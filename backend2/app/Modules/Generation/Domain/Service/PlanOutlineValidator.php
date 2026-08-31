@@ -31,12 +31,27 @@ use App\Modules\Generation\Domain\ValueObject\PlanViolation;
  *
  * ## The one rule that costs money when it is wrong
  *
- * There is NO retry on an outline ({@see \App\Modules\Generation\Application\Service\PlanOutlineService}):
- * one call, and a refusal is a learner looking at an error after a paid request. So every rule here
- * has to be one that is wrong only when the answer really is broken — which is why the
+ * An outline gets ONE re-run ({@see \App\Modules\Generation\Application\Service\PlanOutlineService}),
+ * and then a refusal is a learner looking at an error after two paid requests. So every FATAL rule
+ * here has to be one that is wrong only when the answer really is broken — which is why the
  * target-language gate runs through {@see SupportLanguageText} (abbreviations, codes and the
  * learner's own `goal_terms` are not evidence of anything) and why the «и» rule below is as narrow
  * as it is.
+ *
+ * ## Numbers in the prompt are a GUIDE; this refuses only a broken object
+ *
+ * The rule that reorganised the count checks, and it was bought three times over. The prompt says
+ * «3–12 skills», «3–8 terms», and prose numbers are what the model does not count: formulas came
+ * back 3-of-8 against a cap of 2 on v0.2 and again on v0.2.1, and a live skeleton came back with
+ * THIRTEEN abilities twice in a row — the second time with the number quoted at it as a violation
+ * (`docs/research/plan-v0.3-run.md`). Thirteen abilities is not a broken skeleton: `PlanScheduler`
+ * priced that exact answer at 71 terms over six days and would have taught it. The gate refused a
+ * plan the machine could run, for $0.069.
+ *
+ * So each count now has TWO thresholds. Outside the wide one the object cannot be used and the
+ * answer is refused; between the prompt's number and the wide one it is merely off-guide, and that
+ * is a {@see warnings()} entry — logged every attempt, counted when the answer is kept. Same shape
+ * the day already uses for its formula cap ({@see PlanDayValidator::FORMULA_CAP}).
  *
  * Works on the DECODED ARRAY rather than on a typed outline, and that is a boundary rule, not
  * laziness: the typed outline is Learning's ({@see \App\Modules\Learning\Domain\ValueObject\PlanOutline})
@@ -58,31 +73,55 @@ final class PlanOutlineValidator
     public const TARGET_LANGUAGE = 'outline.target_language';
     public const NOT_A_LIST = 'outline.not_a_list';
 
-    /** A plan is one goal. Past five situations it is a course, and below one it is nothing. */
-    private const MIN_SCENES = 1;
-    private const MAX_SCENES = 5;
+    /** The counters {@see warnings()} raises — named here because the Domain is what names them. */
+    public const SKILL_COUNT_WARNING = 'plan_outline_skill_count';
+
+    public const EST_TERMS_WARNING = 'plan_outline_est_terms';
 
     /**
-     * Abilities across the whole plan. Three is the floor because «спросить дорогу» is honestly
-     * three; twelve is the ceiling because the scheduler will not teach more than fourteen days of
-     * material and a plan of twenty abilities is one that arrives at its event half-taught.
+     * A plan is one goal. Past five situations it is a course, and below one it is nothing — but
+     * only past EIGHT is it an object nothing downstream can use, so that is where the refusal is.
+     */
+    private const MIN_SCENES = 1;
+    private const MAX_SCENES = 5;
+    private const HARD_MAX_SCENES = 8;
+
+    /**
+     * Abilities across the whole plan, and the two thresholds the live run bought.
+     *
+     * Three is the floor because «спросить дорогу» is honestly three, and below it there is no plan
+     * to schedule — that stays fatal. Twelve was the ceiling on the argument that the scheduler
+     * will not teach more than fourteen days of material; the live skeleton came back with
+     * THIRTEEN, twice, and `PlanScheduler` would have taught it in six days. Twelve is now the
+     * GUIDE and twenty is the refusal: past twenty the plan really does arrive at its event
+     * half-taught, and the scheduler's own hat-cutting is what handles everything below it.
      */
     private const MIN_SKILLS = 3;
     private const MAX_SKILLS = 12;
+    private const HARD_MAX_SKILLS = 20;
 
     /**
      * What one ability may cost, in cards.
      *
-     * Both ends are load-bearing. Under three it is not an ability, it is a fragment of its
-     * neighbour; over eight it is two abilities the model declined to split, and the scheduler
-     * would spread it across a day boundary as if it were atomic.
+     * 3–8 is what the prompt asks for and what a well-shaped ability costs: under three it is a
+     * fragment of its neighbour, over eight it is two abilities the model declined to split. Both
+     * are judgements about QUALITY, and neither breaks the arithmetic — the scheduler divides by
+     * whatever number it is given. What breaks the arithmetic is a price of zero (an ability the
+     * scheduler believes is free) or a price of forty (a two-day goal turned into a fortnight), so
+     * 1–12 is the refusal and 3–8 the guide.
      */
     private const MIN_EST_TERMS = 3;
     private const MAX_EST_TERMS = 8;
+    private const HARD_MIN_EST_TERMS = 1;
+    private const HARD_MAX_EST_TERMS = 12;
 
-    /** A role the learner cannot hear is not a role; four lines is already a scene of its own. */
-    private const MIN_OPENING_LINES = 2;
-    private const MAX_OPENING_LINES = 4;
+    /**
+     * A role the learner cannot hear is not a role — and that, exactly, is the fatal case: a role
+     * object with NO opening lines produces a day with no conversation to recognise, because P2
+     * quotes these verbatim. One is thin and six is a scene of its own; seven is somebody else's
+     * scene, and that is where the refusal is.
+     */
+    private const MAX_OPENING_LINES = 6;
 
     /**
      * The infinitive ending of a verb the learner performs — «объяснить», «спросить», «повторить».
@@ -113,12 +152,16 @@ final class PlanOutlineValidator
         $scenes = is_array($answer['scenes'] ?? null) ? $answer['scenes'] : [];
         if ($scenes === []) {
             $violations[] = new PlanViolation(self::NO_SCENES, 'в каркасе нет ни одной сцены');
-        } elseif (count($scenes) > self::MAX_SCENES) {
+        } elseif (count($scenes) > self::HARD_MAX_SCENES) {
             // No floor to check beside the emptiness above: one scene is a legitimate plan
             // («спросить дорогу»), and MIN_SCENES states that in the same place as the ceiling.
+            // Six to eight is off-guide and passes: the prompt asks for five, and a sixth scene is
+            // a plan the learner can still read and the scheduler can still cut.
             $violations[] = new PlanViolation(
                 self::SCENE_COUNT,
-                'сцен ' . count($scenes) . ', а должно быть ' . self::MIN_SCENES . '–' . self::MAX_SCENES,
+                'сцен ' . count($scenes) . ', а больше ' . self::HARD_MAX_SCENES
+                . ' — это уже не один повод, а курс (ориентир промпта — '
+                . self::MIN_SCENES . '–' . self::MAX_SCENES . ')',
             );
         }
 
@@ -152,10 +195,15 @@ final class PlanOutlineValidator
             }
         }
 
-        if ($scenes !== [] && ($skillTotal < self::MIN_SKILLS || $skillTotal > self::MAX_SKILLS)) {
+        // FATAL ONLY OUTSIDE 3–20. Below three there is no plan to schedule; above twenty the plan
+        // arrives at its event half-taught whatever the scheduler does. Thirteen abilities is
+        // neither, and it cost $0.069 to learn that — see the class docblock.
+        if ($scenes !== [] && ($skillTotal < self::MIN_SKILLS || $skillTotal > self::HARD_MAX_SKILLS)) {
             $violations[] = new PlanViolation(
                 self::SKILL_COUNT,
-                'умений в плане ' . $skillTotal . ', а должно быть ' . self::MIN_SKILLS . '–' . self::MAX_SKILLS,
+                'умений в плане ' . $skillTotal . ', а должно быть ' . self::MIN_SKILLS . '–'
+                . self::HARD_MAX_SKILLS . ' (ориентир промпта — ' . self::MIN_SKILLS . '–'
+                . self::MAX_SKILLS . ')',
             );
         }
 
@@ -180,13 +228,85 @@ final class PlanOutlineValidator
     }
 
     /**
-     * `role` is an object or `null`, and an object has 2–4 utterances in it.
+     * WHAT IS OFF-GUIDE AND IS NOT WORTH A SECOND PAID CALL.
+     *
+     * The band between the prompt's number and the refusal: 13–20 abilities, an `est_terms` of 1–2
+     * or 9–12. Every one of them is a skeleton the scheduler can run and a person can read, and
+     * every one of them was fatal until the live run refused a perfectly usable plan twice for one
+     * ability too many (`docs/research/plan-v0.3-run.md`).
+     *
+     * Reported for EVERY attempt and counted only for the one that was kept — the same asymmetry
+     * the day uses, and for the same reason: the log answers «what did the model write», and a
+     * refused answer is exactly the one nothing else records.
+     *
+     * @param  array<mixed>  $answer  the decoded JSON, exactly as the model returned it
+     * @return list<PlanViolation>  empty = nothing to warn about
+     */
+    public function warnings(array $answer): array
+    {
+        $scenes = is_array($answer['scenes'] ?? null) ? $answer['scenes'] : [];
+        if ($scenes === []) {
+            return [];
+        }
+
+        $out = [];
+        $skillTotal = 0;
+
+        foreach ($scenes as $position => $scene) {
+            if (! is_array($scene)) {
+                continue;
+            }
+
+            $skills = is_array($scene['skills'] ?? null) ? $scene['skills'] : [];
+            $skillTotal += count($skills);
+
+            foreach ($skills as $i => $skill) {
+                if (! is_array($skill)) {
+                    continue;
+                }
+                $est = self::estTerms($skill['est_terms'] ?? null);
+                if ($est === null || ($est >= self::MIN_EST_TERMS && $est <= self::MAX_EST_TERMS)) {
+                    continue;
+                }
+
+                $out[] = new PlanViolation(
+                    self::EST_TERMS_WARNING,
+                    '`est_terms` = ' . $est . ', а ориентир промпта — ' . self::MIN_EST_TERMS . '–'
+                    . self::MAX_EST_TERMS,
+                    'сцена ' . ((int) $position + 1) . ', умение ' . ((int) $i + 1),
+                );
+            }
+        }
+
+        if ($skillTotal > self::MAX_SKILLS && $skillTotal <= self::HARD_MAX_SKILLS) {
+            $out[] = new PlanViolation(
+                self::SKILL_COUNT_WARNING,
+                'умений в плане ' . $skillTotal . ', а ориентир промпта — ' . self::MIN_SKILLS . '–'
+                . self::MAX_SKILLS . '; каркас принят, хвост режет планировщик',
+            );
+        }
+
+        return $out;
+    }
+
+    /** `est_terms` as an integer, or null when the model wrote something that is not one. */
+    private static function estTerms(mixed $raw): ?int
+    {
+        if (is_int($raw)) {
+            return $raw;
+        }
+
+        return is_string($raw) && ctype_digit($raw) ? (int) $raw : null;
+    }
+
+    /**
+     * `role` is an object or `null`, and an object has 1–6 utterances in it.
      *
      * Null is a legitimate answer — a scene of reading forms alone has nobody to talk to, and the
      * prompt says inventing «сотрудник, который просто рядом» is worse than admitting it. What is
-     * NOT legitimate is a role with one opening line: P2 quotes these verbatim as the lines the
+     * NOT legitimate is a role with NO opening lines: P2 quotes these verbatim as the lines the
      * learner must recognise, so a role with nothing to say produces a day with no conversation to
-     * recognise.
+     * recognise. One line is thin and passes; the prompt asks for two to four.
      *
      * @return list<PlanViolation>
      */
@@ -200,11 +320,11 @@ final class PlanOutlineValidator
         }
 
         $lines = is_array($role['opening_lines'] ?? null) ? $role['opening_lines'] : [];
-        if (count($lines) < self::MIN_OPENING_LINES || count($lines) > self::MAX_OPENING_LINES) {
+        if ($lines === [] || count($lines) > self::MAX_OPENING_LINES) {
             return [new PlanViolation(
                 self::OPENING_LINES,
-                'реплик собеседника ' . count($lines) . ', а должно быть '
-                . self::MIN_OPENING_LINES . '–' . self::MAX_OPENING_LINES,
+                'реплик собеседника ' . count($lines) . ', а должно быть 1–' . self::MAX_OPENING_LINES
+                . ': без единой реплики день нечего узнавать, а больше шести — это чужая сцена',
                 $label,
             )];
         }
@@ -246,13 +366,18 @@ final class PlanOutlineValidator
             );
         }
 
-        $est = $skill['est_terms'] ?? null;
-        $estValue = is_int($est) ? $est : (is_string($est) && ctype_digit($est) ? (int) $est : null);
-        if ($estValue === null || $estValue < self::MIN_EST_TERMS || $estValue > self::MAX_EST_TERMS) {
+        // FATAL ONLY OUTSIDE 1–12 — the range where the scheduler's arithmetic still means
+        // something. A price of 0 is an ability it believes is free; a price of 40 turns a two-day
+        // goal into a fortnight. 1–2 and 9–12 are merely off-guide and warn ({@see warnings()}).
+        $estValue = self::estTerms($skill['est_terms'] ?? null);
+        if ($estValue === null
+            || $estValue < self::HARD_MIN_EST_TERMS
+            || $estValue > self::HARD_MAX_EST_TERMS) {
             $violations[] = new PlanViolation(
                 self::EST_TERMS,
-                '`est_terms` = ' . (is_scalar($est) ? (string) $est : 'нет')
-                . ', а должно быть целое ' . self::MIN_EST_TERMS . '–' . self::MAX_EST_TERMS,
+                '`est_terms` = ' . (is_scalar($skill['est_terms'] ?? null) ? (string) $skill['est_terms'] : 'нет')
+                . ', а должно быть целое ' . self::HARD_MIN_EST_TERMS . '–' . self::HARD_MAX_EST_TERMS
+                . ' (ориентир промпта — ' . self::MIN_EST_TERMS . '–' . self::MAX_EST_TERMS . ')',
                 $label,
             );
         }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Infrastructure\Adapter;
 
-use App\Modules\Generation\Application\Port\PlanDayDefectReporter;
+use App\Modules\Generation\Application\Port\PlanDefectReporter;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
  * worth. If the cache is cleared the count restarts and the log does not, which is the right way
  * round.
  */
-final class LoggingPlanDayDefectReporter implements PlanDayDefectReporter
+final class LoggingPlanDefectReporter implements PlanDefectReporter
 {
     public function transliterationDropped(
         string $planId,
@@ -50,7 +50,7 @@ final class LoggingPlanDayDefectReporter implements PlanDayDefectReporter
 
     public function warned(
         string $planId,
-        int $dayIndex,
+        ?int $dayIndex,
         string $counter,
         string $detail,
         bool $counted,
@@ -58,16 +58,17 @@ final class LoggingPlanDayDefectReporter implements PlanDayDefectReporter
         // ALWAYS LOGGED. Same level as a dropped hint and for the same reason: nobody but the log
         // will say what the answer actually looked like — and on a REFUSED attempt the log is the
         // only place it will ever be said, because the answer itself is thrown away.
-        Log::warning('Plan day answer has a shape defect', [
+        Log::warning('Plan answer has a shape defect', [
             'counter' => $counter,
             'plan_id' => $planId,
+            // Null on a skeleton: it has no day, and «day 0» would read as a real day.
             'day_index' => $dayIndex,
             'detail' => $detail,
-            'written' => $counted,
+            'kept' => $counted,
         ]);
 
-        // COUNTED ONLY WHEN THE DAY WAS WRITTEN. The counter measures how often a day the learner
-        // GOT is weak; a refused attempt is the machine working, not a weak day shipping.
+        // COUNTED ONLY WHEN THE ANSWER WAS KEPT. The counter measures how often what the learner
+        // GOT is weak; a refused attempt is the machine working, not a weak answer shipping.
         if (! $counted) {
             return;
         }

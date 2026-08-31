@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Modules\Generation\Application\Dto\ModelAnswer;
 use App\Modules\Generation\Application\Dto\RenderedPrompt;
 use App\Modules\Generation\Application\Port\ContentModelPort;
-use App\Modules\Generation\Application\Port\PlanDayDefectReporter;
+use Tests\Doubles\RecordingPlanDefectReporter;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Application\Service\PlanOutlineService;
@@ -100,49 +100,12 @@ beforeEach(function (): void {
         }
     };
 
-    // A reporter that keeps what it was told, so «логируется на каждой попытке, считается только у
-    // принятой» can be asserted rather than read off the log by hand.
-    $this->defects = new class implements PlanDayDefectReporter
-    {
-        /** @var list<array{counter: string, counted: bool}> */
-        public array $warnings = [];
-
-        public function transliterationDropped(
-            string $planId,
-            int $dayIndex,
-            string $text,
-            ?string $raw,
-            string $reason,
-        ): void {}
-
-        public function droppedTransliterations(): int
-        {
-            return 0;
-        }
-
-        public function warned(
-            string $planId,
-            int $dayIndex,
-            string $counter,
-            string $detail,
-            bool $counted,
-        ): void {
-            $this->warnings[] = ['counter' => $counter, 'counted' => $counted];
-        }
-
-        public function warnings(string $counter): int
-        {
-            return count(array_filter(
-                $this->warnings,
-                static fn (array $w): bool => $w['counter'] === $counter && $w['counted'],
-            ));
-        }
-    };
+    $this->defects = new RecordingPlanDefectReporter();
 
     $prompts = new PlanPromptLibrary();
     $ledger = app(RecordsPlanSpend::class);
 
-    app()->instance(PlanOutlinePort::class, new PlanOutlineService($this->model, $prompts, $ledger));
+    app()->instance(PlanOutlinePort::class, new PlanOutlineService($this->model, $prompts, $ledger, $this->defects));
     app()->instance(PlanDayComposer::class, new PlanDayComposer(
         $this->model,
         $prompts,
@@ -213,10 +176,10 @@ it('spends exactly two calls on a day that fails twice, and tells the second one
     // THE SHAPE OF A REFUSED ANSWER IS STILL VISIBLE. The first answer had no question and no
     // repair move; that day was thrown away, so this report is the only record it ever leaves —
     // and it is NOT counted, because the counters measure weak days the learner actually got.
-    $reported = array_column($this->defects->warnings, 'counter');
+    $reported = array_column($this->defects->reported, 'counter');
 
     expect($reported)->toContain(PlanDayValidator::NO_QUESTION)
         ->and($reported)->toContain(PlanDayValidator::NO_REPAIR)
-        ->and(array_column($this->defects->warnings, 'counted'))->not->toContain(true)
+        ->and(array_column($this->defects->reported, 'counted'))->not->toContain(true)
         ->and($this->defects->warnings(PlanDayValidator::NO_QUESTION))->toBe(0);
 });

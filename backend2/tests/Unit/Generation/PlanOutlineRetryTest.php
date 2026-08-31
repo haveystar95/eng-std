@@ -13,6 +13,7 @@ use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
 use App\Modules\Learning\Application\Dto\PlanOutlineBrief;
 use App\Modules\Learning\Application\Exception\PlanOutlineRefused;
+use Tests\Doubles\RecordingPlanDefectReporter;
 
 /**
  * THE SKELETON GETS A SECOND ATTEMPT — and both of them are paid for out loud.
@@ -114,7 +115,7 @@ it('re-runs a refused skeleton once, with the violations named, and pays for bot
     $model = scriptedModel([outlinePayloadWithTwoActions(), outlinePayload()]);
     $ledger = collectingLedger();
 
-    $answer = (new PlanOutlineService($model, new PlanPromptLibrary(), $ledger))->outlineFor(outlineBrief());
+    $answer = (new PlanOutlineService($model, new PlanPromptLibrary(), $ledger, new RecordingPlanDefectReporter()))->outlineFor(outlineBrief());
 
     // ONE skeleton comes back, and it is the second answer.
     expect($answer->payload['title'])->toBe('К врачу из-за боли в спине')
@@ -146,7 +147,7 @@ it('stops after the second refusal and hands the learner the second verdict', fu
     $model = scriptedModel([outlinePayloadWithTwoActions(), outlinePayloadWithTwoActions()]);
     $ledger = collectingLedger();
 
-    $service = new PlanOutlineService($model, new PlanPromptLibrary(), $ledger);
+    $service = new PlanOutlineService($model, new PlanPromptLibrary(), $ledger, new RecordingPlanDefectReporter());
 
     expect(fn () => $service->outlineFor(outlineBrief()))
         ->toThrow(PlanOutlineRefused::class, 'два разных действия');
@@ -155,6 +156,37 @@ it('stops after the second refusal and hands the learner the second verdict', fu
     expect($model->userMessages)->toHaveCount(2)
         ->and($ledger->rows)->toHaveCount(2)
         ->and($ledger->rows[1]->succeeded)->toBeFalse();
+});
+
+it('reports an off-guide skeleton on every attempt and counts only the one it keeps', function () {
+    // Thirteen abilities on both answers, and `outcome_two_actions` on the first. The first answer
+    // is refused and thrown away — the report is the only place its shape survives — and the
+    // second is kept, so exactly one of the two reports is counted.
+    $thirteen = static function (array $payload): array {
+        $skill = $payload['scenes'][0]['skills'][0];
+        $payload['scenes'][0]['skills'] = array_fill(0, 4, $skill);
+        $payload['scenes'][1]['skills'] = array_fill(0, 9, $skill);
+
+        return $payload;
+    };
+
+    $model = scriptedModel([$thirteen(outlinePayloadWithTwoActions()), $thirteen(outlinePayload())]);
+    $defects = new RecordingPlanDefectReporter();
+
+    (new PlanOutlineService($model, new PlanPromptLibrary(), collectingLedger(), $defects))
+        ->outlineFor(outlineBrief());
+
+    $skillWarnings = array_values(array_filter(
+        $defects->reported,
+        static fn (array $w): bool => $w['counter'] === PlanOutlineValidator::SKILL_COUNT_WARNING,
+    ));
+
+    expect($skillWarnings)->toHaveCount(2)
+        ->and($skillWarnings[0]['counted'])->toBeFalse()
+        ->and($skillWarnings[1]['counted'])->toBeTrue()
+        // A skeleton has no day, and «day 0» would read as a real one.
+        ->and($skillWarnings[0]['day_index'])->toBeNull()
+        ->and($defects->warnings(PlanOutlineValidator::SKILL_COUNT_WARNING))->toBe(1);
 });
 
 it('never re-runs a vendor failure — that one does not improve on a second try', function () {
@@ -181,7 +213,7 @@ it('never re-runs a vendor failure — that one does not improve on a second try
     };
     $ledger = collectingLedger();
 
-    expect(fn () => (new PlanOutlineService($model, new PlanPromptLibrary(), $ledger))->outlineFor(outlineBrief()))
+    expect(fn () => (new PlanOutlineService($model, new PlanPromptLibrary(), $ledger, new RecordingPlanDefectReporter()))->outlineFor(outlineBrief()))
         ->toThrow(PlanOutlineRefused::class, 'insufficient credits');
 
     // One call, and no ledger row: nothing was answered, so nothing was priced.

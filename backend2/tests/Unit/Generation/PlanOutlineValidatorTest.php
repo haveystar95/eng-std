@@ -80,24 +80,52 @@ it('refuses a checkpoint that is the promise said again with the punctuation mov
         ->toContain(PlanOutlineValidator::CHECKPOINT_ECHOES_OUTCOME);
 });
 
-it('refuses a price outside 3–8, in both directions', function (mixed $est) {
+// ── the counts: a guide, a warning band, and a refusal ────────────────────────────────────────
+
+it('refuses a price only outside 1–12 — the range the scheduler`s arithmetic still means something in', function (mixed $est) {
+    // Zero is an ability the scheduler believes is free; forty turns a two-day goal into a
+    // fortnight. Those break the arithmetic. Nine does not.
     $violations = $this->validator->validate(outlineWith(skillOverrides: ['est_terms' => $est]));
 
     expect(outlineCodes($violations))->toContain(PlanOutlineValidator::EST_TERMS);
-})->with([9, 2, 0, 'много', null]);
+})->with([0, 13, 40, 'много', null]);
 
-it('accepts both ends of the price range', function (int $est) {
-    expect($this->validator->validate(outlineWith(skillOverrides: ['est_terms' => $est])))->toBe([]);
-})->with([3, 8]);
+it('accepts a price off-guide but usable, and warns about it', function (int $est) {
+    $raw = outlineWith(skillOverrides: ['est_terms' => $est]);
 
-it('refuses a scene whose interlocutor says nothing the learner must recognise', function () {
-    // P2 quotes `opening_lines` verbatim as the lines the day has to teach. A role with one line
-    // is a conversation with nothing to answer.
+    expect($this->validator->validate($raw))->toBe([])
+        ->and(outlineCodes($this->validator->warnings($raw)))
+        ->toContain(PlanOutlineValidator::EST_TERMS_WARNING);
+})->with([1, 2, 9, 12]);
+
+it('says nothing at all about a price the prompt asked for', function (int $est) {
+    $raw = outlineWith(skillOverrides: ['est_terms' => $est]);
+
+    expect($this->validator->validate($raw))->toBe([])
+        ->and($this->validator->warnings($raw))->toBe([]);
+})->with([3, 5, 8]);
+
+it('refuses a scene whose interlocutor says NOTHING the learner must recognise', function () {
+    // P2 quotes `opening_lines` verbatim as the lines the day has to teach. A role with an empty
+    // list is a conversation with nothing to recognise — one line is thin, and thin is not broken.
     $raw = outlineWith();
-    $raw['scenes'][0]['role']['opening_lines'] = [['text' => 'Hello?', 'translation' => 'Здравствуйте?']];
+    $raw['scenes'][0]['role']['opening_lines'] = [];
 
     expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::OPENING_LINES);
 });
+
+it('accepts a role with one line, and refuses one with seven', function (int $lines, bool $ok) {
+    $raw = outlineWith();
+    $raw['scenes'][0]['role']['opening_lines'] = array_fill(
+        0,
+        $lines,
+        ['text' => 'Where does it hurt?', 'translation' => 'Где болит?'],
+    );
+
+    expect(outlineCodes($this->validator->validate($raw)))
+        ->when(! $ok, fn ($e) => $e->toContain(PlanOutlineValidator::OPENING_LINES))
+        ->when($ok, fn ($e) => $e->not->toContain(PlanOutlineValidator::OPENING_LINES));
+})->with([[1, true], [6, true], [7, false]]);
 
 it('accepts a scene with no interlocutor at all', function () {
     // Reading forms alone has nobody to talk to, and the prompt says inventing «сотрудник, который
@@ -162,22 +190,56 @@ it('leaves the learner`s own Latin words alone — goal_terms, abbreviations and
     ['назвать место 14A', []],
 ]);
 
-it('refuses more than five scenes — past that a plan is a course', function () {
+it('refuses more than eight scenes, and lets six through', function (int $scenes, bool $ok) {
+    // The prompt asks for 1–5. A sixth scene is a plan the learner can still read and the
+    // scheduler can still cut; a ninth is a course.
     $raw = outlineWith();
-    $scene = $raw['scenes'][0];
-    $raw['scenes'] = array_fill(0, 6, $scene);
-
-    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::SCENE_COUNT);
-});
-
-it('refuses a plan with fewer than three abilities or more than twelve', function (int $perScene, int $scenes) {
-    $raw = outlineWith();
-    $skill = $raw['scenes'][0]['skills'][0];
-    $raw['scenes'][0]['skills'] = array_fill(0, $perScene, $skill);
     $raw['scenes'] = array_fill(0, $scenes, $raw['scenes'][0]);
 
-    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::SKILL_COUNT);
-})->with([[2, 1], [7, 2]]);
+    expect(outlineCodes($this->validator->validate($raw)))
+        ->when(! $ok, fn ($e) => $e->toContain(PlanOutlineValidator::SCENE_COUNT))
+        ->when($ok, fn ($e) => $e->not->toContain(PlanOutlineValidator::SCENE_COUNT));
+})->with([[6, true], [8, true], [9, false]]);
+
+/** A skeleton of exactly `$total` abilities, spread over as few scenes as it takes. */
+function outlineWithSkills(int $total): array
+{
+    $raw = outlineWith();
+    $skill = $raw['scenes'][0]['skills'][0];
+    $scene = $raw['scenes'][0];
+
+    $scenes = [];
+    for ($left = $total; $left > 0; $left -= 4) {
+        $scene['skills'] = array_fill(0, min(4, $left), $skill);
+        $scenes[] = $scene;
+    }
+    $raw['scenes'] = $scenes;
+
+    return $raw;
+}
+
+it('refuses an ability count only outside 3–20', function (int $total) {
+    expect(outlineCodes($this->validator->validate(outlineWithSkills($total))))
+        ->toContain(PlanOutlineValidator::SKILL_COUNT);
+})->with([2, 21, 24]);
+
+it('accepts 13 abilities and WARNS — the live skeleton that cost $0.069 to refuse twice', function (int $total) {
+    // `docs/research/plan-v0.3-run.md`: the model wrote thirteen abilities twice in a row, the
+    // second time with the number quoted at it, and `PlanScheduler` would have taught that plan in
+    // six days. Off-guide is not broken.
+    $raw = outlineWithSkills($total);
+
+    expect($this->validator->validate($raw))->toBe([])
+        ->and(outlineCodes($this->validator->warnings($raw)))
+        ->toContain(PlanOutlineValidator::SKILL_COUNT_WARNING);
+})->with([13, 20]);
+
+it('says nothing about an ability count the prompt asked for', function (int $total) {
+    $raw = outlineWithSkills($total);
+
+    expect($this->validator->validate($raw))->toBe([])
+        ->and($this->validator->warnings($raw))->toBe([]);
+})->with([3, 12]);
 
 it('refuses a binding list that came back as a string', function () {
     // The failure that would otherwise reach the day prompt as the literal characters of a JSON

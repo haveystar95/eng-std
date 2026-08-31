@@ -671,7 +671,7 @@ it('fails the day loudly when the ledger will not take the row', function () {
         $model,
         $prompts,
         app(\App\Modules\Generation\Application\Port\RecordsPlanSpend::class),
-        app(\App\Modules\Generation\Application\Port\PlanDayDefectReporter::class),
+        app(\App\Modules\Generation\Application\Port\PlanDefectReporter::class),
     ));
 
     // The queue is sync under test, so the job runs inside the request; without the HTTP kernel's

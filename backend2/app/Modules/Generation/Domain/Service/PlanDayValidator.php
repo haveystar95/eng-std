@@ -65,7 +65,7 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  * The formula cap, the missing question and the missing repair move are counted and reported
  * ({@see warnings()}) instead of failing the day. They are taste with a number attached: a day
  * with one formula too many is a slightly worse day, and it is not worth a second paid call. The
- * counters are what a growing problem looks like — see {@see \App\Modules\Generation\Application\Port\PlanDayDefectReporter}.
+ * counters are what a growing problem looks like — see {@see \App\Modules\Generation\Application\Port\PlanDefectReporter}.
  *
  * **The interlocutor's lines are quoted, not invented.** A line marked `speaker: role` has to be,
  * character for character, one of the scene's `opening_lines`. The learner is going to hold that
@@ -81,7 +81,7 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  *
  * TRANSLITERATION. It is not judged here at all any more — {@see transliterationFor()} returns the
  * repaired hint or null, and the caller drops the field, logs it and counts it
- * ({@see \App\Modules\Generation\Application\Port\PlanDayDefectReporter}). Under v0.1 a stray
+ * ({@see \App\Modules\Generation\Application\Port\PlanDefectReporter}). Under v0.1 a stray
  * comma in one hint failed the whole day and bought a second paid generation whose second answer
  * failed the same way. A pronunciation hint is the one field a card can live without: it is the
  * LAST measure, it is visible in the log, and it is not the norm.

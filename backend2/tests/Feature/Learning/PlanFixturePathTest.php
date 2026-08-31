@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Modules\Generation\Application\Dto\ModelAnswer;
 use App\Modules\Generation\Application\Dto\RenderedPrompt;
 use App\Modules\Generation\Application\Port\ContentModelPort;
-use App\Modules\Generation\Application\Port\PlanDayDefectReporter;
+use App\Modules\Generation\Application\Port\PlanDefectReporter;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Application\Service\PlanOutlineService;
@@ -76,12 +76,12 @@ beforeEach(function (): void {
     $prompts = new PlanPromptLibrary();
     $ledger = app(RecordsPlanSpend::class);
 
-    app()->instance(PlanOutlinePort::class, new PlanOutlineService($model, $prompts, $ledger));
+    app()->instance(PlanOutlinePort::class, new PlanOutlineService($model, $prompts, $ledger, app(PlanDefectReporter::class)));
     app()->instance(PlanDayComposer::class, new PlanDayComposer(
         $model,
         $prompts,
         $ledger,
-        app(PlanDayDefectReporter::class),
+        app(PlanDefectReporter::class),
     ));
 });
 

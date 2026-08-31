@@ -8,7 +8,7 @@ use App\Modules\Generation\Application\Dto\PlanDayDraft;
 use App\Modules\Generation\Application\Dto\PlanSpend;
 use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
-use App\Modules\Generation\Application\Port\PlanDayDefectReporter;
+use App\Modules\Generation\Application\Port\PlanDefectReporter;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Domain\Exception\PlanDayRefused;
 use App\Modules\Generation\Domain\Service\PlanCoherenceValidator;
@@ -59,9 +59,9 @@ final readonly class PlanDayComposer
         private RecordsPlanSpend $ledger,
         /**
          * Where a DROPPED reading hint goes. The one defect that is repaired instead of refused,
-         * so the one that has to be visible — see {@see PlanDayDefectReporter}.
+         * so the one that has to be visible — see {@see PlanDefectReporter}.
          */
-        private PlanDayDefectReporter $defects,
+        private PlanDefectReporter $defects,
         private PlanDayValidator $validator = new PlanDayValidator(),
         /**
          * The SECOND gate, and the one that only exists because a plan is a sequence: it judges the

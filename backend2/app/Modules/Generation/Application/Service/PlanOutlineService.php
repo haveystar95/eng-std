@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Dto\ModelAnswer;
 use App\Modules\Generation\Application\Dto\PlanSpend;
 use App\Modules\Generation\Application\Dto\RenderedPrompt;
 use App\Modules\Generation\Application\Port\ContentModelPort;
+use App\Modules\Generation\Application\Port\PlanDefectReporter;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Domain\Service\PlanOutlineValidator;
@@ -52,6 +53,11 @@ final readonly class PlanOutlineService implements PlanOutlinePort
         private ContentModelPort $model,
         private PlanPromptSource $prompts,
         private RecordsPlanSpend $ledger,
+        /**
+         * Where an OFF-GUIDE skeleton goes — thirteen abilities where the prompt asked for twelve.
+         * Not a refusal and not silence: see {@see PlanOutlineValidator::warnings()}.
+         */
+        private PlanDefectReporter $defects,
         private PlanOutlineValidator $validator = new PlanOutlineValidator(),
     ) {}
 
@@ -116,6 +122,18 @@ final readonly class PlanOutlineService implements PlanOutlinePort
         }
 
         $violations = $this->validator->validate($answer->payload, $brief->supportLang);
+
+        // OFF-GUIDE, NOT BROKEN. Reported for every attempt so a refused skeleton's shape is not
+        // lost with it, counted only for the one that is kept — the same split the day uses.
+        foreach ($this->validator->warnings($answer->payload) as $warning) {
+            $this->defects->warned(
+                $brief->planId,
+                null,
+                $warning->code,
+                $warning->subject === null ? $warning->detail : "{$warning->subject}: {$warning->detail}",
+                counted: $violations === [],
+            );
+        }
 
         // THE LEDGER ROW IS WRITTEN BEFORE THE VERDICT, and that ordering is the point: a refused
         // answer cost exactly as much as an accepted one. PLAN-1a's own run refused an outline for
