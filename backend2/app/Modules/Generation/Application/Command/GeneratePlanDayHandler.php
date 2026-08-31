@@ -117,6 +117,11 @@ final readonly class GeneratePlanDayHandler
                 // that made this necessary produced eighteen violations in one answer. A vendor
                 // failure has no verdict and carries nothing.
                 failViolations: $e instanceof PlanDayRefused ? $e->violations : [],
+                // TWO CALLS when the answer was nearly right and a repair was spent on it. The
+                // day's counter is money, so a run that paid twice leaves nothing to pay with —
+                // and a repaired-and-still-broken day is `failed`, not `pending` with an attempt
+                // that does not exist.
+                paidCalls: $e instanceof PlanDayRefused ? $e->paidCalls : 1,
             ));
 
             return;

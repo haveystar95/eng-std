@@ -128,6 +128,60 @@ final class PlanSchemas
     }
 
     /**
+     * P2R — the broken cards, fixed, each back at the address it came from.
+     *
+     * ## One card shape and not a union
+     *
+     * A line and a substitution are different objects: a line has `frame`/`filler`/`speaker` and no
+     * `text`, a word has `text` and none of the three. Expressing that as `anyOf` under `strict` is
+     * possible and not worth it — a mis-chosen branch comes back as a schema error rather than as a
+     * card, and the repair call has no second attempt to spend on one. So `card` carries every
+     * field of both, with the ones that do not apply nullable. The ARRAY the entry names is what
+     * decides which kind it is, exactly as it does in P2, and
+     * {@see \App\Modules\Generation\Application\Service\PlanDayRepairer} reads the fields that kind
+     * has.
+     *
+     * `speaker` is a plain nullable string rather than an enum-with-null: the gate already refuses
+     * a line without a speaker ({@see PlanDayValidator::KIND_MISMATCH}), and a schema keyword one
+     * provider interprets differently is a 400 on a paid path.
+     *
+     * ## No `minItems`/`maxItems`, and that is not an oversight
+     *
+     * «Exactly as many entries as cards under BROKEN» is stated in the prompt and CHECKED after the
+     * answer ({@see PlanDayRepairer}), not asked of the schema: OpenAI's `strict` mode does not
+     * apply array-length keywords — it refuses the whole schema for carrying them. See DECISIONS
+     * п. 201; the same is true of the counters P2 would like on its three arrays.
+     *
+     * @return array<string, mixed>
+     */
+    public static function repair(): array
+    {
+        $card = self::object([
+            'text' => self::nullableString(),
+            'type' => ['type' => 'string', 'enum' => ['word', 'phrase', 'idiom', 'phrasal_verb']],
+            'is_line' => ['type' => 'boolean'],
+            'translation' => self::string(),
+            'transliteration' => self::string(),
+            'description' => self::string(),
+            'example' => self::string(),
+            'example_translation' => self::string(),
+            'image_api_prompt' => self::string(),
+            'covers_checkpoint' => ['type' => ['integer', 'null']],
+            'frame' => self::nullableString(),
+            'filler' => self::nullableString(),
+            'speaker' => self::nullableString(),
+        ]);
+
+        $entry = self::object([
+            'array' => ['type' => 'string', 'enum' => ['phrases', 'words', 'chunks']],
+            'index' => self::integer(),
+            'card' => $card,
+        ]);
+
+        return self::object(['cards' => self::arrayOf($entry)]);
+    }
+
+    /**
      * @param  array<string, array<string, mixed>>  $properties
      * @return array<string, mixed>
      */
@@ -154,6 +208,12 @@ final class PlanSchemas
     private static function string(): array
     {
         return ['type' => 'string'];
+    }
+
+    /** @return array<string, mixed> */
+    private static function nullableString(): array
+    {
+        return ['type' => ['string', 'null']];
     }
 
     /** @return array<string, mixed> */

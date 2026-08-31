@@ -62,6 +62,22 @@ final class FakePlanContentModel implements ContentModelPort
     {
         $properties = $schema['properties'] ?? [];
         $isDay = is_array($properties) && isset($properties['phrases']);
+        // P2R. This double never reaches it — its days pass every gate — and the branch exists so
+        // that a day which somehow does not comes back as an empty repair rather than as a
+        // SKELETON, which is what «anything that is not a day» used to mean here.
+        $isRepair = is_array($properties) && isset($properties['cards']);
+
+        if ($isRepair) {
+            return new ModelAnswer(
+                payload: ['cards' => []],
+                model: 'fake-plan',
+                latencyMs: 0,
+                tokensIn: 0,
+                tokensOut: 0,
+                costUsd: '0.000000',
+                raw: '{}',
+            );
+        }
 
         return new ModelAnswer(
             payload: $isDay ? $this->day($prompt->text) : $this->outline($prompt->text),

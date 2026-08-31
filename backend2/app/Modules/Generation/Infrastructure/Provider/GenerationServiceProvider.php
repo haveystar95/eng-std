@@ -86,6 +86,7 @@ use App\Modules\Generation\Application\Port\PlanDefectReporter;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
+use App\Modules\Generation\Application\Service\PlanDayRepairer;
 use App\Modules\Generation\Application\Service\PlanOutlineService;
 use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedEnrichmentDispatcher;
@@ -158,12 +159,25 @@ final class GenerationServiceProvider extends ServiceProvider
         // The one defect of a plan day that is repaired instead of refused has to be visible.
         $this->app->bind(PlanDefectReporter::class, LoggingPlanDefectReporter::class);
 
+        // P2R runs on the SAME model as the day it repairs. Not a knob: a repaired card is judged
+        // by the gates the day was judged by and sits beside cards the day model wrote, so a
+        // cheaper model here would show up as one card of fourteen written differently from the
+        // rest, which is precisely the defect the repair exists to remove.
+        $this->app->bind(PlanDayRepairer::class, function (): PlanDayRepairer {
+            return new PlanDayRepairer(
+                model: $this->planModel(),
+                prompts: $this->app->make(PlanPromptSource::class),
+                ledger: $this->app->make(RecordsPlanSpend::class),
+            );
+        });
+
         $this->app->bind(PlanDayComposer::class, function (): PlanDayComposer {
             return new PlanDayComposer(
                 model: $this->planModel(),
                 prompts: $this->app->make(PlanPromptSource::class),
                 ledger: $this->app->make(RecordsPlanSpend::class),
                 defects: $this->app->make(PlanDefectReporter::class),
+                repairer: $this->app->make(PlanDayRepairer::class),
                 validator: $this->planDayValidator(),
             );
         });

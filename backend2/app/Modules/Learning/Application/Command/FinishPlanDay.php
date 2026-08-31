@@ -8,9 +8,13 @@ namespace App\Modules\Learning\Application\Command;
  * The generator is done with a day: ready with a collection, or failed with a reason.
  *
  * @param  list<string>  $termIds  the day's terms, for the strict enrolment. Empty on failure.
- * @param  list<string>  $failViolations  the verdict as DATA, one line per failed check, for the
- *         next attempt to be told about. `failReason` is the same verdict as prose, for a person;
- *         both are kept because they have different readers.
+ * @param  list<string>  $failViolations  the verdict as ADDRESSES, one line per failed check, for
+ *         the next attempt to be told about. `failReason` is the same verdict as prose, for a
+ *         person; both are kept because they have different readers, and only one of them is ever
+ *         allowed to carry what the model wrote.
+ * @param  int  $paidCalls  model calls this run actually made — two when a repair call was spent
+ *         ({@see \App\Modules\Generation\Application\Service\PlanDayRepairer}). The day's
+ *         attempt counter is the money, so it charges them rather than counting claims.
  */
 final readonly class FinishPlanDay
 {
@@ -25,5 +29,6 @@ final readonly class FinishPlanDay
         public array $termIds = [],
         public ?string $failReason = null,
         public array $failViolations = [],
+        public int $paidCalls = 1,
     ) {}
 }

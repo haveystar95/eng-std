@@ -50,8 +50,20 @@ final class PlanPromptLibrary implements PlanPromptSource
 
     public const DAY_VERSION = 'plan_day.v0.3';
 
+    /**
+     * P2R — the day's BROKEN CARDS, and nothing else.
+     *
+     * A third prompt rather than a third revision of P2, because it asks a different question. P2
+     * writes a conversation out of a skeleton; P2R is handed a day that is already mostly accepted
+     * and a short list of cards that failed a check, and returns those cards. Versioned separately
+     * for the reason the other two are: it will move when the gates move, and P2 will not move
+     * with it.
+     */
+    public const REPAIR_VERSION = 'plan_day_repair.v0.1';
+
     private const OUTLINE = 'plan_outline.v0.2.md';
     private const DAY = 'plan_day.v0.3.md';
+    private const REPAIR = 'plan_day_repair.v0.1.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}
 
@@ -65,6 +77,11 @@ final class PlanPromptLibrary implements PlanPromptSource
         return $this->render(self::DAY, self::DAY_VERSION, $placeholders);
     }
 
+    public function repair(array $placeholders): RenderedPrompt
+    {
+        return $this->render(self::REPAIR, self::REPAIR_VERSION, $placeholders);
+    }
+
     public function outlineVersion(): string
     {
         return self::OUTLINE_VERSION;
@@ -73,6 +90,11 @@ final class PlanPromptLibrary implements PlanPromptSource
     public function dayVersion(): string
     {
         return self::DAY_VERSION;
+    }
+
+    public function repairVersion(): string
+    {
+        return self::REPAIR_VERSION;
     }
 
     /** @param array<string, string> $placeholders */

@@ -2,16 +2,14 @@
 
 declare(strict_types=1);
 
-use App\Modules\Generation\Application\Dto\ModelAnswer;
-use App\Modules\Generation\Application\Dto\RenderedPrompt;
-use App\Modules\Generation\Application\Port\ContentModelPort;
-use Tests\Doubles\RecordingPlanDefectReporter;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
+use App\Modules\Generation\Application\Service\PlanDayRepairer;
 use App\Modules\Generation\Application\Service\PlanOutlineService;
 use App\Modules\Generation\Domain\Service\PlanDayValidator;
-use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
+use Tests\Doubles\RecordingPlanDefectReporter;
+use Tests\Doubles\ScriptedPlanModel;
 use App\Modules\Learning\Application\Port\PlanOutlinePort;
 use App\Modules\Learning\Domain\Entity\PlanDay;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -67,77 +65,49 @@ beforeEach(function (): void {
         true,
     );
 
-    // TWO DIFFERENT DEFECTS, one per answer, each breaking exactly one gate. Different on purpose:
-    // «the second attempt was told about A» is only observable when the second attempt fails on B.
-    $withoutPicture = $day;
-    $withoutPicture['words'][0]['image_api_prompt'] = '';
+    // EIGHT BROKEN CARDS OF FOURTEEN, on purpose: past half the day P2R is not asked at all
+    // ({@see \App\Modules\Generation\Application\Service\PlanDayRepairer}) and this is the
+    // whole-day path, which is what this file is about. One broken card takes the other road and is
+    // measured in `PlanDayRepairTest`.
+    //
+    // TWO DIFFERENT DEFECTS, one per answer. Different on purpose: «the second attempt was told
+    // about A» is only observable when the second attempt fails on B.
+    $withoutPictures = $day;
+    foreach ([0, 1, 2, 3, 4, 5] as $i) {
+        $withoutPictures['phrases'][$i]['image_api_prompt'] = '';
+    }
+    foreach ([0, 1] as $i) {
+        $withoutPictures['words'][$i]['image_api_prompt'] = '';
+    }
     // …and, on the same answer, a SHAPE defect that is only ever a warning: the day's one question
     // and its one repair move are the same line, and this replaces it with a statement. A refused
     // answer is thrown away, so the log is the only place that fact can survive.
-    $withoutPicture['phrases'][3]['frame'] = 'I would like to check in, please.';
+    $withoutPictures['phrases'][3]['frame'] = 'I would like to check in, please.';
 
-    $withStrayFiller = $day;
-    $withStrayFiller['phrases'][1]['filler'] = 'ten past nine';   // no card of this day says that
+    $withoutExamples = $day;
+    foreach ([0, 1, 2, 3, 4, 5] as $i) {
+        $withoutExamples['phrases'][$i]['example'] = '';
+    }
+    foreach ([0, 1] as $i) {
+        $withoutExamples['words'][$i]['example'] = '';
+    }
 
-    $this->firstAnswer = $withoutPicture;
-
-    $this->model = new class([$withoutPicture, $withStrayFiller]) implements ContentModelPort
-    {
-        /** @var list<string> */
-        public array $dayMessages = [];
-
-        /** @param list<array<string, mixed>> $days */
-        public function __construct(private array $days) {}
-
-        public function provider(): ProviderId
-        {
-            return ProviderId::OpenAi;
-        }
-
-        public function model(): string
-        {
-            return 'scripted-plan';
-        }
-
-        public function complete(RenderedPrompt $prompt, string $userMessage, array $schema): ModelAnswer
-        {
-            $properties = $schema['properties'] ?? [];
-            $isDay = is_array($properties) && isset($properties['phrases']);
-
-            if ($isDay) {
-                $this->dayMessages[] = $userMessage;
-                $payload = array_shift($this->days) ?? [];
-            } else {
-                /** @var array<string, mixed> $payload */
-                $payload = json_decode(
-                    (string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-outline.v0.2.json'),
-                    true,
-                );
-            }
-
-            return new ModelAnswer(
-                payload: $payload,
-                model: 'scripted-plan',
-                latencyMs: 0,
-                tokensIn: 100,
-                tokensOut: 200,
-                costUsd: '0.047000',
-                raw: '{}',
-            );
-        }
-    };
-
+    $this->firstAnswer = $withoutPictures;
+    $this->model = new ScriptedPlanModel([$withoutPictures, $withoutExamples]);
     $this->defects = new RecordingPlanDefectReporter();
 
     $prompts = new PlanPromptLibrary();
     $ledger = app(RecordsPlanSpend::class);
 
     app()->instance(PlanOutlinePort::class, new PlanOutlineService($this->model, $prompts, $ledger, $this->defects));
+    // Wired exactly as production is, repairer and all — a composer built without one would make
+    // «P2R was not called» true for the wrong reason.
     app()->instance(PlanDayComposer::class, new PlanDayComposer(
         $this->model,
         $prompts,
         $ledger,
         $this->defects,
+        new PlanDayRepairer($this->model, $prompts, $ledger),
     ));
 });
 
@@ -161,7 +131,10 @@ it('spends exactly two calls on a day that fails twice, and tells the second one
 
     // TWO CALLS FOR THE DAY. Not four: the composer's own inner retry is gone, so the claim
     // counter on the row is the money.
-    expect($this->model->dayMessages)->toHaveCount(2);
+    expect($this->model->dayCalls())->toBe(2)
+        // AND NO REPAIR CALL. Past half the day, P2R is not asked — repairing eight of fourteen
+        // cards would be paying to keep the six that happened to pass.
+        ->and($this->model->repairCalls())->toBe(0);
 
     $row = DB::table('learning_plan_days')
         ->where('plan_id', $plan['id'])->where('day_index', 1)->first();
@@ -200,7 +173,7 @@ it('spends exactly two calls on a day that fails twice, and tells the second one
     $violations = json_decode((string) $row->generation_violations, true);
     $joined = implode(' ', $violations);
 
-    expect($joined)->toContain(PlanDayValidator::FILLER_NOT_A_CARD)
+    expect($joined)->toContain(PlanDayValidator::EXAMPLE_MISSING)
         ->and($joined)->not->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING);
 
     // TWO ROWS IN THE LEDGER for the day, both refused, each carrying its own reason. A day that
@@ -213,7 +186,7 @@ it('spends exactly two calls on a day that fails twice, and tells the second one
 
     expect($spend)->toHaveCount(2)
         ->and($spend[0]->error)->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING)
-        ->and($spend[1]->error)->toContain(PlanDayValidator::FILLER_NOT_A_CARD)
+        ->and($spend[1]->error)->toContain(PlanDayValidator::EXAMPLE_MISSING)
         ->and($spend->pluck('purpose')->unique()->all())->toBe(['plan']);
 
     // THE SHAPE OF A REFUSED ANSWER IS STILL VISIBLE. The first answer had no question and no

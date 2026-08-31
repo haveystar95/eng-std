@@ -21,15 +21,25 @@ interface PlanPromptSource
     public function day(array $placeholders): RenderedPrompt;
 
     /**
+     * P2R — a handful of broken cards of a day that is otherwise accepted.
+     *
+     * @param  array<string, string>  $placeholders  keys WITHOUT the braces
+     */
+    public function repair(array $placeholders): RenderedPrompt;
+
+    /**
      * The version each prompt is stamped with — what lands in the ledger row and in
      * `terms.prompt_version`.
      *
-     * TWO versions and no longer one. P1 and P2 are revised separately (v0.2 moved the skeleton
-     * off days before it moved the day off two arrays), and a single number for both meant that
-     * bumping either one stamped the other with a version it was not written at. A ledger row
-     * that names the wrong prompt is worse than no row: it is the row a later run will trust.
+     * THREE versions and no longer one. P1, P2 and P2R are revised separately (v0.2 moved the
+     * skeleton off days before it moved the day off two arrays), and a single number for all of
+     * them meant that bumping any one stamped the others with a version they were not written at.
+     * A ledger row that names the wrong prompt is worse than no row: it is the row a later run
+     * will trust.
      */
     public function outlineVersion(): string;
 
     public function dayVersion(): string;
+
+    public function repairVersion(): string;
 }
