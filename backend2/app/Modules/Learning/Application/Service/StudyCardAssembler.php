@@ -203,7 +203,7 @@ final readonly class StudyCardAssembler
             && trim($content->example) !== '';
 
         if ($mode === ExerciseMode::MultipleChoice) {
-            $distractors = $this->distractors->forTarget($view->termId, $poolTermIds, $optionCount - 1);
+            $distractors = $this->distractors->forTarget($user, $view->termId, $poolTermIds, $optionCount - 1);
             /** @var list<string> $options */
             $options = $this->rng->shuffleArray([$answer, ...$distractors]);
         } elseif ($mode === ExerciseMode::WordBank) {
@@ -260,7 +260,7 @@ final readonly class StudyCardAssembler
             // excludes candidates whose translations overlap the target's. That exclusion matters
             // more here than there: a description separates two words a single Russian gloss has
             // collapsed, and offering both of them would put two correct answers on the card.
-            $distractors = $this->distractors->forTarget($view->termId, $poolTermIds, $optionCount - 1);
+            $distractors = $this->distractors->forTarget($user, $view->termId, $poolTermIds, $optionCount - 1);
             /** @var list<string> $options */
             $options = $this->rng->shuffleArray([$answer, ...$distractors]);
         } elseif ($mode === ExerciseMode::Speaking) {

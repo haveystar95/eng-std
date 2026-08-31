@@ -234,7 +234,7 @@ it('keeps the ordinary multiple_choice pool inside the card own language', funct
 
     $pool = array_merge($en, $es);
     $options = app(App\Modules\Vocabulary\Application\Query\DistractorReader::class)
-        ->forTarget(TermId::fromString($en[0]), $pool, 3);
+        ->forTarget(App\Modules\Shared\Domain\ValueObject\UserId::fromString($user->id), TermId::fromString($en[0]), $pool, 3);
 
     foreach ($options as $option) {
         expect(in_array($option, ['table'], true))->toBe(

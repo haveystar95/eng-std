@@ -5,21 +5,25 @@ declare(strict_types=1);
 namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
 
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentDistractorReader implements DistractorReader
 {
-    public function forTarget(TermId $targetId, array $poolTermIds, int $count): array
+    public function forTarget(UserId $userId, TermId $targetId, array $poolTermIds, int $count): array
     {
         if ($count < 1) {
             return [];
         }
 
-        $target = DB::table('terms')->where('id', $targetId->value)->first(['id', 'lang', 'cefr']);
+        $target = DB::table('terms')->where('id', $targetId->value)->first(['id', 'lang', 'cefr', 'kind']);
         if ($target === null) {
             return [];
         }
+
+        $family = self::familyOf($target->kind === null ? null : (string) $target->kind);
 
         $targetTranslations = $this->translationsByTerm([$targetId->value])[$targetId->value] ?? [];
         // THE SYNONYM BAN (SYN-1 Ч.2 п. 3). A near-synonym of the term is a SECOND CORRECT ANSWER on
@@ -51,20 +55,43 @@ final class EloquentDistractorReader implements DistractorReader
         // term IS the studied side of its pair, so this one comparison is the whole pair gate here:
         // the options are term TEXTS, and a card of pair ru→en may show English and nothing else.
         $poolIds = array_values(array_filter($poolTermIds, static fn (string $id): bool => $id !== $targetId->value));
-        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang);
+        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, $family);
 
-        // 2. Top up from same-language terms of a similar level (same cefr first).
+        // 2. Top up from THIS LEARNER'S SHELVES AND THE PUBLIC CATALOGUE — never from anyone else's.
+        //
+        // This query used to read `terms` whole, filtered by language and nothing more. Terms are
+        // deduplicated globally, so a row has no owner and the query looked harmless; what it
+        // actually reached was every phrase any user had ever generated, including the 593 English
+        // terms sitting in other people's PRIVATE collections. A learner short of pool candidates
+        // could be offered somebody else's «Hi, I'm Alex, and I work as a backend developer.» as a
+        // wrong answer. Nobody's name was on it and it was still theirs.
+        //
+        // Ownership of a TERM does not exist here and inventing it would break the dedup invariant.
+        // What exists is the shelf it stands on, so that is what is filtered: the learner's own
+        // collections and the ones they subscribe to — the same access rule the collections module
+        // applies everywhere — plus the published catalogue, which is nobody's in particular and is
+        // exactly what a filler option should come from.
         if (count($picked) < $count) {
             $exclude = array_values(array_unique([$targetId->value, ...$poolTermIds]));
-            $fallbackIds = array_values(DB::table('terms')
-                ->where('lang', (string) $target->lang)
-                ->whereNotIn('id', $exclude)
-                ->orderByRaw('(cefr IS DISTINCT FROM ?)', [$target->cefr])
-                ->limit(max($count * 4, 8))
-                ->pluck('id')
-                ->map(static fn (mixed $id): string => (string) $id)
-                ->all());
-            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang);
+            $rows = DB::table('terms as t')
+                ->join('collection_items as ci', 'ci.term_id', '=', 't.id')
+                ->join('collections as c', 'c.id', '=', 'ci.collection_id')
+                ->where('t.lang', (string) $target->lang)
+                ->whereNotIn('t.id', $exclude)
+                ->where(fn (Builder $q): Builder => $this->readable($q, $userId))
+                ->whereNull('c.deleted_at')
+                ->whereNull('ci.deleted_at')
+                ->distinct()
+                ->limit(max($count * 8, 24))
+                ->get(['t.id', 't.cefr']);
+
+            // Same level first. Ordered here rather than in SQL: `SELECT DISTINCT` may only order
+            // by expressions it selects, and «is this the target's CEFR» is not one of the columns.
+            $fallbackIds = array_values(array_map(
+                static fn (object $row): string => (string) $row->id,
+                $rows->sortBy(static fn (object $row): int => $row->cefr === $target->cefr ? 0 : 1)->values()->all(),
+            ));
+            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, $family);
         }
 
         return array_slice($picked, 0, $count);
@@ -79,25 +106,41 @@ final class EloquentDistractorReader implements DistractorReader
      *         another name — its synonyms, and the terms that name IT as one of theirs
      * @param  string  $lang  the card's own language: a candidate written in another one is not a
      *         wrong answer, it is a different card, and the loop below never sees it
+     * @param  string  $family  {@see familyOf()} — a spoken TURN and a word one drops into a
+     *         sentence are not alternatives to each other, whatever else they have in common
      */
-    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations, array $banned, string $lang): void
+    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations, array $banned, string $lang, string $family): void
     {
         if ($candidateIds === [] || count($picked) >= $count) {
             return;
         }
 
-        /** @var array<string, string> $texts */
-        $texts = DB::table('terms')->whereIn('id', $candidateIds)->where('lang', $lang)->pluck('text', 'id')->all();
+        /** @var array<string, array{text: string, kind: string|null}> $rows */
+        $rows = [];
+        foreach (DB::table('terms')->whereIn('id', $candidateIds)->where('lang', $lang)->get(['id', 'text', 'kind']) as $row) {
+            $rows[(string) $row->id] = [
+                'text' => (string) $row->text,
+                'kind' => $row->kind === null ? null : (string) $row->kind,
+            ];
+        }
         $translations = $this->translationsByTerm($candidateIds);
 
         foreach ($candidateIds as $id) {
             if (count($picked) >= $count) {
                 return;
             }
-            $text = $texts[$id] ?? null;
-            if ($text === null) {
+            $row = $rows[$id] ?? null;
+            if ($row === null) {
                 continue;
             }
+            // THE SHAPE GATE. Asked to recognise «passport», the learner was offered «Hello. Do you
+            // have a reservation?» — a whole spoken turn as a wrong answer for one noun. It is not
+            // a wrong answer, it is a different kind of question, and it makes the right one
+            // obvious by length alone.
+            if (self::familyOf($row['kind']) !== $family) {
+                continue;
+            }
+            $text = $row['text'];
             $textKey = mb_strtolower(trim($text));
             if (isset($usedTexts[$textKey])) {
                 continue; // no duplicate option texts
@@ -118,6 +161,50 @@ final class EloquentDistractorReader implements DistractorReader
                 $usedTranslations[$key] = true;
             }
         }
+    }
+
+    /**
+     * The shelves a filler option may be taken off: the learner's own, the ones they subscribe to,
+     * and the public catalogue.
+     *
+     * The first two are the access rule Collections applies everywhere
+     * ({@see \App\Modules\Collections\Infrastructure\Eloquent\EloquentUserCollectionTermsReader}).
+     * The third is the addition this reader needs and that one does not: a distractor may come from
+     * a catalogue collection the learner has never opened, because a published shelf is not
+     * anybody's content.
+     */
+    private function readable(Builder $query, UserId $userId): Builder
+    {
+        return $query
+            ->where('c.owner_id', $userId->value)
+            ->orWhere(static fn (Builder $q): Builder => $q
+                ->where('c.type', 'system')
+                ->where('c.visibility', 'public'))
+            ->orWhereExists(static function (Builder $sub) use ($userId): void {
+                $sub->from('user_collections as uc')
+                    ->whereColumn('uc.collection_id', 'c.id')
+                    ->where('uc.user_id', $userId->value)
+                    ->whereNull('uc.unsubscribed_at');
+            });
+    }
+
+    /**
+     * WHICH KIND OF THING this term is, for the purpose of being an option: a spoken TURN, or
+     * something you drop into one.
+     *
+     * `line` on one side; `word`, `chunk` and «no kind at all» on the other. The naряд asked for
+     * kind-for-kind (`word↔word`, `chunk↔chunk`), and that is what the ORDER inside a family gives
+     * — but it cannot be the hard rule, because the two ends of it starve: a day carries two
+     * connectors, and the public catalogue this reader tops up from carries none at all (`kind` is
+     * a plan's word for what a card does in its day, and catalogue terms have never been in one).
+     * A `chunk` that could only ever be offered another `chunk` would be offered nothing.
+     *
+     * The line is where the defect actually was, and it is absolute: no sentence among a word's
+     * options, no word among a sentence's.
+     */
+    private static function familyOf(?string $kind): string
+    {
+        return $kind === 'line' ? 'line' : 'substitution';
     }
 
     /**

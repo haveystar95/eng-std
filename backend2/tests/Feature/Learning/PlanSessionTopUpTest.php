@@ -185,3 +185,65 @@ it('leaves the day alone when the sitting ended with a word still owed a card', 
     expect(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('status'))
         ->toBe('ready');
 });
+
+// ── a LINE of another plan never travels ──────────────────────────────────────────────────────
+
+/**
+ * A term with a plan's `kind` on it, in this learner's pool and due — the shape a word left behind
+ * by a finished plan has.
+ */
+function duePlanTerm(object $user, string $kind, string $text, string $translation): string
+{
+    $termId = duePoolTerm($user, 'en', 'ru', $text, $translation);
+    DB::table('terms')->where('id', $termId)->update(['kind' => $kind, 'is_line' => $kind === 'line']);
+
+    return $termId;
+}
+
+it('never tops a plan day up with a LINE out of another plan, as a task or as an option', function () {
+    // The live shape: «Hi, I'm Alex, and I work as a backend developer.» — the learner's own word,
+    // their own pair, their own pool — dealt inside a HOLIDAY plan as something to study, out of an
+    // interview plan they had abandoned. A line is a turn in one conversation; away from it there
+    // is nowhere to say it.
+    [$user, $token, $planId] = startedPlan($this);
+
+    $line = duePlanTerm($user, 'line', "Hi, I'm Alex, and I work as a backend developer.", 'Привет, я Алекс, и я работаю бэкенд-разработчиком.');
+    $word = duePlanTerm($user, 'word', 'boarding pass', 'посадочный талон');
+
+    $session = planSession($this, $token, $planId);
+
+    $dealt = array_column(array_column($session['tasks'], 'card'), 'term_id');
+    expect($dealt)->not->toContain($line)
+        // …and a WORD of another plan is exactly what the bucket is for. It still travels.
+        ->and($dealt)->toContain($word);
+
+    // Nor as a wrong answer: the line was hydrated beside the day's own content, which made it a
+    // distractor candidate before it was ever dealt.
+    $lineText = "Hi, I'm Alex, and I work as a backend developer.";
+    foreach ($session['tasks'] as $task) {
+        expect($task['card']['options'] ?? [])->not->toContain($lineText);
+    }
+});
+
+it('offers a word no line as a wrong answer, whatever the session is carrying', function () {
+    // «passport» offered «Hello. Do you have a reservation?» — not a wrong answer but a different
+    // kind of question, and one that gives the right one away by length alone.
+    [, $token, $planId] = startedPlan($this);
+
+    $session = planSession($this, $token, $planId);
+
+    $kinds = DB::table('terms')->pluck('kind', 'text')->all();
+    $seen = 0;
+    foreach ($session['tasks'] as $task) {
+        $target = $kinds[$task['card']['answer']] ?? null;
+        if ($target === 'line' || $task['card']['options'] === null) {
+            continue;
+        }
+        foreach ($task['card']['options'] as $option) {
+            expect($kinds[$option] ?? null)->not->toBe('line');
+            $seen++;
+        }
+    }
+
+    expect($seen)->toBeGreaterThan(0);   // guard: the session really did deal option cards
+});

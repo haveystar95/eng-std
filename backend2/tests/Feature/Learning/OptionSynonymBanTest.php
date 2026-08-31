@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -48,7 +49,7 @@ function optionsFor(string $targetId): array
 {
     $pool = [$targetId, ...DB::table('terms')->where('id', '<>', $targetId)->pluck('id')->all()];
 
-    return app(DistractorReader::class)->forTarget(TermId::fromString($targetId), array_map('strval', $pool), 3);
+    return app(DistractorReader::class)->forTarget(UserId::fromString(Ulid::generate()), TermId::fromString($targetId), array_map('strval', $pool), 3);
 }
 
 it('never offers a synonym of the term as a wrong answer', function () {

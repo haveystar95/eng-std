@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,7 +43,7 @@ it('never puts two translation twins on one card', function () {
     seedTwinTerm('boarding pass', 'посадочный талон');
 
     $pool = [$target, ...DB::table('terms')->where('id', '<>', $target)->pluck('id')->all()];
-    $options = app(DistractorReader::class)->forTarget(TermId::fromString($target), array_map('strval', $pool), 3);
+    $options = app(DistractorReader::class)->forTarget(UserId::fromString(Ulid::generate()), TermId::fromString($target), array_map('strval', $pool), 3);
 
     $twins = array_intersect($options, ['check-in desk', 'front desk']);
     expect(count($twins))->toBeLessThanOrEqual(1, 'one meaning, one option');
@@ -55,7 +56,7 @@ it('still drops an option that means the same as the PROMPT', function () {
     seedTwinTerm('boarding pass', 'посадочный талон');
 
     $pool = [$target, ...DB::table('terms')->where('id', '<>', $target)->pluck('id')->all()];
-    $options = app(DistractorReader::class)->forTarget(TermId::fromString($target), array_map('strval', $pool), 3);
+    $options = app(DistractorReader::class)->forTarget(UserId::fromString(Ulid::generate()), TermId::fromString($target), array_map('strval', $pool), 3);
 
     expect($options)->not->toContain('How much does this cost?');
 });
@@ -68,7 +69,7 @@ it('still fills the card when the meanings are all different', function () {
     seedTwinTerm('towel', 'полотенце');
 
     $pool = [$target, ...DB::table('terms')->where('id', '<>', $target)->pluck('id')->all()];
-    $options = app(DistractorReader::class)->forTarget(TermId::fromString($target), array_map('strval', $pool), 3);
+    $options = app(DistractorReader::class)->forTarget(UserId::fromString(Ulid::generate()), TermId::fromString($target), array_map('strval', $pool), 3);
 
     expect($options)->toHaveCount(3);
 });

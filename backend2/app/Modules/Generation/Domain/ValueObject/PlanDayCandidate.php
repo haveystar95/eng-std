@@ -12,6 +12,10 @@ final readonly class PlanDayCandidate
      * @param  list<string>  $goalTerms    Latin-alphabet names the learner typed. They stay
      *                                     verbatim in BOTH languages, so they are the one
      *                                     legitimate reason for foreign letters in a key.
+     * @param  list<string>  $entityNames  the people and things the skeleton named — «Иванов»,
+     *                                     «доктор Ионеску». They belong in the FILLER of a line,
+     *                                     never on a card of their own: a surname is not vocabulary
+     *                                     ({@see \App\Modules\Generation\Domain\Service\PlanDayValidator::TERM_IS_A_NAME}).
      * @param  list<string>  $openingLines what the day's interlocutors actually say, verbatim from
      *                                     the skeleton. A line marked `speaker: role` has to be one
      *                                     of these — the conversation the learner will hold starts
@@ -30,5 +34,6 @@ final readonly class PlanDayCandidate
         public array $goalTerms,
         public array $openingLines,
         public array $items,
+        public array $entityNames = [],
     ) {}
 }

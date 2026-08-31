@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -18,6 +19,7 @@ it('picks other target texts as distractors and drops translation near-duplicate
     $bank = addWordTo($col, $user->id, 'bank', 'банк');
 
     $distractors = app(DistractorReader::class)->forTarget(
+        UserId::fromString($user->id),
         TermId::fromString($withdrawCash),
         [$withdrawCash, $deposit, $bank],
         3,

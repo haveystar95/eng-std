@@ -291,6 +291,20 @@ final readonly class BuildPlanSessionHandler
      * Everything else has to match BOTH halves: the term's own language is what the learner would
      * have to say, and the support language is what the card would ask in.
      *
+     * ## AND A LINE OF ANOTHER PLAN IS NEVER TOPPED UP
+     *
+     * The pair filter alone left the worse half of the incident standing. «Hi, I'm Alex, and I work
+     * as a backend developer.» is English, in the learner's own `ru→en` pair, and their own word —
+     * so it passed — and it arrived in a HOLIDAY plan as a task to be studied, mid-lesson, out of an
+     * interview plan they had abandoned. A `line` is a turn in ONE conversation; away from that
+     * conversation it is a sentence with nowhere to be said. Words and connectors travel — that is
+     * what vocabulary is — and lines are revised inside their own plan or not at all.
+     *
+     * A term with NO `kind` travels too: that is ordinary vocabulary, written before plans existed
+     * or saved by hand, and «a plan does not suspend the rest of the learner's vocabulary» is the
+     * whole reason this bucket exists. The rule excludes lines, not everything that is not a
+     * plan's word.
+     *
      * @param  list<DueTermView>  $due
      * @param  array<string, PlanTermStanding>  $standings  every term this plan stands on
      * @return list<DueTermView>
@@ -318,6 +332,7 @@ final readonly class BuildPlanSessionHandler
         foreach ($foreign as $termId) {
             $view = $content[$termId] ?? null;
             $keep[$termId] = $view !== null
+                && $view->kind !== PlanStageLadder::KIND_LINE
                 && self::langKey($view->lang) === $target
                 && self::langKey($langs->for($termId)) === $support;
         }
