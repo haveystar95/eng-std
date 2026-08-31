@@ -48,13 +48,28 @@ interface PlanDayDefectReporter
     public function droppedTransliterations(): int;
 
     /**
-     * The day was written, and this is what was wrong with it anyway.
+     * This is what was wrong with the shape of an answer, whether or not the answer was written.
+     *
+     * LOGGED ON EVERY ATTEMPT, COUNTED ONLY ON THE ONE THAT WAS ACCEPTED. The two halves answer
+     * two different questions and neither answer is the other's. The log answers «what did the
+     * model actually write?» — and a day refused for a fatal defect is exactly when that question
+     * is hardest to answer, since the answer is thrown away and nothing else records its shape.
+     * The counter answers «how often does a day the learner GOT come out weak?», and counting
+     * refused attempts in it would make it climb every time the machine correctly said no.
      *
      * @param  string  $counter  one of the counter names on
      *                           {@see \App\Modules\Generation\Domain\Service\PlanDayValidator}
-     *                           (`plan_day_formula_cap`, `plan_day_no_question`, `plan_day_no_repair`)
+     *                           (`plan_day_formula_cap`, `plan_day_no_question`,
+     *                           `plan_day_no_repair`, `plan_day_filler_mismatch`)
+     * @param  bool  $counted    true when this attempt was accepted and the day was written
      */
-    public function warned(string $planId, int $dayIndex, string $counter, string $detail): void;
+    public function warned(
+        string $planId,
+        int $dayIndex,
+        string $counter,
+        string $detail,
+        bool $counted,
+    ): void;
 
     /** How many times this counter has been raised since it was last reset. For the report. */
     public function warnings(string $counter): int;

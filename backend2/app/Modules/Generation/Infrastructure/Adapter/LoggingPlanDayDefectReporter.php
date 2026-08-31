@@ -48,16 +48,29 @@ final class LoggingPlanDayDefectReporter implements PlanDayDefectReporter
         return $this->count(self::TRANSLITERATION_DROPPED);
     }
 
-    public function warned(string $planId, int $dayIndex, string $counter, string $detail): void
-    {
-        // Same level as a dropped hint and for the same reason: the learner got a day that is
-        // quietly worse than the one the prompt promised, and nobody but the log will say so.
-        Log::warning('Plan day was written with a shape defect', [
+    public function warned(
+        string $planId,
+        int $dayIndex,
+        string $counter,
+        string $detail,
+        bool $counted,
+    ): void {
+        // ALWAYS LOGGED. Same level as a dropped hint and for the same reason: nobody but the log
+        // will say what the answer actually looked like — and on a REFUSED attempt the log is the
+        // only place it will ever be said, because the answer itself is thrown away.
+        Log::warning('Plan day answer has a shape defect', [
             'counter' => $counter,
             'plan_id' => $planId,
             'day_index' => $dayIndex,
             'detail' => $detail,
+            'written' => $counted,
         ]);
+
+        // COUNTED ONLY WHEN THE DAY WAS WRITTEN. The counter measures how often a day the learner
+        // GOT is weak; a refused attempt is the machine working, not a weak day shipping.
+        if (! $counted) {
+            return;
+        }
 
         Cache::add($counter, 0);
         Cache::increment($counter);

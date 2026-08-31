@@ -54,9 +54,11 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  *
  * **A connector lives in a frame, not in its hole.** Four answers in a row built the frame AROUND
  * the connector — «I mainly work with ___» — and that is how the language works, not a mistake.
- * So a chunk's example must be a frame of this day CONTAINING it anywhere ({@see CHUNK_WITHOUT_FRAME}),
- * with the extra condition that earns the card its slot: the result may not be a line of the day
- * repeated. The «in the hole» rule stays for `words` and only for them.
+ * So a chunk's example must CONTAIN a frame of this day that carries it anywhere
+ * ({@see CHUNK_WITHOUT_FRAME}) — containment, on exactly the terms a word's example is judged by,
+ * so «I mainly work with Laravel, mostly.» is a legitimate example and not a near miss. The extra
+ * condition is what earns the card its slot: the sentence may not be a line of the day repeated.
+ * The «in the hole» rule stays for `words` and only for them.
  *
  * ## Three things are now WARNED about rather than refused
  *
@@ -794,11 +796,14 @@ final class PlanDayValidator
             }
 
             foreach ($allFrames as $frame) {
-                if (! $this->exampleIsFrame($frame, $item->example)) {
-                    continue;
+                // The connector in the HOLE — the same containment check a word gets.
+                if ($this->exampleUsesFrame($frame, $item->text, $item->example)) {
+                    continue 2;
                 }
+                // The connector in the FIXED part: the example has to carry the whole frame, with
+                // something in its hole, and may carry more besides.
                 if ($this->frameHolds($frame, $item->text)
-                    || $this->exampleUsesFrame($frame, $item->text, $item->example)) {
+                    && $this->exampleContainsFrame($frame, $item->example)) {
                     continue 2;
                 }
             }
@@ -813,12 +818,32 @@ final class PlanDayValidator
         return $violations;
     }
 
-    /** Is `$example` this frame, filled — or the formula itself when the frame has no slot? */
-    private function exampleIsFrame(string $frame, string $example): bool
+    /**
+     * Does `$example` CONTAIN this frame, filled with something — or contain the formula itself?
+     *
+     * Containment and not equality, which is the same rule a word's example lives by. It was
+     * equality for one commit and that was wrong in a way that only shows up on real sentences:
+     * «I mainly work with Laravel, mostly.» is the frame «I mainly work with ___» with a detail
+     * added, which is exactly what the prompt asks an example to be, and an anchored comparison
+     * refused it. The whole frame still has to be there — a frame with a fixed tail («…every day»)
+     * is not carried by an example that drops the tail.
+     *
+     * The slot is lazy on purpose: a greedy one would let the hole swallow the frame's own tail
+     * and match a sentence that never finished the frame.
+     */
+    private function exampleContainsFrame(string $frame, string $example): bool
     {
-        return str_contains($frame, self::SLOT)
-            ? $this->fillsFrame($frame, $example)
-            : $this->normalize($frame) === $this->normalize($example);
+        $normalizedExample = $this->normalize($example);
+
+        if (! str_contains($frame, self::SLOT)) {
+            $needle = $this->normalize($frame);
+
+            return $needle !== '' && str_contains($normalizedExample, $needle);
+        }
+
+        $pattern = $this->framePattern($frame, '.+?');
+
+        return $pattern !== null && preg_match('/' . $pattern . '/u', $normalizedExample) === 1;
     }
 
     /**
@@ -838,19 +863,6 @@ final class PlanDayValidator
         $haystack = ' ' . $this->normalize(str_replace(self::SLOT, ' ', $frame)) . ' ';
 
         return str_contains($haystack, ' ' . $needle . ' ');
-    }
-
-    /**
-     * Is `$text` the frame with SOMETHING in its slot?
-     *
-     * Compared on content and not on characters: case folded, punctuation flattened to spaces,
-     * whitespace collapsed. A line that differs from its frame by a full stop is the same line.
-     */
-    private function fillsFrame(string $frame, string $text): bool
-    {
-        $pattern = $this->framePattern($frame, '.+');
-
-        return $pattern !== null && preg_match('/^' . $pattern . '$/u', $this->normalize($text)) === 1;
     }
 
     /** Does `$example` contain this frame with `$term` in the slot? */

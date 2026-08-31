@@ -172,18 +172,19 @@ final readonly class PlanDayComposer
             )), 0, 500),
         ));
 
-        // WHAT THE DAY GOT AWAY WITH. Only on an ACCEPTED answer: a refused attempt is thrown away
-        // whole, and counting its shape defects would make the counters measure how often the
-        // machine refuses rather than how often a written day is weak.
-        if ($violations === []) {
-            foreach ($this->validator->warnings($candidate) as $warning) {
-                $this->defects->warned(
-                    $brief->planId,
-                    $brief->dayIndex,
-                    $warning->code,
-                    $warning->detail,
-                );
-            }
+        // WHAT THE ANSWER GOT AWAY WITH — reported for EVERY attempt, counted only for the one
+        // that was written. A refused answer is thrown away whole, so the log is the only place
+        // its shape is ever recorded, and «the day that failed twice — what did it look like?» is
+        // precisely the question the live runs kept having to answer from the model's raw output.
+        // The counters stay a measure of weak days SHIPPED, not of the machine refusing.
+        foreach ($this->validator->warnings($candidate) as $warning) {
+            $this->defects->warned(
+                $brief->planId,
+                $brief->dayIndex,
+                $warning->code,
+                $warning->detail,
+                counted: $violations === [],
+            );
         }
 
         // THE HINT IS NORMALISED ON THE WAY IN — the validator's own repair, applied once, so the

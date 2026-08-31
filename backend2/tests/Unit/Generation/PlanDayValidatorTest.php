@@ -401,18 +401,19 @@ it('refuses a WORD that sits in the FIXED part of a frame instead of its hole', 
         ->toContain(PlanDayValidator::SUBSTITUTION_WITHOUT_FRAME);
 });
 
-it('lets a CONNECTOR live in the fixed part of a frame — that is where the language puts it', function () {
-    // The live «собеседование» refusal, four times over: «I mainly work with ___» beside the chunk
-    // «work with». v0.2 called that a defect; it is how a phrasal verb is used. What is checked
-    // instead is that the example is a frame of the day containing the connector, with a filler
-    // that is not the line's own.
-    $ok = candidate('s2-day1.v0.3.json', 's2-outline.v0.2.json', 3, static function (array $items): array {
+/**
+ * s2 with the frame built AROUND a connector — the live «собеседование» shape — and the connector's
+ * example set to `$example`.
+ */
+function connectorInTheFixedPart(string $frame, string $example): PlanDayCandidate
+{
+    return candidate('s2-day1.v0.3.json', 's2-outline.v0.2.json', 3, static function (array $items) use ($frame, $example): array {
         $items = withCard(6, [
-            'frame' => 'I mainly work with ___ every day.',
+            'frame' => $frame,
             'filler' => 'the payment module',
-            'translation' => 'Я в основном каждый день работаю с модулем оплаты.',
-            'transliteration' => 'ай мэйнли уорк уиз зэ пэймент модьюл эври дэй',
-            'example' => 'I mainly work with the payment module every day, with one colleague.',
+            'translation' => 'Я в основном работаю с модулем оплаты.',
+            'transliteration' => 'ай мэйнли уорк уиз зэ пэймент модьюл',
+            'example' => 'I mainly work with the payment module, day in day out.',
         ])($items);
 
         return withCard(12, [
@@ -420,12 +421,40 @@ it('lets a CONNECTOR live in the fixed part of a frame — that is where the lan
             'translation' => 'работать с',
             'transliteration' => 'уорк уиз',
             'description' => 'To spend your working time on one system rather than another.',
-            'example' => 'I mainly work with queues every day.',
-            'exampleTranslation' => 'Я в основном каждый день работаю с очередями задач.',
+            'example' => $example,
+            'exampleTranslation' => 'Я в основном работаю с этим.',
         ])($items);
     });
+}
 
-    expect($this->validator->validate($ok))->toBe([]);
+it('lets a CONNECTOR live in the fixed part of a frame — that is where the language puts it', function () {
+    // The live «собеседование» refusal, four times over: «I mainly work with ___» beside the chunk
+    // «work with». v0.2 called that a defect; it is how a phrasal verb is used. What is checked
+    // instead is that the example CONTAINS a frame of the day carrying the connector, and is not a
+    // line of the day repeated.
+    expect($this->validator->validate(
+        connectorInTheFixedPart('I mainly work with ___.', 'I mainly work with queues.'),
+    ))->toBe([]);
+});
+
+it('lets a connector`s example add a detail, exactly as a word`s may', function () {
+    // Containment and not equality. This sentence is the frame plus «, mostly» — which is what the
+    // prompt asks an example to be — and one commit of anchored comparison refused it.
+    expect($this->validator->validate(
+        connectorInTheFixedPart('I mainly work with ___.', 'I mainly work with Laravel, mostly.'),
+    ))->toBe([]);
+});
+
+it('still wants the WHOLE frame in a connector`s example, tail included', function () {
+    // Containment is of the frame, not of its beginning: an example that drops the frame's fixed
+    // tail is not that frame with a detail added, it is a different sentence.
+    $broken = connectorInTheFixedPart(
+        'I mainly work with ___ every day.',
+        'I mainly work with Laravel, mostly.',
+    );
+
+    expect(dayCodes($this->validator->validate($broken)))
+        ->toContain(PlanDayValidator::CHUNK_WITHOUT_FRAME);
 });
 
 it('refuses a connector whose example is a line of the day, word for word', function () {

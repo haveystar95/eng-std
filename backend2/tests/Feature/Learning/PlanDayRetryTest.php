@@ -46,6 +46,10 @@ beforeEach(function (): void {
     // «the second attempt was told about A» is only observable when the second attempt fails on B.
     $withoutPicture = $day;
     $withoutPicture['words'][0]['image_api_prompt'] = '';
+    // …and, on the same answer, a SHAPE defect that is only ever a warning: the day's one question
+    // and its one repair move are the same line, and this replaces it with a statement. A refused
+    // answer is thrown away, so the log is the only place that fact can survive.
+    $withoutPicture['phrases'][3]['frame'] = 'I would like to check in, please.';
 
     $withStrayFiller = $day;
     $withStrayFiller['phrases'][1]['filler'] = 'ten past nine';   // no card of this day says that
@@ -96,6 +100,45 @@ beforeEach(function (): void {
         }
     };
 
+    // A reporter that keeps what it was told, so «логируется на каждой попытке, считается только у
+    // принятой» can be asserted rather than read off the log by hand.
+    $this->defects = new class implements PlanDayDefectReporter
+    {
+        /** @var list<array{counter: string, counted: bool}> */
+        public array $warnings = [];
+
+        public function transliterationDropped(
+            string $planId,
+            int $dayIndex,
+            string $text,
+            ?string $raw,
+            string $reason,
+        ): void {}
+
+        public function droppedTransliterations(): int
+        {
+            return 0;
+        }
+
+        public function warned(
+            string $planId,
+            int $dayIndex,
+            string $counter,
+            string $detail,
+            bool $counted,
+        ): void {
+            $this->warnings[] = ['counter' => $counter, 'counted' => $counted];
+        }
+
+        public function warnings(string $counter): int
+        {
+            return count(array_filter(
+                $this->warnings,
+                static fn (array $w): bool => $w['counter'] === $counter && $w['counted'],
+            ));
+        }
+    };
+
     $prompts = new PlanPromptLibrary();
     $ledger = app(RecordsPlanSpend::class);
 
@@ -104,7 +147,7 @@ beforeEach(function (): void {
         $this->model,
         $prompts,
         $ledger,
-        app(PlanDayDefectReporter::class),
+        $this->defects,
     ));
 });
 
@@ -166,4 +209,14 @@ it('spends exactly two calls on a day that fails twice, and tells the second one
         ->and($spend[0]->error)->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING)
         ->and($spend[1]->error)->toContain(PlanDayValidator::FILLER_NOT_A_CARD)
         ->and($spend->pluck('purpose')->unique()->all())->toBe(['plan']);
+
+    // THE SHAPE OF A REFUSED ANSWER IS STILL VISIBLE. The first answer had no question and no
+    // repair move; that day was thrown away, so this report is the only record it ever leaves —
+    // and it is NOT counted, because the counters measure weak days the learner actually got.
+    $reported = array_column($this->defects->warnings, 'counter');
+
+    expect($reported)->toContain(PlanDayValidator::NO_QUESTION)
+        ->and($reported)->toContain(PlanDayValidator::NO_REPAIR)
+        ->and(array_column($this->defects->warnings, 'counted'))->not->toContain(true)
+        ->and($this->defects->warnings(PlanDayValidator::NO_QUESTION))->toBe(0);
 });
