@@ -137,3 +137,51 @@ it('counts the day out of its own material when nothing else is due', function (
     expect($session['day_task_count'])->toBe(count($session['tasks']))
         ->and(array_column($session['tasks'], 'section'))->each->toBe(PlanSessionTaskView::SECTION_DAY);
 });
+
+// ── the day is judged when the sitting ENDS ───────────────────────────────────────────────────
+
+it('marks the day passed as soon as its session is completed, without building another one', function () {
+    // The live shape of the complaint: sixty-three exercises answered, «День 1 пройден» on the
+    // client, and a plan card that still said «День 1 из 5». The verdict was derived correctly and
+    // only ever WRITTEN while assembling the next session, so nobody had asked for it yet.
+    [, $token, $planId] = startedPlan($this);
+
+    $session = planSession($this, $token, $planId);
+    answerTasks($this, $token, $session);
+
+    expect(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('status'))
+        ->toBe('ready');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/study/sessions/{$session['session_id']}/complete", [
+            'ended_at' => now()->toIso8601String(),
+        ])
+        ->assertOk();
+
+    // NO second session built — this is the whole point.
+    expect(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('status'))
+        ->toBe('done');
+});
+
+it('leaves the day alone when the sitting ended with a word still owed a card', function () {
+    // One card answered wrong is what actually kept the live day open, and it SHOULD keep it open:
+    // stage A closes when every word of the day has closed it.
+    [, $token, $planId] = startedPlan($this);
+
+    $session = planSession($this, $token, $planId);
+    // Everything except the last task of the day.
+    $partial = [
+        'session_id' => $session['session_id'],
+        'tasks' => array_slice($session['tasks'], 0, max(0, count($session['tasks']) - 1)),
+    ];
+    answerTasks($this, $token, $partial);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/study/sessions/{$session['session_id']}/complete", [
+            'ended_at' => now()->toIso8601String(),
+        ])
+        ->assertOk();
+
+    expect(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('status'))
+        ->toBe('ready');
+});

@@ -12,7 +12,6 @@ use App\Modules\Learning\Application\Dto\PlanSessionTaskView;
 use App\Modules\Learning\Application\Dto\PlanSessionView;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\HomePlanReader;
-use App\Modules\Learning\Application\Port\DispatchesPlanDay;
 use App\Modules\Learning\Application\Port\ModeAdmissionReader;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Query\GetDueTerms;
@@ -20,6 +19,7 @@ use App\Modules\Learning\Application\Query\GetDueTermsHandler;
 use App\Modules\Learning\Application\Query\GetPracticeTerms;
 use App\Modules\Learning\Application\Query\GetPracticeTermsHandler;
 use App\Modules\Learning\Application\Service\CardLanguageResolver;
+use App\Modules\Learning\Application\Service\PlanDayPassing;
 use App\Modules\Learning\Application\Service\PlanProgress;
 use App\Modules\Learning\Application\Service\StudyCardAssembler;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
@@ -112,7 +112,6 @@ final readonly class BuildPlanSessionHandler
         private PlanRepository $plans,
         private PlanDayRepository $days,
         private PlanProgress $progress,
-        private DispatchesPlanDay $dispatcher,
         private PlanModeSettingsReader $planSettings,
         private GetDueTermsHandler $dueTerms,
         private GetPracticeTermsHandler $practiceTerms,
@@ -126,6 +125,12 @@ final readonly class BuildPlanSessionHandler
         private StudySessionRepository $sessions,
         private TransactionManager $tx,
         private Clock $clock,
+        /**
+         * «День пройден», written by the same code that writes it when a sitting ENDS
+         * ({@see PlanDayPassing}). It used to be a private method here, which is why a day the
+         * learner had just finished stayed `ready` until they opened the next session.
+         */
+        private PlanDayPassing $passing,
         private PlanDayOrder $order = new PlanDayOrder(),
     ) {}
 
@@ -144,8 +149,7 @@ final readonly class BuildPlanSessionHandler
         // The focus has moved past every day the learner has finished. Written here — in the command
         // path, never on a read — so the generation policy (which queues day n+1 when day n is DONE)
         // and the screen agree about what is finished.
-        $computed = $plan->computed();
-        $this->markPassedDays($days, $progress, is_int($computed['intro_days'] ?? null) ? $computed['intro_days'] : 1);
+        $this->passing->mark($plan, $days, $progress);
 
         $strict = $dayIndex === $progress->focusDayIndex && $day->kind() === PlanDayKind::Intro;
         $knobs = $this->planSettings->knobsFor($plan->level());
@@ -669,55 +673,6 @@ final readonly class BuildPlanSessionHandler
         }
 
         return null;
-    }
-
-    /**
-     * Write `done` onto every day whose words have all closed stage A.
-     *
-     * A CACHE of the derived answer, and the reason it is written at all is the generation policy:
-     * day n+1 is queued when day n is done, and a queue cannot subscribe to a projection. Writing it
-     * here — in the command path — is what keeps a read from mutating.
-     *
-     * @param  list<PlanDay>  $days
-     */
-    private function markPassedDays(array $days, PlanProgressView $progress, int $introDays): void
-    {
-        $toMark = [];
-        foreach ($days as $day) {
-            $view = $progress->days[$day->dayIndex()] ?? null;
-            if ($view !== null && $view->passed && $day->status() !== PlanDayStatus::Done) {
-                $toMark[] = $day;
-            }
-        }
-        if ($toMark === []) {
-            return;
-        }
-
-        $this->tx->run(function () use ($toMark): void {
-            foreach ($toMark as $day) {
-                $day->markDone();
-                $this->days->save($day);
-            }
-        });
-
-        // A day just became DONE, which is the event the generation policy waits for: the next day
-        // is queued now, and only now. Outside the transaction, because a worker can pick a job up
-        // before the commit lands — and after the marking, because the policy reads the statuses
-        // this loop just changed.
-        $fresh = $this->days->listForPlan($toMark[0]->planId());
-        foreach ($toMark as $day) {
-            $next = PlanGenerationPolicy::nextAfterDone(
-                $fresh,
-                $day->dayIndex(),
-                $progress->focusDayIndex,
-                $introDays,
-            );
-            if ($next !== null) {
-                $this->dispatcher->dispatchDay($day->planId()->value, $next);
-
-                return;
-            }
-        }
     }
 
     /** @param list<PlanSessionTaskView> $tasks */
