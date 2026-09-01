@@ -233,7 +233,13 @@ final class FakePlanContentModel implements ContentModelPort
             // A day with no substitutions at all has nothing to paste, so its lines are formulas.
             // That is over the formula cap and the cap is a WARNING since v0.3, which is exactly
             // the behaviour this double should exercise: the day is written anyway.
-            $filler = $cards === [] ? '' : $cards[($i - 1) % count($cards)][0];
+            $card = $cards === [] ? null : $cards[($i - 1) % count($cards)];
+            $filler = $card === null ? '' : $card[0];
+            // THE FILLER'S OWN RUSSIAN, INSIDE THE LINE'S RUSSIAN. The gate added by PLAN-FIX-4
+            // (`line.translation_missing_key`) refuses a line whose translation renders everything
+            // except the word it drills, and it is right to: the learner reads that Russian and has
+            // no way to know what to say. A double whose days the real gates refuse tests the gates.
+            $key = $card === null ? '' : ", про «{$card[1]}»";
             $lines[] = [
                 'frame' => $cards === []
                     ? "Day {$day} line {$i}{$mark}."
@@ -242,7 +248,7 @@ final class FakePlanContentModel implements ContentModelPort
                 'speaker' => 'learner',
                 'type' => 'phrase',
                 'is_line' => true,
-                'translation' => "День {$day}, реплика номер {$i}.",
+                'translation' => "День {$day}, реплика номер {$i}{$key}.",
                 'transliteration' => 'дэй лайн эбаут',
                 'description' => "Somebody says it at moment {$i} of conversation {$day}.",
                 'example' => "Day {$day} line {$i}{$mark} said out loud, about {$filler}.",

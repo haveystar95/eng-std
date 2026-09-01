@@ -735,9 +735,49 @@ it('leaves an abbreviation, a code and a goal term alone in a key', function (st
     expect($this->validator->validate($ok))->toBe([]);
 })->with([
     ['снимок MRI поясницы', []],
-    ['место 14A в очереди', []],
+    // Every one of these still SAYS «поясница». Card 8 is the key of a line, and since PLAN-FIX-4 a
+    // key whose Russian shares nothing with its line's Russian is a violation of its own
+    // ({@see PlanDayValidator::TRANSLATION_MISSING_KEY}) — a fixture that drops the word would be
+    // testing that gate here instead of the alphabet one.
+    ['поясница, место 14A в очереди', []],
     ['поясница по Laravel-методике', ['Laravel']],
 ]);
+
+it('refuses a line whose Russian does not carry its own key', function () {
+    // PLAN-FIX-4 п. 1.5. Line 1 drills «half past nine» / «полдесятого»; a Russian prompt that never
+    // says it asks the learner to produce a word nothing on the screen pointed at, and the «Не то»
+    // that follows is the card's fault, not theirs.
+    // The flattened list starts with `phrases`, so a line's index in it is its own index.
+    $broken = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(1, [
+        'translation' => 'У меня всё в порядке.',
+    ]));
+
+    $violations = $this->validator->validate($broken);
+
+    expect(dayCodes($violations))->toContain(PlanDayValidator::TRANSLATION_MISSING_KEY);
+
+    // CARDED, which is the difference between one short repair call and the whole day paid for
+    // again — the address is what P2R merges by.
+    $addressed = array_values(array_filter(
+        $violations,
+        static fn (PlanViolation $v): bool => $v->code === PlanDayValidator::TRANSLATION_MISSING_KEY,
+    ));
+    expect($addressed[0]->isAddressed())->toBeTrue()
+        ->and($addressed[0]->array)->toBe('phrases')
+        ->and($addressed[0]->index)->toBe(1)
+        ->and($addressed[0]->field)->toBe('translation');
+});
+
+it('says nothing about a formula that has no key to carry', function () {
+    // «Could you repeat that, please?» stands on no card of the day. There is no piece to find in
+    // its Russian, and a gate that cannot see must not refuse.
+    $ok = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(3, [
+        'translation' => 'Совсем другое предложение.',
+    ]));
+
+    expect(dayCodes($this->validator->validate($ok)))
+        ->not->toContain(PlanDayValidator::TRANSLATION_MISSING_KEY);
+});
 
 // ── the reading hint: repaired, never fatal ───────────────────────────────────────────────────
 

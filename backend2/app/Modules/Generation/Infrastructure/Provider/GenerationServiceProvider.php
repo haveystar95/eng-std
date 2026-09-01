@@ -626,8 +626,9 @@ final class GenerationServiceProvider extends ServiceProvider
     private function planDayValidator(): \App\Modules\Generation\Domain\Service\PlanDayValidator
     {
         $configured = config('generation.plan.day.repair_markers');
+        $presence = $this->translationKeyPresence();
         if (! is_array($configured)) {
-            return new \App\Modules\Generation\Domain\Service\PlanDayValidator();
+            return new \App\Modules\Generation\Domain\Service\PlanDayValidator(keyPresence: $presence);
         }
 
         $markers = [];
@@ -641,7 +642,31 @@ final class GenerationServiceProvider extends ServiceProvider
             ));
         }
 
-        return new \App\Modules\Generation\Domain\Service\PlanDayValidator(repairMarkers: $markers);
+        return new \App\Modules\Generation\Domain\Service\PlanDayValidator(
+            repairMarkers: $markers,
+            keyPresence: $presence,
+        );
+    }
+
+    /**
+     * The stem lengths the translation gate compares by — a judgement about a language, so config,
+     * for the same reason the repair phrases are. A language absent from the map is not judged.
+     */
+    private function translationKeyPresence(): \App\Modules\Generation\Domain\Service\TranslationKeyPresence
+    {
+        $configured = config('generation.plan.day.translation_stems');
+        if (! is_array($configured)) {
+            return new \App\Modules\Generation\Domain\Service\TranslationKeyPresence();
+        }
+
+        $stems = [];
+        foreach ($configured as $lang => $length) {
+            if (is_string($lang) && is_int($length) && $length > 0) {
+                $stems[mb_strtolower($lang)] = $length;
+            }
+        }
+
+        return new \App\Modules\Generation\Domain\Service\TranslationKeyPresence($stems);
     }
 
     private function planModel(): \App\Modules\Generation\Application\Port\ContentModelPort

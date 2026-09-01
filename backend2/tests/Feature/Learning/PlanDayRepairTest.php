@@ -168,6 +168,33 @@ it('repairs ONE broken card with one short call and leaves the other thirteen al
         ->and($spend->pluck('purpose')->unique()->all())->toBe(['plan']);
 });
 
+it('sends a line whose Russian lost its key to P2R, not the whole day back', function () {
+    // PLAN-FIX-4 п. 1.5, the стык: `line.translation_missing_key` is a CARDED violation, so it buys
+    // one short call about one line — not a second full day, which is what an unaddressed code costs.
+    $broken = $this->day;
+    // The line drills «half past nine» / «полдесятого» and its Russian now says nothing of the kind:
+    // the learner would read the question and have no way to know which word to produce.
+    $broken['phrases'][1]['translation'] = 'У меня всё в порядке.';
+
+    $fixed = $this->day['phrases'][1];   // the same line, with its Russian back
+
+    [$planId, $model] = runPlanWith(
+        new ScriptedPlanModel([$broken], [['cards' => [['array' => 'phrases', 'index' => 1, 'card' => $fixed]]]]),
+        $this->defects,
+    );
+
+    $row = dayRow($planId);
+
+    expect($model->repairCalls())->toBe(1)
+        ->and($row->status)->toBe('ready')
+        // ONE day call: the day was never asked for again.
+        ->and($row->generation_attempts)->toBe(1)
+        ->and($row->repair_calls)->toBe(1)
+        // And the model was told what was wrong with which card, by code.
+        ->and($model->repairMessages[0])->toContain(PlanDayValidator::TRANSLATION_MISSING_KEY)
+        ->and($model->repairMessages[0])->toContain('"array": "phrases"');
+});
+
 // ── (б) the repair itself comes back broken ───────────────────────────────────────────────────
 
 it('buys no second repair inside the run, and leaves the day its second DAY call', function () {

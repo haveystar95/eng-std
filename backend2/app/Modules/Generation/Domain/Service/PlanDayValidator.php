@@ -129,6 +129,20 @@ final class PlanDayValidator
     public const DESCRIPTION_GIVES_AWAY = 'day.description_gives_away';
     public const IMAGE_PROMPT_MISSING = 'day.image_prompt_missing';
 
+    /**
+     * A LINE WHOSE RUSSIAN DOES NOT CONTAIN ITS OWN KEY.
+     *
+     * The translation under a spoken line is the whole question: read this, say the English. The
+     * card is about the piece in the frame's hole ({@see PlanSpeakingKey}), so a translation that
+     * renders everything BUT that piece asks the learner to produce a word nothing on the screen
+     * pointed at. The owner's day 1 (01.09) is the measured case: «Yes, I'm looking for a place to
+     * rent for ___», and the Russian under it never said which kind of place.
+     *
+     * `line.` and not `day.`: it is about the pair (line, its key card) rather than about the day's
+     * shape, and it is the first gate of that kind. Carded, so a repair call can be pointed at it.
+     */
+    public const TRANSLATION_MISSING_KEY = 'line.translation_missing_key';
+
     /** The counters {@see warnings()} raises — named here because the Domain is what names them. */
     public const FORMULA_CAP = 'plan_day_formula_cap';
 
@@ -280,6 +294,7 @@ final class PlanDayValidator
         private readonly SupportLanguageText $supportText = new SupportLanguageText(),
         private readonly array $repairMarkers = self::DEFAULT_REPAIR_MARKERS,
         private readonly TransliteratedSameness $sameness = new TransliteratedSameness(),
+        private readonly TranslationKeyPresence $keyPresence = new TranslationKeyPresence(),
     ) {}
 
     /** @return list<PlanViolation> empty = the day may be written */
@@ -298,6 +313,7 @@ final class PlanDayValidator
             ...$this->checkExamples($day->items),
             ...$this->checkProperNouns($day),
             ...$this->checkKeys($day),
+            ...$this->checkLineTranslations($day),
             ...$this->checkPerCard($day),
         ];
     }
@@ -647,6 +663,59 @@ final class PlanDayValidator
                     'a `speaker: role` line is quoted whole, so its `filler` is empty',
                 );
             }
+        }
+
+        return $violations;
+    }
+
+    /**
+     * EVERY LINE'S RUSSIAN CARRIES ITS OWN KEY — {@see TRANSLATION_MISSING_KEY}.
+     *
+     * The key is the day's card standing in the frame's hole, or, on a formula, a card of the day
+     * standing inside the sentence ({@see PlanSpeakingKey} — one answer, shared with the writer and
+     * the grader). What is looked for is that card's OWN translation, stem by stem, because Russian
+     * inflects it: «долгое проживание в новой стране» appears in the line as «долгого проживания в
+     * новой стране» ({@see TranslationKeyPresence}).
+     *
+     * Silent where it cannot see: a language with no stem rule, a line with no key, a key card with
+     * no translation. A gate that guesses is a paid repair call spent on a card that was fine.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkLineTranslations(PlanDayCandidate $day): array
+    {
+        if (! $this->keyPresence->judges($day->supportLang)) {
+            return [];
+        }
+
+        $translations = [];
+        foreach ($day->items as $item) {
+            if ($item->kind !== PlanDayItem::KIND_LINE) {
+                $translations[$item->text] = $item->translation;
+            }
+        }
+
+        $violations = [];
+        foreach ($this->linesOf($day) as $line) {
+            $key = PlanSpeakingKey::of($line, $day->items);
+            $keyTranslation = $key === null ? null : ($translations[$key] ?? null);
+            if ($key === null || $keyTranslation === null || trim($keyTranslation) === '') {
+                continue;
+            }
+            if ($this->keyPresence->holds($day->supportLang, $line->translation, $keyTranslation)) {
+                continue;
+            }
+
+            $violations[] = PlanViolation::onCard(
+                self::TRANSLATION_MISSING_KEY,
+                $line,
+                'translation',
+                "перевод реплики не содержит перевода ключевой карточки «{$key}» "
+                . "(«{$keyTranslation}») — ученик читает вопрос, в котором не спрошено то, "
+                . 'что карточка требует произнести',
+                'the line translation does not render its key card, so the prompt does not ask for '
+                . 'the word the card grades',
+            );
         }
 
         return $violations;
