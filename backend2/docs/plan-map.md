@@ -5,7 +5,7 @@
 `docs/research/plan-*-run.md`; кто платит за какой промпт — в `docs/prompts/REGISTRY.md`.
 
 Проверено по коду на 01.09.2026 (дополнено нарядом PLAN-FIX-4: §2 лестница плана своя и порядок
-дня, §2.3 ключ говорения, §3 гейт `line.translation_missing_key`).
+дня, §2.3 ключ говорения, §3 гейт `line.translation_missing_key`; PLAN-FIX-5: §2 пол выбора).
 
 ---
 
@@ -213,11 +213,17 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 
 **Голод.** Правило читают ТРИ места, и все три через `DistractorFamily`:
 
+**Голод больше не «всё или ничего».** Число уровня (`mc_options`) — ПОТОЛОК и предпочтение; под ним
+отдельный ПОЛ — `PlanChoiceFloor`, `config/learning.php → plan.mc_min_options` = 3. Карточка, для
+которой набирается три варианта своей формы и своей длины, раздаётся с тремя; ниже трёх — выпадает
+целиком, как и раньше. Пол читают ОБА, из одного объекта: чек-лист (что карточка должна) и сборщик
+(что можно построить).
+
 | место | что делает при голоде |
 |---|---|
-| `PlanStandings::applicableFor()` | пятый фильтр: если своего семейства в терминах плана меньше `mc_options`, режимы выбора (`multiple_choice`, `description_match`) не попадают в `applicable` — карточка **не owed**, и ступень закрывается без неё. Счётчик `plan_distractor_starved` через `ModeFallbackReporter::distractorStarved()` |
-| `StudyCardAssembler::recognitionCard()` | у плана (`optionCount !== null`) возвращает `null`, если не набирается полное число; вне плана — прежнее «меньше, но не вперемешку» |
-| `StudyCardAssembler::assemble()` | у плана отказ карточки целиком, если вариантов меньше заказанного; вне плана прежний пол `MIN_OPTIONS = 2` (QA-15) |
+| `PlanStandings::applicableFor()` | пятый фильтр: если своего семейства и своей полосы в терминах ДНЯ меньше пола, режимы выбора (`multiple_choice`, `description_match`) не попадают в `applicable` — карточка **не owed**, и ступень закрывается без неё. Счётчик `plan_distractor_starved` через `ModeFallbackReporter::distractorStarved()`, и в него пишется ПОЛ, а не предпочтение |
+| `StudyCardAssembler::recognitionCard()` | у плана (`optionCount !== null`) возвращает `null`, если не набирается ПОЛ; вне плана — прежнее «меньше, но не вперемешку» |
+| `StudyCardAssembler::assemble()` | у плана отказ карточки целиком, если вариантов меньше ПОЛА; вне плана прежний пол `MIN_OPTIONS = 2` (QA-15) |
 
 Порядок важен: снятие ДО раздачи, потому что шаг чек-листа закрывается ответом, и шаг, карточку для
 которого построить нельзя, — это ступень, которая не закрывается, и день, который не проходится.
@@ -226,8 +232,8 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 собрал бы, и не имеет права попросить ту, которую он собрать не может.
 
 **Число вариантов** — `PlanKnobs::mcOptions`, конфиг уровня (DECISIONS п. 167), НЕ код:
-`zero` → 3, `basic` → 3, `conversational` → 4, `fluent` → 4. Обычная (не плановая) сессия всегда
-даёт 4 — `StudyCardAssembler::OPTION_COUNT`.
+`zero` → 3, `basic` → 3, `conversational` → 4, `fluent` → 4. Это ПРЕДПОЧТЕНИЕ; пол под ним — 3
+(DECISIONS п. 220). Обычная (не плановая) сессия всегда даёт 4 — `StudyCardAssembler::OPTION_COUNT`.
 
 **Реплика роли** (`terms.speaker = 'role'`) получает только узнавание: `PlanStandings::PRODUCTION_MODES`
 (`word_bank`, `scramble`, `typing`, `speaking`, `cloze`, `dictation`) выпадают из `applicable`.
