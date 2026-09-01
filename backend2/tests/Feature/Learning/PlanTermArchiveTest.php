@@ -125,3 +125,43 @@ it('takes the words out when a plan is abandoned, end to end', function () {
     expect(DB::table('user_term_progress')->where('user_id', $user->id)->whereIn('term_id', $dayTerms)->whereNotNull('enrolled_at')->count())
         ->toBe(0);
 });
+
+/**
+ * IN THE HANDLER, NOT IN THE COMMAND — PLAN-FIX-4 п. 1.2.
+ *
+ * `plan:archive-terms` exists because plans that ended BEFORE the archive rule did had to be
+ * cleaned up once (DECISIONS п. 214). It is a repair, and a repair that a live ending depends on is
+ * a live ending that is broken between the ending and the next time somebody remembers to run a
+ * console command. `EndPlanHandler` archives inside the same transaction that writes the status;
+ * this asserts the state the pool is in the instant the request returns, with nothing run after it.
+ */
+it('leaves no pool row standing on the ended plan alone, the instant abandon returns', function () {
+    fakePlanModel();
+    DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->update(['enabled' => true]);
+
+    [$user, $token, $planId] = startedPlan($this);
+    $source = 'plan:' . $planId;
+
+    // One word the learner ALSO keeps by hand: its own reason did not end with the plan, so the
+    // label comes off and the row stays in the pool. The rule has two halves and both are asserted.
+    $mine = (string) DB::table('collection_items')
+        ->where('collection_id', DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('collection_id'))
+        ->orderBy('position')
+        ->value('term_id');
+    DB::table('user_term_progress')->where('user_id', $user->id)->where('term_id', $mine)
+        ->update(['enrollment_sources' => json_encode([$source, 'manual'])]);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$planId}/abandon", ['reason' => 'передумал'])
+        ->assertOk();
+
+    $rows = DB::table('user_term_progress')->where('user_id', $user->id)->get(['term_id', 'enrolled_at', 'enrollment_sources']);
+
+    foreach ($rows as $row) {
+        // The label is gone from every row — nobody is left standing on an ended plan.
+        expect(json_decode((string) $row->enrollment_sources, true))->not->toContain($source);
+    }
+
+    expect(DB::table('user_term_progress')->where('user_id', $user->id)->whereNotNull('enrolled_at')->pluck('term_id')->all())
+        ->toBe([$mine]);
+});
