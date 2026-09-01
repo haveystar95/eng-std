@@ -28,8 +28,10 @@ use App\Modules\Vocabulary\Application\Query\TermContentReader;
  *
  * ## The cost, stated
  *
- * One collection read, one content read and one review-log read per introduction day — up to
- * fourteen of each ({@see \App\Modules\Learning\Domain\Service\PlanScheduler::MAX_INTRO_DAYS}). The
+ * One collection read (two since PLAN-FIX-4: the ids, and the date each of them joined — the plan
+ * ladder's cutoff, see {@see PlanStandings}), one content read and one review-log read per
+ * introduction day — up to fourteen of each
+ * ({@see \App\Modules\Learning\Domain\Service\PlanScheduler::MAX_INTRO_DAYS}). The
  * content read is per DAY rather than for the whole plan on purpose: a term's example is chosen
  * through the collection it is being shown in, and «сначала пример этого дня, иначе общий» is only
  * expressible one scope at a time.
@@ -103,6 +105,14 @@ final readonly class PlanProgress
             $content,
             $today,
             $tz,
+            // WHEN EACH CARD JOINED THIS PLAN — the line under which the review log stops being
+            // evidence about it. Read per DAY because that is the granularity the fact has: a plan
+            // day is a collection written at one instant, and a card added on day 3 has its own.
+            $this->collectionTerms->joinedAtForCollection(
+                $plan->userId(),
+                $collectionId,
+                self::TERMS_PER_DAY_CAP,
+            ),
         );
 
         return new PlanDayProgressView(

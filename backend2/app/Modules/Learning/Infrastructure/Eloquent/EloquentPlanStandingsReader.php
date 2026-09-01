@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class EloquentPlanStandingsReader implements PlanStandingsReader
 {
-    public function factsFor(UserId $user, array $termIds, DateTimeZone $tz): array
+    public function factsFor(UserId $user, array $termIds, DateTimeZone $tz, array $since = []): array
     {
         if ($termIds === []) {
             return [];
@@ -44,6 +44,14 @@ final class EloquentPlanStandingsReader implements PlanStandingsReader
         $zone = $tz->getName();
         $out = [];
         foreach ($rows as $row) {
+            $termId = (string) $row->term_id;
+            // BEFORE THIS CARD JOINED THIS PLAN — an answer given in another plan or in the
+            // learner's own notebook. Dropped here rather than in SQL: the cutoff is per TERM, and a
+            // day's worth of rows filtered in PHP costs nothing next to a two-hundred-clause OR.
+            if ($this->predates($since, $termId, (string) $row->answered_at)) {
+                continue;
+            }
+
             $mode = ExerciseMode::tryFrom((string) $row->exercise_mode);
             // A mode this build does not know — a row written by a newer deploy, read after a
             // rollback. Skipped rather than fatal, exactly as the mode settings reader does: the
@@ -52,7 +60,7 @@ final class EloquentPlanStandingsReader implements PlanStandingsReader
                 continue;
             }
 
-            $out[(string) $row->term_id][] = new PlanStageFact(
+            $out[$termId][] = new PlanStageFact(
                 mode: $mode,
                 correct: (bool) $row->is_correct,
                 localDate: $this->localDate((string) $row->answered_at, $zone),
@@ -62,7 +70,7 @@ final class EloquentPlanStandingsReader implements PlanStandingsReader
         return $out;
     }
 
-    public function introducedAmong(UserId $user, array $termIds): array
+    public function introducedAmong(UserId $user, array $termIds, array $since = []): array
     {
         if ($termIds === []) {
             return [];
@@ -73,12 +81,34 @@ final class EloquentPlanStandingsReader implements PlanStandingsReader
             DB::table('term_exposures')
                 ->where('user_id', $user->value)
                 ->whereIn('term_id', $termIds)
-                ->pluck('term_id') as $termId
+                ->get(['term_id', 'shown_at']) as $row
         ) {
-            $out[(string) $termId] = true;
+            $termId = (string) $row->term_id;
+            // The card was met, but before this plan dealt it. The plan's own intro is still owed:
+            // meeting a word in a notebook two weeks ago is not the same as being introduced to it
+            // as the first card of «Аренда жилья».
+            if ($this->predates($since, $termId, (string) $row->shown_at)) {
+                continue;
+            }
+            $out[$termId] = true;
         }
 
         return $out;
+    }
+
+    /**
+     * Is this instant earlier than the moment the card joined the plan?
+     *
+     * «No cutoff» is the wide answer on purpose ({@see PlanStandingsReader::factsFor()}): a caller
+     * that does not scope the ladder gets exactly the reading it got before scoping existed.
+     *
+     * @param  array<string, \DateTimeImmutable>  $since
+     */
+    private function predates(array $since, string $termId, string $at): bool
+    {
+        $cutoff = $since[$termId] ?? null;
+
+        return $cutoff !== null && new \DateTimeImmutable($at) < $cutoff;
     }
 
     /**

@@ -44,6 +44,31 @@ use DateTimeZone;
  * admitted). The alternative — teaching the ladder about content — would make «why is this word
  * stuck» a question with four possible answers and no way to tell them apart.
  *
+ * ## THE LADDER OF A PLAN IS THE PLAN'S OWN
+ *
+ * A standing is a projection over the review log, and the log is keyed by (user, term) — which is
+ * right, because progress is. It is NOT right as the input to a plan's ladder. Terms are globally
+ * deduplicated, so «Sorry, could you repeat that?» in a plan started today is the same row as the
+ * one a plan abandoned on Sunday used, and as the one sitting in the learner's notebook. Fed the
+ * whole log, the new plan read Sunday's answers as its own: the card opened on the assembly step
+ * with no introduction, and one card of the owner's day 1 — answered to `graduated` in a plan he
+ * cancelled that morning — owed nothing at all and vanished from the sitting (01.09, PLAN-FIX-4 Ч.0).
+ *
+ * So the ladder counts for the pair (PLAN, term): only what happened after the card joined THIS
+ * plan is evidence about it. A new card of a new plan starts at the introduction whatever the same
+ * word has been through elsewhere, and — the other half of the same sentence — the notebook's own
+ * standing is not touched, because nothing is written here at all. The cutoff is the moment the
+ * term joined the DAY'S COLLECTION ({@see \App\Modules\Collections\Application\Port\UserCollectionTermsReader::joinedAtForCollection()}),
+ * which is a date Collections already holds: a plan day IS a collection written at one instant.
+ *
+ * A cutoff rather than «answers given inside this plan's sessions» on purpose. The precise reading
+ * would scope the log by session, and a review that arrives with no session id — an offline batch
+ * replayed after a reinstall — would then close no step ever, which is a stage that never closes,
+ * a day that never passes and a plan that stops generating. The cutoff fails the other way: at
+ * worst it counts an answer given to the same word elsewhere in the same hour, and a plan holds its
+ * own words out of every other session while it runs ({@see \App\Modules\Learning\Infrastructure\Eloquent\PlanHeldTerms})
+ * so there is almost nowhere for such an answer to come from.
+ *
  * One caveat worth stating: the LANGUAGE gate can empty the set completely (`zh`/`ja` carry no
  * trainer at all in v1). A word with no applicable trainer has no card it could ever be dealt, so
  * the ladder walks it straight through all three stages and calls it finished. That is the honest
@@ -67,6 +92,8 @@ final readonly class PlanStandings
      * @param  list<string>  $termIds
      * @param  array<string, TermContentView>  $content  hydrated content, keyed by term id
      * @param  string  $today  the learner's local day, `Y-m-d`
+     * @param  array<string, \DateTimeImmutable>  $since  term id => the moment this card joined THIS
+     *         plan. See {@see class docblock, «The ladder of a plan is the plan's own»}.
      * @return array<string, PlanTermStanding>  term id => standing (only for terms with content)
      */
     public function forTerms(
@@ -76,13 +103,14 @@ final readonly class PlanStandings
         array $content,
         string $today,
         DateTimeZone $tz,
+        array $since = [],
     ): array {
         if ($termIds === []) {
             return [];
         }
 
-        $facts = $this->reader->factsFor($user, $termIds, $tz);
-        $introduced = $this->reader->introducedAmong($user, $termIds);
+        $facts = $this->reader->factsFor($user, $termIds, $tz, $since);
+        $introduced = $this->reader->introducedAmong($user, $termIds, $since);
         $openAtLevel = $this->planSettings->openModesFor($level);
         $enabled = $this->enabledModes->forUser($user);
         // HOW MANY CARDS OF EACH SHAPE THIS PLAN HOLDS — the fifth filter, and the one that keeps a

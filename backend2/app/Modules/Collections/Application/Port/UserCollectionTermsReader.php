@@ -38,4 +38,21 @@ interface UserCollectionTermsReader
      * @return array<string, list<string>>  collection id => term ids
      */
     public function termIdsByCollection(UserId $userId): array;
+
+    /**
+     * WHEN each of a collection's terms joined it — the item's own `created_at`.
+     *
+     * A membership has a date and until now nobody asked for it. The plan's ladder does: a plan day
+     * IS a collection written at one instant, so «when did this card join this plan» and «when was
+     * this collection item created» are the same fact, and reading it here is what lets the ladder
+     * be scoped to a plan without Learning storing a second copy of a date Collections already has
+     * ({@see \App\Modules\Learning\Application\Service\PlanStandings}).
+     *
+     * A term whose row carries no timestamp (there are legacy items with a null `created_at`) is
+     * absent from the map rather than dated `now` — «unknown» must read as «no cutoff», which
+     * leaves the ladder exactly as wide as it was before this method existed.
+     *
+     * @return array<string, \DateTimeImmutable>  term id => the moment it joined this collection
+     */
+    public function joinedAtForCollection(UserId $userId, string $collectionId, int $limit): array;
 }

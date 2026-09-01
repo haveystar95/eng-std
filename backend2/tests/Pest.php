@@ -536,6 +536,16 @@ function ageHistory(string $userId, int $days): void
     DB::statement("UPDATE reviews SET answered_at = answered_at - {$shift}, created_at = created_at - {$shift} WHERE user_id = ?", [$userId]);
     DB::statement("UPDATE term_exposures SET shown_at = shown_at - {$shift} WHERE user_id = ?", [$userId]);
     DB::statement("UPDATE user_term_progress SET due_at = due_at - {$shift}, last_reviewed_at = last_reviewed_at - {$shift} WHERE user_id = ?", [$userId]);
+    // AND THE DAY THE CARDS WERE WRITTEN ON. This helper says «all of this happened N days
+    // earlier», and since PLAN-FIX-4 the plan ladder reads one more date out of that history: the
+    // moment a card joined its day ({@see \App\Modules\Learning\Application\Service\PlanStandings}).
+    // Leaving it at «now» while the answers move back invents a plan whose lesson was written after
+    // the learner answered it, and every answer of the plan's own falls below its own cutoff.
+    DB::statement(
+        "UPDATE collection_items SET created_at = created_at - {$shift} WHERE collection_id IN "
+        . '(SELECT id FROM collections WHERE owner_id = ?)',
+        [$userId],
+    );
 }
 
 /**
