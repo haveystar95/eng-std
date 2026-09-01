@@ -1177,6 +1177,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionSpeakHint => 'Проверяем, вспомнил ли ты слово, а не произношение.';
 
   @override
+  String sessionSpeakHintKey(String key) {
+    return 'Скажи фразу, главное — «$key».';
+  }
+
+  @override
+  String get sessionSpeakHintWhole => 'Скажи фразу целиком.';
+
+  @override
   String sessionSpeakHeard(String text) {
     return 'Услышали: «$text»';
   }

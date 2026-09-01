@@ -1953,6 +1953,18 @@ abstract class AppLocalizations {
   /// **'Проверяем, вспомнил ли ты слово, а не произношение.'**
   String get sessionSpeakHint;
 
+  /// Подпись говорения у реплики плана: карточка проверяет только ключ — слово в дырке каркаса, — и остальную фразу ученик читает с экрана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи фразу, главное — «{key}».'**
+  String sessionSpeakHintKey(String key);
+
+  /// Подпись говорения у фразы без ключа: спрашивается вся реплика.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи фразу целиком.'**
+  String get sessionSpeakHintWhole;
+
   /// Вердикт говорения — что распознал микрофон, на обоих исходах (QA-20).
   ///
   /// In ru, this message translates to:

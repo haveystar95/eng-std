@@ -437,6 +437,26 @@ class SessionCard {
   /// afterwards what the card had asked. Null for a `known` verification, which is off the ladder.
   final int? ladderStep;
 
+  /// WHAT A SPOKEN LINE IS ACTUALLY ASKED FOR — the piece of the reply, not the reply.
+  ///
+  /// A plan line is a frame plus one card of that day standing in its hole, and the card is about
+  /// that one piece: «Yes, I'm looking for a place to rent for ___». The server grades the
+  /// transcript for THIS string alone, so the screen underlines it alone and says which piece it
+  /// wants. Grading (and underlining) all fifteen words told the owner «Не то» three sittings in a
+  /// row, with seven words marked that the card had never asked for (01.09).
+  ///
+  /// Null on every other mode, on a spoken WORD (the term is already the whole ask) and on a line
+  /// the day left no piece of — and null there MEANS «say the whole line», which the card says out
+  /// loud rather than leaving the learner to guess.
+  final String? speakingKey;
+
+  /// The key as words to hold the spoken answer to, or null when there is no key and the whole
+  /// line is the ask. Blank is treated as absent: an empty key would grade every reading correct.
+  String? get spokenTarget {
+    final key = speakingKey?.trim();
+    return key == null || key.isEmpty ? null : key;
+  }
+
   /// Present ONLY on the forward-recognition card (rung 1), aligned index-for-index with [options]:
   /// the term each option's translation belongs to. That card is graded by IDENTITY — the learner
   /// taps, the client uploads the tapped id, and [answer] is this card's own term id. It is the one
@@ -531,6 +551,7 @@ class SessionCard {
     this.optionFeedback = const [],
     this.ladderStep,
     this.optionIds,
+    this.speakingKey,
   });
 
   bool get isPhrase => type != 'word';
@@ -556,6 +577,7 @@ class SessionCard {
         const [],
     ladderStep: (j['ladder_step'] as num?)?.toInt(),
     optionIds: (j['option_ids'] as List?)?.map((e) => e as String).toList(),
+    speakingKey: j['speaking_key'] as String?,
   );
 }
 

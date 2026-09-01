@@ -223,6 +223,54 @@ abstract final class SessionGrader {
     return uncovered;
   }
 
+  /// WHERE THE KEY STANDS in the displayed sentence — the indices of [sentence]'s own words that
+  /// spell [key], in reading order, or empty when the key is not in the sentence as a whole phrase.
+  ///
+  /// A plan line is a frame with one card of that day pasted into its hole, so the key IS a run of
+  /// the sentence's words and finding it is a scan rather than a guess. What it is for: the speaking
+  /// verdict marks the KEY's missing words and nothing else — the frame around the key is scaffolding
+  /// the learner read off the screen, and underlining it says they got wrong something the card
+  /// never asked (01.09: seven of fifteen words marked on a correct enough reading).
+  ///
+  /// Empty when the run is not found, and the caller then marks nothing at all rather than falling
+  /// back to the whole sentence: no marks is a smaller lie than the wrong marks.
+  static List<int> keyWordIndices(String sentence, String key) {
+    final rawWords = sentence.trim().split(RegExp(r'\s+'));
+    final wanted = _words(key);
+    if (wanted.isEmpty || rawWords.isEmpty) return const [];
+
+    // Each displayed word canonicalises to zero or more tokens ("don't" → don, t), so the scan
+    // walks TOKENS and remembers which displayed word each of them came from.
+    final tokens = <String>[];
+    final owner = <int>[];
+    for (var i = 0; i < rawWords.length; i++) {
+      for (final t in _words(rawWords[i])) {
+        tokens.add(t);
+        owner.add(i);
+      }
+    }
+
+    for (var start = 0; start + wanted.length <= tokens.length; start++) {
+      var match = true;
+      for (var k = 0; k < wanted.length; k++) {
+        if (tokens[start + k] != wanted[k]) {
+          match = false;
+          break;
+        }
+      }
+      if (!match) continue;
+
+      final out = <int>[];
+      for (var k = 0; k < wanted.length; k++) {
+        final at = owner[start + k];
+        if (out.isEmpty || out.last != at) out.add(at);
+      }
+      return out;
+    }
+
+    return const [];
+  }
+
   /// Marks one occurrence of [word] as used in [available] and returns true — exact first, then a
   /// suffix-tolerant match (QA-20: a recogniser drops a trailing sibilant far more than it invents
   /// or swaps a whole word). [available] is one sentence's worth of words, so a linear scan for the

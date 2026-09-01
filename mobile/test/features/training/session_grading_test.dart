@@ -462,4 +462,33 @@ void main() {
       );
     });
   });
+
+  group('SessionGrader.keyWordIndices — where the key stands in the line (PLAN-FIX-4)', () {
+    test('finds the key as a run of the sentence own words', () {
+      expect(
+        SessionGrader.keyWordIndices(
+          "Yes, I'm looking for a place to rent for long-term living.",
+          'a place to rent',
+        ),
+        [4, 5, 6, 7],
+      );
+    });
+
+    test('ignores the punctuation and the case the sentence puts on it', () {
+      expect(
+        SessionGrader.keyWordIndices('A studio can work for me, but an apartment is better.', 'a studio'),
+        [0, 1],
+      );
+    });
+
+    test('answers EMPTY when the key is not in the sentence, so nothing is marked', () {
+      // Nothing marked is a smaller lie than the wrong words marked — which is what marking the
+      // whole sentence was.
+      expect(SessionGrader.keyWordIndices('Sorry, could you repeat that?', 'a place to rent'), isEmpty);
+    });
+
+    test('does not match a key inside a longer word', () {
+      expect(SessionGrader.keyWordIndices('The current price is fine.', 'rent'), isEmpty);
+    });
+  });
 }

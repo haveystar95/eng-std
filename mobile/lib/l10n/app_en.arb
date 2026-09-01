@@ -348,6 +348,8 @@
   "sessionSpeakSkip": "Skip",
   "sessionSpeakSkipHint": "Skipping costs nothing — the word will come back in its own time.",
   "sessionSpeakHint": "We're checking that you remembered the word, not how you pronounce it.",
+  "sessionSpeakHintKey": "Say the line — what counts is “{key}”.",
+  "sessionSpeakHintWhole": "Say the whole line.",
   "sessionSpeakHeard": "Heard: “{text}”",
 
   "sessionEchoTry": "Say it back",

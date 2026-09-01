@@ -439,6 +439,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // [SpokenAnswer.gradesByCoverage]). A recogniser eats articles and guesses homophones, so
         // equality here would print «Не то» over an answer the scheduler is about to count as
         // correct, which is the one direction this check is forbidden to take.
+        // A PLAN LINE IS JUDGED ON ITS KEY — the piece in the frame's hole, which is the only
+        // thing this card teaches. The frame around it is on the screen the whole time. Held to
+        // the whole sentence, a reading that said everything but the key passed and one that said
+        // the key and little else failed; the server grades the key alone, so the phone does too,
+        // off the same string it was sent.
+        : (_isSpeaking && _card.spokenTarget != null)
+        ? (SessionGrader.covers(response, _card.spokenTarget!, ignoreArticles: true)
+              ? LocalCheck.correct
+              : LocalCheck.wrong)
         : (_isSpeaking && _gradesByCoverage)
         ? (SessionGrader.coversAny(response, [
                 _card.answer,
@@ -963,10 +972,25 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           const SizedBox(height: AppSpacing.s4),
           // The frame, on the card and not only in a spec: this is recall, not pronunciation. It is
           // what makes a learner willing to speak at all.
-          Text(l.sessionSpeakHint, style: AppTextExercise.taskInstruction),
+          //
+          // A LINE SAYS WHICH PART OF IT IS BEING ASKED. The card grades the key and nothing else,
+          // so the instruction names it — «главное — <ключ>» — and a line the day left no key for
+          // says the other true thing, that the whole line is the ask. A spoken WORD keeps the
+          // original sentence: the term is already the whole of what is wanted.
+          Text(_speakHint(l), style: AppTextExercise.taskInstruction),
         ],
       ),
     );
+  }
+
+  /// What this spoken card is actually asking for, in one line. See [_speakingPrompt].
+  String _speakHint(AppLocalizations l) {
+    final key = _card.spokenTarget;
+    if (key != null) return l.sessionSpeakHintKey(key);
+
+    // «Целиком» belongs to a card whose answer is a SENTENCE — the same «длинность» rule the
+    // window and the grading use, so a card recorded like a sentence is described like one.
+    return _gradesByCoverage ? l.sessionSpeakHintWhole : l.sessionSpeakHint;
   }
 
   /// The record button, the live transcript, and — only once the microphone has actually failed —
@@ -1862,7 +1886,25 @@ class _FeedbackBlock extends ConsumerWidget {
   /// word-by-word comparison behind the verdict to justify marking it.
   Set<int> get _uncoveredWords {
     final heard = recognizedText;
-    if (!_gradesByCoverage || heard == null || heard.trim().isEmpty) return const {};
+    if (heard == null || heard.trim().isEmpty) return const {};
+
+    // A KEYED LINE MARKS ITS KEY AND NOTHING ELSE. The verdict was computed over the key alone, so
+    // the marks have to be too — underlining the frame says the learner got wrong something the
+    // card never asked for, which is what seven of fifteen underlined words said on 01.09.
+    final key = card.spokenTarget;
+    if (key != null) {
+      final span = SessionGrader.keyWordIndices(card.answerText, key);
+      if (span.isEmpty) return const {};
+
+      // Indices INTO THE KEY, mapped back onto the sentence through the span the scan found.
+      final missing = SessionGrader.uncoveredWords(heard, key, ignoreArticles: true);
+      return {
+        for (final i in missing)
+          if (i < span.length) span[i],
+      };
+    }
+
+    if (!_gradesByCoverage) return const {};
 
     // Matches the verdict's own comparison (QA-21) — marking an article the verdict forgave would
     // point at a "mistake" that was not counted as one.
@@ -1900,7 +1942,7 @@ class _FeedbackBlock extends ConsumerWidget {
             // WHICH part failed to register is worth showing, and the write-on animation has
             // nothing to say about that.
             Expanded(
-              child: _gradesByCoverage
+              child: _gradesByCoverage || card.spokenTarget != null
                   ? _SpokenSentence(sentence: card.answerText, uncovered: _uncoveredWords)
                   : _WritesItself(text: card.answerText, style: AppTextExercise.feedbackTerm),
             ),

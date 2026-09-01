@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/plan_models.dart';
 
 /// The v0.2 contract, from the client's side.
@@ -211,6 +212,81 @@ void main() {
       expect(old.kind, isNull);
       expect(old.speaker, isNull);
       expect(old.isRoleLine, isFalse);
+    });
+  });
+
+  group('the running order is the CONTRACT and the client does not touch it (PLAN-FIX-4)', () {
+    test('cards reach the session screen in the order the server dealt them', () {
+      // The day is laid out on the server — pieces, connectors, replies, the interlocutor's line,
+      // each with its whole checklist ({@see PlanDayOrder}). A client that re-sorted any of it
+      // would deal a card before the one that teaches it, and there would be two answers to «what
+      // comes next».
+      Map<String, dynamic> task(String termId, String mode) => {
+        'stage': 'a',
+        'ordinal': 1,
+        'of_steps': 4,
+        'from_day_index': 1,
+        'softened': false,
+        'section': 'day',
+        'card': {'term_id': termId, 'exercise_mode': mode, 'answer': termId},
+      };
+
+      final session = PlanSession.fromJson({
+        'session_id': 'S1',
+        'plan_id': 'P1',
+        'day_index': 1,
+        'strict': true,
+        'tasks': [
+          task('word', 'intro'),
+          task('word', 'speaking'),
+          task('chunk', 'intro'),
+          task('line', 'intro'),
+          task('line', 'speaking'),
+        ],
+      });
+
+      expect(
+        session.asStudySession().cards.map((c) => '${c.termId}:${c.mode.wire}').toList(),
+        ['word:intro', 'word:speaking', 'chunk:intro', 'line:intro', 'line:speaking'],
+      );
+    });
+
+    test('reads the spoken line key off the card', () {
+      final session = PlanSession.fromJson({
+        'session_id': 'S1',
+        'plan_id': 'P1',
+        'day_index': 1,
+        'strict': true,
+        'tasks': [
+          {
+            'stage': 'a',
+            'ordinal': 4,
+            'of_steps': 4,
+            'from_day_index': 1,
+            'softened': false,
+            'section': 'day',
+            'card': {
+              'term_id': 'T1',
+              'exercise_mode': 'speaking',
+              'answer': "Yes, I'm looking for a place to rent.",
+              'speaking_key': 'a place to rent',
+            },
+          },
+        ],
+      });
+
+      expect(session.tasks.single.card.spokenTarget, 'a place to rent');
+    });
+
+    test('a card with no key says so as null, never as an empty string', () {
+      final card = SessionCard.fromJson({
+        'term_id': 'T2',
+        'exercise_mode': 'speaking',
+        'answer': 'Sorry, could you repeat that?',
+        'speaking_key': null,
+      });
+
+      expect(card.spokenTarget, isNull);
     });
   });
 }

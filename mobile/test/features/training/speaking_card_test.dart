@@ -800,4 +800,91 @@ void main() {
       expect(sent, isNotEmpty);
     });
   });
+
+  group('a plan LINE is asked, marked and judged on its key alone (PLAN-FIX-4)', () {
+    /// The owner's card of 01.09, with the key it actually teaches.
+    SessionCard keyedLine() => SessionCard(
+      termId: 'T6',
+      mode: ExerciseMode.speaking,
+      type: 'phrase',
+      prompt: 'Да, я ищу место для аренды на долгое проживание.',
+      answer: "Yes, I'm looking for a place to rent for long-term living.",
+      speakingKey: 'a place to rent',
+      ladderStep: LearningLadder.stepAssembly,
+    );
+
+    testWidgets('says which piece it wants', (tester) async {
+      await tester.pumpWidget(host(keyedLine(), _FakeRecognizer(const [])));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Скажи фразу, главное — «a place to rent».'), findsOneWidget);
+      // And the old sentence, which promised something else, is gone from this card.
+      expect(find.text('Проверяем, вспомнил ли ты слово, а не произношение.'), findsNothing);
+    });
+
+    testWidgets('a line with no key asks for the whole thing, out loud', (tester) async {
+      final noKey = SessionCard(
+        termId: 'T7',
+        mode: ExerciseMode.speaking,
+        type: 'phrase',
+        prompt: 'Извините, не могли бы вы повторить?',
+        answer: 'Sorry, could you repeat that?',
+        ladderStep: LearningLadder.stepAssembly,
+      );
+
+      await tester.pumpWidget(host(noKey, _FakeRecognizer(const [])));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Скажи фразу целиком.'), findsOneWidget);
+    });
+
+    testWidgets('most of the sentence WITHOUT the key is still wrong', (tester) async {
+      // Eleven of fifteen words and not the one the card teaches. Graded against the whole line
+      // this passed on coverage — which is how a card about «a place to rent» was answered without
+      // ever saying it.
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('Yes I am looking for a long-term living'),
+      ]);
+      await tester.pumpWidget(host(keyedLine(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(answers.single.verdict, LocalCheck.wrong);
+    });
+
+    testWidgets('the key and hardly anything else is right', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('I want a place to rent')]);
+      await tester.pumpWidget(host(keyedLine(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(answers.single.verdict, LocalCheck.correct);
+      // The RAW transcript still goes up untouched — the server is the grader.
+      expect(answers.single.response, 'I want a place to rent');
+    });
+
+    testWidgets('marks the KEY on a wrong reading and leaves the frame alone', (tester) async {
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('Yes I am looking for long-term living'),
+      ], completeOnStop: true);
+      await tester.pumpWidget(host(keyedLine(), recognizer));
+      await tester.pumpAndSettle();
+
+      await tester.tap(recordButton().first); // start
+      await tester.pump();
+      await tester.tap(recordButton().first); // «Готово»
+      await tester.pumpAndSettle();
+
+      expect(answers.single.verdict, LocalCheck.wrong);
+      // The key's own words, and only them.
+      expect(styleOf(tester, 'place')?.decorationStyle, TextDecorationStyle.wavy);
+      expect(styleOf(tester, 'rent')?.decorationStyle, TextDecorationStyle.wavy);
+      // The frame was read off the screen and was never the question — seven words like these were
+      // underlined on the owner's phone.
+      expect(styleOf(tester, 'long-term')?.decorationStyle, isNot(TextDecorationStyle.wavy));
+      expect(styleOf(tester, 'Yes,')?.decorationStyle, isNot(TextDecorationStyle.wavy));
+    });
+  });
 }

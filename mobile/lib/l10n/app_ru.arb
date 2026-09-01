@@ -920,6 +920,13 @@
   "@sessionSpeakSkipHint": { "description": "Пояснение под кнопкой пропуска — пропуск не пишет ни ревью, ни оценку." },
   "sessionSpeakHint": "Проверяем, вспомнил ли ты слово, а не произношение.",
   "@sessionSpeakHint": { "description": "Рамка тренажёра говорения: это не оценка акцента (показывается на карточке)." },
+  "sessionSpeakHintKey": "Скажи фразу, главное — «{key}».",
+  "@sessionSpeakHintKey": {
+    "description": "Подпись говорения у реплики плана: карточка проверяет только ключ — слово в дырке каркаса, — и остальную фразу ученик читает с экрана.",
+    "placeholders": { "key": { "type": "String", "example": "a place to rent" } }
+  },
+  "sessionSpeakHintWhole": "Скажи фразу целиком.",
+  "@sessionSpeakHintWhole": { "description": "Подпись говорения у фразы без ключа: спрашивается вся реплика." },
   "sessionSpeakHeard": "Услышали: «{text}»",
   "@sessionSpeakHeard": {
     "description": "Вердикт говорения — что распознал микрофон, на обоих исходах (QA-20).",
