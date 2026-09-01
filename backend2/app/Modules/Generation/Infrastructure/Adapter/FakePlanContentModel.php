@@ -41,6 +41,26 @@ final class FakePlanContentModel implements ContentModelPort
      */
     private const SCENES_MARKER = '/\[scenes:(\d)\]/';
 
+    /**
+     * How a test asks for a plan whose words are ITS OWN: `[tag:2]` anywhere in the goal text.
+     *
+     * Terms are globally deduplicated, and this double named every card after its DAY alone
+     * (`day1word1`). Two plans of one learner therefore came out standing on the SAME term rows, and
+     * a test asking «did a card of plan A get into plan B's lesson» could not be written at all —
+     * the answer was «they are the same card», which is true of the double and of nothing else.
+     * The tag prefixes every term text, so `2day1word1` belongs to one plan and to no other.
+     *
+     * DIGITS, and this is not a stylistic choice. The mark has to ride BOTH sides of every card —
+     * the studied text and its translation — or the two plans share their Russian and the option
+     * dedup reads A's word and B's word as translation twins. A Latin letter inside the Russian half
+     * is a `day.key_not_support_language` violation and the day is refused; a digit belongs to
+     * neither alphabet and passes both gates.
+     *
+     * Marked goals only: an unmarked one produces exactly what it produced before, so no existing
+     * fixture moves.
+     */
+    private const TAG_MARKER = '/\[tag:(\d{1,3})\]/';
+
     public const FAKE_SKILLS_PER_SCENE = 2;
 
     public const FAKE_EST_TERMS = 4;
@@ -114,9 +134,9 @@ final class FakePlanContentModel implements ContentModelPort
         // this, «больше сцен» would not buy more DAYS — the days come from the sum of the prices,
         // and five cheap scenes still fit in three days.
         $estTerms = $marked ? self::FAKE_EST_TERMS_MAX : self::FAKE_EST_TERMS;
-        // The marker is a TEST directive, not content, so it never reaches the skeleton — the
+        // The markers are TEST directives, not content, so they never reach the skeleton — the
         // outline gate refuses a Latin word on the screen the learner reads, and it is right to.
-        $goal = trim((string) preg_replace(self::SCENES_MARKER, '', $goal));
+        $goal = trim((string) preg_replace([self::SCENES_MARKER, self::TAG_MARKER], '', $goal));
 
         $scenes = [];
         for ($scene = 1; $scene <= $sceneCount; $scene++) {
@@ -192,12 +212,20 @@ final class FakePlanContentModel implements ContentModelPort
         // character. Words then connectors, so the first filler is a word whenever the day has
         // one — a connector standing in the first frame's hole would make its own example a clone
         // of the line it fills.
+        // WHOSE day this is. Empty for every unmarked goal, so the texts below are the ones this
+        // double has always written; `[tag:b]` makes them plan B's and nobody else's.
+        $tag = $this->tagIn($prompt);
+        // The same mark inside a SENTENCE, where a bare prefix would break the capital. Empty for an
+        // unmarked goal, so an untagged frame is the exact string this double has always written —
+        // which matters, because a substitution's example has to equal a frame with the hole filled.
+        $mark = $tag === '' ? '' : " {$tag}";
+
         $cards = [];
         for ($i = 1; $i <= $words; $i++) {
-            $cards[] = ["day{$day}word{$i}", "день{$day}слово{$i}", 'word'];
+            $cards[] = ["{$tag}day{$day}word{$i}", "{$tag}день{$day}слово{$i}", 'word'];
         }
         for ($i = 1; $i <= $chunks; $i++) {
-            $cards[] = ["day{$day} chunk {$i}", "день{$day} связка {$i}", 'phrasal_verb'];
+            $cards[] = ["{$tag}day{$day} chunk {$i}", "{$tag}день{$day} связка {$i}", 'phrasal_verb'];
         }
 
         $lines = [];
@@ -208,8 +236,8 @@ final class FakePlanContentModel implements ContentModelPort
             $filler = $cards === [] ? '' : $cards[($i - 1) % count($cards)][0];
             $lines[] = [
                 'frame' => $cards === []
-                    ? "Day {$day} line {$i}."
-                    : "Day {$day} line {$i} about ___.",
+                    ? "Day {$day} line {$i}{$mark}."
+                    : "Day {$day} line {$i}{$mark} about ___.",
                 'filler' => $filler,
                 'speaker' => 'learner',
                 'type' => 'phrase',
@@ -217,7 +245,7 @@ final class FakePlanContentModel implements ContentModelPort
                 'translation' => "День {$day}, реплика номер {$i}.",
                 'transliteration' => 'дэй лайн эбаут',
                 'description' => "Somebody says it at moment {$i} of conversation {$day}.",
-                'example' => "Day {$day} line {$i} said out loud, about {$filler}.",
+                'example' => "Day {$day} line {$i}{$mark} said out loud, about {$filler}.",
                 'example_translation' => "День {$day}, реплика номер {$i}, сказанная вслух.",
                 'image_api_prompt' => "Two people talking at moment {$i} of a day, close-up.",
                 // Spread over the checkpoints so every one of them is closed.
@@ -235,7 +263,7 @@ final class FakePlanContentModel implements ContentModelPort
             'translation' => $key,
             'transliteration' => 'дэй уорд',
             'description' => "A thing you drop into a sentence on day {$day}.",
-            'example' => "Day {$day} line 1 about {$text}{$tail}.",
+            'example' => "Day {$day} line 1{$mark} about {$text}{$tail}.",
             'example_translation' => "День {$day}, реплика номер 1, про «{$key}».",
             'image_api_prompt' => 'A single object on a table, close-up, no text.',
             'covers_checkpoint' => null,
@@ -243,12 +271,12 @@ final class FakePlanContentModel implements ContentModelPort
 
         $substitutions = [];
         for ($i = 1; $i <= $words; $i++) {
-            $substitutions[] = $substitution("day{$day}word{$i}", "день{$day}слово{$i}", 'word', ' again');
+            $substitutions[] = $substitution("{$tag}day{$day}word{$i}", "{$tag}день{$day}слово{$i}", 'word', ' again');
         }
 
         $connectors = [];
         for ($i = 1; $i <= $chunks; $i++) {
-            $connectors[] = $substitution("day{$day} chunk {$i}", "день{$day} связка {$i}", 'phrasal_verb', ' today');
+            $connectors[] = $substitution("{$tag}day{$day} chunk {$i}", "{$tag}день{$day} связка {$i}", 'phrasal_verb', ' today');
         }
 
         return [
@@ -262,6 +290,17 @@ final class FakePlanContentModel implements ContentModelPort
     }
 
     /** The rest of the line after `$marker`, trimmed. */
+    /**
+     * The plan's own mark, or «» when the goal carries none.
+     *
+     * Read off the WHOLE day prompt rather than off a `GOAL:` line: the day template renders the
+     * goal as `{{goal_text}}` wherever it renders it, and this double must not depend on where.
+     */
+    private function tagIn(string $prompt): string
+    {
+        return preg_match(self::TAG_MARKER, $prompt, $m) === 1 ? $m[1] : '';
+    }
+
     private function after(string $text, string $marker): string
     {
         $at = strpos($text, $marker);

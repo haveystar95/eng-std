@@ -34,8 +34,8 @@ use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\EnabledModesWriter;
 use App\Modules\Learning\Application\Port\ModeFallbackReporter;
 use App\Modules\Learning\Infrastructure\Adapter\LoggingModeFallbackReporter;
-use App\Modules\Learning\Application\Port\PlanDayCollectionTitles;
-use App\Modules\Learning\Application\Port\PlanTermReleaser;
+use App\Modules\Learning\Application\Port\PlanTermArchiver;
+use App\Modules\Learning\Application\Port\PlanTermSweepStore;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanSkillRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
@@ -47,8 +47,8 @@ use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanSkillRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanModeSettingsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanStandingsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanRepository;
-use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanDayCollectionTitles;
-use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermReleaser;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermArchiver;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermSweepStore;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesWriter;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDailyStatsProjector;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDueTermsReader;
@@ -126,9 +126,9 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(PlanRepository::class, EloquentPlanRepository::class);
         $this->app->bind(PlanDayRepository::class, EloquentPlanDayRepository::class);
         $this->app->bind(PlanSkillRepository::class, EloquentPlanSkillRepository::class);
-        $this->app->bind(PlanTermReleaser::class, EloquentPlanTermReleaser::class);
+        $this->app->bind(PlanTermArchiver::class, EloquentPlanTermArchiver::class);
+        $this->app->bind(PlanTermSweepStore::class, EloquentPlanTermSweepStore::class);
         // «Из плана: Отпуск в Италии» — what a review card of the top-up says about itself.
-        $this->app->bind(PlanDayCollectionTitles::class, EloquentPlanDayCollectionTitles::class);
         // Singleton for the same reason the global reader is one: a per-request memo over one query.
         // A DIFFERENT instance from that reader even though it is the same table — the two read
         // disjoint scopes, and sharing a memo would mean one of them filtering the other's rows out

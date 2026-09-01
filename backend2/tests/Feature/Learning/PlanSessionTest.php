@@ -271,36 +271,49 @@ it('opens stage B when the planner makes the word due again — the night alone 
     // moved to the rule rather than to the arithmetic that happened to follow from it.)
     ageHistory($user->id, days: 1);
     $tomorrow = planSession($this, $token, $planId);
-    $dueNow = DB::table('user_term_progress')
+    // «Owed a card», which is the planner's own predicate and not a narrower hand-rolled one: due
+    // now, OR never scheduled at all. The second half is not a loophole — a pair still on the
+    // recognition rungs has no `due_at` because those rungs never schedule (DECISIONS п. 203), and
+    // «незаконченное» is the most urgent thing the trainer has. What the plan may never do is pull
+    // forward a word the planner has scheduled for LATER, and that is what this asserts.
+    $notOwed = DB::table('user_term_progress')
         ->where('user_id', $user->id)
-        ->where('due_at', '<=', now())
+        ->where('due_at', '>', now())
         ->pluck('term_id')
         ->all();
 
     foreach ($tomorrow['tasks'] as $task) {
         if ($task['source'] === 'plan_review') {
-            expect($task['card']['term_id'])->toBeIn($dueNow);
+            expect($task['card']['term_id'])->not->toBeIn($notOwed);
         }
     }
 
-    // Now the planner says they are due — and the plan deals them their stage-B checklist FIRST,
-    // ahead of the new material, because warming up on what you know comes before meeting what you
-    // do not.
+    // Now the planner says they are due — and the plan deals them their stage-B checklist as the
+    // SEAM, after the day's own material. (Under PLAN-FIX-3 the revision moved behind the day: it is
+    // a section the learner reads a label over — «Повторение · из прошлых дней» — and a section
+    // announced after the cards it labels is not a section. The budget agrees, since the day is what
+    // must not be cut.)
     ageHistory($user->id, days: 7);
     $later = planSession($this, $token, $planId);
 
+    $review = array_values(array_filter(
+        $later['tasks'],
+        static fn (array $t): bool => $t['section'] === 'review',
+    ));
     $first = $later['tasks'][0] ?? null;
+    $firstReview = $review[0] ?? null;
 
     expect($later['tasks'])->not->toBeEmpty()
-        ->and($first['stage'])->toBe('b')
-        ->and($first['source'])->toBe('plan_review')
-        ->and($first['from_day_index'])->toBe(1)
-        ->and($first['card']['term_id'])->toBeIn($day1Terms)
-        // …and the day-2 words that follow are stage A, as a first meeting must be.
-        ->and(array_values(array_filter(
-            $later['tasks'],
-            static fn (array $t): bool => $t['source'] === 'new',
-        ))[0]['stage'] ?? null)->toBe('a');
+        // The day leads, and a first meeting is stage A.
+        ->and($first['source'])->toBe('new')
+        ->and($first['stage'])->toBe('a')
+        ->and($first['from_day_index'])->toBe(2)
+        // …and day 1's words follow it, on stage B, carried in as the seam.
+        ->and($firstReview)->not->toBeNull()
+        ->and($firstReview['stage'])->toBe('b')
+        ->and($firstReview['source'])->toBe('plan_review')
+        ->and($firstReview['from_day_index'])->toBe(1)
+        ->and($firstReview['card']['term_id'])->toBeIn($day1Terms);
 });
 
 // ── what the plan screen reads ────────────────────────────────────────────────────────────────

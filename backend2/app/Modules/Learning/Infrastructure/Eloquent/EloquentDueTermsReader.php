@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Infrastructure\Eloquent;
 use App\Modules\Learning\Application\Dto\DueTermView;
 use App\Modules\Learning\Application\Port\DueTermsReader;
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
+use App\Modules\Learning\Domain\ValueObject\EnrollmentSources;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -58,6 +59,30 @@ final class EloquentDueTermsReader implements DueTermsReader
             // ({@see \App\Modules\Learning\Domain\Entity\TermProgress}), and «ступень 0 ничего
             // не планирует» is a rule of the ladder, not an accident. The queue can order the block
             // without either of them being violated.
+            ->orderBy('created_at')
+            ->orderBy('term_id')
+            ->limit($limit)
+            ->get(self::COLUMNS);
+
+        return array_values($rows->map($this->toView(...))->all());
+    }
+
+    public function selectableForPlan(UserId $userId, string $planId, DateTimeImmutable $now, int $limit): array
+    {
+        $query = $this->scoped($userId, null);
+        if ($query === null) {
+            return [];
+        }
+
+        $rows = $query
+            // The plan's OWN words, and no `NOT_HELD` — this reader is the held population, read on
+            // purpose by the one caller entitled to it. `jsonb_exists` is the function spelling of
+            // the jsonb `?` operator, which cannot travel through a query builder at all (`?` is the
+            // parameter placeholder). The source string is built by the value object that owns its
+            // shape, so the prefix is written once ({@see EnrollmentSources::forPlan()}).
+            ->whereRaw('jsonb_exists(enrollment_sources, ?)', [EnrollmentSources::forPlan($planId)])
+            ->where(static fn (BuilderContract $q) => self::owedInPool($q, $now))
+            ->orderByRaw('due_at ASC NULLS FIRST')
             ->orderBy('created_at')
             ->orderBy('term_id')
             ->limit($limit)

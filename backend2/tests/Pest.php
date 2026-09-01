@@ -444,6 +444,19 @@ function startedPlan(object $ctx, array $overrides = []): array
     [$user, $token] = learner();
     profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
 
+    return [$user, $token, startedPlanFor($ctx, $token, $overrides)];
+}
+
+/**
+ * The same three calls for a learner who already exists — a SECOND plan on one account.
+ *
+ * Only one plan may be `active` at a time (`StartPlanHandler`, and a partial unique index under it),
+ * so a fixture with two plans has to pause the first; that is the caller's business and not this
+ * helper's. What is this helper's business is that the three calls live in ONE place: {@see
+ * startedPlan} is now a learner plus this.
+ */
+function startedPlanFor(object $ctx, string $token, array $overrides = []): string
+{
     $plan = $ctx->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/plans', [
             'goal_text' => 'Иду к врачу, болит спина, надо объяснить и понять назначение',
@@ -463,7 +476,7 @@ function startedPlan(object $ctx, array $overrides = []): array
         ->postJson("/api/v1/plans/{$plan['id']}/start")
         ->assertOk();
 
-    return [$user, $token, $plan['id']];
+    return (string) $plan['id'];
 }
 
 function planSession(object $ctx, string $token, string $planId, ?int $dayIndex = null): array

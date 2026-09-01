@@ -10,17 +10,21 @@ use Illuminate\Support\Facades\DB;
 uses(RefreshDatabase::class);
 
 /**
- * THE TOP-UP BESIDE A PLAN DAY — what may join it, and where the seam falls.
+ * THERE IS NO TOP-UP BESIDE A PLAN DAY — and this file is what is left of the one there was.
  *
- * A plan session deals its day and then tops the sitting up from the learner's ordinary queue, so a
- * plan does not suspend the rest of their vocabulary. On a live day that top-up dealt two FRENCH
- * cards inside an `ru→en` plan, and one of them asked «выбери французский эквивалент» in the middle
- * of an English lesson. They were not unlucky either: both stood at `acquisition: learning` with no
- * `due_at`, and the queue orders `due_at ASC NULLS FIRST`, so they led the session.
+ * A plan session used to deal its day and then top the sitting up from the learner's ordinary queue,
+ * «so a plan does not suspend the rest of their vocabulary». Two live runs cost that idea its
+ * credibility: French cards inside an `ru→en` lesson (31.08), and then, with a language-pair filter
+ * already in place, «паспорт» out of an abandoned holiday plan dealt inside a lesson about renting a
+ * flat (01.09). The bucket is gone — not filtered, not called — and what may be in a plan's sitting
+ * is settled by the read itself ({@see \Tests\Feature\Learning\PlanSessionScopeTest}).
  *
- * The other half of the same incident: the client counted the whole session as the day and told the
- * learner «День 1 пройден · 21 фраза и слово» over a day of fourteen. The payload now says where
- * the day ends instead of leaving that to be derived.
+ * The fixtures below build exactly what the top-up used to reach for: the learner's own words, in
+ * the plan's own pair, overdue. Each test is now the statement that none of it arrives.
+ *
+ * The rest of the file is the OTHER half of the same incident and is unchanged: the client counted
+ * the whole sitting as the day and said «День 1 пройден · 21 фраза и слово» over a day of fourteen,
+ * and a walked day stayed `ready` until somebody opened the next session.
  */
 beforeEach(function (): void {
     fakePlanModel();
@@ -71,11 +75,13 @@ function duePoolTerm(object $user, string $lang, string $support, string $text, 
     return $termId;
 }
 
-it('never tops a plan day up with a term of another language pair', function () {
+it('tops a plan day up with nothing at all — not even a word of its own pair', function () {
     [$user, $token, $planId] = startedPlan($this);
 
-    // Two words due beside the plan: one this learner is studying in the plan's own pair, one in a
-    // pair the plan has nothing to do with.
+    // Two words due beside the plan. The French one was the 31.08 incident; the English one is the
+    // learner's own word, in the plan's own pair, and used to be exactly what the bucket was FOR.
+    // Neither is dealt now, and that is the whole change: the rule is «only this plan's cards», not
+    // «this plan's cards plus whatever else looks close enough».
     $french = duePoolTerm($user, 'fr', 'ru', 'Je voudrais enregistrer mon bagage.', 'Я хотел бы сдать багаж.');
     $english = duePoolTerm($user, 'en', 'ru', 'boarding pass', 'посадочный талон');
 
@@ -84,9 +90,8 @@ it('never tops a plan day up with a term of another language pair', function () 
     $dealt = array_column(array_column($session['tasks'], 'card'), 'term_id');
 
     expect($dealt)->not->toContain($french)
-        // …and the filter is a PAIR filter, not «only the day»: the English word in the same pair is
-        // exactly what bucket 3 is for, and it is still dealt.
-        ->and($dealt)->toContain($english);
+        ->and($dealt)->not->toContain($english)
+        ->and($session['tasks'])->not->toBeEmpty();
 });
 
 it('keeps a foreign term out of the option pool as well, not only out of the running order', function () {
@@ -102,30 +107,35 @@ it('keeps a foreign term out of the option pool as well, not only out of the run
     }
 });
 
-it('puts every task of the day before every task of the top-up, and says where the seam is', function () {
-    [$user, $token, $planId] = startedPlan($this);
+it('puts every task of the day before every task of the seam, and says where the seam is', function () {
+    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
     duePoolTerm($user, 'en', 'ru', 'boarding pass', 'посадочный талон');
 
+    // Day 1 walked, so day 2 has an earlier day to revise. On day 1 there is no seam at all, which
+    // is the other half of the contract and is asserted in the next test.
+    walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 8);
+
     $session = planSession($this, $token, $planId);
-
-    expect($session)->toHaveKey('day_task_count');
-
     $sections = array_column($session['tasks'], 'section');
 
-    // The seam, from both ends: the count says where it falls, and the order says it falls once.
-    expect(array_slice($sections, 0, $session['day_task_count']))
+    expect($session)->toHaveKey('day_task_count')
+        // The seam, from both ends: the count says where it falls, and the order says it falls once.
+        ->and(array_slice($sections, 0, $session['day_task_count']))
         ->each->toBe(PlanSessionTaskView::SECTION_DAY)
         ->and(array_slice($sections, $session['day_task_count']))
         ->each->toBe(PlanSessionTaskView::SECTION_REVIEW)
         ->and($session['day_task_count'])->toBeLessThan(count($session['tasks']));
 
-    // And `section` agrees with the field a client would otherwise have had to derive it from.
+    // And `section` agrees with the day each card was introduced on — which is what it now MEANS.
+    // It used to read «`from_day_index` is null», the top-up's signature; with the top-up gone that
+    // test would have made the seam permanently empty.
     foreach ($session['tasks'] as $task) {
         expect($task['section'])->toBe(
-            $task['from_day_index'] === null
-                ? PlanSessionTaskView::SECTION_REVIEW
-                : PlanSessionTaskView::SECTION_DAY,
-        );
+            $task['from_day_index'] === $session['day_index']
+                ? PlanSessionTaskView::SECTION_DAY
+                : PlanSessionTaskView::SECTION_REVIEW,
+        )->and($task['origin'])->toBeNull();
     }
 });
 
@@ -200,11 +210,11 @@ function duePlanTerm(object $user, string $kind, string $text, string $translati
     return $termId;
 }
 
-it('never tops a plan day up with a LINE out of another plan, as a task or as an option', function () {
+it('lets no word of another plan in, as a task or as an option — line or not', function () {
     // The live shape: «Hi, I'm Alex, and I work as a backend developer.» — the learner's own word,
     // their own pair, their own pool — dealt inside a HOLIDAY plan as something to study, out of an
-    // interview plan they had abandoned. A line is a turn in one conversation; away from it there
-    // is nowhere to say it.
+    // interview plan they had abandoned. The `line` half of it was answered on 31.08 by excluding
+    // lines; the word beside it travelled on, and «паспорт» is what that looked like on 01.09.
     [$user, $token, $planId] = startedPlan($this);
 
     $line = duePlanTerm($user, 'line', "Hi, I'm Alex, and I work as a backend developer.", 'Привет, я Алекс, и я работаю бэкенд-разработчиком.');
@@ -214,14 +224,15 @@ it('never tops a plan day up with a LINE out of another plan, as a task or as an
 
     $dealt = array_column(array_column($session['tasks'], 'card'), 'term_id');
     expect($dealt)->not->toContain($line)
-        // …and a WORD of another plan is exactly what the bucket is for. It still travels.
-        ->and($dealt)->toContain($word);
+        ->and($dealt)->not->toContain($word);
 
-    // Nor as a wrong answer: the line was hydrated beside the day's own content, which made it a
-    // distractor candidate before it was ever dealt.
-    $lineText = "Hi, I'm Alex, and I work as a backend developer.";
+    // Nor as wrong answers. Both are `source = 'user'` words on a shelf of this learner's, so the
+    // option reader would take them for one of THEIR ordinary cards — and a plan card prefers its
+    // own plan's pool, which is what keeps them off this one.
     foreach ($session['tasks'] as $task) {
-        expect($task['card']['options'] ?? [])->not->toContain($lineText);
+        expect($task['card']['options'] ?? [])
+            ->not->toContain("Hi, I'm Alex, and I work as a backend developer.")
+            ->not->toContain('boarding pass');
     }
 });
 
@@ -250,51 +261,27 @@ it('offers a word no line as a wrong answer, whatever the session is carrying', 
 
 // ── where a review card says it came from ─────────────────────────────────────────────────────
 
-it('names the shelf a review card came off, and says nothing about the day`s own', function () {
-    // «Привет, я Алекс…» dropped into a lesson about a holiday with nothing said about it read as
-    // part of today, and the learner did not recognise their own word.
-    [$user, $token, $planId] = startedPlan($this);
+it('names no shelf on a seam card, because every card of the sitting is this plan`s own', function () {
+    // `origin` used to carry «Из плана: Отдых в Италии» / «Из коллекции: Аэропорт» over a top-up
+    // card. There is no top-up, so there is no foreign shelf to name — and naming THIS plan over a
+    // card of this plan's own earlier day is the sentence the owner read as a lie on 01.09. The
+    // field stays on the wire (a client reading it must not break); it stays null.
+    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
     $termId = duePoolTerm($user, 'en', 'ru', 'boarding pass', 'посадочный талон');
     DB::table('collections')
         ->whereIn('id', DB::table('collection_items')->where('term_id', $termId)->pluck('collection_id'))
         ->update(['title' => 'Аэропорт']);
 
-    $session = planSession($this, $token, $planId);
-
-    foreach ($session['tasks'] as $task) {
-        if ($task['card']['term_id'] === $termId) {
-            expect($task['origin'])->toBe(['kind' => 'collection', 'title' => 'Аэропорт']);
-        }
-        if ($task['section'] === PlanSessionTaskView::SECTION_DAY) {
-            // The day needs no label: it IS today.
-            expect($task['origin'])->toBeNull();
-        }
-    }
-});
-
-it('names the PLAN, not the day`s folder, for a word out of another plan', function () {
-    // A plan day owns a collection titled after the DAY — «Заселиться в отель · Поесть в кафе» —
-    // and that is a folder the learner never made and would not recognise months later. What they
-    // recognise is the plan.
-    [$user, $token, $planId] = startedPlan($this);
-
-    $termId = duePoolTerm($user, 'en', 'ru', 'boarding pass', 'посадочный талон');
-    $collectionId = DB::table('collection_items')->where('term_id', $termId)->value('collection_id');
-    DB::table('collections')->where('id', $collectionId)->update(['title' => 'День 1 — приезд']);
-
-    // That collection is a day of ANOTHER plan of this learner's.
-    $otherPlan = DB::table('learning_plans')->where('id', '<>', $planId)->where('user_id', $user->id)->value('id')
-        ?? DB::table('learning_plans')->where('id', $planId)->value('id');
-    DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 2)
-        ->update(['collection_id' => $collectionId]);
-    DB::table('learning_plans')->where('id', $otherPlan)->update(['title' => 'Поездка в Рим']);
+    walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 8);
 
     $session = planSession($this, $token, $planId);
 
+    expect(array_column($session['tasks'], 'section'))->toContain(PlanSessionTaskView::SECTION_REVIEW);
+
     foreach ($session['tasks'] as $task) {
-        if ($task['card']['term_id'] === $termId) {
-            expect($task['origin'])->toBe(['kind' => 'plan', 'title' => 'Поездка в Рим']);
-        }
+        expect($task['origin'])->toBeNull()
+            ->and($task['card']['term_id'])->not->toBe($termId);
     }
 });

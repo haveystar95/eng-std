@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Command;
 
-use App\Modules\Collections\Application\Port\CollectionPairReader;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Learning\Application\Dto\DueTermView;
 use App\Modules\Learning\Application\Dto\PlanDayProgressView;
 use App\Modules\Learning\Application\Dto\PlanProgressView;
 use App\Modules\Learning\Application\Dto\PlanSessionTaskView;
 use App\Modules\Learning\Application\Dto\PlanSessionView;
+use App\Modules\Learning\Application\Port\DueTermsReader;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\HomePlanReader;
-use App\Modules\Learning\Application\Port\PlanDayCollectionTitles;
 use App\Modules\Learning\Application\Port\ModeAdmissionReader;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
-use App\Modules\Learning\Application\Query\GetDueTerms;
-use App\Modules\Learning\Application\Query\GetDueTermsHandler;
 use App\Modules\Learning\Application\Query\GetPracticeTerms;
 use App\Modules\Learning\Application\Query\GetPracticeTermsHandler;
 use App\Modules\Learning\Application\Service\CardLanguageResolver;
@@ -62,25 +59,44 @@ use App\Modules\Vocabulary\Application\Query\TermContentReader;
  * check — is the app's ordinary machinery, untouched, which is the whole reason a plan day owns an
  * ordinary collection.
  *
- * ## The four buckets, in the order they are dealt
+ * ## A SITTING IS MADE OF THIS PLAN'S CARDS AND OF NOTHING ELSE
  *
- *   1. **plan reviews** — words of this plan that the repetition planner says are due, and that
- *      stand on stage B or C. B before C, because a word two stages from ready needs the sitting
- *      more than one that is nearly there. First in the session: warm up on what you know before
- *      meeting what you do not.
- *   2. **new** — this day's words that have not closed stage A, in the order A2 computed
+ * Two buckets, in the order they are dealt:
+ *
+ *   1. **new** — this day's words that have not closed stage A, in the order A2 computed
  *      ({@see PlanDayOrder}) — words before replies below `conversational`, replies before words
  *      above it. Each brings its whole remaining stage-A checklist, because stage A has to close in
  *      ONE sitting or the day does not pass.
- *   3. **other due** — everything else the planner has due today **in this plan's language pair**,
- *      if the day's minutes have room left. A plan does not suspend the rest of the learner's
- *      vocabulary; it also does not teach French inside an English lesson, which is what the
- *      unfiltered version did on a live day ({@see inPlanPair()}).
+ *   2. **plan reviews** — words of this plan, introduced on an EARLIER day, that the repetition
+ *      planner says are due and that stand on stage B or C. B before C, because a word two stages
+ *      from ready needs the sitting more than one that is nearly there. This is the seam the learner
+ *      reads as «Повторение · из прошлых дней».
  *
- * The order of the three is the CONTRACT, not an implementation detail: everything belonging to the
- * plan comes first and the top-up follows, so a client can draw the seam between «сегодняшний день»
- * and «повторение» without guessing. `day_task_count` on the payload says where it falls, and every
- * task carries its own {@see PlanSessionTaskView::$section}.
+ * ## There is no third bucket, and «no» here means NOT CALLED
+ *
+ * There used to be: whatever else the planner had due, poured in behind the day so that «a plan does
+ * not suspend the rest of the learner's vocabulary». Two live runs said what that is actually worth.
+ * First, French cards and another plan's lines inside an `ru→en` lesson — answered on 31.08 with a
+ * language-pair filter (DECISIONS п. 204). Then, on 01.09 with that filter in place: «Аренда жилья»,
+ * day 1, task 47 of 67, «Повторение · из плана: Отдых в Италии», the word «паспорт» to be recognised
+ * among `utilities`, `available`, `deposit` — every one of them the learner's own, in the right pair,
+ * and every one of them out of a lesson this lesson is not.
+ *
+ * The rule is cancelled rather than tightened. A filter is a promise that somebody remembered every
+ * way a foreign card can look like a local one, and two rounds of that promise were broken by cards
+ * nobody had thought of. So the read itself is scoped ({@see DueTermsReader::selectableForPlan()}):
+ * the session cannot deal a word this plan did not enrol, because it never reads one.
+ *
+ * The other direction is the same rule seen from the pool: a plan's words are dealt BY THE PLAN and
+ * by nothing else — out of the ordinary session and out of «Повторить N»
+ * ({@see \App\Modules\Learning\Infrastructure\Eloquent\PlanHeldTerms}) while it runs, and out of
+ * them for good when it ends, because an ended plan is an ARCHIVE and its words are added back to
+ * «Учить» by the learner or not at all.
+ *
+ * The order of the two IS the contract: the day, then the seam. `day_task_count` on the payload says
+ * where the boundary falls and every task carries its own {@see PlanSessionTaskView::$section} — and
+ * both now count the day's own cards alone, which is why day 1 of any plan is «N из N» with no
+ * «Повторение» above it.
  *
  * ## «Когда» is not this handler's business
  *
@@ -115,13 +131,16 @@ final readonly class BuildPlanSessionHandler
         private PlanDayRepository $days,
         private PlanProgress $progress,
         private PlanModeSettingsReader $planSettings,
-        private GetDueTermsHandler $dueTerms,
+        /**
+         * The plan's OWN due words — its seam, and the only due list a plan session reads. Not
+         * {@see GetDueTermsHandler}: that query answers «what does the trainer deal next out of the
+         * POOL», and the pool is by definition everything no running plan is standing on.
+         */
+        private DueTermsReader $dueInPlan,
         private GetPracticeTermsHandler $practiceTerms,
         private UserCollectionTermsReader $collectionTerms,
         private TermContentReader $content,
         private CardLanguageResolver $languages,
-        private CollectionPairReader $collectionsByTerm,
-        private PlanDayCollectionTitles $planTitles,
         private StudyCardAssembler $assembler,
         private EnabledModesReader $enabledModes,
         private ModeAdmissionReader $admission,
@@ -201,15 +220,19 @@ final readonly class BuildPlanSessionHandler
         $standings = $progress->allStandings();
         $dayOf = $this->dayOfTerm($progress);
 
-        // Everything the planner says is due, with NO new terms: what is new here is the day's own
-        // material, and the daily quota is about the ordinary pool, not about a plan the learner
-        // has committed to.
-        $due = $this->inPlanPair($plan, ($this->dueTerms)(new GetDueTerms(
-            userId: $plan->userId(),
-            now: $this->clock->now(),
-            sessionSize: self::DUE_CAP,
-            newTermsRemaining: 0,
-        )), $standings);
+        // THIS PLAN'S OWN WORDS THAT THE PLANNER HAS MADE DUE AGAIN — and nothing else in the world.
+        //
+        // It used to be the learner's whole due list ({@see GetDueTerms}), which is how bucket 3 was
+        // fed and how a word out of an abandoned holiday plan turned up in a lesson about renting a
+        // flat. The list is now the plan's own by construction rather than by filter: there is no
+        // predicate here that could be forgotten or widened, because nothing outside the plan is
+        // ever read.
+        $due = $this->dueInPlan->selectableForPlan(
+            $plan->userId(),
+            $plan->id()->value,
+            $this->clock->now(),
+            self::DUE_CAP,
+        );
 
         /** @var array<string, DueTermView> $views */
         $views = [];
@@ -224,23 +247,14 @@ final readonly class BuildPlanSessionHandler
         $specs = [];
         $taken = [];
 
-        // 1. Plan words that are due and standing on B or C — B first.
-        foreach ([PlanStage::B, PlanStage::C] as $stage) {
-            foreach ($due as $view) {
-                $termId = $view->termId->value;
-                $standing = $standings[$termId] ?? null;
-                if ($standing === null || $standing->stage !== $stage || isset($taken[$termId])) {
-                    continue;
-                }
-                $taken[$termId] = true;
-                $specs = [
-                ...$specs,
-                ...$this->specsFor($termId, $standing, $dayOf[$termId] ?? null, 'plan_review', $knobs, $this->kindOf($progress, $termId)),
-            ];
-            }
-        }
-
-        // 2. The day's own words, in A2's order, each bringing its whole remaining stage-A checklist.
+        // 1. THE DAY ITSELF, in A2's order, each word bringing its whole remaining stage-A checklist.
+        //
+        // First, and this is a change: the earlier days' revision used to be dealt ahead of it, to
+        // «warm up on what you know before meeting what you do not». That reading held while those
+        // cards were part of the DAY. They are now a section of their own with a name the learner
+        // reads — «Повторение · из прошлых дней» — and a section announced after the material it
+        // labels is not a section. The budget agrees: `array_slice` below cuts the tail, and stage A
+        // has to close in ONE sitting or the day does not pass, so the day is what must not be cut.
         foreach ($this->orderedDayTerms($plan, $today) as $termId) {
             $standing = $today->standings[$termId] ?? null;
             if ($standing === null || isset($taken[$termId]) || $standing->nextMode === null) {
@@ -253,16 +267,27 @@ final readonly class BuildPlanSessionHandler
             ];
         }
 
-        // 3. Whatever else is due, if the minutes have room.
-        foreach ($due as $view) {
-            $termId = $view->termId->value;
-            if (isset($taken[$termId]) || isset($standings[$termId])) {
-                continue;
+        // 2. THE SEAM: words of an EARLIER day of this plan that the planner has made due again and
+        // that stand on stage B or C — B first, because a word two stages from ready needs the
+        // sitting more than one that is nearly there. A word that is both today's and due is the
+        // day's, which is why this loop skips what the first one took.
+        foreach ([PlanStage::B, PlanStage::C] as $stage) {
+            foreach ($due as $view) {
+                $termId = $view->termId->value;
+                $standing = $standings[$termId] ?? null;
+                if ($standing === null || $standing->stage !== $stage || isset($taken[$termId])) {
+                    continue;
+                }
+                $taken[$termId] = true;
+                $specs = [
+                    ...$specs,
+                    ...$this->specsFor($termId, $standing, $dayOf[$termId] ?? null, 'plan_review', $knobs, $this->kindOf($progress, $termId)),
+                ];
             }
-            $taken[$termId] = true;
-            $specs[] = ['term_id' => $termId, 'stage' => null, 'mode' => null, 'ordinal' => 0,
-                'of' => 0, 'day' => null, 'softened' => false, 'source' => 'other_review', 'step' => null];
         }
+
+        // There is no third bucket. See the class docblock: the top-up is not filtered here, it is
+        // not called, and there is nothing outside this plan for it to have read.
 
         return $this->assembleTasks(
             $plan,
@@ -270,124 +295,9 @@ final readonly class BuildPlanSessionHandler
             $views,
             $this->contentFor($progress, $views, $plan),
             $knobs,
+            $dayIndex,
             $today->collectionId,
         );
-    }
-
-    /**
-     * THE DUE LIST, NARROWED TO THIS PLAN'S LANGUAGE PAIR.
-     *
-     * Bucket 3 exists so a plan does not suspend the rest of the learner's vocabulary — but «the
-     * rest of the vocabulary» meant, literally, everything the planner had due, in any language the
-     * learner has ever saved a word in. A live day of an `ru→en` plan dealt two FRENCH cards and
-     * five lines out of a different plan: seven of its sixty-three tasks were nothing to do with
-     * the day, and one of them asked «выбери французский эквивалент» inside an English lesson.
-     *
-     * They were not even unlucky. Both French pairs stood at `acquisition: learning` with no
-     * `due_at`, and the due query orders `due_at ASC NULLS FIRST` — so they were at the HEAD of the
-     * queue and would have led every session until answered.
-     *
-     * A term of THIS PLAN is kept whatever its pair resolves to: the plan's own material is dealt by
-     * the plan (`$standings` is every term of every day of it), and a day's word that also sits in
-     * an older folder of another pair must not disappear from its own day because
-     * {@see CollectionPairReader::supportLangByTerm()} picked that older folder.
-     *
-     * Everything else has to match BOTH halves: the term's own language is what the learner would
-     * have to say, and the support language is what the card would ask in.
-     *
-     * ## AND A LINE OF ANOTHER PLAN IS NEVER TOPPED UP
-     *
-     * The pair filter alone left the worse half of the incident standing. «Hi, I'm Alex, and I work
-     * as a backend developer.» is English, in the learner's own `ru→en` pair, and their own word —
-     * so it passed — and it arrived in a HOLIDAY plan as a task to be studied, mid-lesson, out of an
-     * interview plan they had abandoned. A `line` is a turn in ONE conversation; away from that
-     * conversation it is a sentence with nowhere to be said. Words and connectors travel — that is
-     * what vocabulary is — and lines are revised inside their own plan or not at all.
-     *
-     * A term with NO `kind` travels too: that is ordinary vocabulary, written before plans existed
-     * or saved by hand, and «a plan does not suspend the rest of the learner's vocabulary» is the
-     * whole reason this bucket exists. The rule excludes lines, not everything that is not a
-     * plan's word.
-     *
-     * @param  list<DueTermView>  $due
-     * @param  array<string, PlanTermStanding>  $standings  every term this plan stands on
-     * @return list<DueTermView>
-     */
-    private function inPlanPair(LearningPlan $plan, array $due, array $standings): array
-    {
-        $foreign = [];
-        foreach ($due as $view) {
-            if (! isset($standings[$view->termId->value])) {
-                $foreign[] = $view->termId->value;
-            }
-        }
-        if ($foreign === []) {
-            return $due;
-        }
-
-        $ids = array_map(static fn (string $id): TermId => TermId::fromString($id), $foreign);
-        $langs = $this->languages->forTerms($plan->userId(), $ids);
-        $content = $this->content->byIds($ids, $langs);
-
-        $target = self::langKey($plan->targetLang()->value);
-        $support = self::langKey($plan->supportLang()->value);
-
-        $keep = [];
-        foreach ($foreign as $termId) {
-            $view = $content[$termId] ?? null;
-            $keep[$termId] = $view !== null
-                && $view->kind !== PlanStageLadder::KIND_LINE
-                && self::langKey($view->lang) === $target
-                && self::langKey($langs->for($termId)) === $support;
-        }
-
-        return array_values(array_filter(
-            $due,
-            static fn (DueTermView $v): bool => $keep[$v->termId->value] ?? true,
-        ));
-    }
-
-    /**
-     * «Отпуск в Италии» — the shelf each of these terms came off, named the way a person names it.
-     *
-     * A card of the top-up is a word the learner met somewhere else. Dropped into the middle of a
-     * plan's lesson with nothing said about it, it reads as part of today — and on the day that
-     * started all this, «Привет, я Алекс, и я работаю бэкенд-разработчиком» turned up in a lesson
-     * about a holiday and the learner did not recognise their own word.
-     *
-     * A collection that IS a plan's day answers as the PLAN: «день 1 плана Отпуск в Италии» is a
-     * folder the learner never made and whose name they would not recognise either.
-     *
-     * @param  list<string>  $termIds
-     * @return array<string, array{kind: string, title: string}>
-     */
-    private function originsFor(LearningPlan $plan, array $termIds): array
-    {
-        if ($termIds === []) {
-            return [];
-        }
-
-        $collections = $this->collectionsByTerm->collectionByTerm($plan->userId(), $termIds);
-        $planTitles = $this->planTitles->titlesByDayCollection(array_values(array_unique(array_map(
-            static fn (array $c): string => $c['id'],
-            $collections,
-        ))));
-
-        $out = [];
-        foreach ($collections as $termId => $collection) {
-            $planTitle = $planTitles[$collection['id']] ?? null;
-            $out[$termId] = $planTitle !== null
-                ? ['kind' => PlanSessionTaskView::ORIGIN_PLAN, 'title' => $planTitle]
-                : ['kind' => PlanSessionTaskView::ORIGIN_COLLECTION, 'title' => $collection['title']];
-        }
-
-        return $out;
-    }
-
-    /** Language codes as they compare: «EN» and «en» are one language, «en-GB» is not «en». */
-    private static function langKey(string $lang): string
-    {
-        return mb_strtolower(trim($lang));
     }
 
     /**
@@ -503,7 +413,9 @@ final readonly class BuildPlanSessionHandler
             scopeCollectionId: $collectionId,
         );
 
-        return $this->assembleTasks($plan, $specs, $byTerm, $content, $knobs, $collectionId, isPractice: true);
+        return $this->assembleTasks(
+            $plan, $specs, $byTerm, $content, $knobs, $day->dayIndex(), $collectionId, isPractice: true,
+        );
     }
 
     // ── assembly ─────────────────────────────────────────────────────────────────────────────
@@ -512,6 +424,10 @@ final readonly class BuildPlanSessionHandler
      * @param  list<array<string, mixed>>  $specs
      * @param  array<string, DueTermView>  $views
      * @param  array<string, TermContentView>  $content
+     * @param  int  $dayIndex  the day BEING STUDIED — what tells the day's own cards from the seam
+     * @param  string|null  $langCollectionId  the collection a card's PAIR is read through. Not the
+     *         distractor pool and not the same question: the pool is the plan, the pair is the folder
+     *         the card is being dealt out of.
      * @return list<PlanSessionTaskView>
      */
     private function assembleTasks(
@@ -520,15 +436,18 @@ final readonly class BuildPlanSessionHandler
         array $views,
         array $content,
         PlanKnobs $knobs,
-        ?string $poolCollectionId,
+        int $dayIndex,
+        ?string $langCollectionId,
         bool $isPractice = false,
     ): array {
         $enabled = $this->enabledModes->forUser($plan->userId());
         $matrix = $this->admission->matrixFor($plan->userId());
 
-        $poolIds = $poolCollectionId !== null
-            ? $this->collectionTerms->termIdsForCollection($plan->userId(), $poolCollectionId, self::DUE_CAP)
-            : array_keys($content);
+        // THE OPTION POOL IS THE WHOLE PLAN, not today's folder. A word met on day 1 is the fairest
+        // wrong answer this lesson has — same subject, same register, already seen — and it was
+        // unreachable while the pool was one day's collection, which is what sent the reader off to
+        // top up from the learner's other shelves in the first place.
+        $poolIds = $this->planPoolIds($plan);
 
         // The far-option pool, exactly as the ordinary session builds it — the session's own words,
         // which is what makes a `far` distractor fair rather than arbitrary.
@@ -536,7 +455,7 @@ final readonly class BuildPlanSessionHandler
         $langs = $this->languages->forTerms(
             $plan->userId(),
             array_map(static fn (string $id): TermId => TermId::fromString($id), array_keys($content)),
-            $poolCollectionId,
+            $langCollectionId,
         );
         foreach ($content as $termId => $view) {
             $neighbours[] = [
@@ -550,13 +469,6 @@ final readonly class BuildPlanSessionHandler
                 'collections' => [],
             ];
         }
-
-        // WHERE EACH REVIEW CARD CAME FROM. Resolved once for the whole session and only for the
-        // top-up: the day's own cards are the day and need no label.
-        $origins = $this->originsFor($plan, array_values(array_unique(array_map(
-            static fn (array $spec): string => (string) $spec['term_id'],
-            array_filter($specs, static fn (array $spec): bool => $spec['day'] === null),
-        ))));
 
         $tasks = [];
         foreach ($specs as $index => $spec) {
@@ -600,13 +512,20 @@ final readonly class BuildPlanSessionHandler
                 fromDayIndex: $spec['day'] === null ? null : (int) $spec['day'],
                 softened: (bool) $spec['softened'],
                 source: (string) $spec['source'],
-                // THE SEAM, named on the server. A task belongs to the day exactly when it came out
-                // of a day of this plan — which is «`day` is not null», the rule the client was
-                // supposed to apply and did not.
-                section: $spec['day'] === null
-                    ? PlanSessionTaskView::SECTION_REVIEW
-                    : PlanSessionTaskView::SECTION_DAY,
-                origin: $spec['day'] === null ? ($origins[$termId] ?? null) : null,
+                // THE SEAM, named on the server. Every card of the sitting now comes out of a day of
+                // THIS plan, so «which day» is the whole question: today's is the day, an earlier
+                // one is «Повторение». It used to read «`day` is null», which was the top-up — and
+                // with the top-up gone that test would have made the seam permanently empty and the
+                // day's own count permanently equal to the sitting.
+                section: (int) $spec['day'] === $dayIndex
+                    ? PlanSessionTaskView::SECTION_DAY
+                    : PlanSessionTaskView::SECTION_REVIEW,
+                // NOBODY ELSE'S SHELF TO NAME. `origin` said «из плана: Отпуск в Италии» over a card
+                // the top-up had brought in; the seam is now this plan's own earlier days, and
+                // `from_day_index` above already says which. The field stays on the wire — it is
+                // what the client would need the day a foreign card is ever dealt again — and it
+                // stays null while there is nothing true to put in it.
+                origin: null,
                 speakingForm: $dealt === ExerciseMode::Speaking
                     ? $stage?->speakingForm($termContent->kind ?? PlanStageLadder::KIND_WORD)
                     : null,
@@ -648,6 +567,31 @@ final readonly class BuildPlanSessionHandler
         $seconds = $this->home->averageCardSeconds($plan->userId(), self::LATENCY_SAMPLE) ?? self::DEFAULT_CARD_SECONDS;
 
         return max(1, min(self::MAX_TASKS, intdiv($plan->minutesPerDay() * 60, max(1, $seconds))));
+    }
+
+    /**
+     * EVERY TERM THIS PLAN STANDS ON, all days — the pool a plan card's wrong answers come from.
+     *
+     * Read off the day COLLECTIONS rather than off `$progress`, because the soft session has no
+     * progress view and the answer must be the same for both: a plan's options are the plan's, and
+     * «which sitting is this» has nothing to do with it.
+     *
+     * @return list<string>
+     */
+    private function planPoolIds(LearningPlan $plan): array
+    {
+        $ids = [];
+        foreach ($this->days->listForPlan($plan->id()) as $day) {
+            $collectionId = $day->collectionId()?->value;
+            if ($collectionId === null) {
+                continue;
+            }
+            foreach ($this->collectionTerms->termIdsForCollection($plan->userId(), $collectionId, self::DUE_CAP) as $termId) {
+                $ids[$termId] = true;
+            }
+        }
+
+        return array_keys($ids);
     }
 
     /** The day's terms in A2's order — words before replies, or the other way, by level. */
