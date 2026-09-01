@@ -4,7 +4,8 @@
 классы. Почему так устроено — в докблоках этих классов и в `docs/DECISIONS.md`; живые прогоны — в
 `docs/research/plan-*-run.md`; кто платит за какой промпт — в `docs/prompts/REGISTRY.md`.
 
-Проверено по коду на 01.09.2026.
+Проверено по коду на 01.09.2026 (дополнено нарядом PLAN-FIX-2: §1.1 лестница отбоя, §2 семейства
+дистракторов и голод, §3.1 статусы дня и `fail_code`, §3.2 матрица режимов на свежей базе).
 
 ---
 
@@ -26,7 +27,8 @@
 | починка | `Generation/Application/Service/PlanDayRepairer::repair()` | **порог**: `count(сломанных) ≤ floor(всего × 1/2)` И у каждого нарушения есть адрес. Иначе `null` — починки нет |
 | после починки | `PlanDayComposer::compose()` | слияние по (`array`, `index`) → `judge()` заново целиком. Второго P2R нет никогда |
 | повтор ЦЕЛОГО дня | `Learning/Application/Command/FinishPlanDayHandler` | только если после `markFailed()` статус вернулся в `pending`, то есть остался бюджет. Сообщение — только адреса последней попытки (`PlanDayComposer::retryMessage()`) |
-| бюджет дня | `Learning/Domain/Entity/PlanDay::MAX_ATTEMPTS = 2` | считает **платные вызовы**: `claim()` берёт 1, `markFailed(paidCalls: 2)` доначисляет второй, когда был P2R |
+| бюджет дня | `Learning/Domain/Entity/PlanDay::MAX_ATTEMPTS = 2` | считает **вызовы P2**, и только их: единственное, что двигает `generation_attempts`, — `claim()`. §1.1 |
+| починка как деньги | `PlanDay::MAX_REPAIR_CALLS = 2`, колонка `repair_calls` | вызовы P2R, начисляются ОДИНАКОВО в `markReady()` и `markFailed()`. Деньги дня = `PlanDay::paidCalls()` = сумма двух. §1.1 |
 | запись дня | `Generation/Application/Command/GeneratePlanDayHandler::materialize()` | коллекция + термины + примеры дня, одна транзакция |
 | готов | `PlanDay::markReady()` | `ready`, `fail_reason` и `generation_violations` очищаются |
 | конвейер | `GeneratePlanDayHandler::__invoke()` | `DispatchesExampleRepair::repairThenEnrich()` — починка эхо-примеров, ЗАТЕМ станок `BuildTermEnrichmentsHandler` (`VERSION = mech-v14.3`: принимаемые формы + **дистракторы**); отдельно `DispatchesImageAttachment::dispatch()` — **картинки** (Pexels по `image_api_prompt`). Fire-and-forget, день уже пригоден |
@@ -42,6 +44,40 @@
    и НЕТ ни одной строки в `reviews`, покидают пул (`enrolled_at = NULL`).
 2. `PlanTermReleaser::releasePlan()` — со всех остальных снимается `plan:<id>`; `enrolled_at`
    сохраняется. Слово, над которым работали, остаётся в обычном повторении.
+
+### 1.1. Лестница отбоя: что чинится, что переписывается, и сколько это стоит
+
+Одно решение, три исхода. Принимает `PlanDayComposer::compose()`, порог держит
+`PlanDayRepairer::brokenCards()`.
+
+| вердикт по ответу P2 | что делает лестница |
+|---|---|
+| пусто | день записывается |
+| **все** нарушения адресованы И сломанных карточек `≤ floor(всего × 1/2)` | **P2R** по этим карточкам, слияние, суд заново целиком |
+| хоть одно нарушение без адреса (`PlanViolation::isAddressed() === false`) | **повтор дня целиком** — чинить по карточкам нечего |
+| сломано больше половины карточек | **повтор дня целиком** — это не хороший день с дефектами, это плохой день |
+
+**Карточное нарушение** — любое, созданное через `PlanViolation::onCard()`, то есть несущее
+`array` + `index`. Практически весь `PlanDayValidator`: `day.example_is_a_term`,
+`day.example_duplicated`, `day.example_missing`, `day.kind_mismatch`, `day.key_is_the_term`,
+`day.key_duplicated`, `day.key_not_support_language`, `day.slot_outside_frame`,
+`day.description_gives_away`, `day.image_prompt_missing`, `day.term_is_a_name`,
+`day.role_line_invented`, `day.filler_not_a_card`, плюс `plan.term_repeated` и
+`plan.entity_disagreement` из `PlanCoherenceValidator`.
+
+**Нарушения БЕЗ адреса** (день чинится только целиком): `day.array_count`, `day.term_count`,
+`day.checkpoint_uncovered` / `..._on_word` / `..._out_of_range`, `day.frame_slot_count`,
+`day.filler_mismatch`, `plan.checkpoint_duplicated`, `day.repair_off_target`.
+
+**Счётчики.** `generation_attempts` — вызовы P2, потолок `MAX_ATTEMPTS = 2`, двигает только
+`claim()`; день становится `failed` РОВНО тогда, когда исчерпаны они. `repair_calls` — вызовы P2R,
+потолок `MAX_REPAIR_CALLS = 2` (один на прогон × два прогона), начисляются одинаково на записанном и
+на отбитом дне. До 01.09 починка начислялась в `generation_attempts` и только на провальном пути,
+отчего одни и те же два вызова читались как «1 попытка» на дне 1 и как «3» на дне 2 (DECISIONS
+п. 206, Д-18).
+
+**Что этого НЕ решает:** качество самого ответа. Живой день 2 вернул 10 сломанных карточек из 14 —
+порог сработал верно, и повтор дня был правильным ходом. Разбор — `docs/research/e2e-sim-1.md`.
 
 ---
 
@@ -88,8 +124,42 @@
 Общие запреты в `appendCandidates()`: дубль текста, синонимы цели в обе стороны (`synonymBan()`),
 пересечение переводов с уже занятыми (`overlaps()`).
 
-**Семейство** — `EloquentDistractorReader::familyOf()`: `line` против «подстановки» (`word`, `chunk`,
-`NULL`). Через границу кандидат не проходит никогда; внутри семейства порядок прежний.
+**Семейство** — `Shared/Domain/Service/DistractorFamily::of($kind, $text)`, одно правило на всех, кто
+его читает:
+
+| kind цели | что может стоять рядом |
+|---|---|
+| `word` | только `word` |
+| `chunk` | только `chunk` |
+| `line`, текст кончается на `?` | только другие вопросы-`line` |
+| `line`, всё остальное | только другие утверждения-`line` |
+| `NULL` (обычная лексика, почти весь каталог) | только `NULL` — это НЕ «word» |
+
+Через границу кандидат не проходит никогда, и добора чужим видом нет. До 01.09 семейство было
+широким (`line` против `word`/`chunk`/`NULL` вместе), и живой прогон показал обе дыры: вопрос среди
+трёх утверждений и связка среди одиночных слов (DECISIONS п. 207).
+
+**Голод.** Правило читают ТРИ места, и все три через `DistractorFamily`:
+
+| место | что делает при голоде |
+|---|---|
+| `PlanStandings::applicableFor()` | пятый фильтр: если своего семейства в терминах плана меньше `mc_options`, режимы выбора (`multiple_choice`, `description_match`) не попадают в `applicable` — карточка **не owed**, и ступень закрывается без неё. Счётчик `plan_distractor_starved` через `ModeFallbackReporter::distractorStarved()` |
+| `StudyCardAssembler::recognitionCard()` | у плана (`optionCount !== null`) возвращает `null`, если не набирается полное число; вне плана — прежнее «меньше, но не вперемешку» |
+| `StudyCardAssembler::assemble()` | у плана отказ карточки целиком, если вариантов меньше заказанного; вне плана прежний пол `MIN_OPTIONS = 2` (QA-15) |
+
+Порядок важен: снятие ДО раздачи, потому что шаг чек-листа закрывается ответом, и шаг, карточку для
+которого построить нельзя, — это ступень, которая не закрывается, и день, который не проходится.
+`PlanStandings` считает семейства по терминам плана, то есть строго не шире читателя дистракторов
+(тот ещё добирает с полок и витрины) — чек-лист имеет право не попросить карточку, которую читатель
+собрал бы, и не имеет права попросить ту, которую он собрать не может.
+
+**Число вариантов** — `PlanKnobs::mcOptions`, конфиг уровня (DECISIONS п. 167), НЕ код:
+`zero` → 3, `basic` → 3, `conversational` → 4, `fluent` → 4. Обычная (не плановая) сессия всегда
+даёт 4 — `StudyCardAssembler::OPTION_COUNT`.
+
+**Реплика роли** (`terms.speaker = 'role'`) получает только узнавание: `PlanStandings::PRODUCTION_MODES`
+(`word_bank`, `scramble`, `typing`, `speaking`, `cloze`, `dictation`) выпадают из `applicable`.
+`speaker` едет клиенту и в контракте дня, и в задаче сессии.
 
 ---
 
@@ -156,6 +226,40 @@
 
 ---
 
+## 3.1. Статус дня, как его читает клиент
+
+Пишется в `learning_plan_days.status`; отдаётся `PlanResource::day()` как есть, рядом с
+`generation_attempts`, `repair_calls` и `fail_code`.
+
+| статус | что это значит на самом деле | подпись в приложении |
+|---|---|---|
+| `pending` | никто ещё не взял день. Задача может быть в очереди, а может и не быть | «В очереди» |
+| `generating` | воркер держит день **прямо сейчас**. Пишет это только `claim()` | «Собирается» |
+| `ready` | материал есть | состав дня |
+| `failed` | вызовы P2 исчерпаны | «Не собрался», и без кнопки «Продолжить» |
+| `done` | ступень A дня закрыта | «пройден» |
+
+`pending` и `generating` — РАЗНЫЕ подписи и ОДИН поллинг (`PlanDayStatus.isBuilding` на клиенте):
+опрос обязан продолжаться и на `pending`, а подпись — нет. Живой прогон подписал «Собирается» два
+нетронутых дня с нулём попыток (Д-20).
+
+**`fail_code`** — код первого фатального нарушения последней попытки, и единственное, что из вердикта
+едет клиенту. Русская проза (`PlanViolation::$detail` → `fail_reason`) остаётся на сервере
+(DECISIONS п. 208). Клиент формулирует сам: `mobile/lib/features/plan/plan_fail_reason.dart` — карта
+код → строка, и одна нейтральная строка для кода, которого он не знает. **Появился новый код —
+добавляется строка там**; выдумывать причину по форме кода нельзя.
+
+## 3.2. Матрица режимов на свежей базе
+
+Миграции пишут все 51 строку и шлют новый тренажёр ВЫКЛЮЧЕННЫМ глобально (правило выкатки:
+себе → бете → всем из админки). `database/seeders/LearningModeSettingsSeeder` несёт то, что владелец
+уже выкатил, — только `enabled` и `position` у `scope = global`, ни одного гейта и ни одной строки
+`scope = plan`.
+
+Установка свежей базы: `php artisan migrate` затем `php artisan db:seed` (сидер подключён к
+`DatabaseSeeder`). Без него план на новом аккаунте выходит без интро и без говорения, и ступень A
+схлопывается с четырёх шагов до двух (Д-14, Д-15).
+
 ## 4. Счётчики `plan_*`
 
 Пишет `Generation/Infrastructure/Adapter/LoggingPlanDefectReporter` через порт `PlanDefectReporter`.
@@ -168,6 +272,10 @@
 `plan_day_no_question`, `plan_day_no_repair`, `plan_day_filler_mismatch`,
 `plan_day_chunk_outside_frame`, `plan_day_no_role_line`, `plan_day_substitution_outside_frame`,
 `plan_day_role_line_share`, `plan_day_transliteration_dropped`.
+
+Особняком — `plan_distractor_starved` (§2): его пишет НЕ этот репортер, а
+`Learning/Infrastructure/Adapter/LoggingModeFallbackReporter` через порт `ModeFallbackReporter`,
+потому что он про сборку сессии, а не про ответ модели. Хранилище то же (`Cache`), читателя тоже нет.
 
 **Где их читать: НИГДЕ.** `PlanDefectReporter::warnings()` и `droppedTransliterations()` не
 вызываются ни из одного экрана, эндпойнта или консольной команды — только из тестов. Значение

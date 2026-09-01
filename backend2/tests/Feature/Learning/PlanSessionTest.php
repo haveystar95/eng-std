@@ -401,6 +401,48 @@ it('writes only day 1 of a LONG plan at the start, and the next when a day is wa
         ->and($after[2])->toBe('ready');
 });
 
+it('closes the day off the CLIENT’S complete, and queues day 2 from that alone (Д-1)', function () {
+    // THE WHOLE CHAIN, in one test, because it was broken in the join and not in any of its parts:
+    // client → `POST /study/sessions/{id}/complete` → `CompleteStudySession` → `PlanDayPassing` →
+    // `PlanGenerationPolicy::nextAfterDone` → day 2 written.
+    //
+    // Every piece of that worked in isolation and the live run still ended with day 1 `ready` and
+    // day 2 never queued, because the app never sent the completion (`session_screen.dart` called
+    // `record` only from the ordinary summary). The day turned `done` on the NEXT session build —
+    // the very fallback PLAN-SESSION-FIX declared closed — which is why this test must not build a
+    // second session to prove anything.
+    [, $token, $planId] = startedPlan($this, [
+        'goal_text' => 'Большая цель [scenes:5]',
+        'event_date' => now()->addDays(10)->format('Y-m-d'),
+    ]);
+
+    $statuses = fn (): array => DB::table('learning_plan_days')
+        ->where('plan_id', $planId)->orderBy('day_index')->pluck('status', 'day_index')->all();
+
+    expect($statuses()[1])->toBe('ready')
+        ->and($statuses()[2])->toBe('pending');
+
+    // ONE sitting: build it, answer every task, and close it the way the app does.
+    $session = planSession($this, $token, $planId);
+    answerTasks($this, $token, $session);
+
+    // …and before the completion, nothing has moved. This is the state the live run was stuck in.
+    expect($statuses()[1])->toBe('ready')
+        ->and($statuses()[2])->toBe('pending')
+        ->and(DB::table('study_sessions')->where('id', $session['session_id'])->value('ended_at'))
+        ->toBeNull();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/study/sessions/{$session['session_id']}/complete")
+        ->assertOk();
+
+    // The completion alone did all three things.
+    expect(DB::table('study_sessions')->where('id', $session['session_id'])->value('ended_at'))
+        ->not->toBeNull();
+    expect($statuses()[1])->toBe('done')
+        ->and($statuses()[2])->toBe('ready');
+});
+
 it('builds a day on demand, idempotently, and refuses to run more than two ahead', function () {
     [, $token, $planId] = startedPlan($this, [
         'goal_text' => 'Большая цель [scenes:5]',
