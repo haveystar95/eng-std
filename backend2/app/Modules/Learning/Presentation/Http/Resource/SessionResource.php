@@ -47,6 +47,13 @@ final class SessionResource extends JsonResource
                 // card is answered by TAPPING, so the client uploads the tapped id and `answer`
                 // above is this card's own term id.
                 'option_ids' => $card->optionIds,
+                // ADDITIVE. The piece a SPOKEN line is graded on — the word in the frame's hole.
+                // Null on every other trainer, on a spoken word, and on a line the day left no
+                // piece of, and null there MEANS «say the whole line»: the card says so and the
+                // server grades so. Sent because the device shows its verdict before the batch
+                // leaves, and a device grading fifteen words while the server grades three is a
+                // «Верно» the log then contradicts.
+                'speaking_key' => $card->speakingKey,
             ], $this->resource->cards),
         ];
     }

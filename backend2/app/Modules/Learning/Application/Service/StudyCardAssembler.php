@@ -373,6 +373,10 @@ final readonly class StudyCardAssembler
             // learner heard as `purpose`, which the server then grades `again`.
             synonyms: ! $asksExample && $mode->acceptsSynonyms() ? $content->synonyms : [],
             ladderStep: $step,
+            // WHAT A SPOKEN LINE IS JUDGED ON. Sent on the speaking card alone — the trainer that
+            // reads it — and only where the day left one; the client then underlines the piece
+            // instead of every word the recogniser missed, and says which piece it wants.
+            speakingKey: $mode === ExerciseMode::Speaking ? $content->speakingKey : null,
         );
     }
 

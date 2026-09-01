@@ -24,6 +24,12 @@ use App\Modules\Shared\Domain\ValueObject\TermId;
  * `filler` is the third of that set and arrived with v0.3: the string that stands in the frame's
  * hole, which is what the cloze gap blanks. Stored rather than re-derived from `text` minus
  * `frame`, because that derivation is right nine times and quietly wrong the tenth.
+ *
+ * `speakingKey` is the fourth, and it is a DECISION rather than a copy: which string a spoken line
+ * is graded on ({@see \App\Modules\Generation\Domain\Service\PlanSpeakingKey}). Usually the
+ * filler; on a formula it may be another card of the same day; sometimes nothing, which means «say
+ * the whole line». Only the code that writes the day can see all three, so it is stored here rather
+ * than worked out again by the grader.
  */
 interface TermPlanFactsWriter
 {
@@ -35,5 +41,6 @@ interface TermPlanFactsWriter
         ?string $frame = null,
         ?string $speaker = null,
         ?string $filler = null,
+        ?string $speakingKey = null,
     ): void;
 }

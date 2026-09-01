@@ -179,6 +179,7 @@ final class EloquentTermContentReader implements TermContentReader
                 kind: $term->kind !== null ? (string) $term->kind : null,
                 frame: $term->frame !== null ? (string) $term->frame : null,
                 speaker: $term->speaker !== null ? (string) $term->speaker : null,
+                speakingKey: $term->speaking_key !== null ? (string) $term->speaking_key : null,
             );
         }
 

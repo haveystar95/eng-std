@@ -18,6 +18,7 @@ final readonly class EloquentTermPlanFactsWriter implements TermPlanFactsWriter
         ?string $frame = null,
         ?string $speaker = null,
         ?string $filler = null,
+        ?string $speakingKey = null,
     ): void {
         DB::table('terms')
             ->where('id', $termId->value)
@@ -30,6 +31,9 @@ final readonly class EloquentTermPlanFactsWriter implements TermPlanFactsWriter
                 // filler: «nothing stands in the hole» and «there is no hole» are one state here.
                 'frame' => $frame === '' ? null : $frame,
                 'filler' => $filler === '' ? null : $filler,
+                // Null means «ask for the whole line», which is a real answer and not an absence —
+                // but an empty string is not it, for the same reason as above.
+                'speaking_key' => $speakingKey === '' ? null : $speakingKey,
                 'speaker' => $speaker,
                 'updated_at' => now(),
             ]);

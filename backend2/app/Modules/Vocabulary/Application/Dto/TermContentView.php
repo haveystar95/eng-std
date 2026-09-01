@@ -80,5 +80,14 @@ final readonly class TermContentView
          * question.
          */
         public ?string $speaker = null,
+        /**
+         * WHAT A SPOKEN CARD FOR THIS LINE ASKS FOR — the piece, not the sentence.
+         *
+         * Chosen when the day is written ({@see \App\Modules\Generation\Domain\Service\PlanSpeakingKey}):
+         * the frame's filler, or a word of the same day standing inside a formula, or nothing.
+         * NULL means «the whole line», which is a real answer and is what the card then says out
+         * loud. Null on every term that is not a plan line.
+         */
+        public ?string $speakingKey = null,
     ) {}
 }

@@ -14,6 +14,7 @@ use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Domain\Exception\PlanDayRefused;
 use App\Modules\Generation\Domain\Exception\PlanSpendNotRecorded;
+use App\Modules\Generation\Domain\Service\PlanSpeakingKey;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
 use App\Modules\Learning\Application\Command\ClaimPlanDay;
 use App\Modules\Learning\Application\Command\ClaimPlanDayHandler;
@@ -215,7 +216,7 @@ final readonly class GeneratePlanDayHandler
             ));
 
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $draft->ownerId));
-            $this->writeFacts($termId, $item, $brief, $collectionId);
+            $this->writeFacts($termId, $item, $brief, $collectionId, $draft->items);
 
             $termIds[] = $termId->value;
         }
@@ -246,11 +247,13 @@ final readonly class GeneratePlanDayHandler
      * term that came from a collection has never been asked either question — the answer «false,
      * null» on it is absence, not a considered no.
      */
+    /** @param list<PlanDayItem> $dayItems every card of the day — what picks a line's speaking key */
     private function writeFacts(
         TermId $termId,
         PlanDayItem $item,
         PlanDayGenerationBrief $brief,
         CollectionId $collectionId,
+        array $dayItems,
     ): void {
         $this->planFacts->write(
             $termId,
@@ -267,6 +270,10 @@ final readonly class GeneratePlanDayHandler
             frame: $item->hasSlot() ? $item->frame : '',
             speaker: $item->speaker,
             filler: $item->hasSlot() ? $item->filler : '',
+            // WHAT THE SPOKEN CARD ASKS FOR. Decided here because only the code that writes the DAY
+            // can see all of it: the filler, or failing that a word or connector of this same day
+            // standing inside the line. {@see PlanSpeakingKey}
+            speakingKey: PlanSpeakingKey::of($item, $dayItems),
         );
 
         $this->scopedExamples->write(

@@ -68,5 +68,18 @@ final readonly class SessionCardView
          * ({@see \App\Modules\Vocabulary\Application\Dto\TermContentView::$transliterationHint}).
          */
         public ?string $transliteration = null,
+        /**
+         * WHAT THE SPOKEN CARD ACTUALLY ASKS FOR — the piece of the line, not the line.
+         *
+         * Present on a `speaking` card whose term is a plan line with a key
+         * ({@see \App\Modules\Generation\Domain\Service\PlanSpeakingKey}), null everywhere
+         * else, including on a spoken WORD, where the term is already the whole ask.
+         *
+         * It rides on the CARD rather than on the plan task because the server grades by it on
+         * every path a spoken line can be dealt on — a plan sitting, a day opened out of turn, free
+         * practice — and a client that did not know it on one of those would show a verdict the
+         * server contradicts. Null means «the whole line», and the card says so.
+         */
+        public ?string $speakingKey = null,
     ) {}
 }

@@ -239,6 +239,25 @@ final readonly class SubmitReviewsHandler
             return new ExpectedAnswer([$key->example], isPhrase: true, policy: $this->policyForExample($input));
         }
 
+        // A SPOKEN LINE IS JUDGED ON ITS KEY, not on all fifteen of its words.
+        //
+        // The card is «say the reply that uses <this word>», and what it teaches is the word: the
+        // frame around it is scaffolding the learner reads off the screen. Graded by coverage of
+        // the WHOLE sentence it marked a correct reading wrong three sittings running (owner,
+        // 01.09) and underlined seven words the card had never asked for. The key is chosen when
+        // the day is written and stored on the term, so the grade and the card agree by
+        // construction — {@see \App\Modules\Generation\Domain\Service\PlanSpeakingKey}.
+        //
+        // Coverage, and the same coverage: the answer still came out of a recogniser, and the
+        // reasons equality is the wrong bar for a sentence hold word for word for a phrase inside
+        // one. A line with no key falls through to the branch below and is asked for entire, which
+        // is what it always was.
+        if ($input->exerciseMode === ExerciseMode::Speaking
+            && $key->speakingKey !== null
+            && trim($key->speakingKey) !== '') {
+            return new ExpectedAnswer([$key->speakingKey], isPhrase: true, policy: MatchPolicy::Coverage);
+        }
+
         // WORD-LEVEL. The key is the term's own forms, plus its near-synonyms where the card asked
         // what the word MEANS ({@see ExerciseMode::acceptsSynonyms()}) and not where it asked for
         // this word in particular. Both halves are target-language text the term itself owns, so the

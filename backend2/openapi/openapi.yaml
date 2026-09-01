@@ -3004,6 +3004,17 @@ components:
             hint at all. Beside `transcription` and never instead of it: that one is IPA, one per
             term in a notation the learner has to have been taught; this one is per language pair,
             in an alphabet they already read.
+        speaking_key:
+          type: string
+          nullable: true
+          description: >
+            ADDITIVE. On a `speaking` card whose term is a plan LINE: the piece of the line the card
+            is actually about — the word standing in the frame's hole («long-term living in a new
+            country» inside «Yes, I'm looking for a place to rent for ___»). The server grades the
+            transcript for THIS string and not for the whole sentence, so the client must underline
+            and judge the same one. NULL on every other mode, on a spoken word, and on a line the
+            day left no piece of — and null there MEANS «say the whole line», which is what the card
+            should say out loud.
         example: { type: string, nullable: true }
         example_translation: { type: string, nullable: true }
         options:
