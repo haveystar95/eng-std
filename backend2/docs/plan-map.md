@@ -4,8 +4,8 @@
 классы. Почему так устроено — в докблоках этих классов и в `docs/DECISIONS.md`; живые прогоны — в
 `docs/research/plan-*-run.md`; кто платит за какой промпт — в `docs/prompts/REGISTRY.md`.
 
-Проверено по коду на 01.09.2026 (дополнено нарядом PLAN-FIX-2: §1.1 лестница отбоя, §2 семейства
-дистракторов и голод, §3.1 статусы дня и `fail_code`, §3.2 матрица режимов на свежей базе).
+Проверено по коду на 01.09.2026 (дополнено нарядом PLAN-FIX-4: §2 лестница плана своя и порядок
+дня, §2.3 ключ говорения, §3 гейт `line.translation_missing_key`).
 
 ---
 
@@ -36,7 +36,7 @@
 | день пройден | `Learning/Application/Service/PlanDayPassing::mark()` | `passed` = все слова дня закрыли ступень A. Вызывается из `CompleteStudySessionHandler` (конец посадки) и из сборки следующей сессии |
 | следующий день | `PlanDayPassing::mark()` → `PlanGenerationPolicy::nextAfterDone()` | ставится в очередь только на переходе в `done` |
 | финальный день | `Learning/Domain/ValueObject/PlanDayKind::Final` | материала не имеет: `PlanDay::claim()` возвращает `false` |
-| окончание | `EndPlanHandler` (`PlanEnding::Pause` / `Abandon` / `Complete`), `RecordPlanFeedbackHandler` | `PlanEnding::keepsHold()` — только `Pause` держит слова |
+| окончание | `EndPlanHandler` (`PlanEnding::Pause` / `Abandon` / `Complete`), `RecordPlanFeedbackHandler` | `PlanEnding::keepsHold()` — только `Pause` держит слова. Архивация — В ТОМ ЖЕ обработчике и в той же транзакции; `plan:archive-terms` только ремонт для планов, кончившихся ДО правила |
 
 **Что уходит в пул при окончании** (`Abandon`/`Complete`, порядок обязателен):
 
@@ -62,8 +62,8 @@
 `day.example_duplicated`, `day.example_missing`, `day.kind_mismatch`, `day.key_is_the_term`,
 `day.key_duplicated`, `day.key_not_support_language`, `day.slot_outside_frame`,
 `day.description_gives_away`, `day.image_prompt_missing`, `day.term_is_a_name`,
-`day.role_line_invented`, `day.filler_not_a_card`, плюс `plan.term_repeated` и
-`plan.entity_disagreement` из `PlanCoherenceValidator`.
+`day.role_line_invented`, `day.filler_not_a_card`, `line.translation_missing_key`, плюс
+`plan.term_repeated` и `plan.entity_disagreement` из `PlanCoherenceValidator`.
 
 **Нарушения БЕЗ адреса** (день чинится только целиком): `day.array_count`, `day.term_count`,
 `day.checkpoint_uncovered` / `..._on_word` / `..._out_of_range`, `day.frame_slot_count`,
@@ -90,7 +90,7 @@
 
 | # | ведро | `source` | `section` | `from_day_index` | `origin` |
 |---|---|---|---|---|---|
-| 1 | слова ЭТОГО дня, не закрывшие ступень A, в порядке `PlanDayOrder` | `new` | `day` | текущий день | null |
+| 1 | слова ЭТОГО дня, не закрывшие ступень A, в порядке `PlanDayOrder` (§2.2) | `new` | `day` | текущий день | null |
 | 2 | слова ЭТОГО плана с прошлых дней, просроченные, на ступени B или C (B раньше C) — шов «Повторение» | `plan_review` | `review` | день ввода | null |
 | — | мягкий прогон (не строгая сессия) | `soft` | `day` | день | null |
 
@@ -110,12 +110,60 @@
 
 **Обратная сторона того же правила.** Пока план идёт, его слова раздаёт только он: их нет в обычной
 сессии и в «Повторить N» (`PlanHeldTerms`). Когда план кончается — их нет там уже насовсем
-(`PlanTermArchiver`, DECISIONS п. 214): завершение и отмена НЕ выпускают слова в общую лестницу.
+(`PlanTermArchiver`, DECISIONS п. 214): завершение и отмена НЕ выпускают слова в общую лестницу, и
+делает это сам `EndPlanHandler`, в той же транзакции, что пишет статус.
 
 **`origin` всегда `null`.** Строка осталась в контракте (клиент, читающий её, не ломается), но
 называть чужую полку больше нечего: доливки нет, а подписывать «из плана: <этот же план>» над
 карточкой его собственного прошлого дня — то самое враньё со скрина 01.09. Клиент рисует шов по
 `section` первой не-дневной карточки и подписывает его «Повторение · из прошлых дней».
+
+### 2.1. Лестница плана считается для пары (ПЛАН, термин)
+
+`PlanStandings::forTerms()` + `PlanStandingsReader::factsFor()/introducedAmong()`, параметр `since`.
+
+Термины дедуплицированы глобально, поэтому журнал `(user, term)` несёт всю историю слова: чужой
+план, блокнот, этот план. Доказательством для ЭТОГО плана считается только то, что случилось после
+того, как карточка вошла в него. Отсечка — `collection_items.created_at` дня
+(`UserCollectionTermsReader::joinedAtForCollection()`), читается ПО ДНЮ: день плана это коллекция,
+записанная в один момент, а карточка дня 3 имеет свою дату.
+
+- Новая карточка нового плана начинается с интро, что бы ни было со словом раньше. Экспозиция
+  старше отсечки — не закрывает интро.
+- Прогресс блокнота не меняется: сборка сессии читает лестницу и не пишет в `user_term_progress`.
+- Отсечка, а не «ответы внутри сессий плана»: точное прочтение уронило бы шаг ревью, приехавшего
+  без `session_id`, а незакрываемый шаг — это непроходимый день.
+- Обе стороны — `timestamp(0)`; ответ в ту же СЕКУНДУ, что и запись дня, считается «после».
+  В тестах поэтому `travel()`, а `ageHistory()` двигает и `collection_items.created_at`.
+
+### 2.2. Порядок дня — `PlanDayOrder`
+
+Четыре блока, всегда одни и те же: `word` → `chunk` → `line` (реплики ученика) → `line` со
+`speaker = role`. Внутри блока — по возрастанию трудности, неоцененная карточка сортируется как
+лёгкая.
+
+**Уровень порядок НЕ решает.** `PlanLevel::wordsBeforeLines()` (от `conversational` реплики шли
+первыми) удалён: «слова внутри реплики узнаются по дороге» — узнавание это отдельная карточка,
+которую раздаёт лестница своего слова, и на живом дне она доходила до слов после всех реплик
+(DECISIONS п. 216). Уровень по-прежнему решает число вариантов и открытые тренажёры.
+
+### 2.3. Говорение фразы — по ключу
+
+`terms.speaking_key`, выбирается один раз при записи дня (`PlanSpeakingKey::of()`), потому что
+только этот код видит все варианты:
+
+| порядок | ключ |
+|---|---|
+| 1 | `filler` — слово в дырке каркаса |
+| 2 | у формулы — карточка дня, стоящая внутри реплики; самая ДЛИННАЯ из подходящих, по границам слов |
+| 3 | ничего — `null`, и это значит «скажи фразу целиком» |
+
+Читают колонку обе стороны: `TermAnswerKeyView::$speakingKey` → `SubmitReviewsHandler::expectedFor()`
+(сравнение покрытием, как и раньше) и `SessionCardView::$speakingKey` → `speaking_key` в контракте
+карточки. Ключ едет на КАРТОЧКЕ, а не на плановой задаче: фразу раздают и мягкий прогон, и
+свободная практика, и клиент, не знающий ключа на одном из путей, покажет вердикт, который сервер
+опровергнет. Клиент подчёркивает только слова ключа (`SessionGrader.keyWordIndices`) и подписывает
+карточку «скажи фразу, главное — <ключ>» / «скажи фразу целиком».
 
 ### Дистракторы — `Vocabulary/Infrastructure/Eloquent/EloquentDistractorReader::forTarget()`
 
@@ -224,6 +272,7 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 | `day.key_duplicated`, `day.key_not_support_language` | ключи |
 | `day.description_gives_away` | описание называет свой термин |
 | `day.image_prompt_missing` | нет `image_api_prompt` |
+| `line.translation_missing_key` | перевод реплики не содержит перевода её ключевой карточки (§2.3). Сравнение по ОСНОВАМ (`TranslationKeyPresence`, длина основы — по языку поддержки в `config/generation.php → translation_stems`, ru/uk = 5). Порог — пол: хотя бы одно значимое слово ключа. Язык без правила не судится вовсе |
 
 Счётчики (`warnings()`): `plan_day_formula_cap`, `plan_day_no_question`, `plan_day_no_repair`,
 `plan_day_filler_mismatch`, `plan_day_chunk_outside_frame`, `plan_day_no_role_line`,
