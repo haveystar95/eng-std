@@ -116,7 +116,10 @@ it('repairs ONE broken card with one short call and leaves the other thirteen al
     expect($model->repairCalls())->toBe(1)
         ->and($row->status)->toBe('ready')
         ->and($row->collection_id)->not->toBeNull()
-        ->and($row->generation_attempts)->toBe(1);
+        ->and($row->generation_attempts)->toBe(1)
+        // THE REPAIR IS ON THE WRITTEN ROW TOO (Д-18). It used to be charged only when the day
+        // failed, so a day that cost two calls and worked said it had cost one.
+        ->and($row->repair_calls)->toBe(1);
 
     // THE REPAIR CALL SAW THE ACCEPTED DAY AND THE BROKEN CARD, and knew which was which.
     $prompt = $model->repairPrompts[0];
@@ -167,7 +170,7 @@ it('repairs ONE broken card with one short call and leaves the other thirteen al
 
 // ── (б) the repair itself comes back broken ───────────────────────────────────────────────────
 
-it('fails the day when the repaired card breaks something new, and buys no second repair', function () {
+it('buys no second repair inside the run, and leaves the day its second DAY call', function () {
     $broken = $this->day;
     $broken['words'][0]['image_api_prompt'] = '';
 
@@ -177,7 +180,7 @@ it('fails the day when the repaired card breaks something new, and buys no secon
 
     [$planId, $model] = runPlanWith(
         new ScriptedPlanModel(
-            [$broken],
+            [$broken, $broken],
             [['cards' => [['array' => 'words', 'index' => 0, 'card' => $stillBroken]]]],
         ),
         $this->defects,
@@ -185,19 +188,48 @@ it('fails the day when the repaired card breaks something new, and buys no secon
 
     $row = dayRow($planId);
 
-    expect($model->repairCalls())->toBe(1)
-        // NO SECOND REPAIR, and no second day either: the run spent two calls and the counter is
-        // the money.
-        ->and($model->dayCalls())->toBe(1)
+    // NO SECOND REPAIR INSIDE ONE RUN — that rule is unchanged. What changed is what the run costs
+    // the day: a repair is not an attempt (Д-18), so the second DAY call the cap was written to
+    // allow is still there and is taken. The second answer is broken the same way and has no repair
+    // left to script, so the day ends spent.
+    expect($model->dayCalls())->toBe(2)
+        // One repair per RUN and never two — two runs, therefore two, which is the structural
+        // ceiling {@see PlanDay::MAX_REPAIR_CALLS} names.
+        ->and($model->repairCalls())->toBe(2)
         ->and($row->status)->toBe('failed')
         ->and($row->generation_attempts)->toBe(PlanDay::MAX_ATTEMPTS)
+        ->and($row->repair_calls)->toBe(PlanDay::MAX_REPAIR_CALLS)
         ->and($row->collection_id)->toBeNull();
 
-    /** @var list<string> $violations */
-    $violations = json_decode((string) $row->generation_violations, true);
+    // The SECOND day call was told where the FIRST run's merged day broke — addresses, no cards.
+    expect($model->dayMessages[1])->toContain('THE PREVIOUS ANSWER TO THIS DAY FAILED')
+        ->toContain('words[0].translation');
+});
 
-    expect(implode(' ', $violations))->toContain(PlanDayValidator::KEY_IS_THE_TERM)
-        ->and(implode(' ', $violations))->toContain('words[0].translation');
+it('sends a single addressed card to P2R rather than rewriting the day (Д-18)', function () {
+    // `day.example_is_a_term` on ONE card — the exact violation the live run's day 2 died on. It
+    // names a card, so it is repairable, and the day must not be bought again whole.
+    $broken = $this->day;
+    $broken['words'][0]['example'] = $this->day['words'][1]['text'];
+
+    [$planId, $model] = runPlanWith(
+        new ScriptedPlanModel(
+            [$broken],
+            [['cards' => [['array' => 'words', 'index' => 0, 'card' => $this->day['words'][0]]]]],
+        ),
+        $this->defects,
+    );
+
+    $row = dayRow($planId);
+
+    // ONE day call for day 1 — read off the row, because `dayCalls()` counts the short plan's
+    // other days too, which run off the end of the script.
+    expect($model->repairCalls())->toBe(1)
+        ->and($model->repairMessages[0])->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM)
+        ->and($model->repairMessages[0])->toContain('"index": 0')
+        ->and($row->status)->toBe('ready')
+        ->and($row->generation_attempts)->toBe(1)
+        ->and($row->repair_calls)->toBe(1);
 });
 
 // ── (в) more than half the day ────────────────────────────────────────────────────────────────
@@ -226,7 +258,9 @@ it('does not call the repair at all when more than half the day is broken', func
         ->and($model->dayMessages[1])->toContain('THE PREVIOUS ANSWER TO THIS DAY FAILED')
         ->and($model->dayMessages[1])->toContain('phrases[0].image_api_prompt')
         ->and($row->status)->toBe('failed')
-        ->and($row->generation_attempts)->toBe(PlanDay::MAX_ATTEMPTS);
+        ->and($row->generation_attempts)->toBe(PlanDay::MAX_ATTEMPTS)
+        // Nothing was patched, so nothing is charged as a patch.
+        ->and($row->repair_calls)->toBe(0);
 });
 
 // ── (г) the repair answers about the wrong cards ───────────────────────────────────────────────
@@ -242,18 +276,22 @@ it('refuses a repair that answers about a card nobody asked about', function (ar
 
     $row = dayRow($planId);
 
-    expect($model->repairCalls())->toBe(1)
-        ->and($model->dayCalls())->toBe(1)
+    // The run is over: the merge did not happen, and the day is refused. It still has the second
+    // DAY call the cap allows — a repair is not an attempt (Д-18) — and takes it; the script is
+    // spent by then, so the day ends `failed` on the empty answer.
+    expect($model->dayCalls())->toBe(2)
         ->and($row->status)->toBe('failed')
+        ->and($row->generation_attempts)->toBe(PlanDay::MAX_ATTEMPTS)
         ->and($row->collection_id)->toBeNull();
 
+    // What the FIRST run recorded is the assertion: off-target, and the original defect still there.
     /** @var list<string> $violations */
-    $violations = json_decode((string) $row->generation_violations, true);
+    $violations = json_decode((string) json_encode($model->dayMessages[1]), true);
 
-    expect(implode(' ', $violations))->toContain(PlanDayRepairer::OFF_TARGET)
+    expect($violations)->toContain(PlanDayRepairer::OFF_TARGET)
         // …and the day is still failing on what it was failing on. Nothing was merged, so nothing
         // was quietly fixed and nothing was quietly overwritten.
-        ->and(implode(' ', $violations))->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING);
+        ->and($violations)->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING);
 })->with([
     'the wrong index' => [fn () => [[
         'array' => 'words',

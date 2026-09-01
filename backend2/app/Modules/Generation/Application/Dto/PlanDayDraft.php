@@ -24,5 +24,14 @@ final readonly class PlanDayDraft
         public string $model,
         public string $promptVersion,
         public ?string $costUsd,
+        /**
+         * P2R calls this run made — 0, or 1 when the answer was nearly right and a repair fixed it.
+         *
+         * Carried on the SUCCESSFUL draft and not only on the refusal, which is the whole of Д-18:
+         * the same two calls used to be charged on the failed path and free on the written one, so
+         * the day's counters said different things about identical spending
+         * ({@see \App\Modules\Learning\Domain\Entity\PlanDay::markFailed()}).
+         */
+        public int $repairCalls = 0,
     ) {}
 }

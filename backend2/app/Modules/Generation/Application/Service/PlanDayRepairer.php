@@ -43,9 +43,12 @@ use App\Modules\Shared\Domain\Service\LanguageName;
  * repair call could be pointed at, and a repair that fixed every ADDRESSED violation would leave
  * the day failing the unaddressed one anyway, having spent a call to find that out.
  *
- * **One repair call, and never two.** A repaired day that still fails is `failed`. The day's
- * counter is money (п. 199), the repair is charged to it, and a second repair on top of a repair is
- * the four-calls-per-day arithmetic that v0.3 was written to remove.
+ * **One repair call per RUN, and never two.** A second repair on top of a repair, inside one claim,
+ * is the inner-retry arithmetic v0.3 was written to remove. What a repaired-and-still-broken day
+ * does NOT lose is its second DAY call: the repair is charged to `learning_plan_days.repair_calls`
+ * and the attempt counter stays the count of P2 calls, because a counter that meant both read one
+ * number when the day was written and another when it was refused (Д-18). Two runs, therefore at
+ * most two repairs per day ({@see \App\Modules\Learning\Domain\Entity\PlanDay::MAX_REPAIR_CALLS}).
  */
 final readonly class PlanDayRepairer
 {

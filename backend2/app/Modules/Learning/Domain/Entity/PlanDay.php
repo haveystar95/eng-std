@@ -16,7 +16,7 @@ use DateTimeImmutable;
  * One day of a plan, and the small state machine that keeps a paid model call from being made
  * twice.
  *
- * ## Two attempts, then stop — and since v0.3 that is also two PAID CALLS
+ * ## Two attempts, then stop — and the attempt is the DAY CALL
  *
  * `generationAttempts` counts CLAIMS, not failures, and the cap is two. The reason it is a stored
  * counter and not a queue `tries` setting: the queue retries a job that CRASHED, which is a
@@ -27,7 +27,20 @@ use DateTimeImmutable;
  * Until v0.3 this counter did not mean what it says. `PlanDayComposer` made its own second call
  * inside one claim, so two claims were FOUR paid calls — a live day spent $0.197 on a budget that
  * was written for two (`docs/research/plan-v0.2.1-run.md`). The composer's inner retry is gone;
- * one claim is one call, and this number is the money.
+ * one claim is one day call.
+ *
+ * ## The repair is money too, and it is counted in its OWN column
+ *
+ * v0.3.1 added P2R and charged it to this same counter, on the failed path only. The E2E-SIM-1 run
+ * showed both ends of what that did (Д-18): a day that spent P2 + P2R and was WRITTEN said
+ * «1 attempt», and a day that spent P2 + P2 + P2R and was REFUSED said «3 attempts» — three, under
+ * a cap of two, having made exactly the two day calls the cap allows. The same two calls read as
+ * one number or as two depending on how the day ended.
+ *
+ * So {@see $repairCalls} stands beside it, charged identically on both paths, and this counter is
+ * the DAY calls alone — the only thing {@see MAX_ATTEMPTS} caps and the only thing that decides
+ * `failed`. Money is {@see paidCalls()}, which is the sum, and the ledger rows in
+ * `generation_requests` remain the record of what each call actually cost.
  *
  * ## What a failed attempt leaves behind — the LAST verdict, and only as addresses
  *
@@ -56,6 +69,14 @@ final class PlanDay
 {
     public const MAX_ATTEMPTS = 2;
 
+    /**
+     * How many REPAIR calls one day may cost — one per run, and there are two runs
+     * ({@see \App\Modules\Generation\Application\Service\PlanDayRepairer}: «one repair call, and
+     * never two»). Structurally guaranteed rather than gated, so this is the assertion that the
+     * structure held, not a second budget with its own opinion.
+     */
+    public const MAX_REPAIR_CALLS = 2;
+
     private function __construct(
         private readonly PlanDayId $id,
         private readonly PlanId $planId,
@@ -74,6 +95,8 @@ final class PlanDay
         private ?string $failReason,
         /** @var list<string> what the LAST answer failed, as addresses — {@see markFailed()} */
         private array $lastViolations = [],
+        /** {@see chargeRepairs()} — the P2R calls, counted apart from the P2 ones. */
+        private int $repairCalls = 0,
     ) {}
 
     /**
@@ -117,10 +140,12 @@ final class PlanDay
         int $generationAttempts,
         ?string $failReason,
         array $lastViolations = [],
+        int $repairCalls = 0,
     ): self {
         return new self(
             $id, $planId, $dayIndex, $kind, $collectionId, $title, $outcomeText, $skills,
             $roleBrief, $scheduledOn, $status, $generationAttempts, $failReason, $lastViolations,
+            $repairCalls,
         );
     }
 
@@ -148,11 +173,17 @@ final class PlanDay
         return true;
     }
 
-    public function markReady(CollectionId $collectionId): void
+    /**
+     * @param  int  $repairCalls  P2R calls this run made — charged on the WRITTEN day exactly as on
+     *                            the refused one ({@see chargeRepairs()}).
+     */
+    public function markReady(CollectionId $collectionId, int $repairCalls = 0): void
     {
         if ($this->status !== PlanDayStatus::Generating) {
             throw InvalidPlanTransition::forDay($this->status, 'объявить день готовым');
         }
+
+        $this->chargeRepairs($repairCalls);
 
         $this->collectionId = $collectionId;
         $this->status = PlanDayStatus::Ready;
@@ -174,19 +205,28 @@ final class PlanDay
      * what the last answer did, not everything this day has ever done. See the class docblock for
      * the run that cost $0.05 to establish which of the two is right.
      *
-     * `$paidCalls` is how many model calls this run actually made — one for an ordinary day, two
-     * when the answer was nearly right and a repair call was spent on it
-     * ({@see \App\Modules\Generation\Application\Service\PlanDayRepairer}). The counter is the
-     * MONEY (п. 199, первая половина), so the second call is charged here rather than staying
-     * invisible: a day that spent a repair has spent its budget, and there is no third answer to
-     * buy with it.
+     * ## THE REPAIR IS CHARGED, AND IT IS NOT AN ATTEMPT
+     *
+     * This used to take `$paidCalls` and add the repair to `generationAttempts`, on the reasoning
+     * that the counter is the money (п. 199). The live run showed what that costs: the SAME two
+     * calls read as one attempt when the day came out `ready` and as two when it came out `failed`,
+     * because only this path charged them — and day 2, which made two P2 calls under a cap of two,
+     * ended up saying it had made three attempts (`docs/research/e2e-sim-1.md`, Д-18).
+     *
+     * A counter whose meaning depends on the outcome cannot cap anything. So `generationAttempts`
+     * counts DAY calls and nothing else — {@see claim()} is the only thing that moves it, and it is
+     * the only thing that decides `failed`. Repairs are counted beside it, identically on both
+     * paths ({@see chargeRepairs()}, {@see markReady()}). The money is the sum of the two, and it is
+     * still exactly as visible as it was — more so, because it now separates «the day was asked for
+     * twice» from «the day was patched».
      *
      * @param  list<string>  $violations  the verdict as ADDRESSES, one line per check
+     * @param  int  $repairCalls  P2R calls this run made: 0 or 1
      */
-    public function markFailed(string $reason, array $violations = [], int $paidCalls = 1): void
+    public function markFailed(string $reason, array $violations = [], int $repairCalls = 0): void
     {
         $this->failReason = mb_substr(trim($reason), 0, 500);
-        $this->generationAttempts += max(0, $paidCalls - 1);
+        $this->chargeRepairs($repairCalls);
         $this->status = $this->generationAttempts >= self::MAX_ATTEMPTS
             ? PlanDayStatus::Failed
             : PlanDayStatus::Pending;
@@ -204,6 +244,19 @@ final class PlanDay
     public function markDone(): void
     {
         $this->status = PlanDayStatus::Done;
+    }
+
+    /**
+     * ADD THIS RUN'S REPAIR CALLS, on whichever path the run ended.
+     *
+     * Clamped rather than refused: the repairer makes at most one call per run and a day has at
+     * most two runs, so {@see MAX_REPAIR_CALLS} is what the pipeline already guarantees. A clamp
+     * keeps a replayed `FinishPlanDay` from inflating a money column; a throw here would turn a
+     * duplicate message into a failed job over a number nobody is spending.
+     */
+    private function chargeRepairs(int $repairCalls): void
+    {
+        $this->repairCalls = min(self::MAX_REPAIR_CALLS, $this->repairCalls + max(0, $repairCalls));
     }
 
     /**
@@ -299,6 +352,18 @@ final class PlanDay
     public function generationAttempts(): int
     {
         return $this->generationAttempts;
+    }
+
+    /** P2R calls this day has cost, on every run it has had. {@see chargeRepairs()} */
+    public function repairCalls(): int
+    {
+        return $this->repairCalls;
+    }
+
+    /** What the day actually cost in model calls — the day calls plus the repairs. */
+    public function paidCalls(): int
+    {
+        return $this->generationAttempts + $this->repairCalls;
     }
 
     public function failReason(): ?string

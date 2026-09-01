@@ -117,11 +117,10 @@ final readonly class GeneratePlanDayHandler
                 // that made this necessary produced eighteen violations in one answer. A vendor
                 // failure has no verdict and carries nothing.
                 failViolations: $e instanceof PlanDayRefused ? $e->violations : [],
-                // TWO CALLS when the answer was nearly right and a repair was spent on it. The
-                // day's counter is money, so a run that paid twice leaves nothing to pay with —
-                // and a repaired-and-still-broken day is `failed`, not `pending` with an attempt
-                // that does not exist.
-                paidCalls: $e instanceof PlanDayRefused ? $e->paidCalls : 1,
+                // The REPAIR, charged in its own column. It is not an attempt: a day that spent P2
+                // and P2R has made ONE day call and still has its second, which is exactly what
+                // `MAX_ATTEMPTS` was written to allow (Д-18). A vendor failure repaired nothing.
+                repairCalls: $e instanceof PlanDayRefused ? $e->repairCalls : 0,
             ));
 
             return;
@@ -147,6 +146,7 @@ final readonly class GeneratePlanDayHandler
             dayIndex: $brief->dayIndex,
             collectionId: $collectionId->value,
             termIds: $termIds,
+            repairCalls: $draft->repairCalls,
         ));
 
         // The ordinary chain, after the learner's day is already usable: repair whatever example

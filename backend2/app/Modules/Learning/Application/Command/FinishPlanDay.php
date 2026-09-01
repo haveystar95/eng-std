@@ -12,9 +12,11 @@ namespace App\Modules\Learning\Application\Command;
  *         the next attempt to be told about. `failReason` is the same verdict as prose, for a
  *         person; both are kept because they have different readers, and only one of them is ever
  *         allowed to carry what the model wrote.
- * @param  int  $paidCalls  model calls this run actually made — two when a repair call was spent
- *         ({@see \App\Modules\Generation\Application\Service\PlanDayRepairer}). The day's
- *         attempt counter is the money, so it charges them rather than counting claims.
+ * @param  int  $repairCalls  P2R calls this run made — 0, or 1 when a repair was spent
+ *         ({@see \App\Modules\Generation\Application\Service\PlanDayRepairer}). Charged into the
+ *         day's own `repair_calls`, on the ready path and the failed one alike: an ATTEMPT is a day
+ *         call, and folding the repair into the attempt counter made identical spending read as one
+ *         number or two depending on the outcome (Д-18).
  */
 final readonly class FinishPlanDay
 {
@@ -29,6 +31,6 @@ final readonly class FinishPlanDay
         public array $termIds = [],
         public ?string $failReason = null,
         public array $failViolations = [],
-        public int $paidCalls = 1,
+        public int $repairCalls = 0,
     ) {}
 }

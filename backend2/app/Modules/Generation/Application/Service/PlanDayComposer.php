@@ -97,19 +97,22 @@ final readonly class PlanDayComposer
      * @param  array<string, string>  $known  term id → text, met on an earlier day of this plan
      *
      * @throws PlanDayRefused when the day failed the validator — with the verdict as addresses and
-     *                        the number of paid calls, so the day row can charge them
+     *                        the number of REPAIR calls, so the day row can charge them beside its
+     *                        day calls rather than inside them (Д-18)
      */
     public function compose(PlanDayGenerationBrief $brief, array $known): PlanDayDraft
     {
         [$answer, $items] = $this->ask($brief, $known);
         [$violations, $candidate] = $this->judge($brief, $known, $items);
         $this->record($brief, $answer, $violations);
-        $paidCalls = 1;
+        // The repair calls this run made — reported on BOTH exits, because the day charges them on
+        // both ({@see \App\Modules\Learning\Domain\Entity\PlanDay::markFailed()}, Д-18).
+        $repairCalls = 0;
 
         if ($violations !== [] && $this->repairer !== null) {
             $repair = $this->repairer->repair($brief, $items, $violations);
             if ($repair !== null) {
-                $paidCalls = 2;
+                $repairCalls = 1;
                 $this->reportWarnings($brief, $candidate, counted: false);
 
                 $items = $repair->items;
@@ -121,10 +124,10 @@ final readonly class PlanDayComposer
         $this->reportWarnings($brief, $candidate, counted: $violations === []);
 
         if ($violations !== []) {
-            throw PlanDayRefused::invalid($violations, $paidCalls);
+            throw PlanDayRefused::invalid($violations, $repairCalls);
         }
 
-        return $this->draft($brief, $known, $answer, $items);
+        return $this->draft($brief, $known, $answer, $items, $repairCalls);
     }
 
     /**
@@ -280,7 +283,7 @@ final readonly class PlanDayComposer
      * @param  array<string, string>  $known
      * @param  list<PlanDayItem>  $items
      */
-    private function draft(PlanDayGenerationBrief $brief, array $known, ModelAnswer $answer, array $items): PlanDayDraft
+    private function draft(PlanDayGenerationBrief $brief, array $known, ModelAnswer $answer, array $items, int $repairCalls = 0): PlanDayDraft
     {
         // THE HINT IS NORMALISED ON THE WAY IN — the validator's own repair, applied once, so the
         // string that is stored is the string that was judged. A hint that cannot be saved is
@@ -327,6 +330,7 @@ final readonly class PlanDayComposer
             model: $answer->model,
             promptVersion: $this->prompts->dayVersion(),
             costUsd: $answer->costUsd,
+            repairCalls: $repairCalls,
         );
     }
 

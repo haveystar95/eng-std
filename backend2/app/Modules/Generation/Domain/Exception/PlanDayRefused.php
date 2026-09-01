@@ -36,24 +36,26 @@ final class PlanDayRefused extends RuntimeException
 {
     /**
      * @param  list<string>  $violations  the ADDRESS form — {@see PlanViolation::address()}
-     * @param  int  $paidCalls  how many model calls this run made before giving up: one for the day
-     *                          alone, two when a repair call was spent on it. The day row charges
-     *                          them, because the attempt counter is the money (п. 199).
+     * @param  int  $repairCalls  P2R calls this run made before giving up: 0, or 1 when the answer
+     *                            was nearly right and a repair was spent on it. The day row charges
+     *                            them in a column of their own — an attempt is a DAY call, and
+     *                            counting the repair as one made a two-call day read as three
+     *                            (`docs/research/e2e-sim-1.md`, Д-18).
      */
     private function __construct(
         string $message,
         public readonly array $violations,
-        public readonly int $paidCalls,
+        public readonly int $repairCalls,
     ) {
         parent::__construct($message);
     }
 
     /** @param list<PlanViolation> $violations */
-    public static function invalid(array $violations, int $paidCalls = 1): self
+    public static function invalid(array $violations, int $repairCalls = 0): self
     {
         $prose = array_map(static fn (PlanViolation $v): string => (string) $v, $violations);
         $addresses = array_map(static fn (PlanViolation $v): string => $v->address(), $violations);
 
-        return new self('День не прошёл валидатор: ' . implode('; ', $prose), $addresses, $paidCalls);
+        return new self('День не прошёл валидатор: ' . implode('; ', $prose), $addresses, $repairCalls);
     }
 }

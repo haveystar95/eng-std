@@ -47,17 +47,62 @@ it('keeps the LAST attempt`s violations and drops the older ones', function () {
     expect($day->lastViolations())->toBe(['day.b: два', 'day.c: три']);
 });
 
-it('charges the repair call to the day`s budget, so a repaired-and-still-broken day is spent', function () {
-    // `generationAttempts` is the MONEY (п. 199, первая половина). A run that spent a day call AND
-    // a P2R call spent two, and there is no third answer to buy — the day is `failed`, not
-    // `pending` with an attempt that does not exist.
+it('counts the repair APART from the attempt — a repaired first run still has its second (Д-18)', function () {
+    // The live run's day 2 made two P2 calls under a cap of two and its row said «3 attempts»,
+    // because the repair was charged as one. An attempt is a DAY call; the repair is money in a
+    // column of its own.
     $day = planDay(PlanDayStatus::Generating, 1);
 
-    $day->markFailed('день и починка', ['day.a: раз'], paidCalls: 2);
+    $day->markFailed('день и починка', ['day.a: раз'], repairCalls: 1);
 
-    expect($day->generationAttempts())->toBe(2)
-        ->and($day->status())->toBe(PlanDayStatus::Failed)
-        ->and($day->claim())->toBeFalse();
+    expect($day->generationAttempts())->toBe(1)
+        ->and($day->repairCalls())->toBe(1)
+        ->and($day->paidCalls())->toBe(2)
+        // The budget is P2 calls, and one is left.
+        ->and($day->status())->toBe(PlanDayStatus::Pending)
+        ->and($day->claim())->toBeTrue();
+});
+
+it('counts the repair IDENTICALLY on the written day and on the refused one (Д-18)', function () {
+    // Day 1 of the live run spent P2 + P2R and came out `ready` saying it had cost one call; day 2
+    // spent the same two and came out saying three. Same spending, two numbers — which is what made
+    // the counter unusable as a budget.
+    $written = planDay(PlanDayStatus::Generating, 1);
+    $written->markReady(CollectionId::fromString(Ulid::generate()), repairCalls: 1);
+
+    $refused = planDay(PlanDayStatus::Generating, 1);
+    $refused->markFailed('не прошёл', ['day.a: раз'], repairCalls: 1);
+
+    expect($written->repairCalls())->toBe($refused->repairCalls())
+        ->and($written->paidCalls())->toBe($refused->paidCalls())
+        ->and($written->paidCalls())->toBe(2);
+});
+
+it('spends the day only when the DAY calls run out, and the repairs are still counted', function () {
+    $day = planDay(PlanDayStatus::Generating, 1);
+    $day->markFailed('первый заход', ['day.a: раз'], repairCalls: 1);
+
+    expect($day->claim())->toBeTrue()
+        ->and($day->generationAttempts())->toBe(PlanDay::MAX_ATTEMPTS);
+
+    $day->markFailed('второй заход', ['day.b: два'], repairCalls: 1);
+
+    expect($day->status())->toBe(PlanDayStatus::Failed)
+        ->and($day->generationAttempts())->toBe(2)
+        // Two runs, one repair each — the structural ceiling, and it is what the day actually cost.
+        ->and($day->repairCalls())->toBe(PlanDay::MAX_REPAIR_CALLS)
+        ->and($day->paidCalls())->toBe(4);
+});
+
+it('never charges more repairs than a day can structurally make', function () {
+    $day = planDay(PlanDayStatus::Generating, 1);
+
+    // A replayed `FinishPlanDay` must not inflate a money column.
+    $day->markFailed('раз', [], repairCalls: 1);
+    $day->markFailed('раз', [], repairCalls: 1);
+    $day->markFailed('раз', [], repairCalls: 1);
+
+    expect($day->repairCalls())->toBe(PlanDay::MAX_REPAIR_CALLS);
 });
 
 it('leaves an ordinary failed run one attempt, exactly as before', function () {

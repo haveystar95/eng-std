@@ -66,7 +66,7 @@ final readonly class FinishPlanDayHandler
                 $day->markFailed(
                     $command->failReason ?? 'день вернулся без коллекции',
                     $command->failViolations,
-                    $command->paidCalls,
+                    $command->repairCalls,
                 );
                 $this->days->save($day);
 
@@ -75,7 +75,9 @@ final readonly class FinishPlanDayHandler
                 return ['retry' => ! $day->isReady() && $day->generationAttempts() < \App\Modules\Learning\Domain\Entity\PlanDay::MAX_ATTEMPTS, 'next' => null];
             }
 
-            $day->markReady(CollectionId::fromString($command->collectionId));
+            // The repair is charged on the WRITTEN day too. A day that was patched into shape cost
+            // two calls whether or not the patch worked, and the row has to say so.
+            $day->markReady(CollectionId::fromString($command->collectionId), $command->repairCalls);
             $this->days->save($day);
 
             // STRICT ENROLMENT. Through the ordinary enrolment command, with the plan named as the

@@ -106,6 +106,7 @@ final class PlanMapper
             lastViolations: is_array($row->generation_violations)
                 ? array_values(array_filter($row->generation_violations, 'is_string'))
                 : [],
+            repairCalls: $row->repair_calls,
         );
     }
 
@@ -124,6 +125,7 @@ final class PlanMapper
             'scheduled_on' => $day->scheduledOn()?->format('Y-m-d'),
             'status' => $day->status()->value,
             'generation_attempts' => $day->generationAttempts(),
+            'repair_calls' => $day->repairCalls(),
             'fail_reason' => $day->failReason(),
             // Null and not `[]` when there is nothing: «this day has never been refused» and «this
             // day was refused for no reasons» should not look the same in the table.

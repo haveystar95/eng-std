@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $scheduled_on
  * @property string $status
  * @property int $generation_attempts
+ * @property int $repair_calls
  * @property string|null $fail_reason
  * @property list<string>|null $generation_violations
  */
@@ -38,5 +39,6 @@ final class PlanDayModel extends Model
         'generation_violations' => 'array',
         'day_index' => 'int',
         'generation_attempts' => 'int',
+        'repair_calls' => 'int',
     ];
 }
