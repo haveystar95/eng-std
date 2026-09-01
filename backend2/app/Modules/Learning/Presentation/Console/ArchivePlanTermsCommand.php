@@ -35,7 +35,7 @@ final class ArchivePlanTermsCommand extends Command
         }
 
         $this->table(
-            ['user', 'plan', 'status', 'pairs'],
+            ['user', 'plan(s)', 'что сделано', 'снято с лестницы'],
             array_map(static fn (array $row): array => [
                 $row['user_id'],
                 $row['title'],
@@ -45,12 +45,20 @@ final class ArchivePlanTermsCommand extends Command
         );
 
         if (! $this->option('apply')) {
-            $this->warn("Dry run: {$report->pairs} pair(s) would leave the pool. Re-run with --apply to write it.");
+            $this->warn(
+                "Dry run: {$report->unenrolled} pair(s) would leave the pool, "
+                . "{$report->stripped} would keep their place and lose only the plan's marker. "
+                . 'Re-run with --apply to write it.',
+            );
 
             return self::SUCCESS;
         }
 
-        $this->info("Archived: {$report->affected} pair(s) left the study pool. Plans, days, cards and reviews untouched.");
+        $this->info(
+            "Archived: {$report->unenrolled} pair(s) left the study pool; "
+            . "{$report->stripped} kept their place and lost only the plan's marker. "
+            . 'Plans, days, cards and reviews untouched.',
+        );
 
         return self::SUCCESS;
     }

@@ -84,19 +84,31 @@ it('reports without writing unless it is told to apply', function () {
     expect(DB::table('user_term_progress')->where('term_id', $termId)->value('enrolled_at'))->toBeNull();
 });
 
-it('refuses to take a word the learner has their own reason for', function () {
+it('takes the record off the ladder only when the plan was its ONLY reason', function () {
     [$user] = learner();
-    [, $collectionId] = endedPlanFixture($user, 'completed');
+    [$planId, $collectionId] = endedPlanFixture($user, 'completed');
+    $marker = 'plan:' . $planId;
 
-    $planOnly = pooledTermOn($user, $collectionId, 'deposit', []);
-    $alsoManual = pooledTermOn($user, $collectionId, 'luggage', ['manual']);
-    $triaged = pooledTermOn($user, $collectionId, 'boarding', ['triage']);
+    $planOnly = pooledTermOn($user, $collectionId, 'deposit', [$marker]);
+    $alsoManual = pooledTermOn($user, $collectionId, 'luggage', [$marker, 'manual']);
+    $triaged = pooledTermOn($user, $collectionId, 'boarding', ['triage', $marker]);
 
     $this->artisan('plan:archive-terms', ['--apply' => true])->assertExitCode(0);
 
+    $sources = static fn (string $termId): array => (array) json_decode(
+        (string) DB::table('user_term_progress')->where('term_id', $termId)->value('enrollment_sources'),
+        true,
+    );
+
+    // Only reason → off the ladder, reasons cleared with it.
     expect(DB::table('user_term_progress')->where('term_id', $planOnly)->value('enrolled_at'))->toBeNull()
+        ->and($sources($planOnly))->toBe([])
+        // Another reason → the record stays and loses ONLY the plan's marker. That reason is the
+        // learner's own and it did not end with anybody's plan.
         ->and(DB::table('user_term_progress')->where('term_id', $alsoManual)->value('enrolled_at'))->not->toBeNull()
-        ->and(DB::table('user_term_progress')->where('term_id', $triaged)->value('enrolled_at'))->not->toBeNull();
+        ->and($sources($alsoManual))->toBe(['manual'])
+        ->and(DB::table('user_term_progress')->where('term_id', $triaged)->value('enrolled_at'))->not->toBeNull()
+        ->and($sources($triaged))->toBe(['triage']);
 });
 
 it('finds a word by its marker even when the day`s collection no longer lists it', function () {
@@ -112,6 +124,46 @@ it('finds a word by its marker even when the day`s collection no longer lists it
     $this->artisan('plan:archive-terms', ['--apply' => true])->assertExitCode(0);
 
     expect(DB::table('user_term_progress')->where('term_id', $termId)->value('enrolled_at'))->toBeNull();
+});
+
+it('takes a word whose plan is not ended but GONE — a marker pointing nowhere', function () {
+    [$user] = learner();
+
+    // No `learning_plans` row at all: not completed, not abandoned, deleted. 23 pairs on the owner's
+    // base were in this state — enrolled, never answered, sitting in the ordinary queue under a
+    // reason that names a plan nobody can open.
+    $vanished = Ulid::generate();
+    [, $collectionId] = endedPlanFixture($user, 'abandoned');
+    $orphan = pooledTermOn($user, $collectionId, 'checkout', ['plan:' . $vanished]);
+    DB::table('collection_items')->where('term_id', $orphan)->delete();
+
+    // …and the same shape WITH a reason of the learner's own keeps its place and loses the marker.
+    // ONE RULE for every plan marker, existing or not — that is the whole point of this test.
+    $alsoMine = pooledTermOn($user, $collectionId, 'receipt', ['plan:' . $vanished, 'manual']);
+    DB::table('collection_items')->where('term_id', $alsoMine)->delete();
+
+    $this->artisan('plan:archive-terms', ['--apply' => true])->assertExitCode(0);
+
+    expect(DB::table('user_term_progress')->where('term_id', $orphan)->value('enrolled_at'))->toBeNull()
+        ->and(DB::table('user_term_progress')->where('term_id', $alsoMine)->value('enrolled_at'))->not->toBeNull()
+        ->and(json_decode((string) DB::table('user_term_progress')->where('term_id', $alsoMine)->value('enrollment_sources'), true))
+        ->toBe(['manual']);
+});
+
+it('leaves a marker of a RUNNING plan alone — that reason has not ended', function () {
+    [$user] = learner();
+    [$running, $runningCollection] = endedPlanFixture($user, 'active');
+    [$ended, $endedCollection] = endedPlanFixture($user, 'abandoned');
+
+    $live = pooledTermOn($user, $runningCollection, 'lease', ['plan:' . $running]);
+    $dead = pooledTermOn($user, $endedCollection, 'landlord', ['plan:' . $ended]);
+
+    $this->artisan('plan:archive-terms', ['--apply' => true])->assertExitCode(0);
+
+    expect(DB::table('user_term_progress')->where('term_id', $live)->value('enrolled_at'))->not->toBeNull()
+        ->and(json_decode((string) DB::table('user_term_progress')->where('term_id', $live)->value('enrollment_sources'), true))
+        ->toBe(['plan:' . $running])
+        ->and(DB::table('user_term_progress')->where('term_id', $dead)->value('enrolled_at'))->toBeNull();
 });
 
 it('leaves a word alone while any plan of that learner is still standing on it', function () {
