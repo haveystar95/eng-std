@@ -139,6 +139,46 @@ it('puts every task of the day before every task of the seam, and says where the
     }
 });
 
+it('lays a seamed sitting out as words, connectors, replies, and only then the seam', function () {
+    // PLAN-FIX-4, the стык: the day's own blocks in order, the whole checklist of each card inside
+    // its block, and «Повторение» after all of it — with `day_task_count` naming the boundary.
+    [$user, $token, $planId] = startedPlan($this, [
+        'level' => 'conversational',
+        'event_date' => now()->addDays(10)->format('Y-m-d'),
+    ]);
+
+    walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 8);
+
+    $session = planSession($this, $token, $planId);
+    $kinds = DB::table('terms')->pluck('kind', 'id')->all();
+    $rank = ['word' => 0, 'chunk' => 1, 'line' => 2];
+
+    $dayCount = $session['day_task_count'];
+    expect($dayCount)->toBeLessThan(count($session['tasks']));
+
+    // 1. The day's own tasks, in block order.
+    $last = -1;
+    $seen = [];
+    foreach (array_slice($session['tasks'], 0, $dayCount) as $task) {
+        $kind = $kinds[$task['card']['term_id']] ?? 'word';
+        $seen[$kind] = true;
+        expect($task['section'])->toBe(PlanSessionTaskView::SECTION_DAY)
+            ->and($rank[$kind])->toBeGreaterThanOrEqual($last);
+        $last = $rank[$kind];
+    }
+    expect($seen)->toHaveKeys(['word', 'chunk', 'line'])
+        // The day opens on a first meeting of a piece — not on the sentence built out of it.
+        ->and($session['tasks'][0]['card']['exercise_mode'])->toBe('intro')
+        ->and($kinds[$session['tasks'][0]['card']['term_id']])->toBe('word');
+
+    // 2. The seam, after every one of them, and nothing of the day inside it.
+    foreach (array_slice($session['tasks'], $dayCount) as $task) {
+        expect($task['section'])->toBe(PlanSessionTaskView::SECTION_REVIEW)
+            ->and($task['from_day_index'])->toBeLessThan($session['day_index']);
+    }
+});
+
 it('counts the day out of its own material when nothing else is due', function () {
     [, $token, $planId] = startedPlan($this);
 
