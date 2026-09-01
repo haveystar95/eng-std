@@ -24,12 +24,12 @@ uses(RefreshDatabase::class);
  * on. So the shelf is what the top-up reads: the learner's own, the ones they subscribe to, and the
  * published catalogue.
  */
-function shelfTerm(string $collectionId, string $text, string $translation, ?string $cefr = 'A2'): string
+function shelfTerm(string $collectionId, string $text, string $translation, ?string $cefr = 'A2', string $source = 'ai'): string
 {
     $termId = Ulid::generate();
     DB::table('terms')->insert([
         'id' => $termId, 'lang' => 'en', 'text' => $text, 'normalized_text' => mb_strtolower($text),
-        'type' => 'word', 'source' => 'ai', 'cefr' => $cefr, 'created_at' => now(), 'updated_at' => now(),
+        'type' => 'word', 'source' => $source, 'cefr' => $cefr, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('term_translations')->insert([
         'id' => Ulid::generate(), 'term_id' => $termId, 'lang' => 'ru', 'text' => $translation,
@@ -56,7 +56,7 @@ function shelf(?string $ownerId, string $type, string $visibility, string $title
     return $id;
 }
 
-it('never offers a term out of another learner`s private collection', function () {
+it('never offers a word somebody typed in themselves, whatever shelf it stands on', function () {
     [$me] = learner();
     [$stranger] = learner();
 
@@ -65,11 +65,12 @@ it('never offers a term out of another learner`s private collection', function (
     $mine = shelf($me->id, 'custom', 'private', 'Моя папка');
     $target = shelfTerm($mine, 'passport', 'паспорт');
 
-    // Somebody else's private material, in the same language and at the same level — everything
-    // the old query filtered on.
+    // Somebody else's own writing — a word they added by hand and a phrase they saved out of the
+    // translator. Both `source = 'user'`, both in the right language and at the right level, and
+    // neither may ever be offered to anyone but the person who wrote it.
     $theirs = shelf($stranger->id, 'custom', 'private', 'Чужая папка');
-    shelfTerm($theirs, "Hi, I'm Alex, and I work as a backend developer.", 'Привет, я Алекс…');
-    shelfTerm($theirs, 'severance package', 'выходное пособие');
+    shelfTerm($theirs, 'severance package', 'выходное пособие', source: 'user');
+    shelfTerm($theirs, 'notice period', 'срок уведомления', source: 'user');
 
     $options = app(DistractorReader::class)->forTarget(
         UserId::fromString($me->id),
@@ -78,11 +79,59 @@ it('never offers a term out of another learner`s private collection', function (
         3,
     );
 
-    expect($options)->not->toContain("Hi, I'm Alex, and I work as a backend developer.")
-        ->and($options)->not->toContain('severance package')
-        // Nothing was reachable, so nothing is offered. An empty answer here is the trainer's own
-        // problem to solve (the option floor drops the card); it is not a reason to reach further.
+    expect($options)->not->toContain('severance package')
+        ->and($options)->not->toContain('notice period')
+        // Nothing else was reachable, so nothing is offered. An empty answer here is the trainer's
+        // own problem to solve (the option floor drops the card); it is not a reason to reach into
+        // somebody's writing.
         ->and($options)->toBe([]);
+});
+
+it('offers generated material off any shelf, including one it has never seen', function () {
+    [$me] = learner();
+    [$stranger] = learner();
+
+    $mine = shelf($me->id, 'custom', 'private', 'Моя папка');
+    $target = shelfTerm($mine, 'passport', 'паспорт');
+
+    // A stranger's PRIVATE folder — but the words in it were generated, not written by them. That
+    // is catalogue: it belongs to the app, and meeting an unfamiliar English word as a wrong answer
+    // is the trainer working. The old shelf rule refused these and starved cards for it.
+    $theirs = shelf($stranger->id, 'custom', 'private', 'Чужая папка');
+    shelfTerm($theirs, 'suitcase', 'чемодан');
+    shelfTerm($theirs, 'ticket', 'билет');
+
+    $options = app(DistractorReader::class)->forTarget(
+        UserId::fromString($me->id),
+        TermId::fromString($target),
+        [$target],
+        2,
+    );
+
+    expect($options)->toContain('suitcase')
+        ->and($options)->toContain('ticket');
+});
+
+it('still offers the learner their OWN hand-written words', function () {
+    [$me] = learner();
+
+    $mine = shelf($me->id, 'custom', 'private', 'Моя папка');
+    $target = shelfTerm($mine, 'passport', 'паспорт');
+
+    // «Не попадают в ЧУЖИЕ варианты» — their own are not somebody else's. A learner whose vocabulary
+    // is mostly words they typed would otherwise get no options at all on a card of one of them,
+    // which is not privacy, it is an empty session.
+    $alsoMine = shelf($me->id, 'custom', 'private', 'Другая моя папка');
+    shelfTerm($alsoMine, 'luggage', 'багаж', source: 'user');
+
+    $options = app(DistractorReader::class)->forTarget(
+        UserId::fromString($me->id),
+        TermId::fromString($target),
+        [$target],
+        3,
+    );
+
+    expect($options)->toContain('luggage');
 });
 
 it('still tops up from the published catalogue and from the learner`s own shelves', function () {

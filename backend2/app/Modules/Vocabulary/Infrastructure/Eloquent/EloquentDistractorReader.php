@@ -8,6 +8,7 @@ use App\Modules\Shared\Domain\Service\DistractorFamily;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
+use App\Modules\Vocabulary\Domain\ValueObject\TermSource;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -61,33 +62,67 @@ final class EloquentDistractorReader implements DistractorReader
         $poolIds = array_values(array_filter($poolTermIds, static fn (string $id): bool => $id !== $targetId->value));
         $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, $family);
 
-        // 2. Top up from THIS LEARNER'S SHELVES AND THE PUBLIC CATALOGUE — never from anyone else's.
+        // 2. TOP UP FROM THE CATALOGUE AS A WHOLE — every term the app has, in this language, of
+        //    this shape, MINUS the words people typed in themselves.
         //
-        // This query used to read `terms` whole, filtered by language and nothing more. Terms are
-        // deduplicated globally, so a row has no owner and the query looked harmless; what it
-        // actually reached was every phrase any user had ever generated, including the 593 English
-        // terms sitting in other people's PRIVATE collections. A learner short of pool candidates
-        // could be offered somebody else's «Hi, I'm Alex, and I work as a backend developer.» as a
-        // wrong answer. Nobody's name was on it and it was still theirs.
+        // The previous rule filtered by the SHELF a term stands on: the learner's own collections,
+        // the ones they subscribe to, and the published catalogue. It was written against a real
+        // leak (somebody else's private phrase offered as a wrong answer) and it was the wrong
+        // instrument for it, in both directions at once. Too narrow, because a plan day's collection
+        // is a private folder OWNED BY THE LEARNER — so every plan they had ever run was a legal
+        // source of options for the one they were doing, which is half of how «паспорт» came to
+        // stand in a lesson about renting a flat. Too wide, because «my shelf» says nothing about
+        // whether the text on it is personal.
         //
-        // Ownership of a TERM does not exist here and inventing it would break the dedup invariant.
-        // What exists is the shelf it stands on, so that is what is filtered: the learner's own
-        // collections and the ones they subscribe to — the same access rule the collections module
-        // applies everywhere — plus the published catalogue, which is nobody's in particular and is
-        // exactly what a filler option should come from.
+        // What actually separates a fair filler from somebody's private sentence is not the folder,
+        // it is WHO WROTE THE WORD. Generated and curated material is catalogue: it belongs to the
+        // app, it is what the app is made of, and a learner meeting an unfamiliar English word as a
+        // wrong answer is the trainer working. A term a PERSON typed — into a collection by hand, or
+        // through the translator — is theirs, and it never becomes anybody else's option.
+        // `terms.source` records exactly that distinction at the moment of import and is the only
+        // ownership fact this table has ({@see \App\Modules\Vocabulary\Domain\ValueObject\TermSource}).
+        //
+        // ONE RULE FOR BOTH SESSIONS. A plan's lesson and the ordinary queue read the same pool: the
+        // question «may this word be a wrong answer here» has one answer, and giving it two was how
+        // the two paths drifted. What still separates a plan card from an ordinary one is the pool
+        // it PREFERS (step 1: the plan's own words, all its days) and how many options it insists on
+        // — not who is allowed to fill the gap.
+        //
+        // Nothing but the TEXT leaves this method, so an option carries no owner, no collection and
+        // no trace of where it was found.
         if (count($picked) < $count) {
             $exclude = array_values(array_unique([$targetId->value, ...$poolTermIds]));
-            $rows = DB::table('terms as t')
-                ->join('collection_items as ci', 'ci.term_id', '=', 't.id')
-                ->join('collections as c', 'c.id', '=', 'ci.collection_id')
-                ->where('t.lang', (string) $target->lang)
-                ->whereNotIn('t.id', $exclude)
-                ->where(fn (Builder $q): Builder => $this->readable($q, $userId))
-                ->whereNull('c.deleted_at')
-                ->whereNull('ci.deleted_at')
-                ->distinct()
+            $targetKind = $target->kind === null ? null : (string) $target->kind;
+            $rows = DB::table('terms')
+                ->where('lang', (string) $target->lang)
+                ->whereNotIn('id', $exclude)
+                // …MINUS what people typed in themselves — «в чужие варианты не попадают». Their
+                // OWN hand-saved words are not somebody else's: a learner whose vocabulary is
+                // mostly words they entered would otherwise have no options at all on a card of
+                // one of them, which is not privacy, it is an empty session. Ownership of a TERM
+                // does not exist (they are deduplicated globally); the shelf it stands on is the
+                // only thing that does, so «mine» is «on a collection I own».
+                ->where(static fn (Builder $q): Builder => $q
+                    ->where('source', '!=', TermSource::User->value)
+                    ->orWhereExists(static function (Builder $sub) use ($userId): void {
+                        $sub->from('collection_items as ci')
+                            ->join('collections as c', 'c.id', '=', 'ci.collection_id')
+                            ->whereColumn('ci.term_id', 'terms.id')
+                            ->where('c.owner_id', $userId->value)
+                            ->whereNull('c.deleted_at')
+                            ->whereNull('ci.deleted_at');
+                    }))
+                // THE SHAPE GATE, in SQL. `appendCandidates()` applies the real rule
+                // ({@see DistractorFamily}) and would apply it to whatever this limit happened to
+                // return — so without the coarse half here, a capped read over the whole table can
+                // come back holding nothing of the target's kind and starve a card that had options.
+                // The fine half — a question among questions inside `line` — stays in PHP, because
+                // it reads the text.
+                ->where(static fn (Builder $q): Builder => $targetKind === null
+                    ? $q->whereNull('kind')
+                    : $q->where('kind', $targetKind))
                 ->limit(max($count * 8, 24))
-                ->get(['t.id', 't.cefr']);
+                ->get(['id', 'cefr']);
 
             // Same level first. Ordered here rather than in SQL: `SELECT DISTINCT` may only order
             // by expressions it selects, and «is this the target's CEFR» is not one of the columns.
@@ -178,21 +213,6 @@ final class EloquentDistractorReader implements DistractorReader
      * a catalogue collection the learner has never opened, because a published shelf is not
      * anybody's content.
      */
-    private function readable(Builder $query, UserId $userId): Builder
-    {
-        return $query
-            ->where('c.owner_id', $userId->value)
-            ->orWhere(static fn (Builder $q): Builder => $q
-                ->where('c.type', 'system')
-                ->where('c.visibility', 'public'))
-            ->orWhereExists(static function (Builder $sub) use ($userId): void {
-                $sub->from('user_collections as uc')
-                    ->whereColumn('uc.collection_id', 'c.id')
-                    ->where('uc.user_id', $userId->value)
-                    ->whereNull('uc.unsubscribed_at');
-            });
-    }
-
     /**
      * @param  array<string, true>  $a
      * @param  array<string, true>  $b

@@ -14,11 +14,15 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
  * prompt can't read as correct for both (e.g. "withdraw money" against "withdraw cash"). Prefers
  * the session's own pool (its collection), then tops up from terms of a similar level.
  *
- * THE TOP-UP IS SCOPED TO THE LEARNER. It used to read `terms` whole — every phrase every user had
- * ever generated, private collections included — because terms are deduplicated globally and a row
- * therefore has no owner to filter by. Ownership is expressed by the COLLECTIONS a term sits in, so
- * that is what the top-up reads: the learner's own shelves, plus the public catalogue, and nothing
- * of anybody else's.
+ * THE TOP-UP IS THE CATALOGUE, MINUS WHAT PEOPLE TYPED THEMSELVES. Terms are deduplicated globally,
+ * so a row has no owner — but it does record who WROTE it. Generated and curated material is the
+ * app's own and is fair game as a wrong answer, whichever shelf it happens to stand on; a term a
+ * person entered by hand, in a collection or through the translator (`terms.source = 'user'`), is
+ * theirs and never becomes anybody else's option. Nothing but the TEXT ever leaves this reader, so
+ * an option says nothing about where it came from or whose it was.
+ *
+ * ONE RULE FOR EVERY SESSION. A plan's lesson and the ordinary queue differ in which pool they
+ * PREFER and in how many options they insist on; they do not differ in who may fill the gap.
  *
  * EVERY option is in the TARGET'S OWN LANGUAGE, from both sources. That is the pair gate for this
  * kind of card: the options are term texts, so the studied side of the pair is the whole of what
@@ -28,7 +32,7 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 interface DistractorReader
 {
     /**
-     * @param  UserId  $userId  whose shelves the top-up may read — see the class docblock
+     * @param  UserId  $userId  the learner the card is for — see the class docblock
      * @param  list<string>  $poolTermIds
      * @return list<string>  up to $count distractor texts
      */
