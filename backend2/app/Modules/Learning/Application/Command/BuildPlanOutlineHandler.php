@@ -18,6 +18,7 @@ use App\Modules\Learning\Domain\ValueObject\PlanOutline;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
+use DateTimeImmutable;
 
 /**
  * P1, then A1. The one place a plan's skeleton is decided.
@@ -61,7 +62,21 @@ final readonly class BuildPlanOutlineHandler
             throw PlanNotFound::withId($command->planId->value);
         }
 
-        $today = $this->clock->now()->setTime(0, 0, 0);
+        // «СЕГОДНЯ» — ЭТО ДАТА В КАЛЕНДАРЕ УЧЕНИКА, А НЕ В UTC.
+        //
+        // Это была `$this->clock->now()`, и живой прогон показал, чего она стоит: план, созданный
+        // 01.09 в 00:5x по Europe/Bucharest, лёг днями 31.08–03.09 при событии 05.09 — первый день
+        // подготовки в уже прошедшем дне, 04.09 пустой. Плану из четырёх дней это стоило одного
+        // (`docs/research/e2e-sim-1.md`, Д-4). Час ночи по местному времени — это ещё вчера по UTC,
+        // и календарь плана — единственное место, где эта разница видна пользователю.
+        //
+        // Формат тот же, каким читается `event_date` ({@see PlanMapper}): полночь без зоны, то есть
+        // «дата как дата». Обе стороны сравнения — {@see PlanScheduler::compute()} — так обязаны
+        // быть одной природы, иначе смещение зоны превращается в лишние или недостающие сутки.
+        $today = new DateTimeImmutable(
+            $this->clock->now()->setTimezone($this->profiles->timezoneFor($plan->userId()))->format('Y-m-d')
+            . ' 00:00:00',
+        );
 
         // The plan is still a draft, so the learner's CURRENT language is the right one — the
         // skeleton about to be written is what it will be written in. This is the last moment the

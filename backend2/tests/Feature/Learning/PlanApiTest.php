@@ -14,6 +14,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Modules\Generation\Infrastructure\Job\AttachImagesJob;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use App\Modules\Shared\Domain\Service\Clock;
+use Tests\Doubles\FixedClock;
+use DateTimeImmutable;
 
 uses(RefreshDatabase::class);
 
@@ -122,6 +125,35 @@ it('builds the skeleton and lays the days on the calendar itself', function () {
         // Every checkpoint of the plan, assembled by the SERVER, on the final day.
         ->and($plan['days'][2]['checkpoints'])->toHaveCount(4)
         ->and($plan['status'])->toBe('draft');
+});
+
+it('lays the first day on the learner’s TODAY, not on UTC’s (Д-4)', function () {
+    [$user, $token] = learner();
+    // Bucharest is UTC+3 in September, so a minute before one in the morning there is still
+    // yesterday evening in UTC — the exact hour the live run created its plan at.
+    profileFor($user, ['native_language' => 'ru', 'timezone' => 'Europe/Bucharest']);
+    $this->app->instance(Clock::class, new FixedClock(new DateTimeImmutable('2026-08-31T21:50:00+00:00')));
+
+    $plan = createPlan($this, $token, ['event_date' => '2026-09-05']);
+    $plan = outlinePlan($this, $token, $plan['id']);
+
+    $scheduled = array_column($plan['days'], 'scheduled_on');
+
+    // Preparation starts TODAY in Bucharest — 01.09, not 31.08 — so the four days before the event
+    // are the four days that exist, and nothing is left empty in front of the rehearsal.
+    expect($scheduled[0])->toBe('2026-09-01')
+        ->and(end($scheduled))->toBe('2026-09-05')
+        ->and($plan['days'][count($plan['days']) - 1]['kind'])->toBe('final');
+
+    // NOT ONE DAY BEFORE TODAY. That is the whole defect: the live plan's first three teaching days
+    // were laid on 31.08–02.09 and one of them was already over when the learner saw it.
+    expect(min($scheduled))->toBe('2026-09-01');
+
+    // What is left over is REST, counted and named, rather than a day that fell off the front:
+    // teaching days + rest + the rehearsal are exactly the days between today and the event.
+    expect($plan['computed']['intro_days'] + $plan['computed']['rest_days'] + 1)
+        ->toBe($plan['computed']['max_days'])
+        ->and($plan['computed']['max_days'])->toBe(5);
 });
 
 it('re-outlining replaces the days rather than adding to them', function () {
