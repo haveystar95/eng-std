@@ -1898,6 +1898,12 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
+  "planChunksCount": "{count, plural, one{{count} связка} few{{count} связки} many{{count} связок} other{{count} связки}}",
+  "@planChunksCount": {
+    "description": "Счётчик связок дня — kind = chunk. Отдельно от слов и фраз: связка не одно слово и не реплика.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
   "planDaysCount": "{count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дня}}",
   "@planDaysCount": {
     "description": "Длительность плана в архиве.",
@@ -2002,7 +2008,19 @@
   "planDayFinalHint": "Без новых слов · можно открыть раньше",
   "@planDayFinalHint": { "description": "Подпись дня-прогона в списке." },
   "planDayBuilding": "Собирается",
-  "@planDayBuilding": { "description": "Подпись дня, который сервер ещё пишет." },
+  "@planDayBuilding": { "description": "Подпись дня в статусе `generating` — его прямо сейчас держит воркер. НЕ для `pending`: см. planDayQueued." },
+  "planSpeakerRole": "Собеседник:",
+  "@planSpeakerRole": { "description": "Пометка реплики собеседника (speaker = role) — на экране дня и на карточке в сессии. Если каркас дня назвал роль, вместо этой строки показывается её имя. Лексика: в UI слово «фраза», не «реплика»." },
+
+  "planDayQueued": "В очереди",
+  "@planDayQueued": { "description": "Подпись дня в статусе `pending`: его ещё никто не взял. Раньше такие дни подписывались «Собирается», хотя попыток у них ноль (Д-20)." },
+  "planDayNotBuilt": "Не собрался",
+  "@planDayNotBuilt": { "description": "Подпись дня в статусе `failed`. Причина — на экране самого дня, по fail_code." },
+  "planDayOpenFailed": "Открыть день {index}",
+  "@planDayOpenFailed": {
+    "description": "Действие вместо «Продолжить день N», когда текущий день сгорел: продолжать нечего, но решение принимается на экране дня.",
+    "placeholders": { "index": { "type": "int" } }
+  },
   "planDayOpenEarly": "можно открыть раньше",
   "@planDayOpenEarly": { "description": "Подпись будущего дня — он открыт, но мягко." },
 
@@ -2046,6 +2064,66 @@
   "@planDayFailed": { "description": "Состояние дня после неудачной генерации." },
   "planDayExhausted": "Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает материал не на том языке. План придётся собрать заново.",
   "@planDayExhausted": { "description": "День исчерпал две попытки: `PlanDay::MAX_ATTEMPTS`. Кнопка «Собрать день» здесь не сработала бы никогда." },
+
+  "planDayExhaustedLead": "Этот день не собрался дважды подряд — сервер больше не будет пытаться. План придётся собрать заново.",
+  "@planDayExhaustedLead": { "description": "Первый абзац сгоревшего дня: что случилось и что теперь можно. Причину называет отдельная строка по fail_code." },
+
+  "planFailWhy": "Что пошло не так: {reason}",
+  "@planFailWhy": {
+    "description": "Обёртка вокруг причины поломки дня. Причина подставляется по fail_code с сервера.",
+    "placeholders": { "reason": { "type": "String" } }
+  },
+
+  "planFailExampleIsATerm": "пример к карточке повторял другую карточку этого дня, а не показывал слово в предложении",
+  "@planFailExampleIsATerm": { "description": "fail_code = day.example_is_a_term." },
+
+  "planFailExampleDuplicated": "один и тот же пример стоял сразу у нескольких карточек",
+  "@planFailExampleDuplicated": { "description": "fail_code = day.example_duplicated." },
+
+  "planFailExampleMissing": "у карточки не было примера",
+  "@planFailExampleMissing": { "description": "fail_code = day.example_missing." },
+
+  "planFailNotTargetLanguage": "материал вернулся не на том языке",
+  "@planFailNotTargetLanguage": { "description": "fail_code = outline.target_language." },
+
+  "planFailKeyIsTheTerm": "перевод карточки повторял саму карточку",
+  "@planFailKeyIsTheTerm": { "description": "fail_code = day.key_is_the_term." },
+
+  "planFailKeyDuplicated": "две карточки дня получили один и тот же перевод",
+  "@planFailKeyDuplicated": { "description": "fail_code = day.key_duplicated." },
+
+  "planFailKeyNotSupportLanguage": "перевод пришёл не на вашем языке",
+  "@planFailKeyNotSupportLanguage": { "description": "fail_code = day.key_not_support_language." },
+
+  "planFailKindMismatch": "карточка объявила себя не тем, чем она является",
+  "@planFailKindMismatch": { "description": "fail_code = day.kind_mismatch." },
+
+  "planFailCounts": "в дне оказалось не столько карточек, сколько было заказано",
+  "@planFailCounts": { "description": "fail_code = day.array_count / day.term_count." },
+
+  "planFailCheckpoint": "одно из умений дня не закрыла ни одна реплика",
+  "@planFailCheckpoint": { "description": "fail_code = day.checkpoint_uncovered и соседние." },
+
+  "planFailTermIsAName": "именем собственным нельзя занимать карточку — его не переводят",
+  "@planFailTermIsAName": { "description": "fail_code = day.term_is_a_name." },
+
+  "planFailSlotOutsideFrame": "пропуск для подстановки оказался не в той строке",
+  "@planFailSlotOutsideFrame": { "description": "fail_code = day.slot_outside_frame." },
+
+  "planFailImagePromptMissing": "к карточке не пришло описание для картинки",
+  "@planFailImagePromptMissing": { "description": "fail_code = day.image_prompt_missing." },
+
+  "planFailDescriptionGivesAway": "описание карточки называло само загаданное слово",
+  "@planFailDescriptionGivesAway": { "description": "fail_code = day.description_gives_away." },
+
+  "planFailRoleLineInvented": "реплика собеседника не из тех, что описаны в каркасе дня",
+  "@planFailRoleLineInvented": { "description": "fail_code = day.role_line_invented." },
+
+  "planFailTermRepeated": "день повторил слово, которое уже вводил другой день",
+  "@planFailTermRepeated": { "description": "fail_code = plan.term_repeated." },
+
+  "planFailUnknown": "не удалось собрать день",
+  "@planFailUnknown": { "description": "fail_code неизвестен клиенту или его нет вовсе. Причину НЕ выдумываем." },
   "planAbandonLink": "Отказаться от плана",
   "@planAbandonLink": { "description": "Тихая деструктивная ссылка внизу экрана плана. В кадрах макета её нет: сервер держит один активный план на человека, и без неё юзер заперт в плане до конца события." },
 

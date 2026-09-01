@@ -48,8 +48,23 @@ enum PlanDayStatus {
   /// Is there material to open? A day still being written has a title and nothing else.
   bool get hasMaterial => this == PlanDayStatus.ready || this == PlanDayStatus.done;
 
-  /// The server is working on it — the «собираю день N» screen polls while this is true.
+  /// The day may still turn into material — the «собираю день N» screen polls while this is true.
+  ///
+  /// Both states, deliberately: a `pending` day may have a job queued this second, and a poller
+  /// that stopped at the queue boundary would give up on a day that was about to arrive.
   bool get isBuilding => this == PlanDayStatus.pending || this == PlanDayStatus.generating;
+
+  /// Nobody has taken this day yet. It may be queued and it may be waiting its turn — either way
+  /// nothing is being written right now.
+  ///
+  /// Apart from [isGenerating] because a LABEL must tell them apart, even though a poller must not.
+  /// `generating` is written by exactly one thing — the worker that already holds the day — so it
+  /// alone means «собирается». The list said «Собирается» over both, and the live run photographed
+  /// two untouched `pending` days with zero attempts wearing it (Д-20).
+  bool get isQueued => this == PlanDayStatus.pending;
+
+  /// A worker holds this day right now.
+  bool get isGenerating => this == PlanDayStatus.generating;
 }
 
 /// How many times the server will CLAIM a day before it stops — `PlanDay::MAX_ATTEMPTS`.
@@ -217,6 +232,7 @@ class PlanDay {
     required this.status,
     required this.generationAttempts,
     required this.failReason,
+    required this.failCode,
     required this.termBudget,
     required this.outcomes,
     required this.checkpoints,
@@ -240,9 +256,17 @@ class PlanDay {
   /// looser than the server's.
   final int generationAttempts;
 
-  /// Why the last attempt failed, in the server's words. Shown to the learner only as a hint of
-  /// what to do next — a validator code is not copy, and it is not printed raw.
+  /// Why the last attempt failed, in the server's words. NEVER shown: it is Russian prose written
+  /// for the server's own logs, and the app has two languages. [failCode] is the half that crosses.
   final String? failReason;
+
+  /// The CODE of the first fatal violation — `day.example_is_a_term` and the rest, or null unless
+  /// the day is `failed`.
+  ///
+  /// The screen switches on it and writes the sentence itself. Before it existed there was one
+  /// hard-coded sentence for every failure there is, and a day that had died on an example
+  /// duplicating its own card told the owner the model had answered in the wrong language (Д-19).
+  final String? failCode;
 
   final int termBudget;
 
@@ -273,6 +297,7 @@ class PlanDay {
     status: PlanDayStatus.fromWire(j['status'] as String?),
     generationAttempts: (j['generation_attempts'] as num?)?.toInt() ?? 0,
     failReason: j['fail_reason'] as String?,
+    failCode: j['fail_code'] as String?,
     termBudget: (j['term_budget'] as num?)?.toInt() ?? 0,
     outcomes: _strings(j['outcome']),
     checkpoints: _strings(j['checkpoints']),
@@ -462,6 +487,7 @@ class PlanTermRow {
     required this.finished,
     required this.fromDayIndex,
     this.kind,
+    this.speaker,
   });
 
   final String termId;
@@ -489,12 +515,23 @@ class PlanTermRow {
   /// lying the moment a connector appears, because «deal with» is two words and a substitution.
   bool get isPhrase => kind == null ? type != 'word' : kind == 'line';
 
+  /// `learner | role` — whose line this is, and null on anything that is not a plan line.
+  final String? speaker;
+
+  /// The INTERLOCUTOR's line: something to understand when it is said, never something to say.
+  ///
+  /// The register must mark it. Without the mark it stood among the learner's own phrases and read
+  /// as one of them — «Hello. What seems to be the problem with your child?» in a list captioned
+  /// «ФРАЗЫ ДНЯ» (Д-8).
+  bool get isRoleLine => speaker == 'role';
+
   factory PlanTermRow.fromJson(Map<String, dynamic> j) => PlanTermRow(
     termId: (j['id'] as String?) ?? '',
     text: (j['text'] as String?) ?? '',
     translation: j['translation'] as String?,
     type: (j['type'] as String?) ?? 'word',
     kind: j['kind'] as String?,
+    speaker: j['speaker'] as String?,
     stage: PlanStage.fromWire(j['stage'] as String?),
     stageComplete: j['stage_complete'] == true,
     finished: j['finished'] == true,
@@ -559,6 +596,8 @@ class PlanSessionTask {
     required this.card,
     this.section = sectionDay,
     this.origin,
+    this.kind,
+    this.speaker,
   });
 
   /// This task is the day's own material — it counts towards «день пройден».
@@ -587,6 +626,22 @@ class PlanSessionTask {
   /// here, because the wording is the client's and there are two languages of it.
   final PlanTaskOrigin? origin;
 
+  /// `line | word | chunk` — what this card DOES in its day, and null outside a plan.
+  ///
+  /// The summary counts by it and the card is labelled by it. Before the server sent it here, the
+  /// screen counted words in the card's TEXT, so a connector came out «фраза» and the day read
+  /// «3 слова · 11 фраз» over 4 word + 2 chunk + 8 line (Д-5).
+  final String? kind;
+
+  /// `learner | role` — whose turn this line is, and null on anything that is not a plan line.
+  ///
+  /// A `role` line is the interlocutor's. It is dealt for recognition only and has to SAY so, or it
+  /// is indistinguishable from a card the learner is meant to produce (Д-8).
+  final String? speaker;
+
+  /// The interlocutor's own line — never something the learner is asked to say.
+  bool get isRoleLine => speaker == 'role';
+
   bool get isDay => section != sectionReview;
 
   factory PlanSessionTask.fromJson(Map<String, dynamic> j) {
@@ -604,6 +659,8 @@ class PlanSessionTask {
       // plan, which is exactly what the top-up is.
       section: (j['section'] as String?) ?? (fromDay > 0 ? sectionDay : sectionReview),
       origin: PlanTaskOrigin.fromJson(j['origin'] as Map<String, dynamic>?),
+      kind: j['kind'] as String?,
+      speaker: j['speaker'] as String?,
     );
   }
 }
@@ -678,6 +735,12 @@ class PlanSession implements PlanSessionEnvelope {
 
   @override
   bool isDayTaskAt(int i) => i >= 0 && i < tasks.length && tasks[i].isDay;
+
+  @override
+  String? kindAt(int i) => i >= 0 && i < tasks.length ? tasks[i].kind : null;
+
+  @override
+  String? speakerAt(int i) => i >= 0 && i < tasks.length ? tasks[i].speaker : null;
 
   @override
   int get dayTaskCount => dayTasks.length;

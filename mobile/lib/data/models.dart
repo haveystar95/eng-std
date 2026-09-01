@@ -631,6 +631,20 @@ abstract interface class PlanSessionEnvelope {
   /// «Отпуск в Италии» — where the review card at [i] came from, or null when it is the day's own
   /// material (which needs no explanation) or the server did not say.
   ({String kind, String title})? originAt(int i);
+
+  /// `line | word | chunk` — what the card at [i] DOES in its day, or null outside a plan day.
+  ///
+  /// The end-of-day count is drawn from this and from nothing else. It used to be inferred from the
+  /// card's text — «more than one word means a phrase» — which announced «3 слова · 11 фраз» over a
+  /// day of 4 word + 2 chunk + 8 line and labelled the connector «five» a phrase (Д-5).
+  String? kindAt(int i);
+
+  /// `learner | role` — whose line the card at [i] is, or null when it is not a plan line.
+  ///
+  /// A `role` line is the interlocutor's turn. The card must say so: the learner is never asked to
+  /// produce it, and one that looked like every other card had them rehearsing the doctor's
+  /// question (Д-8).
+  String? speakerAt(int i);
 }
 
 class Profile {

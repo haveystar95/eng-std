@@ -2614,6 +2614,19 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String planChunksCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count связки',
+      many: '$count связок',
+      few: '$count связки',
+      one: '$count связка',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String planDaysCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2749,6 +2762,20 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planDayBuilding => 'Собирается';
 
   @override
+  String get planSpeakerRole => 'Собеседник:';
+
+  @override
+  String get planDayQueued => 'В очереди';
+
+  @override
+  String get planDayNotBuilt => 'Не собрался';
+
+  @override
+  String planDayOpenFailed(int index) {
+    return 'Открыть день $index';
+  }
+
+  @override
   String get planDayOpenEarly => 'можно открыть раньше';
 
   @override
@@ -2800,6 +2827,68 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get planDayExhausted =>
       'Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает материал не на том языке. План придётся собрать заново.';
+
+  @override
+  String get planDayExhaustedLead =>
+      'Этот день не собрался дважды подряд — сервер больше не будет пытаться. План придётся собрать заново.';
+
+  @override
+  String planFailWhy(String reason) {
+    return 'Что пошло не так: $reason';
+  }
+
+  @override
+  String get planFailExampleIsATerm =>
+      'пример к карточке повторял другую карточку этого дня, а не показывал слово в предложении';
+
+  @override
+  String get planFailExampleDuplicated => 'один и тот же пример стоял сразу у нескольких карточек';
+
+  @override
+  String get planFailExampleMissing => 'у карточки не было примера';
+
+  @override
+  String get planFailNotTargetLanguage => 'материал вернулся не на том языке';
+
+  @override
+  String get planFailKeyIsTheTerm => 'перевод карточки повторял саму карточку';
+
+  @override
+  String get planFailKeyDuplicated => 'две карточки дня получили один и тот же перевод';
+
+  @override
+  String get planFailKeyNotSupportLanguage => 'перевод пришёл не на вашем языке';
+
+  @override
+  String get planFailKindMismatch => 'карточка объявила себя не тем, чем она является';
+
+  @override
+  String get planFailCounts => 'в дне оказалось не столько карточек, сколько было заказано';
+
+  @override
+  String get planFailCheckpoint => 'одно из умений дня не закрыла ни одна реплика';
+
+  @override
+  String get planFailTermIsAName =>
+      'именем собственным нельзя занимать карточку — его не переводят';
+
+  @override
+  String get planFailSlotOutsideFrame => 'пропуск для подстановки оказался не в той строке';
+
+  @override
+  String get planFailImagePromptMissing => 'к карточке не пришло описание для картинки';
+
+  @override
+  String get planFailDescriptionGivesAway => 'описание карточки называло само загаданное слово';
+
+  @override
+  String get planFailRoleLineInvented => 'реплика собеседника не из тех, что описаны в каркасе дня';
+
+  @override
+  String get planFailTermRepeated => 'день повторил слово, которое уже вводил другой день';
+
+  @override
+  String get planFailUnknown => 'не удалось собрать день';
 
   @override
   String get planAbandonLink => 'Отказаться от плана';

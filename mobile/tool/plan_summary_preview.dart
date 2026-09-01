@@ -36,7 +36,17 @@ class _PlanSummaryPreviewApp extends StatelessWidget {
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
       backgroundColor: AppColors.paper,
-      body: PlanDaySummary(envelope: const _Envelope(dayCards: 6), cards: _cards, onDone: () {}),
+      body: PlanDaySummary(
+        envelope: const _Envelope(
+          dayCards: 6,
+          // The live day's own shape: lines, a connector and a word, so the three counters are all
+          // exercised rather than only two of them.
+          kinds: ['line', 'line', 'line', 'chunk', 'word', 'word', 'line', 'word'],
+        ),
+        cards: _cards,
+        sessionId: '01SESSION',
+        onDone: () {},
+      ),
     ),
   );
 }
@@ -99,9 +109,12 @@ final _plan = LearningPlan.fromJson({
 /// Enough envelope for the summary's arithmetic: [dayCards] cards belong to the day, the rest are
 /// the top-up.
 class _Envelope implements PlanSessionEnvelope {
-  const _Envelope({required this.dayCards});
+  const _Envelope({required this.dayCards, this.kinds = const []});
 
   final int dayCards;
+
+  /// What each card IS in its day — `word` / `chunk` / `line`, positionally.
+  final List<String?> kinds;
 
   @override
   String get planId => '01PLAN';
@@ -121,4 +134,8 @@ class _Envelope implements PlanSessionEnvelope {
   int get dayTaskCount => dayCards;
   @override
   ({String kind, String title})? originAt(int i) => null;
+  @override
+  String? kindAt(int i) => i >= 0 && i < kinds.length ? kinds[i] : null;
+  @override
+  String? speakerAt(int i) => null;
 }

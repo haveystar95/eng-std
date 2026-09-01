@@ -69,7 +69,11 @@ final class PlanSessionResource extends JsonResource
                 // Where a cloze card cuts its gap: the day's own frame when there is one, the
                 // card's example otherwise. Null on every other trainer.
                 'cloze_source' => $task->clozeSource,
+                // WHOSE line it is, and WHAT the card is in its day. The first marks the
+                // interlocutor's turn (Д-8); the second is what the summary counts by, instead of
+                // counting words in the text and calling a connector a phrase (Д-5).
                 'speaker' => $task->speaker,
+                'kind' => $task->kind,
                 'knobs_applied' => $task->knobsApplied,
                 'knobs_ignored' => $task->knobsIgnored,
                 'card' => self::card($task),

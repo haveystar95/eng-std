@@ -108,5 +108,14 @@ final readonly class PlanSessionTaskView
          * day's skeleton — for the same reason `origin` does.
          */
         public ?string $speaker = null,
+        /**
+         * `line` | `word` | `chunk` — what this card DOES in its day, or null outside a plan.
+         *
+         * The day contract has carried it since v0.2; the SESSION did not, so the summary screen
+         * counted words in the card's text instead and a connector came out «фраза»: «3 слова ·
+         * 11 фраз» over a day of 4 word + 2 chunk + 8 line (Д-5). One fact, one field, both
+         * contracts.
+         */
+        public ?string $kind = null,
     ) {}
 }

@@ -12,6 +12,7 @@ import '../../data/plan_models.dart';
 import '../../data/providers.dart';
 import '../training/session_screen.dart';
 import 'plan_building_screen.dart';
+import 'plan_fail_reason.dart';
 import 'plan_tab_screen.dart' show abandonPlan;
 import 'plan_ui.dart';
 
@@ -129,7 +130,8 @@ class _DayBody extends ConsumerWidget {
           const SizedBox(height: AppSpacing.s22),
           PlanLabel(l.planDayPhrases, color: AppColors.tertiary, fontSize: 11.5),
           const SizedBox(height: 10),
-          for (final phrase in detail.phrases) _PhraseLine(term: phrase),
+          for (final phrase in detail.phrases)
+            _PhraseLine(term: phrase, roleName: day.roleTitle),
         ],
         if (detail.words.isNotEmpty || carried.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s22),
@@ -222,7 +224,7 @@ class _NotWrittenYet extends ConsumerWidget {
         const SizedBox(height: AppSpacing.s12),
         Text(
           exhausted
-              ? l.planDayExhausted
+              ? l.planDayExhaustedLead
               : (day.status == PlanDayStatus.failed ? l.planDayFailed : l.planDayNotWritten),
           style: AppText.translation.copyWith(
             fontSize: 14.5,
@@ -230,6 +232,21 @@ class _NotWrittenYet extends ConsumerWidget {
             color: AppColors.secondary,
           ),
         ),
+        // THE ACTUAL CAUSE, on its own line and read off the server's `fail_code` (Д-19). It used to
+        // be part of the sentence above, hard-coded and therefore wrong for every failure but one:
+        // the live day had died on an example that repeated another card, and the screen said the
+        // model had answered in the wrong language.
+        if (day.status == PlanDayStatus.failed) ...[
+          const SizedBox(height: AppSpacing.s12),
+          Text(
+            l.planFailWhy(planFailReason(l, day.failCode)),
+            style: AppText.translation.copyWith(
+              fontSize: 14.5,
+              height: 1.6,
+              color: AppColors.tertiary,
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.s22),
         if (exhausted)
           // The plan is not salvageable a day at a time from here. Abandoning is a decision, so it
@@ -268,20 +285,40 @@ class _NotWrittenYet extends ConsumerWidget {
 /// «It's a sharp pain.» — the sentence in serif with its translation under it, and a terracotta rule
 /// down the left. The rule is the frame's one accent on this screen: it marks «то, что ты скажешь».
 class _PhraseLine extends StatelessWidget {
-  const _PhraseLine({required this.term});
+  const _PhraseLine({required this.term, this.roleName});
   final PlanTermRow term;
 
+  /// The interlocutor's name from the day's skeleton («Врач-терапевт»), when it has one.
+  final String? roleName;
+
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return Padding(
     padding: const EdgeInsets.only(bottom: 10),
     child: Container(
       padding: const EdgeInsets.fromLTRB(14, 2, 0, 2),
-      decoration: const BoxDecoration(
-        border: Border(left: BorderSide(color: AppColors.verdictUnknown, width: 2)),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(
+            // The interlocutor's line is not one of yours: brass is the plan's own service mark,
+            // terracotta is the learner's line. The rule alone is not the whole answer — the
+            // caption below says it in words — but a register where every line looks identical is
+            // exactly what put the doctor's question among the learner's phrases (Д-8).
+            color: term.isRoleLine ? AppColors.brassInk : AppColors.verdictUnknown,
+            width: 2,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (term.isRoleLine) ...[
+            // The role's own name when the skeleton gave one, «Собеседник:» when it did not.
+            PlanLabel(roleName ?? l.planSpeakerRole, fontSize: 10.5),
+            const SizedBox(height: 3),
+          ],
           Text(
             term.text,
             style: AppText.collectionNameCard.copyWith(fontSize: 19, height: 1.3),
@@ -296,7 +333,8 @@ class _PhraseLine extends StatelessWidget {
         ],
       ),
     ),
-  );
+    );
+  }
 }
 
 /// «sharp · острый … A» — one row of the day's register.

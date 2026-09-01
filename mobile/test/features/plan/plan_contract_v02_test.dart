@@ -135,5 +135,82 @@ void main() {
 
       expect(task.card.transliteration, isNull);
     });
+
+    test('reads `kind` and `speaker` off the task, so the card can say what it is (Д-5, Д-8)', () {
+      final role = PlanSessionTask.fromJson(const {
+        'stage': 'a',
+        'ordinal': 1,
+        'of_steps': 2,
+        'from_day_index': 1,
+        'softened': false,
+        'source': 'new',
+        'section': 'day',
+        'kind': 'line',
+        'speaker': 'role',
+        'knobs_applied': <String>[],
+        'knobs_ignored': <String>[],
+        'card': {
+          'term_id': 't1',
+          'exercise_mode': 'multiple_choice',
+          'type': 'phrase',
+          'answer': 'Hello. What seems to be the problem with your child?',
+        },
+      });
+
+      final chunk = PlanSessionTask.fromJson(const {
+        'stage': 'a',
+        'ordinal': 1,
+        'of_steps': 2,
+        'from_day_index': 1,
+        'softened': false,
+        'source': 'new',
+        'section': 'day',
+        'kind': 'chunk',
+        'speaker': null,
+        'knobs_applied': <String>[],
+        'knobs_ignored': <String>[],
+        'card': {
+          'term_id': 't2',
+          'exercise_mode': 'multiple_choice',
+          'type': 'phrasal_verb',
+          'answer': 'sore throat',
+        },
+      });
+
+      // The interlocutor's line, marked as one. Without this the session dealt it like every other
+      // card and the learner rehearsed the doctor's question.
+      expect(role.speaker, 'role');
+      expect(role.isRoleLine, isTrue);
+
+      // A connector is a connector — the summary counts «связка» off this and no longer off the
+      // number of words in the text.
+      expect(chunk.kind, 'chunk');
+      expect(chunk.isRoleLine, isFalse);
+    });
+
+    test('a payload written before either field is read without a fuss', () {
+      final old = PlanSessionTask.fromJson(const {
+        'stage': 'a',
+        'ordinal': 1,
+        'of_steps': 2,
+        'from_day_index': 1,
+        'softened': false,
+        'source': 'new',
+        'knobs_applied': <String>[],
+        'knobs_ignored': <String>[],
+        'card': {
+          'term_id': 't1',
+          'exercise_mode': 'multiple_choice',
+          'type': 'phrase',
+          'answer': 'x',
+        },
+      });
+
+      // Null, and never «learner» or «word» by default: a term that is not a plan line has no
+      // speaker at all, and that is a third answer rather than the second one.
+      expect(old.kind, isNull);
+      expect(old.speaker, isNull);
+      expect(old.isRoleLine, isFalse);
+    });
   });
 }

@@ -20,11 +20,12 @@ import 'plan_ui.dart';
 /// The «Дальше» line is a NEXT DAY and not a «завтра»: the plan's step may be one, two or three
 /// calendar days, and naming the day rather than the date is the only version of that sentence that
 /// is true for all three.
-class PlanDaySummary extends ConsumerWidget {
+class PlanDaySummary extends ConsumerStatefulWidget {
   const PlanDaySummary({
     super.key,
     required this.envelope,
     required this.cards,
+    required this.sessionId,
     required this.onDone,
   });
 
@@ -32,14 +33,47 @@ class PlanDaySummary extends ConsumerWidget {
   final PlanSessionEnvelope envelope;
 
   /// The cards actually played, so the summary can count phrases and words apart without a second
-  /// request: the type rides on every card already.
+  /// request: the kind rides on every task already.
   final List<SessionCard> cards;
+
+  /// The run being closed. Reaching this screen IS «played to the end», and that is what
+  /// `study_sessions.ended_at` records — for a plan day as much as for an ordinary session.
+  final String sessionId;
 
   final VoidCallback onDone;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlanDaySummary> createState() => _PlanDaySummaryState();
+}
+
+class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
+  @override
+  void initState() {
+    super.initState();
+    // CLOSE THE RUN — the same two lines the ordinary summary has always run, and the whole of Д-1.
+    //
+    // A plan session used to reach this screen and stop: `record` lived only in `_SessionSummary`,
+    // so `study_sessions.ended_at` stayed null, `CompleteStudySession` never ran, the day stayed
+    // `ready` and day n+1 was never queued. The live run answered 27 cards and sent not one
+    // `POST /study/sessions/{id}/complete`; the day only turned `done` when the learner opened the
+    // NEXT session, which is the very path PLAN-SESSION-FIX declared closed.
+    //
+    // Recorded in its own durable queue first, so a day finished in airplane mode still reaches
+    // `ended_at` when the network returns.
+    ref.read(reviewSyncProvider).flush();
+    ref.read(sessionCompletionSyncProvider).record(sessionId: widget.sessionId);
+    // …and read the plan back, so the day is struck through and the next one is «Собирается»
+    // without the learner having to leave and come back.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.invalidate(planProvider(widget.envelope.planId));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final envelope = widget.envelope;
+    final cards = widget.cards;
     final plan = ref.watch(planProvider(envelope.planId)).value;
 
     // Distinct TERMS, not cards: one word arrives as three cards inside a stage, and «9 фраз и слов»
@@ -50,12 +84,13 @@ class PlanDaySummary extends ConsumerWidget {
     // fourteen was announced as «21 фраза и слово» — seven of them out of another plan and, on the
     // account this was found on, another language. The seam is the server's answer now
     // ([PlanSessionEnvelope.isDayTaskAt]), not this screen's guess.
-    final byTerm = <String, SessionCard>{};
+    final byTerm = <String, String?>{};
     final reviewTerms = <String>{};
     for (var i = 0; i < cards.length; i++) {
       final card = cards[i];
       if (envelope.isDayTaskAt(i)) {
-        byTerm.putIfAbsent(card.termId, () => card);
+        // THE KIND, not the card. What a term IS in its day is the only thing counted below.
+        byTerm.putIfAbsent(card.termId, () => envelope.kindAt(i));
       } else if (!byTerm.containsKey(card.termId)) {
         // A term the day never introduced. Counted once, and never as the day's — a word that is
         // BOTH (dealt for its day and due again) belongs to the day, which is why the check reads
@@ -63,8 +98,22 @@ class PlanDaySummary extends ConsumerWidget {
         reviewTerms.add(card.termId);
       }
     }
-    final phrases = byTerm.values.where((c) => c.type != 'word').length;
-    final words = byTerm.length - phrases;
+
+    // COUNTED BY `kind`, WHICH THE SERVER SENDS — never by how many words are in the text.
+    //
+    // Three kinds and three words for them: a `word` is «слово», a `chunk` is «связка», a `line` is
+    // «фраза». The old count had two buckets and filled them by length, so a day of 4 word +
+    // 2 chunk + 8 line was announced as «3 слова · 11 фраз» and the connector «five» was labelled a
+    // phrase in the session itself (Д-5). A term with no kind at all is not from a plan day and
+    // falls back to the lexical type, which is the only thing there is to go on.
+    final counts = <String, int>{'word': 0, 'chunk': 0, 'line': 0};
+    byTerm.forEach((termId, kind) {
+      final key = kind ?? 'line';
+      counts[key] = (counts[key] ?? 0) + 1;
+    });
+    final words = counts['word'] ?? 0;
+    final chunks = counts['chunk'] ?? 0;
+    final phrases = counts['line'] ?? 0;
 
     final nextIndex = plan?.nextDayIndex;
     final nextDay = nextIndex == null ? null : plan?.dayAt(nextIndex);
@@ -106,6 +155,7 @@ class PlanDaySummary extends ConsumerWidget {
               label: l.planStageAClosed,
               value: [
                 if (words > 0) l.planWordsCount(words),
+                if (chunks > 0) l.planChunksCount(chunks),
                 if (phrases > 0) l.planPhrasesCount(phrases),
               ].join(' · '),
             ),
@@ -134,7 +184,7 @@ class PlanDaySummary extends ConsumerWidget {
               title: l.planNextDay(nextDay.index, nextDay.title),
             ),
           const SizedBox(height: AppSpacing.s26),
-          PrimaryButton(label: l.planDayBackToPlan, minHeight: 52, onPressed: onDone),
+          PrimaryButton(label: l.planDayBackToPlan, minHeight: 52, onPressed: widget.onDone),
         ],
       ),
     );

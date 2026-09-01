@@ -2494,6 +2494,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String planChunksCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count connectors',
+      one: '$count connector',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String planDaysCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2623,6 +2634,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDayBuilding => 'Building';
 
   @override
+  String get planSpeakerRole => 'Other person:';
+
+  @override
+  String get planDayQueued => 'Queued';
+
+  @override
+  String get planDayNotBuilt => 'Did not build';
+
+  @override
+  String planDayOpenFailed(int index) {
+    return 'Open day $index';
+  }
+
+  @override
   String get planDayOpenEarly => 'can be opened early';
 
   @override
@@ -2674,6 +2699,70 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get planDayExhausted =>
       'This day failed to build twice in a row, and the server will not try again. It happens when the model returns material in the wrong language. The plan has to be built again.';
+
+  @override
+  String get planDayExhaustedLead =>
+      'This day failed to build twice in a row, and the server will not try again. The plan has to be built again.';
+
+  @override
+  String planFailWhy(String reason) {
+    return 'What went wrong: $reason';
+  }
+
+  @override
+  String get planFailExampleIsATerm =>
+      'a card\'s example repeated another card of the day instead of showing the word in a sentence';
+
+  @override
+  String get planFailExampleDuplicated => 'the same example stood under several cards at once';
+
+  @override
+  String get planFailExampleMissing => 'a card had no example';
+
+  @override
+  String get planFailNotTargetLanguage => 'the material came back in the wrong language';
+
+  @override
+  String get planFailKeyIsTheTerm => 'a card\'s translation repeated the card itself';
+
+  @override
+  String get planFailKeyDuplicated => 'two cards of the day got the same translation';
+
+  @override
+  String get planFailKeyNotSupportLanguage => 'the translation did not come back in your language';
+
+  @override
+  String get planFailKindMismatch => 'a card declared itself as something it is not';
+
+  @override
+  String get planFailCounts =>
+      'the day came back with a different number of cards than was asked for';
+
+  @override
+  String get planFailCheckpoint => 'one of the day\'s abilities was closed by no line at all';
+
+  @override
+  String get planFailTermIsAName => 'a proper name cannot take a card — names are not translated';
+
+  @override
+  String get planFailSlotOutsideFrame => 'the gap for the substitution ended up in the wrong line';
+
+  @override
+  String get planFailImagePromptMissing => 'a card came back with no image description';
+
+  @override
+  String get planFailDescriptionGivesAway =>
+      'a card\'s description named the very word it was hiding';
+
+  @override
+  String get planFailRoleLineInvented =>
+      'the interlocutor\'s line is not one the day\'s skeleton describes';
+
+  @override
+  String get planFailTermRepeated => 'the day repeated a word another day had already introduced';
+
+  @override
+  String get planFailUnknown => 'the day could not be built';
 
   @override
   String get planAbandonLink => 'Give up on this plan';

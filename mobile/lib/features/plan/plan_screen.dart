@@ -148,12 +148,22 @@ class _PlanBody extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.s12),
                 ],
+                // «Продолжить день N» is a promise that there is a day to continue. A BURNED focus
+                // day has no material and never will, and the live run's plan offered the button
+                // over one — the learner only found out by pressing it (Д-20). The day screen owns
+                // what to do about a failure, so the row leads there and says so, in its own words.
                 if (focus != null)
-                  PrimaryButton(
-                    label: l.planContinueDay(focus.index),
-                    minHeight: 52,
-                    onPressed: () => _openDay(context, plan, focus.index),
-                  ),
+                  focus.status == PlanDayStatus.failed
+                      ? PrimaryButton(
+                          label: l.planDayOpenFailed(focus.index),
+                          minHeight: 52,
+                          onPressed: () => _openDay(context, plan, focus.index),
+                        )
+                      : PrimaryButton(
+                          label: l.planContinueDay(focus.index),
+                          minHeight: 52,
+                          onPressed: () => _openDay(context, plan, focus.index),
+                        ),
                 // THE WAY OUT, and the only one there is. The server allows one running plan per
                 // learner, so without this the only exit is the plan's own event. Quiet terracotta
                 // text under the action, the app's established shape for a destructive act (rule
@@ -325,17 +335,28 @@ class _DayRow extends StatelessWidget {
     final current = day.index == plan.focusDayIndex;
     final computed = plan.computedDayAt(day.index);
 
+    // THE ROW SAYS WHAT THE DAY ACTUALLY IS (Д-20).
+    //
+    // «Собирается» used to cover `pending` and `generating` together, so days 3 and 4 — untouched,
+    // zero attempts, nothing queued — were announced as being built, and a `failed` day fell
+    // through to the word counts and read like an ordinary day ahead. Three states, three
+    // sentences: queued, being written, burned.
     final subtitle = passed
         ? l.planDayPassed(day.index)
-        : day.kind == PlanDayKind.finalRun
-            ? l.planDayFinalHint
-            : day.status.isBuilding
-                ? l.planDayBuilding
-                : [
-                    if ((computed?.wordCount ?? 0) > 0) l.planWordsCount(computed!.wordCount),
-                    if ((computed?.phraseCount ?? 0) > 0) l.planPhrasesCount(computed!.phraseCount),
-                    if (!current) l.planDayOpenEarly,
-                  ].join(' · ');
+        : day.status == PlanDayStatus.failed
+            ? l.planDayNotBuilt
+            : day.kind == PlanDayKind.finalRun
+                ? l.planDayFinalHint
+                : day.status.isGenerating
+                    ? l.planDayBuilding
+                    : day.status.isQueued
+                        ? l.planDayQueued
+                        : [
+                            if ((computed?.wordCount ?? 0) > 0) l.planWordsCount(computed!.wordCount),
+                            if ((computed?.phraseCount ?? 0) > 0)
+                              l.planPhrasesCount(computed!.phraseCount),
+                            if (!current) l.planDayOpenEarly,
+                          ].join(' · ');
 
     return Opacity(
       opacity: passed ? 0.62 : 1,

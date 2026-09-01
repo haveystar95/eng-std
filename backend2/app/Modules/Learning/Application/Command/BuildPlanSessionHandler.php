@@ -623,6 +623,9 @@ final readonly class BuildPlanSessionHandler
                 // never has to read «null» as «the learner's» — a term that is not a plan line has
                 // no speaker at all, and that is a third answer (Д-8).
                 speaker: $termContent->speaker,
+                // WHAT THIS CARD IS, so the summary can count «4 слова · 2 связки · 8 фраз» instead
+                // of counting words in the text and calling a connector a phrase (Д-5).
+                kind: $termContent->kind,
             );
         }
 

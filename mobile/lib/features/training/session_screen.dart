@@ -514,6 +514,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         return PlanDaySummary(
           envelope: plan,
           cards: widget.session.cards,
+          // The run has to be CLOSED here too. It was not: `record` lived only in the ordinary
+          // summary, so a plan day reached its milestone screen and the server never learned the
+          // sitting had ended — the day stayed `ready` and the next one was never queued (Д-1).
+          sessionId: widget.session.sessionId,
           onDone: () => Navigator.of(context).pop(),
         );
       }
@@ -677,6 +681,21 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                                 style: AppText.blockLabel.copyWith(
                                   letterSpacing: 1.32,
                                   color: AppColors.tertiary,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                            ],
+                            // WHOSE LINE THIS IS. Only on the interlocutor's — the learner's own
+                            // needs no caption, and a label on every card would be noise. Without
+                            // it a `role` line is dealt as a card like any other and reads as one
+                            // to learn to SAY: the live run had the learner assembling and reading
+                            // aloud «Hello. What seems to be the problem with your child?» (Д-8).
+                            if (plan.speakerAt(_playing) == 'role') ...[
+                              Text(
+                                l.planSpeakerRole.toUpperCase(),
+                                style: AppText.blockLabel.copyWith(
+                                  letterSpacing: 1.32,
+                                  color: AppColors.brassInk,
                                 ),
                               ),
                               const SizedBox(height: 14),

@@ -3789,6 +3789,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{{count} фраза} few{{count} фразы} many{{count} фраз} other{{count} фразы}}'**
   String planPhrasesCount(int count);
 
+  /// Счётчик связок дня — kind = chunk. Отдельно от слов и фраз: связка не одно слово и не реплика.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} связка} few{{count} связки} many{{count} связок} other{{count} связки}}'**
+  String planChunksCount(int count);
+
   /// Длительность плана в архиве.
   ///
   /// In ru, this message translates to:
@@ -3963,11 +3969,35 @@ abstract class AppLocalizations {
   /// **'Без новых слов · можно открыть раньше'**
   String get planDayFinalHint;
 
-  /// Подпись дня, который сервер ещё пишет.
+  /// Подпись дня в статусе `generating` — его прямо сейчас держит воркер. НЕ для `pending`: см. planDayQueued.
   ///
   /// In ru, this message translates to:
   /// **'Собирается'**
   String get planDayBuilding;
+
+  /// Пометка реплики собеседника (speaker = role) — на экране дня и на карточке в сессии. Если каркас дня назвал роль, вместо этой строки показывается её имя. Лексика: в UI слово «фраза», не «реплика».
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседник:'**
+  String get planSpeakerRole;
+
+  /// Подпись дня в статусе `pending`: его ещё никто не взял. Раньше такие дни подписывались «Собирается», хотя попыток у них ноль (Д-20).
+  ///
+  /// In ru, this message translates to:
+  /// **'В очереди'**
+  String get planDayQueued;
+
+  /// Подпись дня в статусе `failed`. Причина — на экране самого дня, по fail_code.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не собрался'**
+  String get planDayNotBuilt;
+
+  /// Действие вместо «Продолжить день N», когда текущий день сгорел: продолжать нечего, но решение принимается на экране дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть день {index}'**
+  String planDayOpenFailed(int index);
 
   /// Подпись будущего дня — он открыт, но мягко.
   ///
@@ -4058,6 +4088,120 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает материал не на том языке. План придётся собрать заново.'**
   String get planDayExhausted;
+
+  /// Первый абзац сгоревшего дня: что случилось и что теперь можно. Причину называет отдельная строка по fail_code.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этот день не собрался дважды подряд — сервер больше не будет пытаться. План придётся собрать заново.'**
+  String get planDayExhaustedLead;
+
+  /// Обёртка вокруг причины поломки дня. Причина подставляется по fail_code с сервера.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что пошло не так: {reason}'**
+  String planFailWhy(String reason);
+
+  /// fail_code = day.example_is_a_term.
+  ///
+  /// In ru, this message translates to:
+  /// **'пример к карточке повторял другую карточку этого дня, а не показывал слово в предложении'**
+  String get planFailExampleIsATerm;
+
+  /// fail_code = day.example_duplicated.
+  ///
+  /// In ru, this message translates to:
+  /// **'один и тот же пример стоял сразу у нескольких карточек'**
+  String get planFailExampleDuplicated;
+
+  /// fail_code = day.example_missing.
+  ///
+  /// In ru, this message translates to:
+  /// **'у карточки не было примера'**
+  String get planFailExampleMissing;
+
+  /// fail_code = outline.target_language.
+  ///
+  /// In ru, this message translates to:
+  /// **'материал вернулся не на том языке'**
+  String get planFailNotTargetLanguage;
+
+  /// fail_code = day.key_is_the_term.
+  ///
+  /// In ru, this message translates to:
+  /// **'перевод карточки повторял саму карточку'**
+  String get planFailKeyIsTheTerm;
+
+  /// fail_code = day.key_duplicated.
+  ///
+  /// In ru, this message translates to:
+  /// **'две карточки дня получили один и тот же перевод'**
+  String get planFailKeyDuplicated;
+
+  /// fail_code = day.key_not_support_language.
+  ///
+  /// In ru, this message translates to:
+  /// **'перевод пришёл не на вашем языке'**
+  String get planFailKeyNotSupportLanguage;
+
+  /// fail_code = day.kind_mismatch.
+  ///
+  /// In ru, this message translates to:
+  /// **'карточка объявила себя не тем, чем она является'**
+  String get planFailKindMismatch;
+
+  /// fail_code = day.array_count / day.term_count.
+  ///
+  /// In ru, this message translates to:
+  /// **'в дне оказалось не столько карточек, сколько было заказано'**
+  String get planFailCounts;
+
+  /// fail_code = day.checkpoint_uncovered и соседние.
+  ///
+  /// In ru, this message translates to:
+  /// **'одно из умений дня не закрыла ни одна реплика'**
+  String get planFailCheckpoint;
+
+  /// fail_code = day.term_is_a_name.
+  ///
+  /// In ru, this message translates to:
+  /// **'именем собственным нельзя занимать карточку — его не переводят'**
+  String get planFailTermIsAName;
+
+  /// fail_code = day.slot_outside_frame.
+  ///
+  /// In ru, this message translates to:
+  /// **'пропуск для подстановки оказался не в той строке'**
+  String get planFailSlotOutsideFrame;
+
+  /// fail_code = day.image_prompt_missing.
+  ///
+  /// In ru, this message translates to:
+  /// **'к карточке не пришло описание для картинки'**
+  String get planFailImagePromptMissing;
+
+  /// fail_code = day.description_gives_away.
+  ///
+  /// In ru, this message translates to:
+  /// **'описание карточки называло само загаданное слово'**
+  String get planFailDescriptionGivesAway;
+
+  /// fail_code = day.role_line_invented.
+  ///
+  /// In ru, this message translates to:
+  /// **'реплика собеседника не из тех, что описаны в каркасе дня'**
+  String get planFailRoleLineInvented;
+
+  /// fail_code = plan.term_repeated.
+  ///
+  /// In ru, this message translates to:
+  /// **'день повторил слово, которое уже вводил другой день'**
+  String get planFailTermRepeated;
+
+  /// fail_code неизвестен клиенту или его нет вовсе. Причину НЕ выдумываем.
+  ///
+  /// In ru, this message translates to:
+  /// **'не удалось собрать день'**
+  String get planFailUnknown;
 
   /// Тихая деструктивная ссылка внизу экрана плана. В кадрах макета её нет: сервер держит один активный план на человека, и без неё юзер заперт в плане до конца события.
   ///
