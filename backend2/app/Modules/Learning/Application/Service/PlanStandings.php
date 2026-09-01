@@ -155,11 +155,16 @@ final readonly class PlanStandings
         $own = $family[DistractorFamily::of($content->kind, $content->text)] ?? 1;
         // Itself, plus one wrong answer per remaining slot. {@see choiceIsAffordable()}
         $affordable = $own >= $optionCount;
+        // THE INTERLOCUTOR'S OWN LINE is understood, never produced. {@see PRODUCTION_MODES}
+        $recognitionOnly = $content->speaker === self::SPEAKER_ROLE;
 
         return array_values(array_filter(
             $openAtLevel,
-            function (ExerciseMode $mode) use ($forKind, $forLanguage, $playable, $affordable, $content, $user, $optionCount, $own): bool {
+            function (ExerciseMode $mode) use ($forKind, $forLanguage, $playable, $affordable, $content, $user, $optionCount, $own, $recognitionOnly): bool {
                 if (! isset($forKind[$mode->value]) || ! $forLanguage->has($mode) || ! $playable->supports($mode)) {
+                    return false;
+                }
+                if ($recognitionOnly && in_array($mode, self::PRODUCTION_MODES, true)) {
                     return false;
                 }
                 if ($affordable || ! self::isChoice($mode)) {
@@ -178,6 +183,32 @@ final readonly class PlanStandings
             },
         ));
     }
+
+    /** `terms.speaker` for a line the INTERLOCUTOR says. Kept as a literal — Learning does not import Vocabulary Domain. */
+    private const SPEAKER_ROLE = 'role';
+
+    /**
+     * WHAT A `role` LINE IS NEVER ASKED TO DO.
+     *
+     * A line marked `speaker: role` is what the other person says — «Hello. What seems to be the
+     * problem with your child?». It is in the day so the learner will UNDERSTAND it when it is said
+     * to them; it is the one card of a plan they will never say. The live run dealt it as an
+     * ordinary card and spent a word bank on it, so the learner assembled the doctor's question
+     * word by word and then read it aloud (Д-8).
+     *
+     * So: recognition stays — meeting it, choosing its meaning, hearing it — and everything that
+     * asks the learner to PRODUCE the sentence falls out. It falls out of the CHECKLIST, not out of
+     * the deal, for the reason the whole class exists: a step that is owed and cannot be answered
+     * is a stage that never closes.
+     */
+    private const PRODUCTION_MODES = [
+        ExerciseMode::WordBank,
+        ExerciseMode::Scramble,
+        ExerciseMode::Typing,
+        ExerciseMode::Speaking,
+        ExerciseMode::Cloze,
+        ExerciseMode::Dictation,
+    ];
 
     /** The modes whose options come out of the pool, and which therefore starve with it. */
     private static function isChoice(ExerciseMode $mode): bool

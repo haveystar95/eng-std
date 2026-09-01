@@ -31,6 +31,15 @@ final readonly class PlanDayTermView
          * lying the moment a connector appears: «deal with» is two words and a substitution.
          */
         public ?string $kind,
+        /**
+         * `learner` | `role`, and null on anything that is not a plan line.
+         *
+         * WHOSE line it is. A `role` line is what the interlocutor says, and the day screen has to
+         * mark it: the live run listed «Hello. What seems to be the problem with your child?» among
+         * the learner's own phrases with nothing to distinguish it, so the register read as «here
+         * are eleven sentences you are learning to say» and one of them was the doctor's (Д-8).
+         */
+        public ?string $speaker,
         /** `a` | `b` | `c`. */
         public string $stage,
         public bool $stageComplete,
@@ -51,6 +60,7 @@ final readonly class PlanDayTermView
             'translation' => $this->translation,
             'type' => $this->type,
             'kind' => $this->kind,
+            'speaker' => $this->speaker,
             'stage' => $this->stage,
             'stage_complete' => $this->stageComplete,
             'finished' => $this->finished,

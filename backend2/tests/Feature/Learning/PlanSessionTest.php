@@ -127,6 +127,56 @@ it('drops the choice card when the day cannot furnish its kind, instead of paddi
     expect(Cache::get(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED))->toBeGreaterThan(0);
 });
 
+it('deals the interlocutor’s own line for recognition only, and says whose it is (Д-8)', function () {
+    [, $token, $planId] = startedPlan($this);
+
+    // One of the day's lines is the OTHER person's turn — «Hello. What seems to be the problem with
+    // your child?» in the live run. It is in the day so the learner will understand it when it is
+    // said to them, and it is the one card of a plan they are never asked to say.
+    $roleLine = DB::table('terms')->where('kind', 'line')->orderBy('id')->value('id');
+    DB::table('terms')->where('id', $roleLine)->update(['speaker' => 'role']);
+    $learnerLine = DB::table('terms')->where('kind', 'line')->where('id', '!=', $roleLine)->orderBy('id')->value('id');
+    DB::table('terms')->whereIn('kind', ['line'])->where('id', '!=', $roleLine)->update(['speaker' => 'learner']);
+
+    $session = planSession($this, $token, $planId);
+
+    $modes = [];
+    $speakers = [];
+    foreach ($session['tasks'] as $task) {
+        $modes[$task['card']['term_id']][] = $task['card']['exercise_mode'];
+        $speakers[$task['card']['term_id']] = $task['speaker'];
+    }
+
+    // Meeting it and choosing its meaning stay. Assembling it, typing it and reading it aloud do
+    // not: the live run spent a word bank making the learner build the doctor's question word by
+    // word, and then a speaking card making them read it out.
+    expect($modes[$roleLine])->toContain('intro')
+        ->and($modes[$roleLine])->toContain('multiple_choice')
+        ->and($modes[$roleLine])->not->toContain('word_bank')
+        ->and($modes[$roleLine])->not->toContain('scramble')
+        ->and($modes[$roleLine])->not->toContain('typing')
+        ->and($modes[$roleLine])->not->toContain('speaking');
+
+    // The learner's OWN lines are untouched — this is about whose turn it is, not about lines.
+    expect($modes[$learnerLine])->toContain('speaking');
+
+    // …and the card SAYS whose line it is, in both directions. A recognition card that did not
+    // would be indistinguishable from one the learner is expected to produce.
+    expect($speakers[$roleLine])->toBe('role')
+        ->and($speakers[$learnerLine])->toBe('learner');
+
+    // The DAY screen carries it too, so the register does not read as «eleven sentences you are
+    // learning to say» with the doctor's among them.
+    $dayTerms = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$planId}/days/1")
+        ->assertOk()
+        ->json('data.terms');
+
+    $byId = array_column($dayTerms, 'speaker', 'id');
+    expect($byId[$roleLine])->toBe('role')
+        ->and($byId[$learnerLine])->toBe('learner');
+});
+
 it('carries the level’s knobs, and says which of them the card actually honoured', function () {
     [, $token, $planId] = startedPlan($this, ['level' => 'zero']);
 

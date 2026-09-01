@@ -2642,6 +2642,15 @@ components:
             apart from a substitution and used to guess that from `type` — a guess that stops
             working the moment a connector appears, since «deal with» is two words and a
             substitution.
+        speaker:
+          type: [string, 'null']
+          enum: [learner, role, null]
+          description: >-
+            WHOSE line it is. `role` is the interlocutor's turn — the day carries it so the learner
+            will understand it when it is said to them, and it is the one card of a plan they are
+            never asked to produce. The screen must mark it: the live run listed the doctor's
+            question among the learner's own phrases with nothing to tell them apart (Д-8). Null on
+            anything that is not a plan line, which is not the same as `learner`.
         stage: { type: string, enum: [a, b, c] }
         stage_complete: { type: boolean }
         finished:

@@ -69,5 +69,16 @@ final readonly class TermContentView
          * everything that is not from a plan day. What a gap is cut from, in the plan session.
          */
         public ?string $frame = null,
+        /**
+         * WHOSE TURN this line is: `learner` or `role`. Null on everything that is not a plan line.
+         *
+         * A `role` line is what the INTERLOCUTOR says — «Hello. What seems to be the problem with
+         * your child?». It is in the day so the learner will understand it when it is said to them,
+         * and it is the one card of a plan they are never asked to produce. The live run dealt it
+         * as an ordinary card to learn and showed it in «Фразы дня» with nothing marking whose line
+         * it is (Д-8), so the learner spent a word bank and a speaking card rehearsing the doctor's
+         * question.
+         */
+        public ?string $speaker = null,
     ) {}
 }

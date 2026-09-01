@@ -69,6 +69,7 @@ final class PlanSessionResource extends JsonResource
                 // Where a cloze card cuts its gap: the day's own frame when there is one, the
                 // card's example otherwise. Null on every other trainer.
                 'cloze_source' => $task->clozeSource,
+                'speaker' => $task->speaker,
                 'knobs_applied' => $task->knobsApplied,
                 'knobs_ignored' => $task->knobsIgnored,
                 'card' => self::card($task),

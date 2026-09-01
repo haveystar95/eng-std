@@ -619,6 +619,10 @@ final readonly class BuildPlanSessionHandler
                     : null,
                 knobsApplied: PlanKnobSupport::appliedTo($dealt),
                 knobsIgnored: PlanKnobSupport::ignoredBy($dealt),
+                // WHOSE LINE. Carried on every task rather than only on a role one, so the client
+                // never has to read «null» as «the learner's» — a term that is not a plan line has
+                // no speaker at all, and that is a third answer (Д-8).
+                speaker: $termContent->speaker,
             );
         }
 

@@ -94,6 +94,7 @@ final readonly class GetPlanDayTermsHandler
                 translation: $content->translation,
                 type: $content->type,
                 kind: $content->kind,
+                speaker: $content->speaker,
                 stage: $standing->stage->value,
                 stageComplete: $standing->stageComplete,
                 finished: $standing->finished,

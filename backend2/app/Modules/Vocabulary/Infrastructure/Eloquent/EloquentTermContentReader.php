@@ -178,6 +178,7 @@ final class EloquentTermContentReader implements TermContentReader
                 // plan ladder is the only reader.
                 kind: $term->kind !== null ? (string) $term->kind : null,
                 frame: $term->frame !== null ? (string) $term->frame : null,
+                speaker: $term->speaker !== null ? (string) $term->speaker : null,
             );
         }
 

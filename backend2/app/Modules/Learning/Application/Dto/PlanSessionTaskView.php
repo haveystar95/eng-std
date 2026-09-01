@@ -95,5 +95,18 @@ final readonly class PlanSessionTaskView
          * @var array{kind: string, title: string}|null
          */
         public ?array $origin = null,
+        /**
+         * WHOSE LINE THIS IS — `learner`, `role`, or null on anything that is not a plan line.
+         *
+         * The card has to say it out loud. A `role` line is the interlocutor's turn, dealt only for
+         * recognition ({@see \App\Modules\Learning\Application\Service\PlanStandings}), and a
+         * recognition card that does not say so is indistinguishable from one the learner is
+         * expected to produce: the live run showed «Hello. What seems to be the problem with your
+         * child?» as an ordinary card to learn (Д-8).
+         *
+         * Additive, and the client owns the wording — «Собеседник:» or the role's own name from the
+         * day's skeleton — for the same reason `origin` does.
+         */
+        public ?string $speaker = null,
     ) {}
 }
