@@ -35,6 +35,12 @@ use App\Modules\Vocabulary\Application\Query\TermContentReader;
  * content read is per DAY rather than for the whole plan on purpose: a term's example is chosen
  * through the collection it is being shown in, and «сначала пример этого дня, иначе общий» is only
  * expressible one scope at a time.
+ *
+ * Plus, since PLAN-FIX-5, one option read PER CARD THAT THE DAY ITSELF CANNOT FURNISH A CHOICE FOR
+ * ({@see PlanStandings::optionsAvailable()}) — a card the day answers costs nothing. Measured on
+ * the owner's three-day plan: 154 ms for the whole plan, eight such cards on day 1, ~6 ms each. A
+ * fourteen-day plan whose every card is short would pay about a second, and if one ever does the
+ * fix is a batched count in the reader rather than a return to counting the day.
  */
 final readonly class PlanProgress
 {

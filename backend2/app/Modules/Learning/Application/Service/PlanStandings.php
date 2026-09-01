@@ -19,6 +19,7 @@ use App\Modules\Shared\Domain\Service\DistractorLength;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Dto\TermContentView;
+use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use DateTimeZone;
 
 /**
@@ -85,6 +86,11 @@ final readonly class PlanStandings
         private EnabledModesReader $enabledModes,
         private StudyCardAssembler $assembler,
         private ModeFallbackReporter $fallbacks,
+        /**
+         * THE VERY READER THE CARD WILL BE BUILT FROM. Asked, rather than imitated, when the day's
+         * own cards do not reach the floor — see {@see optionsAvailable()}.
+         */
+        private DistractorReader $distractors,
         private PlanStageLadder $ladder = new PlanStageLadder(),
         private DistractorLength $length = new DistractorLength(),
         /**
@@ -189,12 +195,12 @@ final readonly class PlanStandings
             }
         }
 
-        $own = $this->optionsAvailable($pool, $content);
         // THE FLOOR, not the level's preference. A day that can furnish three same-shape,
         // same-length options is dealt a card of three; below three there is no card to deal.
         // {@see PlanChoiceFloor} — and the assembler reads the identical number, which is what
         // keeps «owed» and «buildable» the same set.
         $floor = $this->choiceFloor->forPreferred($optionCount);
+        $own = $this->optionsAvailable($user, $pool, $content, $floor);
         $affordable = $own >= $floor;
         // THE INTERLOCUTOR'S OWN LINE is understood, never produced. {@see PRODUCTION_MODES}
         $recognitionOnly = $content->speaker === self::SPEAKER_ROLE;
@@ -267,23 +273,30 @@ final readonly class PlanStandings
      * closes, a day that never passes and a day n+1 that is never written. A card the pool cannot
      * furnish must therefore not be OWED, not merely not dealt.
      *
-     * Counted over the plan's own terms and nothing else, which makes it at least as strict as
-     * {@see \App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorReader} — that one
-     * also tops up from the catalogue. Strict in that direction on purpose: the checklist may drop a
-     * card the reader could have built, and must never owe one it could not.
+     * ## The population is the CATALOGUE, because that is what the card is built from
      *
-     * How many options a choice card of THIS TARGET could actually be dealt, itself included.
+     * This used to count the DAY and nothing else, and called itself «at least as strict as the
+     * reader, which also tops up from the catalogue». Strict in the safe direction, so it looked
+     * free. It was not: the reader was never asked. On the owner's live day 1 (01.09) the day held
+     * two connectors and seven replies of assorted lengths, so eight cards of fourteen were refused
+     * a choice HERE — while the catalogue could furnish every one of them, three options each,
+     * measured. The asymmetry was not a safety margin, it was the defect.
      *
-     * Two rules, both the ones the option reader applies, and both asked here for the same reason:
-     * {@see DistractorFamily} (a word beside a word, a question beside questions) and
-     * {@see DistractorLength} (and not one three times its length). It used to be a count per
-     * FAMILY, computed once for the day — which was enough while shape was the whole rule, and stops
-     * being enough the moment length is part of it, because «how many `word`s does this plan hold»
-     * is the same number for `key` and for `accommodation` and the answer for the two differs.
+     * So: the day is counted first, in memory, because it is already loaded and usually answers.
+     * When it does not reach the floor, the question goes to {@see DistractorReader} — the very
+     * code the assembler will use — with the day as its preferred pool, and the answer is exact by
+     * construction rather than by two rules being kept in step by hand.
      *
-     * @param  array<string, TermContentView>  $pool  every term this plan stands on
+     * The in-memory half stays an upper bound: it applies {@see DistractorFamily} and
+     * {@see DistractorLength} and not the translation-overlap and synonym bans the reader also
+     * applies. That approximation is unchanged from before this method knew about the catalogue,
+     * and it errs the same way it always did — a day whose two cards are translation twins can owe
+     * a card the reader then refuses. Worth writing down; not worth a query on the healthy path.
+     *
+     * @param  array<string, TermContentView>  $pool  the terms of the day this card belongs to
+     * @param  int  $floor  the fewest options this card may be dealt {@see PlanChoiceFloor}
      */
-    private function optionsAvailable(array $pool, TermContentView $target): int
+    private function optionsAvailable(UserId $user, array $pool, TermContentView $target, int $floor): int
     {
         $family = DistractorFamily::of($target->kind, $target->text);
         $count = 0;
@@ -297,7 +310,20 @@ final readonly class PlanStandings
 
         // The target counts itself: `fits()` is reflexive and the family is its own, so the loop has
         // already taken it. A pool that somehow does not contain the target is still a card of one.
-        return max(1, $count);
+        $inDay = max(1, $count);
+        if ($inDay >= $floor) {
+            return $inDay;
+        }
+
+        // THE DAY IS SHORT — ask the catalogue, through the reader that will build the card.
+        // Asked for exactly the shortfall: the reader stops as soon as it has that many, so a card
+        // the catalogue answers easily costs one short read and not a scan.
+        return 1 + count($this->distractors->forTarget(
+            $user,
+            TermId::fromString($target->id),
+            array_keys($pool),
+            $floor - 1,
+        ));
     }
 
     /**

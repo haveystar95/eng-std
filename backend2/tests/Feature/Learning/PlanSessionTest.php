@@ -123,36 +123,43 @@ it('deals a line and a word different chains in the same session', function () {
         ->and($chains['word'] ?? [])->not->toBeEmpty();
 });
 
-it('drops the choice card when the day cannot furnish its kind, instead of padding it (Д-2)', function () {
+it('never pads a choice with another kind — a connector is offered connectors (Д-2)', function () {
     Cache::forget(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED);
 
     [, $token, $planId] = startedPlan($this);
 
     $session = planSession($this, $token, $planId);
 
-    // The day is 8 lines + 4 words + 2 connectors ({@see DayCapacity::split()} on a budget of 14),
-    // and `basic` deals three options. A connector therefore needs two OTHER connectors and the day
-    // holds one — so a connector gets no choice card at all. Before Д-2 the shortfall was made up
-    // from single words, and «which of these is a connector» was answerable by length.
+    // The day is 8 lines + 4 words + 2 connectors ({@see DayCapacity::split()} on a budget of 14).
+    // A connector therefore has ONE other connector in its own day — and since PLAN-FIX-5 the
+    // question is not «does the day hold three», it is «does the CATALOGUE», which the reader has
+    // answered from all along (DECISIONS п. 213). What has never been allowed, and is what Д-2 is
+    // actually about, is filling the gap with another KIND: «which of these is a connector»
+    // answered by length, among single words.
     $kinds = DB::table('terms')->pluck('kind', 'id')->all();
-    $byKind = [];
+    $kindOfText = DB::table('terms')->pluck('kind', 'text')->all();
+
+    $checked = [];
     foreach ($session['tasks'] as $task) {
-        $termId = $task['card']['term_id'];
-        $byKind[$kinds[$termId] ?? 'none'][] = $task['card']['exercise_mode'];
+        $card = $task['card'];
+        $options = $card['options'] ?? null;
+        // The identity-graded rung-1 card offers TRANSLATIONS, not term texts — a different
+        // question, judged by its own test.
+        if ($card['exercise_mode'] !== 'multiple_choice' || $options === null || ($card['option_ids'] ?? null) !== null) {
+            continue;
+        }
+        $targetKind = $kinds[$card['term_id']] ?? null;
+        $checked[$targetKind] = true;
+        foreach ($options as $option) {
+            expect($kindOfText[$option] ?? null)->toBe($targetKind);
+        }
     }
 
-    expect($byKind['chunk'] ?? [])->not->toBeEmpty()
-        ->and($byKind['chunk'])->not->toContain('multiple_choice')
-        // The connector is still taught — it is only the CHOICE that cannot be built honestly.
-        ->and($byKind['chunk'])->toContain('intro')
-        // Words and lines have their own kind to spare, so nothing else lost a card.
-        ->and($byKind['word'])->toContain('multiple_choice')
-        ->and($byKind['line'])->toContain('multiple_choice');
-
-    // …and the fact is COUNTED, because a session that is quietly shorter is exactly the kind of
-    // thing nobody notices for months.
-    expect(Cache::get(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED))->toBeGreaterThan(0);
+    // And the connector now HAS a choice card, which is the half that changed: its two wrong
+    // answers come out of the catalogue instead of out of a day that holds one.
+    expect($checked)->toHaveKeys(['word', 'chunk', 'line']);
 });
+
 
 /**
  * Keep the first `$keep` WORD cards of day 1 inside the length band and push every other word of
@@ -189,6 +196,50 @@ function narrowWordPoolTo(string $planId, int $keep): string
 
     return $kept[0];
 }
+
+it('owes a choice the DAY cannot furnish but the catalogue can — one population, not two', function () {
+    // The стык PLAN-FIX-5 exists for. The checklist decides whether a card is OWED and the assembler
+    // decides whether it can be BUILT; while the first counted the day and the second the catalogue,
+    // the first refused cards the second would have dealt and was never asked about them. Here the
+    // day holds ONE other card of the target's shape and length — below the floor — and the
+    // catalogue holds more, so the step must be owed AND dealt.
+    Cache::forget(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED);
+
+    [, $token, $planId] = startedPlan($this, ['level' => 'conversational']);
+
+    $day1 = DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('collection_id');
+    $words = DB::table('collection_items')->where('collection_id', $day1)
+        ->join('terms', 'terms.id', '=', 'collection_items.term_id')
+        ->where('terms.kind', 'word')->orderBy('terms.text')->pluck('terms.id')->all();
+
+    // Two words left in band INSIDE THE DAY — one short of the floor of three. What is pushed out is
+    // still there, still the plan's and still `word`: only the length band excludes it, from the day
+    // AND from the catalogue, so the shortfall has to be answered by day 2's words.
+    $target = (string) $words[0];
+    foreach (array_slice($words, 2) as $i => $termId) {
+        DB::table('terms')->where('id', $termId)->update(['text' => 'far too long to stand beside them ' . $i]);
+    }
+
+    $session = planSession($this, $token, $planId);
+
+    $choices = array_values(array_filter(
+        $session['tasks'],
+        static fn (array $t): bool => $t['card']['term_id'] === $target
+            && $t['card']['exercise_mode'] === 'multiple_choice',
+    ));
+
+    expect($choices)->not->toBeEmpty()
+        ->and(count($choices[0]['card']['options']))->toBeGreaterThanOrEqual(3);
+
+    // …and at least one wrong answer came from OUTSIDE the day, which is the claim: the day could
+    // not furnish the card and the card was dealt anyway, out of the same population the reader has
+    // always drawn from.
+    $outsideDay1 = DB::table('collection_items')->where('collection_id', '!=', $day1)
+        ->join('terms', 'terms.id', '=', 'collection_items.term_id')
+        ->pluck('terms.text')->all();
+
+    expect(array_intersect($choices[0]['card']['options'], $outsideDay1))->not->toBeEmpty();
+});
 
 it('shrinks a starved choice to three options instead of dropping it (PLAN-FIX-5)', function () {
     Cache::forget(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED);
@@ -234,7 +285,6 @@ it('still drops the choice when even three cannot be furnished, and counts it', 
         ->and($modes)->toContain('intro')
         ->and(Cache::get(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED))->toBeGreaterThan(0);
 });
-
 it('deals the interlocutor’s own line for recognition only, and says whose it is (Д-8)', function () {
     [, $token, $planId] = startedPlan($this);
 
