@@ -154,6 +154,87 @@ it('drops the choice card when the day cannot furnish its kind, instead of paddi
     expect(Cache::get(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED))->toBeGreaterThan(0);
 });
 
+/**
+ * Keep the first `$keep` WORD cards of day 1 inside the length band and push every other word of
+ * the plan out of it, by making it far too long to stand beside them.
+ *
+ * The band is the mechanism under test ({@see DistractorLength}), so the fixture uses it rather
+ * than deleting rows: a term that is still there, still a `word`, still the plan's, and still
+ * unusable as an option is exactly the shape of the live starvation.
+ *
+ * @return string the term id of the target — the first word of day 1
+ */
+function narrowWordPoolTo(string $planId, int $keep): string
+{
+    $collections = DB::table('learning_plan_days')->where('plan_id', $planId)
+        ->whereNotNull('collection_id')->pluck('collection_id');
+    $day1 = DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('collection_id');
+
+    $inDay1 = DB::table('collection_items')->where('collection_id', $day1)
+        ->join('terms', 'terms.id', '=', 'collection_items.term_id')
+        ->where('terms.kind', 'word')->orderBy('terms.text')->pluck('terms.id')->all();
+
+    $everyWord = DB::table('collection_items')->whereIn('collection_id', $collections)
+        ->join('terms', 'terms.id', '=', 'collection_items.term_id')
+        ->where('terms.kind', 'word')->orderBy('terms.text')->pluck('terms.id')->all();
+
+    $kept = array_slice($inDay1, 0, $keep);
+    $i = 0;
+    foreach ($everyWord as $termId) {
+        if (in_array($termId, $kept, true)) {
+            continue;
+        }
+        DB::table('terms')->where('id', $termId)->update(['text' => 'far too long to stand beside them ' . $i++]);
+    }
+
+    return $kept[0];
+}
+
+it('shrinks a starved choice to three options instead of dropping it (PLAN-FIX-5)', function () {
+    Cache::forget(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED);
+
+    // `conversational` PREFERS four options. The floor under that preference is three.
+    [, $token, $planId] = startedPlan($this, ['level' => 'conversational']);
+    $target = narrowWordPoolTo($planId, keep: 3);
+
+    $session = planSession($this, $token, $planId);
+
+    $choices = array_values(array_filter(
+        $session['tasks'],
+        static fn (array $t): bool => $t['card']['term_id'] === $target
+            && $t['card']['exercise_mode'] === 'multiple_choice',
+    ));
+
+    expect($choices)->not->toBeEmpty()
+        // Three, not four — and dealt, not dropped. Before the floor this card did not exist at all
+        // and the word went straight from «met it» to «say it».
+        ->and($choices[0]['card']['options'])->toHaveCount(3)
+        ->and($choices[0]['card']['options'])->toContain($choices[0]['card']['answer']);
+});
+
+it('still drops the choice when even three cannot be furnished, and counts it', function () {
+    Cache::forget(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED);
+
+    [, $token, $planId] = startedPlan($this, ['level' => 'conversational']);
+    $target = narrowWordPoolTo($planId, keep: 2);
+
+    $session = planSession($this, $token, $planId);
+
+    $modes = [];
+    foreach ($session['tasks'] as $task) {
+        if ($task['card']['term_id'] === $target) {
+            $modes[] = $task['card']['exercise_mode'];
+        }
+    }
+
+    // Two options is a coin toss, and a coin toss writes a correct answer nobody gave.
+    expect($modes)->not->toBeEmpty()
+        ->and($modes)->not->toContain('multiple_choice')
+        // The word is still taught — it is only the CHOICE that cannot be built honestly.
+        ->and($modes)->toContain('intro')
+        ->and(Cache::get(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED))->toBeGreaterThan(0);
+});
+
 it('deals the interlocutor’s own line for recognition only, and says whose it is (Д-8)', function () {
     [, $token, $planId] = startedPlan($this);
 

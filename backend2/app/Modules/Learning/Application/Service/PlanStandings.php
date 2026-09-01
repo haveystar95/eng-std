@@ -8,6 +8,7 @@ use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\ModeFallbackReporter;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Port\PlanStandingsReader;
+use App\Modules\Learning\Domain\Service\PlanChoiceFloor;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
@@ -32,7 +33,7 @@ use DateTimeZone;
  *   the level           which of them are open at this level              learning_mode_settings, scope=plan
  *   the learner         which trainers are switched on for them           learning_mode_settings, scope=global
  *   the term            which can be built from this term's content       TermPlayability
- *   the POOL            whether a full choice can be built of its shape   DistractorFamily
+ *   the POOL            whether a choice of at least three can be built   DistractorFamily
  *
  * The fifth arrived with Д-2 and it is here rather than in the card assembler for one reason: a
  * checklist step is closed by an ANSWER. A step whose card can never be dealt is a stage that never
@@ -86,6 +87,12 @@ final readonly class PlanStandings
         private ModeFallbackReporter $fallbacks,
         private PlanStageLadder $ladder = new PlanStageLadder(),
         private DistractorLength $length = new DistractorLength(),
+        /**
+         * How far a choice card may shrink before it stops being one — the same object
+         * {@see StudyCardAssembler} builds cards by, so the checklist cannot owe a card the
+         * assembler would refuse. {@see PlanChoiceFloor}
+         */
+        private PlanChoiceFloor $choiceFloor = new PlanChoiceFloor(),
     ) {}
 
     /**
@@ -183,14 +190,18 @@ final readonly class PlanStandings
         }
 
         $own = $this->optionsAvailable($pool, $content);
-        // Itself, plus one wrong answer per remaining slot. {@see choiceIsAffordable()}
-        $affordable = $own >= $optionCount;
+        // THE FLOOR, not the level's preference. A day that can furnish three same-shape,
+        // same-length options is dealt a card of three; below three there is no card to deal.
+        // {@see PlanChoiceFloor} — and the assembler reads the identical number, which is what
+        // keeps «owed» and «buildable» the same set.
+        $floor = $this->choiceFloor->forPreferred($optionCount);
+        $affordable = $own >= $floor;
         // THE INTERLOCUTOR'S OWN LINE is understood, never produced. {@see PRODUCTION_MODES}
         $recognitionOnly = $content->speaker === self::SPEAKER_ROLE;
 
         return array_values(array_filter(
             $openAtLevel,
-            function (ExerciseMode $mode) use ($forKind, $forLanguage, $playable, $affordable, $content, $user, $optionCount, $own, $recognitionOnly): bool {
+            function (ExerciseMode $mode) use ($forKind, $forLanguage, $playable, $affordable, $content, $user, $floor, $own, $recognitionOnly): bool {
                 if (! isset($forKind[$mode->value]) || ! $forLanguage->has($mode) || ! $playable->supports($mode)) {
                     return false;
                 }
@@ -205,7 +216,9 @@ final readonly class PlanStandings
                     $user,
                     TermId::fromString($content->id),
                     $mode->value,
-                    $optionCount,
+                    // What was REQUIRED — the floor. Reporting the level's four for a card that
+                    // would have been dealt with three is a counter that climbs on healthy days.
+                    $floor,
                     $own,
                 );
 
@@ -247,7 +260,7 @@ final readonly class PlanStandings
     }
 
     /**
-     * CAN THIS PLAN DEAL THIS CARD A FULL CHOICE, out of its own kind and form? — {@see applicableFor()}
+     * CAN THIS PLAN DEAL THIS CARD A CHOICE AT ALL, out of its own kind and form? — {@see applicableFor()}
      *
      * The fifth filter, and the reason it has to be a FILTER rather than a late refusal: a checklist
      * step is closed by an ANSWER, so a step whose card can never be built is a stage that never

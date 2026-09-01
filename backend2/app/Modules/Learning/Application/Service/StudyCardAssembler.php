@@ -11,6 +11,7 @@ use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ChipShuffler;
 use App\Modules\Learning\Domain\Service\DistractorSpanFilter;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
+use App\Modules\Learning\Domain\Service\PlanChoiceFloor;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\Service\ModePassport;
@@ -71,6 +72,12 @@ final readonly class StudyCardAssembler
         private Randomizer $rng,
         private DistractorLength $length = new DistractorLength(),
         private DistractorSpanFilter $spans = new DistractorSpanFilter(),
+        /**
+         * How far a PLAN's choice card may shrink before it is dropped. Read here and in
+         * {@see PlanStandings} from the same class, because the checklist must never owe a card
+         * this method cannot build.
+         */
+        private PlanChoiceFloor $choiceFloor = new PlanChoiceFloor(),
     ) {}
 
     /**
@@ -119,6 +126,9 @@ final readonly class StudyCardAssembler
         // stays where QA-15 put it, at {@see MIN_OPTIONS}.
         $wantsFullChoice = $optionCount !== null;
         $optionCount = max(2, $optionCount ?? self::OPTION_COUNT);
+        // WHAT THE LEVEL WANTS vs WHAT THE DAY MUST FURNISH. The first is the number above; this is
+        // the floor under it ({@see PlanChoiceFloor}). Outside a plan it is not used at all.
+        $planFloor = $this->choiceFloor->forPreferred($optionCount);
         $progress = TermProgress::reconstitute(
             $user, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
             $view->intervalDays, $view->dueAt, $view->reps, 0, null,
@@ -184,7 +194,7 @@ final readonly class StudyCardAssembler
         if (LearningLadder::isRecognitionStep($step)
             && $mode === ExerciseMode::MultipleChoice
             && $admission->optionsPolicyFor($mode, $view->acquisition) === OptionsPolicy::Distant) {
-            $card = $this->recognitionCard($view, $content, (int) $step, $neighbours, $cardIndex, $supportLang, $optionCount, $wantsFullChoice);
+            $card = $this->recognitionCard($view, $content, (int) $step, $neighbours, $cardIndex, $supportLang, $optionCount, $wantsFullChoice, $planFloor);
             if ($card !== null) {
                 return $card;
             }
@@ -314,12 +324,14 @@ final readonly class StudyCardAssembler
         // ({@see PICK_CORRECT_WRONG_OPTIONS}) and a floor of four would refuse it for obeying it.
         if ($wantsFullChoice
             && ($mode === ExerciseMode::MultipleChoice || $mode === ExerciseMode::DescriptionMatch)
-            && count((array) $options) < $optionCount) {
+            && count((array) $options) < $planFloor) {
             $this->fallbacks->distractorStarved(
                 $user,
                 $view->termId,
                 $mode->value,
-                $optionCount,
+                // The number that was actually REQUIRED, which is the floor and not the level's
+                // preference: «wanted 4, got 3» would be logged for a card that was dealt.
+                $planFloor,
                 count((array) $options),
             );
 
@@ -608,11 +620,13 @@ final readonly class StudyCardAssembler
         ?string $supportLang = null,
         ?int $optionCount = null,
         bool $wantsFullChoice = false,
+        ?int $planFloor = null,
     ): ?SessionCardView {
         if ($supportLang === null) {
             return null;
         }
         $optionCount = max(2, $optionCount ?? self::OPTION_COUNT);
+        $planFloor ??= $this->choiceFloor->forPreferred($optionCount);
         $forward = $step === LearningLadder::STEP_RECOGNITION_FORWARD;
 
         $own = $forward ? $content->translation : $content->text;
@@ -665,7 +679,7 @@ final readonly class StudyCardAssembler
         // catalogue is deep, and three same-shape options still ask the question the card exists to
         // ask. Either way the caller falls through to ordinary multiple_choice, whose own floor
         // decides what happens next.
-        if (count($pool) < ($wantsFullChoice ? $optionCount - 1 : 1)) {
+        if (count($pool) < ($wantsFullChoice ? $planFloor - 1 : 1)) {
             return null;
         }
 

@@ -42,6 +42,7 @@ use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesReader;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Port\PlanStandingsReader;
+use App\Modules\Learning\Domain\Service\PlanChoiceFloor;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanDayRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanSkillRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanModeSettingsReader;
@@ -136,6 +137,12 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->singleton(EloquentPlanModeSettingsReader::class);
         $this->app->alias(EloquentPlanModeSettingsReader::class, PlanModeSettingsReader::class);
         $this->app->bind(PlanStandingsReader::class, EloquentPlanStandingsReader::class);
+        // HOW FAR A PLAN'S CHOICE CARD MAY SHRINK. One instance, injected into both the checklist
+        // and the assembler, because the two must never disagree about which cards exist — see
+        // {@see PlanChoiceFloor}. Configuration, like the length band, for the same reason.
+        $this->app->singleton(PlanChoiceFloor::class, static fn (): PlanChoiceFloor => new PlanChoiceFloor(
+            (int) config('learning.plan.mc_min_options', PlanChoiceFloor::DEFAULT_MIN_OPTIONS),
+        ));
     }
 
     public function boot(): void

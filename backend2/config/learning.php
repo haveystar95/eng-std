@@ -36,6 +36,25 @@ return [
         'word_tolerance' => 0.4,   // line — ±40 % of the target's word count
     ],
 
+    // A PLAN'S CHOICE CARD: what the level WANTS, and how far it may shrink before it is dropped.
+    //
+    // The level's number is a preference (`PlanKnobs::$mcOptions` — three at zero/basic, four from
+    // conversational up). This is the floor under it. They used to be the same number, and on the
+    // owner's live day 1 that cost eleven cards of fourteen their recognition step: four options
+    // wanted, the length band narrow by design, and a day of fourteen cards simply does not hold
+    // four same-shape same-length terms for most of them. Stage A collapsed to «met it → said it».
+    //
+    // Three is a card — one right answer and two wrong ones, which is exactly what a `zero` learner
+    // has always been dealt. Below three it is a coin toss, and the card still falls out whole.
+    //
+    // Configuration and not a constant, like the band above: a product judgement about how hard a
+    // card should be. The rule itself lives in Learning\Domain\Service\PlanChoiceFloor and is read
+    // by BOTH the checklist (what a card is owed) and the assembler (what can be built), because a
+    // step that is owed and cannot be dealt is a stage that never closes.
+    'plan' => [
+        'mc_min_options' => 3,
+    ],
+
     // The ADMISSION MATRIX — which rung of the acquisition ladder opens which trainer — is NOT
     // here. It is data, in `learning_mode_settings` beside the toggle above, with the same
     // global-plus-per-user-override mechanism: what a mode asks of the learner is a product
