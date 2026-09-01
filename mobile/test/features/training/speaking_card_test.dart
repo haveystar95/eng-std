@@ -865,9 +865,23 @@ void main() {
       expect(answers.single.response, 'I want a place to rent');
     });
 
+    testWidgets('the key said and the frame dropped is RIGHT — the frame was on the screen', (
+      tester,
+    ) async {
+      // The owner's own reading, in the direction that used to fail: graded against all fifteen
+      // words, saying the thing the card teaches and skipping the scaffolding scored under 70%.
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard("I'm looking a place to rent")]);
+      await tester.pumpWidget(host(keyedLine(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(answers.single.verdict, LocalCheck.correct);
+    });
+
     testWidgets('marks the KEY on a wrong reading and leaves the frame alone', (tester) async {
       final recognizer = _FakeRecognizer([
-        const SpeechAttempt.heard('Yes I am looking for long-term living'),
+        const SpeechAttempt.heard("Yes I'm looking for it"),
       ], completeOnStop: true);
       await tester.pumpWidget(host(keyedLine(), recognizer));
       await tester.pumpAndSettle();
