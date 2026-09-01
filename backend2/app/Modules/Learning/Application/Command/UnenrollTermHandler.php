@@ -23,7 +23,7 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * ({@see EnrollmentPolicy}). The check is here rather than in the entity because it needs a fact
  * the entity does not have — which of this learner's plans are still holding — and because this is
  * the door the learner comes through. The plan's own release
- * ({@see \App\Modules\Learning\Application\Port\PlanTermReleaser}) does not come through here at
+ * ({@see \App\Modules\Learning\Application\Port\PlanTermArchiver}) does not come through here at
  * all: it takes away the REASON and never the enrolment.
  */
 final readonly class UnenrollTermHandler

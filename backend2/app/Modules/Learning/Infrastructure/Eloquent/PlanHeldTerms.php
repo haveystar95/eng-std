@@ -15,10 +15,12 @@ namespace App\Modules\Learning\Infrastructure\Eloquent;
  * and the two screens disagree about how much work the day holds. Кадр 08 puts the plan card ABOVE
  * the «сегодня» plate precisely because they are two different piles.
  *
- * What happens when the plan ends is the other half of the same rule, and it needs no code here:
- * {@see \App\Modules\Learning\Application\Port\PlanTermReleaser} removes the `plan:` source, this
- * predicate stops matching, and the words rejoin the ordinary rotation — «18 слов ушли в общее
- * повторение» (кадр 11), literally.
+ * What happens when the plan ENDS used to be the other half of the same rule and needed no code
+ * here: the release removed the `plan:` source, this predicate stopped matching, and the words
+ * rejoined the ordinary rotation. That is over (owner, 01.09). An ended plan is an archive and takes
+ * its words out of the pool with it ({@see \App\Modules\Learning\Application\Port\PlanTermArchiver}),
+ * so a pair leaves this predicate's reach by leaving the pool, not by rejoining the queue. What this
+ * predicate still exists for is unchanged: while the plan RUNS, its words are dealt by it alone.
  *
  * ## Why it is SQL and not a list of plan ids
  *

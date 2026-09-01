@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Command;
 
-use App\Modules\Learning\Application\Port\PlanTermReleaser;
+use App\Modules\Learning\Application\Port\PlanTermArchiver;
 use App\Modules\Learning\Domain\Exception\PlanNotFound;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\ValueObject\PlanEnding;
@@ -16,18 +16,21 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  *
  * The difference that matters is what happens to the WORDS. A pause keeps the hold — «я вернусь»,
  * and coming back to a plan whose words were let go one at a time is coming back to a different
- * plan. Abandoning and completing both release it: the plan's reason comes off every pair it
- * claimed, and the words stay in the pool as ordinary words, with their rung, their schedule and
- * their history intact.
+ * plan. Abandoning and completing both ARCHIVE it: the plan's reason comes off every pair it
+ * claimed, and a pair with no other reason left leaves the pool with it.
  *
- * Releasing is not unenrolling. The learner spent days on these words; a plan ending is not a
- * reason to stop studying them, it is a reason to stop refusing to let them stop.
+ * This reverses the rule these two endings used to follow — «words stay in the pool as ordinary
+ * words», «18 слов ушли в общее повторение». The owner's ruling (01.09): a plan is a course with a
+ * subject and a date, an ended one is an ARCHIVE, and its vocabulary does not become the learner's
+ * daily queue by default. Everything is kept — the days, the cards, the results, the whole review
+ * log — and what a learner wants out of it they add to «Учить» themselves. See
+ * {@see PlanTermArchiver} for what «archive» does and does not touch.
  */
 final readonly class EndPlanHandler
 {
     public function __construct(
         private PlanRepository $plans,
-        private PlanTermReleaser $releaser,
+        private PlanTermArchiver $archiver,
         private TransactionManager $tx,
         private Clock $clock,
     ) {}
@@ -51,12 +54,7 @@ final readonly class EndPlanHandler
             $this->plans->save($plan);
 
             if (! $command->action->keepsHold()) {
-                // FIRST, and it reads the marker the release is about to remove: whatever this plan
-            // put in the pool and the learner never once answered leaves with it. A plan
-            // abandoned on day one otherwise leaves fourteen words from a conversation that
-            // never happened, and they come back due for ever.
-            $this->releaser->unenrolUntouched($plan->userId(), $plan->id()->value);
-            $this->releaser->releasePlan($plan->userId(), $plan->id()->value);
+                $this->archiver->archivePlan($plan->userId(), $plan->id()->value);
             }
         });
     }

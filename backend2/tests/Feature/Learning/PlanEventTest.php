@@ -101,7 +101,7 @@ it('hides another learner rehearsal behind a 404', function () {
         ->assertNotFound();
 });
 
-it('closes the plan when the learner says how it went — and lets the words go', function () {
+it('closes the plan when the learner says how it went — and takes the words with it', function () {
     [$user, $token] = learner();
     profileFor($user, ['native_language' => 'ru']);
     $headers = ['Authorization' => "Bearer {$token}"];
@@ -113,7 +113,7 @@ it('closes the plan when the learner says how it went — and lets the words go'
         ->count();
     expect($held)->toBeGreaterThan(0);
 
-    // One word answered: «ушли в общее повторение» is a promise about words the learner worked on.
+    // One word answered — the case «ушли в общее повторение» used to be a promise about.
     $answered = DB::table('collection_items')
         ->whereIn('collection_id', DB::table('learning_plan_days')->where('plan_id', $plan['id'])->whereNotNull('collection_id')->pluck('collection_id'))
         ->value('term_id');
@@ -129,17 +129,16 @@ it('closes the plan when the learner says how it went — and lets the words go'
         ->and($after['status'])->toBe('completed')
         ->and($after['completed_at'])->not->toBeNull();
 
-    // «18 слов ушли в общее повторение» — the claim is off every pair, and they are back in the
-    // ordinary day.
+    // The claim is off every pair — and they did NOT come back to the ordinary day. Reversed by the
+    // owner on 01.09: a completed plan is an archive, and the words in it are added to «Учить» by
+    // the learner, not by the plan finishing.
     $stillHeld = DB::table('user_term_progress')
         ->where('user_id', $user->id)
         ->whereRaw('enrollment_sources @> ?::jsonb', [json_encode(['plan:' . $plan['id']])])
         ->count();
-    // The one that was answered is back in the ordinary day; the ones written for days nobody
-    // opened left the pool with the plan.
     expect($stillHeld)->toBe(0)
         ->and($this->withHeaders($headers)->getJson('/api/v1/home-plan')->json('data.in_work.total'))
-        ->toBe(1);
+        ->toBe(0);
 });
 
 it('tells «asked and used nothing» apart from «never asked»', function () {

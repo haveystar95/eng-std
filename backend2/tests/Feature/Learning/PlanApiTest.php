@@ -448,7 +448,7 @@ it('keeps holding through a pause, because pause means «я вернусь»', f
         ->assertStatus(409);
 });
 
-it('abandoning releases the hold and leaves the words in the pool', function () {
+it('abandoning takes the words out of the pool and keeps everything else', function () {
     [$user, $token] = learner();
     profileFor($user, ['native_language' => 'ru']);
 
@@ -459,9 +459,8 @@ it('abandoning releases the hold and leaves the words in the pool', function () 
     $collectionId = DB::table('learning_plan_days')->where('plan_id', $plan['id'])->where('day_index', 1)->value('collection_id');
     $termId = DB::table('collection_items')->where('collection_id', $collectionId)->value('term_id');
 
-    // ANSWERED ONCE — which is what makes it a word the learner spent time on, and therefore one
-    // the ending keeps. A card they never saw leaves with the plan
-    // ({@see PlanTermReleaser::unenrolUntouched()}, tested in `PlanUnenrolUntouchedTest`).
+    // ANSWERED ONCE — a word the learner really spent time on, which used to be the case an ending
+    // KEPT in the pool. It no longer is ({@see PlanTermArchiver}, tested in `PlanTermArchiveTest`).
     answerTimes($this, $token, $termId, 'x', 1);
 
     $this->withHeader('Authorization', "Bearer {$token}")
@@ -471,17 +470,25 @@ it('abandoning releases the hold and leaves the words in the pool', function () 
 
     $row = DB::table('user_term_progress')->where('user_id', $user->id)->where('term_id', $termId)->first();
 
-    // The reason is gone; the enrolment is NOT. The learner spent days on these words.
+    // The reason is gone and so is the enrolment: the plan was this pair's only reason to be in the
+    // queue, and the plan is over. The RESULTS stay on the row, so adding it back later resumes.
     expect(json_decode((string) $row->enrollment_sources, true))->toBe([])
-        ->and($row->enrolled_at)->not->toBeNull()
+        ->and($row->enrolled_at)->toBeNull()
         // And `abandon_reason` stays NULL: this ending is the learner's own tap, and «я передумал»
         // needs no column. The tag is only for the endings nobody chose.
         ->and(DB::table('learning_plans')->where('id', $plan['id'])->value('abandon_reason'))->toBeNull();
 
+    // «Убрать из изучения» now has nothing left to do — the ending already did it. It answers, and
+    // it answers honestly: `changed: false`, not a 409. The 409 is for a plan that is still RUNNING,
+    // and this one is over.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->deleteJson("/api/v1/pool/terms/{$termId}")
         ->assertOk()
-        ->assertJsonPath('data.changed', true);
+        ->assertJsonPath('data.changed', false);
+
+    // The archive itself: the plan row, its days and every answer are still there to read.
+    expect(DB::table('learning_plan_days')->where('plan_id', $plan['id'])->count())->toBeGreaterThan(0)
+        ->and(DB::table('reviews')->where('term_id', $termId)->count())->toBeGreaterThan(0);
 });
 
 it('records WHY when something other than the learner ends the plan', function () {
@@ -565,22 +572,22 @@ it('keeps the plan words out of the ordinary day while the plan is running', fun
         ->json('data');
     expect($session['cards'])->toBe([]);
 
-    // One word answered: the ones the learner WORKED ON are what «ушли в общее повторение» is a
-    // promise about. The rest of the day was written and never seen, and leaves with the plan.
+    // One word ANSWERED — the case «18 слов ушли в общее повторение» (кадр 11) used to be about.
     $answered = DB::table('collection_items')
         ->whereIn('collection_id', DB::table('learning_plan_days')->where('plan_id', $plan['id'])->whereNotNull('collection_id')->pluck('collection_id'))
         ->value('term_id');
     answerTimes($this, $token, (string) $answered, 'x', 1);
 
-    // The plan lets go → the words the learner worked on rejoin the ordinary rotation. «18 слов
-    // ушли в общее повторение» (кадр 11) is this predicate ceasing to match, and nothing else.
+    // The plan ends → and the ordinary day is STILL empty. Reversed by the owner on 01.09: an ended
+    // plan is an archive and takes its words with it, answered ones included. Nothing is lost — the
+    // days, the cards and the whole review log stay readable — and what the learner wants out of it
+    // they add to «Учить» themselves.
     $this->withHeaders($headers)->postJson("/api/v1/plans/{$plan['id']}/abandon")->assertOk();
 
     $after = $this->withHeaders($headers)->getJson('/api/v1/home-plan')->assertOk()->json('data');
 
-    // ONE — the word that was answered. The other seventeen were written for days the learner never
-    // opened, and a plan does not leave those behind in the pool.
-    expect($after['in_work']['total'])->toBe(1)
+    expect($after['in_work']['total'])->toBe(0)
+        ->and($after['session']['repeat'] + $after['session']['new'])->toBe(0)
         ->and($held)->toBeGreaterThan(1);
 });
 

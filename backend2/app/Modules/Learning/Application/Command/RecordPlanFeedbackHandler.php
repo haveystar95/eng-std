@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Command;
 
-use App\Modules\Learning\Application\Port\PlanTermReleaser;
+use App\Modules\Learning\Application\Port\PlanTermArchiver;
 use App\Modules\Learning\Domain\Exception\PlanNotFound;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\ValueObject\PlanStatus;
@@ -32,7 +32,7 @@ final readonly class RecordPlanFeedbackHandler
 {
     public function __construct(
         private PlanRepository $plans,
-        private PlanTermReleaser $releaser,
+        private PlanTermArchiver $archiver,
         private TransactionManager $tx,
         private Clock $clock,
     ) {}
@@ -50,15 +50,10 @@ final readonly class RecordPlanFeedbackHandler
             $this->plans->save($plan);
 
             // Only when the plan actually LET GO in this call. A paused plan that never became
-            // active is still holding on purpose, and re-releasing an already-released plan would be
-            // a write for nothing.
+            // active is still holding on purpose, and archiving an already-archived plan would be a
+            // write for nothing.
             if ($wasHolding && $plan->status() === PlanStatus::Completed) {
-                // FIRST, and it reads the marker the release is about to remove: whatever this plan
-                // put in the pool and the learner never once answered leaves with it. A plan
-                // abandoned on day one otherwise leaves fourteen words from a conversation that
-                // never happened, and they come back due for ever.
-                $this->releaser->unenrolUntouched($plan->userId(), $plan->id()->value);
-                $this->releaser->releasePlan($plan->userId(), $plan->id()->value);
+                $this->archiver->archivePlan($plan->userId(), $plan->id()->value);
             }
         });
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Learning\Application\Port\PlanTermReleaser;
+use App\Modules\Learning\Application\Port\PlanTermArchiver;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -11,13 +11,16 @@ use Illuminate\Support\Facades\DB;
 uses(RefreshDatabase::class);
 
 /**
- * WHAT A PLAN TAKES BACK WITH IT WHEN IT ENDS.
+ * AN ENDED PLAN TAKES ITS WORDS WITH IT.
  *
- * Releasing is not unenrolling — the learner spent days on those words and a plan ending is not a
- * reason to stop studying them. That argument is about words they WORKED ON. A plan enrols fourteen
- * cards the moment a day is written, so a plan abandoned on day one used to leave fourteen words in
- * the pool for ever: a conversation that never happened, coming back due, and (before the top-up
- * was scoped) turning up inside other plans' lessons.
+ * This file used to assert the opposite half of the rule — that a plan ending RELEASED its words
+ * into the ordinary queue and only the never-answered ones left with it. The owner reversed it on
+ * 01.09: a plan is a course with a subject and a date, an ended one is an archive, and its
+ * vocabulary does not become the learner's daily queue by default. «Учить» is a decision the learner
+ * makes, one word at a time, off the archive screen.
+ *
+ * What did NOT change is the one exception: a word the learner had also saved by hand has a reason
+ * of their own, and that reason did not end with anybody's plan.
  */
 function planPair(object $user, string $text, array $sources, bool $reviewed): string
 {
@@ -44,7 +47,7 @@ function planPair(object $user, string $text, array $sources, bool $reviewed): s
     return $termId;
 }
 
-it('unenrols the words the plan put in and the learner never answered', function () {
+it('takes every word of the plan out of the pool, answered or not', function () {
     [$user] = learner();
     $planId = Ulid::generate();
     $source = 'plan:' . $planId;
@@ -53,16 +56,38 @@ it('unenrols the words the plan put in and the learner never answered', function
     $answered = planPair($user, 'boarding pass', [$source], reviewed: true);
     $alsoMine = planPair($user, 'runway', [$source, 'manual'], reviewed: false);
 
-    $left = app(PlanTermReleaser::class)->unenrolUntouched(UserId::fromString($user->id), $planId);
+    $left = app(PlanTermArchiver::class)->archivePlan(UserId::fromString($user->id), $planId);
 
-    expect($left)->toBe(1)
-        // Never answered, and the plan was its only reason: out of the pool.
+    // Three pairs carried the plan's claim, so three rows were rewritten; two of them left the pool.
+    expect($left)->toBe(3)
         ->and(DB::table('user_term_progress')->where('term_id', $untouched)->value('enrolled_at'))->toBeNull()
-        // ANSWERED — the learner worked on it, so it stays. This is the half the release rule has
-        // always protected.
-        ->and(DB::table('user_term_progress')->where('term_id', $answered)->value('enrolled_at'))->not->toBeNull()
+        // ANSWERED, and out of the pool all the same. This is the reversal: days spent on a word is
+        // not by itself a reason for it to keep arriving in a queue the learner never chose.
+        ->and(DB::table('user_term_progress')->where('term_id', $answered)->value('enrolled_at'))->toBeNull()
         // Saved by hand as well: that reason is the learner's own and did not go anywhere.
-        ->and(DB::table('user_term_progress')->where('term_id', $alsoMine)->value('enrolled_at'))->not->toBeNull();
+        ->and(DB::table('user_term_progress')->where('term_id', $alsoMine)->value('enrolled_at'))->not->toBeNull()
+        ->and(json_decode((string) DB::table('user_term_progress')->where('term_id', $alsoMine)->value('enrollment_sources'), true))
+        ->toBe(['manual']);
+});
+
+it('keeps the results — a word taken out of the pool resumes where it left off', function () {
+    [$user] = learner();
+    $planId = Ulid::generate();
+
+    $termId = planPair($user, 'departure', ['plan:' . $planId], reviewed: true);
+    DB::table('user_term_progress')->where('term_id', $termId)
+        ->update(['acquisition' => 'graduated', 'reps' => 5, 'successful_reviews' => 3, 'interval_days' => 12]);
+
+    app(PlanTermArchiver::class)->archivePlan(UserId::fromString($user->id), $planId);
+
+    $row = DB::table('user_term_progress')->where('term_id', $termId)->first();
+
+    expect($row->enrolled_at)->toBeNull()
+        // The rung, the schedule and the log: untouched. Archiving is the pool's own «пауза».
+        ->and((int) $row->reps)->toBe(5)
+        ->and((int) $row->successful_reviews)->toBe(3)
+        ->and((int) $row->interval_days)->toBe(12)
+        ->and(DB::table('reviews')->where('term_id', $termId)->count())->toBe(1);
 });
 
 it('leaves another plan`s words alone', function () {
@@ -72,11 +97,11 @@ it('leaves another plan`s words alone', function () {
 
     $theirs = planPair($user, 'gate', ['plan:' . $other], reviewed: false);
 
-    expect(app(PlanTermReleaser::class)->unenrolUntouched(UserId::fromString($user->id), $mine))->toBe(0)
+    expect(app(PlanTermArchiver::class)->archivePlan(UserId::fromString($user->id), $mine))->toBe(0)
         ->and(DB::table('user_term_progress')->where('term_id', $theirs)->value('enrolled_at'))->not->toBeNull();
 });
 
-it('takes the untouched words out when a plan is abandoned, end to end', function () {
+it('takes the words out when a plan is abandoned, end to end', function () {
     fakePlanModel();
     DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->update(['enabled' => true]);
 
@@ -90,7 +115,9 @@ it('takes the untouched words out when a plan is abandoned, end to end', functio
         ->and(DB::table('user_term_progress')->where('user_id', $user->id)->whereIn('term_id', $dayTerms)->whereNotNull('enrolled_at')->count())
         ->toBe($dayTerms->count());
 
-    // Abandoned without answering a single card — the shape the rule is about.
+    // A day WALKED first, so the plan is abandoned holding words the learner really worked on.
+    walkDay($this, $token, $planId, 1);
+
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson("/api/v1/plans/{$planId}/abandon", ['reason' => 'передумал'])
         ->assertOk();
