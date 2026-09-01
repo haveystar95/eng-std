@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Application\Service;
 
 use App\Modules\Learning\Application\Port\EnabledModesReader;
+use App\Modules\Learning\Application\Port\ModeFallbackReporter;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Port\PlanStandingsReader;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
@@ -12,22 +13,30 @@ use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanLevel;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
+use App\Modules\Shared\Domain\Service\DistractorFamily;
+use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Dto\TermContentView;
 use DateTimeZone;
 
 /**
- * WHERE EVERY WORD OF A PLAN STANDS — the one place the four filters meet.
+ * WHERE EVERY WORD OF A PLAN STANDS — the one place the five filters meet.
  *
  * The Domain ladder ({@see PlanStageLadder}) is pure and knows nothing about this learner's
  * settings or this term's data, which is what makes it testable. Somebody has to hand it the list
  * of trainers a given word can ACTUALLY be dealt right now, and that list is an intersection of
- * four independent facts, each owned by something else:
+ * five independent facts, each owned by something else:
  *
  *   the plan ladder     which trainers this stage deals at all            PlanStageLadder
  *   the level           which of them are open at this level              learning_mode_settings, scope=plan
  *   the learner         which trainers are switched on for them           learning_mode_settings, scope=global
  *   the term            which can be built from this term's content       TermPlayability
+ *   the POOL            whether a full choice can be built of its shape   DistractorFamily
+ *
+ * The fifth arrived with Д-2 and it is here rather than in the card assembler for one reason: a
+ * checklist step is closed by an ANSWER. A step whose card can never be dealt is a stage that never
+ * closes, so it must not be OWED — dropping it late, at the moment of dealing, would leave the day
+ * un-passable and day n+1 unwritten. {@see choiceIsAffordable()}.
  *
  * Keeping them apart and intersecting HERE is the same discipline the ordinary session already
  * follows ({@see \App\Modules\Learning\Domain\ValueObject\ModeAdmission}: enabled ∧ playable ∧
@@ -48,6 +57,7 @@ final readonly class PlanStandings
         private PlanModeSettingsReader $planSettings,
         private EnabledModesReader $enabledModes,
         private StudyCardAssembler $assembler,
+        private ModeFallbackReporter $fallbacks,
         private PlanStageLadder $ladder = new PlanStageLadder(),
     ) {}
 
@@ -73,6 +83,10 @@ final readonly class PlanStandings
         $introduced = $this->reader->introducedAmong($user, $termIds);
         $openAtLevel = $this->planSettings->openModesFor($level);
         $enabled = $this->enabledModes->forUser($user);
+        // HOW MANY CARDS OF EACH SHAPE THIS PLAN HOLDS — the fifth filter, and the one that keeps a
+        // starved choice from being a step nobody can close. See {@see choiceIsAffordable()}.
+        $family = $this->familySizes($content);
+        $optionCount = $this->planSettings->knobsFor($level)->mcOptions;
 
         $out = [];
         foreach ($termIds as $termId) {
@@ -87,7 +101,7 @@ final readonly class PlanStandings
             $kind = $termContent->kind ?? PlanStageLadder::KIND_WORD;
 
             $out[$termId] = $this->ladder->standingFor(
-                applicable: $this->applicableFor($termContent, $openAtLevel, $enabled, $kind, $termId),
+                applicable: $this->applicableFor($termContent, $openAtLevel, $enabled, $kind, $termId, $family, $optionCount, $user),
                 facts: $facts[$termId] ?? [],
                 introduced: $introduced[$termId] ?? false,
                 today: $today,
@@ -103,9 +117,10 @@ final readonly class PlanStandings
     }
 
     /**
-     * The four filters, intersected, order preserved from the plan ladder.
+     * The FIVE filters, intersected, order preserved from the plan ladder.
      *
      * @param  list<ExerciseMode>  $openAtLevel
+     * @param  array<string, int>  $family  {@see familySizes()}
      * @return list<ExerciseMode>
      */
     private function applicableFor(
@@ -114,6 +129,9 @@ final readonly class PlanStandings
         \App\Modules\Learning\Domain\ValueObject\EnabledModes $enabled,
         string $kind,
         string $termId,
+        array $family,
+        int $optionCount,
+        UserId $user,
     ): array {
         // Per CARD and not per session: a plan is one pair, but this is the same gate every other
         // read applies and applying it here keeps one answer to «which trainers exist for this word».
@@ -134,12 +152,67 @@ final readonly class PlanStandings
             }
         }
 
+        $own = $family[DistractorFamily::of($content->kind, $content->text)] ?? 1;
+        // Itself, plus one wrong answer per remaining slot. {@see choiceIsAffordable()}
+        $affordable = $own >= $optionCount;
+
         return array_values(array_filter(
             $openAtLevel,
-            static fn (ExerciseMode $mode): bool => isset($forKind[$mode->value])
-                && $forLanguage->has($mode)
-                && $playable->supports($mode),
+            function (ExerciseMode $mode) use ($forKind, $forLanguage, $playable, $affordable, $content, $user, $optionCount, $own): bool {
+                if (! isset($forKind[$mode->value]) || ! $forLanguage->has($mode) || ! $playable->supports($mode)) {
+                    return false;
+                }
+                if ($affordable || ! self::isChoice($mode)) {
+                    return true;
+                }
+
+                $this->fallbacks->distractorStarved(
+                    $user,
+                    TermId::fromString($content->id),
+                    $mode->value,
+                    $optionCount,
+                    $own,
+                );
+
+                return false;
+            },
         ));
+    }
+
+    /** The modes whose options come out of the pool, and which therefore starve with it. */
+    private static function isChoice(ExerciseMode $mode): bool
+    {
+        return $mode === ExerciseMode::MultipleChoice || $mode === ExerciseMode::DescriptionMatch;
+    }
+
+    /**
+     * CAN THIS PLAN DEAL THIS CARD A FULL CHOICE, out of its own kind and form? — {@see applicableFor()}
+     *
+     * The fifth filter, and the reason it has to be a FILTER rather than a late refusal: a checklist
+     * step is closed by an ANSWER, so a step whose card can never be built is a stage that never
+     * closes, a day that never passes and a day n+1 that is never written. A card the pool cannot
+     * furnish must therefore not be OWED, not merely not dealt.
+     *
+     * Counted over the plan's own terms and nothing else, which makes it at least as strict as
+     * {@see \App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorReader} — that one
+     * also tops up from the learner's shelves and the catalogue. Strict in that direction on
+     * purpose: the checklist may drop a card the reader could have built, and must never owe one it
+     * could not.
+     *
+     * How many cards of each shape the plan holds — {@see DistractorFamily}.
+     *
+     * @param  array<string, TermContentView>  $content
+     * @return array<string, int>
+     */
+    private function familySizes(array $content): array
+    {
+        $sizes = [];
+        foreach ($content as $view) {
+            $key = DistractorFamily::of($view->kind, $view->text);
+            $sizes[$key] = ($sizes[$key] ?? 0) + 1;
+        }
+
+        return $sizes;
     }
 
     /**

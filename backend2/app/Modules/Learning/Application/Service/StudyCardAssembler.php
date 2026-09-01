@@ -20,6 +20,7 @@ use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\ModeAdmission;
 use App\Modules\Learning\Domain\ValueObject\OptionsPolicy;
 use App\Modules\Learning\Domain\ValueObject\TermPlayability;
+use App\Modules\Shared\Domain\Service\DistractorFamily;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Dto\TermContentView;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
@@ -72,7 +73,7 @@ final readonly class StudyCardAssembler
 
     /**
      * @param  list<string>  $poolTermIds
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
      *         the other terms in THIS session — the far-option pool for the recognition rungs
      * @param  int|null  $slotStep  the rung this particular card was laid out at; a session gives a
      *                              term up to three cards at different rungs ({@see SessionLayout})
@@ -108,6 +109,13 @@ final readonly class StudyCardAssembler
         // shape moves — the wire has always carried a list, and `pick_correct` has always dealt
         // three of them — so this is a knob the trainer already understood, not a contract change.
         // Null is «the product default», which is every caller but the plan.
+        //
+        // It is also what tells the two floors apart below. A PLAN deals its day's own cards, so
+        // «not enough of this kind and form» is a fact about the day and the card is dropped whole
+        // ({@see ModeFallbackReporter::distractorStarved()}). Outside a plan the pool is the whole
+        // catalogue and a card short of one option is still a fair question, so the floor there
+        // stays where QA-15 put it, at {@see MIN_OPTIONS}.
+        $wantsFullChoice = $optionCount !== null;
         $optionCount = max(2, $optionCount ?? self::OPTION_COUNT);
         $progress = TermProgress::reconstitute(
             $user, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
@@ -174,7 +182,7 @@ final readonly class StudyCardAssembler
         if (LearningLadder::isRecognitionStep($step)
             && $mode === ExerciseMode::MultipleChoice
             && $admission->optionsPolicyFor($mode, $view->acquisition) === OptionsPolicy::Distant) {
-            $card = $this->recognitionCard($view, $content, (int) $step, $neighbours, $cardIndex, $supportLang, $optionCount);
+            $card = $this->recognitionCard($view, $content, (int) $step, $neighbours, $cardIndex, $supportLang, $optionCount, $wantsFullChoice);
             if ($card !== null) {
                 return $card;
             }
@@ -287,6 +295,33 @@ final readonly class StudyCardAssembler
             // easier one. The gate guarantees the example is there to be spoken.
             $answer = (string) $content->example;
             $prompt = null;
+        }
+
+        // THE PLAN'S FLOOR IS THE FULL CARD (Д-2, Д-3), and it comes first.
+        //
+        // A plan's pool is its own day — fourteen cards whose kinds are known before anything is
+        // dealt — so «not enough options» there is not a gap in the catalogue, it is this day not
+        // holding enough cards of this shape, which two connectors in fourteen is the ordinary case
+        // of. Before Д-2 the shortfall was made up from whatever was nearest, and the live run
+        // photographed both ends of it: a question among three statements, a connector among single
+        // words. Either is answerable without reading the options.
+        //
+        // So the card falls out and the fact is counted rather than being padded from another kind
+        // ({@see ModeFallbackReporter::distractorStarved()}). Only the two modes that ASKED for
+        // `$optionCount` options: `pick_correct` deals three sentences by its own rule
+        // ({@see PICK_CORRECT_WRONG_OPTIONS}) and a floor of four would refuse it for obeying it.
+        if ($wantsFullChoice
+            && ($mode === ExerciseMode::MultipleChoice || $mode === ExerciseMode::DescriptionMatch)
+            && count((array) $options) < $optionCount) {
+            $this->fallbacks->distractorStarved(
+                $user,
+                $view->termId,
+                $mode->value,
+                $optionCount,
+                count((array) $options),
+            );
+
+            return null;
         }
 
         // THE OPTION FLOOR (QA-15), deliberately here — after every fallback branch above, not
@@ -552,7 +587,7 @@ final readonly class StudyCardAssembler
      * generated yet. A single-option card is not a card, and the caller falls through to ordinary
      * multiple_choice.
      *
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
      * @param  string|null  $supportLang  the asking half of this card's pair; null = unknown, and an
      *                                    unverifiable pair is treated as a failed one
      * @param  int|null  $optionCount  how many options this card is dealt, the right one included —
@@ -566,6 +601,7 @@ final readonly class StudyCardAssembler
         int $cardIndex,
         ?string $supportLang = null,
         ?int $optionCount = null,
+        bool $wantsFullChoice = false,
     ): ?SessionCardView {
         if ($supportLang === null) {
             return null;
@@ -596,6 +632,14 @@ final readonly class StudyCardAssembler
             if ($neighbour['type'] !== $content->type) {
                 continue;
             }
+            // …and the same FAMILY, which `type` cannot express: a question and a statement are both
+            // `phrase`, and the live run put the one question of a card among three statements
+            // (Д-2). The same rule the distractor reader applies, from the same place, so the two
+            // paths into a choice card cannot drift apart ({@see DistractorFamily}).
+            if (DistractorFamily::of($neighbour['kind'] ?? null, $neighbour['text'])
+                !== DistractorFamily::of($content->kind, $content->text)) {
+                continue;
+            }
             $text = $forward ? $neighbour['translation'] : $neighbour['text'];
             if ($text === null || trim($text) === '' || $this->sameOption($text, $own)) {
                 continue;
@@ -606,7 +650,13 @@ final readonly class StudyCardAssembler
             }
         }
 
-        if ($pool === []) {
+        // A PLAN wants the whole card or none of it: it deals its own day, the day's shapes are
+        // known before anything is dealt, and a choice one option short there is a choice the pool
+        // could not honestly build (Д-2). Everywhere else «fewer rather than mixed» stands — the
+        // catalogue is deep, and three same-shape options still ask the question the card exists to
+        // ask. Either way the caller falls through to ordinary multiple_choice, whose own floor
+        // decides what happens next.
+        if (count($pool) < ($wantsFullChoice ? $optionCount - 1 : 1)) {
             return null;
         }
 
@@ -658,9 +708,9 @@ final readonly class StudyCardAssembler
      * fall back to distant ones rather than lose the card, which is the same rule the type filter
      * follows one level down.
      *
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
      * @param  list<string>  $own  the card term's own collections
-     * @return list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>
+     * @return list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>
      */
     private function sameTopicFirst(array $neighbours, array $own): array
     {
@@ -691,7 +741,7 @@ final readonly class StudyCardAssembler
     }
 
     /**
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
      * @return list<string>
      */
     private function collectionsOf(array $neighbours, string $termId): array
@@ -706,8 +756,8 @@ final readonly class StudyCardAssembler
     }
 
     /**
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
-     * @return list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
+     * @return list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>
      */
     private function rotate(array $neighbours, int $by): array
     {

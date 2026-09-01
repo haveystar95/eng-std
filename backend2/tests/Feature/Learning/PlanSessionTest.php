@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Modules\Learning\Infrastructure\Adapter\LoggingModeFallbackReporter;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
@@ -92,6 +94,37 @@ it('deals a line and a word different chains in the same session', function () {
 
     expect($chains['line'] ?? [])->not->toBeEmpty()
         ->and($chains['word'] ?? [])->not->toBeEmpty();
+});
+
+it('drops the choice card when the day cannot furnish its kind, instead of padding it (Д-2)', function () {
+    Cache::forget(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED);
+
+    [, $token, $planId] = startedPlan($this);
+
+    $session = planSession($this, $token, $planId);
+
+    // The day is 8 lines + 4 words + 2 connectors ({@see DayCapacity::split()} on a budget of 14),
+    // and `basic` deals three options. A connector therefore needs two OTHER connectors and the day
+    // holds one — so a connector gets no choice card at all. Before Д-2 the shortfall was made up
+    // from single words, and «which of these is a connector» was answerable by length.
+    $kinds = DB::table('terms')->pluck('kind', 'id')->all();
+    $byKind = [];
+    foreach ($session['tasks'] as $task) {
+        $termId = $task['card']['term_id'];
+        $byKind[$kinds[$termId] ?? 'none'][] = $task['card']['exercise_mode'];
+    }
+
+    expect($byKind['chunk'] ?? [])->not->toBeEmpty()
+        ->and($byKind['chunk'])->not->toContain('multiple_choice')
+        // The connector is still taught — it is only the CHOICE that cannot be built honestly.
+        ->and($byKind['chunk'])->toContain('intro')
+        // Words and lines have their own kind to spare, so nothing else lost a card.
+        ->and($byKind['word'])->toContain('multiple_choice')
+        ->and($byKind['line'])->toContain('multiple_choice');
+
+    // …and the fact is COUNTED, because a session that is quietly shorter is exactly the kind of
+    // thing nobody notices for months.
+    expect(Cache::get(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED))->toBeGreaterThan(0);
 });
 
 it('carries the level’s knobs, and says which of them the card actually honoured', function () {

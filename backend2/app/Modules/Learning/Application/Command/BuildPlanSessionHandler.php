@@ -544,6 +544,7 @@ final readonly class BuildPlanSessionHandler
                 'text' => $view->text,
                 'translation' => $view->translation,
                 'type' => $view->type,
+                'kind' => $view->kind,
                 'lang' => $view->lang,
                 'support' => $langs->for($termId),
                 'collections' => [],

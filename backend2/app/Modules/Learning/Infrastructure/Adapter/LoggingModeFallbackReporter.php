@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Infrastructure\Adapter;
 use App\Modules\Learning\Application\Port\ModeFallbackReporter;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 final class LoggingModeFallbackReporter implements ModeFallbackReporter
@@ -45,5 +46,26 @@ final class LoggingModeFallbackReporter implements ModeFallbackReporter
             'mode' => $mode,
             'options' => $options,
         ]);
+    }
+
+    /** The counter the plan's option pool is measured by — {@see ModeFallbackReporter::distractorStarved()}. */
+    public const PLAN_DISTRACTOR_STARVED = 'plan_distractor_starved';
+
+    public function distractorStarved(UserId $userId, TermId $termId, string $mode, int $wanted, int $got): void
+    {
+        Log::warning('A plan choice card was refused: the pool has too few of this kind and form', [
+            'counter' => self::PLAN_DISTRACTOR_STARVED,
+            'user_id' => $userId->value,
+            'term_id' => $termId->value,
+            'mode' => $mode,
+            'wanted' => $wanted,
+            'got' => $got,
+        ]);
+
+        // Same shape as the plan defect counters: `add` first, so a counter nobody has touched
+        // reads zero instead of «no such key». A counter that silently stays absent is worse than
+        // no counter ({@see \App\Modules\Generation\Infrastructure\Adapter\LoggingPlanDefectReporter}).
+        Cache::add(self::PLAN_DISTRACTOR_STARVED, 0);
+        Cache::increment(self::PLAN_DISTRACTOR_STARVED);
     }
 }

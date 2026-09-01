@@ -130,15 +130,19 @@ it('never offers a spoken LINE as the wrong answer to a word', function () {
         ->and($options)->not->toContain('Hello. Do you have a reservation?');
 });
 
-it('offers a line the other lines, and no words', function () {
-    // The rule reads both ways: a turn is answered against turns.
+it('offers a line the other lines OF ITS OWN FORM, and no words', function () {
+    // The rule reads both ways: a turn is answered against turns. Since Д-2 it also reads one level
+    // finer — a statement is answered against statements, because a question among them is the
+    // answer and needs no reading (`49-session-25.png`).
     [$me] = learner();
 
     $mine = shelf($me->id, 'custom', 'private', 'Моя папка');
     $target = shelfTerm($mine, 'Yes, I have a reservation.', 'Да, у меня есть бронирование.');
-    $otherLine = shelfTerm($mine, 'Hello. Do you have a reservation?', 'Здравствуйте. У вас есть бронирование?');
+    $otherStatement = shelfTerm($mine, 'I booked it last week.', 'Я забронировал на прошлой неделе.');
+    $question = shelfTerm($mine, 'Hello. Do you have a reservation?', 'Здравствуйте. У вас есть бронирование?');
     shelfTerm($mine, 'suitcase', 'чемодан');
-    DB::table('terms')->whereIn('id', [$target, $otherLine])->update(['kind' => 'line', 'is_line' => true]);
+    DB::table('terms')->whereIn('id', [$target, $otherStatement, $question])
+        ->update(['kind' => 'line', 'is_line' => true]);
 
     $options = app(DistractorReader::class)->forTarget(
         UserId::fromString($me->id),
@@ -147,5 +151,25 @@ it('offers a line the other lines, and no words', function () {
         3,
     );
 
-    expect($options)->toBe(['Hello. Do you have a reservation?']);
+    expect($options)->toBe(['I booked it last week.']);
+});
+
+it('offers a question the other questions, and never a statement (Д-2)', function () {
+    [$me] = learner();
+
+    $mine = shelf($me->id, 'custom', 'private', 'Моя папка');
+    $target = shelfTerm($mine, 'Could you repeat?', 'Вы можете повторить?');
+    $otherQuestion = shelfTerm($mine, 'How old is your child?', 'Сколько лет вашему ребёнку?');
+    $statement = shelfTerm($mine, 'He has a fever.', 'У него температура.');
+    DB::table('terms')->whereIn('id', [$target, $otherQuestion, $statement])
+        ->update(['kind' => 'line', 'is_line' => true]);
+
+    $options = app(DistractorReader::class)->forTarget(
+        UserId::fromString($me->id),
+        TermId::fromString($target),
+        DB::table('collection_items')->where('collection_id', $mine)->pluck('term_id')->all(),
+        3,
+    );
+
+    expect($options)->toBe(['How old is your child?']);
 });

@@ -39,4 +39,21 @@ interface ModeFallbackReporter
      * that is simply shorter than expected.
      */
     public function tooFewOptions(UserId $userId, TermId $termId, string $mode, int $options): void;
+
+    /**
+     * A PLAN's choice card was refused because the pool could not furnish its own kind and form
+     * (Д-2, Д-3) — `plan_distractor_starved`.
+     *
+     * Apart from {@see tooFewOptions()} because it is a different fact with a different cure. That
+     * one says «this term has almost no neighbours anywhere», which is content work. This one says
+     * «the DAY does not hold enough cards of this shape» — two connectors in a day of fourteen is
+     * the ordinary case, not a defect — and the cure, if there is one, is the day's composition or
+     * the level's `mc_options`, not the term.
+     *
+     * The card is dropped rather than padded from another kind: a `chunk` offered two single words,
+     * or a question offered three statements, is answerable from its shape, which is the defect
+     * the family rule exists to prevent. One fewer card costs a repetition; a card whose answer is
+     * visible writes a correct answer into an append-only log for a retrieval that never happened.
+     */
+    public function distractorStarved(UserId $userId, TermId $termId, string $mode, int $wanted, int $got): void;
 }

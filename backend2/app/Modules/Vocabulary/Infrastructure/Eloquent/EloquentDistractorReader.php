@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
 
+use App\Modules\Shared\Domain\Service\DistractorFamily;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
@@ -18,12 +19,15 @@ final class EloquentDistractorReader implements DistractorReader
             return [];
         }
 
-        $target = DB::table('terms')->where('id', $targetId->value)->first(['id', 'lang', 'cefr', 'kind']);
+        $target = DB::table('terms')->where('id', $targetId->value)->first(['id', 'lang', 'cefr', 'kind', 'text']);
         if ($target === null) {
             return [];
         }
 
-        $family = self::familyOf($target->kind === null ? null : (string) $target->kind);
+        $family = DistractorFamily::of(
+            $target->kind === null ? null : (string) $target->kind,
+            (string) $target->text,
+        );
 
         $targetTranslations = $this->translationsByTerm([$targetId->value])[$targetId->value] ?? [];
         // THE SYNONYM BAN (SYN-1 Ч.2 п. 3). A near-synonym of the term is a SECOND CORRECT ANSWER on
@@ -106,8 +110,8 @@ final class EloquentDistractorReader implements DistractorReader
      *         another name — its synonyms, and the terms that name IT as one of theirs
      * @param  string  $lang  the card's own language: a candidate written in another one is not a
      *         wrong answer, it is a different card, and the loop below never sees it
-     * @param  string  $family  {@see familyOf()} — a spoken TURN and a word one drops into a
-     *         sentence are not alternatives to each other, whatever else they have in common
+     * @param  string  $family  {@see DistractorFamily} — kind for kind, and inside a spoken turn,
+     *         form for form. Nothing outside the family is ever taken; a short card is the answer.
      */
     private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations, array $banned, string $lang, string $family): void
     {
@@ -133,14 +137,15 @@ final class EloquentDistractorReader implements DistractorReader
             if ($row === null) {
                 continue;
             }
+            $text = $row['text'];
             // THE SHAPE GATE. Asked to recognise «passport», the learner was offered «Hello. Do you
             // have a reservation?» — a whole spoken turn as a wrong answer for one noun. It is not
             // a wrong answer, it is a different kind of question, and it makes the right one
-            // obvious by length alone.
-            if (self::familyOf($row['kind']) !== $family) {
+            // obvious by length alone. Since Д-2 the same is true one level finer: a question among
+            // statements is answerable without reading a word of it. {@see familyOf()}
+            if (DistractorFamily::of($row['kind'], $text) !== $family) {
                 continue;
             }
-            $text = $row['text'];
             $textKey = mb_strtolower(trim($text));
             if (isset($usedTexts[$textKey])) {
                 continue; // no duplicate option texts
@@ -186,25 +191,6 @@ final class EloquentDistractorReader implements DistractorReader
                     ->where('uc.user_id', $userId->value)
                     ->whereNull('uc.unsubscribed_at');
             });
-    }
-
-    /**
-     * WHICH KIND OF THING this term is, for the purpose of being an option: a spoken TURN, or
-     * something you drop into one.
-     *
-     * `line` on one side; `word`, `chunk` and «no kind at all» on the other. The naряд asked for
-     * kind-for-kind (`word↔word`, `chunk↔chunk`), and that is what the ORDER inside a family gives
-     * — but it cannot be the hard rule, because the two ends of it starve: a day carries two
-     * connectors, and the public catalogue this reader tops up from carries none at all (`kind` is
-     * a plan's word for what a card does in its day, and catalogue terms have never been in one).
-     * A `chunk` that could only ever be offered another `chunk` would be offered nothing.
-     *
-     * The line is where the defect actually was, and it is absolute: no sentence among a word's
-     * options, no word among a sentence's.
-     */
-    private static function familyOf(?string $kind): string
-    {
-        return $kind === 'line' ? 'line' : 'substitution';
     }
 
     /**

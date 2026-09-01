@@ -141,6 +141,7 @@ final readonly class BuildStudySessionHandler
                 'text' => $content[$v->termId->value]->text,
                 'translation' => $content[$v->termId->value]->translation,
                 'type' => $content[$v->termId->value]->type,
+                'kind' => $content[$v->termId->value]->kind,
                 'lang' => $content[$v->termId->value]->lang,
                 'support' => $langs->for($v->termId->value),
                 'collections' => $termCollections[$v->termId->value] ?? [],

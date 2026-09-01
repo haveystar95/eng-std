@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use App\Modules\Shared\Domain\Service\Clock;
 use Tests\Doubles\FixedClock;
-use DateTimeImmutable;
 
 uses(RefreshDatabase::class);
 
