@@ -64,9 +64,9 @@ use App\Modules\Vocabulary\Application\Query\TermContentReader;
  * Two buckets, in the order they are dealt:
  *
  *   1. **new** — this day's words that have not closed stage A, in the order A2 computed
- *      ({@see PlanDayOrder}) — words before replies below `conversational`, replies before words
- *      above it. Each brings its whole remaining stage-A checklist, because stage A has to close in
- *      ONE sitting or the day does not pass.
+ *      ({@see PlanDayOrder}): the pieces, then the connectors, then the replies built out of them,
+ *      then the interlocutor's own line. Each brings its whole remaining stage-A checklist, because
+ *      stage A has to close in ONE sitting or the day does not pass.
  *   2. **plan reviews** — words of this plan, introduced on an EARLIER day, that the repetition
  *      planner says are due and that stand on stage B or C. B before C, because a word two stages
  *      from ready needs the sitting more than one that is nearly there. This is the seam the learner
@@ -247,7 +247,8 @@ final readonly class BuildPlanSessionHandler
         $specs = [];
         $taken = [];
 
-        // 1. THE DAY ITSELF, in A2's order, each word bringing its whole remaining stage-A checklist.
+        // 1. THE DAY ITSELF, in A2's order — words, connectors, replies, the interlocutor's line —
+        // each card bringing its whole remaining stage-A checklist.
         //
         // First, and this is a change: the earlier days' revision used to be dealt ahead of it, to
         // «warm up on what you know before meeting what you do not». That reading held while those
@@ -594,7 +595,7 @@ final readonly class BuildPlanSessionHandler
         return array_keys($ids);
     }
 
-    /** The day's terms in A2's order — words before replies, or the other way, by level. */
+    /** The day's terms in A2's order — the pieces, the connectors, the replies, the interlocutor's. */
     /** @return list<string> */
     private function orderedDayTerms(LearningPlan $plan, PlanDayProgressView $day): array
     {
@@ -606,20 +607,24 @@ final readonly class BuildPlanSessionHandler
             }
             $cards[] = new PlanDayCard(
                 termId: $termId,
-                // `is_line` is a fact about the TERM, written when the day was generated. It is read
-                // through the term's shape here because that is what the content reader carries; a
-                // reply is a phrase and a substitution word is a word.
                 // What the card DOES in its day, written when the day was generated. It used to be
                 // guessed from `type` («anything that is not one word is a reply»), which was right
                 // until v0.2 put connectors in a day: «deal with» is two words and a substitution.
-                isLine: ($content->kind ?? '') === PlanStageLadder::KIND_LINE
-                    || ($content->kind === null && $content->type !== 'word'),
+                // A term written before plans existed carries no kind at all, and the old guess is
+                // still the only thing to go on for it.
+                kind: $content->kind ?? ($content->type === 'word'
+                    ? PlanStageLadder::KIND_WORD
+                    : PlanStageLadder::KIND_LINE),
+                isRoleLine: $content->speaker === self::SPEAKER_ROLE,
                 difficultyScore: null,
             );
         }
 
         return $this->order->order($cards, $plan->level());
     }
+
+    /** `terms.speaker` for a line the INTERLOCUTOR says — {@see PlanStandings::PRODUCTION_MODES}. */
+    private const SPEAKER_ROLE = 'role';
 
     /** @return array<string, DueTermView> */
     private function dayViews(LearningPlan $plan, PlanDayProgressView $day): array

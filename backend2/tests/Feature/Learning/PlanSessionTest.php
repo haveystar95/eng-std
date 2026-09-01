@@ -68,6 +68,33 @@ it('deals day 1 as stage A: intro first, then the two recognitions, the word ban
         : ['intro', 'multiple_choice', 'multiple_choice', 'speaking']);
 });
 
+it('lays the day out as pieces, connectors and then replies — whatever the level says', function () {
+    // PLAN-FIX-4 п. 1.3. `conversational` used to invert this and open the day on a reply; on the
+    // owner's 01.09 screen that reply was fifteen words long and its first card was `speaking`.
+    [, $token, $planId] = startedPlan($this, ['level' => 'conversational']);
+
+    $session = planSession($this, $token, $planId);
+    $kinds = DB::table('terms')->pluck('kind', 'id')->all();
+
+    $rank = ['word' => 0, 'chunk' => 1, 'line' => 2];
+    $seen = [];
+    $last = -1;
+    foreach ($session['tasks'] as $task) {
+        $kind = $kinds[$task['card']['term_id']] ?? 'word';
+        $seen[$kind] = true;
+        // Never back to an earlier block: every card of a block, with its whole checklist, before
+        // the first card of the next one.
+        expect($rank[$kind])->toBeGreaterThanOrEqual($last);
+        $last = $rank[$kind];
+    }
+
+    // The fixture is worth testing only if it actually holds all three.
+    expect($seen)->toHaveKeys(['word', 'chunk', 'line'])
+        // And the day opens on a first meeting of a PIECE, not on the sentence built out of it.
+        ->and($session['tasks'][0]['card']['exercise_mode'])->toBe('intro')
+        ->and($kinds[$session['tasks'][0]['card']['term_id']])->toBe('word');
+});
+
 it('deals a line and a word different chains in the same session', function () {
     [, $token, $planId] = startedPlan($this);
 

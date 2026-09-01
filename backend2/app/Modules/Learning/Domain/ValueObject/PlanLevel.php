@@ -10,8 +10,15 @@ namespace App\Modules\Learning\Domain\ValueObject;
  * A2 is an answer to a different question. The prompt reads these four words and nothing else.
  *
  * A level moves the DIFFICULTY, never the topic — a `zero` learner going to the doctor still goes
- * to the doctor. Its one mechanical consequence in this module is the day's card order
- * ({@see \App\Modules\Learning\Domain\Service\PlanDayOrder}).
+ * to the doctor. Mechanically it decides how many options a choice card carries and which trainers
+ * are open ({@see \App\Modules\Learning\Domain\ValueObject\PlanKnobs}, `learning_mode_settings` at
+ * `scope = plan`).
+ *
+ * It used to decide one more thing, and no longer does: `wordsBeforeLines()` inverted the day's
+ * running order from `conversational` up, on the reading that «the reply is the useful unit and the
+ * words inside it are recognised on the way past». No card does that recognising, so the inversion
+ * described a lesson the machine does not run — see {@see \App\Modules\Learning\Domain\Service\PlanDayOrder}
+ * for what replaced it (PLAN-FIX-4, 01.09).
  */
 enum PlanLevel: string
 {
@@ -26,17 +33,4 @@ enum PlanLevel: string
 
     /** Fluent; needs the register and the exact terms. */
     case Fluent = 'fluent';
-
-    /**
-     * Does this learner need the substitution WORDS before the replies?
-     *
-     * Below `conversational` a reply is a wall: the learner cannot assemble «Спина болит уже
-     * неделю» out of words they have not met, so the day introduces the pieces first. From
-     * `conversational` up the reply is the useful unit and the words inside it are recognised
-     * on the way past, so the replies come first and the day reads as a conversation.
-     */
-    public function wordsBeforeLines(): bool
-    {
-        return $this === self::Zero || $this === self::Basic;
-    }
 }
