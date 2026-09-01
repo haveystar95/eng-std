@@ -14,6 +14,7 @@ use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanLevel;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
 use App\Modules\Shared\Domain\Service\DistractorFamily;
+use App\Modules\Shared\Domain\Service\DistractorLength;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Dto\TermContentView;
@@ -59,6 +60,7 @@ final readonly class PlanStandings
         private StudyCardAssembler $assembler,
         private ModeFallbackReporter $fallbacks,
         private PlanStageLadder $ladder = new PlanStageLadder(),
+        private DistractorLength $length = new DistractorLength(),
     ) {}
 
     /**
@@ -85,7 +87,6 @@ final readonly class PlanStandings
         $enabled = $this->enabledModes->forUser($user);
         // HOW MANY CARDS OF EACH SHAPE THIS PLAN HOLDS — the fifth filter, and the one that keeps a
         // starved choice from being a step nobody can close. See {@see choiceIsAffordable()}.
-        $family = $this->familySizes($content);
         $optionCount = $this->planSettings->knobsFor($level)->mcOptions;
 
         $out = [];
@@ -101,7 +102,7 @@ final readonly class PlanStandings
             $kind = $termContent->kind ?? PlanStageLadder::KIND_WORD;
 
             $out[$termId] = $this->ladder->standingFor(
-                applicable: $this->applicableFor($termContent, $openAtLevel, $enabled, $kind, $termId, $family, $optionCount, $user),
+                applicable: $this->applicableFor($termContent, $openAtLevel, $enabled, $kind, $termId, $content, $optionCount, $user),
                 facts: $facts[$termId] ?? [],
                 introduced: $introduced[$termId] ?? false,
                 today: $today,
@@ -120,7 +121,8 @@ final readonly class PlanStandings
      * The FIVE filters, intersected, order preserved from the plan ladder.
      *
      * @param  list<ExerciseMode>  $openAtLevel
-     * @param  array<string, int>  $family  {@see familySizes()}
+     * @param  array<string, TermContentView>  $pool  every term this plan stands on — what a choice
+     *         card of this plan would be built out of {@see optionsAvailable()}
      * @return list<ExerciseMode>
      */
     private function applicableFor(
@@ -129,7 +131,7 @@ final readonly class PlanStandings
         \App\Modules\Learning\Domain\ValueObject\EnabledModes $enabled,
         string $kind,
         string $termId,
-        array $family,
+        array $pool,
         int $optionCount,
         UserId $user,
     ): array {
@@ -152,7 +154,7 @@ final readonly class PlanStandings
             }
         }
 
-        $own = $family[DistractorFamily::of($content->kind, $content->text)] ?? 1;
+        $own = $this->optionsAvailable($pool, $content);
         // Itself, plus one wrong answer per remaining slot. {@see choiceIsAffordable()}
         $affordable = $own >= $optionCount;
         // THE INTERLOCUTOR'S OWN LINE is understood, never produced. {@see PRODUCTION_MODES}
@@ -226,24 +228,35 @@ final readonly class PlanStandings
      *
      * Counted over the plan's own terms and nothing else, which makes it at least as strict as
      * {@see \App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorReader} — that one
-     * also tops up from the learner's shelves and the catalogue. Strict in that direction on
-     * purpose: the checklist may drop a card the reader could have built, and must never owe one it
-     * could not.
+     * also tops up from the catalogue. Strict in that direction on purpose: the checklist may drop a
+     * card the reader could have built, and must never owe one it could not.
      *
-     * How many cards of each shape the plan holds — {@see DistractorFamily}.
+     * How many options a choice card of THIS TARGET could actually be dealt, itself included.
      *
-     * @param  array<string, TermContentView>  $content
-     * @return array<string, int>
+     * Two rules, both the ones the option reader applies, and both asked here for the same reason:
+     * {@see DistractorFamily} (a word beside a word, a question beside questions) and
+     * {@see DistractorLength} (and not one three times its length). It used to be a count per
+     * FAMILY, computed once for the day — which was enough while shape was the whole rule, and stops
+     * being enough the moment length is part of it, because «how many `word`s does this plan hold»
+     * is the same number for `key` and for `accommodation` and the answer for the two differs.
+     *
+     * @param  array<string, TermContentView>  $pool  every term this plan stands on
      */
-    private function familySizes(array $content): array
+    private function optionsAvailable(array $pool, TermContentView $target): int
     {
-        $sizes = [];
-        foreach ($content as $view) {
-            $key = DistractorFamily::of($view->kind, $view->text);
-            $sizes[$key] = ($sizes[$key] ?? 0) + 1;
+        $family = DistractorFamily::of($target->kind, $target->text);
+        $count = 0;
+
+        foreach ($pool as $view) {
+            if (DistractorFamily::of($view->kind, $view->text) === $family
+                && $this->length->fits($target->kind, $target->text, $view->text)) {
+                $count++;
+            }
         }
 
-        return $sizes;
+        // The target counts itself: `fits()` is reflexive and the family is its own, so the loop has
+        // already taken it. A pool that somehow does not contain the target is still a card of one.
+        return max(1, $count);
     }
 
     /**

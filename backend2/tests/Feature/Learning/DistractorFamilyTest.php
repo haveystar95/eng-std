@@ -72,8 +72,10 @@ function familyOptionsFor(string $targetId, int $count = 3): array
 
 it('offers a question only other questions (Д-2)', function () {
     // The live day's shape: eight lines, two of them questions.
+    // Both questions three or four words, so the LENGTH band beside this rule excludes nothing
+    // here: what is being measured is the question/statement split and nothing else.
     $target = seedFamilyTerm('Could you repeat?', 'Вы можете повторить?', 'line');
-    seedFamilyTerm('How old is your child?', 'Сколько лет вашему ребёнку?', 'line');
+    seedFamilyTerm('Can you say that?', 'Можете это сказать?', 'line');
     foreach ([
         'He has a fever.' => 'У него температура.',
         'He is also coughing.' => 'Он ещё кашляет.',
@@ -87,7 +89,7 @@ it('offers a question only other questions (Д-2)', function () {
 
     // Only ONE other question exists, so two wrong answers cannot be found — and none of the six
     // statements is allowed to make up the difference.
-    expect(familyOptionsFor($target, 2))->toBe(['How old is your child?']);
+    expect(familyOptionsFor($target, 2))->toBe(['Can you say that?']);
 });
 
 it('offers a statement only other statements', function () {
@@ -101,13 +103,14 @@ it('offers a statement only other statements', function () {
 
 it('offers a connector only connectors — never single words (наряд PLAN-FIX-2, 1.3)', function () {
     // Two `chunk` cards in a day is the ordinary shape, and it is not enough for a choice card.
+    // Both eleven to fourteen characters, so the length band beside this rule excludes neither.
     $target = seedFamilyTerm('sore throat', 'больное горло', 'chunk');
-    seedFamilyTerm('yesterday evening', 'вчера вечером', 'chunk');
+    seedFamilyTerm('cold shower', 'холодный душ', 'chunk');
     seedFamilyTerm('fever', 'температура', 'word');
     seedFamilyTerm('son', 'сын', 'word');
     seedFamilyTerm('coughing', 'кашель', 'word');
 
-    expect(familyOptionsFor($target, 2))->toBe(['yesterday evening']);
+    expect(familyOptionsFor($target, 2))->toBe(['cold shower']);
 });
 
 it('offers a word only words', function () {

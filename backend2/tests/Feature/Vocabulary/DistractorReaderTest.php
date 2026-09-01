@@ -15,8 +15,11 @@ it('picks other target texts as distractors and drops translation near-duplicate
     // as correct for the same prompt, so it must not become a distractor.
     [$col, $withdrawCash] = seedCollectionWith($user, 'withdraw cash', 'снять наличные');
     addWordTo($col, $user->id, 'withdraw money', 'снять наличные');
+    // Both within the length band of «withdraw cash» — this test is about the translation twin,
+    // and a four-letter «bank» beside a thirteen-character target is excluded by length before the
+    // twin rule is ever consulted.
     $deposit = addWordTo($col, $user->id, 'deposit', 'депозит');
-    $bank = addWordTo($col, $user->id, 'bank', 'банк');
+    $bank = addWordTo($col, $user->id, 'exchange', 'обмен валюты');
 
     $distractors = app(DistractorReader::class)->forTarget(
         UserId::fromString($user->id),
@@ -28,5 +31,5 @@ it('picks other target texts as distractors and drops translation near-duplicate
     expect($distractors)->not->toContain('withdraw cash')  // never the target itself
         ->and($distractors)->not->toContain('withdraw money') // near-duplicate excluded
         ->and($distractors)->toContain('deposit')
-        ->and($distractors)->toContain('bank');
+        ->and($distractors)->toContain('exchange');
 });

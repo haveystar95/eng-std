@@ -56,7 +56,7 @@ it('never offers a synonym of the term as a wrong answer', function () {
     // Two different Russian glosses on purpose: the translation-overlap rule cannot see this pair.
     $target = seedBanTerm('purpose', 'цель');
     seedBanTerm('goal', 'задача');
-    seedBanTerm('boarding pass', 'посадочный талон');
+    seedBanTerm('deadline', 'срок сдачи');
     seedBanSynonym($target, 'goal');
 
     expect(optionsFor($target))->not->toContain('goal');
@@ -65,7 +65,7 @@ it('never offers a synonym of the term as a wrong answer', function () {
 it('bans it in the OTHER direction too, where only the neighbour was enriched', function () {
     $target = seedBanTerm('purpose', 'цель');
     $goal = seedBanTerm('goal', 'задача');
-    seedBanTerm('boarding pass', 'посадочный талон');
+    seedBanTerm('deadline', 'срок сдачи');
     // The станок ran over `goal` and nobody has run it over `purpose` yet.
     seedBanSynonym($goal, 'purpose');
 
@@ -75,16 +75,16 @@ it('bans it in the OTHER direction too, where only the neighbour was enriched', 
 it('leaves an ordinary distractor alone', function () {
     $target = seedBanTerm('purpose', 'цель');
     seedBanTerm('goal', 'задача');
-    seedBanTerm('boarding pass', 'посадочный талон');
+    seedBanTerm('deadline', 'срок сдачи');
     seedBanSynonym($target, 'goal');
 
-    expect(optionsFor($target))->toContain('boarding pass');
+    expect(optionsFor($target))->toContain('deadline');
 });
 
 it('changes nothing for a term with no synonyms', function () {
     $target = seedBanTerm('purpose', 'цель');
     seedBanTerm('goal', 'задача');
-    seedBanTerm('boarding pass', 'посадочный талон');
+    seedBanTerm('deadline', 'срок сдачи');
 
     // Until the станок has run, the pair is unknown and both are ordinary options. That is the
     // honest state, not a defect: the ban can only act on data that exists.
@@ -114,7 +114,7 @@ it('keeps the synonym out of the options', function (string $term, string $gloss
     seedBanTerm($synonym, $synGloss);
     // Three ordinary neighbours, so the card has somewhere else to draw from and the absence of the
     // synonym is a choice rather than an empty pool.
-    seedBanTerm('boarding pass', 'посадочный талон');
+    seedBanTerm('deadline', 'срок сдачи');
     seedBanTerm('luggage tag', 'багажная бирка');
     seedBanTerm('window seat', 'место у окна');
     seedBanSynonym($target, $synonym);

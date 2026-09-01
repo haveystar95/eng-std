@@ -146,9 +146,10 @@ it('caps the queue page and reports the eligible remainder', function () {
 it('keeps a known term out of study and returns it to new when triaged unknown', function () {
     [$user, $token] = learner();
     [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
-    // A neighbour, so the recognition chain can be built at all (QA-15). It is triaged known too,
-    // so the «nothing to study» assertion below still means what it says.
-    $overdraft = addWordTo($col, $user->id, 'overdraft', 'овердрафт');
+    // A neighbour, so the recognition chain can be built at all (QA-15) — and within the length band
+    // of «money», or there is still nothing to put beside it. It is triaged known too, so the
+    // «nothing to study» assertion below still means what it says.
+    $overdraft = addWordTo($col, $user->id, 'wallet', 'кошелёк');
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [

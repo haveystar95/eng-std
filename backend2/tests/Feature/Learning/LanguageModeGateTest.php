@@ -85,8 +85,9 @@ it('refuses pick_correct on a Polish card with identical content', function () {
     $deck = langDeck($user, 'pl');
     $termId = addWordTo($deck, $user->id, 'stanowisko', 'рабочее место');
     pickCorrectReady($termId, 'Twoje stanowisko jest gotowe.', 'Ваше рабочее место готово.');
-    // …and a neighbour, so the multiple_choice floor the card falls to is actually buildable (QA-15).
-    addWordTo($deck, $user->id, 'okno', 'окно');
+    // …and a neighbour, so the multiple_choice floor the card falls to is actually buildable (QA-15)
+    // — within the length band of «stanowisko», or the floor has nothing to stand on either.
+    addWordTo($deck, $user->id, 'biurko', 'письменный стол');
     onlyMode($user->id, ExerciseMode::PickCorrect);
 
     // The mode is on, the content is there, the pair is at the right rung — and the language closes

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use App\Modules\Shared\Domain\Service\DistractorLength;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -207,8 +208,10 @@ it('offers a question the other questions, and never a statement (Д-2)', functi
     [$me] = learner();
 
     $mine = shelf($me->id, 'custom', 'private', 'Моя папка');
+    // All three within the length band on purpose (three to four words): what this test is about is
+    // the FORM split, so the length rule beside it must not be what excludes anything here.
     $target = shelfTerm($mine, 'Could you repeat?', 'Вы можете повторить?');
-    $otherQuestion = shelfTerm($mine, 'How old is your child?', 'Сколько лет вашему ребёнку?');
+    $otherQuestion = shelfTerm($mine, 'Can you say that?', 'Можете это сказать?');
     $statement = shelfTerm($mine, 'He has a fever.', 'У него температура.');
     DB::table('terms')->whereIn('id', [$target, $otherQuestion, $statement])
         ->update(['kind' => 'line', 'is_line' => true]);
@@ -220,5 +223,80 @@ it('offers a question the other questions, and never a statement (Д-2)', functi
         3,
     );
 
-    expect($options)->toBe(['How old is your child?']);
+    expect($options)->toBe(['Can you say that?']);
+});
+
+// ── the length band ───────────────────────────────────────────────────────────────────────────
+
+it('never offers a twelve-letter word beside a four-letter one', function () {
+    [$me] = learner();
+
+    $mine = shelf($me->id, 'custom', 'private', 'Моя папка');
+    // Four letters. ±50 % of that is two to six: `door` and `lamp` fit, `refrigerator` does not.
+    $target = shelfTerm($mine, 'door', 'дверь');
+
+    $catalogue = shelf(null, 'system', 'public', 'Витрина');
+    shelfTerm($catalogue, 'refrigerator', 'холодильник');
+    shelfTerm($catalogue, 'accommodation', 'жильё');
+    shelfTerm($catalogue, 'lamp', 'лампа');
+
+    $options = app(DistractorReader::class)->forTarget(
+        UserId::fromString($me->id),
+        TermId::fromString($target),
+        [$target],
+        3,
+    );
+
+    // Same shape and still answerable at a glance: the short one is the answer and nobody reads the
+    // rest. The band refuses them rather than ranking them below `lamp`.
+    expect($options)->not->toContain('refrigerator')
+        ->and($options)->not->toContain('accommodation')
+        ->and($options)->toContain('lamp');
+});
+
+it('bands a spoken line by WORDS, because a phrase is not a long word', function () {
+    [$me] = learner();
+
+    $mine = shelf($me->id, 'custom', 'private', 'Мои реплики');
+    // Five words. ±40 % is three to seven.
+    $target = shelfTerm($mine, 'Could you say that again please', 'Повторите, пожалуйста');
+    DB::table('terms')->where('id', $target)->update(['kind' => 'line', 'is_line' => true]);
+
+    $catalogue = shelf(null, 'system', 'public', 'Витрина реплик');
+    $fits = shelfTerm($catalogue, 'I did not catch that', 'Я не расслышал');
+    $tooLong = shelfTerm($catalogue, 'I am terribly sorry but I am afraid I did not manage to catch a single word of what you just said', 'Простите, я совсем не расслышал');
+    DB::table('terms')->whereIn('id', [$fits, $tooLong])->update(['kind' => 'line', 'is_line' => true]);
+
+    $options = app(DistractorReader::class)->forTarget(
+        UserId::fromString($me->id),
+        TermId::fromString($target),
+        [$target],
+        3,
+    );
+
+    expect($options)->toContain('I did not catch that')
+        ->and($options)->not->toContain('I am terribly sorry but I am afraid I did not manage to catch a single word of what you just said');
+});
+
+it('reads its two thresholds from config, so they move without a deploy', function () {
+    [$me] = learner();
+
+    $mine = shelf($me->id, 'custom', 'private', 'Моя папка');
+    $target = shelfTerm($mine, 'door', 'дверь');
+
+    $catalogue = shelf(null, 'system', 'public', 'Витрина');
+    shelfTerm($catalogue, 'refrigerator', 'холодильник');
+
+    // Wide open: twelve letters is now within ±300 % of four, and the same card takes it.
+    config(['learning.distractor_length.char_tolerance' => 3.0]);
+    app()->forgetInstance(DistractorLength::class);
+
+    $options = app(DistractorReader::class)->forTarget(
+        UserId::fromString($me->id),
+        TermId::fromString($target),
+        [$target],
+        3,
+    );
+
+    expect($options)->toContain('refrigerator');
 });

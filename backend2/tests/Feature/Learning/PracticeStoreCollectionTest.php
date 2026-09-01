@@ -25,7 +25,10 @@ function f24Deck(string $text = 'passport', string $translation = 'паспор�
     ]);
     // Two terms, not one: a choice card needs something to offer beside its answer, and a deck of
     // one is refused now (QA-15). Every case below is about `$tid`, and reads its own cards.
-    foreach ([[$tid, $text, $translation, 0], [Ulid::generate(), 'boarding pass', 'посадочный талон', 1]] as [$id, $word, $ru, $pos]) {
+    // The second word is within the length band of the first (DistractorLength): this file is
+    // about a SUBSCRIBED store deck being studiable at all, and a card whose only neighbour is
+    // excluded by length would come back empty for a reason that has nothing to do with the subject.
+    foreach ([[$tid, $text, $translation, 0], [Ulid::generate(), 'suitcase', 'чемодан', 1]] as [$id, $word, $ru, $pos]) {
         DB::table('terms')->insert([
             'id' => $id, 'lang' => 'en', 'text' => $word, 'normalized_text' => $word, 'type' => 'word',
             'source' => 'curated', 'cefr' => 'A2', 'created_at' => now(), 'updated_at' => now(),

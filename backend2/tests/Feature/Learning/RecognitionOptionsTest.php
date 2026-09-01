@@ -11,8 +11,10 @@ use App\Modules\Learning\Application\Command\EnrollTermHandler;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -136,6 +138,33 @@ it('falls back to an ordinary card when no neighbour shares the shape', function
     $lonely = seedTyped($collectionId, $user->id, 'grain-free', 'без злаков', 'word');
     seedTyped($collectionId, $user->id, 'Where can I find dog food?', 'Где я могу найти корм для собак?', 'phrase');
     seedTyped($collectionId, $user->id, 'Is this suitable for small breeds?', 'Подходит ли это для мелких пород?', 'phrase');
+
+    // …and one catalogue word the TOP-UP can reach, of a comparable length. It is on another shelf,
+    // so it is not a neighbour of this session and the far-option path still finds nothing — which
+    // is the premise of this test — but the ordinary multiple_choice the card falls to can be built.
+    // Without it the card is refused for want of options, and the fall-through goes unobserved.
+    $catalogue = Ulid::generate();
+    DB::table('collections')->insert([
+        'id' => $catalogue, 'owner_id' => null, 'type' => 'system', 'source' => 'curated',
+        'title' => 'Витрина', 'source_lang' => 'ru', 'target_lang' => 'en', 'visibility' => 'public',
+        'items_count' => 1, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $filler = Ulid::generate();
+    DB::table('terms')->insert([
+        'id' => $filler, 'lang' => 'en', 'text' => 'wheat-free', 'normalized_text' => 'wheat-free',
+        // `kind` NULL, like the rest of the catalogue: the family rule is «null against null», and
+        // a plan's `word` is a different family from ordinary vocabulary ({@see DistractorFamily}).
+        'type' => 'word', 'source' => 'curated', 'cefr' => 'A2',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('term_translations')->insert([
+        'id' => Ulid::generate(), 'term_id' => $filler, 'lang' => 'ru', 'text' => 'без пшеницы',
+        'is_primary' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('collection_items')->insert([
+        'id' => Ulid::generate(), 'collection_id' => $catalogue, 'term_id' => $filler,
+        'position' => 0, 'created_at' => now(), 'updated_at' => now(),
+    ]);
 
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $collectionId, 'size' => 40])

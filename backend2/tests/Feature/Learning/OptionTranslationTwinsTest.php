@@ -64,9 +64,11 @@ it('still drops an option that means the same as the PROMPT', function () {
 it('still fills the card when the meanings are all different', function () {
     // The floor must not become a reason cards stop having options (QA-15 lives next door).
     $target = seedTwinTerm('withdraw cash', 'снять наличные');
+    // All three within the length band of «withdraw cash» (thirteen characters, so six to twenty):
+    // this test is about MEANING, and a five-letter «towel» would be dropped for its length first.
     seedTwinTerm('boarding pass', 'посадочный талон');
     seedTwinTerm('front desk', 'стойка регистрации');
-    seedTwinTerm('towel', 'полотенце');
+    seedTwinTerm('room service', 'обслуживание номеров');
 
     $pool = [$target, ...DB::table('terms')->where('id', '<>', $target)->pluck('id')->all()];
     $options = app(DistractorReader::class)->forTarget(UserId::fromString(Ulid::generate()), TermId::fromString($target), array_map('strval', $pool), 3);

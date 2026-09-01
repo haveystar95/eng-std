@@ -21,6 +21,21 @@ return [
     // recognition — exactly what happened before the ladder existed.
     'enabled_modes' => ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble'],
 
+    // HOW LONG A WRONG ANSWER MAY BE, relative to the target. The shape rule (DistractorFamily)
+    // says a word stands beside a word; inside one shape, length still gives the answer away —
+    // `key` offered `accommodation`, `neighbourhood`, `responsibility` is answered by picking the
+    // short one without reading it. It got worse the day the option pool became the whole catalogue.
+    //
+    // Two measures because a phrase is not a long word: single lexical items are compared by
+    // CHARACTERS, a spoken line by WORDS. Configuration and not constants — this is a product
+    // judgement about how hard a card should be, and the first time one of them is wrong it should
+    // move without a deploy. The rule itself lives in Shared\Domain\Service\DistractorLength and
+    // is read by everyone who builds or predicts a choice card.
+    'distractor_length' => [
+        'char_tolerance' => 0.5,   // word / chunk / «no kind» — ±50 % of the target's characters
+        'word_tolerance' => 0.4,   // line — ±40 % of the target's word count
+    ],
+
     // The ADMISSION MATRIX — which rung of the acquisition ladder opens which trainer — is NOT
     // here. It is data, in `learning_mode_settings` beside the toggle above, with the same
     // global-plus-per-user-override mechanism: what a mode asks of the learner is a product

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
 
 use App\Modules\Shared\Domain\Service\DistractorFamily;
+use App\Modules\Shared\Domain\Service\DistractorLength;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentDistractorReader implements DistractorReader
 {
+    public function __construct(private readonly DistractorLength $length) {}
+
     public function forTarget(UserId $userId, TermId $targetId, array $poolTermIds, int $count): array
     {
         if ($count < 1) {
@@ -60,7 +63,8 @@ final class EloquentDistractorReader implements DistractorReader
         // term IS the studied side of its pair, so this one comparison is the whole pair gate here:
         // the options are term TEXTS, and a card of pair ru→en may show English and nothing else.
         $poolIds = array_values(array_filter($poolTermIds, static fn (string $id): bool => $id !== $targetId->value));
-        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, $family);
+        $targetKind = $target->kind === null ? null : (string) $target->kind;
+        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, $family, $targetKind, (string) $target->text);
 
         // 2. TOP UP FROM THE CATALOGUE AS A WHOLE — every term the app has, in this language, of
         //    this shape, MINUS the words people typed in themselves.
@@ -92,7 +96,6 @@ final class EloquentDistractorReader implements DistractorReader
         // no trace of where it was found.
         if (count($picked) < $count) {
             $exclude = array_values(array_unique([$targetId->value, ...$poolTermIds]));
-            $targetKind = $target->kind === null ? null : (string) $target->kind;
             $rows = DB::table('terms')
                 ->where('lang', (string) $target->lang)
                 ->whereNotIn('id', $exclude)
@@ -130,7 +133,7 @@ final class EloquentDistractorReader implements DistractorReader
                 static fn (object $row): string => (string) $row->id,
                 $rows->sortBy(static fn (object $row): int => $row->cefr === $target->cefr ? 0 : 1)->values()->all(),
             ));
-            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, $family);
+            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, $family, $targetKind, (string) $target->text);
         }
 
         return array_slice($picked, 0, $count);
@@ -147,8 +150,11 @@ final class EloquentDistractorReader implements DistractorReader
      *         wrong answer, it is a different card, and the loop below never sees it
      * @param  string  $family  {@see DistractorFamily} — kind for kind, and inside a spoken turn,
      *         form for form. Nothing outside the family is ever taken; a short card is the answer.
+     * @param  string|null  $targetKind  the TARGET's kind, for the length band — a `line` is banded
+     *         by words and everything else by characters ({@see DistractorLength})
+     * @param  string  $targetText  what the band is measured against
      */
-    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations, array $banned, string $lang, string $family): void
+    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations, array $banned, string $lang, string $family, ?string $targetKind, string $targetText): void
     {
         if ($candidateIds === [] || count($picked) >= $count) {
             return;
@@ -179,6 +185,11 @@ final class EloquentDistractorReader implements DistractorReader
             // obvious by length alone. Since Д-2 the same is true one level finer: a question among
             // statements is answerable without reading a word of it. {@see familyOf()}
             if (DistractorFamily::of($row['kind'], $text) !== $family) {
+                continue;
+            }
+            // THE LENGTH BAND. Same shape is not enough: `key` offered `accommodation` is answered
+            // by picking the short one without reading it. {@see DistractorLength}
+            if (! $this->length->fits($targetKind, $targetText, $text)) {
                 continue;
             }
             $textKey = mb_strtolower(trim($text));

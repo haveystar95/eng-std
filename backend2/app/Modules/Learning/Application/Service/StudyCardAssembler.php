@@ -21,6 +21,7 @@ use App\Modules\Learning\Domain\ValueObject\ModeAdmission;
 use App\Modules\Learning\Domain\ValueObject\OptionsPolicy;
 use App\Modules\Learning\Domain\ValueObject\TermPlayability;
 use App\Modules\Shared\Domain\Service\DistractorFamily;
+use App\Modules\Shared\Domain\Service\DistractorLength;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Dto\TermContentView;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
@@ -68,6 +69,7 @@ final readonly class StudyCardAssembler
         private DistractorReader $distractors,
         private ChipShuffler $chips,
         private Randomizer $rng,
+        private DistractorLength $length = new DistractorLength(),
         private DistractorSpanFilter $spans = new DistractorSpanFilter(),
     ) {}
 
@@ -636,8 +638,11 @@ final readonly class StudyCardAssembler
             // `phrase`, and the live run put the one question of a card among three statements
             // (Д-2). The same rule the distractor reader applies, from the same place, so the two
             // paths into a choice card cannot drift apart ({@see DistractorFamily}).
+            // Same shape AND the same length band as every other option path — the far options are
+            // the session's own neighbours, which makes them fair, not exempt.
             if (DistractorFamily::of($neighbour['kind'] ?? null, $neighbour['text'])
-                !== DistractorFamily::of($content->kind, $content->text)) {
+                !== DistractorFamily::of($content->kind, $content->text)
+                || ! $this->length->fits($content->kind, $content->text, $neighbour['text'])) {
                 continue;
             }
             $text = $forward ? $neighbour['translation'] : $neighbour['text'];
