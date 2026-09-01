@@ -32,5 +32,10 @@ final readonly class FinishPlanDay
         public ?string $failReason = null,
         public array $failViolations = [],
         public int $repairCalls = 0,
+        /**
+         * The first fatal violation's CODE, for the client's own wording of what went wrong (Д-19).
+         * Null on a failure that has no verdict — a vendor error, a write that did not land.
+         */
+        public ?string $failCode = null,
     ) {}
 }

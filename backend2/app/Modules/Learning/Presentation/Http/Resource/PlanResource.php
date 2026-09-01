@@ -70,6 +70,7 @@ final class PlanResource
             'status' => $day->status,
             'generation_attempts' => $day->generationAttempts,
             'fail_reason' => $day->failReason,
+            'fail_code' => $day->failCode,
             'term_budget' => $day->termBudget,
             'outcome' => $day->outcomes,
             'checkpoints' => $day->checkpoints,

@@ -2569,13 +2569,30 @@ components:
         status:
           type: string
           enum: [pending, generating, ready, failed, done]
+          description: >-
+            `pending` — nothing has claimed this day yet (it may or may not be queued);
+            `generating` — a worker holds it right now, which is the only thing that writes this
+            value; `ready` — the material exists; `failed` — both day calls are spent; `done` — the
+            learner walked it. A client must not say «собирается» over a `pending` day: the live run
+            labelled two untouched days that way and neither was being built (Д-20).
         generation_attempts:
           type: integer
           description: >-
-            Claims, not failures, and the cap is two. A day that failed the validator twice is a
-            thing a person looks at — retrying it silently is how a broken prompt spends a plan's
-            whole budget on one day.
+            DAY calls (P2), not failures, and the cap is two. A day that failed the validator twice
+            is a thing a person looks at — retrying it silently is how a broken prompt spends a
+            plan's whole budget on one day. Repair calls are counted separately and do not spend an
+            attempt (Д-18).
         fail_reason: { type: [string, 'null'] }
+        fail_code:
+          type: [string, 'null']
+          description: >-
+            The first fatal violation's CODE — `day.example_is_a_term`, `outline.target_language`
+            and the rest. Null unless `status` is `failed`. The client switches on this and words
+            the reason itself; `fail_reason` is Russian prose for the server's own logs and screens,
+            and is never the source of what the app displays. Codes the client does not know get a
+            neutral «не удалось собрать день» rather than a guess — the live run showed a day that
+            had failed on `day.example_is_a_term` telling the owner the model had answered in the
+            wrong language (Д-19).
         term_budget: { type: integer }
         outcome:
           type: array

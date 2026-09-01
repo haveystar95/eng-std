@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $status
  * @property int $generation_attempts
  * @property int $repair_calls
+ * @property string|null $fail_code
  * @property string|null $fail_reason
  * @property list<string>|null $generation_violations
  */

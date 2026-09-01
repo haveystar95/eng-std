@@ -46,6 +46,14 @@ final class PlanDayRefused extends RuntimeException
         string $message,
         public readonly array $violations,
         public readonly int $repairCalls,
+        /**
+         * The FIRST fatal violation's code — the only part of this verdict a CLIENT is given.
+         *
+         * A code and not a sentence, for the reason the whole class is built on: the prose is
+         * Russian, quotes the model's own cards and stays on the server. The screen needs to say
+         * what broke, and before it had this it said the same thing about everything (Д-19).
+         */
+        public readonly ?string $violationCode,
     ) {
         parent::__construct($message);
     }
@@ -56,6 +64,11 @@ final class PlanDayRefused extends RuntimeException
         $prose = array_map(static fn (PlanViolation $v): string => (string) $v, $violations);
         $addresses = array_map(static fn (PlanViolation $v): string => $v->address(), $violations);
 
-        return new self('День не прошёл валидатор: ' . implode('; ', $prose), $addresses, $repairCalls);
+        return new self(
+            'День не прошёл валидатор: ' . implode('; ', $prose),
+            $addresses,
+            $repairCalls,
+            $violations === [] ? null : $violations[0]->code,
+        );
     }
 }

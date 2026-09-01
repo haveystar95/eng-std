@@ -242,6 +242,7 @@ final readonly class GetPlanHandler
             status: $day->status()->value,
             generationAttempts: $day->generationAttempts(),
             failReason: $day->failReason(),
+            failCode: $day->failCode(),
             termBudget: is_int($brief['term_budget'] ?? null) ? $brief['term_budget'] : 0,
             outcomes: $outcomes,
             checkpoints: $checkpoints,

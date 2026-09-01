@@ -141,7 +141,26 @@ it('spends exactly two calls on a day that fails twice, and tells the second one
 
     expect($row->status)->toBe('failed')
         ->and($row->generation_attempts)->toBe(PlanDay::MAX_ATTEMPTS)
-        ->and($row->collection_id)->toBeNull();
+        ->and($row->repair_calls)->toBe(0)
+        ->and($row->collection_id)->toBeNull()
+        // THE CODE, not the prose. The screen has to be able to say what actually broke; before
+        // this it had one hard-coded sentence and used it for every failure there is (Д-19). It is
+        // the FIRST fatal violation of the last attempt — read off the stored list rather than
+        // named here, because that IS the contract.
+        ->and($row->fail_code)->toBe(
+            explode(': ', explode(' — ', (string) json_decode((string) $row->generation_violations, true)[0])[1])[0],
+        );
+
+    // …and it reaches the client, beside the status and never instead of it.
+    $day = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$plan['id']}")
+        ->assertOk()
+        ->json('data.days.0');
+
+    expect($day['status'])->toBe('failed')
+        ->and($day['fail_code'])->toBe($row->fail_code)
+        // A code, never the Russian prose — that stays on the server (31.08).
+        ->and($day['fail_code'])->toStartWith('day.');
 
     // The first call carries the day and nothing else; the second carries the first answer's
     // verdict — as ADDRESSES.

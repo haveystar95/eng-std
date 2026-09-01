@@ -121,6 +121,10 @@ final readonly class GeneratePlanDayHandler
                 // and P2R has made ONE day call and still has its second, which is exactly what
                 // `MAX_ATTEMPTS` was written to allow (Д-18). A vendor failure repaired nothing.
                 repairCalls: $e instanceof PlanDayRefused ? $e->repairCalls : 0,
+                // The one machine-readable word of the verdict, for the screen the owner reads.
+                // A vendor failure has no verdict, so it carries none and the client falls back to
+                // «не удалось собрать день» — which is exactly what happened (Д-19).
+                failCode: $e instanceof PlanDayRefused ? $e->violationCode : null,
             ));
 
             return;

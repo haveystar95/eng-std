@@ -97,6 +97,8 @@ final class PlanDay
         private array $lastViolations = [],
         /** {@see chargeRepairs()} — the P2R calls, counted apart from the P2 ones. */
         private int $repairCalls = 0,
+        /** {@see failCode()} — the machine-readable half of {@see $failReason}. */
+        private ?string $failCode = null,
     ) {}
 
     /**
@@ -141,11 +143,12 @@ final class PlanDay
         ?string $failReason,
         array $lastViolations = [],
         int $repairCalls = 0,
+        ?string $failCode = null,
     ): self {
         return new self(
             $id, $planId, $dayIndex, $kind, $collectionId, $title, $outcomeText, $skills,
             $roleBrief, $scheduledOn, $status, $generationAttempts, $failReason, $lastViolations,
-            $repairCalls,
+            $repairCalls, $failCode,
         );
     }
 
@@ -169,6 +172,7 @@ final class PlanDay
         $this->status = PlanDayStatus::Generating;
         $this->generationAttempts++;
         $this->failReason = null;
+        $this->failCode = null;
 
         return true;
     }
@@ -188,6 +192,7 @@ final class PlanDay
         $this->collectionId = $collectionId;
         $this->status = PlanDayStatus::Ready;
         $this->failReason = null;
+        $this->failCode = null;
         // The history existed to tell the NEXT attempt what to avoid, and there is no next
         // attempt. Keeping it would make a written day carry a list of things wrong with a day
         // that no longer exists.
@@ -222,10 +227,15 @@ final class PlanDay
      *
      * @param  list<string>  $violations  the verdict as ADDRESSES, one line per check
      * @param  int  $repairCalls  P2R calls this run made: 0 or 1
+     * @param  string|null  $code  the FIRST fatal violation's code — the one thing about this
+     *                             failure the client is allowed to see, so it can say what actually
+     *                             happened in its own words instead of guessing (Д-19).
+     *                             {@see failCode()}
      */
-    public function markFailed(string $reason, array $violations = [], int $repairCalls = 0): void
+    public function markFailed(string $reason, array $violations = [], int $repairCalls = 0, ?string $code = null): void
     {
         $this->failReason = mb_substr(trim($reason), 0, 500);
+        $this->failCode = $code === null || trim($code) === '' ? null : mb_substr(trim($code), 0, 64);
         $this->chargeRepairs($repairCalls);
         $this->status = $this->generationAttempts >= self::MAX_ATTEMPTS
             ? PlanDayStatus::Failed
@@ -369,6 +379,20 @@ final class PlanDay
     public function failReason(): ?string
     {
         return $this->failReason;
+    }
+
+    /**
+     * WHAT KIND OF FAILURE this was, as a code — the client's half of {@see failReason()}.
+     *
+     * The prose stays on the server (`PlanViolation::$detail` is Russian by decision, 31.08) and
+     * this crosses the wire, so the screen can name the actual defect in its own l10n. Before it
+     * existed the client had one hard-coded sentence and used it for everything: a day that failed
+     * on `day.example_is_a_term` told the owner the model had answered in the wrong language
+     * (Д-19).
+     */
+    public function failCode(): ?string
+    {
+        return $this->failCode;
     }
 
     /**

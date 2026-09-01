@@ -23,6 +23,12 @@ final readonly class PlanDayView
         public string $status,
         public int $generationAttempts,
         public ?string $failReason,
+        /**
+         * WHY the day burned, as a code the client switches on — `day.example_is_a_term` and the
+         * rest. Never the prose: `PlanViolation::$detail` is Russian and stays on the server, so
+         * the screen owns its own wording (Д-19). Null unless the day is `failed`.
+         */
+        public ?string $failCode,
         public int $termBudget,
         public array $outcomes,
         public array $checkpoints,

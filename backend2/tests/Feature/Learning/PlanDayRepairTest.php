@@ -252,6 +252,9 @@ it('does not call the repair at all when more than half the day is broken', func
 
     $row = dayRow($planId);
 
+    // The API carries the CODE of what broke, so the screen can say it in its own words (Д-19).
+    expect($row->fail_code)->toBe(PlanDayValidator::IMAGE_PROMPT_MISSING);
+
     expect($model->repairCalls())->toBe(0)
         // The old path, unchanged: two whole-day calls, and the second is told where the first broke.
         ->and($model->dayCalls())->toBe(2)

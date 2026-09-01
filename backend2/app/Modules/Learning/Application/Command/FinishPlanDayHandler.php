@@ -67,6 +67,7 @@ final readonly class FinishPlanDayHandler
                     $command->failReason ?? 'день вернулся без коллекции',
                     $command->failViolations,
                     $command->repairCalls,
+                    $command->failCode,
                 );
                 $this->days->save($day);
 
