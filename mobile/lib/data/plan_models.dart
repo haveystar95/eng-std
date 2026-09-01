@@ -699,7 +699,7 @@ class PlanSession implements PlanSessionEnvelope {
     required this.tasks,
   });
 
-  /// Every task that belongs to the day, in order — `tasks` minus the top-up.
+  /// Every task that belongs to TODAY, in order — `tasks` minus the revision of earlier days.
   List<PlanSessionTask> get dayTasks => tasks.where((t) => t.isDay).toList(growable: false);
 
   final String sessionId;

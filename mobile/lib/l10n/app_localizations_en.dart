@@ -2823,17 +2823,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planReviewSection => 'Revision';
-
-  @override
-  String planReviewFromPlan(String title) {
-    return 'From plan: $title';
-  }
-
-  @override
-  String planReviewFromCollection(String title) {
-    return 'From collection: $title';
-  }
+  String get planReviewSection => 'Revision · from earlier days';
 
   @override
   String get planStageAClosed => 'Stage A closed';

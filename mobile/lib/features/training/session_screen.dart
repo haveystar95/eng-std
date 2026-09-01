@@ -661,29 +661,19 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                               ),
                               const SizedBox(height: 18),
                             ],
-                            // THE SEAM. The day ends here and the top-up from the learner's own
-                            // queue begins — different material, and it must not read as more of
-                            // today's. Drawn once, on the first card past the day, because a label
-                            // over every review card would be noise.
-                            if (_playing == plan.dayTaskCount && plan.dayTaskCount > 0) ...[
+                            // THE SEAM. Today's cards end here and the revision of this plan's
+                            // EARLIER days begins. Drawn once, on the first card past the day,
+                            // because a label over every review card would be noise.
+                            //
+                            // Asked of the card itself rather than compared against
+                            // [dayTaskCount]: the count says how many cards are the day's, which is
+                            // an index into the running order only for as long as the day happens
+                            // to come first. «Первая карточка, которая не сегодняшняя» is the thing
+                            // actually being drawn, and it stays true whatever the order becomes.
+                            if (!plan.isDayTaskAt(_playing) &&
+                                (_playing == 0 || plan.isDayTaskAt(_playing - 1))) ...[
                               _SectionSeam(label: l.planReviewSection),
                               const SizedBox(height: 18),
-                            ],
-                            // «Из плана: Отпуск в Италии» — said on EVERY review card, not only
-                            // the first: the seam scrolls away and the question «почему мне это
-                            // показывают» arrives on card nine, not on card one.
-                            if (plan.originAt(_playing) case final origin?) ...[
-                              Text(
-                                (origin.kind == 'plan'
-                                        ? l.planReviewFromPlan(origin.title)
-                                        : l.planReviewFromCollection(origin.title))
-                                    .toUpperCase(),
-                                style: AppText.blockLabel.copyWith(
-                                  letterSpacing: 1.32,
-                                  color: AppColors.tertiary,
-                                ),
-                              ),
-                              const SizedBox(height: 14),
                             ],
                             // WHOSE LINE THIS IS. Only on the interlocutor's — the learner's own
                             // needs no caption, and a label on every card would be noise. Without

@@ -4275,23 +4275,11 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
   String planReviewCount(int count);
 
-  /// No description provided for @planReviewSection.
+  /// Шов в сессии плана: дальше идут карточки, введённые ПРОШЛЫМИ днями этого же плана. Раньше здесь стояло просто «Повторение», а под каждой карточкой — «Из плана: <название>»; после PLAN-FIX-3 в сессии плана не бывает чужих карточек, и название всегда было бы своим собственным.
   ///
   /// In ru, this message translates to:
-  /// **'Повторение'**
+  /// **'Повторение · из прошлых дней'**
   String get planReviewSection;
-
-  /// No description provided for @planReviewFromPlan.
-  ///
-  /// In ru, this message translates to:
-  /// **'Из плана: {title}'**
-  String planReviewFromPlan(String title);
-
-  /// No description provided for @planReviewFromCollection.
-  ///
-  /// In ru, this message translates to:
-  /// **'Из коллекции: {title}'**
-  String planReviewFromCollection(String title);
 
   /// Строка итога дня.
   ///

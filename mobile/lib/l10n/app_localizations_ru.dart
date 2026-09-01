@@ -2953,17 +2953,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get planReviewSection => 'Повторение';
-
-  @override
-  String planReviewFromPlan(String title) {
-    return 'Из плана: $title';
-  }
-
-  @override
-  String planReviewFromCollection(String title) {
-    return 'Из коллекции: $title';
-  }
+  String get planReviewSection => 'Повторение · из прошлых дней';
 
   @override
   String get planStageAClosed => 'Ступень A пройдена';

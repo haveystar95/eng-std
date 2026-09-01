@@ -2162,14 +2162,9 @@
   "@planReviewCount": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "planReviewSection": "Повторение",
-  "planReviewFromPlan": "Из плана: {title}",
-  "@planReviewFromPlan": {
-    "placeholders": { "title": { "type": "String" } }
-  },
-  "planReviewFromCollection": "Из коллекции: {title}",
-  "@planReviewFromCollection": {
-    "placeholders": { "title": { "type": "String" } }
+  "planReviewSection": "Повторение · из прошлых дней",
+  "@planReviewSection": {
+    "description": "Шов в сессии плана: дальше идут карточки, введённые ПРОШЛЫМИ днями этого же плана. Раньше здесь стояло просто «Повторение», а под каждой карточкой — «Из плана: <название>»; после PLAN-FIX-3 в сессии плана не бывает чужих карточек, и название всегда было бы своим собственным."
   },
   "planStageAClosed": "Ступень A пройдена",
   "@planStageAClosed": { "description": "Строка итога дня." },

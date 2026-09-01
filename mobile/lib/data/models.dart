@@ -614,22 +614,33 @@ abstract interface class PlanSessionEnvelope {
   /// Null for the day's own words, so the «слово со дня K» line is drawn only when it says something.
   int? carriedFromAt(int i);
 
-  /// Is the card at [i] the DAY's own material, rather than the top-up from the ordinary queue?
+  /// Is the card at [i] TODAY's own material, rather than the revision of an earlier day?
   ///
-  /// A plan session deals its day and then tops the sitting up with whatever else the learner has
-  /// due. Both are worth playing and only the first is the DAY: counting them together is how a day
-  /// of fourteen cards was announced as «День 1 пройден · 21 фраза и слово», seven of them from
-  /// another plan and another language.
+  /// A plan session deals its day and then revises the words its EARLIER days introduced. Both are
+  /// worth playing and only the first is the DAY: counting them together is how a day of fourteen
+  /// cards was announced as «День 1 пройден · 21 фраза и слово».
   ///
-  /// The server says it per task (`section`) and says where the seam falls ([dayTaskCount]); this
-  /// asks it per card, because the screen holds cards.
+  /// (It used to mean «not the top-up from the learner's ordinary queue». There is no top-up: since
+  /// PLAN-FIX-3 a plan's sitting holds that plan's own cards and nothing else, so the only thing
+  /// left to tell apart is today's day from the days before it.)
+  ///
+  /// The server says it per task (`section`); this asks it per card, because the screen holds cards.
   bool isDayTaskAt(int i);
 
-  /// How many of the session's cards are the day's own — the index the top-up starts at.
+  /// How many of the session's cards are the day's own — what «N из M» and the day summary count.
+  ///
+  /// A COUNT, not an index. It happens to be where the seam falls while the day is dealt first, and
+  /// the screen deliberately does not rely on that: the seam is drawn at the first card that is not
+  /// the day's ([isDayTaskAt]).
   int get dayTaskCount;
 
-  /// «Отпуск в Италии» — where the review card at [i] came from, or null when it is the day's own
-  /// material (which needs no explanation) or the server did not say.
+  /// Where the card at [i] came from, when that is somewhere other than this plan — or null.
+  ///
+  /// Always null today, and kept on the wire on purpose. It used to carry «Из плана: Отпуск в
+  /// Италии» / «Из коллекции: Аэропорт» over a card the top-up had brought in; with the top-up gone
+  /// every card of a plan sitting is that plan's own, and naming the plan the learner is IN over a
+  /// card of its earlier day is the sentence that read as a lie on the owner's screen (01.09). The
+  /// field survives so a client need not change the day a foreign card is ever dealt again.
   ({String kind, String title})? originAt(int i);
 
   /// `line | word | chunk` — what the card at [i] DOES in its day, or null outside a plan day.
