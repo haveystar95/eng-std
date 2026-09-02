@@ -241,12 +241,39 @@ it('counts, and no longer refuses, a filler the day never taught', function () {
     // on their own shelf. The P2 v0.4 prompt never states this rule; the repair prompt does, and
     // the model broke it three times running.
     //
-    // So the check stayed and its rank changed: the day ships and the mismatch is counted. The
-    // decision is the owner's to close (add the sentence to P2 v0.4 and it goes back to fatal).
+    // So on a LINE the check stayed and its rank changed: the day ships and the mismatch is counted.
+    // The owner closed it on 02.09 — the line keeps the counter, the prompt gains a preference
+    // («prefer as the key a word or chunk from today's shelves»), and the word keeps the refusal
+    // (the test below).
     $day = planCandidate(['say' => [1 => ['filler' => 'the spine']]]);
 
     expect(planCodes($this->validator->validate($day)))->not->toContain(PlanDayValidator::FILLER_NOT_CARD)
         ->and(planCodes($this->validator->warnings($day)))->toContain(PlanDayValidator::FILLER_MISMATCH_WARNING);
+});
+
+it('refuses a word whose example does not contain the word', function () {
+    // THE OTHER RANK OF THE SAME CODE. On a line the rule was unsatisfiable; here it is the
+    // mechanics of the card: the example is the sentence the gap is cut out of, and
+    // `PlayabilityAssessor` calls a term clozeable only when its example contains the answer. An
+    // example that never says «prescription» does not make a weaker card, it makes a card the
+    // trainer cannot build — and the model is only being asked to use the word it just wrote.
+    $day = planCandidate(['words' => [1 => ['example' => 'The doctor wrote something for the pain.']]]);
+
+    expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::FILLER_NOT_CARD);
+});
+
+it('refuses a connector whose example does not contain the connector', function () {
+    $day = planCandidate(['chunks' => [1 => ['example' => 'Please wait until the doctor is free.']]]);
+
+    expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::FILLER_NOT_CARD);
+});
+
+it('accepts a word standing in its own sentence, however the sentence is punctuated', function () {
+    // Word boundaries and nothing stricter: case, commas and the full stop are not the card's
+    // business. «form» inside «information» is still refused — that is a gap cut inside a word.
+    $day = planCandidate(['words' => [1 => ['example' => 'Take this Prescription, please, to the pharmacy.']]]);
+
+    expect(planCodes($this->validator->validate($day)))->not->toContain(PlanDayValidator::FILLER_NOT_CARD);
 });
 
 it('accepts a filler the day teaches inside a bigger piece', function () {
@@ -326,6 +353,16 @@ it('refuses two examples that are one sentence with the term swapped — Д-29',
     ]);
 
     expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::EXAMPLE_SKELETON_CLONE);
+});
+
+it('refuses an example that arrives without its translation — вторая половина Д-29', function () {
+    // The live run found one sentence written into TWO example rows, the second of them
+    // untranslated. That duplicate was the server's and is fixed where it was made; this is the
+    // same half-card arriving from the model instead, and it lands in the day just as untranslated.
+    $day = planCandidate(['words' => [1 => ['example_translation' => '']]]);
+
+    expect(planCodes($this->validator->validate($day)))
+        ->toContain(PlanDayValidator::EXAMPLE_WITHOUT_TRANSLATION);
 });
 
 it('refuses basic vocabulary as a card from «Понимаю простое» up', function () {

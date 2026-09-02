@@ -2726,6 +2726,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'two examples turned out to be one sentence with the word swapped';
 
   @override
+  String get planFailExampleWithoutTranslation =>
+      'an example arrived with no translation beside it, so there would be nothing to read it by';
+
+  @override
   String get planFailNotTargetLanguage => 'the material came back in the wrong language';
 
   @override

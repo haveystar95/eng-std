@@ -39,6 +39,7 @@ String planFailReason(AppLocalizations l, String? failCode) => switch (failCode)
   'card.clone' => l.planFailTermRepeated,
   'card.example_is_a_term' => l.planFailExampleIsATerm,
   'card.example_skeleton_clone' => l.planFailExampleDuplicated,
+  'card.example_without_translation' => l.planFailExampleWithoutTranslation,
   'card.word_is_basic' => l.planFailWordIsBasic,
   'card.kind_size' => l.planFailKindSize,
   'card.term_is_a_name' => l.planFailTermIsAName,

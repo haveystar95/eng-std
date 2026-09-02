@@ -918,6 +918,7 @@
   "@planFailWhy": { "placeholders": { "reason": { "type": "String" } } },
   "planFailExampleIsATerm": "a card's example repeated another card of the day instead of showing the word in a sentence",
   "planFailExampleDuplicated": "two examples turned out to be one sentence with the word swapped",
+  "planFailExampleWithoutTranslation": "an example arrived with no translation beside it, so there would be nothing to read it by",
   "planFailNotTargetLanguage": "the material came back in the wrong language",
   "planFailKeyIsTheTerm": "a card's translation repeated the card itself — in the same letters or in another alphabet",
   "planFailTermIsAName": "a proper name cannot take a card — names are not translated",

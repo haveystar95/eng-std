@@ -4125,6 +4125,12 @@ abstract class AppLocalizations {
   /// **'два примера оказались одним предложением с подменённым словом'**
   String get planFailExampleDuplicated;
 
+  /// fail_code = card.example_without_translation. Вторая половина Д-29: предложение на изучаемом языке без перевода рядом.
+  ///
+  /// In ru, this message translates to:
+  /// **'к примеру не приехал перевод, и читать его было бы нечем'**
+  String get planFailExampleWithoutTranslation;
+
   /// fail_code = outline.target_language.
   ///
   /// In ru, this message translates to:

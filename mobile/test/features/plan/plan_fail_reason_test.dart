@@ -35,6 +35,7 @@ void main() {
     'card.clone',
     'card.example_is_a_term',
     'card.example_skeleton_clone',
+    'card.example_without_translation',
     'card.word_is_basic',
     'card.kind_size',
     'card.term_is_a_name',

@@ -2087,6 +2087,9 @@
   "planFailExampleDuplicated": "два примера оказались одним предложением с подменённым словом",
   "@planFailExampleDuplicated": { "description": "fail_code = card.example_skeleton_clone. Раньше — day.example_duplicated: то же самое, «один пример на несколько карточек», только теперь сервер видит его по скелету предложения." },
 
+  "planFailExampleWithoutTranslation": "к примеру не приехал перевод, и читать его было бы нечем",
+  "@planFailExampleWithoutTranslation": { "description": "fail_code = card.example_without_translation. Вторая половина Д-29: предложение на изучаемом языке без перевода рядом." },
+
   "planFailNotTargetLanguage": "материал вернулся не на том языке",
   "@planFailNotTargetLanguage": { "description": "fail_code = outline.target_language." },
 

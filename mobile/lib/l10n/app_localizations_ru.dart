@@ -2854,6 +2854,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'два примера оказались одним предложением с подменённым словом';
 
   @override
+  String get planFailExampleWithoutTranslation =>
+      'к примеру не приехал перевод, и читать его было бы нечем';
+
+  @override
   String get planFailNotTargetLanguage => 'материал вернулся не на том языке';
 
   @override

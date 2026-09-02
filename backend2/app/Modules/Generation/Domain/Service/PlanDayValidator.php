@@ -74,12 +74,20 @@ final class PlanDayValidator
     public const TRANSLATION_MISSING_KEY = 'card.translation_missing_key';
 
     /**
-     * The filler is not a word or connector of THIS day.
+     * WHAT STANDS IN THE GAP IS NOT WHAT THE DAY TEACHES — one code, two ranks, split by shelf
+     * (решение владельца от 02.09 по итогам живого прогона).
      *
-     * RETIRED AS A REFUSAL and kept as a name: the check itself lives on as
-     * {@see FILLER_MISMATCH_WARNING}, for the reasons the live run wrote at its old site. The
-     * constant stays because the mobile client words this code and old failed days still carry it
-     * in `fail_code` — a code that stops being emitted is not a code that stops being READ.
+     * **Fatal on `words` and `chunks`:** the card's own example must contain the card, word for
+     * word. That gap is where the word is trained — {@see \App\Modules\Learning\Domain\Service\PlayabilityAssessor}
+     * marks a term clozeable only if its example contains the answer, so an example without its own
+     * word does not make a weaker card, it makes a card the trainer cannot cut a gap out of at all.
+     * Machine-checkable, model-satisfiable, and the mechanics of «слово тренируется в своей дырке».
+     *
+     * **Counted on `say` and `ask`** ({@see FILLER_MISMATCH_WARNING}): there the key is a word
+     * INSIDE the line rather than the whole card, and demanding that it be a card of the day made
+     * two gates contradict each other. Three live days died on it before the rank moved.
+     *
+     * **Silent on `hear` and `numbers`:** those are understood and never produced.
      */
     public const FILLER_NOT_CARD = 'card.filler_not_card';
 
@@ -91,6 +99,18 @@ final class PlanDayValidator
 
     /** Two examples are ONE sentence with the term swapped — Д-29. {@see ExampleSkeleton} */
     public const EXAMPLE_SKELETON_CLONE = 'card.example_skeleton_clone';
+
+    /**
+     * An example sentence with no translation beside it.
+     *
+     * The other half of Д-29. The duplicate example row the live run found — one sentence, two
+     * rows, the second one untranslated — was the SERVER's doing and is fixed where it was made
+     * ({@see \App\Modules\Generation\Application\Command\GeneratePlanDayHandler}, `examples: []`).
+     * This is the same shape arriving from the other direction: a model that writes the sentence
+     * and leaves `example_translation` empty puts exactly that half-card into the day, and the
+     * learner meets a sentence in a language they are still learning with nothing to read it by.
+     */
+    public const EXAMPLE_WITHOUT_TRANSLATION = 'card.example_without_translation';
 
     /** Basic vocabulary as a card — fatal from «Понимаю простое» up. {@see BasicVocabulary} */
     public const WORD_IS_BASIC = 'card.word_is_basic';
@@ -576,6 +596,43 @@ final class PlanDayValidator
                     'example',
                     'пример — это дословно карточка дня, а не предложение с ней внутри',
                     'the `example` is, word for word, a card of this day rather than a sentence containing one',
+                );
+
+                continue;
+            }
+
+            // THE WORD HAS TO BE IN ITS OWN SENTENCE. Only `words` and `chunks` carry an example,
+            // and the example is the sentence the gap is cut out of: `PlayabilityAssessor` calls a
+            // term clozeable when its example contains the answer, so «cough» explained by a
+            // sentence that never says «cough» loses the mode outright. Unlike the same rule on a
+            // line's filler, this one the model can always satisfy — it is being asked to use the
+            // word it just wrote (решение владельца, 02.09).
+            $shelf = PlanShelf::tryFromName($item->arrayName());
+            if ($shelf?->wantsExample() === true
+                && $item->text !== ''
+                && ! self::containsWords(self::fold($example), self::fold($item->text))) {
+                $out[] = PlanViolation::onCard(
+                    self::FILLER_NOT_CARD,
+                    $item,
+                    'example',
+                    "пример не содержит саму карточку «{$item->text}» — из такого предложения "
+                    . 'тренажёру нечего вырезать, и слово теряет свою дырку',
+                    'the `example` must contain this card\'s own `text`, word for word: it is the '
+                    . 'sentence the learner\'s gap is cut out of',
+                );
+
+                continue;
+            }
+
+            if (trim($item->exampleTranslation) === '') {
+                $out[] = PlanViolation::onCard(
+                    self::EXAMPLE_WITHOUT_TRANSLATION,
+                    $item,
+                    'example_translation',
+                    'у примера нет перевода — ученик читает предложение на языке, который ещё учит, '
+                    . 'и понять его ему нечем',
+                    'this `example` has no `example_translation`; a sentence in the language being '
+                    . 'learned needs its gloss',
                 );
 
                 continue;

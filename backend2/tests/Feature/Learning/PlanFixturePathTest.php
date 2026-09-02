@@ -160,8 +160,26 @@ it('walks S1 from the skeleton to a ready day 1, and every gate lets it through'
 
     // ONE example row per card, with its translation — the duplicate the live run found (Д-29,
     // «побочно») was a second, unscoped row that carried none.
-    $examples = DB::table('term_examples')->whereIn('term_id', $terms->pluck('id'))->get();
-    expect($examples->groupBy('term_id')->map->count()->max())->toBe(1);
+    $examples = DB::table('term_examples')
+        ->whereIn('term_id', $terms->pluck('id'))
+        ->where('scope_collection_id', $day1->collection_id)
+        ->get();
+    expect($examples->groupBy('term_id')->map->count()->max())->toBe(1)
+        // …and the row that survived is a whole card: the duplicate was recognisable precisely by
+        // having no gloss, so «ровно одна строка» and «строка с переводом» are one assertion split
+        // in two. The model's side of the same defect is `card.example_without_translation`.
+        ->and($examples->whereNull('sentence_translation'))->toHaveCount(0)
+        ->and($examples->where('sentence_translation', ''))->toHaveCount(0);
+
+    // …and the sentence exists ONCE in the whole table, not once in scope and once beside it. That
+    // pairing — the same sentence twice, the unscoped copy carrying no gloss — is the exact shape
+    // Д-29 found, and it is invisible to a query that only looks inside the day's own scope.
+    $everywhere = DB::table('term_examples')->whereIn('term_id', $terms->pluck('id'))->get();
+    $duplicated = $everywhere
+        ->groupBy(static fn (object $row): string => $row->term_id . '|' . $row->sentence)
+        ->filter(static fn ($rows): bool => $rows->count() > 1);
+
+    expect($duplicated)->toHaveCount(0);
 });
 
 it('deals the ready day as a session, giving each card the chain its kind earns', function () {
