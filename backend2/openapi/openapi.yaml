@@ -2048,6 +2048,28 @@ paths:
         '404': { description: No such plan for this learner }
         '409': { description: The plan has already ended }
 
+  /plans/{planId}/complete:
+    post:
+      tags: [Plans]
+      summary: «Подготовка завершена» — the plan run to its end
+      description: >-
+        Terminal, and the same ARCHIVE `abandon` performs: the plan's reason comes off every pair it
+        claimed, and a pair with no other reason left leaves the pool with it. Everything is kept —
+        the days, the cards, the whole review log — and what the learner wants out of it they add
+        back to «Учить» themselves.
+
+
+        The morning-of counterpart to `feedback`, which closes the plan the evening AFTER the event.
+        Without it a learner who walked the final day's rehearsal had nowhere to say the plan was
+        finished, and the final day could not be passed from the app at all (Д-27).
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+        '409': { description: The plan has already ended — the client reads this as «already done» }
+
   /sync/cursor:
     get:
       tags: [Study]

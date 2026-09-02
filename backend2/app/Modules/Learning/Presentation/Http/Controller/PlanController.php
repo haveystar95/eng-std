@@ -135,6 +135,21 @@ final class PlanController
     }
 
     /**
+     * «ПОДГОТОВКА ЗАВЕРШЕНА» — the plan run to its end, closed by the learner.
+     *
+     * The third ending, and the one the app could not reach. Completing was only ever written by
+     * {@see \App\Modules\Learning\Application\Command\RecordPlanFeedbackHandler}, which asks how
+     * the EVENT went — the evening after. A learner who walks the final day's rehearsal that morning
+     * has finished the plan and had nowhere to say so: the live run had to complete it from tinker
+     * (Д-27). Same command, same archive of the words, and idempotent for the same reason every
+     * ending is.
+     */
+    public function complete(Request $request, string $planId): JsonResponse
+    {
+        return $this->finish($request, $planId, PlanEnding::Complete);
+    }
+
+    /**
      * Every plan this learner has run, newest first — the finished one and the archive under it.
      *
      * Summaries, not whole plans: a full read runs the progress computation per day, and this is a

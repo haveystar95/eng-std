@@ -3034,11 +3034,28 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get planWordsReleasedTitle => 'Слова плана ушли в общее повторение';
+  String get planWordsReleasedTitle => 'Слова плана остались в архиве';
 
   @override
   String get planWordsReleasedBody =>
-      'Они будут появляться в ежедневных занятиях, чтобы не пропасть.';
+      'Они никуда не делись — ступени, расписание и вся история на месте. Сами в ежедневные занятия они не придут: чтобы вернуть слово в работу, открой его карточку и нажми «Учить это слово».';
+
+  @override
+  String get planRehearsalDoneTitle => 'Подготовка завершена';
+
+  @override
+  String get planRehearsalDoneBody =>
+      'Ты прошёл весь материал плана. Он ушёл в архив: слова, ступени и вся история сохранены.';
+
+  @override
+  String get planRehearsalDoneAction => 'К плану';
+
+  @override
+  String get planRehearsalStart => 'Пройти прогон';
+
+  @override
+  String get planRehearsalLead =>
+      'Финальный день ничего не добавляет — это прогон всего, чему план научил. Пройди его перед событием.';
 
   @override
   String get planArchive => 'Архив';

@@ -25,7 +25,6 @@ class PlanDaySummary extends ConsumerStatefulWidget {
     super.key,
     required this.envelope,
     required this.cards,
-    required this.sessionId,
     required this.onDone,
   });
 
@@ -35,10 +34,6 @@ class PlanDaySummary extends ConsumerStatefulWidget {
   /// The cards actually played, so the summary can count phrases and words apart without a second
   /// request: the kind rides on every task already.
   final List<SessionCard> cards;
-
-  /// The run being closed. Reaching this screen IS «played to the end», and that is what
-  /// `study_sessions.ended_at` records — for a plan day as much as for an ordinary session.
-  final String sessionId;
 
   final VoidCallback onDone;
 
@@ -50,20 +45,14 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
   @override
   void initState() {
     super.initState();
-    // CLOSE THE RUN — the same two lines the ordinary summary has always run, and the whole of Д-1.
+    // The run was CLOSED when the last card was answered ({@see _SessionShellState._closeRun}) —
+    // not here, and not in the ordinary summary either. Both used to hold their own copy of that
+    // call, which is exactly how the plan's summary came to be the one without it: 103 answers in
+    // the live run and not one `POST /study/sessions/{id}/complete`, so the day stayed `ready` and
+    // day n+1 was never queued (Д-1, Д-28).
     //
-    // A plan session used to reach this screen and stop: `record` lived only in `_SessionSummary`,
-    // so `study_sessions.ended_at` stayed null, `CompleteStudySession` never ran, the day stayed
-    // `ready` and day n+1 was never queued. The live run answered 27 cards and sent not one
-    // `POST /study/sessions/{id}/complete`; the day only turned `done` when the learner opened the
-    // NEXT session, which is the very path PLAN-SESSION-FIX declared closed.
-    //
-    // Recorded in its own durable queue first, so a day finished in airplane mode still reaches
-    // `ended_at` when the network returns.
-    ref.read(reviewSyncProvider).flush();
-    ref.read(sessionCompletionSyncProvider).record(sessionId: widget.sessionId);
-    // …and read the plan back, so the day is struck through and the next one is «Собирается»
-    // without the learner having to leave and come back.
+    // What is still this screen's business is READING THE PLAN BACK, so the day is struck through
+    // and the next one says «Собирается» without the learner having to leave and come back.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) ref.invalidate(planProvider(widget.envelope.planId));
     });

@@ -20,6 +20,7 @@ import '../../data/practice/recognition_replay.dart';
 import '../../data/providers.dart';
 import '../home/home_providers.dart';
 import '../plan/plan_day_summary.dart';
+import '../plan/plan_rehearsal_done.dart';
 import '../plan/plan_ui.dart';
 import 'session/intro_card.dart';
 import 'session/session_exercise.dart';
@@ -43,6 +44,7 @@ class SessionScreen extends ConsumerStatefulWidget {
     this.onlyTermId,
     this.planId,
     this.planDayIndex,
+    this.planIsFinalDay = false,
   });
 
   final String title;
@@ -62,6 +64,14 @@ class SessionScreen extends ConsumerStatefulWidget {
   /// is the server's to know, and recomputing it here is how a screen and a session come to
   /// disagree about which day is being studied.
   final int? planDayIndex;
+
+  /// THE FINAL DAY — the run-through before the event, not a lesson (Д-27).
+  ///
+  /// It introduces nothing and owns no collection, so the server refuses to BUILD it (404) and the
+  /// screen that offered «Собрать день» dead-ended there: the plan could not be finished from the
+  /// app at all, and the live run closed it from tinker. Its session is the plan's own cards, once
+  /// each, and reaching the end of it is what finishes the plan.
+  final bool planIsFinalDay;
 
   /// «Тренировать слово» from a word's expanded card (кадр 16e): a practice session whose pool is
   /// this ONE term. Practice-only by construction — a scheduling session's composition is the
@@ -99,6 +109,7 @@ class SessionScreen extends ConsumerStatefulWidget {
     onlyTermId: onlyTermId,
     planId: planId,
     planDayIndex: planDayIndex,
+    planIsFinalDay: planIsFinalDay,
   );
 
   @override
@@ -203,6 +214,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                         practice: widget.practice,
                         targetLang: widget.targetLang,
                         onAgain: _again,
+                        planIsFinalDay: widget.planIsFinalDay,
                       ),
               ),
               // Invisible keyboard-warmup field (F20). 1×1, transparent, non-interactive.
@@ -230,11 +242,15 @@ class _SessionShell extends ConsumerStatefulWidget {
     required this.practice,
     required this.onAgain,
     this.targetLang,
+    this.planIsFinalDay = false,
   });
 
   final StudySession session;
   final bool practice;
   final String? targetLang;
+
+  /// The plan's run-through before the event — see [SessionScreen.planIsFinalDay].
+  final bool planIsFinalDay;
 
   /// Start another practice session (used by the practice summary's «Ещё раз»).
   final VoidCallback onAgain;
@@ -452,6 +468,27 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     _next();
   }
 
+  /// THE RUN IS OVER — and the server is told so HERE, not by whichever summary happens to be drawn.
+  ///
+  /// This is Д-1/Д-28. `sessionCompletionSync.record` used to live in the summary WIDGETS, one copy
+  /// each, and the plan's summary was the second one — so for the whole live run
+  /// `study_sessions.ended_at` stayed null on every plan sitting, `CompleteStudySession` never ran,
+  /// the day stayed `ready` and day n+1 was never queued. 103 answers, zero
+  /// `POST /study/sessions/{id}/complete`. The day only turned `done` when the learner opened the
+  /// NEXT plan session, which is the very path PLAN-SESSION-FIX had declared closed, and the plan
+  /// screen went on offering «Продолжить день 2» after day 3 (Д-40).
+  ///
+  /// Ending a session is a fact about the SESSION, so it belongs to the thing that owns one. Every
+  /// way to the end funnels through [_next], and a summary widget is now free to be only a screen.
+  ///
+  /// Both writes are durable queues, so a day finished in airplane mode — or an app killed on the
+  /// summary before the request left — still reaches `ended_at` on the next launch, when the home
+  /// screen drains them.
+  void _closeRun() {
+    ref.read(reviewSyncProvider).flush();
+    ref.read(sessionCompletionSyncProvider).record(sessionId: widget.session.sessionId);
+  }
+
   void _next() {
     PerfLog.instance.tapHandled('next');
     // The verdict's auto-pronounce is fired on a timer AFTER the feedback settles, so a «Дальше»
@@ -461,6 +498,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // this one method, including the last card's jump to the summary.
     unawaited(_pronouncer.stop());
     if (_pos + 1 >= _cards.length) {
+      _closeRun();
       setState(() => _finished = true);
     } else {
       setState(() {
@@ -506,18 +544,28 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final plan = widget.session.plan;
 
     if (_finished) {
+      // THE RUN-THROUGH ENDS THE PLAN, not a day (Д-27). The final day teaches nothing new — it is
+      // the plan's own cards once each — so the milestone at the end of it is «подготовка
+      // завершена», and that is the one act the app had no way of performing.
+      if (plan != null && widget.planIsFinalDay) {
+        return PlanRehearsalDone(
+          planId: plan.planId,
+          onDone: () => Navigator.of(context).pop(),
+        );
+      }
+
       // A plan day ends on its OWN summary (кадр 1c · 04): «День 1 пройден · 9 фраз и слов в
       // работе», the two lines that explain the stages, and what comes next. The ordinary summary
       // answers a different question — how the run went — and printing «повторено 14» over a day
       // the learner just finished would be a receipt where a milestone belongs.
+      //
+      // Neither of them closes the run any more: that happens in [_closeRun], when the last card is
+      // answered, because ending a session is a fact about the session and not about which screen
+      // is drawn over it (Д-1, Д-28).
       if (plan != null) {
         return PlanDaySummary(
           envelope: plan,
           cards: widget.session.cards,
-          // The run has to be CLOSED here too. It was not: `record` lived only in the ordinary
-          // summary, so a plan day reached its milestone screen and the server never learned the
-          // sitting had ended — the day stayed `ready` and the next one was never queued (Д-1).
-          sessionId: widget.session.sessionId,
           onDone: () => Navigator.of(context).pop(),
         );
       }
@@ -526,7 +574,6 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         results: _results,
         practice: widget.practice,
         onAgain: widget.onAgain,
-        sessionId: widget.session.sessionId,
         // Counted from the session's own cards, not from the answers: an intro produces no answer,
         // so it is not in [_results] at all — and the summary is reached only by playing every card,
         // which is what makes «dealt an intro» and «met the word» the same fact here.
@@ -957,7 +1004,6 @@ class _SessionSummary extends ConsumerStatefulWidget {
     required this.results,
     required this.practice,
     required this.onAgain,
-    required this.sessionId,
     this.newWords = 0,
   });
 
@@ -967,10 +1013,6 @@ class _SessionSummary extends ConsumerStatefulWidget {
   /// Words INTRODUCED in this run — see [newWordCount]. Practice introduces nothing and never
   /// shows this stat.
   final int newWords;
-
-  /// The run being closed. Reaching this screen IS the definition of «played to the end», which is
-  /// what `study_sessions.ended_at` records (QA-12).
-  final String sessionId;
 
   /// «Ещё раз» (practice only): start a fresh practice session right away.
   final VoidCallback onAgain;
@@ -983,14 +1025,10 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
   @override
   void initState() {
     super.initState();
-    // Push the session's answers now rather than waiting for the next trigger, then a gentle
-    // success — no confetti (§4е).
+    // A gentle success — no confetti (§4е). The run itself was closed when the last card was
+    // answered ({@see _SessionShellState._closeRun}), not here: which screen is drawn over the end
+    // of a session is not what «the session ended» means (Д-1, Д-28).
     WidgetsBinding.instance.addPostFrameCallback((_) => AppHaptics.success());
-    ref.read(reviewSyncProvider).flush();
-    // …and close the run. Recorded in its own durable queue first, so a session finished in
-    // airplane mode still reaches `ended_at` when the network returns; the server takes only the
-    // time from it and recomputes the rest from the run's own logs (QA-12).
-    ref.read(sessionCompletionSyncProvider).record(sessionId: widget.sessionId);
   }
 
   int get _total => widget.results.length;

@@ -2903,11 +2903,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planWordsReleasedTitle => 'The plan\'s words moved into general review';
+  String get planWordsReleasedTitle => 'The plan\'s words stayed in the archive';
 
   @override
   String get planWordsReleasedBody =>
-      'They will keep coming back in your daily sessions so they are not lost.';
+      'Nothing was lost — the rungs, the schedule and the whole history are still there. They will not come back into your daily sessions on their own: to take one back into study, open its card and tap “Learn this word”.';
+
+  @override
+  String get planRehearsalDoneTitle => 'Preparation complete';
+
+  @override
+  String get planRehearsalDoneBody =>
+      'You have been through everything the plan taught. It has gone to the archive: the words, the rungs and the whole history are kept.';
+
+  @override
+  String get planRehearsalDoneAction => 'Back to the plan';
+
+  @override
+  String get planRehearsalStart => 'Start the run-through';
+
+  @override
+  String get planRehearsalLead =>
+      'The final day adds nothing new — it is a run-through of everything the plan taught. Walk it before the event.';
 
   @override
   String get planArchive => 'Archive';

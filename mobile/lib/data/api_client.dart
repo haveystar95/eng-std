@@ -603,6 +603,21 @@ class ApiClient {
     return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
   }
 
+  /// «ПОДГОТОВКА ЗАВЕРШЕНА» — the plan run to its end (Д-27).
+  ///
+  /// Called when the final day's rehearsal is finished. A 409 means the plan is ALREADY ended — a
+  /// second tap, or a retry after the response was lost — and that is a success from here: the run
+  /// this reports really did happen, and the state it asks for is the state the server is in.
+  Future<LearningPlan> completePlan(String planId) async {
+    try {
+      final r = await _dio.post('/plans/$planId/complete');
+      return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response?.statusCode != 409) rethrow;
+      return plan(planId);
+    }
+  }
+
   /// One day with its terms and their stages.
   Future<PlanDayDetail> planDay(String planId, int dayIndex) async {
     final r = await _dio.get('/plans/$planId/days/$dayIndex');

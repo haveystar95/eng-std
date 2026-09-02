@@ -49,6 +49,10 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::post('/plans/{planId}/start', [PlanController::class, 'start']);
     Route::post('/plans/{planId}/pause', [PlanController::class, 'pause']);
     Route::post('/plans/{planId}/abandon', [PlanController::class, 'abandon']);
+    // «Подготовка завершена» — the last day walked, the plan closed by the learner. The other way
+    // in is `feedback`, which closes it the evening AFTER the event; this one is the morning of
+    // it, and without it the plan could not be finished from the app at all (Д-27).
+    Route::post('/plans/{planId}/complete', [PlanController::class, 'complete']);
     // The morning of the event, and the evening after it. The second one CLOSES the plan: answering
     // «как прошло» is the last thing it asks, and a plan whose event is over must stop holding
     // words out of the ordinary day.

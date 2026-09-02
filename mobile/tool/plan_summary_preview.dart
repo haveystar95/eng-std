@@ -44,7 +44,6 @@ class _PlanSummaryPreviewApp extends StatelessWidget {
           kinds: ['line', 'line', 'line', 'chunk', 'word', 'word', 'line', 'word'],
         ),
         cards: _cards,
-        sessionId: '01SESSION',
         onDone: () {},
       ),
     ),

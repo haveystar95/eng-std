@@ -95,6 +95,14 @@ class _DayBody extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final day = detail.day;
 
+    // THE FINAL DAY IS NOT AN UNBUILT DAY (Д-27). It introduces nothing and owns no collection, so
+    // there is nothing to generate and the server says so with a 404 — while this screen drew
+    // «Собрать день», took the refusal and printed «материал не прошёл проверку». What it actually
+    // is is a RUN-THROUGH of everything the plan has taught, and walking it finishes the plan.
+    if (day.kind == PlanDayKind.finalRun) {
+      return _FinalDay(plan: plan, day: day, targetLang: detail.targetLang);
+    }
+
     if (!day.status.hasMaterial) {
       return _NotWrittenYet(plan: plan, day: day);
     }
@@ -183,6 +191,74 @@ class _DayBody extends ConsumerWidget {
     ref.invalidate(planDayProvider((planId: plan.id, dayIndex: detail.day.index)));
     ref.invalidate(planProvider(plan.id));
     ref.invalidate(activePlanProvider);
+  }
+}
+
+/// THE FINAL DAY — the run-through before the event.
+///
+/// Deliberately the smallest screen that makes the plan finishable: the finished one is DAY-2. What
+/// it must not do is what it used to — offer to BUILD a day that has nothing to build, and then
+/// explain the refusal with a reason taken from a different failure (Д-27, and the same class as
+/// Д-19).
+class _FinalDay extends ConsumerWidget {
+  const _FinalDay({required this.plan, required this.day, this.targetLang});
+
+  final LearningPlan plan;
+  final PlanDay day;
+  final String? targetLang;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenH,
+        18,
+        AppSpacing.screenH,
+        AppSpacing.s26,
+      ),
+      children: [
+        Text(day.title, style: AppText.collectionNameScreen.copyWith(fontSize: 29, height: 1.18)),
+        const SizedBox(height: AppSpacing.s12),
+        Text(
+          l.planRehearsalLead,
+          style: AppText.translation.copyWith(
+            fontSize: 14.5,
+            height: 1.6,
+            color: AppColors.secondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.s22),
+        PrimaryButton(
+          label: l.planRehearsalStart,
+          minHeight: 52,
+          onPressed: () => _run(context, ref),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _run(BuildContext context, WidgetRef ref) async {
+    AppHaptics.light();
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SessionScreen(
+          title: day.title,
+          planId: plan.id,
+          planDayIndex: day.index,
+          planIsFinalDay: true,
+          targetLang: targetLang,
+        ),
+      ),
+    );
+    // The run-through closes the plan, so every plan surface is re-read — the archive is a
+    // different screen from the one the learner left.
+    ref.invalidate(planProvider(plan.id));
+    ref.invalidate(activePlanProvider);
+    ref.invalidate(planArchiveProvider);
+    if (context.mounted) Navigator.of(context).maybePop();
   }
 }
 

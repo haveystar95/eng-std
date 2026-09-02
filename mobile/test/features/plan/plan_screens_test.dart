@@ -421,6 +421,36 @@ void main() {
     expect(find.textContaining('не удалось собрать день'), findsOneWidget);
   });
 
+  testWidgets('the FINAL day offers the run-through, never «Собрать день» (Д-27)', (tester) async {
+    // The dead end. The final day introduces nothing and owns no collection, so the server refuses
+    // to build it (404) — and the screen drew «Собрать день» anyway, took the refusal and printed
+    // «материал не прошёл проверку». The plan could not be finished from the app at all; the live
+    // run closed it from tinker.
+    final finalDay = PlanDayDetail.fromJson({
+      'id': 'd5',
+      'index': 5,
+      'kind': 'final',
+      'title': 'Прогон перед событием',
+      'status': 'pending',
+      'plan_id': '01PLAN',
+      'terms': <dynamic>[],
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          planDayProvider((planId: '01PLAN', dayIndex: 5)).overrideWith((ref) async => finalDay),
+        ],
+        child: _app(PlanDayScreen(plan: _plan(focus: 5), dayIndex: 5)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Пройти прогон'), findsOneWidget);
+    expect(find.text('Собрать день'), findsNothing);
+    expect(find.text('Собрать план заново'), findsNothing);
+  });
+
   testWidgets('the interlocutor’s line is marked in the day’s register (Д-8)', (tester) async {
     final day = PlanDayDetail.fromJson({
       'id': 'd1',
@@ -531,7 +561,6 @@ void main() {
               _card('t2', 'word'),
               _card('t3', 'word'),
             ],
-            sessionId: '01SESSION',
             onDone: () {},
           ),
         ),
@@ -572,7 +601,6 @@ void main() {
               _card('r1', 'phrase'),
               _card('r2', 'word'),
             ],
-            sessionId: '01SESSION',
             onDone: () {},
           ),
         ),
@@ -588,11 +616,17 @@ void main() {
     expect(find.text('2 слова'), findsOneWidget);
   });
 
-  testWidgets('a finished plan day CLOSES the run — exactly once (Д-1)', (tester) async {
-    // The blocker, in one screen. `record` lived only in the ordinary summary, so a plan day
-    // reached its milestone and the server never learned the sitting had ended: `ended_at` stayed
-    // null, the day stayed `ready`, and day n+1 was never queued. The live run answered 27 cards
-    // and sent zero completions.
+  testWidgets('the milestone screen does NOT close the run — the session does (Д-1, Д-28)', (
+    tester,
+  ) async {
+    // The blocker, and the shape of its real fix. `record` used to live in the summary WIDGETS, one
+    // copy each, and this was the copy that was missing: the live run answered 103 cards over three
+    // plan days and sent zero completions. Copying the call in here would have fixed the symptom
+    // and left the design that produced it — so the call moved to the SESSION, which is the thing
+    // that actually ends, and this screen went back to being only a screen.
+    //
+    // The behaviour that replaced it is pinned end to end in plan_session_closes_test.dart, on the
+    // real session screen: the last card answered closes the run, whichever summary is drawn.
     final spy = _CompletionSpy();
 
     await tester.pumpWidget(
@@ -602,7 +636,6 @@ void main() {
           PlanDaySummary(
             envelope: const _Envelope(kinds: ['word']),
             cards: [_card('t1', 'word')],
-            sessionId: '01SESSION',
             onDone: () {},
           ),
         ),
@@ -610,13 +643,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(spy.recorded, ['01SESSION']);
-
-    // ONCE, not once per rebuild: the queue is keyed by session and would swallow a repeat, but a
-    // screen that fired on every frame would still be sending a request per frame.
-    await tester.pump();
-    await tester.pumpAndSettle();
-    expect(spy.recorded, ['01SESSION']);
+    expect(spy.recorded, isEmpty);
   });
 
   testWidgets('the day is counted by KIND — «4 слова · 2 связки · 8 фраз» (Д-5)', (tester) async {
@@ -638,7 +665,6 @@ void main() {
             // Every card a single word of text on purpose: if the count still read the text, all
             // fourteen would come out «слово» and the assertion below would fail loudly.
             cards: [for (var i = 0; i < kinds.length; i++) _card('t$i', 'word')],
-            sessionId: '01SESSION',
             onDone: () {},
           ),
         ),

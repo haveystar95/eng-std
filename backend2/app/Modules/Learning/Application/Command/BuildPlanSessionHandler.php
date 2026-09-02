@@ -177,9 +177,16 @@ final readonly class BuildPlanSessionHandler
         $strict = $dayIndex === $progress->focusDayIndex && $day->kind() === PlanDayKind::Intro;
         $knobs = $this->planSettings->knobsFor($plan->level());
 
-        $tasks = $strict
-            ? $this->strictTasks($plan, $progress, $dayIndex, $knobs)
-            : $this->softTasks($plan, $day, $knobs);
+        $tasks = match (true) {
+            $strict => $this->strictTasks($plan, $progress, $dayIndex, $knobs),
+            // THE FINAL DAY IS A RUN-THROUGH, not a lesson (Д-27). It introduces nothing and owns no
+            // collection, which is why asking to GENERATE it is a 404 — there is no material to
+            // buy. The material already exists: it is every card the plan has taught. Before this
+            // the client asked for a build, got the 404 and dead-ended, so the plan could not be
+            // finished from the app at all and the live run closed it from tinker.
+            $day->kind() === PlanDayKind::Final => $this->rehearsalTasks($plan, $progress, $knobs),
+            default => $this->softTasks($plan, $day, $knobs),
+        };
 
         $sessionId = $command->sessionId ?? StudySessionId::generate();
         $this->persist($sessionId, $plan, $day, $tasks, $strict);
@@ -416,6 +423,63 @@ final readonly class BuildPlanSessionHandler
 
         return $this->assembleTasks(
             $plan, $specs, $byTerm, $content, $knobs, $day->dayIndex(), $collectionId, isPractice: true,
+        );
+    }
+
+    /**
+     * THE FINAL DAY: every card the plan taught, once each, in the order it taught them.
+     *
+     * A run-through and nothing more. It is PRACTICE in the one sense the word has here — it
+     * schedules nothing, closes no stage and moves no focus — because by the time the learner opens
+     * it the teaching is done and what is left is the three minutes before the appointment. Grading
+     * a rehearsal would also be the one way a plan could go BACKWARDS on its last morning.
+     *
+     * The material is read off the days that have already been written ({@see PlanProgress}), which
+     * is the same content every other plan surface reads and therefore the same answer about what a
+     * day holds — including the day-scoped example, which a second read here would have lost.
+     *
+     * @return list<PlanSessionTaskView>
+     */
+    private function rehearsalTasks(LearningPlan $plan, PlanProgressView $progress, PlanKnobs $knobs): array
+    {
+        $budget = $this->taskBudget($plan);
+
+        $indexes = array_keys($progress->days);
+        sort($indexes);
+
+        $views = [];
+        $content = [];
+        $specs = [];
+        $seen = [];
+        foreach ($indexes as $index) {
+            $day = $progress->days[$index];
+            $content += $day->content;
+            foreach ($this->dayViews($plan, $day) as $termId => $view) {
+                $views[$termId] ??= $view;
+            }
+            foreach ($day->termIds as $termId) {
+                if (isset($seen[$termId]) || ! isset($day->content[$termId])) {
+                    continue;
+                }
+                $seen[$termId] = true;
+                $specs[] = ['term_id' => $termId, 'stage' => null, 'mode' => null,
+                    'ordinal' => 0, 'of' => 0, 'day' => $index, 'softened' => false,
+                    'source' => 'rehearsal', 'step' => null];
+            }
+        }
+
+        return $this->assembleTasks(
+            $plan,
+            array_slice($specs, 0, $budget),
+            $views,
+            $content,
+            $knobs,
+            // The day being studied is the FINAL one, and no card belongs to it — every one of them
+            // came from a teaching day, so every task is «Повторение» and the seam count is zero.
+            // That is the honest reading: this sitting introduces nothing.
+            $progress->focusDayIndex,
+            null,
+            isPractice: true,
         );
     }
 
