@@ -41,6 +41,32 @@ it('folds the typographic apostrophe onto the ASCII one', function () {
         ->toBe($this->normalizer->normalize("I'd like the pasta for go, please."));
 });
 
+// ---- the apostrophe joins letters, it does not separate words (Д-32) ---------------------------
+
+it('reads «He\'s five years old.» and «Hes five years old.» as one answer', function () {
+    // The live typing card. «He's» is outside the curated contraction map, so the apostrophe reached
+    // the punctuation pass and became a SPACE: «he s five years old» against the typed «hes five
+    // years old» — one edit apart, so an exact answer came back «Почти» and the schedule took a
+    // `hard` for it.
+    expect($this->normalizer->normalize("He's five years old."))
+        ->toBe($this->normalizer->normalize('Hes five years old.'));
+});
+
+it('accepts the typographic apostrophe on a word the contraction map has never heard of', function () {
+    // The phone types «’» and the store holds «'». Neither is a different answer.
+    expect($this->normalizer->normalize('He’s five years old.'))
+        ->toBe($this->normalizer->normalize("He's five years old."));
+});
+
+it('keeps the apostrophe where the mark itself is the difference under examination', function () {
+    // A possessive against a plural is a real correction, and the enrichment validator's «this
+    // corrects nothing» gate has to be able to see it.
+    expect($this->normalizer->canonicalizeKeepingApostrophe('accounts'))
+        ->not->toBe($this->normalizer->canonicalizeKeepingApostrophe("account's"))
+        ->and($this->normalizer->canonicalizeKeepingApostrophe('account’s'))
+        ->toBe($this->normalizer->canonicalizeKeepingApostrophe("account's"));
+});
+
 // ---- canonicalize vs normalize: whether the leading article is under examination ----------------
 
 it('drops the leading article in normalize — the answer key is indifferent to it', function () {

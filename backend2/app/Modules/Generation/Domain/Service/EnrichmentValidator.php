@@ -597,7 +597,12 @@ final class EnrichmentValidator
             // same fragment back as what it should have been. Compared through canonicalize() and NOT
             // normalize(), because the leading article normalize() drops is precisely what an
             // `article` row corrects — «bank account» → «a bank account» is the class working.
-            if ($this->normalizer->canonicalize($span) === $this->normalizer->canonicalize($correction)) {
+            //
+            // …and with the APOSTROPHE kept, for the same reason one level finer: since Д-32 the
+            // ordinary fold joins «account's» onto «accounts», which is right for an answer and
+            // would scrap every possessive-against-plural repair here.
+            if ($this->normalizer->canonicalizeKeepingApostrophe($span)
+                === $this->normalizer->canonicalizeKeepingApostrophe($correction)) {
                 $gates?->record($index, DistractorGate::NoOpCorrection);
 
                 continue;

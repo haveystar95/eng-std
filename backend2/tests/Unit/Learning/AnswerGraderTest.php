@@ -54,6 +54,18 @@ it('accepts an accepted synonym at full grade', function () {
     expect($grade)->toBe(Grade::Good);
 });
 
+it('grades the exact answer «He\'s five years old.» as CORRECT, apostrophe or not (Д-32)', function () {
+    // The live typing card. The answer key holds the ASCII apostrophe; the phone typed the sentence
+    // exactly and the server graded it `hard` — «Почти» on screen — because the mark became a space
+    // and left the two sides one edit apart. All three spellings are one answer.
+    $key = answerKey(["He's five years old."], isPhrase: true);
+
+    foreach (["He's five years old.", 'He’s five years old.', 'Hes five years old.'] as $typed) {
+        expect($this->grader->grade(new Answer($typed), ExerciseMode::Typing, $key, LatencyBaseline::insufficient()))
+            ->toBe(Grade::Good, "«{$typed}» is the same answer");
+    }
+});
+
 it('ignores letter case', function () {
     $grade = $this->grader->grade(new Answer('BANK'), ExerciseMode::Typing, answerKey(['bank']), LatencyBaseline::insufficient());
 

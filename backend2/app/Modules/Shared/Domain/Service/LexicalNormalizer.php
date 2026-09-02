@@ -35,6 +35,29 @@ final class LexicalNormalizer
      */
     public function canonicalize(string $value): string
     {
+        return $this->fold($value, keepApostrophe: false);
+    }
+
+    /**
+     * The same canonicalisation with the APOSTROPHE kept — for the callers comparing two SPELLINGS.
+     *
+     * {@see canonicalize()} folds «account's» onto «accounts», and that is right for an answer: the
+     * mark joins letters rather than separating words, and a learner who leaves it out has written
+     * the same word (Д-32). It is wrong for a comparison whose whole subject is the mark. The
+     * enrichment validator's «this correction corrects nothing» gate is exactly that: a distractor
+     * whose span is «accounts» and whose correction is «account's» is a real repair, and folded
+     * together the two look identical and the row is scrapped.
+     *
+     * The same shape as {@see canonicalize()} against {@see normalize()} one method up, and for the
+     * same reason: a comparison must not fold away the thing it is examining.
+     */
+    public function canonicalizeKeepingApostrophe(string $value): string
+    {
+        return $this->fold($value, keepApostrophe: true);
+    }
+
+    private function fold(string $value, bool $keepApostrophe): string
+    {
         // Unicode BEFORE anything else: this is the one comparison point in the product, so the
         // FOLD form belongs here and nowhere else ({@see TextNormalizer}). It is what lets a learner
         // who typed «stiu» with a cedilla, or «strasse» for «Straße», be right — they know the word,
@@ -42,8 +65,23 @@ final class LexicalNormalizer
         // the store keeps the canonical spelling, which is a different method on the same class.
         $value = $this->unicode->fold($value);
         $value = mb_strtolower(trim($value));
-        $value = $this->expandContractions($value);            // before punctuation strips the apostrophe
-        $value = preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', $value) ?? $value;
+        $value = $this->expandContractions($value);            // before the apostrophe is removed
+        // THE APOSTROPHE IS REMOVED, NOT SPACED (Д-32).
+        //
+        // Every other mark becomes a space, which is right: a comma or a full stop separates words.
+        // An apostrophe JOINS them, and treating it like the others split «He's» into «he s» — two
+        // tokens where the learner sees one. Typing the same sentence without the mark then differed
+        // by a single character, so the exact answer «He's five years old.» came back «Почти» with
+        // `hard` on the schedule, one edit away from the key it actually matched.
+        //
+        // Both glyphs, because a phone types the typographic one and the store holds the ASCII one;
+        // `expandContractions()` folds them together first, and this is the same list read twice
+        // rather than a second opinion about what an apostrophe is.
+        $value = $keepApostrophe
+            ? str_replace(self::APOSTROPHES, "'", $value)
+            : str_replace(self::APOSTROPHES, '', $value);
+        $keep = $keepApostrophe ? "'" : '';
+        $value = preg_replace('/[^\p{L}\p{N}\s' . $keep . ']+/u', ' ', $value) ?? $value;
         $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
 
         return trim($value);
@@ -60,9 +98,15 @@ final class LexicalNormalizer
      * withdraw". A small curated set on purpose (the ambiguous ones like "'d" are the point of the
      * curation); it grows as real answers show what people actually type.
      */
+    /**
+     * Every glyph a person or a keyboard may write an apostrophe as. The ASCII one is last because
+     * the others are folded onto it first.
+     */
+    private const APOSTROPHES = ['’', '‘', '´', '`', "'"];
+
     private function expandContractions(string $value): string
     {
-        $value = str_replace(['’', '`'], "'", $value); // normalise apostrophe glyphs first
+        $value = str_replace(['’', '‘', '´', '`'], "'", $value); // normalise apostrophe glyphs first
         $value = $this->expandPerfectAuxiliary($value);
         $map = [
             "i'd" => 'i would', "i'll" => 'i will', "i'm" => 'i am', "i've" => 'i have',

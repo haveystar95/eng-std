@@ -30,6 +30,23 @@ void main() {
         LocalCheck.correct,
       );
     });
+    // Д-32. «He's» is outside the contraction map, so the apostrophe used to reach the punctuation
+    // pass and become a SPACE: «he s five years old» against the typed «hes five years old», one
+    // edit apart. The exact answer came back «Почти» and the schedule took a `hard` for it.
+    test('the apostrophe joins letters — all three spellings are one answer', () {
+      expect(
+        SessionGrader.check("He's five years old.", "He's five years old."),
+        LocalCheck.correct,
+      );
+      expect(
+        SessionGrader.check('He’s five years old.', "He's five years old."),
+        LocalCheck.correct,
+      );
+      expect(
+        SessionGrader.check('Hes five years old.', "He's five years old."),
+        LocalCheck.correct,
+      );
+    });
   });
 
   group('SessionGrader.check — one-character typo (server caps at hard, still accepted)', () {

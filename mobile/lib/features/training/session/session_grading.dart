@@ -310,6 +310,7 @@ abstract final class SessionGrader {
   static List<String> _words(String value, {bool ignoreArticles = false}) {
     var v = value.toLowerCase().trim();
     v = _expandContractions(v);
+    v = _dropApostrophes(v); // joins letters, never separates words — see [_normalize]
     v = v.replaceAll(RegExp(r'[^\p{L}\p{N}\s]+', unicode: true), ' ');
     v = v.replaceAll(RegExp(r'\s+', unicode: true), ' ').trim();
     if (v.isEmpty) return const [];
@@ -391,9 +392,9 @@ abstract final class SessionGrader {
   }
 
   /// The three ASR-channel tails this trainer forgives (QA-20), mirror of the server's
-  /// `SpokenSuffixTolerance`. `'s` is spelled ` s` (a separate trailing word) because by the time
-  /// either side reaches this check it has already been through [_normalize]/[_words], which turn
-  /// the apostrophe itself into a space.
+  /// `SpokenSuffixTolerance`. ` s` is kept for the rows written before Д-32: the apostrophe is
+  /// REMOVED now rather than spaced, so `'s` reaches this check as a plain `s` and the first entry
+  /// covers it. The server's list is unchanged for the same reason.
   static const List<String> _suffixTails = ['s', 'es', ' s'];
 
   /// Same word (or phrase), once exactly one of the tolerated ASR tails is allowed for, in EITHER
@@ -412,7 +413,15 @@ abstract final class SessionGrader {
   /// rather than only the leading one.
   static String _normalize(String value, {bool ignoreArticles = false}) {
     var v = value.toLowerCase().trim();
-    v = _expandContractions(v); // before stripping the apostrophe
+    v = _expandContractions(v); // before the apostrophe is removed
+    // THE APOSTROPHE IS REMOVED, NOT SPACED (Д-32) — the server's exact sequence.
+    //
+    // Every other mark becomes a space, which is right: a comma or a full stop separates words. An
+    // apostrophe JOINS them, and treating it like the others split «He's» into «he s» — two tokens
+    // where the learner sees one. Typing the same sentence without the mark then differed by a
+    // single character, so the exact answer «He's five years old.» was shown «Почти» and uploaded
+    // as a lapse the server agreed with.
+    v = _dropApostrophes(v);
     v = v.replaceAll(RegExp(r'[^\p{L}\p{N}\s]+', unicode: true), ' ');
     v = v.replaceAll(RegExp(r'\s+', unicode: true), ' ').trim();
     if (!ignoreArticles) return _stripArticle(v);
@@ -460,9 +469,19 @@ abstract final class SessionGrader {
   };
 
   static String _expandContractions(String value) {
-    final v = value.replaceAll('’', "'").replaceAll('`', "'");
+    final v = _foldApostrophes(value);
     return v.replaceAllMapped(RegExp(r"\b[a-z]+'[a-z]+\b"), (m) => _contractions[m[0]] ?? m[0]!);
   }
+
+  /// Every glyph a person or a keyboard may write an apostrophe as, folded onto the ASCII one.
+  /// Mirrors the server's `LexicalNormalizer`.
+  static String _foldApostrophes(String value) => value
+      .replaceAll('’', "'")
+      .replaceAll('‘', "'")
+      .replaceAll('´', "'")
+      .replaceAll('`', "'");
+
+  static String _dropApostrophes(String value) => _foldApostrophes(value).replaceAll("'", '');
 
   /// Byte-free Levenshtein (edit distance) over runes — exact for the latin target side.
   static int _levenshtein(String s, String t) {

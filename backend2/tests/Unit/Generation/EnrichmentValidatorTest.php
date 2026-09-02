@@ -461,10 +461,15 @@ it('keeps the mark when the SPAN has it too — there the correction must carry 
 });
 
 it('is indifferent to a correction whose punctuation is not sentence-ending', function () {
-    // A comma or an apostrophe inside the fix is ordinary content, not the sentence's full stop.
+    // A comma inside the fix is ordinary content, not the sentence's full stop.
+    //
+    // This used to be spelled with an apostrophe — «accounts» → «account's» — and since Д-32 that
+    // fixture no longer says anything about punctuation: the apostrophe JOINS letters, so the two
+    // spellings are one answer, and a distractor that differs from the example by nothing else is
+    // an option the grader would mark correct. The comma is the case this gate is actually about.
     $verdict = $this->validator->validate(enrichmentCandidate(
-        [new RawDistractor('I would like to withdraw money from my accounts.', 'tense', 'accounts', "account's")],
-        example: "I would like to withdraw money from my account's.",
+        [new RawDistractor('I would like to take money please.', 'tense', 'take money', 'withdraw money,')],
+        example: 'I would like to withdraw money, please.',
         acceptedForms: ['withdraw money'],
     ));
 

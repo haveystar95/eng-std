@@ -489,6 +489,50 @@ it('names the speaking card’s form per stage, so the client knows what to put 
 
 // ── the day passing, and the focus moving ─────────────────────────────────────────────────────
 
+it('never lets readiness FALL as a new day is written (Д-31)', function () {
+    // The live run: 23 % after day 1, 13 % after day 2, 8 % after day 3. The denominator was «the
+    // standings that exist», and standings exist only for days that have been written — so every
+    // day the learner finished added fourteen fresh stage-A cards to the bottom of the fraction and
+    // the percentage went backwards. A person doing the work watched their readiness for the
+    // appointment fall.
+    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $readiness = static fn (object $ctx): float => (float) $ctx
+        ->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$planId}")
+        ->assertOk()
+        ->json('data.readiness');
+
+    // Day 1, then two nights of its own revision — enough for its lines to reach the last stage a
+    // line has, which is what `ready` counts.
+    $seq = walkDay($this, $token, $planId, 1);
+    for ($night = 0; $night < 3; $night++) {
+        ageHistory($user->id, days: 1);
+        $session = planSession($this, $token, $planId, 1);
+        if ($session['tasks'] === []) {
+            break;
+        }
+        $seq = answerTasks($this, $token, $session, $seq);
+    }
+
+    // Day 2 is written by now (passing day 1 is what queues it). Put it back to `pending` for one
+    // read: this is the state the live run was measuring in, and the two readings must agree —
+    // «сколько дней уже написано» is not a fact about how ready the learner is.
+    $day2 = DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 2)->first();
+    expect($day2)->not->toBeNull()->and($day2->collection_id)->not->toBeNull();
+
+    DB::table('learning_plan_days')->where('id', $day2->id)
+        ->update(['collection_id' => null, 'status' => 'pending']);
+    $beforeDay2Written = $readiness($this);
+
+    DB::table('learning_plan_days')->where('id', $day2->id)
+        ->update(['collection_id' => $day2->collection_id, 'status' => $day2->status]);
+    $afterDay2Written = $readiness($this);
+
+    expect($beforeDay2Written)->toBeGreaterThan(0.0, 'the fixture must actually acquire something')
+        ->and($afterDay2Written)->toBe($beforeDay2Written);
+});
+
 it('passes the day when every word closes stage A, and moves the focus to day 2', function () {
     [, $token, $planId] = startedPlan($this);
 

@@ -82,7 +82,7 @@ final readonly class GetPlanHandler
             entities: $outline === null ? [] : $outline->entities,
             constraints: $outline === null ? [] : $outline->constraints,
             goalTerms: $outline === null ? [] : $outline->goalTerms,
-            readiness: $this->readinessOf($progress),
+            readiness: $this->readinessOf($progress, $days),
             focusDayIndex: $progress->focusDayIndex,
             nextDayIndex: $this->nextDayIndex($planDays, $progress->focusDayIndex),
             daysToEvent: (int) $today->diff($plan->eventDate()->setTime(0, 0))->format('%r%a'),
@@ -271,12 +271,41 @@ final readonly class GetPlanHandler
      * shipping half a formula safe, and it is the reason the weights are the FINAL ones rather than
      * renormalised over the half that exists: renormalising would make today's 0.4 read as 1.0 and
      * every later release would have to take it back.
+     *
+     * ## THE DENOMINATOR IS THE WHOLE PLAN, from day one (Д-31)
+     *
+     * It used to be «the standings that exist», and standings exist only for days that have been
+     * WRITTEN. A plan writes one day at a time, so the denominator grew every time the learner
+     * finished a day: the live run read 23 % after day 1, 13 % after day 2 and 8 % after day 3. The
+     * learner did the work and watched their readiness for the appointment fall.
+     *
+     * So the denominator is what the plan set out to teach — every day's `term_budget`, written into
+     * the skeleton before the first card existed — and it does not move as days arrive. `max()`
+     * against what a day actually holds is the honest guard for a day that came back bigger than its
+     * budget; it is the only thing that can still grow the denominator, and it grows it by what was
+     * really added rather than by what was merely revealed.
+     *
+     * The canonical formula (C + speed) is not this: it arrives with P2-v0.4/SIT-1. What is fixed
+     * here is only the monotonicity.
+     *
+     * @param  list<PlanDayView>  $days
      */
-    private function readinessOf(PlanProgressView $progress): float
+    private function readinessOf(PlanProgressView $progress, array $days): float
     {
         $standings = $progress->allStandings();
         if ($standings === []) {
             return 0.0;
+        }
+
+        $planned = 0;
+        foreach ($days as $day) {
+            if ($day->kind !== PlanDayKind::Intro->value) {
+                // The final day introduces nothing — its cards are the teaching days' own, and
+                // counting them twice would hold the percentage down for ever.
+                continue;
+            }
+            $written = $progress->days[$day->index] ?? null;
+            $planned += max($day->termBudget, $written === null ? 0 : count($written->termIds));
         }
 
         $atLast = 0;
@@ -286,6 +315,10 @@ final readonly class GetPlanHandler
             }
         }
 
-        return round(0.4 * ($atLast / count($standings)), 4);
+        // A plan whose skeleton carries no budgets at all (written before `term_budget` existed)
+        // falls back to what it can see, which is exactly the reading it had before this change.
+        $planned = max($planned, count($standings));
+
+        return round(0.4 * ($atLast / $planned), 4);
     }
 }
