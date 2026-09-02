@@ -7,6 +7,7 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/models.dart';
+import '../../data/plan_models.dart';
 import '../../data/providers.dart';
 import 'plan_ui.dart';
 
@@ -63,7 +64,20 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
     final l = AppLocalizations.of(context);
     final envelope = widget.envelope;
     final cards = widget.cards;
-    final plan = ref.watch(planProvider(envelope.planId)).value;
+    // THE DAY'S VERDICT IS THE SERVER'S, AND IT IS ASKED FOR — never assumed from «the sitting was
+    // strict». A strict sitting that ends is not a day that passed: a miss does not close its rung,
+    // so a day with one wrong card is still `ready` and the plan still says «Продолжить». The
+    // screen said «День 1 пройден» over exactly that, on the owner's phone, 02.09.
+    //
+    // `isLoading` matters: `invalidate` above keeps the PREVIOUS value while the re-read is in
+    // flight, and the previous value is the plan as it was BEFORE the sitting — which would call
+    // every finished day unclosed for half a second. So the verdict waits for a fresh read, and
+    // until it lands the headline says only what is certainly true ([planDaySittingDone]).
+    final planAsync = ref.watch(planProvider(envelope.planId));
+    final plan = planAsync.value;
+    final fresh = planAsync.isLoading ? null : planAsync.value;
+    final dayPassed = fresh?.dayAt(envelope.dayIndex)?.status == PlanDayStatus.done;
+    final verdictKnown = fresh != null;
 
     // Distinct TERMS, not cards: one word arrives as three cards inside a stage, and «9 фраз и слов»
     // must be nine things and not twenty-seven questions.
@@ -121,10 +135,15 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
           Center(child: PlanLabel(plan?.title ?? '')),
           const SizedBox(height: 14),
           Text(
-            // A soft run closed nothing, so it does not get to say «пройден». It says what it was.
-            envelope.strict
-                ? l.planDayDone(envelope.dayIndex)
-                : l.planDaySoftDone(envelope.dayIndex),
+            // Three verdicts, and each says only what it knows. A soft run closed nothing, so it
+            // does not get to say «пройден»; a strict run says «пройден» only when the SERVER says
+            // the day is `done`; and while the server is still answering it says neither.
+            switch ((envelope.strict, verdictKnown, dayPassed)) {
+              (false, _, _) => l.planDaySoftDone(envelope.dayIndex),
+              (true, false, _) => l.planDaySittingDone,
+              (true, true, true) => l.planDayDone(envelope.dayIndex),
+              (true, true, false) => l.planDayNotClosed(envelope.dayIndex),
+            },
             textAlign: TextAlign.center,
             style: AppText.displayTerm.copyWith(fontSize: 34, height: 1.15),
           ),
@@ -137,8 +156,23 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
               color: AppColors.inkBody,
             ),
           ),
+          if (envelope.strict && verdictKnown && !dayPassed) ...[
+            const SizedBox(height: 12),
+            // Named, so «ещё не закрыт» is not a mystery: the learner missed a card, the rung stayed
+            // where it was, and opening the day again deals the remainder rather than all of it.
+            Text(
+              l.planDayNotClosedNote,
+              textAlign: TextAlign.center,
+              style: AppText.translation.copyWith(
+                fontSize: 14,
+                height: 1.55,
+                color: AppColors.secondary,
+              ),
+            ),
+          ],
           const SizedBox(height: 30),
-          if (envelope.strict) ...[
+          // The stage-A row claims a stage CLOSED. It shows only where that is true.
+          if (envelope.strict && dayPassed) ...[
             const Divider(height: 1, thickness: 1, color: AppColors.hairline),
             _SummaryRow(
               label: l.planStageAClosed,

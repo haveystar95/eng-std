@@ -2801,6 +2801,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get planDaySittingDone => 'Session done';
+
+  @override
+  String planDayNotClosed(int index) {
+    return 'Day $index is not closed yet';
+  }
+
+  @override
+  String get planDayNotClosedNote =>
+      'Some cards were answered wrong, so their rung did not close. Open the day again: it will deal only what is left.';
+
+  @override
   String planDaySoftDone(int index) {
     return 'Day $index revisited';
   }

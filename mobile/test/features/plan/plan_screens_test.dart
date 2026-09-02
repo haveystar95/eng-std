@@ -34,6 +34,19 @@ LearningPlan _plan({int focus = 1}) => LearningPlan.fromJson({
   'next_day_index': focus + 1,
 });
 
+/// The same plan with day 1 CLOSED — what the server answers after a sitting that actually passed
+/// the day. The summary reads this rather than assuming «the sitting was strict, so the day is
+/// done»: a miss does not close its rung, and a day with one wrong card stays `ready`.
+LearningPlan _planWithDayOneDone() => LearningPlan.fromJson({
+  ..._planJson(),
+  'focus_day_index': 2,
+  'next_day_index': 2,
+  'days': [
+    {'id': 'd1', 'index': 1, 'kind': 'intro', 'title': 'Начать приём', 'status': 'done'},
+    {'id': 'd2', 'index': 2, 'kind': 'intro', 'title': 'Уточнить симптомы', 'status': 'ready'},
+  ],
+});
+
 /// The plan's payload minus the two fields a test usually wants to move. Spread rather than copied,
 /// so a day-list test can replace `days` without restating everything above it.
 Map<String, dynamic> _planJson() => {
@@ -174,9 +187,9 @@ class _ReviewSyncStub implements ReviewSync {
 /// [PlanDaySummary] under everything it reaches for on the way in: the plan it names, and the two
 /// queues it closes the run through. Without the last two the screen would write to drift and fire
 /// a request from a widget test.
-ProviderScope _summaryScope(_CompletionSpy spy, Widget child) => ProviderScope(
+ProviderScope _summaryScope(_CompletionSpy spy, Widget child, {LearningPlan? plan}) => ProviderScope(
   overrides: [
-    planProvider('01PLAN').overrideWith((ref) async => _plan()),
+    planProvider('01PLAN').overrideWith((ref) async => plan ?? _planWithDayOneDone()),
     sessionCompletionSyncProvider.overrideWithValue(spy),
     reviewSyncProvider.overrideWithValue(_ReviewSyncStub()),
   ],
@@ -575,6 +588,34 @@ void main() {
 
     // Nothing else was due, so there is no revision row to draw.
     expect(find.text('Повторение'), findsNothing);
+  });
+
+  testWidgets('a strict sitting that did NOT close the day says so, not «пройден»', (tester) async {
+    // The owner's phone, 02.09. All fourteen cards of day 1 were played, two of them wrong — a miss
+    // does not close its rung, so the day stayed `ready` and «Продолжить» was still the right button
+    // on the home screen. The summary said «День 1 пройден» over it, because it read «the sitting
+    // was strict» and never asked the server whether the DAY had passed.
+    await tester.pumpWidget(
+      _summaryScope(
+        _CompletionSpy(),
+        _app(
+          PlanDaySummary(
+            envelope: const _Envelope(kinds: ['word']),
+            cards: [_card('t1', 'word')],
+            onDone: () {},
+          ),
+        ),
+        // The verdict the server actually gives after such a sitting: day 1 still `ready`.
+        plan: _plan(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('День 1 ещё не закрыт'), findsOneWidget);
+    expect(find.text('День 1 пройден'), findsNothing);
+    // …and the row that claims a stage CLOSED is not drawn over a stage that did not.
+    expect(find.text('Ступень A пройдена'), findsNothing);
+    expect(find.textContaining('Открой день ещё раз'), findsOneWidget);
   });
 
   testWidgets('the summary counts the day apart from what the queue added to the sitting', (

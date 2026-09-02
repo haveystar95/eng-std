@@ -2927,6 +2927,18 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get planDaySittingDone => 'Занятие пройдено';
+
+  @override
+  String planDayNotClosed(int index) {
+    return 'День $index ещё не закрыт';
+  }
+
+  @override
+  String get planDayNotClosedNote =>
+      'Часть карточек ответена неверно — ступень по ним не закрылась. Открой день ещё раз: он раздаст только то, что осталось.';
+
+  @override
   String planDaySoftDone(int index) {
     return 'День $index повторён';
   }

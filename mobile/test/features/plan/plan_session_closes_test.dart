@@ -93,7 +93,13 @@ LearningPlan _plan() => LearningPlan.fromJson(const {
   'level': 'basic',
   'event_date': '2026-09-05',
   'minutes_per_day': 20,
-  'days': <dynamic>[],
+  // Day 1 CLOSED — what the server answers after a sitting that actually passed the day. The
+  // summary reads the day's own status rather than assuming «the sitting was strict»: a miss does
+  // not close its rung, and a day with one wrong card stays `ready`.
+  'days': [
+    {'id': 'd1', 'index': 1, 'kind': 'intro', 'title': 'Начать приём', 'status': 'done'},
+    {'id': 'd5', 'index': 5, 'kind': 'final', 'title': 'Прогон перед событием', 'status': 'pending'},
+  ],
   'readiness': 0.1,
   'focus_day_index': 5,
 });

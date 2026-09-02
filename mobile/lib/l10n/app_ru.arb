@@ -2154,6 +2154,15 @@
     "description": "Заголовок итога дня (кадр 1c-04).",
     "placeholders": { "index": { "type": "int" } }
   },
+  "planDaySittingDone": "Занятие пройдено",
+  "@planDaySittingDone": { "description": "Нейтральный заголовок итога, пока сервер не ответил, закрылся ли день. Утверждать «пройден» до ответа нельзя." },
+  "planDayNotClosed": "День {index} ещё не закрыт",
+  "@planDayNotClosed": {
+    "description": "Строгое сидение кончилось, но ступень A закрылась не у всех карточек — день остался в работе.",
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "planDayNotClosedNote": "Часть карточек ответена неверно — ступень по ним не закрылась. Открой день ещё раз: он раздаст только то, что осталось.",
+  "@planDayNotClosedNote": { "description": "Пояснение под заголовком незакрытого дня." },
   "planDaySoftDone": "День {index} повторён",
   "@planDaySoftDone": {
     "description": "Заголовок итога мягкого прохода — ступени не закрывались.",

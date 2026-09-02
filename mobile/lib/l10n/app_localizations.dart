@@ -4263,6 +4263,24 @@ abstract class AppLocalizations {
   /// **'День {index} пройден'**
   String planDayDone(int index);
 
+  /// Нейтральный заголовок итога, пока сервер не ответил, закрылся ли день. Утверждать «пройден» до ответа нельзя.
+  ///
+  /// In ru, this message translates to:
+  /// **'Занятие пройдено'**
+  String get planDaySittingDone;
+
+  /// Строгое сидение кончилось, но ступень A закрылась не у всех карточек — день остался в работе.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {index} ещё не закрыт'**
+  String planDayNotClosed(int index);
+
+  /// Пояснение под заголовком незакрытого дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Часть карточек ответена неверно — ступень по ним не закрылась. Открой день ещё раз: он раздаст только то, что осталось.'**
+  String get planDayNotClosedNote;
+
   /// Заголовок итога мягкого прохода — ступени не закрывались.
   ///
   /// In ru, this message translates to:

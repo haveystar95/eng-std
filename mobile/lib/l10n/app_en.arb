@@ -945,6 +945,10 @@
 
   "planDayDone": "Day {index} done",
   "@planDayDone": { "placeholders": { "index": { "type": "int" } } },
+  "planDaySittingDone": "Session done",
+  "planDayNotClosed": "Day {index} is not closed yet",
+  "@planDayNotClosed": { "placeholders": { "index": { "type": "int" } } },
+  "planDayNotClosedNote": "Some cards were answered wrong, so their rung did not close. Open the day again: it will deal only what is left.",
   "planDaySoftDone": "Day {index} revisited",
   "@planDaySoftDone": { "placeholders": { "index": { "type": "int" } } },
   "planDayInWork": "{count, plural, one{{count} phrase or word in progress} other{{count} phrases and words in progress}}",
