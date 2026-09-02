@@ -409,8 +409,11 @@ final readonly class SubmitReviewsHandler
                 sessionId: $sessionId,
             );
 
-            if (! $this->exposures->insertIgnore($exposure)) {
-                continue; // already met — the ladder has moved on since, and must not move back
+            if (! $this->exposures->record($exposure)) {
+                // Already met. The showing itself is still recorded ({@see TermExposureRepository}),
+                // because a plan's ladder counts only what happened after the card joined it — but
+                // the ordinary rung has moved on since, and must not move back.
+                continue;
             }
 
             $progress = $this->progress->findForUpdate($command->actorId, $input->termId)

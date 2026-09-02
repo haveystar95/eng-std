@@ -10,11 +10,13 @@ use App\Modules\Collections\Application\Command\CreateGeneratedCollection;
 use App\Modules\Collections\Application\Command\CreateGeneratedCollectionHandler;
 use App\Modules\Generation\Application\Dto\PlanDayDraft;
 use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
+use App\Modules\Generation\Application\Port\PlanDefectReporter;
 use App\Modules\Generation\Application\Port\RescueKitSource;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Domain\Exception\PlanDayRefused;
 use App\Modules\Generation\Domain\Exception\PlanSpendNotRecorded;
+use App\Modules\Generation\Domain\Service\PlanDayValidator;
 use App\Modules\Generation\Domain\Service\PlanSpeakingKey;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
 use App\Modules\Generation\Domain\ValueObject\PlanShelf;
@@ -96,6 +98,12 @@ final readonly class GeneratePlanDayHandler
          * has no rule yet» takes in the plan path.
          */
         private ?RescueKitSource $rescueKit = null,
+        /**
+         * The counter behind {@see PlanDayValidator::LINE_EXAMPLE_DROPPED}. Nullable like the kit
+         * above: a build with no reporter drops the field silently rather than refusing to write
+         * the day, which is the same trade every warning in this path makes.
+         */
+        private ?PlanDefectReporter $defects = null,
     ) {}
 
     public function __invoke(GeneratePlanDay $command): void
@@ -322,15 +330,10 @@ final readonly class GeneratePlanDayHandler
             numberValue: null,
         );
 
-        if ($phrase->example !== '') {
-            $this->scopedExamples->write(
-                $termId,
-                $phrase->example,
-                $phrase->exampleTranslation,
-                $support->value,
-                $collectionId,
-            );
-        }
+        // NO EXAMPLE, for the same reason no line has one: «Секунду, я проверю» is the sentence
+        // being learned, and a sentence around it is a different card. The pack still carries one
+        // — it is read by nothing now, and the field stays there rather than being deleted out of
+        // a config the owner writes by hand.
 
         if ($phrase->transliteration !== null) {
             $this->transliterations->ensure(
@@ -392,13 +395,34 @@ final readonly class GeneratePlanDayHandler
             numberValue: $item->value,
         );
 
-        $this->scopedExamples->write(
-            $termId,
-            $item->example,
-            $item->exampleTranslation,
-            $brief->supportLang,
-            $collectionId,
-        );
+        // AN EXAMPLE BELONGS TO A WORD OR A CONNECTOR, AND TO NOTHING ELSE (канон §7,
+        // {@see PlanShelf::wantsExample()}). A line already IS the sentence being learned: the
+        // gap is cut out of its own `frame`, so a second sentence around it is not the place the
+        // card is trained, it is a card the learner is shown instead of the one they are learning.
+        // The live day 1 of 02.09 is what this is written from — every one of its thirteen lines
+        // carried one, and «I see, without utilities.» was taught by «When the power went out, I
+        // realized that I see, without utilities, life becomes…».
+        //
+        // Dropped on the way IN rather than filtered on the way out: there is one writer, and a
+        // reader that had to remember which shelves may show an example would be that rule stated
+        // twice.
+        if (PlanShelf::tryFromName($item->arrayName())?->wantsExample() === true) {
+            $this->scopedExamples->write(
+                $termId,
+                $item->example,
+                $item->exampleTranslation,
+                $brief->supportLang,
+                $collectionId,
+            );
+        } elseif (trim($item->example) !== '') {
+            $this->defects?->warned(
+                $brief->planId,
+                $brief->dayIndex,
+                PlanDayValidator::LINE_EXAMPLE_DROPPED,
+                "полка «{$item->arrayName()}» прислала пример к карточке «{$item->text}» — выброшен",
+                counted: true,
+            );
+        }
 
         if ($item->description !== '') {
             $this->descriptions->ensure(

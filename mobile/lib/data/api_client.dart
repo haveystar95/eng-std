@@ -632,6 +632,17 @@ class ApiClient {
     return PlanDayStatus.fromWire((_data(r) as Map<String, dynamic>)['status'] as String?);
   }
 
+  /// «Собрать заново» — one more attempt for a day that burned.
+  ///
+  /// A separate endpoint from [generatePlanDay] because that one is POLLED: a screen asking «is it
+  /// ready yet» every second must never be able to buy a model call. This one is a button, it
+  /// spends money, and it is pressed once. A day that is not `failed` is answered with the status
+  /// it already has, so a double tap costs nothing.
+  Future<PlanDayStatus> rebuildPlanDay(String planId, int dayIndex) async {
+    final r = await _dio.post('/plans/$planId/days/$dayIndex/rebuild');
+    return PlanDayStatus.fromWire((_data(r) as Map<String, dynamic>)['status'] as String?);
+  }
+
   /// The session of ONE day. [dayIndex] null asks for the day the learner is ON — the server owns
   /// the focus, so it must be possible to ask for it without recomputing it on the device.
   Future<PlanSession> buildPlanSession({

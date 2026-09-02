@@ -44,6 +44,8 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::post('/plans/{planId}/session', [PlanController::class, 'session']);
     // «Собери мне день n». Idempotent and safe to poll — it answers with the day's status.
     Route::post('/plans/{planId}/days/{dayIndex}/generate', [PlanController::class, 'generateDay']);
+    // A BUTTON, not a poll: one more attempt for a day that burned, and it spends money.
+    Route::post('/plans/{planId}/days/{dayIndex}/rebuild', [PlanController::class, 'rebuildDay']);
     Route::post('/plans/{planId}/outline', [PlanController::class, 'buildOutline']);
     Route::patch('/plans/{planId}/outline', [PlanController::class, 'reschedule']);
     Route::post('/plans/{planId}/start', [PlanController::class, 'start']);

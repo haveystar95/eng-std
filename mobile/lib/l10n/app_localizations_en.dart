@@ -2784,6 +2784,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planAbandonLink => 'Give up on this plan';
 
   @override
+  String get planDayRebuildDay => 'Build again';
+
+  @override
   String get planDayRebuildPlan => 'Build the plan again';
 
   @override

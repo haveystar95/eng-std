@@ -2913,6 +2913,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planAbandonLink => 'Отказаться от плана';
 
   @override
+  String get planDayRebuildDay => 'Собрать заново';
+
+  @override
   String get planDayRebuildPlan => 'Собрать план заново';
 
   @override

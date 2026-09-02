@@ -623,6 +623,11 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         ? SessionIntroCard(
             key: ValueKey(_pos),
             card: _card,
+            // A LINE HAS NO EXAMPLE (канон §7): it IS the sentence being learned, so a sentence
+            // written around it is a second card on the intro. The server stopped writing them and
+            // cleaned out the ones it had written; the card refuses to draw one either way, because
+            // a day generated before that fix still carries them in the local mirror.
+            showExample: plan?.kindAt(_playing) != 'line',
             autoPronounce: autoPronounce,
             onSpeak: speakCard,
             photoUrl: _photoUrl[_pos],

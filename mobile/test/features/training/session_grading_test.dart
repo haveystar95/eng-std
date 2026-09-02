@@ -466,6 +466,52 @@ void main() {
       );
     });
 
+    /// A SPACE IS THE RECOGNISER'S GUESS — the client half of the server's `SpokenWordBoundary`.
+    ///
+    /// Owner's live day 1, 02.09: the card «I see, without utilities.» was read correctly, the
+    /// on-device recogniser returned «I see, withoututilities», and both sides graded it «Не то» —
+    /// two of four words, 0.5 against a floor of 0.7. The line's stage-A checklist could not close.
+    test('coverage: a glued transcript is the same reading, not two missing words', () {
+      const target = 'I see, without utilities.';
+      expect(SessionGrader.coverageOf('I see, withoututilities', target), 1.0);
+      expect(SessionGrader.covers('I see, withoututilities', target), isTrue);
+    });
+
+    test('coverage: a word heard as two pieces is the same word', () {
+      expect(
+        SessionGrader.covers('is the listing still avail able', 'Is the listing still available?'),
+        isTrue,
+      );
+    });
+
+    test('coverage: a dropped word is still a dropped word', () {
+      // «пропуск смысловых слов остаётся честным отказом» — no boundary explains «it down».
+      expect(
+        SessionGrader.covers('could you write please', 'Could you write it down, please?'),
+        isFalse,
+      );
+    });
+
+    test('uncoveredWords: a glued pair is not marked as missing', () {
+      expect(
+        SessionGrader.uncoveredWords('I see, withoututilities', 'I see, without utilities.'),
+        isEmpty,
+      );
+    });
+
+    test('speaking equality: a glued two-word term is correct, and only for speaking', () {
+      expect(
+        SessionGrader.check(
+          'withoututilities',
+          'without utilities',
+          spokenSuffixTolerance: true,
+        ),
+        LocalCheck.correct,
+      );
+      // Typed, the same string is at most «Почти» — the one-character typo rule, unchanged.
+      expect(SessionGrader.check('withoututilities', 'without utilities'), LocalCheck.typo);
+    });
+
     test('uncoveredWords: a forgiven article is never marked as missing', () {
       // Index 3 is «a» — with articles ignored it is neither covered nor uncovered, so the
       // highlight cannot contradict the verdict that just forgave it.

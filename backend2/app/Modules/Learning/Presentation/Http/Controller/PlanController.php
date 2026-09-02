@@ -12,6 +12,8 @@ use App\Modules\Learning\Application\Command\CreatePlan;
 use App\Modules\Learning\Application\Command\CreatePlanHandler;
 use App\Modules\Learning\Application\Command\EndPlan;
 use App\Modules\Learning\Application\Command\EndPlanHandler;
+use App\Modules\Learning\Application\Command\RebuildPlanDay;
+use App\Modules\Learning\Application\Command\RebuildPlanDayHandler;
 use App\Modules\Learning\Application\Command\RequestPlanDay;
 use App\Modules\Learning\Application\Command\RequestPlanDayHandler;
 use App\Modules\Learning\Application\Command\RecordPlanFeedback;
@@ -78,6 +80,7 @@ final class PlanController
         private readonly GetPlanDayTermsHandler $dayTerms,
         private readonly BuildPlanSessionHandler $buildSession,
         private readonly RequestPlanDayHandler $requestDay,
+        private readonly RebuildPlanDayHandler $rebuildDay,
         private readonly GetPlanRehearsalHandler $rehearse,
         private readonly RecordPlanFeedbackHandler $recordFeedback,
     ) {}
@@ -209,6 +212,24 @@ final class PlanController
     public function generateDay(Request $request, string $planId, string $dayIndex): JsonResponse
     {
         $status = ($this->requestDay)(new RequestPlanDay(
+            actorId: $this->actorId($request),
+            planId: $this->planId($planId)->value,
+            dayIndex: (int) $dayIndex,
+        ));
+
+        return new JsonResponse(['data' => ['day_index' => (int) $dayIndex, 'status' => $status]]);
+    }
+
+    /**
+     * «Собрать заново» — one more attempt for a day that burned. {@see RebuildPlanDay}.
+     *
+     * Its own endpoint rather than a flag on `generate`, because that one is POLLED: a screen that
+     * asks «is it ready yet» every second must never be able to buy a model call. This one is a
+     * button.
+     */
+    public function rebuildDay(Request $request, string $planId, string $dayIndex): JsonResponse
+    {
+        $status = ($this->rebuildDay)(new RebuildPlanDay(
             actorId: $this->actorId($request),
             planId: $this->planId($planId)->value,
             dayIndex: (int) $dayIndex,

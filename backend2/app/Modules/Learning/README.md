@@ -60,9 +60,12 @@ Layers: `Domain` (pure PHP, no Laravel) · `Application` (Commands/Queries/Ports
 - **`daily_user_stats` is a projection** of the reviews log — rebuildable by replay.
 - **`term_triages` is append-only** (client ULID, no `unique(user, term)`); progress state is a
   projection of it, like it is of `reviews`. Triage is never written to `reviews`.
-- **`term_exposures` is append-only and keyed by the PAIR** `(user_id, term_id)` — the intro
-  card's only output. An intro asks for nothing, so it is never a `reviews` row: that log holds
-  real retrievals, and a row there would inflate retention with a word nobody recalled.
+- **`term_exposures` is keyed by the PAIR** `(user_id, term_id)` — the intro card's only output.
+  An intro asks for nothing, so it is never a `reviews` row: that log holds real retrievals, and a
+  row there would inflate retention with a word nobody recalled. One row per pair, and `shown_at`
+  is the LAST showing, moved forward on every re-introduction (never backwards): a plan's ladder
+  counts only exposures after the card joined that plan, so a row frozen at the first meeting made
+  every intro of every re-used word invisible to it (`TermExposureRepository::record()`).
 - **The server grades**, not the client. **"Mastered" has one definition** (`Mastery::isMastered`).
   A study session's **composition is fixed** under its id — answers outside it are rejected. A term
   may occupy several slots of one session (its ladder chain); the composition is a set of terms.

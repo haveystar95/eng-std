@@ -180,3 +180,28 @@ it('keeps going when one term call fails, and reports it', function () {
     expect($report->failures[0]['term_id'])->toBe($failing);
     expect(exampleOf($failing))->toBe('How much does this bag cost?', 'left as it was, not blanked');
 });
+
+/**
+ * A LINE IS NOT A TERM MISSING AN EXAMPLE — it is a term that may not have one (канон §7,
+ * {@see \App\Modules\Generation\Domain\Service\ExampleAdmission}).
+ *
+ * This loop's whole test for «broken» is «no example at all», which is exactly the state every line
+ * of every plan day is in. On the owner's live day 1 (02.09) it therefore bought a sentence for all
+ * thirteen of them, one model call each, and the sentence it bought for «I see, without utilities.»
+ * wrapped that card in «When the power went out, I realized that…».
+ */
+it('leaves a plan LINE alone — a card with no example is not always a card missing one', function () {
+    [$user, $collectionId, $ids] = echoDeck();
+    $line = $ids['Would you like a receipt?'];
+    setExample($line, null);
+    DB::table('terms')->where('id', $line)->update(['kind' => 'line', 'shelf' => 'hear', 'tier' => 'understand']);
+
+    $report = app(RepairEchoExamplesHandler::class)(new RepairEchoExamples(
+        actorId: UserId::fromString($user->id),
+        collectionId: CollectionId::fromString($collectionId),
+        dryRun: true,
+    ));
+
+    expect($report->needingRepair)->toBe(3)
+        ->and($report->repairedTermIds)->not->toContain($line);
+});

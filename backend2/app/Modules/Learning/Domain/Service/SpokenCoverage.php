@@ -24,6 +24,11 @@ use App\Modules\Shared\Domain\Service\LexicalNormalizer;
  * dropped words are what they do constantly. Counting is by MULTISET, so a sentence saying «very»
  * twice needs it twice.
  *
+ * And a space is not a word: where the recogniser cut one word from the next is its own guess, so
+ * the transcript is re-segmented against the card's own vocabulary before anything is counted
+ * ({@see SpokenWordBoundary}). «withoututilities» is «without utilities» said correctly, not two
+ * words missing.
+ *
  * The threshold is a share rather than a count so it scales with the sentence: four words out of
  * five and eight out of ten are the same reading, and the same verdict. 70% lands where the corpus
  * puts the recogniser's own losses — it forgives the article and the preposition it usually eats,
@@ -74,6 +79,12 @@ final readonly class SpokenCoverage
     public function __construct(
         private LexicalNormalizer $normalizer = new LexicalNormalizer(),
         private SpokenSuffixTolerance $suffixTolerance = new SpokenSuffixTolerance(),
+        /**
+         * WHERE THE WORDS WERE CUT — the recogniser's own guess, and not evidence about the
+         * learner. {@see SpokenWordBoundary}, added after a correct reading of «I see, without
+         * utilities.» came back as «I see, withoututilities» and scored 0.5.
+         */
+        private SpokenWordBoundary $boundary = new SpokenWordBoundary(),
     ) {}
 
     /** Was enough of [$expected] present in [$response]? */
@@ -94,7 +105,9 @@ final readonly class SpokenCoverage
             return 0.0;
         }
 
-        $available = array_count_values($this->words($response));
+        // RE-CUT AGAINST THE CARD'S OWN WORDS FIRST. A boundary the recogniser put in the wrong
+        // place is not a missing word, and the count below cannot tell the two apart on its own.
+        $available = array_count_values($this->boundary->align($this->words($response), $wanted));
 
         $found = 0;
         foreach ($wanted as $word) {

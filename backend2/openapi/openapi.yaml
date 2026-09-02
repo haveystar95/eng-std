@@ -1849,6 +1849,41 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such day }
 
+  /plans/{planId}/days/{dayIndex}/rebuild:
+    post:
+      tags: [Plans]
+      summary: One more attempt for a day that burned
+      description: >-
+        «Собрать заново». A day gets two paid calls and is then `failed`, and until this existed the
+        only move left on the screen was «Собрать план заново» — which throws away every day already
+        walked and buys a new skeleton.
+
+        Gives the day ONE attempt back and queues it. A day that is not `failed` is not touched:
+        the response is whatever status it already has, so a second tap costs nothing. Never
+        automatic and never polled — this endpoint spends money, which is why it is not a flag on
+        `…/generate`.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - name: dayIndex
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: The day's status after the call
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      day_index: { type: integer }
+                      status: { type: string, enum: [pending, generating, ready, failed, done] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'No such day, or the final day — it writes no material' }
+
   /plans/{planId}/rehearsal:
     post:
       tags: [Plans]

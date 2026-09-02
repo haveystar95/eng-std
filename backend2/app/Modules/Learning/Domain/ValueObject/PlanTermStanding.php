@@ -47,6 +47,17 @@ final readonly class PlanTermStanding
          * percentage down for ever by standing on a rung that does not exist for it.
          */
         public bool $ready = false,
+        /**
+         * THIS CARD HAS ALREADY BEEN ANSWERED TODAY — anywhere in this plan, right or wrong.
+         *
+         * Not a state of the ladder and deliberately kept beside it: the ladder says what a card
+         * OWES, and this says whether the learner has already met it since midnight. The one caller
+         * is the warm-up ({@see \App\Modules\Learning\Application\Command\BuildPlanSessionHandler}),
+         * where the two questions come apart — a rescue phrase that owes nothing still comes back
+         * every morning, and one that has already come back this morning must not come back again
+         * in the next sitting of the same day.
+         */
+        public bool $answeredToday = false,
     ) {}
 
     /** Is this word's checklist closed for good? What «готовность слова» means. */
@@ -55,7 +66,13 @@ final readonly class PlanTermStanding
         return $this->finished;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * `answered_today` is deliberately NOT here: it is the warm-up's own input, it changes at
+     * midnight without anything happening, and a client that cached it would draw a day screen that
+     * disagrees with the session it is about to build.
+     *
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [

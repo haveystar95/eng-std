@@ -254,7 +254,7 @@ final readonly class BuildPlanSessionHandler
         $specs = [];
         $taken = [];
 
-        // 0. THE WARM-UP — the rescue kit, every morning, before anything else (канон §5).
+        // 0. THE WARM-UP — the rescue kit, ONCE A DAY, before anything else (канон §5).
         //
         // «Тренируются жёстче всех: разогрев ~2 минуты каждый день до конца плана, из ротации не
         // выпадают.» They are the five phrases that keep a conversation alive when it breaks, so
@@ -264,9 +264,31 @@ final readonly class BuildPlanSessionHandler
         // FIRST, and that is the section's whole meaning — a seam announced after the cards it
         // labels is not a seam. The day's own material follows it, and `day_task_count` keeps
         // counting only that, so «N из N» on the day screen is unchanged.
+        //
+        // ## «КАЖДЫЙ ДЕНЬ» IS A DAY, AND IT USED TO MEAN «EVERY SITTING»
+        //
+        // Every phrase the learner has already answered TODAY is skipped, whatever it owes. Without
+        // that line the kit came back in the NEXT sitting of the same day, and every sitting after
+        // it, with the same five cards — including the ones just answered correctly. Measured on the
+        // owner's live day 1 (02.09, plan `01M1HZF4…`): the first sitting closed stage A for all
+        // five, and the six sittings that followed dealt exactly those five again, one card each,
+        // walking them up the ordinary rungs (word_bank → cloze → typing → listening) inside a
+        // single evening. The day could not be finished by finishing it.
+        //
+        // Both halves of the canon survive the skip: the kit still comes back every morning (a new
+        // local day has no answers in it yet), and it still climbs its accelerated ladder — A on the
+        // day it is introduced, B after the first night — because that ladder is a fact about days
+        // and not about sittings. What it stops doing is looping. A MISS is skipped too, on the same
+        // line and on purpose: «промах по спасателю не добавляет посадок дню» (решение владельца) —
+        // the phrase comes back tomorrow, where the miss is answered by the ladder rather than by
+        // the learner sitting through it again.
         foreach ($this->rescueTerms($progress) as $termId => $rescue) {
             $standing = $rescue['standing'];
             $taken[$termId] = true;
+
+            if ($standing->answeredToday) {
+                continue;
+            }
 
             if ($standing->nextMode !== null) {
                 $specs = [
@@ -285,9 +307,10 @@ final readonly class BuildPlanSessionHandler
                 continue;
             }
 
-            // The kit has walked its ladder and owes nothing today — and it still comes back. One
-            // card at whatever rung the pair stands on, so «из ротации не выпадают» stays true for
-            // the rest of the plan rather than for the three days the ladder takes.
+            // The kit has walked its ladder and owes nothing today — and it still comes back
+            // TOMORROW. One card at whatever rung the pair stands on, so «из ротации не выпадают»
+            // stays true for the rest of the plan rather than for the two days its ladder takes.
+            // Once, because of the skip above: this is the day's warm-up, not the sitting's.
             $specs[] = ['term_id' => $termId, 'stage' => null, 'mode' => null, 'ordinal' => 0,
                 'of' => 0, 'day' => $rescue['day'], 'softened' => false, 'source' => 'warmup',
                 'step' => null, 'section' => PlanSessionTaskView::SECTION_WARMUP];

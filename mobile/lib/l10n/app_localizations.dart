@@ -4227,6 +4227,12 @@ abstract class AppLocalizations {
   /// **'Отказаться от плана'**
   String get planAbandonLink;
 
+  /// Одна дополнительная попытка ДЛЯ ЭТОГО дня на сгоревшем дне — до «Собрать план заново», которое выбрасывает пройденное.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрать заново'**
+  String get planDayRebuildDay;
+
   /// Единственное, что может помочь на исчерпанном дне.
   ///
   /// In ru, this message translates to:

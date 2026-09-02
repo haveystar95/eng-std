@@ -191,6 +191,17 @@ final class PlanDayValidator
     public const WORD_IS_BASIC_WARNING = 'plan_day_word_is_basic';
 
     /**
+     * A LINE ARRIVED WITH AN EXAMPLE, and the example was thrown away on the way in.
+     *
+     * «Пример есть только у `words` и `chunks`» ({@see PlanShelf::wantsExample()}): a line IS the
+     * sentence the learner is learning, so a second sentence around it teaches nothing and the
+     * trainer has nothing to do with it. Counted rather than refused for the reason every counter
+     * here exists — a day is not worth a paid re-run over a field that can simply be dropped — and
+     * counted at all because a counter that climbs means the prompt is being ignored.
+     */
+    public const LINE_EXAMPLE_DROPPED = 'plan_day_line_example_dropped';
+
+    /**
      * The guide sizes of the six shelves — канон §2, and the only place they are written.
      *
      * `words` and `chunks` share one guide («внизу — слова и связки, 6–8 штук»), so they are
@@ -573,10 +584,16 @@ final class PlanDayValidator
     private function checkExamples(PlanDayCandidate $day): array
     {
         $terms = [];
+        // THE DAY'S OWN LINES, folded — what an example may not swallow whole. See below.
+        $lines = [];
         foreach ($day->items as $item) {
             $key = $this->normalize($item->text);
             if ($key !== '') {
                 $terms[$key] = $item->text;
+            }
+            $folded = self::fold($item->text);
+            if ($folded !== '' && PlanShelf::tryFromName($item->arrayName())?->wantsExample() === false) {
+                $lines[$folded] = $item->text;
             }
         }
         $dayTerms = array_values($terms);
@@ -596,6 +613,33 @@ final class PlanDayValidator
                     'example',
                     'пример — это дословно карточка дня, а не предложение с ней внутри',
                     'the `example` is, word for word, a card of this day rather than a sentence containing one',
+                );
+
+                continue;
+            }
+
+            // ...AND A SENTENCE THAT SWALLOWED A WHOLE LINE OF THE DAY IS THE SAME DEFECT.
+            //
+            // The gate above measured EQUALITY, and the live day of 02.09 walked past it: the line
+            // «I see, without utilities.» was taught by «When the power went out, I realized that I
+            // see, without utilities, life becomes…» — the card word for word, padded into a
+            // sentence that means nothing. Equality is the special case where the padding is empty.
+            //
+            // A LINE and not any card, deliberately: the example of a word or a connector is
+            // REQUIRED to contain its own card ({@see FILLER_NOT_CARD} below), and the day's lines
+            // are built out of those same words, so «contains a card of the day» would refuse every
+            // healthy example there is. A whole turn of the scene inside another card's sentence is
+            // the one containment that is never right — it is the day teaching its own line twice,
+            // once as a card and once as scenery.
+            $swallowed = self::lineInside(self::fold($example), $lines, $item->text);
+            if ($swallowed !== null) {
+                $out[] = PlanViolation::onCard(
+                    self::EXAMPLE_IS_A_TERM,
+                    $item,
+                    'example',
+                    "пример целиком содержит реплику дня «{$swallowed}» — это та же карточка, "
+                    . 'обёрнутая в предложение, а не своё предложение',
+                    'the `example` contains a whole LINE of this day word for word; write a sentence of its own',
                 );
 
                 continue;
@@ -1263,6 +1307,25 @@ final class PlanDayValidator
     }
 
     /** Does `$hay` contain `$needle` on word boundaries? */
+    /**
+     * The day's line this example carries inside it, or null — {@see checkExamples()}.
+     *
+     * The card's own text is excluded: a line whose example somehow IS itself is the equality case,
+     * already answered one gate earlier and with its own wording.
+     *
+     * @param  array<string, string>  $lines  folded line => the line as written
+     */
+    private static function lineInside(string $example, array $lines, string $own): ?string
+    {
+        foreach ($lines as $folded => $text) {
+            if ($text !== $own && $example !== $folded && self::containsWords($example, $folded)) {
+                return $text;
+            }
+        }
+
+        return null;
+    }
+
     private static function containsWords(string $hay, string $needle): bool
     {
         return str_contains(' ' . $hay . ' ', ' ' . $needle . ' ');

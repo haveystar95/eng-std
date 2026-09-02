@@ -935,6 +935,7 @@
   "planFailTermRepeated": "a card repeated another one — of this day, of the rescue kit, or of an earlier day",
   "planFailUnknown": "the day could not be built",
   "planAbandonLink": "Give up on this plan",
+  "planDayRebuildDay": "Build again",
   "planDayRebuildPlan": "Build the plan again",
   "planAbandonTitle": "Give up on this plan?",
   "planAbandonBody": "The plan goes to the archive and its words into general review. The days that did build stay as ordinary collections.",

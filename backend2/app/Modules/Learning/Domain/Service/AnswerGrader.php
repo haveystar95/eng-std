@@ -45,6 +45,8 @@ final class AnswerGrader
         private readonly LexicalNormalizer $normalizer = new LexicalNormalizer(),
         private readonly SpokenCoverage $coverage = new SpokenCoverage(),
         private readonly SpokenSuffixTolerance $suffixTolerance = new SpokenSuffixTolerance(),
+        /** Where the recogniser cut the words — its guess, never the learner's. {@see SpokenWordBoundary} */
+        private readonly SpokenWordBoundary $boundary = new SpokenWordBoundary(),
     ) {}
 
     public function grade(Answer $answer, ExerciseMode $mode, ExpectedAnswer $expected, LatencyBaseline $baseline): Grade
@@ -76,6 +78,14 @@ final class AnswerGrader
                 return $this->gradeCorrect($answer, $mode, $expected->isPhrase, $baseline);
             }
             if ($mode === ExerciseMode::Speaking && $this->suffixTolerance->equal($response, $normalizedCandidate)) {
+                return $this->gradeCorrect($answer, $mode, $expected->isPhrase, $baseline);
+            }
+            // ...and a boundary the recogniser guessed differently: «without utilities» comes back
+            // as «withoututilities» from a perfectly good reading of a two-word card, which is the
+            // same channel fact as the eaten sibilant above and not a different memory
+            // ({@see SpokenWordBoundary}). Speaking only, for the same reason: everywhere else the
+            // spaces were typed by the learner.
+            if ($mode === ExerciseMode::Speaking && $this->boundary->equalIgnoringBoundaries($response, $normalizedCandidate)) {
                 return $this->gradeCorrect($answer, $mode, $expected->isPhrase, $baseline);
             }
         }

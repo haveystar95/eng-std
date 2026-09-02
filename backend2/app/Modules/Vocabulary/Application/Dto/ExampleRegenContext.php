@@ -6,7 +6,9 @@ namespace App\Modules\Vocabulary\Application\Dto;
 
 /**
  * What the "New example" action needs about a term: its text and language, the example currently
- * shown (to avoid), and the language its translations are in (so the new example is translated too).
+ * shown (to avoid), the language its translations are in (so the new example is translated too),
+ * and WHAT THE CARD IS — a line is the sentence being learned and may not be given a second one
+ * around it ({@see \App\Modules\Generation\Domain\Service\ExampleAdmission}).
  */
 final readonly class ExampleRegenContext
 {
@@ -15,5 +17,7 @@ final readonly class ExampleRegenContext
         public string $lang,
         public ?string $currentExample,
         public ?string $translationLang,
+        /** `terms.kind` — `line`, `word`, `chunk`, `number`, or null on everything outside a plan. */
+        public ?string $kind = null,
     ) {}
 }

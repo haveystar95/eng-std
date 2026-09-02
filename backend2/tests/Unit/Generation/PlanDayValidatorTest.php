@@ -342,6 +342,31 @@ it('refuses an example that is a card of the day rather than a sentence with one
     expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM);
 });
 
+it('refuses an example that swallowed a whole LINE of the day — not only one equal to a card', function () {
+    // The live day of 02.09 walked past the gate above, which measured EQUALITY: «I see, without
+    // utilities.» was a card of the scene AND the body of another card's example, padded into
+    // nonsense. Equality is the case where the padding is empty.
+    //
+    // `say[0]` of the fixture assembles to «I need to check in, please.»; the word «prescription»
+    // still contains its own text, so nothing else about this card is wrong.
+    $day = planCandidate(['words' => [1 => [
+        'example' => 'Before my prescription I need to check in, please, at the desk.',
+    ]]]);
+
+    expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM);
+});
+
+it('leaves an example that merely uses the day\'s words alone', function () {
+    // The other side of the same rule, and the reason it looks for a LINE: an example is REQUIRED
+    // to contain its own card, and the day's lines are built out of the day's words — so «contains
+    // a card of the day» would refuse every healthy example there is.
+    $day = planCandidate(['words' => [1 => [
+        'example' => 'The nurse will check the prescription before you take a seat.',
+    ]]]);
+
+    expect(planCodes($this->validator->validate($day)))->not->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM);
+});
+
 it('refuses two examples that are one sentence with the term swapped — Д-29', function () {
     // «If the fever gets worse, I need to worse tomorrow»: the live day 3 wrote one sentence and
     // dropped four different words into its slot. Every other gate passed all four.

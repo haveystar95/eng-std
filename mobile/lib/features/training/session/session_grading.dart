@@ -151,6 +151,10 @@ abstract final class SessionGrader {
     if (spokenSuffixTolerance) {
       for (final a in accepted) {
         if (_suffixTolerantEqual(r, a)) return LocalCheck.correct;
+        // ...and a boundary the recogniser guessed differently: «without utilities» comes back as
+        // «withoututilities» from a good reading of a two-word card. Same channel fact as the eaten
+        // sibilant above — see [_alignBoundaries].
+        if (_equalIgnoringBoundaries(r, a)) return LocalCheck.correct;
       }
     }
     if (!forgiveTypos) return LocalCheck.wrong;
@@ -180,7 +184,12 @@ abstract final class SessionGrader {
     if (wanted.isEmpty) return 0; // nothing expected is never a vacuous pass
 
     final available = <String, int>{};
-    for (final word in _words(response, ignoreArticles: ignoreArticles)) {
+    // RE-CUT AGAINST THE CARD'S OWN WORDS FIRST — [_alignBoundaries], mirror of the server's
+    // `SpokenWordBoundary`. A boundary the recogniser guessed differently is not a missing word.
+    for (final word in _alignBoundaries(
+      _words(response, ignoreArticles: ignoreArticles),
+      wanted,
+    )) {
       available[word] = (available[word] ?? 0) + 1;
     }
 
@@ -208,7 +217,10 @@ abstract final class SessionGrader {
     final rawWords = raw.split(RegExp(r'\s+'));
 
     final available = <String, int>{};
-    for (final word in _words(response, ignoreArticles: ignoreArticles)) {
+    for (final word in _alignBoundaries(
+      _words(response, ignoreArticles: ignoreArticles),
+      _words(expected, ignoreArticles: ignoreArticles),
+    )) {
       available[word] = (available[word] ?? 0) + 1;
     }
 
@@ -275,6 +287,83 @@ abstract final class SessionGrader {
   /// suffix-tolerant match (QA-20: a recogniser drops a trailing sibilant far more than it invents
   /// or swaps a whole word). [available] is one sentence's worth of words, so a linear scan for the
   /// tolerant match costs nothing that matters here.
+  /// A SPACE IS THE RECOGNISER'S GUESS — mirror of the server's `SpokenWordBoundary`.
+  ///
+  /// An on-device recogniser cuts a stream of sounds into words, and the cut is the part it is
+  /// least sure of: it writes «withoututilities» for «without utilities» and «down town» for
+  /// «downtown». The learner said the same thing either way.
+  ///
+  /// The live case (owner's day 1, 02.09): «I see, without utilities.» read aloud correctly came
+  /// back as «I see, withoututilities», two of four words matched, 0.5 against a floor of 0.7 — «Не
+  /// то» on the phone and a lapse on the server behind it.
+  ///
+  /// The re-cut is keyed on the EXPECTED side in both directions — a glued token is split into
+  /// expected words, a run of tokens is joined when it spells one — so nothing here can invent a
+  /// word the card did not ask for. A dropped word stays dropped.
+  static List<String> _alignBoundaries(List<String> heard, List<String> expected) {
+    if (heard.isEmpty || expected.isEmpty) return heard;
+    final vocabulary = expected.toSet();
+
+    // Glued apart: «withoututilities» → «without», «utilities».
+    final split = <String>[];
+    for (final word in heard) {
+      if (vocabulary.contains(word)) {
+        split.add(word);
+        continue;
+      }
+      final pieces = _decompose(word, vocabulary, 0);
+      split.addAll(pieces ?? [word]);
+    }
+
+    // Split back together: «down», «town» → «downtown». Only from a token the sentence does not
+    // already know — a run whose first word is an expected word is a run the card asked for.
+    final out = <String>[];
+    for (var i = 0; i < split.length; i++) {
+      if (vocabulary.contains(split[i])) {
+        out.add(split[i]);
+        continue;
+      }
+      var joined = split[i];
+      var taken = 1;
+      for (var span = 1; span < _maxJoin && i + span < split.length; span++) {
+        joined += split[i + span];
+        if (vocabulary.contains(joined)) {
+          taken = span + 1;
+          break;
+        }
+      }
+      out.add(taken == 1 ? split[i] : joined);
+      i += taken - 1;
+    }
+
+    return out;
+  }
+
+  /// How many heard tokens may be joined back into one expected word — the server's `MAX_JOIN`.
+  static const int _maxJoin = 3;
+
+  /// The expected words [word] is made of, in order, or null when it is not made of them. A
+  /// left-to-right walk preferring the longest prefix, which is the ordinary word-break search.
+  static List<String>? _decompose(String word, Set<String> vocabulary, int depth) {
+    if (depth >= _maxJoin) return null;
+    for (var take = word.length - 1; take >= 1; take--) {
+      final head = word.substring(0, take);
+      if (!vocabulary.contains(head)) continue;
+      final tail = word.substring(take);
+      if (vocabulary.contains(tail)) return [head, tail];
+      final rest = _decompose(tail, vocabulary, depth + 1);
+      if (rest != null) return [head, ...rest];
+    }
+    return null;
+  }
+
+  /// Two strings that differ only in where the spaces fall — the equality path's half of the same
+  /// tolerance. Speaking only, like [_suffixTolerantEqual]: everywhere else the spaces were typed.
+  static bool _equalIgnoringBoundaries(String a, String b) {
+    final left = a.replaceAll(' ', '');
+    return left.isNotEmpty && left == b.replaceAll(' ', '');
+  }
+
   static bool _consume(Map<String, int> available, String word) {
     if ((available[word] ?? 0) > 0) {
       available[word] = available[word]! - 1;

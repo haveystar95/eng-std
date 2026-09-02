@@ -13,7 +13,7 @@ final class EloquentExampleRegenContextReader implements ExampleRegenContextRead
 {
     public function find(TermId $termId): ?ExampleRegenContext
     {
-        $term = DB::table('terms')->where('id', $termId->value)->first(['text', 'lang']);
+        $term = DB::table('terms')->where('id', $termId->value)->first(['text', 'lang', 'kind']);
         if ($term === null) {
             return null;
         }
@@ -34,6 +34,7 @@ final class EloquentExampleRegenContextReader implements ExampleRegenContextRead
             lang: (string) $term->lang,
             currentExample: $currentExample !== null ? (string) $currentExample : null,
             translationLang: $translationLang !== null ? (string) $translationLang : null,
+            kind: $term->kind !== null ? (string) $term->kind : null,
         );
     }
 }

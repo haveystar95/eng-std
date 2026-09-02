@@ -37,6 +37,7 @@ class SessionIntroCard extends ConsumerStatefulWidget {
     this.photoUrl,
     this.photoResolved = false,
     this.autoPronounce = true,
+    this.showExample = true,
     required this.speechLocaleId,
     this.isCurrent = _alwaysCurrent,
   });
@@ -51,6 +52,16 @@ class SessionIntroCard extends ConsumerStatefulWidget {
   final String? photoUrl;
   final bool photoResolved;
   final bool autoPronounce;
+
+  /// Does this card carry an example sentence at all?
+  ///
+  /// False for a plan LINE, which has none by contract: the line is the sentence being learned, its
+  /// gap is cut out of its own frame, and a sentence written around it teaches nothing. The live day
+  /// of 02.09 had one on every line — «I see, without utilities.» was introduced by «When the power
+  /// went out, I realized that I see, without utilities, life becomes…» — and the intro is the card
+  /// that showed it. True everywhere else, which is every word and connector and every card outside
+  /// a plan.
+  final bool showExample;
 
   /// Recognition locale for the echo — the language being learned, off THIS card's pair. Required,
   /// with no default: a constant here would quietly listen for English on an Italian word, which is
@@ -235,7 +246,7 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final card = widget.card;
-    final example = card.example;
+    final example = widget.showExample ? card.example : null;
     final variants = card.acceptedVariants;
     final showReading = ref.watch(transliterationEnabledProvider);
 

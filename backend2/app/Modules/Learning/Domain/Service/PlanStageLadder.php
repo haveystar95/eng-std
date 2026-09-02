@@ -407,6 +407,10 @@ final class PlanStageLadder
         $stage = PlanStage::first();
         $cursor = 0;
         $lastStage = self::lastStageFor($kind);
+        // ALREADY MET TODAY — asked of the whole log rather than of the stage being walked, because
+        // the question is about the learner's day and not about the checklist. See
+        // {@see PlanTermStanding::$answeredToday} for the one caller and why it needs it.
+        $answeredToday = self::answeredOn($facts, $today);
 
         while (true) {
             $steps = $this->stepsFor($stage, $applicable, $kind, $pairCounter);
@@ -422,6 +426,7 @@ final class PlanStageLadder
                     finished: false,
                     softened: $walk['softened'],
                     ready: $stage === $lastStage,
+                    answeredToday: $answeredToday,
                 );
             }
 
@@ -444,6 +449,7 @@ final class PlanStageLadder
                     finished: $next === null,
                     softened: $walk['softened'],
                     ready: $stage === $lastStage,
+                    answeredToday: $answeredToday,
                 );
             }
 
@@ -459,12 +465,29 @@ final class PlanStageLadder
                     finished: true,
                     softened: false,
                     ready: true,
+                    answeredToday: $answeredToday,
                 );
             }
 
             $stage = $next;
             $cursor = $walk['cursor'];
         }
+    }
+
+    /**
+     * Has one of these answers landed on the learner's local day `$today`?
+     *
+     * @param  list<PlanStageFact>  $facts
+     */
+    private static function answeredOn(array $facts, string $today): bool
+    {
+        foreach ($facts as $fact) {
+            if ($fact->localDate === $today) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

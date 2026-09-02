@@ -341,14 +341,27 @@ class _NotWrittenYet extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: AppSpacing.s22),
-        if (exhausted)
+        if (exhausted) ...[
+          // ONE MORE ATTEMPT FOR THIS DAY, before the sentence about the whole plan.
+          //
+          // The day gets two paid calls and is then `failed`, and until this button existed the
+          // only move on this screen was «Собрать план заново» — which throws away every day already
+          // walked. The owner's live plan of 02.09 stopped exactly there: day 1 passed, day 2
+          // burned, and continuing meant discarding day 1. It spends money, so it is pressed by a
+          // person and never polled.
+          PrimaryButton(
+            label: l.planDayRebuildDay,
+            minHeight: 52,
+            onPressed: () => _rebuildDay(context, ref),
+          ),
+          const SizedBox(height: AppSpacing.s12),
           // The plan is not salvageable a day at a time from here. Abandoning is a decision, so it
           // is confirmed — and it is the learner's, which is why nothing happens automatically.
-          PrimaryButton(
+          QuietButton(
             label: l.planDayRebuildPlan,
-            minHeight: 52,
             onPressed: () => _rebuild(context, ref),
-          )
+          ),
+        ]
         else
           PrimaryButton(
             label: l.planDayBuildNow,
@@ -363,6 +376,23 @@ class _NotWrittenYet extends ConsumerWidget {
             },
           ),
       ],
+    );
+  }
+
+  /// Give THIS day one more attempt and watch it being written — the building screen from there on,
+  /// which is the same screen «Собрать день» opens and polls the same idempotent endpoint.
+  Future<void> _rebuildDay(BuildContext context, WidgetRef ref) async {
+    AppHaptics.light();
+    try {
+      await ref.read(apiClientProvider).rebuildPlanDay(plan.id, day.index);
+    } catch (_) {
+      // The building screen answers for the failure in its own words — it polls the same day and
+      // will say «не собрался» if the attempt never started. A second error surface here would be
+      // two sentences about one thing.
+    }
+    if (!context.mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => PlanBuildingScreen(plan: plan, dayIndex: day.index)),
     );
   }
 

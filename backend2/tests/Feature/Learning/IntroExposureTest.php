@@ -121,23 +121,50 @@ it('records an intro as an exposure, never as a review', function () {
     ]);
 });
 
-it('is idempotent on the PAIR — a re-uploaded intro changes nothing and keeps the first shown_at', function () {
+it('is idempotent on the PAIR — one row, and it carries the LAST showing', function () {
     [$user, $token] = learner();
     $termId = seedWordFor($user, 'apple', 'яблоко');
     $first = now()->subHour();
+    $again = now();
 
     $batch = ['exposures' => [exposure($termId, shownAt: $first->toIso8601String())]];
     $this->withHeader('Authorization', "Bearer {$token}")->postJson('/api/v1/reviews/batch', $batch)->assertOk();
 
-    // The same pair again, later — a device that lost its acknowledgement, not a second meeting.
+    // The same pair again, later. `exposures: 0` — this is not a first meeting, so the ordinary
+    // ladder is not touched — but the SHOWING is recorded.
+    //
+    // It used to keep the first `shown_at` for ever, on the reading that a second intro of the
+    // same word is the same fact re-uploaded. That was written before a plan's ladder was scoped
+    // to its plan: a plan counts only exposures after the card joined it, so a row frozen at the
+    // first meeting made every intro of a re-used word invisible to it. Measured on the owner's
+    // live day 1 of 02.09 — the client uploaded a fresh exposure for «available» six times, all six
+    // were dropped, and the card was introduced again in six sittings running.
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/reviews/batch', ['exposures' => [exposure($termId, shownAt: now()->toIso8601String())]])
+        ->postJson('/api/v1/reviews/batch', ['exposures' => [exposure($termId, shownAt: $again->toIso8601String())]])
         ->assertOk()
         ->assertJsonPath('data.exposures', 0);
 
     $this->assertDatabaseCount('term_exposures', 1);
     expect((string) DB::table('term_exposures')->where('term_id', $termId)->value('shown_at'))
-        ->toStartWith($first->utc()->format('Y-m-d H:i'));
+        ->toStartWith($again->utc()->format('Y-m-d H:i'));
+});
+
+it('never drags a showing backwards — a replayed offline batch is not a new meeting', function () {
+    [$user, $token] = learner();
+    $termId = seedWordFor($user, 'apple', 'яблоко');
+    $shown = now();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['exposures' => [exposure($termId, shownAt: $shown->toIso8601String())]])
+        ->assertOk();
+
+    // The same intro, arriving late out of a queue that was written an hour ago.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['exposures' => [exposure($termId, shownAt: now()->subHour()->toIso8601String())]])
+        ->assertOk();
+
+    expect((string) DB::table('term_exposures')->where('term_id', $termId)->value('shown_at'))
+        ->toStartWith($shown->utc()->format('Y-m-d H:i'));
 });
 
 it('does not push a pair back down the ladder when its intro is re-uploaded', function () {

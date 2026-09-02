@@ -73,7 +73,7 @@ void main() {
       transliteration: transliteration,
     );
 
-    Widget host(SessionCard c, {bool? readingEnabled}) => ProviderScope(
+    Widget host(SessionCard c, {bool? readingEnabled, bool showExample = true}) => ProviderScope(
       overrides: [
         if (readingEnabled != null)
           transliterationEnabledProvider.overrideWithValue(readingEnabled),
@@ -88,6 +88,7 @@ void main() {
               card: c,
               speechLocaleId: 'en_US',
               autoPronounce: false,
+              showExample: showExample,
               onSpeak: (text, {bool slow = false}) async {},
             ),
           ),
@@ -109,6 +110,26 @@ void main() {
       });
       return out;
     }
+
+    /// A PLAN LINE HAS NO EXAMPLE — канон §7, and the intro is the card that showed one.
+    ///
+    /// Owner's live day 1, 02.09: the card «I see, without utilities.» was introduced by «When the
+    /// power went out, I realized that I see, without utilities, life becomes…» — the card word for
+    /// word, padded into a sentence that means nothing. The server no longer writes them and the
+    /// migration cleaned out the ones it had; the card refuses to draw one either way, because a
+    /// day generated before that fix still carries them in the local mirror.
+    testWidgets('draws no example for a line, whatever the mirror still holds', (tester) async {
+      const example = 'When the power went out, I realized that I see, without utilities, life becomes hard.';
+      await tester.pumpWidget(host(
+        card(term: 'I see, without utilities.', example: example),
+        showExample: false,
+      ));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.textContaining('When the power went out'), findsNothing);
+      // …and the card itself is still there: this hides the sentence, not the introduction.
+      expect(find.textContaining('I see, without utilities.'), findsWidgets);
+    });
 
     testWidgets('a sentence-like term is bolded inside its example', (tester) async {
       const example = 'I have a fever and feel very weak.';
