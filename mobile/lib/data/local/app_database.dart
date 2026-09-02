@@ -36,6 +36,16 @@ class Collections extends Table {
   /// on the title, which the owner may have changed.
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
 
+  /// WHERE THE FOLDER CAME FROM, when it did not come from the learner. `plan` is a plan DAY's
+  /// folder; null is a shelf the learner keeps.
+  ///
+  /// The row IS mirrored — a card's pair is resolved through its collection, so a plan session
+  /// cannot be played without it — and it simply is not a shelf. Both lists that show «what I keep»
+  /// skip it: [watchCollections] («Мои коллекции», Д-34) and [challengeMirror] (the home screen's
+  /// word-challenge, which drew its wrong answers out of the plan's own replies while the plan ran
+  /// and after it was archived, Д-35).
+  TextColumn get origin => text().nullable()();
+
   /// A PHRASEBOOK, not a course: the studied language carries no trainers at all (zh, ja in v1).
   /// Such a collection shows a term, a translation and audio — no triage, no session, no enrolment.
   ///
@@ -457,7 +467,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   /// `addColumn`, but a no-op when the column is already there (QA-23).
   ///
@@ -615,14 +625,31 @@ class AppDatabase extends _$AppDatabase {
         // of them, the server is the only place they exist.
         await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
       }
+      if (from < 19) {
+        // WHERE A FOLDER CAME FROM — `plan` for a plan day's collection (Д-34, Д-35).
+        await _addColumnIfMissing(m, collections, collections.origin);
+        // …and a full snapshot on the next sync, for the same reason as every column before it: a
+        // delta carries only rows whose `updated_at` moved, so every plan day already mirrored here
+        // would stay untagged and go on standing in «Мои коллекции». The server is the only place
+        // the value exists — there is no offline stand-in for it.
+        await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
+      }
     },
   );
 
   // ---- Reads (reactive) -----------------------------------------------------
 
-  /// All owned collections, ordered by title for a stable list (created_at isn't synced).
+  /// The learner's own folders, ordered by title for a stable list (created_at isn't synced).
+  ///
+  /// A PLAN DAY IS NOT A SHELF (Д-34). Its folder is an ordinary private collection — that is what
+  /// lets the session machinery play its cards unchanged — and it is mirrored for exactly that
+  /// reason, but «Мои коллекции» is a list of what the learner KEEPS, and the live run put
+  /// «Ответить на вопр…» and «Открыть приём д…» in it beside «У врача и в аптеке».
   Stream<List<Collection>> watchCollections() {
-    return (select(collections)..orderBy([(t) => OrderingTerm(expression: t.title)])).watch();
+    return (select(collections)
+          ..where((t) => t.origin.isNull())
+          ..orderBy([(t) => OrderingTerm(expression: t.title)]))
+        .watch();
   }
 
   /// The terms of one collection with content + live status, in study order (position).
@@ -1233,7 +1260,15 @@ class AppDatabase extends _$AppDatabase {
             innerJoin(collections, collections.id.equalsExp(collectionItems.collectionId)),
             leftOuterJoin(termProgress, termProgress.termId.equalsExp(terms.id)),
           ])
-          ..where(terms.translation.isNotNull() & collections.targetLang.isNotNull())
+          // A PLAN DAY IS NOT MATERIAL FOR THIS CARD (Д-35). The challenge is a word from the
+          // learner's own shelves; a plan's folder is the inside of a lesson, and taking its
+          // replies as wrong answers put «Я пришёл с сыном.» and «У него жар.» under `prescription`
+          // — while the plan ran, and again after it had been archived.
+          ..where(
+            terms.translation.isNotNull() &
+                collections.targetLang.isNotNull() &
+                collections.origin.isNull(),
+          )
           ..orderBy([OrderingTerm(expression: collections.id)]);
 
     final out = <String, ChallengeTerm>{};

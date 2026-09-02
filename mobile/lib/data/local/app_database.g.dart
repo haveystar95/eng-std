@@ -147,6 +147,15 @@ class $CollectionsTable extends Collections
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _originMeta = const VerificationMeta('origin');
+  @override
+  late final GeneratedColumn<String> origin = GeneratedColumn<String>(
+    'origin',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isReferenceMeta = const VerificationMeta(
     'isReference',
   );
@@ -188,6 +197,7 @@ class $CollectionsTable extends Collections
     imageAuthor,
     imageAuthorUrl,
     isDefault,
+    origin,
     isReference,
     updatedAt,
   ];
@@ -289,6 +299,12 @@ class $CollectionsTable extends Collections
         isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
       );
     }
+    if (data.containsKey('origin')) {
+      context.handle(
+        _originMeta,
+        origin.isAcceptableOrUnknown(data['origin']!, _originMeta),
+      );
+    }
     if (data.containsKey('is_reference')) {
       context.handle(
         _isReferenceMeta,
@@ -367,6 +383,10 @@ class $CollectionsTable extends Collections
         DriftSqlType.bool,
         data['${effectivePrefix}is_default'],
       )!,
+      origin: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}origin'],
+      ),
       isReference: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_reference'],
@@ -403,6 +423,16 @@ class Collection extends DataClass implements Insertable<Collection> {
   /// on the title, which the owner may have changed.
   final bool isDefault;
 
+  /// WHERE THE FOLDER CAME FROM, when it did not come from the learner. `plan` is a plan DAY's
+  /// folder; null is a shelf the learner keeps.
+  ///
+  /// The row IS mirrored — a card's pair is resolved through its collection, so a plan session
+  /// cannot be played without it — and it simply is not a shelf. Both lists that show «what I keep»
+  /// skip it: [watchCollections] («Мои коллекции», Д-34) and [challengeMirror] (the home screen's
+  /// word-challenge, which drew its wrong answers out of the plan's own replies while the plan ran
+  /// and after it was archived, Д-35).
+  final String? origin;
+
   /// A PHRASEBOOK, not a course: the studied language carries no trainers at all (zh, ja in v1).
   /// Such a collection shows a term, a translation and audio — no triage, no session, no enrolment.
   ///
@@ -426,6 +456,7 @@ class Collection extends DataClass implements Insertable<Collection> {
     this.imageAuthor,
     this.imageAuthorUrl,
     required this.isDefault,
+    this.origin,
     required this.isReference,
     required this.updatedAt,
   });
@@ -465,6 +496,9 @@ class Collection extends DataClass implements Insertable<Collection> {
       map['image_author_url'] = Variable<String>(imageAuthorUrl);
     }
     map['is_default'] = Variable<bool>(isDefault);
+    if (!nullToAbsent || origin != null) {
+      map['origin'] = Variable<String>(origin);
+    }
     map['is_reference'] = Variable<bool>(isReference);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -503,6 +537,9 @@ class Collection extends DataClass implements Insertable<Collection> {
           ? const Value.absent()
           : Value(imageAuthorUrl),
       isDefault: Value(isDefault),
+      origin: origin == null && nullToAbsent
+          ? const Value.absent()
+          : Value(origin),
       isReference: Value(isReference),
       updatedAt: Value(updatedAt),
     );
@@ -527,6 +564,7 @@ class Collection extends DataClass implements Insertable<Collection> {
       imageAuthor: serializer.fromJson<String?>(json['imageAuthor']),
       imageAuthorUrl: serializer.fromJson<String?>(json['imageAuthorUrl']),
       isDefault: serializer.fromJson<bool>(json['isDefault']),
+      origin: serializer.fromJson<String?>(json['origin']),
       isReference: serializer.fromJson<bool>(json['isReference']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -548,6 +586,7 @@ class Collection extends DataClass implements Insertable<Collection> {
       'imageAuthor': serializer.toJson<String?>(imageAuthor),
       'imageAuthorUrl': serializer.toJson<String?>(imageAuthorUrl),
       'isDefault': serializer.toJson<bool>(isDefault),
+      'origin': serializer.toJson<String?>(origin),
       'isReference': serializer.toJson<bool>(isReference),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -567,6 +606,7 @@ class Collection extends DataClass implements Insertable<Collection> {
     Value<String?> imageAuthor = const Value.absent(),
     Value<String?> imageAuthorUrl = const Value.absent(),
     bool? isDefault,
+    Value<String?> origin = const Value.absent(),
     bool? isReference,
     DateTime? updatedAt,
   }) => Collection(
@@ -585,6 +625,7 @@ class Collection extends DataClass implements Insertable<Collection> {
         ? imageAuthorUrl.value
         : this.imageAuthorUrl,
     isDefault: isDefault ?? this.isDefault,
+    origin: origin.present ? origin.value : this.origin,
     isReference: isReference ?? this.isReference,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -615,6 +656,7 @@ class Collection extends DataClass implements Insertable<Collection> {
           ? data.imageAuthorUrl.value
           : this.imageAuthorUrl,
       isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      origin: data.origin.present ? data.origin.value : this.origin,
       isReference: data.isReference.present
           ? data.isReference.value
           : this.isReference,
@@ -638,6 +680,7 @@ class Collection extends DataClass implements Insertable<Collection> {
           ..write('imageAuthor: $imageAuthor, ')
           ..write('imageAuthorUrl: $imageAuthorUrl, ')
           ..write('isDefault: $isDefault, ')
+          ..write('origin: $origin, ')
           ..write('isReference: $isReference, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -659,6 +702,7 @@ class Collection extends DataClass implements Insertable<Collection> {
     imageAuthor,
     imageAuthorUrl,
     isDefault,
+    origin,
     isReference,
     updatedAt,
   );
@@ -679,6 +723,7 @@ class Collection extends DataClass implements Insertable<Collection> {
           other.imageAuthor == this.imageAuthor &&
           other.imageAuthorUrl == this.imageAuthorUrl &&
           other.isDefault == this.isDefault &&
+          other.origin == this.origin &&
           other.isReference == this.isReference &&
           other.updatedAt == this.updatedAt);
 }
@@ -697,6 +742,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   final Value<String?> imageAuthor;
   final Value<String?> imageAuthorUrl;
   final Value<bool> isDefault;
+  final Value<String?> origin;
   final Value<bool> isReference;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -714,6 +760,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.imageAuthor = const Value.absent(),
     this.imageAuthorUrl = const Value.absent(),
     this.isDefault = const Value.absent(),
+    this.origin = const Value.absent(),
     this.isReference = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -732,6 +779,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.imageAuthor = const Value.absent(),
     this.imageAuthorUrl = const Value.absent(),
     this.isDefault = const Value.absent(),
+    this.origin = const Value.absent(),
     this.isReference = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -751,6 +799,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Expression<String>? imageAuthor,
     Expression<String>? imageAuthorUrl,
     Expression<bool>? isDefault,
+    Expression<String>? origin,
     Expression<bool>? isReference,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -769,6 +818,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       if (imageAuthor != null) 'image_author': imageAuthor,
       if (imageAuthorUrl != null) 'image_author_url': imageAuthorUrl,
       if (isDefault != null) 'is_default': isDefault,
+      if (origin != null) 'origin': origin,
       if (isReference != null) 'is_reference': isReference,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -789,6 +839,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Value<String?>? imageAuthor,
     Value<String?>? imageAuthorUrl,
     Value<bool>? isDefault,
+    Value<String?>? origin,
     Value<bool>? isReference,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -807,6 +858,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       imageAuthor: imageAuthor ?? this.imageAuthor,
       imageAuthorUrl: imageAuthorUrl ?? this.imageAuthorUrl,
       isDefault: isDefault ?? this.isDefault,
+      origin: origin ?? this.origin,
       isReference: isReference ?? this.isReference,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -855,6 +907,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     if (isDefault.present) {
       map['is_default'] = Variable<bool>(isDefault.value);
     }
+    if (origin.present) {
+      map['origin'] = Variable<String>(origin.value);
+    }
     if (isReference.present) {
       map['is_reference'] = Variable<bool>(isReference.value);
     }
@@ -883,6 +938,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
           ..write('imageAuthor: $imageAuthor, ')
           ..write('imageAuthorUrl: $imageAuthorUrl, ')
           ..write('isDefault: $isDefault, ')
+          ..write('origin: $origin, ')
           ..write('isReference: $isReference, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -6455,6 +6511,7 @@ typedef $$CollectionsTableCreateCompanionBuilder =
       Value<String?> imageAuthor,
       Value<String?> imageAuthorUrl,
       Value<bool> isDefault,
+      Value<String?> origin,
       Value<bool> isReference,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -6474,6 +6531,7 @@ typedef $$CollectionsTableUpdateCompanionBuilder =
       Value<String?> imageAuthor,
       Value<String?> imageAuthorUrl,
       Value<bool> isDefault,
+      Value<String?> origin,
       Value<bool> isReference,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -6550,6 +6608,11 @@ class $$CollectionsTableFilterComposer
 
   ColumnFilters<bool> get isDefault => $composableBuilder(
     column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get origin => $composableBuilder(
+    column: $table.origin,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6638,6 +6701,11 @@ class $$CollectionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get origin => $composableBuilder(
+    column: $table.origin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isReference => $composableBuilder(
     column: $table.isReference,
     builder: (column) => ColumnOrderings(column),
@@ -6709,6 +6777,9 @@ class $$CollectionsTableAnnotationComposer
   GeneratedColumn<bool> get isDefault =>
       $composableBuilder(column: $table.isDefault, builder: (column) => column);
 
+  GeneratedColumn<String> get origin =>
+      $composableBuilder(column: $table.origin, builder: (column) => column);
+
   GeneratedColumn<bool> get isReference => $composableBuilder(
     column: $table.isReference,
     builder: (column) => column,
@@ -6762,6 +6833,7 @@ class $$CollectionsTableTableManager
                 Value<String?> imageAuthor = const Value.absent(),
                 Value<String?> imageAuthorUrl = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
+                Value<String?> origin = const Value.absent(),
                 Value<bool> isReference = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -6779,6 +6851,7 @@ class $$CollectionsTableTableManager
                 imageAuthor: imageAuthor,
                 imageAuthorUrl: imageAuthorUrl,
                 isDefault: isDefault,
+                origin: origin,
                 isReference: isReference,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -6798,6 +6871,7 @@ class $$CollectionsTableTableManager
                 Value<String?> imageAuthor = const Value.absent(),
                 Value<String?> imageAuthorUrl = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
+                Value<String?> origin = const Value.absent(),
                 Value<bool> isReference = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -6815,6 +6889,7 @@ class $$CollectionsTableTableManager
                 imageAuthor: imageAuthor,
                 imageAuthorUrl: imageAuthorUrl,
                 isDefault: isDefault,
+                origin: origin,
                 isReference: isReference,
                 updatedAt: updatedAt,
                 rowid: rowid,

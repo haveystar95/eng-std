@@ -121,6 +121,7 @@ final readonly class GetSyncDeltaHandler
                     $row->topic, $row->sourceLang, $row->targetLang, $row->itemsCount,
                     $row->source, $row->type,
                     $row->imageUrl, $row->imageAuthor, $row->imageAuthorUrl, $row->isDefault,
+                    $row->origin,
                 );
             } elseif ($row instanceof CollectionItemSyncRow) {
                 $pItems[] = new CollectionItemChange(

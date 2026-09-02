@@ -188,6 +188,11 @@ final readonly class GeneratePlanDayHandler
             targetLang: $target,
             description: $draft->dayDescription,
             topic: $brief->goalText,
+            // A PLAN DAY, and the folder says so. It is an ordinary private collection in every
+            // other respect — that is what lets the session machinery deal its cards unchanged —
+            // and without the tag «Мои коллекции» listed it and the home screen's word-challenge
+            // took its replies as wrong answers, plan running or long archived (Д-34, Д-35).
+            origin: CreateGeneratedCollection::ORIGIN_PLAN,
         ));
 
         $termIds = [];

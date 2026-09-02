@@ -6,6 +6,7 @@ namespace App\Modules\Collections\Domain\Entity;
 
 use App\Modules\Collections\Domain\Exception\DefaultCollectionNotDeletable;
 use App\Modules\Collections\Domain\Exception\NotCollectionOwner;
+use App\Modules\Collections\Domain\ValueObject\CollectionOrigin;
 use App\Modules\Collections\Domain\ValueObject\CollectionSource;
 use App\Modules\Collections\Domain\ValueObject\CollectionType;
 use App\Modules\Collections\Domain\ValueObject\LanguagePair;
@@ -60,6 +61,16 @@ final class Collection
          * it by this flag.
          */
         private readonly bool $isDefault = false,
+        /**
+         * WHERE THIS FOLDER CAME FROM — {@see CollectionOrigin}. Null for every folder a learner
+         * made or subscribed to, which is nearly all of them.
+         *
+         * A tag and not a type: the three types say who may SEE a folder, and a plan day is exactly
+         * what its type says it is — a private custom folder of this owner's. What the tag adds is
+         * the one question the lists ask, «is this a shelf the learner keeps, or the inside of a
+         * lesson», and every list answers it for itself.
+         */
+        private readonly ?CollectionOrigin $origin = null,
     ) {
         $this->items = $items;
         $this->imageUrl = self::clean($imageUrl);
@@ -117,11 +128,13 @@ final class Collection
         ?string $description = null,
         ?string $topic = null,
         ?string $imageApiPrompt = null,
+        ?CollectionOrigin $origin = null,
     ): self {
         return new self(
             $id, $ownerId, CollectionType::Custom, self::cleanTitle($title), $description, $topic,
             $sourceLang, $targetLang, Visibility::Private, CollectionSource::Ai, $createdAt, [],
             imageApiPrompt: $imageApiPrompt,
+            origin: $origin,
         );
     }
 
@@ -149,11 +162,13 @@ final class Collection
         ?string $imageAuthorUrl = null,
         bool $isPremium = false,
         bool $isDefault = false,
+        ?CollectionOrigin $origin = null,
     ): self {
         return new self(
             $id, $ownerId, $type, $title, $description, $topic,
             $sourceLang, $targetLang, $visibility, $source, $createdAt, $items,
             $imageUrl, $imageApiPrompt, $imageAuthor, $imageAuthorUrl, $isPremium, $isDefault,
+            $origin,
         );
     }
 
@@ -333,6 +348,11 @@ final class Collection
     public function isDefault(): bool
     {
         return $this->isDefault;
+    }
+
+    public function origin(): ?CollectionOrigin
+    {
+        return $this->origin;
     }
 
     public function createdAt(): DateTimeImmutable

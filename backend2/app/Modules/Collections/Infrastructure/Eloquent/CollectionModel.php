@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $source
  * @property bool $is_premium
  * @property bool $is_default
+ * @property string|null $origin
  * @property int $items_count
  * @property string|null $image_url
  * @property string|null $image_api_prompt

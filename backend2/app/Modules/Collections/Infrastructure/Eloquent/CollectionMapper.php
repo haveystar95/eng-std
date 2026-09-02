@@ -6,6 +6,7 @@ namespace App\Modules\Collections\Infrastructure\Eloquent;
 
 use App\Modules\Collections\Domain\Entity\Collection;
 use App\Modules\Collections\Domain\Entity\CollectionItem;
+use App\Modules\Collections\Domain\ValueObject\CollectionOrigin;
 use App\Modules\Collections\Domain\ValueObject\CollectionSource;
 use App\Modules\Collections\Domain\ValueObject\CollectionType;
 use App\Modules\Collections\Domain\ValueObject\Visibility;
@@ -42,6 +43,7 @@ final class CollectionMapper
             imageAuthorUrl: $model->image_author_url,
             isPremium: (bool) $model->is_premium,
             isDefault: (bool) $model->is_default,
+            origin: $model->origin === null ? null : CollectionOrigin::tryFrom($model->origin),
         );
     }
 
@@ -65,6 +67,7 @@ final class CollectionMapper
             'image_author_url' => $collection->imageAuthorUrl(),
             'is_premium' => $collection->isPremium(),
             'is_default' => $collection->isDefault(),
+            'origin' => $collection->origin()?->value,
             'created_at' => $collection->createdAt(),
         ];
     }

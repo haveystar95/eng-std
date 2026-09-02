@@ -18,6 +18,14 @@ final class EloquentUserCollectionsReader implements UserCollectionsReader
         // is simply the last id seen. Fetch one extra row to detect another page.
         $query = CollectionModel::query()
             ->where('owner_id', $userId->value)
+            // A PLAN DAY IS NOT A SHELF (Д-34). It is a private custom folder of this owner's — that
+            // is what lets the session machinery deal its cards unchanged — but it is the inside of
+            // a lesson, and the two places this reader feeds are lists of what the learner KEEPS:
+            // «Мои коллекции» and the home screen's «разобрать» plate. The live run put «Ответить на
+            // вопр…» and «Открыть приём д…» beside «У врача и в аптеке» in the first, with the
+            // plan's fourteen words counted as words to triage in the second. The plan's own screens
+            // read the plan, never this. {@see CollectionOrigin}
+            ->whereNull('origin')
             ->orderByDesc('id')
             ->limit($limit + 1);
 

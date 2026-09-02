@@ -27,5 +27,14 @@ final readonly class CollectionSyncRow
         // «Сохранённые»: the folder a one-tap save lands in. The client greys out its delete action
         // and names it in the save confirmation, so it has to ride the delta like any other fact.
         public bool $isDefault = false,
+        /**
+         * WHERE THE FOLDER CAME FROM — `plan` for a plan day, null for a shelf the learner keeps.
+         *
+         * On the wire for the same reason `is_default` is: the device's own lists have to make the
+         * same distinction the server's do, and it reads them out of its mirror rather than off an
+         * endpoint. The rows are still SENT — the session needs the folder to resolve a card's pair
+         * — they are just not a shelf ({@see \App\Modules\Collections\Domain\ValueObject\CollectionOrigin}).
+         */
+        public ?string $origin = null,
     ) {}
 }

@@ -2200,6 +2200,17 @@ paths:
                                 image_author: { type: string, nullable: true, description: 'photographer credit (Pexels licence)' }
                                 image_author_url: { type: string, nullable: true, description: 'link to the photographer' }
                                 is_default: { type: boolean, description: 'the owner''s «Сохранённые» folder — one per owner, undeletable' }
+                                origin:
+                                  type: string
+                                  nullable: true
+                                  enum: [plan]
+                                  description: >-
+                                    WHERE THE FOLDER CAME FROM, when it did not come from the
+                                    learner. `plan` is a plan DAY's folder: an ordinary private
+                                    collection that the plan owns, sent so a card's pair can be
+                                    resolved through it, and NOT one of the learner's own shelves.
+                                    The device must leave it out of «Мои коллекции» and out of the
+                                    home screen's word-challenge (Д-34, Д-35). Null everywhere else.
                                 is_reference:
                                   type: boolean
                                   description: >-

@@ -150,6 +150,10 @@ final class SyncController
             'image_author' => $r->imageAuthor,
             'image_author_url' => $r->imageAuthorUrl,
             'is_default' => $r->isDefault,
+            // WHERE THE FOLDER CAME FROM. `plan` marks the inside of a lesson: the rows are still
+            // sent (a card's pair is resolved through its folder) and simply are not a shelf, so
+            // «Мои коллекции» and the word-challenge skip them (Д-34, Д-35).
+            'origin' => $r->origin,
             // ADDITIVE, and derived rather than stored: a collection whose studied language carries
             // no trainers is a phrasebook — term, translation, audio — with no training buttons and
             // no enrolment (DECISIONS пп. 84, 136). Sent from here because the capability is the

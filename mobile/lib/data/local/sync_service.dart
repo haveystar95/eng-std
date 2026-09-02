@@ -255,6 +255,10 @@ class SyncService {
             imageAuthor: Value(c['image_author'] as String?),
             imageAuthorUrl: Value(c['image_author_url'] as String?),
             isDefault: Value((c['is_default'] as bool?) ?? false),
+            // WHERE THE FOLDER CAME FROM. Null on a server that predates the tag, which is the
+            // right default: «this is the inside of a plan» is a claim, and a server that makes no
+            // claim is not making this one.
+            origin: Value(c['origin'] as String?),
             // Additive, and false for a server that predates it — which is the right default:
             // «phrasebook» is a claim, and a server that makes no claim is not making this one.
             isReference: Value((c['is_reference'] as bool?) ?? false),

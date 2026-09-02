@@ -30,6 +30,8 @@ final readonly class CollectionChange
         public ?string $imageAuthor = null,
         public ?string $imageAuthorUrl = null,
         public bool $isDefault = false,
+        /** `plan` for a plan day's folder, null for a shelf the learner keeps. */
+        public ?string $origin = null,
     ) {}
 
     /**
