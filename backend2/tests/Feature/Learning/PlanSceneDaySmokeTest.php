@@ -141,4 +141,28 @@ it('walks a plan from the goal to a closed day, and the day is a scene all the w
 
     expect($census['stage_a_closed'])->toBeGreaterThan(0)
         ->and($census['total'])->toBeGreaterThanOrEqual($census['stage_a_closed']);
+
+    // ── AND NOTHING CLOSED COMES BACK IN THE SAME DAY ─────────────────────────────────────────
+    //
+    // The gate of the blockers наряд, and the shape of the live failure it closes: on 02.09 the
+    // owner answered every card of the scene correctly and the day went on dealing sittings — the
+    // five rescue phrases in every one of them, and one card whose intro was never recorded. Every
+    // step the next sitting owes must be a step nobody has answered today.
+    $next = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$plan['id']}/session")->assertOk()->json('data');
+
+    $answeredToday = DB::table('reviews')->where('user_id', $user->id)->pluck('term_id')->all();
+    $rescue = $shelves->where('shelf', 'rescue')->pluck('id')->all();
+    $repeats = array_values(array_filter(
+        $next['tasks'],
+        static fn (array $t): bool => in_array($t['card']['term_id'], $answeredToday, true)
+            && $t['section'] === PlanSessionTaskView::SECTION_WARMUP,
+    ));
+
+    // The next sitting belongs to DAY 2 — the day just walked is closed and does not deal again —
+    // and the warm-up does not bring back a phrase this day already answered.
+    expect($next['focus_day_index'])->toBe(2)
+        ->and($repeats)->toBe([])
+        ->and(array_intersect(array_column(array_column($next['tasks'], 'card'), 'term_id'), $rescue))
+        ->toBe([]);
 });
