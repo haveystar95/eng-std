@@ -533,6 +533,39 @@ it('never lets readiness FALL as a new day is written (Д-31)', function () {
         ->and($afterDay2Written)->toBe($beforeDay2Written);
 });
 
+it('counts the cards and the stage-A closures the plan card shows', function () {
+    // What `readiness` cannot say while half its formula does not exist. It counts the cards that
+    // reached their LAST stage — a line after B, a word after C — so a day that closes stage A moves
+    // its cards ONTO stage B and the percentage honestly stays at zero. The owner walked fifty-six
+    // cards on 02.09 and the plan card said «0% готовность к событию».
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $census = static fn (object $ctx): array => (array) $ctx
+        ->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$planId}")
+        ->assertOk()
+        ->json('data.stage_census');
+
+    $before = $census($this);
+    expect($before['total'])->toBeGreaterThan(0)
+        ->and($before['stage_a_closed'])->toBe(0);
+
+    walkDay($this, $token, $planId, 1);
+
+    $after = $census($this);
+    $day1 = DB::table('collection_items')->where(
+        'collection_id',
+        DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('collection_id'),
+    )->count();
+
+    // Every card of day 1 closed its stage A, and the count SAYS SO on the day it happened — the
+    // percentage will not move until a night has passed and stage B has been walked too.
+    expect($after['stage_a_closed'])->toBe($day1)
+        ->and($after['total'])->toBeGreaterThanOrEqual($day1)
+        ->and((float) $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/plans/{$planId}")->json('data.readiness'))->toBe(0.0);
+});
+
 it('passes the day when every word closes stage A, and moves the focus to day 2', function () {
     [, $token, $planId] = startedPlan($this);
 

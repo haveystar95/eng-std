@@ -32,6 +32,9 @@ LearningPlan _plan() => LearningPlan.fromJson({
   'event_date': '2026-09-02',
   'minutes_per_day': 20,
   'readiness': 0.5,
+  // Twelve of fourteen cards past stage A — what the card leads with until the canonical readiness
+  // formula arrives (P2-v0.4/SIT-1). The percentage stays on the wire and stops being the headline.
+  'stage_census': {'total': 14, 'stage_a_closed': 12},
   'focus_day_index': 2,
   'days_to_event': 2,
   'can_already': [
@@ -46,7 +49,9 @@ LearningPlan _plan() => LearningPlan.fromJson({
 });
 
 void main() {
-  testWidgets('with a plan the slot leads with readiness, not with words done', (tester) async {
+  testWidgets('with a plan the slot leads with the plan\'s own progress, not with words done', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [activePlanProvider.overrideWith((ref) async => _plan())],
@@ -57,9 +62,13 @@ void main() {
 
     expect(find.text('ПЛАН · ДЕНЬ 2 ИЗ 3'), findsOneWidget);
     expect(find.text('К врачу из-за боли'), findsOneWidget);
-    // The headline number is the readiness, and its caption names the event rather than the cards.
-    expect(find.text('50'), findsOneWidget);
-    expect(find.text('готовности к событию · 1 из 2'), findsOneWidget);
+    // The headline number is the plan's own work — the cards that closed stage A — and not the
+    // readiness percentage, which counts the cards that reached their LAST stage and therefore reads
+    // zero for the first days of every plan (02.09, «0% готовность» over fifty-six walked cards).
+    expect(find.text('12'), findsOneWidget);
+    expect(find.text('14 карточек · 12 закрыли ступень A · 2 осталось'), findsOneWidget);
+    expect(find.text('50'), findsNothing);
+    expect(find.text('%'), findsNothing);
     // The focus day is named beside the action, so the button is not «continue what exactly».
     expect(find.text('Уточнить симптомы'), findsOneWidget);
     expect(find.text('Продолжить'), findsOneWidget);

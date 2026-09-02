@@ -331,6 +331,8 @@ class LearningPlan {
     required this.goalTerms,
     required this.computed,
     required this.days,
+    this.cardsTotal = 0,
+    this.stageAClosed = 0,
   });
 
   final String id;
@@ -361,6 +363,18 @@ class LearningPlan {
   final bool deadlineTight;
 
   final List<PlanCheckpoint> canAlready;
+
+  /// HOW MANY CARDS THE PLAN HAS WRITTEN, AND HOW MANY HAVE CLOSED STAGE A — `stage_census`.
+  ///
+  /// The plain count the plan card shows instead of [readiness] until the canonical formula arrives
+  /// with P2-v0.4/SIT-1. Readiness counts the cards that reached their LAST stage (a line after B, a
+  /// word after C), so a day that closes stage A moves its cards ONTO stage B and the percentage
+  /// honestly stays at zero — which is what the owner read after walking fifty-six cards (02.09).
+  final int cardsTotal, stageAClosed;
+
+  /// Of the cards written, the ones whose stage A is still open. Never negative: a server that has
+  /// not learned to send the census yet answers zero for both, and zero minus zero is zero.
+  int get stageALeft => (cardsTotal - stageAClosed).clamp(0, cardsTotal);
 
   /// «На приёме сказал 5 из 6» — the positions in [canAlready] the learner ticked after the event.
   ///
@@ -423,6 +437,9 @@ class LearningPlan {
     startedAt: j['started_at'] as String?,
     completedAt: j['completed_at'] as String?,
     readiness: (j['readiness'] as num?)?.toDouble() ?? 0,
+    cardsTotal: ((j['stage_census'] as Map<String, dynamic>?)?['total'] as num?)?.toInt() ?? 0,
+    stageAClosed:
+        ((j['stage_census'] as Map<String, dynamic>?)?['stage_a_closed'] as num?)?.toInt() ?? 0,
     focusDayIndex: (j['focus_day_index'] as num?)?.toInt() ?? 1,
     nextDayIndex: (j['next_day_index'] as num?)?.toInt(),
     daysToEvent: (j['days_to_event'] as num?)?.toInt() ?? 0,

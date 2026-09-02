@@ -50,6 +50,8 @@ LearningPlan _planWithDayOneDone() => LearningPlan.fromJson({
 /// The plan's payload minus the two fields a test usually wants to move. Spread rather than copied,
 /// so a day-list test can replace `days` without restating everything above it.
 Map<String, dynamic> _planJson() => {
+  // The census the plan card is built on: fourteen cards written, twelve past stage A.
+  'stage_census': {'total': 14, 'stage_a_closed': 12},
   'id': '01PLAN',
   'status': 'active',
   'title': 'К врачу из-за боли',
@@ -432,6 +434,39 @@ void main() {
 
     // A plausible wrong reason costs more than an honest missing one.
     expect(find.textContaining('не удалось собрать день'), findsOneWidget);
+  });
+
+  testWidgets('the plan card shows the stage count, not a percentage nobody can move', (
+    tester,
+  ) async {
+    // «0% готовность к событию» over fifty-six walked cards, on the owner's phone (02.09). The
+    // number is honest — readiness counts the cards that reached their LAST stage, and a day that
+    // closes stage A moves its cards ONTO stage B — and it will read zero for the first days of
+    // every plan. Until the canonical formula (P2-v0.4/SIT-1) the card shows the count a sitting
+    // actually moves. The formula is untouched: `readiness` is still computed and still on the wire.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [planProvider('01PLAN').overrideWith((ref) async => _plan())],
+        child: _app(const PlanScreen(planId: '01PLAN')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('12'), findsOneWidget);
+    expect(find.text('14 карточек · 12 закрыли ступень A · 2 осталось'), findsOneWidget);
+
+    // The percentage and its caption are gone from the plate — `readiness` is 0.5 in this fixture,
+    // so «50» would be found if the plate still drew it.
+    expect(find.text('%'), findsNothing);
+    expect(find.text('50'), findsNothing);
+
+    // …and «ТЫ УЖЕ МОЖЕШЬ · 0 из 6» is not drawn while every checkpoint is false by construction:
+    // a checkpoint is confirmed by being SAID in a conversation, and there is none until CONV-1.
+    expect(find.textContaining('ТЫ УЖЕ МОЖЕШЬ'), findsNothing);
+    expect(find.text('Сказать, зачем пришёл'), findsNothing);
+    // The days are still there — the block's «Потренировать» only ever opened the day that teaches
+    // the checkpoint, and the day list is right below it.
+    expect(find.text('Начать приём'), findsOneWidget);
   });
 
   testWidgets('the FINAL day offers the run-through, never «Собрать день» (Д-27)', (tester) async {

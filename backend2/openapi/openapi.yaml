@@ -2544,6 +2544,24 @@ components:
             zero, and the term half is capped at 0.4 — its weight in the full formula. A learner
             who has acquired every word of every day reads 0.4, not «готов». The number only ever
             grows when the ladder ships; it never has to be taken back.
+        stage_census:
+          type: object
+          description: >-
+            HOW MANY CARDS THE PLAN HAS WRITTEN, AND HOW MANY HAVE CLOSED STAGE A — the plain count
+            beside `readiness`, and what the plan card shows until the canonical formula arrives
+            with P2-v0.4/SIT-1. Readiness counts the cards that reached their LAST stage (a line
+            after B, a word after C), so a day that closes stage A moves its cards ONTO stage B and
+            the percentage honestly stays at zero for the first days of a plan. Computed from the
+            same standings as `readiness`, so the two can never tell different stories.
+          properties:
+            total: { type: integer, description: 'cards of the days that have been written' }
+            stage_a_closed:
+              type: integer
+              description: >-
+                Of those, how many are past stage A or standing on it with every trainer ticked.
+                The second half matters on the day itself: the stage closes in the sitting and the
+                card only LEAVES A after the night.
+          required: [total, stage_a_closed]
         entities:
           type: array
           description: >-

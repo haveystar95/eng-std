@@ -2939,6 +2939,32 @@ class AppLocalizationsEn extends AppLocalizations {
       'The final day adds nothing new — it is a run-through of everything the plan taught. Walk it before the event.';
 
   @override
+  String planStageCensusCards(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cards',
+      one: '$count card',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planStageCensusClosed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count closed rung A');
+    return '$_temp0';
+  }
+
+  @override
+  String planStageCensusLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count to go');
+    return '$_temp0';
+  }
+
+  @override
+  String get planStageCensusCaption => 'rung A · meeting the material';
+
+  @override
   String get planArchive => 'Archive';
 
   @override

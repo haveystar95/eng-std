@@ -95,27 +95,39 @@ class _PlanBody extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                PlanLabel(
-                  l.planCanAlready(plan.checkpointsHit, plan.canAlready.length),
-                  color: AppColors.tertiary,
-                  fontSize: 11.5,
-                ),
-                const SizedBox(height: AppSpacing.s8),
-                for (final checkpoint in plan.canAlready)
-                  PlanAbilityRow(
-                    text: checkpoint.text,
-                    hit: checkpoint.hit,
-                    // An unmet ability is not a complaint — it is a door. Tapping «Потренировать»
-                    // opens the DAY that teaches it, which is the only place the learner can act on
-                    // this line at all.
-                    trailing: checkpoint.hit
-                        ? null
-                        : _RowLink(
-                            label: l.planTrainThis,
-                            onTap: () => _openDay(context, plan, checkpoint.dayIndex),
-                          ),
+                // «ТЫ УЖЕ МОЖЕШЬ · 0 из 6» IS NOT DRAWN UNTIL IT CAN BE ANYTHING BUT ZERO.
+                //
+                // A checkpoint is confirmed by being SAID in the conversation without a prompt, and
+                // there is no conversation until CONV-1 — so every `hit` is false by construction
+                // and the header counts to zero for the whole life of every plan. A block that can
+                // only ever say «0 из 6» reads as failure over work that was done.
+                //
+                // The rows are not lost with it: each «Потренировать» opened the DAY that teaches
+                // the checkpoint, and the day list two lines below is the same set of days. The data
+                // stays on the wire (`can_already`) — the screen is built against its shape and does
+                // not have to be rewritten when CONV-1 lands; only this `if` goes away.
+                if (plan.canAlready.any((c) => c.hit)) ...[
+                  PlanLabel(
+                    l.planCanAlready(plan.checkpointsHit, plan.canAlready.length),
+                    color: AppColors.tertiary,
+                    fontSize: 11.5,
                   ),
-                const SizedBox(height: AppSpacing.s22),
+                  const SizedBox(height: AppSpacing.s8),
+                  for (final checkpoint in plan.canAlready)
+                    PlanAbilityRow(
+                      text: checkpoint.text,
+                      hit: checkpoint.hit,
+                      // An unmet ability is not a complaint — it is a door. Tapping «Потренировать»
+                      // opens the DAY that teaches it.
+                      trailing: checkpoint.hit
+                          ? null
+                          : _RowLink(
+                              label: l.planTrainThis,
+                              onTap: () => _openDay(context, plan, checkpoint.dayIndex),
+                            ),
+                    ),
+                  const SizedBox(height: AppSpacing.s22),
+                ],
                 PlanLabel(
                   l.planDaysHeader(plan.focusDayIndex, plan.days.length),
                   color: AppColors.tertiary,
@@ -251,29 +263,33 @@ class _ReadinessPlate extends StatelessWidget {
           const SizedBox(height: AppSpacing.s16),
           Divider(height: 1, thickness: 1, color: paper.withValues(alpha: 0.18)),
           const SizedBox(height: AppSpacing.s16),
+          // WHAT THE WORK LOOKS LIKE TODAY, not «0% готовность к событию».
+          //
+          // The percentage is honest and, for the first days of a plan, always zero: it counts the
+          // cards that reached their LAST stage (a line after B, a word after C), and a day that
+          // closes stage A moves its cards ONTO stage B. The owner walked fifty-six cards on 02.09
+          // and read 0%. So the plate shows the count the sitting actually moves until the canonical
+          // formula arrives (P2-v0.4/SIT-1). The formula itself is untouched — `readiness` is still
+          // computed, still on the wire, and simply not the headline here.
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              // 52pt of Literata beside 19 — the number IS the headline, and the unit is not. Two
-              // strings rather than one localised phrase, because one phrase cannot be set in two
-              // sizes (the same reason the home screen's session count is two).
+              // 52pt of Literata beside 18 — the number IS the headline. Two strings rather than one
+              // localised phrase, because one phrase cannot be set in two sizes.
               Text(
-                '${plan.readinessPercent}',
+                '${plan.stageAClosed}',
                 style: AppText.displayNumber.copyWith(color: paper, fontSize: 52, height: 1),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  '%',
-                  style: AppText.displayNumber.copyWith(color: paper, fontSize: 26, height: 1),
-                ),
               ),
               const SizedBox(width: AppSpacing.s12),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 2),
                   child: Text(
-                    l.planReadinessCaption,
+                    [
+                      l.planStageCensusCards(plan.cardsTotal),
+                      l.planStageCensusClosed(plan.stageAClosed),
+                      if (plan.stageALeft > 0) l.planStageCensusLeft(plan.stageALeft),
+                    ].join(' · '),
                     style: AppText.displayTerm.copyWith(
                       color: paper.withValues(alpha: 0.8),
                       fontSize: 18,
@@ -284,8 +300,21 @@ class _ReadinessPlate extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          Text(
+            l.planStageCensusCaption,
+            style: AppText.translation.copyWith(
+              fontSize: 12.5,
+              color: paper.withValues(alpha: 0.66),
+            ),
+          ),
           const SizedBox(height: 14),
-          PlanReadinessBar(value: plan.readiness, onDark: true),
+          PlanReadinessBar(
+            // The bar follows the same count as the number above it — a bar tracking a percentage
+            // the headline no longer shows would be a second, contradicting answer.
+            value: plan.cardsTotal == 0 ? 0 : plan.stageAClosed / plan.cardsTotal,
+            onDark: true,
+          ),
           const SizedBox(height: AppSpacing.s12),
           Row(
             children: [

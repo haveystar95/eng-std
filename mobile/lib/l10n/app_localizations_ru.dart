@@ -3070,6 +3070,48 @@ class AppLocalizationsRu extends AppLocalizations {
       'Финальный день ничего не добавляет — это прогон всего, чему план научил. Пройди его перед событием.';
 
   @override
+  String planStageCensusCards(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count карточки',
+      many: '$count карточек',
+      few: '$count карточки',
+      one: '$count карточка',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planStageCensusClosed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count закрыли ступень A',
+      many: '$count закрыли ступень A',
+      few: '$count закрыли ступень A',
+      one: '$count закрыла ступень A',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planStageCensusLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count осталось',
+      many: '$count осталось',
+      few: '$count осталось',
+      one: '$count осталась',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planStageCensusCaption => 'ступень A · знакомство с материалом';
+
+  @override
   String get planArchive => 'Архив';
 
   @override

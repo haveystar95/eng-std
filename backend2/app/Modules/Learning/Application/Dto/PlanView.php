@@ -87,5 +87,23 @@ final readonly class PlanView
          * @var list<int>|null
          */
         public ?array $eventFeedback = null,
+        /**
+         * WHAT THE WORK LOOKS LIKE TODAY — the count `readiness` cannot express while half its
+         * formula does not exist.
+         *
+         * `readiness` counts the cards that reached their LAST stage (a line after B, a word after
+         * C), which is right and, for the first two days of a plan, always zero: a day that closes
+         * stage A moves every one of its cards ONTO stage B, not through it. The owner walked
+         * fifty-six cards on 02.09 and the card said «0% готовность к событию».
+         *
+         * So the plan card shows this instead until the canonical formula arrives with
+         * P2-v0.4/SIT-1: how many cards the plan has written, and how many of them have closed
+         * stage A — the thing a sitting actually moves. Nothing here feeds `readiness`; it is a
+         * second, plainer answer to «что я сделал», and the two are computed from the same
+         * standings.
+         *
+         * @var array{total: int, stage_a_closed: int}
+         */
+        public array $stageCensus = ['total' => 0, 'stage_a_closed' => 0],
     ) {}
 }

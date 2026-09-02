@@ -79,26 +79,26 @@ class _PlanCard extends ConsumerWidget {
           const SizedBox(height: AppSpacing.s8),
           Text(plan.title, style: AppText.displayTerm.copyWith(fontSize: 23, height: 1.22)),
           const SizedBox(height: AppSpacing.s12),
+          // The same count the plan's own plate shows, and for the same reason: the percentage is
+          // honest and always zero for the first days of a plan, because it counts the cards that
+          // reached their LAST stage. See `plan_screen.dart`; the formula is untouched.
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${plan.readinessPercent}',
+                '${plan.stageAClosed}',
                 style: AppText.displayNumber.copyWith(fontSize: 34, height: 1),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Text(
-                  '%',
-                  style: AppText.displayNumber.copyWith(fontSize: 19, height: 1),
-                ),
               ),
               const SizedBox(width: 9),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 3),
                   child: Text(
-                    l.homePlanCardReadiness(plan.checkpointsHit, plan.canAlready.length),
+                    [
+                      l.planStageCensusCards(plan.cardsTotal),
+                      l.planStageCensusClosed(plan.stageAClosed),
+                      if (plan.stageALeft > 0) l.planStageCensusLeft(plan.stageALeft),
+                    ].join(' · '),
                     style: AppText.translation.copyWith(fontSize: 14, color: AppColors.inkBody),
                   ),
                 ),
@@ -106,10 +106,12 @@ class _PlanCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 10),
-          PlanReadinessBar(value: plan.readiness),
-          if (done.isNotEmpty || left.isNotEmpty) ...[
+          PlanReadinessBar(value: plan.cardsTotal == 0 ? 0 : plan.stageAClosed / plan.cardsTotal),
+          // The abilities are drawn only once one of them can be true — until CONV-1 confirms a
+          // checkpoint, `left` is the whole list and the card would carry a permanent complaint.
+          if (done.isNotEmpty) ...[
             const SizedBox(height: 10),
-            if (done.isNotEmpty) _AbilityLine(text: done.join(' · '), hit: true),
+            _AbilityLine(text: done.join(' · '), hit: true),
             if (left.isNotEmpty) _AbilityLine(text: left.join(' · '), hit: false),
           ],
           const SizedBox(height: 14),

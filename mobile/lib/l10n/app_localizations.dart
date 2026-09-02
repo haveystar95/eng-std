@@ -4455,6 +4455,30 @@ abstract class AppLocalizations {
   /// **'Финальный день ничего не добавляет — это прогон всего, чему план научил. Пройди его перед событием.'**
   String get planRehearsalLead;
 
+  /// Первая часть строки прогресса на карточке плана — сколько карточек план уже написал.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}'**
+  String planStageCensusCards(int count);
+
+  /// Вторая часть: сколько карточек закрыли ступень A — то, что двигает сидение.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} закрыла ступень A} few{{count} закрыли ступень A} many{{count} закрыли ступень A} other{{count} закрыли ступень A}}'**
+  String planStageCensusClosed(int count);
+
+  /// Третья часть: сколько ещё не закрыли. Не рисуется, когда ноль.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} осталась} few{{count} осталось} many{{count} осталось} other{{count} осталось}}'**
+  String planStageCensusLeft(int count);
+
+  /// Подпись под строкой прогресса — вместо «готовность к событию», пока каноническая формула не пришла (SIT-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'ступень A · знакомство с материалом'**
+  String get planStageCensusCaption;
+
   /// Лейбл списка прошлых планов.
   ///
   /// In ru, this message translates to:

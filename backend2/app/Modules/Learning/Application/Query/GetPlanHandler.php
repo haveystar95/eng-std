@@ -89,7 +89,38 @@ final readonly class GetPlanHandler
             deadlineTight: $this->deadlineTight($plan, $planDays, $progress, $today),
             canAlready: $this->canAlready($days),
             eventFeedback: $plan->eventFeedback(),
+            stageCensus: self::stageCensusOf($progress),
         );
+    }
+
+    /**
+     * HOW MANY CARDS THE PLAN HAS WRITTEN, AND HOW MANY HAVE CLOSED STAGE A.
+     *
+     * The plain answer to «что я сделал», beside the one `readiness` gives. Readiness counts the
+     * cards that reached their LAST stage, so a day that closes stage A moves its cards ONTO
+     * stage B and the percentage stays at zero — true, and unreadable to somebody who has just
+     * walked fifty-six cards ({@see PlanView::$stageCensus}).
+     *
+     * «Closed stage A» is: standing past A, or standing on A with every trainer of it ticked. The
+     * second half matters on the day itself — the stage closes in the sitting and the card only
+     * LEAVES A after the night.
+     *
+     * Counted off the same standings `readiness` is, so the two can never tell different stories
+     * about the same card.
+     *
+     * @return array{total: int, stage_a_closed: int}
+     */
+    private static function stageCensusOf(PlanProgressView $progress): array
+    {
+        $closed = 0;
+        $standings = $progress->allStandings();
+        foreach ($standings as $standing) {
+            if ($standing->stage !== PlanStage::A || $standing->stageComplete) {
+                $closed++;
+            }
+        }
+
+        return ['total' => count($standings), 'stage_a_closed' => $closed];
     }
 
     /**

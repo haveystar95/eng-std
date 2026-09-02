@@ -999,6 +999,13 @@
   "planRehearsalDoneAction": "Back to the plan",
   "planRehearsalStart": "Start the run-through",
   "planRehearsalLead": "The final day adds nothing new — it is a run-through of everything the plan taught. Walk it before the event.",
+  "planStageCensusCards": "{count, plural, one{{count} card} other{{count} cards}}",
+  "@planStageCensusCards": { "placeholders": { "count": { "type": "int" } } },
+  "planStageCensusClosed": "{count, plural, other{{count} closed rung A}}",
+  "@planStageCensusClosed": { "placeholders": { "count": { "type": "int" } } },
+  "planStageCensusLeft": "{count, plural, other{{count} to go}}",
+  "@planStageCensusLeft": { "placeholders": { "count": { "type": "int" } } },
+  "planStageCensusCaption": "rung A · meeting the material",
   "planArchive": "Archive",
   "planFinishedNewPlan": "Make a new one",
 
