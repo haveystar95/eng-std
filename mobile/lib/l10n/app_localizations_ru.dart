@@ -2916,7 +2916,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planBuildingRefused =>
-      'День не собрался: материал не прошёл проверку. Ждать дальше нечего — план уже создан, его можно открыть.';
+      'Сервер отказался собирать этот день. Ждать дальше нечего — открой план: на экране дня написано, что именно случилось.';
 
   @override
   String get planDayBuildNow => 'Собрать день';

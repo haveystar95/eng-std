@@ -2790,7 +2790,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planBuildingRefused =>
-      'The day did not build: the material failed validation. There is nothing left to wait for — the plan exists and can be opened.';
+      'The server refused to build this day. There is nothing left to wait for — open the plan: the day\'s own screen says what actually happened.';
 
   @override
   String get planDayBuildNow => 'Build the day';

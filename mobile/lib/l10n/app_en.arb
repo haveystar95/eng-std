@@ -939,7 +939,7 @@
   "planAbandonBody": "The plan goes to the archive and its words into general review. The days that did build stay as ordinary collections.",
   "planAbandonConfirm": "Give up",
 
-  "planBuildingRefused": "The day did not build: the material failed validation. There is nothing left to wait for — the plan exists and can be opened.",
+  "planBuildingRefused": "The server refused to build this day. There is nothing left to wait for — open the plan: the day's own screen says what actually happened.",
 
   "planDayBuildNow": "Build the day",
 
