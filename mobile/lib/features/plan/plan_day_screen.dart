@@ -121,6 +121,23 @@ class _DayBody extends ConsumerWidget {
       ),
       children: [
         Text(day.title, style: AppText.collectionNameScreen.copyWith(fontSize: 29, height: 1.18)),
+        // THE SCENE'S ВВОДКА — «кто перед тобой, что сейчас произойдёт, что считается успехом»
+        // (канон §2), in the learner's own language, above everything the day is made of.
+        //
+        // Plain body text and nothing else: the day screen is DAY-2's to design, and a paragraph
+        // that is merely present is worth more than a card invented here and thrown away there. A
+        // day with no вводка — every day written before the scene existed — draws nothing at all.
+        if (day.intro.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.s12),
+          Text(
+            day.intro,
+            style: AppText.translation.copyWith(
+              fontSize: 14.5,
+              height: 1.6,
+              color: AppColors.secondary,
+            ),
+          ),
+        ],
         if (day.outcomes.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s16),
           PlanLabel(l.planDayCanDo, color: AppColors.tertiary, fontSize: 11.5),
@@ -382,7 +399,11 @@ class _PhraseLine extends StatelessWidget {
             // terracotta is the learner's line. The rule alone is not the whole answer — the
             // caption below says it in words — but a register where every line looks identical is
             // exactly what put the doctor's question among the learner's phrases (Д-8).
-            color: term.isRoleLine ? AppColors.brassInk : AppColors.verdictUnknown,
+            //
+            // Asked as «is this only ever RECOGNISED» rather than «is the speaker the role»: the
+            // «Тебе скажут» shelf answers both, and a term the server marks `understand` without a
+            // speaker must not be set as one of the learner's own lines either.
+            color: term.isRecognitionOnly ? AppColors.brassInk : AppColors.verdictUnknown,
             width: 2,
           ),
         ),
@@ -390,7 +411,7 @@ class _PhraseLine extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (term.isRoleLine) ...[
+          if (term.isRecognitionOnly) ...[
             // The role's own name when the skeleton gave one, «Собеседник:» when it did not.
             PlanLabel(roleName ?? l.planSpeakerRole, fontSize: 10.5),
             const SizedBox(height: 3),

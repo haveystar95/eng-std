@@ -2722,32 +2722,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'a card\'s example repeated another card of the day instead of showing the word in a sentence';
 
   @override
-  String get planFailExampleDuplicated => 'the same example stood under several cards at once';
-
-  @override
-  String get planFailExampleMissing => 'a card had no example';
+  String get planFailExampleDuplicated =>
+      'two examples turned out to be one sentence with the word swapped';
 
   @override
   String get planFailNotTargetLanguage => 'the material came back in the wrong language';
 
   @override
-  String get planFailKeyIsTheTerm => 'a card\'s translation repeated the card itself';
-
-  @override
-  String get planFailKeyDuplicated => 'two cards of the day got the same translation';
-
-  @override
-  String get planFailKeyNotSupportLanguage => 'the translation did not come back in your language';
-
-  @override
-  String get planFailKindMismatch => 'a card declared itself as something it is not';
-
-  @override
-  String get planFailCounts =>
-      'the day came back with a different number of cards than was asked for';
-
-  @override
-  String get planFailCheckpoint => 'one of the day\'s abilities was closed by no line at all';
+  String get planFailKeyIsTheTerm =>
+      'a card\'s translation repeated the card itself — in the same letters or in another alphabet';
 
   @override
   String get planFailTermIsAName => 'a proper name cannot take a card — names are not translated';
@@ -2756,18 +2739,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planFailSlotOutsideFrame => 'the gap for the substitution ended up in the wrong line';
 
   @override
-  String get planFailImagePromptMissing => 'a card came back with no image description';
+  String get planFailGapMissing => 'the line had no gap for the card to stand in';
 
   @override
-  String get planFailDescriptionGivesAway =>
-      'a card\'s description named the very word it was hiding';
+  String get planFailTranslationHasGap =>
+      'a gap was left in the translation — there is nothing to read there';
 
   @override
-  String get planFailRoleLineInvented =>
-      'the interlocutor\'s line is not one the day\'s skeleton describes';
+  String get planFailTranslationMissingKey =>
+      'the line\'s translation did not contain the very word it teaches';
 
   @override
-  String get planFailTermRepeated => 'the day repeated a word another day had already introduced';
+  String get planFailFillerNotCard => 'what stood in the gap was not what the card teaches';
+
+  @override
+  String get planFailWordIsBasic => 'a word from the very first basics was made into a card';
+
+  @override
+  String get planFailKindSize => 'a card ran past the length its kind allows';
+
+  @override
+  String get planFailSkillRefInvalid => 'a card did not name the scene\'s ability it is here for';
+
+  @override
+  String get planFailNumberValueMismatch =>
+      'the number in the line and the number the card is graded on are not the same';
+
+  @override
+  String get planFailShelfMissing =>
+      'a whole shelf of the scene is missing — what you will hear, what you will answer, or what those lines are built from';
+
+  @override
+  String get planFailTermRepeated =>
+      'a card repeated another one — of this day, of the rescue kit, or of an earlier day';
 
   @override
   String get planFailUnknown => 'the day could not be built';
@@ -2844,6 +2848,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planReviewSection => 'Revision · from earlier days';
+
+  @override
+  String get planWarmupSection => 'Warm-up';
+
+  @override
+  String get planShelfHear => 'You will hear';
+
+  @override
+  String get planShelfSay => 'You will answer';
+
+  @override
+  String get planShelfAsk => 'You will ask';
+
+  @override
+  String get planShelfWords => 'Words and connectors';
 
   @override
   String get planStageAClosed => 'Stage A closed';

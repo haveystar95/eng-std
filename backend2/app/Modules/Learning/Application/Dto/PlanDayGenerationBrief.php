@@ -5,32 +5,40 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Application\Dto;
 
 /**
- * Everything the day generator needs, handed over the module boundary as primitives.
+ * ONE DAY-SCENE, handed over the module boundary as primitives.
  *
- * Assembled inside the transaction that CLAIMED the day, so what the generator is holding is the
- * day it owns and not a snapshot of a day somebody else has since taken.
+ * Assembled inside the transaction that CLAIMED the day, so what the generator holds is the day it
+ * owns and not a snapshot of a day somebody else has since taken.
+ *
+ * ## v0.4: a scene in, and no arithmetic at all
+ *
+ * The three exact counts are gone (`phraseCount`, `wordCount`, `chunkCount`) and so are the
+ * numbered checkpoints. A day is ONE SCENE — «день = одна сцена целиком» (канон §2) — and what the
+ * prompt is handed is that scene: its title, its вводка, its skills WITH IDS, the lines the other
+ * person opens with, and the names of the scenario. The sizes of the shelves are the prompt's own
+ * guidance and the validator's counters; nothing here computes them, because there is no longer a
+ * number for a day to be «one card off».
+ *
+ * `termBudget` survives as ONE number and it is not a demand: it is what the scheduler wrote into
+ * the day when the plan was made ({@see \App\Modules\Learning\Domain\Service\SceneDay::UNITS}), and
+ * it is read by the ledger row and by the readiness denominator, neither of which is the model's
+ * business.
  */
 final readonly class PlanDayGenerationBrief
 {
     /**
-     * @param  list<string>  $checkpoints  what has to be heard on this day, in order
-     * @param  list<string>  $previousCheckpoints  what every OTHER day of this plan already promises
-     *        — the coherence gate's input ({@see \App\Modules\Generation\Domain\Service\PlanCoherenceValidator}).
-     *        Two days promising the same line is not a harmless repetition: the conversation ticks
-     *        checkpoints off, and the same one ticked twice reads as two abilities earned.
-     * @param  list<string>  $goalTerms    verbatim in both languages, never translated
-     * @param  list<array{name: string, gender: string, number: string, note: string}>  $entities
-     * @param  list<string>  $constraints
-     * @param  list<string>  $openingLines  what the day's interlocutors actually say, verbatim
-     *        from the skeleton — the lines P2 may quote as the ones the learner must recognise, and
-     *        the list the validator checks a `speaker: role` line against.
-     * @param  array<string, mixed>  $dayJson  the day as the prompt reads it
-     * @param  list<string>  $previousViolations  where the LAST answer for this day broke, as
-     *        addresses — «`phrases[3].translation — day.slot_outside_frame: …`». Empty on a first
-     *        run. It carried every attempt's violations, each quoting its card, until the third
-     *        live call returned those quoted cards verbatim
-     *        (`docs/research/plan-v0.3-run.md`, второй заход): a worked example of a wrong answer
-     *        is an example first and a prohibition second.
+     * @param  list<array{id: string, outcome: string, checkpoint: string, topics: list<string>}>  $skills
+     *         the abilities of THIS scene, each with the id every card of the day must name in
+     *         `skill_ref` ({@see \App\Modules\Generation\Domain\Service\PlanDayValidator::SKILL_REF_INVALID})
+     * @param  list<string>  $openingLines  what the other person actually says in this scene — raw
+     *         material for the «Тебе скажут» shelf. v0.4 asks the model to ADAPT them rather than
+     *         quote them, so nothing is compared against this list any more; it is still handed in
+     *         because a shelf written without it is a conversation with somebody else.
+     * @param  list<string>  $entities      proper names of the scenario — filler, never cards
+     * @param  list<string>  $goalTerms     Latin-alphabet names the learner typed themselves
+     * @param  list<string>  $previousViolations  where the LAST answer broke, as addresses. Empty on
+     *         a first run, and never a quotation of what that answer wrote
+     *         ({@see \App\Modules\Generation\Domain\ValueObject\PlanViolation::address()}).
      */
     public function __construct(
         public string $planId,
@@ -44,16 +52,50 @@ final readonly class PlanDayGenerationBrief
         public string $targetLang,
         public string $level,
         public int $termBudget,
-        public int $phraseCount,
-        public int $chunkCount,
-        public int $wordCount,
-        public array $checkpoints,
-        public array $entities,
-        public array $constraints,
-        public array $goalTerms,
-        public array $dayJson,
+        public string $sceneTitle,
+        /** The вводка, 2–3 sentences in the support language. Already written; the day must not retell it. */
+        public string $sceneIntro,
+        public array $skills,
         public array $openingLines = [],
-        public array $previousCheckpoints = [],
+        public array $entities = [],
+        public array $goalTerms = [],
         public array $previousViolations = [],
     ) {}
+
+    /**
+     * The scene as the PROMPT reads it — the whole of `{{scene}}`, assembled by the server.
+     *
+     * One method rather than a field, so the JSON the model sees and the facts the gates judge
+     * against cannot come apart: both are built from the same six properties above.
+     *
+     * @return array<string, mixed>
+     */
+    public function sceneJson(): array
+    {
+        return [
+            'title' => $this->sceneTitle,
+            'intro' => $this->sceneIntro,
+            'skills' => $this->skills,
+            'opening_lines' => $this->openingLines,
+            'entities' => $this->entities,
+        ];
+    }
+
+    /**
+     * The ids of this scene's skills — what `skill_ref` is checked against.
+     *
+     * @return list<string>
+     */
+    public function skillIds(): array
+    {
+        $out = [];
+        foreach ($this->skills as $skill) {
+            $id = trim($skill['id']);
+            if ($id !== '') {
+                $out[] = $id;
+            }
+        }
+
+        return $out;
+    }
 }

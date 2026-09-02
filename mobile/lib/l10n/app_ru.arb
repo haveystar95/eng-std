@@ -2082,52 +2082,52 @@
   },
 
   "planFailExampleIsATerm": "пример к карточке повторял другую карточку этого дня, а не показывал слово в предложении",
-  "@planFailExampleIsATerm": { "description": "fail_code = day.example_is_a_term." },
+  "@planFailExampleIsATerm": { "description": "fail_code = card.example_is_a_term." },
 
-  "planFailExampleDuplicated": "один и тот же пример стоял сразу у нескольких карточек",
-  "@planFailExampleDuplicated": { "description": "fail_code = day.example_duplicated." },
-
-  "planFailExampleMissing": "у карточки не было примера",
-  "@planFailExampleMissing": { "description": "fail_code = day.example_missing." },
+  "planFailExampleDuplicated": "два примера оказались одним предложением с подменённым словом",
+  "@planFailExampleDuplicated": { "description": "fail_code = card.example_skeleton_clone. Раньше — day.example_duplicated: то же самое, «один пример на несколько карточек», только теперь сервер видит его по скелету предложения." },
 
   "planFailNotTargetLanguage": "материал вернулся не на том языке",
   "@planFailNotTargetLanguage": { "description": "fail_code = outline.target_language." },
 
-  "planFailKeyIsTheTerm": "перевод карточки повторял саму карточку",
-  "@planFailKeyIsTheTerm": { "description": "fail_code = day.key_is_the_term." },
-
-  "planFailKeyDuplicated": "две карточки дня получили один и тот же перевод",
-  "@planFailKeyDuplicated": { "description": "fail_code = day.key_duplicated." },
-
-  "planFailKeyNotSupportLanguage": "перевод пришёл не на вашем языке",
-  "@planFailKeyNotSupportLanguage": { "description": "fail_code = day.key_not_support_language." },
-
-  "planFailKindMismatch": "карточка объявила себя не тем, чем она является",
-  "@planFailKindMismatch": { "description": "fail_code = day.kind_mismatch." },
-
-  "planFailCounts": "в дне оказалось не столько карточек, сколько было заказано",
-  "@planFailCounts": { "description": "fail_code = day.array_count / day.term_count." },
-
-  "planFailCheckpoint": "одно из умений дня не закрыла ни одна реплика",
-  "@planFailCheckpoint": { "description": "fail_code = day.checkpoint_uncovered и соседние." },
+  "planFailKeyIsTheTerm": "перевод карточки повторял саму карточку — теми же буквами или другими",
+  "@planFailKeyIsTheTerm": { "description": "fail_code = card.translation_is_transliteration. Раньше — day.key_is_the_term; сервер теперь ловит и транслитерацию, поэтому во фразе названы оба случая." },
 
   "planFailTermIsAName": "именем собственным нельзя занимать карточку — его не переводят",
-  "@planFailTermIsAName": { "description": "fail_code = day.term_is_a_name." },
+  "@planFailTermIsAName": { "description": "fail_code = card.term_is_a_name." },
 
   "planFailSlotOutsideFrame": "пропуск для подстановки оказался не в той строке",
-  "@planFailSlotOutsideFrame": { "description": "fail_code = day.slot_outside_frame." },
+  "@planFailSlotOutsideFrame": { "description": "fail_code = card.gap_outside_frame." },
 
-  "planFailImagePromptMissing": "к карточке не пришло описание для картинки",
-  "@planFailImagePromptMissing": { "description": "fail_code = day.image_prompt_missing." },
+  "planFailGapMissing": "в реплике не оказалось пропуска, в который встаёт карточка",
+  "@planFailGapMissing": { "description": "fail_code = card.gap_missing." },
 
-  "planFailDescriptionGivesAway": "описание карточки называло само загаданное слово",
-  "@planFailDescriptionGivesAway": { "description": "fail_code = day.description_gives_away." },
+  "planFailTranslationHasGap": "в переводе остался пропуск — читать такую подсказку нечем",
+  "@planFailTranslationHasGap": { "description": "fail_code = card.translation_has_gap." },
 
-  "planFailRoleLineInvented": "реплика собеседника не из тех, что описаны в каркасе дня",
-  "@planFailRoleLineInvented": { "description": "fail_code = day.role_line_invented." },
+  "planFailTranslationMissingKey": "в переводе реплики не нашлось самого слова, которому она учит",
+  "@planFailTranslationMissingKey": { "description": "fail_code = card.translation_missing_key." },
 
-  "planFailTermRepeated": "день повторил слово, которое уже вводил другой день",
-  "@planFailTermRepeated": { "description": "fail_code = plan.term_repeated." },
+  "planFailFillerNotCard": "в пропуск встало не то, чему учит карточка",
+  "@planFailFillerNotCard": { "description": "fail_code = card.filler_not_card." },
+
+  "planFailWordIsBasic": "карточкой стало слово из самого начального минимума",
+  "@planFailWordIsBasic": { "description": "fail_code = card.word_is_basic — стоп-список базового (канон §7)." },
+
+  "planFailKindSize": "карточка вышла за длину, отведённую её виду",
+  "@planFailKindSize": { "description": "fail_code = card.kind_size — слово длиннее трёх слов, связка вне 2–4, реплика вне 3–8 (канон §7)." },
+
+  "planFailSkillRefInvalid": "карточка не назвала умение сцены, ради которого она здесь",
+  "@planFailSkillRefInvalid": { "description": "fail_code = card.skill_ref_invalid (канон §8)." },
+
+  "planFailNumberValueMismatch": "число в реплике не сошлось с числом, по которому карточку проверяют",
+  "@planFailNumberValueMismatch": { "description": "fail_code = card.number_value_mismatch." },
+
+  "planFailShelfMissing": "в сцене не оказалось целой полки — того, что тебе скажут, что ты ответишь или из чего это собрано",
+  "@planFailShelfMissing": { "description": "fail_code = day.shelf_missing. Единственная дневная поломка v0.4: адреса у неё нет, поэтому день пересобирается целиком." },
+
+  "planFailTermRepeated": "карточка повторяла другую — этого дня, спасательного набора или прошлого дня",
+  "@planFailTermRepeated": { "description": "fail_code = card.clone. Раньше — plan.term_repeated («день повторил слово другого дня»); теперь сервер ловит все три вида повтора одним кодом." },
 
   "planFailUnknown": "не удалось собрать день",
   "@planFailUnknown": { "description": "fail_code неизвестен клиенту или его нет вовсе. Причину НЕ выдумываем." },
@@ -2182,6 +2182,21 @@
   "@planReviewSection": {
     "description": "Шов в сессии плана: дальше идут карточки, введённые ПРОШЛЫМИ днями этого же плана. Раньше здесь стояло просто «Повторение», а под каждой карточкой — «Из плана: <название>»; после PLAN-FIX-3 в сессии плана не бывает чужих карточек, и название всегда было бы своим собственным."
   },
+
+  "planWarmupSection": "Разогрев",
+  "@planWarmupSection": { "description": "Шов в сессии плана: section = warmup — спасательный набор, пять фраз перед каждым днём (канон §5)." },
+
+  "planShelfHear": "Тебе скажут",
+  "@planShelfHear": { "description": "Шов в сессии плана: полка hear — реплики собеседника, только на понимание (канон §2)." },
+
+  "planShelfSay": "Ты ответишь",
+  "@planShelfSay": { "description": "Шов в сессии плана: полка say — короткие ответы, полная лестница до «сказал сам»." },
+
+  "planShelfAsk": "Ты спросишь",
+  "@planShelfAsk": { "description": "Шов в сессии плана: полка ask — уточняющие вопросы. Отдельная от say: обе полки — kind = line, и различает их только полка." },
+
+  "planShelfWords": "Слова и связки",
+  "@planShelfWords": { "description": "Шов в сессии плана: полки words и chunks под одной подписью — канон §2 считает их вместе («внизу — слова и связки»)." },
   "planStageAClosed": "Ступень A пройдена",
   "@planStageAClosed": { "description": "Строка итога дня." },
   "planStageBReturns": "Вернутся на ступени B",

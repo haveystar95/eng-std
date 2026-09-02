@@ -678,6 +678,31 @@ abstract interface class PlanSessionEnvelope {
   /// produce it, and one that looked like every other card had them rehearsing the doctor's
   /// question (Д-8).
   String? speakerAt(int i);
+
+  /// WHICH SHELF OF THE SCENE the card at [i] came off — `hear` | `say` | `ask` | `words` |
+  /// `chunks` | `numbers` | `rescue`, or null outside a plan day (and on any day written before
+  /// the shelves existed).
+  ///
+  /// The session draws a caption wherever this changes, which is the only thing that tells «Ты
+  /// ответишь» from «Ты спросишь»: both are `line`, so [kindAt] cannot stand in for it. The wording
+  /// is the client's, in two languages, for the same reason [originAt]'s is.
+  String? shelfAt(int i);
+
+  /// The card at [i] is part of the day's WARM-UP — the plan's five rescue phrases, dealt before
+  /// every day (канон §5).
+  ///
+  /// A third answer beside [isDayTaskAt], not a shade of it: the warm-up is neither today's lesson
+  /// nor a revision of an earlier day, it is the same five cards on day 1 and on day 9, and the
+  /// day's «N из N» must not move because the kit came back.
+  bool isWarmupAt(int i);
+
+  /// The card at [i] is one the learner is only ever asked to RECOGNISE — never to produce.
+  ///
+  /// Two things say it and either is enough: the server's `tier: understand` (the «понимаю» ladder
+  /// — «Тебе скажут» and the scene's numbers, канон §3) and the older `speaker: role`. The server
+  /// refuses to deal a production trainer for such a card; this is what stops the CLIENT labelling
+  /// one as something to say, which is Д-8 seen from the other side.
+  bool isRecognitionOnlyAt(int i);
 }
 
 class Profile {

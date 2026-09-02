@@ -67,8 +67,19 @@ final class PlanOutlineValidator
     public const CHECKPOINT_MISSING = 'outline.checkpoint_missing';
     public const CHECKPOINT_ECHOES_OUTCOME = 'outline.checkpoint_echoes_outcome';
     public const EST_TERMS = 'outline.est_terms';
-    public const ROLE_SHAPE = 'outline.role_shape';
     public const OPENING_LINES = 'outline.opening_lines';
+
+    /**
+     * A SCENE WITH NO ВВОДКА — fatal, and the only new fatal rule of v0.4.
+     *
+     * «Вводка на языке поддержки, 2–3 предложения: кто перед тобой, что сейчас произойдёт, что
+     * считается успехом» (канон §2). It is what the learner reads before the day and what the plan
+     * preview shows; without it the screen is a list of sentences and the day is a topic again.
+     * Refused rather than counted because there is nothing downstream that can write one — the day
+     * prompt is told not to («The intro is already written; do not rewrite or repeat it»), and a
+     * server-made вводка would be the app telling the learner about a situation it did not design.
+     */
+    public const INTRO_MISSING = 'scene.intro_missing';
     public const OUTCOME_TWO_ACTIONS = 'outline.outcome_two_actions';
     public const TARGET_LANGUAGE = 'outline.target_language';
     public const NOT_A_LIST = 'outline.not_a_list';
@@ -77,6 +88,16 @@ final class PlanOutlineValidator
     public const SKILL_COUNT_WARNING = 'plan_outline_skill_count';
 
     public const EST_TERMS_WARNING = 'plan_outline_est_terms';
+
+    /**
+     * THE ВВОДКА CARRIES A WORD OF THE LANGUAGE BEING LEARNED — counted, never refused.
+     *
+     * «Изучаемого языка во вводке нет» (канон §2): the вводка is the one screen a person with zero
+     * English is asked to read. Counted and not refused because the alternative is measured — the
+     * outline gets ONE re-run, and a gate that fires on «ты придёшь в Zoom» costs the learner two
+     * paid calls and then the whole plan.
+     */
+    public const INTRO_LANGUAGE_WARNING = 'plan_outline_intro_language';
 
     /**
      * A plan is one goal. Past five situations it is a course, and below one it is nothing — but
@@ -176,7 +197,8 @@ final class PlanOutlineValidator
                 continue;
             }
 
-            $violations = [...$violations, ...$this->checkRole($scene['role'] ?? null, $label)];
+            $violations = [...$violations, ...$this->checkOpeningLines($scene['opening_lines'] ?? null, $scene['role'] ?? null, $label)];
+            $violations = [...$violations, ...$this->checkIntro($scene['intro'] ?? null, $label, $supportLang, $goalTerms)];
 
             $skills = is_array($scene['skills'] ?? null) ? $scene['skills'] : [];
             $skillTotal += count($skills);
@@ -207,7 +229,7 @@ final class PlanOutlineValidator
             );
         }
 
-        foreach (['title', 'goal_restated'] as $field) {
+        foreach (['goal_summary', 'title', 'goal_restated'] as $field) {
             $violations = [
                 ...$violations,
                 ...$this->checkSupportLanguage($answer[$field] ?? '', $field, null, $supportLang, $goalTerms),
@@ -242,7 +264,7 @@ final class PlanOutlineValidator
      * @param  array<mixed>  $answer  the decoded JSON, exactly as the model returned it
      * @return list<PlanViolation>  empty = nothing to warn about
      */
-    public function warnings(array $answer): array
+    public function warnings(array $answer, string $supportLang = 'ru'): array
     {
         $scenes = is_array($answer['scenes'] ?? null) ? $answer['scenes'] : [];
         if ($scenes === []) {
@@ -251,6 +273,7 @@ final class PlanOutlineValidator
 
         $out = [];
         $skillTotal = 0;
+        $goalTerms = $this->strings($answer['goal_terms'] ?? null);
 
         foreach ($scenes as $position => $scene) {
             if (! is_array($scene)) {
@@ -276,6 +299,25 @@ final class PlanOutlineValidator
                     'сцена ' . ((int) $position + 1) . ', умение ' . ((int) $i + 1),
                 );
             }
+        }
+
+        // THE ВВОДКА IN THE WRONG LANGUAGE — counted, per scene. `opening_lines` are deliberately
+        // not checked: they ARE utterances in the language being learned, which is the one place
+        // the skeleton is allowed to hold any.
+        foreach ($scenes as $position => $scene) {
+            if (! is_array($scene)) {
+                continue;
+            }
+            $intro = $this->text($scene['intro'] ?? '');
+            if ($intro === '' || $this->supportText->isSupportLanguage($supportLang, $intro, $goalTerms)) {
+                continue;
+            }
+
+            $out[] = new PlanViolation(
+                self::INTRO_LANGUAGE_WARNING,
+                'во вводке есть слова изучаемого языка, а её читает человек, который его пока не знает',
+                'сцена ' . ((int) $position + 1),
+            );
         }
 
         if ($skillTotal > self::MAX_SKILLS && $skillTotal <= self::HARD_MAX_SKILLS) {
@@ -310,21 +352,48 @@ final class PlanOutlineValidator
      *
      * @return list<PlanViolation>
      */
-    private function checkRole(mixed $role, string $label): array
+    private function checkOpeningLines(mixed $lines, mixed $legacyRole, string $label): array
     {
-        if ($role === null) {
-            return [];
-        }
-        if (! is_array($role)) {
-            return [new PlanViolation(self::ROLE_SHAPE, '`role` — не объект и не null', $label)];
+        // v0.4 puts the utterances on the scene; a v0.2 skeleton wrapped them in a `role` object.
+        // Both are read, because this validator also judges a re-run of a plan built last week.
+        if (! is_array($lines) || $lines === []) {
+            $role = is_array($legacyRole) ? ($legacyRole['opening_lines'] ?? null) : null;
+            $lines = is_array($role) ? $role : (is_array($lines) ? $lines : []);
         }
 
-        $lines = is_array($role['opening_lines'] ?? null) ? $role['opening_lines'] : [];
-        if ($lines === [] || count($lines) > self::MAX_OPENING_LINES) {
+        // A scene with genuinely nobody to talk to is legitimate — reading forms alone — and it is
+        // the ONE case that passes with none. What is refused is the ceiling: past six utterances
+        // this is somebody else's scene.
+        if (count($lines) > self::MAX_OPENING_LINES) {
             return [new PlanViolation(
                 self::OPENING_LINES,
-                'реплик собеседника ' . count($lines) . ', а должно быть 1–' . self::MAX_OPENING_LINES
-                . ': без единой реплики день нечего узнавать, а больше шести — это чужая сцена',
+                'реплик собеседника ' . count($lines) . ', а больше ' . self::MAX_OPENING_LINES
+                . ' — это уже чужая сцена (ориентир промпта — 3–6)',
+                $label,
+            )];
+        }
+
+        return [];
+    }
+
+    /**
+     * THE ВВОДКА — present, and in the learner's own language.
+     *
+     * Two rules with two ranks, and the asymmetry is the one this whole class is built on: a scene
+     * with NO вводка cannot be shown (fatal), and a вводка with an English word in it is a слегка
+     * худший экран (counted). The second one refusing would cost two paid calls and the plan.
+     *
+     * @param  list<string>  $goalTerms
+     * @return list<PlanViolation>
+     */
+    private function checkIntro(mixed $intro, string $label, string $supportLang, array $goalTerms): array
+    {
+        $text = $this->text($intro);
+        if ($text === '') {
+            return [new PlanViolation(
+                self::INTRO_MISSING,
+                'у сцены нет вводки — экран дня начинается со списка предложений, и человек не '
+                . 'знает, к чему готовится',
                 $label,
             )];
         }

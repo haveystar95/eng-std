@@ -16,6 +16,7 @@ use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Vocabulary\Application\Dto\TermContentView;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 
 /**
@@ -105,6 +106,21 @@ final readonly class PlanProgress
             scopeCollectionId: $collectionId,
         );
 
+        // NUMBERS ARE STORED WITH THE DAY AND DEALT BY NOTHING — yet (канон §6, режим NUM-1).
+        //
+        // They are cards of the day's collection like any other, so they travel with it, get their
+        // picture and are there the moment the trainer exists. What they must not be is OWED: a
+        // step no session can deal is a stage that never closes, a day that never passes and a day
+        // n+1 that is never written. So the plan's own progress does not see them, and neither does
+        // the register the day screen draws from it.
+        $termIds = array_values(array_filter(
+            $termIds,
+            static fn (string $id): bool => ($content[$id]->kind ?? null) !== 'number',
+        ));
+        if ($termIds === []) {
+            return new PlanDayProgressView($day->dayIndex(), $collectionId, [], [], [], passed: false);
+        }
+
         $standings = $this->standings->forTerms(
             $plan->userId(),
             $plan->level(),
@@ -133,7 +149,7 @@ final readonly class PlanProgress
             termIds: $termIds,
             standings: $standings,
             content: $content,
-            passed: $this->stageAClosedForAll($standings),
+            passed: $this->stageAClosedForAll($standings, $content),
         );
     }
 
@@ -166,20 +182,41 @@ final readonly class PlanProgress
     }
 
     /**
-     * Every word of the day has closed stage A.
+     * Every card OF THE SCENE has closed stage A.
      *
      * A day with no readable word is NOT passed — an empty checklist is «nothing happened», not
      * «everything happened», and letting it pass would walk the focus through a broken day silently.
      *
+     * ## THE RESCUE KIT DOES NOT HOLD A DAY OPEN, and it is day 1's alone that could
+     *
+     * The five phrases (канон §5) are written into day 1 and dealt in every warm-up after it. They
+     * belong to the PLAN rather than to that scene: «день пройден» answers «я прошёл эту ситуацию»,
+     * and «Помедленнее, пожалуйста» is not part of the situation — it is what the learner says in
+     * all of them.
+     *
+     * The practical half matters as much as the principle. A card the checklist owes and the
+     * assembler cannot build is a step that never closes ({@see PlanStandings}, the fifth filter's
+     * own approximation), and every one of those is survivable except on day 1 of every plan: a
+     * rescue card in that state would hold day 1 open for ever, and with it the focus, the next
+     * day's generation and the whole plan. The kit keeps coming back in the warm-up either way,
+     * which is where it is supposed to come back.
+     *
      * @param  array<string, PlanTermStanding>  $standings
+     * @param  array<string, TermContentView>  $content
      */
-    private function stageAClosedForAll(array $standings): bool
+    private function stageAClosedForAll(array $standings, array $content): bool
     {
-        if ($standings === []) {
+        $scene = array_filter(
+            $standings,
+            static fn (string $termId): bool => ($content[$termId]->shelf ?? null) !== self::SHELF_RESCUE,
+            ARRAY_FILTER_USE_KEY,
+        );
+
+        if ($scene === []) {
             return false;
         }
 
-        foreach ($standings as $standing) {
+        foreach ($scene as $standing) {
             if ($standing->stage === PlanStage::A && ! $standing->stageComplete) {
                 return false;
             }
@@ -187,6 +224,9 @@ final readonly class PlanProgress
 
         return true;
     }
+
+    /** The shelf the server's own five phrases stand on — {@see PlanShelf::Rescue}. */
+    private const SHELF_RESCUE = 'rescue';
 
     /**
      * The first introduction day not yet passed; the FINAL day's index when they all are.

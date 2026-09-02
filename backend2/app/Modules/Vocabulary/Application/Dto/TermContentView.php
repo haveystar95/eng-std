@@ -89,5 +89,20 @@ final readonly class TermContentView
          * loud. Null on every term that is not a plan line.
          */
         public ?string $speakingKey = null,
+        /**
+         * WHICH SHELF OF ITS DAY-SCENE this card stands on — `hear` | `say` | `ask` | `words` |
+         * `chunks` | `numbers` | `rescue`, and null on everything that never came from a plan.
+         *
+         * The caption the card is dealt under and the thing `kind` cannot say: «Ты ответишь» and
+         * «Ты спросишь» are both spoken lines, and «Тебе скажут» is a line the learner never says.
+         */
+        public ?string $shelf = null,
+        /**
+         * `speak` or `understand` — WHICH LADDER this card climbs (канон §3).
+         *
+         * Derived from the shelf by the server when the day was written and stored beside it, so
+         * every reader gets the same answer to «may this card be asked of the learner at all».
+         */
+        public ?string $tier = null,
     ) {}
 }

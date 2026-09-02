@@ -18,7 +18,9 @@ final readonly class PlanView
      * @param  array<string, mixed>|null  $computed  the server's arithmetic, verbatim
      * @param  list<string>  $constraints
      * @param  list<string>  $goalTerms
-     * @param  list<array{name: string, gender: string, number: string, note: string}>  $entities
+     * @param  list<string>  $entities  proper names of the scenario, gathered from every scene.
+     *         Plain names since P1 v0.4: the gender and number a v0.2 skeleton carried existed for
+     *         one Russian agreement check, and the check retired with the field.
      */
     public function __construct(
         public string $id,

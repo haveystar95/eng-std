@@ -16,6 +16,9 @@ import '../../data/app_settings.dart';
 import '../../data/languages.dart';
 import '../../data/models.dart';
 import '../../data/perf_log.dart';
+// For the shelf names alone — the session plays a plan's cards through the envelope in
+// `models.dart` and knows nothing else about a plan.
+import '../../data/plan_models.dart' show PlanTermRow;
 import '../../data/practice/recognition_replay.dart';
 import '../../data/providers.dart';
 import '../home/home_providers.dart';
@@ -708,18 +711,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                               ),
                               const SizedBox(height: 18),
                             ],
-                            // THE SEAM. Today's cards end here and the revision of this plan's
-                            // EARLIER days begins. Drawn once, on the first card past the day,
-                            // because a label over every review card would be noise.
-                            //
-                            // Asked of the card itself rather than compared against
-                            // [dayTaskCount]: the count says how many cards are the day's, which is
-                            // an index into the running order only for as long as the day happens
-                            // to come first. «Первая карточка, которая не сегодняшняя» is the thing
-                            // actually being drawn, and it stays true whatever the order becomes.
-                            if (!plan.isDayTaskAt(_playing) &&
-                                (_playing == 0 || plan.isDayTaskAt(_playing - 1))) ...[
-                              _SectionSeam(label: l.planReviewSection),
+                            // THE SEAMS of the sitting — see [planSeamCaption]. The warm-up, each
+                            // shelf of the scene, and the revision of this plan's earlier days;
+                            // drawn once, on the first card of each, because a label over every
+                            // card would be noise.
+                            if (planSeamCaption(l, plan, _playing) case final seam?) ...[
+                              _SectionSeam(label: seam),
                               const SizedBox(height: 18),
                             ],
                             // WHOSE LINE THIS IS. Only on the interlocutor's — the learner's own
@@ -727,7 +724,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                             // it a `role` line is dealt as a card like any other and reads as one
                             // to learn to SAY: the live run had the learner assembling and reading
                             // aloud «Hello. What seems to be the problem with your child?» (Д-8).
-                            if (plan.speakerAt(_playing) == 'role') ...[
+                            //
+                            // Asked as «only ever recognised» rather than «speaker is the role»:
+                            // `tier: understand` says the same thing about a card the server will
+                            // never deal a production trainer for, and the caption has to hold for
+                            // both or the newer half arrives unlabelled.
+                            if (plan.isRecognitionOnlyAt(_playing)) ...[
                               Text(
                                 l.planSpeakerRole.toUpperCase(),
                                 style: AppText.blockLabel.copyWith(
@@ -1455,10 +1457,61 @@ class _CenteredMessage extends StatelessWidget {
   }
 }
 
-/// «— ПОВТОРЕНИЕ —»: the line between the plan day and what the ordinary queue added to the sitting.
+/// WHICH PART OF THE SITTING the card at [i] stands in — the thing the seams are drawn between.
 ///
-/// A rule with a word in it rather than a header: the cards after it are played exactly the same
-/// way, so the seam has to be visible without claiming to be a new screen.
+/// A key rather than a caption, because two shelves share one: канон §2 puts «слова и связки» under
+/// a single heading, so `words` and `chunks` are one part of the sitting and a seam between them
+/// would announce a change the learner cannot see.
+///
+/// A shelf this build has never heard of is returned as itself — it groups with its own kind and
+/// gets no caption below, which is the honest answer for a shelf whose name we do not know.
+String _planSeamGroup(PlanSessionEnvelope plan, int i) {
+  if (plan.isWarmupAt(i)) return PlanTermRow.shelfRescue;
+  // Everything that is not today's own material is the revision, whatever shelf it came off
+  // originally: it is being replayed, not taught.
+  if (!plan.isDayTaskAt(i)) return _seamGroupReview;
+
+  return switch (plan.shelfAt(i)) {
+    PlanTermRow.shelfChunks => PlanTermRow.shelfWords,
+    final shelf? => shelf,
+    // A day written before the scene: one undivided block, exactly as it is drawn today.
+    null => _seamGroupDay,
+  };
+}
+
+const _seamGroupReview = 'review';
+const _seamGroupDay = 'day';
+
+/// The caption to draw ABOVE the card at [i], or null when this card needs none.
+///
+/// Null in the two cases that are not a seam: the card stands in the same part of the sitting as
+/// the one before it, or its part has nothing to announce — the day's own undivided block on an
+/// older payload, the numbers the server stores but does not deal yet, a shelf a newer server
+/// invented. Silence there is deliberate: a caption made up from a shelf name we cannot read would
+/// be the plan telling the learner something the plan does not know.
+///
+/// Driven off the CARDS and not off an assumed running order. The server fixes only «разогрев
+/// первым» today and the full order is a later наряд, so the seam is «первая карточка, у которой
+/// полка другая» — which stays true whatever the order becomes.
+String? planSeamCaption(AppLocalizations l, PlanSessionEnvelope plan, int i) {
+  final group = _planSeamGroup(plan, i);
+  if (i > 0 && _planSeamGroup(plan, i - 1) == group) return null;
+
+  return switch (group) {
+    PlanTermRow.shelfRescue => l.planWarmupSection,
+    _seamGroupReview => l.planReviewSection,
+    PlanTermRow.shelfHear => l.planShelfHear,
+    PlanTermRow.shelfSay => l.planShelfSay,
+    PlanTermRow.shelfAsk => l.planShelfAsk,
+    PlanTermRow.shelfWords => l.planShelfWords,
+    _ => null,
+  };
+}
+
+/// «— ПОВТОРЕНИЕ —»: a line with a word in it between two parts of a plan sitting.
+///
+/// A rule rather than a header: the cards after it are played exactly the same way, so the seam has
+/// to be visible without claiming to be a new screen.
 class _SectionSeam extends StatelessWidget {
   const _SectionSeam({required this.label});
 

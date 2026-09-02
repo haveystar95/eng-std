@@ -6,217 +6,215 @@ namespace App\Modules\Generation\Domain\Service;
 
 use App\Modules\Generation\Domain\ValueObject\PlanDayCandidate;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
+use App\Modules\Generation\Domain\ValueObject\PlanShelf;
 use App\Modules\Generation\Domain\ValueObject\PlanViolation;
 use App\Modules\Shared\Domain\Service\LanguagePurity;
 
 /**
- * A day of a plan, judged.
+ * A DAY-SCENE, judged.
  *
- * ## Why this exists at all
+ * ## Why a plan has a validator at all, and a collection does not
  *
- * There is no validator of the CORE anywhere in this app — `translation`, `description`, `example`
- * are checked by the prompt and by a person reading them, and that has been an acceptable trade
- * for a collection, where a weak card is a weak card. It is not an acceptable trade for a plan.
- * A plan is a mechanism: the day promises abilities, the conversation at the end of the day ticks
- * them off, and if no line in the day's material can tick a checkpoint then the day cannot be
- * passed and the learner finds out at the conversation. That is a MECHANICAL failure, and
- * mechanical failures are what deterministic code is for (docs/research/plan-sandbox-2026-08-29.md
- * §8, вопрос 2).
+ * There is no gate over `generate_collection` anywhere in this app: a weak card in a collection is
+ * a weak card. A plan is a MECHANISM — the day promises abilities, the learner walks into the
+ * appointment with what it wrote, and a card that cannot be dealt is a stage that never closes and
+ * a day that never passes. Those are MECHANICAL failures, and mechanical failures are what
+ * deterministic code is for. Taste stays with the prompt.
  *
- * So the rules below are the ones where being wrong breaks the machine, not the ones where being
- * wrong makes a card less pretty. Taste stays with the prompt.
+ * ## v0.4: the shelves, and what stopped being a rule
  *
- * ## What v0.2 added, and what it took away
+ * The day used to be three arrays with three exact counts, and half this class counted them. A
+ * day-scene has SHELVES with guide sizes (канон §2), so every count moved to {@see warnings()} and
+ * the fatal list is now about the CARD: can it be assembled, is it about this scene, is it a card
+ * at all. Gone with the counts:
  *
- * The day is now three arrays with three exact counts, and the two rules that matter most are new:
+ *   `day.array_count` / `day.term_count`   there are no exact counts to be off by;
+ *   `day.checkpoint_*`                     the checkpoint index was replaced by {@see SKILL_REF_INVALID},
+ *                                          which says the same thing about a card instead of about
+ *                                          a number, and is therefore repairable;
+ *   `day.role_line_invented`               v0.4 asks the model to ADAPT `opening_lines` to the
+ *                                          scene rather than quote them, so «not verbatim» stopped
+ *                                          being a defect;
+ *   `day.kind_mismatch`                    the SHELF decides what a card is, exactly as the array
+ *                                          did in v0.3 — a `kind` that disagrees with it is
+ *                                          overwritten on the way in, not argued with.
  *
- * **The frame.** A line is a frame with a slot — «I worked on ___» — and `text` is that line with
- * a real word of the day in the hole. **Every word of the day fits some frame, and its `example` is
- * that sentence.** That is what turns eight lines and six words into twenty sentences the learner
- * can say instead of eight they memorised, and it is checkable: build the frame into a regular
- * expression, put the term in the slot, and look for it in the example.
+ * ## The one asymmetry this class is built on
  *
- * **The slot lives in `frame` and nowhere else.** v0.2.1's own addition, and it is here because the
- * live day failed on it: four lines of eight came back with `___` still standing in `text`. See
- * {@see SLOT_FORBIDDEN_IN}.
- *
- * ## What v0.3 changed, after four refusals in a row
- *
- * Two of the rules above were RIGHT and unenforceable by asking, so v0.3 stopped asking.
- *
- * **The line is assembled, not written.** The model returns `frame` and `filler` and the server
- * pastes them ({@see \App\Modules\Generation\Application\Service\PlanDayComposer::assemble()}).
- * «A line that is not its own frame» and «`___` left in `text`» stop being classes of defect and
- * become impossible constructions. What is checked instead is the pair that produced the line:
- * a frame carries {@see FRAME_SLOT_COUNT} at most one slot, {@see FILLER_MISMATCH} a filler exactly
- * when there is a slot to fill, and {@see FILLER_NOT_A_CARD} a filler that is some card of THIS
- * day, character for character. `day.frame_mismatch` is gone with the defect it named.
- *
- * **A connector lives in a frame, not in its hole.** Four answers in a row built the frame AROUND
- * the connector — «I mainly work with ___» — and that is how the language works, not a mistake.
- * So a chunk's example should CONTAIN a frame of this day that carries it anywhere
- * ({@see CHUNK_OUTSIDE_FRAME}) — containment, on exactly the terms a word's example is judged by,
- * so «I mainly work with Laravel, mostly.» is a legitimate example and not a near miss. The extra
- * condition is what earns the card its slot: the sentence may not be a line of the day repeated.
- * The «in the hole» rule stays for `words`, and stays FATAL for them and only for them.
- *
- * ## What is WARNED about rather than refused
- *
- * The formula cap, the missing question, the missing repair move, the silent interlocutor and the
- * connector standing outside every frame are counted and reported ({@see warnings()}) instead of
- * failing the day. They are taste with a number attached: a day with one formula too many is a
- * slightly worse day, and it is not worth a second paid call. Every one of them earned its way
- * onto this list by refusing a day that was fine — most recently the connector rule, which threw
- * away a whole live day because one example dropped the «Sorry,» from the front of its frame. The
- * counters are what a growing problem looks like — see
- * {@see \App\Modules\Generation\Application\Port\PlanDefectReporter}.
- *
- * **The interlocutor's lines are quoted, not invented.** A line marked `speaker: role` has to be,
- * character for character, one of the scene's `opening_lines`. The learner is going to hold that
- * conversation; a line the skeleton never promised is a line they meet unprepared.
- *
- * And the BAND is gone. v0.1 accepted 35–55% replies and forced the server's own `ceil(0.45 ×
- * budget)` inside that range, which meant two numbers had to be kept in step by hand. The server
- * now hands the model three exact counts ({@see \App\Modules\Learning\Domain\Service\DayCapacity::split()})
- * and this counts against them. A day one card off is not a generous day; it is a day the learner
- * did not ask for.
- *
- * ## The one check that repairs instead of refusing
- *
- * TRANSLITERATION. It is not judged here at all any more — {@see transliterationFor()} returns the
- * repaired hint or null, and the caller drops the field, logs it and counts it
- * ({@see \App\Modules\Generation\Application\Port\PlanDefectReporter}). Under v0.1 a stray
- * comma in one hint failed the whole day and bought a second paid generation whose second answer
- * failed the same way. A pronunciation hint is the one field a card can live without: it is the
- * LAST measure, it is visible in the log, and it is not the norm.
+ * A gate that refuses a GOOD day costs more than one that lets a weak day through. The second is
+ * caught by reading the day; the first spends $0.06, shows the learner an error, and then gets
+ * switched off. So every rule below is one where being wrong breaks the machine, everything
+ * measured in «about how many» is a counter, and three checks stay SILENT when their language has
+ * no rule written ({@see TranslationKeyPresence}, {@see BasicVocabulary}, {@see NumberSpelling}) —
+ * «немецкое правило ещё не написано» must not read as «каждый немецкий день сломан».
  */
 final class PlanDayValidator
 {
-    public const ARRAY_COUNT = 'day.array_count';
-    public const TERM_COUNT = 'day.term_count';
-    public const KIND_MISMATCH = 'day.kind_mismatch';
-    public const CHECKPOINT_UNCOVERED = 'day.checkpoint_uncovered';
-    public const CHECKPOINT_ON_WORD = 'day.checkpoint_on_word';
-    public const CHECKPOINT_OUT_OF_RANGE = 'day.checkpoint_out_of_range';
-    // `day.frame_share` and `day.frame_mismatch` were here until v0.3. The first became a WARNING
-    // ({@see FORMULA_CAP}); the second named a defect the assembly makes unconstructable — a line
-    // built from its own frame is its own frame, always.
-    public const FRAME_SLOT_COUNT = 'day.frame_slot_count';
-    public const FILLER_MISMATCH = 'day.filler_mismatch';
-    public const FILLER_NOT_A_CARD = 'day.filler_not_a_card';
-    public const SLOT_OUTSIDE_FRAME = 'day.slot_outside_frame';
-    public const ROLE_LINE_INVENTED = 'day.role_line_invented';
-    public const EXAMPLE_IS_A_TERM = 'day.example_is_a_term';
-    public const EXAMPLE_DUPLICATED = 'day.example_duplicated';
-    public const EXAMPLE_MISSING = 'day.example_missing';
-    public const KEY_IS_THE_TERM = 'day.key_is_the_term';
+    // ── carded, fatal → one repair call (P2R) ────────────────────────────────────────────────
 
     /**
-     * A CARD WHOSE TERM IS SOMEBODY'S NAME.
+     * THE PAIR CANNOT BE ASSEMBLED — two holes and one filler, a hole with nothing to put in it,
+     * or a filler with nowhere to stand.
      *
-     * The owner's phone dealt «Ivanov» — reading «[иванов]», translation «Иванов», example «My last
-     * name is Ivanov, yes.» — as a word to learn, in a day about checking into a hotel. A surname is
-     * not vocabulary: there is nothing to know about it, the answer is the question written in the
-     * other alphabet, and the learner is being drilled on their own name.
-     *
-     * Names belong in the FILLER of a line — «My last name is ___» is the sentence worth having, and
-     * the name is what the learner puts in it. So a `words`/`chunks` card whose text is one of the
-     * skeleton's `entities` or `goal_terms` is refused, and the frame that needs it keeps working.
+     * v0.3 spelled these as `day.frame_slot_count` + `day.filler_mismatch`; they are one defect
+     * seen from two sides and one address a repair call is pointed at, so v0.4 names them once.
      */
-    public const TERM_IS_A_NAME = 'day.term_is_a_name';
-    public const KEY_DUPLICATED = 'day.key_duplicated';
-    public const KEY_NOT_SUPPORT_LANGUAGE = 'day.key_not_support_language';
-    public const DESCRIPTION_GIVES_AWAY = 'day.description_gives_away';
-    public const IMAGE_PROMPT_MISSING = 'day.image_prompt_missing';
+    public const GAP_MISSING = 'card.gap_missing';
+
+    /** `___` in a field that is not `frame` — a field the learner cannot say. */
+    public const GAP_OUTSIDE_FRAME = 'card.gap_outside_frame';
 
     /**
-     * A LINE WHOSE RUSSIAN DOES NOT CONTAIN ITS OWN KEY.
-     *
-     * The translation under a spoken line is the whole question: read this, say the English. The
-     * card is about the piece in the frame's hole ({@see PlanSpeakingKey}), so a translation that
-     * renders everything BUT that piece asks the learner to produce a word nothing on the screen
-     * pointed at. The owner's day 1 (01.09) is the measured case: «Yes, I'm looking for a place to
-     * rent for ___», and the Russian under it never said which kind of place.
-     *
-     * `line.` and not `day.`: it is about the pair (line, its key card) rather than about the day's
-     * shape, and it is the first gate of that kind. Carded, so a repair call can be pointed at it.
+     * `___` IN THE TRANSLATION — the узор of live day 2, named on its own because it is the one
+     * field the learner READS: «Я работал над ___» asks nothing.
      */
-    public const TRANSLATION_MISSING_KEY = 'line.translation_missing_key';
+    public const TRANSLATION_HAS_GAP = 'card.translation_has_gap';
 
-    /** The counters {@see warnings()} raises — named here because the Domain is what names them. */
+    /** The line's translation does not render its key card (гейт 219, unchanged, renamed to `card.`). */
+    public const TRANSLATION_MISSING_KEY = 'card.translation_missing_key';
+
+    /**
+     * The filler is not a word or connector of THIS day.
+     *
+     * RETIRED AS A REFUSAL and kept as a name: the check itself lives on as
+     * {@see FILLER_MISMATCH_WARNING}, for the reasons the live run wrote at its old site. The
+     * constant stays because the mobile client words this code and old failed days still carry it
+     * in `fail_code` — a code that stops being emitted is not a code that stops being READ.
+     */
+    public const FILLER_NOT_CARD = 'card.filler_not_card';
+
+    /** The card is another card of the day, a rescue-kit phrase, or a unit an earlier day taught. */
+    public const CLONE = 'card.clone';
+
+    /** The example is a card of this day rather than a sentence containing one. */
+    public const EXAMPLE_IS_A_TERM = 'card.example_is_a_term';
+
+    /** Two examples are ONE sentence with the term swapped — Д-29. {@see ExampleSkeleton} */
+    public const EXAMPLE_SKELETON_CLONE = 'card.example_skeleton_clone';
+
+    /** Basic vocabulary as a card — fatal from «Понимаю простое» up. {@see BasicVocabulary} */
+    public const WORD_IS_BASIC = 'card.word_is_basic';
+
+    /** Word > 3 words, chunk outside 2–4, say/ask outside 3–8, hear over 12 (канон §7). */
+    public const KIND_SIZE = 'card.kind_size';
+
+    /** A proper name of the scenario as a card of its own. */
+    public const TERM_IS_A_NAME = 'card.term_is_a_name';
+
+    /** The «translation» is the term itself, or the term written in the other alphabet. */
+    public const TRANSLATION_IS_TRANSLITERATION = 'card.translation_is_transliteration';
+
+    /** The card names no skill of this scene — «почему я это учу» with no answer (канон §8). */
+    public const SKILL_REF_INVALID = 'card.skill_ref_invalid';
+
+    /** The number the line says and the number the card is graded on are not the same number. */
+    public const NUMBER_VALUE_MISMATCH = 'card.number_value_mismatch';
+
+    // ── about the DAY, no address, so the day goes back whole ────────────────────────────────
+
+    /**
+     * A SHELF THE SCENE CANNOT LIVE WITHOUT IS EMPTY.
+     *
+     * Three of them: «Тебе скажут» (no lines to recognise = the learner drills answers to a
+     * question they have never heard), «Ты ответишь» (nothing to say), and the substitutions
+     * together (nothing the lines are built from, so nothing combines). `ask` and `numbers` are
+     * guides and are counted rather than refused — a scene where there is genuinely nothing to
+     * clarify is a real scene.
+     */
+    public const SHELF_MISSING = 'day.shelf_missing';
+
+    // ── counted, never refused ───────────────────────────────────────────────────────────────
+
+    /** A shelf outside its guide size — 4–6 / 4–6 / 2–3 / 6–8 / 2–4. */
+    public const SIZE_OUT_OF_RANGE = 'plan_day_size_out_of_range';
+
     public const FORMULA_CAP = 'plan_day_formula_cap';
 
     public const NO_QUESTION = 'plan_day_no_question';
 
     public const NO_REPAIR = 'plan_day_no_repair';
 
-    public const FILLER_MISMATCH_WARNING = 'plan_day_filler_mismatch';
+    /** A skill of the scene that no card serves — the other half of {@see SKILL_REF_INVALID}. */
+    public const SKILL_UNCOVERED = 'plan_day_skill_uncovered';
 
-    public const CHUNK_OUTSIDE_FRAME = 'plan_day_chunk_outside_frame';
-
-    public const NO_ROLE_LINE = 'plan_day_no_role_line';
-
-    /**
-     * A WORD THAT FITS NO FRAME OF THE DAY — counted since v0.3.1, fatal before it.
-     *
-     * `day.substitution_without_frame` was the last gate standing between a live day and `ready`:
-     * the v0.3 run failed on it three times running, always on ONE word of fourteen cards
-     * («English team», whose example was a good sentence that happened not to be a frame of the
-     * day). One card is not a broken day — and since v0.3.1 one card is not even a re-generation:
-     * it is a P2R address ({@see \App\Modules\Generation\Application\Service\PlanDayRepairer}).
-     * The rule is unchanged and now said in the log instead of paid for.
-     */
-    public const SUBSTITUTION_OUTSIDE_FRAME = 'plan_day_substitution_outside_frame';
-
-    /**
-     * MORE THAN A QUARTER OF THE LINES ARE THE INTERLOCUTOR'S — counted, not refused.
-     *
-     * The ceiling moved to the same footing as its own floor ({@see NO_ROLE_LINE}), which has been
-     * a warning since the day it was written. A day with three role lines of eight is a slightly
-     * lopsided day; refusing it costs a paid call for a shape defect, and the asymmetry of п. 198
-     * says which of the two is worse.
-     */
+    /** More of the day is the interlocutor's than the learner's own. */
     public const ROLE_LINE_SHARE = 'plan_day_role_line_share';
 
     /**
-     * The one language where «the filler is a card of this day, character for character» is a rule
-     * a correct answer can obey.
+     * A word or connector that stands in NO line of the day.
      *
-     * English substitutes bare: «the payment module» goes into «I worked on ___» unchanged. A
-     * language with cases does not — «поясница» is the card and «в пояснице» is what the frame
-     * needs, and a model that inflects correctly would be refused for it while one that pastes the
-     * nominative into a prepositional slot would pass. Until that is decided properly (P2 v0.3.1),
-     * the gate is FATAL for English and a counted WARNING everywhere else
-     * ({@see FILLER_MISMATCH_WARNING}): the defect stays visible without refusing days for being
-     * grammatical.
+     * The measure moved with v0.4 and the name did not. v0.3 asked «is the example one of the day's
+     * frames with this word in the slot», which was a rule about the EXAMPLE; the canon asks for
+     * «слова и связки — из этих же реплик» (§2), which is a rule about the DAY. So it now looks for
+     * the term inside the day's assembled lines, which is what «combines» actually means, and stays
+     * a counter for the reason it became one: it was the last fatal gate between a live day and
+     * `ready`, three runs running, always over one card of fourteen.
      */
-    private const STRICT_FILLER_LANG = 'en';
+    public const SUBSTITUTION_OUTSIDE_FRAME = 'plan_day_substitution_outside_frame';
+
+    /** The model retold the scene's вводка in a card instead of writing the scene. */
+    public const INTRO_REPEATED = 'plan_day_intro_repeated';
+
+    /** The same mismatch {@see FILLER_NOT_CARD} names, in a language where it may be inflection. */
+    public const FILLER_MISMATCH_WARNING = 'plan_day_filler_mismatch';
+
+    /** Two cards of the day ask the same question in the support language. */
+    public const KEY_DUPLICATED = 'plan_day_key_duplicated';
+
+    /** A word with no image query — it will be illustrated by nothing, for ever (канон §7). */
+    public const IMAGE_PROMPT_MISSING = 'plan_day_image_prompt_missing';
+
+    /** A key with letters of the wrong alphabet in it. */
+    public const KEY_NOT_SUPPORT_LANGUAGE = 'plan_day_key_not_support_language';
+
+    /** Basic vocabulary at level `zero`, where it is legitimately the lesson. */
+    public const WORD_IS_BASIC_WARNING = 'plan_day_word_is_basic';
 
     /**
-     * The most lines that may be fixed formulas with no slot — «Nice to meet you».
+     * The guide sizes of the six shelves — канон §2, and the only place they are written.
      *
-     * A third, ROUNDED UP since v0.3, and it stopped being fatal at the same time. Both changes
-     * come from the same measurement: on the live «собеседование» day three of the eight lines had
-     * no slot, and all three were right — «Yes, I can hear you clearly», the interlocutor's own
-     * quoted line, and «I'm a PHP developer with three years of experience», which cannot be a
-     * frame because `PHP` is a goal_term and holds its place. Refusing that day cost a second paid
-     * call and would have kept costing one. A day with one formula too many is a slightly worse
-     * day; it is not worth $0.05, so it is counted and reported instead ({@see FORMULA_CAP}).
+     * `words` and `chunks` share one guide («внизу — слова и связки, 6–8 штук»), so they are
+     * counted TOGETHER and the pair is keyed by `words`.
+     *
+     * @var array<string, array{0: int, 1: int}>
      */
+    private const SHELF_GUIDE = [
+        'hear' => [4, 6],
+        'say' => [4, 6],
+        'ask' => [2, 3],
+        'words' => [6, 8],      // words + chunks together
+        'numbers' => [2, 4],
+    ];
+
+    /**
+     * The length of a card, by what it is — канон §7, in words.
+     *
+     * «Длинного текста в карточках нет вообще»: a fifteen-word card is not a hard card, it is a
+     * paragraph the learner memorises instead of a turn they can say. The interlocutor gets more
+     * room than the learner on purpose — понимать можно длиннее, чем говорить.
+     *
+     * @var array<string, array{0: int, 1: int}>
+     */
+    private const SIZE_LIMIT = [
+        'words' => [1, 3],
+        'chunks' => [2, 4],
+        'say' => [3, 8],
+        'ask' => [3, 8],
+        'hear' => [1, 12],
+    ];
+
+    /** The most lines with no slot at all — «формулы должны остаться меньшинством дня». */
     private const MAX_FORMULA_SHARE = 1 / 3;
+
+    /** The most of the day's lines that may be the interlocutor's. */
+    private const MAX_ROLE_SHARE = 1 / 2;
 
     /**
      * What a repair move sounds like — the learner saying they did not catch it.
      *
-     * A LIST AND NOT A RULE, and it lives in config rather than here for the reason every list of
-     * phrases eventually needs: it will be wrong, and being wrong should not be a code change. The
-     * default is the six the live run's «глазами» section asked for by name, under the one target
-     * language a plan has ever run in. Matched on word boundaries inside the normalised line, so
-     * «Could you repeat the question?» matches «repeat» and «repeatedly» does not.
-     *
-     * A language with NO list — or one absent from the map — has the check switched off rather
-     * than failing it: «nobody has written German's list yet» must not read as «every German day
-     * lacks a repair move».
+     * A LIST AND NOT A RULE, in config for the reason every list of phrases eventually needs: it
+     * will be wrong, and being wrong should not be a code change. A language absent from the map
+     * has the check switched off rather than failing it.
      *
      * @var array<string, list<string>>
      */
@@ -228,42 +226,13 @@ final class PlanDayValidator
         'de' => [],
     ];
 
-    /** The most lines that may be the interlocutor's rather than the learner's own. */
-    private const MAX_ROLE_SHARE = 1 / 4;
-
     /** The slot in a frame. */
     private const SLOT = PlanDayItem::SLOT;
 
-    /**
-     * Where the slot is allowed to be, and therefore — everywhere else it is a defect.
-     *
-     * The live «собеседование» day left `___` in the `text` of four lines of eight: not a line with
-     * a hole for the learner to fill, a line the learner cannot say at all. v0.2.1 says it in one
-     * sentence («`___` never appears in `text`, in `example`, or in any field other than `frame`»)
-     * and this is the same sentence, counted.
-     *
-     * `transliteration` is NOT on this list, and that is not an oversight: the reading hint is the
-     * one field of a day that is repaired or dropped and never fails it (реестр решений, п. 189).
-     * A hint with a slot in it is dropped like any other unusable hint.
-     */
-    private const SLOT_FORBIDDEN_IN = [
-        'text', 'translation', 'description', 'example', 'example_translation', 'image_api_prompt',
-    ];
+    /** Where the slot may never be. `transliteration` is absent on purpose — a bad hint is dropped. */
+    private const SLOT_FORBIDDEN_IN = ['text', 'description', 'example', 'example_translation', 'image_api_prompt'];
 
-    /**
-     * What the slot becomes while a frame is being turned into a regular expression.
-     *
-     * A private-use codepoint and NOT the obvious `\0`, which `trim()` strips by default — a frame
-     * whose slot sits at the end came out of {@see normalize()} with no slot at all, and every line
-     * of every day was «not its own frame». One character, one silent gate, twenty minutes.
-     */
-    private const SLOT_MARK = "\u{E000}";
-
-    /**
-     * Sentence punctuation a transliteration picks up by reflex from the line it transcribes.
-     * Stripped, not rejected: the field is a pronunciation hint, and a full stop at the end of one
-     * is a typographic accident, not a broken hint.
-     */
+    /** Sentence punctuation a reading hint picks up by reflex from the line it transcribes. */
     private const SENTENCE_PUNCTUATION = [
         '.', ',', '?', '!', ';', ':', '"', '“', '”', '«', '»', '(', ')', '[', ']', '…', '–', '—',
     ];
@@ -271,67 +240,840 @@ final class PlanDayValidator
     /** Marks a hint legitimately carries — a hyphen inside a word, an apostrophe inside one. */
     private const HINT_MARKS = [' ', '-', '\'', '’', '‑'];
 
-    /**
-     * ONE Latin word — the unit the day-vocabulary exemption is measured in ({@see dayVocabulary()},
-     * {@see keyIsPure()}).
-     *
-     * A run of Latin letters, plus the apostrophe that lives INSIDE an English word («I'm»,
-     * «don't»). A hyphen deliberately does not join: «backend-разработчик» is one Russian word
-     * whose Latin half is `backend`, and the half is what has to be recognised.
-     */
+    /** ONE Latin word — the unit the day-vocabulary exemption is measured in. */
     private const LATIN_WORD = "/[A-Za-z]+(?:['\u{2019}][A-Za-z]+)*/u";
 
-    /**
-     * The shortest token the day's own vocabulary may excuse. One letter is not a word: it is a
-     * size («размер L»), an initial, or a stray — evidence of nothing, and the whole exemption is
-     * built on a token being EVIDENCE that the day teaches it.
-     */
+    /** The shortest token the day's own vocabulary may excuse. One letter is a size, not a word. */
     private const MIN_VOCABULARY_TOKEN = 2;
 
-    /** @param array<string, list<string>> $repairMarkers target language => phrases; {@see DEFAULT_REPAIR_MARKERS} */
+    /** @param array<string, list<string>> $repairMarkers target language => phrases */
     public function __construct(
         private readonly LanguagePurity $purity = new LanguagePurity(),
         private readonly SupportLanguageText $supportText = new SupportLanguageText(),
         private readonly array $repairMarkers = self::DEFAULT_REPAIR_MARKERS,
         private readonly TransliteratedSameness $sameness = new TransliteratedSameness(),
         private readonly TranslationKeyPresence $keyPresence = new TranslationKeyPresence(),
+        private readonly BasicVocabulary $basics = new BasicVocabulary(),
+        private readonly NumberSpelling $numbers = new NumberSpelling(),
+        private readonly ExampleSkeleton $skeletons = new ExampleSkeleton(),
     ) {}
 
     /** @return list<PlanViolation> empty = the day may be written */
     public function validate(PlanDayCandidate $day): array
     {
-        $violations = $this->checkCounts($day);
+        $violations = $this->checkShelves($day);
         if ($day->items === []) {
             return $violations;
         }
 
         return [
             ...$violations,
-            ...$this->checkKinds($day),
-            ...$this->checkCheckpoints($day),
-            ...$this->checkFrames($day),
-            ...$this->checkExamples($day->items),
-            ...$this->checkProperNouns($day),
+            ...$this->checkSkillRefs($day),
+            ...$this->checkGaps($day),
+            ...$this->checkSizes($day),
+            ...$this->checkClones($day),
+            ...$this->checkExamples($day),
+            ...$this->checkBasics($day),
+            ...$this->checkNames($day),
             ...$this->checkKeys($day),
             ...$this->checkLineTranslations($day),
-            ...$this->checkPerCard($day),
+            ...$this->checkNumbers($day),
         ];
     }
 
     /**
+     * WHAT IS WRONG WITH THE DAY AND IS NOT WORTH A SECOND PAID CALL.
+     *
+     * Everything the canon states as «около столько-то» plus the shape rules whose being wrong
+     * makes a slightly worse day rather than an unplayable one. Reported for every answer and
+     * counted only for the one that was WRITTEN, so the counters measure weak days the learner
+     * GOT, never the machine correctly refusing one.
+     *
+     * @return list<PlanViolation>
+     */
+    public function warnings(PlanDayCandidate $day): array
+    {
+        if ($day->items === []) {
+            return [];
+        }
+
+        return [
+            ...$this->warnShelfSizes($day),
+            ...$this->warnConversation($day),
+            ...$this->warnCoverage($day),
+            ...$this->warnCards($day),
+        ];
+    }
+
+    // ── fatal ────────────────────────────────────────────────────────────────────────────────
+
+    /** @return list<PlanViolation> */
+    private function checkShelves(PlanDayCandidate $day): array
+    {
+        $out = [];
+
+        foreach ([PlanShelf::Hear, PlanShelf::Say] as $shelf) {
+            if ($day->shelf($shelf) === []) {
+                $out[] = PlanViolation::onAnswer(
+                    self::SHELF_MISSING,
+                    "полка «{$shelf->value}» пуста — без неё сцену не пройти",
+                    "the `{$shelf->value}` shelf is empty and the scene cannot be walked without it",
+                );
+            }
+        }
+
+        if ($day->shelf(PlanShelf::Words) === [] && $day->shelf(PlanShelf::Chunks) === []) {
+            $out[] = PlanViolation::onAnswer(
+                self::SHELF_MISSING,
+                'ни слов, ни связок — репликам дня не из чего собираться',
+                'both `words` and `chunks` are empty, so the day\'s lines are built from nothing',
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * EVERY CARD NAMES ONE SKILL OF THIS SCENE — канон §8, mechanically.
+     *
+     * Silent when the scene handed in no skills at all: a day generated from a stored brief written
+     * before skills had ids has nothing to check against, and refusing it would refuse the plan the
+     * learner is halfway through.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkSkillRefs(PlanDayCandidate $day): array
+    {
+        if ($day->skillIds === []) {
+            return [];
+        }
+
+        $known = array_flip($day->skillIds);
+        $out = [];
+        foreach ($day->items as $item) {
+            $ref = trim((string) $item->skillRef);
+            if ($ref !== '' && isset($known[$ref])) {
+                continue;
+            }
+
+            $out[] = PlanViolation::onCard(
+                self::SKILL_REF_INVALID,
+                $item,
+                'skill_ref',
+                $ref === ''
+                    ? 'карточка не называет умение сцены — непонятно, зачем она в этом дне'
+                    : "умения «{$ref}» у этой сцены нет",
+                'the card names no skill of this scene; `skill_ref` must be one of the scene\'s skill ids',
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * THE HOLE — where it is, where it is not, and whether the pair can be pasted at all.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkGaps(PlanDayCandidate $day): array
+    {
+        $cards = $this->substitutionTexts($day);
+        $out = [];
+
+        foreach ($day->items as $item) {
+            $shelf = PlanShelf::tryFromName($item->arrayName());
+            $frame = trim($item->frame);
+            $slots = mb_substr_count($frame, self::SLOT);
+
+            if ($shelf !== null && $shelf->isAssembled()) {
+                if ($slots > 1) {
+                    $out[] = PlanViolation::onCard(
+                        self::GAP_MISSING,
+                        $item,
+                        'frame',
+                        "в каркасе дырок {$slots}, а подставить можно только одно слово дня",
+                        "the frame carries {$slots} gaps and a frame carries at most one",
+                    );
+                } elseif ($slots === 1 && $item->filler === '') {
+                    $out[] = PlanViolation::onCard(
+                        self::GAP_MISSING,
+                        $item,
+                        'filler',
+                        'у каркаса есть дырка, а `filler` пуст — реплику не из чего собрать',
+                        'the frame has a gap and `filler` is empty, so nothing can be assembled',
+                    );
+                } elseif ($slots === 0 && $item->filler !== '') {
+                    $out[] = PlanViolation::onCard(
+                        self::GAP_MISSING,
+                        $item,
+                        'frame',
+                        "`filler` «{$item->filler}» есть, а дырки в каркасе нет — ставить его некуда",
+                        'there is a `filler` and no gap in the frame to put it in',
+                    );
+                }
+
+                // THE FILLER IS NOT REFUSED ANY MORE — it is counted, in every language, and
+                // {@see FILLER_MISMATCH_WARNING} is where it now lands.
+                //
+                // The rule «в дырке стоит то, что день учит» is real and the live run of наряд
+                // P2-v0.4 measured what enforcing it costs. Three P2 answers for the goal «К врачу
+                // с ребёнком» were refused by it and three repairs were bought trying to satisfy
+                // it, $0.20 in all, and day 1 never shipped. Every refused card was a sentence a
+                // person would say: «Is it for your child?», «Should we go to the front desk?»,
+                // «In which clinic is it?». The gaps fall on `child`, `time`, `front desk` — and
+                // the day CANNOT card those: basic words are barred by {@see BasicVocabulary} and
+                // numbers live only on their own shelf, so two gates were asking for opposite
+                // things and the model was caught between them.
+                //
+                // Decisive: the P2 v0.4 prompt never states this rule. The repair prompt does state
+                // it, plainly, and the model broke it three times running — which is what an
+                // unsatisfiable instruction looks like from outside. Until the owner rules (either
+                // P2 v0.4 gains the sentence and this goes back to card-fatal, or it stays a
+                // counter), a day that ships with a counted mismatch beats a plan with no day 1.
+            }
+
+            if (str_contains($item->translation, self::SLOT)) {
+                $out[] = PlanViolation::onCard(
+                    self::TRANSLATION_HAS_GAP,
+                    $item,
+                    'translation',
+                    'в переводе стоит «' . self::SLOT . '» — ученик читает вопрос с дыркой вместо фразы',
+                    'the `translation` carries a gap; it describes the FULL assembled sentence',
+                );
+            }
+
+            foreach ($this->slotBearingFields($item) as $field) {
+                $out[] = PlanViolation::onCard(
+                    self::GAP_OUTSIDE_FRAME,
+                    $item,
+                    $field,
+                    "`{$field}` содержит «" . self::SLOT . '» — дырка живёт только в `frame`',
+                    "`{$field}` carries a gap; the gap lives in `frame` and nowhere else",
+                );
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * «Длинного текста в карточках нет вообще» — канон §7, counted in words.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkSizes(PlanDayCandidate $day): array
+    {
+        $out = [];
+        foreach ($day->items as $item) {
+            $limit = self::SIZE_LIMIT[$item->arrayName()] ?? null;
+            if ($limit === null) {
+                continue;
+            }
+
+            $words = self::wordCount($item->text);
+            if ($words === 0 || ($words >= $limit[0] && $words <= $limit[1])) {
+                continue;
+            }
+
+            $out[] = PlanViolation::onCard(
+                self::KIND_SIZE,
+                $item,
+                $item->frame === '' ? 'text' : 'frame',
+                "в карточке {$words} слов(а), а полка «{$item->arrayName()}» держит {$limit[0]}–{$limit[1]}",
+                "this card is {$words} words and its shelf allows {$limit[0]}–{$limit[1]}",
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * NO CARD IS ANOTHER CARD — of this day, of the rescue kit, or of a day already taught.
+     *
+     * Three populations and one code, because they are one failure for the learner: a slot spent on
+     * something they already have. The rescue kit is the newest of the three and the one the model
+     * cannot see coming — it is added by the server, so «Could you repeat that?» is a perfectly
+     * sensible line to write and a duplicate all the same.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkClones(PlanDayCandidate $day): array
+    {
+        $forbidden = [];
+        foreach ([...$day->rescueKit, ...$day->knownTexts] as $text) {
+            $key = $this->normalize($text);
+            if ($key !== '') {
+                $forbidden[$key] = trim($text);
+            }
+        }
+
+        $seen = [];
+        $out = [];
+        foreach ($day->items as $item) {
+            $key = $this->normalize($item->text);
+            if ($key === '') {
+                continue;
+            }
+
+            if (isset($forbidden[$key])) {
+                $out[] = PlanViolation::onCard(
+                    self::CLONE,
+                    $item,
+                    $item->frame === '' ? 'text' : 'frame',
+                    'эта карточка уже есть у ученика — она в спасательном наборе или её ввёл более '
+                    . 'ранний день плана',
+                    'this card duplicates a rescue-kit phrase or a unit an earlier day of this plan taught',
+                );
+
+                continue;
+            }
+
+            if (isset($seen[$key])) {
+                $out[] = PlanViolation::onCard(
+                    self::CLONE,
+                    $item,
+                    $item->frame === '' ? 'text' : 'frame',
+                    'две карточки дня собираются в один и тот же текст',
+                    'another card of this day assembles into the same text',
+                );
+
+                continue;
+            }
+            $seen[$key] = true;
+        }
+
+        return $out;
+    }
+
+    /**
+     * THE EXAMPLES — a sentence with the word in it, and a DIFFERENT sentence for every word.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkExamples(PlanDayCandidate $day): array
+    {
+        $terms = [];
+        foreach ($day->items as $item) {
+            $key = $this->normalize($item->text);
+            if ($key !== '') {
+                $terms[$key] = $item->text;
+            }
+        }
+        $dayTerms = array_values($terms);
+
+        $skeletons = [];
+        $out = [];
+        foreach ($day->items as $item) {
+            $example = trim($item->example);
+            if ($example === '') {
+                continue;
+            }
+
+            if (isset($terms[$this->normalize($example)])) {
+                $out[] = PlanViolation::onCard(
+                    self::EXAMPLE_IS_A_TERM,
+                    $item,
+                    'example',
+                    'пример — это дословно карточка дня, а не предложение с ней внутри',
+                    'the `example` is, word for word, a card of this day rather than a sentence containing one',
+                );
+
+                continue;
+            }
+
+            $skeleton = $this->skeletons->of($example, $dayTerms);
+            if ($skeleton === null) {
+                continue;
+            }
+            if (isset($skeletons[$skeleton])) {
+                $out[] = PlanViolation::onCard(
+                    self::EXAMPLE_SKELETON_CLONE,
+                    $item,
+                    'example',
+                    'это то же предложение, что у другой карточки, с подставленным своим словом — '
+                    . 'так получается «I need to worse tomorrow»',
+                    'this `example` is another card\'s sentence with this card\'s term swapped in; write a sentence of its own',
+                );
+
+                continue;
+            }
+            $skeletons[$skeleton] = true;
+        }
+
+        return $out;
+    }
+
+    /**
+     * BASIC VOCABULARY IS NOT A CARD — канон §7, and the level decides how loudly.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkBasics(PlanDayCandidate $day): array
+    {
+        if (! $this->basics->judges($day->targetLang) || ! $this->basics->isFatalAt($day->level)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($this->substitutions($day) as $item) {
+            if (! $this->basics->isBasic($day->targetLang, $item->text)) {
+                continue;
+            }
+
+            $out[] = PlanViolation::onCard(
+                self::WORD_IS_BASIC,
+                $item,
+                'text',
+                'это базовое слово — число, день недели, местоимение и подобное; день сцены на них '
+                . 'не тратится, а числа живут на полке «numbers»',
+                'this is basic vocabulary (a number, a weekday, a pronoun, be/have/go and the like) '
+                . 'and is never a card; replace it with something this scene actually needs',
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * A NAME IS NOT A CARD — it belongs in the filler of a line (канон §7).
+     *
+     * ## Only what is actually a name
+     *
+     * The list this reads is P1's, and P1 fills it loosely. On the live run of наряд P2-v0.4 the
+     * skeleton for «К врачу с ребёнком» answered `entities: [clinic, front desk, appointment,
+     * walk-in clinic]` — four common nouns, and precisely the vocabulary the scene exists to teach.
+     * Barring them turned the day into an impossible request: teach this encounter, but not with
+     * any of its words.
+     *
+     * So an entity bars a card only when it LOOKS like a name — a capital letter where the
+     * language does not put one by default, «Dr. Ahmed», «Boots», «Charing Cross». A lowercase
+     * entity is P1 having filed ordinary vocabulary in the wrong list, and the day is judged on
+     * what the word is rather than on where the skeleton put it. Goal terms keep the strict rule:
+     * those are the learner's OWN Latin-alphabet words, which they already have.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkNames(PlanDayCandidate $day): array
+    {
+        $names = [];
+        foreach ($day->entityNames as $name) {
+            $key = $this->normalize($name);
+            if ($key !== '' && self::looksLikeAName($name)) {
+                $names[$key] = trim($name);
+            }
+        }
+        foreach ($day->goalTerms as $name) {
+            $key = $this->normalize($name);
+            if ($key !== '') {
+                $names[$key] = trim($name);
+            }
+        }
+        if ($names === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($this->substitutions($day) as $item) {
+            $named = $names[$this->normalize($item->text)] ?? null;
+            if ($named === null) {
+                continue;
+            }
+
+            $out[] = PlanViolation::onCard(
+                self::TERM_IS_A_NAME,
+                $item,
+                'text',
+                'карточка учит имя собственное «' . $named . '» — учить в нём нечего; имя должно '
+                . 'стоять в дырке реплики',
+                'this card teaches a proper noun of the scenario. A name is filler, not vocabulary',
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * THE KEY — the support-language side of a card, and the two ways it stops being one.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkKeys(PlanDayCandidate $day): array
+    {
+        $out = [];
+        foreach ($day->items as $item) {
+            $translation = trim($item->translation);
+            if ($translation === '') {
+                continue;
+            }
+
+            // «Ivanov» glossed «Иванов» is one word and one piece of information: the learner reads
+            // the Latin, says the Cyrillic, and has learned that a name is spelled as it sounds.
+            // Every other gate passes it, because character by character the two differ.
+            if ($this->normalize($translation) === $this->normalize($item->text)
+                || $this->sameness->same($translation, $item->text)) {
+                $out[] = PlanViolation::onCard(
+                    self::TRANSLATION_IS_TRANSLITERATION,
+                    $item,
+                    'translation',
+                    'перевод — это сама карточка (или она же в другом алфавите): карточка отвечает '
+                    . 'на собственный вопрос',
+                    'the `translation` is the term itself, or the same word written in the other alphabet',
+                );
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * EVERY LINE'S TRANSLATION CARRIES ITS OWN KEY — гейт 219, unchanged.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkLineTranslations(PlanDayCandidate $day): array
+    {
+        if (! $this->keyPresence->judges($day->supportLang)) {
+            return [];
+        }
+
+        $translations = [];
+        foreach ($this->substitutions($day) as $item) {
+            $translations[$item->text] = $item->translation;
+        }
+
+        $out = [];
+        foreach ($day->lines() as $line) {
+            $key = PlanSpeakingKey::of($line, $day->items);
+            $keyTranslation = $key === null ? null : ($translations[$key] ?? null);
+            if ($key === null || $keyTranslation === null || trim($keyTranslation) === '') {
+                continue;
+            }
+            if ($this->keyPresence->holds($day->supportLang, $line->translation, $keyTranslation)) {
+                continue;
+            }
+
+            $out[] = PlanViolation::onCard(
+                self::TRANSLATION_MISSING_KEY,
+                $line,
+                'translation',
+                "перевод реплики не содержит перевода ключевой карточки «{$key}» "
+                . "(«{$keyTranslation}») — ученик читает вопрос, в котором не спрошено то, "
+                . 'что карточка требует произнести',
+                'the line translation does not render its key card, so the prompt does not ask for '
+                . 'the word the card grades',
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * THE NUMBER THE LINE SAYS IS THE NUMBER THE CARD IS GRADED ON — {@see NumberSpelling}.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkNumbers(PlanDayCandidate $day): array
+    {
+        if (! $this->numbers->judges($day->targetLang)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($day->shelf(PlanShelf::Numbers) as $item) {
+            $value = trim((string) $item->value);
+            if ($value === '') {
+                $out[] = PlanViolation::onCard(
+                    self::NUMBER_VALUE_MISMATCH,
+                    $item,
+                    'value',
+                    'у числа нет `value` — ученик вводит цифрами, а сверять их не с чем',
+                    'a `numbers` card has no `value`; the learner answers in digits and there is nothing to grade against',
+                );
+
+                continue;
+            }
+
+            if ($this->numbers->heardIn($day->targetLang, $item->text, $value)) {
+                continue;
+            }
+
+            $out[] = PlanViolation::onCard(
+                self::NUMBER_VALUE_MISMATCH,
+                $item,
+                'value',
+                "в реплике не звучит число «{$value}» — карточка просит услышать одно, а засчитывает другое",
+                'the line does not say the number this card is graded on',
+            );
+        }
+
+        return $out;
+    }
+
+    // ── counted ──────────────────────────────────────────────────────────────────────────────
+
+    /** @return list<PlanViolation> */
+    private function warnShelfSizes(PlanDayCandidate $day): array
+    {
+        $counted = [
+            'hear' => count($day->shelf(PlanShelf::Hear)),
+            'say' => count($day->shelf(PlanShelf::Say)),
+            'ask' => count($day->shelf(PlanShelf::Ask)),
+            'words' => count($day->shelf(PlanShelf::Words)) + count($day->shelf(PlanShelf::Chunks)),
+            'numbers' => count($day->shelf(PlanShelf::Numbers)),
+        ];
+
+        $out = [];
+        foreach (self::SHELF_GUIDE as $shelf => [$min, $max]) {
+            $have = $counted[$shelf];
+            if ($have >= $min && $have <= $max) {
+                continue;
+            }
+
+            $label = $shelf === 'words' ? 'слов и связок' : "полка «{$shelf}»";
+            $out[] = PlanViolation::onAnswer(
+                self::SIZE_OUT_OF_RANGE,
+                "{$label}: {$have}, а ориентир — {$min}–{$max}",
+                "the `{$shelf}` shelf holds {$have} cards; the guide is {$min}–{$max}",
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * IS THIS A CONVERSATION OR A QUESTIONNAIRE — the three shape counters of the day.
+     *
+     * @return list<PlanViolation>
+     */
+    private function warnConversation(PlanDayCandidate $day): array
+    {
+        $spoken = [...$day->shelf(PlanShelf::Say), ...$day->shelf(PlanShelf::Ask)];
+        if ($spoken === []) {
+            return [];
+        }
+
+        $out = [];
+        $formulas = 0;
+        $question = false;
+        $repair = false;
+        $markers = $this->repairMarkersFor($day->targetLang);
+
+        foreach ($spoken as $line) {
+            if (! str_contains($line->frame, self::SLOT)) {
+                $formulas++;
+            }
+            if (str_ends_with(rtrim($line->text), '?')) {
+                $question = true;
+            }
+            if ($markers !== [] && $this->isRepairMove($line->text, $markers)) {
+                $repair = true;
+            }
+        }
+
+        $cap = (int) ceil(count($spoken) * self::MAX_FORMULA_SHARE);
+        if ($formulas > $cap) {
+            $out[] = PlanViolation::onAnswer(
+                self::FORMULA_CAP,
+                "реплик без дырки {$formulas} из " . count($spoken) . ", а треть с округлением вверх — это {$cap}",
+                "{$formulas} of " . count($spoken) . " spoken lines have no gap; a third rounded up is {$cap}",
+            );
+        }
+
+        if (! $question) {
+            $out[] = PlanViolation::onAnswer(
+                self::NO_QUESTION,
+                'ни одна реплика ученика не заканчивается вопросительным знаком — день учит отвечать '
+                . 'и не учит спрашивать',
+                'no line of the learner\'s ends in a question mark',
+            );
+        }
+
+        if (! $repair && $markers !== []) {
+            $out[] = PlanViolation::onAnswer(
+                self::NO_REPAIR,
+                'ни одной реплики-починки («Could you repeat…») — на настоящем разговоре ломается ровно это',
+                'no line asks for a repeat or says it was not caught',
+            );
+        }
+
+        $lines = $day->lines();
+        $role = count($day->shelf(PlanShelf::Hear));
+        $ceiling = (int) floor(count($lines) * self::MAX_ROLE_SHARE);
+        if ($lines !== [] && $role > $ceiling) {
+            $out[] = PlanViolation::onAnswer(
+                self::ROLE_LINE_SHARE,
+                "реплик собеседника {$role} из " . count($lines) . ', а их должно быть не больше половины',
+                "{$role} of " . count($lines) . ' lines are the interlocutor\'s',
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * DOES EVERY PROMISE OF THE SCENE HAVE A CARD, and does every piece stand in a line?
+     *
+     * @return list<PlanViolation>
+     */
+    private function warnCoverage(PlanDayCandidate $day): array
+    {
+        $out = [];
+
+        $served = [];
+        foreach ($day->items as $item) {
+            $ref = trim((string) $item->skillRef);
+            if ($ref !== '') {
+                $served[$ref] = true;
+            }
+        }
+        foreach ($day->skillIds as $skillId) {
+            if (! isset($served[$skillId])) {
+                $out[] = PlanViolation::onAnswer(
+                    self::SKILL_UNCOVERED,
+                    "умение «{$skillId}» не закрыто ни одной карточкой дня",
+                    "no card of this day serves the skill `{$skillId}`",
+                );
+            }
+        }
+
+        // «Слова и связки — из этих же реплик» (канон §2). A piece that stands in no line of the
+        // day is a piece the day never combines, which is the whole difference between a scene and
+        // a glossary with a date on it.
+        $lines = '';
+        foreach ($day->lines() as $line) {
+            $lines .= ' ' . $this->normalize($line->text) . ' ';
+        }
+        foreach ($this->substitutions($day) as $item) {
+            $needle = $this->normalize($item->text);
+            if ($needle === '' || str_contains($lines, ' ' . $needle . ' ')) {
+                continue;
+            }
+
+            $out[] = PlanViolation::onCard(
+                self::SUBSTITUTION_OUTSIDE_FRAME,
+                $item,
+                'text',
+                'это слово не стоит ни в одной реплике дня — его некуда подставить',
+                'this piece stands in no line of the day, so nothing combines with it',
+            );
+        }
+
+        // The вводка is already written and shown above the day; a card that retells it spends a
+        // slot on something the learner has read.
+        $intro = $this->normalize($day->sceneIntro);
+        if ($intro !== '') {
+            foreach ($day->items as $item) {
+                $translation = $this->normalize($item->translation);
+                if ($translation !== '' && self::wordCount($translation) >= 4 && str_contains($intro, $translation)) {
+                    $out[] = PlanViolation::onCard(
+                        self::INTRO_REPEATED,
+                        $item,
+                        'translation',
+                        'карточка пересказывает вводку сцены, которую ученик уже прочитал',
+                        'this card retells the scene intro the learner has already read',
+                    );
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * The per-card counters — everything that makes ONE card weaker without making the day
+     * unplayable.
+     *
+     * @return list<PlanViolation>
+     */
+    private function warnCards(PlanDayCandidate $day): array
+    {
+        $out = [];
+        $cards = $this->substitutionTexts($day);
+        $vocabulary = $this->dayVocabulary($day->items);
+        $seenKeys = [];
+        $basicsCounted = $this->basics->judges($day->targetLang) && ! $this->basics->isFatalAt($day->level);
+
+        foreach ($day->items as $item) {
+            $shelf = PlanShelf::tryFromName($item->arrayName());
+
+            // THE WHOLE OF `card.filler_not_card` NOW LIVES HERE, in every language — a counter on
+            // the day rather than a refusal of it, for the reasons written at the fatal check's old
+            // site. `hear` and `numbers` are exempt even from the counter: those lines are
+            // understood and never produced, so a filler the day did not teach is not a demand made
+            // of the learner, and counting it would bury the counter in noise.
+            if ($item->filler !== ''
+                && $shelf !== PlanShelf::Numbers
+                && $shelf !== PlanShelf::Hear
+                && ! $this->fillerIsTaught($day, $item->filler, $cards)) {
+                $out[] = PlanViolation::onCard(
+                    self::FILLER_MISMATCH_WARNING,
+                    $item,
+                    'filler',
+                    "`filler` «{$item->filler}» не совпадает посимвольно ни с одной карточкой дня — "
+                    . 'возможно, склонение, а возможно, слово не из этого дня',
+                    'the `filler` matches no card of this day character for character',
+                );
+            }
+
+            if ($shelf !== null && $shelf->wantsImage() && trim($item->imageApiPrompt) === '') {
+                $out[] = PlanViolation::onCard(
+                    self::IMAGE_PROMPT_MISSING,
+                    $item,
+                    'image_api_prompt',
+                    'у слова нет описания картинки — карточка останется без иллюстрации',
+                    'this word card carries no image query, so it will never be illustrated',
+                );
+            }
+
+            $key = $this->normalize($item->translation);
+            if ($key !== '' && isset($seenKeys[$key])) {
+                $out[] = PlanViolation::onCard(
+                    self::KEY_DUPLICATED,
+                    $item,
+                    'translation',
+                    'тот же перевод уже стоит у другой карточки дня — два одинаковых вопроса с разными ответами',
+                    'another card of this day already uses this `translation`',
+                );
+            }
+            $seenKeys[$key] = true;
+
+            foreach (['translation' => $item->translation, 'example_translation' => $item->exampleTranslation] as $field => $value) {
+                if (trim($value) !== '' && ! $this->keyIsPure($day, $item, trim($value), $vocabulary)) {
+                    $out[] = PlanViolation::onCard(
+                        self::KEY_NOT_SUPPORT_LANGUAGE,
+                        $item,
+                        $field,
+                        "`{$field}` написан не на языке поддержки",
+                        "`{$field}` is not written in the support language",
+                    );
+                }
+            }
+
+            if ($basicsCounted
+                && $shelf !== null
+                && ! $shelf->isAssembled()
+                && $this->basics->isBasic($day->targetLang, $item->text)) {
+                $out[] = PlanViolation::onCard(
+                    self::WORD_IS_BASIC_WARNING,
+                    $item,
+                    'text',
+                    'базовое слово карточкой — на уровне «с нуля» это законно, но слот дня оно тратит',
+                    'a piece of basic vocabulary as a card; legitimate at level zero, still a spent slot',
+                );
+            }
+        }
+
+        return $out;
+    }
+
+    // ── the reading hint: repaired, never fatal ──────────────────────────────────────────────
+
+    /**
      * THE HINT, REPAIRED — or null when it cannot be saved.
      *
-     * The one rule that fixes instead of failing, and the reason is measured: the live gate
-     * ({@see EnrichmentValidator::transliterationFor()}) allows a hint only a space, a hyphen and
-     * an apostrophe, which is the right rule for a WORD. A line is a sentence and carries a full
-     * stop and a comma by definition, so on plan material that gate fired as a lottery — 5 hints of
-     * 16 thrown away on one day, 0 on another that happened not to end in a full stop
-     * (docs/research/plan-sandbox-2026-08-29.md §7.2).
-     *
-     * So: strip sentence punctuation, then apply the alphabet rule unchanged. A hint with a Latin
-     * letter in a Russian field is still refused — that one defeats the field for exactly the
-     * reader it exists for, and no amount of stripping makes it readable. Refused means the FIELD
-     * is dropped, never the day: see the class docblock.
+     * The one rule that fixes instead of failing, unchanged since v0.2: strip sentence punctuation,
+     * then apply the alphabet rule. A hint with a Latin letter in a Russian field is refused —
+     * refused meaning the FIELD is dropped, never the day.
      */
     public function transliterationFor(string $supportLang, ?string $raw): ?string
     {
@@ -346,8 +1088,6 @@ final class PlanDayValidator
             return null;
         }
 
-        // Digits and brackets are gone by now; anything left that is not a letter or one of the
-        // marks a spoken word carries means the model annotated instead of transliterating.
         $stripped = str_replace(self::HINT_MARKS, '', $text);
         if (preg_match('/^\p{L}*$/u', $stripped) !== 1) {
             return null;
@@ -356,22 +1096,13 @@ final class PlanDayValidator
         return $this->purity->foreignScriptLetters($supportLang, $text) === [] ? $text : null;
     }
 
-    /**
-     * Do the two languages use different scripts — i.e. is a reading hint MANDATORY on this day?
-     *
-     * Cyrillic support with a Latin target means every term, always. When both share a script the
-     * hint is optional and its absence is not a defect worth a line in the log.
-     */
+    /** Do the two languages use different scripts — i.e. is a reading hint mandatory? */
     public function scriptsDiffer(string $supportLang, string $targetLang): bool
     {
         return self::scriptOf($supportLang) !== self::scriptOf($targetLang);
     }
 
-    /**
-     * Which alphabet a language is written in — enough of them to answer «does this pair need a
-     * reading hint», and no more. Anything unlisted is treated as Latin, which is the right guess
-     * for a European language and the harmless one: it only ever means «no hint is mandatory».
-     */
+    /** Which alphabet a language is written in. Anything unlisted is Latin — the harmless guess. */
     private static function scriptOf(string $lang): string
     {
         return match (mb_strtolower(substr(trim($lang), 0, 2))) {
@@ -387,498 +1118,86 @@ final class PlanDayValidator
         };
     }
 
+    // ── helpers ──────────────────────────────────────────────────────────────────────────────
+
     /**
-     * THE THREE NUMBERS, and the sum. A day one card off is rejected whole.
+     * The cards a filler may be — the words and connectors of this day, by their exact text.
      *
-     * @return list<PlanViolation>
+     * @return array<string, true>
      */
-    private function checkCounts(PlanDayCandidate $day): array
+    /**
+     * IS WHAT STANDS IN THE GAP SOMETHING THIS DAY GIVES THE LEARNER?
+     *
+     * The rule is «в дырке стоит то, что день учит», and until the live run it was spelled as
+     * character-for-character equality with a `words`/`chunks` card. Two live days died on that
+     * spelling, and both times the model was right:
+     *
+     *   «Should we go to the ___?» / `front desk`, on a day whose chunk is «come to the front desk»
+     *   — the piece IS taught, inside a larger one. The repair prompt states the exact-text rule
+     *   plainly and the model broke it twice anyway, which is what a rule that cannot be satisfied
+     *   looks like from the outside;
+     *   «Is it for your ___?» / `child` — `child` is on the basic stop list, so
+     *   {@see BasicVocabulary} FORBIDS the day from carding it. Demanding that the filler be a card
+     *   made the two gates contradict each other, and a day could satisfy only one of them.
+     *
+     * So the match is by coverage rather than by equality, in three ways, all cheap and all
+     * conservative — a filler passes when the day teaches it (exactly, or inside a bigger piece, or
+     * as part of one), or when nothing could have taught it because it is basic vocabulary the
+     * learner is assumed to have. Everything else is still refused: an untaught content word in a
+     * line the learner must SAY is the defect this gate exists for.
+     *
+     * @param  array<string, true>  $cards  the day's words and connectors, by text
+     */
+    private function fillerIsTaught(PlanDayCandidate $day, string $filler, array $cards): bool
     {
-        $violations = [];
+        if (isset($cards[$filler])) {
+            return true;
+        }
 
-        $counted = [
-            PlanDayItem::KIND_LINE => 0,
-            PlanDayItem::KIND_WORD => 0,
-            PlanDayItem::KIND_CHUNK => 0,
-        ];
-        foreach ($day->items as $item) {
-            if (isset($counted[$item->kind])) {
-                $counted[$item->kind]++;
+        $needle = self::fold($filler);
+        if ($needle === '') {
+            return true;
+        }
+
+        foreach (array_keys($cards) as $card) {
+            // INSIDE a bigger piece the day teaches, on word boundaries: «front desk» in the chunk
+            // «come to the front desk». One direction only, and never a bare substring: a filler
+            // that ADDS words to a card («tusea mare» over the card «tusea») has added something
+            // the day did not teach, which is the case the counter is for, and «form» must not be
+            // excused by «information».
+            $hay = self::fold((string) $card);
+            if ($hay !== '' && self::containsWords($hay, $needle)) {
+                return true;
             }
         }
 
-        $expected = [
-            PlanDayItem::KIND_LINE => $day->phraseCount,
-            PlanDayItem::KIND_WORD => $day->wordCount,
-            PlanDayItem::KIND_CHUNK => $day->chunkCount,
-        ];
+        if (! $this->basics->judges($day->targetLang)) {
+            return false;
+        }
 
-        $arrays = [
-            PlanDayItem::KIND_LINE => 'phrases',
-            PlanDayItem::KIND_WORD => 'words',
-            PlanDayItem::KIND_CHUNK => 'chunks',
-        ];
-
-        foreach ($expected as $kind => $want) {
-            if ($counted[$kind] !== $want) {
-                $violations[] = PlanViolation::onAnswer(
-                    self::ARRAY_COUNT,
-                    "«{$kind}»: {$counted[$kind]}, а день просил {$want}",
-                    "`{$arrays[$kind]}` holds {$counted[$kind]} cards and the day asked for {$want}",
-                );
+        foreach (preg_split('/\s+/u', $needle) ?: [] as $word) {
+            if ($word !== '' && ! $this->basics->isBasic($day->targetLang, $word)) {
+                return false;
             }
         }
 
-        if (count($day->items) !== $day->termBudget) {
-            $violations[] = PlanViolation::onAnswer(
-                self::TERM_COUNT,
-                'карточек ' . count($day->items) . ', а день просил ' . $day->termBudget,
-                'the day holds ' . count($day->items) . ' cards in all and asked for ' . $day->termBudget,
-            );
-        }
-
-        return $violations;
+        return true;
     }
 
     /**
-     * The four fields that describe what a card IS have to agree with each other.
+     * Is this string written the way a name is written — a capital where a common noun has none?
      *
-     * @return list<PlanViolation>
+     * Deliberately shallow. It is not asking whether the thing IS a name, it is asking whether P1
+     * wrote it as one, which is the only signal a list of bare strings carries. «Charing Cross»
+     * qualifies, «front desk» does not, and a language whose script has no letter case (Japanese,
+     * Arabic, Georgian) answers false for everything — the same silence every rule here keeps when
+     * the language gives it nothing to judge by.
      */
-    private function checkKinds(PlanDayCandidate $day): array
+    private static function looksLikeAName(string $text): bool
     {
-        $violations = [];
-
-        foreach ($day->items as $item) {
-            $isLine = $item->kind === PlanDayItem::KIND_LINE;
-
-            if ($item->isLine !== $isLine) {
-                $violations[] = PlanViolation::onCard(
-                    self::KIND_MISMATCH,
-                    $item,
-                    'is_line',
-                    "`is_line` говорит одно, а «{$item->kind}» — другое",
-                    '`is_line` contradicts the array this card stands in',
-                );
-            }
-
-            if ($isLine && ! in_array($item->speaker, [PlanDayItem::SPEAKER_LEARNER, PlanDayItem::SPEAKER_ROLE], true)) {
-                $violations[] = PlanViolation::onCard(
-                    self::KIND_MISMATCH,
-                    $item,
-                    'speaker',
-                    'у реплики нет говорящего — непонятно, произносит её юзер или собеседник',
-                    'a line needs `speaker`: `learner` or `role`',
-                );
-            }
-
-            if (! $isLine && $item->speaker !== null) {
-                $violations[] = PlanViolation::onCard(
-                    self::KIND_MISMATCH,
-                    $item,
-                    'speaker',
-                    'у подстановки есть говорящий, хотя её никто не произносит целиком',
-                    'a word or a connector has no `speaker` — nobody says it as a whole turn',
-                );
-            }
-
-            // A connector is a phrasal verb or a fixed collocation. `word` is the one lexical type
-            // it cannot be: a one-word term joins nothing.
-            if ($item->kind === PlanDayItem::KIND_CHUNK && $item->type === 'word') {
-                $violations[] = PlanViolation::onCard(
-                    self::KIND_MISMATCH,
-                    $item,
-                    'type',
-                    'связка объявлена как одно слово — связка соединяет, а одно слово не соединяет ничего',
-                    'a connector cannot have `type: word` — one word joins nothing',
-                );
-            }
-        }
-
-        return $violations;
-    }
-
-    /** @return list<PlanViolation> */
-    private function checkCheckpoints(PlanDayCandidate $day): array
-    {
-        $violations = [];
-        $closed = [];
-
-        foreach ($day->items as $item) {
-            $covers = $item->coversCheckpoint;
-            if ($covers === null) {
-                continue;
-            }
-
-            if ($item->kind !== PlanDayItem::KIND_LINE) {
-                $violations[] = PlanViolation::onCard(
-                    self::CHECKPOINT_ON_WORD,
-                    $item,
-                    'covers_checkpoint',
-                    "подстановка помечена как закрывающая чек-пойнт {$covers}; чек-пойнт закрывается репликой",
-                    'only a line may close a checkpoint; a word or a connector must send `null`',
-                );
-
-                continue;
-            }
-
-            if ($covers < 1 || $covers > $day->checkpointCount) {
-                $violations[] = PlanViolation::onCard(
-                    self::CHECKPOINT_OUT_OF_RANGE,
-                    $item,
-                    'covers_checkpoint',
-                    "чек-пойнт {$covers} не существует — их у дня {$day->checkpointCount}",
-                    "checkpoint {$covers} does not exist; this day has {$day->checkpointCount}",
-                );
-
-                continue;
-            }
-
-            $closed[$covers] = true;
-        }
-
-        for ($i = 1; $i <= $day->checkpointCount; $i++) {
-            if (! isset($closed[$i])) {
-                $violations[] = PlanViolation::onAnswer(
-                    self::CHECKPOINT_UNCOVERED,
-                    "чек-пойнт {$i} не закрыт ни одной репликой — этот день нельзя пройти",
-                    "checkpoint {$i} is closed by no line, so this day cannot be passed",
-                );
-            }
-        }
-
-        return $violations;
-    }
-
-    /**
-     * THE PAIR THAT MAKES A LINE — `frame` and `filler`, judged instead of the sentence they build.
-     *
-     * v0.2 checked the OUTPUT: «is this line its own frame with something in the hole». v0.3 builds
-     * the line itself, so that question answers itself and the interesting one moved upstream — is
-     * the pair the server was handed a pair it can paste?
-     *
-     *   ONE slot at most. Two holes and one filler is a line with a hole left in it, which is the
-     *   defect the assembly was introduced to make impossible; letting the paste fill only the
-     *   first would hide it behind a sentence that reads fine.
-     *   A filler exactly when there is a slot. Both halves fail: a slot with `""` leaves a hole,
-     *   and a filler with no slot is a word the line never asked for.
-     *   The filler is a CARD of this day, character for character. «payment module» when the card
-     *   says «the payment module» is not a near miss: the learner meets the word on a card and in
-     *   a line, and if the two differ they are two words.
-     *
-     * And unchanged from v0.2 for the ONE half of it that is about a card: an interlocutor's line
-     * is quoted from the skeleton — its FRAME now, since that is what the model writes. The other
-     * half, the QUARTER ceiling, left this method in v0.3.1 and is counted instead
-     * ({@see ROLE_LINE_SHARE}): it is a fact about the day's proportions, not about a card, and
-     * nothing a repair call can be pointed at.
-     *
-     * @return list<PlanViolation>
-     */
-    private function checkFrames(PlanDayCandidate $day): array
-    {
-        $violations = [];
-        $lines = $this->linesOf($day);
-        if ($lines === []) {
-            return $violations;
-        }
-
-        $cards = [];
-        foreach ($day->items as $item) {
-            if ($item->kind !== PlanDayItem::KIND_LINE) {
-                $cards[$item->text] = true;
-            }
-        }
-
-        $openings = array_map(static fn (string $l): string => trim($l), $day->openingLines);
-
-        foreach ($lines as $line) {
-            $frame = trim($line->frame);
-            $slots = mb_substr_count($frame, self::SLOT);
-
-            if ($slots > 1) {
-                $violations[] = PlanViolation::onCard(
-                    self::FRAME_SLOT_COUNT,
-                    $line,
-                    'frame',
-                    "в каркасе «{$frame}» дырок {$slots}, а дырка в каркасе бывает одна — "
-                    . 'подставить в неё можно только одно слово дня',
-                    "the frame carries {$slots} slots and a frame carries at most one",
-                );
-            }
-
-            if ($slots >= 1 && $line->filler === '') {
-                $violations[] = PlanViolation::onCard(
-                    self::FILLER_MISMATCH,
-                    $line,
-                    'filler',
-                    "у каркаса «{$frame}» есть дырка, а `filler` пуст — реплику не из чего собрать",
-                    'the frame has a slot and `filler` is empty, so the line cannot be assembled',
-                );
-            } elseif ($slots === 0 && $line->filler !== '') {
-                $violations[] = PlanViolation::onCard(
-                    self::FILLER_MISMATCH,
-                    $line,
-                    'filler',
-                    "`filler` «{$line->filler}» есть, а дырки в каркасе «{$frame}» нет — "
-                    . 'ставить его некуда',
-                    'there is a `filler` and no slot in the frame to put it in',
-                );
-            } elseif ($line->filler !== ''
-                && ! isset($cards[$line->filler])
-                && self::isStrictFillerLang($day->targetLang)) {
-                // FATAL ONLY IN ENGLISH — see {@see STRICT_FILLER_LANG}. Elsewhere the same
-                // mismatch is a warning ({@see warnings()}), because the honest answer in a
-                // language with cases is an inflected filler and refusing it would be refusing
-                // grammar.
-                $violations[] = PlanViolation::onCard(
-                    self::FILLER_NOT_A_CARD,
-                    $line,
-                    'filler',
-                    "`filler` «{$line->filler}» не совпадает посимвольно ни с одним `text` "
-                    . 'из words или chunks этого дня — в дырке стоит слово, которого день не учит',
-                    'the `filler` is not, character for character, the `text` of any card in DAY TERMS',
-                );
-            }
-
-            if ($line->speaker !== PlanDayItem::SPEAKER_ROLE) {
-                continue;
-            }
-
-            if (! in_array($frame, $openings, true)) {
-                $violations[] = PlanViolation::onCard(
-                    self::ROLE_LINE_INVENTED,
-                    $line,
-                    'frame',
-                    'реплика собеседника сочинена, а её `frame` должен быть дословно взят из '
-                    . 'opening_lines сцены',
-                    'a `speaker: role` line must be one of OPENING LINES, verbatim',
-                );
-            } elseif ($line->filler !== '') {
-                $violations[] = PlanViolation::onCard(
-                    self::ROLE_LINE_INVENTED,
-                    $line,
-                    'filler',
-                    'реплику собеседника цитируют целиком: `filler` у неё пустой, подставлять в '
-                    . 'чужую реплику нечего',
-                    'a `speaker: role` line is quoted whole, so its `filler` is empty',
-                );
-            }
-        }
-
-        return $violations;
-    }
-
-    /**
-     * EVERY LINE'S RUSSIAN CARRIES ITS OWN KEY — {@see TRANSLATION_MISSING_KEY}.
-     *
-     * The key is the day's card standing in the frame's hole, or, on a formula, a card of the day
-     * standing inside the sentence ({@see PlanSpeakingKey} — one answer, shared with the writer and
-     * the grader). What is looked for is that card's OWN translation, stem by stem, because Russian
-     * inflects it: «долгое проживание в новой стране» appears in the line as «долгого проживания в
-     * новой стране» ({@see TranslationKeyPresence}).
-     *
-     * Silent where it cannot see: a language with no stem rule, a line with no key, a key card with
-     * no translation. A gate that guesses is a paid repair call spent on a card that was fine.
-     *
-     * @return list<PlanViolation>
-     */
-    private function checkLineTranslations(PlanDayCandidate $day): array
-    {
-        if (! $this->keyPresence->judges($day->supportLang)) {
-            return [];
-        }
-
-        $translations = [];
-        foreach ($day->items as $item) {
-            if ($item->kind !== PlanDayItem::KIND_LINE) {
-                $translations[$item->text] = $item->translation;
-            }
-        }
-
-        $violations = [];
-        foreach ($this->linesOf($day) as $line) {
-            $key = PlanSpeakingKey::of($line, $day->items);
-            $keyTranslation = $key === null ? null : ($translations[$key] ?? null);
-            if ($key === null || $keyTranslation === null || trim($keyTranslation) === '') {
-                continue;
-            }
-            if ($this->keyPresence->holds($day->supportLang, $line->translation, $keyTranslation)) {
-                continue;
-            }
-
-            $violations[] = PlanViolation::onCard(
-                self::TRANSLATION_MISSING_KEY,
-                $line,
-                'translation',
-                "перевод реплики не содержит перевода ключевой карточки «{$key}» "
-                . "(«{$keyTranslation}») — ученик читает вопрос, в котором не спрошено то, "
-                . 'что карточка требует произнести',
-                'the line translation does not render its key card, so the prompt does not ask for '
-                . 'the word the card grades',
-            );
-        }
-
-        return $violations;
-    }
-
-    /**
-     * WHAT IS WRONG WITH THE DAY AND IS NOT WORTH A SECOND PAID CALL.
-     *
-     * Things about the SHAPE of the conversation rather than about whether the machine can run it.
-     * Every one of them was a candidate for a fatal gate and every one of them would have refused a
-     * day the owner would have been happy with:
-     *
-     *   too many formulas — measured on the live day and wrong there (see {@see MAX_FORMULA_SHARE});
-     *   no question from the learner — the live day was eight «I…» statements in a row, which reads
-     *   as a questionnaire and not as an interview, and is a real defect the learner feels;
-     *   no repair move — «Sorry, you're breaking up» — which is the moment a remote call actually
-     *   breaks, and a day that trains only statements leaves the learner mute there;
-     *   no line from the interlocutor at all, though the scene had lines to quote;
-     *   too MANY of them — {@see ROLE_LINE_SHARE}, the ceiling, joined its own floor in v0.3.1;
-     *   a word standing in no frame of the day — {@see SUBSTITUTION_OUTSIDE_FRAME}, the last gate
-     *   that stood between a live day and `ready`, three runs in a row, over one card of fourteen.
-     *
-     * They are reported and counted rather than refused because the cost of being wrong is not
-     * symmetric: a weak day is caught by reading it, and a refused day is $0.05 and a learner
-     * staring at an error. A counter that climbs is a prompt problem.
-     *
-     * @return list<PlanViolation> empty = nothing to warn about
-     */
-    public function warnings(PlanDayCandidate $day): array
-    {
-        $lines = $this->linesOf($day);
-        if ($lines === []) {
-            return [];
-        }
-
-        $cards = [];
-        foreach ($day->items as $item) {
-            if ($item->kind !== PlanDayItem::KIND_LINE) {
-                $cards[$item->text] = true;
-            }
-        }
-
-        $out = [...$this->chunksOutsideFrames($day), ...$this->wordsOutsideFrames($day)];
-        $formulas = 0;
-        $question = false;
-        $repair = false;
-        $roleLines = 0;
-        $markers = $this->repairMarkersFor($day->targetLang);
-
-        foreach ($lines as $line) {
-            if (! str_contains($line->frame, self::SLOT)) {
-                $formulas++;
-            }
-
-            // The same mismatch that is fatal in English, counted in every other language until
-            // the inflection question is answered — see {@see STRICT_FILLER_LANG}.
-            if ($line->filler !== ''
-                && ! isset($cards[$line->filler])
-                && ! self::isStrictFillerLang($day->targetLang)) {
-                $out[] = PlanViolation::onCard(
-                    self::FILLER_MISMATCH_WARNING,
-                    $line,
-                    'filler',
-                    "`filler` «{$line->filler}» не совпадает посимвольно ни с одной карточкой дня "
-                    . '— возможно, склонение, а возможно, слово не из этого дня',
-                    'the `filler` matches no card of this day character for character',
-                );
-            }
-
-            if ($line->speaker === PlanDayItem::SPEAKER_ROLE) {
-                $roleLines++;
-            }
-
-            // The learner's OWN lines only. The interlocutor asking a question teaches the learner
-            // to recognise one, which is a different ability from asking one.
-            if ($line->speaker !== PlanDayItem::SPEAKER_LEARNER) {
-                continue;
-            }
-            if (str_ends_with(rtrim($line->text), '?')) {
-                $question = true;
-            }
-            if ($markers !== [] && $this->isRepairMove($line->text, $markers)) {
-                $repair = true;
-            }
-        }
-
-        $cap = (int) ceil($day->phraseCount * self::MAX_FORMULA_SHARE);
-        if ($formulas > $cap) {
-            $out[] = PlanViolation::onAnswer(
-                self::FORMULA_CAP,
-                "реплик без дырки {$formulas} из {$day->phraseCount}, а треть с округлением вверх "
-                . "— это {$cap}",
-                "{$formulas} of {$day->phraseCount} lines have no slot; a third rounded up is {$cap}",
-            );
-        }
-
-        // THE CEILING ON THE INTERLOCUTOR, counted since v0.3.1 — {@see ROLE_LINE_SHARE}. It lived
-        // in `checkFrames()` and refused the day; it is a proportion of the answer, no card is to
-        // blame for it, and a repair call has nothing to be pointed at.
-        $ceiling = (int) floor(count($lines) * self::MAX_ROLE_SHARE);
-        if ($roleLines > $ceiling) {
-            $out[] = PlanViolation::onAnswer(
-                self::ROLE_LINE_SHARE,
-                'реплик собеседника ' . $roleLines . ' из ' . count($lines)
-                . ', а их должно быть не больше четверти',
-                $roleLines . ' of ' . count($lines) . ' lines are the interlocutor\'s; at most a '
-                . 'quarter should be',
-            );
-        }
-
-        if (! $question) {
-            $out[] = PlanViolation::onAnswer(
-                self::NO_QUESTION,
-                'ни одна реплика юзера не заканчивается вопросительным знаком — день учит отвечать '
-                . 'и не учит спрашивать',
-                'no line of the learner\'s ends in a question mark',
-            );
-        }
-
-        // THE FLOOR UNDER THE INTERLOCUTOR. The ceiling above has always been held — no more than
-        // a quarter of the lines are the role's — and nothing held the floor, so a
-        // day of eight lines with the interlocutor silent throughout passed. The live v0.3 day was
-        // exactly that: the skeleton gave its scene three `opening_lines` and the day quoted none,
-        // while its first line answered a question that was nowhere in the day. The learner drills
-        // answers to lines they have never heard.
-        //
-        // Only where there IS somebody to hear: `openingLines` is empty when no scene of this day
-        // has a role, and a scene of reading forms alone is a legitimate day with nobody in it.
-        if ($roleLines === 0 && $day->openingLines !== []) {
-            $out[] = PlanViolation::onAnswer(
-                self::NO_ROLE_LINE,
-                'ни одной реплики собеседника: у сцены есть opening_lines, но день не процитировал '
-                . 'ни одной — юзер учит ответы на то, чего не слышал',
-                'no line is the interlocutor\'s, though the scene has OPENING LINES to quote',
-            );
-        }
-
-        // No list for this target language means the question was never asked of it, and an
-        // unasked question has no answer to warn about.
-        if (! $repair && $markers !== []) {
-            $out[] = PlanViolation::onAnswer(
-                self::NO_REPAIR,
-                'ни одной реплики-починки («Could you repeat…», «Sorry, you`re breaking up») — '
-                . 'на настоящем разговоре ломается ровно это',
-                'no line asks for a repeat or says the connection broke up',
-            );
-        }
-
-        return $out;
-    }
-
-    /**
-     * Does this line ask for a repeat, a slower pace, or say the connection went?
-     *
-     * @param  list<string>  $markers
-     */
-    private function isRepairMove(string $text, array $markers): bool
-    {
-        $line = ' ' . $this->normalize($text) . ' ';
-
-        foreach ($markers as $marker) {
-            $needle = $this->normalize($marker);
-            if ($needle !== '' && str_contains($line, ' ' . $needle . ' ')) {
+        foreach (preg_split('/\s+/u', trim($text)) ?: [] as $word) {
+            $first = mb_substr(ltrim($word, '«"\'('), 0, 1);
+            if ($first !== '' && mb_strtoupper($first) === $first && mb_strtolower($first) !== $first) {
                 return true;
             }
         }
@@ -886,500 +1205,53 @@ final class PlanDayValidator
         return false;
     }
 
-    /**
-     * This target language's repair phrases — exact code first, then the bare language.
-     *
-     * @return list<string> empty = the check is off for this language
-     */
-    private function repairMarkersFor(string $targetLang): array
+    /** Does `$hay` contain `$needle` on word boundaries? */
+    private static function containsWords(string $hay, string $needle): bool
     {
-        $lang = mb_strtolower(trim($targetLang));
-
-        return $this->repairMarkers[$lang]
-            ?? $this->repairMarkers[mb_substr($lang, 0, 2)]
-            ?? [];
+        return str_contains(' ' . $hay . ' ', ' ' . $needle . ' ');
     }
 
-    /** Is the filler rule fatal in this target language? {@see STRICT_FILLER_LANG} */
-    private static function isStrictFillerLang(string $targetLang): bool
+    /** Case and punctuation off, spaces collapsed — the shape a filler is compared in. */
+    private static function fold(string $text): string
     {
-        return mb_substr(mb_strtolower(trim($targetLang)), 0, 2) === self::STRICT_FILLER_LANG;
+        $folded = preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', mb_strtolower(trim($text))) ?? '';
+
+        return trim((string) preg_replace('/\s+/u', ' ', $folded));
     }
 
     /**
-     * EVERY substitution stands in some frame of this day — but a word and a connector stand in
-     * different places, and v0.3 is where that stopped being one rule.
+     * The day's pieces as a lookup — every word and connector it teaches, by text.
      *
-     * This is what makes the day combine. Without it the vocabulary is a glossary next to the
-     * lines: the learner memorises eight sentences and owns none of them, because nothing ever told
-     * them which hole each word goes in.
-     *
-     * **A WORD goes in the HOLE.** The rule is unchanged: `example` is one of this day's frames
-     * with this word in its slot. «the API» → «I mainly work with the API.» What changed in v0.3.1
-     * is what happens when it is broken — see {@see SUBSTITUTION_OUTSIDE_FRAME}. It was the last
-     * fatal gate standing between a live day and `ready`, three attempts running, always over ONE
-     * word of fourteen cards; a day is not broken by one card, and since v0.3.1 one card is an
-     * address a repair call can be pointed at rather than a day paid for twice.
-     *
-     * **A CONNECTOR lives in the frame, wherever the language puts it.** Four live answers in a
-     * row built the frame AROUND the connector — «Right now, I mainly work on ___» beside the chunk
-     * «work on» — and the v0.2 gate called that a defect four times. It is not one: that IS how a
-     * phrasal verb is used, and no wording of the prompt moved it, because the model was right. So
-     * the chunk's example must be a frame of this day CONTAINING it — in the slot or in the fixed
-     * part — and the one thing that would make the card worthless is checked instead: the example
-     * may not be a LINE of the day, word for word. «work on» whose only example is the line it
-     * already stands in teaches that line twice and the connector not at all.
-     *
-     * @return list<PlanViolation>
+     * @return array<string, true>
      */
-    private function wordsOutsideFrames(PlanDayCandidate $day): array
+    private function substitutionTexts(PlanDayCandidate $day): array
     {
-        [, $slotFrames] = $this->framesOf($day);
-
-        $violations = [];
-        foreach ($day->items as $item) {
-            if ($item->kind !== PlanDayItem::KIND_WORD) {
-                continue;
-            }
-
-            foreach ($slotFrames as $frame) {
-                if ($this->exampleUsesFrame($frame, $item->text, $item->example)) {
-                    continue 2;
-                }
-            }
-
-            $violations[] = PlanViolation::onCard(
-                self::SUBSTITUTION_OUTSIDE_FRAME,
-                $item,
-                'example',
-                'ни один каркас дня не принимает это слово в дырку — его пример не собирается ни из чего',
-                'the `example` is not one of the DAY LINES frames with this word in the slot',
-            );
-        }
-
-        return $violations;
-    }
-
-    /**
-     * THE CONNECTORS, counted rather than refused — {@see CHUNK_OUTSIDE_FRAME}.
-     *
-     * Fatal for one commit, and the live day measured what that costs. The model wrote «The
-     * connection is breaking up again on my side.» for the chunk «breaking up», against the day's
-     * own frame «Sorry, the connection is ___» — a sentence from this day's situation, not a clone
-     * of the line, arrived at by FIXING the clone the previous attempt had. What it dropped on the
-     * way was the leading «Sorry,», and the whole-frame rule refused the day for it
-     * (`docs/research/plan-v0.3-run.md`). One word of politeness is not a broken day.
-     *
-     * The rule itself is unchanged and still worth saying: a connector's example should be a frame
-     * of this day carrying it, with a filler that is not the line's own. It is now said in the log.
-     *
-     * Judged against ALL the day's frames, not only the ones with a hole: a connector may live in
-     * a frame's fixed part, which is the whole point of the rule since v0.3.
-     *
-     * @return list<PlanViolation>
-     */
-    private function chunksOutsideFrames(PlanDayCandidate $day): array
-    {
-        [$allFrames, , $lineTexts] = $this->framesOf($day);
         $out = [];
-
-        foreach ($day->items as $item) {
-            if ($item->kind !== PlanDayItem::KIND_CHUNK) {
-                continue;
-            }
-
-            $clone = $lineTexts[$this->normalize($item->example)] ?? null;
-            if ($clone !== null) {
-                $out[] = PlanViolation::onCard(
-                    self::CHUNK_OUTSIDE_FRAME,
-                    $item,
-                    'example',
-                    'пример связки — дословно реплика дня «' . $clone . '»: тот же каркас нужен '
-                    . 'с ДРУГИМ наполнителем, иначе связку учат вместе с уже выученной репликой',
-                    'the `example` is a line of this day word for word; the same frame is wanted '
-                    . 'with a DIFFERENT filler',
-                );
-
-                continue;
-            }
-
-            foreach ($allFrames as $frame) {
-                // The connector in the HOLE — the same containment check a word gets.
-                if ($this->exampleUsesFrame($frame, $item->text, $item->example)) {
-                    continue 2;
-                }
-                // The connector in the FIXED part: the example has to carry the whole frame, with
-                // something in its hole, and may carry more besides.
-                if ($this->frameHolds($frame, $item->text)
-                    && $this->exampleContainsFrame($frame, $item->example)) {
-                    continue 2;
-                }
-            }
-
-            $out[] = PlanViolation::onCard(
-                self::CHUNK_OUTSIDE_FRAME,
-                $item,
-                'example',
-                'ни один каркас дня не содержит эту связку целиком — её пример не собирается '
-                . 'из каркасов этого дня',
-                'no frame of DAY LINES carries this connector whole, so the `example` is built '
-                . 'from nothing in this day',
-            );
+        foreach ($this->substitutions($day) as $item) {
+            $out[$item->text] = true;
         }
 
         return $out;
     }
 
     /**
-     * The three lists every frame rule is judged against, gathered once.
+     * The day's PIECES — words and connectors, the two shelves a line is built from.
      *
-     * @return array{0: list<string>, 1: list<string>, 2: array<string, string>}
+     * @return list<PlanDayItem>
      */
-    private function framesOf(PlanDayCandidate $day): array
+    private function substitutions(PlanDayCandidate $day): array
     {
-        $slotFrames = [];
-        $allFrames = [];
-        $lineTexts = [];
-
-        foreach ($this->linesOf($day) as $line) {
-            $frame = trim($line->frame);
-            if ($frame !== '') {
-                $allFrames[] = $frame;
-                if (str_contains($frame, self::SLOT)) {
-                    $slotFrames[] = $frame;
-                }
-            }
-            $lineTexts[$this->normalize($line->text)] = $line->text;
-        }
-
-        return [$allFrames, $slotFrames, $lineTexts];
+        return [...$day->shelf(PlanShelf::Words), ...$day->shelf(PlanShelf::Chunks)];
     }
 
-    /**
-     * Does `$example` CONTAIN this frame, filled with something — or contain the formula itself?
-     *
-     * Containment and not equality, which is the same rule a word's example lives by. It was
-     * equality for one commit and that was wrong in a way that only shows up on real sentences:
-     * «I mainly work with Laravel, mostly.» is the frame «I mainly work with ___» with a detail
-     * added, which is exactly what the prompt asks an example to be, and an anchored comparison
-     * refused it. The whole frame still has to be there — a frame with a fixed tail («…every day»)
-     * is not carried by an example that drops the tail.
-     *
-     * The slot is lazy on purpose: a greedy one would let the hole swallow the frame's own tail
-     * and match a sentence that never finished the frame.
-     */
-    private function exampleContainsFrame(string $frame, string $example): bool
-    {
-        $normalizedExample = $this->normalize($example);
-
-        if (! str_contains($frame, self::SLOT)) {
-            $needle = $this->normalize($frame);
-
-            return $needle !== '' && str_contains($normalizedExample, $needle);
-        }
-
-        $pattern = $this->framePattern($frame, '.+?');
-
-        return $pattern !== null && preg_match('/' . $pattern . '/u', $normalizedExample) === 1;
-    }
-
-    /**
-     * Does the frame carry `$term` in its FIXED part — the half that does not move?
-     *
-     * Whole words only: «work» must not be found inside «network». The slot is flattened to a space
-     * first, so a term the frame builds around («I mainly work with ___») is found and a term that
-     * merely spans the hole is not.
-     */
-    private function frameHolds(string $frame, string $term): bool
-    {
-        $needle = $this->normalize($term);
-        if ($needle === '') {
-            return false;
-        }
-
-        $haystack = ' ' . $this->normalize(str_replace(self::SLOT, ' ', $frame)) . ' ';
-
-        return str_contains($haystack, ' ' . $needle . ' ');
-    }
-
-    /** Does `$example` contain this frame with `$term` in the slot? */
-    private function exampleUsesFrame(string $frame, string $term, string $example): bool
-    {
-        $pattern = $this->framePattern($frame, preg_quote($this->normalize($term), '/'));
-
-        return $pattern !== null && preg_match('/' . $pattern . '/u', $this->normalize($example)) === 1;
-    }
-
-    /**
-     * The frame as a regular expression, with `$slot` where the hole is.
-     *
-     * Null when the frame has no slot: a formula matches nothing and excuses nothing.
-     */
-    private function framePattern(string $frame, string $slot): ?string
-    {
-        $normalized = $this->normalize(str_replace(self::SLOT, self::SLOT_MARK, $frame));
-        if (! str_contains($normalized, self::SLOT_MARK)) {
-            return null;
-        }
-
-        $parts = array_map(
-            static fn (string $part): string => preg_quote(trim($part), '/'),
-            explode(self::SLOT_MARK, $normalized),
-        );
-
-        // The slot's own neighbours lose their spaces to normalisation, so the parts are re-joined
-        // with «optional whitespace» rather than glued: «worked on» + term must still match
-        // «worked on the payment module».
-        return implode('\s*' . $slot . '\s*', $parts);
-    }
-
-    /**
-     * @param  list<PlanDayItem>  $items
-     * @return list<PlanViolation>
-     */
-    private function checkExamples(array $items): array
-    {
-        $violations = [];
-
-        $terms = [];
-        foreach ($items as $item) {
-            $terms[$this->normalize($item->text)] = $item->text;
-        }
-
-        $seenExamples = [];
-        foreach ($items as $item) {
-            $example = trim($item->example);
-            if ($example === '') {
-                $violations[] = PlanViolation::onCard(
-                    self::EXAMPLE_MISSING,
-                    $item,
-                    'example',
-                    'у карточки нет примера',
-                    'the card has no `example`',
-                );
-
-                continue;
-            }
-
-            $key = $this->normalize($example);
-
-            // Its own text or ANY other card's. The «any other» half is the one v0 lost.
-            //
-            // The English reason names no card, and that is not brevity: the v0.3 retry was handed
-            // «пример — это дословно термин «Right now, I am a backend developer.»» and answered
-            // with that sentence. The address says which card to fix; the day's own text is in
-            // front of the model already.
-            if (isset($terms[$key])) {
-                $violations[] = PlanViolation::onCard(
-                    self::EXAMPLE_IS_A_TERM,
-                    $item,
-                    'example',
-                    'пример — это дословно термин «' . $terms[$key] . '», а не предложение с ним внутри',
-                    'the `example` is, word for word, a card of this day rather than a sentence '
-                    . 'containing one',
-                );
-            }
-
-            if (isset($seenExamples[$key])) {
-                $violations[] = PlanViolation::onCard(
-                    self::EXAMPLE_DUPLICATED,
-                    $item,
-                    'example',
-                    'этот же пример уже стоит у «' . $seenExamples[$key] . '»',
-                    'another card of this day already uses this `example`',
-                );
-
-                continue;
-            }
-            $seenExamples[$key] = $item->text;
-        }
-
-        return $violations;
-    }
-
-    /**
-     * A NAME IS NOT A CARD — {@see TERM_IS_A_NAME}.
-     *
-     * The skeleton names the people and things this conversation is about: «Иванов», the doctor,
-     * the company. Those names go INTO the day's lines, in the slot — «My last name is ___» — and
-     * the learner fills them in. What they must not be is a card of their own: there is nothing to
-     * learn about a surname, its `translation` is the same name in the other alphabet, and the
-     * owner's phone duly dealt «Ivanov» / «Иванов» as a word to study.
-     *
-     * `goal_terms` are the same case for the same reason: they are spelled verbatim in both
-     * languages by construction, so a card whose whole content is one of them asks nothing.
-     *
-     * LINES ARE EXEMPT, and that is the point of the rule rather than an exception to it: the whole
-     * intent is that the name lives inside a spoken turn.
-     *
-     * @return list<PlanViolation>
-     */
-    private function checkProperNouns(PlanDayCandidate $day): array
-    {
-        $names = [];
-        foreach ([...$day->entityNames, ...$day->goalTerms] as $name) {
-            $key = $this->normalize($name);
-            if ($key !== '') {
-                $names[$key] = trim($name);
-            }
-        }
-        if ($names === []) {
-            return [];
-        }
-
-        $violations = [];
-        foreach ($day->items as $item) {
-            if ($item->kind === PlanDayItem::KIND_LINE) {
-                continue;
-            }
-
-            $named = $names[$this->normalize($item->text)] ?? null;
-            if ($named === null) {
-                continue;
-            }
-
-            $violations[] = PlanViolation::onCard(
-                self::TERM_IS_A_NAME,
-                $item,
-                'text',
-                'карточка учит имя собственное «' . $named . '» — учить в нём нечего, а его перевод '
-                . 'это оно же в другом алфавите; имя должно стоять в дырке реплики',
-                'this card teaches a proper noun from ENTITIES or GOAL TERMS. A name is not '
-                . 'vocabulary: put it in the slot of a line and teach the line',
-            );
-        }
-
-        return $violations;
-    }
-
-    /** @return list<PlanViolation> */
-    private function checkKeys(PlanDayCandidate $day): array
-    {
-        $violations = [];
-        $seen = [];
-        $vocabulary = $this->dayVocabulary($day->items);
-
-        foreach ($day->items as $item) {
-            $translation = trim($item->translation);
-
-            // THE KEY IS THE TERM — character for character, OR written in the other alphabet.
-            //
-            // «Ivanov» glossed «Иванов» is one word and one piece of information: the learner reads
-            // the Latin, says the Cyrillic, and has learned that a name is spelled the way it
-            // sounds. Every gate passed that card, because the two strings differ in every
-            // character ({@see TransliteratedSameness}).
-            //
-            // THE READING IS DELIBERATELY NOT COMPARED, and that was measured rather than reasoned
-            // about. «passport» is glossed «паспорт», which is both the correct Russian word and,
-            // by accident of the borrowing, its own pronunciation hint — and a check on «is the
-            // translation the reading» refused it on the owner's own live day. A borrowing that is
-            // genuinely translated is not the defect; a NAME is, and the skeleton above catches
-            // the name without touching the borrowing («паспорт» → `pasport`, «passport» →
-            // `passport`, two different words; «Иванов» → `ivanov` → «Ivanov», one).
-            $sameAsTerm = $this->normalize($translation) === $this->normalize($item->text)
-                || $this->sameness->same($translation, $item->text);
-
-            if ($sameAsTerm) {
-                $violations[] = PlanViolation::onCard(
-                    self::KEY_IS_THE_TERM,
-                    $item,
-                    'translation',
-                    'ключ совпадает с термином (или это он же в другом алфавите) — карточка '
-                    . 'спрашивает то, на что уже ответила',
-                    'the `translation` is the term itself — the same word, or the same word written '
-                    . 'in the other alphabet — so the card answers its own question',
-                );
-            }
-
-            $key = $this->normalize($translation);
-            if ($key !== '' && isset($seen[$key])) {
-                // Two identical questions with two different accepted answers is a card that
-                // cannot be passed by knowing the material.
-                $violations[] = PlanViolation::onCard(
-                    self::KEY_DUPLICATED,
-                    $item,
-                    'translation',
-                    'тот же ключ уже стоит у «' . $seen[$key] . '»',
-                    'another card of this day already uses this `translation`',
-                );
-            }
-            $seen[$key] = $item->text;
-
-            foreach (['translation' => $translation, 'example_translation' => trim($item->exampleTranslation)] as $field => $value) {
-                if ($value !== '' && ! $this->keyIsPure($day, $item, $value, $vocabulary)) {
-                    $violations[] = PlanViolation::onCard(
-                        self::KEY_NOT_SUPPORT_LANGUAGE,
-                        $item,
-                        $field,
-                        "`{$field}` написан не на языке поддержки",
-                        "`{$field}` is not written in the support language",
-                    );
-                }
-            }
-        }
-
-        return $violations;
-    }
-
-    /**
-     * The per-card rules that need no comparison with the rest of the day.
-     *
-     * @return list<PlanViolation>
-     */
-    private function checkPerCard(PlanDayCandidate $day): array
-    {
-        $violations = [];
-
-        foreach ($day->items as $item) {
-            foreach ($this->slotBearingFields($item) as $field) {
-                $violations[] = PlanViolation::onCard(
-                    self::SLOT_OUTSIDE_FRAME,
-                    $item,
-                    $field,
-                    "`{$field}` содержит «" . self::SLOT . '» — дырка живёт только в `frame`, '
-                    . 'а поле с дыркой юзеру не произнести',
-                    "`{$field}` carries a `" . self::SLOT . '` — the slot lives in `frame` and '
-                    . 'nowhere else; this field is about the FULL assembled line',
-                );
-            }
-
-            if ($item->description !== '' && DescriptionSelfReference::givesAway($item->description, $item->text)) {
-                $violations[] = PlanViolation::onCard(
-                    self::DESCRIPTION_GIVES_AWAY,
-                    $item,
-                    'description',
-                    'описание называет собственный термин — карточка спрашивает то, на что уже ответила',
-                    'the `description` names its own term, so the card answers its own question',
-                );
-            }
-
-            // A term with nothing to draw is a term with no picture, and the day's collection is
-            // the only place the plan gets one: the core generator's image query never runs over
-            // plan material. Empty here means the card is illustrated by nothing, for ever.
-            if (trim($item->imageApiPrompt) === '') {
-                $violations[] = PlanViolation::onCard(
-                    self::IMAGE_PROMPT_MISSING,
-                    $item,
-                    'image_api_prompt',
-                    'нет описания картинки — карточка останется без иллюстрации навсегда',
-                    '`image_api_prompt` is empty, so this card is illustrated by nothing for ever',
-                );
-            }
-        }
-
-        return $violations;
-    }
-
-    /**
-     * Which of this card's fields carry a slot they have no business carrying.
-     *
-     * @return list<string> field names, in the order {@see SLOT_FORBIDDEN_IN} lists them
-     */
+    /** @return list<string> field names that carry a gap they have no business carrying */
     private function slotBearingFields(PlanDayItem $item): array
     {
+        $shelf = PlanShelf::tryFromName($item->arrayName());
         $values = [
-            'text' => $item->text,
-            'translation' => $item->translation,
+            // An assembled card's `text` is the server's own paste, so a gap there means the frame
+            // had two and is already named; a written card's `text` is the model's.
+            'text' => $shelf !== null && $shelf->isAssembled() ? '' : $item->text,
             'description' => $item->description,
             'example' => $item->example,
             'example_translation' => $item->exampleTranslation,
@@ -1397,30 +1269,42 @@ final class PlanDayValidator
     }
 
     /**
+     * Does this line ask for a repeat, a slower pace, or say it was not caught?
+     *
+     * @param  list<string>  $markers
+     */
+    private function isRepairMove(string $text, array $markers): bool
+    {
+        $line = ' ' . $this->normalize($text) . ' ';
+
+        foreach ($markers as $marker) {
+            $needle = $this->normalize($marker);
+            if ($needle !== '' && str_contains($line, ' ' . $needle . ' ')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @return list<string> empty = the check is off for this language */
+    private function repairMarkersFor(string $targetLang): array
+    {
+        $lang = mb_strtolower(trim($targetLang));
+
+        return $this->repairMarkers[$lang]
+            ?? $this->repairMarkers[mb_substr($lang, 0, 2)]
+            ?? [];
+    }
+
+    /**
      * Is this key written in the learner's own language?
      *
-     * The plain rule — «ни одной буквы чужого алфавита в переводе» — is right for ordinary content
-     * and WRONG for a plan, in ways that are not exceptions to the product but the product itself.
-     * The shape rules (an abbreviation, a code) and the learner's own `goal_terms` live in
-     * {@see SupportLanguageText}; two more live here because they are about THIS card and THIS day:
+     * The plain rule is right for ordinary content and wrong for a plan: abbreviations, codes, the
+     * learner's own `goal_terms` ({@see SupportLanguageText}) and the day's OWN vocabulary are
+     * legitimate foreign letters in a Russian sentence.
      *
-     * 1. **A term that is itself in the other alphabet.** A card for `backend` glossed «бэкенд» is
-     *    fine, and a key that must quote the term to be unambiguous is not a key in the wrong
-     *    language.
-     * 2. **A WORD THE DAY ITSELF TEACHES.** A Latin token that appears in the `text` or the
-     *    `example` of ANY card of the SAME day is not evidence that the key was written in the
-     *    wrong language — it is the day's own subject matter, quoted where Russian quotes it
-     *    anyway. «Привет, я Alex, junior-разработчик» is how that sentence is written, and the day
-     *    it was on («Онлайн-собеседование разработчика», the owner's phone, 31.08) died twice on
-     *    `Alex`, `junior` and `backend` — words the model had put on the cards one field earlier.
-     *
-     *    Two guards keep it from eating the rule it is an exemption to. The token must be at least
-     *    {@see MIN_VOCABULARY_TOKEN} letters long — one letter is a size, not a word. And the key
-     *    as a WHOLE must still read as the support language: when most of its letters are foreign
-     *    ({@see LanguagePurity::isWrongScript()}) the exemption is off, or an `example_translation`
-     *    left in English would excuse itself with the example it failed to translate.
-     *
-     * @param  array<string, true>  $vocabulary  {@see dayVocabulary()} — every Latin word of the day
+     * @param  array<string, true>  $vocabulary
      */
     private function keyIsPure(PlanDayCandidate $day, PlanDayItem $item, string $value, array $vocabulary): bool
     {
@@ -1438,22 +1322,19 @@ final class PlanDayValidator
     }
 
     /**
-     * Every Latin word the day says out loud — its cards' `text` and `example`, which are the two
-     * fields written in the language being learned.
+     * Every Latin word the day says out loud — its cards' `text` and `example`.
      *
      * @param  list<PlanDayItem>  $items
-     * @return array<string, true>  lower-cased word => true
+     * @return array<string, true>
      */
     private function dayVocabulary(array $items): array
     {
         $words = [];
-
         foreach ($items as $item) {
             foreach ([$item->text, $item->example] as $source) {
                 if (preg_match_all(self::LATIN_WORD, $source, $matches) === false) {
                     continue;
                 }
-
                 foreach ($matches[0] as $word) {
                     if (mb_strlen($word) >= self::MIN_VOCABULARY_TOKEN) {
                         $words[mb_strtolower($word)] = true;
@@ -1465,20 +1346,18 @@ final class PlanDayValidator
         return $words;
     }
 
-    /** @return list<PlanDayItem> */
-    private function linesOf(PlanDayCandidate $day): array
+    private static function wordCount(string $text): int
     {
-        return array_values(array_filter(
-            $day->items,
-            static fn (PlanDayItem $i): bool => $i->kind === PlanDayItem::KIND_LINE,
-        ));
+        $words = preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY);
+
+        return $words === false ? 0 : count($words);
     }
 
     /** Case-folded, punctuation-free, whitespace-collapsed — for comparing two strings as content. */
     private function normalize(string $value): string
     {
         $lower = mb_strtolower(trim($value));
-        $stripped = preg_replace('/[^\p{L}\p{N}\x{E000}]+/u', ' ', $lower) ?? '';
+        $stripped = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $lower) ?? '';
 
         return trim((string) preg_replace('/\s+/u', ' ', $stripped));
     }

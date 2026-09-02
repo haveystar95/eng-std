@@ -42,10 +42,18 @@ final class PlanSkillsFromComputed
 
         $records = [];
         foreach ($outline->scenes as $scene) {
-            $role = $scene->role;
+            // Derived from the scene's own lines since v0.4 — P1 no longer answers with a role
+            // object, and a name invented here would be a fact about a person nobody described.
+            $role = $scene->role();
             foreach ($scene->skills as $skill) {
                 $records[] = new PlanSkillRecord(
+                    // The ROW's id is a ULID, as every row here has; the skill's own `id` («s1.2»)
+                    // is what the day's cards point at and lives in `skill_ref` beside it. Two
+                    // different questions — «which row is this» and «which promise is this» — and
+                    // collapsing them would make a re-scheduled plan renumber the promises its
+                    // already-written days name.
                     id: Ulid::generate(),
+                    skillRef: $skill->id,
                     sceneIndex: $scene->index,
                     sceneTitle: $scene->title,
                     role: $role === null ? null : [

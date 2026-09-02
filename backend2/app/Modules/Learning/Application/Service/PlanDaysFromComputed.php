@@ -48,14 +48,26 @@ final class PlanDaysFromComputed
         return $outcomes === [] ? null : implode("\n", $outcomes);
     }
 
-    /** @return list<array<string, mixed>> */
+    /**
+     * The day's abilities, WITH THE ID EVERY CARD OF THE DAY POINTS AT.
+     *
+     * `id` is what makes «почему я это учу» mechanical: the day's cards carry it in `skill_ref` and
+     * the gate refuses a card that names a skill this scene never promised. It is stored on the
+     * snapshot rather than looked up through `plan_skills`, for the reason the snapshot exists at
+     * all — the day is generated from ONE row, and a join is a second answer to the question of
+     * what this day promises.
+     *
+     * @return list<array<string, mixed>>
+     */
     private function skills(ComputedDay $day): array
     {
         return array_map(
             static fn (PlanSkill $s): array => [
+                'id' => $s->id,
                 'outcome' => $s->outcome,
                 'est_terms' => $s->estTerms,
                 'checkpoint' => $s->checkpoint,
+                'topics' => $s->topics,
                 'scene_index' => $s->sceneIndex,
                 'position' => $s->position,
             ],
@@ -70,11 +82,11 @@ final class PlanDaysFromComputed
      * and no role at all — every checkpoint of the plan, assembled by the server. One field the
      * conversation can read on either kind of day.
      *
-     * `phrase_count` and `word_count` are GONE from this snapshot. They were the day's split
-     * between lines and substitutions, frozen at scheduling time from a formula that has since
-     * become three numbers; freezing them meant a day generated a week later would be asked for a
-     * split nobody could re-derive. The counts are computed where they are used, from the day's
-     * budget, which is the only input they ever had.
+     * NO COUNTS AT ALL any more. `phrase_count`/`word_count` went in v0.3 (frozen numbers a day
+     * generated a week later could not re-derive), and the three exact counts that replaced them
+     * went in v0.4 with the arrays they counted: a day is a SCENE, its shelves have guide sizes the
+     * prompt states and the validator counts as warnings, and `term_budget` survives as one number
+     * ({@see \App\Modules\Learning\Domain\Service\SceneDay::UNITS}) that nobody is asked to hit.
      *
      * @return array<string, mixed>|null
      */
@@ -88,11 +100,12 @@ final class PlanDaysFromComputed
             'checkpoints' => $day->checkpoints,
             'topics' => $day->topics,
             'term_budget' => $day->termBudget,
-            // The day AS P2 READS IT, computed once by the scheduler and stored beside the day it
-            // describes. Two short scenes merged into one day are two entries here, and a scene
-            // split over two days appears in both with only the abilities that landed there —
-            // neither of which the single `role` below can say.
-            'scenes' => $day->scenes,
+            // THE SCENE, exactly as P2 will be handed it ({@see ComputedDay::sceneJson()}). One
+            // scene and no list of them: a day IS a situation since v0.4, so the shape that used to
+            // hold «the halves of two scenes that landed here» has nothing left to say.
+            'scene' => $day->sceneJson(),
+            'intro' => $day->intro,
+            'skills' => $this->skills($day),
             'role' => $day->role === null ? null : [
                 'name' => $day->role->name,
                 'opening_lines' => $day->role->openingLines,

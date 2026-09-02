@@ -49,6 +49,10 @@ final readonly class PlanDayTermView
          * for one carried in from an earlier day — which is what «B · со дня 1» is drawn from.
          */
         public int $fromDayIndex,
+        /** `hear` | `say` | `ask` | `words` | `chunks` | `numbers` | `rescue` — the day's shelves. */
+        public ?string $shelf = null,
+        /** `speak` | `understand` — what the card is ever asked of (канон §3). */
+        public ?string $tier = null,
     ) {}
 
     /** @return array<string, mixed> */
@@ -65,6 +69,8 @@ final readonly class PlanDayTermView
             'stage_complete' => $this->stageComplete,
             'finished' => $this->finished,
             'from_day_index' => $this->fromDayIndex,
+            'shelf' => $this->shelf,
+            'tier' => $this->tier,
         ];
     }
 }

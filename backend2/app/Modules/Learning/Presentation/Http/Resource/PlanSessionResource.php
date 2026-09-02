@@ -53,8 +53,8 @@ final class PlanSessionResource extends JsonResource
             'day_task_count' => $view->dayTaskCount,
             'tasks' => array_map(static fn (PlanSessionTaskView $task): array => [
                 'stage' => $task->stage,
-                // `day` | `review` — the same fact as «`from_day_index` is not null», said once
-                // here so every client does not re-derive it (and get it wrong).
+                // `warmup` | `day` | `review` — which seam this task sits under. Said once here so
+                // every client does not re-derive it (and get it wrong).
                 'section' => $task->section,
                 // «Отпуск в Италии» — where a REVIEW card came from, so the learner is not handed
                 // a word out of nowhere in the middle of a plan's lesson. Null on the day's own
@@ -74,6 +74,13 @@ final class PlanSessionResource extends JsonResource
                 // counting words in the text and calling a connector a phrase (Д-5).
                 'speaker' => $task->speaker,
                 'kind' => $task->kind,
+                // WHICH SHELF this card is from, and which ladder it climbs. The client draws the
+                // seam captions off `shelf` («Разогрев», «Тебе скажут», «Ты ответишь», «Ты
+                // спросишь», «Слова и связки») and reads `tier` to know that a `understand` card is
+                // never something to say back. Additive: a client that ignores both plays the
+                // session exactly as it does today.
+                'shelf' => $task->shelf,
+                'tier' => $task->tier,
                 'knobs_applied' => $task->knobsApplied,
                 'knobs_ignored' => $task->knobsIgnored,
                 'card' => self::card($task),

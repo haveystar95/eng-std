@@ -61,39 +61,51 @@ function answerStrings(array $answer): array
 beforeEach(function (): void {
     /** @var array<string, mixed> $day */
     $day = json_decode(
-        (string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.3.json'),
+        (string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.4.json'),
         true,
     );
 
-    // EIGHT BROKEN CARDS OF FOURTEEN, on purpose: past half the day P2R is not asked at all
+    // ELEVEN BROKEN CARDS OF EIGHTEEN, on purpose: past half the day P2R is not asked at all
     // ({@see \App\Modules\Generation\Application\Service\PlanDayRepairer}) and this is the
     // whole-day path, which is what this file is about. One broken card takes the other road and is
     // measured in `PlanDayRepairTest`.
     //
     // TWO DIFFERENT DEFECTS, one per answer. Different on purpose: «the second attempt was told
     // about A» is only observable when the second attempt fails on B.
-    $withoutPictures = $day;
-    foreach ([0, 1, 2, 3, 4, 5] as $i) {
-        $withoutPictures['phrases'][$i]['image_api_prompt'] = '';
+    $withoutKeys = $day;
+    foreach ([0, 1, 3] as $i) {
+        $withoutKeys['say'][$i]['translation'] = 'У меня всё в порядке.';
     }
     foreach ([0, 1] as $i) {
-        $withoutPictures['words'][$i]['image_api_prompt'] = '';
+        $withoutKeys['ask'][$i]['translation'] = 'У меня всё в порядке.';
     }
-    // …and, on the same answer, a SHAPE defect that is only ever a warning: the day's one question
-    // and its one repair move are the same line, and this replaces it with a statement. A refused
-    // answer is thrown away, so the log is the only place that fact can survive.
-    $withoutPictures['phrases'][3]['frame'] = 'I would like to check in, please.';
-
-    $withoutExamples = $day;
-    foreach ([0, 1, 2, 3, 4, 5] as $i) {
-        $withoutExamples['phrases'][$i]['example'] = '';
+    foreach ([0, 1, 2, 3] as $i) {
+        $withoutKeys['words'][$i]['example'] = $day['words'][$i]['text'];
     }
     foreach ([0, 1] as $i) {
-        $withoutExamples['words'][$i]['example'] = '';
+        $withoutKeys['chunks'][$i]['example'] = $day['chunks'][$i]['text'];
+    }
+    // …and, on the same answer, a SHAPE defect that is only ever a warning: the day's one repair
+    // move becomes an ordinary statement. A refused answer is thrown away whole, so the log is the
+    // only place that fact can survive.
+    $withoutKeys['say'][2]['frame'] = 'I came here on my own.';
+
+    $withGaps = $day;
+    foreach ([0, 1, 2, 3] as $i) {
+        $withGaps['say'][$i]['translation'] = 'Болит в ___.';
+    }
+    foreach ([0, 1] as $i) {
+        $withGaps['ask'][$i]['translation'] = 'Болит в ___.';
+    }
+    foreach ([0, 1, 2, 3] as $i) {
+        $withGaps['words'][$i]['example'] = 'The pain in my ___ gets worse at night.';
+    }
+    foreach ([0, 1] as $i) {
+        $withGaps['chunks'][$i]['example'] = 'You ___ downstairs and then come up here.';
     }
 
-    $this->firstAnswer = $withoutPictures;
-    $this->model = new ScriptedPlanModel([$withoutPictures, $withoutExamples]);
+    $this->firstAnswer = $withoutKeys;
+    $this->model = new ScriptedPlanModel([$withoutKeys, $withGaps]);
     $this->defects = new RecordingPlanDefectReporter();
 
     $prompts = new PlanPromptLibrary();
@@ -160,17 +172,21 @@ it('spends exactly two calls on a day that fails twice, and tells the second one
     expect($day['status'])->toBe('failed')
         ->and($day['fail_code'])->toBe($row->fail_code)
         // A code, never the Russian prose — that stays on the server (31.08).
-        ->and($day['fail_code'])->toStartWith('day.');
+        // A CARD code, and that is the shape of v0.4: almost every fatal verdict names a card now,
+        // because a verdict a repair call can be pointed at is worth more than one about the answer.
+        ->and($day['fail_code'])->toStartWith('card.');
 
     // The first call carries the day and nothing else; the second carries the first answer's
     // verdict — as ADDRESSES.
     expect($this->model->dayMessages[0])->not->toContain('PREVIOUS ANSWER')
         ->and($this->model->dayMessages[1])->toContain('THE PREVIOUS ANSWER TO THIS DAY FAILED')
-        ->and($this->model->dayMessages[1])->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING)
-        // The address, in full: which array, which card, which field.
-        ->and($this->model->dayMessages[1])->toContain('words[0].image_api_prompt')
-        // Still the same request with one more block, not a different request.
-        ->and($this->model->dayMessages[1])->toContain('"index": 1');
+        ->and($this->model->dayMessages[1])->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM)
+        // The address, in full: which SHELF, which card, which field.
+        ->and($this->model->dayMessages[1])->toContain('words[0].example')
+        ->and($this->model->dayMessages[1])->toContain('say[0].translation')
+        // Still the same request with one more block, not a different request: the scene the first
+        // call was given is in it.
+        ->and($this->model->dayMessages[1])->toContain('"intro"');
 
     // NOT ONE LINE OF THE PREVIOUS ANSWER. This is the whole point of the address form, and the
     // one thing a reading of the message cannot be trusted to check by eye: every string the first
@@ -192,8 +208,14 @@ it('spends exactly two calls on a day that fails twice, and tells the second one
     $violations = json_decode((string) $row->generation_violations, true);
     $joined = implode(' ', $violations);
 
-    expect($joined)->toContain(PlanDayValidator::EXAMPLE_MISSING)
-        ->and($joined)->not->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING);
+    // The SECOND answer's verdict, and only it: gaps where the learner reads, not the missing keys
+    // the first answer was refused for. A stored list that mixed the two would send the third call
+    // (there is none) after a defect somebody had already fixed.
+    expect($joined)->toContain(PlanDayValidator::TRANSLATION_HAS_GAP)
+        // …and NOT the defect only the FIRST answer had. A stored list that accumulated would send
+        // the next call (there is none here) after something somebody already fixed — the exact
+        // failure п. 199's second half was cancelled for.
+        ->and($joined)->not->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM);
 
     // TWO ROWS IN THE LEDGER for the day, both refused, each carrying its own reason. A day that
     // cost twice reads as two rows rather than as one that mysteriously cost double.
@@ -204,17 +226,17 @@ it('spends exactly two calls on a day that fails twice, and tells the second one
         ->get();
 
     expect($spend)->toHaveCount(2)
-        ->and($spend[0]->error)->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING)
-        ->and($spend[1]->error)->toContain(PlanDayValidator::EXAMPLE_MISSING)
+        ->and($spend[0]->error)->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM)
+        ->and($spend[1]->error)->toContain(PlanDayValidator::TRANSLATION_HAS_GAP)
         ->and($spend->pluck('purpose')->unique()->all())->toBe(['plan']);
 
     // THE SHAPE OF A REFUSED ANSWER IS STILL VISIBLE. The first answer had no question and no
-    // repair move; that day was thrown away, so this report is the only record it ever leaves —
+    // repair move — the day keeps its questions and loses its way out of a misheard sentence. That
+    // day was thrown away, so this report is the only record it ever leaves —
     // and it is NOT counted, because the counters measure weak days the learner actually got.
     $reported = array_column($this->defects->reported, 'counter');
 
-    expect($reported)->toContain(PlanDayValidator::NO_QUESTION)
-        ->and($reported)->toContain(PlanDayValidator::NO_REPAIR)
+    expect($reported)->toContain(PlanDayValidator::NO_REPAIR)
         ->and(array_column($this->defects->reported, 'counted'))->not->toContain(true)
-        ->and($this->defects->warnings(PlanDayValidator::NO_QUESTION))->toBe(0);
+        ->and($this->defects->warnings(PlanDayValidator::NO_REPAIR))->toBe(0);
 });

@@ -14,50 +14,45 @@ use App\Modules\Generation\Domain\ValueObject\ProviderId;
  * answers that PASS the validators.
  *
  * A fake that returned obviously-broken material would make every feature test a test of the
- * failure path. So this one obeys the numbers it is given (exactly `phrase_count` lines,
- * `word_count` words and `chunk_count` connectors, every checkpoint closed by a line, every
- * substitution standing in one of the day's frames, no example equal to any term, no two keys the
- * same) and produces nonsense CONTENT, which is what a fake is for.
+ * failure path. So this one obeys the v0.4 contract: six shelves, a `skill_ref` on every card taken
+ * from the scene it was handed, frames whose fillers are cards of the same day, examples that are
+ * neither terms nor each other's skeleton, and a number whose value is actually said in its line.
+ * The CONTENT is nonsense, which is what a fake is for.
+ *
+ * ## What changed with v0.4, and why the double had to move with it
+ *
+ * The day is a SCENE now, so the double reads the scene out of the prompt instead of three counts:
+ * which skills exist (it must name one on every card), and which day this is (terms are globally
+ * deduplicated, so day 2 writing day 1's texts would make the two days one day — the defect the
+ * coherence gate used to catch and `card.clone` catches now).
  */
 final class FakePlanContentModel implements ContentModelPort
 {
     /**
      * The shape of every fake skeleton: two scenes, two abilities each, four terms apiece.
      *
-     * Named constants and not literals because the scheduling tests read them back — «need is
-     * 16» is a fact about this double, and a test that hard-codes 16 while the double says
-     * something else is a test measuring nothing.
+     * Named constants and not literals because the scheduling tests read them back — «two scenes is
+     * two teaching days» is a fact about this double, and a test that hard-codes it while the double
+     * says something else is a test measuring nothing.
      */
     public const FAKE_SCENES = 2;
 
     /**
      * How a test asks for a BIGGER skeleton: `[scenes:5]` anywhere in the goal text.
      *
-     * The fake cannot infer the size of a plan from anything else any more — P1 v0.2 is not told
-     * the days or the minutes, so the only input it has is the goal. A test that needs a long plan
-     * (more introduction days than {@see \App\Modules\Learning\Domain\Service\PlanGenerationPolicy::EAGER_INTRO_DAYS})
-     * needs a goal that is honestly bigger, and this is how it says so out loud instead of moving
-     * the event date and hoping.
+     * Since v0.4 this is also how a test asks for more DAYS, and it is the only way: one day is one
+     * scene, so a plan that needs four teaching days needs four scenes. Moving the event date buys
+     * room and never material.
      */
     private const SCENES_MARKER = '/\[scenes:(\d)\]/';
 
     /**
      * How a test asks for a plan whose words are ITS OWN: `[tag:2]` anywhere in the goal text.
      *
-     * Terms are globally deduplicated, and this double named every card after its DAY alone
-     * (`day1word1`). Two plans of one learner therefore came out standing on the SAME term rows, and
-     * a test asking «did a card of plan A get into plan B's lesson» could not be written at all —
-     * the answer was «they are the same card», which is true of the double and of nothing else.
-     * The tag prefixes every term text, so `2day1word1` belongs to one plan and to no other.
-     *
-     * DIGITS, and this is not a stylistic choice. The mark has to ride BOTH sides of every card —
-     * the studied text and its translation — or the two plans share their Russian and the option
-     * dedup reads A's word and B's word as translation twins. A Latin letter inside the Russian half
-     * is a `day.key_not_support_language` violation and the day is refused; a digit belongs to
-     * neither alphabet and passes both gates.
-     *
-     * Marked goals only: an unmarked one produces exactly what it produced before, so no existing
-     * fixture moves.
+     * Terms are globally deduplicated, and this double names every card after its day. Two plans of
+     * one learner therefore stood on the SAME term rows, and «did a card of plan A get into plan
+     * B's lesson» could not be asked at all. DIGITS, because the mark rides both sides of the card:
+     * a Latin letter inside the Russian half would be a key in the wrong language.
      */
     private const TAG_MARKER = '/\[tag:(\d{1,3})\]/';
 
@@ -81,7 +76,7 @@ final class FakePlanContentModel implements ContentModelPort
     public function complete(RenderedPrompt $prompt, string $userMessage, array $schema): ModelAnswer
     {
         $properties = $schema['properties'] ?? [];
-        $isDay = is_array($properties) && isset($properties['phrases']);
+        $isDay = is_array($properties) && isset($properties['hear']);
         // P2R. This double never reaches it — its days pass every gate — and the branch exists so
         // that a day which somehow does not comes back as an empty repair rather than as a
         // SKELETON, which is what «anything that is not a day» used to mean here.
@@ -111,28 +106,15 @@ final class FakePlanContentModel implements ContentModelPort
     }
 
     /**
-     * A v0.2 SKELETON: scenes with priced abilities, and not one number about the calendar.
-     *
-     * It no longer reads `DAYS:` or `MINUTES PER DAY:` out of the prompt, because P1 v0.2 is not
-     * told either — that is the whole change. What it does read is the goal, so a test that asks
-     * for two different plans gets two different titles and the coherence gate has something to
-     * work with.
-     *
-     * The prices are what make the arithmetic testable: four scenes-worth of abilities at 4 terms
-     * each is a `need` of 16, which the scheduler turns into a day count from the learner's
-     * minutes. A fake that priced everything at 1 would make every plan one day long and every
-     * scheduling test vacuous.
+     * A v0.4 SKELETON: scenes with a вводка, skills with ids, and not one number about the calendar.
      *
      * @return array<string, mixed>
      */
     private function outline(string $prompt): array
     {
-        $goal = $this->after($prompt, 'GOAL:');
+        $goal = $this->goalIn($prompt);
         $marked = preg_match(self::SCENES_MARKER, $goal, $m) === 1;
         $sceneCount = $marked ? max(1, min(5, (int) $m[1])) : self::FAKE_SCENES;
-        // A goal big enough to need five scenes has abilities at the top of the range too. Without
-        // this, «больше сцен» would not buy more DAYS — the days come from the sum of the prices,
-        // and five cheap scenes still fit in three days.
         $estTerms = $marked ? self::FAKE_EST_TERMS_MAX : self::FAKE_EST_TERMS;
         // The markers are TEST directives, not content, so they never reach the skeleton — the
         // outline gate refuses a Latin word on the screen the learner reads, and it is right to.
@@ -143,10 +125,11 @@ final class FakePlanContentModel implements ContentModelPort
             $skills = [];
             for ($skill = 1; $skill <= self::FAKE_SKILLS_PER_SCENE; $skill++) {
                 $skills[] = [
+                    'id' => "s{$scene}.{$skill}",
                     'outcome' => "сказать вещь {$scene}.{$skill}",
-                    // The wording matters to the fake DAY below, which counts checkpoints by
-                    // looking for it. Two doubles that disagree about the shape of a plan produce
-                    // a day whose checkpoints nothing closes.
+                    // The wording matters to the fake DAY below, which counts skills by looking for
+                    // it. Two doubles that disagree about the shape of a plan produce a day whose
+                    // skills nothing serves.
                     'checkpoint' => "слышно, как он говорит вещь {$scene}.{$skill}",
                     'est_terms' => $estTerms,
                     'topics' => ["область {$scene}"],
@@ -154,186 +137,195 @@ final class FakePlanContentModel implements ContentModelPort
             }
 
             $scenes[] = [
+                'position' => $scene,
                 'title' => "Сцена {$scene} — сделать шаг",
-                'role' => [
-                    'name' => 'собеседник',
-                    'opening_lines' => [
-                        ['text' => 'Hello?', 'translation' => 'Здравствуйте?'],
-                        ['text' => 'And then?', 'translation' => 'А дальше?'],
-                    ],
-                    'if_silent' => 'переспрашивает проще',
-                ],
+                // In the SUPPORT language and with no target-language word in it: the вводка is the
+                // screen a person with zero English reads before committing.
+                'intro' => "Ты приходишь на место {$scene}. С тобой заговорит собеседник и задаст "
+                    . 'пару вопросов. Успех — если ты ответил и понял ответ.',
                 'skills' => $skills,
+                'opening_lines' => ['Hello?', 'And then?'],
+                'entities' => [],
             ];
         }
 
         return [
-            'title' => $goal === '' ? 'Тестовый план' : mb_substr('План: ' . $goal, 0, 60),
-            'goal_restated' => 'Цель, пересказанная одной строкой',
-            'entities' => [],
-            'constraints' => [],
-            'goal_terms' => [],
+            'goal_summary' => $goal === '' ? 'Тестовый план' : mb_substr('План: ' . $goal, 0, 60),
             'scenes' => $scenes,
         ];
     }
 
     /**
-     * A v0.3 DAY: three arrays, and lines that are a FRAME and a FILLER rather than a sentence.
+     * A v0.4 DAY: six shelves, every card naming a skill of the scene it was handed.
      *
-     * The three counts are read back out of the rendered prompt, because that is where the server
-     * put them and reading them back is also a check that it did. The frames matter as much as the
-     * counts: the validator refuses a word whose example is not one of the day's frames with that
-     * word in the hole, so a double that ignored frames would make every feature test a test of
-     * the failure path.
-     *
-     * v0.3 moved the assembly to the server, and this double moved with it — it writes no `text`
-     * on a line at all, and its fillers are the day's own word and connector cards, character for
-     * character, because that is what the gate demands of a real answer.
+     * The sizes are the guides' own middles, so a fake day raises no size counter; the fillers are
+     * the day's own words and connectors, character for character, because that is what the gate
+     * demands of a real answer.
      *
      * @return array<string, mixed>
      */
     private function day(string $prompt): array
     {
-        $phrases = max(1, $this->intAfter($prompt, 'TERM BUDGET:', '('));
-        $words = max(0, $this->intAfter($prompt, 'lines +'));
-        $chunks = max(0, $this->intAfter($prompt, 'words +'));
-        $checkpoints = max(1, substr_count($prompt, 'слышно, как'));
-        // WHICH DAY this is, read out of the day JSON the server put in the prompt.
-        //
-        // Every term the fake produced used to be «This is reply number 1» whatever day asked for
-        // it — and terms are GLOBALLY DEDUPLICATED, so day 2 imported day 1's words and came out as
-        // the same nine terms. Every stage a learner closed on day 1 was therefore also closed on
-        // day 2, and the plan's focus jumped two days on one sitting. The real model does not do
-        // that (and from PLAN-1b the coherence validator refuses a day that does), so the fake must
-        // not either: a double whose output breaks an invariant tests the invariant, not the code.
-        $day = max(1, $this->intAfter($prompt, '"index":'));
+        $skills = $this->skillIdsIn($prompt);
+        $skill = static fn (int $i): string => $skills === [] ? 's1.1' : $skills[$i % count($skills)];
 
-        // THE CARDS FIRST, because a line's `filler` has to be one of them, character for
-        // character. Words then connectors, so the first filler is a word whenever the day has
-        // one — a connector standing in the first frame's hole would make its own example a clone
-        // of the line it fills.
-        // WHOSE day this is. Empty for every unmarked goal, so the texts below are the ones this
-        // double has always written; `[tag:b]` makes them plan B's and nobody else's.
+        // WHICH DAY this is. One day is one scene, and the scene's own title carries its number —
+        // the only place the day prompt says it, since v0.4 hands over a scene rather than a day.
+        $day = $this->sceneNumberIn($prompt);
         $tag = $this->tagIn($prompt);
-        // The same mark inside a SENTENCE, where a bare prefix would break the capital. Empty for an
-        // unmarked goal, so an untagged frame is the exact string this double has always written —
-        // which matters, because a substitution's example has to equal a frame with the hole filled.
         $mark = $tag === '' ? '' : " {$tag}";
 
-        $cards = [];
-        for ($i = 1; $i <= $words; $i++) {
-            $cards[] = ["{$tag}day{$day}word{$i}", "{$tag}день{$day}слово{$i}", 'word'];
+        $words = [];
+        $chunks = [];
+        for ($i = 1; $i <= 4; $i++) {
+            $words[] = ["{$tag}day{$day}word{$i}", "{$tag}день{$day}слово{$i}"];
         }
-        for ($i = 1; $i <= $chunks; $i++) {
-            $cards[] = ["{$tag}day{$day} chunk {$i}", "{$tag}день{$day} связка {$i}", 'phrasal_verb'];
+        for ($i = 1; $i <= 2; $i++) {
+            $chunks[] = ["{$tag}day{$day} chunk {$i}", "{$tag}день{$day} связка {$i}"];
         }
 
-        $lines = [];
-        for ($i = 1; $i <= $phrases; $i++) {
-            // A day with no substitutions at all has nothing to paste, so its lines are formulas.
-            // That is over the formula cap and the cap is a WARNING since v0.3, which is exactly
-            // the behaviour this double should exercise: the day is written anyway.
-            $card = $cards === [] ? null : $cards[($i - 1) % count($cards)];
-            $filler = $card === null ? '' : $card[0];
-            // THE FILLER'S OWN RUSSIAN, INSIDE THE LINE'S RUSSIAN. The gate added by PLAN-FIX-4
-            // (`line.translation_missing_key`) refuses a line whose translation renders everything
-            // except the word it drills, and it is right to: the learner reads that Russian and has
-            // no way to know what to say. A double whose days the real gates refuse tests the gates.
-            $key = $card === null ? '' : ", про «{$card[1]}»";
-            $lines[] = [
-                'frame' => $cards === []
-                    ? "Day {$day} line {$i}{$mark}."
-                    : "Day {$day} line {$i}{$mark} about ___.",
-                'filler' => $filler,
-                'speaker' => 'learner',
-                'type' => 'phrase',
-                'is_line' => true,
-                'translation' => "День {$day}, реплика номер {$i}{$key}.",
-                'transliteration' => 'дэй лайн эбаут',
-                'description' => "Somebody says it at moment {$i} of conversation {$day}.",
-                'example' => "Day {$day} line {$i}{$mark} said out loud, about {$filler}.",
-                'example_translation' => "День {$day}, реплика номер {$i}, сказанная вслух.",
-                'image_api_prompt' => "Two people talking at moment {$i} of a day, close-up.",
-                // Spread over the checkpoints so every one of them is closed.
-                'covers_checkpoint' => (($i - 1) % $checkpoints) + 1,
+        $hear = [];
+        for ($i = 1; $i <= 4; $i++) {
+            $hear[] = [
+                'kind' => 'line',
+                'skill_ref' => $skill($i - 1),
+                'frame' => "Day {$day} question {$i}{$mark}, please?",
+                'filler' => '',
+                'speaker' => 'role',
+                'translation' => "День {$day}, вопрос собеседника номер {$i}.",
+                'transliteration' => 'дэй куэсчен',
             ];
         }
 
-        // EVERY substitution stands in the FIRST frame of the day — a word in its hole, a
-        // connector in its hole with a word after it, so that neither example is a clone of the
-        // line that frame actually assembles into.
-        $substitution = fn (string $text, string $key, string $type, string $tail): array => [
-            'text' => $text,
-            'type' => $type,
-            'is_line' => false,
-            'translation' => $key,
-            'transliteration' => 'дэй уорд',
-            'description' => "A thing you drop into a sentence on day {$day}.",
-            'example' => "Day {$day} line 1{$mark} about {$text}{$tail}.",
-            'example_translation' => "День {$day}, реплика номер 1, про «{$key}».",
-            'image_api_prompt' => 'A single object on a table, close-up, no text.',
-            'covers_checkpoint' => null,
-        ];
-
-        $substitutions = [];
-        for ($i = 1; $i <= $words; $i++) {
-            $substitutions[] = $substitution("{$tag}day{$day}word{$i}", "{$tag}день{$day}слово{$i}", 'word', ' again');
+        $say = [];
+        foreach ($words as $i => [$text, $key]) {
+            $say[] = [
+                'kind' => 'line',
+                'skill_ref' => $skill($i),
+                'frame' => "Day {$day} line " . ($i + 1) . "{$mark} about ___.",
+                'filler' => $text,
+                // The gate added by PLAN-FIX-4 refuses a line whose translation renders everything
+                // except the word it drills, and it is right to: the learner reads that Russian and
+                // has no way to know what to say.
+                'translation' => 'День ' . $day . ', реплика номер ' . ($i + 1) . ", про «{$key}».",
+                'transliteration' => 'дэй лайн эбаут',
+            ];
         }
 
-        $connectors = [];
-        for ($i = 1; $i <= $chunks; $i++) {
-            $connectors[] = $substitution("{$tag}day{$day} chunk {$i}", "{$tag}день{$day} связка {$i}", 'phrasal_verb', ' today');
+        $ask = [];
+        foreach ($chunks as $i => [$text, $key]) {
+            $ask[] = [
+                'kind' => 'line',
+                'skill_ref' => $skill($i),
+                'frame' => 'Where is ___?',
+                'filler' => $text,
+                'translation' => "Где находится «{$key}»?",
+                'transliteration' => 'уэа из',
+            ];
+        }
+
+        $wordCards = [];
+        foreach ($words as $i => [$text, $key]) {
+            $wordCards[] = [
+                'kind' => 'word',
+                'skill_ref' => $skill($i),
+                'text' => $text,
+                'translation' => $key,
+                'transliteration' => 'дэй уорд',
+                // A sentence of its own: not the term, not a line of the day, and not another
+                // card's sentence with this term swapped in ({@see ExampleSkeleton}).
+                'example' => "Day {$day} moment " . ($i + 1) . " with {$text} in it.",
+                'example_translation' => "День {$day}, момент " . ($i + 1) . ", про «{$key}».",
+                'image_api_prompt' => 'A single object on a table, close-up, no text.',
+            ];
+        }
+
+        $chunkCards = [];
+        foreach ($chunks as $i => [$text, $key]) {
+            $chunkCards[] = [
+                'kind' => 'chunk',
+                'skill_ref' => $skill($i),
+                'text' => $text,
+                'translation' => $key,
+                'transliteration' => 'дэй чанк',
+                'example' => "Day {$day} corner " . ($i + 1) . " where {$text} happens.",
+                'example_translation' => "День {$day}, угол " . ($i + 1) . ", где «{$key}».",
+            ];
+        }
+
+        $numbers = [];
+        foreach ([['twenty', '20'], ['thirty', '30']] as $i => [$spoken, $value]) {
+            $numbers[] = [
+                'kind' => 'number',
+                'skill_ref' => $skill($i),
+                // The DAY is in the line, like every other card of this double: the numbers of day 2
+                // would otherwise be day 1's cards word for word, and `card.clone` would refuse the
+                // day — correctly, which is how this defect was found.
+                'frame' => "Day {$day} price " . ($i + 1) . " is ___ euros.",
+                'filler' => $spoken,
+                'value' => $value,
+                'translation' => "Это стоит {$value} евро.",
+            ];
         }
 
         return [
-            'day_index' => $day,
-            'day_title' => "Тестовый день {$day}",
-            'phrases' => $lines,
-            'words' => $substitutions,
-            'chunks' => $connectors,
-            'known' => [],
+            'hear' => $hear,
+            'say' => $say,
+            'ask' => $ask,
+            'words' => $wordCards,
+            'chunks' => $chunkCards,
+            'numbers' => $numbers,
         ];
     }
 
-    /** The rest of the line after `$marker`, trimmed. */
+    /**
+     * The ids of the scene's skills, read back out of the prompt the server rendered.
+     *
+     * Reading them rather than inventing them is also a CHECK that the server put them there: a
+     * brief with no ids would make every card of every fake day name a skill that does not exist,
+     * and the suite would say so loudly.
+     *
+     * @return list<string>
+     */
+    private function skillIdsIn(string $prompt): array
+    {
+        if (preg_match_all('/"id"\s*:\s*"([^"]+)"/u', $prompt, $matches) === false) {
+            return [];
+        }
+
+        return array_values(array_unique($matches[1]));
+    }
+
+    /** Which scene — and therefore which day — this prompt is for. */
+    private function sceneNumberIn(string $prompt): int
+    {
+        return preg_match('/Сцена (\d+)/u', $prompt, $m) === 1 ? max(1, (int) $m[1]) : 1;
+    }
+
     /**
      * The plan's own mark, or «» when the goal carries none.
      *
-     * Read off the WHOLE day prompt rather than off a `GOAL:` line: the day template renders the
-     * goal as `{{goal_text}}` wherever it renders it, and this double must not depend on where.
+     * Read off the WHOLE prompt rather than off a `GOAL:` line: the template renders the goal
+     * wherever it renders it, and this double must not depend on where.
      */
     private function tagIn(string $prompt): string
     {
         return preg_match(self::TAG_MARKER, $prompt, $m) === 1 ? $m[1] : '';
     }
 
-    private function after(string $text, string $marker): string
+    /**
+     * The learner's goal, as P1 v0.4 renders it — «- Goal, in the user's own words (Russian): …».
+     *
+     * Matched on the line rather than on a bare marker, because the line carries the support
+     * language in brackets between the two and a substring cut would hand the fake «(Russian): …»
+     * as the goal.
+     */
+    private function goalIn(string $prompt): string
     {
-        $at = strpos($text, $marker);
-        if ($at === false) {
-            return '';
+        if (preg_match('/Goal, in the user\'s own words[^:]*:\s*(.*)/u', $prompt, $m) === 1) {
+            return trim($m[1]);
         }
 
-        $tail = substr($text, $at + strlen($marker));
-        $line = strtok($tail, "\n");
-
-        return $line === false ? '' : trim($line);
-    }
-
-    /** The first integer after `$marker` (and after `$then`, when given). */
-    private function intAfter(string $text, string $marker, ?string $then = null): int
-    {
-        $at = strpos($text, $marker);
-        if ($at === false) {
-            return 0;
-        }
-
-        $tail = substr($text, $at + strlen($marker), 200);
-        if ($then !== null) {
-            $thenAt = strpos($tail, $then);
-            $tail = $thenAt === false ? $tail : substr($tail, $thenAt);
-        }
-
-        return preg_match('/\d+/', $tail, $m) === 1 ? (int) $m[0] : 0;
+        return preg_match('/^\s*-?\s*Goal:\s*(.*)$/mu', $prompt, $m) === 1 ? trim($m[1]) : '';
     }
 }

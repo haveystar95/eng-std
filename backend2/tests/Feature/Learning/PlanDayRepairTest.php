@@ -37,7 +37,7 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     /** @var array<string, mixed> $day */
     $this->day = json_decode(
-        (string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.3.json'),
+        (string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.4.json'),
         true,
     );
 
@@ -98,9 +98,11 @@ it('repairs ONE broken card with one short call and leaves the other thirteen al
     // The live shape, exactly: a day that is right but for one card. Under v0.3 this cost a second
     // full day and came back worse.
     $broken = $this->day;
-    $broken['words'][0]['image_api_prompt'] = '';
+    // The example is the card itself — «пример — это дословно термин», the узор the live day 2 died
+    // on. Carded and fatal, so it is one short call about one card.
+    $broken['words'][0]['example'] = $this->day['words'][0]['text'];
 
-    $fixed = $this->day['words'][0];   // the same card, with its picture back
+    $fixed = $this->day['words'][0];   // the same card, with its own sentence back
 
     [$planId, $model] = runPlanWith(
         new ScriptedPlanModel([$broken], [['cards' => [['array' => 'words', 'index' => 0, 'card' => $fixed]]]]),
@@ -123,11 +125,11 @@ it('repairs ONE broken card with one short call and leaves the other thirteen al
 
     // THE REPAIR CALL SAW THE ACCEPTED DAY AND THE BROKEN CARD, and knew which was which.
     $prompt = $model->repairPrompts[0];
-    expect($prompt)->toContain('phrases[0] · frame:')          // an accepted line, with its address
-        ->toContain('words[1] «back pain»')                     // an accepted term
+    expect($prompt)->toContain('hear[0] · frame:')             // an accepted line, with its address
+        ->toContain('words[1] «prescription»')                  // an accepted term
         ->not->toContain('words[0] «lower back»')               // …and not the one being repaired
         ->and($model->repairMessages[0])->toContain('"index": 0')
-        ->and($model->repairMessages[0])->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING);
+        ->and($model->repairMessages[0])->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM);
 
     // THIRTEEN CARDS BYTE FOR BYTE. The merge replaces the addressed card and returns the objects
     // it was given for every other one — this is that claim, read back out of the database.
@@ -141,10 +143,13 @@ it('repairs ONE broken card with one short call and leaves the other thirteen al
     $expected = [
         ...array_map(
             static fn (array $line): string => PlanDayComposer::assemble($line['frame'], $line['filler']),
-            $this->day['phrases'],
+            [...$this->day['hear'], ...$this->day['say'], ...$this->day['ask'], ...$this->day['numbers']],
         ),
         ...array_column($this->day['words'], 'text'),
         ...array_column($this->day['chunks'], 'text'),
+        // The five phrases the SERVER writes into day 1 — they are cards of the collection like any
+        // other, and a merge that dropped them would be as wrong as one that dropped a line.
+        ...array_column(config('generation.plan.rescue_kit.en.ru'), 'text'),
     ];
     sort($expected);
 
@@ -174,12 +179,12 @@ it('sends a line whose Russian lost its key to P2R, not the whole day back', fun
     $broken = $this->day;
     // The line drills «half past nine» / «полдесятого» and its Russian now says nothing of the kind:
     // the learner would read the question and have no way to know which word to produce.
-    $broken['phrases'][1]['translation'] = 'У меня всё в порядке.';
+    $broken['say'][1]['translation'] = 'У меня всё в порядке.';
 
-    $fixed = $this->day['phrases'][1];   // the same line, with its Russian back
+    $fixed = $this->day['say'][1];   // the same line, with its Russian back
 
     [$planId, $model] = runPlanWith(
-        new ScriptedPlanModel([$broken], [['cards' => [['array' => 'phrases', 'index' => 1, 'card' => $fixed]]]]),
+        new ScriptedPlanModel([$broken], [['cards' => [['array' => 'say', 'index' => 1, 'card' => $fixed]]]]),
         $this->defects,
     );
 
@@ -192,16 +197,16 @@ it('sends a line whose Russian lost its key to P2R, not the whole day back', fun
         ->and($row->repair_calls)->toBe(1)
         // And the model was told what was wrong with which card, by code.
         ->and($model->repairMessages[0])->toContain(PlanDayValidator::TRANSLATION_MISSING_KEY)
-        ->and($model->repairMessages[0])->toContain('"array": "phrases"');
+        ->and($model->repairMessages[0])->toContain('"array": "say"');
 });
 
 // ── (б) the repair itself comes back broken ───────────────────────────────────────────────────
 
 it('buys no second repair inside the run, and leaves the day its second DAY call', function () {
     $broken = $this->day;
-    $broken['words'][0]['image_api_prompt'] = '';
+    $broken['words'][0]['example'] = $this->day['words'][0]['text'];
 
-    // The picture is back and the key is now the term itself — a different gate, and a fatal one.
+    // The example is back and the key is now the term itself — a different gate, and a fatal one.
     $stillBroken = $this->day['words'][0];
     $stillBroken['translation'] = $stillBroken['text'];
 
@@ -265,11 +270,20 @@ it('does not call the repair at all when more than half the day is broken', func
     // Eight cards of fourteen. Past the half, the answer is not a good day with defects — it is a
     // bad day, and paying to keep the half that passed is paying for the wrong thing.
     $broken = $this->day;
-    foreach ([0, 1, 2, 3, 4, 5] as $i) {
-        $broken['phrases'][$i]['image_api_prompt'] = '';
+    // Eleven cards of eighteen: the lines that HAVE a key lose it, and every piece's example
+    // becomes the piece itself. (A formula has no key card to lose, which is why the say shelf
+    // contributes three and not four — the half is counted in CARDS the verdict names.)
+    foreach ([0, 1, 2, 3] as $i) {
+        $broken['say'][$i]['translation'] = 'У меня всё в порядке.';
     }
     foreach ([0, 1] as $i) {
-        $broken['words'][$i]['image_api_prompt'] = '';
+        $broken['ask'][$i]['translation'] = 'У меня всё в порядке.';
+    }
+    foreach ([0, 1, 2, 3] as $i) {
+        $broken['words'][$i]['example'] = $this->day['words'][$i]['text'];
+    }
+    foreach ([0, 1] as $i) {
+        $broken['chunks'][$i]['example'] = $this->day['chunks'][$i]['text'];
     }
 
     [$planId, $model] = runPlanWith(
@@ -280,13 +294,13 @@ it('does not call the repair at all when more than half the day is broken', func
     $row = dayRow($planId);
 
     // The API carries the CODE of what broke, so the screen can say it in its own words (Д-19).
-    expect($row->fail_code)->toBe(PlanDayValidator::IMAGE_PROMPT_MISSING);
+    expect($row->fail_code)->toBe(PlanDayValidator::EXAMPLE_IS_A_TERM);
 
     expect($model->repairCalls())->toBe(0)
         // The old path, unchanged: two whole-day calls, and the second is told where the first broke.
         ->and($model->dayCalls())->toBe(2)
         ->and($model->dayMessages[1])->toContain('THE PREVIOUS ANSWER TO THIS DAY FAILED')
-        ->and($model->dayMessages[1])->toContain('phrases[0].image_api_prompt')
+        ->and($model->dayMessages[1])->toContain('say[0].translation')
         ->and($row->status)->toBe('failed')
         ->and($row->generation_attempts)->toBe(PlanDay::MAX_ATTEMPTS)
         // Nothing was patched, so nothing is charged as a patch.
@@ -297,7 +311,7 @@ it('does not call the repair at all when more than half the day is broken', func
 
 it('refuses a repair that answers about a card nobody asked about', function (array $cards) {
     $broken = $this->day;
-    $broken['words'][0]['image_api_prompt'] = '';
+    $broken['words'][0]['example'] = $this->day['words'][0]['text'];
 
     [$planId, $model] = runPlanWith(
         new ScriptedPlanModel([$broken], [['cards' => $cards]]),
@@ -321,28 +335,28 @@ it('refuses a repair that answers about a card nobody asked about', function (ar
     expect($violations)->toContain(PlanDayRepairer::OFF_TARGET)
         // …and the day is still failing on what it was failing on. Nothing was merged, so nothing
         // was quietly fixed and nothing was quietly overwritten.
-        ->and($violations)->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING);
+        ->and($violations)->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM);
 })->with([
     'the wrong index' => [fn () => [[
         'array' => 'words',
         'index' => 3,
-        'card' => json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.3.json'), true)['words'][0],
+        'card' => json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.4.json'), true)['words'][0],
     ]]],
     'the wrong array' => [fn () => [[
         'array' => 'chunks',
         'index' => 0,
-        'card' => json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.3.json'), true)['words'][0],
+        'card' => json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.4.json'), true)['words'][0],
     ]]],
     'one card too many' => [fn () => [
         [
             'array' => 'words',
             'index' => 0,
-            'card' => json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.3.json'), true)['words'][0],
+            'card' => json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.4.json'), true)['words'][0],
         ],
         [
             'array' => 'words',
             'index' => 1,
-            'card' => json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.3.json'), true)['words'][1],
+            'card' => json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-day1.v0.4.json'), true)['words'][1],
         ],
     ]],
 ]);

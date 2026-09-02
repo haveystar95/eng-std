@@ -19,6 +19,10 @@ final readonly class EloquentTermPlanFactsWriter implements TermPlanFactsWriter
         ?string $speaker = null,
         ?string $filler = null,
         ?string $speakingKey = null,
+        ?string $shelf = null,
+        ?string $tier = null,
+        ?string $skillRef = null,
+        ?string $numberValue = null,
     ): void {
         DB::table('terms')
             ->where('id', $termId->value)
@@ -26,6 +30,13 @@ final readonly class EloquentTermPlanFactsWriter implements TermPlanFactsWriter
                 'is_line' => $isLine,
                 'difficulty_score' => $difficultyScore,
                 'kind' => $kind,
+                // The shelf and the tier travel together and are written even when null: a term
+                // re-imported by a plan day is answering these questions for the first time, and a
+                // term this day did not put on a shelf must not keep yesterday's answer.
+                'shelf' => $shelf,
+                'tier' => $tier,
+                'skill_ref' => $skillRef,
+                'number_value' => $numberValue,
                 // A formula («Nice to meet you») has no slot, and an empty string would read as
                 // «a frame whose hole is at the start» to every regex downstream. Same for the
                 // filler: «nothing stands in the hole» and «there is no hole» are one state here.

@@ -85,9 +85,11 @@ use App\Modules\Generation\Infrastructure\Adapter\OpenAiTermEnricher;
 use App\Modules\Generation\Application\Port\PlanDefectReporter;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
+use App\Modules\Generation\Application\Port\RescueKitSource;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Application\Service\PlanDayRepairer;
 use App\Modules\Generation\Application\Service\PlanOutlineService;
+use App\Modules\Generation\Infrastructure\Adapter\ConfigRescueKit;
 use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedEnrichmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedPlanDayDispatcher;
@@ -171,6 +173,15 @@ final class GenerationServiceProvider extends ServiceProvider
             );
         });
 
+        // THE LANGUAGE PACK'S FIVE PHRASES (канон §5) — read, never generated. Config and not a
+        // constant for the reason every content judgement here is: it will move, and moving it must
+        // not be a deploy of the Domain.
+        $this->app->bind(RescueKitSource::class, function (): RescueKitSource {
+            $pack = config('generation.plan.rescue_kit');
+
+            return new ConfigRescueKit(is_array($pack) ? $pack : []);
+        });
+
         $this->app->bind(PlanDayComposer::class, function (): PlanDayComposer {
             return new PlanDayComposer(
                 model: $this->planModel(),
@@ -179,6 +190,7 @@ final class GenerationServiceProvider extends ServiceProvider
                 defects: $this->app->make(PlanDefectReporter::class),
                 repairer: $this->app->make(PlanDayRepairer::class),
                 validator: $this->planDayValidator(),
+                rescueKit: $this->app->make(RescueKitSource::class),
             );
         });
         // The admin sandbox's own registry. A SECOND catalogue beside the one above, not a widening
@@ -627,8 +639,13 @@ final class GenerationServiceProvider extends ServiceProvider
     {
         $configured = config('generation.plan.day.repair_markers');
         $presence = $this->translationKeyPresence();
+        $basics = $this->basicVocabulary();
+
         if (! is_array($configured)) {
-            return new \App\Modules\Generation\Domain\Service\PlanDayValidator(keyPresence: $presence);
+            return new \App\Modules\Generation\Domain\Service\PlanDayValidator(
+                keyPresence: $presence,
+                basics: $basics,
+            );
         }
 
         $markers = [];
@@ -645,7 +662,38 @@ final class GenerationServiceProvider extends ServiceProvider
         return new \App\Modules\Generation\Domain\Service\PlanDayValidator(
             repairMarkers: $markers,
             keyPresence: $presence,
+            basics: $basics,
         );
+    }
+
+    /**
+     * The stop-list of basic vocabulary, overridden from config when there is an override.
+     *
+     * Same shape as the repair phrases and for the same reason: a list of words is a product
+     * judgement, it will be wrong, and being wrong about it must not be a deploy of the Domain. An
+     * EMPTY config leaves the shipped list alone rather than switching the gate off — «нечего
+     * переопределять» и «этого языка не судить» это два разных факта, and the second one is said by
+     * a language having no list at all.
+     */
+    private function basicVocabulary(): \App\Modules\Generation\Domain\Service\BasicVocabulary
+    {
+        $configured = config('generation.plan.day.basic_stop_list');
+        if (! is_array($configured) || $configured === []) {
+            return new \App\Modules\Generation\Domain\Service\BasicVocabulary();
+        }
+
+        $lists = [];
+        foreach ($configured as $lang => $words) {
+            if (! is_string($lang) || ! is_array($words)) {
+                continue;
+            }
+            $lists[mb_strtolower($lang)] = array_values(array_filter(
+                $words,
+                static fn (mixed $w): bool => is_string($w) && trim($w) !== '',
+            ));
+        }
+
+        return new \App\Modules\Generation\Domain\Service\BasicVocabulary($lists);
     }
 
     /**

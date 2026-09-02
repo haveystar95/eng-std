@@ -108,6 +108,10 @@ final readonly class ReschedulePlanHandler
             $skills = [];
             foreach ($scene->skills as $skill) {
                 $skills[] = new PlanSkill(
+                    // The ID DOES NOT MOVE, though the scene's position does. It is what the cards
+                    // of a day already written name in `skill_ref`, and renumbering it because a
+                    // LATER scene was dropped would point every one of them at nothing.
+                    id: $skill->id,
                     outcome: $skill->outcome,
                     checkpoint: $skill->checkpoint,
                     estTerms: $skill->estTerms,
@@ -121,8 +125,10 @@ final readonly class ReschedulePlanHandler
             $kept[] = new PlanScene(
                 index: $index,
                 title: $scene->title,
-                role: $scene->role,
+                intro: $scene->intro,
                 skills: $skills,
+                openingLines: $scene->openingLines,
+                entities: $scene->entities,
             );
         }
 
@@ -156,6 +162,7 @@ final readonly class ReschedulePlanHandler
             $skills = [];
             foreach ($scene->skills as $skill) {
                 $skills[] = [
+                    'id' => $skill->id,
                     'outcome' => $skill->outcome,
                     'checkpoint' => $skill->checkpoint,
                     'est_terms' => $skill->estTerms,
@@ -164,13 +171,12 @@ final readonly class ReschedulePlanHandler
             }
 
             $scenes[] = [
+                'position' => $scene->index,
                 'title' => $scene->title,
-                'role' => $scene->role === null ? null : [
-                    'name' => $scene->role->name,
-                    'opening_lines' => $scene->role->openingLines,
-                    'if_silent' => $scene->role->ifSilent,
-                ],
+                'intro' => $scene->intro,
                 'skills' => $skills,
+                'opening_lines' => $scene->openingLines,
+                'entities' => $scene->entities,
             ];
         }
 

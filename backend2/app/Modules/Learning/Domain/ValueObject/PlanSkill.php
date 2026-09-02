@@ -23,6 +23,20 @@ final readonly class PlanSkill
 {
     /** @param list<string> $topics */
     public function __construct(
+        /**
+         * THE ID EVERY CARD OF THE DAY POINTS AT — «s1.2».
+         *
+         * New in v0.4 and the mechanical half of «каждая карточка отвечает, почему она здесь»
+         * (канон §8): a card names one skill in `skill_ref`, and a card that names none — or names
+         * one this scene never promised — is refused
+         * ({@see \App\Modules\Generation\Domain\Service\PlanDayValidator::SKILL_REF_INVALID}).
+         *
+         * The model is asked for it and the SERVER fills it in when the answer omits one
+         * ({@see \App\Modules\Learning\Domain\ValueObject\PlanOutline::fromArray()}): an id is
+         * an address, and refusing a whole skeleton over a missing address would be paying for a
+         * second call to get a string this code can write itself.
+         */
+        public string $id,
         /** The ability, in the learner's own language, as P1 wrote it. */
         public string $outcome,
         /** What must be HEARD for it to count. Exactly one per skill — never null since v0.2. */

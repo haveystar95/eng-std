@@ -47,15 +47,25 @@ it('deals day 1 as stage A: intro first, then the two recognitions, the word ban
         ->and($session['focus_day_index'])->toBe(1)
         ->and($session['tasks'])->not->toBeEmpty();
 
+    // THE SITTING OPENS ON THE WARM-UP — the plan's five rescue phrases, before the day itself
+    // (канон §5). They are a section of their own, so «N из N» on the day screen still counts the
+    // day's own cards and nothing else.
+    $day = array_values(array_filter($session['tasks'], static fn (array $t): bool => $t['section'] === 'day'));
+    $warmup = array_values(array_filter($session['tasks'], static fn (array $t): bool => $t['section'] === 'warmup'));
+
+    expect($warmup)->not->toBeEmpty()
+        ->and($session['tasks'][0]['section'])->toBe('warmup')
+        ->and($session['day_task_count'])->toBe(count($day));
+
     // Every task of a never-studied day is stage A, and belongs to day 1.
-    foreach ($session['tasks'] as $task) {
+    foreach ($day as $task) {
         expect($task['stage'])->toBe('a')
             ->and($task['source'])->toBe('new')
             ->and($task['from_day_index'])->toBe(1);
     }
 
     // The first word's own chain, in the stage's fixed order.
-    $first = $session['tasks'][0]['card']['term_id'];
+    $first = $day[0]['card']['term_id'];
     $chain = [];
     foreach ($session['tasks'] as $task) {
         if ($task['card']['term_id'] === $first) {
@@ -83,7 +93,10 @@ it('lays the day out as pieces, connectors and then replies — whatever the lev
     $rank = ['word' => 0, 'chunk' => 1, 'line' => 2];
     $seen = [];
     $last = -1;
-    foreach ($session['tasks'] as $task) {
+    // The DAY's own cards: the warm-up is a section of its own and stands before all of them, which
+    // is the one thing about the running order that is fixed (канон §11 — the rest is SIT-1).
+    $dayTasks = array_values(array_filter($session['tasks'], static fn (array $t): bool => $t['section'] === 'day'));
+    foreach ($dayTasks as $task) {
         $kind = $kinds[$task['card']['term_id']] ?? 'word';
         $seen[$kind] = true;
         // Never back to an earlier block: every card of a block, with its whole checklist, before
@@ -95,8 +108,8 @@ it('lays the day out as pieces, connectors and then replies — whatever the lev
     // The fixture is worth testing only if it actually holds all three.
     expect($seen)->toHaveKeys(['word', 'chunk', 'line'])
         // And the day opens on a first meeting of a PIECE, not on the sentence built out of it.
-        ->and($session['tasks'][0]['card']['exercise_mode'])->toBe('intro')
-        ->and($kinds[$session['tasks'][0]['card']['term_id']])->toBe('word');
+        ->and($dayTasks[0]['card']['exercise_mode'])->toBe('intro')
+        ->and($kinds[$dayTasks[0]['card']['term_id']])->toBe('word');
 });
 
 it('deals a line and a word different chains in the same session', function () {
@@ -292,13 +305,17 @@ it('still drops the choice when even three cannot be furnished, and counts it', 
 it('deals the interlocutor’s own line for recognition only, and says whose it is (Д-8)', function () {
     [, $token, $planId] = startedPlan($this);
 
-    // One of the day's lines is the OTHER person's turn — «Hello. What seems to be the problem with
-    // your child?» in the live run. It is in the day so the learner will understand it when it is
-    // said to them, and it is the one card of a plan they are never asked to say.
-    $roleLine = DB::table('terms')->where('kind', 'line')->orderBy('id')->value('id');
-    DB::table('terms')->where('id', $roleLine)->update(['speaker' => 'role']);
-    $learnerLine = DB::table('terms')->where('kind', 'line')->where('id', '!=', $roleLine)->orderBy('id')->value('id');
-    DB::table('terms')->whereIn('kind', ['line'])->where('id', '!=', $roleLine)->update(['speaker' => 'learner']);
+    // A whole SHELF of the day is the other person's turn now — «Тебе скажут» — and nothing has to
+    // be marked by hand any more: the shelf says whose line it is and the server derives the tier
+    // from it. «Hello. What seems to be the problem with your child?» in the live run was a card
+    // like this one, and the app spent a word bank making the learner build it word by word.
+    $roleLine = DB::table('terms')->where('shelf', 'hear')->orderBy('id')->value('id');
+    $learnerLine = DB::table('terms')->where('shelf', 'say')->orderBy('id')->value('id');
+
+    expect($roleLine)->not->toBeNull()
+        ->and($learnerLine)->not->toBeNull()
+        ->and(DB::table('terms')->where('id', $roleLine)->value('tier'))->toBe('understand')
+        ->and(DB::table('terms')->where('id', $learnerLine)->value('tier'))->toBe('speak');
 
     $session = planSession($this, $token, $planId);
 
@@ -553,10 +570,15 @@ it('counts the cards and the stage-A closures the plan card shows', function () 
     walkDay($this, $token, $planId, 1);
 
     $after = $census($this);
-    $day1 = DB::table('collection_items')->where(
-        'collection_id',
-        DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('collection_id'),
-    )->count();
+    // The cards of day 1 that a SESSION can deal. The numbers of the scene are stored with the day
+    // and dealt by nothing yet (канон §6, NUM-1), so they are not owed a stage and are not counted
+    // as one that closed — a card no sitting can play must not hold a day open.
+    $day1 = DB::table('collection_items as ci')
+        ->join('terms as t', 't.id', '=', 'ci.term_id')
+        ->where('ci.collection_id', DB::table('learning_plan_days')
+            ->where('plan_id', $planId)->where('day_index', 1)->value('collection_id'))
+        ->where('t.kind', '!=', 'number')
+        ->count();
 
     // Every card of day 1 closed its stage A, and the count SAYS SO on the day it happened — the
     // percentage will not move until a night has passed and stage B has been walked too.
@@ -642,10 +664,14 @@ it('opens stage B when the planner makes the word due again — the night alone 
         $later['tasks'],
         static fn (array $t): bool => $t['section'] === 'review',
     ));
-    $first = $later['tasks'][0] ?? null;
+    // The warm-up leads every sitting (канон §5); the DAY is what follows it, and the seam of
+    // earlier days follows that.
+    $day = array_values(array_filter($later['tasks'], static fn (array $t): bool => $t['section'] === 'day'));
+    $first = $day[0] ?? null;
     $firstReview = $review[0] ?? null;
 
     expect($later['tasks'])->not->toBeEmpty()
+        ->and($later['tasks'][0]['section'])->toBe('warmup')
         // The day leads, and a first meeting is stage A.
         ->and($first['source'])->toBe('new')
         ->and($first['stage'])->toBe('a')

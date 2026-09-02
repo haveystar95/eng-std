@@ -180,6 +180,8 @@ final class EloquentTermContentReader implements TermContentReader
                 frame: $term->frame !== null ? (string) $term->frame : null,
                 speaker: $term->speaker !== null ? (string) $term->speaker : null,
                 speakingKey: $term->speaking_key !== null ? (string) $term->speaking_key : null,
+                shelf: $term->shelf !== null ? (string) $term->shelf : null,
+                tier: $term->tier !== null ? (string) $term->tier : null,
             );
         }
 

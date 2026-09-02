@@ -119,18 +119,36 @@ it('puts every task of the day before every task of the seam, and says where the
     $session = planSession($this, $token, $planId);
     $sections = array_column($session['tasks'], 'section');
 
+    // THREE SECTIONS, in one order and never interleaved: the warm-up the plan opens every sitting
+    // with (канон §5), then the day, then the revision of the days before it. `day_task_count` is a
+    // COUNT of the middle one and not an index into the list — the warm-up stands before it.
+    $warmup = array_keys($sections, PlanSessionTaskView::SECTION_WARMUP, true);
+    $dayTasks = array_keys($sections, PlanSessionTaskView::SECTION_DAY, true);
+    $review = array_keys($sections, PlanSessionTaskView::SECTION_REVIEW, true);
+
     expect($session)->toHaveKey('day_task_count')
-        // The seam, from both ends: the count says where it falls, and the order says it falls once.
-        ->and(array_slice($sections, 0, $session['day_task_count']))
-        ->each->toBe(PlanSessionTaskView::SECTION_DAY)
-        ->and(array_slice($sections, $session['day_task_count']))
-        ->each->toBe(PlanSessionTaskView::SECTION_REVIEW)
+        ->and($warmup)->not->toBeEmpty()
+        ->and($dayTasks)->not->toBeEmpty()
+        ->and($review)->not->toBeEmpty()
+        // Each section is one contiguous run, in this order — that is what makes a caption over it
+        // a caption rather than a label on scattered cards.
+        ->and(max($warmup))->toBeLessThan(min($dayTasks))
+        ->and(max($dayTasks))->toBeLessThan(min($review))
+        ->and($session['day_task_count'])->toBe(count($dayTasks))
         ->and($session['day_task_count'])->toBeLessThan(count($session['tasks']));
 
     // And `section` agrees with the day each card was introduced on — which is what it now MEANS.
     // It used to read «`from_day_index` is null», the top-up's signature; with the top-up gone that
     // test would have made the seam permanently empty.
     foreach ($session['tasks'] as $task) {
+        if ($task['section'] === PlanSessionTaskView::SECTION_WARMUP) {
+            // The kit lives on day 1 and comes back every morning after it, so «which day» says
+            // nothing about which section it is in — the shelf does.
+            expect($task['shelf'])->toBe('rescue')->and($task['origin'])->toBeNull();
+
+            continue;
+        }
+
         expect($task['section'])->toBe(
             $task['from_day_index'] === $session['day_index']
                 ? PlanSessionTaskView::SECTION_DAY
@@ -157,23 +175,34 @@ it('lays a seamed sitting out as words, connectors, replies, and only then the s
     $dayCount = $session['day_task_count'];
     expect($dayCount)->toBeLessThan(count($session['tasks']));
 
+    $section = static fn (string $name): array => array_values(array_filter(
+        $session['tasks'],
+        static fn (array $t): bool => $t['section'] === $name,
+    ));
+
+    // 0. The warm-up leads, and it is the rescue kit and nothing else.
+    expect($section(PlanSessionTaskView::SECTION_WARMUP))->not->toBeEmpty()
+        ->and(array_unique(array_column($section(PlanSessionTaskView::SECTION_WARMUP), 'shelf')))
+        ->toBe(['rescue']);
+
     // 1. The day's own tasks, in block order.
     $last = -1;
     $seen = [];
-    foreach (array_slice($session['tasks'], 0, $dayCount) as $task) {
+    $dayTasks = $section(PlanSessionTaskView::SECTION_DAY);
+    foreach ($dayTasks as $task) {
         $kind = $kinds[$task['card']['term_id']] ?? 'word';
         $seen[$kind] = true;
-        expect($task['section'])->toBe(PlanSessionTaskView::SECTION_DAY)
-            ->and($rank[$kind])->toBeGreaterThanOrEqual($last);
+        expect($rank[$kind])->toBeGreaterThanOrEqual($last);
         $last = $rank[$kind];
     }
     expect($seen)->toHaveKeys(['word', 'chunk', 'line'])
+        ->and($dayTasks)->toHaveCount($dayCount)
         // The day opens on a first meeting of a piece — not on the sentence built out of it.
-        ->and($session['tasks'][0]['card']['exercise_mode'])->toBe('intro')
-        ->and($kinds[$session['tasks'][0]['card']['term_id']])->toBe('word');
+        ->and($dayTasks[0]['card']['exercise_mode'])->toBe('intro')
+        ->and($kinds[$dayTasks[0]['card']['term_id']])->toBe('word');
 
     // 2. The seam, after every one of them, and nothing of the day inside it.
-    foreach (array_slice($session['tasks'], $dayCount) as $task) {
+    foreach ($section(PlanSessionTaskView::SECTION_REVIEW) as $task) {
         expect($task['section'])->toBe(PlanSessionTaskView::SECTION_REVIEW)
             ->and($task['from_day_index'])->toBeLessThan($session['day_index']);
     }
@@ -184,8 +213,16 @@ it('counts the day out of its own material when nothing else is due', function (
 
     $session = planSession($this, $token, $planId);
 
-    expect($session['day_task_count'])->toBe(count($session['tasks']))
-        ->and(array_column($session['tasks'], 'section'))->each->toBe(PlanSessionTaskView::SECTION_DAY);
+    $sections = array_column($session['tasks'], 'section');
+
+    // Nothing is due and no earlier day exists, so the sitting is the WARM-UP and the day, and
+    // nothing else. The count is the day's own cards — which is what «N из N» on the day screen
+    // reads, and why the five rescue phrases coming back every morning must not enter it.
+    expect(array_values(array_unique($sections)))
+        ->toBe([PlanSessionTaskView::SECTION_WARMUP, PlanSessionTaskView::SECTION_DAY])
+        ->and($session['day_task_count'])
+        ->toBe(count(array_keys($sections, PlanSessionTaskView::SECTION_DAY, true)))
+        ->and($session['day_task_count'])->toBeLessThan(count($session['tasks']));
 });
 
 // ── the day is judged when the sitting ENDS ───────────────────────────────────────────────────

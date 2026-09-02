@@ -4113,23 +4113,17 @@ abstract class AppLocalizations {
   /// **'Что пошло не так: {reason}'**
   String planFailWhy(String reason);
 
-  /// fail_code = day.example_is_a_term.
+  /// fail_code = card.example_is_a_term.
   ///
   /// In ru, this message translates to:
   /// **'пример к карточке повторял другую карточку этого дня, а не показывал слово в предложении'**
   String get planFailExampleIsATerm;
 
-  /// fail_code = day.example_duplicated.
+  /// fail_code = card.example_skeleton_clone. Раньше — day.example_duplicated: то же самое, «один пример на несколько карточек», только теперь сервер видит его по скелету предложения.
   ///
   /// In ru, this message translates to:
-  /// **'один и тот же пример стоял сразу у нескольких карточек'**
+  /// **'два примера оказались одним предложением с подменённым словом'**
   String get planFailExampleDuplicated;
-
-  /// fail_code = day.example_missing.
-  ///
-  /// In ru, this message translates to:
-  /// **'у карточки не было примера'**
-  String get planFailExampleMissing;
 
   /// fail_code = outline.target_language.
   ///
@@ -4137,76 +4131,82 @@ abstract class AppLocalizations {
   /// **'материал вернулся не на том языке'**
   String get planFailNotTargetLanguage;
 
-  /// fail_code = day.key_is_the_term.
+  /// fail_code = card.translation_is_transliteration. Раньше — day.key_is_the_term; сервер теперь ловит и транслитерацию, поэтому во фразе названы оба случая.
   ///
   /// In ru, this message translates to:
-  /// **'перевод карточки повторял саму карточку'**
+  /// **'перевод карточки повторял саму карточку — теми же буквами или другими'**
   String get planFailKeyIsTheTerm;
 
-  /// fail_code = day.key_duplicated.
-  ///
-  /// In ru, this message translates to:
-  /// **'две карточки дня получили один и тот же перевод'**
-  String get planFailKeyDuplicated;
-
-  /// fail_code = day.key_not_support_language.
-  ///
-  /// In ru, this message translates to:
-  /// **'перевод пришёл не на вашем языке'**
-  String get planFailKeyNotSupportLanguage;
-
-  /// fail_code = day.kind_mismatch.
-  ///
-  /// In ru, this message translates to:
-  /// **'карточка объявила себя не тем, чем она является'**
-  String get planFailKindMismatch;
-
-  /// fail_code = day.array_count / day.term_count.
-  ///
-  /// In ru, this message translates to:
-  /// **'в дне оказалось не столько карточек, сколько было заказано'**
-  String get planFailCounts;
-
-  /// fail_code = day.checkpoint_uncovered и соседние.
-  ///
-  /// In ru, this message translates to:
-  /// **'одно из умений дня не закрыла ни одна реплика'**
-  String get planFailCheckpoint;
-
-  /// fail_code = day.term_is_a_name.
+  /// fail_code = card.term_is_a_name.
   ///
   /// In ru, this message translates to:
   /// **'именем собственным нельзя занимать карточку — его не переводят'**
   String get planFailTermIsAName;
 
-  /// fail_code = day.slot_outside_frame.
+  /// fail_code = card.gap_outside_frame.
   ///
   /// In ru, this message translates to:
   /// **'пропуск для подстановки оказался не в той строке'**
   String get planFailSlotOutsideFrame;
 
-  /// fail_code = day.image_prompt_missing.
+  /// fail_code = card.gap_missing.
   ///
   /// In ru, this message translates to:
-  /// **'к карточке не пришло описание для картинки'**
-  String get planFailImagePromptMissing;
+  /// **'в реплике не оказалось пропуска, в который встаёт карточка'**
+  String get planFailGapMissing;
 
-  /// fail_code = day.description_gives_away.
+  /// fail_code = card.translation_has_gap.
   ///
   /// In ru, this message translates to:
-  /// **'описание карточки называло само загаданное слово'**
-  String get planFailDescriptionGivesAway;
+  /// **'в переводе остался пропуск — читать такую подсказку нечем'**
+  String get planFailTranslationHasGap;
 
-  /// fail_code = day.role_line_invented.
+  /// fail_code = card.translation_missing_key.
   ///
   /// In ru, this message translates to:
-  /// **'реплика собеседника не из тех, что описаны в каркасе дня'**
-  String get planFailRoleLineInvented;
+  /// **'в переводе реплики не нашлось самого слова, которому она учит'**
+  String get planFailTranslationMissingKey;
 
-  /// fail_code = plan.term_repeated.
+  /// fail_code = card.filler_not_card.
   ///
   /// In ru, this message translates to:
-  /// **'день повторил слово, которое уже вводил другой день'**
+  /// **'в пропуск встало не то, чему учит карточка'**
+  String get planFailFillerNotCard;
+
+  /// fail_code = card.word_is_basic — стоп-список базового (канон §7).
+  ///
+  /// In ru, this message translates to:
+  /// **'карточкой стало слово из самого начального минимума'**
+  String get planFailWordIsBasic;
+
+  /// fail_code = card.kind_size — слово длиннее трёх слов, связка вне 2–4, реплика вне 3–8 (канон §7).
+  ///
+  /// In ru, this message translates to:
+  /// **'карточка вышла за длину, отведённую её виду'**
+  String get planFailKindSize;
+
+  /// fail_code = card.skill_ref_invalid (канон §8).
+  ///
+  /// In ru, this message translates to:
+  /// **'карточка не назвала умение сцены, ради которого она здесь'**
+  String get planFailSkillRefInvalid;
+
+  /// fail_code = card.number_value_mismatch.
+  ///
+  /// In ru, this message translates to:
+  /// **'число в реплике не сошлось с числом, по которому карточку проверяют'**
+  String get planFailNumberValueMismatch;
+
+  /// fail_code = day.shelf_missing. Единственная дневная поломка v0.4: адреса у неё нет, поэтому день пересобирается целиком.
+  ///
+  /// In ru, this message translates to:
+  /// **'в сцене не оказалось целой полки — того, что тебе скажут, что ты ответишь или из чего это собрано'**
+  String get planFailShelfMissing;
+
+  /// fail_code = card.clone. Раньше — plan.term_repeated («день повторил слово другого дня»); теперь сервер ловит все три вида повтора одним кодом.
+  ///
+  /// In ru, this message translates to:
+  /// **'карточка повторяла другую — этого дня, спасательного набора или прошлого дня'**
   String get planFailTermRepeated;
 
   /// fail_code неизвестен клиенту или его нет вовсе. Причину НЕ выдумываем.
@@ -4310,6 +4310,36 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Повторение · из прошлых дней'**
   String get planReviewSection;
+
+  /// Шов в сессии плана: section = warmup — спасательный набор, пять фраз перед каждым днём (канон §5).
+  ///
+  /// In ru, this message translates to:
+  /// **'Разогрев'**
+  String get planWarmupSection;
+
+  /// Шов в сессии плана: полка hear — реплики собеседника, только на понимание (канон §2).
+  ///
+  /// In ru, this message translates to:
+  /// **'Тебе скажут'**
+  String get planShelfHear;
+
+  /// Шов в сессии плана: полка say — короткие ответы, полная лестница до «сказал сам».
+  ///
+  /// In ru, this message translates to:
+  /// **'Ты ответишь'**
+  String get planShelfSay;
+
+  /// Шов в сессии плана: полка ask — уточняющие вопросы. Отдельная от say: обе полки — kind = line, и различает их только полка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ты спросишь'**
+  String get planShelfAsk;
+
+  /// Шов в сессии плана: полки words и chunks под одной подписью — канон §2 считает их вместе («внизу — слова и связки»).
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова и связки'**
+  String get planShelfWords;
 
   /// Строка итога дня.
   ///

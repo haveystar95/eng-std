@@ -2850,31 +2850,15 @@ class AppLocalizationsRu extends AppLocalizations {
       'пример к карточке повторял другую карточку этого дня, а не показывал слово в предложении';
 
   @override
-  String get planFailExampleDuplicated => 'один и тот же пример стоял сразу у нескольких карточек';
-
-  @override
-  String get planFailExampleMissing => 'у карточки не было примера';
+  String get planFailExampleDuplicated =>
+      'два примера оказались одним предложением с подменённым словом';
 
   @override
   String get planFailNotTargetLanguage => 'материал вернулся не на том языке';
 
   @override
-  String get planFailKeyIsTheTerm => 'перевод карточки повторял саму карточку';
-
-  @override
-  String get planFailKeyDuplicated => 'две карточки дня получили один и тот же перевод';
-
-  @override
-  String get planFailKeyNotSupportLanguage => 'перевод пришёл не на вашем языке';
-
-  @override
-  String get planFailKindMismatch => 'карточка объявила себя не тем, чем она является';
-
-  @override
-  String get planFailCounts => 'в дне оказалось не столько карточек, сколько было заказано';
-
-  @override
-  String get planFailCheckpoint => 'одно из умений дня не закрыла ни одна реплика';
+  String get planFailKeyIsTheTerm =>
+      'перевод карточки повторял саму карточку — теми же буквами или другими';
 
   @override
   String get planFailTermIsAName =>
@@ -2884,16 +2868,39 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planFailSlotOutsideFrame => 'пропуск для подстановки оказался не в той строке';
 
   @override
-  String get planFailImagePromptMissing => 'к карточке не пришло описание для картинки';
+  String get planFailGapMissing => 'в реплике не оказалось пропуска, в который встаёт карточка';
 
   @override
-  String get planFailDescriptionGivesAway => 'описание карточки называло само загаданное слово';
+  String get planFailTranslationHasGap =>
+      'в переводе остался пропуск — читать такую подсказку нечем';
 
   @override
-  String get planFailRoleLineInvented => 'реплика собеседника не из тех, что описаны в каркасе дня';
+  String get planFailTranslationMissingKey =>
+      'в переводе реплики не нашлось самого слова, которому она учит';
 
   @override
-  String get planFailTermRepeated => 'день повторил слово, которое уже вводил другой день';
+  String get planFailFillerNotCard => 'в пропуск встало не то, чему учит карточка';
+
+  @override
+  String get planFailWordIsBasic => 'карточкой стало слово из самого начального минимума';
+
+  @override
+  String get planFailKindSize => 'карточка вышла за длину, отведённую её виду';
+
+  @override
+  String get planFailSkillRefInvalid => 'карточка не назвала умение сцены, ради которого она здесь';
+
+  @override
+  String get planFailNumberValueMismatch =>
+      'число в реплике не сошлось с числом, по которому карточку проверяют';
+
+  @override
+  String get planFailShelfMissing =>
+      'в сцене не оказалось целой полки — того, что тебе скажут, что ты ответишь или из чего это собрано';
+
+  @override
+  String get planFailTermRepeated =>
+      'карточка повторяла другую — этого дня, спасательного набора или прошлого дня';
 
   @override
   String get planFailUnknown => 'не удалось собрать день';
@@ -2974,6 +2981,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planReviewSection => 'Повторение · из прошлых дней';
+
+  @override
+  String get planWarmupSection => 'Разогрев';
+
+  @override
+  String get planShelfHear => 'Тебе скажут';
+
+  @override
+  String get planShelfSay => 'Ты ответишь';
+
+  @override
+  String get planShelfAsk => 'Ты спросишь';
+
+  @override
+  String get planShelfWords => 'Слова и связки';
 
   @override
   String get planStageAClosed => 'Ступень A пройдена';

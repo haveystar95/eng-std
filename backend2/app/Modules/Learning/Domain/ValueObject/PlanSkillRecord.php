@@ -23,6 +23,12 @@ final readonly class PlanSkillRecord
      */
     public function __construct(
         public string $id,
+        /**
+         * The id the SCENE gave this ability — «s1.2» — and the string every card of its day
+         * carries in `skill_ref` ({@see \App\Modules\Learning\Domain\ValueObject\PlanSkill::$id}).
+         * Stable across a reschedule, unlike {@see $id}, which is a row.
+         */
+        public string $skillRef,
         public int $sceneIndex,
         public string $sceneTitle,
         public ?array $role,

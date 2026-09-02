@@ -46,9 +46,13 @@ it('starts a new plan at the introduction for cards an abandoned plan had alread
     // The whole of day 1 answered — every card of it is now introduced, recognised and said.
     walkDay($this, $token, $first, 1);
 
-    $terms = DB::table('collection_items')
-        ->where('collection_id', DB::table('learning_plan_days')->where('plan_id', $first)->where('day_index', 1)->value('collection_id'))
-        ->pluck('term_id')
+    // The cards a SESSION deals. The numbers of a scene are stored with the day and dealt by nothing
+    // yet (канон §6, NUM-1), so «every card came back» is asked of the cards that can come back.
+    $terms = DB::table('collection_items as ci')
+        ->join('terms as t', 't.id', '=', 'ci.term_id')
+        ->where('ci.collection_id', DB::table('learning_plan_days')->where('plan_id', $first)->where('day_index', 1)->value('collection_id'))
+        ->where('t.kind', '!=', 'number')
+        ->pluck('ci.term_id')
         ->all();
 
     expect(DB::table('reviews')->where('user_id', $user->id)->whereIn('term_id', $terms)->count())->toBeGreaterThan(0)

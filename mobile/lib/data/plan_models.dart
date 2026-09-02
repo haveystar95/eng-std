@@ -238,6 +238,7 @@ class PlanDay {
     required this.checkpoints,
     required this.topics,
     required this.role,
+    this.intro = '',
   });
 
   final String id;
@@ -279,6 +280,15 @@ class PlanDay {
   /// it is what the locked «Разговор» block on the day screen names.
   final Map<String, dynamic>? role;
 
+  /// THE SCENE'S ВВОДКА — two or three sentences in the learner's OWN language: who is in front of
+  /// you, what is about to happen, what counts as success (канон §2).
+  ///
+  /// Empty on a day written before the day became a scene, and empty is a legitimate answer rather
+  /// than a hole to fill: the day screen simply draws nothing. The string is the server's — the
+  /// model writes it in the support language — so it is one of the few pieces of copy on this
+  /// screen that does NOT come out of `AppLocalizations`.
+  final String intro;
+
   String? get roleTitle {
     final r = role;
     if (r == null) return null;
@@ -303,6 +313,7 @@ class PlanDay {
     checkpoints: _strings(j['checkpoints']),
     topics: _strings(j['topics']),
     role: j['role'] as Map<String, dynamic>?,
+    intro: (j['intro'] as String?)?.trim() ?? '',
   );
 }
 
@@ -505,7 +516,25 @@ class PlanTermRow {
     required this.fromDayIndex,
     this.kind,
     this.speaker,
+    this.shelf,
+    this.tier,
   });
+
+  /// The shelves of a scene, as the server names them (канон §2). `numbers` is stored and not yet
+  /// dealt; `rescue` is the plan's five universal phrases, played in the warm-up.
+  static const shelfHear = 'hear';
+  static const shelfSay = 'say';
+  static const shelfAsk = 'ask';
+  static const shelfWords = 'words';
+  static const shelfChunks = 'chunks';
+  static const shelfNumbers = 'numbers';
+  static const shelfRescue = 'rescue';
+
+  /// The full ladder A → B → C, up to «сказал сам».
+  static const tierSpeak = 'speak';
+
+  /// Two touches and no more — heard it, recognised it. Never something to produce (канон §3).
+  static const tierUnderstand = 'understand';
 
   final String termId;
   final String text;
@@ -542,6 +571,23 @@ class PlanTermRow {
   /// «ФРАЗЫ ДНЯ» (Д-8).
   bool get isRoleLine => speaker == 'role';
 
+  /// WHICH SHELF OF THE SCENE this term stands on, or null on a day written before the shelves.
+  ///
+  /// One of the `shelf*` constants — but read as an OPEN set: a value this build has never heard of
+  /// is a server ahead of the client, and it must fall through to «no shelf» rather than be forced
+  /// into one of the six the switch happens to know.
+  final String? shelf;
+
+  /// `speak` | `understand` — the ladder this term climbs, or null outside a scene.
+  final String? tier;
+
+  /// Something to UNDERSTAND, never something to say — see [isRoleLine] for the older half of it.
+  ///
+  /// The shelf decides the tier structurally (канон §3), so the server answers it and the client
+  /// only reads it. An unrecognised [tier] answers `false` and leaves the speaker to decide, which
+  /// is exactly what this screen did before the field existed.
+  bool get isRecognitionOnly => tier == tierUnderstand || isRoleLine;
+
   factory PlanTermRow.fromJson(Map<String, dynamic> j) => PlanTermRow(
     termId: (j['id'] as String?) ?? '',
     text: (j['text'] as String?) ?? '',
@@ -553,6 +599,8 @@ class PlanTermRow {
     stageComplete: j['stage_complete'] == true,
     finished: j['finished'] == true,
     fromDayIndex: (j['from_day_index'] as num?)?.toInt() ?? 0,
+    shelf: j['shelf'] as String?,
+    tier: j['tier'] as String?,
   );
 }
 
@@ -615,6 +663,8 @@ class PlanSessionTask {
     this.origin,
     this.kind,
     this.speaker,
+    this.shelf,
+    this.tier,
   });
 
   /// This task is the day's own material — it counts towards «день пройден».
@@ -622,6 +672,13 @@ class PlanSessionTask {
 
   /// Top-up from the learner's ordinary queue — worth playing, not part of the day.
   static const sectionReview = 'review';
+
+  /// THE WARM-UP: the plan's five rescue phrases, dealt before every day of it (канон §5).
+  ///
+  /// A section of its own, and the reason [isDay] asks for [sectionDay] by name instead of «not a
+  /// review». The kit is the same five cards on day 1 and on day 9 — counting it into the day would
+  /// grow «N из N» by five for a day that did not grow.
+  static const sectionWarmup = 'warmup';
 
   final PlanStage stage;
 
@@ -659,7 +716,33 @@ class PlanSessionTask {
   /// The interlocutor's own line — never something the learner is asked to say.
   bool get isRoleLine => speaker == 'role';
 
-  bool get isDay => section != sectionReview;
+  /// WHICH SHELF OF THE SCENE this card came off — `hear` | `say` | `ask` | `words` | `chunks` |
+  /// `numbers` | `rescue`, or null outside a plan day. See [PlanTermRow.shelf] for the constants.
+  ///
+  /// The session draws a caption where it changes. [kind] cannot do that job: «Ты ответишь» and «Ты
+  /// спросишь» are both `line`, and the two shelves are two different things to practise.
+  final String? shelf;
+
+  /// `speak` | `understand` — the ladder this card climbs (канон §3), or null outside a plan.
+  final String? tier;
+
+  /// This card is only ever asked for RECOGNITION — the server deals it no production trainer, and
+  /// the client must not caption it as one either (Д-8, from the other side).
+  ///
+  /// A [tier] this build does not know answers `false` and the older [speaker] signal decides, so a
+  /// server that grows a third tier degrades to today's behaviour instead of to a wrong label.
+  bool get isRecognitionOnly => tier == PlanTermRow.tierUnderstand || isRoleLine;
+
+  /// The warm-up runs BEFORE the day and is not part of it — see [sectionWarmup].
+  bool get isWarmup => section == sectionWarmup;
+
+  /// TODAY'S OWN MATERIAL — what «день пройден» counts.
+  ///
+  /// Asked as «is it the day's» rather than «is it not a review» because there are three sections
+  /// now: the warm-up is neither, and the older reading would have counted its five cards into
+  /// every day. A payload written before `section` existed still lands on `day`/`review` through
+  /// the fallback in [fromJson], so nothing about it changes.
+  bool get isDay => section == sectionDay;
 
   factory PlanSessionTask.fromJson(Map<String, dynamic> j) {
     final fromDay = (j['from_day_index'] as num?)?.toInt() ?? 0;
@@ -678,6 +761,8 @@ class PlanSessionTask {
       origin: PlanTaskOrigin.fromJson(j['origin'] as Map<String, dynamic>?),
       kind: j['kind'] as String?,
       speaker: j['speaker'] as String?,
+      shelf: j['shelf'] as String?,
+      tier: j['tier'] as String?,
     );
   }
 }
@@ -758,6 +843,16 @@ class PlanSession implements PlanSessionEnvelope {
 
   @override
   String? speakerAt(int i) => i >= 0 && i < tasks.length ? tasks[i].speaker : null;
+
+  @override
+  String? shelfAt(int i) => i >= 0 && i < tasks.length ? tasks[i].shelf : null;
+
+  @override
+  bool isWarmupAt(int i) => i >= 0 && i < tasks.length && tasks[i].isWarmup;
+
+  @override
+  bool isRecognitionOnlyAt(int i) =>
+      i >= 0 && i < tasks.length && tasks[i].isRecognitionOnly;
 
   @override
   int get dayTaskCount => dayTasks.length;

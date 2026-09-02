@@ -99,6 +99,8 @@ final readonly class GetPlanDayTermsHandler
                 stageComplete: $standing->stageComplete,
                 finished: $standing->finished,
                 fromDayIndex: $index,
+                shelf: $content->shelf,
+                tier: $content->tier,
             );
         }
 

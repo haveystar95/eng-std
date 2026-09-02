@@ -158,7 +158,10 @@ final readonly class PlanStandings
                 continue;
             }
 
-            $kind = $termContent->kind ?? PlanStageLadder::KIND_WORD;
+            // The TIER beats the kind: «Тебе скажут» is a line the learner never says, so it
+            // climbs the two-touch ladder however much it looks like one they do
+            // ({@see PlanStageLadder::ladderKindFor()}).
+            $kind = PlanStageLadder::ladderKindFor($termContent->kind, $termContent->tier);
 
             $out[$termId] = $this->ladder->standingFor(
                 applicable: $this->applicableFor($termContent, $openAtLevel, $kind, $termId, $content, $optionCount, $user, $spokenByRole),

@@ -92,7 +92,12 @@ final readonly class ComputedPlan
                     'checkpoints' => $d->checkpoints,
                     'topics' => $d->topics,
                     'source_scene_index' => $d->sourceSceneIndex,
-                    'scenes' => $d->scenes,
+                    // The scene itself, since a day IS one: the вводка the preview shows, and the
+                    // two raw lists the day brief hands to P2. `scenes` (a LIST, for a day that
+                    // could hold halves of two situations) went with the packing that produced it.
+                    'intro' => $d->intro,
+                    'opening_lines' => $d->openingLines,
+                    'entities' => $d->entities,
                 ],
                 $this->days,
             ),

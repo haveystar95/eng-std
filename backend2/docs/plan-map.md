@@ -7,7 +7,23 @@
 Проверено по коду на 02.09.2026 (дополнено нарядом PLAN-FIX-4: §2 лестница плана своя и порядок
 дня, §2.3 ключ говорения, §3 гейт `line.translation_missing_key`; PLAN-FIX-5: §2 пол выбора;
 E2E-FIX-1: §2 матрица плана перебивает глобальную, реплика роли двумя источниками, полоса длины по
-собранному тексту, пояс близости; §2.4 финальный день и завершение; §4 происхождение коллекции дня).
+собранному тексту, пояс близости; §2.4 финальный день и завершение; §4 происхождение коллекции дня;
+**P2-v0.4: сцена вместо мешка** — §0 контракт дня, §1 день = одна сцена, §2 разогрев, §3 гейты v0.4).
+
+## 0. День — это сцена, а не мешок из трёх массивов
+
+Канон: `docs/plan-model.md`, промпты `docs/p1.plan-outline.v0.4.md` и `docs/p2.plan-day.v0.4.md`.
+
+| что | где в коде |
+|---|---|
+| полки дня | `Generation/Domain/ValueObject/PlanShelf`: `hear`, `say`, `ask`, `words`, `chunks`, `numbers` + серверная `rescue` |
+| tier карточки | **выводит сервер** из полки (`PlanShelf::tier()`): `understand` — `hear` и `numbers`, `speak` — всё остальное. Модель tier не задаёт, колонка `terms.tier` |
+| «почему я это учу» | `terms.skill_ref` → id умения сцены (`s<сцена>.<n>`, генерирует `PlanOutline::fromArray()`, P1 их не пишет) |
+| число цифрами | `terms.number_value`, только полка `numbers`; карточки-числа лежат в дне и НЕ раздаются сессией (тренажёр — NUM-1) |
+| вводка сцены | `learning_plan_days.snapshot.intro` → `PlanDayView::intro` → экран дня; в превью её пока нет (DAY-2) |
+| спасательный набор | `config/generation.php` → `generation.plan.rescue_kit.<target>.<support>`; сервер вшивает пять фраз в день 1 (`GeneratePlanDayHandler::writeRescuePhrase()`) и подаёт их в P2 как запретный список |
+| разогрев | `BuildPlanSessionHandler` — ведро 0, секция `warmup`, полка `rescue`; в `day_task_count` не входит |
+
 
 ---
 
@@ -18,14 +34,14 @@ E2E-FIX-1: §2 матрица плана перебивает глобальну
 | цель → каркас | `Learning/Application/Command/BuildPlanOutlineHandler` → `Generation/Application/Service/PlanOutlineService` | вызов **P1** |
 | повтор каркаса | `PlanOutlineService::__invoke()` | ровно **две** попытки ВНУТРИ одного вызова; вторая получает нарушения первой; обе в `generation_requests` |
 | разбор ответа | `Generation/Domain/Service/PlanOutlineValidator` | фатальные → отбой; warning → счётчик (§3) |
-| вместимость дня | `Learning/Domain/Service/DayCapacity::forMinutes()` | 10 мин → 7, 20 → 14, 40 → 24; между точками прямая |
-| три числа для P2 | `DayCapacity::split()` | `phrases = ceil(0.55×cap)`, `chunks = max(1, floor(0.15×cap))`, `words` — остаток; 14 → 8/2/4 |
-| упаковка умений в дни | `Learning/Domain/Service/PlanScheduler::compute()` | `need`, `capacity`, `fits`, `dropped`, `dropReason`; `MAX_INTRO_DAYS = 14`, `MAX_STEP = 3` |
+| вместимость дня | `Learning/Domain/Service/DayCapacity::forMinutes()` | 10 мин → 7, 20 → 14, 40 → 24; между точками прямая. Считается и показывается в превью, но **день больше не делит**: `split()` удалён вместе с массивами, которые он размерял |
+| размер дня-сцены | `Learning/Domain/Service/SceneDay::UNITS = 25` | ориентир бюджета одного дня; сама раскладка по полкам — в P2 |
+| сцены в дни | `Learning/Domain/Service/PlanScheduler::compute()` | **день = одна сцена целиком**; лишние сцены отбрасываются С КОНЦА (P1 пишет их по вероятности), `MAX_INTRO_DAYS = 14`, `MAX_STEP = 3` |
 | пересчёт после правки | `PlanScheduler::recheck()` | что ещё влезает и какие умения ушли бы |
 | когда писать день n+1 | `Learning/Domain/Service/PlanGenerationPolicy` | `EAGER_INTRO_DAYS = 3` (короткий план пишется вперёд), `MAX_READY_AHEAD = 2`; `nextAfterReady()` / `nextAfterDone()` |
 | захват дня | `Learning/Application/Command/ClaimPlanDayHandler` → `PlanDay::claim()` | одна транзакция, `SELECT … FOR UPDATE`; отказ, если день занят/готов/бюджет исчерпан |
 | материал дня | `Generation/Application/Service/PlanDayComposer::compose()` | вызов **P2** |
-| суд над днём | `PlanDayComposer::judge()` | `PlanDayValidator` + `PlanCoherenceValidator`, одним вердиктом, с нуля |
+| суд над днём | `PlanDayComposer::judge()` | `PlanDayValidator`, одним вердиктом, с нуля. `PlanCoherenceValidator` удалён: его входом были плановые списки `constraints`/`goal_terms`/род сущностей, которых P1 v0.4 не пишет |
 | починка | `Generation/Application/Service/PlanDayRepairer::repair()` | **порог**: `count(сломанных) ≤ floor(всего × 1/2)` И у каждого нарушения есть адрес. Иначе `null` — починки нет |
 | после починки | `PlanDayComposer::compose()` | слияние по (`array`, `index`) → `judge()` заново целиком. Второго P2R нет никогда |
 | повтор ЦЕЛОГО дня | `Learning/Application/Command/FinishPlanDayHandler` | только если после `markFailed()` статус вернулся в `pending`, то есть остался бюджет. Сообщение — только адреса последней попытки (`PlanDayComposer::retryMessage()`) |
@@ -92,6 +108,7 @@ E2E-FIX-1: §2 матрица плана перебивает глобальну
 
 | # | ведро | `source` | `section` | `from_day_index` | `origin` |
 |---|---|---|---|---|---|
+| 0 | **разогрев** — пять фраз спасательного набора (полка `rescue`), каждый день, пока план идёт | `warmup` | `warmup` | день 1 | null |
 | 1 | слова ЭТОГО дня, не закрывшие ступень A, в порядке `PlanDayOrder` (§2.2) | `new` | `day` | текущий день | null |
 | 2 | слова ЭТОГО плана с прошлых дней, просроченные, на ступени B или C (B раньше C) — шов «Повторение» | `plan_review` | `review` | день ввода | null |
 | — | мягкий прогон (не строгая сессия) | `soft` | `day` | день | null |
@@ -103,6 +120,13 @@ E2E-FIX-1: §2 матрица плана перебивает глобальну
 `DueTermsReader::selectableForPlan()` — только пары, зачисленные ЭТИМ планом
 (`jsonb_exists(enrollment_sources, 'plan:<id>')`), — поэтому чужую карточку сессия не отфильтровывает,
 а не видит. Фильтра `inPlanPair()` и метода `originsFor()` больше нет.
+
+**Разогрев идёт первым и в счёт дня не входит.** Набор принадлежит ПЛАНУ, а не сцене: он лежит в
+коллекции дня 1, раздаётся в начале каждой посадки и никогда не выпадает из ротации.
+`PlanSessionView::$dayTaskCount` считает только карточки дня, поэтому «N из N» на экране — про
+сцену, а не про разогрев. По той же причине `PlanProgress::stageAClosedForAll()` **исключает полку
+`rescue`** из условия «день пройден»: иначе голодная ступень A набора держала бы день 1 каждого
+плана открытым навсегда.
 
 **Порядок: сначала день, потом шов.** Обратный порядок («сначала повторить знакомое») был верен,
 пока прошлые дни были частью ДНЯ; теперь это секция с подписью, которую читает человек, а секция,
@@ -277,44 +301,67 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 | `outline.skill_without_outcome`, `outline.checkpoint_missing` | фатально |
 | `outline.checkpoint_echoes_outcome`, `outline.outcome_two_actions` | фатально |
 | `outline.est_terms` | фатально вне `HARD_MIN_EST_TERMS = 1` … `HARD_MAX_EST_TERMS = 12` |
-| `outline.role_shape`, `outline.opening_lines` | фатально (`opening_lines`: 0 или больше 6) |
+| `outline.opening_lines` | фатально (0 или больше 6). `outline.role_shape` **отменён** — роли-объекта в v0.4 нет, реплики лежат прямо на сцене |
+| `scene.intro_missing` | **фатально** — сцена без вводки: экран дня начинается со списка предложений |
 | `outline.target_language` | фатально |
 | `plan_outline_skill_count` | **warning**, когда умений `MAX_SKILLS`+1 … 20 |
 | `plan_outline_est_terms` | **warning**, когда `est_terms` вне 3–8, но внутри 1–12 |
+| `scene.intro_has_target_lang` | **warning** — во вводке изучаемый язык |
+
+Схема ответа — `PlanSchemas::outline()`, и она обязана разрешать ровно то, что просит промпт:
+структурный вывод не может вернуть ключ, которого нет в схеме. Живой прогон наряда P2-v0.4 заплатил
+за это дважды: промпт просил `intro`, схема осталась v0.2, и `scene.intro_missing` отбил каркас на
+всех сценах. Держит связку `tests/Unit/Generation/PlanSchemaShapeTest.php` — фикстуры валидатора
+обязаны быть выразимы в схемах.
 
 ### P2 — `PlanDayValidator`
 
-Фатальные (`validate()`):
+Карточные фатальные (`validate()`) — у каждого есть адрес, поэтому они идут в P2R:
 
 | код | о чём |
 |---|---|
-| `day.array_count`, `day.term_count` | три числа и сумма |
-| `day.kind_mismatch` | `is_line`/массив/`speaker`/`type` противоречат друг другу |
-| `day.checkpoint_uncovered` / `..._on_word` / `..._out_of_range` | чек-пойнты |
-| `day.frame_slot_count` | дырок в каркасе больше одной |
-| `day.filler_mismatch` | дырка без наполнителя или наполнитель без дырки |
-| `day.filler_not_a_card` | наполнитель ≠ карточка дня. **Фатально только при `target_lang = en`** (`STRICT_FILLER_LANG`), иначе warning |
-| `day.slot_outside_frame` | `___` в `text`/`translation`/`description`/`example`/`example_translation`/`image_api_prompt` |
-| `day.role_line_invented` | реплика собеседника не из `opening_lines` (или у неё есть наполнитель) |
-| `day.example_is_a_term`, `day.example_duplicated`, `day.example_missing` | примеры |
-| `day.key_is_the_term` | ключ = термин, **в том числе тот же термин в другом алфавите** (`TransliteratedSameness`) |
-| `day.term_is_a_name` | карточка `words`/`chunks` = имя из `entities` или `goal_terms`. Реплики исключены |
-| `day.key_duplicated`, `day.key_not_support_language` | ключи |
-| `day.description_gives_away` | описание называет свой термин |
-| `day.image_prompt_missing` | нет `image_api_prompt` |
-| `line.translation_missing_key` | перевод реплики не содержит перевода её ключевой карточки (§2.3). Сравнение по ОСНОВАМ (`TranslationKeyPresence`, длина основы — по языку поддержки в `config/generation.php → translation_stems`, ru/uk = 5). Порог — пол: хотя бы одно значимое слово ключа. Язык без правила не судится вовсе |
+| `card.gap_missing`, `card.gap_outside_frame` | `___` нет в `frame`, или он встретился вне его |
+| `card.translation_has_gap` | `___` уехал в перевод |
+| `card.translation_missing_key` | перевод реплики не содержит перевода ключа (§2.3). Сравнение по ОСНОВАМ (`TranslationKeyPresence`, длина основы по языку поддержки в `config/generation.php → translation_stems`, ru/uk = 5). Язык без правила не судится |
+| `card.clone` | собранный текст совпал с другой карточкой дня, с фразой спасательного набора или с единицей прошлого дня |
+| `card.example_is_a_term` | пример равен карточке или любой реплике дня |
+| `card.example_skeleton_clone` | два примера — одно предложение с подменённым термином (`ExampleSkeleton`, Д-29) |
+| `card.word_is_basic` | стоп-список `BasicVocabulary`; фатально от уровня «Понимаю простое», на `zero` — warning |
+| `card.kind_size` | `word` > 3 слов; `chunk` вне 2–4; `say`/`ask` вне 3–8; `hear` > 12 |
+| `card.term_is_a_name` | карточка `words`/`chunks` = имя из `entities` **написанное как имя** (заглавная) или слово из `goal_terms` |
+| `card.translation_is_transliteration` | перевод = термин в другом алфавите (`TransliteratedSameness`) |
+| `card.skill_ref_invalid` | `skill_ref` пуст или не из этой сцены |
+| `card.number_value_mismatch` | число в `frame` не сходится с `value` (только `numbers`) |
 
-Счётчики (`warnings()`): `plan_day_formula_cap`, `plan_day_no_question`, `plan_day_no_repair`,
-`plan_day_filler_mismatch`, `plan_day_chunk_outside_frame`, `plan_day_no_role_line`,
-`plan_day_substitution_outside_frame`, `plan_day_role_line_share`.
+Дневные фатальные: `day.shelf_missing` (нет полки `hear` / `say` / пары `words+chunks` целиком) и
+порог «сломано больше половины карточек» → повтор дня целиком.
+
+Счётчики (`warnings()`): `plan_day_size_out_of_range` (полка вне ориентиров 4–6 / 4–6 / 2–3 / 6–8 /
+2–4), `plan_day_formula_cap`, `plan_day_no_question`, `plan_day_no_repair`,
+`plan_day_skill_uncovered`, `plan_day_role_line_share`, `plan_day_substitution_outside_frame`,
+`plan_day_intro_repeated`, `plan_day_filler_mismatch`, `plan_day_key_duplicated`,
+`plan_day_image_prompt_missing`, `plan_day_key_not_support_language`, `plan_day_word_is_basic`.
+
+**`card.filler_not_card` разжалован в счётчик** (`plan_day_filler_mismatch`, все языки; `hear` и
+`numbers` не считаются вовсе). Живой прогон: три ответа P2 и три починки, $0.20, день 1 так и не
+доехал — отбивались реплики, которые человек говорит («Should we go to the front desk?»), потому
+что в дырке стоит слово, которое день КАРТОЧКОЙ сделать не может (базовая лексика запрещена,
+числа живут только на своей полке). Промпт P2 v0.4 этого правила не содержит вовсе, промпт починки
+содержит — и модель нарушила его трижды подряд. Решение владельца: либо строка в канон P2 и код
+возвращается в фатальные, либо остаётся счётчиком.
+
+Совпадение наполнителя с карточкой дня — по ПОКРЫТИЮ, а не по равенству
+(`PlanDayValidator::fillerIsTaught()`): точное совпадение, либо наполнитель целиком внутри карточки
+по границам слов («front desk» внутри «come to the front desk»), либо все его слова базовые (день
+их карточкой сделать не вправе).
 
 Чтение (`transliterationFor()`) не судится вовсе: непригодная подсказка **отбрасывается**, день
 живёт, счётчик `plan_day_transliteration_dropped`.
 
-### План против самого себя — `PlanCoherenceValidator`
-
-`plan.term_repeated`, `plan.checkpoint_duplicated`, `plan.entity_disagreement` — все фатальные.
-`plan.checkpoint_duplicated` идёт **без адреса**, поэтому день с ним чинится только целиком.
+Отменены вместе с мешком: `day.array_count`, `day.term_count`, `day.kind_mismatch`,
+`day.checkpoint_uncovered`, `day.role_line_invented`, `day.description_gives_away`,
+`plan.term_repeated`, `plan.checkpoint_duplicated`, `plan.entity_disagreement` (весь
+`PlanCoherenceValidator`).
 
 ### P2R — `PlanDayRepairer`
 
@@ -400,10 +447,12 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
   `counter`, `plan_id`, `day_index`, `detail`, `kept`.
 - **Счётчик — только у ПРИНЯТОГО ответа** (`counted: true`), ключ = имя счётчика, хранилище — `Cache`.
 
-Полный список: `plan_outline_skill_count`, `plan_outline_est_terms`, `plan_day_formula_cap`,
-`plan_day_no_question`, `plan_day_no_repair`, `plan_day_filler_mismatch`,
-`plan_day_chunk_outside_frame`, `plan_day_no_role_line`, `plan_day_substitution_outside_frame`,
-`plan_day_role_line_share`, `plan_day_transliteration_dropped`.
+Полный список: `plan_outline_skill_count`, `plan_outline_est_terms`, `scene.intro_has_target_lang`,
+`plan_day_size_out_of_range`, `plan_day_formula_cap`, `plan_day_no_question`, `plan_day_no_repair`,
+`plan_day_skill_uncovered`, `plan_day_filler_mismatch`, `plan_day_substitution_outside_frame`,
+`plan_day_role_line_share`, `plan_day_intro_repeated`, `plan_day_key_duplicated`,
+`plan_day_image_prompt_missing`, `plan_day_key_not_support_language`, `plan_day_word_is_basic`,
+`plan_day_transliteration_dropped`.
 
 Особняком — `plan_distractor_starved` (§2): его пишет НЕ этот репортер, а
 `Learning/Infrastructure/Adapter/LoggingModeFallbackReporter` через порт `ModeFallbackReporter`,
@@ -422,8 +471,8 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 
 | id | версия / константа | файл | кто вызывает | схема ответа |
 |---|---|---|---|---|
-| **P1** | `plan_outline.v0.2` — `PlanPromptLibrary::OUTLINE_VERSION` | `plan_outline.v0.2.md` | `PlanOutlineService` | `PlanSchemas::outline()` |
-| **P2** | `plan_day.v0.3` — `DAY_VERSION` | `plan_day.v0.3.md` | `PlanDayComposer` | `PlanSchemas::day()` |
+| **P1** | `plan_outline.v0.4` — `PlanPromptLibrary::OUTLINE_VERSION` | `plan_outline.v0.4.md` | `PlanOutlineService` | `PlanSchemas::outline()` |
+| **P2** | `plan_day.v0.4` — `DAY_VERSION` | `plan_day.v0.4.md` | `PlanDayComposer` | `PlanSchemas::day()` |
 | **P2R** | `plan_day_repair.v0.2` — `REPAIR_VERSION` | `plan_day_repair.v0.2.md` | `PlanDayRepairer` | `PlanSchemas::repair()` |
 
 Обе половины плейсхолдеров форматирует `Generation/Application/Service/PlanPromptData`
@@ -435,3 +484,9 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 `PlanSpendNotRecorded` наверх.
 
 Длины массивов (`minItems`/`maxItems`) в плановых схемах нет **сознательно** — DECISIONS п. 202.
+Схема и промпт двигаются ОДНОВРЕМЕННО: структурный вывод физически не отдаёт ключ, которого нет в
+схеме, поэтому «промпт просит, схема не разрешает» читается как «модель не слушается». Держит
+`PlanSchemaShapeTest`.
+
+Версии v0.2/v0.3 остались файлами и строками реестра: план, начатый на них, дочитывается
+(`PlanOutline::fromArray()` понимает обе формы каркаса).

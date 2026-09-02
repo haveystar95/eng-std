@@ -19,7 +19,7 @@ use App\Modules\Generation\Domain\ValueObject\ProviderId;
  * answer» is an assertion, not a reading.
  *
  * The three prompts are told apart by their schema, the way the production doubles do it: `cards`
- * is P2R, `phrases` is P2, anything else is P1.
+ * is P2R, `hear` is P2 (the first shelf of a day-scene), anything else is P1.
  */
 final class ScriptedPlanModel implements ContentModelPort
 {
@@ -39,7 +39,7 @@ final class ScriptedPlanModel implements ContentModelPort
     public function __construct(
         private array $days,
         private array $repairs = [],
-        private string $outlineFixture = 's1-outline.v0.2.json',
+        private string $outlineFixture = 's1-outline.v0.4.json',
     ) {}
 
     public function provider(): ProviderId
@@ -61,7 +61,7 @@ final class ScriptedPlanModel implements ContentModelPort
             $this->repairPrompts[] = $prompt->text;
             $this->repairMessages[] = $userMessage;
             $payload = array_shift($this->repairs) ?? ['cards' => []];
-        } elseif (isset($properties['phrases'])) {
+        } elseif (isset($properties['hear'])) {
             $this->dayMessages[] = $userMessage;
             $payload = array_shift($this->days) ?? [];
         } else {

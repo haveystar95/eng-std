@@ -53,6 +53,99 @@ void main() {
       expect(legacy.kind, isNull);
       expect(legacy.isPhrase, isTrue);
     });
+
+    test('reads the shelf and the tier v0.4 put on the register', () {
+      final heard = PlanTermRow.fromJson(const {
+        'id': 't4',
+        'text': 'What seems to be the problem?',
+        'translation': 'Что вас беспокоит?',
+        'type': 'phrase',
+        'kind': 'line',
+        'speaker': 'role',
+        'shelf': 'hear',
+        'tier': 'understand',
+        'stage': 'a',
+        'from_day_index': 1,
+      });
+
+      final asked = PlanTermRow.fromJson(const {
+        'id': 't5',
+        'text': 'How long will it take?',
+        'translation': 'Сколько это займёт?',
+        'type': 'phrase',
+        'kind': 'line',
+        'speaker': 'learner',
+        'shelf': 'ask',
+        'tier': 'speak',
+        'stage': 'a',
+        'from_day_index': 1,
+      });
+
+      expect(heard.shelf, PlanTermRow.shelfHear);
+      expect(heard.isRecognitionOnly, isTrue);
+
+      // Both are `line`: only the shelf tells «Ты спросишь» from «Тебе скажут».
+      expect(asked.kind, heard.kind);
+      expect(asked.shelf, PlanTermRow.shelfAsk);
+      expect(asked.isRecognitionOnly, isFalse);
+    });
+  });
+
+  group('a day written before the day was a scene (v0.3 and earlier)', () {
+    /// The whole day payload with none of the fields v0.4 added — the answer a server that has not
+    /// been deployed yet still gives, and the shape every fallback here has to keep working on.
+    PlanDayDetail oldDay() => PlanDayDetail.fromJson(const {
+      'id': 'd1',
+      'index': 1,
+      'kind': 'intro',
+      'title': 'Начать приём',
+      'status': 'ready',
+      'plan_id': '01PLAN',
+      'terms': [
+        {
+          'id': 't1',
+          'text': "It's a sharp pain.",
+          'translation': 'Это острая боль.',
+          'type': 'phrase',
+          'stage': 'a',
+          'from_day_index': 1,
+        },
+      ],
+    });
+
+    test('has no вводка, and that is an empty string rather than a hole', () {
+      // The day screen asks `intro.isNotEmpty` and draws nothing. Null would make every call site
+      // ask the question twice; a placeholder would put a sentence on the screen nobody wrote.
+      expect(oldDay().day.intro, '');
+    });
+
+    test('has no shelves and no tiers, and every older reading still answers', () {
+      final term = oldDay().terms.single;
+
+      expect(term.shelf, isNull);
+      expect(term.tier, isNull);
+      // The pre-v0.2 guess still stands the phrase apart from the words…
+      expect(term.isPhrase, isTrue);
+      // …and with neither tier nor speaker there is nothing to say it is only ever recognised.
+      expect(term.isRecognitionOnly, isFalse);
+    });
+
+    test('an вводка of blank space is read as none at all', () {
+      final blank = PlanDayDetail.fromJson({
+        ...const {
+          'id': 'd1',
+          'index': 1,
+          'kind': 'intro',
+          'title': 'Начать приём',
+          'status': 'ready',
+          'plan_id': '01PLAN',
+          'terms': <dynamic>[],
+        },
+        'intro': '   \n ',
+      });
+
+      expect(blank.day.intro, '');
+    });
   });
 
   group('plan session task', () {
@@ -212,6 +305,13 @@ void main() {
       expect(old.kind, isNull);
       expect(old.speaker, isNull);
       expect(old.isRoleLine, isFalse);
+
+      // The same for what v0.4 added. A session with no shelves draws the one seam it always drew,
+      // and «never produced» is decided by the speaker exactly as it was.
+      expect(old.shelf, isNull);
+      expect(old.tier, isNull);
+      expect(old.isWarmup, isFalse);
+      expect(old.isRecognitionOnly, isFalse);
     });
   });
 

@@ -79,6 +79,9 @@ final class PlanResource
             'checkpoints' => $day->checkpoints,
             'topics' => $day->topics,
             'role' => $day->role,
+            // The scene's вводка. Additive, and the one string on this payload written to be READ
+            // rather than rendered: the day screen puts it above the register (канон §2).
+            'intro' => $day->intro,
         ];
     }
 }

@@ -2613,6 +2613,14 @@ components:
         index: { type: integer, minimum: 1 }
         kind: { type: string, enum: [intro, final] }
         title: { type: string }
+        intro:
+          type: [string, 'null']
+          description: >-
+            The SCENE in two or three sentences, in the language the learner already speaks: where
+            they are, who is opposite them, what is at stake. Since v0.4 a day is one whole scene,
+            and this is the only text of it written to be READ rather than played — the day screen
+            prints it above the register, and the preview prints it under the day's title. Null on
+            the final day and on any day of a plan built before v0.4.
         scheduled_on: { type: [string, 'null'], format: date }
         collection_id:
           type: [string, 'null']
@@ -2686,13 +2694,32 @@ components:
         type: { type: string, enum: [word, phrase, idiom, phrasal_verb] }
         kind:
           type: [string, 'null']
-          enum: [line, word, chunk, null]
+          enum: [line, word, chunk, number, null]
           description: >-
             What the expression DOES in this day, beside `type`, which says what it IS. Null on a
             term that never came from a plan day of v0.2 or later. The screen sets a spoken LINE
             apart from a substitution and used to guess that from `type` — a guess that stops
             working the moment a connector appears, since «deal with» is two words and a
-            substitution.
+            substitution. `number` is a time, a price or a dose the learner must catch by ear; it is
+            stored with the day and dealt by nothing yet (its trainer is NUM-1).
+        shelf:
+          type: [string, 'null']
+          enum: [hear, say, ask, words, chunks, numbers, rescue, null]
+          description: >-
+            WHICH SHELF OF THE SCENE it came off — since v0.4 a day is not a bag of three arrays but
+            a scene with named shelves, and the shelf is what the section captions on the day screen
+            («Тебе скажут», «Ты ответишь», «Ты спросишь», «Слова и связки») are drawn from. `rescue`
+            is the survival kit: five phrases the SERVER writes into day 1 of every plan, which
+            belong to the plan rather than to this scene. Null on a term from a pre-v0.4 day.
+        tier:
+          type: [string, 'null']
+          enum: [speak, understand, null]
+          description: >-
+            How far the card is taken, DERIVED BY THE SERVER from the shelf and stored beside it —
+            the client never computes it. `speak` walks the full ladder; `understand` gets two
+            recognition touches, no stage C and no production, because a line the interlocutor says
+            has to be caught, not performed. A client that does not know this field must still not
+            break: the exercise modes it receives are already the right ones.
         speaker:
           type: [string, 'null']
           enum: [learner, role, null]
@@ -2707,8 +2734,9 @@ components:
         finished:
           type: boolean
           description: >-
-            The LAST stage for this kind is behind it — C for a word or a connector, B for a line,
-            which has no stage C. A carried term that is finished is not listed.
+            The LAST stage for this card is behind it — C for a single word, B for everything else,
+            and B for anything at the `understand` tier, which has no stage C at all. A carried term
+            that is finished is not listed.
         from_day_index:
           type: integer
           description: >-

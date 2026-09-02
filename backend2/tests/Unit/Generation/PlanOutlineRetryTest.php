@@ -30,7 +30,7 @@ function outlinePayload(): array
 {
     /** @var array<string, mixed> $raw */
     $raw = json_decode(
-        (string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-outline.v0.2.json'),
+        (string) file_get_contents(__DIR__ . '/../../Fixtures/plan/s1-outline.v0.4.json'),
         true,
     );
 
@@ -41,7 +41,7 @@ function outlinePayload(): array
 function outlinePayloadWithTwoActions(): array
 {
     $payload = outlinePayload();
-    $payload['scenes'][0]['skills'][0]['outcome'] = 'назвать время приёма и записаться на приём';
+    $payload['scenes'][0]['skills'][0]['outcome'] = 'отметиться на приёме и записаться к врачу';
 
     return $payload;
 }
@@ -118,8 +118,8 @@ it('re-runs a refused skeleton once, with the violations named, and pays for bot
     $answer = (new PlanOutlineService($model, new PlanPromptLibrary(), $ledger, new RecordingPlanDefectReporter()))->outlineFor(outlineBrief());
 
     // ONE skeleton comes back, and it is the second answer.
-    expect($answer->payload['title'])->toBe('К врачу из-за боли в спине')
-        ->and($answer->payload['scenes'][0]['skills'][0]['outcome'])->toBe('назвать время приёма и своё имя')
+    expect($answer->payload['goal_summary'])->toStartWith('Иду к врачу с болью в спине')
+        ->and($answer->payload['scenes'][0]['skills'][0]['outcome'])->toBe('отметиться на приёме у стойки')
         ->and($model->userMessages)->toHaveCount(2);
 
     // The first message is the goal alone; the second carries the verdict on the first, as DATA.

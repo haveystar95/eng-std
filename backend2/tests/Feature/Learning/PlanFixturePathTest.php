@@ -51,12 +51,12 @@ beforeEach(function (): void {
         public function complete(RenderedPrompt $prompt, string $userMessage, array $schema): ModelAnswer
         {
             $properties = $schema['properties'] ?? [];
-            $isDay = is_array($properties) && isset($properties['phrases']);
+            $isDay = is_array($properties) && isset($properties['hear']);
 
             /** @var array<string, mixed> $payload */
             $payload = json_decode(
                 (string) file_get_contents(
-                    __DIR__ . '/../../Fixtures/plan/' . ($isDay ? 's1-day1.v0.3.json' : 's1-outline.v0.2.json'),
+                    __DIR__ . '/../../Fixtures/plan/' . ($isDay ? 's1-day1.v0.4.json' : 's1-outline.v0.4.json'),
                 ),
                 true,
             );
@@ -101,11 +101,14 @@ it('walks S1 from the skeleton to a ready day 1, and every gate lets it through'
     $outlined = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson("/api/v1/plans/{$plan['id']}/outline")->assertOk()->json('data');
 
-    // The скелет: four abilities at four cards each, two teaching days at fourteen cards a day.
-    expect($outlined['computed']['need'])->toBe(16)
+    // The скелет: TWO SCENES, therefore two teaching days — «день = одна сцена целиком». The
+    // capacity is still reported (the preview prints it) and no longer divides anything.
+    expect($outlined['computed']['intro_days'])->toBe(2)
         ->and($outlined['computed']['capacity'])->toBe(14)
-        ->and($outlined['computed']['intro_days'])->toBe(2)
-        ->and($outlined['computed']['fits'])->toBeTrue();
+        ->and($outlined['computed']['fits'])->toBeTrue()
+        // The вводка reaches the day payload, which is the one string on that screen written to be
+        // read rather than played.
+        ->and($outlined['days'][0]['intro'])->toStartWith('Перед тобой администратор регистратуры.');
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
@@ -119,26 +122,46 @@ it('walks S1 from the skeleton to a ready day 1, and every gate lets it through'
     $terms = DB::table('terms as t')
         ->join('collection_items as ci', 'ci.term_id', '=', 't.id')
         ->where('ci.collection_id', $day1->collection_id)
-        ->get(['t.id', 't.text', 't.kind', 't.frame', 't.speaker', 't.filler', 't.image_api_prompt']);
+        ->get(['t.id', 't.text', 't.kind', 't.shelf', 't.tier', 't.skill_ref', 't.number_value',
+            't.frame', 't.speaker', 't.filler', 't.image_api_prompt']);
 
-    // Eight lines, two connectors, four words — the split the day was asked for, landed.
-    expect($terms)->toHaveCount(14)
-        ->and($terms->where('kind', 'line'))->toHaveCount(8)
-        ->and($terms->where('kind', 'chunk'))->toHaveCount(2)
-        ->and($terms->where('kind', 'word'))->toHaveCount(4)
-        // Two of the eight lines are the doctor's own, quoted from the skeleton.
-        ->and($terms->where('speaker', 'role'))->toHaveCount(2)
-        // Those two plus the learner's own repair move are the formulas — a frame with no hole is
-        // stored as no frame at all, because a cloze gap cut from it would blank nothing.
-        ->and($terms->where('kind', 'line')->whereNotNull('frame'))->toHaveCount(5)
-        ->and($terms->where('kind', 'line')->whereNull('frame'))->toHaveCount(3)
-        ->and($terms->whereNull('image_api_prompt'))->toHaveCount(0);
+    // THE SHELVES, landed as rows: four lines the learner will hear, four they will say, two they
+    // will ask, six pieces, two numbers — plus the five rescue phrases the SERVER writes into day 1.
+    expect($terms)->toHaveCount(23)
+        ->and($terms->where('shelf', 'hear'))->toHaveCount(4)
+        ->and($terms->where('shelf', 'say'))->toHaveCount(4)
+        ->and($terms->where('shelf', 'ask'))->toHaveCount(2)
+        ->and($terms->where('shelf', 'words'))->toHaveCount(4)
+        ->and($terms->where('shelf', 'chunks'))->toHaveCount(2)
+        ->and($terms->where('shelf', 'numbers'))->toHaveCount(2)
+        ->and($terms->where('shelf', 'rescue'))->toHaveCount(5)
+        // THE TIER IS THE SERVER'S, derived from the shelf and stored: «Тебе скажут» and the
+        // numbers are understood, everything else is produced (канон §3).
+        ->and($terms->where('tier', 'understand'))->toHaveCount(6)
+        ->and($terms->where('shelf', 'hear')->whereNull('tier'))->toHaveCount(0)
+        // Every card of the scene names one skill of it; the rescue kit names none, because it
+        // serves the plan rather than this scene.
+        ->and($terms->whereIn('shelf', ['hear', 'say', 'ask', 'words', 'chunks', 'numbers'])->whereNull('skill_ref'))
+        ->toHaveCount(0)
+        ->and($terms->where('shelf', 'rescue')->whereNotNull('skill_ref'))->toHaveCount(0)
+        // The digits a number is graded on — the one field that never reaches the screen.
+        ->and($terms->where('shelf', 'numbers')->whereNull('number_value'))->toHaveCount(0)
+        // Only WORDS carry a picture query now (канон §7), plus the rescue phrases the server
+        // writes one for.
+        ->and($terms->whereNotNull('image_api_prompt'))->toHaveCount(9);
 
     // The frame is the line with a hole in it, the filler is what stands in the hole, and the line
     // is what the SERVER built out of the two — the model never wrote that sentence.
     $withFrame = $terms->firstWhere('text', 'It hurts in my lower back.');
     expect($withFrame->frame)->toBe('It hurts in my ___.')
-        ->and($withFrame->filler)->toBe('lower back');
+        ->and($withFrame->filler)->toBe('lower back')
+        ->and($withFrame->shelf)->toBe('say')
+        ->and($withFrame->tier)->toBe('speak');
+
+    // ONE example row per card, with its translation — the duplicate the live run found (Д-29,
+    // «побочно») was a second, unscoped row that carried none.
+    $examples = DB::table('term_examples')->whereIn('term_id', $terms->pluck('id'))->get();
+    expect($examples->groupBy('term_id')->map->count()->max())->toBe(1);
 });
 
 it('deals the ready day as a session, giving each card the chain its kind earns', function () {

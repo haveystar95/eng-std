@@ -76,45 +76,16 @@ final class DayCapacity
     }
 
     /**
-     * THE DAY'S THREE NUMBERS — lines, connectors, words — and they sum to the budget exactly.
+     * THE THREE NUMBERS ARE GONE, and this is where they were.
      *
-     * P2 v0.2 asks for three arrays and is handed three exact counts. Not a band: two prompt
-     * iterations of «сделай 40–50% реплик» produced 31.3% on a sixteen-term day, and the same
-     * mechanic stated as arithmetic produced exactly the figure asked for on the first run
-     * (docs/research/plan-sandbox-2026-08-29.md §4). A band is a request; a number is a check.
+     * `split()` turned a day's capacity into `phrases` / `chunks` / `words` — the three exact
+     * counts P2 was handed and judged against. v0.4 has no arrays to count: a day is a SCENE with
+     * shelves, the shelf sizes are guidance the prompt states, and a day that comes back with 22
+     * units or 27 is a day rather than an error
+     * ({@see \App\Modules\Generation\Domain\Service\PlanDayValidator::SIZE_OUT_OF_RANGE}).
      *
-     *   phrases  `ceil(0.55 × cap)` — the LINES. The day is a conversation, and this is the
-     *            majority of it. Under a third replies and it is a vocabulary list with an event
-     *            date attached, which is what v0 produced.
-     *   chunks   `max(1, floor(0.15 × cap))` — the CONNECTORS («deal with», «be in charge of»).
-     *            At least one, always: a day with no connector teaches words that sit in a slot
-     *            and nothing that joins two of them.
-     *   words    whatever is left. The remainder goes HERE and not to the lines, because the
-     *            other two are the ones with a floor to respect.
-     *
-     * 14 → 8 + 2 + 4. 7 → 4 + 1 + 2. 24 → 14 + 3 + 7.
-     *
-     * Beside the table on purpose: the three numbers are a function OF the capacity, and the one
-     * way they can go wrong is by being computed somewhere the table is not.
-     *
-     * @return array{phrases: int, chunks: int, words: int}
+     * What replaced it is one number and it belongs to the scene rather than to the minutes:
+     * {@see SceneDay::UNITS}. The minutes still decide the SESSION — how many cards one sitting
+     * deals — which is what {@see forMinutes()} above is still read for.
      */
-    public static function split(int $termBudget): array
-    {
-        $phrases = (int) ceil(self::PHRASE_SHARE * $termBudget);
-        // At least one connector, unless the budget is so small that one would leave no line —
-        // a day is a conversation before it is anything else, so the line is the last to give way.
-        $chunks = min(max(1, (int) floor(self::CHUNK_SHARE * $termBudget)), max(0, $termBudget - 1));
-
-        $phrases = min($phrases, max(1, $termBudget - $chunks - 1));
-        $words = $termBudget - $phrases - $chunks;
-
-        return ['phrases' => $phrases, 'chunks' => $chunks, 'words' => max(0, $words)];
-    }
-
-    /** The share of a day that is spoken turns. See {@see split()}. */
-    private const PHRASE_SHARE = 0.55;
-
-    /** The share of a day that is phrasal verbs and fixed collocations. */
-    private const CHUNK_SHARE = 0.15;
 }

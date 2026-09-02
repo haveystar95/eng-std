@@ -36,6 +36,16 @@ final readonly class PlanDayItem
     public const KIND_WORD = 'word';
     public const KIND_CHUNK = 'chunk';
 
+    /**
+     * A NUMBER OF THE SCENE — a price, a date, a house number, heard inside a line (канон §6).
+     *
+     * The fourth kind, and the one nothing deals yet: numbers are written with the day and stored
+     * beside it, and the trainer that plays them («звучит реплика → введи цифрами») is NUM-1. A
+     * card no session can deal must not be OWED either, which is why the plan's progress reads
+     * them out of the day rather than dropping them from it.
+     */
+    public const KIND_NUMBER = 'number';
+
     public const SPEAKER_LEARNER = 'learner';
     public const SPEAKER_ROLE = 'role';
 
@@ -87,23 +97,65 @@ final readonly class PlanDayItem
          * position independently is how a repair call edits the card next to the broken one.
          */
         public int $index = 0,
+        /**
+         * WHICH SHELF OF THE SCENE this card stands on — `hear` | `say` | `ask` | `words` |
+         * `chunks` | `numbers`, and `rescue` for a card the server added itself.
+         *
+         * The v0.4 contract's load-bearing field, and the reason {@see $kind} is no longer enough:
+         * «Ты ответишь» and «Ты спросишь» are both `line`s the learner says, and they are two
+         * shelves with two captions; «Тебе скажут» is a `line` too and belongs to the other TIER
+         * entirely. The shelf answers all three questions and the model only ever writes the array
+         * it put the card in ({@see PlanShelf}).
+         *
+         * Empty on a card built before shelves existed — the backfill gives every stored term one,
+         * and this default is what keeps a hand-built test item constructible.
+         */
+        public string $shelf = '',
+        /**
+         * The id of the ONE skill of the scene this card serves — «почему я это учу», mechanically
+         * (канон §8). Null only on a card that named none, which is
+         * {@see \App\Modules\Generation\Domain\Service\PlanDayValidator::SKILL_REF_INVALID}.
+         */
+        public ?string $skillRef = null,
+        /**
+         * NUMBERS ONLY: the same number as digits, or an ISO date — «20», «2026-09-05».
+         *
+         * The card is heard, not read, so what it is graded against is the digits the learner types
+         * and not the words the line spells them with. Null everywhere else.
+         */
+        public ?string $value = null,
     ) {}
 
     /**
-     * Which of the answer's three arrays this card came out of — `phrases` | `words` | `chunks`.
+     * WHICH SHELF this card came out of — the first half of its address, and what the repair call
+     * puts a fixed card back into.
      *
-     * Derived from {@see $kind} rather than stored beside it, because the two cannot be allowed to
-     * disagree: the array is what DECIDED the kind on the way in
-     * ({@see \App\Modules\Generation\Application\Service\PlanDayComposer::items()}), so a second
-     * field would only ever be a chance for them to drift.
+     * The name is historical: a violation says «`say[3]`», so the «array» is the shelf. It falls
+     * back to the kind for a card built without a shelf (a fixture from before v0.4, a hand-made
+     * test item), because an address that cannot be built is a card a repair call cannot be pointed
+     * at.
      */
     public function arrayName(): string
     {
+        if ($this->shelf !== '') {
+            return $this->shelf;
+        }
+
         return match ($this->kind) {
-            self::KIND_LINE => 'phrases',
-            self::KIND_WORD => 'words',
-            default => 'chunks',
+            self::KIND_LINE => PlanShelf::Say->value,
+            self::KIND_WORD => PlanShelf::Words->value,
+            self::KIND_NUMBER => PlanShelf::Numbers->value,
+            default => PlanShelf::Chunks->value,
         };
+    }
+
+    /**
+     * `speak` or `understand` — the LADDER this card climbs, derived from its shelf and never read
+     * off the model's answer (канон §3; {@see PlanShelf::tier()}).
+     */
+    public function tier(): string
+    {
+        return (PlanShelf::tryFromName($this->arrayName()) ?? PlanShelf::Say)->tier();
     }
 
     /**

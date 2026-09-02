@@ -204,14 +204,23 @@ it('deals day 1 of a plan out of that plan alone — no seam, and no wrong answe
     $session = planSession($this, $f['token'], $f['planB'], 1);
 
     $ownTerms = planTermIds($f['planB']);
-    $foreign = surfaceTexts([...planTermIds($f['planA']), ...$f['shelfTerms'], ...$f['manualTerms']]);
+    // THE RESCUE KIT IS THE SAME FIVE TERMS IN EVERY PLAN OF A LANGUAGE, and terms are globally
+    // deduplicated — «Помедленнее, пожалуйста» is one row in the catalogue, so plan A's day 1 and
+    // plan B's day 1 stand on it TOGETHER. Subtracting this plan's own cards is what keeps the
+    // question the one being asked: «did a card of somebody else's lesson get into this one».
+    $foreign = array_values(array_diff(
+        surfaceTexts([...planTermIds($f['planA']), ...$f['shelfTerms'], ...$f['manualTerms']]),
+        surfaceTexts($ownTerms),
+    ));
 
     expect($session['tasks'])->not->toBeEmpty();
 
     foreach ($session['tasks'] as $task) {
         expect($task['card']['term_id'])->toBeIn($ownTerms)
-            // Day 1 of any plan has no earlier day to revise, so the seam does not exist.
-            ->and($task['section'])->toBe('day');
+            // Day 1 of any plan has no earlier day to revise, so the REVISION seam does not exist.
+            // What does is the warm-up, and its five cards are this plan's own too — the server
+            // wrote them into its day 1.
+            ->and($task['section'])->toBeIn(['warmup', 'day']);
     }
 
     // «паспорт» among `utilities` / `available` / `deposit` — the card off the screenshot, and every
@@ -220,8 +229,10 @@ it('deals day 1 of a plan out of that plan alone — no seam, and no wrong answe
         expect($option)->not->toBeIn($foreign);
     }
 
-    // …and the count in the header describes that and only that.
-    expect($session['day_task_count'])->toBe(count($session['tasks']));
+    // …and the count in the header describes the DAY and only the day.
+    expect($session['day_task_count'])
+        ->toBe(count(tasksInSection($session, 'day')))
+        ->toBeLessThan(count($session['tasks']));
 });
 
 it('fills the seam of day 2 with the plan`s OWN first day and nothing else', function () {
@@ -234,7 +245,6 @@ it('fills the seam of day 2 with the plan`s OWN first day and nothing else', fun
 
     $day1 = planDayTermIds($f['planB'], 1);
     $review = tasksInSection($session, 'review');
-
     expect($session['day_index'])->toBe(2)
         ->and($review)->not->toBeEmpty();
 
@@ -243,7 +253,7 @@ it('fills the seam of day 2 with the plan`s OWN first day and nothing else', fun
     }
 
     // The day's own count is the day's own cards — the seam is not part of it.
-    expect($session['day_task_count'])->toBe(count($session['tasks']) - count($review));
+    expect($session['day_task_count'])->toBe(count(tasksInSection($session, 'day')));
 });
 
 it('never lets the other plan`s words into a plan session, in either direction', function () {

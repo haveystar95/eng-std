@@ -46,9 +46,9 @@ final class PlanPromptLibrary implements PlanPromptSource
      * a stored plan written on them is read back through its own `outline` JSON, not by
      * re-rendering the prompt, so nothing needs to load them again.
      */
-    public const OUTLINE_VERSION = 'plan_outline.v0.2';
+    public const OUTLINE_VERSION = 'plan_outline.v0.4';
 
-    public const DAY_VERSION = 'plan_day.v0.3';
+    public const DAY_VERSION = 'plan_day.v0.4';
 
     /**
      * P2R — the day's BROKEN CARDS, and nothing else.
@@ -73,8 +73,8 @@ final class PlanPromptLibrary implements PlanPromptSource
      */
     public const REPAIR_VERSION = 'plan_day_repair.v0.2';
 
-    private const OUTLINE = 'plan_outline.v0.2.md';
-    private const DAY = 'plan_day.v0.3.md';
+    private const OUTLINE = 'plan_outline.v0.4.md';
+    private const DAY = 'plan_day.v0.4.md';
     private const REPAIR = 'plan_day_repair.v0.2.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}

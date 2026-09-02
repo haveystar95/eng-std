@@ -58,6 +58,23 @@ final class PlanStageLadder
     public const KIND_CHUNK = 'chunk';
 
     /**
+     * THE «ПОНИМАЮ» LADDER — not a kind of card but a TIER of one, and the only one that is not a
+     * `speak` ladder in disguise.
+     *
+     * Канон §3: «Понимаю» — два касания: услышал → выбрал смысл; узнал в тексте. Без ступени C, без
+     * говорения. Every card of the «Тебе скажут» shelf climbs it, and so would a number if numbers
+     * were dealt yet (NUM-1).
+     *
+     * It is expressed as a ladder KEY rather than as a filter over the line ladder because the two
+     * are different lists, not one list minus some entries: an understanding card is met, its
+     * meaning is chosen, and it is heard — three steps over two stages, where a spoken line has
+     * seven over two. Subtracting the production modes from the spoken ladder gave the same answer
+     * by accident until v0.4, and «by accident» is what {@see RoleLineModes} was written twice to
+     * stop being the mechanism.
+     */
+    public const KIND_UNDERSTAND = 'understand';
+
+    /**
      * THE CHECKLISTS, by stage and by what the card IS.
      *
      * One config, in Domain, next to the stages it spells out. Until v0.2 there was one ladder for
@@ -118,6 +135,28 @@ final class PlanStageLadder
                 ExerciseMode::PickCorrect,
             ],
         ],
+        // TWO TOUCHES AND A NIGHT BETWEEN THEM, and nothing that asks for the sentence back.
+        //
+        //   A  meet it → choose what it means
+        //   B  hear it and take it down
+        //   C  —
+        //
+        // `listening` is the one production-looking mode that stays, and it stays for the reason
+        // DECISIONS п. 223 gives: hearing a line said to you and writing down what you heard is
+        // exactly the skill the shelf exists for. Everything that asks the learner to PRODUCE the
+        // interlocutor's turn — the word bank, the speaking card, the dictation of a sentence they
+        // will never say — is absent here and refused again downstream ({@see RoleLineModes}),
+        // because a day opened out of turn never sees this checklist at all.
+        self::KIND_UNDERSTAND => [
+            PlanStage::A->value => [
+                ExerciseMode::Intro,
+                ExerciseMode::MultipleChoice,
+            ],
+            PlanStage::B->value => [
+                ExerciseMode::Listening,
+            ],
+            PlanStage::C->value => [],
+        ],
     ];
 
     /**
@@ -173,8 +212,35 @@ final class PlanStageLadder
      */
     private static function normalizeKind(string $kind): string
     {
-        return $kind === self::KIND_LINE ? self::KIND_LINE : self::KIND_WORD;
+        return match ($kind) {
+            self::KIND_LINE, self::KIND_UNDERSTAND => $kind,
+            default => self::KIND_WORD,
+        };
     }
+
+    /**
+     * WHICH LADDER A PLAN CARD CLIMBS — the one place the tier beats the kind.
+     *
+     * The shelf decides the tier and the tier decides the ladder (канон §3), so a card of «Тебе
+     * скажут» takes the two-touch ladder however much it looks like a spoken line, and everything
+     * else takes the ladder of what it is. Read by the checklist
+     * ({@see \App\Modules\Learning\Application\Service\PlanStandings}) and by the session's
+     * running order, from here, so the two cannot answer differently for one card.
+     *
+     * A term with no tier at all — everything written before v0.4, and every card outside a plan —
+     * is judged by its kind exactly as it was.
+     */
+    public static function ladderKindFor(?string $kind, ?string $tier): string
+    {
+        if ($tier === self::TIER_UNDERSTAND) {
+            return self::KIND_UNDERSTAND;
+        }
+
+        return self::normalizeKind($kind ?? self::KIND_WORD);
+    }
+
+    /** `understand` — the tier whose cards are met and heard and never produced. */
+    public const TIER_UNDERSTAND = 'understand';
 
     /**
      * The stage after this one FOR THIS KIND, or null at the top.
@@ -196,7 +262,7 @@ final class PlanStageLadder
     /** The LAST stage a card of this kind lives on — B for a line, C for everything else. */
     public static function lastStageFor(string $kind): PlanStage
     {
-        return self::normalizeKind($kind) === self::KIND_LINE ? PlanStage::B : PlanStage::C;
+        return self::normalizeKind($kind) === self::KIND_WORD ? PlanStage::C : PlanStage::B;
     }
 
     /**
@@ -207,7 +273,7 @@ final class PlanStageLadder
     public static function allModes(): array
     {
         $out = [];
-        foreach ([self::KIND_LINE, self::KIND_WORD] as $kind) {
+        foreach ([self::KIND_LINE, self::KIND_WORD, self::KIND_UNDERSTAND] as $kind) {
             foreach (PlanStage::cases() as $stage) {
                 foreach (self::STEPS[$kind][$stage->value] as $mode) {
                     if (! in_array($mode, $out, true)) {
@@ -287,7 +353,10 @@ final class PlanStageLadder
         // example», and a line's example is the turn around it — a different sentence. What the
         // learner is asked to say is the line, so the rung stays the assembly one and the STAGE
         // says whether the text is on the screen ({@see PlanStage::speakingForm()}).
-        if (self::normalizeKind($kind) === self::KIND_LINE) {
+        // A LINE is graded against ITSELF, at every stage, and so is a card of the понимаю tier:
+        // the dictation rung means «ask for the example», and their example is a different
+        // sentence. What is asked for is the line, so the rung stays the assembly one.
+        if (self::normalizeKind($kind) !== self::KIND_WORD) {
             return LearningLadder::STEP_ASSEMBLY;
         }
 

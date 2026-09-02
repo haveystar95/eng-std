@@ -219,6 +219,7 @@ final readonly class GetPlanHandler
         $skills = [];
         foreach ($day->skills() as $position => $skill) {
             $skills[] = new PlanSkill(
+                id: is_string($skill['id'] ?? null) ? $skill['id'] : '',
                 outcome: is_string($skill['outcome'] ?? null) ? $skill['outcome'] : '',
                 checkpoint: is_string($skill['checkpoint'] ?? null) ? $skill['checkpoint'] : '',
                 estTerms: is_int($skill['est_terms'] ?? null) ? $skill['est_terms'] : 1,
@@ -240,6 +241,19 @@ final readonly class GetPlanHandler
             topics: [],
             sourceSceneIndex: null,
         );
+    }
+
+    /**
+     * The scene's вводка out of the stored day brief.
+     *
+     * @param  array<string, mixed>  $brief
+     */
+    private static function introOf(array $brief): string
+    {
+        $scene = is_array($brief['scene'] ?? null) ? $brief['scene'] : [];
+        $intro = $scene['intro'] ?? ($brief['intro'] ?? null);
+
+        return is_string($intro) ? trim($intro) : '';
     }
 
     private function dayView(PlanDay $day): PlanDayView
@@ -279,6 +293,10 @@ final readonly class GetPlanHandler
             checkpoints: $checkpoints,
             topics: $topics,
             role: is_array($brief['role'] ?? null) ? $brief['role'] : null,
+            // Read off the stored scene, with the older top-level key as the fallback: a day
+            // scheduled before v0.4 has neither, and an empty вводка is a day without one rather
+            // than a plan that cannot be read.
+            intro: self::introOf($brief),
         );
     }
 

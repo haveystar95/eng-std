@@ -73,7 +73,11 @@ Map<String, dynamic> _planJson() => {
   ],
 };
 
-PlanDayDetail _day() => PlanDayDetail.fromJson({
+PlanDayDetail _day() => PlanDayDetail.fromJson(_dayJson());
+
+/// The day's payload, spread rather than copied so a test can add one field to it — the same shape
+/// [_planJson] has, and for the same reason.
+Map<String, dynamic> _dayJson() => {
   'id': 'd2',
   'index': 2,
   'kind': 'intro',
@@ -110,7 +114,7 @@ PlanDayDetail _day() => PlanDayDetail.fromJson({
       'from_day_index': 1,
     },
   ],
-});
+};
 
 SessionCard _card(String id, String type) => SessionCard.fromJson({
   'term_id': id,
@@ -155,6 +159,14 @@ class _Envelope implements PlanSessionEnvelope {
   // The summary does not read it; the SESSION card does, and that side is covered on the model
   // itself (`plan_contract_v02_test.dart`) rather than by driving the whole session screen.
   String? speakerAt(int i) => null;
+  // Nor these three — the shelves and the warm-up are the SESSION's seams, pinned in
+  // `plan_session_seam_test.dart` on the caption function itself.
+  @override
+  String? shelfAt(int i) => null;
+  @override
+  bool isWarmupAt(int i) => false;
+  @override
+  bool isRecognitionOnlyAt(int i) => false;
 }
 
 /// Counts the «this run ended» calls without touching the queue or the network.
@@ -279,6 +291,53 @@ void main() {
     expect(find.text('РАЗГОВОР'), findsOneWidget);
   });
 
+  testWidgets('the day opens with the scene’s вводка, above everything it is made of', (
+    tester,
+  ) async {
+    // «Кто перед тобой, что сейчас произойдёт, что считается успехом» (канон §2), written by the
+    // server in the learner's own language. Plain text on purpose — the day screen is DAY-2's to
+    // design, and this наряд only has to stop the вводка being thrown away on the wire.
+    final withIntro = PlanDayDetail.fromJson({
+      ..._dayJson(),
+      'intro': 'Ты у стойки регистрации. Тебя спросят фамилию и дату приёма. '
+          'Успех — если ты понял вопрос и назвал их, не переспрашивая дважды.',
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          planDayProvider((planId: '01PLAN', dayIndex: 2)).overrideWith((ref) async => withIntro),
+        ],
+        child: _app(PlanDayScreen(plan: _plan(focus: 2), dayIndex: 2)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Ты у стойки регистрации'), findsOneWidget);
+    // …and it stands above the register rather than inside it.
+    expect(
+      tester.getTopLeft(find.textContaining('Ты у стойки регистрации')).dy,
+      lessThan(tester.getTopLeft(find.text('ФРАЗЫ ДНЯ')).dy),
+    );
+  });
+
+  testWidgets('a day written before scenes existed draws no empty вводка', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          planDayProvider((planId: '01PLAN', dayIndex: 2)).overrideWith((ref) async => _day()),
+        ],
+        child: _app(PlanDayScreen(plan: _plan(focus: 2), dayIndex: 2)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The title is followed straight by the day's own blocks — no blank paragraph, no placeholder.
+    expect(find.text(''), findsNothing);
+    expect(find.text('Уточнить симптомы и помощь'), findsOneWidget);
+    expect(find.text('ФРАЗЫ ДНЯ'), findsOneWidget);
+  });
+
   testWidgets('a running plan can always be given up — there is no other way out', (tester) async {
     // The server allows ONE running plan per learner. Without this link the only exit from a plan is
     // its own event, which makes a plan that went wrong a trap. No frame of «Фаза 4» draws it; the
@@ -312,7 +371,7 @@ void main() {
           'title': 'Ответить на вопросы врача',
           'status': 'failed',
           'generation_attempts': 2,
-          'fail_code': 'day.example_is_a_term',
+          'fail_code': 'card.example_is_a_term',
         },
         {'id': 'd3', 'index': 3, 'kind': 'intro', 'title': 'Понять назначение', 'status': 'pending'},
         {
@@ -377,8 +436,9 @@ void main() {
   testWidgets('a burned day names the CAUSE the server reported, not a stock one (Д-19)', (
     tester,
   ) async {
-    // The live day died on `day.example_is_a_term` and the screen said the model had answered in
-    // the wrong language — one hard-coded sentence used for every failure there is.
+    // The live day died on the example gate and the screen said the model had answered in the
+    // wrong language — one hard-coded sentence used for every failure there is. The code is
+    // `card.` now (v0.4: one card, one address), the sentence it earns is the same one.
     final dead = PlanDayDetail.fromJson({
       'id': 'd1',
       'index': 1,
@@ -386,7 +446,7 @@ void main() {
       'title': 'Ответить на вопросы врача',
       'status': 'failed',
       'generation_attempts': 2,
-      'fail_code': 'day.example_is_a_term',
+      'fail_code': 'card.example_is_a_term',
       'plan_id': '01PLAN',
       'terms': [],
     });

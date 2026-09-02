@@ -20,10 +20,11 @@ function outlineCodes(array $violations): array
     return array_values(array_unique(array_map(static fn (PlanViolation $v): string => $v->code, $violations)));
 }
 
-/** One scene, one ability, everything valid — the base every negative case below breaks once. */
+/** One scene, three abilities, everything valid — the base every negative case below breaks once. */
 function outlineWith(array $overrides = [], array $skillOverrides = []): array
 {
     $skill = [
+        'id' => 's1.1',
         'outcome' => 'сказать, где именно болит',
         'checkpoint' => 'называет конкретное место, и врачу не приходится переспрашивать',
         'est_terms' => 4,
@@ -32,34 +33,49 @@ function outlineWith(array $overrides = [], array $skillOverrides = []): array
     ];
 
     return [
-        'title' => 'К врачу из-за спины',
-        'goal_restated' => 'Иду к врачу с болью в спине.',
-        'entities' => [],
-        'constraints' => [],
-        'goal_terms' => [],
+        'goal_summary' => 'Иду к врачу с болью в спине.',
         'scenes' => [[
+            'position' => 1,
             'title' => 'Описать боль',
-            'role' => [
-                'name' => 'врач-терапевт',
-                'opening_lines' => [
-                    ['text' => 'Where does it hurt?', 'translation' => 'Где болит?'],
-                    ['text' => 'Since when?', 'translation' => 'С каких пор?'],
-                ],
-                'if_silent' => 'показывает пальцем и спрашивает проще',
-            ],
-            'skills' => [$skill, $skill, $skill],
+            'intro' => 'Перед тобой врач. Он спросит, где болит и как давно. Успех — если он понял '
+                . 'место с первого раза.',
+            'skills' => [$skill, [...$skill, 'id' => 's1.2'], [...$skill, 'id' => 's1.3']],
+            'opening_lines' => ['Where does it hurt?', 'Since when?'],
+            'entities' => [],
         ]],
         ...$overrides,
     ];
 }
 
-it('passes the three v0.2 skeletons the plan is designed around', function (string $fixture) {
+it('passes the three v0.4 skeletons the plan is designed around', function (string $fixture) {
     expect($this->validator->validate(outlineFixture($fixture), 'ru'))->toBe([]);
 })->with([
-    's1-outline.v0.2.json',
-    's2-outline.v0.2.json',
-    's3-outline.v0.2.json',
+    's1-outline.v0.4.json',
+    's2-outline.v0.4.json',
+    's3-outline.v0.4.json',
 ]);
+
+// ── the вводка: the screen a person with zero English reads first ─────────────────────────────
+
+it('refuses a scene with no вводка — the day would open on a list of sentences', function () {
+    $raw = outlineWith();
+    $raw['scenes'][0]['intro'] = '';
+
+    expect(outlineCodes($this->validator->validate($raw)))
+        ->toContain(PlanOutlineValidator::INTRO_MISSING);
+});
+
+it('counts, rather than refuses, a вводка with the language being learned inside it', function () {
+    // The outline gets ONE re-run and no more, so a gate that fires here costs the learner two paid
+    // calls and then the whole plan. «Изучаемого языка во вводке нет» is a rule worth stating and
+    // not worth $0.05.
+    $raw = outlineWith();
+    $raw['scenes'][0]['intro'] = 'Врач спросит: where does it hurt, и ты ответишь.';
+
+    expect($this->validator->validate($raw, 'ru'))->toBe([])
+        ->and(outlineCodes($this->validator->warnings($raw, 'ru')))
+        ->toContain(PlanOutlineValidator::INTRO_LANGUAGE_WARNING);
+});
 
 it('refuses a skeleton with nothing to schedule', function () {
     expect(outlineCodes($this->validator->validate(['scenes' => []])))
@@ -105,33 +121,23 @@ it('says nothing at all about a price the prompt asked for', function (int $est)
         ->and($this->validator->warnings($raw))->toBe([]);
 })->with([3, 5, 8]);
 
-it('refuses a scene whose interlocutor says NOTHING the learner must recognise', function () {
-    // P2 quotes `opening_lines` verbatim as the lines the day has to teach. A role with an empty
-    // list is a conversation with nothing to recognise — one line is thin, and thin is not broken.
+it('accepts one opening line and refuses seven', function (int $lines, bool $ok) {
+    // The lines are raw material for «Тебе скажут» — v0.4 asks the day to ADAPT them rather than
+    // quote them, so one thin line is a thin scene and not a broken one. Seven is somebody else's
+    // scene.
     $raw = outlineWith();
-    $raw['scenes'][0]['role']['opening_lines'] = [];
-
-    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::OPENING_LINES);
-});
-
-it('accepts a role with one line, and refuses one with seven', function (int $lines, bool $ok) {
-    $raw = outlineWith();
-    $raw['scenes'][0]['role']['opening_lines'] = array_fill(
-        0,
-        $lines,
-        ['text' => 'Where does it hurt?', 'translation' => 'Где болит?'],
-    );
+    $raw['scenes'][0]['opening_lines'] = array_fill(0, $lines, 'Where does it hurt?');
 
     expect(outlineCodes($this->validator->validate($raw)))
         ->when(! $ok, fn ($e) => $e->toContain(PlanOutlineValidator::OPENING_LINES))
         ->when($ok, fn ($e) => $e->not->toContain(PlanOutlineValidator::OPENING_LINES));
 })->with([[1, true], [6, true], [7, false]]);
 
-it('accepts a scene with no interlocutor at all', function () {
-    // Reading forms alone has nobody to talk to, and the prompt says inventing «сотрудник, который
-    // просто рядом» is worse than admitting it. Its checkpoints are still tested in the rehearsal.
+it('accepts a scene with nobody to talk to', function () {
+    // Reading forms alone has no interlocutor, and inventing «сотрудник, который просто рядом» is
+    // worse than admitting it. Its checkpoints are still tested in the rehearsal.
     $raw = outlineWith();
-    $raw['scenes'][0]['role'] = null;
+    $raw['scenes'][0]['opening_lines'] = [];
 
     expect($this->validator->validate($raw))->toBe([]);
 });

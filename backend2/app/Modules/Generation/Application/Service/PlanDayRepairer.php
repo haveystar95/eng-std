@@ -11,6 +11,7 @@ use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
+use App\Modules\Generation\Domain\ValueObject\PlanShelf;
 use App\Modules\Generation\Domain\ValueObject\PlanViolation;
 use App\Modules\Learning\Application\Dto\PlanDayGenerationBrief;
 use App\Modules\Shared\Domain\Service\LanguageName;
@@ -178,7 +179,9 @@ final readonly class PlanDayRepairer
             'support_lang' => LanguageName::of($brief->supportLang),
             'target_lang' => LanguageName::of($brief->targetLang),
             'level' => $brief->level,
-            'entities' => PlanPromptData::entities($brief->entities),
+            // Since P1 v0.4 the entities of a scene are plain names — «Zoom», «Dr Ionescu» — and no
+            // longer objects with a gender: the agreement check they fed retired with them.
+            'entities' => PlanPromptData::bullets($brief->entities),
             'goal_terms' => PlanPromptData::bullets($brief->goalTerms),
             'opening_lines' => PlanPromptData::bullets($brief->openingLines),
             'day_lines' => $this->dayLines($items, $broken),
@@ -213,11 +216,12 @@ final readonly class PlanDayRepairer
     {
         $out = [];
         foreach ($items as $item) {
-            if ($item->kind !== PlanDayItem::KIND_LINE || isset($broken[$item->arrayName() . '#' . $item->index])) {
+            $shelf = PlanShelf::tryFromName($item->arrayName());
+            if ($shelf === null || ! $shelf->isAssembled() || isset($broken[$item->arrayName() . '#' . $item->index])) {
                 continue;
             }
 
-            $out[] = 'phrases[' . $item->index . '] · frame: «' . $item->frame . '»'
+            $out[] = $item->arrayName() . '[' . $item->index . '] · frame: «' . $item->frame . '»'
                 . ' · filler: «' . $item->filler . '»'
                 . ' · line: «' . $item->text . '»'
                 . ' · ' . $item->translation;
@@ -236,7 +240,8 @@ final readonly class PlanDayRepairer
     {
         $out = [];
         foreach ($items as $item) {
-            if ($item->kind === PlanDayItem::KIND_LINE || isset($broken[$item->arrayName() . '#' . $item->index])) {
+            $shelf = PlanShelf::tryFromName($item->arrayName());
+            if ($shelf === null || $shelf->isAssembled() || isset($broken[$item->arrayName() . '#' . $item->index])) {
                 continue;
             }
 
@@ -285,20 +290,29 @@ final readonly class PlanDayRepairer
     private function cardJson(PlanDayItem $item): array
     {
         $common = [
-            'type' => $item->type,
-            'is_line' => $item->isLine,
+            'kind' => $item->kind,
+            'skill_ref' => (string) $item->skillRef,
             'translation' => $item->translation,
             'transliteration' => (string) $item->transliteration,
-            'description' => $item->description,
+        ];
+
+        $shelf = PlanShelf::tryFromName($item->arrayName()) ?? PlanShelf::Say;
+
+        if ($shelf === PlanShelf::Numbers) {
+            return ['frame' => $item->frame, 'filler' => $item->filler, 'value' => (string) $item->value, ...$common];
+        }
+
+        if ($shelf->isAssembled()) {
+            return ['frame' => $item->frame, 'filler' => $item->filler, 'speaker' => $item->speaker, ...$common];
+        }
+
+        return [
+            'text' => $item->text,
             'example' => $item->example,
             'example_translation' => $item->exampleTranslation,
             'image_api_prompt' => $item->imageApiPrompt,
-            'covers_checkpoint' => $item->coversCheckpoint,
+            ...$common,
         ];
-
-        return $item->kind === PlanDayItem::KIND_LINE
-            ? ['frame' => $item->frame, 'filler' => $item->filler, 'speaker' => $item->speaker, ...$common]
-            : ['text' => $item->text, ...$common];
     }
 
     /**
@@ -384,30 +398,36 @@ final readonly class PlanDayRepairer
                 continue;
             }
 
-            $isLine = $item->kind === PlanDayItem::KIND_LINE;
-            $frame = $isLine ? $this->text($card['frame'] ?? '') : '';
-            $filler = $isLine ? $this->text($card['filler'] ?? '') : '';
-            $speaker = $this->text($card['speaker'] ?? '');
-            $covers = $card['covers_checkpoint'] ?? null;
+            // THE SHELF DOES NOT MOVE, and neither does anything derived from it. The address said
+            // which shelf the card is on; a card that changed shelves under repair would change
+            // its TIER, and the tier decides whether the learner is ever asked to say it.
+            $shelf = PlanShelf::tryFromName($item->arrayName()) ?? PlanShelf::Say;
+            $assembled = $shelf->isAssembled();
+            $frame = $assembled ? $this->text($card['frame'] ?? '') : '';
+            $filler = $assembled ? $this->text($card['filler'] ?? '') : '';
 
             $out[] = new PlanDayItem(
-                text: $isLine ? PlanDayComposer::assemble($frame, $filler) : $this->text($card['text'] ?? ''),
-                type: $this->text($card['type'] ?? 'word'),
-                // The KIND does not move. The address said which array the card is in, and a card
-                // that changed kind under repair would change stage ladders under the learner.
+                text: $assembled ? PlanDayComposer::assemble($frame, $filler) : $this->text($card['text'] ?? ''),
+                type: $item->type,
                 kind: $item->kind,
-                isLine: $isLine,
+                isLine: $item->isLine,
                 translation: $this->text($card['translation'] ?? ''),
                 transliteration: $this->text($card['transliteration'] ?? ''),
-                description: $this->text($card['description'] ?? ''),
+                description: '',
                 example: $this->text($card['example'] ?? ''),
                 exampleTranslation: $this->text($card['example_translation'] ?? ''),
                 frame: $frame,
                 filler: $filler,
-                speaker: $isLine && $speaker !== '' ? $speaker : null,
+                speaker: $item->speaker,
                 imageApiPrompt: $this->text($card['image_api_prompt'] ?? ''),
-                coversCheckpoint: $isLine && is_int($covers) ? $covers : null,
+                coversCheckpoint: null,
                 index: $item->index,
+                shelf: $item->shelf,
+                // The card may be re-pointed at a DIFFERENT skill of the same scene — that is a
+                // legitimate fix for `card.skill_ref_invalid` — but it keeps the one it had when
+                // the answer says nothing.
+                skillRef: $this->text($card['skill_ref'] ?? '') ?: $item->skillRef,
+                value: $this->text($card['value'] ?? '') ?: null,
             );
         }
 

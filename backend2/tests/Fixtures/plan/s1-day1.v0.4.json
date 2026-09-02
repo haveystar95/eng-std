@@ -1,0 +1,172 @@
+{
+  "hear": [
+    {
+      "kind": "line",
+      "skill_ref": "s1.1",
+      "frame": "Do you have an appointment?",
+      "filler": "",
+      "speaker": "role",
+      "translation": "Вы записаны?",
+      "transliteration": "ду ю хэв эн эпойнтмент"
+    },
+    {
+      "kind": "line",
+      "skill_ref": "s1.2",
+      "frame": "What is the problem today?",
+      "filler": "",
+      "speaker": "role",
+      "translation": "С чем вы сегодня пришли?",
+      "transliteration": "уот из зэ проблем тудэй"
+    },
+    {
+      "kind": "line",
+      "skill_ref": "s1.1",
+      "frame": "Please wait here for a few minutes.",
+      "filler": "",
+      "speaker": "role",
+      "translation": "Подождите здесь несколько минут, пожалуйста.",
+      "transliteration": "плиз уэйт хиэ фор э фью минитс"
+    },
+    {
+      "kind": "line",
+      "skill_ref": "s1.2",
+      "frame": "Here is your prescription for the week.",
+      "filler": "",
+      "speaker": "role",
+      "translation": "Вот ваш рецепт на неделю.",
+      "transliteration": "хиэ из ёр прескрипшен фор зэ уик"
+    }
+  ],
+  "say": [
+    {
+      "kind": "line",
+      "skill_ref": "s1.1",
+      "frame": "I need to ___, please.",
+      "filler": "check in",
+      "translation": "Мне нужно отметиться на стойке, пожалуйста.",
+      "transliteration": "ай нид ту чек-ин плиз"
+    },
+    {
+      "kind": "line",
+      "skill_ref": "s1.2",
+      "frame": "It hurts in my ___.",
+      "filler": "lower back",
+      "translation": "Болит в пояснице.",
+      "transliteration": "ит хётс ин май лоуэр бэк"
+    },
+    {
+      "kind": "line",
+      "skill_ref": "s1.2",
+      "frame": "Sorry, could you say that again?",
+      "filler": "",
+      "translation": "Извините, не могли бы вы сказать это ещё раз?",
+      "transliteration": "сорри куд ю сэй зэт эгейн"
+    },
+    {
+      "kind": "line",
+      "skill_ref": "s1.1",
+      "frame": "Do I need a ___?",
+      "filler": "referral",
+      "translation": "Мне нужно направление?",
+      "transliteration": "ду ай нид э рифёрал"
+    }
+  ],
+  "ask": [
+    {
+      "kind": "line",
+      "skill_ref": "s1.2",
+      "frame": "How often should I take the ___?",
+      "filler": "painkiller",
+      "translation": "Как часто мне принимать обезболивающее?",
+      "transliteration": "хау офен шуд ай тэйк зэ пэйнкиллер"
+    },
+    {
+      "kind": "line",
+      "skill_ref": "s1.1",
+      "frame": "Where do I ___?",
+      "filler": "take a seat",
+      "translation": "Где мне присесть?",
+      "transliteration": "уэа ду ай тэйк э сит"
+    }
+  ],
+  "words": [
+    {
+      "kind": "word",
+      "skill_ref": "s1.2",
+      "text": "lower back",
+      "translation": "поясница",
+      "transliteration": "лоуэр бэк",
+      "example": "The pain in my lower back gets worse at night.",
+      "example_translation": "Боль в пояснице усиливается ночью.",
+      "image_api_prompt": "a man pressing his hand against his lower back while standing, plain room"
+    },
+    {
+      "kind": "word",
+      "skill_ref": "s1.2",
+      "text": "prescription",
+      "translation": "рецепт",
+      "transliteration": "прескрипшен",
+      "example": "The nurse handed me a prescription at the desk.",
+      "example_translation": "Медсестра дала мне рецепт на стойке.",
+      "image_api_prompt": "a small printed slip of paper lying on a clinic reception counter, close-up"
+    },
+    {
+      "kind": "word",
+      "skill_ref": "s1.2",
+      "text": "painkiller",
+      "translation": "обезболивающее",
+      "transliteration": "пэйнкиллер",
+      "example": "A painkiller helps for a few hours only.",
+      "example_translation": "Обезболивающее помогает только на несколько часов.",
+      "image_api_prompt": "a blister pack of white tablets on a wooden table, close-up"
+    },
+    {
+      "kind": "word",
+      "skill_ref": "s1.1",
+      "text": "referral",
+      "translation": "направление",
+      "transliteration": "рифёрал",
+      "example": "Without a referral the clinic will not see me.",
+      "example_translation": "Без направления в клинике меня не примут.",
+      "image_api_prompt": "a hand passing a folded form across a hospital desk"
+    }
+  ],
+  "chunks": [
+    {
+      "kind": "chunk",
+      "skill_ref": "s1.1",
+      "text": "check in",
+      "translation": "отметиться на стойке",
+      "transliteration": "чек-ин",
+      "example": "You check in downstairs and then come up here.",
+      "example_translation": "Вы отмечаетесь на стойке внизу, а потом поднимаетесь сюда."
+    },
+    {
+      "kind": "chunk",
+      "skill_ref": "s1.1",
+      "text": "take a seat",
+      "translation": "присесть",
+      "transliteration": "тэйк э сит",
+      "example": "You can take a seat by the window while you wait.",
+      "example_translation": "Пока ждёте, можно присесть у окна."
+    }
+  ],
+  "numbers": [
+    {
+      "kind": "number",
+      "skill_ref": "s1.1",
+      "frame": "Your appointment is at ___.",
+      "filler": "half past nine",
+      "value": "9:30",
+      "translation": "Ваш приём в полдесятого."
+    },
+    {
+      "kind": "number",
+      "skill_ref": "s1.2",
+      "frame": "That will be ___, please.",
+      "filler": "twenty euros",
+      "value": "20",
+      "translation": "С вас двадцать евро, пожалуйста."
+    }
+  ]
+}

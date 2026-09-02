@@ -24,6 +24,9 @@ final class EloquentPlanSkillRepository implements PlanSkillRepository
             $rows[] = [
                 'id' => $skill->id === '' ? Ulid::generate() : $skill->id,
                 'plan_id' => $planId->value,
+                // «s1.2» — what the day's cards name in `skill_ref`. A row id answers «which row»;
+                // this answers «which promise», and only the second one may appear in a card.
+                'skill_ref' => $skill->skillRef,
                 'scene_index' => $skill->sceneIndex,
                 'scene_title' => $skill->sceneTitle,
                 // jsonb through the query builder: no model, no casts, so the encoding is explicit.
@@ -57,6 +60,7 @@ final class EloquentPlanSkillRepository implements PlanSkillRepository
 
             $out[] = new PlanSkillRecord(
                 id: (string) $row->id,
+                skillRef: (string) ($row->skill_ref ?? ''),
                 sceneIndex: (int) $row->scene_index,
                 sceneTitle: (string) $row->scene_title,
                 /** @phpstan-ignore-next-line the column is written from the same shape one method up */

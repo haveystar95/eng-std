@@ -10,34 +10,40 @@ use App\Modules\Learning\Domain\Exception\InvalidPlanOutline;
  * P1's answer, typed.
  *
  * Built from the decoded JSON exactly once, at the boundary, so nothing downstream ever does
- * `$outline['scenes'][0]['skills'][1]['checkpoint'] ?? null`. The three lists the whole plan is
- * bound by — `entities`, `constraints`, `goal_terms` — travel with it into every day's generation
- * and are facts about the learner's situation, not suggestions.
+ * `$outline['scenes'][0]['skills'][1]['checkpoint'] ?? null`.
  *
- * ## v0.2: scenes and priced skills, and no days at all
+ * ## v0.4: scenes with a вводка, skills with an id, and no plan-level lists
  *
- * The model no longer answers in days and is no longer told how many there are. It answers in
- * SCENES, each holding ordered SKILLS, each skill priced by the model in `est_terms`. Everything
- * about the calendar — how many days, which skill lands on which, what does not fit — is computed
- * from this by {@see \App\Modules\Learning\Domain\Service\PlanScheduler}.
+ * The skeleton is `goal_summary` + `scenes[]`, and everything else moved INTO the scene: the
+ * interlocutor's lines, the names of the scenario, and the вводка the learner reads before the day.
+ * The three plan-level lists v0.2 answered with are gone with it — `entities` is now the union of
+ * the scenes' own names (plain strings, no gender), `constraints` and `goal_terms` are empty.
+ * Nothing downstream lost a rule it was enforcing except the Russian gender-agreement check, whose
+ * whole input was the gender P1 no longer answers with.
  *
- * There is also no `final_day` any more, and its absence is the same fix one step further: v0 asked
- * the model for the final day's checkpoints and the list drifted from the days it was copying; v0.1
- * kept asking for its title. The title is now a constant in the plan's support language and the
- * checkpoints are {@see finalCheckpoints()} — so nothing about the rehearsal is a model opinion.
+ * ## READING AN OLD SKELETON IS NOT OPTIONAL
+ *
+ * A plan runs for days and its outline is re-parsed on every read. A learner halfway through a
+ * v0.2 plan must not have it break because the code moved on, so this parse accepts BOTH shapes:
+ * `goal_summary` or `title`/`goal_restated`, `opening_lines` as strings or as the old `role`
+ * object's `{text, translation}` pairs, scene `entities` or the old plan-level ones. What an old
+ * skeleton simply does not have is a вводка, and an empty intro is a день без вводки rather than a
+ * broken plan.
  *
  * The CONTENT judgement (are there scenes at all, does every skill have one checkpoint, is
- * `est_terms` in range) is not made here: it is made once, by
+ * `est_terms` in range, is there an intro) is not made here: it is made once, by
  * {@see \App\Modules\Generation\Domain\Service\PlanOutlineValidator}, on the model's raw answer
  * before it is ever stored. This type is the STRUCTURAL parse and it refuses only what it cannot
- * represent — which is what makes it safe to re-read a stored outline written months ago.
+ * represent — which is what makes it safe to re-read a skeleton written months ago.
  */
 final readonly class PlanOutline
 {
     /**
-     * @param  list<array{name: string, gender: string, number: string, note: string}>  $entities
-     * @param  list<string>  $constraints
-     * @param  list<string>  $goalTerms
+     * @param  list<string>  $entities     proper names of the scenario, from every scene
+     * @param  list<string>  $constraints  always empty since v0.4 — kept because a stored v0.2
+     *                                     skeleton has them and the plan screen still shows them
+     * @param  list<string>  $goalTerms    the learner's own Latin-alphabet words, when a v0.2
+     *                                     skeleton named them
      * @param  list<PlanScene>  $scenes
      */
     public function __construct(
@@ -62,6 +68,7 @@ final readonly class PlanOutline
 
         $scenes = [];
         $position = 0;
+        $entities = [];
         $rawScenes = is_array($raw['scenes'] ?? null) ? $raw['scenes'] : [];
         foreach ($rawScenes as $rawScene) {
             if (! is_array($rawScene)) {
@@ -82,7 +89,12 @@ final readonly class PlanOutline
                     continue;
                 }
 
+                $skillIndex = count($skills);
                 $skills[] = new PlanSkill(
+                    // The model is asked for an id and the server writes one when it did not: an id
+                    // is an ADDRESS, and «s1.2» computed from the position is exactly as stable as
+                    // one the model would have written, because the position is what it addresses.
+                    id: self::text($rawSkill['id'] ?? '') ?: 's' . $sceneIndex . '.' . ($skillIndex + 1),
                     outcome: $outcome,
                     checkpoint: self::text($rawSkill['checkpoint'] ?? ''),
                     // A skill whose price did not survive the round trip is worth ONE term rather
@@ -90,7 +102,7 @@ final readonly class PlanOutline
                     // underprices, because free abilities never make a plan «не влезает».
                     estTerms: max(1, (int) self::scalar($rawSkill['est_terms'] ?? 0)),
                     sceneIndex: $sceneIndex,
-                    skillIndex: count($skills),
+                    skillIndex: $skillIndex,
                     position: $position++,
                     topics: self::stringList($rawSkill['topics'] ?? null),
                 );
@@ -102,11 +114,20 @@ final readonly class PlanOutline
                 continue;
             }
 
+            $sceneEntities = self::stringList($rawScene['entities'] ?? null);
+            foreach ($sceneEntities as $entity) {
+                if (! in_array($entity, $entities, true)) {
+                    $entities[] = $entity;
+                }
+            }
+
             $scenes[] = new PlanScene(
                 index: $sceneIndex,
                 title: self::text($rawScene['title'] ?? ''),
-                role: self::role($rawScene['role'] ?? null),
+                intro: self::text($rawScene['intro'] ?? ''),
                 skills: $skills,
+                openingLines: self::openingLines($rawScene),
+                entities: $sceneEntities,
             );
         }
 
@@ -118,10 +139,14 @@ final readonly class PlanOutline
             throw InvalidPlanOutline::because($violations);
         }
 
+        // `goal_summary` is v0.4's one plan-level string and stands in for both: it is the goal in
+        // one sentence, which is what the title says and what the restatement says.
+        $summary = self::text($raw['goal_summary'] ?? '');
+
         return new self(
-            title: self::text($raw['title'] ?? ''),
-            goalRestated: self::text($raw['goal_restated'] ?? ''),
-            entities: self::entities($raw['entities'] ?? null),
+            title: $summary !== '' ? $summary : self::text($raw['title'] ?? ''),
+            goalRestated: $summary !== '' ? $summary : self::text($raw['goal_restated'] ?? ''),
+            entities: $entities !== [] ? $entities : self::legacyEntityNames($raw['entities'] ?? null),
             constraints: self::stringList($raw['constraints'] ?? null),
             goalTerms: self::stringList($raw['goal_terms'] ?? null),
             scenes: $scenes,
@@ -130,8 +155,8 @@ final readonly class PlanOutline
 
     /**
      * Every ability of the whole plan, in P1's own order: scene 1's abilities, then scene 2's, and
-     * so on. The order is load-bearing — the prompt writes scenes and skills by dependency and by
-     * likelihood, so when a plan does not fit, the scheduler drops from the END.
+     * so on. The order is load-bearing — the prompt writes scenes by likelihood, so when a plan does
+     * not fit, the scheduler drops from the END.
      *
      * @return list<PlanSkill>
      */
@@ -161,13 +186,8 @@ final readonly class PlanOutline
     /**
      * The FINAL day's checkpoint list: every checkpoint of the plan, in P1's order.
      *
-     * Assembled here and never asked of the model. v0 asked, and the answer drifted from the days
-     * it was supposed to be a copy of — promising the learner an exam harder than the plan they
-     * took (docs/research/plan-sandbox-2026-08-29.md §7.7).
-     *
-     * Unlike v0.1 this now includes the checkpoints of scenes with NO interlocutor: the checkpoints
-     * used to hang off the role, so a scene without one silently contributed nothing to the
-     * rehearsal. An ability nobody watches is still an ability the plan promised.
+     * Assembled here and never asked of the model. v0 asked, and the answer drifted from the days it
+     * was supposed to be a copy of — promising the learner an exam harder than the plan they took.
      *
      * @return list<string>
      */
@@ -183,33 +203,45 @@ final readonly class PlanOutline
         return $out;
     }
 
-    private static function role(mixed $raw): ?PlanRole
+    /**
+     * The scene's opening lines, from either shape.
+     *
+     * v0.4 answers with plain utterances; v0.2 wrapped them in a `role` object with a translation
+     * beside each. Both are read, because a plan started last week is still running.
+     *
+     * @param  array<mixed>  $rawScene
+     * @return list<string>
+     */
+    private static function openingLines(array $rawScene): array
     {
-        if (! is_array($raw)) {
-            return null;
+        $direct = self::stringList($rawScene['opening_lines'] ?? null);
+        if ($direct !== []) {
+            return $direct;
         }
 
-        $lines = [];
-        $rawLines = is_array($raw['opening_lines'] ?? null) ? $raw['opening_lines'] : [];
-        foreach ($rawLines as $line) {
-            if (! is_array($line)) {
-                continue;
+        $role = $rawScene['role'] ?? null;
+        $lines = is_array($role) ? ($role['opening_lines'] ?? null) : null;
+        if (! is_array($lines)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($lines as $line) {
+            $text = is_array($line) ? self::text($line['text'] ?? '') : self::text($line);
+            if ($text !== '') {
+                $out[] = $text;
             }
-            $lines[] = [
-                'text' => self::text($line['text'] ?? ''),
-                'translation' => self::text($line['translation'] ?? ''),
-            ];
         }
 
-        return new PlanRole(
-            name: self::text($raw['name'] ?? ''),
-            openingLines: $lines,
-            ifSilent: self::text($raw['if_silent'] ?? ''),
-        );
+        return $out;
     }
 
-    /** @return list<array{name: string, gender: string, number: string, note: string}> */
-    private static function entities(mixed $raw): array
+    /**
+     * A v0.2 skeleton's plan-level entities, as names.
+     *
+     * @return list<string>
+     */
+    private static function legacyEntityNames(mixed $raw): array
     {
         if (! is_array($raw)) {
             return [];
@@ -217,19 +249,10 @@ final readonly class PlanOutline
 
         $out = [];
         foreach ($raw as $entity) {
-            if (! is_array($entity)) {
-                continue;
+            $name = is_array($entity) ? self::text($entity['name'] ?? '') : self::text($entity);
+            if ($name !== '') {
+                $out[] = $name;
             }
-            $name = self::text($entity['name'] ?? '');
-            if ($name === '') {
-                continue;
-            }
-            $out[] = [
-                'name' => $name,
-                'gender' => self::text($entity['gender'] ?? 'none'),
-                'number' => self::text($entity['number'] ?? 'singular'),
-                'note' => self::text($entity['note'] ?? ''),
-            ];
         }
 
         return $out;

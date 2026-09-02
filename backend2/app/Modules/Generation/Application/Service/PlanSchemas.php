@@ -19,25 +19,30 @@ namespace App\Modules\Generation\Application\Service;
  */
 final class PlanSchemas
 {
-    /** @return array<string, mixed> */
+    /**
+     * P1 v0.4 — A SKELETON IS SCENES AND NOTHING ELSE.
+     *
+     * This is the «OUTPUT» block of `docs/p1.plan-outline.v0.4.md`, key for key. Everything that
+     * used to sit beside the scenes moved inside them: the interlocutor's lines are the scene's own
+     * `opening_lines`, the names of the scenario are the scene's `entities`, and the вводка — the
+     * two or three sentences that put the learner in the room — is a scene field, because a day is
+     * one whole scene now and that вводка is the first thing on its screen.
+     *
+     * Three plan-level lists went away with them: `title` and `goal_restated` collapsed into one
+     * `goal_summary`, and the typed `entities` / `constraints` / `goal_terms` are simply not asked
+     * for any more. Nothing downstream lost a rule except the Russian gender check, whose only input
+     * was a gender the model no longer states.
+     *
+     * The schema being left at v0.2 while the prompt and the validator moved to v0.4 is not a
+     * hypothetical: it is what the live run of this наряд hit. Structured output cannot emit a key
+     * the schema does not name, so every scene came back without an intro, `scene.intro_missing`
+     * fired on all four of them, and the skeleton was refused twice for real money. The prompt asks,
+     * the schema permits, and BOTH have to be moved.
+     *
+     * @return array<string, mixed>
+     */
     public static function outline(): array
     {
-        $line = self::object([
-            'text' => self::string(),
-            'translation' => self::string(),
-        ]);
-
-        $role = [
-            'type' => ['object', 'null'],
-            'additionalProperties' => false,
-            'required' => ['name', 'opening_lines', 'if_silent'],
-            'properties' => [
-                'name' => self::string(),
-                'opening_lines' => self::arrayOf($line),
-                'if_silent' => self::string(),
-            ],
-        ];
-
         // One checkpoint per skill, and the schema is where that stops being a hope. Until v0.2 the
         // checkpoints were a separate list on the role, kept parallel to the abilities by nothing
         // but instruction, and the validator's job was to notice when the two lengths came apart.
@@ -49,16 +54,18 @@ final class PlanSchemas
         ]);
 
         $scene = self::object([
+            // The model's own numbering, kept so a re-ordered answer can still be read in the order
+            // it meant. The server addresses scenes by their place in the array regardless — the
+            // scheduler drops from the END, and «the end» has to be P1's end, not the model's mood.
+            'position' => self::integer(),
             'title' => self::string(),
-            'role' => $role,
+            'intro' => self::string(),
             'skills' => self::arrayOf($skill),
-        ]);
-
-        $entity = self::object([
-            'name' => self::string(),
-            'gender' => self::string(),
-            'number' => self::string(),
-            'note' => self::string(),
+            // Raw material for the «тебе скажут» shelf, as plain utterances. v0.2 wrapped these in
+            // a `role` object with a translation each; the day prompt never used the translation and
+            // the name of the interlocutor now lives in the вводка, where a person reads it.
+            'opening_lines' => self::arrayOf(self::string()),
+            'entities' => self::arrayOf(self::string()),
         ]);
 
         // No `days`, no `final_day`, no `estimated_terms`, no `single_day`: every one of them was a
@@ -66,64 +73,77 @@ final class PlanSchemas
         // here (`additionalProperties: false`) and not only asked for in the prose, because a model
         // handed a familiar shape tends to fill it back in.
         return self::object([
-            'title' => self::string(),
-            'goal_restated' => self::string(),
-            'entities' => self::arrayOf($entity),
-            'constraints' => self::arrayOf(self::string()),
-            'goal_terms' => self::arrayOf(self::string()),
+            'goal_summary' => self::string(),
             'scenes' => self::arrayOf($scene),
         ]);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * P2 v0.4 — THE SIX SHELVES OF A DAY-SCENE.
+     *
+     * Three shapes, and the SHELF decides which one an item has ({@see PlanShelf}):
+     *
+     *   an assembled card (`hear`, `say`, `ask`, `numbers`) writes `frame` + `filler` and NO
+     *   `text` — the server pastes them ({@see PlanDayComposer::assemble()}), which is what made
+     *   «`___` left standing in the text» an unconstructable defect in v0.3 and keeps it one;
+     *   a written card (`words`, `chunks`) writes its own `text` and its own key, because the card
+     *   IS the term and a translation of the sentence around it would grade nothing;
+     *   a number additionally writes `value` — the digits the learner types, which never appear on
+     *   the screen and are therefore the one thing no other gate could notice being wrong.
+     *
+     * `kind` rides along because the prompt asks for it, and is NOT trusted: the array a card
+     * stands in decides what it is, exactly as it did in v0.3. `speaker` exists only on `hear`,
+     * where its one legal value is `role` — the tier is the server's and the shelf already said it.
+     *
+     * @return array<string, mixed>
+     */
     public static function day(): array
     {
         $common = [
-            'type' => ['type' => 'string', 'enum' => ['word', 'phrase', 'idiom', 'phrasal_verb']],
-            'is_line' => ['type' => 'boolean'],
+            'kind' => ['type' => 'string', 'enum' => ['line', 'word', 'chunk', 'number']],
+            'skill_ref' => self::string(),
             'translation' => self::string(),
+        ];
+
+        $assembled = [...$common, 'frame' => self::string(), 'filler' => self::string()];
+
+        $hear = self::object([...$assembled, 'speaker' => ['type' => 'string', 'enum' => ['role']], 'transliteration' => self::string()]);
+        $line = self::object([...$assembled, 'transliteration' => self::string()]);
+        $number = self::object([...$assembled, 'value' => self::string()]);
+
+        $word = self::object([
+            ...$common,
+            'text' => self::string(),
             'transliteration' => self::string(),
-            'description' => self::string(),
             'example' => self::string(),
             'example_translation' => self::string(),
             'image_api_prompt' => self::string(),
-            'covers_checkpoint' => ['type' => ['integer', 'null']],
-        ];
-
-        // A LINE HAS NO `text`, AND THAT IS THE WHOLE OF v0.3 IN ONE LINE OF SCHEMA.
-        //
-        // The model writes `frame` — the line with its slot as `___`, or no slot at all for a
-        // formula — and `filler`, the day's own word that goes in the hole; the server pastes them
-        // together ({@see PlanDayComposer::items()}). Four live answers in a row came back with
-        // `___` still standing in `text`, and prose could not stop it: a field the model cannot
-        // write is a defect it cannot commit. `speaker` says whose turn it is.
-        $line = self::object([
-            ...$common,
-            'frame' => self::string(),
-            'filler' => self::string(),
-            'speaker' => ['type' => 'string', 'enum' => ['learner', 'role']],
         ]);
 
-        // A substitution DOES write its own text — it is a word, not an assembled sentence.
-        $card = self::object(['text' => self::string(), ...$common]);
-
-        $knownExample = self::object([
+        $chunk = self::object([
+            ...$common,
+            'text' => self::string(),
+            'transliteration' => self::string(),
             'example' => self::string(),
             'example_translation' => self::string(),
         ]);
 
-        $known = self::object([
-            'text' => self::string(),
-            'examples' => self::arrayOf($knownExample),
-        ]);
-
+        // SIX SHELVES AND NOTHING ELSE — «OUTPUT: one JSON object» of the v0.4 canon, verbatim.
+        //
+        // v0.3 asked for a seventh array, `known`: fresh examples for the terms an earlier day of
+        // this plan already taught, so a carried word was re-met in TODAY's situation instead of
+        // yesterday's. The v0.4 prompt names the known units as INPUT only — «never reintroduce
+        // them as cards» — and its output block has six keys. The schema follows the prompt, which
+        // means that feature is dormant rather than removed: the reader that files those examples
+        // is still in {@see PlanDayComposer::knownExamples()} and starts working again the day the
+        // canon asks for the shelf back. Flagged to the owner as a v0.3 capability v0.4 drops.
         return self::object([
-            'day_index' => self::integer(),
-            'day_title' => self::string(),
-            'phrases' => self::arrayOf($line),
-            'words' => self::arrayOf($card),
-            'chunks' => self::arrayOf($card),
-            'known' => self::arrayOf($known),
+            'hear' => self::arrayOf($hear),
+            'say' => self::arrayOf($line),
+            'ask' => self::arrayOf($line),
+            'words' => self::arrayOf($word),
+            'chunks' => self::arrayOf($chunk),
+            'numbers' => self::arrayOf($number),
         ]);
     }
 
@@ -164,22 +184,24 @@ final class PlanSchemas
     {
         $card = self::object([
             'text' => self::nullableString(),
-            'type' => ['type' => 'string', 'enum' => ['word', 'phrase', 'idiom', 'phrasal_verb']],
-            'is_line' => ['type' => 'boolean'],
+            'kind' => ['type' => 'string', 'enum' => ['line', 'word', 'chunk', 'number']],
+            'skill_ref' => self::nullableString(),
             'translation' => self::string(),
             'transliteration' => self::string(),
-            'description' => self::string(),
             'example' => self::string(),
             'example_translation' => self::string(),
             'image_api_prompt' => self::string(),
-            'covers_checkpoint' => ['type' => ['integer', 'null']],
             'frame' => self::nullableString(),
             'filler' => self::nullableString(),
             'speaker' => self::nullableString(),
+            'value' => self::nullableString(),
         ]);
 
+        // The SHELF is the first half of an address, and a repaired card goes back onto the shelf
+        // it came from — «`say[3]`». It cannot move: a card that changed shelves under repair would
+        // change TIER under the learner, and the tier is what decides which trainers they are dealt.
         $entry = self::object([
-            'array' => ['type' => 'string', 'enum' => ['phrases', 'words', 'chunks']],
+            'array' => ['type' => 'string', 'enum' => ['hear', 'say', 'ask', 'words', 'chunks', 'numbers']],
             'index' => self::integer(),
             'card' => $card,
         ]);

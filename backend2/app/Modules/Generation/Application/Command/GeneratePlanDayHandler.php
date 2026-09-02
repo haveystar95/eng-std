@@ -10,12 +10,15 @@ use App\Modules\Collections\Application\Command\CreateGeneratedCollection;
 use App\Modules\Collections\Application\Command\CreateGeneratedCollectionHandler;
 use App\Modules\Generation\Application\Dto\PlanDayDraft;
 use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
+use App\Modules\Generation\Application\Port\RescueKitSource;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Domain\Exception\PlanDayRefused;
 use App\Modules\Generation\Domain\Exception\PlanSpendNotRecorded;
 use App\Modules\Generation\Domain\Service\PlanSpeakingKey;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
+use App\Modules\Generation\Domain\ValueObject\PlanShelf;
+use App\Modules\Generation\Domain\ValueObject\RescuePhrase;
 use App\Modules\Learning\Application\Command\ClaimPlanDay;
 use App\Modules\Learning\Application\Command\ClaimPlanDayHandler;
 use App\Modules\Learning\Application\Command\FinishPlanDay;
@@ -87,6 +90,12 @@ final readonly class GeneratePlanDayHandler
         private DispatchesImageAttachment $attachImages,
         private DifficultyScorer $scorer,
         private TransactionManager $tx,
+        /**
+         * The language pack's five phrases (канон §5). Null on a build with no pack wired, and then
+         * day 1 is written without a kit rather than refused — the same shape every «this language
+         * has no rule yet» takes in the plan path.
+         */
+        private ?RescueKitSource $rescueKit = null,
     ) {}
 
     public function __invoke(GeneratePlanDay $command): void
@@ -205,10 +214,16 @@ final readonly class GeneratePlanDayHandler
                 source: 'ai',
                 translations: [new TranslationInput($support, $item->translation, isPrimary: true)],
                 ipa: null,
-                // The example is written for THIS day and is scoped to it below. It is imported
-                // here as well so a brand-new term is not born without one — the scope is what
-                // decides where it is shown, not whether it exists.
-                examples: [new ExampleInput($item->example, $item->exampleTranslation, $support)],
+                // NO EXAMPLE HERE, and that is the fix rather than an omission (Д-29, «побочно»).
+                // The sentence is written for THIS day and is stored by the SCOPED writer below,
+                // with its translation in `example_translations`. Importing it here as well wrote a
+                // second, unscoped row that carried no translation — every plan term came out with
+                // two example rows, one of them half a card, and the reader picks whichever it
+                // finds. One sentence, one row: the scope decides where it is shown, and a term
+                // whose only example is scoped is still a term with an example
+                // ({@see \App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermContentReader}
+                // ranks the day's own first and falls back to whatever else exists).
+                examples: [],
                 cefr: null,
                 promptVersion: $draft->promptVersion,
                 generationModel: $draft->model,
@@ -240,7 +255,93 @@ final readonly class GeneratePlanDayHandler
             );
         }
 
+        // THE RESCUE KIT — five phrases, written into DAY 1 and into no other day (канон §5).
+        //
+        // The server's own cards, not the model's: they are the same five in every plan of a
+        // language, and a model asked for them a hundred times spells them a hundred ways. They
+        // ride in the day's collection like any other card, so the session machinery deals them
+        // without knowing what they are, and they are told apart by their SHELF — which is also
+        // how the warm-up finds them every morning after.
+        if ($brief->dayIndex === 1) {
+            foreach ($this->rescueKit?->forPair($brief->targetLang, $brief->supportLang) ?? [] as $phrase) {
+                $termIds[] = $this->writeRescuePhrase($phrase, $brief, $collectionId, $draft, $support, $target)->value;
+            }
+        }
+
         return [$collectionId, $termIds];
+    }
+
+    /**
+     * ONE RESCUE PHRASE, written as an ordinary card of day 1.
+     *
+     * Ordinary in every way that matters — a term, a translation, a scoped example, a picture query
+     * — and marked in exactly one: {@see PlanShelf::Rescue}, which is what makes it
+     * {@see \App\Modules\Learning\Application\Command\BuildPlanSessionHandler}'s warm-up rather
+     * than one more line of the scene. No frame and no filler: «Повторите ещё раз» is said whole,
+     * and a hole in it would be a hole in the one card that has to come out right under pressure.
+     */
+    private function writeRescuePhrase(
+        RescuePhrase $phrase,
+        PlanDayGenerationBrief $brief,
+        CollectionId $collectionId,
+        PlanDayDraft $draft,
+        LanguageCode $support,
+        LanguageCode $target,
+    ): TermId {
+        $termId = ($this->importTerm)(new ImportTerm(
+            lang: $target,
+            text: $phrase->text,
+            type: 'phrase',
+            pos: null,
+            source: 'ai',
+            translations: [new TranslationInput($support, $phrase->translation, isPrimary: true)],
+            ipa: null,
+            examples: [],
+            cefr: null,
+            promptVersion: $draft->promptVersion,
+            generationModel: $draft->model,
+            imageApiPrompt: $phrase->imageApiPrompt !== '' ? $phrase->imageApiPrompt : null,
+        ));
+
+        ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $draft->ownerId));
+
+        $this->planFacts->write(
+            $termId,
+            isLine: true,
+            difficultyScore: $this->scorer->score($brief->targetLang, $phrase->text),
+            kind: PlanDayItem::KIND_LINE,
+            frame: '',
+            speaker: PlanDayItem::SPEAKER_LEARNER,
+            filler: '',
+            // The whole phrase is the ask. There is no piece to pick out of «Секунду, я проверю»,
+            // and a key that named one would grade the learner on half a formula.
+            speakingKey: null,
+            shelf: PlanShelf::Rescue->value,
+            tier: PlanShelf::Rescue->tier(),
+            skillRef: null,
+            numberValue: null,
+        );
+
+        if ($phrase->example !== '') {
+            $this->scopedExamples->write(
+                $termId,
+                $phrase->example,
+                $phrase->exampleTranslation,
+                $support->value,
+                $collectionId,
+            );
+        }
+
+        if ($phrase->transliteration !== null) {
+            $this->transliterations->ensure(
+                $termId,
+                $brief->supportLang,
+                $phrase->transliteration,
+                generatorVersion: PlanDayComposer::PROMPT_VERSION,
+            );
+        }
+
+        return $termId;
     }
 
     /**
@@ -279,6 +380,16 @@ final readonly class GeneratePlanDayHandler
             // can see all of it: the filler, or failing that a word or connector of this same day
             // standing inside the line. {@see PlanSpeakingKey}
             speakingKey: PlanSpeakingKey::of($item, $dayItems),
+            // THE SHELF AND THE TIER — the v0.4 pair the session reads before anything else. The
+            // shelf is the caption a card is dealt under and the thing `kind` cannot say (say and
+            // ask are both spoken `line`s, hear is a `line` nobody says); the tier is derived from
+            // it by the server and stored, so no reader ever computes it a second way.
+            shelf: $item->arrayName(),
+            tier: $item->tier(),
+            skillRef: $item->skillRef,
+            // Only a `numbers` card has one, and it is what NUM-1 will grade against: the digits
+            // never appear on the screen, so nothing but a gate can notice them being wrong.
+            numberValue: $item->value,
         );
 
         $this->scopedExamples->write(

@@ -11,6 +11,8 @@ use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Application\Port\PlanDefectReporter;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
+use App\Modules\Generation\Domain\Service\PlanDayValidator;
+use App\Modules\Generation\Domain\Service\PlanLanguageNotes;
 use App\Modules\Generation\Domain\Service\PlanOutlineValidator;
 use App\Modules\Generation\Domain\ValueObject\PlanViolation;
 use App\Modules\Learning\Application\Dto\PlanModelAnswer;
@@ -66,11 +68,20 @@ final readonly class PlanOutlineService implements PlanOutlinePort
         // Language NAMES, not codes. The prompt is written in English prose about «a
         // {{support_lang}}-speaking learner», and «a ru-speaking learner» is a sentence the model
         // has to decode before it can obey it. Same rule the core prompt follows.
+        $notes = new PlanLanguageNotes();
+        $scriptsDiffer = (new PlanDayValidator())->scriptsDiffer($brief->supportLang, $brief->targetLang);
+
         $prompt = $this->prompts->outline([
-            'goal_text' => $brief->goalText,
+            'goal' => $brief->goalText,
             'support_lang' => LanguageName::of($brief->supportLang),
             'target_lang' => LanguageName::of($brief->targetLang),
             'level' => $brief->level,
+            'target_lang_notes' => $notes->target($brief->targetLang),
+            'support_lang_notes' => $notes->support($brief->supportLang, $brief->targetLang, $scriptsDiffer),
+            // ENTRY-2 will fill this with the listening check and the three questions. Until then
+            // it is EMPTY on purpose and the prompt says what to do with an empty one — «rely on
+            // the goal and the level alone» — so the placeholder is a contract rather than a stub.
+            'diagnostics' => '(пусто — вход диагностики появится с ENTRY-2)',
         ]);
 
         [$answer, $violations] = $this->attempt($prompt, $brief, null);
@@ -125,7 +136,7 @@ final readonly class PlanOutlineService implements PlanOutlinePort
 
         // OFF-GUIDE, NOT BROKEN. Reported for every attempt so a refused skeleton's shape is not
         // lost with it, counted only for the one that is kept — the same split the day uses.
-        foreach ($this->validator->warnings($answer->payload) as $warning) {
+        foreach ($this->validator->warnings($answer->payload, $brief->supportLang) as $warning) {
             $this->defects->warned(
                 $brief->planId,
                 null,

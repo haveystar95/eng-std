@@ -21,6 +21,15 @@ final readonly class PlanSessionTaskView
     /** Top-up from the learner's ordinary queue — it does not count towards the day. */
     public const SECTION_REVIEW = 'review';
 
+    /**
+     * THE WARM-UP — the plan's five rescue phrases, dealt before the day, every day (канон §5).
+     *
+     * A section of its own rather than «the day's own material», because it is neither today's
+     * lesson nor a revision of an earlier one: it is the same five cards on day 1 and on day 9, and
+     * the count the day screen shows («N из N») must not move because the kit came back.
+     */
+    public const SECTION_WARMUP = 'warmup';
+
     /** {@see $origin} — the card came out of another plan of this learner's. */
     public const ORIGIN_PLAN = 'plan';
 
@@ -117,5 +126,22 @@ final readonly class PlanSessionTaskView
          * contracts.
          */
         public ?string $kind = null,
+        /**
+         * WHICH SHELF OF THE SCENE — `hear` | `say` | `ask` | `words` | `chunks` | `numbers` |
+         * `rescue`, or null outside a plan.
+         *
+         * The caption a seam is drawn with, named by the server because the shelf is a fact about
+         * the day and the wording is the client's, in two languages ({@see $origin} for the same
+         * split). `kind` cannot stand in for it: «Ты ответишь» and «Ты спросишь» are both `line`.
+         */
+        public ?string $shelf = null,
+        /**
+         * `speak` | `understand` — the ladder this card climbs (канон §3), or null outside a plan.
+         *
+         * The client decides nothing with it. It is on the wire so a card the server will only ever
+         * ask the learner to RECOGNISE is not drawn as one they are expected to produce, which is
+         * the whole of Д-8 seen from the other side.
+         */
+        public ?string $tier = null,
     ) {}
 }

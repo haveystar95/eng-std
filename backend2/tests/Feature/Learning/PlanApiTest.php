@@ -224,7 +224,12 @@ it('writes the abilities as rows, with the day each one landed on', function () 
         ->and($rows->pluck('dropped')->unique()->all())->toBe([false])
         // Every ability is scheduled onto some day, and the days it names exist.
         ->and($rows->pluck('day_index')->filter()->count())->toBe(4)
-        ->and(json_decode((string) $rows[0]->role, true)['name'])->toBe('собеседник')
+        // Every row carries the name its day's cards point at — «s1.2», not the ULID of the row,
+        // which is regenerated on every reschedule.
+        ->and($rows->pluck('skill_ref')->all())->toBe(['s1.1', 's1.2', 's2.1', 's2.2'])
+        // The interlocutor, derived from the scene's own opening lines: P1 v0.4 answers with no
+        // role object, so there is no name to store and the lines are the whole of it.
+        ->and(json_decode((string) $rows[0]->role, true)['opening_lines'])->toHaveCount(2)
         ->and(json_decode((string) $rows[0]->topics, true))->toBe(['область 1']);
 });
 
@@ -234,19 +239,22 @@ it('rewrites the abilities when the calendar is recomputed, keeping them the sou
     $plan = createPlan($this, $token, ['minutes_per_day' => 40]);
     outlinePlan($this, $token, $plan['id']);
 
-    $daysBefore = DB::table('plan_skills')->where('plan_id', $plan['id'])->pluck('day_index')->unique()->count();
+    $before = DB::table('plan_skills')->where('plan_id', $plan['id'])->orderBy('position')
+        ->pluck('day_index', 'skill_ref')->all();
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->patchJson("/api/v1/plans/{$plan['id']}/outline", ['minutes_per_day' => 10])
         ->assertOk();
 
     $rows = DB::table('plan_skills')->where('plan_id', $plan['id'])->orderBy('position')->get();
-    $daysAfter = $rows->pluck('day_index')->unique()->count();
 
-    // Fewer minutes, smaller days, the same abilities spread over more of them — and not one row
-    // duplicated: A7 REPLACES the set rather than adding to it.
+    // THE MINUTES NO LONGER MOVE THE DAYS, and that is v0.4 rather than a broken reschedule: a day
+    // is a SCENE, so two scenes are two days at ten minutes and at forty. What the minutes decide
+    // is how much of a day one SITTING deals. Not one row is duplicated either — A7 REPLACES the
+    // set rather than adding to it, which is the half of this test that never changed.
     expect($rows)->toHaveCount(4)
-        ->and($daysAfter)->toBeGreaterThan($daysBefore);
+        ->and($rows->pluck('day_index', 'skill_ref')->all())->toBe($before)
+        ->and($rows->pluck('skill_ref')->unique())->toHaveCount(4);
 });
 
 it('refuses a PATCH that changes nothing', function () {
@@ -285,7 +293,8 @@ it('starts the plan, writes day 1 as a real collection and enrols its terms stri
 
     // A real collection with real terms — every trainer works on it without knowing plans exist.
     $termIds = DB::table('collection_items')->where('collection_id', $day1->collection_id)->pluck('term_id');
-    expect($termIds)->toHaveCount(14);
+    // Eighteen cards of the scene plus the five rescue phrases the server writes into day 1.
+    expect($termIds)->toHaveCount(23);
 
     // Strictly enrolled, with the plan named as the reason.
     $sources = DB::table('user_term_progress')
@@ -293,7 +302,7 @@ it('starts the plan, writes day 1 as a real collection and enrols its terms stri
         ->whereIn('term_id', $termIds)
         ->pluck('enrollment_sources');
 
-    expect($sources)->toHaveCount(14);
+    expect($sources)->toHaveCount(23);
     foreach ($sources as $raw) {
         expect(json_decode((string) $raw, true))->toBe(['plan:' . $plan['id']]);
     }
@@ -311,17 +320,24 @@ it('writes the two plan facts onto the terms — is_line and a difficulty score'
     $terms = DB::table('collection_items as ci')
         ->join('terms as t', 't.id', '=', 'ci.term_id')
         ->where('ci.collection_id', $collectionId)
-        ->get(['t.is_line', 't.difficulty_score', 't.kind', 't.frame', 't.speaker', 't.image_api_prompt']);
+        ->get(['t.is_line', 't.difficulty_score', 't.kind', 't.shelf', 't.tier', 't.frame',
+            't.speaker', 't.image_api_prompt']);
 
-    // 14 cards → 8 lines + 2 connectors + 4 words, the three numbers DayCapacity::split() gives.
-    expect($terms->where('is_line', true))->toHaveCount(8)
-        ->and($terms->where('is_line', false))->toHaveCount(6)
-        ->and($terms->where('kind', 'line'))->toHaveCount(8)
+    // The day-scene: ten spoken and heard lines, six pieces, two numbers — plus the five rescue
+    // phrases, which are lines the server wrote rather than the model.
+    expect($terms->where('kind', 'line'))->toHaveCount(15)
         ->and($terms->where('kind', 'chunk'))->toHaveCount(2)
         ->and($terms->where('kind', 'word'))->toHaveCount(4)
-        // Every line stands in a frame and knows whose turn it is; a substitution has neither.
-        ->and($terms->where('kind', 'line')->whereNull('frame'))->toHaveCount(0)
-        ->and($terms->where('kind', 'line')->where('speaker', 'learner'))->toHaveCount(8)
+        ->and($terms->where('kind', 'number'))->toHaveCount(2)
+        ->and($terms->where('is_line', true))->toHaveCount(15)
+        // THE TIER, derived from the shelf and written down: the interlocutor's lines and the
+        // numbers are understood, everything else is produced (канон §3).
+        ->and($terms->where('tier', 'understand')->pluck('shelf')->unique()->sort()->values()->all())
+        ->toBe(['hear', 'numbers'])
+        ->and($terms->where('tier', 'speak')->pluck('shelf')->unique()->sort()->values()->all())
+        ->toBe(['ask', 'chunks', 'rescue', 'say', 'words'])
+        // Whose turn it is, and who has no turn at all.
+        ->and($terms->where('shelf', 'hear')->where('speaker', 'role'))->toHaveCount(4)
         ->and($terms->where('kind', 'word')->whereNotNull('speaker'))->toHaveCount(0)
         ->and($terms->whereNull('difficulty_score'))->toHaveCount(0);
 });
@@ -347,8 +363,14 @@ it('gives every card of a plan day a picture to search for, and queues the searc
         ->where('ci.collection_id', $collectionId)
         ->pluck('t.image_api_prompt');
 
-    expect($prompts)->toHaveCount(14)
-        ->and($prompts->filter(static fn (?string $p): bool => $p === null || trim($p) === ''))->toHaveCount(0);
+    // ONLY A WORD IS ILLUSTRATED now (канон §7): a line, a connector and a number carry no picture,
+    // and the four words of the day plus the five rescue phrases do. What the PLAN-1a defect was
+    // about is unchanged and still asserted — the cards that should have a query have one, and the
+    // job that goes looking is dispatched.
+    $withPicture = $prompts->filter(static fn (?string $p): bool => $p !== null && trim($p) !== '');
+
+    expect($prompts)->toHaveCount(23)
+        ->and($withPicture)->toHaveCount(9);
 
     Bus::assertDispatched(AttachImagesJob::class);
 });
@@ -695,10 +717,10 @@ it('leaves a ledger row for every paid call the plan made', function () {
         // Two versions and not one: the ledger says which prompt each call actually used rather
         // than stamping both with a single number that would be wrong for one of them the moment
         // they are revised apart.
-        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.2', 'plan_day.v0.3'])
+        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.4', 'plan_day.v0.4'])
         ->and($rows[0]->prompt)->toStartWith('outline:')
         ->and($rows[1]->prompt)->toStartWith('day:')
-        ->and($rows[1]->size)->toBe(14);
+        ->and($rows[1]->size)->toBe(\App\Modules\Learning\Domain\Service\SceneDay::UNITS);
 });
 
 it('fails the day loudly when the ledger will not take the row', function () {

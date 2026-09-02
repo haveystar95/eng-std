@@ -10,7 +10,7 @@ use App\Modules\Learning\Domain\ValueObject\ComputedPlan;
 use App\Modules\Learning\Domain\ValueObject\DeadlineCheck;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanOutline;
-use App\Modules\Learning\Domain\ValueObject\PlanRole;
+use App\Modules\Learning\Domain\ValueObject\PlanScene;
 use App\Modules\Learning\Domain\ValueObject\PlanSkill;
 use DateInterval;
 use DateTimeImmutable;
@@ -29,32 +29,37 @@ use DateTimeImmutable;
  * is handed in, which is also what makes «а что будет, если я начну в четверг» a test rather than a
  * conversation.
  *
- * ## The day's budget is CAPACITY, not the sum of what landed on it
+ * ## The day's size is the SCENE's, and `need` is now only a sentence on a card
  *
- * `need` measures DEMAND — the sum of what P1 priced every ability at ({@see PlanSkill::$estTerms})
- * — and it is what decides how many days there are and what does not fit. Since v0.2 those prices
- * are the MODEL's, one per ability; until v0.2 they were this server's own day budget divided up
- * and handed back to itself, which is why no plan ever failed to fit. What each day then ASKS FOR is `capacity`: the number of cards
- * that fit in the minutes the learner has, exactly. Those are two different questions and letting
- * the second be answered by the first is what produced days of 10 and 18 terms — a figure P1 chose
- * out of a band, handed to a validator that counts cards, on a day whose length the learner had
- * already fixed by choosing 20 minutes.
+ * `need` measures DEMAND — the sum of what P1 priced every ability at ({@see PlanSkill::$estTerms}).
+ * Until v0.4 it was also a DIVISOR: days were `ceil(need / capacity)`, and the day the learner
+ * opened was however much of a situation fitted into fourteen cards. Since v0.4 the number of days
+ * is the number of scenes and the size of a day is {@see SceneDay::UNITS} — «≈25 единиц» — so
+ * `need` and `capacity` survive as things the plan SAYS («~75 фраз и слов», «20 минут в день») and
+ * decide nothing.
  *
- * So the model is given a NUMBER and never a band, the validator counts against that same number,
- * and a day that comes back with 8 or 11 cards is wrong rather than «within tolerance». The last
- * day of a plan may carry fewer abilities than the others and still asks for a full day's cards:
- * more material per ability is what a day with room looks like, and asking for less would leave
- * the learner short for a reason no one chose.
+ * That is not a loss of a check. What `need` was protecting against — a plan too big for its
+ * deadline — is now checked in the unit the learner actually experiences: scenes against days.
  *
  * ## The arithmetic, in the order it happens
  *
- *   need      Σ of what every ability costs — {@see PlanOutline::skills()}
- *   capacity  how many terms fit in ONE day at this many minutes ({@see DayCapacity})
+ *   scenes    how many situations the goal is made of — {@see PlanOutline::$scenes}
  *   max_days  days from today to the event INCLUSIVE
+ *   need      Σ of what every ability costs — kept for the «срок мал» card, no longer a divisor
+ *   capacity  how many cards a day at this many minutes holds ({@see DayCapacity}) — reported to
+ *             the preview and used by nothing else since v0.4
  *
- * The last day teaches nothing: it is practice plus the conversation that runs the whole plan. So
- * there are `max_days − 1` days available for teaching, and the room the plan actually has is
- * `capacity × (max_days − 1)`. Everything else follows from comparing `need` with that number.
+ * The last day teaches nothing: it is the run-through. So there are `max_days − 1` days available
+ * for teaching, and since v0.4 the arithmetic ends there: ONE DAY IS ONE SCENE (канон §2), so the
+ * plan needs as many teaching days as it has scenes, and what does not fit is the tail.
+ *
+ * ## Why the packing went, and what it was doing wrong
+ *
+ * Until v0.4 abilities were packed into days by CAPACITY: a day held fourteen cards, a long scene
+ * was split across two days and two short scenes shared one. That produced days the learner could
+ * not name — half of «регистратура» and the beginning of «кабинет врача» in one sitting — and it is
+ * the thing the canon replaced: «День = одна сцена (полный тариф — до двух)». A situation is the
+ * unit a person prepares for, and half a situation prepares them for nothing.
  *
  * ## The plan is not allowed to be longer than {@see MAX_INTRO_DAYS} days of teaching
  *
@@ -82,17 +87,17 @@ use DateTimeImmutable;
  *
  * ## Two cases the general rule gets wrong, and both are real
  *
- * **The event is TODAY.** `max_days = 1`, so the general rule would offer zero teaching days and
- * drop the entire plan. What the learner wants is obvious and the code says it out loud: one day
- * that does both jobs, everything compressed into it, nothing dropped. `fits` still reports
- * honestly whether it all fitted — a compressed day that is over capacity is a real fact and the
- * card says so — but nothing is CUT, because there is no later day to cut it in favour of.
+ * **The event is TODAY.** `max_days = 1`, so there is one day and it does both jobs: the FIRST
+ * scene, plus the run-through of everything it promises. Under the old rule the whole plan was
+ * compressed into it and nothing was dropped; that was possible while a day was a bag of cards, and
+ * it is not while a day is a situation — two situations in one sitting is two sittings. So the
+ * remaining scenes are named in `dropped` and the learner is told, rather than handed a day that
+ * cannot be walked.
  *
- * **It does not fit.** Abilities are taken in P1's order until the room runs out, and the rest are
- * named in `dropped`. The order is load-bearing: P1 writes days in DEPENDENCY order, simple before
- * complex, so dropping from the end drops what leans on the rest rather than what the rest leans
- * on. Nothing is dropped silently — that is what A7 ({@see recheck()}) and the «срок мал» card are
- * for.
+ * **It does not fit.** Whole SCENES are taken in P1's order until the days run out, and the rest
+ * are named in `dropped`. The order is load-bearing: P1 writes scenes typical-before-deep, so
+ * dropping from the end drops the rare encounter rather than the one that will certainly happen.
+ * Nothing is dropped silently — that is what A7 ({@see recheck()}) and the «срок мал» card are for.
  */
 final class PlanScheduler
 {
@@ -133,76 +138,65 @@ final class PlanScheduler
         }
 
         $capacity = $this->capacityFor($minutesPerDay);
-        $skills = $outline->skills();
-        $need = $this->sum($skills);
+        $need = $this->sum($outline->skills());
 
         // ── The event is today ────────────────────────────────────────────────────────────────
-        // One day, both jobs, everything compressed. `fits` still tells the truth about whether it
-        // all fitted; nothing is dropped, because there is no later day to drop it in favour of.
+        // One day, one scene, and the rest of the plan is honestly out of reach. The old rule
+        // compressed the WHOLE plan into that day, which was possible while a day was a bag of
+        // cards and is not while it is a situation: two situations in one sitting is two sittings.
         if ($maxDays === 1) {
+            $droppedScenes = array_slice($outline->scenes, 1);
+            // The parse refuses a skeleton with no scenes at all, so there is always a first one.
+            $first = $outline->scenes[0];
+
             return new ComputedPlan(
-                days: [$this->introDay(
+                days: [$this->sceneDay(
                     index: 1,
-                    // INTRO, even though it is also the last day, and the kind is what decides
-                    // whether the day owns a collection and gets generated. A same-day plan's one
-                    // day TEACHES; calling it `final` would describe the conversation correctly
-                    // and stop the material from ever being written. That the final conversation
-                    // happens on the same day is said by `finalSameDay`, which is where it belongs.
-                    kind: PlanDayKind::Intro,
+                    scene: $first,
                     scheduledOn: $event,
-                    skills: $skills,
-                    outline: $outline,
                     finalCheckpoints: $outline->finalCheckpoints(),
-                    budget: $capacity,
                 )],
                 need: $need,
                 capacity: $capacity,
                 maxDays: 1,
                 introDays: 1,
                 restDays: 0,
-                fits: $need <= $capacity,
-                dropped: [],
+                fits: $droppedScenes === [],
+                dropped: $this->skillsOf($droppedScenes),
                 step: 1,
-                dropReason: null,
+                dropReason: $droppedScenes === [] ? null : ComputedPlan::DROP_DEADLINE,
                 finalSameDay: true,
             );
         }
 
-        // ── The general case ──────────────────────────────────────────────────────────────────
+        // ── The general case: ONE DAY PER SCENE, in the order P1 wrote them ────────────────────
         $teachingDays = $maxDays - 1;
         // The room is bounded TWICE and the tighter bound wins: by the calendar, and by the cap on
-        // how long a plan may be. Which one bit is remembered, because they are different sentences
-        // on the learner's card.
+        // how long a plan may be. Which one bit is remembered — they are different sentences on the
+        // learner's card and different decisions for them.
         $daysAllowed = min($teachingDays, self::MAX_INTRO_DAYS);
-        $room = $capacity * $daysAllowed;
+        $kept = array_slice($outline->scenes, 0, $daysAllowed);
+        $droppedScenes = array_slice($outline->scenes, $daysAllowed);
 
-        [$kept, $dropped] = $this->fitInOrder($skills, $room);
-        $keptNeed = $this->sum($kept);
-        $introDays = min($daysAllowed, max(1, (int) ceil($keptNeed / $capacity)));
+        $introDays = max(1, count($kept));
         $restDays = $teachingDays - $introDays;
 
-        // Spread the teaching over the room there is, up to three days apart. `floor` and not
-        // `round`, so the last introduction day never lands after the event.
+        // Spread the teaching over the room there is, up to three days apart. `floor`, so the last
+        // introduction day never lands after the event.
         $step = max(1, min(self::MAX_STEP, intdiv($teachingDays, $introDays)));
 
-        $buckets = $this->packIntoDays($kept, $capacity, $introDays);
-
         $days = [];
-        foreach ($buckets as $i => $bucket) {
-            $days[] = $this->introDay(
+        foreach ($kept as $i => $scene) {
+            $days[] = $this->sceneDay(
                 index: $i + 1,
-                kind: PlanDayKind::Intro,
+                scene: $scene,
                 scheduledOn: $start->add(new DateInterval('P' . ($i * $step) . 'D')),
-                skills: $bucket,
-                outline: $outline,
                 finalCheckpoints: null,
-                budget: $capacity,
             );
         }
 
         // The final day: introduces nothing, owns no collection, and carries EVERY checkpoint of
-        // the plan — assembled here from the days, never asked of the model (v0 asked, and the
-        // answer drifted from the days it was supposed to copy).
+        // the plan — assembled here from the days, never asked of the model.
         $days[] = new ComputedDay(
             index: $introDays + 1,
             kind: PlanDayKind::Final,
@@ -223,16 +217,79 @@ final class PlanScheduler
             maxDays: $maxDays,
             introDays: $introDays,
             restDays: $restDays,
-            fits: $dropped === [],
-            dropped: $dropped,
+            fits: $droppedScenes === [],
+            dropped: $this->skillsOf($droppedScenes),
             step: $step,
             // The cap only gets the blame when it was the binding constraint — i.e. the calendar
             // had more days to offer and this class refused them.
-            dropReason: $dropped === []
+            dropReason: $droppedScenes === []
                 ? null
                 : ($teachingDays > self::MAX_INTRO_DAYS ? ComputedPlan::DROP_CAP : ComputedPlan::DROP_DEADLINE),
             finalSameDay: false,
         );
+    }
+
+    /**
+     * ONE SCENE, LAID ON A DATE — the whole of «день = одна сцена целиком» (канон §2).
+     *
+     * Everything the day carries comes off the scene, and the two computations that used to happen
+     * here went with the packing: there is no budget to divide, because a day's size is the scene's
+     * ({@see SceneDay::UNITS}), and no title to invent, because the scene has one.
+     *
+     * @param  list<string>|null  $finalCheckpoints  the whole plan's checkpoints, on a same-day plan
+     */
+    private function sceneDay(
+        int $index,
+        PlanScene $scene,
+        DateTimeImmutable $scheduledOn,
+        ?array $finalCheckpoints,
+    ): ComputedDay {
+        $skills = $scene->skills;
+
+        $checkpoints = [];
+        foreach ($skills as $skill) {
+            if ($skill->checkpoint !== '') {
+                $checkpoints[] = $skill->checkpoint;
+            }
+        }
+
+        return new ComputedDay(
+            index: $index,
+            kind: PlanDayKind::Intro,
+            title: $scene->title !== '' ? $scene->title : ($skills[0]->outcome ?? 'День плана'),
+            scheduledOn: $scheduledOn,
+            termBudget: SceneDay::units(),
+            skills: $skills,
+            checkpoints: $finalCheckpoints ?? $checkpoints,
+            role: $scene->role(),
+            topics: $scene->topics(),
+            sourceSceneIndex: $scene->index,
+            intro: $scene->intro,
+            openingLines: $scene->openingLines,
+            entities: $scene->entities,
+        );
+    }
+
+    /**
+     * Every ability of the scenes that did NOT fit — what the «срок мал» card is built from.
+     *
+     * Whole scenes, never a skill from the middle of one: a day is a situation, and half a
+     * situation is a lesson about nothing. The order is P1's, so what goes is the tail — the rare
+     * encounter rather than the one that will certainly happen.
+     *
+     * @param  list<PlanScene>  $scenes
+     * @return list<PlanSkill>
+     */
+    private function skillsOf(array $scenes): array
+    {
+        $out = [];
+        foreach ($scenes as $scene) {
+            foreach ($scene->skills as $skill) {
+                $out[] = $skill;
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -273,9 +330,19 @@ final class PlanScheduler
                 $skills[] = $skill;
             }
         }
-
         $needRemaining = $this->sum($skills);
-        [, $atRisk] = $this->fitInOrder($skills, $capacity * $introDaysRemaining);
+
+        // A DAY IS A SCENE, so what is left is counted in DAYS and not in cards. The old reading
+        // divided the remaining abilities by a day's capacity, which was the right question while a
+        // day was a bag of fourteen; a learner who is three scenes behind with two days left has a
+        // scene at risk whether those scenes are large or small, and compressing two situations
+        // into one sitting is not something the calendar can buy.
+        $atRisk = [];
+        foreach (array_slice($remainingIntroDays, $introDaysRemaining) as $day) {
+            foreach ($day->skills as $skill) {
+                $atRisk[] = $skill;
+            }
+        }
 
         return new DeadlineCheck(
             needRemaining: $needRemaining,
@@ -297,240 +364,6 @@ final class PlanScheduler
     public function capacityFor(int $minutesPerDay): int
     {
         return DayCapacity::forMinutes($minutesPerDay);
-    }
-
-    /**
-     * Take abilities in order until the room runs out.
-     *
-     * ORDER, not size: a greedy pack by size would keep the cheap abilities and drop an expensive
-     * one from the middle, which in a dependency-ordered plan means teaching day 3 to a learner who
-     * never got day 2. The plan is a sequence; it is truncated, not filtered.
-     *
-     * @param  list<PlanSkill>  $skills
-     * @return array{0: list<PlanSkill>, 1: list<PlanSkill>}  kept, dropped
-     */
-    private function fitInOrder(array $skills, int $room): array
-    {
-        $kept = [];
-        $dropped = [];
-        $spent = 0;
-
-        foreach ($skills as $skill) {
-            if ($dropped === [] && $spent + $skill->estTerms <= $room) {
-                $kept[] = $skill;
-                $spent += $skill->estTerms;
-
-                continue;
-            }
-            $dropped[] = $skill;
-        }
-
-        return [$kept, $dropped];
-    }
-
-    /**
-     * Share the abilities out over exactly `$dayCount` days, in order.
-     *
-     * By CUMULATIVE POSITION rather than by first-fit: an ability goes to the day its running total
-     * lands in. First-fit fragments — three 5-term abilities at capacity 9 come out as three days
-     * instead of two, because the second never fits beside the first — and a plan that grew a day
-     * out of a rounding decision is a plan that ends on the wrong date.
-     *
-     * A day may end up one or two terms over capacity when the abilities do not divide (three 5s
-     * into two 9s is 10 and 5). That is the honest answer: the arithmetic says two days, the chunks
-     * do not split, and the day's real budget is reported rather than trimmed to look tidy.
-     *
-     * @param  list<PlanSkill>  $skills
-     * @return list<list<PlanSkill>>  exactly `$dayCount` buckets, each with at least one ability
-     */
-    private function packIntoDays(array $skills, int $capacity, int $dayCount): array
-    {
-        /** @var list<list<PlanSkill>> $buckets */
-        $buckets = array_fill(0, $dayCount, []);
-
-        $cumulative = 0;
-        foreach ($skills as $skill) {
-            $day = min($dayCount - 1, intdiv($cumulative, $capacity));
-            $buckets[$day][] = $skill;
-            $cumulative += $skill->estTerms;
-        }
-
-        // An empty day is a day the learner opens onto nothing. It can only happen when there are
-        // fewer abilities than days, so the fix is to spend a day rather than to show an empty one:
-        // steal from the fullest earlier bucket, keeping order.
-        for ($i = 1; $i < $dayCount; $i++) {
-            if ($buckets[$i] !== []) {
-                continue;
-            }
-            for ($j = $i - 1; $j >= 0; $j--) {
-                if (count($buckets[$j]) > 1) {
-                    $moved = array_pop($buckets[$j]);
-                    $buckets[$i] = [$moved];
-                    break;
-                }
-            }
-        }
-
-        return array_values(array_filter($buckets, static fn (array $b): bool => $b !== []));
-    }
-
-    /**
-     * Build one teaching day out of the abilities that landed on it.
-     *
-     * The TITLE prefers the outline day's own words when the whole day came from one outline day —
-     * which is the ordinary case and is why P1 is asked for a title at all: «Начать приём и описать
-     * боль» is a step, and the first ability, «сказать, где именно болит и как давно», is a
-     * fragment of one. When the server has merged material from several outline days there is no
-     * such title to borrow, and the day is named after its main ability, which is the honest
-     * fallback rather than a title about a day that no longer exists.
-     *
-     * @param  list<PlanSkill>  $skills
-     * @param  list<string>|null  $finalCheckpoints  the whole plan's checkpoints, on a same-day plan
-     */
-    private function introDay(
-        int $index,
-        PlanDayKind $kind,
-        DateTimeImmutable $scheduledOn,
-        array $skills,
-        PlanOutline $outline,
-        ?array $finalCheckpoints,
-        int $budget,
-    ): ComputedDay {
-        $sceneIndexes = [];
-        foreach ($skills as $skill) {
-            $sceneIndexes[$skill->sceneIndex] = true;
-        }
-        $sourceIndex = count($sceneIndexes) === 1 ? (int) array_key_first($sceneIndexes) : null;
-
-        $checkpoints = [];
-        foreach ($skills as $skill) {
-            if ($skill->checkpoint !== '') {
-                $checkpoints[] = $skill->checkpoint;
-            }
-        }
-
-        // The areas come off the SKILLS that landed here, not off their scenes: a scene split
-        // across two days would otherwise hand both days the whole scene's topics, and the day
-        // brief would ask for substitution words the day has no line to put them in.
-        $topics = [];
-        foreach ($skills as $skill) {
-            foreach ($skill->topics as $topic) {
-                if (! in_array($topic, $topics, true)) {
-                    $topics[] = $topic;
-                }
-            }
-        }
-
-        return new ComputedDay(
-            index: $index,
-            kind: $kind,
-            title: $this->titleFor($skills, $outline),
-            scheduledOn: $scheduledOn,
-            termBudget: $budget,
-            skills: $skills,
-            checkpoints: $finalCheckpoints ?? $checkpoints,
-            // The FIRST scene's interlocutor, for the readers that want one person: the rehearsal
-            // screen and the plan screen. The day brief reads `scenes` instead and gets all of them.
-            role: $this->roleFor($skills, $outline),
-            topics: $topics,
-            sourceSceneIndex: $sourceIndex,
-            scenes: $this->scenesFor($skills, $outline),
-        );
-    }
-
-    /**
-     * THE DAY'S NAME — the scene it came from, or both scenes joined.
-     *
-     * A day is a slice of the plan and not a lesson with a theme, so its title is the step it
-     * gets you: «Записаться и дойти до кабинета». One scene, one title. TWO scenes merged into one
-     * day get «A · B», because the alternative — naming the day after its first ability — hides
-     * half of what the learner is about to do, and they are looking at this line to decide whether
-     * to open the day at all.
-     *
-     * A scene SPLIT across two days gives both of them the same title, and that is correct: they
-     * are two sittings of one situation, and numbering them «часть 1 / часть 2» would be inventing
-     * a distinction the plan does not make.
-     *
-     * @param list<PlanSkill> $skills
-     */
-    private function titleFor(array $skills, PlanOutline $outline): string
-    {
-        $titles = [];
-        foreach ($skills as $skill) {
-            $title = $outline->scene($skill->sceneIndex)->title ?? '';
-            if ($title !== '' && ! in_array($title, $titles, true)) {
-                $titles[] = $title;
-            }
-        }
-
-        if ($titles !== []) {
-            return implode(' · ', $titles);
-        }
-
-        return $skills[0]->outcome ?? 'День плана';
-    }
-
-    /**
-     * The day's SCENES, as P2 reads them — with the checkpoints numbered 1..N straight through.
-     *
-     * One entry per scene that has abilities HERE, carrying only those abilities. That is what
-     * makes a scene split across two days honest: day 1 shows the interlocutor and the two moves
-     * that landed on it, day 2 shows the same person and the rest, and neither day is handed
-     * checkpoints its own material was never asked to cover.
-     *
-     * The numbering runs over the day, not over the scene: the validator checks that every index
-     * 1..N is closed by some line, and «N» is a property of the day.
-     *
-     * @param  list<PlanSkill>  $skills
-     * @return list<array{title: string, role: array{name: string, opening_lines: list<array{text: string, translation: string}>, if_silent: string}|null, skills: list<array{outcome: string, checkpoint_index: int, topics: list<string>}>}>
-     */
-    private function scenesFor(array $skills, PlanOutline $outline): array
-    {
-        $scenes = [];
-        $order = [];
-        $checkpointIndex = 0;
-
-        foreach ($skills as $skill) {
-            $checkpointIndex++;
-            $sceneIndex = $skill->sceneIndex;
-
-            if (! isset($scenes[$sceneIndex])) {
-                $scene = $outline->scene($sceneIndex);
-                $role = $scene?->role;
-                $scenes[$sceneIndex] = [
-                    'title' => $scene->title ?? '',
-                    'role' => $role === null ? null : [
-                        'name' => $role->name,
-                        'opening_lines' => $role->openingLines,
-                        'if_silent' => $role->ifSilent,
-                    ],
-                    'skills' => [],
-                ];
-                $order[] = $sceneIndex;
-            }
-
-            $scenes[$sceneIndex]['skills'][] = [
-                'outcome' => $skill->outcome,
-                'checkpoint_index' => $checkpointIndex,
-                'topics' => $skill->topics,
-            ];
-        }
-
-        return array_map(static fn (int $i): array => $scenes[$i], $order);
-    }
-
-    /**
-     * The person the day's conversation is with — the interlocutor of the day's FIRST scene.
-     *
-     * @param list<PlanSkill> $skills
-     */
-    private function roleFor(array $skills, PlanOutline $outline): ?PlanRole
-    {
-        if ($skills === []) {
-            return null;
-        }
-
-        return $outline->scene($skills[0]->sceneIndex)?->role;
     }
 
     /**

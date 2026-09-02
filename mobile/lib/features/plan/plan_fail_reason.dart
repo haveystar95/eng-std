@@ -10,10 +10,17 @@
 /// there was no way to work out what to actually fix (Д-19).
 ///
 /// A code this list does not know gets [AppLocalizations.planFailUnknown] — «не удалось собрать
-/// день» — and nothing else. Guessing from a code's shape («it starts with `day.example`, so
+/// день» — and nothing else. Guessing from a code's shape («it starts with `card.example`, so
 /// probably…») is how the old sentence was wrong in the first place, and a plausible wrong reason
 /// costs more than an honest missing one. The list grows when the server grows a code; the map is
 /// in `backend2/docs/plan-map.md` §3.
+///
+/// The codes turned over wholesale when the day stopped being three arrays and became a scene
+/// (p2.plan-day v0.4): what used to be a `day.*` verdict about the whole payload is now a `card.*`
+/// one about ONE card, because that is the address a repair call is pointed at. The gone codes are
+/// gone from here too — a client that keeps answering for a code the server no longer sends is a
+/// list nobody can trust to be current — and where the new code says what an old one said, it
+/// inherits the old one's sentence rather than a second wording of the same thing.
 library;
 
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -23,23 +30,23 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// [failCode] is null on every day that did not fail, and on a failure with no verdict at all — a
 /// vendor error, a write that did not land. Both get the neutral answer, which is true of both.
 String planFailReason(AppLocalizations l, String? failCode) => switch (failCode) {
-  'day.example_is_a_term' => l.planFailExampleIsATerm,
-  'day.example_duplicated' => l.planFailExampleDuplicated,
-  'day.example_missing' => l.planFailExampleMissing,
+  // ── one card, one address: the day goes back for a repair of that card ───────────────────────
+  'card.gap_missing' => l.planFailGapMissing,
+  'card.gap_outside_frame' => l.planFailSlotOutsideFrame,
+  'card.translation_has_gap' => l.planFailTranslationHasGap,
+  'card.translation_missing_key' => l.planFailTranslationMissingKey,
+  'card.filler_not_card' => l.planFailFillerNotCard,
+  'card.clone' => l.planFailTermRepeated,
+  'card.example_is_a_term' => l.planFailExampleIsATerm,
+  'card.example_skeleton_clone' => l.planFailExampleDuplicated,
+  'card.word_is_basic' => l.planFailWordIsBasic,
+  'card.kind_size' => l.planFailKindSize,
+  'card.term_is_a_name' => l.planFailTermIsAName,
+  'card.translation_is_transliteration' => l.planFailKeyIsTheTerm,
+  'card.skill_ref_invalid' => l.planFailSkillRefInvalid,
+  'card.number_value_mismatch' => l.planFailNumberValueMismatch,
+  // ── about the DAY, with no card to point at, so the whole day goes back ──────────────────────
+  'day.shelf_missing' => l.planFailShelfMissing,
   'outline.target_language' => l.planFailNotTargetLanguage,
-  'day.key_is_the_term' => l.planFailKeyIsTheTerm,
-  'day.key_duplicated' => l.planFailKeyDuplicated,
-  'day.key_not_support_language' => l.planFailKeyNotSupportLanguage,
-  'day.kind_mismatch' => l.planFailKindMismatch,
-  'day.array_count' || 'day.term_count' => l.planFailCounts,
-  'day.checkpoint_uncovered' ||
-  'day.checkpoint_on_word' ||
-  'day.checkpoint_out_of_range' => l.planFailCheckpoint,
-  'day.term_is_a_name' => l.planFailTermIsAName,
-  'day.slot_outside_frame' => l.planFailSlotOutsideFrame,
-  'day.image_prompt_missing' => l.planFailImagePromptMissing,
-  'day.description_gives_away' => l.planFailDescriptionGivesAway,
-  'day.role_line_invented' => l.planFailRoleLineInvented,
-  'plan.term_repeated' => l.planFailTermRepeated,
   _ => l.planFailUnknown,
 };

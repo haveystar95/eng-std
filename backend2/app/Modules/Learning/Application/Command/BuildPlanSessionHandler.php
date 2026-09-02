@@ -254,6 +254,45 @@ final readonly class BuildPlanSessionHandler
         $specs = [];
         $taken = [];
 
+        // 0. THE WARM-UP — the rescue kit, every morning, before anything else (канон §5).
+        //
+        // «Тренируются жёстче всех: разогрев ~2 минуты каждый день до конца плана, из ротации не
+        // выпадают.» They are the five phrases that keep a conversation alive when it breaks, so
+        // they are the one thing that must not wait its turn in a queue: a learner who never gets
+        // to «Помедленнее, пожалуйста» is a learner who stops at the first sentence they miss.
+        //
+        // FIRST, and that is the section's whole meaning — a seam announced after the cards it
+        // labels is not a seam. The day's own material follows it, and `day_task_count` keeps
+        // counting only that, so «N из N» on the day screen is unchanged.
+        foreach ($this->rescueTerms($progress) as $termId => $rescue) {
+            $standing = $rescue['standing'];
+            $taken[$termId] = true;
+
+            if ($standing->nextMode !== null) {
+                $specs = [
+                    ...$specs,
+                    ...$this->specsFor(
+                        $termId,
+                        $standing,
+                        $rescue['day'],
+                        'warmup',
+                        $knobs,
+                        $this->kindOf($progress, $termId),
+                        PlanSessionTaskView::SECTION_WARMUP,
+                    ),
+                ];
+
+                continue;
+            }
+
+            // The kit has walked its ladder and owes nothing today — and it still comes back. One
+            // card at whatever rung the pair stands on, so «из ротации не выпадают» stays true for
+            // the rest of the plan rather than for the three days the ladder takes.
+            $specs[] = ['term_id' => $termId, 'stage' => null, 'mode' => null, 'ordinal' => 0,
+                'of' => 0, 'day' => $rescue['day'], 'softened' => false, 'source' => 'warmup',
+                'step' => null, 'section' => PlanSessionTaskView::SECTION_WARMUP];
+        }
+
         // 1. THE DAY ITSELF, in A2's order — words, connectors, replies, the interlocutor's line —
         // each card bringing its whole remaining stage-A checklist.
         //
@@ -324,6 +363,7 @@ final readonly class BuildPlanSessionHandler
         string $source,
         PlanKnobs $knobs,
         string $kind = PlanStageLadder::KIND_WORD,
+        ?string $section = null,
     ): array {
         $specs = [];
         $seen = [];
@@ -351,6 +391,9 @@ final readonly class BuildPlanSessionHandler
                 'day' => $dayIndex,
                 'softened' => $standing->softened,
                 'source' => $source,
+                // Named by the caller when the card belongs to a seam of its own; otherwise the
+                // day it came from decides, as it always has.
+                'section' => $section,
                 'step' => PlanStageLadder::ladderStepFor(
                     $standing->stage,
                     $mode,
@@ -378,7 +421,10 @@ final readonly class BuildPlanSessionHandler
         foreach ($progress->days as $day) {
             $content = $day->content[$termId] ?? null;
             if ($content !== null && $content->kind !== null) {
-                return $content->kind;
+                // The same derivation the checklist made ({@see PlanStandings}), from the same
+                // object: the tier decides the ladder, and a session that asked a different
+                // question would deal a step the checklist does not owe.
+                return PlanStageLadder::ladderKindFor($content->kind, $content->tier);
             }
         }
 
@@ -582,9 +628,11 @@ final readonly class BuildPlanSessionHandler
                 // one is «Повторение». It used to read «`day` is null», which was the top-up — and
                 // with the top-up gone that test would have made the seam permanently empty and the
                 // day's own count permanently equal to the sitting.
-                section: (int) $spec['day'] === $dayIndex
-                    ? PlanSessionTaskView::SECTION_DAY
-                    : PlanSessionTaskView::SECTION_REVIEW,
+                section: is_string($spec['section'] ?? null)
+                    ? $spec['section']
+                    : ((int) $spec['day'] === $dayIndex
+                        ? PlanSessionTaskView::SECTION_DAY
+                        : PlanSessionTaskView::SECTION_REVIEW),
                 // NOBODY ELSE'S SHELF TO NAME. `origin` said «из плана: Отпуск в Италии» over a card
                 // the top-up had brought in; the seam is now this plan's own earlier days, and
                 // `from_day_index` above already says which. The field stays on the wire — it is
@@ -610,6 +658,15 @@ final readonly class BuildPlanSessionHandler
                 // WHAT THIS CARD IS, so the summary can count «4 слова · 2 связки · 8 фраз» instead
                 // of counting words in the text and calling a connector a phrase (Д-5).
                 kind: $termContent->kind,
+                // WHICH SHELF, and therefore which caption the client draws over the seam —
+                // «Тебе скажут», «Ты ответишь», «Ты спросишь», «Слова и связки», «Разогрев». The
+                // server names it because the shelf is a fact about the day and the client has two
+                // languages to say it in.
+                shelf: $termContent->shelf,
+                // `speak` or `understand`. The client does not decide anything with it; it is here
+                // so a card the server will only ever ask for RECOGNITION cannot be drawn as one
+                // the learner is expected to produce (Д-8).
+                tier: $termContent->tier,
             );
         }
 
@@ -690,6 +747,40 @@ final readonly class BuildPlanSessionHandler
     /** `terms.speaker` for a line the INTERLOCUTOR says — {@see PlanStandings::PRODUCTION_MODES}. */
     private const SPEAKER_ROLE = 'role';
 
+    /** The shelf the server's own five phrases stand on — {@see PlanShelf::Rescue}. */
+    private const SHELF_RESCUE = 'rescue';
+
+    /**
+     * THE RESCUE KIT OF THIS PLAN, with where each phrase stands — the warm-up's whole input.
+     *
+     * Found by SHELF and not by a list of texts: the five phrases are written into day 1 as
+     * ordinary cards ({@see \App\Modules\Generation\Application\Command\GeneratePlanDayHandler}), and
+     * a session that matched them by comparing strings against a config would deal a different set
+     * the day somebody fixed a comma in the language pack.
+     *
+     * They live on day 1, so their standings are day 1's — which is also what makes «ускоренная
+     * лестница» true without a second ladder: A on the day they are introduced, B in the session
+     * after the first night, C after the second, exactly as the plan's own ladder walks anything.
+     *
+     * @return array<string, array{standing: PlanTermStanding, day: int}>
+     */
+    private function rescueTerms(PlanProgressView $progress): array
+    {
+        $out = [];
+        foreach ($progress->days as $index => $day) {
+            foreach ($day->termIds as $termId) {
+                $content = $day->content[$termId] ?? null;
+                $standing = $day->standings[$termId] ?? null;
+                if ($content === null || $standing === null || $content->shelf !== self::SHELF_RESCUE) {
+                    continue;
+                }
+                $out[$termId] ??= ['standing' => $standing, 'day' => $index];
+            }
+        }
+
+        return $out;
+    }
+
     /** @return array<string, DueTermView> */
     private function dayViews(LearningPlan $plan, PlanDayProgressView $day): array
     {
@@ -700,7 +791,13 @@ final readonly class BuildPlanSessionHandler
         $out = [];
         foreach (($this->practiceTerms)(new GetPracticeTerms(
             userId: $plan->userId(),
-            sessionSize: count($day->termIds),
+            // THE WHOLE COLLECTION, not «as many as the day owes». The two stopped being the same
+            // number in v0.4: a day's collection also holds its NUMBERS, which no session deals yet
+            // and which the plan's progress therefore leaves out of `termIds`. Asking for the
+            // smaller figure made the reader return that many rows of a bigger folder, and the
+            // cards it happened to leave out were dealt nothing at all — a stage that never closes,
+            // a day that never passes, and a day n+1 that is never written.
+            sessionSize: self::DUE_CAP,
             collectionId: $day->collectionId,
         )) as $view) {
             $out[$view->termId->value] = $view;

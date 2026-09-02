@@ -137,4 +137,11 @@ class _Envelope implements PlanSessionEnvelope {
   String? kindAt(int i) => i >= 0 && i < kinds.length ? kinds[i] : null;
   @override
   String? speakerAt(int i) => null;
+  // The summary reads none of the three: a scene's shelves are a fact about the SESSION's seams.
+  @override
+  String? shelfAt(int i) => null;
+  @override
+  bool isWarmupAt(int i) => false;
+  @override
+  bool isRecognitionOnlyAt(int i) => false;
 }

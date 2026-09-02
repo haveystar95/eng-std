@@ -34,5 +34,14 @@ final readonly class PlanDayView
         public array $checkpoints,
         public array $topics,
         public ?array $role,
+        /**
+         * THE ВВОДКА — «кто перед тобой, что сейчас произойдёт, что считается успехом», 2–3
+         * sentences in the learner's own language, written once by P1 (канон §2).
+         *
+         * It is what turns a list of sentences into a situation, and it is why the day screen can
+         * say something before the first card. Empty on the final day, which is no scene, and on
+         * every day scheduled before v0.4.
+         */
+        public string $intro = '',
     ) {}
 }
