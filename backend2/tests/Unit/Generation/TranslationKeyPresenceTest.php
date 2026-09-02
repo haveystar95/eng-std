@@ -40,6 +40,34 @@ it('does not count a preposition as having found the key', function () {
     expect($this->presence->holds('ru', 'Я взял это для тебя', 'место для аренды'))->toBeFalse();
 });
 
+/**
+ * THE FOUR LINES OF THE OWNER'S LIVE DAY 2, verbatim — plan `01M1HZF4…`, 02–03.09.
+ *
+ * `card.translation_missing_key` refused this day FOUR times over these rows: twice from P2R at
+ * 21:14:50, once from P2 at 22:38:37, and the fourth time through the rebuild handle this наряд
+ * added. Every one of the translations below is correct Russian; every one of them was refused,
+ * because a fixed five-letter stem of «тихий» is «тихий» and the language says «тихо».
+ */
+it('finds a short adjective through its ending — the live day 2 rows', function () {
+    expect($this->presence->holds('ru', 'Здесь довольно тихо.', 'тихий'))->toBeTrue()
+        ->and($this->presence->holds('ru', 'Тихое место мне подходит.', 'тихий'))->toBeTrue()
+        ->and($this->presence->holds('ru', 'Это важно для меня.', 'важный'))->toBeTrue()
+        // The fourth generation, bought by the rebuild handle, died on this one.
+        ->and($this->presence->holds('ru', 'Это выглядит тихо.', 'тихий'))->toBeTrue();
+});
+
+it('still refuses a line that says nothing of the key, short word or not', function () {
+    // The adaptive stem widens what counts as «the same word»; it does not make the gate vacuous.
+    expect($this->presence->holds('ru', 'Здесь довольно шумно.', 'тихий'))->toBeFalse()
+        ->and($this->presence->holds('ru', 'Мне это подходит.', 'важный'))->toBeFalse();
+});
+
+it('requires a three-letter key to be there exactly — there is no stem to take', function () {
+    expect($this->presence->holds('ru', 'Это мой дом', 'дом'))->toBeTrue()
+        // «домой» is a different word, and two letters of «дом» would have matched it.
+        ->and($this->presence->holds('ru', 'Я иду домой', 'дом'))->toBeFalse();
+});
+
 it('says nothing at all about a language whose rule is not written', function () {
     expect($this->presence->judges('ru'))->toBeTrue()
         ->and($this->presence->judges('de'))->toBeFalse()
