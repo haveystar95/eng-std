@@ -182,6 +182,54 @@ it('falls back to an ordinary card when no neighbour shares the shape', function
     }
 });
 
+it('reaches the catalogue rather than shrinking a starved choice to two (Д-36)', function () {
+    // The live shape, and the reason it is a fact about the ORDINARY session: a running plan holds
+    // its own words out of the queue, so the session the learner is left with can be two words wide.
+    // «cold» came out with a single wrong answer — a coin toss, and a correct answer written into an
+    // append-only log for a retrieval that never happened (скрины 193, 197).
+    [$user, $token] = learner();
+    $actor = UserId::fromString($user->id);
+
+    $mine = app(CreateCustomCollectionHandler::class)(new CreateCustomCollection(
+        $actor, 'Простуда', new LanguageCode('ru'), new LanguageCode('en'),
+    ))->value;
+
+    // The session's own belt: the target and ONE neighbour. One short of the floor of three.
+    $target = seedTyped($mine, $user->id, 'cold', 'простуда', 'word');
+    seedTyped($mine, $user->id, 'cough', 'кашель', 'word');
+
+    // …and a catalogue that can easily furnish the rest, in band and of the same shape.
+    $catalogue = app(CreateCustomCollectionHandler::class)(new CreateCustomCollection(
+        $actor, 'Витрина', new LanguageCode('ru'), new LanguageCode('en'),
+    ))->value;
+    foreach ([['rash', 'сыпь'], ['ache', 'ломота'], ['pill', 'таблетка']] as [$en, $ru]) {
+        $id = app(AddWordToCollectionHandler::class)(new AddWordToCollection(
+            CollectionId::fromString($catalogue), $actor, $en, $ru, type: 'word',
+        ))->value;
+        // Catalogue material, not the learner's own writing — and NOT enrolled, so it is not part of
+        // the session's own belt. The only way it can reach the card is the top-up.
+        DB::table('terms')->where('id', $id)->update(['source' => 'ai']);
+    }
+
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $mine, 'size' => 40])
+        ->assertOk()
+        ->json('data.cards');
+
+    $choices = array_values(array_filter(
+        $cards,
+        static fn (array $c): bool => $c['term_id'] === $target && ($c['options'] ?? null) !== null,
+    ));
+
+    expect($choices)->not->toBe([], 'the target must still be dealt its recognition cards');
+    foreach ($choices as $card) {
+        expect(count($card['options']))->toBeGreaterThanOrEqual(
+            3,
+            'a two-option card is a coin toss: ' . implode(' / ', $card['options']),
+        );
+    }
+});
+
 it('prefers far options from the card own topic when the pool mixes collections', function () {
     // A pool session is no longer one collection's words. «аптека» beside «собеседование» beside
     // «аэропорт» makes a far option far by SUBJECT, and the learner picks the pharmacy-shaped word
@@ -197,9 +245,13 @@ it('prefers far options from the card own topic when the pool mixes collections'
     ))->value;
 
     $target = seedTyped($pharmacy, $user->id, 'antipyretic', 'жаропонижающее', 'word');
+    // All three Russian sides sit inside «жаропонижающее»'s length band, and that is deliberate:
+    // since Д-2 the band is measured on the text the card SHOWS, which on a forward recognition
+    // card is the translation. «рецепт» (6) against «жаропонижающее» (14) is outside it, so with it
+    // in the fixture this test measured the band rather than the topic preference it is about.
     $sameTopic = [
         seedTyped($pharmacy, $user->id, 'painkiller', 'обезболивающее', 'word'),
-        seedTyped($pharmacy, $user->id, 'prescription', 'рецепт', 'word'),
+        seedTyped($pharmacy, $user->id, 'antiseptic', 'антисептик', 'word'),
         seedTyped($pharmacy, $user->id, 'pharmacist', 'фармацевт', 'word'),
     ];
     // Plenty of other-topic words, so a preference that did nothing would show up as a mix.
@@ -219,7 +271,7 @@ it('prefers far options from the card own topic when the pool mixes collections'
     expect($own)->not->toBe([], 'the target is a first meeting, so it is dealt recognition cards');
 
     $pharmacyWords = ['antipyretic', 'жаропонижающее', 'painkiller', 'обезболивающее',
-        'prescription', 'рецепт', 'pharmacist', 'фармацевт'];
+        'antiseptic', 'антисептик', 'pharmacist', 'фармацевт'];
     foreach ($own as $card) {
         // Three same-topic neighbours exist, and a recognition card takes three options — so every
         // option on this card can and must come from the pharmacy.

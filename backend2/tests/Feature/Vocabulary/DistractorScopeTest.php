@@ -278,6 +278,38 @@ it('bands a spoken line by WORDS, because a phrase is not a long word', function
         ->and($options)->not->toContain('I am terribly sorry but I am afraid I did not manage to catch a single word of what you just said');
 });
 
+it('refuses a line that leaves the answer the only option on two rows (Д-2, скрин 247)', function () {
+    // The live card, verbatim. «Your child needs this medicine twice a day.» is eight words, so the
+    // word band's ±40 % opened it to five — and five-word replies came in at nineteen and twenty-one
+    // characters against the answer's forty-two. On the phone the answer was the only option that
+    // wrapped onto a second row, and it was picked without being read.
+    [$me] = learner();
+
+    $mine = shelf($me->id, 'custom', 'private', 'День плана');
+    $target = shelfTerm($mine, 'Your child needs this medicine twice a day.', 'Вашему ребёнку нужно это лекарство два раза в день.');
+    DB::table('terms')->where('id', $target)->update(['kind' => 'line', 'is_line' => true]);
+
+    $catalogue = shelf(null, 'system', 'public', 'Витрина реплик');
+    $short = shelfTerm($catalogue, 'I came with my son.', 'Я пришёл с сыном.');
+    $alsoShort = shelfTerm($catalogue, 'He has a sore throat.', 'У него болит горло.');
+    // Same number of rows on the card, which is the whole test: inside the word band AND inside the
+    // character band, so it may stand there.
+    $sameSize = shelfTerm($catalogue, 'He needs to take this syrup twice a day.', 'Ему нужно принимать этот сироп дважды в день.');
+    DB::table('terms')->whereIn('id', [$short, $alsoShort, $sameSize])
+        ->update(['kind' => 'line', 'is_line' => true]);
+
+    $options = app(DistractorReader::class)->forTarget(
+        UserId::fromString($me->id),
+        TermId::fromString($target),
+        [$target],
+        3,
+    );
+
+    expect($options)->toContain('He needs to take this syrup twice a day.')
+        ->and($options)->not->toContain('I came with my son.')
+        ->and($options)->not->toContain('He has a sore throat.');
+});
+
 it('reads its two thresholds from config, so they move without a deploy', function () {
     [$me] = learner();
 

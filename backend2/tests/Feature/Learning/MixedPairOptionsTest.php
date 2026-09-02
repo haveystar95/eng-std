@@ -197,9 +197,14 @@ it('deals fewer options rather than one from another pair', function () {
 
 it('leaves a single-pair session exactly as it was', function () {
     // The regression guard: nothing above may cost a one-pair session its full-width cards.
+    //
+    // Every Russian side is 4–6 characters, and that is now load-bearing: since Д-2 the length band
+    // is measured on the text the card SHOWS, and a forward recognition card shows translations. The
+    // fixture used to carry «дом» beside «книга», which the band separates — so the card came out
+    // three wide and the guard measured the band instead of the pair filter it exists for.
     [$user, $token] = learner();
     $en = seedPair($user, 'ru', 'en', 'Английский', [
-        ['hello', 'привет'], ['table', 'стол'], ['water', 'вода'], ['book', 'книга'], ['house', 'дом'],
+        ['hello', 'привет'], ['table', 'стол'], ['water', 'вода'], ['book', 'книга'], ['window', 'окно'],
     ]);
 
     $cards = $this->withHeader('Authorization', "Bearer {$token}")

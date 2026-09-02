@@ -22,11 +22,15 @@ beforeEach(function (): void {
     // Offline, and resolved back to prove it — see fakePlanModel() in tests/Pest.php.
     fakePlanModel();
 
-    // The plan ladder deals `intro` and `speaking`, and both ship DARK — a new trainer is switched
-    // on себе → бете → всем, never by a migration. That release rule is not what these tests are
-    // about, so the owner's switch is thrown here: without it the stage-A checklist is three steps
-    // and this file would be quietly testing a narrower ladder than the one it describes.
-    DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->update(['enabled' => true]);
+    // NOTHING IS SWITCHED ON HERE, and that is the point (Д-15).
+    //
+    // This block used to flip every `scope = global` row to `enabled` before each test, because
+    // `intro` and `speaking` ship dark and `PlanStandings` intersected the plan matrix with them —
+    // so without the flip the stage-A checklist was three steps and this file tested a narrower
+    // ladder than the one it describes. That intersection is gone: a plan's matrix overrides the
+    // learner's ({@see PlanStandings}), so the rows below are left exactly as a migration writes
+    // them on a fresh account, and every «intro first, speaking last» expectation in this file is
+    // now an assertion about the shipped default rather than about a test fixture.
 });
 
 
@@ -333,6 +337,109 @@ it('deals the interlocutor’s own line for recognition only, and says whose it 
     $byId = array_column($dayTerms, 'speaker', 'id');
     expect($byId[$roleLine])->toBe('role')
         ->and($byId[$learnerLine])->toBe('learner');
+});
+
+it('deals a role line the day’s SKELETON named, even when the card carries no speaker (Д-33)', function () {
+    // The other source of «whose line is this», and the one the live run tripped over. The day's
+    // skeleton holds `role.opening_lines`; when the model puts one of them among the day's cards it
+    // arrives with `terms.speaker` empty, and the checklist then owed it a dictation — the learner
+    // was asked to write down «Does your child have a fever?» from hearing the doctor say it.
+    [, $token, $planId] = startedPlan($this);
+
+    $day1 = DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->first();
+    $line = DB::table('collection_items')->where('collection_id', $day1->collection_id)
+        ->join('terms', 'terms.id', '=', 'collection_items.term_id')
+        ->where('terms.kind', 'line')->orderBy('terms.id')->first(['terms.id', 'terms.text']);
+
+    // Deliberately NOT marked: this card is the interlocutor's by the skeleton alone.
+    DB::table('terms')->where('id', $line->id)->update(['speaker' => null]);
+
+    $brief = json_decode((string) $day1->role_brief, true);
+    $brief['role'] = ['name' => 'Врач-терапевт', 'opening_lines' => [['text' => $line->text]]];
+    DB::table('learning_plan_days')->where('id', $day1->id)->update(['role_brief' => json_encode($brief)]);
+
+    $session = planSession($this, $token, $planId);
+
+    $modes = [];
+    foreach ($session['tasks'] as $task) {
+        if ($task['card']['term_id'] === $line->id) {
+            $modes[] = $task['card']['exercise_mode'];
+        }
+    }
+
+    expect($modes)->not->toBeEmpty()
+        ->and($modes)->toContain('intro')
+        ->and($modes)->not->toContain('dictation')
+        ->and($modes)->not->toContain('word_bank')
+        ->and($modes)->not->toContain('scramble')
+        ->and($modes)->not->toContain('typing')
+        ->and($modes)->not->toContain('speaking');
+});
+
+it('refuses to BUILD a production card for a role line, even off the checklist (Д-33)', function () {
+    // The second gate, and the one the soft session needs. A day opened out of turn picks its
+    // trainer off the ordinary ladder and never sees a checklist — which is where the live run's
+    // dictation on the doctor's question came from. Day 2 is ahead of the focus, so its session is
+    // soft; every card of it must still be recognition for the interlocutor's line.
+    [, $token, $planId] = startedPlan($this);
+
+    $day2 = DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 2)->value('collection_id');
+    if ($day2 === null) {
+        $this->markTestSkipped('the fixture plan wrote only one day');
+    }
+
+    $roleLine = DB::table('collection_items')->where('collection_id', $day2)
+        ->join('terms', 'terms.id', '=', 'collection_items.term_id')
+        ->where('terms.kind', 'line')->orderBy('terms.id')->value('terms.id');
+    DB::table('terms')->where('id', $roleLine)->update(['speaker' => 'role']);
+
+    $session = planSession($this, $token, $planId, 2);
+
+    expect($session['strict'])->toBeFalse();
+    foreach ($session['tasks'] as $task) {
+        if ($task['card']['term_id'] !== $roleLine) {
+            continue;
+        }
+        expect(['word_bank', 'scramble', 'typing', 'speaking', 'cloze', 'dictation'])
+            ->not->toContain($task['card']['exercise_mode']);
+    }
+});
+
+it('measures the length band on the text the card SHOWS, not on the term behind it (Д-2)', function () {
+    // The `zero` level deals the FAR-option card: the prompt is the term and the options are the
+    // neighbours' TRANSLATIONS. The band used to be measured on those neighbours' English while
+    // their Russian was what went on screen, so the answer kept coming out the only long option
+    // there (скрины 120, 247) with every English side comfortably inside the band.
+    [, $token, $planId] = startedPlan($this, ['level' => 'zero']);
+
+    $words = DB::table('terms')->where('kind', 'word')->orderBy('id')->pluck('id')->all();
+    expect(count($words))->toBeGreaterThan(2);
+
+    // Every OTHER word keeps its English length and loses its Russian one: a two-letter option
+    // beside a whole word is the one nobody has to read.
+    $target = (string) $words[0];
+    foreach (array_slice($words, 1) as $termId) {
+        DB::table('term_translations')->where('term_id', $termId)->update(['text' => 'да']);
+    }
+    // …and the target's own translation is a long one, so «да» is unmistakably out of its band.
+    DB::table('term_translations')->where('term_id', $target)->update(['text' => 'жаропонижающее']);
+
+    $session = planSession($this, $token, $planId);
+
+    $seen = 0;
+    foreach ($session['tasks'] as $task) {
+        $card = $task['card'];
+        if ($card['term_id'] !== $target || $card['exercise_mode'] !== 'multiple_choice') {
+            continue;
+        }
+        $seen++;
+        // «да» never stands on this card. Either the band refused it and other neighbours filled the
+        // slots, or the belt starved and the card fell through to the catalogue-backed one, whose
+        // options are English. Both are honest; the answer standing alone at its own length is not.
+        expect($card['options'])->not->toContain('да');
+    }
+
+    expect($seen)->toBeGreaterThan(0, 'the target must actually be dealt a choice card');
 });
 
 it('carries the level’s knobs, and says which of them the card actually honoured', function () {

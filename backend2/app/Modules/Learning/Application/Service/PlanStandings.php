@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Service;
 
-use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\ModeFallbackReporter;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Port\PlanStandingsReader;
 use App\Modules\Learning\Domain\Service\PlanChoiceFloor;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
+use App\Modules\Learning\Domain\Service\RoleLineModes;
+use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanLevel;
@@ -32,9 +33,23 @@ use DateTimeZone;
  *
  *   the plan ladder     which trainers this stage deals at all            PlanStageLadder
  *   the level           which of them are open at this level              learning_mode_settings, scope=plan
- *   the learner         which trainers are switched on for them           learning_mode_settings, scope=global
+ *   the language        which of them this language can carry at all      LanguageModeSupport
  *   the term            which can be built from this term's content       TermPlayability
  *   the POOL            whether a choice of at least three can be built   DistractorFamily
+ *
+ * ## THE PLAN'S MATRIX OVERRIDES THE LEARNER'S, and that is the third row above
+ *
+ * There used to be a sixth: `learning_mode_settings` at `scope = global` — the trainers the learner
+ * has switched on for their ORDINARY day. Intersecting it here cost the plan its first and last
+ * card on every fresh account: both global rows ship switched OFF (`intro` and `speaking`,
+ * `user_id = NULL`, written by the migration itself), the plan matrix has both switched ON at every
+ * level, and the intersection took the zero. Stage A collapsed from «met it → recognised it → put
+ * it together → said it» to two taps, 27 tasks where the checklist called for 56 (Д-14/Д-15).
+ *
+ * The ruling (архитектор, 02.09): a plan knows its own ladder, so a global toggle must not cut it.
+ * What stays in the intersection is what is not a preference — the LANGUAGE (a trainer `zh` cannot
+ * carry is not a trainer anywhere) and the TERM's own content. The learner's toggles go on ruling
+ * the ordinary session and nothing else ({@see \App\Modules\Learning\Domain\ValueObject\ModeAdmission}).
  *
  * The fifth arrived with Д-2 and it is here rather than in the card assembler for one reason: a
  * checklist step is closed by an ANSWER. A step whose card can never be dealt is a stage that never
@@ -83,7 +98,6 @@ final readonly class PlanStandings
     public function __construct(
         private PlanStandingsReader $reader,
         private PlanModeSettingsReader $planSettings,
-        private EnabledModesReader $enabledModes,
         private StudyCardAssembler $assembler,
         private ModeFallbackReporter $fallbacks,
         /**
@@ -107,6 +121,9 @@ final readonly class PlanStandings
      * @param  string  $today  the learner's local day, `Y-m-d`
      * @param  array<string, \DateTimeImmutable>  $since  term id => the moment this card joined THIS
      *         plan. See {@see class docblock, «The ladder of a plan is the plan's own»}.
+     * @param  list<string>  $roleLines  the day's `role_brief.role.opening_lines`, verbatim. A card
+     *         whose text is one of them is the INTERLOCUTOR's, whatever `terms.speaker` says
+     *         {@see RoleLineModes}.
      * @return array<string, PlanTermStanding>  term id => standing (only for terms with content)
      */
     public function forTerms(
@@ -117,6 +134,7 @@ final readonly class PlanStandings
         string $today,
         DateTimeZone $tz,
         array $since = [],
+        array $roleLines = [],
     ): array {
         if ($termIds === []) {
             return [];
@@ -125,7 +143,7 @@ final readonly class PlanStandings
         $facts = $this->reader->factsFor($user, $termIds, $tz, $since);
         $introduced = $this->reader->introducedAmong($user, $termIds, $since);
         $openAtLevel = $this->planSettings->openModesFor($level);
-        $enabled = $this->enabledModes->forUser($user);
+        $spokenByRole = RoleLineModes::index($roleLines);
         // HOW MANY CARDS OF EACH SHAPE THIS PLAN HOLDS — the fifth filter, and the one that keeps a
         // starved choice from being a step nobody can close. See {@see choiceIsAffordable()}.
         $optionCount = $this->planSettings->knobsFor($level)->mcOptions;
@@ -143,7 +161,7 @@ final readonly class PlanStandings
             $kind = $termContent->kind ?? PlanStageLadder::KIND_WORD;
 
             $out[$termId] = $this->ladder->standingFor(
-                applicable: $this->applicableFor($termContent, $openAtLevel, $enabled, $kind, $termId, $content, $optionCount, $user),
+                applicable: $this->applicableFor($termContent, $openAtLevel, $kind, $termId, $content, $optionCount, $user, $spokenByRole),
                 facts: $facts[$termId] ?? [],
                 introduced: $introduced[$termId] ?? false,
                 today: $today,
@@ -164,21 +182,28 @@ final readonly class PlanStandings
      * @param  list<ExerciseMode>  $openAtLevel
      * @param  array<string, TermContentView>  $pool  every term this plan stands on — what a choice
      *         card of this plan would be built out of {@see optionsAvailable()}
+     * @param  array<string, true>  $spokenByRole  normalised texts the interlocutor says
      * @return list<ExerciseMode>
      */
     private function applicableFor(
         TermContentView $content,
         array $openAtLevel,
-        \App\Modules\Learning\Domain\ValueObject\EnabledModes $enabled,
         string $kind,
         string $termId,
         array $pool,
         int $optionCount,
         UserId $user,
+        array $spokenByRole = [],
     ): array {
         // Per CARD and not per session: a plan is one pair, but this is the same gate every other
         // read applies and applying it here keeps one answer to «which trainers exist for this word».
-        $forLanguage = $enabled->forLanguage($content->lang);
+        //
+        // EVERY trainer the language can carry, and not the ones the learner has switched on: the
+        // plan's own matrix decides that ({@see class docblock, «The plan's matrix overrides the
+        // learner's»}). `EnabledModes` is asked here purely as the LANGUAGE table's front door — it
+        // is the one object that owns that intersection, and a second copy of it would be a second
+        // opinion about what `zh` can carry.
+        $forLanguage = (new EnabledModes(ExerciseMode::cases()))->forLanguage($content->lang);
         if ($forLanguage === null) {
             return [];
         }
@@ -202,8 +227,8 @@ final readonly class PlanStandings
         $floor = $this->choiceFloor->forPreferred($optionCount);
         $own = $this->optionsAvailable($user, $pool, $content, $floor);
         $affordable = $own >= $floor;
-        // THE INTERLOCUTOR'S OWN LINE is understood, never produced. {@see PRODUCTION_MODES}
-        $recognitionOnly = $content->speaker === self::SPEAKER_ROLE;
+        // THE INTERLOCUTOR'S OWN LINE is understood, never produced. {@see RoleLineModes}
+        $recognitionOnly = RoleLineModes::isRoleLine($content->speaker, $content->text, $spokenByRole);
 
         return array_values(array_filter(
             $openAtLevel,
@@ -211,7 +236,7 @@ final readonly class PlanStandings
                 if (! isset($forKind[$mode->value]) || ! $forLanguage->has($mode) || ! $playable->supports($mode)) {
                     return false;
                 }
-                if ($recognitionOnly && in_array($mode, self::PRODUCTION_MODES, true)) {
+                if ($recognitionOnly && RoleLineModes::produces($mode)) {
                     return false;
                 }
                 if ($affordable || ! self::isChoice($mode)) {
@@ -232,32 +257,6 @@ final readonly class PlanStandings
             },
         ));
     }
-
-    /** `terms.speaker` for a line the INTERLOCUTOR says. Kept as a literal — Learning does not import Vocabulary Domain. */
-    private const SPEAKER_ROLE = 'role';
-
-    /**
-     * WHAT A `role` LINE IS NEVER ASKED TO DO.
-     *
-     * A line marked `speaker: role` is what the other person says — «Hello. What seems to be the
-     * problem with your child?». It is in the day so the learner will UNDERSTAND it when it is said
-     * to them; it is the one card of a plan they will never say. The live run dealt it as an
-     * ordinary card and spent a word bank on it, so the learner assembled the doctor's question
-     * word by word and then read it aloud (Д-8).
-     *
-     * So: recognition stays — meeting it, choosing its meaning, hearing it — and everything that
-     * asks the learner to PRODUCE the sentence falls out. It falls out of the CHECKLIST, not out of
-     * the deal, for the reason the whole class exists: a step that is owed and cannot be answered
-     * is a stage that never closes.
-     */
-    private const PRODUCTION_MODES = [
-        ExerciseMode::WordBank,
-        ExerciseMode::Scramble,
-        ExerciseMode::Typing,
-        ExerciseMode::Speaking,
-        ExerciseMode::Cloze,
-        ExerciseMode::Dictation,
-    ];
 
     /** The modes whose options come out of the pool, and which therefore starve with it. */
     private static function isChoice(ExerciseMode $mode): bool

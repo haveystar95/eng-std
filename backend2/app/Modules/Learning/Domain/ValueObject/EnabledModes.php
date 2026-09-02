@@ -84,6 +84,24 @@ final readonly class EnabledModes
     }
 
     /**
+     * The same set minus every mode `$drop` says yes to, or NULL when that empties it.
+     *
+     * Null rather than the floor {@see forLanguage()} falls back to, and the difference is the
+     * reason this method exists: that floor is what a MISCONFIGURATION deserves — an empty session
+     * is a worse answer to a switched-off toggle than an unexpected exercise. This narrowing is not
+     * a configuration, it is a rule about the card ({@see \App\Modules\Learning\Domain\Service\RoleLineModes}),
+     * and dealing `multiple_choice` anyway would be dealing exactly what the rule forbade.
+     *
+     * @param  callable(ExerciseMode): bool  $drop
+     */
+    public function without(callable $drop): ?self
+    {
+        $kept = array_values(array_filter($this->modes, static fn (ExerciseMode $m): bool => ! $drop($m)));
+
+        return $kept === [] ? null : new self($kept);
+    }
+
+    /**
      * The given modes that are enabled, in the given order (for a stable rotation set).
      *
      * @param  list<ExerciseMode>  $preferred

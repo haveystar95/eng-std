@@ -10,6 +10,7 @@ use App\Modules\Learning\Application\Dto\PlanProgressView;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
+use App\Modules\Learning\Domain\Service\RoleLineModes;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
@@ -119,6 +120,11 @@ final readonly class PlanProgress
                 $collectionId,
                 self::TERMS_PER_DAY_CAP,
             ),
+            // WHAT THE OTHER SIDE SAYS in this day, straight off the skeleton. A card that repeats
+            // one of these is the interlocutor's whatever `terms.speaker` holds — the model puts an
+            // opening line among the day's cards often enough, and it arrives there unmarked
+            // ({@see RoleLineModes}).
+            self::openingLinesOf($day),
         );
 
         return new PlanDayProgressView(
@@ -129,6 +135,34 @@ final readonly class PlanProgress
             content: $content,
             passed: $this->stageAClosedForAll($standings),
         );
+    }
+
+    /**
+     * The day's `role_brief.role.opening_lines`, as plain strings.
+     *
+     * The same shape {@see \App\Modules\Learning\Application\Query\GetPlanRehearsalHandler::roleOf()}
+     * reads, and read defensively for the same reason: the brief is model-written JSON that has been
+     * through three prompt versions, so every level of it is checked rather than assumed.
+     *
+     * @return list<string>
+     */
+    private static function openingLinesOf(PlanDay $day): array
+    {
+        $role = $day->roleBrief()['role'] ?? null;
+        $lines = is_array($role) ? ($role['opening_lines'] ?? null) : null;
+        if (! is_array($lines)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($lines as $line) {
+            $text = is_array($line) ? ($line['text'] ?? null) : $line;
+            if (is_string($text) && trim($text) !== '') {
+                $out[] = $text;
+            }
+        }
+
+        return $out;
     }
 
     /**
