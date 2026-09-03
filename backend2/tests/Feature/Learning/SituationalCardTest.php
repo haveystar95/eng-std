@@ -167,6 +167,53 @@ it('assembles the situation out of the day, by one of the two routes and no othe
     expect($sources)->toContain(SituationalSituation::SOURCE_ROLE_LINE);
 });
 
+it('grades a tapped meaning by ID, and never drops it as a stale ladder answer', function () {
+    // THE RISKIEST PATH IN THIS НАРЯД. A card whose correct option is a translation must be graded by
+    // the tapped option's id, and the ONE other card that works that way is guarded by the rung —
+    // which is exactly why this one must not be. `situational_hear` is dealt at stage B of a scene,
+    // where the pair is usually graduated, and a rung-1 claim from a graduated pair is DROPPED as a
+    // stale ladder answer. Read off the rung, every second touch of the понимаю tier would have
+    // vanished from the log without a single test going red.
+    $f = situationalFixture($this);
+    $session = planSession($this, $f['token'], $f['plan']);
+
+    $hear = array_values(array_filter(
+        $session['tasks'],
+        static fn (array $t): bool => $t['card']['exercise_mode'] === 'situational_hear',
+    ));
+    expect($hear)->not->toBeEmpty();
+
+    $task = $hear[0];
+    $before = DB::table('reviews')->where('user_id', $f['user']->id)->count();
+
+    $this->withHeader('Authorization', "Bearer {$f['token']}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => (string) \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+            'term_id' => $task['card']['term_id'],
+            'exercise_mode' => 'situational_hear',
+            // The learner taps the right meaning; the client uploads that option's TERM ID.
+            'response' => $task['card']['term_id'],
+            'answered_at' => now()->toIso8601String(),
+            'client_seq' => $f['seq'] + 1,
+            'session_id' => $session['session_id'],
+            'ladder_step' => $task['card']['ladder_step'],
+        ]]])
+        ->assertOk();
+
+    $review = DB::table('reviews')
+        ->where('user_id', $f['user']->id)
+        ->where('term_id', $task['card']['term_id'])
+        ->where('exercise_mode', 'situational_hear')
+        ->orderByDesc('created_at')
+        ->first();
+
+    // The row exists — it was not dropped — and the tap was graded CORRECT rather than compared as
+    // text against the term's own forms, which is what would have failed a right answer.
+    expect(DB::table('reviews')->where('user_id', $f['user']->id)->count())->toBe($before + 1)
+        ->and($review)->not->toBeNull()
+        ->and($review->grade)->not->toBe('again');
+});
+
 it('does not deal a situational card in a session that has no scene', function () {
     // Free practice and the ordinary session: no scene, no situation, nothing honest to ask.
     [$user, $token] = learner();
