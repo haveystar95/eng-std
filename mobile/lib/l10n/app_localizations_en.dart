@@ -3418,25 +3418,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planPreviewKicker => 'Your plan is ready';
 
   @override
-  String planPreviewSubtitle(int scenes) {
+  String planPreviewSubtitle(int scenes, String topics) {
     String _temp0 = intl.Intl.pluralLogic(
       scenes,
       locale: localeName,
       other: '$scenes scenes',
       one: '$scenes scene',
     );
-    return 'From your own words: $_temp0.';
+    return 'From your own words — $_temp0: $topics.';
   }
 
   @override
-  String planPreviewSubtitleNoDate(int scenes) {
+  String planPreviewSubtitleNoDate(int scenes, String topics) {
     String _temp0 = intl.Intl.pluralLogic(
       scenes,
       locale: localeName,
       other: '$scenes scenes',
       one: '$scenes scene',
     );
-    return 'From your own words: $_temp0. No date, so we go at your own pace.';
+    return 'From your own words — $_temp0: $topics. No date, so we go at your own pace.';
   }
 
   @override

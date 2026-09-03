@@ -10,6 +10,7 @@ import 'package:eng_std/data/session_completion_sync.dart';
 import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
 import 'package:eng_std/features/plan/plan_day_screen.dart';
 import 'package:eng_std/features/plan/plan_day_summary.dart';
+import 'package:eng_std/features/plan/plan_preview_screen.dart';
 import 'package:eng_std/features/plan/plan_screen.dart';
 import 'package:eng_std/features/plan/plan_tab_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -272,6 +273,50 @@ void main() {
     final next = tester.widget<EntryCta>(find.byType(EntryCta));
     expect(next.enabled && next.onPressed != null, isTrue);
     expect(find.text('хватит для плана'), findsOneWidget);
+  });
+
+  testWidgets('превью говорит ТЕМАМИ, а не пересказом цели', (tester) async {
+    // Найдено живым прогоном 03.09: подзаголовок брал `goal_summary` от P1 — пересказ цели, — а
+    // заголовок экрана и есть цель, и превью говорило одно и то же дважды. Теперь подзаголовок
+    // называет число сцен и первые три названия с маленькой буквы; `goal_summary` остаётся в
+    // данных (он нужен модели и админке) и на экран не едет.
+    _tallPhone(tester);
+    final plan = LearningPlan.fromJson({
+      ..._planJson(),
+      'goal_text': 'Иду к врачу с ребёнком, надо объяснить симптомы и понять назначение',
+      'goal_restated':
+          'Сходить с ребёнком в частную клинику: понять вопросы на стойке и разобраться в назначении',
+      'days': [
+        {'id': 'd1', 'index': 1, 'kind': 'intro', 'title': 'На стойке регистрации'},
+        {'id': 'd2', 'index': 2, 'kind': 'intro', 'title': 'В кабинете врача'},
+        {'id': 'd3', 'index': 3, 'kind': 'intro', 'title': 'После осмотра'},
+        {'id': 'd4', 'index': 4, 'kind': 'final', 'title': 'Прогон перед событием'},
+      ],
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(child: _app(PlanPreviewScreen(plan: plan))),
+    );
+    await tester.pumpAndSettle();
+
+    final subtitle = tester
+        .widgetList<Text>(find.textContaining('По твоим словам', skipOffstage: false))
+        .map((t) => t.data ?? '')
+        .single;
+
+    // Темы — названия сцен, с маленькой буквы, первые три.
+    expect(subtitle, contains('3 сцены'));
+    expect(subtitle, contains('на стойке регистрации'));
+    expect(subtitle, contains('в кабинете врача'));
+    expect(subtitle, contains('после осмотра'));
+    // Прогон — не сцена и в темы не попадает.
+    expect(subtitle, isNot(contains('прогон')));
+
+    // ГЛАВНОЕ: цели в подзаголовке нет ни в одной из двух её форм.
+    expect(subtitle, isNot(contains(plan.goalText)));
+    expect(subtitle, isNot(contains(plan.goalRestated!)));
+    // …а заголовком она остаётся, и это не дубль, а единственное место, где она стоит.
+    expect(find.text(plan.title), findsOneWidget);
   });
 
   testWidgets('the empty План tab explains the difference from a collection', (tester) async {

@@ -5217,17 +5217,17 @@ abstract class AppLocalizations {
   /// **'Твой план готов'**
   String get planPreviewKicker;
 
-  /// Подзаголовок превью. Пересказа цели в нём НЕТ: заголовок экрана и есть цель, и повторять её строкой ниже — говорить одно и то же дважды (найдено живым прогоном 03.09).
+  /// Подзаголовок превью — ТЕМЫ, а не пересказ цели: число сцен и названия первых трёх с маленькой буквы. Цели в нём нет вовсе: заголовок экрана и есть цель, и повторять её строкой ниже — говорить одно и то же дважды (живой прогон 03.09). `goal_summary` от P1 остаётся в данных для модели и админки и на экран не едет.
   ///
   /// In ru, this message translates to:
-  /// **'По твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}.'**
-  String planPreviewSubtitle(int scenes);
+  /// **'По твоим словам — {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}: {topics}.'**
+  String planPreviewSubtitle(int scenes, String topics);
 
   /// То же без даты (кадр V4·06б).
   ///
   /// In ru, this message translates to:
-  /// **'По твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}. Даты нет, идём в своём темпе.'**
-  String planPreviewSubtitleNoDate(int scenes);
+  /// **'По твоим словам — {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}: {topics}. Даты нет, идём в своём темпе.'**
+  String planPreviewSubtitleNoDate(int scenes, String topics);
 
   /// Моноширинная строка-ориентир превью с датой.
   ///

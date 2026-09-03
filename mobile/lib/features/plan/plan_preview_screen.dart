@@ -65,6 +65,32 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
   List<PlanDay> get _scenes =>
       _plan.days.where((d) => d.kind == PlanDayKind.intro).toList(growable: false);
 
+  /// «на стойке регистрации, в кабинете врача, после осмотра» — the plan's TOPICS.
+  ///
+  /// The subtitle of the preview says what the plan is ABOUT, and the honest answer to that is the
+  /// names of its scenes. It is deliberately NOT `goal_summary`: P1 writes that as a restatement of
+  /// the goal, the title above already IS the goal, and the live preview of 03.09 said the same
+  /// sentence twice — six lines of serif and then the same six lines again, in grey.
+  ///
+  /// `goal_summary` is not lost, it is just not on this screen: the model needs it (it is the
+  /// skeleton's own summary of what it was asked for) and so does the back office.
+  ///
+  /// THREE, and lowercased. Three because a plan may hold up to fourteen scenes and a subtitle that
+  /// listed them all would be the ladder again, in a paragraph; lowercased because these are the
+  /// middle of a sentence here and their own headline in the cards below.
+  String _topics() {
+    final titles = _scenes
+        .map((s) => s.title.trim())
+        .where((t) => t.isNotEmpty)
+        .take(3)
+        .map(_lowerFirst);
+
+    return titles.join(', ');
+  }
+
+  static String _lowerFirst(String text) =>
+      text.isEmpty ? text : text[0].toLowerCase() + text.substring(1);
+
   Future<void> _mutate(Future<LearningPlan> Function(ApiClient api) call) async {
     if (_busy) return;
     AppHaptics.light();
@@ -248,11 +274,11 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              // «По твоим словам…» and NOT the goal again: the title above already
-                              // is the goal, and the live preview said the same sentence twice.
+                              // «По твоим словам — N сцен: темы» and NEVER the goal again: the
+                              // title above already is the goal ({@see _topics}).
                               _dated
-                                  ? l.planPreviewSubtitle(scenes.length)
-                                  : l.planPreviewSubtitleNoDate(scenes.length),
+                                  ? l.planPreviewSubtitle(scenes.length, _topics())
+                                  : l.planPreviewSubtitleNoDate(scenes.length, _topics()),
                               style: AppText.translation.copyWith(
                                 fontSize: 15,
                                 height: 1.6,
