@@ -179,6 +179,13 @@ Hard-won gotchas (all already resolved once — needed again on a fresh machine/
 - **Xcode 27 beta required** — host is macOS 27 beta; App Store Xcode 26.x won't launch (error -10664). Xcode 27 beta 3 is installed.
 - **Signing** (one-time in Xcode → Runner → Signing & Capabilities): personal team "Solonina Denis" (Apple ID `haveystar95@gmail.com`), team id `7A5U4R66CB`, **bundle id `com.denis.engstd`**. Free personal team ⇒ app expires ~7 days; re-run to reinstall.
 - **Developer Mode ON** on the iPhone (Settings → Privacy & Security → Developer Mode).
+- **Plug the cable in.** The phone can be on the same Wi-Fi, unlocked, and Xcode will still list it
+  as `unavailable` while `flutter devices` says «The device must be opted into Developer Mode to
+  connect wirelessly (code -27)» — an error about the WIRELESS channel, not about the setting, which
+  was already on. `xcrun devicectl list devices` is the honest read: it names the device and its
+  state (`unavailable` vs `available (paired)`) without flutter's guess at a cause. One wired
+  connection flips it to `available` and the build goes through (03.09, SIT-1 — five minutes lost to
+  believing the error message).
 - **iOS deployment target ≥ 15.0** — set in `ios/Runner.xcodeproj/project.pbxproj` (3×) and `ios/Podfile` (`platform :ios, '15.0'`). Xcode 27 rejects 13.0.
 - **CocoaPods**: use Homebrew's (`/opt/homebrew/bin/pod`, 1.17+). The old gem pod `/usr/local/bin/pod` (1.11.3) has a broken `ffi` and fails `pod install`; it was removed. Run flutter with `/opt/homebrew/bin` first on PATH and `LANG=en_US.UTF-8`.
 - Google Sign-In needs the **REVERSED_CLIENT_ID URL scheme** in `ios/Runner/Info.plist` (already added, from `../credentials.plist`).
