@@ -79,6 +79,30 @@ final class PlanSchemas
     }
 
     /**
+     * P-Listen v1 — THREE LINES THE OTHER PERSON WOULD SAY, and nothing else.
+     *
+     * The smallest schema in this file, for the smallest call: the listening warm-up of the entry
+     * (кадры V4·03…03г) is one minute of audio and three self-taps, and everything it needs is a
+     * line, its translation and two-to-four words naming where it sounds.
+     *
+     * `place` is a STRING and not an enum on purpose. «на стойке» / «по телефону» are examples in
+     * the prompt rather than a vocabulary — a scene the model invents needs a name the model
+     * invents — and the client renders it as a надзаголовок without reading it.
+     *
+     * @return array<string, mixed>
+     */
+    public static function listen(): array
+    {
+        $line = self::object([
+            'text' => self::string(),
+            'translation' => self::string(),
+            'place' => self::string(),
+        ]);
+
+        return self::object(['lines' => self::arrayOf($line)]);
+    }
+
+    /**
      * P2 v0.4 — THE SIX SHELVES OF A DAY-SCENE.
      *
      * Three shapes, and the SHELF decides which one an item has ({@see PlanShelf}):

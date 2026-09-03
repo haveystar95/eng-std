@@ -123,6 +123,16 @@ class AppConfig {
     defaultValue: '1003468760314-lvn5ckoc6p8s6v5g44i396ma5j4797j0.apps.googleusercontent.com',
   );
 
+  /// Where «Написать нам» goes when a plan refuses to build (кадр V4·05г).
+  ///
+  /// A `mailto:` and not a form: the app has no support desk of its own, and a button that opened
+  /// one would be a promise about a queue nobody reads. The owner's own address is the honest
+  /// default for a single-user build; a real product overrides it at build time.
+  static const String supportEmail = String.fromEnvironment(
+    'SUPPORT_EMAIL',
+    defaultValue: 'haveystar95@gmail.com',
+  );
+
   /// Optional web/server client id (used as serverClientId if set).
   static const String googleServerClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',

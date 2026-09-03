@@ -145,7 +145,8 @@ class _PlanBody extends ConsumerWidget {
                 // say how it went. It is the same screen the evening notification opens, offered
                 // here for the learner who never tapped it — otherwise a plan whose appointment is
                 // over goes on holding its words out of the ordinary day, indefinitely.
-                if (plan.daysToEvent <= 0) ...[
+                // An undated plan has no event to have happened, so it is never offered «как прошло».
+                if ((plan.daysToEvent ?? 1) <= 0) ...[
                   PrimaryButton(
                     label: l.planFeedbackTitle,
                     minHeight: 52,
@@ -249,7 +250,7 @@ class _ReadinessPlate extends StatelessWidget {
             children: [
               Expanded(child: PlanLabel(l.planActiveBadge, color: AppColors.brass)),
               PlanLabel(
-                planDateLabel(context, plan.eventDate, short: true),
+                planDateOrNone(context, plan.eventDate, short: true),
                 color: paper.withValues(alpha: 0.7),
                 fontSize: 11.5,
               ),
@@ -320,9 +321,12 @@ class _ReadinessPlate extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  plan.daysToEvent > 0
-                      ? l.planEventInDays(plan.daysToEvent)
-                      : (plan.daysToEvent == 0 ? l.planEventToday : l.planEventPassed),
+                  switch (plan.daysToEvent) {
+                    null => l.planEntryHintNoDate,
+                    final int d when d > 0 => l.planEventInDays(d),
+                    0 => l.planEventToday,
+                    _ => l.planEventPassed,
+                  },
                   style: AppText.translation.copyWith(
                     fontSize: 12.5,
                     color: paper.withValues(alpha: 0.66),

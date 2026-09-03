@@ -8,6 +8,7 @@ use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Exception\EventDateInPast;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
+use App\Modules\Learning\Domain\ValueObject\ListeningDiagnostics;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\PlanLevel;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
@@ -31,10 +32,15 @@ final readonly class CreatePlanHandler
     /** @throws EventDateInPast */
     public function __invoke(CreatePlan $command): PlanId
     {
-        $eventDate = new DateTimeImmutable($command->eventDate . ' 00:00:00');
-        $today = $this->clock->now()->setTime(0, 0, 0);
-        if ($eventDate < $today) {
-            throw EventDateInPast::make($eventDate->format('Y-m-d'), $today->format('Y-m-d'));
+        // «Без даты» skips the check rather than passing it: there is no date to be in the past,
+        // and a plan without one is laid out by {@see PlanScheduler::undated()} instead.
+        $eventDate = null;
+        if ($command->eventDate !== null) {
+            $eventDate = new DateTimeImmutable($command->eventDate . ' 00:00:00');
+            $today = $this->clock->now()->setTime(0, 0, 0);
+            if ($eventDate < $today) {
+                throw EventDateInPast::make($eventDate->format('Y-m-d'), $today->format('Y-m-d'));
+            }
         }
 
         $plan = LearningPlan::draft(
@@ -52,6 +58,10 @@ final readonly class CreatePlanHandler
             level: PlanLevel::from($command->level),
             eventDate: $eventDate,
             minutesPerDay: $command->minutesPerDay,
+            // The listening step's answers, turned into the record the two prompts read. NULL when
+            // the step was skipped — and «пропущен» is deliberately not the same value as «прошёл
+            // и ничего не понял», which is a real diagnostics with three `understood: false` rows.
+            diagnostics: ListeningDiagnostics::fromLines($command->listened),
         );
 
         $this->plans->save($plan);

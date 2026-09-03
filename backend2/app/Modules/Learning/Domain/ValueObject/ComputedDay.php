@@ -31,7 +31,15 @@ final readonly class ComputedDay
         public int $index,
         public PlanDayKind $kind,
         public string $title,
-        public DateTimeImmutable $scheduledOn,
+        /**
+         * The date this day is meant to be walked — or NULL on a plan with no event date.
+         *
+         * «Без даты» (кадр V4·04б): nothing is laid on the calendar, and the days open one after
+         * another as the previous one closes. A far-future date was the tempting stand-in and is
+         * wrong for the same reason it is wrong on the plan: it is still a countdown, and it would
+         * put one on the card.
+         */
+        public ?DateTimeImmutable $scheduledOn,
         public int $termBudget,
         public array $skills,
         public array $checkpoints,

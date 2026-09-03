@@ -7,13 +7,13 @@ import 'package:eng_std/data/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/review_sync.dart';
 import 'package:eng_std/data/session_completion_sync.dart';
-import 'package:eng_std/features/plan/plan_builder_screen.dart';
+import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
 import 'package:eng_std/features/plan/plan_day_screen.dart';
 import 'package:eng_std/features/plan/plan_day_summary.dart';
 import 'package:eng_std/features/plan/plan_screen.dart';
 import 'package:eng_std/features/plan/plan_tab_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
-import 'package:eng_std/ui/ui.dart';
+import 'package:eng_std/features/plan/entry/entry_ui.dart';
 
 /// The plan screens, on data rather than on a live server.
 ///
@@ -210,43 +210,68 @@ ProviderScope _summaryScope(_CompletionSpy spy, Widget child, {LearningPlan? pla
   child: child,
 );
 
+/// A phone tall enough for a whole entry step, so a test can look at the button without scrolling
+/// a lazily-built list first. The default 800×600 surface cuts the CTA off the bottom of кадр V4·01.
+void _tallPhone(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1170, 3000);
+  tester.view.devicePixelRatio = 3;
+  addTearDown(tester.view.reset);
+}
+
 void main() {
-  testWidgets('every example goal is one the SERVER would accept', (tester) async {
-    // The live run found this the fastest way there is: «Врач» is four characters, the server's
-    // `CreatePlanRequest` refuses a goal under five, and tapping an example the screen itself
-    // suggests produced «Не получилось собрать план». An example that cannot be used is worse than
-    // no example — so the chips are held to the server's own floor here.
-    await tester.pumpWidget(
-      ProviderScope(child: _app(const PlanBuilderScreen())),
-    );
+  testWidgets('every example goal is one the plan would actually accept', (tester) async {
+    // The live run of направление Б found this the fastest way there is: «Врач» is four characters,
+    // the server refuses a `goal_text` under five, and tapping an example the screen itself
+    // suggests produced «Не получилось собрать план». The entry now holds a HIGHER bar than the
+    // server's — a five-character goal is legal and useless — so every example is held to the bar
+    // that actually opens «Дальше».
+    await tester.pumpWidget(ProviderScope(child: _app(const PlanEntryScreen())));
     await tester.pumpAndSettle();
 
-    final chips = tester
-        .widgetList<Text>(find.descendant(of: find.byType(Wrap), matching: find.byType(Text)))
-        .map((t) => t.data ?? '')
-        .where((s) => s.isNotEmpty);
+    final examples = tester
+        .widgetList<Text>(find.descendant(of: find.byType(InkWell), matching: find.byType(Text)))
+        .map((t) => (t.data ?? '').trim())
+        .where((s) => s.startsWith('Иду') || s.startsWith('Онлайн') || s.startsWith('Летим'));
 
-    expect(chips, isNotEmpty);
-    for (final chip in chips) {
+    expect(examples, isNotEmpty);
+    for (final example in examples) {
       expect(
-        chip.trim().length,
-        greaterThanOrEqualTo(5),
-        reason: '«$chip» is shorter than the server\'s goal_text floor of 5',
+        example.length,
+        greaterThanOrEqualTo(24),
+        reason: '«$example» would not open «Дальше»',
       );
     }
   });
 
-  testWidgets('«Собрать план» stays shut until the goal clears that same floor', (tester) async {
+  testWidgets('a two-word goal says what is missing instead of blocking with red', (tester) async {
+    _tallPhone(tester);
     await tester.pumpWidget(
-      ProviderScope(child: _app(const PlanBuilderScreen(initialGoal: 'Врач'))),
+      ProviderScope(child: _app(const PlanEntryScreen(initialGoal: 'К врачу'))),
     );
     await tester.pumpAndSettle();
 
-    // Four characters: the button must not offer to spend a request on a 422.
-    final short = tester.widget<PrimaryButton>(
-      find.widgetWithText(PrimaryButton, 'Собрать план'),
+    // The hint of кадр V4·01в, and the ready continuations under it — not an error message.
+    expect(find.textContaining('Пары слов мало'), findsOneWidget);
+    expect(find.text('ДОПИСАТЬ ЗА ТЕБЯ'), findsOneWidget);
+
+    // …and «Дальше» does not offer to spend a request on a goal the model cannot use.
+    final next = tester.widget<EntryCta>(find.byType(EntryCta));
+    expect(next.enabled && next.onPressed != null, isFalse);
+  });
+
+  testWidgets('tapping a ready continuation fills the field and opens «Дальше»', (tester) async {
+    _tallPhone(tester);
+    await tester.pumpWidget(
+      ProviderScope(child: _app(const PlanEntryScreen(initialGoal: 'К врачу'))),
     );
-    expect(short.enabled && short.onPressed != null, isFalse);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.textContaining('К врачу с ребёнком'));
+    await tester.pumpAndSettle();
+
+    final next = tester.widget<EntryCta>(find.byType(EntryCta));
+    expect(next.enabled && next.onPressed != null, isTrue);
+    expect(find.text('хватит для плана'), findsOneWidget);
   });
 
   testWidgets('the empty План tab explains the difference from a collection', (tester) async {

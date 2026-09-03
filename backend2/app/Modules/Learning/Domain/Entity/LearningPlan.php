@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Domain\Entity;
 
 use App\Modules\Learning\Domain\Exception\InvalidPlanTransition;
+use App\Modules\Learning\Domain\ValueObject\ListeningDiagnostics;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\PlanLevel;
 use App\Modules\Learning\Domain\ValueObject\PlanOutline;
@@ -47,8 +48,26 @@ final class LearningPlan
          */
         private LanguageCode $supportLang,
         private PlanLevel $level,
-        private DateTimeImmutable $eventDate,
+        /**
+         * THE DAY IT HAPPENS — or NULL, and «нет даты» is a different plan rather than a far one.
+         *
+         * «Без даты» (кадры V4·04б, 06б): the learner is preparing for something real with no date
+         * on it yet. Nothing about such a plan is compressed toward a deadline, nothing is «срок
+         * мал», and the rehearsal is «в конце» instead of «накануне» — {@see PlanScheduler} reads
+         * the null and lays the scenes out one after another. A far-future date would have been the
+         * wrong stand-in: it is still a countdown, and it would show one on the card.
+         */
+        private ?DateTimeImmutable $eventDate,
         private int $minutesPerDay,
+        /**
+         * What the entry's listening step learned — or NULL when it was skipped or never offered.
+         *
+         * Read twice and written once: `{{diagnostics}}` of P1 shapes the scenes, `{{balance}}` of
+         * P2 tilts the shelves. It belongs to the PLAN and not to the account, because it is an
+         * answer about THIS situation at THIS level: the same person preparing for a different
+         * event hears different lines and may well answer differently.
+         */
+        private ?ListeningDiagnostics $diagnostics,
         /** @var array<string, mixed>|null */
         private ?array $outline,
         /** @var array<string, mixed>|null */
@@ -96,12 +115,13 @@ final class LearningPlan
         LanguageCode $targetLang,
         LanguageCode $supportLang,
         PlanLevel $level,
-        DateTimeImmutable $eventDate,
+        ?DateTimeImmutable $eventDate,
         int $minutesPerDay,
+        ?ListeningDiagnostics $diagnostics = null,
     ): self {
         return new self(
             $id, $userId, PlanStatus::Draft, $title, $goalText, null, $targetLang, $supportLang,
-            $level, $eventDate, $minutesPerDay, null, null, null, null,
+            $level, $eventDate, $minutesPerDay, $diagnostics, null, null, null, null,
         );
     }
 
@@ -120,7 +140,7 @@ final class LearningPlan
         LanguageCode $targetLang,
         LanguageCode $supportLang,
         PlanLevel $level,
-        DateTimeImmutable $eventDate,
+        ?DateTimeImmutable $eventDate,
         int $minutesPerDay,
         ?array $outline,
         ?array $computed,
@@ -128,11 +148,12 @@ final class LearningPlan
         ?DateTimeImmutable $completedAt,
         ?array $eventFeedback = null,
         ?string $abandonReason = null,
+        ?ListeningDiagnostics $diagnostics = null,
     ): self {
         return new self(
             $id, $userId, $status, $title, $goalText, $goalRestated, $targetLang, $supportLang,
-            $level, $eventDate, $minutesPerDay, $outline, $computed, $startedAt, $completedAt,
-            $eventFeedback, $abandonReason,
+            $level, $eventDate, $minutesPerDay, $diagnostics, $outline, $computed, $startedAt,
+            $completedAt, $eventFeedback, $abandonReason,
         );
     }
 
@@ -171,7 +192,7 @@ final class LearningPlan
      *
      * @param  array<string, mixed>  $computed
      */
-    public function reschedule(array $computed, int $minutesPerDay, DateTimeImmutable $eventDate): void
+    public function reschedule(array $computed, int $minutesPerDay, ?DateTimeImmutable $eventDate): void
     {
         if ($this->status !== PlanStatus::Draft) {
             throw InvalidPlanTransition::make($this->status, 'пересчитать расписание');
@@ -348,9 +369,15 @@ final class LearningPlan
         return $this->level;
     }
 
-    public function eventDate(): DateTimeImmutable
+    public function eventDate(): ?DateTimeImmutable
     {
         return $this->eventDate;
+    }
+
+    /** What the listening step learned, or NULL — «шаг пропущен» is not «ничего не понял». */
+    public function diagnostics(): ?ListeningDiagnostics
+    {
+        return $this->diagnostics;
     }
 
     public function minutesPerDay(): int

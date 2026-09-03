@@ -353,8 +353,13 @@ class LearningPlan {
   final String supportLang, targetLang;
   final PlanLevel level;
 
-  /// `Y-m-d`. The event, not a deadline the app invented.
-  final String eventDate;
+  /// `Y-m-d`, or NULL — «Без даты» (кадр V4·04б).
+  ///
+  /// A plan with no date is a different plan, not a distant one: nothing counts down, nothing is
+  /// «срок мал», the days carry no date of their own and open one after another, and the rehearsal
+  /// is «в конце». Every screen that prints a date has to say the other sentence instead, which is
+  /// why this is nullable rather than an empty string — an empty string is a date that renders.
+  final String? eventDate;
   final int minutesPerDay;
   final String? startedAt, completedAt;
 
@@ -366,8 +371,11 @@ class LearningPlan {
   final int focusDayIndex;
   final int? nextDayIndex;
 
-  /// Whole days to the event. 0 = today, negative = it has passed.
-  final int daysToEvent;
+  /// Whole days to the event. 0 = today, negative = it has passed, NULL = there is no date.
+  ///
+  /// NOT zero when there is no date: zero means «событие сегодня», and a plan without one would
+  /// then be drawn as the most urgent plan the app can show.
+  final int? daysToEvent;
 
   /// What is LEFT no longer fits in the days that are left. Nothing is cut on the strength of it —
   /// it is the «срок мал» card's trigger, and the decision is the learner's.
@@ -443,7 +451,7 @@ class LearningPlan {
     supportLang: (j['support_lang'] as String?) ?? 'ru',
     targetLang: (j['target_lang'] as String?) ?? 'en',
     level: PlanLevel.fromWire(j['level'] as String?),
-    eventDate: (j['event_date'] as String?) ?? '',
+    eventDate: j['event_date'] as String?,
     minutesPerDay: (j['minutes_per_day'] as num?)?.toInt() ?? 20,
     startedAt: j['started_at'] as String?,
     completedAt: j['completed_at'] as String?,
@@ -453,7 +461,7 @@ class LearningPlan {
         ((j['stage_census'] as Map<String, dynamic>?)?['stage_a_closed'] as num?)?.toInt() ?? 0,
     focusDayIndex: (j['focus_day_index'] as num?)?.toInt() ?? 1,
     nextDayIndex: (j['next_day_index'] as num?)?.toInt(),
-    daysToEvent: (j['days_to_event'] as num?)?.toInt() ?? 0,
+    daysToEvent: (j['days_to_event'] as num?)?.toInt(),
     deadlineTight: j['deadline_tight'] == true,
     canAlready: ((j['can_already'] as List?) ?? const [])
         .map((e) => PlanCheckpoint.fromJson(e as Map<String, dynamic>))
@@ -489,7 +497,10 @@ class PlanSummary {
 
   final String id;
   final PlanStatus status;
-  final String title, eventDate;
+  final String title;
+
+  /// `Y-m-d`, or NULL on a plan built without a date. The archive row says «без даты» instead.
+  final String? eventDate;
   final int dayCount;
   final String? completedAt;
 
@@ -497,7 +508,7 @@ class PlanSummary {
     id: (j['id'] as String?) ?? '',
     status: PlanStatus.fromWire(j['status'] as String?),
     title: (j['title'] as String?) ?? '',
-    eventDate: (j['event_date'] as String?) ?? '',
+    eventDate: j['event_date'] as String?,
     dayCount: (j['day_count'] as num?)?.toInt() ?? 0,
     completedAt: j['completed_at'] as String?,
   );
@@ -943,3 +954,66 @@ List<String> _strings(Object? raw) => ((raw as List?) ?? const [])
     .whereType<String>()
     .where((s) => s.trim().isNotEmpty)
     .toList(growable: false);
+
+/// ONE LINE OF THE LISTENING WARM-UP — what the entry plays on кадр V4·03б.
+///
+/// Three fields and no id: the step is a minute long, the lines are never stored on the device and
+/// never read back, and what survives it is [ListenAnswer] — the same line with the learner's own
+/// «Понял» / «Не совсем» beside it, which rides to the server with `POST /plans`.
+class ListenLine {
+  const ListenLine({required this.text, required this.translation, required this.place});
+
+  /// The line itself, in the studied language. This is what the TTS says.
+  final String text;
+
+  /// Shown only behind «Показать текст» — the step is about the EAR, and a translation on screen
+  /// from the first second turns it into a reading exercise.
+  final String translation;
+
+  /// «на стойке», «по телефону» — 2–4 words from the model naming where it sounds. Rendered as the
+  /// надзаголовок over the play button and never matched against anything: a scene the model
+  /// invents needs a name the model invents. May be empty.
+  final String place;
+
+  factory ListenLine.fromJson(Map<String, dynamic> j) => ListenLine(
+    text: (j['text'] as String?) ?? '',
+    translation: (j['translation'] as String?) ?? '',
+    place: (j['place'] as String?) ?? '',
+  );
+}
+
+/// A heard line with the learner's own verdict on it.
+///
+/// «Понял» / «Не совсем», and neither is the right answer — the screen says so out loud. What the
+/// server does with them is derive ONE decision about the plan (all understood → «упор на
+/// говорение», anything else → «упор на понимание»), which is why the verdict itself is never sent:
+/// a client that could send it could send one that disagrees with its own rows.
+class ListenAnswer {
+  const ListenAnswer({required this.line, required this.understood});
+
+  final ListenLine line;
+  final bool understood;
+
+  Map<String, dynamic> toJson() => {
+    'text': line.text,
+    'translation': line.translation,
+    'place': line.place,
+    'understood': understood,
+  };
+}
+
+/// The outcome the learner is SHOWN on кадр V4·03в/03г, and the one the server will derive again.
+///
+/// Computed on the device only to write the sentence on the screen and the ribbon row. The plan is
+/// built on the server's own reading of the same rows — one rule, stated in two places on purpose:
+/// the screen has to promise exactly what the plan will do, and a promise computed from the same
+/// input as the decision cannot drift from it.
+enum ListenEmphasis {
+  understanding,
+  speaking;
+
+  /// «Понимаешь на слух уверенно» only when every line landed. Mixed counts as understanding: the
+  /// learner said, about a line they will actually hear, that they did not quite get it.
+  static ListenEmphasis of(List<ListenAnswer> answers) =>
+      answers.every((a) => a.understood) ? ListenEmphasis.speaking : ListenEmphasis.understanding;
+}

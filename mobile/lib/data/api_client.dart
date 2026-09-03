@@ -536,8 +536,9 @@ class ApiClient {
     required String goalText,
     required String targetLang,
     required String level,
-    required String eventDate,
+    required String? eventDate,
     required int minutesPerDay,
+    List<ListenAnswer> listening = const [],
   }) async {
     final r = await _dio.post(
       '/plans',
@@ -545,11 +546,50 @@ class ApiClient {
         'goal_text': goalText,
         'target_lang': targetLang,
         'level': level,
+        // ALWAYS SENT, and null is «Без даты» (кадр V4·04б). The server refuses a create with the
+        // key missing on purpose — an app that simply forgot the date must not produce an undated
+        // plan — so this is a plain assignment and never a `?:` conditional key.
         'event_date': eventDate,
         'minutes_per_day': minutesPerDay,
+        // What the learner tapped on the listening step, line by line. The VERDICT is not sent: the
+        // server derives «упор на понимание / на говорение» from these rows, so the balance the
+        // plan is built on cannot disagree with the answers the learner gave.
+        if (listening.isNotEmpty)
+          'listening': listening.map((a) => a.toJson()).toList(growable: false),
       },
     );
     return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// «Послушай три реплики из твоей ситуации» — the entry's optional step (кадр V4·03).
+  ///
+  /// Called in the background right after the level is chosen, BEFORE any plan exists. An EMPTY
+  /// list is a legitimate answer and means the step is not offered: the server answers 200 with
+  /// nothing when the warm-up could not be written, and this client turns a network failure into
+  /// the same empty list for the same reason — the step is optional, and a person who never asked
+  /// for it must not be shown an error about it.
+  ///
+  /// It waits on a model, so it states its own timeout like [buildPlanOutline] does.
+  Future<List<ListenLine>> listenWarmup({
+    required String goalText,
+    required String targetLang,
+    required String level,
+  }) async {
+    try {
+      final r = await _dio.post(
+        '/plans/listen-warmup',
+        data: {'goal_text': goalText, 'target_lang': targetLang, 'level': level},
+        options: Options(receiveTimeout: const Duration(minutes: 2)),
+      );
+      final data = _data(r) as Map<String, dynamic>;
+
+      return ((data['lines'] as List?) ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(ListenLine.fromJson)
+          .toList(growable: false);
+    } catch (_) {
+      return const [];
+    }
   }
 
   /// P1 + the scheduler: the SKELETON the learner reads before committing. One model call, and

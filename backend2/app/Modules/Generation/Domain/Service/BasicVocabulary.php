@@ -57,9 +57,15 @@ final class BasicVocabulary
             'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
             'my', 'your', 'his', 'our', 'their', 'this', 'that', 'these', 'those',
             'yes', 'no', 'please', 'thanks', 'thank you', 'hello', 'goodbye', 'sorry',
+            // артикли и базовые предлоги — служебные слова, которые карточкой не бывают ни на
+            // каком уровне, и без которых «связка из базовых слов» не ловится (решение владельца
+            // 03.09: список неполон против канона §7, чинится конфигом, а не гейтом)
+            'a', 'an', 'the',
+            'for', 'in', 'on', 'at', 'to', 'of', 'with', 'from', 'by',
             // be / have / go и их формы
             'be', 'am', 'is', 'are', 'was', 'were', 'been', 'have', 'has', 'had',
             'go', 'goes', 'went', 'gone', 'do', 'does', 'did', 'can', 'want', 'need',
+            'get', 'gets', 'got', 'see', 'sees', 'saw', 'come', 'comes', 'came',
             // из канона поимённо
             'a little', 'little', 'enough', 'much', 'many', 'again', 'slowly', 'very', 'more',
             'good', 'bad', 'big', 'small', 'here', 'there', 'now', 'later',
@@ -76,6 +82,23 @@ final class BasicVocabulary
      * @var list<string>
      */
     private const LENIENT_LEVELS = ['zero'];
+
+    /**
+     * Articles, per target language — the whole of the `card.chunk_article_pair` rule's vocabulary.
+     *
+     * A list of its own even though every article is also in the stop list: the chunk gate asks a
+     * different question — «is the FIRST word an article» — and answering it from the stop list
+     * would turn «for the desk» into an article pair the day a preposition was added there.
+     *
+     * German is unwritten for the same reason its stop list is: a language whose list is missing is
+     * NOT judged, and «немецкий список не написан» must never read as «каждый немецкий день чист».
+     *
+     * @var array<string, list<string>>
+     */
+    private const ARTICLES = [
+        'en' => ['a', 'an', 'the'],
+        'de' => [],
+    ];
 
     /** @param array<string, list<string>> $stopList target language => words; {@see DEFAULT_STOP_LIST} */
     public function __construct(private readonly array $stopList = self::DEFAULT_STOP_LIST) {}
@@ -109,6 +132,54 @@ final class BasicVocabulary
     public function isFatalAt(string $level): bool
     {
         return ! in_array(mb_strtolower(trim($level)), self::LENIENT_LEVELS, true);
+    }
+
+    /**
+     * IS EVERY WORD OF THIS CARD BASIC — the «связка из базовых слов» check (канон §7, 03.09).
+     *
+     * Read only by the chunk gate {@see PlanDayValidator::CHUNK_IS_BASIC}. «see it» is two words
+     * the learner already has, glued together by this one sentence; a chunk is supposed to be a
+     * piece of language that lives OUTSIDE the sentence it was found in («front desk», «make an
+     * appointment»). One basic word inside a chunk is fine and common — «an appointment» is barred
+     * by the article rule, not by this one — so the test is ALL, never ANY.
+     *
+     * ## What is deliberately not in the list
+     *
+     * «work» and «works». «works for me» is a real spoken chunk and the owner refused to lose it
+     * (решение 03.09); the price is that «works for» — a fragment cut off from its object — is not
+     * caught mechanically at all. That one is held by the prompt text of `plan_day.v0.4.1`, and the
+     * limit is deliberate rather than overlooked.
+     */
+    public function allBasic(string $targetLang, string $text): bool
+    {
+        $normalized = self::normalize($text);
+        if ($normalized === '' || $this->listFor($targetLang) === []) {
+            return false;
+        }
+
+        $words = explode(' ', $normalized);
+        foreach ($words as $word) {
+            if (! $this->isBasic($targetLang, $word)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Is this word an article of the target language?
+     *
+     * A separate list from the stop list even though every article is also in it: the chunk gate
+     * asks a different question — «is the FIRST word an article» — and answering it by scanning the
+     * whole stop list would make «for the desk» an article pair the moment a preposition was added.
+     */
+    public function isArticle(string $targetLang, string $word): bool
+    {
+        $lang = mb_strtolower(trim($targetLang));
+        $articles = self::ARTICLES[$lang] ?? self::ARTICLES[mb_substr($lang, 0, 2)] ?? [];
+
+        return in_array(self::normalize($word), $articles, true);
     }
 
     /**

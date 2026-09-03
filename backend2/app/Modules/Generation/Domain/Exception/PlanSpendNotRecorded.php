@@ -31,7 +31,7 @@ use Throwable;
 final class PlanSpendNotRecorded extends RuntimeException
 {
     private function __construct(
-        public readonly string $planId,
+        public readonly ?string $planId,
         public readonly ?string $costUsd,
         string $message,
         ?Throwable $previous,
@@ -39,14 +39,19 @@ final class PlanSpendNotRecorded extends RuntimeException
         parent::__construct($message, 0, $previous);
     }
 
-    public static function forPlan(string $planId, ?string $costUsd, Throwable $previous): self
+    /**
+     * @param  string|null  $planId  NULL for the entry's listening warm-up, which is paid for
+     *         before a plan exists ({@see \App\Modules\Generation\Application\Dto\PlanSpend::CALL_LISTEN})
+     */
+    public static function forPlan(?string $planId, ?string $costUsd, Throwable $previous): self
     {
         $spent = $costUsd ?? 'неизвестно сколько';
+        $whose = $planId === null ? 'разогрева на слух (плана ещё нет)' : "плана {$planId}";
 
         return new self(
             $planId,
             $costUsd,
-            "Вызов модели для плана {$planId} состоялся и стоил {$spent}, но строка учёта не "
+            "Вызов модели для {$whose} состоялся и стоил {$spent}, но строка учёта не "
             . 'записалась: ' . $previous->getMessage() . '. Это не проглатывается: неучтённый '
             . 'платёж должен ронять работу, а не оставаться незамеченным.',
             $previous,

@@ -10,7 +10,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/api_client.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
-import 'plan_builder_screen.dart';
+import 'entry/plan_entry_screen.dart';
 import 'plan_screen.dart';
 import 'plan_ui.dart';
 
@@ -176,7 +176,7 @@ class _FinishedPlanTab extends ConsumerWidget {
                     l.planFinishedAtEvent(full.eventFeedbackHits, full.canAlready.length),
                   l.planFinishedSummary(
                     latest.dayCount,
-                    planDateLabel(context, latest.eventDate),
+                    planDateOrNone(context, latest.eventDate),
                   ),
                 ].join(' '),
                 style: AppText.translation.copyWith(
@@ -272,7 +272,7 @@ class _ArchiveRow extends StatelessWidget {
                   Text(plan.title, style: AppText.collectionNameCard.copyWith(fontSize: 18)),
                   const SizedBox(height: 2),
                   Text(
-                    '${planDateLabel(context, plan.eventDate)} · ${l.planDaysCount(plan.dayCount)}',
+                    '${planDateOrNone(context, plan.eventDate)} · ${l.planDaysCount(plan.dayCount)}',
                     style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.tertiary),
                   ),
                 ],
@@ -386,7 +386,7 @@ Future<bool> abandonPlan(BuildContext context, WidgetRef ref, String planId) asy
 Future<void> openPlanBuilder(BuildContext context, WidgetRef ref, {String? goal}) async {
   AppHaptics.light();
   await Navigator.of(context).push(
-    MaterialPageRoute(builder: (_) => PlanBuilderScreen(initialGoal: goal)),
+    MaterialPageRoute(builder: (_) => PlanEntryScreen(initialGoal: goal)),
   );
   // They may have started one. Both the tab and the home card read the same provider.
   ref.invalidate(activePlanProvider);

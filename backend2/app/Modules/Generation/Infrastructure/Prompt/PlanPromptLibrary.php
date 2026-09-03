@@ -48,7 +48,15 @@ final class PlanPromptLibrary implements PlanPromptSource
      */
     public const OUTLINE_VERSION = 'plan_outline.v0.4';
 
-    public const DAY_VERSION = 'plan_day.v0.4';
+    /**
+     * v0.4.1 — two edits by the architect, one bump (наряд ENTRY-2, Ч-6).
+     *
+     * What a chunk IS, said out loud in SHELF SPECIFICS, and `{{balance}}`: the outcome of the
+     * entry's listening step, which tilts the `hear` and `say` shelves toward opposite ends of
+     * their guides. An empty balance is the ordinary case — every plan built without the listening
+     * step passes one — and the rule says so, so the placeholder is a contract and not a stub.
+     */
+    public const DAY_VERSION = 'plan_day.v0.4.1';
 
     /**
      * P2R — the day's BROKEN CARDS, and nothing else.
@@ -73,9 +81,19 @@ final class PlanPromptLibrary implements PlanPromptSource
      */
     public const REPAIR_VERSION = 'plan_day_repair.v0.2';
 
+    /**
+     * P-Listen — the entry's optional listening warm-up (наряд ENTRY-2, Ч-3).
+     *
+     * A fourth prompt rather than a mode of P1, and versioned on its own for the reason the other
+     * three are: it is asked BEFORE the plan exists, of a goal and a level and nothing else, and it
+     * will move when the step's design moves — which P1 has no reason to do with it.
+     */
+    public const LISTEN_VERSION = 'plan_listen.v1';
+
     private const OUTLINE = 'plan_outline.v0.4.md';
-    private const DAY = 'plan_day.v0.4.md';
+    private const DAY = 'plan_day.v0.4.1.md';
     private const REPAIR = 'plan_day_repair.v0.2.md';
+    private const LISTEN = 'plan_listen.v1.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}
 
@@ -107,6 +125,16 @@ final class PlanPromptLibrary implements PlanPromptSource
     public function repairVersion(): string
     {
         return self::REPAIR_VERSION;
+    }
+
+    public function listen(array $placeholders): RenderedPrompt
+    {
+        return $this->render(self::LISTEN, self::LISTEN_VERSION, $placeholders);
+    }
+
+    public function listenVersion(): string
+    {
+        return self::LISTEN_VERSION;
     }
 
     /** @param array<string, string> $placeholders */

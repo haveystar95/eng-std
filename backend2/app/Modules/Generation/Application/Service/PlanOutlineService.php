@@ -78,10 +78,17 @@ final readonly class PlanOutlineService implements PlanOutlinePort
             'level' => $brief->level,
             'target_lang_notes' => $notes->target($brief->targetLang),
             'support_lang_notes' => $notes->support($brief->supportLang, $brief->targetLang, $scriptsDiffer),
-            // ENTRY-2 will fill this with the listening check and the three questions. Until then
-            // it is EMPTY on purpose and the prompt says what to do with an empty one — «rely on
-            // the goal and the level alone» — so the placeholder is a contract rather than a stub.
-            'diagnostics' => '(пусто — вход диагностики появится с ENTRY-2)',
+            // ENTRY-2 filled this: the three lines of the listening step with «понял / не совсем»
+            // beside each, and the verdict the learner was shown. A plan built WITHOUT the step
+            // passes an empty one, which the prompt handles by its own text — «rely on the goal and
+            // the level alone» — so both paths are the prompt's own, not a stub and a real case.
+            //
+            // What P1 describes and never receives is the OTHER half of its diagnostics paragraph:
+            // «what scares you more», «will you negotiate», «who will you talk to». Those three
+            // questions have no screen in the V4 entry, so they are not sent; the paragraph reads
+            // as a superset and a partial diagnostics is legal by the same sentence that makes an
+            // empty one legal.
+            'diagnostics' => PlanPromptData::diagnostics($brief->diagnostics, $brief->balance),
         ]);
 
         [$answer, $violations] = $this->attempt($prompt, $brief, null);

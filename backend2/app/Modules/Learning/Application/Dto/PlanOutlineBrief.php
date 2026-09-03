@@ -26,5 +26,20 @@ final readonly class PlanOutlineBrief
         public string $supportLang,
         public string $targetLang,
         public string $level,
+        /**
+         * The listening step's answers, or NULL — «шаг пропущен», which P1 handles by its own text.
+         *
+         * The whole record and not just its verdict: `{{diagnostics}}` is prose the model reads to
+         * shape the scenes, and «не понял две реплики из трёх» tells it far less than the two lines
+         * themselves. In primitives, like everything else here — the value object lives in
+         * Learning's Domain and Generation has no business importing it; what crosses the boundary
+         * is the shape {@see \App\Modules\Learning\Domain\ValueObject\ListeningDiagnostics::toArray()}
+         * writes, plus the verdict it derives, so the two cannot disagree on the way over.
+         *
+         * @var array{lines: list<array{text: string, translation: string, place: string, understood: bool}>}|null
+         */
+        public ?array $diagnostics = null,
+        /** `understanding` | `speaking` | `''` — the verdict of the step above, empty when skipped. */
+        public string $balance = '',
     ) {}
 }

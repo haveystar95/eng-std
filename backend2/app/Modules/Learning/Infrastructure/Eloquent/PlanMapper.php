@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Infrastructure\Eloquent;
 
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
+use App\Modules\Learning\Domain\ValueObject\ListeningDiagnostics;
 use App\Modules\Learning\Domain\ValueObject\PlanDayId;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
@@ -32,7 +33,7 @@ final class PlanMapper
             targetLang: new LanguageCode($row->target_lang),
             supportLang: new LanguageCode($row->support_lang),
             level: PlanLevel::from($row->level),
-            eventDate: new DateTimeImmutable($row->event_date . ' 00:00:00'),
+            eventDate: $row->event_date !== null ? new DateTimeImmutable($row->event_date . ' 00:00:00') : null,
             minutesPerDay: $row->minutes_per_day,
             outline: $row->outline,
             computed: $row->computed,
@@ -40,6 +41,7 @@ final class PlanMapper
             completedAt: $row->completed_at?->toDateTimeImmutable(),
             eventFeedback: self::indexes($row->event_feedback),
             abandonReason: $row->abandon_reason,
+            diagnostics: ListeningDiagnostics::fromArray($row->listening_diagnostics),
         );
     }
 
@@ -73,7 +75,7 @@ final class PlanMapper
             'target_lang' => $plan->targetLang()->value,
             'support_lang' => $plan->supportLang()->value,
             'level' => $plan->level()->value,
-            'event_date' => $plan->eventDate()->format('Y-m-d'),
+            'event_date' => $plan->eventDate()?->format('Y-m-d'),
             'minutes_per_day' => $plan->minutesPerDay(),
             'outline' => $plan->outline(),
             'computed' => $plan->computed(),
@@ -81,6 +83,15 @@ final class PlanMapper
             'completed_at' => $plan->completedAt(),
             'event_feedback' => $plan->eventFeedback(),
             'abandon_reason' => $plan->abandonReason(),
+            // ENCODED HERE, unlike `outline` and `event_feedback`, and the difference is the INSERT.
+            // The repository writes through `updateOrInsert`, which bypasses the model's casts;
+            // Laravel's grammar json-encodes array bindings on an UPDATE and not on an INSERT, and
+            // those two columns only ever arrive on an update (a draft is inserted with both null).
+            // This one arrives with the row itself — the listening step happens before «Собрать
+            // план» — so it has to be a string by the time it gets here.
+            'listening_diagnostics' => $plan->diagnostics() === null
+                ? null
+                : json_encode($plan->diagnostics()->toArray(), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
         ];
     }
 

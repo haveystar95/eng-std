@@ -9,6 +9,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 /// A brass caption — «ПЛАН · ДЕНЬ 2 ИЗ 3», «АКТИВНЫЙ ПЛАН», «ДЕНЬ 1».
@@ -340,6 +341,31 @@ class PlanNotice extends StatelessWidget {
 /// The plan speaks in DATES and in «через N дней», never in a countdown of hours: the event is a day
 /// in the learner's calendar, and an app that said «через 47 часов» would be describing its own
 /// clock rather than their appointment.
+/// The same label, for a plan that may have no date at all — «Без даты» (кадры V4·04б, 06б).
+///
+/// One helper rather than a `?? l.planNoDate` at each of the eight call sites: a plan with no date
+/// is a state every screen that prints one has to answer for, and eight private answers is how one
+/// of them ends up printing an empty string where a date was.
+String planDateOrNone(BuildContext context, String? isoDate, {bool short = false}) {
+  final date = isoDate?.trim() ?? '';
+
+  return date.isEmpty
+      ? AppLocalizations.of(context).planNoDate
+      : planDateLabel(context, date, short: short);
+}
+
+/// The weekday under a chosen date — «ПОНЕДЕЛЬНИК» (кадр V4·04).
+///
+/// Its own helper rather than a flag on [planDateLabel], because it is a different fact: the date
+/// answers «когда», the weekday answers «а это вообще рабочий день», and the frame sets them in two
+/// different styles for exactly that reason.
+String planWeekdayLabel(BuildContext context, String isoDate) {
+  final parsed = DateTime.tryParse(isoDate);
+  if (parsed == null) return '';
+
+  return DateFormat('EEEE', Localizations.localeOf(context).languageCode).format(parsed);
+}
+
 String planDateLabel(BuildContext context, String isoDate, {bool short = false}) {
   final parsed = DateTime.tryParse(isoDate);
   if (parsed == null) return isoDate;

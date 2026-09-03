@@ -118,6 +118,29 @@ final class PlanDayValidator
     /** Word > 3 words, chunk outside 2–4, say/ask outside 3–8, hear over 12 (канон §7). */
     public const KIND_SIZE = 'card.kind_size';
 
+    /**
+     * EVERY WORD OF THE CHUNK IS BASIC — «see it», «do that» (правка архитектора 03.09).
+     *
+     * A chunk is meant to be a self-sufficient piece of language that lives outside the one
+     * sentence it was found in: «front desk», «make an appointment», «water pressure». Two words
+     * the learner already had, glued by today's frame, is not a piece of language — it is the frame
+     * showing through, and the slot it takes is a reply the learner will not have. ALL words, never
+     * any: «an appointment» has a basic word in it and is barred by {@see CHUNK_ARTICLE_PAIR}, not
+     * by this one.
+     */
+    public const CHUNK_IS_BASIC = 'card.chunk_is_basic';
+
+    /**
+     * A TWO-WORD CHUNK WHOSE FIRST WORD IS AN ARTICLE — «the location», «an appointment».
+     *
+     * Article plus noun is not a set combination; it is a noun with the grammar it always has. The
+     * word the day is actually teaching — `location`, `appointment` — belongs on the `words` shelf,
+     * where it gets its own image and its own example, and putting it on `chunks` with an article
+     * in front spends a chunk slot on a declension. «an appointment» from the live run of P2-v0.4
+     * is exactly this shape and is meant to fall here (наряд ENTRY-2, Ч-6).
+     */
+    public const CHUNK_ARTICLE_PAIR = 'card.chunk_article_pair';
+
     /** A proper name of the scenario as a card of its own. */
     public const TERM_IS_A_NAME = 'card.term_is_a_name';
 
@@ -328,6 +351,7 @@ final class PlanDayValidator
             ...$this->checkClones($day),
             ...$this->checkExamples($day),
             ...$this->checkBasics($day),
+            ...$this->checkChunks($day),
             ...$this->checkNames($day),
             ...$this->checkKeys($day),
             ...$this->checkLineTranslations($day),
@@ -721,6 +745,60 @@ final class PlanDayValidator
                 'this is basic vocabulary (a number, a weekday, a pronoun, be/have/go and the like) '
                 . 'and is never a card; replace it with something this scene actually needs',
             );
+        }
+
+        return $out;
+    }
+
+    /**
+     * WHAT IS NOT A CHUNK — the two shapes a machine can name (правка архитектора, v0.4.1).
+     *
+     * The prompt names three: a fragment cut off from its object («works for»), an article plus a
+     * noun («the location»), and a combination of basic words («see it»). Only the last two have a
+     * mechanical test, and that split is deliberate rather than unfinished: «works for» is wrong
+     * because of what the missing object WOULD have been, and the only list that could catch it
+     * would have to hold «work», which would also kill «works for me» — a real spoken chunk the
+     * owner refused to lose (решение 03.09). The fragment is held by the prompt alone, and the
+     * gates hold the two shapes that need no judgement.
+     *
+     * Unlike {@see WORD_IS_BASIC}, neither depends on the level. A card that is not a chunk is not
+     * a chunk at `zero` either — the rule is about what the shelf holds, not about what the learner
+     * already knows.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkChunks(PlanDayCandidate $day): array
+    {
+        $out = [];
+        foreach ($day->shelf(PlanShelf::Chunks) as $item) {
+            $words = preg_split('/\s+/u', trim($item->text)) ?: [];
+            $words = array_values(array_filter($words, static fn (string $w): bool => $w !== ''));
+
+            if (count($words) === 2 && $this->basics->isArticle($day->targetLang, $words[0])) {
+                $out[] = PlanViolation::onCard(
+                    self::CHUNK_ARTICLE_PAIR,
+                    $item,
+                    'text',
+                    'артикль плюс существительное — это не связка, а существительное со своей '
+                    . 'грамматикой; само слово живёт на полке «words»',
+                    'an article plus a noun is not a set combination; put the noun itself on the '
+                    . 'words shelf, or replace this with a real chunk of the scene',
+                );
+
+                continue;
+            }
+
+            if ($this->basics->allBasic($day->targetLang, $item->text)) {
+                $out[] = PlanViolation::onCard(
+                    self::CHUNK_IS_BASIC,
+                    $item,
+                    'text',
+                    'связка целиком собрана из базовых слов — она живёт только внутри этой фразы, '
+                    . 'а связка обязана жить вне её',
+                    'every word of this chunk is basic vocabulary, so it is not a piece of language '
+                    . 'that lives outside this sentence; replace it with a real chunk of the scene',
+                );
+            }
         }
 
         return $out;

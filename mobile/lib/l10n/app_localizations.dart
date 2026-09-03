@@ -4712,6 +4712,624 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'На событии сказал {used} из {total}.'**
   String planFinishedAtEvent(int used, int total);
+
+  /// План без даты события — везде, где обычно стоит дата (кадры V4·04б, 06б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Без даты'**
+  String get planNoDate;
+
+  /// Надзаголовок шагов входа (кадры V4·01…04б).
+  ///
+  /// In ru, this message translates to:
+  /// **'План подготовки'**
+  String get planEntryKicker;
+
+  /// Вопрос шага 1 (кадр V4·01).
+  ///
+  /// In ru, this message translates to:
+  /// **'К чему готовишься?'**
+  String get planEntryGoalTitle;
+
+  /// Подзаголовок на пустом поле (кадр V4·01).
+  ///
+  /// In ru, this message translates to:
+  /// **'Расскажи своими словами: где будешь, с кем, что нужно сказать и понять. Подробности — это те самые фразы, которые пригодятся.'**
+  String get planEntryGoalSubtitleLong;
+
+  /// Короткий подзаголовок, когда в поле уже что-то есть (кадр V4·01б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Расскажи своими словами: где будешь, с кем, что нужно сказать и понять.'**
+  String get planEntryGoalSubtitle;
+
+  /// Подсказка в поле — написана как чужой ответ, а не как инструкция.
+  ///
+  /// In ru, this message translates to:
+  /// **'Например: иду к врачу с ребёнком, надо объяснить симптомы и понять назначение'**
+  String get planEntryGoalPlaceholder;
+
+  /// Счётчик строк, пока цели не хватает.
+  ///
+  /// In ru, this message translates to:
+  /// **'можно 4–6 строк'**
+  String get planEntryLinesHint;
+
+  /// Латунная замена счётчика, когда цели достаточно (кадр V4·01б).
+  ///
+  /// In ru, this message translates to:
+  /// **'хватит для плана'**
+  String get planEntryEnough;
+
+  /// Счётчик на длинной цели (кадр V4·01г).
+  ///
+  /// In ru, this message translates to:
+  /// **'подробно — это хорошо'**
+  String get planEntryDetailed;
+
+  /// Подсказка под короткой целью — без красного и без блокировки (кадр V4·01в).
+  ///
+  /// In ru, this message translates to:
+  /// **'Пары слов мало. Добавь: к какому врачу, с кем идёшь, что нужно понять.'**
+  String get planEntryTooShort;
+
+  /// Надзаголовок примеров на пустом поле.
+  ///
+  /// In ru, this message translates to:
+  /// **'Так тоже подходит'**
+  String get planEntryExamplesTitle;
+
+  /// Надзаголовок дополнений, когда цели уже хватает.
+  ///
+  /// In ru, this message translates to:
+  /// **'Можно добавить'**
+  String get planEntryAdditionsTitle;
+
+  /// Надзаголовок готовых продолжений под короткой целью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дописать за тебя'**
+  String get planEntryFinishTitle;
+
+  /// Пример цели 1 (кадр V4·01).
+  ///
+  /// In ru, this message translates to:
+  /// **'Иду к врачу, болит спина, надо объяснить и понять назначение'**
+  String get planEntryExample1;
+
+  /// Пример цели 2.
+  ///
+  /// In ru, this message translates to:
+  /// **'Онлайн-собеседование PHP-разработчика, удалённо, английская команда'**
+  String get planEntryExample2;
+
+  /// Пример цели 3.
+  ///
+  /// In ru, this message translates to:
+  /// **'Летим в отпуск с ребёнком, аэропорт, отель, аптека'**
+  String get planEntryExample3;
+
+  /// Дополнение к цели 1 (кадр V4·01б).
+  ///
+  /// In ru, this message translates to:
+  /// **'…врач говорит только по-английски'**
+  String get planEntryAddition1;
+
+  /// Дополнение к цели 2.
+  ///
+  /// In ru, this message translates to:
+  /// **'…нужно забрать рецепт в аптеке рядом'**
+  String get planEntryAddition2;
+
+  /// Готовое продолжение 1 (кадр V4·01в).
+  ///
+  /// In ru, this message translates to:
+  /// **'К врачу с ребёнком: объяснить симптомы и понять назначение'**
+  String get planEntryFinish1;
+
+  /// Готовое продолжение 2.
+  ///
+  /// In ru, this message translates to:
+  /// **'К врачу самому: болит спина, нужен рецепт'**
+  String get planEntryFinish2;
+
+  /// Кнопка перехода к следующему шагу входа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дальше'**
+  String get planEntryNext;
+
+  /// Подпись кнопки диктовки внутри поля цели (для скринридера).
+  ///
+  /// In ru, this message translates to:
+  /// **'Продиктовать'**
+  String get planEntryDictate;
+
+  /// Вопрос шага 2 (кадр V4·02).
+  ///
+  /// In ru, this message translates to:
+  /// **'Какой язык учишь?'**
+  String get planEntryLangTitle;
+
+  /// Родной язык не спрашиваем — только сообщаем (кадр V4·02).
+  ///
+  /// In ru, this message translates to:
+  /// **'Переводы на {language}'**
+  String planEntryTranslationsInto(String language);
+
+  /// Ссылка рядом со строкой о языке переводов.
+  ///
+  /// In ru, this message translates to:
+  /// **'изменить в настройках'**
+  String get planEntrySettingsLink;
+
+  /// Второй вопрос шага 2 (кадр V4·02).
+  ///
+  /// In ru, this message translates to:
+  /// **'Как сейчас говоришь?'**
+  String get planEntryLevelTitle;
+
+  /// Человеческое описание уровня `zero`.
+  ///
+  /// In ru, this message translates to:
+  /// **'Знаю отдельные слова, фразу не соберу'**
+  String get planLevelZeroHint;
+
+  /// Человеческое описание уровня `basic`.
+  ///
+  /// In ru, this message translates to:
+  /// **'Читаю переписку, но говорю с паузами'**
+  String get planLevelBasicHint;
+
+  /// Человеческое описание уровня `conversational`.
+  ///
+  /// In ru, this message translates to:
+  /// **'Договорюсь о бытовом, сложное — подбираю слова'**
+  String get planLevelConversationalHint;
+
+  /// Человеческое описание уровня `fluent`.
+  ///
+  /// In ru, this message translates to:
+  /// **'Говорю без подготовки, шлифую точность'**
+  String get planLevelFluentHint;
+
+  /// Надзаголовок шага слуха (кадр V4·03).
+  ///
+  /// In ru, this message translates to:
+  /// **'Необязательный шаг'**
+  String get planListenKicker;
+
+  /// Заголовок предложения послушать.
+  ///
+  /// In ru, this message translates to:
+  /// **'Хочешь, настрою точнее?'**
+  String get planListenOfferTitle;
+
+  /// Текст предложения послушать.
+  ///
+  /// In ru, this message translates to:
+  /// **'Послушай три реплики из твоей ситуации — как они прозвучат на самом деле. Минута.'**
+  String get planListenOfferBody;
+
+  /// Кнопка согласия на шаг слуха.
+  ///
+  /// In ru, this message translates to:
+  /// **'Послушать'**
+  String get planListenListen;
+
+  /// Кнопка пропуска шага слуха — того же веса, что и «Послушать».
+  ///
+  /// In ru, this message translates to:
+  /// **'Пропустить'**
+  String get planListenSkip;
+
+  /// Подпись под кнопками предложения.
+  ///
+  /// In ru, this message translates to:
+  /// **'Это не тест. Ответы никто не увидит, план соберётся и без этого шага.'**
+  String get planListenReassure;
+
+  /// Выход из шага слуха в любой момент (шапка плеера).
+  ///
+  /// In ru, this message translates to:
+  /// **'Хватит'**
+  String get planListenEnough;
+
+  /// Надзаголовок плеера, когда модель не назвала место.
+  ///
+  /// In ru, this message translates to:
+  /// **'Реплика {index}'**
+  String planListenLine(int index);
+
+  /// Надзаголовок плеера с местом от модели (кадр V4·03б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Реплика {index} · {place}'**
+  String planListenLineAt(int index, String place);
+
+  /// Подпись под волной в плеере.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слушай столько раз, сколько нужно.'**
+  String get planListenReplayHint;
+
+  /// Ссылка, открывающая текст реплики и перевод.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать текст'**
+  String get planListenShowText;
+
+  /// Надзаголовок над двумя самооценками.
+  ///
+  /// In ru, this message translates to:
+  /// **'Как ощущается'**
+  String get planListenFeelLabel;
+
+  /// Самооценка «понял» — не правильный ответ, просто ответ.
+  ///
+  /// In ru, this message translates to:
+  /// **'Понял'**
+  String get planListenGot;
+
+  /// Самооценка «не совсем».
+  ///
+  /// In ru, this message translates to:
+  /// **'Не совсем'**
+  String get planListenNotQuite;
+
+  /// Подпись под самооценками.
+  ///
+  /// In ru, this message translates to:
+  /// **'Правильного ответа нет — это про то, что подобрать в план.'**
+  String get planListenNoRightAnswer;
+
+  /// Итог слуха, если хоть одна реплика далась не полностью (кадр V4·03в).
+  ///
+  /// In ru, this message translates to:
+  /// **'Понял: сделаю упор на понимание на слух'**
+  String get planListenResultUnderstanding;
+
+  /// Подпись под итогом «упор на понимание».
+  ///
+  /// In ru, this message translates to:
+  /// **'Речь идёт быстрее, чем удобно. В плане будет больше прослушивания и меньше зубрёжки слов.'**
+  String get planListenResultUnderstandingBody;
+
+  /// Итог слуха, если все три реплики поняты (кадр V4·03г).
+  ///
+  /// In ru, this message translates to:
+  /// **'Понимаешь на слух уверенно: сделаю упор на говорение'**
+  String get planListenResultSpeaking;
+
+  /// Подпись под итогом «упор на говорение».
+  ///
+  /// In ru, this message translates to:
+  /// **'Реплики тебе даются — в плане будет больше твоих ответов вслух и меньше зубрёжки слов.'**
+  String get planListenResultSpeakingBody;
+
+  /// Строка в рамке под итогом слуха.
+  ///
+  /// In ru, this message translates to:
+  /// **'Настройку можно поменять в плане в любой день.'**
+  String get planListenResultFootnote;
+
+  /// Строка ленты о пройденном шаге слуха (кадр V4·04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Слух · упор на понимание'**
+  String get planEntryRibbonListenUnderstanding;
+
+  /// Строка ленты о пройденном шаге слуха.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слух · упор на говорение'**
+  String get planEntryRibbonListenSpeaking;
+
+  /// Строка ленты о пропущенном шаге слуха (кадр V4·04б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Слух · шаг пропущен'**
+  String get planEntryRibbonListenSkipped;
+
+  /// Приглашение пройти пропущенный шаг — без укора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пройти'**
+  String get planEntryPass;
+
+  /// Строка ленты о языке и уровне.
+  ///
+  /// In ru, this message translates to:
+  /// **'{language} · {level}'**
+  String planEntryRibbonLangLevel(String language, String level);
+
+  /// Вопрос шага даты (кадр V4·04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Когда это случится?'**
+  String get planEntryWhenTitle;
+
+  /// Кнопка выбора даты, когда даты ещё нет (кадр V4·04б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбрать дату'**
+  String get planEntryPickDate;
+
+  /// Строка-ориентир под датой.
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{Через {days} день · сервер разложит подготовку по этим дням} few{Через {days} дня · сервер разложит подготовку по этим дням} many{Через {days} дней · сервер разложит подготовку по этим дням} other{Через {days} дня · сервер разложит подготовку по этим дням}}'**
+  String planEntryHintDays(int days);
+
+  /// Строка-ориентир, когда событие сегодня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня · вся подготовка уместится в один подход'**
+  String get planEntryHintToday;
+
+  /// Честная строка-ориентир без даты (решение владельца 03.09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Даты нет · идём в своём темпе, по одной сцене за подход'**
+  String get planEntryHintNoDate;
+
+  /// Второй вопрос шага даты.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сколько минут в день?'**
+  String get planEntryMinutesTitle;
+
+  /// Подпись под числом минут на карточке.
+  ///
+  /// In ru, this message translates to:
+  /// **'минут'**
+  String get planEntryMinutesUnit;
+
+  /// Кнопка запуска сборки (кадры V4·04, 04б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрать план'**
+  String get planEntryBuild;
+
+  /// Надзаголовок экрана сборки (кадр V4·05).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собираю твой план'**
+  String get planBuildKicker;
+
+  /// Шаг сборки 1.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разбираю цель'**
+  String get planBuildStep1;
+
+  /// Шаг сборки 2.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подбираю реплики'**
+  String get planBuildStep2;
+
+  /// Шаг сборки 3.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собираю слова'**
+  String get planBuildStep3;
+
+  /// Строка под шагами сборки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Реплики берём из живой речи, не из учебника. Это занимает несколько секунд.'**
+  String get planBuildFootnote;
+
+  /// Надзаголовок первой неудачи (кадр V4·05в).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сборка идёт'**
+  String get planBuildRetryKicker;
+
+  /// Единственная изменившаяся строка при первой неудаче. Причин не называем.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получилось собрать с первого раза — пробую ещё.'**
+  String get planBuildRetryBody;
+
+  /// Строка под шагами при первой неудаче.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ответы на месте. Вторая попытка идёт с того же шага.'**
+  String get planBuildRetryFootnote;
+
+  /// Надзаголовок при потере сети (кадр V4·05б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сборка приостановлена'**
+  String get planBuildOfflineKicker;
+
+  /// Заголовок при потере сети.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пропала связь на середине'**
+  String get planBuildOfflineTitle;
+
+  /// Текст при потере сети.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ответы сохранены — ничего вводить заново не придётся. Продолжим, как только сеть вернётся.'**
+  String get planBuildOfflineBody;
+
+  /// Кнопка повтора сборки при потере сети.
+  ///
+  /// In ru, this message translates to:
+  /// **'Попробовать снова'**
+  String get planBuildRetryButton;
+
+  /// Вторая кнопка кадра V4·05б. Механики уведомления нет — кнопка честно неактивна.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сообщить, когда будет готов'**
+  String get planBuildNotifyButton;
+
+  /// Подпись под неактивной кнопкой уведомления — вместо выдуманной механики.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уведомления ещё не подключены'**
+  String get planBuildNotifyUnavailable;
+
+  /// Надзаголовок второй неудачи (кадр V4·05г).
+  ///
+  /// In ru, this message translates to:
+  /// **'Не собралось'**
+  String get planBuildFailedKicker;
+
+  /// Заголовок второй неудачи.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не собралось. Твои ответы сохранены'**
+  String get planBuildFailedTitle;
+
+  /// Текст второй неудачи.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничего вводить заново не придётся. Можно вернуться к ответам и запустить сборку снова — или написать нам.'**
+  String get planBuildFailedBody;
+
+  /// Главная кнопка второй неудачи.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернуться к ответам'**
+  String get planBuildBackToAnswers;
+
+  /// Вторая кнопка второй неудачи — открывает почту.
+  ///
+  /// In ru, this message translates to:
+  /// **'Написать нам'**
+  String get planBuildWriteUs;
+
+  /// Тема письма в поддержку.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не собрался план'**
+  String get planBuildMailSubject;
+
+  /// Надзаголовок превью (кадры V4·06, 06б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Твой план готов'**
+  String get planPreviewKicker;
+
+  /// Подзаголовок превью: пересказ цели плюс число сцен.
+  ///
+  /// In ru, this message translates to:
+  /// **'{summary} — по твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}.'**
+  String planPreviewSubtitle(String summary, int scenes);
+
+  /// То же без даты (кадр V4·06б).
+  ///
+  /// In ru, this message translates to:
+  /// **'{summary} — по твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}. Даты нет, идём в своём темпе.'**
+  String planPreviewSubtitleNoDate(String summary, int scenes);
+
+  /// Моноширинная строка-ориентир превью с датой.
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{{days} ДЕНЬ ПОДГОТОВКИ} few{{days} ДНЯ ПОДГОТОВКИ} many{{days} ДНЕЙ ПОДГОТОВКИ} other{{days} ДНЯ ПОДГОТОВКИ}} · {minutes} МИНУТ В ДЕНЬ'**
+  String planPreviewOrientation(int days, int minutes);
+
+  /// Моноширинная строка-ориентир превью без даты.
+  ///
+  /// In ru, this message translates to:
+  /// **'{scenes, plural, one{{scenes} СЦЕНА} few{{scenes} СЦЕНЫ} many{{scenes} СЦЕН} other{{scenes} СЦЕНЫ}} · {minutes} МИНУТ В ДЕНЬ · ПО ОДНОЙ ЗА ПОДХОД'**
+  String planPreviewOrientationNoDate(int scenes, int minutes);
+
+  /// Надзаголовок лестницы сцен, когда дата есть.
+  ///
+  /// In ru, this message translates to:
+  /// **'Твои дни'**
+  String get planPreviewDaysTitle;
+
+  /// Надзаголовок лестницы сцен без даты.
+  ///
+  /// In ru, this message translates to:
+  /// **'Твои сцены'**
+  String get planPreviewScenesTitle;
+
+  /// Метка карточки сцены, когда дата есть.
+  ///
+  /// In ru, this message translates to:
+  /// **'ДЕНЬ {index}'**
+  String planPreviewDayLabel(int index);
+
+  /// Метка карточки сцены без даты.
+  ///
+  /// In ru, this message translates to:
+  /// **'СЦЕНА {index}'**
+  String planPreviewSceneLabel(int index);
+
+  /// Плашка спасательного набора в превью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пять фраз-спасателей — с первого дня, на случай если растерялся.'**
+  String get planPreviewRescueBody;
+
+  /// Живая фраза набора курсивом — обещание должно быть осязаемым.
+  ///
+  /// In ru, this message translates to:
+  /// **'«Помедленнее, пожалуйста» — и ещё четыре таких, с первого дня.'**
+  String get planPreviewRescueQuote;
+
+  /// Метка прогона, когда дата есть.
+  ///
+  /// In ru, this message translates to:
+  /// **'НАКАНУНЕ'**
+  String get planPreviewRehearsalEveLabel;
+
+  /// Метка прогона без даты.
+  ///
+  /// In ru, this message translates to:
+  /// **'В КОНЦЕ'**
+  String get planPreviewRehearsalEndLabel;
+
+  /// Название пунктирной карточки прогона.
+  ///
+  /// In ru, this message translates to:
+  /// **'Прогон перед событием'**
+  String get planPreviewRehearsalTitle;
+
+  /// Текст прогона, когда дата есть.
+  ///
+  /// In ru, this message translates to:
+  /// **'{scenes, plural, one{Одна сцена} few{Все {scenes} сцены} many{Все {scenes} сцен} other{Все {scenes} сцены}} подряд, вслух, за один присест.'**
+  String planPreviewRehearsalEveBody(int scenes);
+
+  /// Текст прогона без даты.
+  ///
+  /// In ru, this message translates to:
+  /// **'Откроется, когда пройдёшь все сцены. Дату можно поставить в любой день.'**
+  String get planPreviewRehearsalEndBody;
+
+  /// Главная кнопка превью с датой.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать первый день'**
+  String get planPreviewStartDay;
+
+  /// Главная кнопка превью без даты.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать первую сцену'**
+  String get planPreviewStartScene;
+
+  /// Вторая кнопка превью с датой.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить ответы'**
+  String get planPreviewEditAnswers;
+
+  /// Вторая кнопка превью без даты — единственное, чего плану не хватает.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поставить дату'**
+  String get planPreviewSetDate;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

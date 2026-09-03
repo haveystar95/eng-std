@@ -118,6 +118,30 @@ class Pronouncer {
     _lastSpokeAt = DateTime.now();
   }
 
+  /// The same voice, for a line that is not a [Word] — the entry's listening warm-up (кадр V4·03б).
+  ///
+  /// Its three lines exist for one minute, are never stored and never become terms, so wrapping
+  /// them in a `Word` to be allowed to speak them would be inventing a card to play a sound. Every
+  /// engine setting below is [speak]'s, in [speak]'s order, because the reasons for them (the iOS
+  /// audio session, the immediate stop, the cold-route wake-up) are about the ENGINE and have
+  /// nothing to do with where the text came from.
+  Future<void> speakText(String text, {required String targetLang, bool slow = false}) async {
+    final line = text.trim();
+    if (line.isEmpty) return;
+
+    await _configureIosAudioSession();
+    await _tts.stop();
+    final rate = slow ? _rateSlow : _rateNormal;
+    await _applyLocale(ttsLocaleFor(targetLang));
+    if (_lastRate != rate) {
+      _lastRate = rate;
+      await _tts.setSpeechRate(rate);
+    }
+    await _wakeRoute();
+    await _tts.speak(line);
+    _lastSpokeAt = DateTime.now();
+  }
+
   /// Pronunciation is intentional media, not a notification, so it must play through the iOS
   /// hardware silent switch. The default audio-session category respects the mute switch (silent
   /// → no sound); `.playback` overrides it, the way media/player apps do (device-batch F10). Set

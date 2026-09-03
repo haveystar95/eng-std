@@ -28,6 +28,16 @@ interface PlanPromptSource
     public function repair(array $placeholders): RenderedPrompt;
 
     /**
+     * P-Listen — three lines of the situation, for the entry's optional listening step.
+     *
+     * The only plan prompt asked BEFORE a plan exists: the step stands between the level and the
+     * date, and the plan is created by the button after the date.
+     *
+     * @param  array<string, string>  $placeholders  keys WITHOUT the braces
+     */
+    public function listen(array $placeholders): RenderedPrompt;
+
+    /**
      * The version each prompt is stamped with — what lands in the ledger row and in
      * `terms.prompt_version`.
      *
@@ -42,4 +52,6 @@ interface PlanPromptSource
     public function dayVersion(): string;
 
     public function repairVersion(): string;
+
+    public function listenVersion(): string;
 }

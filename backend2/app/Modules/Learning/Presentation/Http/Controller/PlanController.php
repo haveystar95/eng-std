@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Presentation\Http\Controller;
 
+use App\Modules\Learning\Application\Command\BuildListenWarmup;
+use App\Modules\Learning\Application\Command\BuildListenWarmupHandler;
 use App\Modules\Learning\Application\Command\BuildPlanOutline;
 use App\Modules\Learning\Application\Command\BuildPlanOutlineHandler;
 use App\Modules\Learning\Application\Command\BuildPlanSession;
@@ -22,6 +24,7 @@ use App\Modules\Learning\Application\Command\ReschedulePlan;
 use App\Modules\Learning\Application\Command\ReschedulePlanHandler;
 use App\Modules\Learning\Application\Command\StartPlan;
 use App\Modules\Learning\Application\Command\StartPlanHandler;
+use App\Modules\Learning\Application\Dto\ListenLineView;
 use App\Modules\Learning\Application\Dto\PlanDayTermView;
 use App\Modules\Learning\Application\Dto\PlanDayView;
 use App\Modules\Learning\Application\Dto\PlanSummaryView;
@@ -38,6 +41,7 @@ use App\Modules\Learning\Domain\ValueObject\PlanEnding;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Learning\Presentation\Http\Request\CreatePlanRequest;
+use App\Modules\Learning\Presentation\Http\Request\ListenWarmupRequest;
 use App\Modules\Learning\Presentation\Http\Request\PlanFeedbackRequest;
 use App\Modules\Learning\Presentation\Http\Request\ReschedulePlanRequest;
 use App\Modules\Learning\Presentation\Http\Resource\PlanResource;
@@ -83,7 +87,37 @@ final class PlanController
         private readonly RebuildPlanDayHandler $rebuildDay,
         private readonly GetPlanRehearsalHandler $rehearse,
         private readonly RecordPlanFeedbackHandler $recordFeedback,
+        private readonly BuildListenWarmupHandler $listenWarmup,
     ) {}
+
+    /**
+     * «Послушай три реплики из твоей ситуации» — the entry's optional step (кадры V4·03…03г).
+     *
+     * NO PLAN ID, because there is no plan: the step stands between the level and the date, and the
+     * plan is created by the button after the date. What the learner taps is kept on the device and
+     * rides back with `POST /plans` as `listening`.
+     *
+     * ALWAYS 200, and an empty list is a legitimate answer — «шаг не предлагается». The step is
+     * optional in the product, so a vendor outage is not an error the learner is shown; the client
+     * reads `lines: []` and goes straight to the date. A failure worth a person's attention is in
+     * the log and in the ledger, where the people who can act on it will see it.
+     *
+     * A POST because it SPENDS MONEY. Nothing polls it: it is called once, in the background, right
+     * after the level is chosen.
+     */
+    public function listenWarmup(ListenWarmupRequest $request): JsonResponse
+    {
+        $lines = ($this->listenWarmup)(new BuildListenWarmup(
+            actorId: $this->actorId($request),
+            goalText: (string) $request->input('goal_text'),
+            targetLang: (string) $request->input('target_lang'),
+            level: (string) $request->input('level'),
+        ));
+
+        return new JsonResponse([
+            'data' => ['lines' => array_map(static fn (ListenLineView $l): array => $l->toArray(), $lines)],
+        ]);
+    }
 
     public function store(CreatePlanRequest $request): JsonResponse
     {
@@ -92,8 +126,10 @@ final class PlanController
             goalText: (string) $request->input('goal_text'),
             targetLang: (string) $request->input('target_lang'),
             level: (string) $request->input('level'),
-            eventDate: (string) $request->input('event_date'),
+            // «Без даты» arrives as an explicit null and stays one all the way down.
+            eventDate: $request->input('event_date') !== null ? (string) $request->input('event_date') : null,
             minutesPerDay: (int) $request->input('minutes_per_day', 20),
+            listened: self::listened($request),
         ));
 
         return $this->show($request, $planId->value, Response::HTTP_CREATED);
@@ -343,6 +379,34 @@ final class PlanController
         } catch (InvalidArgumentException $e) {
             throw new NotFoundHttpException(previous: $e);
         }
+    }
+
+    /**
+     * The listening step's answers off the wire, in the shape the domain takes.
+     *
+     * Read defensively even behind a FormRequest: the rules guarantee the keys that are `required`
+     * and say nothing about the ones that are not, and `place` on a line the model wrote without
+     * one is legitimately absent rather than wrong.
+     *
+     * @return list<array{text: string, translation: string, place: string, understood: bool}>
+     */
+    private static function listened(Request $request): array
+    {
+        $out = [];
+        foreach ((array) $request->input('listening', []) as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $out[] = [
+                'text' => is_string($row['text'] ?? null) ? $row['text'] : '',
+                'translation' => is_string($row['translation'] ?? null) ? $row['translation'] : '',
+                'place' => is_string($row['place'] ?? null) ? $row['place'] : '',
+                'understood' => filter_var($row['understood'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            ];
+        }
+
+        return $out;
     }
 
     private function actorId(Request $request): UserId

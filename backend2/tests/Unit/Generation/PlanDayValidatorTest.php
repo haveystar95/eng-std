@@ -444,6 +444,77 @@ it('refuses a bare number as a word card, whatever the list holds', function () 
     expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::WORD_IS_BASIC);
 });
 
+// ── ЧТО НЕ СВЯЗКА (правка архитектора, v0.4.1 + два гейта наряда ENTRY-2) ───────────────────
+//
+// Три формы названы в промпте, две из них имеют механический тест. Живые карточки, ради которых
+// гейты и появились, стоят здесь поимённо: они приехали из настоящего дня, а не придуманы.
+
+it('refuses a chunk that is only basic words — «see it»', function () {
+    $day = planCandidate(['chunks' => [0 => ['text' => 'see it', 'translation' => 'увидеть это']]]);
+
+    expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::CHUNK_IS_BASIC);
+});
+
+it('refuses an article plus a noun — «the location»', function () {
+    $day = planCandidate(['chunks' => [0 => ['text' => 'the location', 'translation' => 'место']]]);
+
+    expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::CHUNK_ARTICLE_PAIR);
+});
+
+it('refuses «an appointment» by the same rule — the word itself belongs on the words shelf', function () {
+    // The live day of наряд P2-v0.4 put exactly this on the chunks shelf, beside «front desk».
+    // It is not an exception to the article rule; it is the case the rule was written for.
+    $day = planCandidate(['chunks' => [0 => ['text' => 'an appointment', 'translation' => 'запись на приём']]]);
+
+    expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::CHUNK_ARTICLE_PAIR);
+});
+
+it('leaves «works for» to the prompt — the fragment rule has no mechanical test', function () {
+    // The DELIBERATE limit (решение владельца 03.09). The only stop list that could catch this
+    // would have to hold «work», and that would also kill «works for me», which is a real chunk.
+    // So the gate is silent here and the prompt text of v0.4.1 is what forbids it.
+    $day = planCandidate(['chunks' => [0 => ['text' => 'works for', 'translation' => 'подходит для']]]);
+
+    expect(planCodes($this->validator->validate($day)))
+        ->not->toContain(PlanDayValidator::CHUNK_IS_BASIC)
+        ->and(planCodes($this->validator->validate($day)))->not->toContain(PlanDayValidator::CHUNK_ARTICLE_PAIR);
+});
+
+it('leaves real chunks alone — «front desk», «water pressure»', function () {
+    $clean = planCandidate(['chunks' => [
+        0 => ['text' => 'front desk', 'translation' => 'стойка регистратуры'],
+        1 => ['text' => 'water pressure', 'translation' => 'напор воды'],
+    ]]);
+
+    expect(planCodes($this->validator->validate($clean)))
+        ->not->toContain(PlanDayValidator::CHUNK_IS_BASIC)
+        ->and(planCodes($this->validator->validate($clean)))->not->toContain(PlanDayValidator::CHUNK_ARTICLE_PAIR);
+});
+
+it('does not judge a chunk in a language whose stop list is not written', function () {
+    $day = planCandidate(
+        ['chunks' => [0 => ['text' => 'die Anmeldung', 'translation' => 'регистратура']]],
+        targetLang: 'de',
+    );
+
+    expect(planCodes($this->validator->validate($day)))
+        ->not->toContain(PlanDayValidator::CHUNK_ARTICLE_PAIR)
+        ->and(planCodes($this->validator->validate($day)))->not->toContain(PlanDayValidator::CHUNK_IS_BASIC);
+});
+
+it('keeps the widened stop list off ordinary word cards', function () {
+    // The list grew by articles, prepositions and a handful of verbs so that the CHUNK gate could
+    // work at all — and the same list is what refuses a `word` card. This is the check that the
+    // widening did not cost the day its own vocabulary: «viewing» and «heating» are words a rental
+    // scene teaches, and neither is basic.
+    $day = planCandidate(['words' => [
+        0 => ['text' => 'viewing', 'translation' => 'просмотр квартиры'],
+        1 => ['text' => 'heating', 'translation' => 'отопление'],
+    ]]);
+
+    expect(planCodes($this->validator->validate($day)))->not->toContain(PlanDayValidator::WORD_IS_BASIC);
+});
+
 it('refuses a card longer than its shelf allows', function () {
     $day = planCandidate(['words' => [0 => ['text' => 'the lower part of my back']]]);
 

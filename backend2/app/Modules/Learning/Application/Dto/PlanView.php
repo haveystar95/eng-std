@@ -31,7 +31,8 @@ final readonly class PlanView
         public string $supportLang,
         public string $targetLang,
         public string $level,
-        public string $eventDate,
+        /** «Без даты» is NULL, and it is a different plan rather than a distant one. */
+        public ?string $eventDate,
         public int $minutesPerDay,
         public ?string $startedAt,
         public ?string $completedAt,
@@ -61,8 +62,11 @@ final readonly class PlanView
         public int $focusDayIndex,
         /** The next introduction day after the focus, or null when there is none left. */
         public ?int $nextDayIndex,
-        /** Whole days from today to the event. 0 = today, negative = the event has passed. */
-        public int $daysToEvent,
+        /**
+         * Whole days from today to the event. 0 = today, negative = the event has passed, NULL =
+         * the plan has no date and there is nothing to count down to.
+         */
+        public ?int $daysToEvent,
         /**
          * A7: what is LEFT no longer fits in the days that are left ({@see PlanScheduler::recheck()}).
          * Nothing is cut on the strength of this — it is the «срок мал» card's input, and the

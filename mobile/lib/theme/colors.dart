@@ -105,6 +105,21 @@ abstract final class AppColors {
   /// plan card from the paper without becoming a second surface colour.
   static const brassWash = Color.fromARGB(18, 183, 147, 99);
 
+  /// THE CHOSEN CARD of the plan entry — «выбранное состояние #F1EADC» (записка «Вход v4»).
+  ///
+  /// A warm sand, and the one fill in the entry that is neither paper nor the accent: the level
+  /// card, the picked date, the chosen minutes. The записка is explicit that a selection is not an
+  /// outline — «выбранная карточка не просто обводится: она темнеет до тёплого песочного, получает
+  /// латунную галочку и мягкую тень — выбор ощущается как нажатая клавиша».
+  static const planSelected = Color(0xFFF1EADC);
+
+  /// «Неактивное» of the same записка — #B4AEA6, one step quieter than [tertiary].
+  ///
+  /// The step of the build screen that has not started yet, and the rows of a locked thing. NOT
+  /// [plateLabel]: that one is a caption ON the photo plate and is a different job at a similar
+  /// value.
+  static const planInactive = Color(0xFFB4AEA6);
+
   static const verdictUnknown = Color(0xFFB5533C);
 
   /// «Не уверен». Подпись — [onVerdictUnsure].

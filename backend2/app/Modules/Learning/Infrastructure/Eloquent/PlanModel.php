@@ -16,13 +16,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $target_lang
  * @property string $support_lang
  * @property string $level
- * @property string $event_date
+ * @property string|null $event_date
  * @property int $minutes_per_day
  * @property array<string, mixed>|null $outline
  * @property array<string, mixed>|null $computed
  * @property \Illuminate\Support\Carbon|null $started_at
  * @property \Illuminate\Support\Carbon|null $completed_at
  * @property array<string, mixed>|null $event_feedback
+ * @property array<string, mixed>|null $listening_diagnostics
  * @property string|null $abandon_reason
  */
 final class PlanModel extends Model
@@ -39,6 +40,7 @@ final class PlanModel extends Model
         'outline' => 'array',
         'computed' => 'array',
         'event_feedback' => 'array',
+        'listening_diagnostics' => 'array',
         'minutes_per_day' => 'int',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',

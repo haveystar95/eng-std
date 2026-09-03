@@ -88,15 +88,19 @@ use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Application\Port\RescueKitSource;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Application\Service\PlanDayRepairer;
+use App\Modules\Generation\Application\Port\ListenWarmupReporter;
+use App\Modules\Generation\Application\Service\PlanListenService;
 use App\Modules\Generation\Application\Service\PlanOutlineService;
 use App\Modules\Generation\Infrastructure\Adapter\ConfigRescueKit;
 use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedEnrichmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedPlanDayDispatcher;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentPlanSpendLedger;
+use App\Modules\Generation\Infrastructure\Adapter\LoggingListenWarmupReporter;
 use App\Modules\Generation\Infrastructure\Adapter\LoggingPlanDefectReporter;
 use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
 use App\Modules\Learning\Application\Port\DispatchesPlanDay;
+use App\Modules\Learning\Application\Port\ListenWarmupPort;
 use App\Modules\Learning\Application\Port\PlanOutlinePort;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedGenerationDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedExampleRepairDispatcher;
@@ -155,6 +159,20 @@ final class GenerationServiceProvider extends ServiceProvider
                 prompts: $this->app->make(PlanPromptSource::class),
                 ledger: $this->app->make(RecordsPlanSpend::class),
                 defects: $this->app->make(PlanDefectReporter::class),
+            );
+        });
+
+        // P-Listen — the same model as the skeleton, because it answers the same question about
+        // the same goal one screen earlier. No defect reporter: the step has no counters, and its
+        // only failure mode is «шаг не предложили», which is a log line.
+        $this->app->bind(ListenWarmupReporter::class, LoggingListenWarmupReporter::class);
+
+        $this->app->bind(ListenWarmupPort::class, function (): ListenWarmupPort {
+            return new PlanListenService(
+                model: $this->planModel(),
+                prompts: $this->app->make(PlanPromptSource::class),
+                ledger: $this->app->make(RecordsPlanSpend::class),
+                reporter: $this->app->make(ListenWarmupReporter::class),
             );
         });
 

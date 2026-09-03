@@ -86,7 +86,7 @@ final readonly class ComputedPlan
                     'index' => $d->index,
                     'kind' => $d->kind->value,
                     'title' => $d->title,
-                    'scheduled_on' => $d->scheduledOn->format('Y-m-d'),
+                    'scheduled_on' => $d->scheduledOn?->format('Y-m-d'),
                     'term_budget' => $d->termBudget,
                     'outcome' => $d->outcomes(),
                     'checkpoints' => $d->checkpoints,

@@ -73,7 +73,7 @@ final readonly class GetPlanHandler
             supportLang: $support->value,
             targetLang: $plan->targetLang()->value,
             level: $plan->level()->value,
-            eventDate: $plan->eventDate()->format('Y-m-d'),
+            eventDate: $plan->eventDate()?->format('Y-m-d'),
             minutesPerDay: $plan->minutesPerDay(),
             startedAt: $plan->startedAt()?->format(DATE_ATOM),
             completedAt: $plan->completedAt()?->format(DATE_ATOM),
@@ -85,7 +85,11 @@ final readonly class GetPlanHandler
             readiness: $this->readinessOf($progress, $days),
             focusDayIndex: $progress->focusDayIndex,
             nextDayIndex: $this->nextDayIndex($planDays, $progress->focusDayIndex),
-            daysToEvent: (int) $today->diff($plan->eventDate()->setTime(0, 0))->format('%r%a'),
+            // NULL on a plan with no date — and NOT zero, which would read as «событие сегодня»
+            // on every screen that counts down.
+            daysToEvent: $plan->eventDate() === null
+                ? null
+                : (int) $today->diff($plan->eventDate()->setTime(0, 0))->format('%r%a'),
             deadlineTight: $this->deadlineTight($plan, $planDays, $progress, $today),
             canAlready: $this->canAlready($days),
             eventFeedback: $plan->eventFeedback(),
@@ -175,9 +179,11 @@ final readonly class GetPlanHandler
     private function deadlineTight(LearningPlan $plan, array $days, PlanProgressView $progress, DateTimeImmutable $today): bool
     {
         $computed = $plan->computed();
-        if ($computed === null || $plan->eventDate()->setTime(0, 0) < $today) {
-            // A draft has nothing to be behind on, and a plan whose event has passed cannot be made
-            // tighter by saying so.
+        $event = $plan->eventDate();
+        // A draft has nothing to be behind on; a plan whose event has passed cannot be made tighter
+        // by saying so; and a plan with NO date has no deadline to be tight against — «срок мал» is
+        // arithmetic over a deadline, and «без даты» is the absence of one, not a generous one.
+        if ($computed === null || $event === null || $event->setTime(0, 0) < $today) {
             return false;
         }
 
@@ -199,7 +205,7 @@ final readonly class GetPlanHandler
             return $this->scheduler->recheck(
                 remainingIntroDays: array_map($this->computedDayOf(...), $remaining),
                 minutesPerDay: $plan->minutesPerDay(),
-                eventDate: $plan->eventDate(),
+                eventDate: $event,
                 today: $today,
             )->deadlineTight;
         } catch (EventDateInPast) {

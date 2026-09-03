@@ -125,10 +125,14 @@ final class PlanScheduler
     public function compute(
         PlanOutline $outline,
         int $minutesPerDay,
-        DateTimeImmutable $eventDate,
+        ?DateTimeImmutable $eventDate,
         DateTimeImmutable $today,
         string $supportLang = 'ru',
     ): ComputedPlan {
+        if ($eventDate === null) {
+            return $this->undated($outline, $minutesPerDay, $supportLang);
+        }
+
         $event = $this->midnight($eventDate);
         $start = $this->midnight($today);
 
@@ -241,7 +245,7 @@ final class PlanScheduler
     private function sceneDay(
         int $index,
         PlanScene $scene,
-        DateTimeImmutable $scheduledOn,
+        ?DateTimeImmutable $scheduledOn,
         ?array $finalCheckpoints,
     ): ComputedDay {
         $skills = $scene->skills;
@@ -267,6 +271,71 @@ final class PlanScheduler
             intro: $scene->intro,
             openingLines: $scene->openingLines,
             entities: $scene->entities,
+        );
+    }
+
+    /**
+     * A PLAN WITH NO DATE — «идём в своём темпе, по одной сцене за подход» (кадры V4·04б, 06б).
+     *
+     * Everything the dated path computes is arithmetic over a deadline, and here there is none. So
+     * this is not the dated computation with a distant date substituted — a distant date is still a
+     * countdown, and it would put one on the card, compress the tail toward it and eventually call
+     * the plan «срок мал». It is the same plan with the calendar taken out:
+     *
+     *   every scene keeps its day, up to {@see MAX_INTRO_DAYS} — the cap is about how long a plan
+     *   can stay a plan and has nothing to do with the calendar, so it is the ONE bound left;
+     *   no day carries a date (`scheduledOn = null`), and the days open one after another as the
+     *   previous one closes;
+     *   the rehearsal is still the last day, and it is «в конце» rather than «накануне».
+     *
+     * `restDays` is 0 and `step` is 1 for the same reason: both are answers about spacing, and
+     * there is no space to divide. What is NOT zero is `dropped` — a skeleton with nineteen scenes
+     * loses its tail here exactly as it would with a date, and for the honest reason (`DROP_CAP`).
+     */
+    private function undated(PlanOutline $outline, int $minutesPerDay, string $supportLang): ComputedPlan
+    {
+        $kept = array_slice($outline->scenes, 0, self::MAX_INTRO_DAYS);
+        $droppedScenes = array_slice($outline->scenes, self::MAX_INTRO_DAYS);
+
+        $days = [];
+        foreach ($kept as $i => $scene) {
+            $days[] = $this->sceneDay(
+                index: $i + 1,
+                scene: $scene,
+                scheduledOn: null,
+                finalCheckpoints: null,
+            );
+        }
+
+        $introDays = max(1, count($days));
+
+        $days[] = new ComputedDay(
+            index: $introDays + 1,
+            kind: PlanDayKind::Final,
+            title: self::finalDayTitle($supportLang),
+            scheduledOn: null,
+            termBudget: 0,
+            skills: [],
+            checkpoints: $this->checkpointsOf($days),
+            role: null,
+            topics: [],
+            sourceSceneIndex: null,
+        );
+
+        return new ComputedPlan(
+            days: $days,
+            need: $this->sum($outline->skills()),
+            capacity: $this->capacityFor($minutesPerDay),
+            // The plan is as long as it is; there is no calendar offering more or fewer days, so
+            // «сколько дней вообще есть» and «сколько дней в плане» are the same number here.
+            maxDays: $introDays + 1,
+            introDays: $introDays,
+            restDays: 0,
+            fits: $droppedScenes === [],
+            dropped: $this->skillsOf($droppedScenes),
+            step: 1,
+            dropReason: $droppedScenes === [] ? null : ComputedPlan::DROP_CAP,
+            finalSameDay: false,
         );
     }
 

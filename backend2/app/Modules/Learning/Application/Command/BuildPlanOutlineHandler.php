@@ -90,6 +90,11 @@ final readonly class BuildPlanOutlineHandler
             supportLang: $plan->supportLang()->value,
             targetLang: $plan->targetLang()->value,
             level: $plan->level()->value,
+            // What the entry's listening step learned, or NULL when it was skipped. P1 reads it as
+            // `{{diagnostics}}` and its own text says what to do with an empty one — «rely on the
+            // goal and the level alone» — so a skipped step is a supported input, not a gap.
+            diagnostics: $plan->diagnostics()?->toArray(),
+            balance: $plan->diagnostics()?->emphasis() ?? '',
         ));
 
         $outline = PlanOutline::fromArray($answer->payload);

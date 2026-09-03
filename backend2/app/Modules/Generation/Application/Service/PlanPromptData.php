@@ -39,6 +39,45 @@ final class PlanPromptData
             : implode("\n", array_map(static fn (string $i): string => '- ' . $i, $items));
     }
 
+    /**
+     * THE LISTENING CHECK, as P1 reads it — «{{diagnostics}}».
+     *
+     * Prose and not JSON, alone among the formatters here, because this placeholder sits inside a
+     * sentence of the prompt rather than beside a label: P1 says «Diagnostics (may be empty): …»
+     * and then explains what to do with what it finds. A JSON blob dropped into a paragraph is
+     * read as a quotation of something; three lines with a verdict under them are read as facts.
+     *
+     * The verdict is written out in the same words the learner saw on кадр V4·03в/03г, because the
+     * plan the model builds is the promise that screen made. What is NOT here is a score, a
+     * percentage or a level — the step has none, deliberately, and inventing one for the model
+     * would be inventing one for the plan.
+     *
+     * @param  array{lines: list<array{text: string, translation: string, place: string, understood: bool}>}|null  $diagnostics
+     */
+    public static function diagnostics(?array $diagnostics, string $balance): string
+    {
+        $lines = $diagnostics['lines'] ?? [];
+        if ($lines === []) {
+            return '(empty — the user skipped the listening step)';
+        }
+
+        $rows = [];
+        foreach ($lines as $line) {
+            $where = trim($line['place']) !== '' ? ' [' . trim($line['place']) . ']' : '';
+            $rows[] = '- "' . trim($line['text']) . '"' . $where . ' — '
+                . ($line['understood'] ? 'understood' : 'not understood');
+        }
+
+        $verdict = $balance === 'speaking'
+            ? 'Verdict: the user understands spoken lines of this situation confidently — put the '
+                . 'weight on SPEAKING.'
+            : 'Verdict: spoken lines of this situation are hard for the user — put the weight on '
+                . 'LISTENING COMPREHENSION.';
+
+        return "Listening check (the user heard these lines and said how each felt):\n"
+            . implode("\n", $rows) . "\n" . $verdict;
+    }
+
     /** @param array<string, mixed>|list<mixed> $value */
     public static function json(array $value): string
     {

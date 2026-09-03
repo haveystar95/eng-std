@@ -37,7 +37,7 @@ final readonly class ListPlansHandler
                 status: $plan->status()->value,
                 title: $plan->title(),
                 targetLang: $plan->targetLang()->value,
-                eventDate: $plan->eventDate()->format('Y-m-d'),
+                eventDate: $plan->eventDate()?->format('Y-m-d'),
                 dayCount: count($this->days->listForPlan($plan->id())),
                 startedAt: $plan->startedAt()?->format(DATE_ATOM),
                 completedAt: $plan->completedAt()?->format(DATE_ATOM),

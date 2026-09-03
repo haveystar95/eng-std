@@ -1,30 +1,46 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart' show CupertinoDatePicker, CupertinoDatePickerMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
-import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/api_client.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
+import 'entry/entry_ui.dart';
 import 'plan_building_screen.dart';
 import 'plan_ui.dart';
 
-/// «Превью плана» — кадр Б-04, and Б-05 when the deadline is tight.
+/// ПРЕВЬЮ ПЛАНА СЦЕНАМИ — кадры V4·06 (с датой) и 06б (без даты).
 ///
-/// The dark plate is the whole reason this is a screen of its own rather than the last reply in a
-/// ribbon: the plan reads as a bought thing, the same material the day's session wears on the home
-/// screen. Everything under it is the STRUCTURE — days with what each one teaches — and the two
-/// quiet links that change it.
+/// The main screen of the entry: the first time a person sees their own route. It is a LADDER OF
+/// SCENES and not a table of counts — each card is a day with a name and two or three sentences of
+/// вводка in the learner's own language, and the numbers that appear (days, minutes, the date) are
+/// the server's own, printed once, in one line.
 ///
-/// Nothing here has been generated yet. The outline is one model call the learner has already paid
-/// for; «Начать» is the commitment, and until it is pressed the plan is a draft that costs nothing
-/// to abandon by walking back.
+/// ## What the composition promises
+///
+/// The title is the goal. The subtitle leads with «по твоим словам», because everything below it
+/// was written from the sentence the learner typed and that is the claim the screen is making. The
+/// rescue kit shows ONE of its five phrases живьём — «чтобы обещание было осязаемым» — and the
+/// rehearsal is dashed, because it is the one card that is not a day of teaching.
+///
+/// Day 1 is the only accented card. «Первый день на полтона темнее и на строку подробнее: это
+/// единственный акцент лестницы, дни 2–4 держат ровный ритм.»
+///
+/// ## Undated is a different plan, not a plan missing a field
+///
+/// «Дни» become «сцены», the countdown disappears, the rehearsal moves from «накануне» to «в
+/// конце», and the second button offers the one thing the plan lacks. Nothing invents a date to
+/// fill the gap.
+///
+/// Nothing has been generated yet: the skeleton is one call already paid for, and «Начать» is the
+/// commitment. Walking back costs nothing.
 class PlanPreviewScreen extends ConsumerStatefulWidget {
   const PlanPreviewScreen({super.key, required this.plan});
 
@@ -40,9 +56,14 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
   String? _error;
 
   /// «Оставить» on the «срок мал» card — the learner has read the recommendation and declined it.
-  /// Kept on the screen and not on the server: the server's `deadline_tight` is a FACT about the
-  /// calendar, and «I know» is not a change to the plan.
+  /// Kept on the screen and not on the server: `deadline_tight` is a FACT about the calendar, and
+  /// «я понял» is not a change to the plan.
   bool _tightAcknowledged = false;
+
+  bool get _dated => (_plan.eventDate ?? '').isNotEmpty;
+
+  List<PlanDay> get _scenes =>
+      _plan.days.where((d) => d.kind == PlanDayKind.intro).toList(growable: false);
 
   Future<void> _mutate(Future<LearningPlan> Function(ApiClient api) call) async {
     if (_busy) return;
@@ -69,15 +90,58 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
     }
   }
 
-  /// «Убрать день» — the learner picks WHICH one. The frames draw one link; a link that silently
-  /// dropped the last day would be an edit the learner cannot see before it happens.
-  Future<void> _dropDay() async {
+  /// «Поставить дату» — the one thing an undated plan is missing (кадр V4·06б).
+  ///
+  /// The same free re-schedule «Добавить 20 минут» uses: the outline is already written, and laying
+  /// its scenes onto a calendar is arithmetic, not a model call.
+  Future<void> _setDate() async {
+    AppHaptics.light();
+    final today = DateTime.now();
+    var chosen = DateTime(today.year, today.month, today.day).add(const Duration(days: 2));
+
+    final result = await showAppBottomSheet<DateTime>(
+      context: context,
+      builder: (sheetContext) {
+        final l = AppLocalizations.of(sheetContext);
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l.planWhenSheetTitle, style: AppText.sheetButton.copyWith(fontSize: 17)),
+            SizedBox(
+              height: 216,
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: chosen,
+                minimumDate: DateTime(today.year, today.month, today.day),
+                maximumDate: today.add(const Duration(days: 365)),
+                onDateTimeChanged: (d) => chosen = DateTime(d.year, d.month, d.day),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s12),
+            PrimaryButton(
+              label: l.commonSave,
+              onPressed: () => Navigator.of(sheetContext).pop(chosen),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == null || !mounted) return;
+    final iso =
+        '${result.year.toString().padLeft(4, '0')}-${result.month.toString().padLeft(2, '0')}-${result.day.toString().padLeft(2, '0')}';
+    await _mutate((api) => api.reschedulePlan(_plan.id, eventDate: iso));
+  }
+
+  /// «Убрать сцену» — offered only inside the «срок мал» card, because that is the only reason to.
+  Future<void> _dropScene() async {
     final l = AppLocalizations.of(context);
-    final days = (_plan.computed?.days ?? const <PlanComputedDay>[])
-        .where((d) => d.kind == PlanDayKind.intro)
-        .toList();
-    if (days.length <= 1) {
+    final scenes = _scenes;
+    if (scenes.length <= 1) {
       setState(() => _error = l.planDropLastDay);
+
       return;
     }
 
@@ -89,13 +153,13 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
         children: [
           Text(l.planDropDaySheet, style: AppText.sheetButton.copyWith(fontSize: 17)),
           const SizedBox(height: AppSpacing.s8),
-          for (final day in days)
+          for (final scene in scenes)
             AppSheetRow(
               title: Text(
-                '${l.planDayNumber(day.index)} · ${day.title}',
+                '${l.planDayNumber(scene.index)} · ${scene.title}',
                 style: AppText.translation.copyWith(fontSize: 15),
               ),
-              onTap: () => Navigator.of(sheetContext).pop(day.index),
+              onTap: () => Navigator.of(sheetContext).pop(scene.index),
             ),
         ],
       ),
@@ -106,8 +170,7 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
     }
   }
 
-  /// «Начать» — the commitment. Days start generating and words start being held; from here the
-  /// plan is the learner's, and the way out is «отказаться», not «назад».
+  /// «Начать первый день» — the commitment. Days start generating and words start being held.
   Future<void> _start() async {
     if (_busy) return;
     AppHaptics.light();
@@ -118,13 +181,9 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
     try {
       final started = await ref.read(apiClientProvider).startPlan(_plan.id);
       if (!mounted) return;
-      // The tab now has a plan to show. Invalidated before navigating so the screen behind the
-      // «собираю» animation is already the right one.
       ref.invalidate(activePlanProvider);
       // …and THIS is the moment to ask about notifications: the learner has just told the app there
-      // is a date they care about. Asking at launch would be a permission dialog answered «нет» by
-      // somebody who has not yet been told what it is for. Fire-and-forget — a refusal costs the
-      // plan nothing.
+      // is something they care about. Fire-and-forget — a refusal costs the plan nothing.
       unawaited(ref.read(planNotificationsProvider).requestPermission());
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => PlanBuildingScreen(plan: started)),
@@ -142,8 +201,10 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final computed = _plan.computed;
-    final days = computed?.days ?? const <PlanComputedDay>[];
+    final scenes = _scenes;
+    final summary = (_plan.goalRestated ?? '').trim().isNotEmpty
+        ? _plan.goalRestated!.trim()
+        : _plan.goalText.trim();
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
@@ -151,235 +212,416 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
         backgroundColor: AppColors.paper,
         body: SafeArea(
           bottom: false,
-          child: Column(
-            children: [
-              _PreviewBar(title: l.planPreviewBadge),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(14, AppSpacing.s12, 14, AppSpacing.s26),
-                  children: [
-                    PlanPlate(child: _plateBody(context, l, computed)),
-                    if (_plan.deadlineTight && !_tightAcknowledged) ...[
-                      const SizedBox(height: 18),
-                      _TightCard(
-                        plan: _plan,
-                        busy: _busy,
-                        onAddMinutes: () => _mutate(
-                          (api) => api.reschedulePlan(
-                            _plan.id,
-                            minutesPerDay: _plan.minutesPerDay + 20,
-                          ),
-                        ),
-                        onKeep: () => setState(() => _tightAcknowledged = true),
-                      ),
-                    ],
-                    const SizedBox(height: AppSpacing.s22),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (final day in days) _DayRow(day: day),
-                          const SizedBox(height: AppSpacing.s16),
-                          Row(
-                            children: [
-                              _QuietLink(label: l.planPreviewDropDay, onTap: _busy ? null : _dropDay),
-                              const SizedBox(width: 18),
-                              _QuietLink(
-                                label: l.planPreviewRebuild,
-                                onTap: _busy
-                                    ? null
-                                    : () => _mutate((api) => api.buildPlanOutline(_plan.id)),
-                              ),
-                            ],
-                          ),
-                          if (_error != null) ...[
-                            const SizedBox(height: AppSpacing.s16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                EntryHeader(
+                  kicker: l.planPreviewKicker,
+                  step: 4,
+                  steps: 4,
+                  onBack: () => Navigator.of(context).maybePop(),
+                  trailing: const SizedBox.shrink(),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.only(top: 26, bottom: 34),
+                    children: [
+                      // ─ the header block, first ────────────────────────────────────────────
+                      _Appear(
+                        delay: Duration.zero,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                             Text(
-                              _error!,
+                              _plan.title,
+                              style: AppText.collectionNameScreen.copyWith(
+                                fontSize: 32,
+                                height: 1.18,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _dated
+                                  ? l.planPreviewSubtitle(summary, scenes.length)
+                                  : l.planPreviewSubtitleNoDate(summary, scenes.length),
                               style: AppText.translation.copyWith(
-                                fontSize: 13.5,
-                                height: 1.45,
-                                color: AppColors.destructiveText,
+                                fontSize: 15,
+                                height: 1.6,
+                                color: AppColors.inkBody,
                               ),
                             ),
                           ],
-                          const SizedBox(height: 18),
-                          PrimaryButton(
-                            label: _busy ? l.planBuilderWorking : l.planPreviewStart,
-                            minHeight: 52,
-                            enabled: !_busy,
-                            onPressed: _start,
+                        ),
+                      ),
+                      // ─ …then the orientation line, 80 ms later ────────────────────────────
+                      _Appear(
+                        delay: const Duration(milliseconds: 80),
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 18),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                color: AppColors.brassInk.withValues(alpha: 0.32),
+                              ),
+                              bottom: BorderSide(
+                                color: AppColors.brassInk.withValues(alpha: 0.32),
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 10),
-                          // Busy: the same heartbeat the entrance uses. «Перестроить» is a paid
-                          // model call and «Начать» writes the first day, and both leave the screen
-                          // looking identical to a screen that is doing nothing.
-                          //
-                          // Otherwise: the paywall is not built (PLAN-1c leaves it alone on
-                          // purpose), so the line is a PLACEHOLDER and says so — a price invented
-                          // here would be a price somebody eventually ships.
-                          if (_busy)
-                            PlanBusyLine(text: l.planBuilderBusyLine)
-                          else
-                            Center(
-                              child: Text(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: PlanLabel(
+                                  _dated
+                                      ? l.planPreviewOrientation(
+                                          scenes.length,
+                                          _plan.minutesPerDay,
+                                        )
+                                      : l.planPreviewOrientationNoDate(
+                                          scenes.length,
+                                          _plan.minutesPerDay,
+                                        ),
+                                  fontSize: 11,
+                                ),
+                              ),
+                              if (_dated) ...[
+                                const SizedBox(width: 12),
+                                PlanLabel(
+                                  planDateOrNone(context, _plan.eventDate, short: true),
+                                  fontSize: 11,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (!(_plan.computed?.fits ?? true) && !_tightAcknowledged) ...[
+                        const SizedBox(height: 18),
+                        _TightCard(
+                          plan: _plan,
+                          busy: _busy,
+                          onAddMinutes: () => _mutate(
+                            (api) => api.reschedulePlan(
+                              _plan.id,
+                              minutesPerDay: _plan.minutesPerDay + 20,
+                            ),
+                          ),
+                          onDropScene: _busy ? null : _dropScene,
+                          onKeep: () => setState(() => _tightAcknowledged = true),
+                        ),
+                      ],
+                      // ─ …then the ladder, 60 ms apart, never longer than 400 ms in total ───
+                      const SizedBox(height: 28),
+                      _Appear(
+                        delay: const Duration(milliseconds: 140),
+                        child: EntryOverline(
+                          _dated ? l.planPreviewDaysTitle : l.planPreviewScenesTitle,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      for (var i = 0; i < scenes.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 11),
+                        _Appear(
+                          delay: Duration(milliseconds: 180 + 60 * i.clamp(0, 4)),
+                          child: _SceneCard(
+                            label: _dated
+                                ? l.planPreviewDayLabel(scenes[i].index)
+                                : l.planPreviewSceneLabel(scenes[i].index),
+                            title: scenes[i].title,
+                            intro: scenes[i].intro,
+                            accent: i == 0,
+                          ),
+                        ),
+                      ],
+                      // ─ …and the rescue kit and the rehearsal last ─────────────────────────
+                      const SizedBox(height: 22),
+                      _Appear(
+                        delay: const Duration(milliseconds: 420),
+                        child: _RescueCard(
+                          body: l.planPreviewRescueBody,
+                          quote: l.planPreviewRescueQuote,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _Appear(
+                        delay: const Duration(milliseconds: 460),
+                        child: _RehearsalCard(
+                          label: _dated
+                              ? l.planPreviewRehearsalEveLabel
+                              : l.planPreviewRehearsalEndLabel,
+                          title: l.planPreviewRehearsalTitle,
+                          body: _dated
+                              ? l.planPreviewRehearsalEveBody(scenes.length)
+                              : l.planPreviewRehearsalEndBody,
+                        ),
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 18),
+                        Text(
+                          _error!,
+                          style: AppText.translation.copyWith(
+                            fontSize: 13.5,
+                            height: 1.45,
+                            color: AppColors.destructiveText,
+                          ),
+                        ),
+                      ],
+                      // ─ the CTA appears with no delay: it must not wait for an animation ───
+                      const SizedBox(height: 28),
+                      EntryCta(
+                        label: _dated ? l.planPreviewStartDay : l.planPreviewStartScene,
+                        minHeight: 56,
+                        enabled: !_busy,
+                        onPressed: _start,
+                      ),
+                      const SizedBox(height: 16),
+                      // The subscription slot. A PLACEHOLDER that says it is one — the paywall is
+                      // not this наряд's, and a price invented here is a price somebody ships.
+                      Center(
+                        child: _busy
+                            ? PlanBusyLine(text: l.planBuilderBusyLine)
+                            : Text(
                                 l.planPricePlaceholder,
+                                textAlign: TextAlign.center,
                                 style: AppText.translation.copyWith(
                                   fontSize: 12.5,
+                                  height: 1.5,
                                   color: AppColors.tertiary,
                                 ),
                               ),
-                            ),
-                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 10),
+                      Center(
+                        child: Semantics(
+                          button: true,
+                          child: InkWell(
+                            onTap: _busy
+                                ? null
+                                : (_dated
+                                      ? () {
+                                          AppHaptics.light();
+                                          Navigator.of(context).maybePop();
+                                        }
+                                      : _setDate),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              child: Text(
+                                _dated ? l.planPreviewEditAnswers : l.planPreviewSetDate,
+                                style: AppText.translation.copyWith(
+                                  fontSize: 14,
+                                  color: AppColors.secondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 34),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _plateBody(BuildContext context, AppLocalizations l, PlanComputed? computed) {
-    final paper = AppColors.paper;
-    final intro = computed?.introDayCount ?? 0;
-    final terms = computed?.totalTerms ?? 0;
+/// One scene of the ladder — the number in brass, the name in the serif, the вводка under it.
+class _SceneCard extends StatelessWidget {
+  const _SceneCard({
+    required this.label,
+    required this.title,
+    required this.intro,
+    required this.accent,
+  });
 
-    return Column(
+  final String label, title, intro;
+
+  /// Day 1 (or scene 1) — the ONE accent of the ladder.
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.fromLTRB(18, 17, 18, 17),
+    decoration: BoxDecoration(
+      color: accent ? AppColors.planSelected : AppColors.surfaceRaised,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(
+        color: accent
+            ? AppColors.brassInk.withValues(alpha: 0.34)
+            : AppColors.dividerFaint,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.ink.withValues(alpha: accent ? 0.08 : 0.045),
+          blurRadius: accent ? 14 : 12,
+          offset: Offset(0, accent ? 4 : 3),
+        ),
+      ],
+    ),
+    child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          _plan.title,
-          style: AppText.displayTerm.copyWith(color: paper, fontSize: 28, height: 1.18),
-        ),
-        const SizedBox(height: 14),
-        Divider(height: 1, thickness: 1, color: paper.withValues(alpha: 0.18)),
-        const SizedBox(height: 14),
-        // Two labels at opposite ends of one line, and a gap that cannot close. Without it the
-        // structure and the budget ran together on the simulator — «ПОДГОТОВКА 3 ДНЯ + ПРОГОН 20
-        // МИН/ДЕНЬ» reads as one sentence, and it is two facts.
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Flexible(
-              child: PlanLabel(
-                l.planPrepDays(intro),
-                color: paper.withValues(alpha: 0.72),
-                fontSize: 11.5,
+            PlanLabel(label, fontSize: 10.5),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Container(
+                height: 1,
+                color: AppColors.brassInk.withValues(alpha: accent ? 0.32 : 0.25),
               ),
-            ),
-            const SizedBox(width: AppSpacing.s16),
-            PlanLabel(
-              l.planMinutesPerDay(_plan.minutesPerDay),
-              color: paper.withValues(alpha: 0.72),
-              fontSize: 11.5,
             ),
           ],
         ),
-        const SizedBox(height: 14),
-        Text(
-          [
-            l.planEventOn(planDateLabel(context, _plan.eventDate)),
-            if (terms > 0) l.planApproxTerms(terms),
-          ].join(' '),
-          style: AppText.translation.copyWith(
-            fontSize: 14,
-            height: 1.55,
-            color: paper.withValues(alpha: 0.82),
+        const SizedBox(height: 9),
+        Text(title, style: AppText.collectionNameCard.copyWith(fontSize: 21, height: 1.25)),
+        if (intro.trim().isNotEmpty) ...[
+          const SizedBox(height: 7),
+          Text(
+            intro,
+            style: AppText.translation.copyWith(
+              fontSize: 14,
+              height: 1.55,
+              color: AppColors.inkBody,
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+/// The rescue kit, with one of its five phrases quoted — the promise made tangible.
+class _RescueCard extends StatelessWidget {
+  const _RescueCard({required this.body, required this.quote});
+
+  final String body, quote;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+    decoration: BoxDecoration(
+      color: AppColors.planSelected,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: AppColors.brassInk.withValues(alpha: 0.34)),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 2),
+          child: Icon(Icons.favorite_border, size: 18, color: AppColors.brassInk),
+        ),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                body,
+                style: AppText.translation.copyWith(
+                  fontSize: 14,
+                  height: 1.55,
+                  color: AppColors.inkBody,
+                ),
+              ),
+              const SizedBox(height: 7),
+              // ITALIC, and the one italic of the series: «курсив маркирует чужую речь».
+              Text(
+                quote,
+                style: AppText.collectionNameCard.copyWith(
+                  fontSize: 14.5,
+                  height: 1.5,
+                  fontStyle: FontStyle.italic,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
           ),
         ),
       ],
-    );
-  }
+    ),
+  );
 }
 
-/// One day of the preview: «ДЕНЬ 1 · 5 слов · 4 фразы», the title, and what it teaches.
-class _DayRow extends StatelessWidget {
-  const _DayRow({required this.day});
-  final PlanComputedDay day;
+/// The rehearsal — dashed, because it is the one card that teaches nothing new.
+class _RehearsalCard extends StatelessWidget {
+  const _RehearsalCard({required this.label, required this.title, required this.body});
+
+  final String label, title, body;
 
   @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final counts = day.kind == PlanDayKind.finalRun
-        ? l.planDayNoNewWords
-        : [
-            if (day.wordCount > 0) l.planWordsCount(day.wordCount),
-            if (day.phraseCount > 0) l.planPhrasesCount(day.phraseCount),
-          ].join(' · ');
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
-      ),
-      child: Column(
+  Widget build(BuildContext context) => DottedBorderBox(
+    radius: 18,
+    color: AppColors.brassInk.withValues(alpha: 0.45),
+    padding: const EdgeInsets.fromLTRB(18, 17, 18, 17),
+    child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: PlanLabel(l.planDayNumber(day.index), fontSize: 11.5)),
-              if (counts.isNotEmpty)
-                Text(
-                  counts,
-                  style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.tertiary),
+              PlanLabel(label, fontSize: 10.5),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Container(
+                  height: 1,
+                  color: AppColors.brassInk.withValues(alpha: 0.25),
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: 5),
-          Text(day.title, style: AppText.collectionNameCard.copyWith(fontSize: 19, height: 1.3)),
-          if (day.outcomes.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.s8),
-            Text(
-              // «Сказать, зачем пришёл · назвать, где болит · объяснить, как давно» — the abilities
-              // in one line rather than a bulleted list: the preview is a promise, not a syllabus.
-              day.outcomes.join(' · '),
-              style: AppText.translation.copyWith(
-                fontSize: 13.5,
-                height: 1.6,
-                color: AppColors.inkBody,
-              ),
+          const SizedBox(height: 9),
+          Text(title, style: AppText.collectionNameCard.copyWith(fontSize: 21, height: 1.25)),
+          const SizedBox(height: 7),
+          Text(
+            body,
+            style: AppText.translation.copyWith(
+              fontSize: 14,
+              height: 1.55,
+              color: AppColors.inkBody,
             ),
-          ],
-        ],
-      ),
-    );
-  }
+          ),
+      ],
+    ),
+  );
 }
 
-/// «Срок мал под цель» (кадр Б-05) — a brass recommendation between the plate and the days.
+/// «Срок мал» — kept from направление Б, and the ONLY thing on this screen the frames do not draw.
 ///
-/// It sits exactly where the structure it talks about begins, and it is a RECOMMENDATION: the
-/// «Оставить» button is real, and the plan it leaves alone is a plan the learner may still run.
-/// The reason is stated as MECHANICS («слова второго дня останутся на ступени B») rather than as
-/// «будет сложно» — the learner can act on the first and not on the second.
+/// It appears only when the server says the plan does not fit, and it is the only place the learner
+/// is told that scenes were dropped. Without it that fact is silent: the ladder simply comes back
+/// shorter than the goal deserved, and nothing on the screen says why.
 class _TightCard extends StatelessWidget {
   const _TightCard({
     required this.plan,
     required this.busy,
     required this.onAddMinutes,
+    required this.onDropScene,
     required this.onKeep,
   });
 
   final LearningPlan plan;
   final bool busy;
-  final VoidCallback onAddMinutes, onKeep;
+  final VoidCallback onAddMinutes;
+  final VoidCallback? onDropScene;
+  final VoidCallback onKeep;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final computed = plan.computed;
     final dropped = computed?.dropped ?? const <PlanDroppedSkill>[];
-    // The abilities that DO fit, so the card can show both halves — a list of only the losses reads
-    // as a failure, and this plan teaches most of what was asked.
+    // Both halves. A list of only the losses reads as a failure, and this plan still teaches most
+    // of what was asked.
     final kept = [
-      for (final day in computed?.days ?? const <PlanComputedDay>[])
-        ...day.outcomes,
+      for (final day in computed?.days ?? const <PlanComputedDay>[]) ...day.outcomes,
     ];
 
     return PlanBrassCard(
@@ -391,18 +633,46 @@ class _TightCard extends StatelessWidget {
             style: AppText.collectionNameCard.copyWith(fontSize: 18, height: 1.4),
           ),
           const SizedBox(height: AppSpacing.s12),
-          for (final text in kept.take(3))
-            PlanAbilityRow(text: text, hit: true, divider: false),
+          for (final text in kept.take(3)) PlanAbilityRow(text: text, hit: true, divider: false),
           for (final skill in dropped.take(3))
             PlanAbilityRow(text: skill.outcome, hit: false, divider: false),
-          const SizedBox(height: AppSpacing.s16),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
+          const SizedBox(height: 14),
+          Row(
             children: [
-              _BrassButton(label: l.planTightAddMinutes(20), onTap: busy ? null : onAddMinutes),
-              _OutlineButton(label: l.planTightKeep, onTap: busy ? null : onKeep),
+              Expanded(
+                child: EntrySecondary(
+                  label: l.planTightAddMinutes(20),
+                  minHeight: 46,
+                  enabled: !busy,
+                  onPressed: onAddMinutes,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: EntrySecondary(
+                  label: l.planPreviewDropDay,
+                  minHeight: 46,
+                  enabled: !busy && onDropScene != null,
+                  onPressed: onDropScene,
+                ),
+              ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: InkWell(
+              onTap: onKeep,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Text(
+                  l.planTightKeep,
+                  style: AppText.translation.copyWith(
+                    fontSize: 13.5,
+                    color: AppColors.secondary,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -410,101 +680,48 @@ class _TightCard extends StatelessWidget {
   }
 }
 
-/// The one brass FILL in the app, and only here: the «срок мал» card's recommended action. It is
-/// not the screen's primary button — «Начать» below still is, in terracotta — so the two cannot be
-/// confused for one another.
-class _BrassButton extends StatelessWidget {
-  const _BrassButton({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback? onTap;
+/// One block arriving — 12 pt up and a fade, at the delay the записка gives it.
+///
+/// A widget rather than a controller per screen: the order of appearance is a property of the
+/// COMPOSITION («заголовок и подзаголовок первыми, затем строка-ориентир, затем лестница»), so it
+/// belongs beside the block it delays and not in a list of intervals somewhere else.
+class _Appear extends StatefulWidget {
+  const _Appear({required this.delay, required this.child});
+
+  final Duration delay;
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: onTap == null ? AppColors.track : AppColors.brassInk,
-    borderRadius: BorderRadius.circular(AppRadii.small),
-    clipBehavior: Clip.antiAlias,
-    child: InkWell(
-      onTap: onTap,
-      // No `alignment`: these two sit in a Wrap, where an aligned Container takes the whole line.
-      child: Container(
-        constraints: const BoxConstraints(minHeight: AppSpacing.minTap),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        child: Text(
-          label,
-          style: AppText.translation.copyWith(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: AppColors.paper,
-          ),
-        ),
-      ),
-    ),
-  );
+  State<_Appear> createState() => _AppearState();
 }
 
-class _OutlineButton extends StatelessWidget {
-  const _OutlineButton({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback? onTap;
+class _AppearState extends State<_Appear> {
+  bool _in = false;
+  Timer? _timer;
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: Colors.transparent,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadii.small),
-      side: const BorderSide(color: AppColors.track),
-    ),
-    clipBehavior: Clip.antiAlias,
-    child: InkWell(
-      onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: AppSpacing.minTap),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Text(label, style: AppText.translation.copyWith(fontSize: 15)),
-      ),
-    ),
-  );
-}
-
-class _QuietLink extends StatelessWidget {
-  const _QuietLink({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback? onTap;
+  void initState() {
+    super.initState();
+    _timer = Timer(widget.delay, () {
+      if (mounted) setState(() => _in = true);
+    });
+  }
 
   @override
-  Widget build(BuildContext context) => MinTapHeight(
-    onTap: onTap,
-    child: Text(
-      label,
-      style: AppText.translation.copyWith(
-        fontSize: 14,
-        color: onTap == null ? AppColors.tertiary : AppColors.destructiveText,
-      ),
-    ),
-  );
-}
-
-class _PreviewBar extends StatelessWidget {
-  const _PreviewBar({required this.title});
-  final String title;
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: AppSpacing.minTap,
-    child: Row(
-      children: [
-        InkResponse(
-          onTap: () => Navigator.of(context).maybePop(),
-          radius: 22,
-          child: const SizedBox(
-            width: AppSpacing.minTap,
-            height: AppSpacing.minTap,
-            child: Icon(LucideIcons.chevronLeft, size: 20, color: AppColors.secondary),
-          ),
-        ),
-        Expanded(child: Center(child: PlanLabel(title))),
-        const SizedBox(width: AppSpacing.minTap),
-      ],
+  Widget build(BuildContext context) => AnimatedSlide(
+    offset: _in ? Offset.zero : const Offset(0, 0.035),
+    duration: const Duration(milliseconds: 240),
+    curve: Curves.easeOut,
+    child: AnimatedOpacity(
+      opacity: _in ? 1 : 0,
+      duration: const Duration(milliseconds: 240),
+      child: widget.child,
     ),
   );
 }

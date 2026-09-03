@@ -76,14 +76,19 @@ class _PlanNotificationHostState extends ConsumerState<PlanNotificationHost> {
   /// one matters — the evening «как прошло?» is scheduled for the day of the event, so a plan the
   /// learner never closed does not keep asking.
   PlanNotificationTexts? _textsFor(LearningPlan? plan) {
-    if (plan == null || !plan.status.isRunning || plan.daysToEvent < 0) return null;
+    // A plan with NO date schedules nothing: both notifications are «утро события» and «вечер
+    // события», and there is no such day yet. Setting a date later brings them back.
+    final daysToEvent = plan?.daysToEvent;
+    if (plan == null || !plan.status.isRunning || daysToEvent == null || daysToEvent < 0) {
+      return null;
+    }
     final l = AppLocalizations.of(context);
     final focus = plan.focusDay;
     final phrases = plan.computed?.days.fold<int>(0, (sum, d) => sum + d.phraseCount) ?? 0;
 
     return PlanNotificationTexts(
       planId: plan.id,
-      eventDate: plan.eventDate,
+      eventDate: plan.eventDate!,
       channel: (name: l.planNotifyChannelName, description: l.planNotifyChannelBody),
       // «До события 1 день. День N ждёт» — the reason is the DATE, and the body names both the
       // readiness and what today teaches, so the notification is worth the interruption.

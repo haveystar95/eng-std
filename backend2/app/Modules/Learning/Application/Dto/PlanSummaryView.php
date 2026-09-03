@@ -20,7 +20,7 @@ final readonly class PlanSummaryView
         public string $status,
         public string $title,
         public string $targetLang,
-        public string $eventDate,
+        public ?string $eventDate,
         public int $dayCount,
         public ?string $startedAt,
         public ?string $completedAt,

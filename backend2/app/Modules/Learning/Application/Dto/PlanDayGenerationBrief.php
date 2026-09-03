@@ -60,6 +60,19 @@ final readonly class PlanDayGenerationBrief
         public array $entities = [],
         public array $goalTerms = [],
         public array $previousViolations = [],
+        /**
+         * `understanding` | `speaking` | `''` — the outcome of the entry's listening step.
+         *
+         * P2 v0.4.1 reads it as `{{balance}}` and tilts two shelves toward opposite ends of their
+         * guides. An empty string is the ordinary case (the step is optional and most plans skip
+         * it), and the prompt's own rule says to ignore the line then — so the empty value is the
+         * contract rather than a missing one.
+         *
+         * It rides on the DAY brief and not just on the plan because every day of the plan is
+         * written against it: the decision was made once, at the entry, and it is the same decision
+         * on day 4 as on day 1.
+         */
+        public string $balance = '',
     ) {}
 
     /**

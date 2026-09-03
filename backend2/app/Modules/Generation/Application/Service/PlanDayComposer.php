@@ -157,6 +157,9 @@ final readonly class PlanDayComposer
                     static fn (RescuePhrase $p): string => $p->text,
                     $rescue,
                 )),
+            // Empty is the ordinary case — the listening step is optional — and the prompt says to
+            // ignore the rule when it is empty, so nothing here has to invent a default balance.
+            'balance' => $brief->balance,
         ]);
 
         $userMessage = $brief->previousViolations === []

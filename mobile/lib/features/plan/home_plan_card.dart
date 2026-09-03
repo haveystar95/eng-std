@@ -68,10 +68,14 @@ class _PlanCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.s8),
+              // No date, no countdown: the card says «без даты» rather than «событие сегодня»,
+              // which is what a zero here used to make it say.
               PlanLabel(
-                plan.daysToEvent > 0
-                    ? l.homePlanCardEventIn(plan.daysToEvent)
-                    : l.homePlanCardEventToday,
+                switch (plan.daysToEvent) {
+                  null => l.planNoDate,
+                  final int d when d > 0 => l.homePlanCardEventIn(d),
+                  _ => l.homePlanCardEventToday,
+                },
                 fontSize: 11,
               ),
             ],

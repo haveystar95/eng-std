@@ -19,8 +19,19 @@ final readonly class PlanSpend
      */
     public const CALL_DAY_REPAIR = 'day_repair';
 
+    /**
+     * P-Listen — the entry's listening warm-up, and the only call here made before a plan exists.
+     *
+     * Its ledger row therefore carries `plan_id = NULL`. That is the honest shape rather than a
+     * hole: the row says a paid call happened, whose it was, what it cost and what was asked, and
+     * the one thing it cannot say is which plan — because at the moment of the call the learner had
+     * not yet pressed «Собрать план», and may never press it.
+     */
+    public const CALL_LISTEN = 'listen';
+
     public function __construct(
-        public string $planId,
+        /** NULL only for {@see CALL_LISTEN} — see the note there. */
+        public ?string $planId,
         public string $userId,
         /** {@see CALL_OUTLINE} | {@see CALL_DAY} | {@see CALL_DAY_REPAIR} — which plan prompt this was. */
         public string $call,

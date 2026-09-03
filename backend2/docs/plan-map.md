@@ -27,6 +27,22 @@ E2E-FIX-1: §2 матрица плана перебивает глобальну
 
 ---
 
+## 0.1. Вход в план — что шаг слуха меняет в машинерии (ENTRY-2, 03.09)
+
+| что | где в коде |
+|---|---|
+| три реплики на слух | `POST /plans/listen-warmup` → `BuildListenWarmupHandler` → порт `ListenWarmupPort` → `Generation/…/PlanListenService` (**P-Listen v1**) |
+| тихий отбой | порт НЕ бросает: вендор упал, форма не та, список пуст — везде `[]`, и вход молча идёт к дате. Причина — в `ListenWarmupReporter` (лог), не на экране |
+| учёт без плана | `PlanSpend::CALL_LISTEN`, `plan_id = NULL`: шаг стоит между уровнем и датой, а план создаётся кнопкой после даты |
+| что тапнул человек | едет обратно в `POST /plans` полем `listening[]`; вердикт на проводе не ездит |
+| хранение | `learning_plans.listening_diagnostics` (jsonb) → `ListeningDiagnostics`. `NULL` = шаг пропущен, и это НЕ то же самое, что «прошёл и ничего не понял» |
+| вердикт | `ListeningDiagnostics::emphasis()`: все «понял» → `speaking`, иначе (смешанное тоже) → `understanding`. Считается на чтении, не хранится |
+| в P1 | `{{diagnostics}}` — прозой, реплики с «understood / not understood» + вывод (`PlanPromptData::diagnostics()`) |
+| в P2 | `{{balance}}` — одно слово; правило («hear к верхней границе ориентира, say к нижней, и наоборот») живёт в тексте `plan_day.v0.4.1` |
+| план без даты | `learning_plans.event_date` теперь nullable. `PlanScheduler::undated()`: сцены подряд до `MAX_INTRO_DAYS`, у дней нет `scheduled_on`, финальный день — «в конце», `days_to_event` = `null`, `deadline_tight` = `false`. Дата ставится позже обычным `PATCH /plans/{id}/outline` |
+
+---
+
 ## 1. Путь плана
 
 | шаг | класс | что решает |
@@ -329,6 +345,8 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 | `card.example_without_translation` | у примера нет перевода — вторая половина Д-29, с той стороны, откуда приходит модель |
 | `card.filler_not_card` | **только `words`/`chunks`**: пример карточки не содержит саму карточку по границам слов. Это дырка, в которой слово тренируется: `PlayabilityAssessor` считает термин clozeable, только если пример содержит ответ |
 | `card.word_is_basic` | стоп-список `BasicVocabulary`; фатально от уровня «Понимаю простое», на `zero` — warning |
+| `card.chunk_is_basic` | **только `chunks`**: ВСЕ слова связки в стоп-списке `BasicVocabulary` («see it»). Уровень не смотрится — связка из базовых слов не связка ни на каком |
+| `card.chunk_article_pair` | **только `chunks`**: связка из двух слов, первое — артикль языка цели («the location», «an appointment»). Само слово живёт на полке `words`. Список артиклей — `BasicVocabulary::ARTICLES`, язык без списка (de) не судится |
 | `card.kind_size` | `word` > 3 слов; `chunk` вне 2–4; `say`/`ask` вне 3–8; `hear` > 12 |
 | `card.term_is_a_name` | карточка `words`/`chunks` = имя из `entities` **написанное как имя** (заглавная) или слово из `goal_terms` |
 | `card.translation_is_transliteration` | перевод = термин в другом алфавите (`TransliteratedSameness`) |
@@ -480,8 +498,9 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 | id | версия / константа | файл | кто вызывает | схема ответа |
 |---|---|---|---|---|
 | **P1** | `plan_outline.v0.4` — `PlanPromptLibrary::OUTLINE_VERSION` | `plan_outline.v0.4.md` | `PlanOutlineService` | `PlanSchemas::outline()` |
-| **P2** | `plan_day.v0.4` — `DAY_VERSION` | `plan_day.v0.4.md` | `PlanDayComposer` | `PlanSchemas::day()` |
+| **P2** | `plan_day.v0.4.1` — `DAY_VERSION` | `plan_day.v0.4.1.md` | `PlanDayComposer` | `PlanSchemas::day()` |
 | **P2R** | `plan_day_repair.v0.2` — `REPAIR_VERSION` | `plan_day_repair.v0.2.md` | `PlanDayRepairer` | `PlanSchemas::repair()` |
+| **P-Listen** | `plan_listen.v1` — `LISTEN_VERSION` | `plan_listen.v1.md` | `PlanListenService` | `PlanSchemas::listen()` |
 
 Обе половины плейсхолдеров форматирует `Generation/Application/Service/PlanPromptData`
 (`entities()`, `bullets()`, `json()`) — одна на P2 и P2R, чтобы брифы не разъехались.

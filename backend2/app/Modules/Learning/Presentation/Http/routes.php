@@ -29,6 +29,11 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::get('/triage/queue', [TriageController::class, 'queue']);
     Route::post('/triage/batch', [TriageController::class, 'batch']);
 
+    // The entry's optional listening step (кадры V4·03…03г) — asked BEFORE any plan exists, which
+    // is why it carries no id and stands above the rest. It answers 200 with an empty list when the
+    // warm-up could not be written: the step is optional, and a failure is not the learner's news.
+    Route::post('/plans/listen-warmup', [PlanController::class, 'listenWarmup']);
+
     // Learning plans. `/plans/active` sits BEFORE `/plans/{planId}` — otherwise «active» is
     // matched as a plan id and answers 404 forever.
     Route::post('/plans', [PlanController::class, 'store']);

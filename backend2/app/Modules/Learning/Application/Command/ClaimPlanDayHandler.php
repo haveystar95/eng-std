@@ -93,6 +93,9 @@ final readonly class ClaimPlanDayHandler
                 // claim is what has the day row open, and handed over as strings so Generation is
                 // not asked to reconstruct Learning's rows.
                 previousViolations: $day->lastViolations(),
+                // The entry's listening verdict, carried onto every day of the plan: the decision
+                // was made once and does not change between day 1 and day 4.
+                balance: $plan->diagnostics()?->emphasis() ?? '',
             );
         });
     }
