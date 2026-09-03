@@ -342,19 +342,54 @@ it('refuses an example that is a card of the day rather than a sentence with one
     expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM);
 });
 
-it('refuses an example that swallowed a whole LINE of the day — not only one equal to a card', function () {
-    // The live day of 02.09 walked past the gate above, which measured EQUALITY: «I see, without
-    // utilities.» was a card of the scene AND the body of another card's example, padded into
-    // nonsense. Equality is the case where the padding is empty.
-    //
+/**
+ * «ТЕБЕ СКАЖУТ» НЕ ПРОИЗНОСЯТ, ПОЭТОМУ ЕЁ ПЕРЕВОД НЕ ФАТАЛЕН — решение владельца, 03.09.
+ *
+ * The gate says «ученик читает вопрос, в котором не спрошено то, что карточка требует произнести».
+ * Of a `hear` line that sentence is not true: the card asks for nothing, the понимаю tier never
+ * produces it. It burned the owner's live day 2 on «Smoking»/«курение» against «Курить внутри
+ * нельзя» — a verbal noun against a verb, correct Russian nobody is asked to say.
+ */
+it('counts, and does not refuse, an interlocutor line whose translation drops its key', function () {
+    $day = planCandidate(['hear' => [0 => [
+        'frame' => 'Do you have a ___?',
+        'filler' => 'prescription',
+        'translation' => 'У вас всё в порядке?',
+    ]]]);
+
+    expect(planCodes($this->validator->validate($day)))->not->toContain(PlanDayValidator::TRANSLATION_MISSING_KEY)
+        ->and(planCodes($this->validator->warnings($day)))
+        ->toContain(PlanDayValidator::HEAR_TRANSLATION_MISSING_KEY);
+});
+
+it('still refuses a line the learner DOES say whose translation drops its key', function () {
+    // `say` is the learner's own turn: there the sentence the gate says is exactly true.
+    $day = planCandidate(['say' => [0 => ['translation' => 'У меня всё в порядке.']]]);
+
+    expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::TRANSLATION_MISSING_KEY);
+});
+
+/**
+ * A SENTENCE THAT SWALLOWED A WHOLE LINE — COUNTED, NEVER REFUSED (решение владельца, 03.09).
+ *
+ * The defect is real («I see, without utilities.» taught by «When the power went out, I realized
+ * that I see, without utilities, life becomes…») and the shape is sometimes unavoidable: the third
+ * rebuild of the owner's live day 2 died here on the connector «included in the rent», whose day
+ * line is «Heating is included in the rent.» — the connector plus one word. An example of the
+ * connector is REQUIRED to contain the connector, so it contains the line too.
+ */
+it('counts an example that swallowed a whole line of the day, and writes the day anyway', function () {
     // `say[0]` of the fixture assembles to «I need to check in, please.»; the word «prescription»
     // still contains its own text, so nothing else about this card is wrong.
     $day = planCandidate(['words' => [1 => [
         'example' => 'Before my prescription I need to check in, please, at the desk.',
     ]]]);
 
-    expect(planCodes($this->validator->validate($day)))->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM);
+    expect(planCodes($this->validator->validate($day)))->not->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM)
+        ->and(planCodes($this->validator->warnings($day)))
+        ->toContain(PlanDayValidator::EXAMPLE_CONTAINS_LINE);
 });
+
 
 it('leaves an example that merely uses the day\'s words alone', function () {
     // The other side of the same rule, and the reason it looks for a LINE: an example is REQUIRED

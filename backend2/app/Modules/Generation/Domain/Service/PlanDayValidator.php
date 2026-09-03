@@ -191,6 +191,29 @@ final class PlanDayValidator
     public const WORD_IS_BASIC_WARNING = 'plan_day_word_is_basic';
 
     /**
+     * THE INTERLOCUTOR'S LINE DOES NOT RENDER ITS KEY — the same rule {@see TRANSLATION_MISSING_KEY}
+     * names, on the one shelf where being wrong is not fatal.
+     *
+     * «Тебе скажут» is the понимаю tier: the learner never produces that line, so «в переводе не
+     * спрошено то, что карточка требует произнести» is not a statement about it — the card asks for
+     * nothing. Counted rather than refused (решение владельца, 03.09). It burned a live day 2 on
+     * «Smoking»/«курение» against «Курить внутри нельзя» — a verb where the key is a verbal noun,
+     * correct Russian nobody is asked to say.
+     */
+    public const HEAR_TRANSLATION_MISSING_KEY = 'plan_day_hear_translation_missing_key';
+
+    /**
+     * AN EXAMPLE SWALLOWED A WHOLE LINE OF THE DAY — {@see EXAMPLE_IS_A_TERM}'s other half.
+     *
+     * Fatal is EQUALITY and nothing else; containment is counted (решение владельца, 03.09). The
+     * live day 2 of 03.09 is why: the connector «included in the rent» is REQUIRED to appear in its
+     * own example, and the day's line is «Heating is included in the rent.» — the connector plus one
+     * word. Any natural example of the card therefore contains the line, and the gate was refusing a
+     * shape the model cannot avoid.
+     */
+    public const EXAMPLE_CONTAINS_LINE = 'plan_day_example_contains_line';
+
+    /**
      * A LINE ARRIVED WITH AN EXAMPLE, and the example was thrown away on the way in.
      *
      * «Пример есть только у `words` и `chunks`» ({@see PlanShelf::wantsExample()}): a line IS the
@@ -333,6 +356,7 @@ final class PlanDayValidator
             ...$this->warnConversation($day),
             ...$this->warnCoverage($day),
             ...$this->warnCards($day),
+            ...$this->warnHearTranslations($day),
         ];
     }
 
@@ -584,16 +608,10 @@ final class PlanDayValidator
     private function checkExamples(PlanDayCandidate $day): array
     {
         $terms = [];
-        // THE DAY'S OWN LINES, folded — what an example may not swallow whole. See below.
-        $lines = [];
         foreach ($day->items as $item) {
             $key = $this->normalize($item->text);
             if ($key !== '') {
                 $terms[$key] = $item->text;
-            }
-            $folded = self::fold($item->text);
-            if ($folded !== '' && PlanShelf::tryFromName($item->arrayName())?->wantsExample() === false) {
-                $lines[$folded] = $item->text;
             }
         }
         $dayTerms = array_values($terms);
@@ -613,33 +631,6 @@ final class PlanDayValidator
                     'example',
                     'пример — это дословно карточка дня, а не предложение с ней внутри',
                     'the `example` is, word for word, a card of this day rather than a sentence containing one',
-                );
-
-                continue;
-            }
-
-            // ...AND A SENTENCE THAT SWALLOWED A WHOLE LINE OF THE DAY IS THE SAME DEFECT.
-            //
-            // The gate above measured EQUALITY, and the live day of 02.09 walked past it: the line
-            // «I see, without utilities.» was taught by «When the power went out, I realized that I
-            // see, without utilities, life becomes…» — the card word for word, padded into a
-            // sentence that means nothing. Equality is the special case where the padding is empty.
-            //
-            // A LINE and not any card, deliberately: the example of a word or a connector is
-            // REQUIRED to contain its own card ({@see FILLER_NOT_CARD} below), and the day's lines
-            // are built out of those same words, so «contains a card of the day» would refuse every
-            // healthy example there is. A whole turn of the scene inside another card's sentence is
-            // the one containment that is never right — it is the day teaching its own line twice,
-            // once as a card and once as scenery.
-            $swallowed = self::lineInside(self::fold($example), $lines, $item->text);
-            if ($swallowed !== null) {
-                $out[] = PlanViolation::onCard(
-                    self::EXAMPLE_IS_A_TERM,
-                    $item,
-                    'example',
-                    "пример целиком содержит реплику дня «{$swallowed}» — это та же карточка, "
-                    . 'обёрнутая в предложение, а не своё предложение',
-                    'the `example` contains a whole LINE of this day word for word; write a sentence of its own',
                 );
 
                 continue;
@@ -833,6 +824,28 @@ final class PlanDayValidator
      */
     private function checkLineTranslations(PlanDayCandidate $day): array
     {
+        // `hear` is COUNTED, never refused — {@see HEAR_TRANSLATION_MISSING_KEY}.
+        return $this->lineTranslationDefects($day, self::TRANSLATION_MISSING_KEY, hear: false);
+    }
+
+    /**
+     * The same rule on «Тебе скажут», as a counter — {@see HEAR_TRANSLATION_MISSING_KEY}.
+     *
+     * @return list<PlanViolation>
+     */
+    private function warnHearTranslations(PlanDayCandidate $day): array
+    {
+        return $this->lineTranslationDefects($day, self::HEAR_TRANSLATION_MISSING_KEY, hear: true);
+    }
+
+    /**
+     * EVERY LINE'S TRANSLATION CARRIES ITS OWN KEY — one walk, two ranks.
+     *
+     * @param  bool  $hear  true for «Тебе скажут» (counted), false for every other shelf (fatal)
+     * @return list<PlanViolation>
+     */
+    private function lineTranslationDefects(PlanDayCandidate $day, string $code, bool $hear): array
+    {
         if (! $this->keyPresence->judges($day->supportLang)) {
             return [];
         }
@@ -844,6 +857,10 @@ final class PlanDayValidator
 
         $out = [];
         foreach ($day->lines() as $line) {
+            if ((PlanShelf::tryFromName($line->arrayName()) === PlanShelf::Hear) !== $hear) {
+                continue;
+            }
+
             $key = PlanSpeakingKey::of($line, $day->items);
             $keyTranslation = $key === null ? null : ($translations[$key] ?? null);
             if ($key === null || $keyTranslation === null || trim($keyTranslation) === '') {
@@ -854,7 +871,7 @@ final class PlanDayValidator
             }
 
             $out[] = PlanViolation::onCard(
-                self::TRANSLATION_MISSING_KEY,
+                $code,
                 $line,
                 'translation',
                 "перевод реплики не содержит перевода ключевой карточки «{$key}» "
@@ -1116,6 +1133,26 @@ final class PlanDayValidator
                 );
             }
 
+            // AN EXAMPLE THAT SWALLOWED A WHOLE LINE OF THE DAY — counted, never refused
+            // ({@see EXAMPLE_CONTAINS_LINE}). It is a real defect: «I see, without utilities.» was
+            // taught by «When the power went out, I realized that I see, without utilities, life
+            // becomes…», the card padded into nonsense. It is also a shape the model sometimes
+            // cannot avoid — a line that is a connector plus one word leaves the connector's own
+            // example nowhere else to stand — so the day is not bought again over it.
+            $swallowed = trim($item->example) === ''
+                ? null
+                : self::lineInside(self::fold($item->example), self::lineTexts($day), $item->text);
+            if ($swallowed !== null) {
+                $out[] = PlanViolation::onCard(
+                    self::EXAMPLE_CONTAINS_LINE,
+                    $item,
+                    'example',
+                    "пример целиком содержит реплику дня «{$swallowed}» — это та же карточка, "
+                    . 'обёрнутая в предложение, а не своё предложение',
+                    'the `example` contains a whole LINE of this day word for word',
+                );
+            }
+
             if ($shelf !== null && $shelf->wantsImage() && trim($item->imageApiPrompt) === '') {
                 $out[] = PlanViolation::onCard(
                     self::IMAGE_PROMPT_MISSING,
@@ -1308,7 +1345,25 @@ final class PlanDayValidator
 
     /** Does `$hay` contain `$needle` on word boundaries? */
     /**
-     * The day's line this example carries inside it, or null — {@see checkExamples()}.
+     * The day's own LINES, folded — every card of a shelf that carries no example of its own.
+     *
+     * @return array<string, string>  folded line => the line as written
+     */
+    private static function lineTexts(PlanDayCandidate $day): array
+    {
+        $out = [];
+        foreach ($day->items as $item) {
+            $folded = self::fold($item->text);
+            if ($folded !== '' && PlanShelf::tryFromName($item->arrayName())?->wantsExample() === false) {
+                $out[$folded] = $item->text;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * The day's line this example carries inside it, or null — {@see warnCards()}.
      *
      * The card's own text is excluded: a line whose example somehow IS itself is the equality case,
      * already answered one gate earlier and with its own wording.

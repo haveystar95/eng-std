@@ -360,3 +360,61 @@ it('refuses a repair that answers about a card nobody asked about', function (ar
         ],
     ]],
 ]);
+
+// ── (д) the repair was ON TARGET, and the merge changed another card's verdict ─────────────────
+
+/**
+ * THE LIVE CASE OF 03.09, and the correction it forced.
+ *
+ * The owner's day 2 came back with `words[6] = «small»` — basic vocabulary, one fatal violation,
+ * one address. The repair answered about `words[6]` and returned «Smoking» / «курение»: exactly the
+ * address it was asked about, so {@see PlanDayRepairer::OFF_TARGET} was right not to fire and there
+ * is nothing wrong with its contract (it is pinned by case (г) above).
+ *
+ * What actually happened is one step further on: the merged day is judged WHOLE again, and the new
+ * word became the key of a line that already stood in the day — `hear[2]`, «Smoking is not allowed
+ * inside.», translated «Курить внутри нельзя». Before the repair that line had no key with a
+ * translation and the gate was silent; after it, the gate fired on a card nobody had touched.
+ *
+ * Since 03.09 that is a COUNTER on `hear` and not a refusal (решение владельца), so the day this
+ * fixture writes is the day the learner gets.
+ */
+it('writes a day whose repaired word gives an interlocutor line a key it does not render', function () {
+    $broken = $this->day;
+    // The defect the live day had: a basic word, one address, well under the repair threshold.
+    $broken['words'][0]['text'] = 'small';
+    $broken['words'][0]['translation'] = 'маленький';
+    // …and the line that will acquire a key the moment the repair replaces that word.
+    $broken['hear'][0]['frame'] = '___ is not allowed inside.';
+    $broken['hear'][0]['filler'] = 'Smoking';
+    $broken['hear'][0]['translation'] = 'Курить внутри нельзя.';
+
+    $repaired = $this->day['words'][0];
+    $repaired['text'] = 'Smoking';
+    $repaired['translation'] = 'курение';
+    $repaired['example'] = 'Smoking is not okay on the balcony either.';
+    $repaired['example_translation'] = 'Курение нельзя и на балконе тоже.';
+
+    [$planId] = runPlanWith(
+        new ScriptedPlanModel([$broken], [['cards' => [[
+            'array' => 'words',
+            'index' => 0,
+            'card' => $repaired,
+        ]]]]),
+        $this->defects,
+    );
+
+    $row = dayRow($planId);
+
+    expect($row->status)->toBe('ready')
+        // ON TARGET: the merge happened, so the day carries the repaired card and is written —
+        // one day call, one repair, no second attempt bought.
+        ->and($row->generation_attempts)->toBe(1)
+        ->and($row->repair_calls)->toBe(1)
+        ->and($row->collection_id)->not->toBeNull()
+        ->and($row->fail_reason)->toBeNull()
+        // …and the line the repair made judgeable is COUNTED, not refused. (At least once: the
+        // fixture's script answers for the days queued behind this one as well.)
+        ->and($this->defects->warnings(PlanDayValidator::HEAR_TRANSLATION_MISSING_KEY))
+        ->toBeGreaterThanOrEqual(1);
+});
