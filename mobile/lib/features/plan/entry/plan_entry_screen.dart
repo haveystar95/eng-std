@@ -13,6 +13,7 @@ import 'package:eng_std/ui/ui.dart';
 import '../../../data/languages.dart' show languageByCode, sttLocaleFor, studyLanguagesFor;
 import '../../../data/plan_models.dart';
 import '../../../data/providers.dart';
+import '../../profile/profile_screen.dart';
 import '../plan_ui.dart';
 import 'entry_listen_screen.dart';
 import 'entry_ui.dart';
@@ -678,9 +679,14 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
             Semantics(
               button: true,
               child: InkWell(
+                // PUSHED, never popped: the answers already given live on this screen, and a link
+                // that dropped the learner out of the entry to change one setting would take them
+                // with it. Coming back lands on the same step, filled in.
                 onTap: () {
                   AppHaptics.light();
-                  Navigator.of(context).maybePop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  );
                 },
                 child: Text(
                   l.planEntrySettingsLink,

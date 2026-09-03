@@ -1,0 +1,31 @@
+('ask', 'line') 3
+('chunks', 'chunk') 3
+('hear', 'line') 5
+('rescue', 'line') 5
+('say', 'line') 4
+('words', 'word') 4
+
+[hear] Do you have insurance for this visit? — У вас есть страховка на этот визит?
+[hear] Is the appointment for your child? — Запись для вашего ребёнка?
+[hear] Can I see your ID and insurance card? — Можно ваш документ и страховую карту?
+[hear] Please take a seat and wait. — Пожалуйста присядьте и подождите.
+[hear] Which doctor are you here to see? — К какому врачу вы пришли?
+[say] Yes, I have insurance. — Да, у меня есть страховка.
+[say] The appointment is for my child. — Запись для моего ребёнка.
+[say] We are here for the pediatrician. — Мы к педиатру.
+[say] Here is the insurance card. — Вот страховая карта.
+[ask] Do we wait here? — Нужно подождать здесь?
+[ask] Which doctor do we need? — К какому врачу нам нужно идти?
+[ask] Is the insurance valid for this visit? — Страховка подходит для этого визита?
+[words] insurance — страховка
+[words] appointment — запись на приём
+[words] pediatrician — педиатр
+[words] visit — визит
+[chunks] insurance card — страховая карта
+[chunks] take a seat — присядьте
+[chunks] see a doctor — к врачу
+[rescue] Could you speak more slowly, please? — Помедленнее, пожалуйста.
+[rescue] Could you write it down, please? — Напишите, пожалуйста.
+[rescue] Could you repeat that, please? — Повторите ещё раз, пожалуйста.
+[rescue] How much is it? — Сколько это стоит?
+[rescue] One moment, let me check. — Секунду, я проверю.

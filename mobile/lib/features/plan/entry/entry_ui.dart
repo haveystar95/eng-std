@@ -49,9 +49,7 @@ class EntryCta extends StatelessWidget {
       label: label,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: on
-              ? AppColors.destructiveText
-              : AppColors.destructiveText.withValues(alpha: 0.16),
+          color: on ? AppColors.destructiveText : AppColors.destructiveText.withValues(alpha: 0.16),
           borderRadius: radius,
           boxShadow: on
               ? [
@@ -82,7 +80,11 @@ class EntryCta extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 15, color: on ? AppColors.paper : AppColors.ink.withValues(alpha: 0.42)),
+                    Icon(
+                      icon,
+                      size: 15,
+                      color: on ? AppColors.paper : AppColors.ink.withValues(alpha: 0.42),
+                    ),
                     const SizedBox(width: 9),
                   ],
                   Flexible(
@@ -147,9 +149,7 @@ class EntrySecondary extends StatelessWidget {
         textAlign: TextAlign.center,
         style: AppText.translation.copyWith(
           fontSize: outlined ? 16 : 15,
-          color: on
-              ? (outlined ? AppColors.ink : AppColors.secondary)
-              : AppColors.planInactive,
+          color: on ? (outlined ? AppColors.ink : AppColors.secondary) : AppColors.planInactive,
         ),
       ),
     );
@@ -232,44 +232,55 @@ class EntryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SizedBox(
     height: 44,
-    child: Row(
-      children: [
-        SizedBox(
-          width: 24,
-          child: onBack == null
-              ? null
-              : Semantics(
-                  button: true,
-                  child: InkResponse(
-                    onTap: onBack,
-                    radius: 22,
-                    child: const Icon(Icons.chevron_left, size: 22, color: AppColors.secondary),
-                  ),
+    // «Три латунные точки закрылись» stand in the MIDDLE of the header on the verdict frame
+    // (V4·03в) and at the right edge on every step of the flow. One header, two placements,
+    // decided by whether there is anything else in the row to hold the line.
+    child: kicker.isEmpty && onBack == null && trailing == null
+        ? Center(
+            child: EntryDots(step: step, steps: steps, allDone: dotsAllDone),
+          )
+        : Row(
+            children: [
+              SizedBox(
+                width: 24,
+                child: onBack == null
+                    ? null
+                    : Semantics(
+                        button: true,
+                        child: InkResponse(
+                          onTap: onBack,
+                          radius: 22,
+                          child: const Icon(
+                            Icons.chevron_left,
+                            size: 22,
+                            color: AppColors.secondary,
+                          ),
+                        ),
+                      ),
+              ),
+              Expanded(
+                child: Center(
+                  child: kicker.isEmpty
+                      ? const SizedBox.shrink()
+                      : Text(
+                          kicker.toUpperCase(),
+                          style: AppText.blockLabel.copyWith(
+                            fontSize: 10.5,
+                            letterSpacing: 1.9,
+                            color: AppColors.brassInk,
+                          ),
+                        ),
                 ),
-        ),
-        Expanded(
-          child: Center(
-            child: kicker.isEmpty
-                ? const SizedBox.shrink()
-                : Text(
-                    kicker.toUpperCase(),
-                    style: AppText.blockLabel.copyWith(
-                      fontSize: 10.5,
-                      letterSpacing: 1.9,
-                      color: AppColors.brassInk,
-                    ),
-                  ),
+              ),
+              SizedBox(
+                width: 78,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: trailing ?? EntryDots(step: step, steps: steps, allDone: dotsAllDone),
+                ),
+              ),
+            ],
           ),
-        ),
-        SizedBox(
-          width: 78,
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: trailing ?? EntryDots(step: step, steps: steps, allDone: dotsAllDone),
-          ),
-        ),
-      ],
-    ),
   );
 }
 
@@ -356,7 +367,11 @@ class EntrySuggestion extends StatelessWidget {
           ),
           child: Text(
             text,
-            style: AppText.translation.copyWith(fontSize: 14.5, height: 1.45, color: AppColors.inkBody),
+            style: AppText.translation.copyWith(
+              fontSize: 14.5,
+              height: 1.45,
+              color: AppColors.inkBody,
+            ),
           ),
         ),
       ),
@@ -419,16 +434,21 @@ class EntryChoice extends StatelessWidget {
           },
           child: Padding(
             padding: padding,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: child),
-                if (selected && showTick) ...[
-                  const SizedBox(width: 12),
-                  const _BrassTick(),
-                ],
-              ],
-            ),
+            // NO Row WHEN THERE IS NO TICK, and that is load-bearing rather than tidy: a Row with
+            // an `Expanded` inside it demands a bounded width, and this box is used BOTH inside an
+            // `Expanded` (the level cards, the minutes) and as a plain sibling that sizes to its
+            // own content («Без даты», кадр V4·04). The second case handed the Row an unbounded
+            // width and the whole step came out blank on the simulator — caught by walking it, not
+            // by a test, because no test had reached that step.
+            child: showTick
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: child),
+                      if (selected) ...[const SizedBox(width: 12), const _BrassTick()],
+                    ],
+                  )
+                : child,
           ),
         ),
       ),

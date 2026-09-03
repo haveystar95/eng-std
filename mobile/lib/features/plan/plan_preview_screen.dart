@@ -202,9 +202,6 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final scenes = _scenes;
-    final summary = (_plan.goalRestated ?? '').trim().isNotEmpty
-        ? _plan.goalRestated!.trim()
-        : _plan.goalText.trim();
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
@@ -234,18 +231,28 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            // THE GOAL IS THE TITLE — and P1 writes it as a RESTATEMENT, not as a
+                            // name, so it can be a whole sentence. The live run of 03.09 came back
+                            // with «Сходить с ребёнком в частную клинику: понять вопросы на
+                            // стойке, описать симптомы врачу и разобраться в назначении.» and it
+                            // filled the screen at 32 pt. Three lines and a step down in size,
+                            // like the goal field does when the answer grows.
                             Text(
                               _plan.title,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
                               style: AppText.collectionNameScreen.copyWith(
-                                fontSize: 32,
+                                fontSize: _plan.title.length > 60 ? 26 : 32,
                                 height: 1.18,
                               ),
                             ),
                             const SizedBox(height: 12),
                             Text(
+                              // «По твоим словам…» and NOT the goal again: the title above already
+                              // is the goal, and the live preview said the same sentence twice.
                               _dated
-                                  ? l.planPreviewSubtitle(summary, scenes.length)
-                                  : l.planPreviewSubtitleNoDate(summary, scenes.length),
+                                  ? l.planPreviewSubtitle(scenes.length)
+                                  : l.planPreviewSubtitleNoDate(scenes.length),
                               style: AppText.translation.copyWith(
                                 fontSize: 15,
                                 height: 1.6,

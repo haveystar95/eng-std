@@ -11,6 +11,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/token_store.dart';
 import 'package:eng_std/features/plan/entry/entry_ui.dart';
 import 'package:eng_std/features/plan/entry/plan_assembly_screen.dart';
+import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 /// СБОРКА ПЛАНА, когда она не удаётся — кадры V4·05в, 05г и 05б.
@@ -102,6 +103,18 @@ Future<void> _pumpAssembly(WidgetTester tester, ApiClient api) async {
   await tester.pump(const Duration(milliseconds: 400));
 }
 
+/// Нажать на кнопку шага, где бы она ни оказалась в ленте.
+///
+/// `find.text` пропускает то, что список ещё не вывел на экран, а шаги входа длиннее любого
+/// тестового окна: сначала подводим кнопку в видимую часть, потом жмём.
+Future<void> _tapStepButton(WidgetTester tester, String label) async {
+  final button = find.text(label, skipOffstage: false);
+  await tester.ensureVisible(button);
+  await tester.pumpAndSettle();
+  await tester.tap(button);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('nothing is painted for the first 900 ms — a fast answer never flashes a screen', (
     tester,
@@ -175,6 +188,77 @@ void main() {
     expect(notify.enabled, isFalse);
     // Offline is NOT a failed attempt: the model was never asked twice.
     expect(api.outlineCalls, 1);
+  });
+
+  testWidgets('the flow reaches the DATE step and draws it — «Без даты» included', (tester) async {
+    // Каждый шаг входа рисуется хоть раз. Написан после живого прогона: экран даты выходил ПУСТЫМ
+    // (`EntryChoice` без галочки держал внутри `Expanded`, а «Без даты» стоит в строке без
+    // ограничения по ширине), и ни один тест до этого шага не доходил, поэтому падение было видно
+    // только глазами на симуляторе.
+    tester.view.physicalSize = const Size(1170, 3400);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        // Разогрев не отвечает ничем — шаг слуха молча не предлагается, и «Дальше» с уровня ведёт
+        // прямо к дате. Это же и есть проверка тихого фолбэка со стороны клиента.
+        overrides: [apiClientProvider.overrideWithValue(_FailingApi(failures: 9))],
+        child: _app(
+          const PlanEntryScreen(
+            initialGoal: 'Иду к врачу с ребёнком, надо объяснить симптомы и понять назначение',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _tapStepButton(tester, 'Дальше');
+    expect(find.text('Какой язык учишь?'), findsOneWidget);
+
+    await _tapStepButton(tester, 'Дальше');
+
+    expect(find.text('Когда это случится?'), findsOneWidget);
+    expect(find.text('Без даты', skipOffstage: false), findsOneWidget);
+    expect(find.text('Сколько минут в день?', skipOffstage: false), findsOneWidget);
+    expect(find.text('Собрать план', skipOffstage: false), findsOneWidget);
+    // Шага слуха в ленте нет вовсе: его не предлагали, значит и возвращаться некуда.
+    expect(find.textContaining('Слух', skipOffstage: false), findsNothing);
+  });
+
+  testWidgets('«Без даты» меняет строку-ориентир и не выдумывает дату', (tester) async {
+    tester.view.physicalSize = const Size(1170, 3400);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [apiClientProvider.overrideWithValue(_FailingApi(failures: 9))],
+        child: _app(
+          const PlanEntryScreen(
+            initialGoal: 'Иду к врачу с ребёнком, надо объяснить симптомы и понять назначение',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _tapStepButton(tester, 'Дальше');
+    await _tapStepButton(tester, 'Дальше');
+
+    expect(
+      find.textContaining('сервер разложит подготовку по этим дням', skipOffstage: false),
+      findsOneWidget,
+    );
+
+    await _tapStepButton(tester, 'Без даты');
+
+    expect(
+      find.textContaining('идём в своём темпе, по одной сцене за подход', skipOffstage: false),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('сервер разложит подготовку по этим дням', skipOffstage: false),
+      findsNothing,
+    );
   });
 
   test('the listening verdict is «говорение» only when every line landed', () {

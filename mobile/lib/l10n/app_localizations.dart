@@ -5217,17 +5217,17 @@ abstract class AppLocalizations {
   /// **'Твой план готов'**
   String get planPreviewKicker;
 
-  /// Подзаголовок превью: пересказ цели плюс число сцен.
+  /// Подзаголовок превью. Пересказа цели в нём НЕТ: заголовок экрана и есть цель, и повторять её строкой ниже — говорить одно и то же дважды (найдено живым прогоном 03.09).
   ///
   /// In ru, this message translates to:
-  /// **'{summary} — по твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}.'**
-  String planPreviewSubtitle(String summary, int scenes);
+  /// **'По твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}.'**
+  String planPreviewSubtitle(int scenes);
 
   /// То же без даты (кадр V4·06б).
   ///
   /// In ru, this message translates to:
-  /// **'{summary} — по твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}. Даты нет, идём в своём темпе.'**
-  String planPreviewSubtitleNoDate(String summary, int scenes);
+  /// **'По твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}. Даты нет, идём в своём темпе.'**
+  String planPreviewSubtitleNoDate(int scenes);
 
   /// Моноширинная строка-ориентир превью с датой.
   ///

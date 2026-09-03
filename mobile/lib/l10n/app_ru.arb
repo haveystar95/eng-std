@@ -2580,15 +2580,15 @@
 
   "planPreviewKicker": "Твой план готов",
   "@planPreviewKicker": { "description": "Надзаголовок превью (кадры V4·06, 06б)." },
-  "planPreviewSubtitle": "{summary} — по твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}.",
+  "planPreviewSubtitle": "По твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}.",
   "@planPreviewSubtitle": {
-    "description": "Подзаголовок превью: пересказ цели плюс число сцен.",
-    "placeholders": { "summary": { "type": "String" }, "scenes": { "type": "int" } }
+    "description": "Подзаголовок превью. Пересказа цели в нём НЕТ: заголовок экрана и есть цель, и повторять её строкой ниже — говорить одно и то же дважды (найдено живым прогоном 03.09).",
+    "placeholders": { "scenes": { "type": "int" } }
   },
-  "planPreviewSubtitleNoDate": "{summary} — по твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}. Даты нет, идём в своём темпе.",
+  "planPreviewSubtitleNoDate": "По твоим словам собрано {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}. Даты нет, идём в своём темпе.",
   "@planPreviewSubtitleNoDate": {
     "description": "То же без даты (кадр V4·06б).",
-    "placeholders": { "summary": { "type": "String" }, "scenes": { "type": "int" } }
+    "placeholders": { "scenes": { "type": "int" } }
   },
   "planPreviewOrientation": "{days, plural, one{{days} ДЕНЬ ПОДГОТОВКИ} few{{days} ДНЯ ПОДГОТОВКИ} many{{days} ДНЕЙ ПОДГОТОВКИ} other{{days} ДНЯ ПОДГОТОВКИ}} · {minutes} МИНУТ В ДЕНЬ",
   "@planPreviewOrientation": {

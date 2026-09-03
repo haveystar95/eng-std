@@ -1,0 +1,489 @@
+{
+ "id": "01M1KHZKQ72VQCP7Q7K3EHMNMP",
+ "status": "draft",
+ "title": "Сходить с ребёнком в частную клинику, описать симптомы, ответить на вопросы про страховку и понять, что назначил врач",
+ "goal_text": "Иду к врачу с ребёнком в частную клинику. Надо объяснить симптомы, ответить про страховку и понять назначение",
+ "goal_restated": "Сходить с ребёнком в частную клинику, описать симптомы, ответить на вопросы про страховку и понять, что назначил врач",
+ "support_lang": "ru",
+ "target_lang": "en",
+ "level": "basic",
+ "event_date": "2026-09-08",
+ "minutes_per_day": 20,
+ "started_at": null,
+ "completed_at": null,
+ "readiness": 0,
+ "focus_day_index": 1,
+ "next_day_index": 2,
+ "days_to_event": 5,
+ "deadline_tight": false,
+ "can_already": [
+  {
+   "text": "может назвать врача или сказать, что запись на ребёнка",
+   "day_index": 1,
+   "hit": false
+  },
+  {
+   "text": "может сказать, есть ли страховка, и какой это тип оплаты",
+   "day_index": 1,
+   "hit": false
+  },
+  {
+   "text": "может коротко сказать, что болит или что беспокоит",
+   "day_index": 2,
+   "hit": false
+  },
+  {
+   "text": "может сообщить, когда появились симптомы",
+   "day_index": 2,
+   "hit": false
+  },
+  {
+   "text": "может дать короткий ответ на прямой вопрос о состоянии",
+   "day_index": 2,
+   "hit": false
+  },
+  {
+   "text": "может повторить своими словами, что нужно дать ребёнку или сделать дома",
+   "day_index": 3,
+   "hit": false
+  },
+  {
+   "text": "может переспросить про частоту приёма",
+   "day_index": 3,
+   "hit": false
+  },
+  {
+   "text": "может задать вопрос про повторный приём или тревожные признаки",
+   "day_index": 3,
+   "hit": false
+  }
+ ],
+ "stage_census": {
+  "total": 0,
+  "stage_a_closed": 0
+ },
+ "event_feedback": null,
+ "entities": [
+  "private clinic",
+  "reception",
+  "insurance card",
+  "front desk",
+  "doctor",
+  "exam room",
+  "thermometer",
+  "medical history",
+  "prescription",
+  "pharmacy",
+  "follow-up visit",
+  "discharge instructions"
+ ],
+ "constraints": [],
+ "goal_terms": [],
+ "computed": {
+  "days": [
+   {
+    "kind": "intro",
+    "index": 1,
+    "intro": "Ты подходишь к стойке в частной клинике с ребёнком. Нужно коротко объяснить, зачем вы пришли, и спокойно ответить на вопросы про запись и страховку. Успех в этой сцене — вас зарегистрировали и направили дальше.",
+    "title": "На стойке регистрации",
+    "topics": [
+     "регистрация",
+     "запись",
+     "приём",
+     "ребёнок",
+     "клиника",
+     "страховка",
+     "оплата",
+     "данные",
+     "частная клиника",
+     "стойка"
+    ],
+    "outcome": [
+     "сможешь сказать, с кем у тебя приём",
+     "сможешь ответить на вопрос про страховку"
+    ],
+    "entities": [
+     "private clinic",
+     "reception",
+     "insurance card",
+     "front desk"
+    ],
+    "checkpoints": [
+     "может назвать врача или сказать, что запись на ребёнка",
+     "может сказать, есть ли страховка, и какой это тип оплаты"
+    ],
+    "term_budget": 25,
+    "scheduled_on": "2026-09-03",
+    "opening_lines": [
+     "Do you have an appointment?",
+     "Who is the appointment for?",
+     "What seems to be the problem today?",
+     "Do you have insurance?",
+     "Can I see your insurance card, please?",
+     "Please take a seat and wait to be called."
+    ],
+    "source_scene_index": 1
+   },
+   {
+    "kind": "intro",
+    "index": 2,
+    "intro": "Вы заходите в кабинет врача. Тебе нужно простыми словами описать, что происходит с ребёнком сейчас, и ответить на уточняющие вопросы. Успех в этой сцене — врач понял основную проблему и важные детали.",
+    "title": "У врача: симптомы ребёнка",
+    "topics": [
+     "симптомы",
+     "боль",
+     "температура",
+     "кашель",
+     "самочувствие",
+     "время",
+     "начало",
+     "длительность",
+     "сегодня",
+     "рвота",
+     "тошнота",
+     "состояние",
+     "вопросы врача"
+    ],
+    "outcome": [
+     "сможешь назвать главные симптомы ребёнка",
+     "сможешь сказать, когда это началось",
+     "сможешь ответить, есть ли температура или рвота"
+    ],
+    "entities": [
+     "doctor",
+     "exam room",
+     "thermometer",
+     "medical history"
+    ],
+    "checkpoints": [
+     "может коротко сказать, что болит или что беспокоит",
+     "может сообщить, когда появились симптомы",
+     "может дать короткий ответ на прямой вопрос о состоянии"
+    ],
+    "term_budget": 25,
+    "scheduled_on": "2026-09-04",
+    "opening_lines": [
+     "What brings you in today?",
+     "What symptoms does your child have?",
+     "When did it start?",
+     "Does your child have a fever?",
+     "Has your child been vomiting?",
+     "Is the pain constant or does it come and go?"
+    ],
+    "source_scene_index": 2
+   },
+   {
+    "kind": "intro",
+    "index": 3,
+    "intro": "В конце приёма врач объяснит, что делать дальше. Тебе нужно понять лечение, переспросить при необходимости и уточнить, когда обращаться снова. Успех в этой сцене — ты понимаешь назначение и следующие шаги.",
+    "title": "У врача: рекомендации и назначение",
+    "topics": [
+     "лечение",
+     "лекарство",
+     "дозировка",
+     "домашний уход",
+     "назначение",
+     "частота",
+     "уточнение",
+     "инструкция",
+     "повторный приём",
+     "контроль",
+     "ухудшение",
+     "когда вернуться",
+     "наблюдение"
+    ],
+    "outcome": [
+     "сможешь понять, какое лечение назначил врач",
+     "сможешь уточнить, как часто давать лекарство",
+     "сможешь спросить, когда нужно прийти снова"
+    ],
+    "entities": [
+     "prescription",
+     "pharmacy",
+     "follow-up visit",
+     "discharge instructions"
+    ],
+    "checkpoints": [
+     "может повторить своими словами, что нужно дать ребёнку или сделать дома",
+     "может переспросить про частоту приёма",
+     "может задать вопрос про повторный приём или тревожные признаки"
+    ],
+    "term_budget": 25,
+    "scheduled_on": "2026-09-05",
+    "opening_lines": [
+     "I think it is a viral infection.",
+     "Your child should rest and drink plenty of fluids.",
+     "Give this medicine twice a day.",
+     "Use this for three days.",
+     "If the fever gets worse, come back.",
+     "Do you have any questions about the treatment?"
+    ],
+    "source_scene_index": 3
+   },
+   {
+    "kind": "final",
+    "index": 4,
+    "intro": "",
+    "title": "Прогон перед событием",
+    "topics": [],
+    "outcome": [],
+    "entities": [],
+    "checkpoints": [
+     "может назвать врача или сказать, что запись на ребёнка",
+     "может сказать, есть ли страховка, и какой это тип оплаты",
+     "может коротко сказать, что болит или что беспокоит",
+     "может сообщить, когда появились симптомы",
+     "может дать короткий ответ на прямой вопрос о состоянии",
+     "может повторить своими словами, что нужно дать ребёнку или сделать дома",
+     "может переспросить про частоту приёма",
+     "может задать вопрос про повторный приём или тревожные признаки"
+    ],
+    "term_budget": 0,
+    "scheduled_on": "2026-09-08",
+    "opening_lines": [],
+    "source_scene_index": null
+   }
+  ],
+  "fits": true,
+  "need": 46,
+  "step": 1,
+  "capacity": 14,
+  "max_days": 6,
+  "rest_days": 2,
+  "intro_days": 3,
+  "drop_reason": null,
+  "dropped_skills": [],
+  "final_same_day": false
+ },
+ "days": [
+  {
+   "id": "01M1KJ0BCK3FA0TJ0RMGBP9AY4",
+   "index": 1,
+   "kind": "intro",
+   "title": "На стойке регистрации",
+   "scheduled_on": "2026-09-03",
+   "collection_id": null,
+   "status": "pending",
+   "generation_attempts": 0,
+   "fail_reason": null,
+   "fail_code": null,
+   "term_budget": 25,
+   "outcome": [
+    "сможешь сказать, с кем у тебя приём",
+    "сможешь ответить на вопрос про страховку"
+   ],
+   "checkpoints": [
+    "может назвать врача или сказать, что запись на ребёнка",
+    "может сказать, есть ли страховка, и какой это тип оплаты"
+   ],
+   "topics": [
+    "регистрация",
+    "запись",
+    "приём",
+    "ребёнок",
+    "клиника",
+    "страховка",
+    "оплата",
+    "данные",
+    "частная клиника",
+    "стойка"
+   ],
+   "role": {
+    "name": "",
+    "if_silent": "",
+    "opening_lines": [
+     {
+      "text": "Do you have an appointment?",
+      "translation": ""
+     },
+     {
+      "text": "Who is the appointment for?",
+      "translation": ""
+     },
+     {
+      "text": "What seems to be the problem today?",
+      "translation": ""
+     },
+     {
+      "text": "Do you have insurance?",
+      "translation": ""
+     },
+     {
+      "text": "Can I see your insurance card, please?",
+      "translation": ""
+     },
+     {
+      "text": "Please take a seat and wait to be called.",
+      "translation": ""
+     }
+    ]
+   },
+   "intro": "Ты подходишь к стойке в частной клинике с ребёнком. Нужно коротко объяснить, зачем вы пришли, и спокойно ответить на вопросы про запись и страховку. Успех в этой сцене — вас зарегистрировали и направили дальше."
+  },
+  {
+   "id": "01M1KJ0BCKW7SW4JM3VME67R3R",
+   "index": 2,
+   "kind": "intro",
+   "title": "У врача: симптомы ребёнка",
+   "scheduled_on": "2026-09-04",
+   "collection_id": null,
+   "status": "pending",
+   "generation_attempts": 0,
+   "fail_reason": null,
+   "fail_code": null,
+   "term_budget": 25,
+   "outcome": [
+    "сможешь назвать главные симптомы ребёнка",
+    "сможешь сказать, когда это началось",
+    "сможешь ответить, есть ли температура или рвота"
+   ],
+   "checkpoints": [
+    "может коротко сказать, что болит или что беспокоит",
+    "может сообщить, когда появились симптомы",
+    "может дать короткий ответ на прямой вопрос о состоянии"
+   ],
+   "topics": [
+    "симптомы",
+    "боль",
+    "температура",
+    "кашель",
+    "самочувствие",
+    "время",
+    "начало",
+    "длительность",
+    "сегодня",
+    "рвота",
+    "тошнота",
+    "состояние",
+    "вопросы врача"
+   ],
+   "role": {
+    "name": "",
+    "if_silent": "",
+    "opening_lines": [
+     {
+      "text": "What brings you in today?",
+      "translation": ""
+     },
+     {
+      "text": "What symptoms does your child have?",
+      "translation": ""
+     },
+     {
+      "text": "When did it start?",
+      "translation": ""
+     },
+     {
+      "text": "Does your child have a fever?",
+      "translation": ""
+     },
+     {
+      "text": "Has your child been vomiting?",
+      "translation": ""
+     },
+     {
+      "text": "Is the pain constant or does it come and go?",
+      "translation": ""
+     }
+    ]
+   },
+   "intro": "Вы заходите в кабинет врача. Тебе нужно простыми словами описать, что происходит с ребёнком сейчас, и ответить на уточняющие вопросы. Успех в этой сцене — врач понял основную проблему и важные детали."
+  },
+  {
+   "id": "01M1KJ0BCK4K84A8G9KXKV09VE",
+   "index": 3,
+   "kind": "intro",
+   "title": "У врача: рекомендации и назначение",
+   "scheduled_on": "2026-09-05",
+   "collection_id": null,
+   "status": "pending",
+   "generation_attempts": 0,
+   "fail_reason": null,
+   "fail_code": null,
+   "term_budget": 25,
+   "outcome": [
+    "сможешь понять, какое лечение назначил врач",
+    "сможешь уточнить, как часто давать лекарство",
+    "сможешь спросить, когда нужно прийти снова"
+   ],
+   "checkpoints": [
+    "может повторить своими словами, что нужно дать ребёнку или сделать дома",
+    "может переспросить про частоту приёма",
+    "может задать вопрос про повторный приём или тревожные признаки"
+   ],
+   "topics": [
+    "лечение",
+    "лекарство",
+    "дозировка",
+    "домашний уход",
+    "назначение",
+    "частота",
+    "уточнение",
+    "инструкция",
+    "повторный приём",
+    "контроль",
+    "ухудшение",
+    "когда вернуться",
+    "наблюдение"
+   ],
+   "role": {
+    "name": "",
+    "if_silent": "",
+    "opening_lines": [
+     {
+      "text": "I think it is a viral infection.",
+      "translation": ""
+     },
+     {
+      "text": "Your child should rest and drink plenty of fluids.",
+      "translation": ""
+     },
+     {
+      "text": "Give this medicine twice a day.",
+      "translation": ""
+     },
+     {
+      "text": "Use this for three days.",
+      "translation": ""
+     },
+     {
+      "text": "If the fever gets worse, come back.",
+      "translation": ""
+     },
+     {
+      "text": "Do you have any questions about the treatment?",
+      "translation": ""
+     }
+    ]
+   },
+   "intro": "В конце приёма врач объяснит, что делать дальше. Тебе нужно понять лечение, переспросить при необходимости и уточнить, когда обращаться снова. Успех в этой сцене — ты понимаешь назначение и следующие шаги."
+  },
+  {
+   "id": "01M1KJ0BCMYNDM07CSHZYG9CH0",
+   "index": 4,
+   "kind": "final",
+   "title": "Прогон перед событием",
+   "scheduled_on": "2026-09-08",
+   "collection_id": null,
+   "status": "pending",
+   "generation_attempts": 0,
+   "fail_reason": null,
+   "fail_code": null,
+   "term_budget": 0,
+   "outcome": [],
+   "checkpoints": [
+    "может назвать врача или сказать, что запись на ребёнка",
+    "может сказать, есть ли страховка, и какой это тип оплаты",
+    "может коротко сказать, что болит или что беспокоит",
+    "может сообщить, когда появились симптомы",
+    "может дать короткий ответ на прямой вопрос о состоянии",
+    "может повторить своими словами, что нужно дать ребёнку или сделать дома",
+    "может переспросить про частоту приёма",
+    "может задать вопрос про повторный приём или тревожные признаки"
+   ],
+   "topics": [],
+   "role": null,
+   "intro": ""
+  }
+ ]
+}

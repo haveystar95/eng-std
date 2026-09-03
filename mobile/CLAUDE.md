@@ -97,6 +97,24 @@ part of that answer. It reads ONE payload — `GET /home-plan`, cached into `syn
   (`collections_strip.dart`) which duplicated the Collections tab, and `computeHomeCta` — the home
   no longer picks one verb for the day, it states the day's composition.
 
+## Вход в план — «Вход v4» (наряд ENTRY-2)
+
+`features/plan/entry/` — по одному вопросу на экран, лента прошлых ответов с «Изм.» сверху.
+Направление Б (три шага одной карточкой, `plan_builder_screen.dart`) **удалено**, не спрятано за
+флагом: два входа в одну и ту же вещь — это два места, где чинить один баг.
+
+Одно правило серии расходится с остальным приложением и расходится сознательно: **главное действие
+входа — терракотовое** (`EntryCta` в `entry/entry_ui.dart`), а не чернильное, как везде ещё
+(`PrimaryButton`). Так говорит и токен-лист (правило 23: «главное действие экрана остаётся
+терракотовым даже внутри плана»), и каждый кадр серии. Флага на общей кнопке нет специально: он
+разнёс бы это решение на всё приложение, чего токен-лист не говорит. Терракота живёт во входе и в
+превью плана; экран дня и дальше — DAY-2, там ничего не трогалось.
+
+Шаг слуха необязателен на обеих сторонах: сервер отвечает пустым списком, когда разогрев не
+написался, и тогда шаг **молча не предлагается** — ни ошибки, ни повтора, ни строки о том, что
+что-то не вышло. Точки прогресса при этом остаются четырьмя: дорога не стала короче оттого, что
+одна остановка закрыта.
+
 ## Design
 
 **«Слова» — paper/ink.** A light, typographic look: paper ground, ink type, hairline rules; no
@@ -185,14 +203,18 @@ on the training home (now shows word counts), and AI open-answer check.
 
 `flutter analyze` must be clean. `flutter test` runs the widget + unit tests.
 
-For visual checks there are two harnesses under `tool/` (both outside `lib/`, so their Russian
+For visual checks there are three harnesses under `tool/` (all outside `lib/`, so their Russian
 sample copy is exempt from the cyrillic guard):
 
 - `tool/preview.dart` — the app's own screens with mock providers.
 - `tool/ladder_preview.dart` — the acquisition-ladder surfaces (кадры 16b/16d/16e): the intro card,
   the word row's five dots, the expanded word card.
+- `tool/entry_preview.dart` — ВХОД В ПЛАН, серия «Вход v4» целиком (кадры V4·01…06б), без сервера и
+  без логина. Данные в `tool/entry_preview_data.dart` — живые ответы модели из наряда ENTRY-2
+  (`../backend2/docs/research/entry-2-run.md`), а не выдумка, поэтому харнесс показывает то, что
+  человек действительно увидит. Им же снят скрин-путь в `docs/shots/entry2/`.
 
-Both run on the **iOS simulator** (runtimes 26.5 and 27.0 ARE installed — the old note claiming
+All three run on the **iOS simulator** (runtimes 26.5 and 27.0 ARE installed — the old note claiming
 otherwise was stale), or in Chrome:
 
 ```bash

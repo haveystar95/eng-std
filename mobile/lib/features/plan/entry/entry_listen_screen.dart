@@ -293,6 +293,8 @@ class _EntryListenScreenState extends State<EntryListenScreen> {
           step: widget.lines.length,
           steps: widget.lines.length,
           dotsAllDone: true,
+          // No back and no «Хватит» on the verdict: the step is lived through, and the only thing
+          // left to do is «Дальше». With the row empty the dots centre themselves (кадр V4·03в).
         ),
         Expanded(
           child: ListView(

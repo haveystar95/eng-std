@@ -3570,7 +3570,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planPreviewKicker => 'Твой план готов';
 
   @override
-  String planPreviewSubtitle(String summary, int scenes) {
+  String planPreviewSubtitle(int scenes) {
     String _temp0 = intl.Intl.pluralLogic(
       scenes,
       locale: localeName,
@@ -3579,11 +3579,11 @@ class AppLocalizationsRu extends AppLocalizations {
       few: '$scenes сцены',
       one: '$scenes сцена',
     );
-    return '$summary — по твоим словам собрано $_temp0.';
+    return 'По твоим словам собрано $_temp0.';
   }
 
   @override
-  String planPreviewSubtitleNoDate(String summary, int scenes) {
+  String planPreviewSubtitleNoDate(int scenes) {
     String _temp0 = intl.Intl.pluralLogic(
       scenes,
       locale: localeName,
@@ -3592,7 +3592,7 @@ class AppLocalizationsRu extends AppLocalizations {
       few: '$scenes сцены',
       one: '$scenes сцена',
     );
-    return '$summary — по твоим словам собрано $_temp0. Даты нет, идём в своём темпе.';
+    return 'По твоим словам собрано $_temp0. Даты нет, идём в своём темпе.';
   }
 
   @override
