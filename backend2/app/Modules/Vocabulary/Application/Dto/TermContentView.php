@@ -104,5 +104,16 @@ final readonly class TermContentView
          * every reader gets the same answer to «may this card be asked of the learner at all».
          */
         public ?string $tier = null,
+        /**
+         * «ПОЧЕМУ Я ЭТО УЧУ», as an id — the scene skill this card serves (канон §8), or null
+         * outside a plan.
+         *
+         * Written when the day was generated and checked by a gate, so it is the one string that
+         * reliably points from a card to the ability it is there for. It has two readers now: the
+         * gate that refuses a card naming an ability the scene does not have, and the SITUATIONAL
+         * card, which finds a card's paired role line by matching this
+         * ({@see \App\Modules\Learning\Domain\Service\SituationalPrompt}).
+         */
+        public ?string $skillRef = null,
     ) {}
 }

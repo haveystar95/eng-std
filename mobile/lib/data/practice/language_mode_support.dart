@@ -42,6 +42,14 @@ abstract final class LanguageModeSupport {
     ExerciseMode.pickCorrect,
     ExerciseMode.speaking,
     ExerciseMode.descriptionMatch,
+    // The scene's situational cards. Nothing in them is language-specific beyond what every other
+    // trainer needs — a line to play, options to tap — so every taught language carries them and
+    // neither reference one does. They are dealt in a plan session and nowhere else, so this table
+    // never actually gates one; the row exists because the registry must match the server's, and a
+    // parity test says so out loud.
+    ExerciseMode.situationalHear,
+    ExerciseMode.situationalSay,
+    ExerciseMode.situationalAsk,
   ];
 
   /// Language → what it cannot carry, and what it carries only with a network. A language ABSENT

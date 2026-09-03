@@ -143,5 +143,30 @@ final readonly class PlanSessionTaskView
          * the whole of Д-8 seen from the other side.
          */
         public ?string $tier = null,
+        /**
+         * THE POSITION — «Хозяин спросил про залог» — on a situational card and null everywhere else.
+         *
+         * The shape is {@see \App\Modules\Learning\Domain\ValueObject\SituationalSituation}: a
+         * `source`, a `context` on the support language, and then either the role's own line (played
+         * aloud, on the language being learned) or the ability this card serves. The client draws
+         * the labels around it — «Ситуация», «Задача», «Сейчас услышите» — because the wording is
+         * the client's and there are two languages of it, exactly as for `origin` and `speaker`.
+         *
+         * What is NOT in it, on any path, is the translation of the card's own answer: the situation
+         * is a position, not a gloss (канон §13), and building it out of the day rather than out of
+         * the term is what makes that true by construction.
+         *
+         * @var array<string, mixed>|null
+         */
+        public ?array $situation = null,
+        /**
+         * The learner SAYS the option they tapped, right after tapping it — «Ты ответишь» and «Ты
+         * спросишь», and nothing else.
+         *
+         * Reinforcement, not a second answer: nothing about it is graded, uploaded or scheduled
+         * ({@see \App\Modules\Learning\Domain\ValueObject\ExerciseMode::speaksAfterChoice()}).
+         * The key to say is on the card as `speaking_key`, the same key the speaking trainer reads.
+         */
+        public bool $speaksAfterChoice = false,
     ) {}
 }

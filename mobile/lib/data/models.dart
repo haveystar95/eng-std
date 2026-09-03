@@ -300,7 +300,33 @@ enum ExerciseMode {
   /// every other trainer and what keeps «which card next» a single question. What makes it different
   /// is one thing, [isGraded]: it produces no answer, so no verdict, and nothing reaches the review
   /// queue — it writes an EXPOSURE instead.
-  intro('intro');
+  intro('intro'),
+
+  /// THE SITUATIONAL CARD — one mechanic, three shelves, and the whole of stage B of a scene.
+  ///
+  /// Everything above asks a question about a WORD. These ask a question about a MOMENT: «Хозяин
+  /// спросил про залог. Скажи, что тебя устраивает» — the position on the learner's own language,
+  /// the options on the one being learned, a tap. The situation itself is not on the card: it is
+  /// assembled by the server out of the DAY and rides on the plan's envelope
+  /// ([PlanSessionEnvelope.situationAt]), because only the day holds the scene it comes from.
+  ///
+  /// They are dealt in a PLAN SESSION and nowhere else — an ordinary session has no scene, so there
+  /// is nothing honest for them to ask there. A build that meets one outside a plan draws it as an
+  /// ordinary choice card, which is exactly what it is minus the position.
+  ///
+  /// [situationalHear] is «Что скажут»: the interlocutor's line is PLAYED, with no text until the
+  /// learner asks for it, and the options are meanings in their own language. Its correct option is
+  /// therefore a translation, so — like the rung-1 recognition card and for the same reason — it is
+  /// graded by the tapped option's ID and never as text.
+  situationalHear('situational_hear'),
+
+  /// «Ты ответишь»: the situation, the learner's own possible replies, the tap, and then saying the
+  /// chosen line out loud. The SPOKEN half is reinforcement — nothing about it is graded, uploaded
+  /// or scheduled (owner's ruling, наряд SIT-1); the answer this card asks for is the CHOICE.
+  situationalSay('situational_say'),
+
+  /// «Ты спросишь» — the same mechanic for the questions that buy time and detail.
+  situationalAsk('situational_ask');
 
   const ExerciseMode(this.wire);
   final String wire;
@@ -321,6 +347,27 @@ enum ExerciseMode {
 
   /// Modes that assemble the answer from given tiles rather than picking or typing it.
   bool get isAssembled => this == wordBank || this == scramble;
+
+  /// The three cards of the situational mechanic — one question about a moment, on three shelves.
+  bool get isSituational =>
+      this == situationalHear || this == situationalSay || this == situationalAsk;
+
+  /// Is this card graded by the ID of the tapped option rather than by its text?
+  ///
+  /// True for [situationalHear] alone, and for the reason the rung-1 recognition card is graded that
+  /// way: its correct option is a TRANSLATION, and no translation ever enters a text answer key. The
+  /// client uploads the tapped option's term id — [SessionCard.optionIds] — and the server compares
+  /// ids. Mirrors the server's `ExerciseMode::gradesByOptionId()`.
+  bool get gradesByOptionId => this == situationalHear;
+
+  /// Does the learner SAY the option they tapped, right after tapping it?
+  ///
+  /// The two speak shelves, never [situationalHear] — the понимаю tier is never produced. What
+  /// follows the tap is говорение по ключу and it writes nothing, so this changes what is DRAWN and
+  /// nothing about the review queue. The server says it per task
+  /// ([PlanSessionEnvelope.speaksAfterChoiceAt]); this is the same fact read off the mode, for a
+  /// card met outside a plan envelope.
+  bool get speaksAfterChoice => this == situationalSay || this == situationalAsk;
 
   /// Modes whose content is heard, not read: the card plays on appearance and offers a replay.
   bool get isHeard => this == listening || this == dictation;
@@ -614,6 +661,74 @@ class StudySession {
   });
 }
 
+/// THE POSITION A SITUATIONAL CARD PUTS THE LEARNER IN — assembled by the SERVER out of the day.
+///
+/// «Подсказка — ситуация, не слово» (канон §13). The server owns the facts because only the day
+/// holds them — the scene's вводка, its role lines, its abilities — and the WORDING is the client's,
+/// in two languages, exactly as it is for [PlanTaskOrigin]. So this carries pieces, not a sentence,
+/// and the labels («Ситуация», «Задача», «Сейчас услышите») are drawn on the device.
+///
+/// What it never carries, on any path, is a translation of the card's own answer: a prompt that
+/// glosses the right option turns stage B back into a translation exercise.
+class PlanSituation {
+  const PlanSituation({required this.source, this.context, this.task, this.roleLine, this.roleLineTermId});
+
+  /// The paired role line was found — the learner sees what was just said to them.
+  static const sourceRoleLine = 'role_line';
+
+  /// No paired role line on this day: the card names the ABILITY it serves instead (канон §8).
+  static const sourceSkill = 'skill';
+
+  /// «Тебе скажут»: what is about to be heard, named by the scene it happens in.
+  static const sourceScene = 'scene';
+
+  /// One of the three constants above — read as an OPEN set: a source this build has never heard of
+  /// still draws whatever pieces came with it.
+  final String source;
+
+  /// WHERE this is happening, on the support language: the first sentence of the scene's вводка for
+  /// a speak shelf, the scene's own name for a hear one.
+  final String? context;
+
+  /// WHAT the learner is there to do — the scene ability's own outcome. Only on [sourceSkill].
+  final String? task;
+
+  /// WHAT WAS JUST SAID TO THEM, on the language being learned and played aloud. Only on
+  /// [sourceRoleLine].
+  final String? roleLine;
+
+  /// The term that line IS, so the card can speak it like any other.
+  final String? roleLineTermId;
+
+  bool get isEmpty =>
+      (context ?? '').trim().isEmpty &&
+      (task ?? '').trim().isEmpty &&
+      (roleLine ?? '').trim().isEmpty;
+
+  static PlanSituation? fromJson(Map<String, dynamic>? j) {
+    if (j == null) return null;
+    final situation = PlanSituation(
+      source: (j['source'] as String?) ?? sourceSkill,
+      context: j['context'] as String?,
+      task: j['task'] as String?,
+      roleLine: j['role_line'] as String?,
+      roleLineTermId: j['role_line_term_id'] as String?,
+    );
+
+    // A situation with nothing in it is not a thinner situation, it is none: the card then draws the
+    // options alone rather than an empty plaque with a caption over it.
+    return situation.isEmpty ? null : situation;
+  }
+
+  Map<String, dynamic> toJson() => {
+    'source': source,
+    'context': context,
+    'task': task,
+    'role_line': roleLine,
+    'role_line_term_id': roleLineTermId,
+  };
+}
+
 /// What a study session is when it belongs to a plan — see [StudySession.plan].
 ///
 /// An interface rather than the concrete `PlanSession`: the plan models import this file for
@@ -695,6 +810,21 @@ abstract interface class PlanSessionEnvelope {
   /// nor a revision of an earlier day, it is the same five cards on day 1 and on day 9, and the
   /// day's «N из N» must not move because the kit came back.
   bool isWarmupAt(int i);
+
+  /// ПРИСЕСТЫ — the task counts of each sitting, in order, adding up to the number of cards.
+  ///
+  /// The learner's chosen minutes are the length of ONE sitting, not a limit on the day: the whole
+  /// day is dealt and this says where it is honest to stop, always on a section boundary. Empty on a
+  /// payload from a server that predates it — and then the day is played as one long session, which
+  /// is what it was.
+  List<int> get sittings;
+
+  /// The POSITION the card at [i] puts the learner in — on a situational card, null on every other.
+  PlanSituation? situationAt(int i);
+
+  /// The learner says the option they tapped out loud after tapping it — «Ты ответишь» / «Ты
+  /// спросишь». Reinforcement: nothing about it is graded or uploaded.
+  bool speaksAfterChoiceAt(int i);
 
   /// The card at [i] is one the learner is only ever asked to RECOGNISE — never to produce.
   ///

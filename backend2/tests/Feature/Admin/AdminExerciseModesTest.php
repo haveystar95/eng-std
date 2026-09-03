@@ -107,7 +107,11 @@ it('refuses to leave the product default empty — there is nothing to inherit f
 
     // One row per (scope, mode) since the admission matrix moved into this table.
     expect(DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->count())
-        ->toBe(count(\App\Modules\Learning\Domain\ValueObject\ExerciseMode::cases()));
+        ->toBe(count(array_filter(
+            \App\Modules\Learning\Domain\ValueObject\ExerciseMode::cases(),
+            // Plan-only trainers have no global row — see AdminModeSettingsTest for the whole of it.
+            static fn (\App\Modules\Learning\Domain\ValueObject\ExerciseMode $m): bool => ! $m->isSituational(),
+        )));
 });
 
 it('rejects an unknown mode, naming the offending entry', function () {

@@ -51,6 +51,11 @@ final class PlanSessionResource extends JsonResource
             // ordinary queue. A client counts «день пройден» out of THIS number — counting out of
             // `tasks` is how a day of fourteen was announced as twenty-one.
             'day_task_count' => $view->dayTaskCount,
+            // ПРИСЕСТЫ: the task counts of each sitting, in order, adding up to `count(tasks)`.
+            // The learner's minutes are the length of one sitting, not a limit on the day, and the
+            // breaks fall only on section boundaries. A client that ignores this plays the day as
+            // one long session — which is what it did before.
+            'sittings' => $view->sittings,
             'tasks' => array_map(static fn (PlanSessionTaskView $task): array => [
                 'stage' => $task->stage,
                 // `warmup` | `day` | `review` — which seam this task sits under. Said once here so
@@ -81,6 +86,10 @@ final class PlanSessionResource extends JsonResource
                 // session exactly as it does today.
                 'shelf' => $task->shelf,
                 'tier' => $task->tier,
+                // THE POSITION a situational card puts the learner in, and whether they say the
+                // line they tapped afterwards. Null / false on every other trainer.
+                'situation' => $task->situation,
+                'speaks_after_choice' => $task->speaksAfterChoice,
                 'knobs_applied' => $task->knobsApplied,
                 'knobs_ignored' => $task->knobsIgnored,
                 'card' => self::card($task),

@@ -18,7 +18,8 @@ import '../../data/models.dart';
 import '../../data/perf_log.dart';
 // For the shelf names alone — the session plays a plan's cards through the envelope in
 // `models.dart` and knows nothing else about a plan.
-import '../../data/plan_models.dart' show PlanTermRow;
+import '../../data/plan_models.dart' show PlanSession, PlanTermRow;
+import '../../data/plan_sitting_store.dart';
 import '../../data/practice/recognition_replay.dart';
 import '../../data/providers.dart';
 import '../home/home_providers.dart';
@@ -28,6 +29,7 @@ import '../plan/plan_ui.dart';
 import 'session/intro_card.dart';
 import 'session/session_exercise.dart';
 import 'session/session_grading.dart';
+import 'session/sitting_queue.dart';
 import 'triage_swipe.dart';
 
 /// One exercise session (кадры 12a–12k): due then new cards from `/study/sessions`, one card per
@@ -273,14 +275,29 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
   List<SessionCard> get _cards => widget.session.cards;
 
+  /// THE RUNNING ORDER of this sitting — where the next card is, and where the breaks fall.
+  ///
+  /// Everything about it lives in [SittingQueue]: a card answered wrong comes back once at the end
+  /// of its own присест (Ч-5), and the boundaries the server cut move with that tail (Ч-6). Kept out
+  /// of this shell because it is arithmetic, and this shell is a screen with a speech engine and an
+  /// image cache in it.
+  late SittingQueue _queue;
+
+  /// True while the learner is between two присесты — the minimal service screen.
+  bool _betweenSittings = false;
+
+  /// The card index being played at the current position — the ORDER's, before the replay resolves
+  /// which rung of it to deal.
+  int get _slot => _queue.cardAt(_pos);
+
   /// A recognition slot is played at the pair's CURRENT rung, so a failed rung 1 is replayed rather
   /// than followed by rung 2 (QA-9). Resolved at DISPLAY time, which is the only moment that knows
   /// how the earlier cards went — the session itself was dealt before any of them were answered.
   late final RecognitionReplay _replay = RecognitionReplay(_cards, enabled: !widget.practice);
 
-  /// The index actually being played at the current position — [_pos] unless the slot is replaying
-  /// a rung the learner has not passed yet.
-  int get _playing => _replay.resolve(_pos);
+  /// The index actually being played at the current position — [_slot] unless it is replaying a
+  /// rung the learner has not passed yet.
+  int get _playing => _replay.resolve(_slot);
   SessionCard get _card => _cards[_playing];
 
   @override
@@ -300,6 +317,48 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       _prepareCard(2);
     });
     unawaited(_resolvePairs());
+    _queue = SittingQueue.of(
+      cards: _cards.length,
+      sittings: widget.session.plan?.sittings ?? const [],
+    );
+    unawaited(_restoreSitting());
+  }
+
+  /// PICK THE SITTING BACK UP where it was left (Ч-6).
+  ///
+  /// The session itself has already been restored from the stored payload by the provider — this is
+  /// the other half, the running ORDER, which is the only part of a присест the payload cannot
+  /// carry: the tail a wrong answer added, the boundaries that moved with it, and the card that is
+  /// next.
+  ///
+  /// Refused rather than half-applied when the stored order does not fit the session in hand: an
+  /// index past the end of the cards would open a sitting on a card that is not there, and starting
+  /// the day over is a far smaller loss than that.
+  Future<void> _restoreSitting() async {
+    final plan = widget.session.plan;
+    if (plan == null || widget.practice || !plan.strict) return;
+
+    final saved = await ref
+        .read(planSittingStoreProvider)
+        .restore(planId: plan.planId, dayIndex: plan.dayIndex);
+    if (saved == null || !mounted) return;
+    final resumed = SittingQueue.resume(
+      cards: _cards.length,
+      order: saved.order,
+      ends: saved.sittingEnds,
+      requeued: saved.requeued,
+    );
+    if (resumed == null) return;
+
+    setState(() {
+      _queue = resumed;
+      _pos = saved.position.clamp(0, resumed.length - 1);
+      _answered = false;
+      // A resumed sitting opens ON its next card, never on the «Присест N пройден» plaque: the
+      // learner already chose to continue by coming back.
+      _betweenSittings = false;
+    });
+    _prepareCard(_pos);
   }
 
   /// WHICH PAIR each card belongs to — «EN→RU» over the card, resolved from the local mirror.
@@ -432,10 +491,67 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // Move the session's own view of the ladder. A failed recognition leaves the pair where it is,
     // which is what makes the term's next slot replay this rung instead of dealing the next one.
     _replay.record(played, accepted: a.verdict.isAccepted);
+    _requeueIfMissed(a.verdict);
     // Reveal the pinned «Дальше» bar. It lives OUTSIDE the scroll view, so it stays reachable no
     // matter how tall the feedback grows (the photo loads async and kept pushing an in-scroll
     // button below the fold — device-batch F9).
     setState(() => _answered = true);
+  }
+
+  /// A CARD ANSWERED WRONG COMES BACK ONCE, at the end of the присест it was in (наряд SIT-1, Ч-5).
+  ///
+  /// «В конец очереди ТЕКУЩЕЙ посадки», and every word of that is load-bearing. Not immediately —
+  /// re-showing a card the learner just got wrong tests the last twenty seconds and nothing else.
+  /// Not tomorrow only — a slip they never revisit is a slip that had a whole evening to set. Once —
+  /// the second miss belongs to the server: tomorrow's warm-up carries it (Ч-4) and the day's next
+  /// visit re-owes its checklist step.
+  ///
+  /// The PROGRESS BAR does not roll back, and that falls out of doing it this way: the position
+  /// stands still and the order grows, so what was passed stays passed and the tail simply gets
+  /// longer. Rewinding the position would have been the other way to «play it again», and it would
+  /// have told the learner they had un-done work they actually did.
+  ///
+  /// Plan sittings only, and strict ones only: free practice schedules nothing and a soft run of a
+  /// day opened out of turn is a read-through, so in neither is there a mistake to make good.
+  void _requeueIfMissed(LocalCheck verdict) {
+    final plan = widget.session.plan;
+    if (plan == null || widget.practice || !plan.strict) return;
+    if (verdict.isAccepted) return;
+    _queue.requeue(_pos);
+  }
+
+  /// WRITE DOWN WHERE WE ARE — after every move, so a kill costs nothing (Ч-6).
+  ///
+  /// The answers are already durable (the review queue owns them); what only this shell knows is the
+  /// ORDER — which cards were sent to the tail, where the присест boundaries moved to, and which
+  /// card is next. That is what is stored, beside the payload the sitting was dealt from, so
+  /// «продолжить» resumes the sitting instead of asking the server to deal the day again.
+  void _rememberPosition() {
+    final plan = widget.session.plan;
+    if (plan == null || widget.practice || !plan.strict || plan is! PlanSession) return;
+
+    unawaited(
+      ref
+          .read(planSittingStoreProvider)
+          .save(
+            PlanSittingState(
+              planId: plan.planId,
+              dayIndex: plan.dayIndex,
+              payload: plan.raw,
+              order: _queue.order,
+              sittingEnds: _queue.ends,
+              position: _pos,
+              requeued: _queue.requeued,
+            ),
+          ),
+    );
+  }
+
+  /// The day is over — the stored position goes with it, or the next visit would resume a sitting
+  /// that has already been finished and closed.
+  void _forgetPosition() {
+    if (widget.session.plan == null) return;
+    unawaited(ref.read(planSittingStoreProvider).clear());
   }
 
   /// A speaking card the MICROPHONE lost — «Пропустить» after a few failed attempts.
@@ -500,14 +616,26 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // «Дальше» bar, a microphone skip, an intro's «Понятно» — because all of them funnel through
     // this one method, including the last card's jump to the summary.
     unawaited(_pronouncer.stop());
-    if (_pos + 1 >= _cards.length) {
+    if (_pos + 1 >= _queue.length) {
       _closeRun();
+      _forgetPosition();
       setState(() => _finished = true);
+    } else if (_queue.breaksAfter(_pos)) {
+      // THE END OF A ПРИСЕСТ, and not of the day. The position moves — the card just answered is
+      // behind us — and the learner is handed the service screen rather than the next section, so
+      // stopping here is a decision they make instead of a thing that happens to them.
+      setState(() {
+        _pos++;
+        _answered = false;
+        _betweenSittings = true;
+      });
+      _rememberPosition();
     } else {
       setState(() {
         _pos++;
         _answered = false;
       });
+      _rememberPosition();
       // Release the photo of a card three back: it is off-screen, out of the outgoing animation,
       // and nothing can navigate to it again. Keeps the session's decoded-image footprint flat
       // instead of climbing pass after pass within one app launch (F20-r).
@@ -515,6 +643,54 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       // New card starts at the top (the previous one may have been scrolled to its feedback).
       if (_scroll.hasClients) _scroll.jumpTo(0);
     }
+  }
+
+  /// THE BAR OF A PLAN SITTING, in the shape кадр 6b fixes it: two groups, and the day divided.
+  ///
+  /// The WARM-UP is its own group in brass — it is the same five-plus-five cards every morning and
+  /// it is not the day, so counting it into «День N/M» would make the day look longer than it is on
+  /// exactly the mornings that were hardest. The DAY is one group with a division per section, each
+  /// division as wide as the number of cards in it, so a glance answers «сколько осталось» and «что
+  /// дальше» at once.
+  ///
+  /// Read off the ORDER rather than off the payload: a card sent to the tail (Ч-5) belongs to the
+  /// section it was in, so its own division grows and every other one stays exactly where it was —
+  /// which is «пройденное не сгорает», drawn.
+  _PlanProgress _planProgress() {
+    final plan = widget.session.plan;
+    final segments = <_ProgressSegment>[];
+    var warmupTotal = 0;
+    var warmupDone = 0;
+    String? group;
+
+    for (var at = 0; at < _queue.length; at++) {
+      final card = _queue.cardAt(at);
+      final done = at < _pos;
+      if (plan!.isWarmupAt(card)) {
+        warmupTotal++;
+        if (done) warmupDone++;
+
+        continue;
+      }
+
+      final key = planSeamGroupOf(plan, card);
+      if (segments.isEmpty || group != key) {
+        segments.add(_ProgressSegment(key: key));
+        group = key;
+      }
+      final segment = segments.last;
+      segment.total++;
+      if (done) segment.done++;
+    }
+
+    return _PlanProgress(
+      warmupTotal: warmupTotal,
+      warmupDone: warmupDone,
+      segments: segments,
+      // «День 11/22» counts the day's own cards — the warm-up is beside it, never inside it.
+      dayDone: segments.fold(0, (sum, s) => sum + s.done),
+      dayTotal: segments.fold(0, (sum, s) => sum + s.total),
+    );
   }
 
   Future<bool> _confirmExit() async {
@@ -545,6 +721,18 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final l = AppLocalizations.of(context);
 
     final plan = widget.session.plan;
+
+    // BETWEEN TWO ПРИСЕСТЫ — the minimal service screen (Ч-6). Deliberately служебный: «красота —
+    // DAY-2», and a milestone screen here would compete with the one the day itself ends on.
+    if (_betweenSittings && plan != null) {
+      return _SittingBreak(
+        sitting: _queue.sittingAt(_pos - 1),
+        sittings: _queue.sittings,
+        remaining: _queue.length - _pos,
+        onContinue: () => setState(() => _betweenSittings = false),
+        onStop: () => Navigator.of(context).pop(),
+      );
+    }
 
     if (_finished) {
       // THE RUN-THROUGH ENDS THE PLAN, not a day (Д-27). The final day teaches nothing new — it is
@@ -584,7 +772,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       );
     }
 
-    final total = _cards.length;
+    // THE ORDER, not the deck: a card sent to the tail lengthens the sitting, and the counter has to
+    // say so or «5 из 27» would stay 27 while there are 28 cards left to play.
+    final total = _queue.length;
     final phaseLabel = widget.practice
         ? l.sessionPhasePractice
         // The RUNG's own name wherever the card has one — the same five words the word card, the
@@ -652,6 +842,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             photoUrl: _photoUrl[_pos],
             photoResolved: _photoUrl.containsKey(_pos),
             showDue: !widget.practice,
+            // THE POSITION and the spoken half — both facts about the DAY, so both come off the
+            // plan's envelope and are null/false on every ordinary card.
+            situation: plan?.situationAt(_playing),
+            speaksAfterChoice: plan?.speaksAfterChoiceAt(_playing) ?? false,
             // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's
             // deferred speak/focus is cancelled instead of firing on the next card.
             isCurrent: () => mounted && _pos == builtAt,
@@ -674,6 +868,17 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 14, AppSpacing.screenH, 0),
               child: _SessionHeader(
                 phaseLabel: phaseLabel,
+                // THE PROGRESS OF A PLAN SITTING IS TWO GROUPS (кадр 6b): the warm-up in brass, and
+                // the day with a division per section. Widths are proportional to the number of
+                // cards, so the bar does not lie about how much is left — and the seam says what is
+                // coming rather than only how far along we are.
+                planProgress: plan == null
+                    ? null
+                    : _planProgress(),
+                // «A» / «B» — the rung, in brass, in the corner (кадр 6b). It is a mark for oneself
+                // and not a grade, so it is never explained: the stage's meaning is on the day
+                // screen, and repeating it over every card would be a legend nobody reads twice.
+                stageBadge: plan?.stageLetterAt(_playing),
                 // The plan's brass mark REPLACES the phase word in the header (кадр 1c · 03): the
                 // rung's own name moves down to the caption over the task, where it can be said in
                 // full beside the stage. Two labels competing for the one centred slot is how a
@@ -854,7 +1059,16 @@ class _SessionHeader extends StatelessWidget {
     required this.onClose,
     this.pair,
     this.planBadge,
+    this.planProgress,
+    this.stageBadge,
   });
+
+  /// The two-group bar of a plan sitting (кадр 6b), or null in an ordinary session — which keeps the
+  /// one-line [SessionSegments] it has always had.
+  final _PlanProgress? planProgress;
+
+  /// «A» / «B» — the rung, in brass, in the header's right corner. A mark for oneself, not a grade.
+  final String? stageBadge;
 
   /// «План · День 2» — the brass pill a plan session wears instead of the phase word.
   final String? planBadge;
@@ -890,7 +1104,28 @@ class _SessionHeader extends StatelessWidget {
             ),
             Expanded(
               child: planBadge != null
-                  ? Center(child: PlanPill(planBadge!))
+                  // «План · День 2 · 5 из 27» — the day AND the counter, in the centre, because the
+                  // right corner is the STAGE's since кадр 6b. Shrunk to fit rather than wrapped:
+                  // the counter went to two lines the moment the denominator went double-digit
+                  // (QA-OBS-28), and one line that gets a little smaller is the lesser evil.
+                  ? Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            PlanPill(planBadge!),
+                            const SizedBox(width: AppSpacing.s8),
+                            Text(
+                              l.triageCounter(current, total),
+                              maxLines: 1,
+                              softWrap: false,
+                              style: AppTextExercise.sessionHeader,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
                   : Text(
                       phaseLabel,
                       textAlign: TextAlign.center,
@@ -902,13 +1137,21 @@ class _SessionHeader extends StatelessWidget {
             // 44pt floor is still there to balance the × on the left when the counter is short.
             ConstrainedBox(
               constraints: const BoxConstraints(minWidth: AppSpacing.minTap),
-              child: Text(
-                l.triageCounter(current, total),
-                maxLines: 1,
-                softWrap: false,
-                textAlign: TextAlign.right,
-                style: AppTextExercise.sessionHeader,
-              ),
+              // THE RUNG, in brass, in the corner the eye reaches last (кадр 6b) — a mark for
+              // oneself, never explained. A plan card that has no stage (the warm-up's light touch,
+              // a soft run) leaves the corner empty rather than borrowing the counter back: the
+              // counter has moved, and two homes for one number is how they drift apart.
+              child: stageBadge != null
+                  ? Align(alignment: Alignment.centerRight, child: _StagePill(stageBadge!))
+                  : planBadge != null
+                  ? const SizedBox.shrink()
+                  : Text(
+                      l.triageCounter(current, total),
+                      maxLines: 1,
+                      softWrap: false,
+                      textAlign: TextAlign.right,
+                      style: AppTextExercise.sessionHeader,
+                    ),
             ),
           ],
         ),
@@ -921,8 +1164,216 @@ class _SessionHeader extends StatelessWidget {
           Center(child: PairBadge(learned: p.learned, support: p.support)),
         ],
         const SizedBox(height: 10),
-        SessionSegments(done: current - 1, total: total),
+        if (planProgress case final progress?)
+          _PlanProgressBar(progress: progress)
+        else
+          SessionSegments(done: current - 1, total: total),
       ],
+    );
+  }
+}
+
+/// «A» / «B» — the rung, latunью, bordered, and never explained (кадр 6b).
+class _StagePill extends StatelessWidget {
+  const _StagePill(this.letter);
+
+  final String letter;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+    decoration: BoxDecoration(
+      border: Border.all(color: AppColors.brassInk.withValues(alpha: .38)),
+      borderRadius: BorderRadius.circular(5),
+    ),
+    child: Text(
+      letter.toUpperCase(),
+      style: AppText.blockLabel.copyWith(color: AppColors.brassInk, letterSpacing: .4),
+    ),
+  );
+}
+
+/// One section of the day inside the bar — how many cards it holds and how many are behind us.
+class _ProgressSegment {
+  _ProgressSegment({required this.key});
+
+  final String key;
+  int total = 0;
+  int done = 0;
+}
+
+/// The two groups of a plan sitting's bar — see [_SessionShellState._planProgress].
+class _PlanProgress {
+  const _PlanProgress({
+    required this.warmupTotal,
+    required this.warmupDone,
+    required this.segments,
+    required this.dayDone,
+    required this.dayTotal,
+  });
+
+  final int warmupTotal, warmupDone, dayDone, dayTotal;
+  final List<_ProgressSegment> segments;
+}
+
+/// THE BAR (кадр 6b): «Разогрев 5/5» in brass, a hairline, then «День 11/22» divided by section.
+///
+/// The two groups are laid out in proportion to the number of cards they hold, and each section's
+/// division is as wide as its own share of the day — so the bar is a map of the sitting rather than
+/// a percentage. Nothing about it moves backwards: a card sent to the tail lengthens its own
+/// section and leaves every other one where it was.
+class _PlanProgressBar extends StatelessWidget {
+  const _PlanProgressBar({required this.progress});
+
+  final _PlanProgress progress;
+
+  static const _height = 5.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final hasWarmup = progress.warmupTotal > 0;
+    final hasDay = progress.dayTotal > 0;
+    if (!hasWarmup && !hasDay) return const SizedBox.shrink();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (hasWarmup)
+          Expanded(
+            flex: progress.warmupTotal,
+            child: _group(
+              label: l.planWarmupProgress(progress.warmupDone, progress.warmupTotal),
+              labelColor: AppColors.brassInk,
+              bars: [
+                for (var i = 0; i < progress.warmupTotal; i++)
+                  Expanded(
+                    child: _bar(filled: i < progress.warmupDone ? 1 : 0),
+                  ),
+              ],
+            ),
+          ),
+        if (hasWarmup && hasDay) ...[
+          const SizedBox(width: 9),
+          Container(width: 1, height: 16, color: AppColors.brassInk.withValues(alpha: .4)),
+          const SizedBox(width: 9),
+        ],
+        if (hasDay)
+          Expanded(
+            flex: progress.dayTotal,
+            child: _group(
+              label: l.planDayProgress(progress.dayDone, progress.dayTotal),
+              labelColor: AppColors.tertiary,
+              bars: [
+                for (final segment in progress.segments)
+                  Expanded(
+                    flex: segment.total,
+                    child: _bar(filled: segment.done / segment.total),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _group({
+    required String label,
+    required Color labelColor,
+    required List<Widget> bars,
+  }) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppText.blockLabel.copyWith(color: labelColor, fontSize: 10),
+      ),
+      const SizedBox(height: 5),
+      Row(children: [
+        for (var i = 0; i < bars.length; i++) ...[
+          bars[i],
+          if (i != bars.length - 1) const SizedBox(width: 2),
+        ],
+      ]),
+    ],
+  );
+
+  /// One division, filled left-to-right by how much of its own section is done.
+  Widget _bar({required double filled}) => ClipRRect(
+    borderRadius: BorderRadius.circular(2),
+    child: SizedBox(
+      height: _height,
+      child: Stack(
+        children: [
+          Positioned.fill(child: ColoredBox(color: AppColors.track)),
+          FractionallySizedBox(
+            widthFactor: filled.clamp(0, 1),
+            child: const ColoredBox(color: AppColors.brassInk),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// «ПРИСЕСТ N ПРОЙДЕН» — the service screen between two sittings (Ч-6).
+///
+/// Deliberately plain: «красота — DAY-2», and anything more here would compete with the milestone
+/// the DAY ends on. What it has to do is exactly two things — say that a stopping point has been
+/// reached, and make continuing and stopping equally easy, because the whole point of a присест is
+/// that leaving costs nothing.
+class _SittingBreak extends StatelessWidget {
+  const _SittingBreak({
+    required this.sitting,
+    required this.sittings,
+    required this.remaining,
+    required this.onContinue,
+    required this.onStop,
+  });
+
+  /// Zero-based index of the sitting just finished, and how many there are in the day.
+  final int sitting, sittings;
+
+  /// Cards left in the whole day — what «Продолжить · осталось 11» counts.
+  final int remaining;
+
+  final VoidCallback onContinue, onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenH,
+        AppSpacing.s26,
+        AppSpacing.screenH,
+        AppSpacing.s26,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l.planSittingDone(sitting, sittings).toUpperCase(),
+            textAlign: TextAlign.center,
+            style: AppText.blockLabel.copyWith(color: AppColors.brassInk, letterSpacing: 1.32),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          Text(
+            l.planSittingRemaining(remaining),
+            textAlign: TextAlign.center,
+            style: AppText.translation.copyWith(height: 1.5),
+          ),
+          const SizedBox(height: AppSpacing.s26),
+          PrimaryButton(label: l.planSittingContinue, onPressed: onContinue),
+          const SizedBox(height: AppSpacing.s12),
+          QuietButton(label: l.planSittingStop, onPressed: onStop),
+        ],
+      ),
     );
   }
 }
@@ -1470,6 +1921,8 @@ class _CenteredMessage extends StatelessWidget {
 ///
 /// A shelf this build has never heard of is returned as itself — it groups with its own kind and
 /// gets no caption below, which is the honest answer for a shelf whose name we do not know.
+String planSeamGroupOf(PlanSessionEnvelope plan, int i) => _planSeamGroup(plan, i);
+
 String _planSeamGroup(PlanSessionEnvelope plan, int i) {
   if (plan.isWarmupAt(i)) return PlanTermRow.shelfRescue;
   // Everything that is not today's own material is the revision, whatever shelf it came off

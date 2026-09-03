@@ -1432,6 +1432,65 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionListenReplay => 'Повторить озвучку';
 
   @override
+  String get sessionInstrSituationalHear => 'выбери, что он сказал';
+
+  @override
+  String get sessionInstrSituationalSay => 'выбери, что ответишь';
+
+  @override
+  String get sessionInstrSituationalAsk => 'выбери, что спросишь';
+
+  @override
+  String get sessionSituationLabel => 'Ситуация';
+
+  @override
+  String get sessionSituationHearLabel => 'Сейчас услышите';
+
+  @override
+  String get sessionSituationRevealText => 'Показать текст';
+
+  @override
+  String get sessionSituationSayAloud => 'Скажи вслух';
+
+  @override
+  String sessionSituationTask(String outcome) {
+    return 'Твоя задача — $outcome.';
+  }
+
+  @override
+  String planWarmupProgress(int done, int total) {
+    return 'Разогрев $done/$total';
+  }
+
+  @override
+  String planDayProgress(int done, int total) {
+    return 'День $done/$total';
+  }
+
+  @override
+  String planSittingDone(int n, int total) {
+    return 'Присест $n из $total пройден';
+  }
+
+  @override
+  String planSittingRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Осталось $count карточек дня.',
+      few: 'Осталось $count карточки дня.',
+      one: 'Осталась $count карточка дня.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planSittingContinue => 'Продолжить';
+
+  @override
+  String get planSittingStop => 'Хватит на сегодня';
+
+  @override
   String get sessionListenReplaySlow => 'Замедленно';
 
   @override

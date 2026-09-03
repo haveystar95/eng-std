@@ -1,4 +1,4 @@
-# plan_outline.v0.4 — каркас Learning Plan (P1)
+# plan_outline.v0.4.1 — каркас Learning Plan (P1)
 
 > **Боевой промпт.** Реестр: `docs/prompts/REGISTRY.md`, id **P1**. Рендерится
 > `PlanPromptLibrary`, вызывается `PlanOutlineService`, ответ судит `PlanOutlineValidator`.
@@ -23,6 +23,9 @@
 >    диагностике описано в теле и покрыто тестом.
 > 5. **Дни считает сервер, как и раньше**, но теперь по правилу «день = одна сцена целиком»
 >    (`PlanScheduler`), а не по вместимости 14 карточек.
+>
+> **v0.4.1 против v0.4 — одна правка архитектора (наряд SIT-1, Ч-0а):** `scenes[].title` — это
+> ИМЯ сцены, 2–4 слова, без двоеточия и без подзаголовка. Подробности живут во вводке.
 >
 > **Гейты (`PlanOutlineValidator`):** действующие сохраняются (число сцен и умений, `est_terms`,
 > «и» в `outcome`, чек-пойнт не копия обещания, язык поддержки, `opening_lines` 1–6), плюс
@@ -54,7 +57,7 @@ OUTPUT — one JSON object, nothing else:
   "scenes": [
     {
       "position": 1,
-      "title": "short scene name in {{support_lang}}",
+      "title": "short scene name in {{support_lang}}, 2–4 words, no colon and no subtitle — details belong to the intro",
       "intro": "2–3 sentences in {{support_lang}}",
       "skills": [
         {

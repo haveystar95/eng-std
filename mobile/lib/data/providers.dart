@@ -25,6 +25,7 @@ import 'practice/practice_mode_selector.dart';
 import 'models.dart';
 import 'plan_models.dart';
 import 'plan_notifications.dart';
+import 'plan_sitting_store.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
 import 'pool_sync.dart';
@@ -921,8 +922,34 @@ final planDayProvider = FutureProvider.family<PlanDayDetail, PlanDayArgs>((ref, 
 /// idempotent exactly as an ordinary session's is.
 typedef PlanSessionArgs = ({String planId, int? dayIndex, String sessionId});
 
+/// The store of the current присест — where the learner is inside a plan day, durably (SIT-1, Ч-6).
+final planSittingStoreProvider = Provider<PlanSittingStore>(
+  (ref) => PlanSittingStore(ref.watch(appDatabaseProvider)),
+);
+
+/// The stored присест for one plan day, or null when there is none to resume.
+final planSittingProvider = FutureProvider.family<PlanSittingState?, PlanDayArgs>((ref, args) {
+  return ref
+      .watch(planSittingStoreProvider)
+      .restore(planId: args.planId, dayIndex: args.dayIndex);
+});
+
 /// The cards of one plan day, wrapped so the ordinary session screen can play them unchanged.
+///
+/// A SITTING ALREADY IN PROGRESS IS NOT REBUILT. «Продолжить» after a break — or after the app was
+/// killed — has to resume the same cards in the same order, and asking the server again would deal
+/// the day afresh at whatever the ladder says by then: the answered cards gone from the checklist,
+/// the requeued ones not, and the tail of a sitting silently rewritten. So the stored payload wins
+/// whenever there is one for this day, and the network is asked only for a day that has not been
+/// opened yet ({@see PlanSittingStore}).
 final planSessionProvider = FutureProvider.family<StudySession, PlanSessionArgs>((ref, args) async {
+  final resumed = args.dayIndex == null
+      ? null
+      : await ref
+            .watch(planSittingStoreProvider)
+            .restore(planId: args.planId, dayIndex: args.dayIndex!);
+  if (resumed != null) return resumed.session.asStudySession();
+
   final session = await ref
       .watch(apiClientProvider)
       .buildPlanSession(

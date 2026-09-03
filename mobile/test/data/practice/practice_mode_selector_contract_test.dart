@@ -108,9 +108,13 @@ void main() {
       // Graded modes only, exactly as the fixture is generated. `intro` is applicable to every term
       // by construction (it asks for nothing, so no content can be missing) and is never dealt in
       // practice, so listing it would add a constant to both sides rather than a fact about a term.
+      // …and PLAN-ONLY trainers are out for the same reason `intro` is: the situational three are
+      // never dealt in free practice — there is no scene outside a plan day to situate them in —
+      // and their content gate is a constant `true`, so listing them would add noise to both sides
+      // rather than a fact about a term. The server's fixture leaves them out on the same rule.
       final supported = [
         for (final mode in ExerciseMode.values)
-          if (mode.isGraded && p.supports(mode)) mode.wire,
+          if (mode.isGraded && !mode.isSituational && p.supports(mode)) mode.wire,
       ];
 
       expect(

@@ -205,7 +205,15 @@ class TermPlayability {
     ExerciseMode.typing ||
     ExerciseMode.listening ||
     ExerciseMode.speaking ||
-    ExerciseMode.intro => true,
+    ExerciseMode.intro ||
+    // The three SITUATIONAL cards fit every term for the same reason multiple_choice does: what
+    // they ask for is the card's own line, and the POSITION above it is assembled by the server out
+    // of the plan day, never out of this term's content. They are never dealt in free practice
+    // anyway — there is no scene outside a plan for them to be about — so this arm exists to make
+    // the answer explicit rather than to open a path.
+    ExerciseMode.situationalHear ||
+    ExerciseMode.situationalSay ||
+    ExerciseMode.situationalAsk => true,
   };
 
   /// The given modes this term can be drilled in, order preserved.

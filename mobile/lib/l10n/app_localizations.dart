@@ -2301,6 +2301,90 @@ abstract class AppLocalizations {
   /// **'Повторить озвучку'**
   String get sessionListenReplay;
 
+  /// Инструкция «Тебе скажут» на ситуационной карточке (SIT-1): реплика звучит, варианты — смыслы на языке поддержки.
+  ///
+  /// In ru, this message translates to:
+  /// **'выбери, что он сказал'**
+  String get sessionInstrSituationalHear;
+
+  /// Инструкция «Ты ответишь» на ситуационной карточке (SIT-1, канон §4).
+  ///
+  /// In ru, this message translates to:
+  /// **'выбери, что ответишь'**
+  String get sessionInstrSituationalSay;
+
+  /// Инструкция «Ты спросишь» на ситуационной карточке (SIT-1, канон §4).
+  ///
+  /// In ru, this message translates to:
+  /// **'выбери, что спросишь'**
+  String get sessionInstrSituationalAsk;
+
+  /// Подпись над положением на ситуационной карточке (кадр D-04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ситуация'**
+  String get sessionSituationLabel;
+
+  /// Подпись над названием сцены на карточке «Тебе скажут» (кадр D-03).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сейчас услышите'**
+  String get sessionSituationHearLabel;
+
+  /// Кнопка под карточкой «Тебе скажут»: показывает реплику после ответа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать текст'**
+  String get sessionSituationRevealText;
+
+  /// Подпись над закреплением: выбранная реплика произносится вслух, ничего не оценивается.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи вслух'**
+  String get sessionSituationSayAloud;
+
+  /// Задача карточки, когда у дня нет парной реплики роли: умение сцены (канон §8).
+  ///
+  /// In ru, this message translates to:
+  /// **'Твоя задача — {outcome}.'**
+  String sessionSituationTask(String outcome);
+
+  /// Левая группа полосы прогресса посадки (кадр 6b): разогрев латунью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разогрев {done}/{total}'**
+  String planWarmupProgress(int done, int total);
+
+  /// Правая группа полосы прогресса посадки (кадр 6b): день с делениями по секциям.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {done}/{total}'**
+  String planDayProgress(int done, int total);
+
+  /// Служебный экран между присестами (SIT-1, Ч-6).
+  ///
+  /// In ru, this message translates to:
+  /// **'Присест {n} из {total} пройден'**
+  String planSittingDone(int n, int total);
+
+  /// Сколько карточек дня осталось после присеста.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Осталась {count} карточка дня.} few{Осталось {count} карточки дня.} other{Осталось {count} карточек дня.}}'**
+  String planSittingRemaining(int count);
+
+  /// Главное действие экрана между присестами.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить'**
+  String get planSittingContinue;
+
+  /// Уйти между присестами — позиция сохраняется, день продолжится с этого места.
+  ///
+  /// In ru, this message translates to:
+  /// **'Хватит на сегодня'**
+  String get planSittingStop;
+
   /// Кнопка замедленного повтора озвучки в аудировании (кадры 12g–12h).
   ///
   /// In ru, this message translates to:

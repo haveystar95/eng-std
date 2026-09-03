@@ -62,6 +62,12 @@ final class LanguageModeSupport
         'pick_correct',
         'speaking',
         'description_match',
+        // The scene's situational cards (наряд SIT-1). Nothing in them is language-specific beyond
+        // what every other trainer needs — a line to play, options to tap — so they are carried by
+        // every language this product teaches and by neither of the two reference ones.
+        'situational_hear',
+        'situational_say',
+        'situational_ask',
     ];
 
     /**

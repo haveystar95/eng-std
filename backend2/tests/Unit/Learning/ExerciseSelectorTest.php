@@ -470,7 +470,14 @@ it('practice_contract: the committed fixture still matches this selector', funct
                 static fn (ExerciseMode $m): string => $m->value,
                 array_filter(
                     ExerciseMode::cases(),
-                    static fn (ExerciseMode $m): bool => $m->isGraded() && $playable->supports($m),
+                    // Plan-only trainers are absent for the same reason `intro` is: this fixture
+                    // pins the FREE-PRACTICE ladder across the two runtimes, the situational cards
+                    // are never dealt there (no global rule, and no scene to situate them in), and
+                    // their content gate is a constant `true` — listing them would add noise to the
+                    // fixture rather than a fact about the term.
+                    static fn (ExerciseMode $m): bool => $m->isGraded()
+                        && ! $m->isSituational()
+                        && $playable->supports($m),
                 ),
             )),
             'rotation' => practiceRotation($case['term_id'], $case['card_index']),

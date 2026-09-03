@@ -62,14 +62,20 @@ final readonly class PlanProgress
     public function forPlan(LearningPlan $plan, array $days): PlanProgressView
     {
         $tz = $this->profile->timezoneFor($plan->userId());
-        $today = $this->clock->now()->setTimezone($tz)->format('Y-m-d');
+        $now = $this->clock->now()->setTimezone($tz);
+        $today = $now->format('Y-m-d');
+        // THE LEARNER'S OWN YESTERDAY, computed once here because this is the only place that holds
+        // their timezone. `modify` on a zoned date, not «minus 86400 seconds»: a day is 23 or 25
+        // hours twice a year, and the warm-up would then read the wrong day's misses on exactly the
+        // mornings a person is most likely to be somewhere unfamiliar.
+        $yesterday = $now->modify('-1 day')->format('Y-m-d');
 
         $progress = [];
         foreach ($days as $day) {
             if ($day->kind() !== PlanDayKind::Intro) {
                 continue;
             }
-            $progress[$day->dayIndex()] = $this->dayProgress($plan, $day, $today, $tz);
+            $progress[$day->dayIndex()] = $this->dayProgress($plan, $day, $today, $tz, $yesterday);
         }
 
         return new PlanProgressView(
@@ -79,7 +85,7 @@ final readonly class PlanProgress
         );
     }
 
-    private function dayProgress(LearningPlan $plan, PlanDay $day, string $today, \DateTimeZone $tz): PlanDayProgressView
+    private function dayProgress(LearningPlan $plan, PlanDay $day, string $today, \DateTimeZone $tz, string $yesterday): PlanDayProgressView
     {
         $collectionId = $day->collectionId()?->value;
         if ($collectionId === null) {
@@ -141,6 +147,7 @@ final readonly class PlanProgress
             // opening line among the day's cards often enough, and it arrives there unmarked
             // ({@see RoleLineModes}).
             self::openingLinesOf($day),
+            $yesterday,
         );
 
         return new PlanDayProgressView(
@@ -150,7 +157,71 @@ final readonly class PlanProgress
             standings: $standings,
             content: $content,
             passed: $this->stageAClosedForAll($standings, $content),
+            sceneIntro: self::sceneText($day, 'intro'),
+            sceneTitle: self::sceneText($day, 'title') ?? $day->title(),
+            skillOutcomes: self::skillOutcomesOf($day),
         );
+    }
+
+    /**
+     * One string off the scene of a day's skeleton — its `intro` or its `title`.
+     *
+     * Read defensively, like {@see openingLinesOf()} and for the same reason: the brief is
+     * model-written JSON that has been through four prompt versions, so every level of it is
+     * checked rather than assumed. Two shapes of the same fact are accepted — `scene.intro` is what
+     * a v0.4 day stores, a top-level `intro` is what the days written before it stored.
+     */
+    private static function sceneText(PlanDay $day, string $key): ?string
+    {
+        $brief = $day->roleBrief() ?? [];
+        $scene = is_array($brief['scene'] ?? null) ? $brief['scene'] : [];
+        $value = $scene[$key] ?? ($brief[$key] ?? null);
+        if (! is_string($value)) {
+            return null;
+        }
+        $value = trim($value);
+
+        return $value === '' ? null : $value;
+    }
+
+    /**
+     * The scene's abilities, keyed by the id a card names in `skill_ref` (канон §8).
+     *
+     * `outcome` and not `checkpoint`: the outcome is what the learner is there to DO — «рассказать,
+     * что болит» — and the checkpoint is how the прогон will know it happened. A card's situation
+     * asks for the first.
+     *
+     * @return array<string, string>
+     */
+    private static function skillOutcomesOf(PlanDay $day): array
+    {
+        $brief = $day->roleBrief() ?? [];
+        $scene = is_array($brief['scene'] ?? null) ? $brief['scene'] : [];
+        $skills = $scene['skills'] ?? ($brief['skills'] ?? null);
+        if (! is_array($skills)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($skills as $skill) {
+            if (! is_array($skill)) {
+                continue;
+            }
+            $outcome = $skill['outcome'] ?? null;
+            if (! is_string($outcome) || trim($outcome) === '') {
+                continue;
+            }
+            // NO ID, NO ENTRY. A skill written before ids existed is a skill no card can point at —
+            // `terms.skill_ref` did not exist either — so inventing a key here would only create a
+            // way for a card to be matched to an ability by accident.
+            $id = $skill['id'] ?? null;
+            if (! is_string($id) || trim($id) === '') {
+                continue;
+            }
+            $out[trim($id)] = trim($outcome);
+        }
+
+        return $out;
     }
 
     /**

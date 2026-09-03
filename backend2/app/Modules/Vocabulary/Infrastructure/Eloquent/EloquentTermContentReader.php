@@ -182,6 +182,7 @@ final class EloquentTermContentReader implements TermContentReader
                 speakingKey: $term->speaking_key !== null ? (string) $term->speaking_key : null,
                 shelf: $term->shelf !== null ? (string) $term->shelf : null,
                 tier: $term->tier !== null ? (string) $term->tier : null,
+                skillRef: $term->skill_ref !== null ? (string) $term->skill_ref : null,
             );
         }
 

@@ -37,5 +37,21 @@ final readonly class PlanSessionView
          * number rather than out of `count(tasks)`.
          */
         public int $dayTaskCount = 0,
+        /**
+         * ПРИСЕСТЫ — the task counts of each sitting, in order, adding up to `count(tasks)`.
+         *
+         * The learner's 10 / 20 / 40 minutes is the length of ONE присест, not a limit on the day
+         * ({@see \App\Modules\Learning\Domain\Service\PlanSittings}): the whole day is dealt,
+         * and this says where it is honest to stop — always on a section boundary, never inside
+         * «Ты ответишь». The client shows its «Присест N пройден» screen at each break and keeps
+         * its position durably, so leaving between two of them (or being killed) resumes where it
+         * stopped without rebuilding the sitting.
+         *
+         * A client that ignores this plays the day as one long session, which is what it did
+         * before — the field is additive.
+         *
+         * @var list<int>
+         */
+        public array $sittings = [],
     ) {}
 }

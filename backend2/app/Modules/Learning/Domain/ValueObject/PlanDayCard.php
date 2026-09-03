@@ -23,6 +23,15 @@ final readonly class PlanDayCard
         public bool $isRoleLine = false,
         /** {@see \App\Modules\Shared\Domain\Service\DifficultyScorer}; null = never scored. */
         public ?int $difficultyScore = null,
+        /**
+         * WHICH SHELF OF THE SCENE — `hear` | `say` | `ask` | `words` | `chunks` | `rescue`, or null
+         * on a day written before shelves existed.
+         *
+         * The order of a day is the order of its SHELVES since канон §11 was made serverside
+         * (наряд SIT-1, Ч-3), and `kind` cannot express it: «Ты ответишь» and «Ты спросишь» are both
+         * `line`, and they are two sections of the sitting with two captions of their own.
+         */
+        public ?string $shelf = null,
     ) {}
 
     public function isLine(): bool

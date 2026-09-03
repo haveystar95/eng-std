@@ -394,3 +394,102 @@ function stageAFacts(string $date): array
         hit(ExerciseMode::Speaking, $date),
     ];
 }
+
+// ── the situational card: stage B of a scene (наряд SIT-1) ───────────────────────────────────
+
+it('gives «Ты ответишь» and «Ты спросишь» their own stage B, one situational card each', function () {
+    // Замещение, не дополнение: B used to be cloze → listening → speaking for both shelves, which is
+    // three cards per line. The canon's B is one act — «выбрал ответ в ситуации» (§4).
+    expect(PlanStageLadder::modesOf(PlanStage::B, PlanStageLadder::KIND_LINE_SAY))
+        ->toBe([ExerciseMode::SituationalSay])
+        ->and(PlanStageLadder::modesOf(PlanStage::B, PlanStageLadder::KIND_LINE_ASK))
+        ->toBe([ExerciseMode::SituationalAsk])
+        // Stage A is untouched, and it is the same on both shelves.
+        ->and(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_LINE_SAY))
+        ->toBe(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_LINE_ASK))
+        // C for a line is the прогон сцены, which is a session and not a checklist step.
+        ->and(PlanStageLadder::modesOf(PlanStage::C, PlanStageLadder::KIND_LINE_SAY))->toBe([])
+        ->and(PlanStageLadder::modesOf(PlanStage::C, PlanStageLadder::KIND_LINE_ASK))->toBe([]);
+});
+
+it('makes the second touch of «Тебе скажут» the situational card, not a dictation of it', function () {
+    // Канон §3: два касания — узнал; услышал → выбрал смысл. Writing the interlocutor's sentence
+    // down was the second touch until SIT-1, and it is a keyboard test wearing a comprehension
+    // card's clothes.
+    expect(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_UNDERSTAND))
+        ->toBe([ExerciseMode::Intro, ExerciseMode::MultipleChoice])
+        ->and(PlanStageLadder::modesOf(PlanStage::B, PlanStageLadder::KIND_UNDERSTAND))
+        ->toBe([ExerciseMode::SituationalHear])
+        ->and(PlanStageLadder::modesOf(PlanStage::C, PlanStageLadder::KIND_UNDERSTAND))->toBe([]);
+});
+
+it('reads the shelf to tell a reply from a question, and only for a spoken line', function () {
+    expect(PlanStageLadder::ladderKindFor('line', 'speak', 'say'))->toBe(PlanStageLadder::KIND_LINE_SAY)
+        ->and(PlanStageLadder::ladderKindFor('line', 'speak', 'ask'))->toBe(PlanStageLadder::KIND_LINE_ASK)
+        // The rescue kit is a line on the `rescue` shelf: it keeps the plain line ladder, so its
+        // accelerated walk (канон §5) is untouched by this наряд.
+        ->and(PlanStageLadder::ladderKindFor('line', 'speak', 'rescue'))->toBe(PlanStageLadder::KIND_LINE)
+        // A day written before shelves existed.
+        ->and(PlanStageLadder::ladderKindFor('line', null, null))->toBe(PlanStageLadder::KIND_LINE)
+        // The TIER still beats the shelf and the kind both: «Тебе скажут» is understood, never said.
+        ->and(PlanStageLadder::ladderKindFor('line', 'understand', 'hear'))->toBe(PlanStageLadder::KIND_UNDERSTAND)
+        // A word is a word whatever shelf it stands on.
+        ->and(PlanStageLadder::ladderKindFor('word', 'speak', 'words'))->toBe(PlanStageLadder::KIND_WORD);
+});
+
+it('closes a reply’s stage B on the situational card and not on anything else', function () {
+    $facts = [
+        hit(ExerciseMode::MultipleChoice, '2026-09-01'),
+        hit(ExerciseMode::WordBank, '2026-09-01'),
+        hit(ExerciseMode::Speaking, '2026-09-01'),
+        // The learner also met this line elsewhere, on the trainer stage B used to owe.
+        hit(ExerciseMode::Cloze, '2026-09-02'),
+    ];
+
+    $standing = $this->ladder->standingFor(
+        allModes(), $facts, introduced: true, today: '2026-09-02',
+        kind: PlanStageLadder::KIND_LINE_SAY,
+    );
+
+    expect($standing->stage)->toBe(PlanStage::B)
+        ->and($standing->nextMode)->toBe(ExerciseMode::SituationalSay);
+});
+
+// ── разогрев v2: «непослушная» карточка ──────────────────────────────────────────────────────
+
+it('remembers that a card was missed YESTERDAY, and not that it was missed today', function () {
+    $facts = [
+        miss(ExerciseMode::MultipleChoice, '2026-09-02'),
+        hit(ExerciseMode::MultipleChoice, '2026-09-03'),
+    ];
+
+    $yesterdays = $this->ladder->standingFor(
+        allModes(), $facts, introduced: true, today: '2026-09-03', yesterday: '2026-09-02',
+    );
+    // The same log read on the day the miss happened: it is TODAY's miss, and today's misses stay
+    // out of today's warm-up (DECISIONS п. 238).
+    $todays = $this->ladder->standingFor(
+        allModes(), $facts, introduced: true, today: '2026-09-02', yesterday: '2026-09-01',
+    );
+
+    expect($yesterdays->missedYesterday)->toBeTrue()
+        ->and($todays->missedYesterday)->toBeFalse();
+});
+
+it('counts a miss that was corrected later the same day — the hand did not know it', function () {
+    $facts = [
+        miss(ExerciseMode::MultipleChoice, '2026-09-02'),
+        hit(ExerciseMode::MultipleChoice, '2026-09-02'),
+    ];
+
+    expect($this->ladder->standingFor(
+        allModes(), $facts, introduced: true, today: '2026-09-03', yesterday: '2026-09-02',
+    )->missedYesterday)->toBeTrue();
+});
+
+it('says nothing about yesterday when nobody told it which day that was', function () {
+    $facts = [miss(ExerciseMode::MultipleChoice, '2026-09-02')];
+
+    expect($this->ladder->standingFor(allModes(), $facts, introduced: true, today: '2026-09-03')
+        ->missedYesterday)->toBeFalse();
+});

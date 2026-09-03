@@ -31,7 +31,11 @@ use App\Modules\Learning\Domain\Repository\StudySessionRepository;
 use App\Modules\Learning\Domain\Service\PlanDayOrder;
 use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
 use App\Modules\Learning\Domain\Service\PlanKnobSupport;
+use App\Modules\Learning\Domain\Service\PlanSessionSections;
+use App\Modules\Learning\Domain\Service\PlanSittings;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
+use App\Modules\Learning\Domain\Service\SituationalPrompt;
+use App\Modules\Learning\Domain\ValueObject\SituationalCandidate;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanDayCard;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
@@ -120,11 +124,25 @@ final readonly class BuildPlanSessionHandler
     /** How many recent answers the per-learner card-seconds figure is measured over. */
     private const LATENCY_SAMPLE = 50;
 
-    /** A session is a sitting, not a marathon, whatever the minutes work out to. */
+    /**
+     * The ceiling on ONE PAYLOAD — a sanity bound, not a teaching rule.
+     *
+     * It used to be «a session is a sitting, not a marathon», which is what the budget said too. The
+     * two questions came apart in Ч-6: the minutes are the sitting now, and this is only the point
+     * past which a single response has stopped being a lesson and become a data dump.
+     */
     private const MAX_TASKS = 120;
 
     /** Bound on the due read: the same order of magnitude as the ordinary session's. */
     private const DUE_CAP = 100;
+
+    /**
+     * How many of yesterday's misses the warm-up carries (канон §5, разогрев v2).
+     *
+     * Five, beside the five rescue phrases, because the warm-up is TWO MINUTES: ten light touches
+     * is what fits, and a warm-up that grows with a bad evening is a punishment for having had one.
+     */
+    private const WARMUP_MISS_CAP = 5;
 
     public function __construct(
         private PlanRepository $plans,
@@ -155,6 +173,8 @@ final readonly class BuildPlanSessionHandler
          */
         private PlanDayPassing $passing,
         private PlanDayOrder $order = new PlanDayOrder(),
+        /** Where a situational card's «Ситуация» comes from — pure, and stated in Domain. */
+        private SituationalPrompt $situations = new SituationalPrompt(),
     ) {}
 
     public function __invoke(BuildPlanSession $command): PlanSessionView
@@ -206,7 +226,56 @@ final readonly class BuildPlanSessionHandler
                 $tasks,
                 static fn (PlanSessionTaskView $t): bool => $t->section === PlanSessionTaskView::SECTION_DAY,
             )),
+            // WHERE IT IS HONEST TO STOP. Computed from the tasks that actually survived assembly,
+            // for the same reason `dayTaskCount` is: a spec whose card the assembler refused is not
+            // a card the learner will sit through.
+            sittings: PlanSittings::cut(array_map(self::sectionKeyOf(...), $tasks), $this->taskBudget($plan)),
         );
+    }
+
+    /**
+     * Every day of this plan as a SCENE the situation builder can read — its вводка, its name, its
+     * abilities, and its own cards flattened to what a pairing needs.
+     *
+     * Built once per sitting rather than per card: a day of a plan is a couple of dozen cards and a
+     * sitting deals every one of them, so this is one pass instead of one pass each.
+     *
+     * @return array<int, array{cards: list<SituationalCandidate>, skills: array<string, string>, intro: string|null, title: string|null}>
+     */
+    private function scenesOf(?PlanProgressView $progress): array
+    {
+        $out = [];
+        foreach ($progress === null ? [] : $progress->days as $index => $day) {
+            $cards = [];
+            foreach ($day->content as $termId => $view) {
+                $cards[] = new SituationalCandidate($termId, $view->shelf, $view->skillRef, $view->text);
+            }
+            $out[$index] = [
+                'cards' => $cards,
+                'skills' => $day->skillOutcomes,
+                'intro' => $day->sceneIntro,
+                'title' => $day->sceneTitle,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * WHICH PART OF THE SITTING a task belongs to — the key присесты are cut between.
+     *
+     * The warm-up and the revision are parts by their SECTION; the day's own material is parted by
+     * its SHELF, which is канон §11's own list ({@see PlanSessionSections}). Kept here rather than
+     * on the wire because it is the same grouping the client already derives for the seam captions,
+     * and two names for one grouping is how the two drift.
+     */
+    private static function sectionKeyOf(PlanSessionTaskView $task): string
+    {
+        return match ($task->section) {
+            PlanSessionTaskView::SECTION_WARMUP => PlanSessionSections::WARMUP,
+            PlanSessionTaskView::SECTION_REVIEW => PlanSessionSections::REVIEW,
+            default => PlanSessionSections::ofShelf($task->shelf),
+        };
     }
 
     // ── the strict session ───────────────────────────────────────────────────────────────────
@@ -223,7 +292,6 @@ final readonly class BuildPlanSessionHandler
             return [];
         }
 
-        $budget = $this->taskBudget($plan);
         $standings = $progress->allStandings();
         $dayOf = $this->dayOfTerm($progress);
 
@@ -316,6 +384,37 @@ final readonly class BuildPlanSessionHandler
                 'step' => null, 'section' => PlanSessionTaskView::SECTION_WARMUP];
         }
 
+        // 0b. YESTERDAY'S DISOBEDIENT CARDS — the second half of разогрев v2 (канон §5).
+        //
+        // Up to five cards of the scene the learner answered WRONG yesterday, each dealt ONE light
+        // touch — a recognition card, never the stage's full checklist. The distinction is the whole
+        // point of the rule: a card that went wrong needs to be met again before the day starts, and
+        // it does NOT need to be re-walked from the intro, which is what re-owing its stage would
+        // do to a two-minute warm-up.
+        //
+        // YESTERDAY, and today's misses are deliberately out (DECISIONS п. 238). A card missed
+        // twenty minutes ago is already coming back twice — at the end of this посадка (Ч-5) and in
+        // tomorrow's warm-up — and putting it in today's as well would have one slip cost the
+        // learner the same card three times in one evening.
+        //
+        // `answeredToday` skips it for the same reason it skips a rescue phrase: this is the DAY's
+        // warm-up, not the sitting's, and the second sitting of an evening must not replay it.
+        $misses = 0;
+        foreach ($this->missedYesterday($progress) as $termId => $missed) {
+            if ($misses >= self::WARMUP_MISS_CAP) {
+                break;
+            }
+            if (isset($taken[$termId]) || $missed['standing']->answeredToday) {
+                continue;
+            }
+            $taken[$termId] = true;
+            $misses++;
+            $specs[] = ['term_id' => $termId, 'stage' => null, 'mode' => ExerciseMode::MultipleChoice,
+                'ordinal' => 0, 'of' => 0, 'day' => $missed['day'], 'softened' => false,
+                'source' => 'warmup_miss', 'step' => null,
+                'section' => PlanSessionTaskView::SECTION_WARMUP];
+        }
+
         // 1. THE DAY ITSELF, in A2's order — words, connectors, replies, the interlocutor's line —
         // each card bringing its whole remaining stage-A checklist.
         //
@@ -359,15 +458,49 @@ final readonly class BuildPlanSessionHandler
         // There is no third bucket. See the class docblock: the top-up is not filtered here, it is
         // not called, and there is nothing outside this plan for it to have read.
 
+        // THE WHOLE DAY, and the minutes are a присест rather than a limit (Ч-6, {@see PlanSittings}).
+        //
+        // This used to be `array_slice($specs, 0, $budget)`: the learner's ten minutes CUT the day,
+        // everything past the cut was never dealt, and the tail came back rebuilt from scratch at
+        // whatever the ladder said next time. The day is one lesson; ten minutes is how long a
+        // person sits down for. So the tail stays, `sittings` says where the breaks fall, and the
+        // only ceiling left is {@see MAX_TASKS} — a sanity bound on a payload, not a teaching rule.
         return $this->assembleTasks(
             $plan,
-            array_slice($specs, 0, $budget),
+            array_slice($specs, 0, self::MAX_TASKS),
             $views,
             $this->contentFor($progress, $views, $plan),
             $knobs,
             $dayIndex,
             $today->collectionId,
+            progress: $progress,
         );
+    }
+
+    /**
+     * Every card of this plan the learner answered WRONG yesterday, day by day, in the order the
+     * days were taught — the warm-up's second half.
+     *
+     * A `hear` card and a `word` are equally eligible: «непослушная» is a fact about the answer, not
+     * about the shelf. The rescue kit falls out on its own, because the loop above has already
+     * claimed those term ids.
+     *
+     * @return array<string, array{standing: PlanTermStanding, day: int}>
+     */
+    private function missedYesterday(PlanProgressView $progress): array
+    {
+        $out = [];
+        foreach ($progress->days as $index => $day) {
+            foreach ($day->termIds as $termId) {
+                $standing = $day->standings[$termId] ?? null;
+                if ($standing === null || ! $standing->missedYesterday) {
+                    continue;
+                }
+                $out[$termId] ??= ['standing' => $standing, 'day' => $index];
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -447,7 +580,7 @@ final readonly class BuildPlanSessionHandler
                 // The same derivation the checklist made ({@see PlanStandings}), from the same
                 // object: the tier decides the ladder, and a session that asked a different
                 // question would deal a step the checklist does not owe.
-                return PlanStageLadder::ladderKindFor($content->kind, $content->tier);
+                return PlanStageLadder::ladderKindFor($content->kind, $content->tier, $content->shelf);
             }
         }
 
@@ -573,9 +706,23 @@ final readonly class BuildPlanSessionHandler
         int $dayIndex,
         ?string $langCollectionId,
         bool $isPractice = false,
+        ?PlanProgressView $progress = null,
     ): array {
         $enabled = $this->enabledModes->forUser($plan->userId());
         $matrix = $this->admission->matrixFor($plan->userId());
+
+        // EVERY DAY'S SCENE, flattened once — the input a situational card's position is assembled
+        // from ({@see SituationalPrompt}).
+        //
+        // Per DAY and not per sitting, and that is the whole subtlety: a card on stage B is a card
+        // of an EARLIER day, dealt in the seam of this one. Its situation is its own scene's — the
+        // вводка it was written under, and the role line of ITS day that asks the same thing. Built
+        // out of today's scene instead, «Ты ответишь» from day 1 would be answering a question
+        // nobody in that conversation asked.
+        //
+        // Null on a soft run and on the final day's rehearsal: neither walks a checklist, so
+        // neither deals a situational card.
+        $scenes = $this->scenesOf($progress);
 
         // THE OPTION POOL IS THE WHOLE PLAN, not today's folder. A word met on day 1 is the fairest
         // wrong answer this lesson has — same subject, same register, already seen — and it was
@@ -637,6 +784,16 @@ final readonly class BuildPlanSessionHandler
             /** @var PlanStage|null $stage */
             $stage = $spec['stage'];
             $dealt = ExerciseMode::from($card->exerciseMode);
+            // THE CARD'S OWN DAY, not the day being studied.
+            $scene = $scenes[$spec['day'] === null ? -1 : (int) $spec['day']] ?? null;
+            $situation = $scene === null ? null : $this->situations->for(
+                $dealt,
+                new SituationalCandidate($termId, $termContent->shelf, $termContent->skillRef, $termContent->text),
+                $scene['cards'],
+                $scene['skills'],
+                $scene['intro'],
+                $scene['title'],
+            );
 
             $tasks[] = new PlanSessionTaskView(
                 card: $card,
@@ -690,6 +847,15 @@ final readonly class BuildPlanSessionHandler
                 // so a card the server will only ever ask for RECOGNITION cannot be drawn as one
                 // the learner is expected to produce (Д-8).
                 tier: $termContent->tier,
+                // THE POSITION THE CARD PUTS THE LEARNER IN — on the situational trainers and
+                // nowhere else. Assembled on the server because it is a fact about the DAY (the
+                // scene's вводка, its role lines, its abilities) and this is the only place that
+                // holds all three at once.
+                situation: $situation?->toArray(),
+                // …and whether the learner says the tapped line out loud afterwards. Not graded and
+                // not uploaded ({@see ExerciseMode::speaksAfterChoice()}); it is on the wire so the
+                // client does not have to know which of the three modes is which.
+                speaksAfterChoice: $dealt->speaksAfterChoice(),
             );
         }
 
@@ -699,19 +865,26 @@ final readonly class BuildPlanSessionHandler
     // ── the pieces ───────────────────────────────────────────────────────────────────────────
 
     /**
-     * How many cards fit in the day's minutes.
+     * HOW MANY CARDS FIT IN ONE ПРИСЕСТ — the learner's chosen minutes, priced in cards.
      *
-     * Priced in CARDS at this learner's own measured seconds-per-card — the same figure and the same
-     * default the home screen uses, because a day that says «20 минут» on one screen and deals twice
-     * that on another is the plan lying about the one number the learner chose. Note this is not the
-     * scheduler's `capacity`, which counts TERMS: a word met today brings its whole stage-A
-     * checklist, so nine terms is far more than nine cards.
+     * Priced at this learner's own measured seconds-per-card — the same figure and the same default
+     * the home screen uses, because a plan that says «20 минут» on one screen and deals twice that on
+     * another is lying about the one number the learner chose. Note this is not the scheduler's
+     * `capacity`, which counts TERMS: a word met today brings its whole stage-A checklist, so nine
+     * terms is far more than nine cards.
+     *
+     * NOT capped at {@see MAX_TASKS}, and that stopped being a detail with Ч-6. While the budget CUT
+     * the session, the cap was the same bound seen twice and cost nothing. Now it is the length of a
+     * присест, and a cap would collapse 20 minutes and 40 minutes onto the same number for any
+     * learner whose cards are quick — the plan would break a forty-minute sitting where a
+     * twenty-minute one breaks, which is the opposite of what the learner asked for. The payload's
+     * own ceiling is applied where it belongs, to the tasks.
      */
     private function taskBudget(LearningPlan $plan): int
     {
         $seconds = $this->home->averageCardSeconds($plan->userId(), self::LATENCY_SAMPLE) ?? self::DEFAULT_CARD_SECONDS;
 
-        return max(1, min(self::MAX_TASKS, intdiv($plan->minutesPerDay() * 60, max(1, $seconds))));
+        return max(1, intdiv($plan->minutesPerDay() * 60, max(1, $seconds)));
     }
 
     /**
@@ -751,6 +924,7 @@ final readonly class BuildPlanSessionHandler
             }
             $cards[] = new PlanDayCard(
                 termId: $termId,
+                shelf: $content->shelf,
                 // What the card DOES in its day, written when the day was generated. It used to be
                 // guessed from `type` («anything that is not one word is a reply»), which was right
                 // until v0.2 put connectors in a day: «deal with» is two words and a substitution.

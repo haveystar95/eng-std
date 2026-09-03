@@ -150,6 +150,8 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     this.photoUrl,
     this.photoResolved = false,
     this.showDue = true,
+    this.situation,
+    this.speaksAfterChoice = false,
   });
 
   static bool _alwaysCurrent() => true;
@@ -197,6 +199,22 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   /// here would judge an Italian answer by English's alphabet.
   final String answerLang;
 
+  /// THE POSITION a situational card puts the learner in — «Хозяин спросил про залог».
+  ///
+  /// It rides on the PLAN's envelope rather than on the card, because it is a fact about the day and
+  /// the card is the app's ordinary card ({@see PlanSessionEnvelope.situationAt}). Null on every
+  /// other trainer, and on a situational card met outside a plan — where the options alone are drawn
+  /// and the card degrades to the ordinary choice it is underneath.
+  final PlanSituation? situation;
+
+  /// The learner SAYS the line they tapped, right after tapping it — «Ты ответишь» / «Ты спросишь».
+  ///
+  /// Reinforcement and nothing else: it produces no answer, writes no review and moves no ladder
+  /// (owner's ruling, наряд SIT-1 — «оценка по выбору, говорение — закрепление»). Which is also why
+  /// there is no microphone here: a recogniser that grades nothing would open a permission prompt to
+  /// produce a verdict nobody reads.
+  final bool speaksAfterChoice;
+
   /// Pronounce a target-language string via the shell's TTS (respects the auto-pronounce toggle
   /// at call sites; here it's an explicit speak). [slow] backs the listening «замедленно» replay.
   final Future<void> Function(String text, {bool slow}) onSpeak;
@@ -230,6 +248,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   bool get _isScramble => _mode == ExerciseMode.scramble;
   bool get _isDictation => _mode == ExerciseMode.dictation;
   bool get _isSpeaking => _mode == ExerciseMode.speaking;
+
+  /// «Тебе скажут» on the situational trainer: the line is PLAYED and the options are meanings.
+  bool get _isSituationalHear => _mode == ExerciseMode.situationalHear;
+
+  /// The two speak shelves — a position, replies to tap, and the chosen one said out loud.
+  bool get _isSituationalSpeak =>
+      _mode == ExerciseMode.situationalSay || _mode == ExerciseMode.situationalAsk;
 
   // ── speaking ───────────────────────────────────────────────────────────────
   // The channel state, kept apart from the answering state above on purpose: `_attempts` counts
@@ -693,6 +718,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // there was nothing on screen to tap.
         if (_mode == ExerciseMode.multipleChoice ||
             _mode == ExerciseMode.descriptionMatch ||
+            _mode.isSituational ||
             _mode.isSentenceChoice ||
             _isRecognitionListening) ...[
           const SizedBox(height: AppSpacing.s12),
@@ -724,6 +750,24 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           // distinct labels, so the first tap doesn't read as a no-op (device-batch F12).
           PrimaryButton(label: l.sessionCheck, onPressed: _submitAssembled),
         ],
+        // «ПОКАЗАТЬ ТЕКСТ», and only after the answer (наряд Ч-2). Before it the card is the sound:
+        // printing the line would answer its own question, and «Ещё раз» / «Медленнее» are the
+        // escape a learner who did not catch it actually needs.
+        if (_answered && _isSituationalHear) ...[
+          const SizedBox(height: AppSpacing.s12),
+          _RevealedLine(text: _card.answerText, onSpeak: widget.onSpeak),
+        ],
+        // ГОВОРЕНИЕ ПО КЛЮЧУ — say the line you chose, out loud, once. Nothing is graded and nothing
+        // is uploaded; the block exists so stage B ends with the learner's own voice rather than
+        // with a tap.
+        if (_answered && widget.speaksAfterChoice) ...[
+          const SizedBox(height: AppSpacing.s12),
+          _SayItAloud(
+            line: _card.answerText,
+            speakingKey: _card.speakingKey,
+            onSpeak: widget.onSpeak,
+          ),
+        ],
         if (_answered) ...[
           const SizedBox(height: AppSpacing.s12),
           _FeedbackBlock(
@@ -751,6 +795,8 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_isSpeaking) return _speakingPrompt(l);
     if (_isScramble) return _scramblePrompt(l);
     if (_mode.isSentenceChoice) return _pickCorrectPrompt(l);
+    if (_isSituationalHear) return _situationalHearPrompt(l);
+    if (_isSituationalSpeak) return _situationalSpeakPrompt(l);
     if (_mode == ExerciseMode.descriptionMatch) return _descriptionPrompt(l);
     if (_mode == ExerciseMode.wordBank) return _wordBankPrompt(l);
     if (_mode == ExerciseMode.typing) return _typingPrompt(l);
@@ -796,6 +842,12 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       _card.asksForExample ? l.sessionInstrSpeakExample : l.sessionInstrSpeakWord,
     ExerciseMode.listening =>
       _isRecognitionListening ? l.sessionInstrListenChoose : l.sessionInstrListenType(_adverb(l)),
+    // The three situational cards each name what is being chosen, because the options are three
+    // different things: a MEANING on «Тебе скажут», a reply on «Ты ответишь», a question on «Ты
+    // спросишь». One instruction for all three would describe none of them.
+    ExerciseMode.situationalHear => l.sessionInstrSituationalHear,
+    ExerciseMode.situationalSay => l.sessionInstrSituationalSay,
+    ExerciseMode.situationalAsk => l.sessionInstrSituationalAsk,
   };
 
   String _typeLabel(AppLocalizations l) => switch (_card.type) {
@@ -1111,6 +1163,118 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             style: AppTextExercise.taskInstruction,
           ),
           if (typed && !_answered) ...[const SizedBox(height: AppSpacing.s16), _inputField()],
+        ],
+      ),
+    );
+  }
+
+  /// «ТЕБЕ СКАЖУТ» ON THE SITUATIONAL TRAINER (кадр D · 03) — the sound, and no text at all.
+  ///
+  /// The whole card is what is NOT on it: the line is played and never printed, because the question
+  /// is «что он спросил» and the answer is written on the card the moment the sentence is. What the
+  /// learner gets instead is the two things a person actually asks for when they miss something —
+  /// «Ещё раз» and «Медленнее» — and, once they have answered, the text
+  /// ([_RevealedLine]).
+  ///
+  /// Above it stands the SCENE, not the вводка: «сейчас услышите · У стойки регистратуры». The
+  /// вводка says what will happen, which on this card is the answer.
+  Widget _situationalHearPrompt(AppLocalizations l) {
+    final scene = widget.situation?.context?.trim() ?? '';
+
+    return PaperCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (scene.isNotEmpty) ...[
+            Text(l.sessionSituationHearLabel.toUpperCase(), style: AppText.sectionLabel),
+            const SizedBox(height: AppSpacing.s8),
+            Text(scene, style: AppText.stepTitle.copyWith(fontSize: 19, height: 1.3)),
+            const SizedBox(height: AppSpacing.s22),
+          ],
+          Center(
+            child: _PlayCircle(
+              onTap: () => widget.onSpeak(_card.answerText),
+              label: l.sessionListenReplay,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          Center(
+            child: QuietButton(
+              label: l.sessionListenReplaySlow,
+              icon: LucideIcons.gauge,
+              onPressed: () => widget.onSpeak(_card.answerText, slow: true),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s16),
+          Text(
+            _instructionFor(l),
+            textAlign: TextAlign.center,
+            style: AppTextExercise.taskInstruction,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// «ТЫ ОТВЕТИШЬ» / «ТЫ СПРОСИШЬ» (кадр D · 04) — the position, then the replies.
+  ///
+  /// The situation is always ABOVE the options and always on the learner's own language: the choice
+  /// is made from the moment, not from a gloss of the right answer (канон §13). Its second line is
+  /// either what was just SAID to them — the day's own role line, on the language being learned,
+  /// speakable — or, when this day has no role line for the ability this card serves, the ability
+  /// itself. Both are the server's; neither is ever a translation of the answer.
+  Widget _situationalSpeakPrompt(AppLocalizations l) {
+    final situation = widget.situation;
+    final context = situation?.context?.trim() ?? '';
+    final roleLine = situation?.roleLine?.trim() ?? '';
+    final task = situation?.task?.trim() ?? '';
+
+    return PaperCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.sessionSituationLabel.toUpperCase(), style: AppText.sectionLabel),
+          if (context.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s8),
+            Text(context, style: AppText.stepTitle.copyWith(fontSize: 17, height: 1.45)),
+          ],
+          if (roleLine.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s12),
+            // WHAT WAS JUST SAID TO THEM, in the language being learned — so the reply is an answer
+            // to something heard, not to a description of it. Tapping speaks it, like every other
+            // target-language line on a card.
+            InkWell(
+              onTap: () => widget.onSpeak(roleLine),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 3, right: AppSpacing.s8),
+                    child: Icon(LucideIcons.volume2, size: 15, color: AppColors.brassInk),
+                  ),
+                  Expanded(
+                    child: Text(
+                      roleLine,
+                      style: AppText.stepTitle.copyWith(
+                        fontSize: 16,
+                        height: 1.4,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (roleLine.isEmpty && task.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s12),
+            Text(
+              l.sessionSituationTask(task),
+              style: AppText.translation.copyWith(fontSize: 15, height: 1.45),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.s16),
+          Text(_instructionFor(l), style: AppTextExercise.taskInstruction),
         ],
       ),
     );
@@ -1606,6 +1770,134 @@ class _ClozeSentence extends StatelessWidget {
 }
 
 // ── listening play circle ─────────────────────────────────────────────────────
+
+/// «ПОКАЗАТЬ ТЕКСТ» — what was said, revealed once the meaning has been chosen.
+///
+/// After the answer and never before it: the hear card's question IS the sound, so printing the
+/// sentence early answers it. Speakable, because a learner who missed it wants to hear it again
+/// while reading it.
+class _RevealedLine extends StatefulWidget {
+  const _RevealedLine({required this.text, required this.onSpeak});
+
+  final String text;
+  final Future<void> Function(String text, {bool slow}) onSpeak;
+
+  @override
+  State<_RevealedLine> createState() => _RevealedLineState();
+}
+
+class _RevealedLineState extends State<_RevealedLine> {
+  bool _shown = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    if (!_shown) {
+      return Center(
+        child: QuietButton(
+          label: l.sessionSituationRevealText,
+          icon: LucideIcons.eye,
+          onPressed: () => setState(() => _shown = true),
+        ),
+      );
+    }
+
+    return PaperCard(
+      child: InkWell(
+        onTap: () => widget.onSpeak(widget.text),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 3, right: AppSpacing.s8),
+              child: Icon(LucideIcons.volume2, size: 15, color: AppColors.brassInk),
+            ),
+            Expanded(
+              child: Text(
+                widget.text,
+                style: AppText.stepTitle.copyWith(fontSize: 17, height: 1.4),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ГОВОРЕНИЕ ПО КЛЮЧУ — «скажи это вслух», once, after the tap.
+///
+/// Stage B of a scene is «выбрал ответ в ситуации» (канон §4) and the tap is what is graded; this is
+/// the half that makes the stage end in the learner's own voice. It writes nothing — no review, no
+/// verdict, no schedule — which is exactly why there is no microphone: a recogniser here would ask
+/// for a permission in order to produce a judgement nobody reads.
+///
+/// The KEY is underlined when the day left one: it is the piece the card was written to teach, and
+/// the same key the speaking trainer grades by, so the learner is told what to get right rather than
+/// asked to nail fifteen words of scaffolding.
+class _SayItAloud extends StatelessWidget {
+  const _SayItAloud({required this.line, required this.speakingKey, required this.onSpeak});
+
+  final String line;
+  final String? speakingKey;
+  final Future<void> Function(String text, {bool slow}) onSpeak;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return PaperCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.sessionSituationSayAloud.toUpperCase(), style: AppText.sectionLabel),
+          const SizedBox(height: AppSpacing.s12),
+          _KeyedLine(line: line, speakingKey: speakingKey),
+          const SizedBox(height: AppSpacing.s12),
+          QuietButton(
+            label: l.sessionListenReplay,
+            icon: LucideIcons.volume2,
+            onPressed: () => onSpeak(line),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The line with its KEY underlined — brass under the piece the day cared about.
+class _KeyedLine extends StatelessWidget {
+  const _KeyedLine({required this.line, required this.speakingKey});
+
+  final String line;
+  final String? speakingKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final base = AppText.stepTitle.copyWith(fontSize: 19, height: 1.35);
+    final key = speakingKey?.trim() ?? '';
+    final at = key.isEmpty ? -1 : line.toLowerCase().indexOf(key.toLowerCase());
+    if (at < 0) return Text(line, style: base);
+
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: line.substring(0, at)),
+          TextSpan(
+            text: line.substring(at, at + key.length),
+            style: const TextStyle(
+              color: AppColors.brassInk,
+              decoration: TextDecoration.underline,
+              decorationColor: AppColors.brassInk,
+            ),
+          ),
+          TextSpan(text: line.substring(at + key.length)),
+        ],
+      ),
+      style: base,
+    );
+  }
+}
 
 class _PlayCircle extends StatefulWidget {
   const _PlayCircle({required this.onTap, required this.label});

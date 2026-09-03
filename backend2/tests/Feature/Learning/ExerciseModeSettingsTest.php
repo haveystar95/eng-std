@@ -130,7 +130,11 @@ it('erases a user override with the account', function () {
     DB::table('users')->where('id', $user->id)->delete();
 
     expect(DB::table('learning_mode_settings')->where('user_id', $user->id)->count())->toBe(0)
-        ->and(DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->count())->toBe(count(ExerciseMode::cases()));
+        // One global row per trainer of the ORDINARY session. The situational three are plan-only —
+        // they have no global row at all, because a global row IS an admission rule and there is no
+        // scene in an ordinary session for their card to be about (наряд SIT-1).
+        ->and(DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->count())
+        ->toBe(count(array_filter(ExerciseMode::cases(), static fn (ExerciseMode $m): bool => ! $m->isSituational())));
 });
 
 // ── the admission matrix, now stored beside the toggles ──────────────────────

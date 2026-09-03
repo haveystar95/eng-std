@@ -58,6 +58,24 @@ final class PlanStageLadder
     public const KIND_CHUNK = 'chunk';
 
     /**
+     * THE TWO SPEAK SHELVES, TOLD APART — because since SIT-1 their stage B is not the same list.
+     *
+     * «Ты ответишь» and «Ты спросишь» are both `line` by kind and both `speak` by tier, and until
+     * now that was the whole story: one ladder for both. Stage B is now the SITUATIONAL card
+     * (канон §4: «B — выбрал ответ в ситуации»), and the situational card is a different trainer on
+     * each shelf — «Ты ответишь» offers replies, «Ты спросишь» offers questions — because that is
+     * what makes each of them switchable on its own, the way every trainer before them shipped.
+     *
+     * So the SHELF now reaches the ladder, and it reaches it as a kind rather than as a second
+     * argument threaded through six functions. {@see KIND_LINE} stays and stays reachable: it is
+     * what a line with NO shelf climbs — the rescue kit (which is `rescue`, not `say`) and every
+     * plan line written before v0.4 put a shelf on a term.
+     */
+    public const KIND_LINE_SAY = 'line_say';
+
+    public const KIND_LINE_ASK = 'line_ask';
+
+    /**
      * THE «ПОНИМАЮ» LADDER — not a kind of card but a TIER of one, and the only one that is not a
      * `speak` ladder in disguise.
      *
@@ -152,8 +170,49 @@ final class PlanStageLadder
                 ExerciseMode::Intro,
                 ExerciseMode::MultipleChoice,
             ],
+            // THE SECOND TOUCH IS THE SITUATIONAL ONE (наряд SIT-1). Канон §3 asks for «услышал →
+            // выбрал смысл» and this is that card said exactly: the line is PLAYED, with no text
+            // until the learner asks for it, and the options are meanings in their own language.
+            //
+            // It REPLACES `listening` rather than joining it, and that is the whole rule of this
+            // наряд: «прежний B-чек-лист замещается, не дополняется — день не растёт». The two ask
+            // the same question anyway — what did they just say — and `listening` asked it by
+            // making the learner WRITE the interlocutor's sentence down, which is a keyboard test
+            // wearing a comprehension card's clothes.
             PlanStage::B->value => [
-                ExerciseMode::Listening,
+                ExerciseMode::SituationalHear,
+            ],
+            PlanStage::C->value => [],
+        ],
+        // «ТЫ ОТВЕТИШЬ» and «ТЫ СПРОСИШЬ»: stage A unchanged — meet it, recognise it, assemble it,
+        // read it aloud — and stage B is the situation and nothing else.
+        //
+        // Замещение, не дополнение: B used to be cloze → listening → speaking, three cards per
+        // line, and a day of eight replies therefore owed twenty-four. The canon's B is one act
+        // («выбрал ответ в ситуации»), the tap is followed by saying the chosen line out loud
+        // ({@see ExerciseMode::speaksAfterChoice()}), and C for a line is the прогон сцены, which
+        // is a session and not a checklist step.
+        self::KIND_LINE_SAY => [
+            PlanStage::A->value => [
+                ExerciseMode::Intro,
+                ExerciseMode::MultipleChoice,
+                ExerciseMode::WordBank,
+                ExerciseMode::Speaking,
+            ],
+            PlanStage::B->value => [
+                ExerciseMode::SituationalSay,
+            ],
+            PlanStage::C->value => [],
+        ],
+        self::KIND_LINE_ASK => [
+            PlanStage::A->value => [
+                ExerciseMode::Intro,
+                ExerciseMode::MultipleChoice,
+                ExerciseMode::WordBank,
+                ExerciseMode::Speaking,
+            ],
+            PlanStage::B->value => [
+                ExerciseMode::SituationalAsk,
             ],
             PlanStage::C->value => [],
         ],
@@ -213,7 +272,8 @@ final class PlanStageLadder
     private static function normalizeKind(string $kind): string
     {
         return match ($kind) {
-            self::KIND_LINE, self::KIND_UNDERSTAND => $kind,
+            self::KIND_LINE, self::KIND_UNDERSTAND,
+            self::KIND_LINE_SAY, self::KIND_LINE_ASK => $kind,
             default => self::KIND_WORD,
         };
     }
@@ -230,14 +290,34 @@ final class PlanStageLadder
      * A term with no tier at all — everything written before v0.4, and every card outside a plan —
      * is judged by its kind exactly as it was.
      */
-    public static function ladderKindFor(?string $kind, ?string $tier): string
+    public static function ladderKindFor(?string $kind, ?string $tier, ?string $shelf = null): string
     {
         if ($tier === self::TIER_UNDERSTAND) {
             return self::KIND_UNDERSTAND;
         }
 
-        return self::normalizeKind($kind ?? self::KIND_WORD);
+        $normalized = self::normalizeKind($kind ?? self::KIND_WORD);
+
+        // A SPOKEN LINE IS TOLD APART BY ITS SHELF, and only there. A reply and a question climb
+        // the same rungs up to stage B and then part company, because B is the situational card and
+        // that card is a different trainer on each shelf ({@see KIND_LINE_SAY}). Everything else —
+        // the rescue kit, a line of a day written before shelves existed, a re-used term with no
+        // shelf at all — keeps the plain line ladder it always had.
+        if ($normalized === self::KIND_LINE) {
+            return match ($shelf) {
+                self::SHELF_SAY => self::KIND_LINE_SAY,
+                self::SHELF_ASK => self::KIND_LINE_ASK,
+                default => self::KIND_LINE,
+            };
+        }
+
+        return $normalized;
     }
+
+    /** `terms.shelf` for the two speak shelves — literals, because Learning does not import Generation. */
+    public const SHELF_SAY = 'say';
+
+    public const SHELF_ASK = 'ask';
 
     /** `understand` — the tier whose cards are met and heard and never produced. */
     public const TIER_UNDERSTAND = 'understand';
@@ -273,7 +353,8 @@ final class PlanStageLadder
     public static function allModes(): array
     {
         $out = [];
-        foreach ([self::KIND_LINE, self::KIND_WORD, self::KIND_UNDERSTAND] as $kind) {
+        foreach ([self::KIND_LINE, self::KIND_WORD, self::KIND_UNDERSTAND,
+            self::KIND_LINE_SAY, self::KIND_LINE_ASK] as $kind) {
             foreach (PlanStage::cases() as $stage) {
                 foreach (self::STEPS[$kind][$stage->value] as $mode) {
                     if (! in_array($mode, $out, true)) {
@@ -391,6 +472,9 @@ final class PlanStageLadder
      *                                          it is the one step closed by something other than a
      *                                          fact.
      * @param  string  $today                   the learner's local day, `Y-m-d`
+     * @param  string|null  $yesterday            the day before it, `Y-m-d`. An argument rather than
+     *                                            `$today` minus a day, because a calendar day is a
+     *                                            fact about a timezone and Domain owns no clock.
      * @param  string  $kind                     what this card DOES in its day — `line`, `word` or
      *                                           `chunk`. Picks the checklist; see {@see STEPS}.
      * @param  int  $pairCounter                 the pair's own stable number, which decides the one
@@ -403,6 +487,7 @@ final class PlanStageLadder
         string $today,
         string $kind = self::KIND_WORD,
         int $pairCounter = 0,
+        ?string $yesterday = null,
     ): PlanTermStanding {
         $stage = PlanStage::first();
         $cursor = 0;
@@ -411,6 +496,10 @@ final class PlanStageLadder
         // the question is about the learner's day and not about the checklist. See
         // {@see PlanTermStanding::$answeredToday} for the one caller and why it needs it.
         $answeredToday = self::answeredOn($facts, $today);
+        // MISSED YESTERDAY — the warm-up's second half (канон §5, разогрев v2). Asked of the whole
+        // log for the same reason `answeredToday` is: it is a question about the learner's week, not
+        // about the stage being walked.
+        $missedYesterday = $yesterday !== null && self::missedOn($facts, $yesterday);
 
         while (true) {
             $steps = $this->stepsFor($stage, $applicable, $kind, $pairCounter);
@@ -427,6 +516,7 @@ final class PlanStageLadder
                     softened: $walk['softened'],
                     ready: $stage === $lastStage,
                     answeredToday: $answeredToday,
+                    missedYesterday: $missedYesterday,
                 );
             }
 
@@ -450,6 +540,7 @@ final class PlanStageLadder
                     softened: $walk['softened'],
                     ready: $stage === $lastStage,
                     answeredToday: $answeredToday,
+                    missedYesterday: $missedYesterday,
                 );
             }
 
@@ -466,6 +557,7 @@ final class PlanStageLadder
                     softened: false,
                     ready: true,
                     answeredToday: $answeredToday,
+                    missedYesterday: $missedYesterday,
                 );
             }
 
@@ -483,6 +575,26 @@ final class PlanStageLadder
     {
         foreach ($facts as $fact) {
             if ($fact->localDate === $today) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Did one of these answers land WRONG on that day?
+     *
+     * «At least one miss», not «the last answer was a miss»: a card the learner got wrong and then
+     * right again in the same sitting is still a card their hand did not know, which is exactly what
+     * one light touch the next morning is for.
+     *
+     * @param  list<PlanStageFact>  $facts
+     */
+    private static function missedOn(array $facts, string $day): bool
+    {
+        foreach ($facts as $fact) {
+            if ($fact->localDate === $day && ! $fact->correct) {
                 return true;
             }
         }

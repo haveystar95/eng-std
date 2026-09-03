@@ -229,7 +229,17 @@ final readonly class SubmitReviewsHandler
      */
     private function expectedFor(ReviewInput $input, TermAnswerKeyView $key, array $states): ExpectedAnswer
     {
-        if ($this->isForwardRecognition($input, $states)) {
+        // GRADED BY THE TAPPED OPTION'S ID, on two paths that are the same card seen twice.
+        //
+        // The forward-recognition rung is one, and it is guarded by three agreeing facts because the
+        // RUNG is a claim the client makes. `situational_hear` is the other, and it needs no such
+        // guard: it is graded by id because of what the MODE is — a line played aloud with meanings
+        // to tap — and a mode is not something a stale batch can drift into. Reading it off the rung
+        // instead would be worse than redundant: the hear card is dealt at stage B of a scene, where
+        // the pair is usually graduated, and a rung-1 claim from a graduated pair is dropped as a
+        // stale ladder answer ({@see isStaleLadderAnswer()}) — every second touch of the понимаю
+        // tier would have vanished from the log.
+        if ($this->isForwardRecognition($input, $states) || $input->exerciseMode->gradesByOptionId()) {
             return new ExpectedAnswer([$input->termId->value]);
         }
 

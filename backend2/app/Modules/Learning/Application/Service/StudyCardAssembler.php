@@ -212,6 +212,12 @@ final readonly class StudyCardAssembler
         if ($mode === ExerciseMode::Intro) {
             return $this->introCard($view, $content);
         }
+        if ($mode->isSituational()) {
+            return $this->situationalCard(
+                $user, $view, $content, $mode, $poolTermIds, $neighbours,
+                $cardIndex, $supportLang, $optionCount, $choiceFloor, $step,
+            );
+        }
         // Where the wrong options come from is POLICY, read from the matrix, not inferred from the
         // rung: `distant` (the session's own neighbours) is what makes a first meeting winnable,
         // and it is stored per mode so it can be moved without a deploy.
@@ -602,6 +608,106 @@ final readonly class StudyCardAssembler
     }
 
     /**
+     * THE SITUATIONAL CARD (наряд SIT-1) — one mechanic, three shelves.
+     *
+     * What the learner sees ABOVE the options — the position, the role's line, the ability — is not
+     * built here at all: it rides on the plan's own envelope
+     * ({@see \App\Modules\Learning\Domain\Service\SituationalPrompt}), because it is a fact
+     * about the DAY and this method only ever sees one card. What is built here is the choice.
+     *
+     * ## «Тебе скажут»: the forward-recognition card with the text taken away
+     *
+     * Options are MEANINGS on the support language, so the correct one is a translation and the card
+     * is graded by identity — which is the forward card exactly, and is therefore the forward card
+     * literally ({@see recognitionCard()}). The line itself rides in `prompt`: the device needs it
+     * to SPEAK it, and the client is what keeps it hidden until «Показать текст». Withholding it
+     * would withhold the audio, which is the whole card.
+     *
+     * The floor drops to {@see MIN_OPTIONS} before this card is refused, and that is the one place
+     * this наряд parts with Д-36's «reach farther, never deal fewer». Reaching farther has nowhere
+     * to reach: a wrong MEANING for this moment has to be another meaning from THIS conversation,
+     * and the catalogue's answer would be a sentence out of some other day — an option the learner
+     * discards without understanding either. Below two there is no card, and QA-15 already fixed
+     * that as the floor under every card in the app.
+     *
+     * ## «Ты ответишь» / «Ты спросишь»: an ordinary choice with the prompt removed
+     *
+     * The options are lines the learner could say, out of the same distractor reader every other
+     * choice card uses, and the answer is this card's own text. `prompt` is deliberately NULL: the
+     * card's question is the situation, and putting the reply's translation there would turn stage B
+     * back into the translation exercise the canon replaced (§4, §13).
+     *
+     * @param  list<string>  $poolTermIds
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
+     */
+    private function situationalCard(
+        UserId $user,
+        DueTermView $view,
+        TermContentView $content,
+        ExerciseMode $mode,
+        array $poolTermIds,
+        array $neighbours,
+        int $cardIndex,
+        ?string $supportLang,
+        int $optionCount,
+        int $choiceFloor,
+        ?int $step,
+    ): ?SessionCardView {
+        if ($mode === ExerciseMode::SituationalHear) {
+            foreach ([$choiceFloor, self::MIN_OPTIONS] as $floor) {
+                $card = $this->recognitionCard(
+                    $user, $view, $content,
+                    LearningLadder::STEP_RECOGNITION_FORWARD,
+                    $neighbours, $cardIndex, $supportLang, $optionCount, $floor,
+                    as: $mode,
+                    reportedStep: $step,
+                );
+                if ($card !== null) {
+                    return $card;
+                }
+            }
+
+            return null;
+        }
+
+        $distractors = $this->distractors->forTarget($user, $view->termId, $poolTermIds, $optionCount - 1);
+        /** @var list<string> $options */
+        $options = $this->rng->shuffleArray([$content->text, ...$distractors]);
+
+        // The same floor, and the same refusal, as an ordinary plan choice card: a reply offered
+        // beside one wrong line is a coin toss written into an append-only log.
+        if (count($options) < $choiceFloor) {
+            $this->fallbacks->distractorStarved($user, $view->termId, $mode->value, $choiceFloor, count($options));
+
+            return null;
+        }
+
+        return new SessionCardView(
+            termId: $view->termId->value,
+            exerciseMode: $mode->value,
+            type: $content->type,
+            // NO PROMPT. The situation is the question and it lives on the plan envelope; a
+            // translation here would answer the card.
+            prompt: null,
+            answer: $content->text,
+            transcription: $content->transcription,
+            example: $content->example,
+            exampleTranslation: $content->exampleTranslation,
+            options: $options,
+            chips: null,
+            acceptedVariants: $content->acceptedVariants,
+            // Tapped among lines this server dealt, so a synonym can never arrive
+            // ({@see ExerciseMode::acceptsSynonyms()}).
+            synonyms: [],
+            ladderStep: $step,
+            // WHAT THE LEARNER SAYS AFTER THE TAP — говорение по ключу, the same key the speaking
+            // card would have used. Nothing is graded on it and nothing is uploaded; it rides here
+            // so the device underlines the piece the day cared about instead of the whole line.
+            speakingKey: $content->speakingKey,
+        );
+    }
+
+    /**
      * Rungs 1–2: four options, all of them the session's own neighbours, deliberately far.
      *
      *  * rung 1, `term → translation` — the prompt is the TERM and the options are translations.
@@ -660,6 +766,8 @@ final readonly class StudyCardAssembler
         ?string $supportLang = null,
         ?int $optionCount = null,
         ?int $choiceFloor = null,
+        ?ExerciseMode $as = null,
+        ?int $reportedStep = null,
     ): ?SessionCardView {
         if ($supportLang === null) {
             return null;
@@ -756,7 +864,12 @@ final readonly class StudyCardAssembler
 
         return new SessionCardView(
             termId: $view->termId->value,
-            exerciseMode: ExerciseMode::MultipleChoice->value,
+            // The SAME CARD under another name. `situational_hear` is this card's forward direction
+            // with the line played instead of printed: same options, same identity grading, same
+            // refusal when the belt runs out. Building it here rather than beside it is what keeps
+            // the two from drifting — and what makes «no translation ever in a text key» one fact
+            // rather than two promises.
+            exerciseMode: ($as ?? ExerciseMode::MultipleChoice)->value,
             type: $content->type,
             prompt: $forward ? $content->text : $content->translation,
             // Forward: the id IS the answer (identity grading). Reverse: the term's text, checked
@@ -773,7 +886,11 @@ final readonly class StudyCardAssembler
             // answer is a right answer. The forward card is graded by option id and has no text key
             // at all — see optionIds.
             synonyms: $forward ? [] : $content->synonyms,
-            ladderStep: $step,
+            // The rung this card was DEALT at, which for a plan's situational card is the plan's own
+            // and not rung 1 — the hear card is graded by id because of its MODE
+            // ({@see ExerciseMode::gradesByOptionId()}), never because of a rung, and claiming rung 1
+            // for a graduated pair would have the answer dropped as a stale ladder answer.
+            ladderStep: $reportedStep ?? $step,
             optionIds: $forward
                 ? array_map(static fn (array $o): string => $o['term_id'], $optionPairs)
                 : null,

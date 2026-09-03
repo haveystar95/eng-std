@@ -62,6 +62,11 @@ final class PlanKnobSupport
         return match ($mode) {
             ExerciseMode::MultipleChoice => [self::MC_OPTIONS, self::DISTRACTOR_CLOSENESS],
             ExerciseMode::PickCorrect => [self::DISTRACTOR_CLOSENESS],
+            // `situational_hear` deals the DAY's own meanings as its options — the near belt the
+            // recognition card uses — so both knobs land on it. The two speak shelves read the
+            // count and take their wrong lines through the ordinary distractor reader.
+            ExerciseMode::SituationalHear => [self::MC_OPTIONS, self::DISTRACTOR_CLOSENESS],
+            ExerciseMode::SituationalSay, ExerciseMode::SituationalAsk => [self::MC_OPTIONS],
             default => [],
         };
     }
@@ -80,6 +85,9 @@ final class PlanKnobSupport
             ExerciseMode::WordBank => [self::BANK_EXTRA],
             ExerciseMode::Typing => [self::TYPING_HINT],
             ExerciseMode::Listening, ExerciseMode::Dictation => [self::TTS_RATE],
+            // The hear card PLAYS the line before anything is tapped, so a speaking rate is
+            // configured for it and — like everywhere else — read by nothing yet.
+            ExerciseMode::SituationalHear => [self::TTS_RATE],
             default => [],
         };
     }

@@ -49,10 +49,26 @@ final readonly class GetExerciseModeSettingsHandler
         );
     }
 
-    /** @return list<string> */
+    /**
+     * Every trainer of the ORDINARY session — which is every mode the enum has, minus the ones that
+     * only make sense inside a plan day.
+     *
+     * The situational three ask about a MOMENT, and the moment is assembled out of a scene
+     * ({@see \App\Modules\Learning\Domain\Service\SituationalPrompt}); an ordinary session has
+     * no scene, so there is no honest card for them to deal there. Offering the toggle anyway would
+     * not be a harmless switch: a global row IS an admission rule
+     * ({@see \App\Modules\Learning\Domain\ValueObject\ModeAdmission}), so writing one is what
+     * would make the card reachable. Their own configuration lives in `scope='plan'`, on the plan
+     * matrix screen.
+     *
+     * @return list<string>
+     */
     private function available(): array
     {
-        return array_map(static fn (ExerciseMode $m): string => $m->value, ExerciseMode::cases());
+        return array_values(array_map(
+            static fn (ExerciseMode $m): string => $m->value,
+            array_filter(ExerciseMode::cases(), static fn (ExerciseMode $m): bool => ! $m->isSituational()),
+        ));
     }
 
     /** @return list<string> */

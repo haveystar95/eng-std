@@ -32,5 +32,18 @@ final readonly class PlanDayProgressView
          * moves on a three-day plan.
          */
         public bool $passed,
+        /**
+         * THE SCENE, as much of it as a CARD needs — the вводка's own text, the scene's name, and
+         * every ability of the scene by the `skill_ref` its cards point at.
+         *
+         * Carried here rather than re-read by the session builder because it is the same day object
+         * this view was built from, and two reads of one model-written JSON blob is two chances to
+         * disagree about what the scene said. Its one reader is the situational card
+         * ({@see \App\Modules\Learning\Domain\Service\SituationalPrompt}).
+         */
+        public ?string $sceneIntro = null,
+        public ?string $sceneTitle = null,
+        /** @var array<string, string> `skill_ref` => the ability's `outcome`, support language */
+        public array $skillOutcomes = [],
     ) {}
 }

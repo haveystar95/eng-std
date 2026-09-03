@@ -1391,6 +1391,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionListenReplay => 'Replay audio';
 
   @override
+  String get sessionInstrSituationalHear => 'choose what they said';
+
+  @override
+  String get sessionInstrSituationalSay => 'choose what you will say';
+
+  @override
+  String get sessionInstrSituationalAsk => 'choose what you will ask';
+
+  @override
+  String get sessionSituationLabel => 'Situation';
+
+  @override
+  String get sessionSituationHearLabel => 'You are about to hear';
+
+  @override
+  String get sessionSituationRevealText => 'Show the text';
+
+  @override
+  String get sessionSituationSayAloud => 'Say it aloud';
+
+  @override
+  String sessionSituationTask(String outcome) {
+    return 'Your task — $outcome.';
+  }
+
+  @override
+  String planWarmupProgress(int done, int total) {
+    return 'Warm-up $done/$total';
+  }
+
+  @override
+  String planDayProgress(int done, int total) {
+    return 'Day $done/$total';
+  }
+
+  @override
+  String planSittingDone(int n, int total) {
+    return 'Sitting $n of $total done';
+  }
+
+  @override
+  String planSittingRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cards of the day left.',
+      one: '$count card of the day left.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planSittingContinue => 'Continue';
+
+  @override
+  String get planSittingStop => 'That is enough for today';
+
+  @override
   String get sessionListenReplaySlow => 'Slower';
 
   @override

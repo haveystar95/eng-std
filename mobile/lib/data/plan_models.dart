@@ -9,7 +9,8 @@
 /// The wire shapes are `backend2`'s `PlanResource` / `PlanSessionResource`, field for field.
 library;
 
-import 'models.dart' show PlanSessionEnvelope, SessionCard, StudySession;
+import 'models.dart'
+    show ExerciseMode, PlanSessionEnvelope, PlanSituation, SessionCard, StudySession;
 
 /// Where a plan is in its life. `draft` has no days and cost nothing; `active` is the commitment.
 enum PlanStatus {
@@ -676,6 +677,8 @@ class PlanSessionTask {
     this.speaker,
     this.shelf,
     this.tier,
+    this.situation,
+    this.speaksAfterChoice = false,
   });
 
   /// This task is the day's own material — it counts towards «день пройден».
@@ -737,6 +740,13 @@ class PlanSessionTask {
   /// `speak` | `understand` — the ladder this card climbs (канон §3), or null outside a plan.
   final String? tier;
 
+  /// THE POSITION — on a situational card, and null on every other trainer. See [PlanSituation].
+  final PlanSituation? situation;
+
+  /// The learner says the option they tapped out loud, right after tapping it — «Ты ответишь» and
+  /// «Ты спросишь». Reinforcement: nothing about it is graded or uploaded.
+  final bool speaksAfterChoice;
+
   /// This card is only ever asked for RECOGNITION — the server deals it no production trainer, and
   /// the client must not caption it as one either (Д-8, from the other side).
   ///
@@ -774,6 +784,14 @@ class PlanSessionTask {
       speaker: j['speaker'] as String?,
       shelf: j['shelf'] as String?,
       tier: j['tier'] as String?,
+      situation: PlanSituation.fromJson(j['situation'] as Map<String, dynamic>?),
+      // The server names it per task; the mode is the same fact for a build that meets one of these
+      // cards outside a plan envelope, which is why both exist.
+      speaksAfterChoice:
+          j['speaks_after_choice'] == true ||
+          ExerciseMode.fromWire(
+            (j['card'] as Map<String, dynamic>?)?['exercise_mode'] as String?,
+          ).speaksAfterChoice,
     );
   }
 }
@@ -810,6 +828,8 @@ class PlanSession implements PlanSessionEnvelope {
     required this.dayIndex,
     required this.strict,
     required this.tasks,
+    this.sittings = const [],
+    this.raw = const {},
   });
 
   /// Every task that belongs to TODAY, in order — `tasks` minus the revision of earlier days.
@@ -827,6 +847,24 @@ class PlanSession implements PlanSessionEnvelope {
   final bool strict;
 
   final List<PlanSessionTask> tasks;
+
+  /// ПРИСЕСТЫ — the task counts of each sitting, in order, adding up to `tasks.length`.
+  ///
+  /// The learner's 10 / 20 / 40 minutes is the length of ONE sitting, not a limit on the day: the
+  /// whole day is dealt and this says where it is honest to stop, always on a section boundary and
+  /// never inside «Ты ответишь». Empty on a payload from a server that predates it, and then the day
+  /// is played as one long session — which is what it was.
+  @override
+  final List<int> sittings;
+
+  /// THE PAYLOAD THIS SESSION WAS PARSED FROM, kept verbatim.
+  ///
+  /// It is what makes a присест durable: leaving between two of them — or being killed — has to
+  /// resume the SAME sitting rather than build a new one, and re-parsing the payload the server
+  /// already sent is the only way to do that without asking it to deal the day again at whatever
+  /// the ladder says by then. Written to the local store beside the position
+  /// (`lib/data/plan_sitting_store.dart`) and never sent anywhere.
+  final Map<String, dynamic> raw;
 
   /// The plan session as the ordinary session screen consumes it — cards in order, envelope beside.
   StudySession asStudySession() => StudySession(
@@ -866,6 +904,13 @@ class PlanSession implements PlanSessionEnvelope {
       i >= 0 && i < tasks.length && tasks[i].isRecognitionOnly;
 
   @override
+  PlanSituation? situationAt(int i) => i >= 0 && i < tasks.length ? tasks[i].situation : null;
+
+  @override
+  bool speaksAfterChoiceAt(int i) =>
+      i >= 0 && i < tasks.length && tasks[i].speaksAfterChoice;
+
+  @override
   int get dayTaskCount => dayTasks.length;
 
   @override
@@ -894,6 +939,10 @@ class PlanSession implements PlanSessionEnvelope {
     tasks: ((j['tasks'] as List?) ?? const [])
         .map((e) => PlanSessionTask.fromJson(e as Map<String, dynamic>))
         .toList(growable: false),
+    sittings: ((j['sittings'] as List?) ?? const [])
+        .map((e) => (e as num).toInt())
+        .toList(growable: false),
+    raw: j,
   );
 }
 

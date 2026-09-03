@@ -119,6 +119,8 @@ final readonly class PlanStandings
      * @param  list<string>  $termIds
      * @param  array<string, TermContentView>  $content  hydrated content, keyed by term id
      * @param  string  $today  the learner's local day, `Y-m-d`
+     * @param  string|null  $yesterday  the day before it, in the same calendar — what «непослушная
+     *         карточка» is measured against ({@see PlanTermStanding::$missedYesterday})
      * @param  array<string, \DateTimeImmutable>  $since  term id => the moment this card joined THIS
      *         plan. See {@see class docblock, «The ladder of a plan is the plan's own»}.
      * @param  list<string>  $roleLines  the day's `role_brief.role.opening_lines`, verbatim. A card
@@ -135,6 +137,7 @@ final readonly class PlanStandings
         DateTimeZone $tz,
         array $since = [],
         array $roleLines = [],
+        ?string $yesterday = null,
     ): array {
         if ($termIds === []) {
             return [];
@@ -161,7 +164,9 @@ final readonly class PlanStandings
             // The TIER beats the kind: «Тебе скажут» is a line the learner never says, so it
             // climbs the two-touch ladder however much it looks like one they do
             // ({@see PlanStageLadder::ladderKindFor()}).
-            $kind = PlanStageLadder::ladderKindFor($termContent->kind, $termContent->tier);
+            // …and the SHELF beats nothing but tells the two speak shelves apart, which is what
+            // decides whose situational card stage B owes ({@see PlanStageLadder::KIND_LINE_SAY}).
+            $kind = PlanStageLadder::ladderKindFor($termContent->kind, $termContent->tier, $termContent->shelf);
 
             $out[$termId] = $this->ladder->standingFor(
                 applicable: $this->applicableFor($termContent, $openAtLevel, $kind, $termId, $content, $optionCount, $user, $spokenByRole),
@@ -173,6 +178,7 @@ final readonly class PlanStandings
                 // than inside the ladder, because Domain has no idea what a term id looks like.
                 kind: $kind,
                 pairCounter: self::pairCounterFor($termId),
+                yesterday: $yesterday,
             );
         }
 
@@ -264,7 +270,12 @@ final readonly class PlanStandings
     /** The modes whose options come out of the pool, and which therefore starve with it. */
     private static function isChoice(ExerciseMode $mode): bool
     {
-        return $mode === ExerciseMode::MultipleChoice || $mode === ExerciseMode::DescriptionMatch;
+        // The situational cards are choices too, and they starve exactly the same way: a shelf with
+        // two lines cannot furnish three same-shape options. Owed-but-unbuildable is a stage that
+        // never closes, which is the whole reason this filter exists.
+        return $mode === ExerciseMode::MultipleChoice
+            || $mode === ExerciseMode::DescriptionMatch
+            || $mode->isSituational();
     }
 
     /**

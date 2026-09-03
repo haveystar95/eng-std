@@ -56,7 +56,16 @@ final class RoleLineModes
             ExerciseMode::Typing,
             ExerciseMode::Speaking,
             ExerciseMode::Cloze,
-            ExerciseMode::Dictation => true,
+            ExerciseMode::Dictation,
+            // The two speak shelves END IN THE LEARNER SAYING THE LINE — говорение по ключу, right
+            // after the tap. On the interlocutor's own line that is the very thing Д-8 photographed:
+            // the learner reading the doctor's question aloud. The tap alone would be harmless; the
+            // half that follows it is not, so the whole trainer stays off a role card.
+            ExerciseMode::SituationalSay,
+            ExerciseMode::SituationalAsk => true,
+            // `situational_hear` is the role line's OWN trainer: it plays what the other person says
+            // and asks what it meant. Recognition, like `listening` beside it.
+            ExerciseMode::SituationalHear,
             ExerciseMode::MultipleChoice,
             ExerciseMode::DescriptionMatch,
             ExerciseMode::Listening,

@@ -42,7 +42,9 @@ it('keeps the plan rows out of the ordinary trainer registry', function () {
     $rows = app(EnabledModesReader::class);
     $global = DB::table('learning_mode_settings')->where('scope', 'global')->count();
 
-    expect($global)->toBe(count(ExerciseMode::cases()))
+    // One global row per trainer of the ordinary session — the situational three are plan-only and
+    // have no global row at all (наряд SIT-1).
+    expect($global)->toBe(count(array_filter(ExerciseMode::cases(), static fn (ExerciseMode $m): bool => ! $m->isSituational())))
         ->and(app(EnabledModesReader::class)->globalDefault()->modes)
         ->each->toBeInstanceOf(ExerciseMode::class)
         ->and($rows->globalDefault()->modes)->toHaveCount(

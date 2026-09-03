@@ -144,4 +144,13 @@ class _Envelope implements PlanSessionEnvelope {
   bool isWarmupAt(int i) => false;
   @override
   bool isRecognitionOnlyAt(int i) => false;
+
+  @override
+  List<int> get sittings => const [];
+
+  @override
+  PlanSituation? situationAt(int i) => null;
+
+  @override
+  bool speaksAfterChoiceAt(int i) => false;
 }

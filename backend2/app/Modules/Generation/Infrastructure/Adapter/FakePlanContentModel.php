@@ -192,7 +192,12 @@ final class FakePlanContentModel implements ContentModelPort
                 'frame' => "Day {$day} question {$i}{$mark}, please?",
                 'filler' => '',
                 'speaker' => 'role',
-                'translation' => "День {$day}, вопрос собеседника номер {$i}.",
+                // THE TAG BELONGS IN THE TRANSLATION TOO, like it does on every other shelf. Without
+                // it two plans of one fixture write the SAME Russian for their role lines, and a
+                // scope test that checks isolation by TEXT reads one plan's own option as the
+                // other's leak — which is exactly what happened the day «Тебе скажут» got a card
+                // whose options are translations (situational_hear, наряд SIT-1).
+                'translation' => "{$tag}День {$day}, вопрос собеседника номер {$i}.",
                 'transliteration' => 'дэй куэсчен',
             ];
         }

@@ -58,6 +58,20 @@ final readonly class PlanTermStanding
          * in the next sitting of the same day.
          */
         public bool $answeredToday = false,
+        /**
+         * THIS CARD WAS ANSWERED WRONG YESTERDAY — «непослушная карточка» (канон §5, разогрев v2).
+         *
+         * Yesterday, in the learner's own calendar, and not «recently»: the warm-up is a morning
+         * ritual and its second half is «what did I get wrong last time I sat down». Today's misses
+         * are deliberately outside it — a card missed twenty minutes ago comes back at the END of
+         * this sitting ({@see \App\Modules\Learning\Application\Command\BuildPlanSessionHandler},
+         * Ч-5) and in TOMORROW's warm-up, and putting it in today's would make a miss cost the
+         * learner the same card three times in one evening (DECISIONS п. 238).
+         *
+         * Beside the ladder rather than in it, like {@see $answeredToday}: it says nothing about
+         * what the card owes.
+         */
+        public bool $missedYesterday = false,
     ) {}
 
     /** Is this word's checklist closed for good? What «готовность слова» means. */

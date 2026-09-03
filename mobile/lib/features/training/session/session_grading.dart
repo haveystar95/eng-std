@@ -622,7 +622,13 @@ SessionPhase phaseFor(ExerciseMode mode) => switch (mode) {
   ExerciseMode.listening ||
   ExerciseMode.cloze ||
   ExerciseMode.scramble ||
-  ExerciseMode.dictation => SessionPhase.review,
+  ExerciseMode.dictation ||
+  // The situational three are stage B of a scene — a card met a day after the word was, dealt to
+  // rehearse reaching for it. That is the review phase by every reading, and it is also the phase
+  // the plan session never prints: a plan wears its own brass mark in the header instead.
+  ExerciseMode.situationalHear ||
+  ExerciseMode.situationalSay ||
+  ExerciseMode.situationalAsk => SessionPhase.review,
 };
 
 /// What the session header NAMES on one card.

@@ -8,14 +8,27 @@ use App\Modules\Learning\Domain\ValueObject\PlanDayCard;
 use App\Modules\Learning\Domain\ValueObject\PlanLevel;
 
 /**
- * A2, second half — the order a day's material is INTRODUCED in.
+ * A2, second half — the order a day's material is INTRODUCED in, and канон §11 made mechanical.
  *
  * FOUR BLOCKS, ALWAYS THE SAME FOUR, AND THE LEVEL DOES NOT MOVE THEM:
  *
- *   1. `word`  — the pieces
- *   2. `chunk` — the connectors, which are pieces of a bigger shape
- *   3. `line`  — the replies the learner says, assembled out of 1 and 2
- *   4. `line` with `speaker: role` — the interlocutor's, which is understood and never said
+ *   1. «слова и связки» — the pieces, then the connectors, which are pieces of a bigger shape
+ *   2. «Тебе скажут»    — the interlocutor's turns, understood and never said
+ *   3. «Ты ответишь»    — the replies the learner says, assembled out of 1
+ *   4. «Ты спросишь»    — the questions that buy time and detail
+ *
+ * ## The role line used to be LAST, and канон §11 moved it to third
+ *
+ * The old order put the interlocutor's line at the end, on the argument that it is the one card the
+ * learner never produces and so belongs «after the ones that are being learned». The canon's order
+ * is the SCENE's: you hear what is said to you, and then you answer it. Reading the doctor's
+ * question after having already practised every reply to it is a rehearsal run backwards — and
+ * since SIT-1 it is also mechanically wrong, because the situational card of «Ты ответишь» shows
+ * that very line as the position the learner is answering from
+ * ({@see \App\Modules\Learning\Domain\Service\SituationalPrompt}).
+ *
+ * «Ты ответишь» and «Ты спросишь» are told apart for the first time here, for the same reason: they
+ * are two sections of the sitting with two captions, and `kind` calls them both `line`.
  *
  * Within a block, easy first ({@see \App\Modules\Shared\Domain\Service\DifficultyScorer}). A day
  * opening on its hardest sentence is a day the learner bounces off.
@@ -54,11 +67,15 @@ final class PlanDayOrder
      */
     public function order(array $cards, PlanLevel $level): array
     {
+        // The parts of the day, in канон §11's order — and the `words` block keeps its own internal
+        // order (word before chunk, DECISIONS 217), which is why it is two buckets and one section.
         $blocks = [
             PlanStageLadder::KIND_WORD => [],
             PlanStageLadder::KIND_CHUNK => [],
-            'line' => [],
-            'role' => [],
+            PlanSessionSections::HEAR => [],
+            PlanSessionSections::SAY => [],
+            PlanSessionSections::ASK => [],
+            PlanSessionSections::DAY => [],
         ];
 
         foreach ($cards as $card) {
@@ -83,8 +100,24 @@ final class PlanDayOrder
      */
     private function blockOf(PlanDayCard $card): string
     {
+        // THE SHELF DECIDES, and it decides first: it is the fact the day was written with, and the
+        // only one that can tell «Ты ответишь» from «Ты спросишь».
+        $section = PlanSessionSections::ofShelf($card->shelf);
+        if ($section === PlanSessionSections::WORDS) {
+            return $card->kind === PlanStageLadder::KIND_CHUNK
+                ? PlanStageLadder::KIND_CHUNK
+                : PlanStageLadder::KIND_WORD;
+        }
+        if ($section !== PlanSessionSections::DAY) {
+            return $section;
+        }
+
+        // NO SHELF — a day written before v0.4, or a term re-used from outside a plan. The old
+        // two-and-two reading is still the best available: a line the interlocutor says is
+        // recognised and everything else is a piece. It lands in the day's undivided block, which is
+        // exactly how such a day has always been drawn.
         if ($card->isLine()) {
-            return $card->isRoleLine ? 'role' : 'line';
+            return $card->isRoleLine ? PlanSessionSections::HEAR : PlanSessionSections::SAY;
         }
 
         return $card->kind === PlanStageLadder::KIND_CHUNK

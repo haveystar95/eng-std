@@ -45,8 +45,14 @@ final class PlanPromptLibrary implements PlanPromptSource
      * The v0.1.1 files stay in this directory as history and are not addressed by any constant —
      * a stored plan written on them is read back through its own `outline` JSON, not by
      * re-rendering the prompt, so nothing needs to load them again.
+     *
+     * v0.4.1 — one edit by the architect (наряд SIT-1, Ч-0а): `scenes[].title` is a NAME, 2–4 words,
+     * with no colon and no subtitle. It is the line the preview and the day screen print above the
+     * scene, and a model that answered «У врача: рассказать, что болит» was printing the goal там,
+     * where the вводка already says it — the subtitle repeated the intro and pushed the name out of
+     * one line. The details belong to the intro, and the title is what you call the scene.
      */
-    public const OUTLINE_VERSION = 'plan_outline.v0.4';
+    public const OUTLINE_VERSION = 'plan_outline.v0.4.1';
 
     /**
      * v0.4.1 — two edits by the architect, one bump (наряд ENTRY-2, Ч-6).
@@ -95,7 +101,7 @@ final class PlanPromptLibrary implements PlanPromptSource
      */
     public const LISTEN_VERSION = 'plan_listen.v1.1';
 
-    private const OUTLINE = 'plan_outline.v0.4.md';
+    private const OUTLINE = 'plan_outline.v0.4.1.md';
     private const DAY = 'plan_day.v0.4.1.md';
     private const REPAIR = 'plan_day_repair.v0.2.md';
     private const LISTEN = 'plan_listen.v1.1.md';
