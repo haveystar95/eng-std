@@ -18,6 +18,13 @@ final readonly class BuildListenWarmup
     public function __construct(
         public UserId $actorId,
         public string $goalText,
+        /**
+         * EMPTY on the goal step, where the language has not been chosen yet.
+         *
+         * The same command serves both moments of the entry: typed-goal («допиши за меня», no
+         * language) and after the level («послушай три реплики»). One command, because it is one
+         * question about one goal and one paid call — see `plan_listen.v1.1`.
+         */
         public string $targetLang,
         public string $level,
     ) {}

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show listEquals;
+
 import 'package:flutter/cupertino.dart' show CupertinoDatePicker, CupertinoDatePickerMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -67,8 +69,29 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
 
   /// The warm-up, in flight or finished. Started when the goal is left, so the learner's time on
   /// the level cards is the model's time to write three lines.
-  Future<List<ListenLine>>? _warmup;
+  Future<ListenWarmup>? _warmup;
   List<ListenLine> _warmupLines = const [];
+
+  /// «Дописать за тебя» / «Можно добавить» — the learner's own goal carried further, from the model.
+  ///
+  /// STATIC SUGGESTIONS WERE THE BUG. Two ready sentences about a doctor sat under a goal about an
+  /// IT interview and read as a broken screen: an example of a goal is a fair thing to show when
+  /// there is no goal yet, but a CONTINUATION of somebody's sentence has to be a continuation of
+  /// THAT sentence (решение владельца 03.09).
+  List<String> _continuations = const [];
+
+  /// Answers already paid for, by the exact goal text.
+  ///
+  /// The call fires on a typing PAUSE, so without this a learner who edits a word and undoes it
+  /// buys the same two sentences twice. Bounded by how many distinct goals one person types on one
+  /// screen, which is a handful.
+  final Map<String, List<String>> _continuationCache = {};
+
+  /// The pause. Long enough that typing a sentence is one call and not five.
+  Timer? _continuationTimer;
+
+  /// The goal a request is in flight for — so a pause inside the same text does not start a second.
+  String? _continuationsInFlight;
 
   /// What the learner tapped, or NULL — the step was skipped or never offered. Two different facts
   /// on the ribbon («шаг пропущен» + «Пройти» vs the verdict + «Изм.»), and two different facts to
@@ -91,11 +114,65 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     final profile = ref.read(authControllerProvider).value?.profile;
     _targetLang = profile?.targetLanguage ?? 'en';
     if (_targetLang == (profile?.nativeLanguage ?? 'ru')) _targetLang = 'en';
-    _goal.addListener(() => setState(() {}));
+    _goal.addListener(_onGoalChanged);
+    if (_goalText.length >= _serverFloor) _scheduleContinuations();
   }
+
+  /// Every keystroke: redraw, and restart the pause after which the continuations are asked for.
+  void _onGoalChanged() {
+    setState(() {});
+    _scheduleContinuations();
+  }
+
+  /// Ask for continuations after the learner stops typing — and only then.
+  ///
+  /// Bounded on purpose, because every fire is a paid call:
+  ///   only while the GOAL step is open — nothing else shows them;
+  ///   only past the server's floor — a two-letter goal has nothing to continue;
+  ///   never for a goal that is already long enough to lose the block (кадр V4·01г);
+  ///   never twice for the same text — the cache answers, and an in-flight request is not doubled.
+  void _scheduleContinuations() {
+    _continuationTimer?.cancel();
+    if (_step != _Step.goal) return;
+
+    final goal = _goalText;
+    if (goal.length < _serverFloor || _goalDetailed) return;
+
+    final cached = _continuationCache[goal];
+    if (cached != null) {
+      if (!listEquals(cached, _continuations)) setState(() => _continuations = cached);
+
+      return;
+    }
+
+    _continuationTimer = Timer(_continuationPause, () => unawaited(_askContinuations(goal)));
+  }
+
+  static const _continuationPause = Duration(milliseconds: 900);
+
+  Future<void> _askContinuations(String goal) async {
+    if (_continuationsInFlight == goal) return;
+    _continuationsInFlight = goal;
+
+    // NO target language: on this step it has not been chosen, and its absence is what asks the
+    // server for the continuations alone.
+    final answer = await ref.read(apiClientProvider).listenWarmup(
+      goalText: goal,
+      level: _level.wire,
+    );
+    _continuationsInFlight = null;
+    if (!mounted) return;
+
+    _continuationCache[goal] = answer.continuations;
+    // The learner may have typed on while we were asking. Their CURRENT text owns the screen.
+    if (_goalText != goal) return;
+    setState(() => _continuations = answer.continuations);
+  }
+
 
   @override
   void dispose() {
+    _continuationTimer?.cancel();
     if (_speech.isListening) _speech.stop();
     _goal.dispose();
     _goalFocus.dispose();
@@ -164,7 +241,14 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     if (pending == null) return false;
 
     try {
-      _warmupLines = await pending.timeout(const Duration(seconds: 12));
+      final answer = await pending.timeout(const Duration(seconds: 12));
+      _warmupLines = answer.lines;
+      // The full call answers with continuations too, and they are fresher than whatever the goal
+      // step asked for. Kept, so «Изм.» back to the goal does not go and buy them again.
+      if (answer.continuations.isNotEmpty) {
+        _continuationCache[_goalText] = answer.continuations;
+        _continuations = answer.continuations;
+      }
     } catch (_) {
       _warmupLines = const [];
     }
@@ -178,6 +262,9 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     AppHaptics.light();
     _goalFocus.unfocus();
     setState(() => _step = step);
+    // Coming BACK to the goal through «Изм.»: the block is drawn from what was already paid for,
+    // or asked for again after a pause if the text has changed since.
+    if (step == _Step.goal) _scheduleContinuations();
   }
 
   Future<void> _fromGoal() async {
@@ -529,32 +616,38 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     // A detailed goal needs no examples — «они уже не нужны» (кадр V4·01г).
     if (_goalDetailed) return null;
 
-    if (_goalTooShort) {
+    // EMPTY FIELD: static EXAMPLES, and they stay static honestly. These are examples of what a
+    // goal looks like, not continuations of one — there is nothing yet to continue, and three ready
+    // sentences are the fastest way to show what a good answer is.
+    if (_goalText.isEmpty) {
       return (
-        title: l.planEntryFinishTitle,
-        items: [l.planEntryFinish1, l.planEntryFinish2],
+        title: l.planEntryExamplesTitle,
+        items: [l.planEntryExample1, l.planEntryExample2, l.planEntryExample3],
         append: false,
-        brass: true,
-      );
-    }
-
-    if (_goalEnough) {
-      // ADDITIONS, not replacements: «примеры превращаются в дополнения — их можно дописать к
-      // своему тексту» (кадр V4·01б).
-      return (
-        title: l.planEntryAdditionsTitle,
-        items: [l.planEntryAddition1, l.planEntryAddition2],
-        append: true,
         brass: false,
       );
     }
 
-    return (
-      title: l.planEntryExamplesTitle,
-      items: [l.planEntryExample1, l.planEntryExample2, l.planEntryExample3],
-      append: false,
-      brass: false,
-    );
+    // ANYTHING TYPED: the block is the model's continuations of THAT sentence, or it is not shown.
+    // The same silent contract the listening step has — a block that could not be written does not
+    // apologise, it is absent.
+    if (_continuations.isEmpty) return null;
+
+    return _goalTooShort
+        ? (
+            title: l.planEntryFinishTitle,
+            items: _continuations,
+            // «Дописать за тебя» APPENDS as well: the continuations are written to carry the
+            // learner's own sentence on, and replacing it would throw away what they typed.
+            append: true,
+            brass: true,
+          )
+        : (
+            title: l.planEntryAdditionsTitle,
+            items: _continuations,
+            append: true,
+            brass: false,
+          );
   }
 
   /// «Тап заполняет поле сразу, без печати по буквам» (записка).
@@ -564,9 +657,22 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
   /// it is deliberately not in this наряд.
   void _applySuggestion(String text, {required bool append}) {
     final current = _goal.text.trimRight();
-    final next = append && current.isNotEmpty
-        ? '$current ${text.replaceFirst(RegExp(r'^…\s*'), '')}'
-        : text;
+    // The «…» of a written-out addition is a typographic lead-in, not part of the sentence.
+    final addition = text.replaceFirst(RegExp(r'^…\s*'), '').trim();
+
+    // A CONTINUATION THAT RESTATED THE GOAL IS REPLACED, NOT APPENDED.
+    //
+    // The prompt says «never restate what is already written» and the live run of 03.09 caught it
+    // being disobeyed on exactly half the goals: «Иду к врачу, болит спина» came back as «Иду к
+    // врачу, болит спина, и мне нужно объяснить, где именно болит.» Appending that would have put
+    // the learner's own sentence on screen twice. Whatever the model meant, what it wrote IS the
+    // whole goal carried further, so it takes the field rather than joining it.
+    final restatesGoal =
+        current.isNotEmpty && addition.toLowerCase().startsWith(current.toLowerCase());
+
+    final next = append && current.isNotEmpty && !restatesGoal
+        ? '$current $addition'
+        : addition;
     _goal.value = TextEditingValue(
       text: next,
       selection: TextSelection.collapsed(offset: next.length),

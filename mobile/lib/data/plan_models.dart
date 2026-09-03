@@ -1017,3 +1017,33 @@ enum ListenEmphasis {
   static ListenEmphasis of(List<ListenAnswer> answers) =>
       answers.every((a) => a.understood) ? ListenEmphasis.speaking : ListenEmphasis.understanding;
 }
+
+/// WHAT ONE WARM-UP CALL ANSWERS — and the entry asks it at two different moments.
+///
+/// On the GOAL step the language is not chosen yet, so [continuations] arrive alone and [lines] is
+/// empty; after the language step both come back. Either list being empty always means the same
+/// thing — «этого блока нет» — and never «блок сломался»: both things it feeds are optional, and
+/// neither has an error state on screen.
+class ListenWarmup {
+  const ListenWarmup({this.lines = const [], this.continuations = const []});
+
+  final List<ListenLine> lines;
+
+  /// «Дописать за тебя» — the learner's own goal carried a little further, in their own language.
+  /// Tapping one appends it to what they typed.
+  final List<String> continuations;
+
+  bool get isEmpty => lines.isEmpty && continuations.isEmpty;
+
+  factory ListenWarmup.fromJson(Map<String, dynamic> j) => ListenWarmup(
+    lines: ((j['lines'] as List?) ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(ListenLine.fromJson)
+        .toList(growable: false),
+    continuations: ((j['continuations'] as List?) ?? const [])
+        .whereType<String>()
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList(growable: false),
+  );
+}

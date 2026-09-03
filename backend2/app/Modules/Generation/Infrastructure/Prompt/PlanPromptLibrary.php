@@ -87,13 +87,18 @@ final class PlanPromptLibrary implements PlanPromptSource
      * A fourth prompt rather than a mode of P1, and versioned on its own for the reason the other
      * three are: it is asked BEFORE the plan exists, of a goal and a level and nothing else, and it
      * will move when the step's design moves — which P1 has no reason to do with it.
+     *
+     * **v1.1 gave it a second job**: the continuations of «Дописать за тебя». They come from the
+     * same call rather than from a fifth prompt, because they answer the same question about the
+     * same goal — and on the goal step the target language is not chosen yet, which is why
+     * `{{target_lang}}` may be empty and an empty one means «продолжения без реплик».
      */
-    public const LISTEN_VERSION = 'plan_listen.v1';
+    public const LISTEN_VERSION = 'plan_listen.v1.1';
 
     private const OUTLINE = 'plan_outline.v0.4.md';
     private const DAY = 'plan_day.v0.4.1.md';
     private const REPAIR = 'plan_day_repair.v0.2.md';
-    private const LISTEN = 'plan_listen.v1.md';
+    private const LISTEN = 'plan_listen.v1.1.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}
 

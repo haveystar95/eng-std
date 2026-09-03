@@ -31,8 +31,8 @@ E2E-FIX-1: §2 матрица плана перебивает глобальну
 
 | что | где в коде |
 |---|---|
-| три реплики на слух | `POST /plans/listen-warmup` → `BuildListenWarmupHandler` → порт `ListenWarmupPort` → `Generation/…/PlanListenService` (**P-Listen v1**) |
-| тихий отбой | порт НЕ бросает: вендор упал, форма не та, список пуст — везде `[]`, и вход молча идёт к дате. Причина — в `ListenWarmupReporter` (лог), не на экране |
+| три реплики на слух и два продолжения цели | `POST /plans/listen-warmup` → `BuildListenWarmupHandler` → порт `ListenWarmupPort` → `Generation/…/PlanListenService` (**P-Listen v1.1**). Одна ручка, ДВА момента входа: без `target_lang` — только `continuations` («Дописать за тебя», кадр V4·01в), с ним — обе половины |
+| тихий отбой | порт НЕ бросает: вендор упал, форма не та, список пуст — везде пусто, и блок молча не показывается. Причина — в `ListenWarmupReporter` (лог), не на экране. Пустой `lines` у вызова БЕЗ языка дефектом не считается: это ответ, о котором просили |
 | учёт без плана | `PlanSpend::CALL_LISTEN`, `plan_id = NULL`: шаг стоит между уровнем и датой, а план создаётся кнопкой после даты |
 | что тапнул человек | едет обратно в `POST /plans` полем `listening[]`; вердикт на проводе не ездит |
 | хранение | `learning_plans.listening_diagnostics` (jsonb) → `ListeningDiagnostics`. `NULL` = шаг пропущен, и это НЕ то же самое, что «прошёл и ничего не понял» |
@@ -500,7 +500,7 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 | **P1** | `plan_outline.v0.4` — `PlanPromptLibrary::OUTLINE_VERSION` | `plan_outline.v0.4.md` | `PlanOutlineService` | `PlanSchemas::outline()` |
 | **P2** | `plan_day.v0.4.1` — `DAY_VERSION` | `plan_day.v0.4.1.md` | `PlanDayComposer` | `PlanSchemas::day()` |
 | **P2R** | `plan_day_repair.v0.2` — `REPAIR_VERSION` | `plan_day_repair.v0.2.md` | `PlanDayRepairer` | `PlanSchemas::repair()` |
-| **P-Listen** | `plan_listen.v1` — `LISTEN_VERSION` | `plan_listen.v1.md` | `PlanListenService` | `PlanSchemas::listen()` |
+| **P-Listen** | `plan_listen.v1.1` — `LISTEN_VERSION` | `plan_listen.v1.1.md` | `PlanListenService` | `PlanSchemas::listen()` |
 
 Обе половины плейсхолдеров форматирует `Generation/Application/Service/PlanPromptData`
 (`entities()`, `bullets()`, `json()`) — одна на P2 и P2R, чтобы брифы не разъехались.

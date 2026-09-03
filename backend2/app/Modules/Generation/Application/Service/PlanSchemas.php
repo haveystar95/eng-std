@@ -79,7 +79,7 @@ final class PlanSchemas
     }
 
     /**
-     * P-Listen v1 — THREE LINES THE OTHER PERSON WOULD SAY, and nothing else.
+     * P-Listen v1.1 — three lines the other person would say, AND two continuations of the goal.
      *
      * The smallest schema in this file, for the smallest call: the listening warm-up of the entry
      * (кадры V4·03…03г) is one minute of audio and three self-taps, and everything it needs is a
@@ -88,6 +88,11 @@ final class PlanSchemas
      * `place` is a STRING and not an enum on purpose. «на стойке» / «по телефону» are examples in
      * the prompt rather than a vocabulary — a scene the model invents needs a name the model
      * invents — and the client renders it as a надзаголовок without reading it.
+     *
+     * `continuations` (v1.1) are what «Дописать за тебя» offers on the goal step. Plain strings and
+     * no shape at all: they are the learner's own sentence carried a little further, and anything
+     * this schema could add — a length, a kind, a topic — would be the app deciding what a goal is
+     * allowed to grow into.
      *
      * @return array<string, mixed>
      */
@@ -99,7 +104,13 @@ final class PlanSchemas
             'place' => self::string(),
         ]);
 
-        return self::object(['lines' => self::arrayOf($line)]);
+        return self::object([
+            'lines' => self::arrayOf($line),
+            // v1.1. Both keys are always REQUIRED by strict mode, so the shape does not change with
+            // what was asked for: a call made before the language is chosen answers with an empty
+            // `lines` and a full `continuations`, and one made after fills both.
+            'continuations' => self::arrayOf(self::string()),
+        ]);
     }
 
     /**

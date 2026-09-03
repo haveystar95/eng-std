@@ -3340,18 +3340,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planEntryExample3 => 'Летим в отпуск с ребёнком, аэропорт, отель, аптека';
 
   @override
-  String get planEntryAddition1 => '…врач говорит только по-английски';
-
-  @override
-  String get planEntryAddition2 => '…нужно забрать рецепт в аптеке рядом';
-
-  @override
-  String get planEntryFinish1 => 'К врачу с ребёнком: объяснить симптомы и понять назначение';
-
-  @override
-  String get planEntryFinish2 => 'К врачу самому: болит спина, нужен рецепт';
-
-  @override
   String get planEntryNext => 'Дальше';
 
   @override

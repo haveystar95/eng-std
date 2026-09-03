@@ -11,12 +11,14 @@ use App\Modules\Generation\Application\Port\PlanPromptSource;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Learning\Application\Dto\ListenLineView;
 use App\Modules\Learning\Application\Dto\ListenWarmupBrief;
+use App\Modules\Learning\Application\Dto\ListenWarmupView;
 use App\Modules\Learning\Application\Port\ListenWarmupPort;
 use App\Modules\Shared\Domain\Service\LanguageName;
 use Throwable;
 
 /**
- * P-Listen — three lines of the situation for the entry's optional listening step (кадры V4·03…03г).
+ * P-Listen — three lines of the situation (кадры V4·03…03г) and the two continuations of
+ * «Дописать за тебя» (кадр V4·01в).
  *
  * The same seam as {@see PlanOutlineService}: one paid call through {@see ContentModelPort}, priced
  * and logged by the adapter everything else in this module uses, and written to the plan ledger.
@@ -47,6 +49,9 @@ final readonly class PlanListenService implements ListenWarmupPort
     /** The most lines the step will ever show. The prompt asks for three; this is the ceiling. */
     private const MAX_LINES = 3;
 
+    /** «Дописать за тебя» offers two. The frame draws two, and a third would be a menu. */
+    private const MAX_CONTINUATIONS = 2;
+
     public function __construct(
         private ContentModelPort $model,
         private PlanPromptSource $prompts,
@@ -54,12 +59,16 @@ final readonly class PlanListenService implements ListenWarmupPort
         private ListenWarmupReporter $reporter,
     ) {}
 
-    public function linesFor(ListenWarmupBrief $brief): array
+    public function warmupFor(ListenWarmupBrief $brief): ListenWarmupView
     {
         $prompt = $this->prompts->listen([
             'goal' => $brief->goalText,
             'support_lang' => LanguageName::of($brief->supportLang),
-            'target_lang' => LanguageName::of($brief->targetLang),
+            // EMPTY STAYS EMPTY. On the goal step the language is not chosen yet, and the prompt's
+            // own rule reads «may be empty … return lines as an empty array and fill only
+            // continuations» — so substituting a plausible default here would be answering a
+            // question the learner has not been asked.
+            'target_lang' => $brief->targetLang === '' ? '' : LanguageName::of($brief->targetLang),
             'level' => $brief->level,
         ]);
 
@@ -76,10 +85,11 @@ final readonly class PlanListenService implements ListenWarmupPort
                 'вызов модели не состоялся: ' . $e->getMessage(),
             );
 
-            return [];
+            return new ListenWarmupView();
         }
 
         $lines = $this->lines($answer->payload);
+        $continuations = $this->continuations($answer->payload);
 
         $this->ledger->record(new PlanSpend(
             planId: null,
@@ -93,20 +103,72 @@ final readonly class PlanListenService implements ListenWarmupPort
             tokensIn: $answer->tokensIn,
             tokensOut: $answer->tokensOut,
             costUsd: $answer->costUsd,
-            size: count($lines),
-            succeeded: $lines !== [],
-            error: $lines !== [] ? null : 'ответ не содержит ни одной пригодной реплики',
+            size: count($lines) + count($continuations),
+            // A call BEFORE the language is chosen is a success with no lines at all — that is what
+            // the prompt was asked for. What counts as failure is an answer with nothing usable in
+            // the half that WAS asked for.
+            succeeded: $brief->targetLang === '' ? $continuations !== [] : $lines !== [],
+            error: $this->shortfall($brief, $lines, $continuations),
         ));
 
-        if ($lines === []) {
-            $this->reporter->notOffered(
-                $brief->userId,
-                $brief->targetLang,
-                'ответ не содержит ни одной пригодной реплики',
-            );
+        $shortfall = $this->shortfall($brief, $lines, $continuations);
+        if ($shortfall !== null) {
+            $this->reporter->notOffered($brief->userId, $brief->targetLang, $shortfall);
         }
 
-        return $lines;
+        return new ListenWarmupView(lines: $lines, continuations: $continuations);
+    }
+
+    /**
+     * What was asked for and did not come back, in words — or NULL when the answer was enough.
+     *
+     * «Enough» depends on what was asked: a goal-step call wants continuations and no lines, and
+     * saying its empty `lines` is a defect would put a warning in the log every time somebody types
+     * a goal.
+     *
+     * @param  list<ListenLineView>  $lines
+     * @param  list<string>  $continuations
+     */
+    private function shortfall(ListenWarmupBrief $brief, array $lines, array $continuations): ?string
+    {
+        if ($brief->targetLang === '') {
+            return $continuations === [] ? 'ответ не содержит ни одного продолжения цели' : null;
+        }
+
+        return $lines === [] ? 'ответ не содержит ни одной пригодной реплики' : null;
+    }
+
+    /**
+     * «Дописать за тебя», read defensively — two at most, blanks dropped.
+     *
+     * No check that a continuation actually continues the goal: the prompt asks for that and the
+     * only way to verify it would be a second model call about the first one. What IS checked is
+     * that there is something to tap — an empty string in a card is a card that does nothing.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return list<string>
+     */
+    private function continuations(array $payload): array
+    {
+        $rows = $payload['continuations'] ?? null;
+        if (! is_array($rows)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            $text = self::text($row);
+            if ($text === '') {
+                continue;
+            }
+
+            $out[] = $text;
+            if (count($out) === self::MAX_CONTINUATIONS) {
+                break;
+            }
+        }
+
+        return $out;
     }
 
     /**

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Port;
 
-use App\Modules\Learning\Application\Dto\ListenLineView;
 use App\Modules\Learning\Application\Dto\ListenWarmupBrief;
+use App\Modules\Learning\Application\Dto\ListenWarmupView;
 
 /**
- * P-Listen, as far as Learning is concerned: a goal in, three lines out — OR NOTHING.
+ * P-Listen, as far as Learning is concerned: a goal in, three lines and two continuations out —
+ * OR NOTHING.
  *
  * Declared here and fulfilled in Generation, the same direction as {@see PlanOutlinePort}.
  *
@@ -26,6 +27,11 @@ use App\Modules\Learning\Application\Dto\ListenWarmupBrief;
  */
 interface ListenWarmupPort
 {
-    /** @return list<ListenLineView> empty = the step is not offered at all */
-    public function linesFor(ListenWarmupBrief $brief): array;
+    /**
+     * Either half may come back empty, and empty always means «этого блока нет».
+     *
+     * A brief with NO target language asks for the continuations alone — that is the goal step,
+     * where the language has not been chosen yet ({@see ListenWarmupBrief::$targetLang}).
+     */
+    public function warmupFor(ListenWarmupBrief $brief): ListenWarmupView;
 }

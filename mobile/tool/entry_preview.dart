@@ -57,14 +57,20 @@ class _PreviewApi extends ApiClient {
       LearningPlan.fromJson(jsonDecode(kEntryPreviewPlanJson) as Map<String, dynamic>);
 
   @override
-  Future<List<ListenLine>> listenWarmup({
+  Future<ListenWarmup> listenWarmup({
     required String goalText,
-    required String targetLang,
+    String targetLang = '',
     required String level,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    // Продолжения приходят быстро (их ждут на паузе набора), реплики — как настоящий вызов.
+    await Future<void>.delayed(
+      targetLang.isEmpty ? const Duration(milliseconds: 600) : const Duration(milliseconds: 1500),
+    );
 
-    return kEntryPreviewLines;
+    return ListenWarmup(
+      lines: targetLang.isEmpty ? const [] : kEntryPreviewLines,
+      continuations: kEntryPreviewContinuations,
+    );
   }
 
   @override

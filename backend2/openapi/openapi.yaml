@@ -1825,37 +1825,57 @@ paths:
   /plans/listen-warmup:
     post:
       tags: [Plans]
-      summary: Three lines of the situation, for the entry's optional listening step
+      summary: Lines of the situation to listen to, and continuations of the goal
       description: >-
-        «Хочешь, настрою точнее?» (кадры V4·03…03г). Asked BEFORE any plan exists — the step stands
-        between the level and the date, and the plan is created by the button after the date — so
-        this carries no plan id and creates nothing.
+        ONE endpoint, TWO moments of the entry, and `target_lang` is what tells them apart.
 
-        ALWAYS 200. An EMPTY `lines` is a legitimate answer and means «шаг не предлагается»: the
-        step is optional in the product, so a vendor outage, a malformed answer or an empty list all
-        resolve to the same thing and the entry goes straight to the date. There is no retry and no
-        error screen; the failure is in the log and in the spend ledger.
+        WITHOUT `target_lang` — the goal step (кадр V4·01в), fired on a typing pause while the goal
+        is still too short. The learner has not reached the language question yet, so the answer is
+        `continuations` only and `lines` comes back empty. That is what «Дописать за тебя» offers:
+        two ways to carry their own sentence further. It replaced static suggestions, which lived on
+        somebody else's topic — a goal about an IT interview was offered a hint about a sore back.
 
-        It SPENDS MONEY (one `gpt-5.4` call, ≈ $0.004), which is why it is a POST and why nothing
-        polls it: the client calls it once, in the background, right after the level is chosen. Its
-        ledger row carries `plan_id = null`, honestly — there is nothing yet to name.
+        WITH `target_lang` — «Хочешь, настрою точнее?» (кадры V4·03…03г), fired in the background
+        right after the level is chosen. Both halves come back.
 
-        What the learner then taps is kept on the device and rides back with `POST /plans` as
-        `listening`.
+        Asked BEFORE any plan exists, so it carries no plan id and creates nothing; its ledger row
+        holds `plan_id = null`, honestly — there is nothing yet to name.
+
+        ALWAYS 200, and an EMPTY half is a legitimate answer meaning «этого блока нет»: both things
+        it feeds are optional, so a vendor outage, a malformed answer or an empty list all resolve
+        the same way — the block is not shown and nothing apologises for it. There is no retry and
+        no error screen; the failure is in the log and in the spend ledger.
+
+        It SPENDS MONEY (one `gpt-5.4` call, ≈ $0.002 for continuations alone, ≈ $0.004 for the full
+        answer), which is why it is a POST and why nothing polls it. The client debounces the typing
+        pause and caches by the goal text, so the same sentence is never paid for twice.
+
+        What the learner taps on the listening step is kept on the device and rides back with
+        `POST /plans` as `listening`.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [goal_text, target_lang, level]
+              required: [goal_text, level]
               properties:
                 goal_text: { type: string, minLength: 5, maxLength: 500 }
-                target_lang: { type: string, minLength: 2, maxLength: 5 }
+                target_lang:
+                  type: string
+                  minLength: 2
+                  maxLength: 5
+                  nullable: true
+                  description: >-
+                    OPTIONAL, and its absence is a question rather than an omission: without it the
+                    call is the goal step asking for continuations alone. Present-but-unsupported is
+                    still a 422.
                 level: { type: string, enum: [zero, basic, conversational, fluent] }
       responses:
         '200':
-          description: OK — possibly with an empty list, which means the step is not offered.
+          description: >-
+            OK. Either half may be empty; an empty one means that block is not shown. A call made
+            without `target_lang` always answers with an empty `lines`.
           content:
             application/json:
               schema:
@@ -1863,6 +1883,7 @@ paths:
                 properties:
                   data:
                     type: object
+                    required: [lines, continuations]
                     properties:
                       lines:
                         type: array
@@ -1882,6 +1903,13 @@ paths:
                                 2–4 words naming where it sounds — «на стойке», «по телефону». The
                                 надзаголовок over the play button. Prose from the model, rendered
                                 and never matched.
+                      continuations:
+                        type: array
+                        maxItems: 2
+                        description: >-
+                          «Дописать за тебя» — the learner's own goal carried a little further, in
+                          the support language. Tapping one appends it to what they typed.
+                        items: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
 

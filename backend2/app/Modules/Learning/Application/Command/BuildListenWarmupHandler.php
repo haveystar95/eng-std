@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Command;
 
-use App\Modules\Learning\Application\Dto\ListenLineView;
 use App\Modules\Learning\Application\Dto\ListenWarmupBrief;
+use App\Modules\Learning\Application\Dto\ListenWarmupView;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ListenWarmupPort;
 
@@ -29,13 +29,13 @@ final readonly class BuildListenWarmupHandler
         private LearnerProfileReader $profiles,
     ) {}
 
-    /** @return list<ListenLineView> empty = the step is not offered */
-    public function __invoke(BuildListenWarmup $command): array
+    public function __invoke(BuildListenWarmup $command): ListenWarmupView
     {
-        return $this->listen->linesFor(new ListenWarmupBrief(
+        return $this->listen->warmupFor(new ListenWarmupBrief(
             userId: $command->actorId->value,
             goalText: trim($command->goalText),
             supportLang: $this->profiles->nativeLangFor($command->actorId),
+            // May be EMPTY — see the command. An empty one asks for the continuations alone.
             targetLang: $command->targetLang,
             level: $command->level,
         ));

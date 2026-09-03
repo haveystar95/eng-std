@@ -24,7 +24,6 @@ use App\Modules\Learning\Application\Command\ReschedulePlan;
 use App\Modules\Learning\Application\Command\ReschedulePlanHandler;
 use App\Modules\Learning\Application\Command\StartPlan;
 use App\Modules\Learning\Application\Command\StartPlanHandler;
-use App\Modules\Learning\Application\Dto\ListenLineView;
 use App\Modules\Learning\Application\Dto\PlanDayTermView;
 use App\Modules\Learning\Application\Dto\PlanDayView;
 use App\Modules\Learning\Application\Dto\PlanSummaryView;
@@ -97,6 +96,11 @@ final class PlanController
      * plan is created by the button after the date. What the learner taps is kept on the device and
      * rides back with `POST /plans` as `listening`.
      *
+     * CALLED TWICE, at two moments of the entry, and `target_lang` is what tells them apart. On the
+     * goal step it is absent — the language has not been chosen — and the answer is the two
+     * continuations of «Дописать за тебя» with no lines at all. After the level it is present and
+     * the answer holds both.
+     *
      * ALWAYS 200, and an empty list is a legitimate answer — «шаг не предлагается». The step is
      * optional in the product, so a vendor outage is not an error the learner is shown; the client
      * reads `lines: []` and goes straight to the date. A failure worth a person's attention is in
@@ -107,16 +111,16 @@ final class PlanController
      */
     public function listenWarmup(ListenWarmupRequest $request): JsonResponse
     {
-        $lines = ($this->listenWarmup)(new BuildListenWarmup(
+        $warmup = ($this->listenWarmup)(new BuildListenWarmup(
             actorId: $this->actorId($request),
             goalText: (string) $request->input('goal_text'),
-            targetLang: (string) $request->input('target_lang'),
+            // Absent or empty is the GOAL STEP asking for continuations alone — the learner has not
+            // reached the language question yet. It is a legitimate value, not a missing one.
+            targetLang: (string) $request->input('target_lang', ''),
             level: (string) $request->input('level'),
         ));
 
-        return new JsonResponse([
-            'data' => ['lines' => array_map(static fn (ListenLineView $l): array => $l->toArray(), $lines)],
-        ]);
+        return new JsonResponse(['data' => $warmup->toArray()]);
     }
 
     public function store(CreatePlanRequest $request): JsonResponse

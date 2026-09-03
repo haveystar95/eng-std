@@ -4809,30 +4809,6 @@ abstract class AppLocalizations {
   /// **'Летим в отпуск с ребёнком, аэропорт, отель, аптека'**
   String get planEntryExample3;
 
-  /// Дополнение к цели 1 (кадр V4·01б).
-  ///
-  /// In ru, this message translates to:
-  /// **'…врач говорит только по-английски'**
-  String get planEntryAddition1;
-
-  /// Дополнение к цели 2.
-  ///
-  /// In ru, this message translates to:
-  /// **'…нужно забрать рецепт в аптеке рядом'**
-  String get planEntryAddition2;
-
-  /// Готовое продолжение 1 (кадр V4·01в).
-  ///
-  /// In ru, this message translates to:
-  /// **'К врачу с ребёнком: объяснить симптомы и понять назначение'**
-  String get planEntryFinish1;
-
-  /// Готовое продолжение 2.
-  ///
-  /// In ru, this message translates to:
-  /// **'К врачу самому: болит спина, нужен рецепт'**
-  String get planEntryFinish2;
-
   /// Кнопка перехода к следующему шагу входа.
   ///
   /// In ru, this message translates to:

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/api_client.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/review_sync.dart';
 import 'package:eng_std/data/session_completion_sync.dart';
+import 'package:eng_std/data/token_store.dart';
 import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
 import 'package:eng_std/features/plan/plan_day_screen.dart';
 import 'package:eng_std/features/plan/plan_day_summary.dart';
@@ -213,6 +215,39 @@ ProviderScope _summaryScope(_CompletionSpy spy, Widget child, {LearningPlan? pla
 
 /// A phone tall enough for a whole entry step, so a test can look at the button without scrolling
 /// a lazily-built list first. The default 800×600 surface cuts the CTA off the bottom of кадр V4·01.
+/// Сервер, который отвечает «Дописать за тебя» ровно тем, что ему сказали.
+///
+/// Блок продолжений перестал быть статикой (решение владельца 03.09): заготовки жили на чужой теме
+/// и выглядели поломкой. Поэтому и тест теперь про ПУТЬ — пауза набора, ответ, тап, — а не про две
+/// строки, вшитые в экран.
+class _ContinuationsApi extends ApiClient {
+  _ContinuationsApi(this.continuations) : super(TokenStore());
+
+  final List<String> continuations;
+  int calls = 0;
+
+  /// Языка на шаге цели нет, и это часть проверки: пустой `targetLang` = «только продолжения».
+  String? lastTargetLang;
+
+  @override
+  Future<ListenWarmup> listenWarmup({
+    required String goalText,
+    String targetLang = '',
+    required String level,
+  }) async {
+    calls++;
+    lastTargetLang = targetLang;
+
+    return ListenWarmup(continuations: continuations);
+  }
+}
+
+/// Довести экран до момента, когда пауза набора отработала и ответ пришёл.
+Future<void> _settleContinuations(WidgetTester tester) async {
+  await tester.pump(const Duration(milliseconds: 1000));
+  await tester.pumpAndSettle();
+}
+
 void _tallPhone(WidgetTester tester) {
   tester.view.physicalSize = const Size(1170, 3000);
   tester.view.devicePixelRatio = 3;
@@ -246,33 +281,140 @@ void main() {
 
   testWidgets('a two-word goal says what is missing instead of blocking with red', (tester) async {
     _tallPhone(tester);
+    final api = _ContinuationsApi(const [
+      'и понять, что скажет врач про лечение',
+      'и записать ребёнка на приём',
+    ]);
+
     await tester.pumpWidget(
-      ProviderScope(child: _app(const PlanEntryScreen(initialGoal: 'К врачу'))),
+      ProviderScope(
+        overrides: [apiClientProvider.overrideWithValue(api)],
+        child: _app(const PlanEntryScreen(initialGoal: 'К врачу')),
+      ),
     );
     await tester.pumpAndSettle();
 
-    // The hint of кадр V4·01в, and the ready continuations under it — not an error message.
+    // Подсказка кадра V4·01в — не сообщение об ошибке и не красное.
     expect(find.textContaining('Пары слов мало'), findsOneWidget);
-    expect(find.text('ДОПИСАТЬ ЗА ТЕБЯ'), findsOneWidget);
-
-    // …and «Дальше» does not offer to spend a request on a goal the model cannot use.
+    // …и «Дальше» не предлагает потратить запрос на цель, которую модель не сможет использовать.
     final next = tester.widget<EntryCta>(find.byType(EntryCta));
     expect(next.enabled && next.onPressed != null, isFalse);
+
+    // Блок продолжений появляется ТОЛЬКО когда они пришли — не раньше.
+    expect(find.text('ДОПИСАТЬ ЗА ТЕБЯ'), findsNothing);
+    await _settleContinuations(tester);
+
+    expect(find.text('ДОПИСАТЬ ЗА ТЕБЯ'), findsOneWidget);
+    expect(find.text('и понять, что скажет врач про лечение'), findsOneWidget);
+    // Языка на этом шаге ещё нет — сервер просят об одних продолжениях.
+    expect(api.lastTargetLang, '');
   });
 
-  testWidgets('tapping a ready continuation fills the field and opens «Дальше»', (tester) async {
+  testWidgets('блок продолжений молча не показывается, если их не написали', (tester) async {
+    // Тот же тихий контракт, что у шага слуха: необязательное, что не собралось, не извиняется —
+    // его просто нет.
     _tallPhone(tester);
     await tester.pumpWidget(
-      ProviderScope(child: _app(const PlanEntryScreen(initialGoal: 'К врачу'))),
+      ProviderScope(
+        overrides: [apiClientProvider.overrideWithValue(_ContinuationsApi(const []))],
+        child: _app(const PlanEntryScreen(initialGoal: 'К врачу')),
+      ),
     );
     await tester.pumpAndSettle();
+    await _settleContinuations(tester);
 
-    await tester.tap(find.textContaining('К врачу с ребёнком'));
+    expect(find.text('ДОПИСАТЬ ЗА ТЕБЯ'), findsNothing);
+    // Подсказка о том, чего не хватает, при этом остаётся: она не про сервер.
+    expect(find.textContaining('Пары слов мало'), findsOneWidget);
+  });
+
+  testWidgets('одна и та же цель не покупается дважды', (tester) async {
+    _tallPhone(tester);
+    final api = _ContinuationsApi(const ['и понять назначение']);
+
+    // Цель СРАЗУ достаточной длины: иначе «Дальше» приглушено и уйти с шага нечем.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [apiClientProvider.overrideWithValue(api)],
+        child: _app(
+          const PlanEntryScreen(initialGoal: 'Иду к врачу с ребёнком, надо объяснить симптомы'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _settleContinuations(tester);
+    expect(api.calls, 1);
+
+    // Ушли на шаг языка — это ВТОРОЙ, осознанный вызов: разогрев на слух с языком.
+    await tester.tap(find.text('Дальше'));
+    await tester.pumpAndSettle();
+    expect(api.calls, 2);
+
+    // …и вернулись «Изм.» на ту же самую цель. Третьего вызова нет: текст тот же, ответ в кэше.
+    await tester.tap(find.text('Изм.').first);
+    await tester.pumpAndSettle();
+    await _settleContinuations(tester);
+
+    expect(api.calls, 2);
+    expect(find.text('и понять назначение'), findsOneWidget);
+  });
+
+  testWidgets('тап по продолжению ДОПИСЫВАЕТ к набранному и открывает «Дальше»', (tester) async {
+    _tallPhone(tester);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          apiClientProvider.overrideWithValue(
+            _ContinuationsApi(const ['и понять, что скажет врач про лечение']),
+          ),
+        ],
+        child: _app(const PlanEntryScreen(initialGoal: 'К врачу')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _settleContinuations(tester);
+
+    await tester.tap(find.text('и понять, что скажет врач про лечение'));
     await tester.pumpAndSettle();
 
+    // ДОПИСАНО, а не заменено: то, что человек набрал, никуда не делось.
+    expect(
+      find.text('К врачу и понять, что скажет врач про лечение'),
+      findsOneWidget,
+    );
     final next = tester.widget<EntryCta>(find.byType(EntryCta));
     expect(next.enabled && next.onPressed != null, isTrue);
     expect(find.text('хватит для плана'), findsOneWidget);
+  });
+
+  testWidgets('продолжение, пересказавшее цель, ЗАМЕНЯЕТ её, а не дописывается', (tester) async {
+    // Промпт просит «never restate what is already written», и живой прогон 03.09 поймал, как это
+    // правило нарушается на половине целей. Дописать такой ответ значило бы показать человеку его
+    // собственную фразу дважды.
+    _tallPhone(tester);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          apiClientProvider.overrideWithValue(
+            _ContinuationsApi(const [
+              'Иду к врачу, болит спина, и я хочу понять, что мне делать дальше',
+            ]),
+          ),
+        ],
+        child: _app(const PlanEntryScreen(initialGoal: 'Иду к врачу, болит спина')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _settleContinuations(tester);
+
+    await tester.tap(find.textContaining('и я хочу понять'));
+    await tester.pumpAndSettle();
+
+    // Читаем САМО ПОЛЕ, а не экран: та же строка стоит и в карточке подсказки.
+    final field = tester.widget<EditableText>(find.byType(EditableText)).controller.text;
+    expect(field, 'Иду к врачу, болит спина, и я хочу понять, что мне делать дальше');
+    // Никакого «Иду к врачу, болит спина Иду к врачу, болит спина, …».
+    expect(field, isNot(contains('спина Иду к врачу')));
   });
 
   testWidgets('превью говорит ТЕМАМИ, а не пересказом цели', (tester) async {

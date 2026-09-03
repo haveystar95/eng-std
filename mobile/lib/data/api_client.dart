@@ -561,34 +561,39 @@ class ApiClient {
     return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// «Послушай три реплики из твоей ситуации» — the entry's optional step (кадр V4·03).
+  /// The entry's two optional blocks, from one call — «Дописать за тебя» and «Послушать».
   ///
-  /// Called in the background right after the level is chosen, BEFORE any plan exists. An EMPTY
-  /// list is a legitimate answer and means the step is not offered: the server answers 200 with
-  /// nothing when the warm-up could not be written, and this client turns a network failure into
-  /// the same empty list for the same reason — the step is optional, and a person who never asked
-  /// for it must not be shown an error about it.
+  /// WITHOUT [targetLang] it is the goal step (кадр V4·01в), fired on a typing pause: the language
+  /// has not been chosen, and the answer is the two continuations alone. WITH it, right after the
+  /// level is chosen, the answer holds the three lines too (кадр V4·03).
+  ///
+  /// Called BEFORE any plan exists. An EMPTY answer is legitimate and means the block is not shown:
+  /// the server answers 200 with nothing when it could not be written, and this client turns a
+  /// network failure into the same emptiness for the same reason — both blocks are optional, and a
+  /// person who never asked for one must not be shown an error about it.
   ///
   /// It waits on a model, so it states its own timeout like [buildPlanOutline] does.
-  Future<List<ListenLine>> listenWarmup({
+  Future<ListenWarmup> listenWarmup({
     required String goalText,
-    required String targetLang,
+    String targetLang = '',
     required String level,
   }) async {
     try {
       final r = await _dio.post(
         '/plans/listen-warmup',
-        data: {'goal_text': goalText, 'target_lang': targetLang, 'level': level},
+        data: {
+          'goal_text': goalText,
+          // OMITTED, not sent empty: on the goal step the language has not been chosen, and the
+          // absence of the key is what asks for the continuations alone.
+          if (targetLang.isNotEmpty) 'target_lang': targetLang,
+          'level': level,
+        },
         options: Options(receiveTimeout: const Duration(minutes: 2)),
       );
-      final data = _data(r) as Map<String, dynamic>;
 
-      return ((data['lines'] as List?) ?? const [])
-          .whereType<Map<String, dynamic>>()
-          .map(ListenLine.fromJson)
-          .toList(growable: false);
+      return ListenWarmup.fromJson(_data(r) as Map<String, dynamic>);
     } catch (_) {
-      return const [];
+      return const ListenWarmup();
     }
   }
 

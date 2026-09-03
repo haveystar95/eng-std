@@ -3186,19 +3186,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEntryExample3 => 'Flying on holiday with a child: airport, hotel, pharmacy';
 
   @override
-  String get planEntryAddition1 => '…the doctor only speaks English';
-
-  @override
-  String get planEntryAddition2 => '…I need to pick up a prescription at the pharmacy nearby';
-
-  @override
-  String get planEntryFinish1 =>
-      'To the doctor with my child: describe the symptoms and understand the treatment';
-
-  @override
-  String get planEntryFinish2 => 'To the doctor myself: my back hurts, I need a prescription';
-
-  @override
   String get planEntryNext => 'Next';
 
   @override

@@ -57,11 +57,19 @@ beforeEach(function (): void {
             $isListen = is_array($properties) && isset($properties['lines']);
 
             if ($isListen) {
+                // The prompt's own rule: no target language → no lines, continuations only. The
+                // fake obeys it, so the test measures the PATH rather than a model that ignores it.
+                $languageChosen = ! str_contains($prompt->text, "Target language:  —");
+
                 return $this->answer([
-                    'lines' => [
+                    'lines' => $languageChosen ? [
                         ['text' => 'Do you have an appointment?', 'translation' => 'У вас есть запись?', 'place' => 'на стойке'],
                         ['text' => 'What seems to be the problem?', 'translation' => 'Что случилось?', 'place' => 'в кабинете'],
                         ['text' => 'Please take a seat.', 'translation' => 'Присаживайтесь.', 'place' => 'в коридоре'],
+                    ] : [],
+                    'continuations' => [
+                        'и понять, что скажет врач про лечение',
+                        'и записать ребёнка на приём',
                     ],
                 ]);
             }
@@ -152,6 +160,37 @@ it('offers three lines to listen to before any plan exists', function () {
         ->and($lines[0]['place'])->toBe('на стойке')
         // No plan was created by asking — the step is before the plan and must not leave one.
         ->and(\App\Modules\Learning\Infrastructure\Eloquent\PlanModel::query()->count())->toBe(0);
+});
+
+it('answers the goal step with continuations alone — no language, no lines', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
+
+    // «Дописать за тебя» на кадре V4·01в: язык ещё не выбран, поэтому его в запросе НЕТ.
+    $data = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/plans/listen-warmup', [
+            'goal_text' => 'Иду к врачу, болит спина',
+            'level' => 'basic',
+        ])->assertOk()->json('data');
+
+    expect($data['continuations'])->toHaveCount(2)
+        ->and($data['continuations'][0])->toContain('понять, что скажет врач')
+        ->and($data['lines'])->toBe([])
+        // Ни плана, ни черновика: блок подсказок ничего не создаёт.
+        ->and(\App\Modules\Learning\Infrastructure\Eloquent\PlanModel::query()->count())->toBe(0);
+});
+
+it('still refuses a target language it does not teach', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
+
+    // Отсутствие языка — вопрос, а мусор на его месте — по-прежнему 422.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/plans/listen-warmup', [
+            'goal_text' => 'Иду к врачу, болит спина',
+            'target_lang' => 'klingon',
+            'level' => 'basic',
+        ])->assertStatus(422);
 });
 
 it('carries a mixed listening result into both prompts as «упор на понимание»', function () {

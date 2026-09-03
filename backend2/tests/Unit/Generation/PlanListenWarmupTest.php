@@ -22,13 +22,13 @@ use App\Modules\Learning\Application\Dto\ListenWarmupBrief;
  * an absence of behaviour — a service that started throwing would put a 500 in front of a person
  * who was about to pick a date, and nothing on the screen would ever have shown it was coming.
  */
-function listenBrief(): ListenWarmupBrief
+function listenBrief(string $targetLang = 'en'): ListenWarmupBrief
 {
     return new ListenWarmupBrief(
         userId: '01M1BVKQ1AF375ER40H96D4P70',
         goalText: 'Иду к врачу с ребёнком в частную клинику, надо объяснить симптомы',
         supportLang: 'ru',
-        targetLang: 'en',
+        targetLang: $targetLang,
         level: 'basic',
     );
 }
@@ -104,10 +104,13 @@ function listenReporter(): ListenWarmupReporter
     };
 }
 
-/** @param list<array{text: string, translation: string, place: string}> $lines */
-function listenPayload(array $lines): array
+/**
+ * @param  list<array{text: string, translation: string, place: string}>  $lines
+ * @param  list<string>  $continuations
+ */
+function listenPayload(array $lines, array $continuations = []): array
 {
-    return ['lines' => $lines];
+    return ['lines' => $lines, 'continuations' => $continuations];
 }
 
 it('returns three lines and pays for them with no plan id', function () {
@@ -119,7 +122,8 @@ it('returns three lines and pays for them with no plan id', function () {
     $ledger = listenLedger();
 
     $lines = (new PlanListenService($model, new PlanPromptLibrary(), $ledger, listenReporter()))
-        ->linesFor(listenBrief());
+        ->warmupFor(listenBrief())
+        ->lines;
 
     expect($lines)->toHaveCount(3)
         ->and($lines[1])->toBeInstanceOf(ListenLineView::class)
@@ -141,11 +145,12 @@ it('goes silent when the model call fails — no exception, no retry, no ledger 
     $ledger = listenLedger();
     $reporter = listenReporter();
 
-    $lines = (new PlanListenService($model, new PlanPromptLibrary(), $ledger, $reporter))
-        ->linesFor(listenBrief());
+    $warmup = (new PlanListenService($model, new PlanPromptLibrary(), $ledger, $reporter))
+        ->warmupFor(listenBrief());
 
-    // THE WHOLE CONTRACT: an empty list, which the entry reads as «шаг не предлагается».
-    expect($lines)->toBe([])
+    // THE WHOLE CONTRACT: empty everywhere, which the entry reads as «шаг не предлагается».
+    expect($warmup->lines)->toBe([])
+        ->and($warmup->continuations)->toBe([])
         // One call. A retry would double the wait before a screen nobody asked for.
         ->and($model->calls)->toBe(1)
         // Nothing was bought — a vendor error before an answer is not a purchase.
@@ -165,7 +170,8 @@ it('goes silent on an answer with no usable line, and still records the call it 
     $reporter = listenReporter();
 
     $lines = (new PlanListenService($model, new PlanPromptLibrary(), $ledger, $reporter))
-        ->linesFor(listenBrief());
+        ->warmupFor(listenBrief())
+        ->lines;
 
     expect($lines)->toBe([])
         ->and($reporter->reasons)->toHaveCount(1)
@@ -179,7 +185,8 @@ it('goes silent on an answer that is not the shape at all', function () {
     $model = listenModel(['lines' => 'три реплики']);
 
     $lines = (new PlanListenService($model, new PlanPromptLibrary(), listenLedger(), listenReporter()))
-        ->linesFor(listenBrief());
+        ->warmupFor(listenBrief())
+        ->lines;
 
     expect($lines)->toBe([]);
 });
@@ -191,7 +198,8 @@ it('never shows more than three lines, whatever the answer holds', function () {
     }
 
     $lines = (new PlanListenService(listenModel(listenPayload($rows)), new PlanPromptLibrary(), listenLedger(), listenReporter()))
-        ->linesFor(listenBrief());
+        ->warmupFor(listenBrief())
+        ->lines;
 
     expect($lines)->toHaveCount(3)
         ->and($lines[2]->text)->toBe('Line 3?');
@@ -203,7 +211,7 @@ it('sends the goal and the languages by name, and no plan facts at all', functio
     ]));
 
     (new PlanListenService($model, new PlanPromptLibrary(), listenLedger(), listenReporter()))
-        ->linesFor(listenBrief());
+        ->warmupFor(listenBrief());
 
     expect($model->lastPrompt)->toContain('Иду к врачу с ребёнком')
         // Names, not codes — the prompt is English prose about «in {{target_lang}}».
@@ -212,4 +220,81 @@ it('sends the goal and the languages by name, and no plan facts at all', functio
         ->and($model->lastPrompt)->not->toContain('{{goal}}')
         // The header above the first `---` is for readers and must not reach the model.
         ->and($model->lastPrompt)->not->toContain('Боевой промпт');
+});
+
+// ── v1.1: «Дописать за тебя» ─────────────────────────────────────────────────────────────────
+//
+// Один вызов, два момента входа, и различает их ТОЛЬКО язык. На шаге цели его ещё нет, и тогда
+// промпт по своему же правилу возвращает продолжения без реплик.
+
+it('asks for continuations alone when the language is not chosen yet', function () {
+    $model = listenModel(listenPayload([], [
+        'и понять, что скажет врач про лечение',
+        'и записать ребёнка на приём',
+    ]));
+    $ledger = listenLedger();
+    $reporter = listenReporter();
+
+    $warmup = (new PlanListenService($model, new PlanPromptLibrary(), $ledger, $reporter))
+        ->warmupFor(listenBrief(targetLang: ''));
+
+    expect($warmup->continuations)->toHaveCount(2)
+        ->and($warmup->continuations[0])->toContain('понять, что скажет врач')
+        // No lines, and that is the ANSWER rather than a shortfall — nothing is logged about it.
+        ->and($warmup->lines)->toBe([])
+        ->and($reporter->reasons)->toBe([])
+        ->and($ledger->rows[0]->succeeded)->toBeTrue();
+
+    // The placeholder is left EMPTY rather than filled with a plausible default: the learner has
+    // not answered the language question, and the prompt is told so in its own words.
+    expect($model->lastPrompt)->toContain('may be empty if the user has not chosen it yet')
+        ->and($model->lastPrompt)->not->toContain('{{target_lang}}')
+        ->and($model->lastPrompt)->not->toContain('English');
+});
+
+it('counts a language-less call with no continuations as the failure it is', function () {
+    $ledger = listenLedger();
+    $reporter = listenReporter();
+
+    $warmup = (new PlanListenService(listenModel(listenPayload([], [])), new PlanPromptLibrary(), $ledger, $reporter))
+        ->warmupFor(listenBrief(targetLang: ''));
+
+    expect($warmup->continuations)->toBe([])
+        ->and($ledger->rows[0]->succeeded)->toBeFalse()
+        ->and($reporter->reasons)->toHaveCount(1)
+        ->and($reporter->reasons[0])->toContain('продолжени');
+});
+
+it('brings the continuations back with the lines once the language is known', function () {
+    $model = listenModel(listenPayload([
+        ['text' => 'Do you have an appointment?', 'translation' => 'У вас есть запись?', 'place' => 'на стойке'],
+    ], ['и понять назначение', 'и спросить про дозировку']));
+
+    $warmup = (new PlanListenService($model, new PlanPromptLibrary(), listenLedger(), listenReporter()))
+        ->warmupFor(listenBrief());
+
+    expect($warmup->lines)->toHaveCount(1)
+        ->and($warmup->continuations)->toHaveCount(2);
+});
+
+it('never offers more than two continuations, and drops the blank ones', function () {
+    $warmup = (new PlanListenService(
+        listenModel(listenPayload([], ['первое', '   ', 'второе', 'третье'])),
+        new PlanPromptLibrary(),
+        listenLedger(),
+        listenReporter(),
+    ))->warmupFor(listenBrief(targetLang: ''));
+
+    expect($warmup->continuations)->toBe(['первое', 'второе']);
+});
+
+it('goes silent on continuations that are not the shape at all', function () {
+    $warmup = (new PlanListenService(
+        listenModel(['lines' => [], 'continuations' => 'допиши сам']),
+        new PlanPromptLibrary(),
+        listenLedger(),
+        listenReporter(),
+    ))->warmupFor(listenBrief(targetLang: ''));
+
+    expect($warmup->continuations)->toBe([]);
 });
