@@ -4071,6 +4071,12 @@ abstract class AppLocalizations {
   /// **'Собирается'**
   String get planDayBuilding;
 
+  /// Пометка роли в левом поле реплики на экране дня (кадр D-01): «он» — говорит собеседник. Курсив и эта метка вместе однозначно говорят, чья это речь.
+  ///
+  /// In ru, this message translates to:
+  /// **'он'**
+  String get planSpeakerRoleShort;
+
   /// Пометка реплики собеседника (speaker = role) — на экране дня и на карточке в сессии. Если каркас дня назвал роль, вместо этой строки показывается её имя. Лексика: в UI слово «фраза», не «реплика».
   ///
   /// In ru, this message translates to:
@@ -4485,42 +4491,6 @@ abstract class AppLocalizations {
   /// **'{progress} · {section}'**
   String planProgressWithSection(String progress, String section);
 
-  /// Строка над заданием плановой посадки: что это за карточка и что с ней делают — «фраза · скажи слово вслух». Заменила «СТУПЕНЬ B · СБОРКА»: ступень стоит меткой в шапке, а секция — в подписи полосы.
-  ///
-  /// In ru, this message translates to:
-  /// **'{kind} · {doing}'**
-  String planTaskDoing(String kind, String doing);
-
-  /// Что за карточка, в строке над заданием: kind = word.
-  ///
-  /// In ru, this message translates to:
-  /// **'слово'**
-  String get planKindWord;
-
-  /// Что за карточка, в строке над заданием: kind = chunk.
-  ///
-  /// In ru, this message translates to:
-  /// **'связка'**
-  String get planKindChunk;
-
-  /// Что за карточка, в строке над заданием: kind = line.
-  ///
-  /// In ru, this message translates to:
-  /// **'фраза'**
-  String get planKindLine;
-
-  /// Что делают с фразой, у которой есть ключ говорения: произносят её, и главное в ней — одно слово.
-  ///
-  /// In ru, this message translates to:
-  /// **'скажи слово вслух'**
-  String get planDoingSpeakKey;
-
-  /// Что делают с фразой без ключа: произносят целиком.
-  ///
-  /// In ru, this message translates to:
-  /// **'скажи вслух'**
-  String get planDoingSpeakWhole;
-
   /// Надзаголовок экрана-диалога (кадры DL-01…DL-10). Материал называется сценой; слово «день» на этих экранах не звучит.
   ///
   /// In ru, this message translates to:
@@ -4712,6 +4682,150 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Вернуться к сессии'**
   String get planDialogueBackToSession;
+
+  /// Пояснение блока спасателей на экране дня (кадр D-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'С них начинается день — чтобы было чем ответить, если растеряешься.'**
+  String get planDayRescueLead;
+
+  /// Подпись полки «Тебе скажут» на экране дня: реплики роли — только на понимание (кадр D-01, канон §3).
+  ///
+  /// In ru, this message translates to:
+  /// **'говорит собеседник · только понимать'**
+  String get planDayRoleOnlyUnderstand;
+
+  /// Надзаголовок возврата в начатый день (кадр D-01б).
+  ///
+  /// In ru, this message translates to:
+  /// **'День начат'**
+  String get planDayStarted;
+
+  /// Состав дня под кнопкой «Начать день» — счёт от сервера, а не оценка длины (кадр D-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'{cards, plural, one{{cards} карточка} few{{cards} карточки} other{{cards} карточек}} · {sections, plural, one{{sections} секция} few{{sections} секции} other{{sections} секций}}'**
+  String planDayComposition(int cards, int sections);
+
+  /// Главное действие возврата в начатый день: счёт карточек, а не времени (кадр D-01б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить · осталось {count}'**
+  String planDayContinueLeft(int count);
+
+  /// Состояние секции в сводке начатого дня (кадр D-01б).
+  ///
+  /// In ru, this message translates to:
+  /// **'закрыт'**
+  String get planDaySectionClosed;
+
+  /// Состояние ещё не начатых секций в сводке начатого дня (кадр D-01б).
+  ///
+  /// In ru, this message translates to:
+  /// **'ждут'**
+  String get planDaySectionWaiting;
+
+  /// Состояние секции, которую проходят прямо сейчас (кадр D-01б).
+  ///
+  /// In ru, this message translates to:
+  /// **'{done} из {total}'**
+  String planDaySectionPart(int done, int total);
+
+  /// Раскрыть полки начатого дня — свёрнутую сводку разворачивают руками (кадр D-01б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Посмотреть сцену целиком'**
+  String get planDayShowWholeScene;
+
+  /// Подзаголовок итога посадки (кадр D-06): итог отвечает на вопрос «справлюсь ли я в этой сцене», а не «сколько слов выучил».
+  ///
+  /// In ru, this message translates to:
+  /// **'Сцена: {title}'**
+  String planSceneNamed(String title);
+
+  /// Вердикт «день не закрыт» (кадр D-06б): заголовок называет остаток, а не притворяется, что день пройден.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {index} · почти'**
+  String planDayAlmost(int index);
+
+  /// Сколько карточек не дошло до ступени, на которой их можно сказать в разговоре (кадр D-06б).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Осталось дотренировать {count} карточку} few{Осталось дотренировать {count} карточки} other{Осталось дотренировать {count} карточек}}'**
+  String planDayAlmostLead(int count);
+
+  /// Первый блок итога посадки: карточки, отвеченные верно (кадр D-06).
+  ///
+  /// In ru, this message translates to:
+  /// **'Далось'**
+  String get planDayGotIt;
+
+  /// Второй блок итога: конкретные карточки с причиной, они же уходят в завтрашний разогрев (кадр D-06).
+  ///
+  /// In ru, this message translates to:
+  /// **'Не далось'**
+  String get planDayMissed;
+
+  /// Что будет с тем, что не далось (кадр D-06, канон §5 «разогрев v2»).
+  ///
+  /// In ru, this message translates to:
+  /// **'Непослушные карточки вернутся в разогреве.'**
+  String get planDayMissedNote;
+
+  /// Действие вердикта «почти»: вернуться в день и закрыть остаток (кадр D-06б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Дотренировать'**
+  String get planDayTrainMore;
+
+  /// Второй выбор вердикта «почти»: остаток придёт в разогреве, день останется открытым (кадр D-06б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Оставить на завтра'**
+  String get planDayLeaveForTomorrow;
+
+  /// Что значит «оставить на завтра» — сказано до выбора, а не после (кадр D-06б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Если оставить — они придут в разогреве следующего дня, а этот останется открытым.'**
+  String get planDayLeaveNote;
+
+  /// Строка вердикта «почти»: сколько карточек дня уже закрыто (кадр D-06б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрыто в дне'**
+  String get planDayClosedCount;
+
+  /// Надзаголовок расшифровки A/B/C на итоге посадки (кадр D-06в).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ступени'**
+  String get planLadderLegend;
+
+  /// Почему на итоге нет процента: его не считают, а не прячут (кадр D-06в). Пока процент не считается, его нет вообще.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готовность к сцене появится, когда сервер её посчитает. Пока — ступени.'**
+  String get planLadderNoReadiness;
+
+  /// Ступень A человеческим словом — расшифровка стоит рядом, а не в справке (кадр D-06в).
+  ///
+  /// In ru, this message translates to:
+  /// **'познакомился'**
+  String get planLadderA;
+
+  /// Ступень B человеческим словом.
+  ///
+  /// In ru, this message translates to:
+  /// **'применяешь'**
+  String get planLadderB;
+
+  /// Ступень C человеческим словом.
+  ///
+  /// In ru, this message translates to:
+  /// **'говоришь сам'**
+  String get planLadderC;
 
   /// Строка итога дня.
   ///

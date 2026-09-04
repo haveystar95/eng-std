@@ -2700,6 +2700,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDayBuilding => 'Building';
 
   @override
+  String get planSpeakerRoleShort => 'they';
+
+  @override
   String get planSpeakerRole => 'Other person:';
 
   @override
@@ -2960,26 +2963,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String planTaskDoing(String kind, String doing) {
-    return '$kind · $doing';
-  }
-
-  @override
-  String get planKindWord => 'word';
-
-  @override
-  String get planKindChunk => 'connector';
-
-  @override
-  String get planKindLine => 'line';
-
-  @override
-  String get planDoingSpeakKey => 'say the key word aloud';
-
-  @override
-  String get planDoingSpeakWhole => 'say it aloud';
-
-  @override
   String planDialogueScene(int index) {
     return 'Scene $index';
   }
@@ -3109,6 +3092,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planDialogueBackToSession => 'Back to the session';
+
+  @override
+  String get planDayRescueLead =>
+      'The day starts with them — so you have something to say when you get stuck.';
+
+  @override
+  String get planDayRoleOnlyUnderstand => 'they speak · understanding only';
+
+  @override
+  String get planDayStarted => 'Day started';
+
+  @override
+  String planDayComposition(int cards, int sections) {
+    String _temp0 = intl.Intl.pluralLogic(
+      cards,
+      locale: localeName,
+      other: '$cards cards',
+      one: '$cards card',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      sections,
+      locale: localeName,
+      other: '$sections parts',
+      one: '$sections part',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String planDayContinueLeft(int count) {
+    return 'Continue · $count left';
+  }
+
+  @override
+  String get planDaySectionClosed => 'closed';
+
+  @override
+  String get planDaySectionWaiting => 'waiting';
+
+  @override
+  String planDaySectionPart(int done, int total) {
+    return '$done of $total';
+  }
+
+  @override
+  String get planDayShowWholeScene => 'See the whole scene';
+
+  @override
+  String planSceneNamed(String title) {
+    return 'Scene: $title';
+  }
+
+  @override
+  String planDayAlmost(int index) {
+    return 'Day $index · almost';
+  }
+
+  @override
+  String planDayAlmostLead(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cards left to finish',
+      one: '$count card left to finish',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planDayGotIt => 'Went well';
+
+  @override
+  String get planDayMissed => 'Did not go well';
+
+  @override
+  String get planDayMissedNote => 'The cards that went wrong come back in the warm-up.';
+
+  @override
+  String get planDayTrainMore => 'Finish them';
+
+  @override
+  String get planDayLeaveForTomorrow => 'Leave for tomorrow';
+
+  @override
+  String get planDayLeaveNote =>
+      'If you leave them, they come back in the next day\'s warm-up and this day stays open.';
+
+  @override
+  String get planDayClosedCount => 'Closed in this day';
+
+  @override
+  String get planLadderLegend => 'Stages';
+
+  @override
+  String get planLadderNoReadiness =>
+      'Readiness for the scene appears once the server computes it. For now — the stages.';
+
+  @override
+  String get planLadderA => 'met it';
+
+  @override
+  String get planLadderB => 'using it';
+
+  @override
+  String get planLadderC => 'saying it yourself';
 
   @override
   String get planStageAClosed => 'Stage A closed';

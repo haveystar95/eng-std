@@ -191,7 +191,8 @@ void main() {
 
     expect(spy.recorded.length, 1);
     // The milestone screen is still the milestone screen — it simply no longer owns the closing.
-    expect(find.text('День 1 пройден'), findsOneWidget);
+    // The verdict is its над-title now, set in caps like every надзаголовок of the series.
+    expect(find.text('ДЕНЬ 1 ПРОЙДЕН'), findsOneWidget);
 
     await teardownTree(tester);
   });

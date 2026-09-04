@@ -205,14 +205,19 @@ void main() {
     testWidgets('a situational card with no position degrades to the choice it is underneath', (
       tester,
     ) async {
-      // A card met outside a plan envelope: no scene, so no plaque — and still a playable card,
-      // rather than an empty caption over nothing.
+      // A card met outside a plan envelope, and a card played INSIDE the conversation — where the
+      // shell owns the moment and the server sends no position at all (наряд DAY-2, Ч.1.5). Either
+      // way it is a playable card, and the heading goes with the position: «СИТУАЦИЯ» over nothing
+      // is a label for something that is not there, and on the dialogue screen it stood over the
+      // very line the bubble above had just said it was hiding.
       await tester.pumpWidget(host(sayCard()));
       await tester.pumpAndSettle();
 
-      expect(find.text('СИТУАЦИЯ'), findsOneWidget);
+      expect(find.text('СИТУАЦИЯ'), findsNothing);
       expect(find.text('Вы у стойки регистратуры.'), findsNothing);
       expect(find.text(reply), findsOneWidget);
+      // The question is still asked — the card degrades to its own instruction, not to silence.
+      expect(find.textContaining('выбери'), findsOneWidget);
     });
   });
 }

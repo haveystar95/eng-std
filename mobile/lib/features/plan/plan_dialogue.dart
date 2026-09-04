@@ -184,12 +184,16 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
     );
   }
 
-  /// «обмен 2 из 4» — counted by the learner's turns, because an exchange is «they said something,
-  /// you answered» and a scene that ends on a goodbye has one more turn than it has exchanges.
+  /// «обмен 2 из 5» — WHICH EXCHANGE IS BEING PLAYED.
+  ///
+  /// Counted by the ROLE turns behind us, because an exchange OPENS when the other person speaks:
+  /// their line and the answer to it are one exchange, so the number must not tick over between the
+  /// two halves of it. Counting the learner's turns instead left «обмен 1 из 5» standing over the
+  /// second line the interlocutor said.
   int get _exchangeNumber {
     var n = 0;
     for (var i = 0; i <= widget.turnIndex && i < widget.dialogue.turns.length; i++) {
-      if (!widget.dialogue.turns[i].isRole) n++;
+      if (widget.dialogue.turns[i].isRole) n++;
     }
 
     return n == 0 ? 1 : n;

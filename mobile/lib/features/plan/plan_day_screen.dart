@@ -109,7 +109,7 @@ class _DayBody extends ConsumerWidget {
       return _NotWrittenYet(plan: plan, day: day);
     }
 
-    final carried = detail.carried;
+    final shelves = _Shelves.of(detail);
 
     return ListView(
       // Always scrollable, so the pull works on a day whose content does not fill the screen —
@@ -122,50 +122,54 @@ class _DayBody extends ConsumerWidget {
         AppSpacing.s26,
       ),
       children: [
-        Text(day.title, style: AppText.collectionNameScreen.copyWith(fontSize: 29, height: 1.18)),
-        // THE SCENE'S ВВОДКА — «кто перед тобой, что сейчас произойдёт, что считается успехом»
-        // (канон §2), in the learner's own language, above everything the day is made of.
-        //
-        // Plain body text and nothing else: the day screen is DAY-2's to design, and a paragraph
-        // that is merely present is worth more than a card invented here and thrown away there. A
-        // day with no вводка — every day written before the scene existed — draws nothing at all.
+        if (shelves.started) ...[
+          Row(
+            children: [
+              Expanded(child: PlanLabel(l.planDayStarted, color: AppColors.brassInk)),
+              Text(
+                l.planDaySectionPart(shelves.closed, shelves.cards),
+                style: AppText.blockLabel.copyWith(color: AppColors.brassInk, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+        ],
+        Text(day.title, style: AppText.collectionNameScreen.copyWith(fontSize: 27, height: 1.2)),
+        // THE ВВОДКА IS THE MAIN TEXT OF THE SCREEN, in the ink colour and not in grey (записка
+        // «Вводка», серия «День v1»): a person reads the situation before the lines, and a вводка set
+        // as a caption reads as a footnote to a list of sentences. «Кто перед тобой, что сейчас
+        // произойдёт, что считается успехом» (канон §2). A day with none — every day written before
+        // the scene existed — draws nothing at all.
         if (day.intro.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s12),
           Text(
             day.intro,
             style: AppText.translation.copyWith(
-              fontSize: 14.5,
+              fontSize: 15,
               height: 1.6,
-              color: AppColors.secondary,
+              color: AppColors.ink,
             ),
           ),
         ],
-        if (day.outcomes.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.s16),
-          PlanLabel(l.planDayCanDo, color: AppColors.tertiary, fontSize: 11.5),
-          const SizedBox(height: AppSpacing.s8),
-          Text(
-            day.outcomes.join(' · '),
-            style: AppText.translation.copyWith(
-              fontSize: 14.5,
-              height: 1.7,
-              color: AppColors.inkBody,
-            ),
+        // СПАСАТЕЛИ — the accent of this screen (записка «Акцент один на экран»). They are what the
+        // day opens on, and the line under them says why, which is the difference between five
+        // phrases and a chore.
+        if (shelves.rescue.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.s22),
+          _RescueBlock(phrases: shelves.rescue),
+        ],
+        // THE SHELVES, IN THE ORDER THE SITTING DEALS THEM (канон §11), each under the caption the
+        // session uses for it. It used to be «Фразы» and «Слова» — two buckets that told «Тебе
+        // скажут» from «Ты ответишь» by nothing at all, which is exactly how the interlocutor's
+        // question came to sit among the learner's own lines (Д-8).
+        for (final shelf in shelves.blocks) ...[
+          const SizedBox(height: AppSpacing.s22),
+          _ShelfBlock(
+            label: shelf.label(l),
+            note: shelf.shelf == PlanTermRow.shelfHear ? l.planDayRoleOnlyUnderstand : null,
+            terms: shelf.terms,
+            collapsed: shelves.started,
           ),
-        ],
-        if (detail.phrases.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.s22),
-          PlanLabel(l.planDayPhrases, color: AppColors.tertiary, fontSize: 11.5),
-          const SizedBox(height: 10),
-          for (final phrase in detail.phrases)
-            _PhraseLine(term: phrase, roleName: day.roleTitle),
-        ],
-        if (detail.words.isNotEmpty || carried.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.s22),
-          PlanLabel(l.planDayWords, color: AppColors.tertiary, fontSize: 11.5),
-          const SizedBox(height: 6),
-          for (final word in detail.words) _WordRow(term: word),
-          if (carried.isNotEmpty) _CarriedRow(terms: carried),
         ],
         const SizedBox(height: AppSpacing.s22),
         if (!_isFocus) ...[
@@ -185,12 +189,20 @@ class _DayBody extends ConsumerWidget {
           const SizedBox(height: 10),
         ],
         PrimaryButton(
-          label: l.planDayTrain,
+          label: shelves.started ? l.planDayContinueLeft(shelves.left) : l.planDayTrain,
           minHeight: 52,
           onPressed: () => _train(context, ref),
         ),
-        const SizedBox(height: AppSpacing.s16),
-        _ConversationBlock(role: day.roleTitle),
+        const SizedBox(height: 10),
+        // THE COMPOSITION, from the server's own material: how many cards and how many parts. A
+        // count of CARDS and not of minutes — «прогресс считается в карточках внутри секций, а не в
+        // процентах времени», so a pause in the middle breaks nothing.
+        Center(
+          child: Text(
+            l.planDayComposition(shelves.cards, shelves.sections),
+            style: AppText.translation.copyWith(fontSize: 13, color: AppColors.tertiary),
+          ),
+        ),
       ],
     );
   }
@@ -453,168 +465,111 @@ class _NotWrittenYet extends ConsumerWidget {
   }
 }
 
-/// «It's a sharp pain.» — the sentence in serif with its translation under it, and a terracotta rule
-/// down the left. The rule is the frame's one accent on this screen: it marks «то, что ты скажешь».
-class _PhraseLine extends StatelessWidget {
-  const _PhraseLine({required this.term, this.roleName});
-  final PlanTermRow term;
-
-  /// The interlocutor's name from the day's skeleton («Врач-терапевт»), when it has one.
-  final String? roleName;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-
-    return Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Container(
-      padding: const EdgeInsets.fromLTRB(14, 2, 0, 2),
-      decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(
-            // The interlocutor's line is not one of yours: brass is the plan's own service mark,
-            // terracotta is the learner's line. The rule alone is not the whole answer — the
-            // caption below says it in words — but a register where every line looks identical is
-            // exactly what put the doctor's question among the learner's phrases (Д-8).
-            //
-            // Asked as «is this only ever RECOGNISED» rather than «is the speaker the role»: the
-            // «Тебе скажут» shelf answers both, and a term the server marks `understand` without a
-            // speaker must not be set as one of the learner's own lines either.
-            color: term.isRecognitionOnly ? AppColors.brassInk : AppColors.verdictUnknown,
-            width: 2,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (term.isRecognitionOnly) ...[
-            // The role's own name when the skeleton gave one, «Собеседник:» when it did not.
-            PlanLabel(roleName ?? l.planSpeakerRole, fontSize: 10.5),
-            const SizedBox(height: 3),
-          ],
-          Text(
-            term.text,
-            style: AppText.collectionNameCard.copyWith(fontSize: 19, height: 1.3),
-          ),
-          if (term.translation != null && term.translation!.isNotEmpty) ...[
-            const SizedBox(height: 3),
-            Text(
-              term.translation!,
-              style: AppText.translation.copyWith(fontSize: 13.5, color: AppColors.secondary),
-            ),
-          ],
-        ],
-      ),
-    ),
-    );
-  }
-}
-
-/// «sharp · острый … A» — one row of the day's register.
-class _WordRow extends StatelessWidget {
-  const _WordRow({required this.term});
-  final PlanTermRow term;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: AppSpacing.minTap),
-    decoration: const BoxDecoration(
-      border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
-    ),
-    child: Row(
-      children: [
-        Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(child: Text(term.text, style: AppText.termInList)),
-              if (term.translation != null && term.translation!.isNotEmpty) ...[
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    term.translation!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.translation.copyWith(fontSize: 14, color: AppColors.secondary),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(width: AppSpacing.s8),
-        PlanStageMark(term.stage.letter),
-      ],
-    ),
-  );
-}
-
-/// «back · pain · week — B · со дня 1» — everything still in flight from earlier days, in ONE row.
+/// THE DAY'S MATERIAL, sorted into the parts the sitting deals it in — канон §11.
 ///
-/// One row and not one per word, because what it says is a fact about the PLAN and not about each
-/// word: the days are connected, and yesterday's words are still in play. A list of them would
-/// compete with today's register for the same attention.
-class _CarriedRow extends StatelessWidget {
-  const _CarriedRow({required this.terms});
+/// One pass over the day's terms, because every number on this screen is counted off the same list:
+/// what is on each shelf, how many cards there are, how many parts, how many have closed stage A,
+/// and therefore whether the day has been STARTED at all.
+class _Shelves {
+  const _Shelves({
+    required this.blocks,
+    required this.rescue,
+    required this.cards,
+    required this.closed,
+  });
+
+  /// The scene's own shelves, in the order the sitting reaches them. Empty ones are absent — «блок
+  /// без данных не рисуется» is this product's rule, and «0 фраз» is not a sentence it says.
+  final List<_ShelfGroup> blocks;
+
+  /// The plan's five phrases. They belong to the PLAN and not to this scene (канон §5), so they are
+  /// their own block above the shelves rather than a sixth one among them.
+  final List<PlanTermRow> rescue;
+
+  /// The scene's own cards, and how many of them have closed stage A.
+  final int cards, closed;
+
+  int get left => (cards - closed).clamp(0, cards);
+
+  /// The parts the sitting has — the shelves plus the warm-up, which always runs first.
+  int get sections => blocks.length + (rescue.isEmpty ? 0 : 1);
+
+  /// The learner has been here before: something of this scene has already closed its first rung.
+  bool get started => closed > 0 && closed < cards;
+
+  static _Shelves of(PlanDayDetail detail) {
+    final rescue = <PlanTermRow>[];
+    final byShelf = <String, List<PlanTermRow>>{};
+    var cards = 0;
+    var closed = 0;
+
+    for (final term in detail.terms) {
+      if (term.shelf == PlanTermRow.shelfRescue) {
+        rescue.add(term);
+
+        continue;
+      }
+      // The scene's OWN cards. A term carried in from an earlier day is that day's scene and is
+      // dealt in this sitting's seam, not on this screen: the day screen is about one scene.
+      if (term.fromDayIndex != detail.day.index) continue;
+
+      cards++;
+      // The same rule the server's census uses: past stage A, or standing on A with every trainer
+      // of it ticked. Two places, one definition, or the screen and the plan card disagree about a
+      // card the learner has just finished.
+      if (term.stage != PlanStage.a || term.stageComplete) closed++;
+      byShelf.putIfAbsent(term.shelf ?? _shelfUnknown, () => []).add(term);
+    }
+
+    final blocks = <_ShelfGroup>[];
+    for (final shelf in _order) {
+      final terms = byShelf.remove(shelf);
+      if (terms != null && terms.isNotEmpty) blocks.add(_ShelfGroup(shelf, terms));
+    }
+    // A shelf this build has never heard of, and every day written before the shelves existed: one
+    // undivided block at the end rather than silence.
+    for (final entry in byShelf.entries) {
+      blocks.add(_ShelfGroup(entry.key, entry.value));
+    }
+
+    return _Shelves(blocks: blocks, rescue: rescue, cards: cards, closed: closed);
+  }
+
+  static const _shelfUnknown = '';
+
+  /// КАНОН §11, and it is the same list the session's own parts are in.
+  static const _order = [
+    PlanTermRow.shelfWords,
+    PlanTermRow.shelfChunks,
+    PlanTermRow.shelfHear,
+    PlanTermRow.shelfSay,
+    PlanTermRow.shelfAsk,
+    PlanTermRow.shelfNumbers,
+  ];
+}
+
+class _ShelfGroup {
+  const _ShelfGroup(this.shelf, this.terms);
+
+  final String shelf;
   final List<PlanTermRow> terms;
 
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    // Grouped by the day they came from, oldest first: «со дня 1» and «со дня 2» are two different
-    // sentences and merging them would name a day that owns only some of the words.
-    final byDay = <int, List<PlanTermRow>>{};
-    for (final term in terms) {
-      byDay.putIfAbsent(term.fromDayIndex, () => []).add(term);
-    }
-    final indexes = byDay.keys.toList()..sort();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final index in indexes)
-          Container(
-            constraints: const BoxConstraints(minHeight: AppSpacing.minTap),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    byDay[index]!.map((t) => t.text).join(' · '),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.termInList.copyWith(color: AppColors.inkBody),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.s8),
-                PlanStageMark(
-                  // The stage of the group, taken from its first word: they were introduced on the
-                  // same day and walk the ladder together, so a per-word letter here would be three
-                  // identical letters in a row.
-                  byDay[index]!.first.stage.letter,
-                  suffix: l.planFromDay(index),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
+  String label(AppLocalizations l) => switch (shelf) {
+    PlanTermRow.shelfWords || PlanTermRow.shelfChunks => l.planShelfWords,
+    PlanTermRow.shelfHear => l.planShelfHear,
+    PlanTermRow.shelfSay => l.planShelfSay,
+    PlanTermRow.shelfAsk => l.planShelfAsk,
+    PlanTermRow.shelfNumbers => l.planSectionNumbers,
+    // A day with no shelves at all — its material under the caption it has always had.
+    _ => l.planDayPhrases,
+  };
 }
 
-/// «Разговор» — present, named, and locked until CONV-1.
-///
-/// Drawn rather than hidden on purpose: the conversation is what the whole plan is FOR, and a day
-/// that simply had no such block would read as a plan that teaches words. The caption says when it
-/// opens instead of promising it silently.
-class _ConversationBlock extends StatelessWidget {
-  const _ConversationBlock({required this.role});
-  final String? role;
+/// СПАСАТЕЛИ on the day screen — the accent, and the one block that says why it is here.
+class _RescueBlock extends StatelessWidget {
+  const _RescueBlock({required this.phrases});
+
+  final List<PlanTermRow> phrases;
 
   @override
   Widget build(BuildContext context) {
@@ -622,41 +577,28 @@ class _ConversationBlock extends StatelessWidget {
 
     return PaperCard(
       radius: 16,
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      padding: const EdgeInsets.fromLTRB(18, 15, 18, 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    PlanLabel(l.planConversationLabel),
-                    const SizedBox(height: 5),
-                    Text(
-                      role ?? l.planConversationDefaultRole,
-                      style: AppText.collectionNameCard.copyWith(fontSize: 20),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s12),
-              Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.photoPlate,
-                ),
-                child: const Icon(LucideIcons.lock, size: 17, color: AppColors.plateLabel),
+              Expanded(child: PlanLabel(l.planDialogueRescue)),
+              Text(
+                l.planDialogueRescuePhrases(phrases.length),
+                style: AppText.blockLabel.copyWith(color: AppColors.brassInk),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+          // ONE of them, quoted. Five would be a list to read; one is an example of what they are.
           Text(
-            l.planConversationLocked,
+            '«${phrases.first.text}»',
+            style: AppText.collectionNameCard.copyWith(fontSize: 16, height: 1.35),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l.planDayRescueLead,
             style: AppText.translation.copyWith(
               fontSize: 13.5,
               height: 1.55,
@@ -669,6 +611,133 @@ class _ConversationBlock extends StatelessWidget {
   }
 }
 
+/// ONE SHELF OF THE SCENE — its caption, what it is for, and its lines.
+///
+/// The interlocutor's shelf marks every line «он» and sets it in italic: курсив — только чужая речь,
+/// and a register where every line looks identical is exactly what put the doctor's question among
+/// the learner's own (Д-8).
+///
+/// A STARTED day shows two lines and a count («и ещё 3», кадр D·01в): the learner has read this
+/// already, and what they came back for is the button.
+class _ShelfBlock extends StatelessWidget {
+  const _ShelfBlock({
+    required this.label,
+    required this.terms,
+    this.note,
+    this.collapsed = false,
+  });
+
+  final String label;
+  final String? note;
+  final List<PlanTermRow> terms;
+  final bool collapsed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final shown = collapsed && terms.length > 2 ? terms.take(2).toList() : terms;
+    final hidden = terms.length - shown.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(child: PlanLabel(label, color: AppColors.tertiary, fontSize: 11.5)),
+            if (note != null)
+              Text(
+                note!,
+                style: AppText.translation.copyWith(fontSize: 11.5, color: AppColors.brassInk),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        for (final term in shown) _ShelfLine(term: term),
+        if (hidden > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              l.planDaySectionPart(shown.length, terms.length),
+              style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.tertiary),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// One line of a shelf — «он» in the margin when it is the interlocutor's.
+class _ShelfLine extends StatelessWidget {
+  const _ShelfLine({required this.term});
+
+  final PlanTermRow term;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final role = term.isRecognitionOnly;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceRaised,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: AppColors.dividerFaint),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (role) ...[
+            // «он» — a mark in the left margin, in the mono face. The type says whose line it is
+            // before the caption does.
+            Text(
+              l.planSpeakerRoleShort,
+              style: AppText.blockLabel.copyWith(color: AppColors.brassInk),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  term.text,
+                  style: role
+                      ? AppText.collectionNameCard.copyWith(
+                          fontSize: 15,
+                          height: 1.45,
+                          fontStyle: FontStyle.italic,
+                        )
+                      : AppText.termInList.copyWith(fontSize: 15, height: 1.45),
+                ),
+                if ((term.translation ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    term.translation!,
+                    style: AppText.translation.copyWith(
+                      fontSize: 13,
+                      color: AppColors.secondary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.s8),
+          PlanStageMark(term.stage.letter),
+        ],
+      ),
+    );
+  }
+}
+
+/// «РАЗГОВОР» AS A LOCKED PLATE IS GONE from this screen, and so are «Фразы» and «Слова».
+///
+/// The plate promised the conversation the plan is for; the conversation exists now and is played
+/// inside the sitting (наряд DAY-2, Ч.3), so a lock over it would be the app hiding something the
+/// learner has already done. The two buckets went with the shelves: «Тебе скажут» and «Ты ответишь»
+/// are two different things and were drawn identically, which is Д-8 seen on the day screen.
 class _DayBar extends StatelessWidget {
   const _DayBar({required this.label});
   final String label;

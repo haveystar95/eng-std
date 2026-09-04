@@ -9,24 +9,39 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/models.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
+import '../training/session/session_grading.dart' show LocalCheck;
 import 'plan_ui.dart';
 
-/// «День N пройден» — кадр 1c · 04.
+/// ИТОГ ПОСАДКИ — три вердикта одной вёрсткой (серия «День v1», кадры D·06, D·06б, D·06в).
 ///
-/// The wording is «в работе», never «выучено», and the two rows under it say why: stage A is what a
-/// SITTING can close, and stages B and C need nights. A summary that said «9 слов выучено» would be
-/// claiming something the ladder explicitly does not claim — and the learner would find out it was
-/// untrue at the appointment.
+/// The question this screen answers is «справлюсь ли я в этой сцене», never «сколько слов я выучил»
+/// (канон §13). So the headline is the scene, the body is what went well and what did not — by name,
+/// with what happens to it next — and the numbers underneath are the stages, in the words a person
+/// uses: познакомился → применяешь → говоришь сам.
 ///
-/// The «Дальше» line is a NEXT DAY and not a «завтра»: the plan's step may be one, two or three
-/// calendar days, and naming the day rather than the date is the only version of that sentence that
-/// is true for all three.
+/// ## Three verdicts, one layout
+///
+///   **закрыт** — the server says the day is `done`. Brass над-title, the scene, the ladder, and the
+///   next day.
+///   **почти** — the sitting ended and the day did not close: named remainder, and a CHOICE, because
+///   whether to finish now or meet them in tomorrow's warm-up is the learner's call and not ours
+///   (кадр D·06б).
+///   **прерван / ещё не известно** — a soft run, or the verdict still in flight. It says only what
+///   is certainly true.
+///
+/// ## No percentage, because none is computed
+///
+/// «Пока процент не считается, его нет вообще» (кадр D·06в). Readiness for a scene is a server
+/// number and the server does not compute one per scene yet; inventing one out of the stages here
+/// would be the client answering a question the product has not answered.
 class PlanDaySummary extends ConsumerStatefulWidget {
   const PlanDaySummary({
     super.key,
     required this.envelope,
     required this.cards,
     required this.onDone,
+    this.results = const [],
+    this.onTrainMore,
   });
 
   /// The session's plan envelope — which plan, which day, and whether it counted.
@@ -35,6 +50,16 @@ class PlanDaySummary extends ConsumerStatefulWidget {
   /// The cards actually played, so the summary can count phrases and words apart without a second
   /// request: the kind rides on every task already.
   final List<SessionCard> cards;
+
+  /// HOW EACH ANSWER WENT — what «Далось» and «Не далось» are made of (кадр D·06).
+  ///
+  /// The sitting's own verdicts, not a second read: the screen already has them, and asking the
+  /// server «which cards went wrong» would be a second opinion about an evening it did not watch.
+  final List<({SessionCard card, LocalCheck verdict})> results;
+
+  /// Open the day again and deal what is left — «Дотренировать» (кадр D·06б). Null when there is no
+  /// way back (the run-through), and then the choice is not offered.
+  final VoidCallback? onTrainMore;
 
   final VoidCallback onDone;
 
@@ -102,24 +127,29 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
       }
     }
 
-    // COUNTED BY `kind`, WHICH THE SERVER SENDS — never by how many words are in the text.
-    //
-    // Three kinds and three words for them: a `word` is «слово», a `chunk` is «связка», a `line` is
-    // «фраза». The old count had two buckets and filled them by length, so a day of 4 word +
-    // 2 chunk + 8 line was announced as «3 слова · 11 фраз» and the connector «five» was labelled a
-    // phrase in the session itself (Д-5). A term with no kind at all is not from a plan day and
-    // falls back to the lexical type, which is the only thing there is to go on.
-    final counts = <String, int>{'word': 0, 'chunk': 0, 'line': 0};
-    byTerm.forEach((termId, kind) {
-      final key = kind ?? 'line';
-      counts[key] = (counts[key] ?? 0) + 1;
-    });
-    final words = counts['word'] ?? 0;
-    final chunks = counts['chunk'] ?? 0;
-    final phrases = counts['line'] ?? 0;
+    // The breakdown by `kind` («3 слова · 2 связки · 8 фраз») is GONE from this screen, not moved.
+    // It was a receipt, and an итог that answers «справлюсь ли я в этой сцене» has no line for one
+    // (канон §13). What the day's terms are still counted for is the ladder's first rung: how many
+    // things this sitting introduced.
 
     final nextIndex = plan?.nextDayIndex;
     final nextDay = nextIndex == null ? null : plan?.dayAt(nextIndex);
+    final scene = plan?.dayAt(envelope.dayIndex)?.title ?? '';
+
+    // WHAT WENT WELL AND WHAT DID NOT, by card and once each. The LAST verdict of a term wins: a
+    // card missed and then met again at the end of the присест (Ч-5) is a card that went well in the
+    // end, and listing it under «Не далось» would be the app remembering a moment the learner has
+    // already moved past.
+    final verdicts = <String, ({SessionCard card, bool ok})>{};
+    for (final result in widget.results) {
+      verdicts[result.card.termId] = (card: result.card, ok: result.verdict.isAccepted);
+    }
+    final missed = verdicts.values.where((v) => !v.ok).toList(growable: false);
+    final gotIt = verdicts.values.where((v) => v.ok).toList(growable: false);
+
+    // «Почти» — the sitting ended and the day did not close. It is a VERDICT and not an error: the
+    // remainder is named, and finishing it now or meeting it in tomorrow's warm-up is a choice.
+    final almost = envelope.strict && verdictKnown && !dayPassed;
 
     return SafeArea(
       bottom: false,
@@ -132,74 +162,89 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
         ),
         children: [
           const SizedBox(height: 28),
-          Center(child: PlanLabel(plan?.title ?? '')),
-          const SizedBox(height: 14),
-          Text(
-            // Three verdicts, and each says only what it knows. A soft run closed nothing, so it
-            // does not get to say «пройден»; a strict run says «пройден» only when the SERVER says
-            // the day is `done`; and while the server is still answering it says neither.
-            switch ((envelope.strict, verdictKnown, dayPassed)) {
-              (false, _, _) => l.planDaySoftDone(envelope.dayIndex),
-              (true, false, _) => l.planDaySittingDone,
-              (true, true, true) => l.planDayDone(envelope.dayIndex),
-              (true, true, false) => l.planDayNotClosed(envelope.dayIndex),
-            },
-            textAlign: TextAlign.center,
-            style: AppText.displayTerm.copyWith(fontSize: 34, height: 1.15),
+          // THE OVER-TITLE CARRIES THE VERDICT and nothing else does: brass when the day is closed,
+          // grey when it is not (записка «Итог дня»). The word «День» is allowed here and only here
+          // — this IS today's sitting, which is the one place the schedule's word belongs.
+          Center(
+            child: PlanLabel(
+              switch ((envelope.strict, verdictKnown, dayPassed)) {
+                (false, _, _) => l.planDaySoftDone(envelope.dayIndex),
+                (true, false, _) => l.planDaySittingDone,
+                (true, true, true) => l.planDayDone(envelope.dayIndex),
+                (true, true, false) => l.planDayAlmost(envelope.dayIndex),
+              },
+              color: dayPassed ? AppColors.brassInk : AppColors.tertiary,
+            ),
           ),
+          const SizedBox(height: 14),
+          // THE SCENE, and the scene is the headline. «Справлюсь ли я в регистратуре» is the
+          // question the day was for; «9 фраз и слов в работе» answered a different one, and it is
+          // the sentence канон §13 names as the wrong sentence.
+          Text(
+            scene.isEmpty ? (plan?.title ?? '') : l.planSceneNamed(scene),
+            textAlign: TextAlign.center,
+            style: AppText.displayTerm.copyWith(fontSize: 30, height: 1.24),
+          ),
+          if (almost) ...[
+            const SizedBox(height: 12),
+            Text(
+              missed.isEmpty
+                  ? l.planDayNotClosedNote
+                  : l.planDayAlmostLead(missed.length),
+              textAlign: TextAlign.center,
+              style: AppText.collectionNameCard.copyWith(fontSize: 17, color: AppColors.inkBody),
+            ),
+          ],
+          const SizedBox(height: 28),
+          // ЧТО НЕ ДАЛОСЬ — first, and by name: these are the cards that come back tomorrow, and a
+          // list of them is the one thing on this screen the learner can act on.
+          if (missed.isNotEmpty) ...[
+            PlanLabel(l.planDayMissed, color: AppColors.verdictUnknown),
+            const SizedBox(height: 8),
+            for (final entry in missed.take(5)) _CardLine(text: entry.card.answerText),
+            const SizedBox(height: 8),
+            Text(
+              l.planDayMissedNote,
+              style: AppText.translation.copyWith(
+                fontSize: 13,
+                height: 1.5,
+                color: AppColors.tertiary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s22),
+          ],
+          if (gotIt.isNotEmpty) ...[
+            PlanLabel(l.planDayGotIt),
+            const SizedBox(height: 8),
+            for (final entry in gotIt.take(4)) _CardLine(text: entry.card.answerText),
+            const SizedBox(height: AppSpacing.s22),
+          ],
+          // THE LADDER, in the words a person uses — and not a percentage, because none is computed
+          // (кадр D·06в). The counts are the sitting's own: what it introduced, and what of the
+          // plan has closed stage A at all.
+          PlanLabel(l.planLadderLegend),
+          const SizedBox(height: 8),
+          _LadderRow(letter: 'A', name: l.planLadderA, value: l.planDayInWork(byTerm.length)),
+          if (plan != null)
+            _LadderRow(
+              letter: 'B',
+              name: l.planLadderB,
+              value: l.planDialogueCountOf(plan.stageAClosed, plan.cardsTotal),
+            ),
+          _LadderRow(letter: 'C', name: l.planLadderC, value: ''),
           const SizedBox(height: 10),
           Text(
-            l.planDayInWork(byTerm.length),
-            textAlign: TextAlign.center,
-            style: AppText.collectionNameCard.copyWith(
-              fontSize: 17,
-              color: AppColors.inkBody,
+            l.planLadderNoReadiness,
+            style: AppText.translation.copyWith(
+              fontSize: 13,
+              height: 1.5,
+              color: AppColors.tertiary,
             ),
           ),
-          if (envelope.strict && verdictKnown && !dayPassed) ...[
-            const SizedBox(height: 12),
-            // Named, so «ещё не закрыт» is not a mystery: the learner missed a card, the rung stayed
-            // where it was, and opening the day again deals the remainder rather than all of it.
-            Text(
-              l.planDayNotClosedNote,
-              textAlign: TextAlign.center,
-              style: AppText.translation.copyWith(
-                fontSize: 14,
-                height: 1.55,
-                color: AppColors.secondary,
-              ),
-            ),
+          if (reviewTerms.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s16),
+            _SummaryRow(label: l.planReviewRow, value: l.planReviewCount(reviewTerms.length)),
           ],
-          const SizedBox(height: 30),
-          // The stage-A row claims a stage CLOSED. It shows only where that is true.
-          if (envelope.strict && dayPassed) ...[
-            const Divider(height: 1, thickness: 1, color: AppColors.hairline),
-            _SummaryRow(
-              label: l.planStageAClosed,
-              value: [
-                if (words > 0) l.planWordsCount(words),
-                if (chunks > 0) l.planChunksCount(chunks),
-                if (phrases > 0) l.planPhrasesCount(phrases),
-              ].join(' · '),
-            ),
-            const Divider(height: 1, thickness: 1, color: AppColors.hairline),
-            _SummaryRow(label: l.planStageBReturns, value: l.planStageBWhen),
-            const Divider(height: 1, thickness: 1, color: AppColors.hairline),
-            // The top-up, said out loud and on its own line. It was worth playing and it is not the
-            // day: folding it into the count above is what made the day look bigger than it was.
-            if (reviewTerms.isNotEmpty) ...[
-              _SummaryRow(
-                label: l.planReviewRow,
-                value: l.planReviewCount(reviewTerms.length),
-              ),
-              const Divider(height: 1, thickness: 1, color: AppColors.hairline),
-            ],
-          ],
-          const SizedBox(height: AppSpacing.s26),
-          // The conversation is the day's main act and it is not built (CONV-1). A dark plate that
-          // did nothing would be a button that lies, so it is drawn as what it is: the next thing,
-          // named, with the reason it is not open yet.
-          _LockedConversation(),
           const SizedBox(height: AppSpacing.s22),
           if (nextDay != null)
             _NextRow(
@@ -207,11 +252,90 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
               title: l.planNextDay(nextDay.index, nextDay.title),
             ),
           const SizedBox(height: AppSpacing.s26),
-          PrimaryButton(label: l.planDayBackToPlan, minHeight: 52, onPressed: widget.onDone),
+          // THE CHOICE, and only on «почти»: finish the remainder now, or meet it in tomorrow's
+          // warm-up. Both are named before either is pressed, so «оставить» is a decision and not a
+          // thing that happens by walking away.
+          if (almost && widget.onTrainMore != null) ...[
+            PrimaryButton(
+              label: '${l.planDayTrainMore} · ${missed.length}',
+              minHeight: 52,
+              onPressed: widget.onTrainMore!,
+            ),
+            const SizedBox(height: AppSpacing.s12),
+            QuietButton(label: l.planDayLeaveForTomorrow, onPressed: widget.onDone),
+            const SizedBox(height: 10),
+            Text(
+              l.planDayLeaveNote,
+              textAlign: TextAlign.center,
+              style: AppText.translation.copyWith(
+                fontSize: 13,
+                height: 1.5,
+                color: AppColors.tertiary,
+              ),
+            ),
+          ] else
+            PrimaryButton(label: l.planDayBackToPlan, minHeight: 52, onPressed: widget.onDone),
         ],
       ),
     );
   }
+}
+
+/// One card named on the итог — «My child has a fever.», nothing around it.
+class _CardLine extends StatelessWidget {
+  const _CardLine({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    constraints: const BoxConstraints(minHeight: AppSpacing.minTap),
+    decoration: const BoxDecoration(
+      border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
+    ),
+    alignment: Alignment.centerLeft,
+    child: Text(text, style: AppText.termInList, maxLines: 2, overflow: TextOverflow.ellipsis),
+  );
+}
+
+/// «A · познакомился» — one rung of the ladder, with the word a person uses for it.
+///
+/// The letter stays a mark for oneself (brass, bordered, never terracotta) and the WORD beside it is
+/// what makes it legible without a legend — кадр D·06в puts the explanation next to the letters
+/// rather than in a help screen.
+class _LadderRow extends StatelessWidget {
+  const _LadderRow({required this.letter, required this.name, required this.value});
+
+  final String letter, name, value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    constraints: const BoxConstraints(minHeight: AppSpacing.minTap),
+    decoration: const BoxDecoration(
+      border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
+    ),
+    child: Row(
+      children: [
+        PlanStageMark(letter),
+        const SizedBox(width: AppSpacing.s12),
+        Expanded(
+          child: Text(
+            name,
+            style: AppText.translation.copyWith(fontSize: 15, color: AppColors.inkBody),
+          ),
+        ),
+        if (value.isNotEmpty)
+          Text(
+            value,
+            style: AppText.translation.copyWith(
+              fontSize: 12,
+              color: AppColors.tertiary,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+      ],
+    ),
+  );
 }
 
 class _SummaryRow extends StatelessWidget {
@@ -242,54 +366,11 @@ class _SummaryRow extends StatelessWidget {
   );
 }
 
-class _LockedConversation extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final paper = AppColors.paper;
-
-    return PlanPlate(
-      padding: const EdgeInsets.fromLTRB(22, 20, 22, 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                PlanLabel(l.planConversationLabel, color: AppColors.brass),
-                const SizedBox(height: 6),
-                Text(
-                  l.planConversationSoon,
-                  style: AppText.displayTerm.copyWith(color: paper, fontSize: 22, height: 1.2),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  l.planConversationLocked,
-                  style: AppText.translation.copyWith(
-                    fontSize: 13.5,
-                    height: 1.5,
-                    color: paper.withValues(alpha: 0.72),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.s12),
-          Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: paper.withValues(alpha: 0.14),
-            ),
-            child: Icon(LucideIcons.lock, size: 17, color: paper.withValues(alpha: 0.7)),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// «РАЗГОВОР — СКОРО» IS GONE FROM THIS SCREEN, and it is gone rather than hidden.
+//
+// It was a locked dark plate promising the conversation the plan is for. The conversation exists
+// now — it is the scene's own dialogue, played inside the sitting (наряд DAY-2, Ч.3) — so a plate
+// saying «скоро» over an итог would be the app promising something the learner has just done.
 
 class _NextRow extends StatelessWidget {
   const _NextRow({required this.caption, required this.title});

@@ -884,10 +884,15 @@ class PlanDialogue {
 
   /// How many EXCHANGES this conversation is — «4 обмена» on кадр DL·01.
   ///
-  /// An exchange is «they said something, you answered», so it is counted by the learner's turns
-  /// and not by halving the chain: a scene that ends on the other person's goodbye has one more
-  /// turn than it has exchanges, and «3,5 обмена» is not a thing to print.
-  int get exchanges => turns.where((t) => !t.isRole).length;
+  /// An exchange OPENS when the other person speaks, so it is counted by the ROLE turns and not by
+  /// halving the chain: «3,5 обмена» is not a thing to print. A chain with no role turns at all —
+  /// which the gates refuse and an old day could still produce — falls back to the learner's, so
+  /// the number is never zero over a conversation that exists.
+  int get exchanges {
+    final role = turns.where((t) => t.isRole).length;
+
+    return role > 0 ? role : turns.length;
+  }
 
   static PlanDialogue? fromJson(Map<String, dynamic>? j) {
     if (j == null) return null;

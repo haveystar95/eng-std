@@ -15,6 +15,7 @@ import 'package:eng_std/features/plan/plan_day_summary.dart';
 import 'package:eng_std/features/plan/plan_preview_screen.dart';
 import 'package:eng_std/features/plan/plan_screen.dart';
 import 'package:eng_std/features/plan/plan_tab_screen.dart';
+import 'package:eng_std/features/training/session/session_grading.dart' show LocalCheck;
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/features/plan/entry/entry_ui.dart';
 
@@ -97,6 +98,20 @@ Map<String, dynamic> _dayJson() => {
       'text': "It's a sharp pain.",
       'translation': 'Это острая боль.',
       'type': 'phrase',
+      'kind': 'line',
+      'shelf': 'say',
+      'stage': 'a',
+      'from_day_index': 2,
+    },
+    {
+      'id': 't0',
+      'text': 'Where does it hurt?',
+      'translation': 'Где болит?',
+      'type': 'phrase',
+      'kind': 'line',
+      'shelf': 'hear',
+      'speaker': 'role',
+      'tier': 'understand',
       'stage': 'a',
       'from_day_index': 2,
     },
@@ -105,6 +120,8 @@ Map<String, dynamic> _dayJson() => {
       'text': 'sharp',
       'translation': 'острый',
       'type': 'word',
+      'kind': 'word',
+      'shelf': 'words',
       'stage': 'a',
       'from_day_index': 2,
     },
@@ -113,6 +130,8 @@ Map<String, dynamic> _dayJson() => {
       'text': 'back',
       'translation': 'спина',
       'type': 'word',
+      'kind': 'word',
+      'shelf': 'words',
       'stage': 'b',
       'from_day_index': 1,
     },
@@ -494,9 +513,12 @@ void main() {
     expect(find.text('Составить план'), findsOneWidget);
   });
 
-  testWidgets('a day sets phrases apart from words and marks every word with its stage', (
+  testWidgets('a day lays the scene out by SHELF, in the order the sitting deals it (D·01)', (
     tester,
   ) async {
+    // «Фразы дня» и «Слова в этих фразах» were two buckets that could not tell «Тебе скажут» from
+    // «Ты ответишь» — both are lines, and drawing them identically is Д-8 on the day screen. The
+    // shelves are the scene's own parts, in канон §11's order.
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -507,16 +529,23 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('ФРАЗЫ ДНЯ'), findsOneWidget);
+    expect(find.text('СЛОВА И СВЯЗКИ'), findsOneWidget);
+    expect(find.text('ТЕБЕ СКАЖУТ'), findsOneWidget);
+    expect(find.text('ТЫ ОТВЕТИШЬ'), findsOneWidget);
     expect(find.text("It's a sharp pain."), findsOneWidget);
-    expect(find.text('СЛОВА В ЭТИХ ФРАЗАХ'), findsOneWidget);
     expect(find.text('sharp'), findsOneWidget);
-    // The day's own word stands on A…
-    expect(find.text('A'), findsOneWidget);
-    // …and yesterday's is carried in with the day it came from named beside its stage.
-    expect(find.text('B · со дня 1'), findsOneWidget);
-    // The conversation is present and honestly locked, not hidden.
-    expect(find.text('РАЗГОВОР'), findsOneWidget);
+    // The interlocutor's shelf says what it is for, and its line is marked «он» in the margin.
+    expect(find.textContaining('только понимать'), findsOneWidget);
+    expect(find.text('он'), findsOneWidget);
+    // A card of an EARLIER day is another scene's and is not laid out here.
+    expect(find.text('back'), findsNothing);
+
+    // The composition, counted off the material: three cards of this scene, three parts.
+    await tester.scrollUntilVisible(find.textContaining('карточки'), 200);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('3 карточки · 3 секции'), findsOneWidget);
+    // The locked «Разговор» plate is gone: the conversation exists and is played in the sitting.
+    expect(find.text('РАЗГОВОР'), findsNothing);
   });
 
   testWidgets('the day opens with the scene’s вводка, above everything it is made of', (
@@ -545,7 +574,7 @@ void main() {
     // …and it stands above the register rather than inside it.
     expect(
       tester.getTopLeft(find.textContaining('Ты у стойки регистрации')).dy,
-      lessThan(tester.getTopLeft(find.text('ФРАЗЫ ДНЯ')).dy),
+      lessThan(tester.getTopLeft(find.text('СЛОВА И СВЯЗКИ')).dy),
     );
   });
 
@@ -563,7 +592,7 @@ void main() {
     // The title is followed straight by the day's own blocks — no blank paragraph, no placeholder.
     expect(find.text(''), findsNothing);
     expect(find.text('Уточнить симптомы и помощь'), findsOneWidget);
-    expect(find.text('ФРАЗЫ ДНЯ'), findsOneWidget);
+    expect(find.text('СЛОВА И СВЯЗКИ'), findsOneWidget);
   });
 
   testWidgets('a running plan can always be given up — there is no other way out', (tester) async {
@@ -829,11 +858,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Both lines are shown; exactly one of them says whose it is. Without the caption the doctor's
+    // Both lines are shown; exactly one of them says whose it is. Without the mark the doctor's
     // question stood among the learner's own phrases and read as one to learn to say.
+    //
+    // The mark is «он» in the margin now, beside the italic (записка «Пометка роли»): the type
+    // answers «чья это речь» before the caption does, and the caption is a word rather than a
+    // colon-terminated label over a line the learner will never say.
     expect(find.text('Hello. What seems to be the problem with your child?'), findsOneWidget);
     expect(find.text('I came with my son.'), findsOneWidget);
-    expect(find.text('СОБЕСЕДНИК:'), findsOneWidget);
+    expect(find.text('он'), findsOneWidget);
   });
 
   testWidgets('a day that failed ONCE is still offered a retry', (tester) async {
@@ -911,9 +944,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('День 1 пройден'), findsOneWidget);
+    // The verdict is the над-title now, in caps like every надзаголовок of the series; the headline
+    // under it is the SCENE (наряд DAY-2, Ч.2.3).
+    expect(find.text('ДЕНЬ 1 ПРОЙДЕН'), findsOneWidget);
     expect(find.text('3 фразы и слова в работе'), findsOneWidget);
-    expect(find.text('Ступень A пройдена'), findsOneWidget);
     expect(find.textContaining('выучен'), findsNothing);
 
     // Nothing else was due, so there is no revision row to draw.
@@ -941,8 +975,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('День 1 ещё не закрыт'), findsOneWidget);
-    expect(find.text('День 1 пройден'), findsNothing);
+    expect(find.text('ДЕНЬ 1 · ПОЧТИ'), findsOneWidget);
+    expect(find.text('ДЕНЬ 1 ПРОЙДЕН'), findsNothing);
     // …and the row that claims a stage CLOSED is not drawn over a stage that did not.
     expect(find.text('Ступень A пройдена'), findsNothing);
     expect(find.textContaining('Открой день ещё раз'), findsOneWidget);
@@ -1017,10 +1051,12 @@ void main() {
     expect(spy.recorded, isEmpty);
   });
 
-  testWidgets('the day is counted by KIND — «4 слова · 2 связки · 8 фраз» (Д-5)', (tester) async {
-    // The live day, exactly: 4 word + 2 chunk + 8 line. It was announced as «3 слова · 11 фраз»,
-    // because the screen counted words in the text — so a two-word term was a phrase and so was
-    // the connector «five».
+  testWidgets('the итог answers «справлюсь ли я в этой сцене», not «сколько слов» (D·06)', (
+    tester,
+  ) async {
+    // The receipt is GONE, not moved (наряд DAY-2, Ч.2.3). «4 слова · 2 связки · 8 фраз» was an
+    // honest count of the wrong thing: канон §13 asks the итог to be about the SCENE, and a
+    // breakdown by kind is a list of what was handled rather than of what can now be done.
     const kinds = [
       'word', 'word', 'word', 'word',
       'chunk', 'chunk',
@@ -1033,8 +1069,6 @@ void main() {
         _app(
           PlanDaySummary(
             envelope: const _Envelope(kinds: kinds),
-            // Every card a single word of text on purpose: if the count still read the text, all
-            // fourteen would come out «слово» and the assertion below would fail loudly.
             cards: [for (var i = 0; i < kinds.length; i++) _card('t$i', 'word')],
             onDone: () {},
           ),
@@ -1043,6 +1077,53 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('4 слова · 2 связки · 8 фраз'), findsOneWidget);
+    expect(find.text('4 слова · 2 связки · 8 фраз'), findsNothing);
+    // The scene is the headline, and the ladder is said in the words a person uses.
+    expect(find.textContaining('Сцена:'), findsOneWidget);
+    expect(find.text('познакомился'), findsOneWidget);
+    expect(find.text('применяешь'), findsOneWidget);
+    expect(find.text('говоришь сам'), findsOneWidget);
+    // No percentage anywhere: «пока процент не считается, его нет вообще» (кадр D·06в).
+    expect(find.textContaining('%'), findsNothing);
+  });
+
+  testWidgets('«почти» names the remainder and offers the choice (D·06б)', (tester) async {
+    // A sitting that ended without closing the day. The screen used to say «День 1 ещё не закрыт»
+    // and leave it there; the frame asks for the remainder BY NAME and for a choice, because
+    // whether to finish now or meet them in tomorrow's warm-up is the learner's call.
+    var trained = 0;
+
+    await tester.pumpWidget(
+      _summaryScope(
+        _CompletionSpy(),
+        _app(
+          PlanDaySummary(
+            envelope: const _Envelope(kinds: ['line', 'line']),
+            cards: [_card('t1', 'phrase'), _card('t2', 'phrase')],
+            results: [
+              (card: _card('t1', 'phrase'), verdict: LocalCheck.wrong),
+              (card: _card('t2', 'phrase'), verdict: LocalCheck.correct),
+            ],
+            onTrainMore: () => trained++,
+            onDone: () {},
+          ),
+        ),
+        plan: _plan(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('ДЕНЬ 1 · ПОЧТИ'), findsOneWidget);
+    expect(find.textContaining('Осталось дотренировать'), findsOneWidget);
+    expect(find.text('Не далось'.toUpperCase()), findsOneWidget);
+
+    // The choice sits at the foot of the итог — a lazy list has not built it yet.
+    await tester.scrollUntilVisible(find.text('Оставить на завтра'), 200);
+    await tester.pumpAndSettle();
+    expect(find.text('Оставить на завтра'), findsOneWidget);
+
+    await tester.tap(find.textContaining('Дотренировать'));
+    await tester.pumpAndSettle();
+    expect(trained, 1);
   });
 }

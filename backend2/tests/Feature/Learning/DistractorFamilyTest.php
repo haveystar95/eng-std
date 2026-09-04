@@ -131,5 +131,10 @@ it('keeps ordinary vocabulary — no kind at all — in a family of its own', fu
     seedFamilyTerm('ticket', 'билет', null);
     seedFamilyTerm('fever', 'температура', 'word');
 
-    expect(familyOptionsFor($target, 3))->toBe(['luggage', 'ticket']);
+    // WHICH terms, not in which order. The reader ranks by CEFR and length and has nothing left to
+    // separate two equal candidates by, so the tie falls to whatever the index hands back — and the
+    // ids are freshly generated ULIDs, so it falls differently from run to run. This assertion
+    // failed once under the parallel suite on exactly that (04.09, наряд DAY-2) while passing three
+    // times in a row on its own: an order the code does not promise is not a thing to pin.
+    expect(familyOptionsFor($target, 3))->toEqualCanonicalizing(['luggage', 'ticket']);
 });

@@ -2044,6 +2044,8 @@
   "@planDayFinalHint": { "description": "Подпись дня-прогона в списке." },
   "planDayBuilding": "Собирается",
   "@planDayBuilding": { "description": "Подпись дня в статусе `generating` — его прямо сейчас держит воркер. НЕ для `pending`: см. planDayQueued." },
+  "planSpeakerRoleShort": "он",
+  "@planSpeakerRoleShort": { "description": "Пометка роли в левом поле реплики на экране дня (кадр D-01): «он» — говорит собеседник. Курсив и эта метка вместе однозначно говорят, чья это речь." },
   "planSpeakerRole": "Собеседник:",
   "@planSpeakerRole": { "description": "Пометка реплики собеседника (speaker = role) — на экране дня и на карточке в сессии. Если каркас дня назвал роль, вместо этой строки показывается её имя. Лексика: в UI слово «фраза», не «реплика»." },
 
@@ -2264,24 +2266,6 @@
     "placeholders": { "progress": { "type": "String" }, "section": { "type": "String" } }
   },
 
-  "planTaskDoing": "{kind} · {doing}",
-  "@planTaskDoing": {
-    "description": "Строка над заданием плановой посадки: что это за карточка и что с ней делают — «фраза · скажи слово вслух». Заменила «СТУПЕНЬ B · СБОРКА»: ступень стоит меткой в шапке, а секция — в подписи полосы.",
-    "placeholders": { "kind": { "type": "String" }, "doing": { "type": "String" } }
-  },
-
-  "planKindWord": "слово",
-  "@planKindWord": { "description": "Что за карточка, в строке над заданием: kind = word." },
-  "planKindChunk": "связка",
-  "@planKindChunk": { "description": "Что за карточка, в строке над заданием: kind = chunk." },
-  "planKindLine": "фраза",
-  "@planKindLine": { "description": "Что за карточка, в строке над заданием: kind = line." },
-
-  "planDoingSpeakKey": "скажи слово вслух",
-  "@planDoingSpeakKey": { "description": "Что делают с фразой, у которой есть ключ говорения: произносят её, и главное в ней — одно слово." },
-  "planDoingSpeakWhole": "скажи вслух",
-  "@planDoingSpeakWhole": { "description": "Что делают с фразой без ключа: произносят целиком." },
-
   "planDialogueScene": "Сцена {index}",
   "@planDialogueScene": {
     "description": "Надзаголовок экрана-диалога (кадры DL-01…DL-10). Материал называется сценой; слово «день» на этих экранах не звучит.",
@@ -2368,6 +2352,72 @@
   "@planDialogueNextAssembly": { "description": "Что будет после диалога — уровень B+ (кадр DL-10, канон §5)." },
   "planDialogueBackToSession": "Вернуться к сессии",
   "@planDialogueBackToSession": { "description": "Единственное действие финала диалога: ведёт обратно в посадку (кадр DL-10)." },
+  "planDayRescueLead": "С них начинается день — чтобы было чем ответить, если растеряешься.",
+  "@planDayRescueLead": { "description": "Пояснение блока спасателей на экране дня (кадр D-01)." },
+  "planDayRoleOnlyUnderstand": "говорит собеседник · только понимать",
+  "@planDayRoleOnlyUnderstand": { "description": "Подпись полки «Тебе скажут» на экране дня: реплики роли — только на понимание (кадр D-01, канон §3)." },
+  "planDayStarted": "День начат",
+  "@planDayStarted": { "description": "Надзаголовок возврата в начатый день (кадр D-01б)." },
+  "planDayComposition": "{cards, plural, one{{cards} карточка} few{{cards} карточки} other{{cards} карточек}} · {sections, plural, one{{sections} секция} few{{sections} секции} other{{sections} секций}}",
+  "@planDayComposition": {
+    "description": "Состав дня под кнопкой «Начать день» — счёт от сервера, а не оценка длины (кадр D-01).",
+    "placeholders": { "cards": { "type": "int" }, "sections": { "type": "int" } }
+  },
+  "planDayContinueLeft": "Продолжить · осталось {count}",
+  "@planDayContinueLeft": {
+    "description": "Главное действие возврата в начатый день: счёт карточек, а не времени (кадр D-01б).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planDaySectionClosed": "закрыт",
+  "@planDaySectionClosed": { "description": "Состояние секции в сводке начатого дня (кадр D-01б)." },
+  "planDaySectionWaiting": "ждут",
+  "@planDaySectionWaiting": { "description": "Состояние ещё не начатых секций в сводке начатого дня (кадр D-01б)." },
+  "planDaySectionPart": "{done} из {total}",
+  "@planDaySectionPart": {
+    "description": "Состояние секции, которую проходят прямо сейчас (кадр D-01б).",
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "planDayShowWholeScene": "Посмотреть сцену целиком",
+  "@planDayShowWholeScene": { "description": "Раскрыть полки начатого дня — свёрнутую сводку разворачивают руками (кадр D-01б)." },
+  "planSceneNamed": "Сцена: {title}",
+  "@planSceneNamed": {
+    "description": "Подзаголовок итога посадки (кадр D-06): итог отвечает на вопрос «справлюсь ли я в этой сцене», а не «сколько слов выучил».",
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "planDayAlmost": "День {index} · почти",
+  "@planDayAlmost": {
+    "description": "Вердикт «день не закрыт» (кадр D-06б): заголовок называет остаток, а не притворяется, что день пройден.",
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "planDayAlmostLead": "{count, plural, one{Осталось дотренировать {count} карточку} few{Осталось дотренировать {count} карточки} other{Осталось дотренировать {count} карточек}}",
+  "@planDayAlmostLead": {
+    "description": "Сколько карточек не дошло до ступени, на которой их можно сказать в разговоре (кадр D-06б).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planDayGotIt": "Далось",
+  "@planDayGotIt": { "description": "Первый блок итога посадки: карточки, отвеченные верно (кадр D-06)." },
+  "planDayMissed": "Не далось",
+  "@planDayMissed": { "description": "Второй блок итога: конкретные карточки с причиной, они же уходят в завтрашний разогрев (кадр D-06)." },
+  "planDayMissedNote": "Непослушные карточки вернутся в разогреве.",
+  "@planDayMissedNote": { "description": "Что будет с тем, что не далось (кадр D-06, канон §5 «разогрев v2»)." },
+  "planDayTrainMore": "Дотренировать",
+  "@planDayTrainMore": { "description": "Действие вердикта «почти»: вернуться в день и закрыть остаток (кадр D-06б)." },
+  "planDayLeaveForTomorrow": "Оставить на завтра",
+  "@planDayLeaveForTomorrow": { "description": "Второй выбор вердикта «почти»: остаток придёт в разогреве, день останется открытым (кадр D-06б)." },
+  "planDayLeaveNote": "Если оставить — они придут в разогреве следующего дня, а этот останется открытым.",
+  "@planDayLeaveNote": { "description": "Что значит «оставить на завтра» — сказано до выбора, а не после (кадр D-06б)." },
+  "planDayClosedCount": "Закрыто в дне",
+  "@planDayClosedCount": { "description": "Строка вердикта «почти»: сколько карточек дня уже закрыто (кадр D-06б)." },
+  "planLadderLegend": "Ступени",
+  "@planLadderLegend": { "description": "Надзаголовок расшифровки A/B/C на итоге посадки (кадр D-06в)." },
+  "planLadderNoReadiness": "Готовность к сцене появится, когда сервер её посчитает. Пока — ступени.",
+  "@planLadderNoReadiness": { "description": "Почему на итоге нет процента: его не считают, а не прячут (кадр D-06в). Пока процент не считается, его нет вообще." },
+  "planLadderA": "познакомился",
+  "@planLadderA": { "description": "Ступень A человеческим словом — расшифровка стоит рядом, а не в справке (кадр D-06в)." },
+  "planLadderB": "применяешь",
+  "@planLadderB": { "description": "Ступень B человеческим словом." },
+  "planLadderC": "говоришь сам",
+  "@planLadderC": { "description": "Ступень C человеческим словом." },
   "planStageAClosed": "Ступень A пройдена",
   "@planStageAClosed": { "description": "Строка итога дня." },
   "planStageBReturns": "Вернутся на ступени B",

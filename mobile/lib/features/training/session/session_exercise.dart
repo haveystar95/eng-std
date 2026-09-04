@@ -1291,6 +1291,19 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     final roleLine = situation?.roleLine?.trim() ?? '';
     final task = situation?.task?.trim() ?? '';
 
+    // NO POSITION, NO HEADING. Inside a conversation the shell owns the moment — the line sounds
+    // from the bubble above and the вводка stood on the dialogue's opening screen — so the server
+    // sends no situation and this card is just the question (наряд DAY-2, Ч.1.5). «СИТУАЦИЯ» over
+    // an empty card would be a label for something that is not there.
+    if (context.isEmpty && roleLine.isEmpty && task.isEmpty) {
+      return PaperCard(
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(_instructionFor(l), style: AppTextExercise.taskInstruction),
+        ),
+      );
+    }
+
     return PaperCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

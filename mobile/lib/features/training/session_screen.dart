@@ -259,6 +259,11 @@ class _SessionShell extends ConsumerStatefulWidget {
   final bool planIsFinalDay;
 
   /// Start another practice session (used by the practice summary's «Ещё раз»).
+  ///
+  /// The SAME act as «Дотренировать» on a plan day that did not close (кадр D·06б): a fresh sitting
+  /// of the same material, in place of this one. The plan's ladder owes only what is still open, so
+  /// what comes back is the remainder rather than the day over again — which is why one callback
+  /// serves both and there is no second way to re-enter a sitting.
   final VoidCallback onAgain;
 
   @override
@@ -964,34 +969,6 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         SessionHeader.phaseReview => l.sessionPhaseReview,
       };
 
-  /// «фраза · скажи слово вслух» — what the card at the front IS, and what is being done with it.
-  ///
-  /// The two halves are two different facts and both were missing from the old line. `kind` is the
-  /// server's own («Ты ответишь» and a connector are not the same card, however alike they look),
-  /// and the verb is the trainer's — except on the speaking card, where the honest verb depends on
-  /// whether the phrase has a KEY: «скажи слово вслух» is what the learner actually does when only
-  /// one word of the sentence is graded, and it is the sentence the наряд asks for by name.
-  ///
-  /// Null when there is no `kind` to name — a card of a day written before the shelves, and every
-  /// card of a session that is not a plan's.
-  String? _taskDoing(AppLocalizations l, PlanSessionEnvelope plan) {
-    final kind = switch (plan.kindAt(_playing)) {
-      'word' => l.planKindWord,
-      'chunk' => l.planKindChunk,
-      'line' => l.planKindLine,
-      _ => null,
-    };
-    if (kind == null) return null;
-
-    final doing = _card.mode == ExerciseMode.speaking
-        ? ((_card.speakingKey ?? '').trim().isEmpty
-            ? l.planDoingSpeakWhole
-            : l.planDoingSpeakKey)
-        : _phaseWord(l).toLowerCase();
-
-    return l.planTaskDoing(kind, doing);
-  }
-
   /// The rung names are captions first («узнавание», under a dot) and a header second. One string
   /// in the deck rather than two, capitalised where the layout calls for it — two entries would be
   /// two entries to keep in step, and this is exactly the drift Ч.4 exists to undo.
@@ -1083,6 +1060,17 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         return PlanDaySummary(
           envelope: plan,
           cards: widget.session.cards,
+          // HOW THE EVENING WENT, from the sitting's own verdicts: «Далось» and «Не далось» by name
+          // (кадр D·06). Asking the server which cards went wrong would be a second opinion about an
+          // evening it did not watch.
+          results: _results,
+          // «ДОТРЕНИРОВАТЬ» — the choice кадр D·06б offers when the day did not close.
+          //
+          // A FRESH SESSION for the same day, in place of this one: the plan is asked to deal the
+          // day again and the ladder owes only what is still open, so «доделать» is one more short
+          // sitting rather than the whole day over. `pushReplacement` keeps the back stack from
+          // filling with finished sittings, exactly as «Ещё раз» does on a practice summary.
+          onTrainMore: widget.planIsFinalDay ? null : widget.onAgain,
           onDone: () => Navigator.of(context).pop(),
         );
       }
@@ -1156,7 +1144,15 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             showDue: !widget.practice,
             // THE POSITION and the spoken half — both facts about the DAY, so both come off the
             // plan's envelope and are null/false on every ordinary card.
-            situation: plan?.situationAt(_playing),
+            // THE «СИТУАЦИЯ» BLOCK IS THE SHELL'S JOB INSIDE A CONVERSATION, and the card must not
+            // draw its own (наряд DAY-2, Ч.1.5: «их место занимает диалог»).
+            //
+            // Measured on the live run: the bubble said «говорит собеседник · текст скрыт» and the
+            // card printed that very line underneath it — the screen hiding a sentence and spoiling
+            // it in the same frame. The position is the conversation now: the line SOUNDS from the
+            // bubble, «Показать текст» reveals it if the learner asks, and the вводка stands on the
+            // dialogue's own opening screen.
+            situation: _dialogueHere != null ? null : plan?.situationAt(_playing),
             speaksAfterChoice: plan?.speaksAfterChoiceAt(_playing) ?? false,
             // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's
             // deferred speak/focus is cancelled instead of firing on the next card.
@@ -1257,22 +1253,19 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                               ),
                               const SizedBox(height: 18),
                             ],
-                            // «ФРАЗА · СКАЖИ СЛОВО ВСЛУХ» — what this card is, and what is being
-                            // done with it.
+                            // «СТУПЕНЬ B · СБОРКА» USED TO STAND HERE, and nothing replaced it in
+                            // the same slot (наряд DAY-2, Ч.2.2).
                             //
-                            // It replaces «СТУПЕНЬ B · СБОРКА» (наряд DAY-2, Ч.2.2). The stage is a
-                            // mark for oneself and it already has a home — the brass pill in the
-                            // header — and «сборка» named the machinery rather than the act. The
-                            // part of the sitting moved to the progress bar, where it stands over
-                            // its own divisions; what is left here is the one sentence that changes
-                            // with every card.
-                            if (_taskDoing(l, plan) case final doing?) ...[
-                              Text(
-                                doing.toUpperCase(),
-                                style: AppText.blockLabel.copyWith(letterSpacing: 1.32),
-                              ),
-                              const SizedBox(height: 18),
-                            ],
+                            // Both halves of it had a better home already. The STAGE is a mark for
+                            // oneself and wears the brass pill in the header. The rung's name —
+                            // «сборка» — was read off `ladder_step`, which on a plan card is the
+                            // PLAN's step number and not the pool's rung, so a `multiple_choice`
+                            // card came out «СБОРКА» over its own honest instruction. And what the
+                            // learner is DOING is on the card itself, where it has always been and
+                            // where it is written per trainer: «фраза · выбери английский
+                            // эквивалент», «фраза · скажи слово вслух»
+                            // ({@see SessionExercise._instructionLine}). The part of the sitting
+                            // moved to the progress bar, over the divisions it is about.
                             // WHOSE LINE THIS IS. Only on the interlocutor's — the learner's own
                             // needs no caption, and a label on every card would be noise. Without
                             // it a `role` line is dealt as a card like any other and reads as one

@@ -2829,6 +2829,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planDayBuilding => 'Собирается';
 
   @override
+  String get planSpeakerRoleShort => 'он';
+
+  @override
   String get planSpeakerRole => 'Собеседник:';
 
   @override
@@ -3094,26 +3097,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String planTaskDoing(String kind, String doing) {
-    return '$kind · $doing';
-  }
-
-  @override
-  String get planKindWord => 'слово';
-
-  @override
-  String get planKindChunk => 'связка';
-
-  @override
-  String get planKindLine => 'фраза';
-
-  @override
-  String get planDoingSpeakKey => 'скажи слово вслух';
-
-  @override
-  String get planDoingSpeakWhole => 'скажи вслух';
-
-  @override
   String planDialogueScene(int index) {
     return 'Сцена $index';
   }
@@ -3246,6 +3229,114 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planDialogueBackToSession => 'Вернуться к сессии';
+
+  @override
+  String get planDayRescueLead =>
+      'С них начинается день — чтобы было чем ответить, если растеряешься.';
+
+  @override
+  String get planDayRoleOnlyUnderstand => 'говорит собеседник · только понимать';
+
+  @override
+  String get planDayStarted => 'День начат';
+
+  @override
+  String planDayComposition(int cards, int sections) {
+    String _temp0 = intl.Intl.pluralLogic(
+      cards,
+      locale: localeName,
+      other: '$cards карточек',
+      few: '$cards карточки',
+      one: '$cards карточка',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      sections,
+      locale: localeName,
+      other: '$sections секций',
+      few: '$sections секции',
+      one: '$sections секция',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String planDayContinueLeft(int count) {
+    return 'Продолжить · осталось $count';
+  }
+
+  @override
+  String get planDaySectionClosed => 'закрыт';
+
+  @override
+  String get planDaySectionWaiting => 'ждут';
+
+  @override
+  String planDaySectionPart(int done, int total) {
+    return '$done из $total';
+  }
+
+  @override
+  String get planDayShowWholeScene => 'Посмотреть сцену целиком';
+
+  @override
+  String planSceneNamed(String title) {
+    return 'Сцена: $title';
+  }
+
+  @override
+  String planDayAlmost(int index) {
+    return 'День $index · почти';
+  }
+
+  @override
+  String planDayAlmostLead(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Осталось дотренировать $count карточек',
+      few: 'Осталось дотренировать $count карточки',
+      one: 'Осталось дотренировать $count карточку',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planDayGotIt => 'Далось';
+
+  @override
+  String get planDayMissed => 'Не далось';
+
+  @override
+  String get planDayMissedNote => 'Непослушные карточки вернутся в разогреве.';
+
+  @override
+  String get planDayTrainMore => 'Дотренировать';
+
+  @override
+  String get planDayLeaveForTomorrow => 'Оставить на завтра';
+
+  @override
+  String get planDayLeaveNote =>
+      'Если оставить — они придут в разогреве следующего дня, а этот останется открытым.';
+
+  @override
+  String get planDayClosedCount => 'Закрыто в дне';
+
+  @override
+  String get planLadderLegend => 'Ступени';
+
+  @override
+  String get planLadderNoReadiness =>
+      'Готовность к сцене появится, когда сервер её посчитает. Пока — ступени.';
+
+  @override
+  String get planLadderA => 'познакомился';
+
+  @override
+  String get planLadderB => 'применяешь';
+
+  @override
+  String get planLadderC => 'говоришь сам';
 
   @override
   String get planStageAClosed => 'Ступень A пройдена';
