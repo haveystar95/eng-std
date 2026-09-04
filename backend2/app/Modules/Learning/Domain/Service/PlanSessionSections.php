@@ -57,7 +57,21 @@ final class PlanSessionSections
     /** «Цифры на слух» — канон §6. No session deals one yet (NUM-1); the code exists so it can. */
     public const NUMBERS = 'numbers';
 
-    /** «Прогон сцены» — the final day's run-through, and later SCENE-RUN. */
+    /**
+     * ПРОГОН СЦЕНЫ — ступень C, последняя часть дня (наряд SCENE-RUN, Ч.2).
+     *
+     * Та же цепочка, что играл диалог, и ни одного варианта на своём ходу: подсказка на языке
+     * поддержки и микрофон. Собирается ТОЛЬКО у сцены, каждый ход которой уже прошёл ступень B хотя
+     * бы одним верным выбором ({@see PlanSceneRunGate}); иначе секции просто нет — заглушки
+     * «недоступно» на экране дня не бывает, потому что человеку нечего с ней делать.
+     *
+     * Своя часть, а не {@see REHEARSAL}: прогон перед событием это ВЕСЬ план по одной карточке на
+     * термин, а это одна сцена, сыгранная разговором. Одна подпись на двоих врала бы на обоих
+     * экранах.
+     */
+    public const SCENE_RUN = 'scene_run';
+
+    /** «Прогон перед событием» — the final day's run-through over the whole plan. */
     public const REHEARSAL = 'rehearsal';
 
     /** «Повторение · из прошлых дней» — this plan's earlier material, after the day. */
@@ -76,6 +90,10 @@ final class PlanSessionSections
         self::DIALOGUE_INTRO,
         self::DIALOGUE,
         self::NUMBERS,
+        // Прогон — ПОСЛЕДНИЙ в дне (наряд SCENE-RUN, Ч.2.1): разогрев → слова и связки →
+        // знакомство → диалог → цифры → прогон. Он проверяет то, чему день учил, поэтому не может
+        // стоять раньше того, чему он учил.
+        self::SCENE_RUN,
         self::REHEARSAL,
         self::DAY,
     ];

@@ -18,6 +18,9 @@ use App\Modules\Learning\Application\Command\RebuildPlanDay;
 use App\Modules\Learning\Application\Command\RebuildPlanDayHandler;
 use App\Modules\Learning\Application\Command\RequestPlanDay;
 use App\Modules\Learning\Application\Command\RequestPlanDayHandler;
+use App\Modules\Learning\Application\Command\RecordSceneRun;
+use App\Modules\Learning\Application\Command\RecordSceneRunHandler;
+use App\Modules\Learning\Application\Command\SceneRunTurn;
 use App\Modules\Learning\Application\Command\RecordPlanFeedback;
 use App\Modules\Learning\Application\Command\RecordPlanFeedbackHandler;
 use App\Modules\Learning\Application\Command\ReschedulePlan;
@@ -38,11 +41,13 @@ use App\Modules\Learning\Application\Query\GetPlanRehearsalHandler;
 use App\Modules\Learning\Application\Query\ListPlans;
 use App\Modules\Learning\Application\Query\ListPlansHandler;
 use App\Modules\Learning\Domain\ValueObject\PlanEnding;
+use App\Modules\Learning\Domain\ValueObject\SceneRunOutcome;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Learning\Presentation\Http\Request\CreatePlanRequest;
 use App\Modules\Learning\Presentation\Http\Request\ListenWarmupRequest;
 use App\Modules\Learning\Presentation\Http\Request\PlanFeedbackRequest;
+use App\Modules\Learning\Presentation\Http\Request\SceneRunRequest;
 use App\Modules\Learning\Presentation\Http\Request\ReschedulePlanRequest;
 use App\Modules\Learning\Presentation\Http\Resource\PlanResource;
 use App\Modules\Learning\Presentation\Http\Resource\PlanSessionResource;
@@ -88,6 +93,7 @@ final class PlanController
         private readonly GetPlanRehearsalHandler $rehearse,
         private readonly RecordPlanFeedbackHandler $recordFeedback,
         private readonly BuildListenWarmupHandler $listenWarmup,
+        private readonly RecordSceneRunHandler $recordSceneRun,
     ) {}
 
     /**
@@ -315,6 +321,49 @@ final class PlanController
         ));
 
         return $this->show($request, $planId);
+    }
+
+    /**
+     * ПРОГОН СЦЕНЫ ЗАВЕРШЁН — наряд SCENE-RUN, Ч.2.6/Ч.2.7.
+     *
+     * Клиент присылает ходы с исходами и НЕ присылает ни одного посчитанного числа: «Прошёл сам 2
+     * из 4 · сразу 1» — то, что человеку показывают и что потом читает зрелость сцены, и число,
+     * посчитанное на телефоне, было бы вторым источником правды о том, чего он добился.
+     *
+     * Ответы каждого хода уже уехали обычной партией в `POST /reviews/batch` — сказал это
+     * `speaking/good`, пропустил `speaking/again`, — поэтому здесь их нет: append-only журнал не
+     * должен получить один ответ дважды.
+     */
+    public function sceneRun(SceneRunRequest $request, string $planId): JsonResponse
+    {
+        /** @var list<array<string, mixed>> $rows */
+        $rows = (array) $request->input('turns', []);
+        $turns = [];
+        foreach ($rows as $row) {
+            $turns[] = new SceneRunTurn(
+                termId: (string) ($row['term_id'] ?? ''),
+                outcome: SceneRunOutcome::from((string) ($row['outcome'] ?? '')),
+            );
+        }
+
+        $run = ($this->recordSceneRun)(new RecordSceneRun(
+            planId: $this->planId($planId),
+            actorId: $this->actorId($request),
+            sceneIndex: (int) $request->input('scene_index'),
+            dayIndex: (int) $request->input('day_index'),
+            turns: $turns,
+        ));
+
+        return response()->json(['data' => [
+            'scene_index' => $run->sceneIndex,
+            'day_index' => $run->dayIndex,
+            'total' => $run->total,
+            'said' => $run->said,
+            // «Сразу» — своим числом, никогда процентом: на экранах плана процентов нет (кадр DL·10).
+            'said_fast' => $run->saidFast,
+            'skipped' => $run->skipped,
+            'rescued' => $run->rescued,
+        ]], 201);
     }
 
     public function day(Request $request, string $planId, string $dayIndex): JsonResponse

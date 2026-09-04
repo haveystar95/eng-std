@@ -64,6 +64,10 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     // «как прошло» is the last thing it asks, and a plan whose event is over must stop holding
     // words out of the ordinary day.
     Route::post('/plans/{planId}/rehearsal', [PlanController::class, 'rehearsal']);
+    // ПРОГОН СЦЕНЫ ЗАВЕРШЁН (наряд SCENE-RUN). Ходы с исходами; числа считает сервер. Отдельный
+    // вызов, а не поле в `complete` посадки: прогон — событие сцены, а посадка может кончиться, не
+    // дойдя до него.
+    Route::post('/plans/{planId}/scene-runs', [PlanController::class, 'sceneRun']);
     Route::post('/plans/{planId}/feedback', [PlanController::class, 'feedback']);
 
     Route::get('/sync/cursor', [SyncController::class, 'cursor']);

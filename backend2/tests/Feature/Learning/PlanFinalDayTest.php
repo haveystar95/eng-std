@@ -21,7 +21,10 @@ uses(RefreshDatabase::class);
  */
 beforeEach(fn () => fakePlanModel());
 
-it('deals the final day a run-through over every card the plan taught', function () {
+it('deals the final day a run of every scene, one after another', function () {
+    // Наряд SCENE-RUN, Ч.2.8: старый «прогон по всем карточкам плана» заменён цепочкой прогонов
+    // сцен той же механикой. Раньше последнее утро было списком из полусотни карточек по одной на
+    // термин; теперь это разговоры, сыгранные подряд, — то, что человеку предстоит через час.
     [, $token, $planId] = startedPlan($this);
 
     $final = DB::table('learning_plan_days')->where('plan_id', $planId)->where('kind', 'final')->first();
@@ -48,17 +51,20 @@ it('deals the final day a run-through over every card the plan taught', function
         ->and(DB::table('study_sessions')->where('id', $session['session_id'])->value('is_practice'))->toBeTrue();
 
     foreach ($session['tasks'] as $task) {
-        expect($task['stage'])->toBeNull()
-            ->and($task['source'])->toBe('rehearsal');
+        expect($task['source'])->toBe('scene_run')
+            ->and($task['section_code'])->toBe('scene_run')
+            ->and($task['turn_level'])->toBe('say');
     }
+
+    // …и разговор каждой сцены приезжает целиком: лента прогона это та же цепочка.
+    expect($session['dialogues'])->not->toBe([]);
 });
 
-it('runs the final day through by ear and by voice — no typing, no dictation (С-9)', function () {
+it('runs the final day by voice alone — no options, no blocks, no keyboard (С-9)', function () {
     // Канон §10/§12: «прогон всех сцен + финальный разговор», вслух. What the stand got instead was
     // the ordinary selector's pick over 53 tasks — `listening` 16, `typing` 11, `cloze` 4, and not
     // one speaking card — i.e. the learner typing out the INTERLOCUTOR's lines from audio three
-    // minutes before the appointment. The mode is named per card now
-    // ({@see \App\Modules\Learning\Application\Command\BuildPlanSessionHandler::rehearsalModesFor()}).
+    // minutes before the appointment. Теперь режим один и он назван: это ступень C.
     [, $token, $planId] = startedPlan($this);
 
     $final = DB::table('learning_plan_days')->where('plan_id', $planId)->where('kind', 'final')->first();
@@ -69,21 +75,29 @@ it('runs the final day through by ear and by voice — no typing, no dictation (
         $session['tasks'],
     )));
 
-    expect($modes)->not->toBeEmpty();
-    foreach ($modes as $mode) {
-        expect($mode)->toBeIn([
-            'multiple_choice', 'speaking',
-            'situational_hear', 'situational_say', 'situational_ask',
-        ]);
+    expect($modes)->toBe(['speaking']);
+
+    foreach ($session['tasks'] as $task) {
+        // Ни вариантов, ни блоков: на экране подсказка и микрофон.
+        expect($task['card']['options'])->toBeNull()
+            ->and($task['card']['chips'])->toBeNull()
+            // Только свои ходы. Реплика собеседника звучит из ленты и ходом не является.
+            ->and($task['shelf'])->toBeIn(['say', 'ask']);
     }
+});
 
-    // The scene's own shelves are run through as scenes, and the learner's own lines out loud.
-    expect($modes)->toContain('speaking')
-        ->and($modes)->toContain('situational_hear');
+it('runs an unripe scene on the last day anyway, and says it was unripe', function () {
+    // Единственное исключение из гейта (наряд Ч.2.8): завтра стойка, и сцена, до которой лестница не
+    // дошла, — ровно то место, где будет страшно. Прогоняется, но помечена.
+    [, $token, $planId] = startedPlan($this);
 
-    // …and nothing that puts a keyboard between the learner and the conversation.
-    foreach (['typing', 'dictation', 'cloze', 'listening', 'word_bank', 'scramble'] as $absent) {
-        expect($modes)->not->toContain($absent);
+    $final = DB::table('learning_plan_days')->where('plan_id', $planId)->where('kind', 'final')->first();
+    $session = planSession($this, $token, $planId, (int) $final->day_index);
+
+    expect($session['dialogues'])->not->toBe([]);
+    foreach ($session['dialogues'] as $dialogue) {
+        // Ни одна сцена этого плана ещё не проходила ступень B: человек только что его создал.
+        expect($dialogue['run_ready'])->toBeFalse();
     }
 });
 

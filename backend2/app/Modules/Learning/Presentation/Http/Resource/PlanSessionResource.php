@@ -68,6 +68,10 @@ final class PlanSessionResource extends JsonResource
                 'day_index' => $dialogue->dayIndex,
                 'scene_title' => $dialogue->sceneTitle,
                 'scene_intro' => $dialogue->sceneIntro,
+                // ДОЗРЕЛА ЛИ СЦЕНА ДО ПРОГОНА (наряд SCENE-RUN, Ч.2.8). В обычный день у сцены,
+                // чей прогон собрали, это всегда true; на последнем дне гоняются и недозревшие, и
+                // итог их помечает вместо того, чтобы делать вид, что они были как остальные.
+                'run_ready' => $dialogue->runReady,
                 'turns' => array_map(static fn (PlanDialogueTurnView $turn): array => [
                     'turn' => $turn->turn,
                     'term_id' => $turn->termId,

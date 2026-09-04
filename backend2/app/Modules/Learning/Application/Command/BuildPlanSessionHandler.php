@@ -33,10 +33,12 @@ use App\Modules\Learning\Application\Dto\PlanDialogueView;
 use App\Modules\Learning\Application\Service\LineAudioIndex;
 use App\Modules\Learning\Domain\Service\PlanAnswerOptions;
 use App\Modules\Learning\Domain\Service\PlanDayOrder;
+use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
 use App\Modules\Learning\Domain\Service\PlanDialogueChain;
 use App\Modules\Learning\Domain\Service\PlanDialogueLevel;
 use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
+use App\Modules\Learning\Domain\Service\PlanSceneRunGate;
 use App\Modules\Learning\Domain\Service\PlanKnobSupport;
 use App\Modules\Learning\Domain\Service\PlanSessionSections;
 use App\Modules\Learning\Domain\Service\PlanSittings;
@@ -240,6 +242,11 @@ final readonly class BuildPlanSessionHandler
          * длиннее списка задач — экран рисует ленту вперёд и должен знать, чем ход станет.
          */
         private PlanTermStageRepository $termStages,
+        /**
+         * ЧТО УЖЕ ПРОГОНЯЛИ. Спрашивается один раз на посадку: прогон — событие, и сцена, которую
+         * сегодня уже прогнали, второй раз за вечер мерила бы память о первом прогоне.
+         */
+        private PlanSceneRunRepository $sceneRuns,
         private PlanDayOrder $order = new PlanDayOrder(),
         /** Where a situational card's «Ситуация» comes from — pure, and stated in Domain. */
         private SituationalPrompt $situations = new SituationalPrompt(),
@@ -283,7 +290,7 @@ final readonly class BuildPlanSessionHandler
             // A RUN-THROUGH HAS NO CONVERSATION. Every card of the plan, once each, in the order it
             // was taught — that is a different shape from a scene being spoken, and the dialogue of
             // the прогон is SCENE-RUN's, not this one's.
-            : [$this->rehearsalTasks($plan, $progress, $knobs), []];
+            : $this->rehearsalTasks($plan, $progress, $knobs, $this->termStages->forPlan($plan->id()));
 
         $sessionId = $command->sessionId ?? StudySessionId::generate();
         $this->persist($sessionId, $plan, $day, $tasks, $strict);
@@ -590,7 +597,12 @@ final readonly class BuildPlanSessionHandler
         $warmup = [];
         $rest = [];
         foreach ($specs as $position => $spec) {
-            $spec['section_code'] = $this->sectionCodeOf($spec, $progress);
+            // Ведро, которое НАЗВАЛО свою часть, знает о ней больше правила: прогон сцены играется
+            // тем же тренажёром и на той же полке, что и говорение фразы, и вывести его из полки со
+            // ступенью нельзя — различает их то, зачем карточку раздали.
+            $spec['section_code'] = is_string($spec['section_code'] ?? null)
+                ? $spec['section_code']
+                : $this->sectionCodeOf($spec, $progress);
             if ($spec['section_code'] === PlanSessionSections::WARMUP) {
                 $warmup[] = $spec;
 
@@ -601,8 +613,10 @@ final readonly class BuildPlanSessionHandler
             $rest[] = [
                 'spec' => $spec,
                 'key' => [
-                    // The day being studied, then everything behind it — the seam.
-                    $day === $dayIndex ? 0 : 1,
+                    // The day being studied, then everything behind it — the seam. ПРОГОН СЦЕНЫ
+                    // стоит на стороне ДНЯ, чьей бы сцены он ни был: это сегодняшний шаг лестницы,
+                    // а не возврат к пройденному, и подпись шва над ним была бы неправдой.
+                    $day === $dayIndex || $spec['section_code'] === PlanSessionSections::SCENE_RUN ? 0 : 1,
                     PlanSessionSections::rankOf($spec['section_code']),
                     $day,
                     $atTurn[$day . '#' . $spec['term_id']] ?? PHP_INT_MAX,
@@ -631,7 +645,12 @@ final readonly class BuildPlanSessionHandler
     {
         $wanted = [];
         foreach ($specs as $spec) {
-            if (($spec['section_code'] ?? null) === PlanSessionSections::DIALOGUE && $spec['day'] !== null) {
+            // Разговор нужен ОБЕИМ секциям, которые его играют: диалогу (ступень B) и прогону
+            // (ступень C). Лента прогона — та же цепочка, и без неё экран не знал бы, что говорит
+            // собеседник между твоими ходами.
+            $code = $spec['section_code'] ?? null;
+            if (($code === PlanSessionSections::DIALOGUE || $code === PlanSessionSections::SCENE_RUN)
+                && $spec['day'] !== null) {
                 $wanted[(int) $spec['day']] = true;
             }
         }
@@ -673,6 +692,9 @@ final readonly class BuildPlanSessionHandler
                     sceneTitle: $day->sceneTitle,
                     sceneIntro: $day->sceneIntro,
                     turns: $turns,
+                    // Дозрела ли сцена до прогона. В обычный день у сцены, чей прогон собрали, это
+                    // всегда true; на последнем дне гоняются и недозревшие, и итог их помечает.
+                    runReady: $this->sceneTurnsOf($day)[1],
                 );
             }
         }
@@ -914,6 +936,15 @@ final readonly class BuildPlanSessionHandler
             }
         }
 
+        // 3. ПРОГОН СЦЕНЫ — ступень C, последним в дне (наряд SCENE-RUN, Ч.2).
+        //
+        // Собирается только у сцены, каждый ход которой уже прошёл ступень B хотя бы одним верным
+        // выбором ({@see PlanSceneRunGate}), и только один раз за день: прогон это событие, а
+        // второй прогон той же сцены в тот же вечер измерял бы память о первом.
+        foreach ($this->sceneRunSpecs($plan, $progress, $dayIndex) as $spec) {
+            $specs[] = $spec;
+        }
+
         // There is no third bucket. See the class docblock: the top-up is not filtered here, it is
         // not called, and there is nothing outside this plan for it to have read.
 
@@ -949,6 +980,80 @@ final readonly class BuildPlanSessionHandler
             ),
             array_values($chains),
         ];
+    }
+
+    /**
+     * ХОДЫ ПРОГОНА СЦЕНЫ ЭТОГО ДНЯ, или пусто — сцена до прогона ещё не дозрела (наряд SCENE-RUN).
+     *
+     * Один шаг на каждый ход `you` цепочки, в порядке цепочки, тренажёром «говорение»: реплики на
+     * экране нет, есть подсказка на языке поддержки и микрофон. Тренажёр не новый и режим не новый —
+     * новое только то, ЗАЧЕМ карточку раздали, и это говорит `section_code`.
+     *
+     * ## Три условия, и все три обязательны
+     *
+     * 1. У сцены есть цепочка и в ней есть свои ходы — прогонять иначе нечего.
+     * 2. Каждый ход прошёл ступень B хотя бы одним верным выбором ({@see PlanSceneRunGate}).
+     * 3. Сегодня эту сцену ещё не прогоняли. Прогон — событие, и второй за вечер мерил бы память о
+     *    первом, а не умение.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function sceneRunSpecs(LearningPlan $plan, PlanProgressView $progress, int $dayIndex): array
+    {
+        // ЧТО УЖЕ ПРОГОНЯЛИ. Два разных вопроса из одного списка: «эту сцену сегодня уже гоняли»
+        // (событие не повторяют в тот же вечер) и «эта сцена уже пройдена сама целиком» (ступень C
+        // закрыта, возвращать её незачем).
+        $ranToday = [];
+        $closed = [];
+        foreach ($this->sceneRuns->forPlan($plan->id()) as $run) {
+            if ($run->dayIndex === $dayIndex) {
+                $ranToday[$run->sceneIndex] = true;
+            }
+            if ($run->allSaid()) {
+                $closed[$run->sceneIndex] = true;
+            }
+        }
+
+        $indexes = array_keys($progress->days);
+        sort($indexes);
+
+        $specs = [];
+        foreach ($indexes as $index) {
+            // Сцены ВПЕРЕДИ дня, который изучают, не прогоняются: их ещё не проходили. Сцена самого
+            // дня прогоняется — она могла дозреть на прошлой посадке.
+            if ($index > $dayIndex || isset($ranToday[$index]) || isset($closed[$index])) {
+                continue;
+            }
+
+            [$turns, $ready] = $this->sceneTurnsOf($progress->days[$index]);
+            if ($turns === [] || ! $ready) {
+                continue;
+            }
+
+            foreach ($turns as $termId) {
+                $specs[] = [
+                    'term_id' => $termId,
+                    // Ступень C — то, чем прогон и является; она же решает, что реплики на экране
+                    // нет ({@see PlanStage::speakingForm()} — `example_from_memory`).
+                    'stage' => PlanStage::C,
+                    'mode' => ExerciseMode::Speaking,
+                    'ordinal' => 0,
+                    'of' => 0,
+                    'day' => $index,
+                    'softened' => false,
+                    'source' => 'scene_run',
+                    'step' => null,
+                    'section_code' => PlanSessionSections::SCENE_RUN,
+                    'turn_level' => PlanTurnLevel::Say,
+                    // ПРОГОН — ЧАСТЬ ДНЯ, а не шва, даже когда прогоняется вчерашняя сцена. Шов
+                    // подписан «Повторение · из прошлых дней» и означает «вернулись к пройденному»;
+                    // прогон это сегодняшний шаг лестницы, он входит в счётчик дня и в его итог.
+                    'section' => PlanSessionTaskView::SECTION_DAY,
+                ];
+            }
+        }
+
+        return $specs;
     }
 
     /**
@@ -1108,8 +1213,16 @@ final readonly class BuildPlanSessionHandler
      *
      * @return list<PlanSessionTaskView>
      */
-    private function rehearsalTasks(LearningPlan $plan, PlanProgressView $progress, PlanKnobs $knobs): array
-    {
+    /**
+     * @param  array<string, PlanTermStage>  $stages
+     * @return array{0: list<PlanSessionTaskView>, 1: list<PlanDialogueView>}
+     */
+    private function rehearsalTasks(
+        LearningPlan $plan,
+        PlanProgressView $progress,
+        PlanKnobs $knobs,
+        array $stages,
+    ): array {
         $budget = $this->taskBudget($plan);
 
         $indexes = array_keys($progress->days);
@@ -1118,59 +1231,75 @@ final readonly class BuildPlanSessionHandler
         $views = $this->planViews($plan, $progress);
         $content = [];
         $specs = [];
-        $seen = [];
         foreach ($indexes as $index) {
             $day = $progress->days[$index];
             $content += $day->content;
-            foreach ($day->termIds as $termId) {
-                if (isset($seen[$termId]) || ! isset($day->content[$termId])) {
-                    continue;
-                }
-                $seen[$termId] = true;
-                $specs[] = ['term_id' => $termId, 'stage' => null,
-                    'mode' => null, 'modes' => self::rehearsalModesFor($day->content[$termId]),
+
+            [$turns] = $this->sceneTurnsOf($day);
+            if ($turns === []) {
+                continue;
+            }
+            foreach ($turns as $termId) {
+                $specs[] = ['term_id' => $termId, 'stage' => PlanStage::C,
+                    'mode' => ExerciseMode::Speaking,
                     'ordinal' => 0, 'of' => 0, 'day' => $index, 'softened' => false,
-                    'source' => 'rehearsal', 'step' => null];
+                    'source' => 'scene_run', 'step' => null,
+                    'section_code' => PlanSessionSections::SCENE_RUN,
+                    'turn_level' => PlanTurnLevel::Say];
             }
         }
 
-        return $this->assembleTasks(
-            $plan,
-            array_slice($specs, 0, $budget),
-            $views,
-            $content,
-            $knobs,
-            // The day being studied is the FINAL one, and no card belongs to it — every one of them
-            // came from a teaching day, so every task is «Повторение» and the seam count is zero.
-            // That is the honest reading: this sitting introduces nothing.
-            $progress->focusDayIndex,
-            null,
-            isPractice: true,
-        );
+        $specs = array_slice($specs, 0, $budget);
+        $chains = $this->chainsFor($specs, $progress, $stages);
+
+        return [
+            $this->assembleTasks(
+                $plan,
+                $specs,
+                $views,
+                $content,
+                $knobs,
+                // The day being studied is the FINAL one, and no card belongs to it — every one of
+                // them came from a teaching day, so every task is «Повторение» and the seam count is
+                // zero. That is the honest reading: this sitting introduces nothing.
+                $progress->focusDayIndex,
+                null,
+                isPractice: true,
+                stages: $stages,
+            ),
+            array_values($chains),
+        ];
     }
 
     /**
-     * THE RUN-THROUGH'S TRAINERS FOR ONE CARD, best first — see {@see rehearsalTasks()}.
+     * ХОДЫ `you` ЭТОЙ СЦЕНЫ и дозрела ли она до прогона — общий кусок обычного дня и финального.
      *
-     * The ladder KIND decides, exactly as it decides the checklist ({@see PlanStageLadder}), so a
-     * card that climbed the понимаю ladder is run through by understanding and a reply is run
-     * through by answering. Each list ends in a mode that needs no option pool at all, so the
-     * run-through cannot lose a card to a starved shelf.
-     *
-     * @return list<ExerciseMode>
+     * @return array{0: list<string>, 1: bool}
      */
-    private static function rehearsalModesFor(TermContentView $content): array
+    private function sceneTurnsOf(PlanDayProgressView $day): array
     {
-        return match (PlanStageLadder::ladderKindFor($content->kind, $content->tier, $content->shelf)) {
-            // Heard, then understood. `multiple_choice` behind it is the same question with the text
-            // on the screen — the honest degradation when the shelf is too small for a situation.
-            PlanStageLadder::KIND_UNDERSTAND => [ExerciseMode::SituationalHear, ExerciseMode::MultipleChoice],
-            PlanStageLadder::KIND_LINE_SAY => [ExerciseMode::SituationalSay, ExerciseMode::Speaking],
-            PlanStageLadder::KIND_LINE_ASK => [ExerciseMode::SituationalAsk, ExerciseMode::Speaking],
-            // A line with no shelf — the rescue kit — and every word and connector: say it. There is
-            // no situation to put a rescue phrase in; it is what the learner says in all of them.
-            default => [ExerciseMode::Speaking, ExerciseMode::MultipleChoice],
-        };
+        $cards = [];
+        foreach ($day->content as $termId => $view) {
+            $cards[] = new SituationalCandidate($termId, $view->shelf, $view->skillRef, $view->text);
+        }
+
+        $turns = [];
+        foreach ($this->dialogues->for($day->dialogue, $cards) as $move) {
+            if (! $move->isRole() && isset($day->content[$move->termId])) {
+                $turns[] = $move->termId;
+            }
+        }
+
+        $standings = [];
+        foreach ($turns as $termId) {
+            $standing = $day->standings[$termId] ?? null;
+            if ($standing === null) {
+                return [$turns, false];
+            }
+            $standings[] = $standing;
+        }
+
+        return [$turns, PlanSceneRunGate::sceneIsReady($standings)];
     }
 
     // ── assembly ─────────────────────────────────────────────────────────────────────────────
@@ -1257,8 +1386,7 @@ final readonly class BuildPlanSessionHandler
             //
             // One, on every path but the run-through: a checklist step IS a named trainer, so a slot
             // that fell back to another one would close a step the learner was never asked. The
-            // final day's run-through closes nothing, and there the list is a fallback order —
-            // {@see rehearsalModesFor()}.
+            // final day's run-through closes nothing, and its list is the scene's own turns.
             /** @var list<ExerciseMode|null> $candidates */
             $candidates = isset($spec['modes']) && is_array($spec['modes']) && $spec['modes'] !== []
                 ? $spec['modes']
@@ -1402,7 +1530,12 @@ final readonly class BuildPlanSessionHandler
                 // ничего — у реплики собеседника, слова, связки и разогрева. Считается по паре, а
                 // не по карточке, потому что доказывает выбор ПАРА (план, термин), а карточка
                 // сегодняшней раздачи — только её последнее доказательство.
-                turnLevel: $dealt->speaksAfterChoice() ? $level?->value : null,
+                turnLevel: match (true) {
+                    // Ведро назвало уровень само — прогон сцены: `say`, микрофон, реплики нет.
+                    ($spec['turn_level'] ?? null) instanceof PlanTurnLevel => $spec['turn_level']->value,
+                    $dealt->speaksAfterChoice() => $level?->value,
+                    default => null,
+                },
             );
         }
 

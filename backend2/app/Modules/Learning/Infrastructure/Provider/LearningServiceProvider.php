@@ -37,6 +37,7 @@ use App\Modules\Learning\Infrastructure\Adapter\LoggingModeFallbackReporter;
 use App\Modules\Learning\Application\Port\PlanTermArchiver;
 use App\Modules\Learning\Application\Port\PlanTermSweepStore;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
+use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanSkillRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
@@ -52,6 +53,7 @@ use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermArchiver;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermSweepStore;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermStageRepository;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanSceneRunRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesWriter;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDailyStatsProjector;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDueTermsReader;
@@ -132,6 +134,7 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(PlanTermArchiver::class, EloquentPlanTermArchiver::class);
         $this->app->bind(PlanTermSweepStore::class, EloquentPlanTermSweepStore::class);
         $this->app->bind(PlanTermStageRepository::class, EloquentPlanTermStageRepository::class);
+        $this->app->bind(PlanSceneRunRepository::class, EloquentPlanSceneRunRepository::class);
         // «Из плана: Отпуск в Италии» — what a review card of the top-up says about itself.
         // Singleton for the same reason the global reader is one: a per-request memo over one query.
         // A DIFFERENT instance from that reader even though it is the same table — the two read

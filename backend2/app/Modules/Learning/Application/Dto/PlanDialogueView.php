@@ -38,5 +38,16 @@ final readonly class PlanDialogueView
         /** The вводка, support language — what the dialogue's own opening screen prints (DL·01). */
         public ?string $sceneIntro,
         public array $turns,
+        /**
+         * СЦЕНА ДОЗРЕЛА ДО ПРОГОНА — каждый её ход прошёл ступень B хотя бы одним верным выбором
+         * ({@see \App\Modules\Learning\Domain\Service\PlanSceneRunGate}).
+         *
+         * В обычный день это всегда true у сцены, чей прогон вообще собрали: недозревшая секции не
+         * получает. Значение появляется на ПОСЛЕДНЕМ дне, где прогоняются все сцены подряд, включая
+         * те, до которых лестница не дошла (наряд SCENE-RUN, Ч.2.8): завтра стойка, и сцена, которую
+         * человек не успел, — ровно то место, где будет страшно. Итог прогона ставит на такую сцену
+         * пометку, а не делает вид, что она была как остальные.
+         */
+        public bool $runReady = true,
     ) {}
 }
