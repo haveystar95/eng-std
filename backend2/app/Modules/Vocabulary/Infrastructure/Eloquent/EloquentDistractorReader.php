@@ -17,7 +17,7 @@ final class EloquentDistractorReader implements DistractorReader
 {
     public function __construct(private readonly DistractorLength $length) {}
 
-    public function forTarget(UserId $userId, TermId $targetId, array $poolTermIds, int $count): array
+    public function forTarget(UserId $userId, TermId $targetId, array $poolTermIds, int $count, bool $poolOnly = false): array
     {
         if ($count < 1) {
             return [];
@@ -94,7 +94,7 @@ final class EloquentDistractorReader implements DistractorReader
         //
         // Nothing but the TEXT leaves this method, so an option carries no owner, no collection and
         // no trace of where it was found.
-        if (count($picked) < $count) {
+        if (count($picked) < $count && ! $poolOnly) {
             $exclude = array_values(array_unique([$targetId->value, ...$poolTermIds]));
             $rows = DB::table('terms')
                 ->where('lang', (string) $target->lang)

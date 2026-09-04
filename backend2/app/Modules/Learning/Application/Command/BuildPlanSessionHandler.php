@@ -30,6 +30,7 @@ use App\Modules\Learning\Application\Dto\PlanDialogueTurnView;
 use App\Modules\Learning\Application\Dto\PlanLineAudioView;
 use App\Modules\Learning\Application\Dto\PlanDialogueView;
 use App\Modules\Learning\Application\Service\LineAudioIndex;
+use App\Modules\Learning\Domain\Service\PlanAnswerOptions;
 use App\Modules\Learning\Domain\Service\PlanDayOrder;
 use App\Modules\Learning\Domain\Service\PlanDialogueChain;
 use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
@@ -400,6 +401,29 @@ final readonly class BuildPlanSessionHandler
         }
 
         return $out;
+    }
+
+    /**
+     * КАНДИДАТЫ В ВАРИАНТЫ ХОДА [$termId], или null — эта карточка вариантов-реплик не получает.
+     *
+     * Null для всего, что не стоит на полках say/ask: слово, связка, число и реплика собеседника
+     * собирают варианты по-своему, и подмена пула сломала бы им карточку. Null и когда план ещё не
+     * назвал сцены (мягкий прогон, прогон перед событием) — там ситуационных карточек не бывает.
+     *
+     * @param  array<int, array{cards: list<SituationalCandidate>, skills: mixed, intro: mixed, title: mixed}>  $scenes
+     * @return list<string>|null
+     */
+    private function answerPoolFor(string $termId, TermContentView $content, mixed $day, array $scenes): ?array
+    {
+        if ($scenes === [] || ! PlanAnswerOptions::isSpokenShelf($content->shelf)) {
+            return null;
+        }
+
+        return PlanAnswerOptions::forTurn(
+            new SituationalCandidate($termId, $content->shelf, $content->skillRef, $content->text),
+            array_map(static fn (array $scene): array => $scene['cards'], $scenes),
+            $day === null ? null : (int) $day,
+        );
     }
 
     /**
@@ -1131,6 +1155,16 @@ final readonly class BuildPlanSessionHandler
                 ? $spec['modes']
                 : [$spec['mode']];
 
+            // ВАРИАНТЫ ТВОЕГО ХОДА — реплики плана, которые человек мог бы сказать ВМЕСТО этой
+            // (наряд DAY-2-FIX, Ч.1.5). Считается по всему плану, своей сценой вперёд, и годится
+            // только для say/ask — на такте понимания варианты это СМЫСЛЫ, а не реплики, и их
+            // собирает {@see StudyCardAssembler::recognitionCard()} из того же дня.
+            //
+            // Живьём среди трёх ответов стояла другая реплика собеседника — человек выбирал, что
+            // сказать, из того, что говорят ему. Второй дефект был тише и хуже: вариант с тем же
+            // `skill_ref`, что у правильного ответа, отвечает на тот же вопрос и тоже верен.
+            $answerPool = $this->answerPoolFor($termId, $termContent, $spec['day'], $scenes);
+
             $card = null;
             foreach ($candidates as $mode) {
                 $card = $this->assembler->assemble(
@@ -1143,6 +1177,7 @@ final readonly class BuildPlanSessionHandler
                     supportLang: $langs->for($termId),
                     // The one knob the choice card already understood, and the level's own number.
                     optionCount: $knobs->mcOptions,
+                    answerPoolIds: $answerPool,
                 );
                 if ($card !== null) {
                     break;

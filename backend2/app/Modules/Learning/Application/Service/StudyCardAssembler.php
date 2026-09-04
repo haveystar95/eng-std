@@ -97,6 +97,14 @@ final readonly class StudyCardAssembler
      *                              not name it, and the far options are then refused rather than
      *                              guessed — the card falls through to ordinary multiple_choice,
      *                              whose own pool is filtered by language one level down.
+     * @param  list<string>|null  $answerPoolIds  ВАРИАНТЫ ТВОЕГО ХОДА, если этот вопрос уже решён
+     *                              снаружи — реплики плана, которые человек мог бы сказать вместо
+     *                              этой, отобранные по полке и по умению
+     *                              ({@see \App\Modules\Learning\Domain\Service\PlanAnswerOptions}).
+     *                              Передаёт его только план, и только на `situational_say` /
+     *                              `situational_ask`: там «из чего вообще бывают варианты» — это
+     *                              суждение, а не предпочтение, и добор из каталога поверх него
+     *                              вернул бы фразу не из этого разговора. Null — обычная раздача.
      */
     public function assemble(
         UserId $user,
@@ -112,6 +120,7 @@ final readonly class StudyCardAssembler
         ?ExerciseMode $modeOverride = null,
         ?string $supportLang = null,
         ?int $optionCount = null,
+        ?array $answerPoolIds = null,
     ): ?SessionCardView {
         // How many options a choice card is dealt, the right one included. A NUMBER rather than the
         // constant, because a plan deals its level's number ({@see PlanKnobs}: three for a learner
@@ -215,7 +224,7 @@ final readonly class StudyCardAssembler
         if ($mode->isSituational()) {
             return $this->situationalCard(
                 $user, $view, $content, $mode, $poolTermIds, $neighbours,
-                $cardIndex, $supportLang, $optionCount, $choiceFloor, $step,
+                $cardIndex, $supportLang, $optionCount, $choiceFloor, $step, $answerPoolIds,
             );
         }
         // Where the wrong options come from is POLICY, read from the matrix, not inferred from the
@@ -637,8 +646,14 @@ final readonly class StudyCardAssembler
      * card's question is the situation, and putting the reply's translation there would turn stage B
      * back into the translation exercise the canon replaced (§4, §13).
      *
+     * WHICH lines those are is not this method's judgement when the plan has made it already:
+     * [$answerPoolIds] is the scene's own say/ask shelves, minus everything that answers the same
+     * question ({@see \App\Modules\Learning\Domain\Service\PlanAnswerOptions}), and it is taken
+     * as the whole set rather than as a preference.
+     *
      * @param  list<string>  $poolTermIds
      * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
+     * @param  list<string>|null  $answerPoolIds  {@see assemble()}
      */
     private function situationalCard(
         UserId $user,
@@ -652,6 +667,7 @@ final readonly class StudyCardAssembler
         int $optionCount,
         int $choiceFloor,
         ?int $step,
+        ?array $answerPoolIds = null,
     ): ?SessionCardView {
         if ($mode === ExerciseMode::SituationalHear) {
             foreach ([$choiceFloor, self::MIN_OPTIONS] as $floor) {
@@ -670,7 +686,20 @@ final readonly class StudyCardAssembler
             return null;
         }
 
-        $distractors = $this->distractors->forTarget($user, $view->termId, $poolTermIds, $optionCount - 1);
+        // ИЗ ЧЕГО БЫВАЮТ ВАРИАНТЫ ТВОЕГО ХОДА — наряд DAY-2-FIX, Ч.1.5.
+        //
+        // Когда план назвал пул сам, он и есть весь список законных вариантов: реплики плана с
+        // полок say/ask, служащие ДРУГОМУ умению сцены. Каталог поверх него не добирается — вариант
+        // вне плана это фраза не из этого разговора, и добор превратил бы отобранный список обратно
+        // в мешок. Меньше вариантов — правильный ответ, когда план их не дал; ниже пола карточка
+        // отбивается, как отбивалась всегда.
+        $distractors = $this->distractors->forTarget(
+            $user,
+            $view->termId,
+            $answerPoolIds ?? $poolTermIds,
+            $optionCount - 1,
+            poolOnly: $answerPoolIds !== null,
+        );
         /** @var list<string> $options */
         $options = $this->rng->shuffleArray([$content->text, ...$distractors]);
 
