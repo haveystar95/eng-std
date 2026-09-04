@@ -10,7 +10,7 @@
 library;
 
 import 'models.dart'
-    show ExerciseMode, PlanSessionEnvelope, PlanSituation, SessionCard, StudySession;
+    show ExerciseMode, PlanDialogue, PlanSessionEnvelope, PlanSituation, SessionCard, StudySession;
 
 /// Where a plan is in its life. `draft` has no days and cost nothing; `active` is the commitment.
 enum PlanStatus {
@@ -693,6 +693,7 @@ class PlanSessionTask {
     this.tier,
     this.situation,
     this.speaksAfterChoice = false,
+    this.sectionCode,
   });
 
   /// This task is the day's own material — it counts towards «день пройден».
@@ -763,6 +764,38 @@ class PlanSessionTask {
   /// «Ты спросишь». Reinforcement: nothing about it is graded or uploaded.
   final bool speaksAfterChoice;
 
+  /// WHAT THE LEARNER IS DOING — the part of the sitting, as a code (наряд DAY-2).
+  ///
+  /// One of [sectionCodeWarmup] … [sectionCodeReview], read as an OPEN set: a code this build has
+  /// never heard of is a server ahead of the client and must fall through to «no caption» rather
+  /// than be forced into one of the seven the switch happens to know.
+  ///
+  /// Null on a payload written before the field existed, and then the shelf decides — which is what
+  /// the client did on its own until it could not: meeting a reply and speaking it in the
+  /// conversation are two parts of the sitting, and `shelf` says `say` for both.
+  final String? sectionCode;
+
+  /// The plan's five rescue phrases, before the day, every day (канон §5).
+  static const sectionCodeWarmup = 'warmup';
+
+  /// «Слова и связки» — the pieces the scene's lines are built from.
+  static const sectionCodeWords = 'words';
+
+  /// «Знакомство с репликами» — stage A of the three line shelves, one part.
+  static const sectionCodeDialogueIntro = 'dialogue_intro';
+
+  /// «Диалог сцены» — stage B of those same shelves, played as one conversation.
+  static const sectionCodeDialogue = 'dialogue';
+
+  /// «Цифры на слух» (канон §6). No session deals one yet — the code exists so it can.
+  static const sectionCodeNumbers = 'numbers';
+
+  /// «Прогон сцены» — the final day's run-through.
+  static const sectionCodeRehearsal = 'rehearsal';
+
+  /// «Повторение · из прошлых дней» — this plan's earlier material, after the day.
+  static const sectionCodeReview = 'review';
+
   /// This card is only ever asked for RECOGNITION — the server deals it no production trainer, and
   /// the client must not caption it as one either (Д-8, from the other side).
   ///
@@ -808,6 +841,7 @@ class PlanSessionTask {
           ExerciseMode.fromWire(
             (j['card'] as Map<String, dynamic>?)?['exercise_mode'] as String?,
           ).speaksAfterChoice,
+      sectionCode: (j['section_code'] as String?)?.trim(),
     );
   }
 }
@@ -845,6 +879,7 @@ class PlanSession implements PlanSessionEnvelope {
     required this.strict,
     required this.tasks,
     this.sittings = const [],
+    this.dialogues = const [],
     this.raw = const {},
   });
 
@@ -876,6 +911,24 @@ class PlanSession implements PlanSessionEnvelope {
   /// is played as one long session — which is what it was.
   @override
   final List<int> sittings;
+
+  /// THE CONVERSATIONS this sitting plays — one per scene it reaches (наряд DAY-2).
+  ///
+  /// Whole scenes, so the dialogue screen plays a conversation from its first line rather than from
+  /// whatever the ladder owes today. Empty on the day a scene is introduced, on the run-through, and
+  /// on a payload from a server that predates the field — and then the sitting is played card by
+  /// card, exactly as it was.
+  @override
+  final List<PlanDialogue> dialogues;
+
+  /// The conversation of the scene taught on `dayIndex`, or null when this sitting has none.
+  PlanDialogue? dialogueForDay(int dayIndex) {
+    for (final dialogue in dialogues) {
+      if (dialogue.dayIndex == dayIndex) return dialogue;
+    }
+
+    return null;
+  }
 
   /// THE PAYLOAD THIS SESSION WAS PARSED FROM, kept verbatim.
   ///
@@ -924,6 +977,9 @@ class PlanSession implements PlanSessionEnvelope {
       i >= 0 && i < tasks.length && tasks[i].isRecognitionOnly;
 
   @override
+  String? sectionCodeAt(int i) => i >= 0 && i < tasks.length ? tasks[i].sectionCode : null;
+
+  @override
   PlanSituation? situationAt(int i) => i >= 0 && i < tasks.length ? tasks[i].situation : null;
 
   @override
@@ -961,6 +1017,11 @@ class PlanSession implements PlanSessionEnvelope {
         .toList(growable: false),
     sittings: ((j['sittings'] as List?) ?? const [])
         .map((e) => (e as num).toInt())
+        .toList(growable: false),
+    dialogues: ((j['dialogues'] as List?) ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(PlanDialogue.fromJson)
+        .whereType<PlanDialogue>()
         .toList(growable: false),
     raw: j,
   );

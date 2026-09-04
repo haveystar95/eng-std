@@ -226,10 +226,20 @@ void main() {
     });
   });
 
-  group('the day counter (С-8)', () {
-    testWidgets('counts the day`s own cards and leaves the revision out', (tester) async {
-      // The stand's own composition: two cards of the day behind twenty of the seam. The payload
-      // said `day_task_count: 2`; the screen said «День 0/22».
+  group('the scene counter (С-8, DAY-2)', () {
+    testWidgets('counts exactly the divisions it draws', (tester) async {
+      // The stand's own composition: two cards of the day behind twenty of the seam.
+      //
+      // С-8 WAS A DISAGREEMENT, and it was fixed twice. The screen said «День 0/22» over a payload
+      // whose `day_task_count` said 2: the label counted one thing and the bar drew another. The
+      // first fix made the LABEL count only the day, which left the bar drawing twenty-two
+      // divisions under the number 2 — the same disagreement seen from the other side, and it is
+      // what put «День 4/69» on the owner's screen.
+      //
+      // DAY-2's answer is that both halves say the same thing: the group is «Сцена» — which is what
+      // all of those cards are, today's and yesterday's alike — and it counts every division it
+      // draws. «N из N» about the DAY is a sentence the day's own summary makes, out of
+      // `day_task_count`, where it is the only number on the screen.
       await tester.pumpWidget(
         host(
           tasks: [
@@ -246,8 +256,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('День 0/2'), findsOneWidget);
-      expect(find.text('День 0/22'), findsNothing);
+      // Twenty-two divisions, twenty-two in the number — and the part the learner is in named
+      // beside it, which is what the bare counter in the header used to say badly.
+      expect(find.textContaining('Сцена 0/22'), findsOneWidget);
+      // The word «День» is gone from the sitting: it belongs to the schedule and to today's landing,
+      // never over the material (DAY-2, терминология).
+      expect(find.textContaining('День 0/'), findsNothing);
+      // …and the bare «N из M» beside the plan pill is gone with it: a number with no address.
+      expect(find.text('1 из 22'), findsNothing);
 
       await teardownTree(tester);
     });

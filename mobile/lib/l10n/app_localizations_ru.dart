@@ -3064,6 +3064,190 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planShelfWords => 'Слова и связки';
 
   @override
+  String get planSectionDialogueIntro => 'Знакомство с репликами';
+
+  @override
+  String get planSectionDialogue => 'Диалог сцены';
+
+  @override
+  String get planSectionNumbers => 'Цифры на слух';
+
+  @override
+  String get planSectionRehearsal => 'Прогон сцены';
+
+  @override
+  String planSectionOfScene(String section, int index) {
+    return '$section · сцена $index';
+  }
+
+  @override
+  String get planWarmupWhy => 'чтобы было чем ответить, если растеряешься';
+
+  @override
+  String planSceneProgress(int done, int total) {
+    return 'Сцена $done/$total';
+  }
+
+  @override
+  String planProgressWithSection(String progress, String section) {
+    return '$progress · $section';
+  }
+
+  @override
+  String planTaskDoing(String kind, String doing) {
+    return '$kind · $doing';
+  }
+
+  @override
+  String get planKindWord => 'слово';
+
+  @override
+  String get planKindChunk => 'связка';
+
+  @override
+  String get planKindLine => 'фраза';
+
+  @override
+  String get planDoingSpeakKey => 'скажи слово вслух';
+
+  @override
+  String get planDoingSpeakWhole => 'скажи вслух';
+
+  @override
+  String planDialogueScene(int index) {
+    return 'Сцена $index';
+  }
+
+  @override
+  String get planDialogueLabel => 'Диалог';
+
+  @override
+  String planDialogueExchanges(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count обменов',
+      few: '$count обмена',
+      one: '$count обмен',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planDialogueLead =>
+      'Собеседник говорит — вы отвечаете. Отвечать будете выбором из фраз плана, включая выученные в прошлых сценах.';
+
+  @override
+  String get planDialogueRescueAtHand => 'Спасатели под рукой';
+
+  @override
+  String get planDialogueRescueLead =>
+      'Кнопка остаётся на экране весь диалог: можно попросить повторить или помедленнее.';
+
+  @override
+  String get planDialogueStart => 'Начать диалог';
+
+  @override
+  String get planDialogueSound => 'со звуком · наденьте наушники';
+
+  @override
+  String planDialogueExchangeOf(int n, int total) {
+    return 'обмен $n из $total';
+  }
+
+  @override
+  String get planDialogueRoleSpeaks => 'говорит собеседник · текст скрыт';
+
+  @override
+  String get planDialogueReplay => 'Ещё раз';
+
+  @override
+  String get planDialogueShowText => 'Показать текст';
+
+  @override
+  String get planDialogueHideText => 'Скрыть текст';
+
+  @override
+  String get planDialogueUnderstoodMark => 'понял';
+
+  @override
+  String get planDialogueSaidAloud => 'сказано вслух';
+
+  @override
+  String get planDialogueFamiliar => 'знакомая реплика · разбор не нужен';
+
+  @override
+  String get planDialogueVoicePreparing => 'Готовим озвучку';
+
+  @override
+  String get planDialogueVoicePreparingBody =>
+      'Реплика прозвучит, когда голос будет готов. Диалог начнётся с неё — тишины не будет.';
+
+  @override
+  String get planDialogueRescue => 'Спасатели';
+
+  @override
+  String planDialogueRescuePhrases(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count фраз',
+      few: '$count фразы',
+      one: '$count фраза',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planDialogueRescueNote =>
+      'Это нормальный ход разговора, а не ошибка: носители просят повторить так же часто.';
+
+  @override
+  String get planDialogueRescueBack => 'Вернуться к диалогу';
+
+  @override
+  String get planDialogueDone => 'диалог пройден';
+
+  @override
+  String get planDialogueDoneLead => 'Разговор целиком — ваши ответы стоят в ленте.';
+
+  @override
+  String get planDialogueResult => 'Итог по сцене';
+
+  @override
+  String get planDialogueAnsweredSelf => 'Отвечал сам';
+
+  @override
+  String get planDialogueHeardOut => 'Разобрал реплику на слух';
+
+  @override
+  String get planDialogueAskedRepeat => 'Просил повторить';
+
+  @override
+  String planDialogueCountOf(int done, int total) {
+    return '$done из $total';
+  }
+
+  @override
+  String planDialogueTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count раз',
+      few: '$count раза',
+      one: '$count раз',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planDialogueNextAssembly =>
+      'Дальше — сборка: те же обмены, но ответ собираете из связок сцены сами.';
+
+  @override
+  String get planDialogueBackToSession => 'Вернуться к сессии';
+
+  @override
   String get planStageAClosed => 'Ступень A пройдена';
 
   @override

@@ -4437,6 +4437,282 @@ abstract class AppLocalizations {
   /// **'Слова и связки'**
   String get planShelfWords;
 
+  /// Секция посадки (DAY-2, код dialogue_intro): ступень A трёх полок сцены — реплики, которые сегодня встречают впервые. Раньше это были три подписи («Тебе скажут», «Ты ответишь», «Ты спросишь»); в день знакомства это одно, что происходит.
+  ///
+  /// In ru, this message translates to:
+  /// **'Знакомство с репликами'**
+  String get planSectionDialogueIntro;
+
+  /// Секция посадки (DAY-2, код dialogue): ступень B тех же полок, сыгранная одним разговором — экран-диалог.
+  ///
+  /// In ru, this message translates to:
+  /// **'Диалог сцены'**
+  String get planSectionDialogue;
+
+  /// Секция посадки (код numbers, канон §6). Пока ни одна сессия их не раздаёт — подпись есть, чтобы было чем подписать, когда появится тренажёр.
+  ///
+  /// In ru, this message translates to:
+  /// **'Цифры на слух'**
+  String get planSectionNumbers;
+
+  /// Секция посадки (код rehearsal): прогон перед событием, финальный день.
+  ///
+  /// In ru, this message translates to:
+  /// **'Прогон сцены'**
+  String get planSectionRehearsal;
+
+  /// Подпись секции, которая принадлежит ПРОШЛОЙ сцене: «Диалог сцены · сцена 1». Номер нужен, потому что в одной посадке может быть разговор одной сцены и знакомство другой.
+  ///
+  /// In ru, this message translates to:
+  /// **'{section} · сцена {index}'**
+  String planSectionOfScene(String section, int index);
+
+  /// Пояснение под подписью «Разогрев» на первой карточке разогрева: зачем спасатели (кадр D-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'чтобы было чем ответить, если растеряешься'**
+  String get planWarmupWhy;
+
+  /// Правая группа полосы прогресса посадки (DAY-2, Ч.2.2): материал сцены — день и шов вместе. Считает ровно те деления, что рисует: раньше подпись говорила «День N/M» по одному дню, а деления рисовались по всей посадке, и в подпись уезжали чужие числа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сцена {done}/{total}'**
+  String planSceneProgress(int done, int total);
+
+  /// Подпись группы прогресса вместе с текущей секцией: «Сцена 11/22 · Диалог сцены» (кадры D-03, D-04).
+  ///
+  /// In ru, this message translates to:
+  /// **'{progress} · {section}'**
+  String planProgressWithSection(String progress, String section);
+
+  /// Строка над заданием плановой посадки: что это за карточка и что с ней делают — «фраза · скажи слово вслух». Заменила «СТУПЕНЬ B · СБОРКА»: ступень стоит меткой в шапке, а секция — в подписи полосы.
+  ///
+  /// In ru, this message translates to:
+  /// **'{kind} · {doing}'**
+  String planTaskDoing(String kind, String doing);
+
+  /// Что за карточка, в строке над заданием: kind = word.
+  ///
+  /// In ru, this message translates to:
+  /// **'слово'**
+  String get planKindWord;
+
+  /// Что за карточка, в строке над заданием: kind = chunk.
+  ///
+  /// In ru, this message translates to:
+  /// **'связка'**
+  String get planKindChunk;
+
+  /// Что за карточка, в строке над заданием: kind = line.
+  ///
+  /// In ru, this message translates to:
+  /// **'фраза'**
+  String get planKindLine;
+
+  /// Что делают с фразой, у которой есть ключ говорения: произносят её, и главное в ней — одно слово.
+  ///
+  /// In ru, this message translates to:
+  /// **'скажи слово вслух'**
+  String get planDoingSpeakKey;
+
+  /// Что делают с фразой без ключа: произносят целиком.
+  ///
+  /// In ru, this message translates to:
+  /// **'скажи вслух'**
+  String get planDoingSpeakWhole;
+
+  /// Надзаголовок экрана-диалога (кадры DL-01…DL-10). Материал называется сценой; слово «день» на этих экранах не звучит.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сцена {index}'**
+  String planDialogueScene(int index);
+
+  /// Подпись блока на входе в диалог (кадр DL-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'Диалог'**
+  String get planDialogueLabel;
+
+  /// Сколько обменов в сцене — счёт от сервера, а не оценка длины (кадр DL-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} обмен} few{{count} обмена} other{{count} обменов}}'**
+  String planDialogueExchanges(int count);
+
+  /// Что произойдёт в диалоге (кадр DL-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседник говорит — вы отвечаете. Отвечать будете выбором из фраз плана, включая выученные в прошлых сценах.'**
+  String get planDialogueLead;
+
+  /// Подпись второго блока на входе в диалог (кадр DL-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'Спасатели под рукой'**
+  String get planDialogueRescueAtHand;
+
+  /// Пояснение к блоку спасателей на входе в диалог (кадр DL-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'Кнопка остаётся на экране весь диалог: можно попросить повторить или помедленнее.'**
+  String get planDialogueRescueLead;
+
+  /// Главное действие входа в диалог (кадр DL-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать диалог'**
+  String get planDialogueStart;
+
+  /// Честное предупреждение под кнопкой: реплики звучат, а не написаны (кадр DL-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'со звуком · наденьте наушники'**
+  String get planDialogueSound;
+
+  /// Надзаголовок в шапке диалога: где мы в разговоре (кадры DL-02…DL-09).
+  ///
+  /// In ru, this message translates to:
+  /// **'обмен {n} из {total}'**
+  String planDialogueExchangeOf(int n, int total);
+
+  /// Подпись под пузырём собеседника, пока текст не раскрыт (кадр DL-02).
+  ///
+  /// In ru, this message translates to:
+  /// **'говорит собеседник · текст скрыт'**
+  String get planDialogueRoleSpeaks;
+
+  /// Повтор реплики собеседника голосом (кадр DL-02).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ещё раз'**
+  String get planDialogueReplay;
+
+  /// Раскрыть текст реплики внутри пузыря. Доступно всегда, но тише всего остального: это подсказка, а не шаг (кадр DL-02).
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать текст'**
+  String get planDialogueShowText;
+
+  /// Свернуть текст реплики обратно (кадр DL-02б).
+  ///
+  /// In ru, this message translates to:
+  /// **'Скрыть текст'**
+  String get planDialogueHideText;
+
+  /// Свёрнутая отметка пройденного такта «Понял?» в ленте (кадр DL-03).
+  ///
+  /// In ru, this message translates to:
+  /// **'понял'**
+  String get planDialogueUnderstoodMark;
+
+  /// Отметка под своим ответом в ленте — факт, а не балл (кадр DL-05).
+  ///
+  /// In ru, this message translates to:
+  /// **'сказано вслух'**
+  String get planDialogueSaidAloud;
+
+  /// Подпись у зрелого обмена: реплика уже закрыла «понимаю», такта 1 нет (кадр DL-06).
+  ///
+  /// In ru, this message translates to:
+  /// **'знакомая реплика · разбор не нужен'**
+  String get planDialogueFamiliar;
+
+  /// Состояние, пока голос не готов: реплика не подаётся, но и тишины нет (кадр DL-08).
+  ///
+  /// In ru, this message translates to:
+  /// **'Готовим озвучку'**
+  String get planDialogueVoicePreparing;
+
+  /// Пояснение под «Готовим озвучку». Никаких «осталось 5 секунд»: время неизвестно, поэтому не обещается (кадр DL-08).
+  ///
+  /// In ru, this message translates to:
+  /// **'Реплика прозвучит, когда голос будет готов. Диалог начнётся с неё — тишины не будет.'**
+  String get planDialogueVoicePreparingBody;
+
+  /// Постоянная кнопка на экране диалога (кадр DL-09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Спасатели'**
+  String get planDialogueRescue;
+
+  /// Сколько спасательных фраз в наборе (кадр DL-09).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} фраза} few{{count} фразы} other{{count} фраз}}'**
+  String planDialogueRescuePhrases(int count);
+
+  /// Пояснение в панели спасателей: использование не штрафуется (кадр DL-09, канон §8).
+  ///
+  /// In ru, this message translates to:
+  /// **'Это нормальный ход разговора, а не ошибка: носители просят повторить так же часто.'**
+  String get planDialogueRescueNote;
+
+  /// Закрыть панель спасателей (кадр DL-09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернуться к диалогу'**
+  String get planDialogueRescueBack;
+
+  /// Надзаголовок финала диалога (кадр DL-10).
+  ///
+  /// In ru, this message translates to:
+  /// **'диалог пройден'**
+  String get planDialogueDone;
+
+  /// Подпись под названием сцены на финале диалога (кадр DL-10).
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор целиком — ваши ответы стоят в ленте.'**
+  String get planDialogueDoneLead;
+
+  /// Надзаголовок трёх фактов финала (кадр DL-10).
+  ///
+  /// In ru, this message translates to:
+  /// **'Итог по сцене'**
+  String get planDialogueResult;
+
+  /// Первый факт финала диалога (кадр DL-10).
+  ///
+  /// In ru, this message translates to:
+  /// **'Отвечал сам'**
+  String get planDialogueAnsweredSelf;
+
+  /// Второй факт финала диалога (кадр DL-10).
+  ///
+  /// In ru, this message translates to:
+  /// **'Разобрал реплику на слух'**
+  String get planDialogueHeardOut;
+
+  /// Третий факт финала диалога. Стоит рядом с остальными без извинений: это часть разговора (кадр DL-10).
+  ///
+  /// In ru, this message translates to:
+  /// **'Просил повторить'**
+  String get planDialogueAskedRepeat;
+
+  /// Моноширинное значение факта на финале диалога.
+  ///
+  /// In ru, this message translates to:
+  /// **'{done} из {total}'**
+  String planDialogueCountOf(int done, int total);
+
+  /// Сколько раз просили повторить (кадр DL-10).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} раз} few{{count} раза} other{{count} раз}}'**
+  String planDialogueTimes(int count);
+
+  /// Что будет после диалога — уровень B+ (кадр DL-10, канон §5).
+  ///
+  /// In ru, this message translates to:
+  /// **'Дальше — сборка: те же обмены, но ответ собираете из связок сцены сами.'**
+  String get planDialogueNextAssembly;
+
+  /// Единственное действие финала диалога: ведёт обратно в посадку (кадр DL-10).
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернуться к сессии'**
+  String get planDialogueBackToSession;
+
   /// Строка итога дня.
   ///
   /// In ru, this message translates to:

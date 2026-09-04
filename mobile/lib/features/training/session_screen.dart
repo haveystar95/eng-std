@@ -18,12 +18,13 @@ import '../../data/models.dart';
 import '../../data/perf_log.dart';
 // For the shelf names alone — the session plays a plan's cards through the envelope in
 // `models.dart` and knows nothing else about a plan.
-import '../../data/plan_models.dart' show PlanSession, PlanTermRow;
+import '../../data/plan_models.dart' show PlanSession, PlanSessionTask, PlanTermRow;
 import '../../data/plan_sitting_store.dart';
 import '../../data/practice/recognition_replay.dart';
 import '../../data/providers.dart';
 import '../home/home_providers.dart';
 import '../plan/plan_day_summary.dart';
+import '../plan/plan_dialogue.dart';
 import '../plan/plan_rehearsal_done.dart';
 import '../plan/plan_ui.dart';
 import 'session/intro_card.dart';
@@ -286,6 +287,18 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   /// True while the learner is between two присесты — the minimal service screen.
   bool _betweenSittings = false;
 
+  /// Scenes whose dialogue has already been OPENED — кадр DL·01 is shown once per conversation.
+  ///
+  /// Keyed by the scene's own day, because a sitting can hold two of them: today's introduction and
+  /// yesterday's conversation, and each conversation gets its own opening screen.
+  final Set<int> _dialogueOpened = {};
+
+  /// The scene whose conversation has just ENDED and whose finale (кадр DL·10) is owed, or null.
+  int? _dialogueFinished;
+
+  /// The speech engine has been raised — see the warm-up in [initState] and [PlanDialogueShell].
+  bool _voiceWarm = false;
+
   /// The card index being played at the current position — the ORDER's, before the replay resolves
   /// which rung of it to deal.
   int get _slot => _queue.cardAt(_pos);
@@ -308,7 +321,20 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // never on the first listening card, whose whole content is the sound (F20-r).
     // The pairs are not resolved yet, so this primes the engine with the session's fallback; every
     // utterance sets the language of the card it belongs to before speaking.
-    unawaited(_pronouncer.warmUp(targetLang: _sessionLang));
+    // The result is WATCHED as well as awaited, because the dialogue screen has to know: канон §7
+    // forbids handing the learner a line to answer before its voice can say it, and кадр DL·08 is
+    // what stands in the bubble's place until then. One warm-up for the whole sitting — the shell
+    // asks this engine to speak rather than raising one of its own.
+    unawaited(
+      _pronouncer
+          .warmUp(targetLang: _sessionLang)
+          // Settled either way: a device with no voice for this language is not a device the
+          // learner can do anything about, and holding the conversation shut for ever over it would
+          // be worse than a line they have to read.
+          .whenComplete(() {
+            if (mounted) setState(() => _voiceWarm = true);
+          }),
+    );
     // F20: warm the first few cards' photos up front so opening photo cards aren't cold network
     // loads (the lag the user saw was photo cards fetching + decoding late).
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -684,10 +710,28 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // «Дальше» bar, a microphone skip, an intro's «Понятно» — because all of them funnel through
     // this one method, including the last card's jump to the summary.
     unawaited(_pronouncer.stop());
+    // A CONVERSATION THAT HAS JUST ENDED owes its finale (кадр DL·10) — the whole feed and three
+    // facts about it. Read BEFORE the position moves, because «which scene were we in» is a
+    // question about the card just answered; shown after, on whichever screen comes next.
+    final leaving = _dialogueLeftAfter(_pos);
     if (_pos + 1 >= _queue.length) {
       _closeRun();
       _forgetPosition();
-      setState(() => _finished = true);
+      setState(() {
+        _dialogueFinished = leaving;
+        _finished = true;
+      });
+    } else if (leaving != null) {
+      // The finale comes FIRST and the присест break after it, when both fall here: one is the end
+      // of a conversation and the other is the end of a stretch of work, and the second reads as an
+      // anticlimax over the first.
+      setState(() {
+        _pos++;
+        _answered = false;
+        _dialogueFinished = leaving;
+        _betweenSittings = _queue.breaksAfter(_pos - 1);
+      });
+      _rememberPosition();
     } else if (_queue.breaksAfter(_pos)) {
       // THE END OF A ПРИСЕСТ, and not of the day. The position moves — the card just answered is
       // behind us — and the learner is handed the service screen rather than the next section, so
@@ -713,16 +757,117 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     }
   }
 
-  /// THE BAR OF A PLAN SITTING, in the shape кадр 6b fixes it: two groups, and the day divided.
+  /// The conversation the card at the FRONT belongs to — the shell's whole switch.
+  PlanDialogue? get _dialogueHere => _dialogueAtPosition(_pos);
+
+  /// Term ids of this sitting's answered cards — what puts «сказано вслух» under a bubble already
+  /// in the feed (кадр DL·05). A fact, never a grade: it says the turn was taken, not that it was
+  /// right.
+  Set<String> get _spokenTerms => {for (final r in _results) r.card.termId};
+
+  /// The sitting's conversation for the scene taught on [day], or null when it carries none.
+  static PlanDialogue? _dialogueOf(PlanSessionEnvelope plan, int day) {
+    for (final dialogue in plan.dialogues) {
+      if (dialogue.dayIndex == day) return dialogue;
+    }
+
+    return null;
+  }
+
+  /// The conversation the card at position [at] belongs to, or null when it is not in one.
+  PlanDialogue? _dialogueAtPosition(int at) {
+    final plan = widget.session.plan;
+    if (plan == null || at < 0 || at >= _queue.length) return null;
+
+    return planDialogueAt(plan, _replay.resolve(_queue.cardAt(at)));
+  }
+
+  /// The scene whose conversation ENDS after the card at [at] — null when it does not.
+  ///
+  /// «Ends» means the next card of the sitting is in a different conversation or in none at all. The
+  /// last card of the whole sitting ends one too: a day that stops on the last exchange still had a
+  /// conversation in it.
+  int? _dialogueLeftAfter(int at) {
+    final here = _dialogueAtPosition(at);
+    if (here == null) return null;
+    final next = _dialogueAtPosition(at + 1);
+
+    return next?.dayIndex == here.dayIndex ? null : here.dayIndex;
+  }
+
+  /// THE FACTS THE FINALE STATES — counted off the sitting, never guessed (кадр DL·10).
+  ///
+  /// «Отвечал сам» is the learner's own turns of this conversation that the sitting actually asked
+  /// them to take; «разобрал на слух» is the role lines they were asked the meaning of. A turn the
+  /// ladder did not owe today is in the FEED and not in the count — it is part of the conversation
+  /// and it is not something the learner did this evening.
+  ({int answered, int answerable, int heard, int hearable}) _dialogueFacts(PlanDialogue dialogue) {
+    var answered = 0, answerable = 0, heard = 0, hearable = 0;
+    // ACCEPTED, not «exactly right»: a typo is an accepted answer everywhere else in the product,
+    // and a conversation is the last place to start counting it as a miss.
+    final byTerm = <String, bool>{};
+    for (final result in _results) {
+      byTerm[result.card.termId] = result.verdict.isAccepted;
+    }
+
+    for (final turn in dialogue.turns) {
+      final graded = byTerm[turn.termId];
+      if (graded == null) continue;
+      if (turn.isRole) {
+        hearable++;
+        if (graded) heard++;
+      } else {
+        answerable++;
+        if (graded) answered++;
+      }
+    }
+
+    return (answered: answered, answerable: answerable, heard: heard, hearable: hearable);
+  }
+
+  /// The plan's rescue phrases as this sitting holds them — the panel's whole content (кадр DL·09).
+  ///
+  /// Read off the WARM-UP's own cards rather than out of a config: the five phrases are ordinary
+  /// cards of day 1 and the server marks them by shelf, so a client that matched them by text would
+  /// show a different set the day somebody fixed a comma in the language pack.
+  List<({String text, String? translation})> _rescuePhrases() {
+    final plan = widget.session.plan;
+    if (plan == null) return const [];
+
+    final out = <({String text, String? translation})>[];
+    final seen = <String>{};
+    for (var i = 0; i < _cards.length; i++) {
+      if (!plan.isWarmupAt(i)) continue;
+      final card = _cards[i];
+      final text = card.answerText.trim();
+      if (text.isEmpty || !seen.add(text)) continue;
+      // The cue is the phrase's own meaning in the learner's language wherever the card has one; a
+      // card that has none shows the phrase alone rather than a string borrowed from elsewhere.
+      final cue = card.prompt?.trim();
+      out.add((text: text, translation: cue == null || cue.isEmpty || cue == text ? null : cue));
+    }
+
+    return out;
+  }
+
+  /// THE BAR OF A PLAN SITTING: two groups — «Разогрев» and «Сцена» — and the second one divided
+  /// by part (наряд DAY-2, Ч.2.2; кадр D-02).
   ///
   /// The WARM-UP is its own group in brass — it is the same five-plus-five cards every morning and
-  /// it is not the day, so counting it into «День N/M» would make the day look longer than it is on
-  /// exactly the mornings that were hardest. The DAY is one group with a division per section, each
-  /// division as wide as the number of cards in it, so a glance answers «сколько осталось» and «что
-  /// дальше» at once.
+  /// it belongs to the PLAN rather than to any scene (канон §5), so counting it into the scene would
+  /// make the scene look longer than it is on exactly the mornings that were hardest. Everything
+  /// else is «Сцена», with a division per part, each as wide as the number of cards in it, so a
+  /// glance answers «сколько осталось» and «что дальше» at once.
+  ///
+  /// ## The group's number counts exactly the divisions it draws
+  ///
+  /// It used to count only TODAY's own cards while drawing the revision's divisions beside them, so
+  /// the label and the bar were two statements about two different things and the label carried
+  /// numbers from neither: «День 4/69». Both halves of that are gone — the label is «Сцена», which
+  /// is what all of those cards are, and it counts them all.
   ///
   /// Read off the ORDER rather than off the payload: a card sent to the tail (Ч-5) belongs to the
-  /// section it was in, so its own division grows and every other one stays exactly where it was —
+  /// part it was in, so its own division grows and every other one stays exactly where it was —
   /// which is «пройденное не сгорает», drawn.
   _PlanProgress _planProgress() {
     final plan = widget.session.plan;
@@ -755,15 +900,8 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       warmupTotal: warmupTotal,
       warmupDone: warmupDone,
       segments: segments,
-      // «День 11/22» COUNTS THE DAY'S OWN CARDS — and «Повторение» is not one of them.
-      //
-      // The warm-up was already outside the count; the seam was not, and that is E2E-SIM-2 С-8: a
-      // sitting of 2 day cards behind 20 revision cards read «День 0/22» over a payload whose own
-      // `day_task_count` said 2. The seam keeps its division on the BAR — it is part of the sitting
-      // and the learner is about to play it — but it is not part of the day, because «N из N» is a
-      // sentence about the scene.
-      dayDone: segments.fold(0, (sum, s) => sum + (s.isDay ? s.done : 0)),
-      dayTotal: segments.fold(0, (sum, s) => sum + (s.isDay ? s.total : 0)),
+      sceneDone: segments.fold(0, (sum, s) => sum + s.done),
+      sceneTotal: segments.fold(0, (sum, s) => sum + s.total),
     );
   }
 
@@ -811,6 +949,49 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     return text.isEmpty ? null : l.planSessionCarried(text, from, stage);
   }
 
+  /// THE RUNG'S OWN NAME for the card at the front — the same five words the word card, the pool row
+  /// and the ladder strip use (Ч.4). Capitalised because it is a header; the ladder strip sets the
+  /// identical words in lower case as captions, and [_taskDoing] lower-cases it again.
+  String _phaseWord(AppLocalizations l) =>
+      switch (sessionHeaderFor(mode: _card.mode, ladderStep: _card.ladderStep)) {
+        SessionHeader.rungMeeting => _capitalized(l.ladderStep0),
+        SessionHeader.rungRecognition => _capitalized(l.ladderStep1),
+        SessionHeader.rungAssembly => _capitalized(l.ladderStep3),
+        SessionHeader.rungWriting => _capitalized(l.ladderStep4),
+        SessionHeader.rungDictation => _capitalized(l.ladderStep5),
+        SessionHeader.phaseIntro => l.sessionPhaseIntro,
+        SessionHeader.phaseAssemble => l.sessionPhaseAssemble,
+        SessionHeader.phaseReview => l.sessionPhaseReview,
+      };
+
+  /// «фраза · скажи слово вслух» — what the card at the front IS, and what is being done with it.
+  ///
+  /// The two halves are two different facts and both were missing from the old line. `kind` is the
+  /// server's own («Ты ответишь» and a connector are not the same card, however alike they look),
+  /// and the verb is the trainer's — except on the speaking card, where the honest verb depends on
+  /// whether the phrase has a KEY: «скажи слово вслух» is what the learner actually does when only
+  /// one word of the sentence is graded, and it is the sentence the наряд asks for by name.
+  ///
+  /// Null when there is no `kind` to name — a card of a day written before the shelves, and every
+  /// card of a session that is not a plan's.
+  String? _taskDoing(AppLocalizations l, PlanSessionEnvelope plan) {
+    final kind = switch (plan.kindAt(_playing)) {
+      'word' => l.planKindWord,
+      'chunk' => l.planKindChunk,
+      'line' => l.planKindLine,
+      _ => null,
+    };
+    if (kind == null) return null;
+
+    final doing = _card.mode == ExerciseMode.speaking
+        ? ((_card.speakingKey ?? '').trim().isEmpty
+            ? l.planDoingSpeakWhole
+            : l.planDoingSpeakKey)
+        : _phaseWord(l).toLowerCase();
+
+    return l.planTaskDoing(kind, doing);
+  }
+
   /// The rung names are captions first («узнавание», under a dot) and a header second. One string
   /// in the deck rather than two, capitalised where the layout calls for it — two entries would be
   /// two entries to keep in step, and this is exactly the drift Ч.4 exists to undo.
@@ -822,6 +1003,50 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final l = AppLocalizations.of(context);
 
     final plan = widget.session.plan;
+
+    // THE END OF A CONVERSATION — кадр DL·10, and it comes before every other interstitial.
+    //
+    // The whole feed and three facts about it, with not one percentage among them. It is the
+    // milestone of the scene's stage B, so it is shown even when the sitting ends here: a day that
+    // stopped on the last exchange still had a conversation in it.
+    if (_dialogueFinished case final day? when plan != null) {
+      final dialogue = _dialogueOf(plan, day);
+      if (dialogue != null) {
+        final facts = _dialogueFacts(dialogue);
+
+        return PlanDialogueDone(
+          dialogue: dialogue,
+          answeredSelf: facts.answered,
+          answerable: facts.answerable,
+          heardOut: facts.heard,
+          hearable: facts.hearable,
+          // The rescue phrases are trained in the warm-up and are not counted as a move inside the
+          // conversation yet — RESQ-1 owns «сколько раз просил повторить», and a zero invented here
+          // would be a number the app does not know. The row is simply absent (кадр DL·10 draws it
+          // only when there is something to draw).
+          rescueUsed: 0,
+          onDone: () => setState(() => _dialogueFinished = null),
+        );
+      }
+      // A conversation this build cannot find has no finale to draw — carry on rather than freeze.
+      _dialogueFinished = null;
+    }
+
+    // THE OPENING OF A CONVERSATION — кадр DL·01, once per scene.
+    //
+    // Two honest warnings and one action: the lines SOUND rather than being written, and answering
+    // will be a move of the learner's own. Shown before the first card of the conversation, so the
+    // first thing the learner meets is the scene and not an exercise.
+    if (plan != null && !_betweenSittings && !_finished) {
+      final opening = _dialogueAtPosition(_pos);
+      if (opening != null && !_dialogueOpened.contains(opening.dayIndex)) {
+        return PlanDialogueIntro(
+          dialogue: opening,
+          rescueCount: _rescuePhrases().length,
+          onStart: () => setState(() => _dialogueOpened.add(opening.dayIndex)),
+        );
+      }
+    }
 
     // BETWEEN TWO ПРИСЕСТЫ — the minimal service screen (Ч-6). Deliberately служебный: «красота —
     // DAY-2», and a milestone screen here would compete with the one the day itself ends on.
@@ -876,21 +1101,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // THE ORDER, not the deck: a card sent to the tail lengthens the sitting, and the counter has to
     // say so or «5 из 27» would stay 27 while there are 28 cards left to play.
     final total = _queue.length;
-    final phaseLabel = widget.practice
-        ? l.sessionPhasePractice
-        // The RUNG's own name wherever the card has one — the same five words the word card, the
-        // pool row and the ladder strip use (Ч.4). Capitalised here because it is a header; the
-        // ladder strip sets the identical words in lower case as captions.
-        : switch (sessionHeaderFor(mode: _card.mode, ladderStep: _card.ladderStep)) {
-            SessionHeader.rungMeeting => _capitalized(l.ladderStep0),
-            SessionHeader.rungRecognition => _capitalized(l.ladderStep1),
-            SessionHeader.rungAssembly => _capitalized(l.ladderStep3),
-            SessionHeader.rungWriting => _capitalized(l.ladderStep4),
-            SessionHeader.rungDictation => _capitalized(l.ladderStep5),
-            SessionHeader.phaseIntro => l.sessionPhaseIntro,
-            SessionHeader.phaseAssemble => l.sessionPhaseAssemble,
-            SessionHeader.phaseReview => l.sessionPhaseReview,
-          };
+    final phaseLabel = widget.practice ? l.sessionPhasePractice : _phaseWord(l);
 
     final autoPronounce = ref.watch(appSettingsProvider).value?.autoPronounce ?? true;
 
@@ -976,6 +1187,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                 planProgress: plan == null
                     ? null
                     : _planProgress(),
+                // WHAT PART OF THE SITTING THIS IS, beside the group's numbers — the part is the
+                // sentence a person reads, the numbers are how far through it they are.
+                sectionLabel: plan == null ? null : planSectionCaption(l, plan, _playing),
                 // «A» / «B» — the rung, in brass, in the corner (кадр 6b). It is a mark for oneself
                 // and not a grade, so it is never explained: the stage's meaning is on the day
                 // screen, and repeating it over every card would be a legend nobody reads twice.
@@ -1008,26 +1222,55 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                 ),
                 child: _SlideSwitcher(
                   index: _pos,
-                  child: (plan != null)
+                  // INSIDE A CONVERSATION the card is not alone on the screen: the feed stands above
+                  // it, the line it answers sounds from the bubble in front of it, and the rescue
+                  // button never leaves (серия «Диалог v1»). The card itself is untouched — такт 1
+                  // and такт 2 are the situational trainers the app already has, and re-implementing
+                  // them inside the shell is how two answers to one question come to differ.
+                  child: (plan != null && _dialogueHere != null)
+                      ? PlanDialogueShell(
+                          dialogue: _dialogueHere!,
+                          turnIndex: _dialogueHere!.turns.indexWhere(
+                            (t) => t.termId == _card.termId,
+                          ),
+                          voiceReady: _voiceWarm,
+                          onSpeak: (text) => unawaited(
+                            _pronouncer.speakText(text, targetLang: _sessionLang),
+                          ),
+                          rescue: _rescuePhrases(),
+                          answeredAloud: _spokenTerms,
+                          card: card,
+                        )
+                      : (plan != null)
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // «Ступень B · пропуск в фразе» — the stage, then the trainer, over the
-                            // task. The trainer half is the same word the ordinary header shows;
-                            // saying both here is what makes the stage legible without a legend.
-                            if (plan.stageLetterAt(_playing) case final stage?) ...[
-                              Text(
-                                l.planSessionStage(stage, phaseLabel.toLowerCase()).toUpperCase(),
-                                style: AppText.blockLabel.copyWith(letterSpacing: 1.32),
+                            // THE SEAMS of the sitting — see [planSeamCaption]. The warm-up, the
+                            // pieces, meeting the scene's lines, the conversation; drawn once, on
+                            // the first card of each, because a label over every card would be
+                            // noise. The warm-up says WHY it is here, once, on its first card
+                            // (кадр D-01): five phrases with no reason given read as a chore.
+                            if (planSeamCaption(l, plan, _playing) case final seam?) ...[
+                              _SectionSeam(
+                                label: seam,
+                                note: plan.isWarmupAt(_playing) ? l.planWarmupWhy : null,
                               ),
                               const SizedBox(height: 18),
                             ],
-                            // THE SEAMS of the sitting — see [planSeamCaption]. The warm-up, each
-                            // shelf of the scene, and the revision of this plan's earlier days;
-                            // drawn once, on the first card of each, because a label over every
-                            // card would be noise.
-                            if (planSeamCaption(l, plan, _playing) case final seam?) ...[
-                              _SectionSeam(label: seam),
+                            // «ФРАЗА · СКАЖИ СЛОВО ВСЛУХ» — what this card is, and what is being
+                            // done with it.
+                            //
+                            // It replaces «СТУПЕНЬ B · СБОРКА» (наряд DAY-2, Ч.2.2). The stage is a
+                            // mark for oneself and it already has a home — the brass pill in the
+                            // header — and «сборка» named the machinery rather than the act. The
+                            // part of the sitting moved to the progress bar, where it stands over
+                            // its own divisions; what is left here is the one sentence that changes
+                            // with every card.
+                            if (_taskDoing(l, plan) case final doing?) ...[
+                              Text(
+                                doing.toUpperCase(),
+                                style: AppText.blockLabel.copyWith(letterSpacing: 1.32),
+                              ),
                               const SizedBox(height: 18),
                             ],
                             // WHOSE LINE THIS IS. Only on the interlocutor's — the learner's own
@@ -1170,7 +1413,13 @@ class _SessionHeader extends StatelessWidget {
     this.planBadge,
     this.planProgress,
     this.stageBadge,
+    this.sectionLabel,
   });
+
+  /// The part of the sitting the learner is in right now — «Диалог сцены» — drawn beside the scene
+  /// group's numbers (кадры D-03 / D-04). Null outside a plan, and null for a part this build has no
+  /// name for.
+  final String? sectionLabel;
 
   /// The two-group bar of a plan sitting (кадр 6b), or null in an ordinary session — which keeps the
   /// one-line [SessionSegments] it has always had.
@@ -1213,26 +1462,15 @@ class _SessionHeader extends StatelessWidget {
             ),
             Expanded(
               child: planBadge != null
-                  // «План · День 2 · 5 из 27» — the day AND the counter, in the centre, because the
-                  // right corner is the STAGE's since кадр 6b. Shrunk to fit rather than wrapped:
-                  // the counter went to two lines the moment the denominator went double-digit
-                  // (QA-OBS-28), and one line that gets a little smaller is the lesser evil.
+                  // «День 2 из 4» AND NOTHING ELSE. The bare «5 из 27» that used to sit beside it
+                  // was a number with no address (наряд DAY-2, Ч.2.2): it counted the whole sitting,
+                  // the bar below counted parts, and the two disagreed on every screen the learner
+                  // could compare them on. The counting lives on the bar now, where each number
+                  // stands over the divisions it is about.
                   ? Center(
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            PlanPill(planBadge!),
-                            const SizedBox(width: AppSpacing.s8),
-                            Text(
-                              l.triageCounter(current, total),
-                              maxLines: 1,
-                              softWrap: false,
-                              style: AppTextExercise.sessionHeader,
-                            ),
-                          ],
-                        ),
+                        child: PlanPill(planBadge!),
                       ),
                     )
                   : Text(
@@ -1274,7 +1512,7 @@ class _SessionHeader extends StatelessWidget {
         ],
         const SizedBox(height: 10),
         if (planProgress case final progress?)
-          _PlanProgressBar(progress: progress)
+          _PlanProgressBar(progress: progress, sectionLabel: sectionLabel)
         else
           SessionSegments(done: current - 1, total: total),
       ],
@@ -1322,11 +1560,11 @@ class _PlanProgress {
     required this.warmupTotal,
     required this.warmupDone,
     required this.segments,
-    required this.dayDone,
-    required this.dayTotal,
+    required this.sceneDone,
+    required this.sceneTotal,
   });
 
-  final int warmupTotal, warmupDone, dayDone, dayTotal;
+  final int warmupTotal, warmupDone, sceneDone, sceneTotal;
   final List<_ProgressSegment> segments;
 }
 
@@ -1337,9 +1575,13 @@ class _PlanProgress {
 /// a percentage. Nothing about it moves backwards: a card sent to the tail lengthens its own
 /// section and leaves every other one where it was.
 class _PlanProgressBar extends StatelessWidget {
-  const _PlanProgressBar({required this.progress});
+  const _PlanProgressBar({required this.progress, this.sectionLabel});
 
   final _PlanProgress progress;
+
+  /// The part the learner is in right now — «Диалог сцены» — beside the group's own numbers
+  /// (кадры D-03 / D-04). Null when this build has no name for it.
+  final String? sectionLabel;
 
   static const _height = 5.0;
 
@@ -1347,8 +1589,10 @@ class _PlanProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final hasWarmup = progress.warmupTotal > 0;
-    final hasDay = progress.dayTotal > 0;
+    final hasDay = progress.sceneTotal > 0;
     if (!hasWarmup && !hasDay) return const SizedBox.shrink();
+
+    final scene = l.planSceneProgress(progress.sceneDone, progress.sceneTotal);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -1374,9 +1618,14 @@ class _PlanProgressBar extends StatelessWidget {
         ],
         if (hasDay)
           Expanded(
-            flex: progress.dayTotal,
+            flex: progress.sceneTotal,
             child: _group(
-              label: l.planDayProgress(progress.dayDone, progress.dayTotal),
+              // «Сцена 11/22 · Диалог сцены» — the numbers and the part in one line, which is
+              // where кадр D-03 puts them. The part is what the learner is DOING; the numbers say
+              // how far through the scene's material this sitting is.
+              label: sectionLabel == null
+                  ? scene
+                  : l.planProgressWithSection(scene, sectionLabel!),
               labelColor: AppColors.tertiary,
               bars: [
                 for (final segment in progress.segments)
@@ -1415,7 +1664,18 @@ class _PlanProgressBar extends StatelessWidget {
     ],
   );
 
-  /// One division, filled left-to-right by how much of its own section is done.
+  /// One division, filled LEFT-TO-RIGHT by how much of its own part is done.
+  ///
+  /// Two things about this were wrong and both were invisible rather than crashing — «точки разогрева
+  /// не закрашиваются», скрин 04.09:
+  ///
+  ///   the fill was an unpositioned `Stack` child, so it was laid out under LOOSE constraints and a
+  ///   `ColoredBox` with no child takes the smallest size it is allowed — zero height. The colour was
+  ///   there and nothing was ever drawn with it;
+  ///   `FractionallySizedBox` centres its child by default, so even at full height a half-done part
+  ///   would have grown out of the middle of its own division.
+  ///
+  /// `Positioned.fill` makes the height tight and the alignment says which end the bar grows from.
   Widget _bar({required double filled}) => ClipRRect(
     borderRadius: BorderRadius.circular(2),
     child: SizedBox(
@@ -1423,9 +1683,12 @@ class _PlanProgressBar extends StatelessWidget {
       child: Stack(
         children: [
           Positioned.fill(child: ColoredBox(color: AppColors.track)),
-          FractionallySizedBox(
-            widthFactor: filled.clamp(0, 1),
-            child: const ColoredBox(color: AppColors.brassInk),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: filled.clamp(0, 1),
+              child: const ColoredBox(color: AppColors.brassInk),
+            ),
           ),
         ],
       ),
@@ -2038,6 +2301,19 @@ class _CenteredMessage extends StatelessWidget {
 String planSeamGroupOf(PlanSessionEnvelope plan, int i) => _planSeamGroup(plan, i);
 
 String _planSeamGroup(PlanSessionEnvelope plan, int i) {
+  // THE SERVER NAMES THE PART, since DAY-2. The client cannot derive it any more and it should never
+  // have had to: meeting a reply and speaking it in the conversation are two parts of the sitting,
+  // and `shelf` says `say` for both. The DAY rides in the key because one sitting can hold two
+  // scenes — today's introduction and yesterday's conversation — and «Диалог» announced once over
+  // two conversations is a lie about both.
+  final code = plan.sectionCodeAt(i);
+  if (code != null && code.isNotEmpty) {
+    return code == PlanSessionTask.sectionCodeWarmup
+        ? code
+        : '$code#${plan.carriedFromAt(i) ?? 0}';
+  }
+
+  // A payload from a server that predates the field: the shelf decides, exactly as it did.
   if (plan.isWarmupAt(i)) return PlanTermRow.shelfRescue;
   // Everything that is not today's own material is the revision, whatever shelf it came off
   // originally: it is being replayed, not taught.
@@ -2069,13 +2345,72 @@ String? planSeamCaption(AppLocalizations l, PlanSessionEnvelope plan, int i) {
   final group = _planSeamGroup(plan, i);
   if (i > 0 && _planSeamGroup(plan, i - 1) == group) return null;
 
-  return switch (group) {
-    PlanTermRow.shelfRescue => l.planWarmupSection,
-    _seamGroupReview => l.planReviewSection,
+  return planSectionCaption(l, plan, i);
+}
+
+/// THE CONVERSATION the card at [i] belongs to, or null when it is not part of one.
+///
+/// Two conditions and both are the server's: the card is in the `dialogue` part of the sitting, and
+/// the payload carries that scene's chain. A card of the conversation whose chain never arrived —
+/// an older server, a scene whose chain the day lost — falls back to the ordinary card layout,
+/// which is what the sitting looked like before this наряд.
+PlanDialogue? planDialogueAt(PlanSessionEnvelope plan, int i) {
+  if (plan.sectionCodeAt(i) != PlanSessionTask.sectionCodeDialogue) return null;
+  // The card's OWN scene, not the day being studied: the conversation dealt on day 2 is scene 1's.
+  final day = plan.carriedFromAt(i) ?? plan.dayIndex;
+  for (final dialogue in plan.dialogues) {
+    if (dialogue.dayIndex == day) return dialogue;
+  }
+
+  return null;
+}
+
+/// THE NAME OF THE PART the card at [i] stands in — «Разогрев», «Слова и связки», «Знакомство с
+/// репликами», «Диалог сцены» — or null when this build has nothing true to call it.
+///
+/// Drawn in two places and therefore written once: as the seam over the first card of a part, and
+/// beside the progress group's own numbers («Сцена 11/22 · Диалог сцены», кадры D-03 / D-04).
+///
+/// A part that belongs to an EARLIER scene says so — «Диалог сцены · сцена 1» — because a sitting
+/// can hold two of them and the learner is entitled to know which conversation they are in.
+///
+/// Silence for a code this build has never heard of is deliberate: a caption invented from a code
+/// we cannot read would be the plan telling the learner something the plan does not know.
+String? planSectionCaption(AppLocalizations l, PlanSessionEnvelope plan, int i) {
+  final code = plan.sectionCodeAt(i);
+  final name = code == null || code.isEmpty
+      ? _legacySectionName(l, plan, i)
+      : switch (code) {
+          PlanSessionTask.sectionCodeWarmup => l.planWarmupSection,
+          PlanSessionTask.sectionCodeWords => l.planShelfWords,
+          PlanSessionTask.sectionCodeDialogueIntro => l.planSectionDialogueIntro,
+          PlanSessionTask.sectionCodeDialogue => l.planSectionDialogue,
+          PlanSessionTask.sectionCodeNumbers => l.planSectionNumbers,
+          PlanSessionTask.sectionCodeRehearsal => l.planSectionRehearsal,
+          PlanSessionTask.sectionCodeReview => l.planReviewSection,
+          _ => null,
+        };
+  if (name == null) return null;
+
+  // The WARM-UP belongs to the plan and to no scene (канон §5: «набор принадлежит ПЛАНУ»), and its
+  // cards live on day 1 — so the day they came from would name a scene they are not part of.
+  final from = code == PlanSessionTask.sectionCodeWarmup || plan.isWarmupAt(i)
+      ? null
+      : plan.carriedFromAt(i);
+
+  return from == null ? name : l.planSectionOfScene(name, from);
+}
+
+/// The part's name off the SHELF — for a payload written before the server named it.
+String? _legacySectionName(AppLocalizations l, PlanSessionEnvelope plan, int i) {
+  if (plan.isWarmupAt(i)) return l.planWarmupSection;
+  if (!plan.isDayTaskAt(i)) return l.planReviewSection;
+
+  return switch (plan.shelfAt(i)) {
     PlanTermRow.shelfHear => l.planShelfHear,
     PlanTermRow.shelfSay => l.planShelfSay,
     PlanTermRow.shelfAsk => l.planShelfAsk,
-    PlanTermRow.shelfWords => l.planShelfWords,
+    PlanTermRow.shelfWords || PlanTermRow.shelfChunks => l.planShelfWords,
     _ => null,
   };
 }
@@ -2085,22 +2420,43 @@ String? planSeamCaption(AppLocalizations l, PlanSessionEnvelope plan, int i) {
 /// A rule rather than a header: the cards after it are played exactly the same way, so the seam has
 /// to be visible without claiming to be a new screen.
 class _SectionSeam extends StatelessWidget {
-  const _SectionSeam({required this.label});
+  const _SectionSeam({required this.label, this.note});
 
   final String label;
 
+  /// One line under the rule saying WHY this part is here — «чтобы было чем ответить, если
+  /// растеряешься». Only the warm-up has one: the other parts are self-explanatory once named, and
+  /// a note under every seam would be a legend nobody reads twice.
+  final String? note;
+
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) => Column(
     children: [
-      const Expanded(child: Divider(height: 1, thickness: 1, color: AppColors.dividerFaint)),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
-        child: Text(
-          label.toUpperCase(),
-          style: AppText.blockLabel.copyWith(letterSpacing: 1.32, color: AppColors.tertiary),
-        ),
+      Row(
+        children: [
+          const Expanded(child: Divider(height: 1, thickness: 1, color: AppColors.dividerFaint)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
+            child: Text(
+              label.toUpperCase(),
+              style: AppText.blockLabel.copyWith(letterSpacing: 1.32, color: AppColors.tertiary),
+            ),
+          ),
+          const Expanded(child: Divider(height: 1, thickness: 1, color: AppColors.dividerFaint)),
+        ],
       ),
-      const Expanded(child: Divider(height: 1, thickness: 1, color: AppColors.dividerFaint)),
+      if (note != null) ...[
+        const SizedBox(height: 8),
+        Text(
+          note!,
+          textAlign: TextAlign.center,
+          style: AppText.translation.copyWith(
+            fontSize: 13,
+            height: 1.45,
+            color: AppColors.tertiary,
+          ),
+        ),
+      ],
     ],
   );
 }

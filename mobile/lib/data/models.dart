@@ -835,6 +835,103 @@ abstract interface class PlanSessionEnvelope {
   /// refuses to deal a production trainer for such a card; this is what stops the CLIENT labelling
   /// one as something to say, which is Д-8 seen from the other side.
   bool isRecognitionOnlyAt(int i);
+
+  /// WHAT THE LEARNER IS DOING with the card at [i] — the part of the sitting, as a CODE.
+  ///
+  /// `warmup` · `words` · `dialogue_intro` · `dialogue` · `numbers` · `rehearsal` · `review` ·
+  /// `day` (наряд DAY-2). The wording is the client's, in two languages, exactly as for [originAt]
+  /// and [speakerAt]; what the server owns is which part this is.
+  ///
+  /// It exists because [shelfAt] cannot answer it: meeting a reply and speaking it in the
+  /// conversation are two parts of the sitting and both are `say`. A code this build has never
+  /// heard of gets no caption rather than a guessed one.
+  ///
+  /// Null on a payload from a server that predates the field — and then the shelf decides, exactly
+  /// as it did before.
+  String? sectionCodeAt(int i);
+
+  /// THE CONVERSATIONS this sitting plays — one per scene it reaches, whole and in order.
+  ///
+  /// Empty on the day a scene is introduced (its dialogue opens tomorrow — канон §10), on the final
+  /// day's run-through, and on a payload from a server that predates the field.
+  List<PlanDialogue> get dialogues;
+}
+
+/// ONE SCENE'S CONVERSATION — the dialogue screen's whole input beside the sitting's own tasks.
+///
+/// The chain is the WHOLE scene, not the part of it that is owed today: the screen plays it from
+/// the first line, and hands the learner a move only on a turn whose card is in the sitting. That
+/// is the difference between a conversation and a stack of cards, and it is why the turns
+/// outnumber the tasks.
+class PlanDialogue {
+  const PlanDialogue({
+    required this.dayIndex,
+    required this.turns,
+    this.sceneTitle,
+    this.sceneIntro,
+  });
+
+  /// Which day of the plan this scene is — «Сцена 2» is drawn from the plan, this is the address.
+  final int dayIndex;
+
+  /// «Рассказ о прошлом опыте».
+  final String? sceneTitle;
+
+  /// The вводка, on the language of support — what кадр DL·01 prints before the first line.
+  final String? sceneIntro;
+
+  final List<PlanDialogueTurn> turns;
+
+  /// How many EXCHANGES this conversation is — «4 обмена» on кадр DL·01.
+  ///
+  /// An exchange is «they said something, you answered», so it is counted by the learner's turns
+  /// and not by halving the chain: a scene that ends on the other person's goodbye has one more
+  /// turn than it has exchanges, and «3,5 обмена» is not a thing to print.
+  int get exchanges => turns.where((t) => !t.isRole).length;
+
+  static PlanDialogue? fromJson(Map<String, dynamic>? j) {
+    if (j == null) return null;
+    final turns = ((j['turns'] as List?) ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(PlanDialogueTurn.fromJson)
+        .toList(growable: false);
+    if (turns.isEmpty) return null;
+
+    return PlanDialogue(
+      dayIndex: (j['day_index'] as num?)?.toInt() ?? 0,
+      sceneTitle: (j['scene_title'] as String?)?.trim(),
+      sceneIntro: (j['scene_intro'] as String?)?.trim(),
+      turns: turns,
+    );
+  }
+}
+
+/// One turn of a scene's conversation — see [PlanDialogue].
+class PlanDialogueTurn {
+  const PlanDialogueTurn({
+    required this.turn,
+    required this.termId,
+    required this.text,
+    this.translation,
+    this.shelf,
+  });
+
+  /// `role` — the other person speaks; `you` — the learner's move.
+  final String turn;
+  final String termId;
+  final String text;
+  final String? translation;
+  final String? shelf;
+
+  bool get isRole => turn == 'role';
+
+  factory PlanDialogueTurn.fromJson(Map<String, dynamic> j) => PlanDialogueTurn(
+    turn: (j['turn'] as String?) ?? 'role',
+    termId: (j['term_id'] as String?) ?? '',
+    text: (j['text'] as String?) ?? '',
+    translation: (j['translation'] as String?),
+    shelf: j['shelf'] as String?,
+  );
 }
 
 class Profile {

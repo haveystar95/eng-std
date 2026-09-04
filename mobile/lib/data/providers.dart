@@ -906,7 +906,22 @@ final planArchiveProvider = FutureProvider<List<PlanSummary>>((ref) async {
 });
 
 /// One plan by id — the archive, and any screen that already knows which plan it is showing.
+///
+/// THE ACTIVE PLAN IS READ THROUGH [activePlanProvider] AND NOWHERE ELSE (E2E-SIM-2, С-11).
+///
+/// The two providers used to fetch the same plan independently, and the deck was then counted twice
+/// from two answers taken at two moments: right after a plan started, «План» said «37 карточек · 37
+/// осталось» and «Главная», in the same minute, said 53 — the honest number. Neither screen was
+/// computing anything; they were holding two different snapshots of one server answer, and there is
+/// no way for a person to read that as anything but a bug.
+///
+/// So the active plan has ONE cached answer. An archived plan — which the active provider will
+/// never hold — is fetched here as it always was, and the extra `await` costs one already-cached
+/// future.
 final planProvider = FutureProvider.family<LearningPlan, String>((ref, planId) async {
+  final active = await ref.watch(activePlanProvider.future);
+  if (active != null && active.id == planId) return active;
+
   return ref.watch(apiClientProvider).plan(planId);
 });
 

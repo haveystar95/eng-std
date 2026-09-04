@@ -179,6 +179,13 @@ class _Envelope implements PlanSessionEnvelope {
 
   @override
   bool speaksAfterChoiceAt(int i) => false;
+
+  // Nor the part of the sitting and its conversation: this envelope exists for the SUMMARY, which
+  // counts cards, and both are the session frame's business (`plan_session_seam_test.dart`).
+  @override
+  String? sectionCodeAt(int i) => null;
+  @override
+  List<PlanDialogue> get dialogues => const [];
 }
 
 /// Counts the «this run ended» calls without touching the queue or the network.

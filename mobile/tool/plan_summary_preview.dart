@@ -153,4 +153,9 @@ class _Envelope implements PlanSessionEnvelope {
 
   @override
   bool speaksAfterChoiceAt(int i) => false;
+
+  @override
+  String? sectionCodeAt(int i) => null;
+  @override
+  List<PlanDialogue> get dialogues => const [];
 }

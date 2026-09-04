@@ -2230,6 +2230,144 @@
 
   "planShelfWords": "Слова и связки",
   "@planShelfWords": { "description": "Шов в сессии плана: полки words и chunks под одной подписью — канон §2 считает их вместе («внизу — слова и связки»)." },
+
+  "planSectionDialogueIntro": "Знакомство с репликами",
+  "@planSectionDialogueIntro": { "description": "Секция посадки (DAY-2, код dialogue_intro): ступень A трёх полок сцены — реплики, которые сегодня встречают впервые. Раньше это были три подписи («Тебе скажут», «Ты ответишь», «Ты спросишь»); в день знакомства это одно, что происходит." },
+
+  "planSectionDialogue": "Диалог сцены",
+  "@planSectionDialogue": { "description": "Секция посадки (DAY-2, код dialogue): ступень B тех же полок, сыгранная одним разговором — экран-диалог." },
+
+  "planSectionNumbers": "Цифры на слух",
+  "@planSectionNumbers": { "description": "Секция посадки (код numbers, канон §6). Пока ни одна сессия их не раздаёт — подпись есть, чтобы было чем подписать, когда появится тренажёр." },
+
+  "planSectionRehearsal": "Прогон сцены",
+  "@planSectionRehearsal": { "description": "Секция посадки (код rehearsal): прогон перед событием, финальный день." },
+
+  "planSectionOfScene": "{section} · сцена {index}",
+  "@planSectionOfScene": {
+    "description": "Подпись секции, которая принадлежит ПРОШЛОЙ сцене: «Диалог сцены · сцена 1». Номер нужен, потому что в одной посадке может быть разговор одной сцены и знакомство другой.",
+    "placeholders": { "section": { "type": "String" }, "index": { "type": "int" } }
+  },
+
+  "planWarmupWhy": "чтобы было чем ответить, если растеряешься",
+  "@planWarmupWhy": { "description": "Пояснение под подписью «Разогрев» на первой карточке разогрева: зачем спасатели (кадр D-01)." },
+
+  "planSceneProgress": "Сцена {done}/{total}",
+  "@planSceneProgress": {
+    "description": "Правая группа полосы прогресса посадки (DAY-2, Ч.2.2): материал сцены — день и шов вместе. Считает ровно те деления, что рисует: раньше подпись говорила «День N/M» по одному дню, а деления рисовались по всей посадке, и в подпись уезжали чужие числа.",
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "planProgressWithSection": "{progress} · {section}",
+  "@planProgressWithSection": {
+    "description": "Подпись группы прогресса вместе с текущей секцией: «Сцена 11/22 · Диалог сцены» (кадры D-03, D-04).",
+    "placeholders": { "progress": { "type": "String" }, "section": { "type": "String" } }
+  },
+
+  "planTaskDoing": "{kind} · {doing}",
+  "@planTaskDoing": {
+    "description": "Строка над заданием плановой посадки: что это за карточка и что с ней делают — «фраза · скажи слово вслух». Заменила «СТУПЕНЬ B · СБОРКА»: ступень стоит меткой в шапке, а секция — в подписи полосы.",
+    "placeholders": { "kind": { "type": "String" }, "doing": { "type": "String" } }
+  },
+
+  "planKindWord": "слово",
+  "@planKindWord": { "description": "Что за карточка, в строке над заданием: kind = word." },
+  "planKindChunk": "связка",
+  "@planKindChunk": { "description": "Что за карточка, в строке над заданием: kind = chunk." },
+  "planKindLine": "фраза",
+  "@planKindLine": { "description": "Что за карточка, в строке над заданием: kind = line." },
+
+  "planDoingSpeakKey": "скажи слово вслух",
+  "@planDoingSpeakKey": { "description": "Что делают с фразой, у которой есть ключ говорения: произносят её, и главное в ней — одно слово." },
+  "planDoingSpeakWhole": "скажи вслух",
+  "@planDoingSpeakWhole": { "description": "Что делают с фразой без ключа: произносят целиком." },
+
+  "planDialogueScene": "Сцена {index}",
+  "@planDialogueScene": {
+    "description": "Надзаголовок экрана-диалога (кадры DL-01…DL-10). Материал называется сценой; слово «день» на этих экранах не звучит.",
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "planDialogueLabel": "Диалог",
+  "@planDialogueLabel": { "description": "Подпись блока на входе в диалог (кадр DL-01)." },
+  "planDialogueExchanges": "{count, plural, one{{count} обмен} few{{count} обмена} other{{count} обменов}}",
+  "@planDialogueExchanges": {
+    "description": "Сколько обменов в сцене — счёт от сервера, а не оценка длины (кадр DL-01).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planDialogueLead": "Собеседник говорит — вы отвечаете. Отвечать будете выбором из фраз плана, включая выученные в прошлых сценах.",
+  "@planDialogueLead": { "description": "Что произойдёт в диалоге (кадр DL-01)." },
+  "planDialogueRescueAtHand": "Спасатели под рукой",
+  "@planDialogueRescueAtHand": { "description": "Подпись второго блока на входе в диалог (кадр DL-01)." },
+  "planDialogueRescueLead": "Кнопка остаётся на экране весь диалог: можно попросить повторить или помедленнее.",
+  "@planDialogueRescueLead": { "description": "Пояснение к блоку спасателей на входе в диалог (кадр DL-01)." },
+  "planDialogueStart": "Начать диалог",
+  "@planDialogueStart": { "description": "Главное действие входа в диалог (кадр DL-01)." },
+  "planDialogueSound": "со звуком · наденьте наушники",
+  "@planDialogueSound": { "description": "Честное предупреждение под кнопкой: реплики звучат, а не написаны (кадр DL-01)." },
+
+  "planDialogueExchangeOf": "обмен {n} из {total}",
+  "@planDialogueExchangeOf": {
+    "description": "Надзаголовок в шапке диалога: где мы в разговоре (кадры DL-02…DL-09).",
+    "placeholders": { "n": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "planDialogueRoleSpeaks": "говорит собеседник · текст скрыт",
+  "@planDialogueRoleSpeaks": { "description": "Подпись под пузырём собеседника, пока текст не раскрыт (кадр DL-02)." },
+  "planDialogueReplay": "Ещё раз",
+  "@planDialogueReplay": { "description": "Повтор реплики собеседника голосом (кадр DL-02)." },
+  "planDialogueShowText": "Показать текст",
+  "@planDialogueShowText": { "description": "Раскрыть текст реплики внутри пузыря. Доступно всегда, но тише всего остального: это подсказка, а не шаг (кадр DL-02)." },
+  "planDialogueHideText": "Скрыть текст",
+  "@planDialogueHideText": { "description": "Свернуть текст реплики обратно (кадр DL-02б)." },
+  "planDialogueUnderstoodMark": "понял",
+  "@planDialogueUnderstoodMark": { "description": "Свёрнутая отметка пройденного такта «Понял?» в ленте (кадр DL-03)." },
+  "planDialogueSaidAloud": "сказано вслух",
+  "@planDialogueSaidAloud": { "description": "Отметка под своим ответом в ленте — факт, а не балл (кадр DL-05)." },
+  "planDialogueFamiliar": "знакомая реплика · разбор не нужен",
+  "@planDialogueFamiliar": { "description": "Подпись у зрелого обмена: реплика уже закрыла «понимаю», такта 1 нет (кадр DL-06)." },
+
+  "planDialogueVoicePreparing": "Готовим озвучку",
+  "@planDialogueVoicePreparing": { "description": "Состояние, пока голос не готов: реплика не подаётся, но и тишины нет (кадр DL-08)." },
+  "planDialogueVoicePreparingBody": "Реплика прозвучит, когда голос будет готов. Диалог начнётся с неё — тишины не будет.",
+  "@planDialogueVoicePreparingBody": { "description": "Пояснение под «Готовим озвучку». Никаких «осталось 5 секунд»: время неизвестно, поэтому не обещается (кадр DL-08)." },
+
+  "planDialogueRescue": "Спасатели",
+  "@planDialogueRescue": { "description": "Постоянная кнопка на экране диалога (кадр DL-09)." },
+  "planDialogueRescuePhrases": "{count, plural, one{{count} фраза} few{{count} фразы} other{{count} фраз}}",
+  "@planDialogueRescuePhrases": {
+    "description": "Сколько спасательных фраз в наборе (кадр DL-09).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planDialogueRescueNote": "Это нормальный ход разговора, а не ошибка: носители просят повторить так же часто.",
+  "@planDialogueRescueNote": { "description": "Пояснение в панели спасателей: использование не штрафуется (кадр DL-09, канон §8)." },
+  "planDialogueRescueBack": "Вернуться к диалогу",
+  "@planDialogueRescueBack": { "description": "Закрыть панель спасателей (кадр DL-09)." },
+
+  "planDialogueDone": "диалог пройден",
+  "@planDialogueDone": { "description": "Надзаголовок финала диалога (кадр DL-10)." },
+  "planDialogueDoneLead": "Разговор целиком — ваши ответы стоят в ленте.",
+  "@planDialogueDoneLead": { "description": "Подпись под названием сцены на финале диалога (кадр DL-10)." },
+  "planDialogueResult": "Итог по сцене",
+  "@planDialogueResult": { "description": "Надзаголовок трёх фактов финала (кадр DL-10)." },
+  "planDialogueAnsweredSelf": "Отвечал сам",
+  "@planDialogueAnsweredSelf": { "description": "Первый факт финала диалога (кадр DL-10)." },
+  "planDialogueHeardOut": "Разобрал реплику на слух",
+  "@planDialogueHeardOut": { "description": "Второй факт финала диалога (кадр DL-10)." },
+  "planDialogueAskedRepeat": "Просил повторить",
+  "@planDialogueAskedRepeat": { "description": "Третий факт финала диалога. Стоит рядом с остальными без извинений: это часть разговора (кадр DL-10)." },
+  "planDialogueCountOf": "{done} из {total}",
+  "@planDialogueCountOf": {
+    "description": "Моноширинное значение факта на финале диалога.",
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "planDialogueTimes": "{count, plural, one{{count} раз} few{{count} раза} other{{count} раз}}",
+  "@planDialogueTimes": {
+    "description": "Сколько раз просили повторить (кадр DL-10).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planDialogueNextAssembly": "Дальше — сборка: те же обмены, но ответ собираете из связок сцены сами.",
+  "@planDialogueNextAssembly": { "description": "Что будет после диалога — уровень B+ (кадр DL-10, канон §5)." },
+  "planDialogueBackToSession": "Вернуться к сессии",
+  "@planDialogueBackToSession": { "description": "Единственное действие финала диалога: ведёт обратно в посадку (кадр DL-10)." },
   "planStageAClosed": "Ступень A пройдена",
   "@planStageAClosed": { "description": "Строка итога дня." },
   "planStageBReturns": "Вернутся на ступени B",

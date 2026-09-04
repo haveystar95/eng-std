@@ -2930,6 +2930,187 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planShelfWords => 'Words and connectors';
 
   @override
+  String get planSectionDialogueIntro => 'Meeting the lines';
+
+  @override
+  String get planSectionDialogue => 'The scene\'s dialogue';
+
+  @override
+  String get planSectionNumbers => 'Numbers by ear';
+
+  @override
+  String get planSectionRehearsal => 'Run-through';
+
+  @override
+  String planSectionOfScene(String section, int index) {
+    return '$section · scene $index';
+  }
+
+  @override
+  String get planWarmupWhy => 'so you have something to say when you get stuck';
+
+  @override
+  String planSceneProgress(int done, int total) {
+    return 'Scene $done/$total';
+  }
+
+  @override
+  String planProgressWithSection(String progress, String section) {
+    return '$progress · $section';
+  }
+
+  @override
+  String planTaskDoing(String kind, String doing) {
+    return '$kind · $doing';
+  }
+
+  @override
+  String get planKindWord => 'word';
+
+  @override
+  String get planKindChunk => 'connector';
+
+  @override
+  String get planKindLine => 'line';
+
+  @override
+  String get planDoingSpeakKey => 'say the key word aloud';
+
+  @override
+  String get planDoingSpeakWhole => 'say it aloud';
+
+  @override
+  String planDialogueScene(int index) {
+    return 'Scene $index';
+  }
+
+  @override
+  String get planDialogueLabel => 'Dialogue';
+
+  @override
+  String planDialogueExchanges(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count exchanges',
+      one: '$count exchange',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planDialogueLead =>
+      'They speak — you answer. You will answer by choosing from your plan\'s own lines, including the ones you learned in earlier scenes.';
+
+  @override
+  String get planDialogueRescueAtHand => 'Rescue phrases at hand';
+
+  @override
+  String get planDialogueRescueLead =>
+      'The button stays on screen for the whole dialogue: you can always ask them to repeat or slow down.';
+
+  @override
+  String get planDialogueStart => 'Start the dialogue';
+
+  @override
+  String get planDialogueSound => 'with sound · put your headphones on';
+
+  @override
+  String planDialogueExchangeOf(int n, int total) {
+    return 'exchange $n of $total';
+  }
+
+  @override
+  String get planDialogueRoleSpeaks => 'they are speaking · text hidden';
+
+  @override
+  String get planDialogueReplay => 'Again';
+
+  @override
+  String get planDialogueShowText => 'Show the text';
+
+  @override
+  String get planDialogueHideText => 'Hide the text';
+
+  @override
+  String get planDialogueUnderstoodMark => 'got it';
+
+  @override
+  String get planDialogueSaidAloud => 'said aloud';
+
+  @override
+  String get planDialogueFamiliar => 'a familiar line · no need to work it out';
+
+  @override
+  String get planDialogueVoicePreparing => 'Getting the voice ready';
+
+  @override
+  String get planDialogueVoicePreparingBody =>
+      'The line will play once the voice is ready. The dialogue starts with it — there will be no silence.';
+
+  @override
+  String get planDialogueRescue => 'Rescue phrases';
+
+  @override
+  String planDialogueRescuePhrases(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count phrases',
+      one: '$count phrase',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planDialogueRescueNote =>
+      'This is a normal move in a conversation, not a mistake: native speakers ask for a repeat just as often.';
+
+  @override
+  String get planDialogueRescueBack => 'Back to the dialogue';
+
+  @override
+  String get planDialogueDone => 'dialogue done';
+
+  @override
+  String get planDialogueDoneLead => 'The whole conversation — your answers are in the feed.';
+
+  @override
+  String get planDialogueResult => 'How the scene went';
+
+  @override
+  String get planDialogueAnsweredSelf => 'Answered on your own';
+
+  @override
+  String get planDialogueHeardOut => 'Worked the line out by ear';
+
+  @override
+  String get planDialogueAskedRepeat => 'Asked for a repeat';
+
+  @override
+  String planDialogueCountOf(int done, int total) {
+    return '$done of $total';
+  }
+
+  @override
+  String planDialogueTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '$count time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planDialogueNextAssembly =>
+      'Next comes assembly: the same exchanges, but you build the answer out of the scene\'s connectors yourself.';
+
+  @override
+  String get planDialogueBackToSession => 'Back to the session';
+
+  @override
   String get planStageAClosed => 'Stage A closed';
 
   @override
