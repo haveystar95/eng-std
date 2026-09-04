@@ -3094,6 +3094,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDialogueBackToSession => 'Back to the session';
 
   @override
+  String get planDialogueAskHeard => 'What did they just say?';
+
+  @override
+  String get planDialogueAskSay => 'What will you say?';
+
+  @override
+  String get planDialogueAskAsk => 'What will you ask?';
+
+  @override
+  String get planDialogueYourAnswer => 'Your reply';
+
+  @override
+  String get planDialogueYourQuestion => 'Your question';
+
+  @override
+  String get planDialogueListenHow => 'Hear how it sounds';
+
+  @override
+  String get planDialogueSayAloudNote =>
+      'This is for the pronunciation. Nothing is graded and nothing is compared — say it and we move on.';
+
+  @override
+  String get planDialogueSaidIt => 'Said it aloud';
+
+  @override
+  String get planDialogueTailSay => 'This scene\'s reply, once more';
+
+  @override
+  String get planDialogueTailAsk => 'This scene\'s question, once more';
+
+  @override
   String get planDayRescueLead =>
       'The day starts with them — so you have something to say when you get stuck.';
 

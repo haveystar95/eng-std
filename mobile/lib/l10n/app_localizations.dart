@@ -4683,6 +4683,66 @@ abstract class AppLocalizations {
   /// **'Вернуться к сессии'**
   String get planDialogueBackToSession;
 
+  /// Шапка такта «Понял?» — крупный вопрос над русскими вариантами (кадр DL-02).
+  ///
+  /// In ru, this message translates to:
+  /// **'Что тебе сейчас сказали?'**
+  String get planDialogueAskHeard;
+
+  /// Шапка такта «Ответишь?» — крупный вопрос над вариантами на изучаемом языке (кадр DL-03).
+  ///
+  /// In ru, this message translates to:
+  /// **'Что ты ответишь?'**
+  String get planDialogueAskSay;
+
+  /// Шапка такта «Ответишь?» для хода-вопроса (кадр DL-03, канон §4).
+  ///
+  /// In ru, this message translates to:
+  /// **'Что ты спросишь?'**
+  String get planDialogueAskAsk;
+
+  /// Надзаголовок своего хода без карточки — реплика полки «Ты ответишь» (кадр DL-04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш ответ'**
+  String get planDialogueYourAnswer;
+
+  /// То же для хода полки «Ты спросишь» (кадр DL-04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш вопрос'**
+  String get planDialogueYourQuestion;
+
+  /// Тихое действие на шаге «Скажи вслух»: реплика звучит тем же голосом, что и разговор (кадр DL-04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Послушать, как это звучит'**
+  String get planDialogueListenHow;
+
+  /// Подпись шага «Скажи вслух»: разбора произношения здесь нет, и экран об этом говорит (кадр DL-04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрепляем произношение. Мы не оцениваем и не сравниваем — скажите и идём дальше.'**
+  String get planDialogueSayAloudNote;
+
+  /// Главное действие шага «Скажи вслух»: пузырь встаёт в ленту, разговор идёт дальше (кадр DL-04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сказал вслух'**
+  String get planDialogueSaidIt;
+
+  /// Вводка хвостовой карточки «Ты ответишь» — она вне ленты, потому что в цепочку сцены не попала (наряд DAY-2-FIX, Ч.1.6).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ещё раз ответ этой сцены'**
+  String get planDialogueTailSay;
+
+  /// То же для хвостовой карточки «Ты спросишь».
+  ///
+  /// In ru, this message translates to:
+  /// **'Ещё раз вопрос этой сцены'**
+  String get planDialogueTailAsk;
+
   /// Пояснение блока спасателей на экране дня (кадр D-01).
   ///
   /// In ru, this message translates to:

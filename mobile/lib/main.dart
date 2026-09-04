@@ -31,14 +31,22 @@ class EngStdApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Locale resolution (A3.0): stored override → device → ru fallback. The
-    // override is applied here; device→fallback lives in [resolveLocale].
+    // Locale resolution: stored override → ЯЗЫК ПОДДЕРЖКИ ПАРЫ → device → ru fallback. The first
+    // two are applied here; device→fallback lives in [resolveLocale].
+    //
+    // The support language sits above the device's because it answers the right question: the app
+    // TALKS to the learner in the language of their pair («для ru→en это русский», канон диалога
+    // §4), and the phone's language only says how they keep their system. The owner's phone is in
+    // English, and that alone printed the whole plan contour in English — «said aloud», «rung A»,
+    // «choose what you will say» — with every one of those strings correctly translated in
+    // `app_ru.arb` all along (наряд DAY-2-FIX, Ч.1.2).
     final option = ref.watch(localeControllerProvider).asData?.value ?? UiLanguageOption.system;
+    final supportLang = ref.watch(authControllerProvider).value?.profile?.nativeLanguage;
     return MaterialApp(
       title: 'Eng Std',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
-      locale: LocaleController.overrideLocale(option),
+      locale: LocaleController.localeFor(option, supportLang),
       supportedLocales: kSupportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       localeResolutionCallback: (device, supported) => resolveLocale(device, supported),

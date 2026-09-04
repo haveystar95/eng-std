@@ -812,6 +812,57 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   /// The conversation the card at the FRONT belongs to — the shell's whole switch.
   PlanDialogue? get _dialogueHere => _dialogueAtPosition(_pos);
 
+  /// ГДЕ КАРТОЧКА СТОИТ В ЦЕПОЧКЕ, или -1 — она в сцене есть, а в разговоре её нет.
+  ///
+  /// Второй случай — это ХВОСТ (`plan_day_dialogue_uncovered`): карточка say/ask, которую модель в
+  /// цепочку не поставила. Раздаётся она после разговора, и до этого наряда оболочка рисовала над
+  /// ней всю ленту с пузырями — разговор, который уже кончился, продолжался ещё три карточки. Такая
+  /// карточка подаётся вне ленты, обычной, с честной вводкой (наряд DAY-2-FIX, Ч.1.6).
+  int _turnIndexAt(int at) {
+    final dialogue = _dialogueAtPosition(at);
+    if (dialogue == null) return -1;
+    final termId = _cards[_replay.resolve(_queue.cardAt(at))].termId;
+
+    return dialogue.turns.indexWhere((t) => t.termId == termId);
+  }
+
+  /// Карточка на позиции [at] играется РАЗГОВОРОМ (её ход есть в цепочке).
+  bool _inChainAt(int at) => _turnIndexAt(at) >= 0;
+
+  /// Свои ходы без карточки, уже произнесённые вслух — ключ `term_id` (наряд DAY-2-FIX, Ч.1.4).
+  ///
+  /// Живёт в экране, а не в оболочке, потому что переживает перестроение оболочки на каждой
+  /// карточке и потому что финал разговора спрашивает у него же, не остался ли ход неотданным.
+  final Set<String> _spokenUntasked = {};
+
+  /// Термины, у которых в этой посадке есть карточка — что оболочка считает «сегодня разбираем».
+  late final Set<String> _dealtTerms = {for (final c in _cards) c.termId};
+
+  /// Вводка ХВОСТОВОЙ карточки сцены, или null — карточка в цепочке и подаётся разговором.
+  ///
+  /// «Ещё раз ответ этой сцены» / «Ещё раз вопрос этой сцены» — по полке, потому что вопрос это не
+  /// ответ. Полка приходит с сервера ({@see PlanSessionEnvelope.shelfAt}), а не угадывается по
+  /// режиму: реплику могут выдать любым тренажёром, а полка у неё одна.
+  String? _tailIntro(AppLocalizations l, int at) {
+    if (_dialogueAtPosition(at) == null || _inChainAt(at)) return null;
+
+    return widget.session.plan?.shelfAt(_playing) == 'ask'
+        ? l.planDialogueTailAsk
+        : l.planDialogueTailSay;
+  }
+
+  /// КРУПНЫЙ ВОПРОС ТАКТА для карточки на позиции [i] (кадры DL·02, DL·03; наряд Ч.1.1).
+  ///
+  /// Такт понимания и такт ответа обязаны различаться с одного взгляда, и различает их вопрос, а не
+  /// серая строка кеглем 12 под пузырём.
+  String? _taktQuestion(AppLocalizations l, int i) => switch (_cards[i].mode) {
+    ExerciseMode.situationalHear => l.planDialogueAskHeard,
+    ExerciseMode.situationalSay => l.planDialogueAskSay,
+    ExerciseMode.situationalAsk => l.planDialogueAskAsk,
+    // Любой другой тренажёр внутри диалога сам называет, что делать, — его подпись не трогаем.
+    _ => null,
+  };
+
   /// Term ids of this sitting's answered cards — what puts «сказано вслух» under a bubble already
   /// in the feed (кадр DL·05). A fact, never a grade: it says the turn was taken, not that it was
   /// right.
@@ -836,15 +887,19 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
   /// The scene whose conversation ENDS after the card at [at] — null when it does not.
   ///
-  /// «Ends» means the next card of the sitting is in a different conversation or in none at all. The
-  /// last card of the whole sitting ends one too: a day that stops on the last exchange still had a
-  /// conversation in it.
+  /// «Ends» means the next card of the sitting is outside this CHAIN: another conversation, no
+  /// conversation, or this scene's tail. The last card of the whole sitting ends one too: a day that
+  /// stops on the last exchange still had a conversation in it.
+  ///
+  /// ЛЕНТА КОНЧАЕТСЯ ФИНАЛОМ ЦЕПОЧКИ, а не концом секции (наряд DAY-2-FIX, Ч.1.6): хвостовые
+  /// карточки раздаются после разговора, и финал, отложенный до них, приходил бы через три карточки
+  /// после последнего обмена.
   int? _dialogueLeftAfter(int at) {
     final here = _dialogueAtPosition(at);
-    if (here == null) return null;
+    if (here == null || !_inChainAt(at)) return null;
     final next = _dialogueAtPosition(at + 1);
 
-    return next?.dayIndex == here.dayIndex ? null : here.dayIndex;
+    return next?.dayIndex == here.dayIndex && _inChainAt(at + 1) ? null : here.dayIndex;
   }
 
   /// THE FACTS THE FINALE STATES — counted off the sitting, never guessed (кадр DL·10).
@@ -1036,6 +1091,36 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     if (_dialogueFinished case final day? when plan != null) {
       final dialogue = _dialogueOf(plan, day);
       if (dialogue != null) {
+        // …НО СНАЧАЛА — СВОИ ХОДЫ, КОТОРЫЕ ОСТАЛИСЬ НЕОТДАННЫМИ (наряд DAY-2-FIX, Ч.1.4).
+        //
+        // Хвост цепочки может кончаться ходом `you`, которого лестница сегодня не спрашивает: он
+        // стоит после последней карточки, и оболочка до него не доходит. Итог, показанный поверх
+        // него, объявил бы разговор состоявшимся там, где человек не сказал последнего слова.
+        final pending = PlanDialogueShell.untakenTurnsBefore(
+          dialogue,
+          dialogue.turns.length,
+          dealtTerms: _dealtTerms,
+          spoken: _spokenUntasked,
+        );
+        if (pending.isNotEmpty) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenH,
+                AppSpacing.s26,
+                AppSpacing.screenH,
+                AppSpacing.s26,
+              ),
+              child: PlanDialogueSayAloud(
+                turn: pending.first,
+                onSpeak: (text) =>
+                    unawaited(_pronouncer.speakText(text, targetLang: _sessionLang)),
+                onDone: () => setState(() => _spokenUntasked.add(pending.first.termId)),
+              ),
+            ),
+          );
+        }
+
         final facts = _dialogueFacts(dialogue);
 
         return PlanDialogueDone(
@@ -1199,7 +1284,13 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             // it in the same frame. The position is the conversation now: the line SOUNDS from the
             // bubble, «Показать текст» reveals it if the learner asks, and the вводка stands on the
             // dialogue's own opening screen.
-            situation: _dialogueHere != null ? null : plan?.situationAt(_playing),
+            //
+            // ХВОСТОВАЯ карточка положение получает обратно: она вне ленты, пузыря над ней нет, и
+            // без «Ситуации» человек не узнает, на что отвечает (наряд DAY-2-FIX, Ч.1.6).
+            situation: _inChainAt(_pos) ? null : plan?.situationAt(_playing),
+            // ВНУТРИ РАЗГОВОРА карточка не подписывает себя сама: такт называет крупный вопрос над
+            // ней, и вторая строка мелким серым под ним говорила бы то же самое тише (Ч.1.1).
+            inDialogue: _inChainAt(_pos),
             speaksAfterChoice: plan?.speaksAfterChoiceAt(_playing) ?? false,
             // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's
             // deferred speak/focus is cancelled instead of firing on the next card.
@@ -1270,24 +1361,30 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                   // button never leaves (серия «Диалог v1»). The card itself is untouched — такт 1
                   // and такт 2 are the situational trainers the app already has, and re-implementing
                   // them inside the shell is how two answers to one question come to differ.
-                  child: (plan != null && _dialogueHere != null)
+                  child: (plan != null && _dialogueHere != null && _inChainAt(_pos))
                       ? PlanDialogueShell(
                           dialogue: _dialogueHere!,
-                          turnIndex: _dialogueHere!.turns.indexWhere(
-                            (t) => t.termId == _card.termId,
-                          ),
+                          turnIndex: _turnIndexAt(_pos),
+                          // «ОЗВУЧКА ГОТОВА» — про ту строку, которая сейчас зазвучит, чья бы
+                          // карточка ни стояла впереди: у своего хода это реплика перед ним, у
+                          // такта понимания — она же и есть карточка (наряд Ч.1.3).
                           voiceReady: _voiceReadyFor(
                             PlanDialogueShell.liveRoleTurnOf(
                               _dialogueHere!,
-                              _dialogueHere!.turns.indexWhere((t) => t.termId == _card.termId),
+                              _turnIndexAt(_pos),
                             )?.text,
                           ),
+                          taktQuestion: _taktQuestion(l, _playing),
                           onSpeak: (text) => unawaited(
                             _pronouncer.speakText(text, targetLang: _sessionLang),
                           ),
                           rescue: _rescuePhrases(),
                           voiceTrouble: PlanVoiceTrouble(cache: _lineAudio),
                           answeredAloud: _spokenTerms,
+                          dealtTerms: _dealtTerms,
+                          spokenUntasked: _spokenUntasked,
+                          onSpokeUntasked: (termId) =>
+                              setState(() => _spokenUntasked.add(termId)),
                           card: card,
                         )
                       : (plan != null)
@@ -1304,6 +1401,16 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                                 label: seam,
                                 note: plan.isWarmupAt(_playing) ? l.planWarmupWhy : null,
                               ),
+                              const SizedBox(height: 18),
+                            ],
+                            // ХВОСТ — НЕ РАЗГОВОР (наряд DAY-2-FIX, Ч.1.6).
+                            //
+                            // A say/ask card the model left out of the chain
+                            // (`plan_day_dialogue_uncovered`) is dealt AFTER the conversation, and
+                            // it is not part of it: no feed, no bubbles, no «обмен 3 из 4». Just the
+                            // ordinary card, under one honest line saying why it is here again.
+                            if (_tailIntro(l, _pos) case final intro?) ...[
+                              _SectionSeam(label: intro),
                               const SizedBox(height: 18),
                             ],
                             // «СТУПЕНЬ B · СБОРКА» USED TO STAND HERE, and nothing replaced it in

@@ -156,6 +156,7 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     this.showDue = true,
     this.situation,
     this.speaksAfterChoice = false,
+    this.inDialogue = false,
   });
 
   static bool _alwaysCurrent() => true;
@@ -218,6 +219,17 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   /// there is no microphone here: a recogniser that grades nothing would open a permission prompt to
   /// produce a verdict nobody reads.
   final bool speaksAfterChoice;
+
+  /// ЭТА КАРТОЧКА ИГРАЕТСЯ РАЗГОВОРОМ — она стоит внутри оболочки диалога (серия «Диалог v1»).
+  ///
+  /// Меняется от этого ровно одно: карточка перестаёт подписывать САМА СЕБЯ. Такт над ней уже задал
+  /// крупный русский вопрос — «Что тебе сейчас сказали?», «Что ты ответишь?» — а реплику проигрывает
+  /// и повторяет пузырь. Своя серая строка «фраза · выбери, что ответишь» и своя кнопка
+  /// воспроизведения были бы вторым ответом на тот же вопрос, тише и мельче первого; живьём владелец
+  /// читал именно её и не понимал, какой из двух тактов перед ним (наряд DAY-2-FIX, Ч.1.1).
+  ///
+  /// Механика не меняется НИЧЕМ: те же варианты, та же оценка, та же лестница.
+  final bool inDialogue;
 
   /// Pronounce a target-language string via the shell's TTS (respects the auto-pronounce toggle
   /// at call sites; here it's an explicit speak). [slow] backs the listening «замедленно» replay.
@@ -1243,6 +1255,12 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   Widget _situationalHearPrompt(AppLocalizations l) {
     final scene = widget.situation?.context?.trim() ?? '';
 
+    // ВНУТРИ РАЗГОВОРА ПРОМПТА У ЭТОЙ КАРТОЧКИ НЕТ: пузырь над ней и есть промпт (кадр DL·02) —
+    // реплика звучит сама при появлении и повторяется той же кнопкой «Ещё раз», что и на всех
+    // остальных пузырях роли, а «Показать текст» раскрывает её внутри пузыря. Своя кнопка
+    // воспроизведения кеглем 112 рядом с пузырём была бы вторым плеером на одну реплику.
+    if (widget.inDialogue) return const SizedBox.shrink();
+
     return PaperCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1291,11 +1309,17 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     final roleLine = situation?.roleLine?.trim() ?? '';
     final task = situation?.task?.trim() ?? '';
 
-    // NO POSITION, NO HEADING. Inside a conversation the shell owns the moment — the line sounds
-    // from the bubble above and the вводка stood on the dialogue's opening screen — so the server
-    // sends no situation and this card is just the question (наряд DAY-2, Ч.1.5). «СИТУАЦИЯ» over
-    // an empty card would be a label for something that is not there.
+    // NO POSITION, NO HEADING, NO INSTRUCTION. Inside a conversation the shell owns the moment —
+    // the line sounds from the bubble above, the вводка stood on the dialogue's opening screen, and
+    // the такт asks its question in full size over the options (наряд DAY-2-FIX, Ч.1.1). What stood
+    // here was «выбери, что ответишь» in grey 12 pt: the only sentence on the screen telling the
+    // learner what to do, set smaller than everything around it and in the wrong language.
     if (context.isEmpty && roleLine.isEmpty && task.isEmpty) {
+      // Внутри разговора — ничего: вопрос такта уже стоит над карточкой крупно. Вне его — своя
+      // инструкция, потому что тогда спросить больше некому и карточка деградирует до обычного
+      // выбора, а не до молчания.
+      if (widget.inDialogue) return const SizedBox.shrink();
+
       return PaperCard(
         child: Align(
           alignment: Alignment.centerLeft,

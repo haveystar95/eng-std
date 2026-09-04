@@ -3231,6 +3231,37 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planDialogueBackToSession => 'Вернуться к сессии';
 
   @override
+  String get planDialogueAskHeard => 'Что тебе сейчас сказали?';
+
+  @override
+  String get planDialogueAskSay => 'Что ты ответишь?';
+
+  @override
+  String get planDialogueAskAsk => 'Что ты спросишь?';
+
+  @override
+  String get planDialogueYourAnswer => 'Ваш ответ';
+
+  @override
+  String get planDialogueYourQuestion => 'Ваш вопрос';
+
+  @override
+  String get planDialogueListenHow => 'Послушать, как это звучит';
+
+  @override
+  String get planDialogueSayAloudNote =>
+      'Закрепляем произношение. Мы не оцениваем и не сравниваем — скажите и идём дальше.';
+
+  @override
+  String get planDialogueSaidIt => 'Сказал вслух';
+
+  @override
+  String get planDialogueTailSay => 'Ещё раз ответ этой сцены';
+
+  @override
+  String get planDialogueTailAsk => 'Ещё раз вопрос этой сцены';
+
+  @override
   String get planDayRescueLead =>
       'С них начинается день — чтобы было чем ответить, если растеряешься.';
 

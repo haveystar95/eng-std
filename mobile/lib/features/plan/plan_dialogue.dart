@@ -45,9 +45,13 @@ class PlanDialogueShell extends StatefulWidget {
     required this.turnIndex,
     required this.card,
     required this.onSpeak,
+    this.taktQuestion,
     this.voiceReady = true,
     this.rescue = const [],
     this.answeredAloud = const {},
+    this.dealtTerms = const {},
+    this.spokenUntasked = const {},
+    this.onSpokeUntasked,
     this.voiceTrouble,
   });
 
@@ -86,22 +90,86 @@ class PlanDialogueShell extends StatefulWidget {
   /// докачку ничего не знает и знать не должна.
   final Widget? voiceTrouble;
 
-  /// THE ROLE LINE THE CARD AT [turnIndex] ANSWERS — the live bubble above it, or null.
+  /// КРУПНЫЙ РУССКИЙ ВОПРОС ТАКТА — «Что тебе сейчас сказали?» / «Что ты ответишь?» / «Что ты
+  /// спросишь?» (наряд DAY-2-FIX, Ч.1.1, кадры DL·02 и DL·03).
   ///
-  /// Only when the card at the front is the learner's turn. When the card IS the role turn, the
-  /// card itself is the bubble (`situational_hear` plays the line and asks what it meant), and a
-  /// second bubble above it would be the same line twice.
+  /// Он стоит НАД карточкой, а не внутри неё, потому что такт — это устройство разговора, а не
+  /// упражнения: карточка остаётся тем же тренажёром, что и вне диалога, и рисует только варианты.
+  /// Два такта обязаны различаться с одного взгляда, а серая строка «выбери, что ответишь» кеглем
+  /// 12 под пузырём этого не делала — живьём владелец не мог сказать, о чём его спрашивают.
+  ///
+  /// Приходит от СЕССИИ, потому что вопрос задаёт РЕЖИМ карточки, а оболочка режимов не знает.
+  final String? taktQuestion;
+
+  /// Ходы, у которых в этой посадке есть карточка — по `term_id`.
+  ///
+  /// Два разных ответа висят на этом множестве, и оба про честность подписи:
+  ///  * «знакомая реплика · разбор не нужен» пишется, только когда у реплики роли карточки СЕГОДНЯ
+  ///    нет. Раньше она стояла над каждым живым пузырём, в том числе над той репликой, которую
+  ///    человек только что разобрал сам, — подпись врала ровно в том месте, где хвалила;
+  ///  * свой ход без карточки не проматывается молча в ленту — см. [spokenUntasked].
+  final Set<String> dealtTerms;
+
+  /// Свои ходы без карточки, которые человек уже произнёс вслух в этом разговоре.
+  ///
+  /// «Участие в каждом своём ходу» (канон §1: единица интерактива — ОБМЕН). Ход `you`, чью карточку
+  /// лестница сегодня не выдала, всё равно принадлежит человеку: он проговаривает фразу, и пузырь
+  /// встаёт в ленту. Ничего не оценивается и ревью не пишется — это закрепление, а не ответ.
+  final Set<String> spokenUntasked;
+
+  /// Человек произнёс свой ход без карточки. Null — оболочка тогда таких ходов не спрашивает
+  /// (харнессы и виджет-тесты, которым нужен один кадр).
+  final void Function(String termId)? onSpokeUntasked;
+
+  /// WHERE THE LIVE ROLE BUBBLE STANDS in [dialogue], or -1 when there is none.
+  ///
+  /// ОДИН ПУЗЫРЬ НА ОБА СЛУЧАЯ (наряд DAY-2-FIX, Ч.1.3). The turn itself when the card at the front
+  /// IS the role's — `situational_hear` is the такт «Понял?», and кадр DL·02 draws it as a bubble
+  /// with «Ещё раз» over three Russian meanings, not as a play button on a card of its own. The
+  /// PREVIOUS turn when the card is the learner's, which is кадр DL·03 and DL·06.
+  ///
+  /// Before this there were two shapes of the same thing: a bubble that sounded by itself and a card
+  /// that waited to be tapped. Живьём это и читалось как два разных экрана — «никаких пузырей,
+  /// которые молчат до тапа».
+  static int liveRoleIndexOf(PlanDialogue dialogue, int turnIndex) {
+    if (turnIndex < 0 || turnIndex >= dialogue.turns.length) return -1;
+    if (dialogue.turns[turnIndex].isRole) return turnIndex;
+    final previous = turnIndex - 1;
+
+    return previous >= 0 && dialogue.turns[previous].isRole ? previous : -1;
+  }
+
+  /// THE ROLE LINE THAT SOUNDS AT [turnIndex] — the live bubble, or null.
   ///
   /// Static and public because the SESSION also has to answer it: «озвучка готова» is a fact about
   /// the line that is about to sound, not about the engine (наряд TTS-1), and the screen deciding
   /// that separately from the shell drawing it is two answers to one question.
   static PlanDialogueTurn? liveRoleTurnOf(PlanDialogue dialogue, int turnIndex) {
-    if (turnIndex <= 0 || turnIndex >= dialogue.turns.length) return null;
-    if (dialogue.turns[turnIndex].isRole) return null;
-    final previous = dialogue.turns[turnIndex - 1];
+    final i = liveRoleIndexOf(dialogue, turnIndex);
 
-    return previous.isRole ? previous : null;
+    return i < 0 ? null : dialogue.turns[i];
   }
+
+  /// СВОИ ХОДЫ БЕЗ КАРТОЧКИ, которые стоят в ленте перед ходом [turnIndex] и ещё не произнесены.
+  ///
+  /// Their turn is still their turn: the ladder simply owes them nothing today. Канон §1 — единица
+  /// интерактива это ОБМЕН, а обмен, в котором человек промолчал, разговором не был. So each of
+  /// them is asked out loud once, in order, before the conversation moves on ([PlanDialogueSayAloud]).
+  ///
+  /// [before] is exclusive; pass `turns.length` to sweep the tail of a finished conversation.
+  static List<PlanDialogueTurn> untakenTurnsBefore(
+    PlanDialogue dialogue,
+    int before, {
+    required Set<String> dealtTerms,
+    required Set<String> spoken,
+  }) => [
+    for (var i = 0; i < before && i < dialogue.turns.length; i++)
+      if (!dialogue.turns[i].isRole &&
+          dialogue.turns[i].text.trim().isNotEmpty &&
+          !dealtTerms.contains(dialogue.turns[i].termId) &&
+          !spoken.contains(dialogue.turns[i].termId))
+        dialogue.turns[i],
+  ];
 
   @override
   State<PlanDialogueShell> createState() => _PlanDialogueShellState();
@@ -127,28 +195,58 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
       _revealed = false;
       _spokenFor = -1;
     }
-    if (old.turnIndex != widget.turnIndex || (!old.voiceReady && widget.voiceReady)) {
+    // …и когда свой ход наконец произнесён: реплика собеседника ждала его и теперь звучит сама.
+    if (old.turnIndex != widget.turnIndex ||
+        (!old.voiceReady && widget.voiceReady) ||
+        old.spokenUntasked.length != widget.spokenUntasked.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _speakLive());
     }
   }
 
   /// The live role line, said once per turn — never on every rebuild.
+  ///
+  /// Не звучит, пока на экране стоит чужой шаг: «Скажи вслух» ([_untaken]) — это ход ЧЕЛОВЕКА, и
+  /// реплика собеседника, зазвучавшая поверх него, отвечала бы за него же.
   void _speakLive() {
     final turn = _liveRoleTurn;
-    if (!mounted || !widget.voiceReady || turn == null || _spokenFor == widget.turnIndex) return;
+    if (!mounted || !widget.voiceReady || turn == null || _untaken != null) return;
+    if (_spokenFor == widget.turnIndex) return;
     _spokenFor = widget.turnIndex;
     widget.onSpeak(turn.text);
   }
+
+  int get _liveIndex => PlanDialogueShell.liveRoleIndexOf(widget.dialogue, widget.turnIndex);
 
   PlanDialogueTurn? get _liveRoleTurn =>
       PlanDialogueShell.liveRoleTurnOf(widget.dialogue, widget.turnIndex);
 
   /// How many turns of the feed stand behind the current exchange.
-  int get _feedEnd {
-    final live = _liveRoleTurn;
-    final i = widget.turnIndex < 0 ? widget.dialogue.turns.length : widget.turnIndex;
+  int get _feedEnd => _liveIndex >= 0
+      ? _liveIndex
+      : (widget.turnIndex < 0 ? widget.dialogue.turns.length : widget.turnIndex);
 
-    return live == null ? i : i - 1;
+  /// Свой ход без карточки, который ждёт своей очереди прямо сейчас, или null.
+  PlanDialogueTurn? get _untaken {
+    if (widget.onSpokeUntasked == null) return null;
+    final pending = PlanDialogueShell.untakenTurnsBefore(
+      widget.dialogue,
+      _feedEnd,
+      dealtTerms: widget.dealtTerms,
+      spoken: widget.spokenUntasked,
+    );
+
+    return pending.isEmpty ? null : pending.first;
+  }
+
+  /// «Разбор не нужен» — ПРАВДА ЛИ ЭТО про живой пузырь.
+  ///
+  /// Правда ровно тогда, когда у реплики роли в этой посадке карточки нет: лестница её не выдала,
+  /// значит разбирать нечего, реплика просто звучит. Над репликой, которую человек разбирает прямо
+  /// сейчас или только что разобрал, эта подпись врала бы.
+  bool get _familiar {
+    final live = _liveRoleTurn;
+
+    return live != null && !widget.dealtTerms.contains(live.termId);
   }
 
   @override
@@ -156,6 +254,7 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
     final l = AppLocalizations.of(context);
     final live = _liveRoleTurn;
     final turns = widget.dialogue.turns;
+    final untaken = _untaken;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -171,33 +270,67 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
         const SizedBox(height: AppSpacing.s16),
         // THE FEED — everything already spoken, quieter and smaller the further back it is. The
         // conversation goes forward: what is behind reads as context, not as a queue of cards.
+        //
+        // A turn the learner has not taken yet is NOT in it: [untaken] stops the feed at that line
+        // and asks for it out loud instead (Ч.1.4). Без этого свой ход появлялся в ленте сам, будто
+        // его кто-то сказал за человека.
         for (var i = 0; i < _feedEnd && i < turns.length; i++) ...[
-          PlanDialogueBubble(
-            turn: turns[i],
-            past: true,
-            aloud: widget.answeredAloud.contains(turns[i].termId),
-            onReplay: turns[i].isRole ? () => widget.onSpeak(turns[i].text) : null,
-          ),
-          const SizedBox(height: 10),
-        ],
-        if (live != null) ...[
-          if (!widget.voiceReady)
-            const _VoicePreparing()
-          else
+          if (untaken == null || i < turns.indexOf(untaken)) ...[
             PlanDialogueBubble(
-              turn: live,
-              past: false,
-              revealed: _revealed,
-              onReplay: () => widget.onSpeak(live.text),
-              onToggleText: () => setState(() => _revealed = !_revealed),
-              // «Знакомая реплика · разбор не нужен» — the line has closed «понимаю», so the screen
-              // plays it and goes straight to the answer (кадр DL·06). It is a fact about the card,
-              // not a compliment, so it is set as a caption and not as praise.
-              note: l.planDialogueFamiliar,
+              turn: turns[i],
+              past: true,
+              aloud: widget.answeredAloud.contains(turns[i].termId) ||
+                  widget.spokenUntasked.contains(turns[i].termId),
+              onReplay: turns[i].isRole ? () => widget.onSpeak(turns[i].text) : null,
             ),
-          const SizedBox(height: AppSpacing.s16),
+            const SizedBox(height: 10),
+          ],
         ],
-        widget.card,
+        // СВОЙ ХОД НИКОГДА НЕ МОЛЧИТ — кадр DL·04, канон §1. The conversation stops here until the
+        // line has been said; nothing is graded and no review is written.
+        if (untaken != null)
+          PlanDialogueSayAloud(
+            turn: untaken,
+            onSpeak: widget.onSpeak,
+            onDone: () => widget.onSpokeUntasked!(untaken.termId),
+          )
+        else ...[
+          if (live != null) ...[
+            if (!widget.voiceReady)
+              const _VoicePreparing()
+            else
+              PlanDialogueBubble(
+                turn: live,
+                past: false,
+                revealed: _revealed,
+                onReplay: () => widget.onSpeak(live.text),
+                onToggleText: () => setState(() => _revealed = !_revealed),
+                // «Знакомая реплика · разбор не нужен» — the line has closed «понимаю», so the
+                // screen plays it and goes straight to the answer (кадр DL·06). It is a fact about
+                // the card, not a compliment, so it is a caption and not praise — and it is only
+                // printed when it is true ([_familiar]).
+                note: _familiar ? l.planDialogueFamiliar : null,
+              ),
+            const SizedBox(height: AppSpacing.s16),
+          ],
+          // ШАПКА ТАКТА — крупный русский вопрос, кадры DL·02 и DL·03 (наряд DAY-2-FIX, Ч.1.1).
+          //
+          // Стоит и пока голос едет: «что от меня хотят» — правда про такт, а не про озвучку, и
+          // экран, который сначала молчит, а потом задаёт вопрос, читается как два разных экрана.
+          if (widget.taktQuestion case final question?) ...[
+            Text(
+              question,
+              style: AppText.collectionNameCard.copyWith(fontSize: 21, height: 1.25),
+            ),
+            const SizedBox(height: AppSpacing.s12),
+          ],
+          // Пока голоса нет, реплика не подаётся, и над карточкой стоит «Готовим озвучку» вместо
+          // пузыря (кадр DL·08). Варианты при этом ПРИГЛУШЕНЫ, но не заблокированы, и это
+          // сознательное расхождение с кадром: у кадра есть выход «Читать сцену без звука», а у
+          // экрана его нет, — устройство без голоса для этого языка заперло бы человека в посадке
+          // навсегда. Приглушение говорит «рано», блокировка соврала бы «нельзя».
+          Opacity(opacity: widget.voiceReady ? 1 : .45, child: widget.card),
+        ],
       ],
     );
   }
@@ -557,6 +690,91 @@ class _BubbleAction extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// «СКАЖИ ВСЛУХ» — кадр DL·04, свой ход, которого лестница сегодня не спрашивает.
+///
+/// Три-пять обменов в сцене, а карточек на них лестница выдаёт столько, сколько дозрело: ход `you`
+/// без карточки — обычное дело, и до этого наряда он просто появлялся в ленте сам. Экран говорил
+/// «ты это сказал» человеку, который не открывал рта. Канон §1 держит обратное: единица интерактива
+/// — обмен, и в каждом своём ходу человек участвует.
+///
+/// Что здесь НЕ происходит: ничего не оценивается, ничего не сравнивается, ревью не пишется и
+/// лестница не двигается. Подпись говорит это вслух, потому что кнопка с микрофоном обещает разбор
+/// произношения, которого тут нет.
+class PlanDialogueSayAloud extends StatelessWidget {
+  const PlanDialogueSayAloud({
+    super.key,
+    required this.turn,
+    required this.onSpeak,
+    required this.onDone,
+  });
+
+  final PlanDialogueTurn turn;
+
+  /// «Послушать, как это звучит» — тем же голосом, что и весь разговор.
+  final void Function(String text) onSpeak;
+
+  /// Произнёс — пузырь встаёт в ленту, разговор идёт дальше.
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // «Ваш ответ» / «Ваш вопрос» — по полке хода, потому что «Ты спросишь» это не ответ и
+        // подписывать его ответом значит называть ход не тем, что он есть (канон §2).
+        PlanLabel(
+          turn.shelf == 'ask' ? l.planDialogueYourQuestion : l.planDialogueYourAnswer,
+        ),
+        const SizedBox(height: AppSpacing.s8),
+        PaperCard(
+          radius: 16,
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Своя реплика набирается ПРЯМЫМ — курсив в серии значит чужую речь, и ничего больше.
+              Text(
+                turn.text,
+                style: AppText.termInList.copyWith(fontSize: 22, height: 1.35),
+              ),
+              const SizedBox(height: AppSpacing.s16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: QuietButton(
+                  label: l.planDialogueListenHow,
+                  icon: LucideIcons.volume2,
+                  onPressed: () => onSpeak(turn.text),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.s16),
+        Text(
+          l.planDialogueSayAloudNote,
+          style: AppText.translation.copyWith(
+            fontSize: 13.5,
+            height: 1.55,
+            color: AppColors.secondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.s16),
+        PrimaryButton(
+          label: l.planDialogueSaidIt,
+          minHeight: 52,
+          onPressed: () {
+            AppHaptics.light();
+            onDone();
+          },
+        ),
+      ],
     );
   }
 }
