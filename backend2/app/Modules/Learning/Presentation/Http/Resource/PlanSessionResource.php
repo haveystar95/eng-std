@@ -77,6 +77,10 @@ final class PlanSessionResource extends JsonResource
                     // ОЗВУЧКА РЕПЛИКИ (наряд TTS-1, Ч.1.3). Null = «серверного файла нет», и клиент
                     // читает строку системным голосом, как читал всегда.
                     'audio_url' => LineAudioUrl::for($turn->audioId),
+                    // СТРОГОСТЬ СВОЕГО ХОДА — `choose` | `assemble` | `say`, null у реплики
+                    // собеседника (наряд SCENE-RUN, Ч.1). Едет на цепочке, а не только на задаче:
+                    // ходов больше, чем задач, и лента рисуется вперёд.
+                    'level' => $turn->level,
                 ], $dialogue->turns),
             ], $view->dialogues),
             // ВСЯ ОЗВУЧКА ЭТОЙ ПОСАДКИ одним списком — то, что телефон качает на входе в день,
@@ -127,6 +131,10 @@ final class PlanSessionResource extends JsonResource
                 // line they tapped afterwards. Null / false on every other trainer.
                 'situation' => $task->situation,
                 'speaks_after_choice' => $task->speaksAfterChoice,
+                // СТРОГОСТЬ ЭТОГО ХОДА. Отдельно от `exercise_mode`: тренажёр один и тот же на всех
+                // уровнях, а рисуется он вариантами, блоками или микрофоном. Null у всего, что не
+                // является ходом человека в диалоге.
+                'turn_level' => $task->turnLevel,
                 'knobs_applied' => $task->knobsApplied,
                 'knobs_ignored' => $task->knobsIgnored,
                 'card' => self::card($task),

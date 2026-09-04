@@ -33,7 +33,9 @@ use App\Modules\Learning\Application\Dto\PlanDialogueView;
 use App\Modules\Learning\Application\Service\LineAudioIndex;
 use App\Modules\Learning\Domain\Service\PlanAnswerOptions;
 use App\Modules\Learning\Domain\Service\PlanDayOrder;
+use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
 use App\Modules\Learning\Domain\Service\PlanDialogueChain;
+use App\Modules\Learning\Domain\Service\PlanDialogueLevel;
 use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
 use App\Modules\Learning\Domain\Service\PlanKnobSupport;
 use App\Modules\Learning\Domain\Service\PlanSessionSections;
@@ -49,7 +51,9 @@ use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\OptionsPolicy;
 use App\Modules\Learning\Domain\ValueObject\PlanKnobs;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
+use App\Modules\Learning\Domain\ValueObject\PlanTermStage;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
+use App\Modules\Learning\Domain\ValueObject\PlanTurnLevel;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
@@ -229,6 +233,13 @@ final readonly class BuildPlanSessionHandler
          */
         private LineAudioIndex $lineAudio,
         private OrdersLineSpeech $speechOrders,
+        /**
+         * НА КАКОМ УРОВНЕ СТРОГОСТИ СТОИТ КАЖДЫЙ ХОД ЭТОГО ПЛАНА (наряд SCENE-RUN, Ч.1).
+         *
+         * Один запрос на посадку, планом целиком: уровень нужен и задаче, и цепочке, а цепочка
+         * длиннее списка задач — экран рисует ленту вперёд и должен знать, чем ход станет.
+         */
+        private PlanTermStageRepository $termStages,
         private PlanDayOrder $order = new PlanDayOrder(),
         /** Where a situational card's «Ситуация» comes from — pure, and stated in Domain. */
         private SituationalPrompt $situations = new SituationalPrompt(),
@@ -263,7 +274,7 @@ final readonly class BuildPlanSessionHandler
         $knobs = $this->planSettings->knobsFor($plan->level());
 
         [$tasks, $dialogues] = $strict
-            ? $this->strictTasks($plan, $progress, $dayIndex, $knobs)
+            ? $this->strictTasks($plan, $progress, $dayIndex, $knobs, $this->termStages->forPlan($plan->id()))
             // THE FINAL DAY IS A RUN-THROUGH, not a lesson (Д-27). It introduces nothing and owns no
             // collection, which is why asking to GENERATE it is a 404 — there is no material to
             // buy. The material already exists: it is every card the plan has taught. Before this
@@ -343,6 +354,7 @@ final readonly class BuildPlanSessionHandler
                 translation: $t->translation,
                 shelf: $t->shelf,
                 audioId: $byTerm[$t->termId] ?? null,
+                level: $t->level,
             ), $d->turns),
         ), $dialogues);
     }
@@ -612,9 +624,10 @@ final readonly class BuildPlanSessionHandler
      * whole plan on the wire on the morning of day 9.
      *
      * @param  list<array<string, mixed>>  $specs  already stamped with `section_code`
+     * @param  array<string, PlanTermStage>  $stages  what each pair has proved — {@see turnLevelFor()}
      * @return array<int, PlanDialogueView>  day index => that scene's conversation
      */
-    private function chainsFor(array $specs, PlanProgressView $progress): array
+    private function chainsFor(array $specs, PlanProgressView $progress, array $stages): array
     {
         $wanted = [];
         foreach ($specs as $spec) {
@@ -647,6 +660,10 @@ final readonly class BuildPlanSessionHandler
                     text: $content->text,
                     translation: $content->translation,
                     shelf: $content->shelf,
+                    // Уровень строгости — на КАЖДОМ своём ходу цепочки, а не только на тех, у
+                    // которых сегодня есть задача: экран рисует ленту вперёд, и ход, до которого
+                    // лестница ещё не дошла, должен выглядеть тем, чем он станет.
+                    level: $move->isRole() ? null : self::turnLevelFor($move->termId, $stages)->value,
                 );
             }
 
@@ -663,14 +680,43 @@ final readonly class BuildPlanSessionHandler
         return $out;
     }
 
+    /**
+     * СТРОГОСТЬ ХОДА ЭТОЙ РЕПЛИКИ — выбор, пока пара не закрыла выбор без ошибок дважды.
+     *
+     * Пара, о которой строки ещё нет, стоит на выборе: счётчик по умолчанию ноль, и это верное
+     * прочтение — «ничего ещё не доказано» и «доказано ноль раз» здесь одно и то же.
+     *
+     * @param  array<string, PlanTermStage>  $stages
+     */
+    private static function turnLevelFor(string $termId, array $stages): PlanTurnLevel
+    {
+        return PlanDialogueLevel::forStreak(self::streakOf($termId, $stages));
+    }
+
+    /**
+     * Безошибочных выборов подряд у этой пары — ноль у пары, о которой строки ещё нет.
+     *
+     * @param  array<string, PlanTermStage>  $stages
+     */
+    private static function streakOf(string $termId, array $stages): int
+    {
+        $stage = $stages[$termId] ?? null;
+
+        return $stage === null ? 0 : $stage->choiceStreak;
+    }
+
     // ── the strict session ───────────────────────────────────────────────────────────────────
 
-    /** @return array{0: list<PlanSessionTaskView>, 1: list<PlanDialogueView>} */
+    /**
+     * @param  array<string, PlanTermStage>  $stages
+     * @return array{0: list<PlanSessionTaskView>, 1: list<PlanDialogueView>}
+     */
     private function strictTasks(
         LearningPlan $plan,
         PlanProgressView $progress,
         int $dayIndex,
         PlanKnobs $knobs,
+        array $stages,
     ): array {
         $today = $progress->days[$dayIndex] ?? null;
         if ($today === null) {
@@ -882,7 +928,7 @@ final readonly class BuildPlanSessionHandler
         // Applied before the budget bound, so «what gets cut» is the tail of the лesson rather than
         // whatever the buckets happened to build last.
         $specs = $this->ordered($specs, $progress, [], $dayIndex);
-        $chains = $this->chainsFor($specs, $progress);
+        $chains = $this->chainsFor($specs, $progress, $stages);
         // A second pass, now that the chains exist: the first one could not know where inside a
         // conversation a card stands, because the conversations are chosen by which cards are here.
         // Two cheap sorts over a few dozen specs, and the alternative is a chain built for every day
@@ -899,6 +945,7 @@ final readonly class BuildPlanSessionHandler
                 $dayIndex,
                 $today->collectionId,
                 progress: $progress,
+                stages: $stages,
             ),
             array_values($chains),
         ];
@@ -1136,6 +1183,7 @@ final readonly class BuildPlanSessionHandler
      * @param  string|null  $langCollectionId  the collection a card's PAIR is read through. Not the
      *         distractor pool and not the same question: the pool is the plan, the pair is the folder
      *         the card is being dealt out of.
+     * @param  array<string, PlanTermStage>  $stages  what each pair has proved — {@see turnLevelFor()}
      * @return list<PlanSessionTaskView>
      */
     private function assembleTasks(
@@ -1148,6 +1196,7 @@ final readonly class BuildPlanSessionHandler
         ?string $langCollectionId,
         bool $isPractice = false,
         ?PlanProgressView $progress = null,
+        array $stages = [],
     ): array {
         $enabled = $this->enabledModes->forUser($plan->userId());
         $matrix = $this->admission->matrixFor($plan->userId());
@@ -1193,6 +1242,8 @@ final readonly class BuildPlanSessionHandler
         }
 
         $tasks = [];
+        /** @var array<string, int> $projected — счётчик выборов, спроецированный на эту посадку */
+        $projected = [];
         foreach ($specs as $index => $spec) {
             /** @var string $termId */
             $termId = $spec['term_id'];
@@ -1223,6 +1274,23 @@ final readonly class BuildPlanSessionHandler
             // `skill_ref`, что у правильного ответа, отвечает на тот же вопрос и тоже верен.
             $answerPool = $this->answerPoolFor($termId, $termContent, $spec['day'], $scenes);
 
+            // СТРОГОСТЬ ХОДА, если это ход. Считается ДО раздачи, потому что от неё зависит, что
+            // вообще строится: выбор с вариантами или сборка с блоками.
+            //
+            // И считается ПО ХОДУ СБОРКИ ПОСАДКИ, а не один раз по хранимому счётчику. Ступень
+            // проходят за одну посадку («переход к следующему тренажёру — сразу после успеха»), то
+            // есть все три касания ступени B лежат в ОДНОМ пейлоаде; спросив хранимый счётчик
+            // трижды, посадка раздала бы три выбора и закрыла ступень, ни разу не показав сборку —
+            // то есть B+ не наступил бы никогда. Поэтому счётчик проецируется вперёд, как если бы
+            // каждый выданный выбор был верным: ошибка возвращает карточку в хвост присеста, а
+            // следующая сборка посадки берёт уже настоящий счётчик.
+            $level = null;
+            if (PlanAnswerOptions::isSpokenShelf($termContent->shelf)) {
+                $streak = $projected[$termId] ?? self::streakOf($termId, $stages);
+                $level = PlanDialogueLevel::forStreak($streak);
+                $projected[$termId] = PlanDialogueLevel::after($streak, correct: true);
+            }
+
             $card = null;
             foreach ($candidates as $mode) {
                 $card = $this->assembler->assemble(
@@ -1236,6 +1304,7 @@ final readonly class BuildPlanSessionHandler
                     // The one knob the choice card already understood, and the level's own number.
                     optionCount: $knobs->mcOptions,
                     answerPoolIds: $answerPool,
+                    turnLevel: $level,
                 );
                 if ($card !== null) {
                     break;
@@ -1329,6 +1398,11 @@ final readonly class BuildPlanSessionHandler
                 sectionCode: is_string($spec['section_code'] ?? null)
                     ? $spec['section_code']
                     : PlanSessionSections::REHEARSAL,
+                // СТРОГОСТЬ ХОДА, и только у хода: выбор или сборка на двух говорящих полках,
+                // ничего — у реплики собеседника, слова, связки и разогрева. Считается по паре, а
+                // не по карточке, потому что доказывает выбор ПАРА (план, термин), а карточка
+                // сегодняшней раздачи — только её последнее доказательство.
+                turnLevel: $dealt->speaksAfterChoice() ? $level?->value : null,
             );
         }
 

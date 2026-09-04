@@ -15,12 +15,15 @@ use App\Modules\Learning\Domain\Service\PlanChoiceFloor;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\Service\ModePassport;
+use App\Modules\Learning\Domain\Service\PlanAssemblyBlocks;
+use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\Service\RoleLineModes;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\ModeAdmission;
 use App\Modules\Learning\Domain\ValueObject\OptionsPolicy;
+use App\Modules\Learning\Domain\ValueObject\PlanTurnLevel;
 use App\Modules\Learning\Domain\ValueObject\TermPlayability;
 use App\Modules\Shared\Domain\Service\DistractorFamily;
 use App\Modules\Shared\Domain\Service\DistractorLength;
@@ -105,6 +108,10 @@ final readonly class StudyCardAssembler
      *                              `situational_ask`: там «из чего вообще бывают варианты» — это
      *                              суждение, а не предпочтение, и добор из каталога поверх него
      *                              вернул бы фразу не из этого разговора. Null — обычная раздача.
+     * @param  PlanTurnLevel|null  $turnLevel  СТРОГОСТЬ ХОДА, если это ход человека в диалоге плана
+     *                              ({@see PlanTurnLevel}). `assemble` заменяет варианты блоками
+     *                              ({@see \App\Modules\Learning\Domain\Service\PlanAssemblyBlocks});
+     *                              null и `choose` — прежняя карточка выбора.
      */
     public function assemble(
         UserId $user,
@@ -121,6 +128,7 @@ final readonly class StudyCardAssembler
         ?string $supportLang = null,
         ?int $optionCount = null,
         ?array $answerPoolIds = null,
+        ?PlanTurnLevel $turnLevel = null,
     ): ?SessionCardView {
         // How many options a choice card is dealt, the right one included. A NUMBER rather than the
         // constant, because a plan deals its level's number ({@see PlanKnobs}: three for a learner
@@ -225,6 +233,7 @@ final readonly class StudyCardAssembler
             return $this->situationalCard(
                 $user, $view, $content, $mode, $poolTermIds, $neighbours,
                 $cardIndex, $supportLang, $optionCount, $choiceFloor, $step, $answerPoolIds,
+                $turnLevel,
             );
         }
         // Where the wrong options come from is POLICY, read from the matrix, not inferred from the
@@ -668,6 +677,7 @@ final readonly class StudyCardAssembler
         int $choiceFloor,
         ?int $step,
         ?array $answerPoolIds = null,
+        ?PlanTurnLevel $turnLevel = null,
     ): ?SessionCardView {
         if ($mode === ExerciseMode::SituationalHear) {
             foreach ([$choiceFloor, self::MIN_OPTIONS] as $floor) {
@@ -684,6 +694,16 @@ final readonly class StudyCardAssembler
             }
 
             return null;
+        }
+
+        // B+ · СБОРКА: вариантов нет, есть блоки (наряд SCENE-RUN, Ч.1.2).
+        //
+        // Раньше выбора по конструкции: у сборки нет пола вариантов, потому что у неё нет вариантов,
+        // и голодная полка отбить её не может. Это не послабление — это единственная форма, в
+        // которой третье касание ступени B закрывается у всех, а не только у тех, кому хватило
+        // соседей.
+        if ($turnLevel === PlanTurnLevel::Assemble) {
+            return $this->assemblyCard($view, $content, $mode, $neighbours, $step);
         }
 
         // ИЗ ЧЕГО БЫВАЮТ ВАРИАНТЫ ТВОЕГО ХОДА — наряд DAY-2-FIX, Ч.1.5.
@@ -732,6 +752,67 @@ final readonly class StudyCardAssembler
             // WHAT THE LEARNER SAYS AFTER THE TAP — говорение по ключу, the same key the speaking
             // card would have used. Nothing is graded on it and nothing is uploaded; it rides here
             // so the device underlines the piece the day cared about instead of the whole line.
+            speakingKey: $content->speakingKey,
+        );
+    }
+
+    /**
+     * B+ · СБОРКА — та же ситуационная карточка, у которой вместо вариантов лежат блоки.
+     *
+     * Тренажёр тот же (`situational_say` / `situational_ask`), ответ тот же — текст реплики, —
+     * поэтому и оценка та же: ключ пары, сравнение по тексту, без прощения опечаток
+     * ({@see ExerciseMode::forgivesTypos()}). Сервер не узнаёт о сборке ничего нового; он просто
+     * кладёт на карточку `chips` вместо `options`, и append-only журнал получает ровно один ответ,
+     * как и на выборе.
+     *
+     * Блоки перемешаны здесь, а не на клиенте: порядок, который придумывает телефон, был бы вторым
+     * источником правды о трудности карточки, и два устройства одного человека дали бы разную.
+     *
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
+     */
+    private function assemblyCard(
+        DueTermView $view,
+        TermContentView $content,
+        ExerciseMode $mode,
+        array $neighbours,
+        ?int $step,
+    ): SessionCardView {
+        $own = PlanAssemblyBlocks::own($content->text);
+
+        // Чужие блоки — только слова и связки ЭТОГО плана. Реплики (`line`) и карточки без вида
+        // отсеиваются здесь, потому что «блок» это по определению кусок фразы, а не фраза.
+        $pool = [];
+        foreach ($neighbours as $neighbour) {
+            if ($neighbour['term_id'] === $view->termId->value) {
+                continue;
+            }
+            if (! in_array($neighbour['kind'] ?? null, [PlanStageLadder::KIND_WORD, PlanStageLadder::KIND_CHUNK], true)) {
+                continue;
+            }
+            $pool[] = $neighbour['text'];
+        }
+
+        /** @var list<string> $chips */
+        $chips = $this->rng->shuffleArray([
+            ...$own,
+            ...PlanAssemblyBlocks::decoys($own, $pool, $this->length),
+        ]);
+
+        return new SessionCardView(
+            termId: $view->termId->value,
+            exerciseMode: $mode->value,
+            type: $content->type,
+            // Вопрос всё тот же — положение на языке поддержки, и оно едет на конверте задачи.
+            prompt: null,
+            answer: $content->text,
+            transcription: $content->transcription,
+            example: $content->example,
+            exampleTranslation: $content->exampleTranslation,
+            options: null,
+            chips: $chips,
+            acceptedVariants: $content->acceptedVariants,
+            synonyms: [],
+            ladderStep: $step,
             speakingKey: $content->speakingKey,
         );
     }

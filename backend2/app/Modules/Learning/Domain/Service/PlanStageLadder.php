@@ -185,13 +185,28 @@ final class PlanStageLadder
             PlanStage::C->value => [],
         ],
         // «ТЫ ОТВЕТИШЬ» and «ТЫ СПРОСИШЬ»: stage A unchanged — meet it, recognise it, assemble it,
-        // read it aloud — and stage B is the situation and nothing else.
+        // read it aloud — and stage B is the situation, three times.
         //
         // Замещение, не дополнение: B used to be cloze → listening → speaking, three cards per
         // line, and a day of eight replies therefore owed twenty-four. The canon's B is one act
         // («выбрал ответ в ситуации»), the tap is followed by saying the chosen line out loud
         // ({@see ExerciseMode::speaksAfterChoice()}), and C for a line is the прогон сцены, which
         // is a session and not a checklist step.
+        //
+        // ## ТРИ КАСАНИЯ, А НЕ ОДНО — B и B+ на одном тренажёре (наряд SCENE-RUN, Ч.1)
+        //
+        // Канон `docs/plan-dialogue.md` §5 ставит между выбором и прогоном ступень B+ — «блоки
+        // связок сцены, собрал ответ → сказал» — и правило перехода «B → B+ когда выбор закрыт без
+        // ошибок дважды». Оба уровня живут ВНУТРИ диалога и на одном тренажёре: отдельного режима
+        // у сборки нет ({@see \App\Modules\Learning\Domain\ValueObject\PlanTurnLevel}), меняется
+        // только то, сколько убрали с экрана.
+        //
+        // Отсюда три шага и ни одним меньше. С одним шагом «двух безошибочных выборов подряд» не
+        // бывает физически: первый верный выбор закрывает ступень, реплика становится `finished`, и
+        // второй раз её не раздают никогда — то есть сборка была бы недостижима, а не редка. Первые
+        // два касания — выбор, третье — сборка, если счётчик дозрел, и снова выбор, если нет
+        // ({@see \App\Modules\Learning\Domain\Service\PlanDialogueLevel}); тем и держится, что
+        // ступень закрывается у всех, а не только у тех, кто не ошибся.
         self::KIND_LINE_SAY => [
             PlanStage::A->value => [
                 ExerciseMode::Intro,
@@ -200,6 +215,8 @@ final class PlanStageLadder
                 ExerciseMode::Speaking,
             ],
             PlanStage::B->value => [
+                ExerciseMode::SituationalSay,
+                ExerciseMode::SituationalSay,
                 ExerciseMode::SituationalSay,
             ],
             PlanStage::C->value => [],
@@ -212,6 +229,8 @@ final class PlanStageLadder
                 ExerciseMode::Speaking,
             ],
             PlanStage::B->value => [
+                ExerciseMode::SituationalAsk,
+                ExerciseMode::SituationalAsk,
                 ExerciseMode::SituationalAsk,
             ],
             PlanStage::C->value => [],

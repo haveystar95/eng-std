@@ -104,8 +104,18 @@ it('says the chosen line aloud on the two speak shelves, and grades only the tap
             ->and($task['tier'])->toBe('speak')
             // The answer is the line itself, graded as text like any other choice card.
             ->and($task['card']['answer'])->toBeString()
-            ->and($task['card']['options'])->toContain($task['card']['answer'])
             ->and($task['card']['option_ids'])->toBeNull();
+
+        // …and WHAT is on the card depends on the strictness of the turn (наряд SCENE-RUN, Ч.1):
+        // the choice offers lines, the assembly offers the blocks they are built from. Both grade
+        // the same text, which is why they are one trainer and one checklist step.
+        if ($task['turn_level'] === 'assemble') {
+            expect($task['card']['options'])->toBeNull()
+                ->and($task['card']['chips'])->toContain(...explode(' ', (string) $task['card']['answer']));
+
+            continue;
+        }
+        expect($task['card']['options'])->toContain($task['card']['answer']);
     }
 });
 

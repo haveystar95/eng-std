@@ -186,5 +186,18 @@ final readonly class PlanSessionTaskView
          * heard of must fall through to a neutral caption rather than to a guess.
          */
         public string $sectionCode = PlanSessionSections::DAY,
+        /**
+         * СТРОГОСТЬ ЭТОГО ХОДА — `choose` | `assemble` | `say`, или null, если задача не является
+         * ходом человека в диалоге ({@see \App\Modules\Learning\Domain\ValueObject\PlanTurnLevel}).
+         *
+         * Отдельно от `exercise_mode`, и это не дубль: режим отвечает «какой тренажёр», уровень —
+         * «сколько с экрана убрали». Тренажёр один и тот же ситуационный на всех трёх уровнях, а
+         * рисуется он тремя разными вещами — вариантами, блоками, микрофоном. Клиент читает уровень
+         * и ничего не выводит сам: «сколько раз подряд человек не ошибся» — факт сервера.
+         *
+         * Null у реплики собеседника, у слова, у связки, у разогрева и у прогона перед событием:
+         * ход, которого не делают, уровня строгости не имеет.
+         */
+        public ?string $turnLevel = null,
     ) {}
 }

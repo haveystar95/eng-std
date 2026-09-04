@@ -441,13 +441,16 @@ function stageAFacts(string $date): array
 
 // ── the situational card: stage B of a scene (наряд SIT-1) ───────────────────────────────────
 
-it('gives «Ты ответишь» and «Ты спросишь» their own stage B, one situational card each', function () {
-    // Замещение, не дополнение: B used to be cloze → listening → speaking for both shelves, which is
-    // three cards per line. The canon's B is one act — «выбрал ответ в ситуации» (§4).
+it('gives «Ты ответишь» and «Ты спросишь» their own stage B — the same card, three times', function () {
+    // Замещение, не дополнение: B used to be cloze → listening → speaking for both shelves, three
+    // DIFFERENT cards per line. The canon's B is one act — «выбрал ответ в ситуации» (§4) — asked
+    // three times, because B and B+ live on one trainer: two choices, then the assembly
+    // (наряд SCENE-RUN, Ч.1). One step would make «два безошибочных выбора подряд» unreachable —
+    // the first correct choice would close the stage for ever.
     expect(PlanStageLadder::modesOf(PlanStage::B, PlanStageLadder::KIND_LINE_SAY))
-        ->toBe([ExerciseMode::SituationalSay])
+        ->toBe([ExerciseMode::SituationalSay, ExerciseMode::SituationalSay, ExerciseMode::SituationalSay])
         ->and(PlanStageLadder::modesOf(PlanStage::B, PlanStageLadder::KIND_LINE_ASK))
-        ->toBe([ExerciseMode::SituationalAsk])
+        ->toBe([ExerciseMode::SituationalAsk, ExerciseMode::SituationalAsk, ExerciseMode::SituationalAsk])
         // Stage A is untouched, and it is the same on both shelves.
         ->and(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_LINE_SAY))
         ->toBe(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_LINE_ASK))

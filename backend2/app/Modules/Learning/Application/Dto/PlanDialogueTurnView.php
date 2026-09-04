@@ -29,5 +29,15 @@ final readonly class PlanDialogueTurnView
          * \App\Modules\Learning\Presentation\Http\LineAudioUrl}).
          */
         public ?string $audioId = null,
+        /**
+         * СТРОГОСТЬ ЭТОГО ХОДА — `choose` | `assemble` | `say`, и только у хода `you`
+         * ({@see \App\Modules\Learning\Domain\ValueObject\PlanTurnLevel}).
+         *
+         * Едет на ЦЕПОЧКЕ, а не только на задаче, потому что цепочка приходит целой, а задач
+         * меньше: экран рисует ленту разговора вперёд, и ход, до которого лестница сегодня не
+         * дошла, всё равно должен выглядеть тем, чем он станет. Null у реплики собеседника —
+         * её не говорят.
+         */
+        public ?string $level = null,
     ) {}
 }
