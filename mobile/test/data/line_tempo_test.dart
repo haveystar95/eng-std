@@ -127,6 +127,36 @@ void main() {
     expect(playerCalls, isEmpty);
     expect(ttsCalls.map((c) => c.method), contains('speak'));
   });
+
+
+  test('a line that HAD an address and fell back to the phone is counted, not swallowed', () async {
+    // ЖИВОЙ ДЕФЕКТ TTS-1: сервер отдавал `http://`, iOS резал запрос по ATS, докачка падала — и все
+    // реплики звучали системным голосом, молча, на всех экранах сразу. Тихий фолбэк ПРИ ЖИВОМ
+    // адресе — дефект, и в дев-сборке он обязан быть виден. Здесь пинается счётчик под бейджем.
+    final cache = LineAudioCache(http: _refusing(), directory: dir);
+    await cache.preload([(text: 'Thanks for joining today.', url: 'https://x/api/v1/audio/lines/A.mp3')]);
+
+    expect(cache.trouble.downloads, greaterThan(0));
+    expect(cache.trouble.lastReason, isNotNull);
+
+    await Pronouncer(null, cache).speakText('Thanks for joining today.', targetLang: 'en');
+
+    expect(cache.trouble.silentFallbacks, 1);
+    expect(ttsCalls.map((c) => c.method), contains('speak'));
+  });
+
+  test('a line the server never voiced is NOT counted as trouble', () async {
+    // Слово, связка, реплика при выключенной трубе — им нечем было прозвучать файлом, и считать
+    // это поломкой значит утопить настоящую поломку в шуме.
+    final cache = LineAudioCache(http: _refusing(), directory: dir);
+    cache.note(const ['Could you repeat that, please?']);
+
+    await Pronouncer(null, cache).speakText('Could you repeat that, please?', targetLang: 'en');
+
+    expect(cache.trouble.silentFallbacks, 0);
+    expect(cache.trouble.downloads, 0);
+  });
+
 }
 
 Dio _refusing() {

@@ -3932,4 +3932,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devVoicesFavourite => 'This session\'s favourite';
+
+  @override
+  String devVoiceTrouble(int silent, int failed) {
+    return 'Voice: $silent lines fell back to the system voice, $failed downloads failed';
+  }
 }

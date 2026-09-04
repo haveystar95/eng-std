@@ -76,6 +76,26 @@ return Application::configure(basePath: dirname(__DIR__))
         // RouteNotFoundException (500) instead of 401. Null the resolver: with no redirect target the
         // handler answers 401 for every unauthenticated request (JSON body on our api/admin paths).
         $middleware->redirectGuestsTo(fn (): ?string => null);
+
+        /*
+         * ДОВЕРЯТЬ ЗАГОЛОВКАМ ПРОКСИ — иначе приложение врёт о собственной схеме.
+         *
+         * Телефон ходит через ngrok по HTTPS, ngrok приходит в контейнер по HTTP и ставит
+         * `X-Forwarded-Proto: https`. Без доверия к прокси Laravel читает схему СОКЕТА, и всё, что
+         * он генерирует абсолютным адресом, выходит с `http://`.
+         *
+         * Поймано живьём (наряд TTS-1): `audio_url` реплики уезжал как
+         * `http://greedily-thermos-finer.ngrok-free.dev/...`, iOS резал cleartext-запрос по ATS,
+         * докачка молча падала — и ВСЕ реплики на телефоне звучали системным голосом, на всех
+         * экранах сразу. Дев-экран при этом работал, потому что играет ассеты из бандла и в сеть не
+         * ходит вовсе, — и это ровно та разница, из-за которой дефект читался как «озвучка не
+         * доехала до диалога».
+         *
+         * `at: '*'` — потому что перед приложением стоит ровно один прокси и его адрес не наш:
+         * ngrok меняет IP от запуска к запуску. Приложение слушает только внутри compose-сети,
+         * снаружи в него никто не ходит напрямую.
+         */
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

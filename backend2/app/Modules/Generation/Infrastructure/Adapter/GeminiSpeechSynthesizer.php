@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Infrastructure\Adapter;
 
 use App\Modules\Generation\Application\Dto\SpokenLine;
+use App\Modules\Generation\Application\Port\SpeechEncoder;
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Application\Port\TransientSpeechError;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
@@ -17,13 +18,12 @@ use RuntimeException;
 /**
  * Озвучка голосом Gemini TTS — `models/{model}:generateContent` с `responseModalities: [AUDIO]`.
  *
- * ## Формат: WAV, и это цена этого вендора
+ * ## Формат: mp3; WAV — только если кодировщика нет
  *
- * Gemini отдаёт СЫРОЙ PCM (16 бит, моно, 24 кГц) в base64. Сжать его в mp3 внутри контейнера нечем
- * — кодировщика там нет и тащить его туда ради одного адаптера мы не стали, — поэтому файл
- * записывается как WAV: тот же PCM с 44-байтовым заголовком. Это работает и играется на iOS без
- * единой зависимости, но весит примерно в шесть раз больше mp3 того же места (замер Ч.0.4). Голос
- * этого вендора стоит выбирать УШАМИ, а не потому что он дешевле; за него платят докачкой.
+ * Gemini отдаёт СЫРОЙ PCM (16 бит, моно, 24 кГц) в base64, и он жмётся в mp3 прямо здесь
+ * ({@see SpeechEncoder} → `lame` из образа, 64 кбит/с моно): план весит ~0.6 МБ вместо 3.5 МБ
+ * WAV-ом, а на слух разницы нет. Кодировщика в сборке не оказалось — кладём WAV и работаем дальше:
+ * озвучка, падающая из-за отсутствия бинарника, была бы хуже озвучки, которая весит втрое больше.
  *
  * ## Темп — фразой, числовой ручки нет
  *
@@ -38,6 +38,7 @@ final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
     public function __construct(
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
+        private readonly SpeechEncoder $encoder,
         private readonly int $timeout = 60,
         private readonly string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta',
     ) {}
@@ -93,9 +94,13 @@ final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
         $rate = is_string($mime) ? self::rateOf($mime) : self::SAMPLE_RATE;
         $durationMs = (int) round(strlen($pcm) / ($rate * 2) * 1000);
 
+        // Длительность считается по PCM — до всякого сжатия. Она про ЗВУК, а не про файл, и
+        // именно по ней вендор выставляет счёт.
+        $mp3 = $this->encoder->pcmToMp3($pcm, $rate);
+
         return new SpokenLine(
-            bytes: self::wav($pcm, $rate),
-            format: 'wav',
+            bytes: $mp3 ?? self::wav($pcm, $rate),
+            format: $mp3 === null ? 'wav' : 'mp3',
             durationMs: $durationMs,
             costUsd: SpeechCost::estimate($voice->model, mb_strlen($line), $durationMs),
         );

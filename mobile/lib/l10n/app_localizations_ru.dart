@@ -4101,4 +4101,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devVoicesFavourite => 'Фаворит сессии';
+
+  @override
+  String devVoiceTrouble(int silent, int failed) {
+    return 'Озвучка: $silent реплик системным голосом, $failed не скачалось';
+  }
 }

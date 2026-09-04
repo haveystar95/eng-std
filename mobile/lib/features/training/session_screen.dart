@@ -1286,6 +1286,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                             _pronouncer.speakText(text, targetLang: _sessionLang),
                           ),
                           rescue: _rescuePhrases(),
+                          voiceTrouble: PlanVoiceTrouble(cache: _lineAudio),
                           answeredAloud: _spokenTerms,
                           card: card,
                         )

@@ -35,6 +35,16 @@ import 'package:path_provider/path_provider.dart';
 /// One line the server can play from a file: what it says, and where the file is.
 typedef LineAudioRef = ({String text, String url});
 
+/// ЧТО ПОШЛО НЕ ТАК с озвучкой, и это не отладочная роскошь.
+///
+/// Труба падает ТИХО по построению: файла нет — читает системный синтез, и урок продолжается. Ровно
+/// поэтому сломанная труба неотличима от выключенной, и ровно это уже случилось живьём (наряд
+/// TTS-1: сервер отдавал `http://`, iOS резал запрос по ATS, все реплики ушли на системный голос, и
+/// на экране это выглядело нормально). Счётчик существует, чтобы разница была ВИДНА в дев-сборке.
+///
+/// `silentFallbacks` — самое важное число: у реплики БЫЛ адрес, а прозвучала она системным голосом.
+typedef VoiceTrouble = ({int downloads, int silentFallbacks, String? lastReason});
+
 /// Пара «реплика → файл» на телефоне.
 ///
 /// Один экземпляр на приложение (провайдер в `providers.dart`): манифест на диске один, и два
@@ -74,6 +84,15 @@ class LineAudioCache {
 
   /// Скачивания, идущие прямо сейчас, — чтобы вход в день дважды не качал один файл дважды.
   final Set<String> _inFlight = {};
+
+  int _downloadFailures = 0;
+  int _silentFallbacks = 0;
+  String? _lastReason;
+
+  /// См. [VoiceTrouble]. Ноль по всем трём — труба либо работает, либо выключена; отличить их
+  /// можно по тому, знает ли кэш хоть одну реплику ([knows]).
+  VoiceTrouble get trouble =>
+      (downloads: _downloadFailures, silentFallbacks: _silentFallbacks, lastReason: _lastReason);
 
   /// Ключ кэша. Регистр и хвостовые пробелы срезаются, потому что одна и та же реплика приезжает
   /// пузырём, карточкой и шпаргалкой, и совпадать они обязаны как строки, а не как байты.
@@ -215,7 +234,12 @@ class LineAudioCache {
         ),
       );
       final bytes = response.data;
-      if (response.statusCode != 200 || bytes == null || bytes.isEmpty) return;
+      if (response.statusCode != 200 || bytes == null || bytes.isEmpty) {
+        _downloadFailures++;
+        _lastReason = 'http ${response.statusCode}';
+
+        return;
+      }
 
       // Пишем во временный файл и переименовываем: оборванная докачка не должна оставить в кэше
       // половину файла под именем целого.
@@ -226,6 +250,10 @@ class LineAudioCache {
       _fileOf[key] = name;
       await _save();
     } catch (e) {
+      _downloadFailures++;
+      // Первая строка причины: у Dio дальше идёт абзац про статус-коды, который в бейдж не влезет
+      // и ничего не добавляет.
+      _lastReason = e.toString().split('\n').first;
       debugPrint('[line-audio] $url: $e');
     } finally {
       _inFlight.remove(url);
@@ -252,7 +280,13 @@ class LineAudioCache {
   /// Сыграть скачанный файл этой реплики. False — файла нет, зовите системный голос.
   Future<bool> play(String text) async {
     final path = fileFor(text);
-    if (path == null) return false;
+    if (path == null) {
+      // У реплики ЕСТЬ адрес, а играть нечего — значит она сейчас прозвучит системным голосом,
+      // и это дефект, а не режим работы. Строка, которой сервер не озвучивает, сюда не попадает.
+      if (_urlOf.containsKey(keyOf(text))) _silentFallbacks++;
+
+      return false;
+    }
     try {
       await _channel.invokeMethod<void>('play', {'path': path});
 
@@ -262,6 +296,8 @@ class LineAudioCache {
       // на экране быть не должно ни в одном исходе.
       debugPrint('[line-audio] play failed: ${e.code}');
       _fileOf.remove(keyOf(text));
+      _silentFallbacks++;
+      _lastReason = 'play: ${e.code}';
 
       return false;
     } on MissingPluginException {

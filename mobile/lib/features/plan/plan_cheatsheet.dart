@@ -160,7 +160,12 @@ class _PlanCheatSheetState extends ConsumerState<PlanCheatSheet> {
               // системным голосом на экране, где рядом играет серверный.
               unawaited(_preload(detail.terms));
 
-              return _Sheet(detail: detail, speaking: _speaking, onSay: _say);
+              return _Sheet(
+                detail: detail,
+                speaking: _speaking,
+                onSay: _say,
+                voiceTrouble: PlanVoiceTrouble(cache: _lineAudio),
+              );
             },
           ),
         ),
@@ -170,11 +175,20 @@ class _PlanCheatSheetState extends ConsumerState<PlanCheatSheet> {
 }
 
 class _Sheet extends StatelessWidget {
-  const _Sheet({required this.detail, required this.speaking, required this.onSay});
+  const _Sheet({
+    required this.detail,
+    required this.speaking,
+    required this.onSay,
+    required this.voiceTrouble,
+  });
 
   final PlanDayDetail detail;
   final String? speaking;
   final void Function(PlanTermRow) onSay;
+
+  /// Дев-бейдж сломанной озвучки — тот же виджет, что в диалоге. Дефект общий для экранов, потому
+  /// что путь «пейлоад → докачка → произноситель» один.
+  final Widget voiceTrouble;
 
   /// The five phrases of the plan, and the scene's own shelves in the order the sitting deals them.
   ///
@@ -239,7 +253,11 @@ class _Sheet extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 14, 8, 0),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+          child: voiceTrouble,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 8, 0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

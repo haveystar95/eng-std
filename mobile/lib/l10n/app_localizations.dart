@@ -5954,6 +5954,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Фаворит сессии'**
   String get devVoicesFavourite;
+
+  /// Дев-бейдж сломанной трубы озвучки (наряд TTS-1). Показывается только при DEV_MENU: тихий фолбэк на системный голос при живом audio_url — дефект, и в дев-сборке он должен быть виден.
+  ///
+  /// In ru, this message translates to:
+  /// **'Озвучка: {silent} реплик системным голосом, {failed} не скачалось'**
+  String devVoiceTrouble(int silent, int failed);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

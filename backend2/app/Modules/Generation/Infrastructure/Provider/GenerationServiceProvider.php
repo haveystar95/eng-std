@@ -26,7 +26,9 @@ use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Application\Command\SpeakCollectionLinesHandler;
 use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
+use App\Modules\Generation\Application\Port\SpeechEncoder;
 use App\Modules\Generation\Infrastructure\Adapter\GeminiSpeechSynthesizer;
+use App\Modules\Generation\Infrastructure\Adapter\LameSpeechEncoder;
 use App\Modules\Generation\Infrastructure\Adapter\LoggingLineSpeechReporter;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiSpeechSynthesizer;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedLineSpeechDispatcher;
@@ -252,6 +254,10 @@ final class GenerationServiceProvider extends ServiceProvider
             (bool) config('generation.speech.enabled', false),
         ));
         $this->app->bind(LineSpeechReporter::class, LoggingLineSpeechReporter::class);
+        // Кодировщик озвучки: PCM вендора → mp3. Битрейт — конфиг, потому что это решение «по уху».
+        $this->app->bind(SpeechEncoder::class, fn (): SpeechEncoder => new LameSpeechEncoder(
+            bitrateKbps: (int) config('generation.speech.mp3_bitrate', 64),
+        ));
         $this->app->bind(DispatchesExampleRepair::class, QueuedExampleRepairDispatcher::class);
         // Fulfils Vocabulary's enrichment-dispatch port with the Generation queue job.
         $this->app->bind(DispatchesTermEnrichment::class, QueuedTermEnrichmentDispatcher::class);
@@ -571,6 +577,7 @@ final class GenerationServiceProvider extends ServiceProvider
                 ? new GeminiSpeechSynthesizer(
                     context: $this->app->make(OutboundCallContext::class),
                     apiKey: (string) config('services.gemini.api_key'),
+                    encoder: $this->app->make(SpeechEncoder::class),
                     timeout: $timeout,
                 )
                 : new OpenAiSpeechSynthesizer(

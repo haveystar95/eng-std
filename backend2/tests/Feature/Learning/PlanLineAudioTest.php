@@ -118,3 +118,37 @@ it('puts the same address on the cheat sheet, so one line has one voice', functi
             ->and($term['audio_url'])->toContain('/api/v1/audio/lines/');
     }
 });
+
+it('builds the address with the scheme the CLIENT arrived on, not the one the socket saw', function () {
+    [, $token, $planId] = voiceDayOne($this);
+
+    // ЖИВОЙ ДЕФЕКТ. Телефон ходит через ngrok по HTTPS, ngrok приходит в контейнер по HTTP и ставит
+    // `X-Forwarded-Proto`. Без доверия к прокси Laravel читал схему СОКЕТА, `audio_url` уезжал как
+    // `http://…`, iOS резал cleartext-запрос по ATS — и ВСЕ реплики на телефоне звучали системным
+    // голосом, на всех экранах сразу, молча.
+    $session = $this->withHeader('Authorization', "Bearer {$token}")
+        ->withHeader('X-Forwarded-Proto', 'https')
+        ->withHeader('X-Forwarded-Host', 'greedily-thermos-finer.ngrok-free.dev')
+        ->postJson("/api/v1/plans/{$planId}/session")
+        ->assertOk()
+        ->json('data');
+
+    expect($session['line_audio'])->not->toBeEmpty();
+    foreach ($session['line_audio'] as $row) {
+        expect($row['url'])->toStartWith('https://greedily-thermos-finer.ngrok-free.dev/');
+    }
+
+    // И ТО ЖЕ САМОЕ НА РЕГИСТРЕ ДНЯ — шпаргалка ходит другим запросом, а адрес строится одним кодом.
+    $terms = $this->withHeader('Authorization', "Bearer {$token}")
+        ->withHeader('X-Forwarded-Proto', 'https')
+        ->withHeader('X-Forwarded-Host', 'greedily-thermos-finer.ngrok-free.dev')
+        ->getJson("/api/v1/plans/{$planId}/days/1")
+        ->assertOk()
+        ->json('data.terms');
+
+    $voiced = array_values(array_filter($terms, static fn (array $t): bool => $t['audio_url'] !== null));
+    expect($voiced)->not->toBeEmpty();
+    foreach ($voiced as $term) {
+        expect($term['audio_url'])->toStartWith('https://greedily-thermos-finer.ngrok-free.dev/');
+    }
+});

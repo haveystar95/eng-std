@@ -160,6 +160,10 @@ return [
 
         'timeout' => (int) env('SPEECH_TIMEOUT', 60),
 
+        // Битрейт mp3, в который жмётся сырой PCM вендора. 64 кбит/с моно на 24 кГц: на слух
+        // неотличимо от исходного PCM, а план весит ~0.6 МБ вместо 3.5 МБ WAV-ом.
+        'mp3_bitrate' => (int) env('SPEECH_MP3_BITRATE', 64),
+
         /*
          * КАКИЕ ПОЛКИ ОЗВУЧИВАЮТСЯ. Наряд открыл трубу для того, что СЛУШАЮТ: реплик собеседника
          * («Тебе скажут») и спасательного набора. Слова и связки сознательно остаются на системном
@@ -186,10 +190,13 @@ return [
          * Языка нет в таблице — голоса нет, и это не отказ: реплики звучат системным синтезом.
          */
         'voices' => [
+            // ВЫБОР ВЛАДЕЛЬЦА (04.09, прослушка на телефоне): Gemini `Aoede`. Голоса OpenAI
+            // отклонены из-за посторонних шумов в записи — на цифрах они выигрывали, ухом
+            // проиграли, и это ровно то решение, ради которого делался дев-экран.
             'en' => [
-                'provider' => env('SPEECH_VOICE_EN_PROVIDER', 'openai'),
-                'model' => env('SPEECH_VOICE_EN_MODEL', 'gpt-4o-mini-tts'),
-                'voice' => env('SPEECH_VOICE_EN_NAME', 'coral'),
+                'provider' => env('SPEECH_VOICE_EN_PROVIDER', 'gemini'),
+                'model' => env('SPEECH_VOICE_EN_MODEL', 'gemini-2.5-flash-preview-tts'),
+                'voice' => env('SPEECH_VOICE_EN_NAME', 'Aoede'),
                 'speed' => (float) env('SPEECH_VOICE_EN_SPEED', 0.9),
             ],
         ],

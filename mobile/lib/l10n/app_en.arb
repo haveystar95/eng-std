@@ -1309,6 +1309,7 @@
   "devVoicesPrice": "≈ {price} per plan",
   "devVoicesPlayAll": "All five",
   "devVoicesStop": "Stop",
-  "devVoicesFavourite": "This session's favourite"
+  "devVoicesFavourite": "This session's favourite",
+  "devVoiceTrouble": "Voice: {silent} lines fell back to the system voice, {failed} downloads failed"
 
 }

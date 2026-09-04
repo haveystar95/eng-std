@@ -9,6 +9,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:eng_std/data/config.dart';
+import 'package:eng_std/data/line_audio.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
@@ -375,4 +377,58 @@ String planDateLabel(BuildContext context, String isoDate, {bool short = false})
   // («2 сентября»), and copy does not live in a Dart file — the cyrillic guard says so, and it is
   // right. The same call the home screen's «Следующий повтор» line already makes.
   return DateFormat(short ? 'd MMM' : 'd MMMM', locale).format(parsed);
+}
+
+/// «ОЗВУЧКА НЕ ДОЕХАЛА» — дев-бейдж, и он существует ради одного класса дефектов.
+///
+/// Труба падает ТИХО по построению: файла нет — читает системный синтез, урок идёт дальше. Значит
+/// сломанная труба выглядит ровно как выключенная, и живой прогон TTS-1 это доказал: сервер отдавал
+/// `http://`, iOS резал запрос по ATS, ВСЕ реплики на телефоне звучали системным голосом — на всех
+/// экранах сразу, — и ни один экран об этом не сказал.
+///
+/// Поэтому в дев-сборке молчание становится видимым. В релизе виджет не рисуется вовсе: человеку,
+/// который учит язык, нечего делать с «3 файла не скачалось», и правильное поведение для него —
+/// именно то тихое, что уже есть.
+///
+/// Один виджет на все экраны, потому что дефект общий: путь «пейлоад → докачка → произноситель»
+/// один, и различаться по экранам ему нечем.
+class PlanVoiceTrouble extends StatelessWidget {
+  const PlanVoiceTrouble({super.key, required this.cache});
+
+  final LineAudioCache cache;
+
+  @override
+  Widget build(BuildContext context) {
+    final trouble = cache.trouble;
+    if (!AppConfig.devMenuEnabled || (trouble.downloads == 0 && trouble.silentFallbacks == 0)) {
+      return const SizedBox.shrink();
+    }
+
+    final l = AppLocalizations.of(context);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.destructiveText.withValues(alpha: .45)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.devVoiceTrouble(trouble.silentFallbacks, trouble.downloads),
+            style: AppText.blockLabel.copyWith(color: AppColors.destructiveText, letterSpacing: .3),
+          ),
+          if (trouble.lastReason != null)
+            Text(
+              trouble.lastReason!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.translation.copyWith(fontSize: 11.5, color: AppColors.tertiary),
+            ),
+        ],
+      ),
+    );
+  }
 }

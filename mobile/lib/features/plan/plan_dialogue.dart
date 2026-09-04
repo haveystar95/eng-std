@@ -48,6 +48,7 @@ class PlanDialogueShell extends StatefulWidget {
     this.voiceReady = true,
     this.rescue = const [],
     this.answeredAloud = const {},
+    this.voiceTrouble,
   });
 
   final PlanDialogue dialogue;
@@ -80,6 +81,10 @@ class PlanDialogueShell extends StatefulWidget {
 
   /// Term ids the learner has already answered in this conversation — the «сказано вслух» mark.
   final Set<String> answeredAloud;
+
+  /// Дев-бейдж сломанной озвучки, или null. Ставит его СЕССИЯ — она владеет кэшем; оболочка про
+  /// докачку ничего не знает и знать не должна.
+  final Widget? voiceTrouble;
 
   /// THE ROLE LINE THE CARD AT [turnIndex] ANSWERS — the live bubble above it, or null.
   ///
@@ -155,6 +160,7 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (widget.voiceTrouble != null) widget.voiceTrouble!,
         _DialogueBar(
           scene: widget.dialogue.dayIndex,
           exchange: _exchangeNumber,

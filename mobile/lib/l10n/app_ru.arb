@@ -2915,6 +2915,8 @@
   "devVoicesStop": "Стоп",
   "@devVoicesStop": { "description": "Остановить проигрывание." },
   "devVoicesFavourite": "Фаворит сессии",
-  "@devVoicesFavourite": { "description": "Метка у голоса, который предложен как фаворит. Решение — за владельцем." }
+  "@devVoicesFavourite": { "description": "Метка у голоса, который предложен как фаворит. Решение — за владельцем." },
+  "devVoiceTrouble": "Озвучка: {silent} реплик системным голосом, {failed} не скачалось",
+  "@devVoiceTrouble": { "description": "Дев-бейдж сломанной трубы озвучки (наряд TTS-1). Показывается только при DEV_MENU: тихий фолбэк на системный голос при живом audio_url — дефект, и в дев-сборке он должен быть виден.", "placeholders": { "silent": { "type": "int" }, "failed": { "type": "int" } } }
 
 }

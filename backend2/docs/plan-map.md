@@ -636,7 +636,9 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 | какие полки | `generation.speech.shelves` (`SPEECH_SHELVES`, дефолт `hear,rescue`) → контекстная привязка `$shelves` у `SpeakCollectionLinesHandler` |
 | когда покупается | `GeneratePlanDayHandler::__invoke()` — третий fire-and-forget рядом с починкой примеров и картинками, после того как день уже пригоден |
 | станок | `Generation/Application/Command/SpeakCollectionLinesHandler` — та же форма, что у `AttachCollectionImagesHandler`: читатели держат идемпотентность, невозвратный отказ пропускает реплику, возвратный уходит наружу |
-| вендор | `SpeechSynthesizerPort` → `OpenAiSpeechSynthesizer` (mp3 прямо с вызова) / `GeminiSpeechSynthesizer` (сырой PCM → WAV, втрое тяжелее) / `FakeSpeechSynthesizer`. `SPEECH_DRIVER` |
+| вендор | `SpeechSynthesizerPort` → `OpenAiSpeechSynthesizer` (mp3 прямо с вызова) / `GeminiSpeechSynthesizer` (сырой PCM → mp3 через `SpeechEncoder`) / `FakeSpeechSynthesizer`. `SPEECH_DRIVER` |
+| кодировщик | `SpeechEncoder` → `LameSpeechEncoder` (`lame` из образа, 64 кбит/с моно, `SPEECH_MP3_BITRATE`). Нет бинарника → WAV и работаем дальше |
+| **схема адреса** | `trustProxies(at: '*')` в `bootstrap/app.php`. Без него `url()` читает схему СОКЕТА, `audio_url` уезжает `http://`, а iOS режет cleartext по ATS — и ВСЯ озвучка молча уходит на системный голос (живой дефект 04.09) |
 | повторы | `SpeakLinesJob`: `tries = 4`, backoff `15/60/180` — у бесплатного Gemini лимит 10 запросов/мин на модель, а сцена это 5 реплик плюс 5 спасателей |
 | хранение | таблица `term_audios` (Vocabulary), уникальный ключ (`term_id`, `voice`, `variant`) — он же идемпотентность; файл на приватном диске (`FilesystemTermAudioStore`) |
 | кэш общий | ключ — термин, а термины дедуплицированы глобально: второй план с той же фразой берёт готовый файл. О пользователях в таблице нет ни слова |
