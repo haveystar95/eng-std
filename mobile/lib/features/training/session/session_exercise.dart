@@ -1255,11 +1255,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   Widget _situationalHearPrompt(AppLocalizations l) {
     final scene = widget.situation?.context?.trim() ?? '';
 
-    // ВНУТРИ РАЗГОВОРА ПРОМПТА У ЭТОЙ КАРТОЧКИ НЕТ: пузырь над ней и есть промпт (кадр DL·02) —
+    // В ЛЕНТЕ РАЗГОВОРА ПРОМПТА У ЭТОЙ КАРТОЧКИ НЕТ: пузырь над ней и есть промпт (кадр DL·02) —
     // реплика звучит сама при появлении и повторяется той же кнопкой «Ещё раз», что и на всех
     // остальных пузырях роли, а «Показать текст» раскрывает её внутри пузыря. Своя кнопка
     // воспроизведения кеглем 112 рядом с пузырём была бы вторым плеером на одну реплику.
-    if (widget.inDialogue) return const SizedBox.shrink();
+    //
+    // Отличается это от ХВОСТА сцены (карточки вне цепочки) ровно положением: в ленте сервер шлёт
+    // `situation: null`, потому что момент подаёт пузырь; у хвоста положение есть, пузыря нет, и
+    // играть реплику нечем, кроме собственной кнопки.
+    if (widget.inDialogue && widget.situation == null) return const SizedBox.shrink();
 
     return PaperCard(
       child: Column(
@@ -1315,9 +1319,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     // here was «выбери, что ответишь» in grey 12 pt: the only sentence on the screen telling the
     // learner what to do, set smaller than everything around it and in the wrong language.
     if (context.isEmpty && roleLine.isEmpty && task.isEmpty) {
-      // Внутри разговора — ничего: вопрос такта уже стоит над карточкой крупно. Вне его — своя
-      // инструкция, потому что тогда спросить больше некому и карточка деградирует до обычного
-      // выбора, а не до молчания.
+      // В разговоре — ничего: вопрос такта уже стоит над карточкой крупно, а у хвостовой карточки
+      // над ней стоит вводка «Ещё раз ответ этой сцены». Вне разговора — своя инструкция, потому
+      // что спросить больше некому и карточка деградирует до обычного выбора, а не до молчания.
       if (widget.inDialogue) return const SizedBox.shrink();
 
       return PaperCard(
@@ -1372,8 +1376,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
               style: AppText.translation.copyWith(fontSize: 15, height: 1.45),
             ),
           ],
-          const SizedBox(height: AppSpacing.s16),
-          Text(_instructionFor(l), style: AppTextExercise.taskInstruction),
+          // Служебной строки в разговоре нет и у карточки С ПОЛОЖЕНИЕМ: над хвостом стоит вводка
+          // «Ещё раз вопрос этой сцены», и «выбери, что спросишь» под ней — то же самое, тише и
+          // мельче (наряд DAY-2-FIX, Ч.1.6 — поймано живым прогоном).
+          if (!widget.inDialogue) ...[
+            const SizedBox(height: AppSpacing.s16),
+            Text(_instructionFor(l), style: AppTextExercise.taskInstruction),
+          ],
         ],
       ),
     );

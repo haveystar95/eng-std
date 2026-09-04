@@ -273,6 +273,9 @@ void main() {
     expect(find.text('ЕЩЁ РАЗ ОТВЕТ ЭТОЙ СЦЕНЫ'), findsOneWidget);
     expect(find.textContaining('говорит собеседник'), findsNothing);
     expect(find.textContaining('обмен'), findsNothing);
+    // …и своей служебной строки у хвоста тоже нет: вводка над ним уже сказала, что это (живой
+    // прогон поймал «выбери, что спросишь» под вводкой — то же самое тише и мельче).
+    expect(find.textContaining('выбери, что'), findsNothing);
     expect(find.text('That experience is relevant.'), findsWidgets);
 
     await teardownTree(tester);

@@ -1346,9 +1346,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             // ХВОСТОВАЯ карточка положение получает обратно: она вне ленты, пузыря над ней нет, и
             // без «Ситуации» человек не узнает, на что отвечает (наряд DAY-2-FIX, Ч.1.6).
             situation: _inChainAt(_pos) ? null : plan?.situationAt(_playing),
-            // ВНУТРИ РАЗГОВОРА карточка не подписывает себя сама: такт называет крупный вопрос над
-            // ней, и вторая строка мелким серым под ним говорила бы то же самое тише (Ч.1.1).
-            inDialogue: _inChainAt(_pos),
+            // В РАЗГОВОРЕ СЦЕНЫ карточка не подписывает себя сама: в ленте её называет крупный
+            // вопрос такта, у хвоста — вводка «Ещё раз ответ этой сцены», и вторая строка мелким
+            // серым под ними говорила бы то же самое тише (Ч.1.1, Ч.1.6).
+            //
+            // По СЕКЦИИ, а не по членству в цепочке: хвост — та же сцена, и подписан он так же.
+            inDialogue: _dialogueAtPosition(_pos) != null,
             speaksAfterChoice: plan?.speaksAfterChoiceAt(_playing) ?? false,
             // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's
             // deferred speak/focus is cancelled instead of firing on the next card.
