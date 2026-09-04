@@ -10,6 +10,7 @@
 ///   тихий фолбэк, чтобы дев-бейдж это показал.
 library;
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -40,6 +41,14 @@ void main() {
   late LineAudioCache cache;
   late Directory dir;
 
+  /// Кэш с заданной сетью и с токеном — токен спрашивается В МОМЕНТ запроса, как в приложении.
+  LineAudioCache cacheWith(HttpClientAdapter adapter) {
+    final dio = Dio();
+    dio.httpClientAdapter = adapter;
+
+    return LineAudioCache(http: dio, directory: dir, bearer: () => 'T0K3N');
+  }
+
   setUp(() {
     // Свой каталог, а не системный: `getApplicationSupportDirectory()` в виджет-тесте не отвечает,
     // и кэш застревал бы на первом же `load()` — проверяли бы отсутствие плагина, а не ожидание.
@@ -49,10 +58,7 @@ void main() {
       ttsChannel,
       (call) async => 1,
     );
-    final dio = Dio();
-    // Сеть, которой нет и не будет: файл не приедет никогда.
-    dio.httpClientAdapter = _DeadAdapter();
-    cache = LineAudioCache(http: dio, directory: dir);
+    cache = cacheWith(_DeadAdapter());
   });
 
   tearDown(() {
@@ -128,29 +134,54 @@ void main() {
     ),
   );
 
-  testWidgets('реплика без файла ждёт секунды, а потом отдаётся системному голосу', (tester) async {
+  testWidgets('докачка упала — реплика не ждёт вовсе и звучит системным голосом', (tester) async {
+    // ЖИВОЙ ДЕФЕКТ: бейдж показал «0 системным, 10 не скачалось, http 401». Ноль значил, что
+    // реплики просто МОЛЧАЛИ: экран ждал файла, которого уже не будет. Отказ — не задержка.
+    cache = cacheWith(_DeadAdapter());
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
     await tester.tap(find.text('Начать диалог'));
     await tester.pumpAndSettle();
 
-    // Пока ждём — честное «Готовим озвучку» и никаких обещаний про секунды.
+    expect(find.text('Готовим озвучку'), findsNothing);
+    expect(find.textContaining('говорит собеседник'), findsOneWidget);
+    expect(find.text('Ещё раз'), findsOneWidget);
+    // Тихий фолбэк засчитан: у реплики БЫЛ адрес, а прозвучала она системным голосом, — и это
+    // то самое число, которое дев-бейдж показывает.
+    expect(cache.trouble.silentFallbacks, greaterThan(0));
+    expect(cache.trouble.downloads, greaterThan(0));
+
+    // …и одна отложенная попытка всё-таки идёт: «первая попытка пришлась не на тот момент» —
+    // это класс, а не один баг (токен, поднявшийся из кейчейна секундой позже; сеть в лифте).
+    final firstTry = cache.trouble.downloads;
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+    expect(cache.trouble.downloads, greaterThan(firstTry));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('файл ещё едет — ждём секунды, а потом всё равно звучим', (tester) async {
+    // Второе состояние, и только оно — про кадр DL·08: докачка не ответила ни да, ни нет.
+    cache = cacheWith(_HangingAdapter());
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Начать диалог'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Готовим озвучку'), findsOneWidget);
+    // Никаких «осталось 5 секунд»: время докачки неизвестно, поэтому не обещается.
     expect(find.textContaining('осталось'), findsNothing);
 
-    // Повтор докачки — и он тоже не помог: сети нет.
     await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();
     expect(find.text('Готовим озвучку'), findsOneWidget);
 
-    // …и ожидание кончается. Пузырь встаёт на место, реплику читает движок.
     await tester.pump(const Duration(seconds: 6));
     await tester.pumpAndSettle();
     expect(find.text('Готовим озвучку'), findsNothing);
     expect(find.textContaining('говорит собеседник'), findsOneWidget);
-    expect(find.text('Ещё раз'), findsOneWidget);
-
-    // Тихий фолбэк засчитан: у реплики БЫЛ адрес, а прозвучала она системным голосом.
     expect(cache.trouble.silentFallbacks, greaterThan(0));
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -158,6 +189,7 @@ void main() {
   });
 }
 
+/// Сервер отвечает `401` — ровно то, что живьём получили все десять файлов посадки.
 class _DeadAdapter implements HttpClientAdapter {
   @override
   void close({bool force = false}) {}
@@ -167,7 +199,20 @@ class _DeadAdapter implements HttpClientAdapter {
     RequestOptions options,
     Stream<List<int>>? requestStream,
     Future<void>? cancelFuture,
-  ) async => ResponseBody.fromBytes(const [], 503);
+  ) async => ResponseBody.fromBytes(const [], 401);
+}
+
+/// Докачка, которая не отвечает ни да, ни нет: файл ЕДЕТ.
+class _HangingAdapter implements HttpClientAdapter {
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<List<int>>? requestStream,
+    Future<void>? cancelFuture,
+  ) => Completer<ResponseBody>().future;
 }
 
 class _PlanApi implements ApiClient {

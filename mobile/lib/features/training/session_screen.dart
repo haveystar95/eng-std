@@ -391,8 +391,23 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final lines = plan.lineAudio;
     if (lines.isEmpty) return;
 
-    await _lineAudio.preload(lines, bearer: ref.read(tokenStoreProvider).current);
+    await _lineAudio.preload(lines);
     if (mounted) setState(() {});
+
+    // ОДИН ПОВТОР, если что-то упало. Живьём упали все десять файлов на `401`: токен спрашивался
+    // снимком, снятым мгновением раньше, чем надо. Снимка больше нет ({@see LineAudioCache}), но
+    // «первая попытка пришлась не на тот момент» — это класс, а не один баг: сеть на входе в
+    // квартиру, токен, обновившийся между экранами. Одна отложенная попытка стоит нисколько и
+    // закрывает его; дальше решает честный фолбэк на системный голос.
+    if (_lineAudio.trouble.downloads > 0) {
+      _voiceRetryTimer?.cancel();
+      _voiceRetryTimer = Timer(_voiceRetryAfter, () {
+        if (!mounted) return;
+        unawaited(_lineAudio.retryMissing().whenComplete(() {
+          if (mounted) setState(() {});
+        }));
+      });
+    }
   }
 
   /// «ГОТОВИМ ОЗВУЧКУ» — СОСТОЯНИЕ НА СЕКУНДЫ.
@@ -444,7 +459,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       if (!mounted) return;
       unawaited(
         _lineAudio
-            .retryMissing(bearer: ref.read(tokenStoreProvider).current)
+            .retryMissing()
             .whenComplete(() {
               if (mounted) setState(() {});
             }),

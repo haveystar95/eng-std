@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -35,13 +36,78 @@ void main() {
   LineAudioCache cache({Dio? http}) =>
       LineAudioCache(http: http ?? serving([1, 2, 3]), directory: dir);
 
-  test('a line whose file has not arrived is NOT ready', () async {
-    final c = cache(http: serving([], status: 503));
-    await c.preload([(text: 'Thanks for joining today.', url: 'https://x/api/v1/audio/lines/A.mp3')]);
+  test('a line whose file is still on its way is NOT ready', () async {
+    // Кадр DL·08 стоит ровно на этом состоянии: файл ЕДЕТ. «Упал» — состояние другое, и с него
+    // экран обязан сходить на системный голос, а не ждать (см. тест про 401 ниже).
+    final pending = Dio();
+    pending.httpClientAdapter = _HangingAdapter();
+    final c = cache(http: pending);
+    unawaited(c.preload([(text: 'Thanks for joining today.', url: 'https://x/api/v1/audio/lines/A.mp3')]));
+    await Future<void>.delayed(Duration.zero);
 
-    // Это и есть кадр DL·08: реплика известна, файла нет, на слух её не подают.
     expect(c.knows('Thanks for joining today.'), isTrue);
     expect(c.isReady('Thanks for joining today.'), isFalse);
+  });
+
+  test('сохранённый присест с `http://` не роняет токен на редиректе', () async {
+    // ПЕРВОПРИЧИНА живого `401`: присест долговечен, его пейлоад лежит на диске целиком — вместе с
+    // абсолютными адресами, сгенерированными до того, как сервер научился доверять
+    // `X-Forwarded-Proto`. ngrok отвечает на `http` редиректом `307`, `dart:io` его идёт и СРЕЗАЕТ
+    // `Authorization` — до сервера доезжает анонимный запрос.
+    const base = 'https://greedily-thermos-finer.ngrok-free.dev';
+    expect(
+      LineAudioCache.normalizeUrl('$base/api/v1/audio/lines/A.mp3'.replaceFirst('https', 'http'), apiBase: base),
+      '$base/api/v1/audio/lines/A.mp3',
+    );
+    // Уже https — не трогаем; чужой хост — тем более (это не наш токен и не наша схема).
+    expect(LineAudioCache.normalizeUrl('$base/x.mp3', apiBase: base), '$base/x.mp3');
+    expect(LineAudioCache.normalizeUrl('http://cdn.example/x.mp3', apiBase: base), 'http://cdn.example/x.mp3');
+    // Локальный http-стенд остаётся http: приводить не к чему.
+    expect(
+      LineAudioCache.normalizeUrl('http://localhost:8001/x.mp3', apiBase: 'http://localhost:8001'),
+      'http://localhost:8001/x.mp3',
+    );
+  });
+
+  test('докачка идёт С ТОКЕНОМ, и токен спрашивается в момент запроса', () async {
+    // ЖИВОЙ ДЕФЕКТ: все десять файлов посадки ушли `401`, и в логе сервера у этих запросов нет
+    // ключа `authorization` ВООБЩЕ, хотя соседние вызовы API в ту же минуту прошли с токеном.
+    // Токен приезжал сюда СТРОКОЙ, снятой на входе в день; снимок — это одно мгновение.
+    final seen = <String?>[];
+    final dio = Dio();
+    dio.httpClientAdapter = _HeaderSpyAdapter(seen);
+
+    // Токена ещё нет — ровно то мгновение, на котором снимок и ломался.
+    String? token;
+    final c = LineAudioCache(http: dio, directory: dir, bearer: () => token);
+
+    await c.preload([(text: 'A line.', url: 'https://x/api/v1/audio/lines/A.mp3')]);
+    expect(seen, [null]);
+
+    // Токен поднялся из кейчейна ПОСЛЕ входа в день — повтор обязан его подхватить, а не
+    // повторить то же мгновение.
+    token = 'T0K3N';
+    await c.retryMissing();
+
+    expect(seen, [null, 'Bearer T0K3N']);
+  });
+
+  test('401 — реплика не ждёт: она сразу считается готовой и звучит системным голосом', () async {
+    // Живьём бейдж показал «0 системным, 10 не скачалось, http 401»: ноль означал, что реплики
+    // ПРОСТО МОЛЧАЛИ — экран ждал файла, которого уже не будет. Упавшая докачка честна сразу.
+    const line = 'Could you tell me about your background?';
+    final c = cache(http: serving([], status: 401));
+    await c.preload([(text: line, url: 'https://x/api/v1/audio/lines/A.mp3')]);
+
+    expect(c.trouble.downloads, 1);
+    expect(c.trouble.lastReason, 'http 401');
+    expect(c.hasFailed(line), isTrue);
+    // Готова — то есть «произноси»: файла не будет, читает телефон.
+    expect(c.isReady(line), isTrue);
+
+    // …и это засчитывается тихим фолбэком, потому что адрес у реплики БЫЛ.
+    expect(await c.play(line), isFalse);
+    expect(c.trouble.silentFallbacks, 1);
   });
 
   test('упавшая докачка повторяется — иначе «Готовим озвучку» стоит навсегда', () async {
@@ -58,13 +124,14 @@ void main() {
 
     final c = cache(http: flaky);
     await c.preload([(text: line, url: url)]);
-    expect(c.isReady(line), isFalse);
+    expect(c.fileFor(line), isNull);
     expect(c.trouble.downloads, 1);
 
     await c.retryMissing();
 
     expect(asked, [url, url]);
-    expect(c.isReady(line), isTrue);
+    expect(c.fileFor(line), isNotNull);
+    expect(c.hasFailed(line), isFalse);
   });
 
   test('a line the server does not voice is ready the moment it is asked about', () async {
@@ -103,8 +170,11 @@ void main() {
 
     // Пакет сменил голос → сервер отдал другой id. Старый файл на диске цел, но играть его за новый
     // голос нельзя: для уха это другая реплика.
-    final offline = LineAudioCache(http: serving([], status: 503), directory: dir);
-    await offline.preload([(text: 'Hi, can you hear me clearly?', url: 'https://x/api/v1/audio/lines/NEW.mp3')]);
+    final pending = Dio();
+    pending.httpClientAdapter = _HangingAdapter();
+    final offline = LineAudioCache(http: pending, directory: dir);
+    unawaited(offline.preload([(text: 'Hi, can you hear me clearly?', url: 'https://x/api/v1/audio/lines/NEW.mp3')]));
+    await Future<void>.delayed(Duration.zero);
 
     expect(offline.knows('Hi, can you hear me clearly?'), isTrue);
     expect(offline.isReady('Hi, can you hear me clearly?'), isFalse);
@@ -129,7 +199,9 @@ void main() {
     await c.preload([(text: 'Is my video visible?', url: 'https://x/api/v1/audio/lines/D.mp3')]);
 
     expect(File(p.join(dir.path, 'D.mp3')).existsSync(), isFalse);
-    expect(c.isReady('Is my video visible?'), isFalse);
+    expect(c.fileFor('Is my video visible?'), isNull);
+    // …и реплика не ждёт того, чего не будет: 404 — это отказ, а не задержка.
+    expect(c.hasFailed('Is my video visible?'), isTrue);
   });
 
   test('the manifest names a file only while the file is actually there', () async {
@@ -196,4 +268,42 @@ class _FlakyAdapter implements HttpClientAdapter {
         ? ResponseBody.fromBytes(const [], 503)
         : ResponseBody.fromBytes(bytes, 200);
   }
+}
+
+/// Запоминает заголовок `Authorization` каждого запроса. Первый — тот, на котором живой прогон и
+/// сломался: заголовка не было вовсе.
+class _HeaderSpyAdapter implements HttpClientAdapter {
+  _HeaderSpyAdapter(this.seen);
+
+  final List<String?> seen;
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<List<int>>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    seen.add(options.headers['Authorization'] as String?);
+
+    // Без токена сервер отвечает 401, как отвечал живьём; с токеном отдаёт файл.
+    return options.headers['Authorization'] == null
+        ? ResponseBody.fromBytes(const [], 401)
+        : ResponseBody.fromBytes(const [1, 2, 3], 200);
+  }
+}
+
+/// Докачка, которая НЕ ОТВЕЧАЕТ: состояние «файл ещё едет», ради которого кадр DL·08 и нарисован.
+class _HangingAdapter implements HttpClientAdapter {
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<List<int>>? requestStream,
+    Future<void>? cancelFuture,
+  ) => Completer<ResponseBody>().future;
 }

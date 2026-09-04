@@ -32,6 +32,8 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'config.dart';
+
 /// One line the server can play from a file: what it says, and where the file is.
 typedef LineAudioRef = ({String text, String url});
 
@@ -50,13 +52,32 @@ typedef VoiceTrouble = ({int downloads, int silentFallbacks, String? lastReason}
 /// Один экземпляр на приложение (провайдер в `providers.dart`): манифест на диске один, и два
 /// объекта, пишущих его порознь, — это две карты, которые однажды разойдутся.
 class LineAudioCache {
-  LineAudioCache({Dio? http, MethodChannel? channel, Directory? directory})
-    : _http = http ?? Dio(),
-      _channel = channel ?? const MethodChannel('com.denis.engstd/line_audio'),
-      _given = directory;
+  LineAudioCache({
+    Dio? http,
+    MethodChannel? channel,
+    Directory? directory,
+    String? Function()? bearer,
+  }) : _http = http ?? Dio(),
+       _channel = channel ?? const MethodChannel('com.denis.engstd/line_audio'),
+       _given = directory,
+       // ignore: prefer_initializing_formals
+       _bearer = bearer;
 
   final Dio _http;
   final MethodChannel _channel;
+
+  /// ТОКЕН — СПРАШИВАЕТСЯ В МОМЕНТ ЗАПРОСА, а не передаётся снимком.
+  ///
+  /// Файл озвучки лежит за `auth:sanctum`, как и весь остальной API, и качается он тем же токеном.
+  /// Раньше токен приезжал сюда СТРОКОЙ, снятой на входе в день (`initState`), и этого хватило,
+  /// чтобы живьём все десять докачек ушли без заголовка вовсе: лог сервера показал десять
+  /// `401` подряд, у которых ключа `authorization` в запросе нет, а соседние вызовы API в ту же
+  /// минуту прошли с токеном. Снимок — это одно мгновение, и любое мгновение, в котором токен ещё
+  /// не поднят из кейчейна или уже обновлён, превращает докачку в анонимную.
+  ///
+  /// Функция вместо строки убирает весь класс: спрашивают в момент запроса, значит спрашивают у
+  /// того, кто знает. Null — «токена нет», и это законно: харнессы и тесты качают без него.
+  final String? Function()? _bearer;
 
   /// Куда класть файлы, если каталог задан снаружи. В приложении — null (спрашиваем систему); в
   /// тестах — временный каталог, ровно как у [ImageDiskCache], и по той же причине: спрашивать
@@ -68,6 +89,14 @@ class LineAudioCache {
 
   /// `нормализованный текст` → имя файла в кэше. Известно, что реплика УЖЕ СКАЧАНА.
   final Map<String, String> _fileOf = {};
+
+  /// Строки, чья докачка УПАЛА и не повторяется прямо сейчас.
+  ///
+  /// Ждать их бессмысленно: файла не будет, пока кто-нибудь не попробует снова. Поэтому такая
+  /// строка считается готовой ([isReady]) — она прозвучит системным голосом, а кэш засчитает тихий
+  /// фолбэк, который увидит дев-бейдж. Экран, который вместо этого показывал «Готовим озвучку»,
+  /// ждал того, что уже не случилось (живой прогон: десять `401`, ноль системных).
+  final Set<String> _failed = {};
 
   /// Строки, про которые известно ТОЛЬКО ОДНО: это реплики, файла у них нет и не будет.
   ///
@@ -98,6 +127,36 @@ class LineAudioCache {
   /// пузырём, карточкой и шпаргалкой, и совпадать они обязаны как строки, а не как байты.
   static String keyOf(String text) => text.trim().toLowerCase();
 
+  /// АДРЕС ФАЙЛА, ПРИВЕДЁННЫЙ К СХЕМЕ API. Возвращает [url] без изменений, если приводить нечего.
+  ///
+  /// Живой дефект, стоивший десяти реплик подряд: посадка ДОЛГОВЕЧНА — присест переживает выход из
+  /// приложения, и его пейлоад лежит на диске целиком, вместе с абсолютными адресами файлов
+  /// (`plan_sitting_store.dart`). Адрес — факт про СЕРВЕР в момент сборки, а не про присест, и
+  /// сохранённый пейлоад нёс адреса, сгенерированные до того, как сервер научился доверять
+  /// `X-Forwarded-Proto`: `http://…`.
+  ///
+  /// Дальше механика беспощадная и тихая: ngrok отвечает на `http` редиректом `307` на `https`,
+  /// `dart:io` редирект послушно идёт — и **срезает `Authorization`**, потому что не переносит
+  /// авторизацию через переход. До сервера доезжает анонимный запрос, сервер отвечает `401`, а в
+  /// логе у этих запросов ключа `authorization` нет вовсе — при том, что соседние вызовы API той же
+  /// минуты прошли с токеном (лог `api_request_logs`, 05.09 01:19).
+  ///
+  /// Поэтому схема приводится ЗДЕСЬ, а не чинится на сервере: сервер уже чинили
+  /// ({@link bootstrap/app.php} `trustProxies`), а адреса, уже лежащие на телефонах, он переписать
+  /// не может. И правило шире одного дефекта: токен не должен ехать по cleartext ни при каких
+  /// обстоятельствах — ни ради озвучки, ни ради чего-либо ещё.
+  ///
+  /// Трогается только СВОЙ хост: чужой адрес с чужой схемой — не наша забота и не наш токен.
+  static String normalizeUrl(String url, {String? apiBase}) {
+    final base = Uri.tryParse(apiBase ?? AppConfig.apiBaseUrl);
+    final target = Uri.tryParse(url);
+    if (base == null || target == null) return url;
+    if (base.scheme != 'https' || target.scheme != 'http') return url;
+    if (target.host.isEmpty || target.host != base.host) return url;
+
+    return target.replace(scheme: 'https').toString();
+  }
+
   /// Имя файла — id строки озвучки из URL. Смена голоса даёт новый id, поэтому новый файл встаёт
   /// рядом со старым, а не поверх него: «старый кэш не играется за новый голос» держится именем.
   static String fileNameOf(String url) {
@@ -124,13 +183,19 @@ class LineAudioCache {
     }
   }
 
-  /// Готова ли реплика к подаче на слух. Строка, которую кэш не знает, готова всегда: она не
-  /// реплика, её читает системный синтез, и ждать ей нечего.
+  /// Готова ли реплика к подаче на слух — то есть можно ли её сейчас произнести хоть как-нибудь.
+  ///
+  /// Три «да» и одно «нет»: не реплика вовсе (её всегда читал телефон), файл уже приехал, докачка
+  /// упала (файла не будет — читает телефон). «Нет» остаётся ровно за одним состоянием: файл ЕЩЁ
+  /// едет, и его стоит подождать (кадр DL·08).
   bool isReady(String text) {
     final key = keyOf(text);
 
-    return !_urlOf.containsKey(key) || _fileOf.containsKey(key);
+    return !_urlOf.containsKey(key) || _fileOf.containsKey(key) || _failed.contains(key);
   }
+
+  /// Упала ли докачка этой строки — для дев-бейджа и для тестов.
+  bool hasFailed(String text) => _failed.contains(keyOf(text));
 
   /// Путь к скачанному файлу, или null.
   String? fileFor(String text) {
@@ -180,14 +245,14 @@ class LineAudioCache {
   /// Возвращает управление сразу же — вход в день не ждёт сети. Экран смотрит на [isReady] той
   /// строки, которая вот-вот прозвучит, а не на общий прогресс: ждать чужой файл, чтобы сыграть
   /// свой, — это тишина без причины.
-  Future<void> preload(Iterable<LineAudioRef> lines, {String? bearer}) async {
+  Future<void> preload(Iterable<LineAudioRef> lines) async {
     await load();
 
     final wanted = <String, String>{};
     for (final line in lines) {
       final key = keyOf(line.text);
       if (key.isEmpty || line.url.isEmpty) continue;
-      wanted[key] = line.url;
+      wanted[key] = normalizeUrl(line.url);
     }
     if (wanted.isEmpty) return;
 
@@ -205,7 +270,7 @@ class LineAudioCache {
 
     await Future.wait([
       for (final entry in wanted.entries)
-        if (!_fileOf.containsKey(entry.key)) _fetch(entry.key, entry.value, bearer),
+        if (!_fileOf.containsKey(entry.key)) _fetch(entry.key, entry.value),
     ]);
   }
 
@@ -217,7 +282,7 @@ class LineAudioCache {
   ///
   /// Обрыв сети на входе в день, 401 на непрогретом токене, файл, вычищенный системой между
   /// запусками, — все они лечатся повтором, и ни один из них не лечился.
-  Future<void> retryMissing({String? bearer}) async {
+  Future<void> retryMissing() async {
     await load();
     final pending = [
       for (final entry in _urlOf.entries)
@@ -225,18 +290,23 @@ class LineAudioCache {
     ];
     if (pending.isEmpty) return;
 
-    await Future.wait([for (final entry in pending) _fetch(entry.key, entry.value, bearer)]);
+    // Повтор снимает отметку об отказе: пока он идёт, строку снова стоит подождать.
+    _failed.removeAll(pending.map((e) => e.key));
+    await Future.wait([for (final entry in pending) _fetch(entry.key, entry.value)]);
   }
 
-  Future<void> _fetch(String key, String url, String? bearer) async {
+  Future<void> _fetch(String key, String url) async {
     final dir = _dir;
     if (dir == null || !_inFlight.add(url)) return;
+    // СПРАШИВАЕМ ТОКЕН СЕЙЧАС — см. [_bearer].
+    final bearer = _bearer?.call();
 
     final name = fileNameOf(url);
     final target = File(p.join(dir.path, name));
     try {
       if (target.existsSync() && target.lengthSync() > 0) {
         _fileOf[key] = name;
+        _failed.remove(key);
         await _save();
 
         return;
@@ -256,6 +326,7 @@ class LineAudioCache {
       if (response.statusCode != 200 || bytes == null || bytes.isEmpty) {
         _downloadFailures++;
         _lastReason = 'http ${response.statusCode}';
+        _failed.add(key);
 
         return;
       }
@@ -267,9 +338,11 @@ class LineAudioCache {
       tmp.renameSync(target.path);
 
       _fileOf[key] = name;
+      _failed.remove(key);
       await _save();
     } catch (e) {
       _downloadFailures++;
+      _failed.add(key);
       // Первая строка причины: у Dio дальше идёт абзац про статус-коды, который в бейдж не влезет
       // и ничего не добавляет.
       _lastReason = e.toString().split('\n').first;

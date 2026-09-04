@@ -106,7 +106,7 @@ class _PlanCheatSheetState extends ConsumerState<PlanCheatSheet> {
     ];
     if (lines.isEmpty) return;
 
-    await _lineAudio.preload(lines, bearer: ref.read(tokenStoreProvider).current);
+    await _lineAudio.preload(lines);
     if (mounted) setState(() {});
   }
 

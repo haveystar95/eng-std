@@ -88,7 +88,12 @@ final connectivityProvider = StreamProvider<bool>((ref) async* {
 /// которые однажды разойдутся. Экземпляр поднимает манифест сразу, чтобы повторный вход в день
 /// работал без сети — реплики, скачанные вчера, уже известны к первому кадру.
 final lineAudioCacheProvider = Provider<LineAudioCache>((ref) {
-  final cache = LineAudioCache();
+  // ТОКЕН ОТДАЁТСЯ ИСТОЧНИКОМ, А НЕ СНИМКОМ. Файл озвучки лежит за `auth:sanctum`, как и весь
+  // остальной API; снимок, снятый на входе в день, живьём оказался пустым, и десять докачек ушли
+  // без заголовка вовсе ({@see LineAudioCache._bearer}). Спрашивать в момент запроса — значит
+  // спрашивать у того, кто знает, и обновлённый токен подхватывается сам.
+  final tokens = ref.watch(tokenStoreProvider);
+  final cache = LineAudioCache(bearer: () => tokens.current);
   unawaited(cache.load());
 
   return cache;
