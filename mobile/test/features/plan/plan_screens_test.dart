@@ -13,6 +13,7 @@ import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
 import 'package:eng_std/features/plan/plan_day_screen.dart';
 import 'package:eng_std/features/plan/plan_day_summary.dart';
 import 'package:eng_std/features/plan/plan_preview_screen.dart';
+import 'package:eng_std/features/plan/plan_rehearsal_done.dart';
 import 'package:eng_std/features/plan/plan_screen.dart';
 import 'package:eng_std/features/plan/plan_tab_screen.dart';
 import 'package:eng_std/features/training/session/session_grading.dart' show LocalCheck;
@@ -255,6 +256,16 @@ ProviderScope _summaryScope(_CompletionSpy spy, Widget child, {LearningPlan? pla
 /// Блок продолжений перестал быть статикой (решение владельца 03.09): заготовки жили на чужой теме
 /// и выглядели поломкой. Поэтому и тест теперь про ПУТЬ — пауза набора, ответ, тап, — а не про две
 /// строки, вшитые в экран.
+/// Closes the plan without a network — the ending screen sends `POST /plans/{id}/complete` on open.
+class _ClosingApi extends ApiClient {
+  _ClosingApi(this.closed) : super(TokenStore());
+
+  final LearningPlan closed;
+
+  @override
+  Future<LearningPlan> completePlan(String planId) async => closed;
+}
+
 class _ContinuationsApi extends ApiClient {
   _ContinuationsApi(this.continuations) : super(TokenStore());
 
@@ -814,6 +825,84 @@ void main() {
     expect(find.text('Пройти прогон'), findsOneWidget);
     expect(find.text('Собрать день'), findsNothing);
     expect(find.text('Собрать план заново'), findsNothing);
+  });
+
+  testWidgets('the run-through lists the scenes with the status it knows, and no percentage (D·11)', (
+    tester,
+  ) async {
+    // «Прогон не притворяется днём»: no warm-up, no sections, only the scenes and what is true of
+    // each. The frame prints «готов 60%» per scene; the server computes readiness for the PLAN and
+    // not per scene, so the rows say the day's STATUS instead of a number nobody produced.
+    final finalDay = PlanDayDetail.fromJson({
+      'id': 'd5',
+      'index': 5,
+      'kind': 'final',
+      'title': 'Прогон перед событием',
+      'status': 'pending',
+      'plan_id': '01PLAN',
+      'terms': <dynamic>[],
+    });
+    final plan = LearningPlan.fromJson({
+      ..._planJson(),
+      // The focus is on scene 2, so scene 1 is behind it — «пройдена» by the same rule the day list
+      // uses, and the two screens cannot disagree about one day.
+      'focus_day_index': 2,
+      'days': [
+        {'id': 'd1', 'index': 1, 'kind': 'intro', 'title': 'Начать приём', 'status': 'done'},
+        {'id': 'd2', 'index': 2, 'kind': 'intro', 'title': 'Уточнить симптомы', 'status': 'ready'},
+        {'id': 'd3', 'index': 3, 'kind': 'intro', 'title': 'Аптека', 'status': 'pending'},
+        {'id': 'd5', 'index': 5, 'kind': 'final', 'title': 'Прогон перед событием', 'status': 'pending'},
+      ],
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          planDayProvider((planId: '01PLAN', dayIndex: 5)).overrideWith((ref) async => finalDay),
+          planProvider('01PLAN').overrideWith((ref) async => plan),
+          apiClientProvider.overrideWithValue(_ClosingApi(plan)),
+        ],
+        child: _app(PlanDayScreen(plan: plan, dayIndex: 5)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Every teaching scene, by name — and the run-through itself is not one of them.
+    expect(find.text('Начать приём'), findsOneWidget);
+    expect(find.text('Уточнить симптомы'), findsOneWidget);
+    expect(find.text('Аптека'), findsOneWidget);
+    expect(find.text('СЦЕНА 1'), findsOneWidget);
+
+    expect(find.text('пройдена'), findsOneWidget);
+    expect(find.text('в работе'), findsOneWidget);
+    // An untrained scene admits it out loud and does not block the run-through.
+    expect(find.text('не тренировали'), findsOneWidget);
+    expect(find.textContaining('Войдёт в прогон как есть'), findsOneWidget);
+    // No percentage anywhere, and the screen says why rather than leaving a hole.
+    expect(find.textContaining('%'), findsNothing);
+    expect(find.textContaining('Готовность по сценам появится'), findsOneWidget);
+
+    // «Шпаргалка под рукой» is a promise the screen keeps: the run-through has no prompts and no
+    // options, so the sheet is the only thing there is to reach for. Two of them on screen — the
+    // header's and the button's — and the header's is the one every plan screen carries.
+    expect(find.textContaining('Вслух, без остановок'), findsOneWidget);
+    await tester.drag(find.byType(ListView).last, const Offset(0, -400));
+    await tester.pumpAndSettle();
+    expect(find.text('Шпаргалка'), findsNWidgets(2));
+
+    // «Завершить план» pushes the ending, and the ending is a BODY: [PlanRehearsalDone] is what the
+    // run-through returns INSIDE the session's Scaffold. Pushed bare it has no Material over it and
+    // Flutter draws the whole screen in the debug face — yellow double underline on black, which is
+    // exactly how it came out on the simulator.
+    await tester.tap(find.text('Завершить план'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Завершить'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.ancestor(of: find.byType(PlanRehearsalDone), matching: find.byType(Material)),
+      findsWidgets,
+    );
   });
 
   testWidgets('the interlocutor’s line is marked in the day’s register (Д-8)', (tester) async {

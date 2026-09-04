@@ -4983,6 +4983,108 @@ abstract class AppLocalizations {
   /// **'Завершить'**
   String get planCompleteConfirm;
 
+  /// Точка входа в лист шпаргалки — в шапке экрана дня и списка дней (кадры D-01, D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'Шпаргалка'**
+  String get planCheatSheet;
+
+  /// Надзаголовок листа шпаргалки (кадр D-09). «День» здесь законно: это расписание, а не материал.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шпаргалка · день {index}'**
+  String planCheatSheetTitle(int index);
+
+  /// Подпись закреплённого блока спасателей в шпаргалке (кадр D-09): при прокрутке он не уезжает.
+  ///
+  /// In ru, this message translates to:
+  /// **'Спасатели · закреплены'**
+  String get planCheatSheetRescuePinned;
+
+  /// День не собран: лист честно говорит, почему он пуст, вместо пустого экрана.
+  ///
+  /// In ru, this message translates to:
+  /// **'У этого дня ещё нет материала — шпаргалке нечего показать.'**
+  String get planCheatSheetEmpty;
+
+  /// Кадр D-10 показывает блок «Числа на слух», а список дня чисел не содержит (PlanProgress их исключает). Сказано вслух, а не пропущено молча.
+  ///
+  /// In ru, this message translates to:
+  /// **'Цифры сцены здесь пока не показываются: сервер их в этот список не отдаёт.'**
+  String get planCheatSheetNoNumbers;
+
+  /// Надзаголовок списка сцен на экране прогона (кадр D-11).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сцены плана'**
+  String get planRehearsalScenes;
+
+  /// Статус сцены, которую не начинали: в прогон она войдёт как есть (кадр D-11).
+  ///
+  /// In ru, this message translates to:
+  /// **'не тренировали'**
+  String get planRehearsalSceneUntrained;
+
+  /// Статус пройденной сцены на экране прогона.
+  ///
+  /// In ru, this message translates to:
+  /// **'пройдена'**
+  String get planRehearsalScenePassed;
+
+  /// Статус сцены, материал которой есть, но день не закрыт.
+  ///
+  /// In ru, this message translates to:
+  /// **'в работе'**
+  String get planRehearsalSceneReady;
+
+  /// Нетренированная сцена признаётся вслух и не блокирует прогон (кадр D-11).
+  ///
+  /// In ru, this message translates to:
+  /// **'Войдёт в прогон как есть — по шпаргалке.'**
+  String get planRehearsalUntrainedNote;
+
+  /// Подпись над кнопкой прогона (кадр D-11).
+  ///
+  /// In ru, this message translates to:
+  /// **'Вслух, без остановок. Шпаргалка под рукой.'**
+  String get planRehearsalAloudNote;
+
+  /// Почему у сцен нет процентов: их не считают, а не прячут. Дизайн не считает готовность из ступеней (записка серии «День v1»).
+  ///
+  /// In ru, this message translates to:
+  /// **'Готовность по сценам появится, когда сервер её посчитает. Пока — статус каждой сцены.'**
+  String get planRehearsalNoPercent;
+
+  /// Первый факт экрана завершённого плана (кадр D-12).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сцены пройдены'**
+  String get planDoneScenes;
+
+  /// Второй факт экрана завершённого плана. Карточек, а не реплик: реплик сервер отдельно не считает.
+  ///
+  /// In ru, this message translates to:
+  /// **'Карточек в плане'**
+  String get planDoneCards;
+
+  /// Третий факт экрана завершённого плана — единственное про ступени число, которое сервер знает.
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрыли ступень A'**
+  String get planDoneStageA;
+
+  /// Что происходит с материалом после завершения (кадр D-12, канон §1: архив целиком).
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова и реплики плана останутся в архиве — открыть можно с его карточки. Автоматических повторений не будет: план закончился вместе с событием.'**
+  String get planDoneArchiveNote;
+
+  /// Главное действие завершённого плана: в день события нужна она, а не новый план (кадр D-12).
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть шпаргалку'**
+  String get planDoneOpenCheatSheet;
+
   /// Кнопка финального дня: он не собирается, он прогоняется по карточкам плана.
   ///
   /// In ru, this message translates to:

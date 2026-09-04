@@ -12,6 +12,7 @@ import '../../data/plan_models.dart';
 import '../../data/providers.dart';
 import '../training/session_screen.dart';
 import 'plan_building_screen.dart';
+import 'plan_cheatsheet.dart';
 import 'plan_fail_reason.dart';
 import 'plan_rehearsal_done.dart';
 import 'plan_tab_screen.dart' show abandonPlan;
@@ -52,7 +53,17 @@ class PlanDayScreen extends ConsumerWidget {
           bottom: false,
           child: Column(
             children: [
-              _DayBar(label: l.planDayOfPlan(dayIndex, plan.days.length)),
+              _DayBar(
+                label: l.planDayOfPlan(dayIndex, plan.days.length),
+                // ШПАРГАЛКА в шапке (кадр D·01): «подглядеть перед дверью» — доступна с любого
+                // экрана плана и возвращает точно туда же.
+                onCheatSheet: () => showPlanCheatSheet(
+                  context,
+                  planId: plan.id,
+                  dayIndex: dayIndex,
+                  targetLang: plan.targetLang,
+                ),
+              ),
               Expanded(
                 child: day.when(
                   loading: () =>
@@ -227,12 +238,18 @@ class _DayBody extends ConsumerWidget {
   }
 }
 
-/// THE FINAL DAY — the run-through before the event.
+/// ПРОГОН ПЕРЕД СОБЫТИЕМ — кадр D·11.
 ///
-/// Deliberately the smallest screen that makes the plan finishable: the finished one is DAY-2. What
-/// it must not do is what it used to — offer to BUILD a day that has nothing to build, and then
-/// explain the refusal with a reason taken from a different failure (Д-27, and the same class as
-/// Д-19).
+/// «Прогон не притворяется днём»: у него нет разогрева и секций, только список сцен и то, что о
+/// каждой известно. Every teaching day of the plan is a scene, they run one after another, out loud,
+/// and a scene nobody trained goes in as it is rather than blocking the run.
+///
+/// ## Про сцены нет процентов, и это правило, а не пропуск
+///
+/// «Готовность к сцене приходит от сервера одним числом. Дизайн не считает её из ступеней и не
+/// показывает, пока сервер не вернул значение» (записка серии «День v1»). The server computes
+/// readiness for the PLAN and not per scene, so the frame's «готов 60%» has nothing behind it yet.
+/// What the client honestly knows is each day's STATUS, and that is what the rows say.
 class _FinalDay extends ConsumerWidget {
   const _FinalDay({required this.plan, required this.day, this.targetLang});
 
@@ -243,6 +260,7 @@ class _FinalDay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
+    final scenes = plan.days.where((d) => d.kind != PlanDayKind.finalRun).toList(growable: false);
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -263,11 +281,48 @@ class _FinalDay extends ConsumerWidget {
             color: AppColors.secondary,
           ),
         ),
+        if (scenes.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.s22),
+          PlanLabel(l.planRehearsalScenes, color: AppColors.tertiary, fontSize: 11.5),
+          const SizedBox(height: 8),
+          for (final scene in scenes)
+            _RehearsalSceneRow(scene: scene, passed: scene.index < plan.focusDayIndex),
+          const SizedBox(height: 10),
+          Text(
+            l.planRehearsalNoPercent,
+            style: AppText.translation.copyWith(
+              fontSize: 13,
+              height: 1.5,
+              color: AppColors.tertiary,
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.s22),
+        Center(
+          child: Text(
+            l.planRehearsalAloudNote,
+            textAlign: TextAlign.center,
+            style: AppText.translation.copyWith(fontSize: 13.5, color: AppColors.secondary),
+          ),
+        ),
+        const SizedBox(height: 10),
         PrimaryButton(
           label: l.planRehearsalStart,
           minHeight: 52,
           onPressed: () => _run(context, ref),
+        ),
+        // «ШПАРГАЛКА ПОД РУКОЙ» is a promise the screen has to keep: the run-through has no options
+        // and no prompts, so the sheet is the only thing to reach for. It opens on the FOCUS scene
+        // — the one the learner is least sure of — and returns here.
+        const SizedBox(height: AppSpacing.s12),
+        QuietButton(
+          label: l.planCheatSheet,
+          onPressed: () => showPlanCheatSheet(
+            context,
+            planId: plan.id,
+            dayIndex: scenes.isEmpty ? plan.focusDayIndex : scenes.last.index,
+            targetLang: plan.targetLang,
+          ),
         ),
         // «ЗАВЕРШИТЬ ПЛАН» — the ending the canon promises, reachable from the screen the learner is
         // actually standing on (E2E-SIM-2, С-10).
@@ -305,9 +360,15 @@ class _FinalDay extends ConsumerWidget {
 
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PlanRehearsalDone(
-          planId: plan.id,
-          onDone: () => Navigator.of(context).pop(),
+        // [PlanRehearsalDone] is a BODY, not a screen — the run-through returns it inside the
+        // session's own Scaffold. Pushed bare it lands under no Material at all, and Flutter draws
+        // every line of it in the debug face: yellow double underline on black (caught on the
+        // simulator, кадр D·12). The Scaffold is what the other call site already gives it.
+        builder: (_) => Scaffold(
+          body: PlanRehearsalDone(
+            planId: plan.id,
+            onDone: () => Navigator.of(context).pop(),
+          ),
         ),
       ),
     );
@@ -462,6 +523,76 @@ class _NotWrittenYet extends ConsumerWidget {
     if (!await abandonPlan(context, ref, plan.id) || !context.mounted) return;
     // Back to the tab, which is now the empty state with «Составить план» on it.
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+}
+
+/// ONE SCENE IN THE RUN-THROUGH — its number, its name, and what is honestly known about it.
+///
+/// «Нетренированная сцена признаётся вслух и не блокирует прогон» (кадр D·11): a day that was never
+/// walked says so, under its own name, and the run-through takes it as it is.
+class _RehearsalSceneRow extends StatelessWidget {
+  const _RehearsalSceneRow({required this.scene, required this.passed});
+
+  final PlanDay scene;
+
+  /// The day is behind the focus — the SAME rule the day list uses for «День N пройден».
+  ///
+  /// Both facts are the server's and they can disagree: the focus is computed live off the
+  /// standings, and `learning_plan_days.status` is written when a sitting ends. On this plan's
+  /// day 2 they did — focus 3, status `ready` — and two screens about one day gave two answers,
+  /// which is С-11 in a different costume. One rule, and it is the list's, because that is the
+  /// screen the learner came from.
+  final bool passed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final untrained = !passed && !scene.status.hasMaterial;
+    final status = passed
+        ? l.planRehearsalScenePassed
+        : switch (scene.status) {
+            PlanDayStatus.done => l.planRehearsalScenePassed,
+            PlanDayStatus.ready => l.planRehearsalSceneReady,
+            _ => l.planRehearsalSceneUntrained,
+          };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: PlanLabel(
+                  l.planDialogueScene(scene.index),
+                  color: AppColors.tertiary,
+                  fontSize: 11,
+                ),
+              ),
+              Text(
+                status,
+                style: AppText.blockLabel.copyWith(
+                  color: passed ? AppColors.brassInk : AppColors.tertiary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(scene.title, style: AppText.termInList.copyWith(fontSize: 16, height: 1.35)),
+          if (untrained) ...[
+            const SizedBox(height: 3),
+            Text(
+              l.planRehearsalUntrainedNote,
+              style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.tertiary),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
@@ -739,26 +870,54 @@ class _ShelfLine extends StatelessWidget {
 /// learner has already done. The two buckets went with the shelves: «Тебе скажут» and «Ты ответишь»
 /// are two different things and were drawn identically, which is Д-8 seen on the day screen.
 class _DayBar extends StatelessWidget {
-  const _DayBar({required this.label});
+  const _DayBar({required this.label, this.onCheatSheet});
+
   final String label;
 
+  /// «Шпаргалка» — the sheet, opened from the header (кадр D·01). Null on a day that has no
+  /// material to show one from.
+  final VoidCallback? onCheatSheet;
+
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: AppSpacing.minTap,
-    child: Row(
-      children: [
-        InkResponse(
-          onTap: () => Navigator.of(context).maybePop(),
-          radius: 22,
-          child: const SizedBox(
-            width: AppSpacing.minTap,
-            height: AppSpacing.minTap,
-            child: Icon(LucideIcons.chevronLeft, size: 20, color: AppColors.secondary),
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return SizedBox(
+      height: AppSpacing.minTap,
+      child: Row(
+        children: [
+          InkResponse(
+            onTap: () => Navigator.of(context).maybePop(),
+            radius: 22,
+            child: const SizedBox(
+              width: AppSpacing.minTap,
+              height: AppSpacing.minTap,
+              child: Icon(LucideIcons.chevronLeft, size: 20, color: AppColors.secondary),
+            ),
           ),
-        ),
-        Expanded(child: Center(child: PlanLabel(label))),
-        const SizedBox(width: AppSpacing.minTap),
-      ],
-    ),
-  );
+          Expanded(child: Center(child: PlanLabel(label))),
+          if (onCheatSheet == null)
+            const SizedBox(width: AppSpacing.minTap)
+          else
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: InkWell(
+                onTap: onCheatSheet,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                  child: Text(
+                    l.planCheatSheet,
+                    style: AppText.blockLabel.copyWith(
+                      color: AppColors.brassInk,
+                      letterSpacing: .4,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }

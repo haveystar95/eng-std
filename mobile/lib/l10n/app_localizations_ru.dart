@@ -3439,6 +3439,62 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planCompleteConfirm => 'Завершить';
 
   @override
+  String get planCheatSheet => 'Шпаргалка';
+
+  @override
+  String planCheatSheetTitle(int index) {
+    return 'Шпаргалка · день $index';
+  }
+
+  @override
+  String get planCheatSheetRescuePinned => 'Спасатели · закреплены';
+
+  @override
+  String get planCheatSheetEmpty => 'У этого дня ещё нет материала — шпаргалке нечего показать.';
+
+  @override
+  String get planCheatSheetNoNumbers =>
+      'Цифры сцены здесь пока не показываются: сервер их в этот список не отдаёт.';
+
+  @override
+  String get planRehearsalScenes => 'Сцены плана';
+
+  @override
+  String get planRehearsalSceneUntrained => 'не тренировали';
+
+  @override
+  String get planRehearsalScenePassed => 'пройдена';
+
+  @override
+  String get planRehearsalSceneReady => 'в работе';
+
+  @override
+  String get planRehearsalUntrainedNote => 'Войдёт в прогон как есть — по шпаргалке.';
+
+  @override
+  String get planRehearsalAloudNote => 'Вслух, без остановок. Шпаргалка под рукой.';
+
+  @override
+  String get planRehearsalNoPercent =>
+      'Готовность по сценам появится, когда сервер её посчитает. Пока — статус каждой сцены.';
+
+  @override
+  String get planDoneScenes => 'Сцены пройдены';
+
+  @override
+  String get planDoneCards => 'Карточек в плане';
+
+  @override
+  String get planDoneStageA => 'Закрыли ступень A';
+
+  @override
+  String get planDoneArchiveNote =>
+      'Слова и реплики плана останутся в архиве — открыть можно с его карточки. Автоматических повторений не будет: план закончился вместе с событием.';
+
+  @override
+  String get planDoneOpenCheatSheet => 'Открыть шпаргалку';
+
+  @override
   String get planRehearsalStart => 'Пройти прогон';
 
   @override

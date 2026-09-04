@@ -3298,6 +3298,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planCompleteConfirm => 'Finish';
 
   @override
+  String get planCheatSheet => 'Cheat sheet';
+
+  @override
+  String planCheatSheetTitle(int index) {
+    return 'Cheat sheet · day $index';
+  }
+
+  @override
+  String get planCheatSheetRescuePinned => 'Rescue phrases · pinned';
+
+  @override
+  String get planCheatSheetEmpty =>
+      'This day has no material yet — there is nothing for the cheat sheet to show.';
+
+  @override
+  String get planCheatSheetNoNumbers =>
+      'The scene\'s numbers are not listed here yet: the server does not send them with this list.';
+
+  @override
+  String get planRehearsalScenes => 'The plan\'s scenes';
+
+  @override
+  String get planRehearsalSceneUntrained => 'not trained';
+
+  @override
+  String get planRehearsalScenePassed => 'passed';
+
+  @override
+  String get planRehearsalSceneReady => 'in progress';
+
+  @override
+  String get planRehearsalUntrainedNote =>
+      'It goes into the run-through as it is — from the cheat sheet.';
+
+  @override
+  String get planRehearsalAloudNote => 'Out loud, no stopping. The cheat sheet is at hand.';
+
+  @override
+  String get planRehearsalNoPercent =>
+      'Readiness per scene appears once the server computes it. For now — each scene\'s status.';
+
+  @override
+  String get planDoneScenes => 'Scenes passed';
+
+  @override
+  String get planDoneCards => 'Cards in the plan';
+
+  @override
+  String get planDoneStageA => 'Closed stage A';
+
+  @override
+  String get planDoneArchiveNote =>
+      'The plan\'s words and lines stay in its archive — open it from the plan\'s card. There will be no automatic repeats: the plan ended with the event.';
+
+  @override
+  String get planDoneOpenCheatSheet => 'Open the cheat sheet';
+
+  @override
   String get planRehearsalStart => 'Start the run-through';
 
   @override
