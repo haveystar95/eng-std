@@ -13,6 +13,7 @@ import '../../data/providers.dart';
 import '../training/session_screen.dart';
 import 'plan_building_screen.dart';
 import 'plan_fail_reason.dart';
+import 'plan_rehearsal_done.dart';
 import 'plan_tab_screen.dart' show abandonPlan;
 import 'plan_ui.dart';
 
@@ -27,9 +28,10 @@ import 'plan_ui.dart';
 ///    review log on every read and is stored nowhere.
 ///
 /// A day AHEAD of the focus is openable — the frames say «можно открыть раньше» rather than drawing
-/// a lock. What it cannot do is count: its session comes back `strict: false`, schedules nothing and
-/// closes no stage, and the screen says so above the button rather than letting the learner find out
-/// afterwards.
+/// a lock — and since E2E-SIM-2 (С-1) it counts like any other day: the session comes back
+/// `strict: true`, deals that day's own stage A in канон §11's order, and closes it when it closes.
+/// The line above the button says which day the learner is looking at, not what the session will
+/// fail to do; the «мягкий прогон» it used to warn about no longer exists on either side.
 class PlanDayScreen extends ConsumerWidget {
   const PlanDayScreen({super.key, required this.plan, required this.dayIndex});
 
@@ -167,9 +169,11 @@ class _DayBody extends ConsumerWidget {
         ],
         const SizedBox(height: AppSpacing.s22),
         if (!_isFocus) ...[
-          // Said BEFORE the button, not after the session. A soft run is a legitimate thing to want
-          // — «посмотреть, что будет завтра» — and the only dishonest version of it is one the
-          // learner finds out about when their progress has not moved.
+          // Said BEFORE the button, because looking ahead is a legitimate thing to want and the
+          // learner should know which day they are about to walk. It used to warn that the session
+          // would «run softly» — true then, and the mechanism it described is what dealt dictations
+          // of sentences nobody had been shown (С-1). Now it says the plain fact: this is tomorrow's
+          // lesson, dealt as tomorrow's lesson.
           Text(
             l.planDaySoftNote,
             style: AppText.translation.copyWith(
@@ -253,8 +257,52 @@ class _FinalDay extends ConsumerWidget {
           minHeight: 52,
           onPressed: () => _run(context, ref),
         ),
+        // «ЗАВЕРШИТЬ ПЛАН» — the ending the canon promises, reachable from the screen the learner is
+        // actually standing on (E2E-SIM-2, С-10).
+        //
+        // `POST /plans/{id}/complete` has existed and worked all along; what the app offered on this
+        // screen was «Отказаться от плана» and nothing else, so «план кончается результатом, а не
+        // датой» was true of the server and false of the product. The run-through's own summary
+        // ([PlanRehearsalDone]) is still the ordinary way here — a learner who plays the run-through
+        // to the end is offered it there — and this is for the one who has already done it, or who
+        // is closing the plan the morning after.
+        //
+        // Quiet rather than primary: the button above is what to do NOW, and finishing is what to do
+        // when there is nothing left to do.
+        const SizedBox(height: AppSpacing.s12),
+        QuietButton(
+          label: l.planCompleteAction,
+          onPressed: () => _complete(context, ref),
+        ),
       ],
     );
+  }
+
+  /// End the plan with a RESULT — the same command the run-through's summary sends, and the same
+  /// screen after it, so the two endings cannot come to differ.
+  Future<void> _complete(BuildContext context, WidgetRef ref) async {
+    AppHaptics.light();
+    final ok = await showCenterAlert(
+      context: context,
+      title: AppLocalizations.of(context).planCompleteTitle,
+      message: AppLocalizations.of(context).planCompleteBody,
+      confirmLabel: AppLocalizations.of(context).planCompleteConfirm,
+      cancelLabel: AppLocalizations.of(context).commonCancel,
+    );
+    if (ok != true || !context.mounted) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PlanRehearsalDone(
+          planId: plan.id,
+          onDone: () => Navigator.of(context).pop(),
+        ),
+      ),
+    );
+    ref.invalidate(planProvider(plan.id));
+    ref.invalidate(activePlanProvider);
+    ref.invalidate(planArchiveProvider);
+    if (context.mounted) Navigator.of(context).maybePop();
   }
 
   Future<void> _run(BuildContext context, WidgetRef ref) async {

@@ -84,6 +84,20 @@ enum PlanStage {
   static PlanStage fromWire(String? v) =>
       PlanStage.values.firstWhere((s) => s.name == v, orElse: () => PlanStage.a);
 
+  /// THE STAGE THE SERVER NAMED, or null when it named none — «нет ступени» is an answer.
+  ///
+  /// [fromWire] falls back to `a`, which is right for a day's TERM ROW (every card of a scene stands
+  /// on a stage) and was wrong for a session TASK: the run-through of the final day and the warm-up's
+  /// light touch carry `stage: null`, and reading that as «A» is what put «СТУПЕНЬ A · ПОВТОРЕНИЕ»
+  /// over a dictation on the morning of the event (E2E-SIM-2, С-9).
+  static PlanStage? tryFromWire(String? v) {
+    for (final stage in PlanStage.values) {
+      if (stage.name == v) return stage;
+    }
+
+    return null;
+  }
+
   String get letter => name.toUpperCase();
 }
 
@@ -694,7 +708,9 @@ class PlanSessionTask {
   /// grow «N из N» by five for a day that did not grow.
   static const sectionWarmup = 'warmup';
 
-  final PlanStage stage;
+  /// The stage this card is being dealt at, or NULL when the sitting has no stages — the final
+  /// day's run-through, and the warm-up's one light touch. See [PlanStage.tryFromWire].
+  final PlanStage? stage;
 
   /// «3 из 4» inside the stage.
   final int ordinal, ofSteps;
@@ -769,7 +785,7 @@ class PlanSessionTask {
     final fromDay = (j['from_day_index'] as num?)?.toInt() ?? 0;
 
     return PlanSessionTask(
-      stage: PlanStage.fromWire(j['stage'] as String?),
+      stage: PlanStage.tryFromWire(j['stage'] as String?),
       ordinal: (j['ordinal'] as num?)?.toInt() ?? 1,
       ofSteps: (j['of_steps'] as num?)?.toInt() ?? 1,
       fromDayIndex: fromDay,
@@ -841,8 +857,12 @@ class PlanSession implements PlanSessionEnvelope {
   @override
   final int dayIndex;
 
-  /// FALSE means this day was opened out of turn: a soft run over its material that schedules
-  /// nothing and closes no stage. The day screen says so above the button.
+  /// TRUE for every teaching day of a plan — its turn or not (E2E-SIM-2, С-1).
+  ///
+  /// It used to be false for a day opened ahead of the focus, and that «soft run» is gone: an early
+  /// day is dealt its own stage A, strictly, and its answers close it. What still comes back FALSE is
+  /// the final day's run-through, which grades nothing on purpose — a plan must not be able to go
+  /// backwards on its last morning.
   @override
   final bool strict;
 
@@ -874,7 +894,7 @@ class PlanSession implements PlanSessionEnvelope {
   );
 
   @override
-  String? stageLetterAt(int i) => i >= 0 && i < tasks.length ? tasks[i].stage.letter : null;
+  String? stageLetterAt(int i) => i >= 0 && i < tasks.length ? tasks[i].stage?.letter : null;
 
   @override
   ({int ordinal, int of})? stepAt(int i) {

@@ -122,13 +122,30 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
   @override
   Future<bool> get hasPermission => _speech.hasPermission;
 
+  /// HOW LONG A NATIVE CALL MAY TAKE TO ANSWER before it is treated as a refusal.
+  ///
+  /// Neither `initialize` nor `listen` promises to return. On the simulator the audio session comes
+  /// up against nothing at all, and `AVAudioEngine startAndReturnError:` sat inside
+  /// `AURemoteIO::fetchWorkgroup()` until the RPC timed out and aborted the process — a `SIGABRT`
+  /// about two minutes after the tap, with the card frozen on «Слушаю…» the whole time
+  /// (E2E-SIM-2, С-4). A channel that has not started in eight seconds has not started; saying so
+  /// is a `SpeechOutcome.unavailable`, which is a state this trainer already knows how to be in.
+  ///
+  /// It bounds the DART await and cannot stop a native abort on its own — the card's own watchdog is
+  /// the other half — but it is what turns «the engine never answered» into an answer.
+  static const _startTimeout = Duration(seconds: 8);
+
   @override
   Future<bool> prepare() async {
     if (_initialized) return _speech.isAvailable;
     try {
       // `initialize` is what raises the two iOS prompts. A refusal comes back as false; the plugin
       // also throws on some platform errors, which is the same answer as far as a card is concerned.
-      _initialized = await _speech.initialize(onStatus: _onStatus, onError: _onError);
+      // A permission prompt is answered by a PERSON, so the bound here is generous: it is here for
+      // an engine that never comes up, not for a learner who is reading the dialog.
+      _initialized = await _speech
+          .initialize(onStatus: _onStatus, onError: _onError)
+          .timeout(_startTimeout * 4, onTimeout: () => false);
     } catch (e) {
       debugPrint('[speech] initialize failed: $e');
       _initialized = false;
@@ -182,8 +199,10 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
         // QA-20's mishearings (`expected` above only picks the taskHint).
         contextualStrings: contextualStrings.isEmpty ? null : contextualStrings,
         onResult: (result) => _onResult(result, onPartial),
-      );
+      ).timeout(_startTimeout);
     } catch (e) {
+      // A refusal, a throw, or an engine that never came up at all — all three are the same answer
+      // to a card, and the third one is why there is a timeout on the await (see [_startTimeout]).
       debugPrint('[speech] listen failed: $e');
       _settle(const SpeechAttempt.unavailable());
     }

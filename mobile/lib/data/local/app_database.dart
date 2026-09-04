@@ -752,6 +752,19 @@ class AppDatabase extends _$AppDatabase {
     return out;
   }
 
+  /// The plain HEADWORD of each of these terms, keyed by id — the text a surface may PRINT.
+  ///
+  /// One read for a whole session, because the caller needs it for every card and `termById` per
+  /// card would be one query each. A term that is not mirrored is simply absent from the result;
+  /// the caller falls back, exactly as it does for the pair.
+  Future<Map<String, String>> termTextsByIds(List<String> termIds) async {
+    if (termIds.isEmpty) return const {};
+
+    final rows = await (select(terms)..where((t) => t.id.isIn(termIds))).get();
+
+    return {for (final row in rows) if (row.termText != null) row.id: row.termText!};
+  }
+
   /// One synced term by id (or null) — used by the exercise-session feedback to pull the photo,
   /// which the `/study/sessions` shape does not carry. One-shot: the image is already synced.
   Future<Term?> termById(String id) =>

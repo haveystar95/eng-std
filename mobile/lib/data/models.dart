@@ -737,7 +737,9 @@ abstract interface class PlanSessionEnvelope {
   String get planId;
   int get dayIndex;
 
-  /// FALSE means the day was opened out of turn — a soft run that schedules nothing and closes no
+  /// FALSE means the sitting grades nothing — today only the final day's run-through. A day opened
+  /// AHEAD of the focus is strict like any other (E2E-SIM-2, С-1); it used to be the soft run that
+  /// schedules nothing and closes no
   /// stage. The screen says so; the SERVER is what enforces it.
   bool get strict;
 

@@ -4125,10 +4125,10 @@ abstract class AppLocalizations {
   /// **'Слова в этих фразах'**
   String get planDayWords;
 
-  /// Предупреждение над кнопкой для дня впереди фокуса.
+  /// Строка над кнопкой для дня впереди фокуса: посадка строгая, как у любого дня (E2E-SIM-2, С-1).
   ///
   /// In ru, this message translates to:
-  /// **'Это не текущий день: тренировка пройдёт мягко — ступени не закроются и повторы не назначатся.'**
+  /// **'Это день впереди текущего. Тренировка настоящая: карточки идут ступенью A, ответы засчитываются.'**
   String get planDaySoftNote;
 
   /// Главная кнопка экрана дня.
@@ -4568,6 +4568,30 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'К плану'**
   String get planRehearsalDoneAction;
+
+  /// Кнопка финального дня: закрыть план результатом, а не датой (E2E-SIM-2, С-10).
+  ///
+  /// In ru, this message translates to:
+  /// **'Завершить план'**
+  String get planCompleteAction;
+
+  /// Подтверждение завершения плана с экрана финального дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Завершить план?'**
+  String get planCompleteTitle;
+
+  /// Что произойдёт при завершении плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'План закроется, слова уйдут в архив. Вернуть их в «Учить» можно будет вручную.'**
+  String get planCompleteBody;
+
+  /// Подтверждающая кнопка завершения плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Завершить'**
+  String get planCompleteConfirm;
 
   /// Кнопка финального дня: он не собирается, он прогоняется по карточкам плана.
   ///

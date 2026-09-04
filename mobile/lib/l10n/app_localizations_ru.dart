@@ -2861,7 +2861,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planDaySoftNote =>
-      'Это не текущий день: тренировка пройдёт мягко — ступени не закроются и повторы не назначатся.';
+      'Это день впереди текущего. Тренировка настоящая: карточки идут ступенью A, ответы засчитываются.';
 
   @override
   String get planDayTrain => 'Тренировать';
@@ -3149,6 +3149,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planRehearsalDoneAction => 'К плану';
+
+  @override
+  String get planCompleteAction => 'Завершить план';
+
+  @override
+  String get planCompleteTitle => 'Завершить план?';
+
+  @override
+  String get planCompleteBody =>
+      'План закроется, слова уйдут в архив. Вернуть их в «Учить» можно будет вручную.';
+
+  @override
+  String get planCompleteConfirm => 'Завершить';
 
   @override
   String get planRehearsalStart => 'Пройти прогон';

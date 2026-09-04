@@ -379,11 +379,26 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
   ({String learned, String support})? get _cardPair => _pairs[_card.termId];
 
+  /// The plain HEADWORD of each card's term, out of the local mirror — what the seam's footnote
+  /// names the card by ([_carriedCaption]).
+  ///
+  /// Off the term row rather than off the card, because a card's `answer` is its GRADING KEY and on
+  /// two of the trainers that key is not words at all. Empty until the lookup lands, and the caption
+  /// falls back to [SessionCard.answerText] meanwhile — a term missing from the mirror is ordinary
+  /// (the pool outlives a deleted folder) and must not blank the line.
+  Map<String, String> _termTexts = const {};
+
   Future<void> _resolvePairs() async {
-    final pairs = await ref
-        .read(appDatabaseProvider)
-        .pairByTerms(_cards.map((c) => c.termId).toList(growable: false));
-    if (mounted) setState(() => _pairs = pairs);
+    final ids = _cards.map((c) => c.termId).toList(growable: false);
+    final db = ref.read(appDatabaseProvider);
+    final pairs = await db.pairByTerms(ids);
+    final texts = await db.termTextsByIds(ids);
+    if (mounted) {
+      setState(() {
+        _pairs = pairs;
+        _termTexts = texts;
+      });
+    }
   }
 
   /// The resolved photo url per card index. A present KEY means the lookup finished, which is what
@@ -496,6 +511,30 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // matter how tall the feedback grows (the photo loads async and kept pushing an in-scroll
     // button below the fold — device-batch F9).
     setState(() => _answered = true);
+    // AND THE SITTING HAS MOVED ON — «Проверить» is what passes a card, «Дальше» only turns the
+    // page (E2E-SIM-2, С-13).
+    //
+    // The answer is already durable at this point (the review queue owns it), and the stored
+    // POSITION used to move only on «Дальше». An app killed between the two came back on the card
+    // just answered, with an empty field, and a second answer went into the append-only log in the
+    // same mode. It did not move the ladder — `walk()` closes the first open step — but the learner
+    // was asked a question they had already answered, which is the part they can see.
+    _rememberFrom(_pos + 1);
+  }
+
+  /// Store the sitting's position as `$at`, or forget it when the sitting has run out.
+  ///
+  /// Forgetting is the honest end of the second case: a kill after the LAST answer has nothing left
+  /// to resume, and a stored index past the end would be clamped back onto the final card — the very
+  /// re-ask this is here to stop. The next visit asks the server, which deals whatever the ladder
+  /// still owes, i.e. nothing for a day that is finished.
+  void _rememberFrom(int at) {
+    if (at >= _queue.length) {
+      _forgetPosition();
+
+      return;
+    }
+    _rememberPosition(at: at);
   }
 
   /// A CARD ANSWERED WRONG COMES BACK ONCE, at the end of the присест it was in (наряд SIT-1, Ч-5).
@@ -511,8 +550,8 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   /// longer. Rewinding the position would have been the other way to «play it again», and it would
   /// have told the learner they had un-done work they actually did.
   ///
-  /// Plan sittings only, and strict ones only: free practice schedules nothing and a soft run of a
-  /// day opened out of turn is a read-through, so in neither is there a mistake to make good.
+  /// Plan sittings only, and strict ones only: free practice schedules nothing and the final day's
+  /// run-through grades nothing, so in neither is there a mistake to make good.
   void _requeueIfMissed(LocalCheck verdict) {
     final plan = widget.session.plan;
     if (plan == null || widget.practice || !plan.strict) return;
@@ -526,7 +565,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   /// ORDER — which cards were sent to the tail, where the присест boundaries moved to, and which
   /// card is next. That is what is stored, beside the payload the sitting was dealt from, so
   /// «продолжить» resumes the sitting instead of asking the server to deal the day again.
-  void _rememberPosition() {
+  void _rememberPosition({int? at}) {
     final plan = widget.session.plan;
     if (plan == null || widget.practice || !plan.strict || plan is! PlanSession) return;
 
@@ -540,7 +579,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
               payload: plan.raw,
               order: _queue.order,
               sittingEnds: _queue.ends,
-              position: _pos,
+              // Where the sitting RESUMES, which is not always where it is standing: a card that has
+              // been answered is behind us even while its feedback is still on the screen (С-13).
+              position: at ?? _pos,
               requeued: _queue.requeued,
             ),
           ),
@@ -556,14 +597,41 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
   /// A speaking card the MICROPHONE lost — «Пропустить» after a few failed attempts.
   ///
-  /// The whole behaviour is what it does NOT do: no `reviewSync.record`, so no review row and no
-  /// grade; no `_results` entry, so no tick or cross in the summary; no ladder movement, so the
-  /// pair stands exactly where it did. The word simply comes back on its own schedule, as if this
-  /// card had never been dealt — which is the honest reading of «the room was too noisy».
+  /// It writes NOTHING outside a plan: no `_results` entry, so no tick or cross in the summary, and
+  /// the word comes back on its own schedule as if this card had never been dealt — the honest
+  /// reading of «the room was too noisy». The counter moves, so a card can never trap the learner.
   ///
-  /// It is a session slot spent, and only that: the counter moves so a card cannot trap the learner.
+  /// ## INSIDE A PLAN IT WRITES A LAPSE, and that is the change (E2E-SIM-2, С-4)
+  ///
+  /// A plan's stage is a CHECKLIST, and a checklist step is closed by an answer. A skip that wrote
+  /// nothing left the speaking step of stage A open for ever — and stage A has to close for the day
+  /// to pass, so a learner whose microphone was refused could not finish the day at all. Nothing on
+  /// the screen said so: the card went by, the counter moved, and the day quietly stayed `ready`.
+  ///
+  /// So the step is closed HONESTLY rather than silently: an empty response, which the server grades
+  /// `again` exactly as «Не помню» does. The card is re-owed tomorrow instead of being owed for ever.
+  /// It is deliberately not a pass — a microphone is not evidence that the learner knew the line —
+  /// and it is deliberately not silence either, because silence is what broke the day.
   void _skipCard() {
     PerfLog.instance.tapHandled('skip');
+    final played = _card;
+    if (widget.session.plan != null && !widget.practice) {
+      ref
+          .read(reviewSyncProvider)
+          .record(
+            termId: played.termId,
+            exerciseMode: played.mode.wire,
+            response: '',
+            usedHint: false,
+            isPractice: widget.practice,
+            latencyMs: null,
+            sessionId: widget.session.sessionId,
+            ladderStep: played.ladderStep,
+          );
+      // The sitting has moved on for the same reason it does on «Проверить»: the answer is recorded,
+      // so a kill here must not bring the card back (С-13).
+      _rememberFrom(_pos + 1);
+    }
     _prepareCard(_pos + 1);
     _prepareCard(_pos + 2);
     _next();
@@ -675,7 +743,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
       final key = planSeamGroupOf(plan, card);
       if (segments.isEmpty || group != key) {
-        segments.add(_ProgressSegment(key: key));
+        segments.add(_ProgressSegment(key: key, isDay: plan.isDayTaskAt(card)));
         group = key;
       }
       final segment = segments.last;
@@ -687,9 +755,15 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       warmupTotal: warmupTotal,
       warmupDone: warmupDone,
       segments: segments,
-      // «День 11/22» counts the day's own cards — the warm-up is beside it, never inside it.
-      dayDone: segments.fold(0, (sum, s) => sum + s.done),
-      dayTotal: segments.fold(0, (sum, s) => sum + s.total),
+      // «День 11/22» COUNTS THE DAY'S OWN CARDS — and «Повторение» is not one of them.
+      //
+      // The warm-up was already outside the count; the seam was not, and that is E2E-SIM-2 С-8: a
+      // sitting of 2 day cards behind 20 revision cards read «День 0/22» over a payload whose own
+      // `day_task_count` said 2. The seam keeps its division on the BAR — it is part of the sitting
+      // and the learner is about to play it — but it is not part of the day, because «N из N» is a
+      // sentence about the scene.
+      dayDone: segments.fold(0, (sum, s) => sum + (s.isDay ? s.done : 0)),
+      dayTotal: segments.fold(0, (sum, s) => sum + (s.isDay ? s.total : 0)),
     );
   }
 
@@ -708,6 +782,33 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       cancelLabel: l.sessionExitCancel, // «Продолжить» — default
     );
     return leave ?? false;
+  }
+
+  /// «Слово worse идёт со дня 1 — сегодня оно на ступени B», or null when the line has nothing true
+  /// to say. The seam's own footnote (E2E-SIM-2, С-3 and С-6).
+  ///
+  /// Three conditions, and each one of them is a defect this caption actually had:
+  ///
+  ///   ANSWERED   it used to be drawn from the first frame, so on «Ты ответишь» it printed the reply
+  ///              the learner was about to choose out of four, and on the run-through's dictation
+  ///              the sentence they were being asked to type. A note about where a card came from
+  ///              reads exactly as well after the answer.
+  ///   A STAGE    a task with no stage (the run-through) has no «сегодня оно на ступени N» to say,
+  ///              and on the run-through every card is carried, so the line would be on all of them.
+  ///   THE WORD   the term's own TEXT, out of the local mirror — never `card.answer`, which is the
+  ///              GRADING KEY. On `situational_hear` that key is the id of an option, and the
+  ///              caption printed «Слово «01M1MH57RKS1EPN0VRKJ5AXYC2» идёт со дня 1» (С-6).
+  ///              [SessionCard.answerText] is the fallback: it already knows the identity-graded
+  ///              recognition card, and it is what every other surface prints.
+  String? _carriedCaption(AppLocalizations l, PlanSessionEnvelope plan) {
+    if (!_answered) return null;
+    final stage = plan.stageLetterAt(_playing);
+    final from = plan.carriedFromAt(_playing);
+    if (stage == null || from == null) return null;
+
+    final text = (_termTexts[_card.termId] ?? _card.answerText).trim();
+
+    return text.isEmpty ? null : l.planSessionCarried(text, from, stage);
   }
 
   /// The rung names are captions first («узнавание», under a dot) and a header second. One string
@@ -953,7 +1054,19 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                             // «Слово worse идёт со дня 1 — сегодня оно на ступени B.» Drawn only
                             // for a word carried in from an EARLIER day, because for today's own
                             // words the sentence would say nothing.
-                            if (plan.carriedFromAt(_playing) case final from?) ...[
+                            //
+                            // AFTER THE ANSWER, and never before it (E2E-SIM-2, С-3). The line
+                            // names the card's own word, and on half the trainers that word IS the
+                            // answer: on «Ты ответишь» it printed the very line the learner was
+                            // about to pick out of four options, and on the final day's dictation it
+                            // printed the sentence they were being asked to type. The caption is a
+                            // note about where a card came from — it costs nothing to read it a
+                            // moment later, and printing it early is simply the answer key.
+                            //
+                            // A card with no STAGE (the run-through) gets no caption at all: there
+                            // every card comes from an earlier day, so the line would be on all of
+                            // them and would have no stage to name.
+                            if (_carriedCaption(l, plan) case final caption?) ...[
                               const SizedBox(height: AppSpacing.s26),
                               Container(
                                 padding: const EdgeInsets.only(top: 14),
@@ -961,11 +1074,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                                   border: Border(top: BorderSide(color: AppColors.dividerFaint)),
                                 ),
                                 child: Text(
-                                  l.planSessionCarried(
-                                    _card.answer,
-                                    from,
-                                    plan.stageLetterAt(_playing) ?? '',
-                                  ),
+                                  caption,
                                   style: AppText.translation.copyWith(
                                     fontSize: 13,
                                     height: 1.5,
@@ -1139,7 +1248,7 @@ class _SessionHeader extends StatelessWidget {
               constraints: const BoxConstraints(minWidth: AppSpacing.minTap),
               // THE RUNG, in brass, in the corner the eye reaches last (кадр 6b) — a mark for
               // oneself, never explained. A plan card that has no stage (the warm-up's light touch,
-              // a soft run) leaves the corner empty rather than borrowing the counter back: the
+              // the run-through) leaves the corner empty rather than borrowing the counter back: the
               // counter has moved, and two homes for one number is how they drift apart.
               child: stageBadge != null
                   ? Align(alignment: Alignment.centerRight, child: _StagePill(stageBadge!))
@@ -1195,9 +1304,14 @@ class _StagePill extends StatelessWidget {
 
 /// One section of the day inside the bar — how many cards it holds and how many are behind us.
 class _ProgressSegment {
-  _ProgressSegment({required this.key});
+  _ProgressSegment({required this.key, required this.isDay});
 
   final String key;
+
+  /// Is this part the DAY's own material? False for the revision of earlier days, which is drawn on
+  /// the bar and counted out of «День N/M» — see [_SessionShellState._planProgress].
+  final bool isDay;
+
   int total = 0;
   int done = 0;
 }

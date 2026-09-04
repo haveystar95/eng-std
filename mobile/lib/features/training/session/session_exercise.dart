@@ -98,9 +98,13 @@ class SessionAnswer {
 ///
 /// It is a separate callback from [SessionAnswer] and not a verdict inside it, because the two are
 /// different KINDS of event and the difference is the whole point of the trainer. An answer is
-/// evidence about memory and is uploaded; a skip is a statement about a microphone and must reach
-/// nothing at all — no review, no verdict, no summary row, no schedule. Giving it its own way out
-/// of the card is what makes "writes nothing" a shape the code has rather than a rule to remember.
+/// evidence about memory; a skip is a statement about a microphone, and it must never become a
+/// verdict — no `_results` row, no tick, no cross.
+///
+/// What the SHELL does with it depends on where the card is standing, and that decision belongs
+/// there rather than here: outside a plan the skip reaches nothing at all, and inside one it closes
+/// the checklist step as a lapse, because a step nothing closes is a day that never passes
+/// ({@see _SessionShellState._skipCard}).
 typedef SessionSkipped = void Function();
 
 /// Drop a term's decoded photo once its card is well behind, so a session's photos don't pile up.
@@ -265,6 +269,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   String _partial = '';
   int _attempts = 0;
 
+  /// HOW LONG PAST ITS OWN WINDOW a recording attempt may go before the card stops waiting for it.
+  ///
+  /// Fifteen seconds, the наряд's own number, and it is a grace period rather than a timeout: the
+  /// engine's window ([_window]) is what normally ends an attempt, and this only catches the case
+  /// where the engine never answers at all. Long enough that a slow start on a cold audio session
+  /// is not mistaken for a dead one; short enough that nobody waits out the two minutes it used to
+  /// take for the process to abort instead.
+  static const _channelGrace = Duration(seconds: 15);
+
   /// The last channel failure, shown as a quiet line rather than as a verdict. Null once something
   /// is heard, so a successful retry clears the apology.
   SpeechOutcome? _channelFailure;
@@ -363,6 +376,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   Timer? _speakTimer;
   Timer? _settleTimer;
 
+  /// The dead-engine watchdog's own timer — see [_armStallWatchdog].
+  Timer? _stallTimer;
+
   /// True once the slide-in has finished. A photo that is NOT already decoded waits for this before
   /// fading in: a picture that materialises mid-transition is exactly what reads as a lag, even
   /// though every frame is delivered on time (F20-r — the janky-looking cards had zero late frames).
@@ -421,6 +437,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     _deferTimer?.cancel();
     _speakTimer?.cancel();
     _settleTimer?.cancel();
+    _stallTimer?.cancel();
     if (_isCloze) _input.removeListener(_onClozeInput);
     // A card left mid-utterance must not leave the microphone open behind it — and must not have
     // its transcript arrive over the next card either. Cancel keeps nothing, which is right: an
@@ -633,18 +650,25 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     final contextualStrings = await _contextualStrings();
     if (!mounted) return;
 
-    final attempt = await _recognizer!.listenOnce(
-      expected: _spokenTargets,
-      localeId: widget.speechLocaleId,
-      timeout: _window.listenFor,
-      pauseFor: _window.pauseFor,
-      contextualStrings: contextualStrings,
-      onPartial: (text) {
-        if (mounted && _listeningNow) setState(() => _partial = text);
-      },
-    );
+    _armStallWatchdog();
 
+    final attempt = await _recognizer!
+        .listenOnce(
+          expected: _spokenTargets,
+          localeId: widget.speechLocaleId,
+          timeout: _window.listenFor,
+          pauseFor: _window.pauseFor,
+          contextualStrings: contextualStrings,
+          onPartial: (text) {
+            if (mounted && _listeningNow) setState(() => _partial = text);
+          },
+        );
+
+    _stallTimer?.cancel();
     if (!mounted) return;
+    // THE WATCHDOG GOT HERE FIRST — the card is no longer listening and has already said so. A
+    // result that arrives after that is a result for an attempt the learner has been let out of.
+    if (!_listeningNow) return;
     setState(() => _listeningNow = false);
 
     if (attempt.isHeard) {
@@ -686,6 +710,44 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       _channelFailure = attempt.outcome;
     });
     AppHaptics.warning();
+  }
+
+  /// THE WAY OUT OF A MICROPHONE THAT NEVER ANSWERS (E2E-SIM-2, С-4).
+  ///
+  /// The recogniser promises to settle every attempt: its own window closes, the plugin reports a
+  /// status, or an error arrives. On the simulator — and on any phone whose audio input does not
+  /// come up — none of the three happens, and the card sat in «Слушаю…» for ever. «Не помню» is
+  /// disabled while listening; «Пропустить» needs a channel failure that was never reported; two
+  /// minutes later the process died inside `AVAudioEngine startAndReturnError:`. Killing the app was
+  /// the only exit from the card, and the stage-A step it belonged to stayed open, so the day could
+  /// not be closed either.
+  ///
+  /// Fifteen seconds with NOTHING back — not a result, not an error, not even a partial — is a
+  /// channel that is not answering, and this ends the attempt exactly as a reported failure would:
+  /// the quiet «микрофон недоступен» line, «Пропустить» on screen, and «Не помню» live again because
+  /// listening has stopped. An attempt that is producing partials is left alone: the engine is
+  /// clearly alive and its own window is the right thing to end the recording.
+  void _armStallWatchdog() {
+    _stallTimer?.cancel();
+    _stallTimer = Timer(_channelGrace, () {
+      if (!mounted || !_listeningNow) return;
+      // SOMETHING IS COMING THROUGH — the engine is alive and the learner is mid-answer. Settle on
+      // what has been heard, exactly as «Готово» does, rather than holding the microphone open: a
+      // long window is a reason to wait for the sentence, not a reason to wait for ever.
+      if (_partial.trim().isNotEmpty) {
+        unawaited(_stopListening());
+
+        return;
+      }
+      unawaited(_recognizer?.cancel());
+      setState(() {
+        _listeningNow = false;
+        _attempts++;
+        _partial = '';
+        _channelFailure = SpeechOutcome.unavailable;
+      });
+      AppHaptics.warning();
+    });
   }
 
   Future<void> _stopListening() async {

@@ -171,7 +171,7 @@ void main() {
         },
       });
 
-      expect(task.stage.letter, 'B');
+      expect(task.stage?.letter, 'B');
       expect(task.ordinal, 1);
       expect(task.ofSteps, 2);
       expect(task.card.termId, 't1');

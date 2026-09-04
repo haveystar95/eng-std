@@ -2732,7 +2732,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planDaySoftNote =>
-      'This is not the current day: the session will run softly — no stage closes and nothing gets scheduled.';
+      'This day is ahead of the current one. The session is the real thing: stage A, and the answers count.';
 
   @override
   String get planDayTrain => 'Train';
@@ -3014,6 +3014,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planRehearsalDoneAction => 'Back to the plan';
+
+  @override
+  String get planCompleteAction => 'Finish the plan';
+
+  @override
+  String get planCompleteTitle => 'Finish the plan?';
+
+  @override
+  String get planCompleteBody =>
+      'The plan closes and its words go to the archive. You can add them back to «Учить» by hand.';
+
+  @override
+  String get planCompleteConfirm => 'Finish';
 
   @override
   String get planRehearsalStart => 'Start the run-through';

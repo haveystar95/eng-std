@@ -855,21 +855,28 @@ void main() {
     expect(find.text('Собрать план заново'), findsNothing);
   });
 
-  testWidgets('the day opened out of turn warns BEFORE the button, not after the session', (
+  testWidgets('a day opened out of turn says which day it is — and no longer that it is soft', (
     tester,
   ) async {
+    // The line is said BEFORE the button either way: looking ahead is a legitimate thing to want,
+    // and the learner should know which day they are about to walk. What it SAYS changed with
+    // E2E-SIM-2 (С-1): «тренировка пройдёт мягко» was true of the мягкий прогон, and that progon is
+    // what dealt dictations of sentences nobody had been shown. An early day is now dealt its own
+    // stage A, strictly, and its answers count — so the warning would be a lie.
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           planDayProvider((planId: '01PLAN', dayIndex: 2)).overrideWith((ref) async => _day()),
         ],
-        // Focus is day 1, so day 2 is ahead of it — a soft run.
+        // Focus is day 1, so day 2 is ahead of it.
         child: _app(PlanDayScreen(plan: _plan(focus: 1), dayIndex: 2)),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('пройдёт мягко'), findsOneWidget);
+    expect(find.textContaining('пройдёт мягко'), findsNothing);
+    expect(find.textContaining('впереди текущего'), findsOneWidget);
+    expect(find.textContaining('ответы засчитываются'), findsOneWidget);
   });
 
   testWidgets('the day summary counts TERMS and says «в работе», never «выучено»', (tester) async {
