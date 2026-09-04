@@ -1438,6 +1438,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrSituationalSay => 'выбери, что ответишь';
 
   @override
+  String get sessionInstrAssembleTurn => 'собери свой ответ из блоков';
+
+  @override
   String get sessionInstrSituationalAsk => 'выбери, что спросишь';
 
   @override

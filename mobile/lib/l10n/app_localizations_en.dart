@@ -1397,6 +1397,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionInstrSituationalSay => 'choose what you will say';
 
   @override
+  String get sessionInstrAssembleTurn => 'put your reply together from the blocks';
+
+  @override
   String get sessionInstrSituationalAsk => 'choose what you will ask';
 
   @override

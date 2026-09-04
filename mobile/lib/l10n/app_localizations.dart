@@ -2313,6 +2313,12 @@ abstract class AppLocalizations {
   /// **'выбери, что ответишь'**
   String get sessionInstrSituationalSay;
 
+  /// Инструкция уровня B+ — сборка ответа из блоков вместо выбора из вариантов (SCENE-RUN, Ч.1).
+  ///
+  /// In ru, this message translates to:
+  /// **'собери свой ответ из блоков'**
+  String get sessionInstrAssembleTurn;
+
   /// Инструкция «Ты спросишь» на ситуационной карточке (SIT-1, канон §4).
   ///
   /// In ru, this message translates to:

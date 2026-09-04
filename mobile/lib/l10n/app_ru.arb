@@ -1083,6 +1083,8 @@
   "@sessionInstrSituationalHear": { "description": "Инструкция «Тебе скажут» на ситуационной карточке (SIT-1): реплика звучит, варианты — смыслы на языке поддержки." },
   "sessionInstrSituationalSay": "выбери, что ответишь",
   "@sessionInstrSituationalSay": { "description": "Инструкция «Ты ответишь» на ситуационной карточке (SIT-1, канон §4)." },
+  "sessionInstrAssembleTurn": "собери свой ответ из блоков",
+  "@sessionInstrAssembleTurn": { "description": "Инструкция уровня B+ — сборка ответа из блоков вместо выбора из вариантов (SCENE-RUN, Ч.1)." },
   "sessionInstrSituationalAsk": "выбери, что спросишь",
   "@sessionInstrSituationalAsk": { "description": "Инструкция «Ты спросишь» на ситуационной карточке (SIT-1, канон §4)." },
   "sessionSituationLabel": "Ситуация",

@@ -417,6 +417,8 @@
   "@sessionInstrSituationalHear": { "description": "«Тебе скажут» situational instruction." },
   "sessionInstrSituationalSay": "choose what you will say",
   "@sessionInstrSituationalSay": { "description": "«Ты ответишь» situational instruction." },
+  "sessionInstrAssembleTurn": "put your reply together from the blocks",
+  "@sessionInstrAssembleTurn": { "description": "Level B+ instruction — assemble the reply from blocks instead of choosing (SCENE-RUN, Ч.1)." },
   "sessionInstrSituationalAsk": "choose what you will ask",
   "@sessionInstrSituationalAsk": { "description": "«Ты спросишь» situational instruction." },
   "sessionSituationLabel": "Situation",

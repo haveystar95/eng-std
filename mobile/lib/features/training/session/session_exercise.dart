@@ -272,6 +272,17 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   bool get _isSituationalSpeak =>
       _mode == ExerciseMode.situationalSay || _mode == ExerciseMode.situationalAsk;
 
+  /// B+ · СБОРКА — тот же ход, но реплики целиком на экране больше нет (наряд SCENE-RUN, Ч.1).
+  ///
+  /// Читается по СОДЕРЖИМОМУ карточки, а не по новому режиму: сервер кладёт блоки вместо вариантов,
+  /// и это единственная разница. Уровень едет и отдельным полем (`turn_level`), но решает здесь
+  /// именно карточка — экран рисует то, что ему прислали, а не то, что он вывел из подписи; иначе
+  /// «уровень сборка» и «блоков нет» дали бы пустой экран вместо задания.
+  ///
+  /// Клавиатуры не появляется ни при каком уровне: канон §9 — ни один обязательный шаг не требует
+  /// системной клавиатуры изучаемого языка.
+  bool get _isAssembleTurn => _isSituationalSpeak && _chips.isNotEmpty;
+
   // ── speaking ───────────────────────────────────────────────────────────────
   // The channel state, kept apart from the answering state above on purpose: `_attempts` counts
   // failures of the MICROPHONE, never wrong answers. A recognised answer is a verdict on the first
@@ -790,15 +801,37 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // though its options are whole sentences — that only changes how they read, not how they
         // are answered. Leaving it out was the device-batch bug: prompt and photo rendered, and
         // there was nothing on screen to tap.
-        if (_mode == ExerciseMode.multipleChoice ||
-            _mode == ExerciseMode.descriptionMatch ||
-            _mode.isSituational ||
-            _mode.isSentenceChoice ||
-            _isRecognitionListening) ...[
+        if (!_isAssembleTurn &&
+            (_mode == ExerciseMode.multipleChoice ||
+                _mode == ExerciseMode.descriptionMatch ||
+                _mode.isSituational ||
+                _mode.isSentenceChoice ||
+                _isRecognitionListening)) ...[
           const SizedBox(height: AppSpacing.s12),
           _options(l),
         ],
-        if (_mode.isAssembled) ...[const SizedBox(height: AppSpacing.s16), _chipTray(l)],
+        // СТРОКА СБОРКИ У ХОДА — своим блоком, а не внутри карточки-вопроса.
+        //
+        // У word_bank и scramble она живёт в карточке-вопросе, потому что там эта карточка есть. В
+        // разговоре её нет вовсе: реплику подаёт пузырь, вопрос такта стоит над карточкой, и
+        // положения на экране не рисуется (наряд DAY-2-FIX, Ч.1.1). Без этой строки человек тапал
+        // бы блоки и не видел, что собрал.
+        if (_isAssembleTurn) ...[
+          const SizedBox(height: AppSpacing.s12),
+          PaperCard(
+            child: _AssemblyLine(
+              words: _placed.map((i) => _chips[i]).toList(),
+              answered: _answered,
+              correct: _verdict?.isAccepted ?? false,
+              mistakes: _mistakes(_placed.map((i) => _chips[i]).toList()),
+              onTapWord: (idx) => _unplaceChip(_placed[idx]),
+            ),
+          ),
+        ],
+        if (_mode.isAssembled || _isAssembleTurn) ...[
+          const SizedBox(height: AppSpacing.s16),
+          _chipTray(l),
+        ],
         if (!_answered && _isSpeaking) ...[
           const SizedBox(height: AppSpacing.s16),
           _speakingControls(l),
@@ -813,11 +846,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // «я не помню это слово» sayable on a sentence and unsayable on a word: the only way out of
         // a word_bank card was to assemble something wrong on purpose, and a wrong answer and a
         // blank one are not the same statement about what the learner knows.
-        if (!_answered && _mode.isAssembled) ...[
+        if (!_answered && (_mode.isAssembled || _isAssembleTurn)) ...[
           const SizedBox(height: AppSpacing.s12),
           QuietButton(label: l.sessionDontRemember, onPressed: _giveUp),
         ],
-        if (!_answered && _mode.isAssembled && _placed.isNotEmpty) ...[
+        if (!_answered && (_mode.isAssembled || _isAssembleTurn) && _placed.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s12),
           // «Проверить», not «Дальше»: this submits the assembled phrase (grades it) — the
           // feedback block then shows the real «Дальше» that advances. Two distinct steps, two
@@ -920,8 +953,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     // different things: a MEANING on «Тебе скажут», a reply on «Ты ответишь», a question on «Ты
     // спросишь». One instruction for all three would describe none of them.
     ExerciseMode.situationalHear => l.sessionInstrSituationalHear,
-    ExerciseMode.situationalSay => l.sessionInstrSituationalSay,
-    ExerciseMode.situationalAsk => l.sessionInstrSituationalAsk,
+    // …и на двух говорящих полках инструкция зависит от того, ЧТО лежит на экране: варианты или
+    // блоки (наряд SCENE-RUN, Ч.1). «Выбери, что ответишь» над рядом плиток описывает карточку, на
+    // которую человек не смотрит.
+    ExerciseMode.situationalSay =>
+      _isAssembleTurn ? l.sessionInstrAssembleTurn : l.sessionInstrSituationalSay,
+    ExerciseMode.situationalAsk =>
+      _isAssembleTurn ? l.sessionInstrAssembleTurn : l.sessionInstrSituationalAsk,
   };
 
   String _typeLabel(AppLocalizations l) => switch (_card.type) {
