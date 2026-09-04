@@ -175,6 +175,12 @@
 их больше не просил; докачка на входе в день была ОДНОЙ попыткой, и упавшая попытка не повторялась
 ничем. Экран честно ждал того, чего не заказывали.
 
+**Где лежат абсолютные адреса** (для отдельного микро на относительные пути): сохранённый присест —
+`sync_meta['plan_sitting'] → payload` (`mobile/lib/data/plan_sitting_store.dart`, `_key`,
+`PlanSitting.payload`), внутри пейлоада поля `line_audio[].url` и `dialogues[].turns[].audio_url`;
+на сервере их строит `LineAudioUrl::for()`
+(`backend2/app/Modules/Learning/Presentation/Http/LineAudioUrl.php`) через `url()`.
+
 **Закрыто тремя правками, каждая на своём отрезке:**
 
 1. **Посадка видит недостачу первой** и заказывает её — порт `OrdersLineSpeech` в Learning, адаптер
