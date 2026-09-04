@@ -58,6 +58,28 @@ it('treats a budget of zero as one card, rather than as no day', function () {
     expect(PlanSittings::cut([...part(S::WARMUP, 2), ...part(S::SAY, 2)], 0))->toBe([2, 2]);
 });
 
+it('never hands out a sitting longer than forty tasks, whatever the minutes buy (С-12)', function () {
+    // The stand's own day: 68 tasks over the canon's shelves, on the learner's twenty minutes. The
+    // budget alone never cut it — `sittings` came back `[68]`, and the «присест пройден» screen was
+    // never once seen in the whole run. A day-scene is two sittings for anybody.
+    $day = [
+        ...part(S::WARMUP, 10), ...part(S::WORDS, 24),
+        ...part(S::HEAR, 8), ...part(S::SAY, 16), ...part(S::ASK, 10),
+    ];
+    expect($day)->toHaveCount(68);
+
+    // 20 minutes at the measured 16 s a card is a budget of 75 — more than the day holds.
+    // The cut still falls on a shelf boundary: warm-up + words, then the three speak shelves.
+    expect(PlanSittings::cut($day, 75))->toBe([34, 34]);
+
+    // …and the ceiling binds no matter how the arithmetic is arrived at.
+    foreach ([41, 75, 150, 1000] as $budget) {
+        foreach (PlanSittings::cut($day, $budget) as $size) {
+            expect($size)->toBeLessThanOrEqual(PlanSittings::MAX_TASKS_PER_SITTING);
+        }
+    }
+});
+
 it('re-opens a section that comes back later as a section of its own', function () {
     // The cutter reads the list it is given and does not reorder it: two runs of the same key are
     // two parts, because a boundary is «the shelf changed», not «this shelf has appeared before».

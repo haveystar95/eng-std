@@ -53,6 +53,40 @@ it('deals the final day a run-through over every card the plan taught', function
     }
 });
 
+it('runs the final day through by ear and by voice — no typing, no dictation (С-9)', function () {
+    // Канон §10/§12: «прогон всех сцен + финальный разговор», вслух. What the stand got instead was
+    // the ordinary selector's pick over 53 tasks — `listening` 16, `typing` 11, `cloze` 4, and not
+    // one speaking card — i.e. the learner typing out the INTERLOCUTOR's lines from audio three
+    // minutes before the appointment. The mode is named per card now
+    // ({@see \App\Modules\Learning\Application\Command\BuildPlanSessionHandler::rehearsalModesFor()}).
+    [, $token, $planId] = startedPlan($this);
+
+    $final = DB::table('learning_plan_days')->where('plan_id', $planId)->where('kind', 'final')->first();
+    $session = planSession($this, $token, $planId, (int) $final->day_index);
+
+    $modes = array_values(array_unique(array_map(
+        static fn (array $t): string => (string) $t['card']['exercise_mode'],
+        $session['tasks'],
+    )));
+
+    expect($modes)->not->toBeEmpty();
+    foreach ($modes as $mode) {
+        expect($mode)->toBeIn([
+            'multiple_choice', 'speaking',
+            'situational_hear', 'situational_say', 'situational_ask',
+        ]);
+    }
+
+    // The scene's own shelves are run through as scenes, and the learner's own lines out loud.
+    expect($modes)->toContain('speaking')
+        ->and($modes)->toContain('situational_hear');
+
+    // …and nothing that puts a keyboard between the learner and the conversation.
+    foreach (['typing', 'dictation', 'cloze', 'listening', 'word_bank', 'scramble'] as $absent) {
+        expect($modes)->not->toContain($absent);
+    }
+});
+
 it('lets the learner close the plan, and the words go to the archive with it', function () {
     [$user, $token, $planId] = startedPlan($this);
 

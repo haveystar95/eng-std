@@ -265,9 +265,11 @@ it('never lets the other plan`s words into a plan session, in either direction',
     $aTerms = planTermIds($f['planA']);
     $bTerms = planTermIds($f['planB']);
 
-    // B's sitting holds nothing of A — not as a card, and not as a wrong answer.
+    // B's sitting holds nothing of A — not as a card, and not as a wrong answer. «Of A» means A's
+    // OWN: the rescue kit is one deduplicated set of five rows that both plans stand on (see the
+    // first test in this file), so a phrase both plans hold is not evidence of a leak either way.
     $b = planSession($this, $f['token'], $f['planB']);
-    $aSurface = surfaceTexts($aTerms);
+    $aSurface = array_values(array_diff(surfaceTexts($aTerms), surfaceTexts($bTerms)));
     foreach ($b['tasks'] as $task) {
         expect($task['card']['term_id'])->toBeIn($bTerms);
     }
@@ -277,7 +279,7 @@ it('never lets the other plan`s words into a plan session, in either direction',
 
     // And A's own sitting, opened after it ended, holds nothing of B.
     $a = planSession($this, $f['token'], $f['planA']);
-    $bSurface = surfaceTexts($bTerms);
+    $bSurface = array_values(array_diff(surfaceTexts($bTerms), surfaceTexts($aTerms)));
     expect($a['tasks'])->not->toBeEmpty();
     foreach ($a['tasks'] as $task) {
         expect($task['card']['term_id'])->toBeIn($aTerms);

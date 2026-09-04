@@ -11,7 +11,6 @@ use App\Modules\Learning\Domain\Service\PlanChoiceFloor;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\Service\RoleLineModes;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
-use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanLevel;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
@@ -169,7 +168,7 @@ final readonly class PlanStandings
             $kind = PlanStageLadder::ladderKindFor($termContent->kind, $termContent->tier, $termContent->shelf);
 
             $out[$termId] = $this->ladder->standingFor(
-                applicable: $this->applicableFor($termContent, $openAtLevel, $kind, $termId, $content, $optionCount, $user, $spokenByRole),
+                applicable: $this->applicableFor($termContent, $openAtLevel, $kind, $content, $optionCount, $user, $spokenByRole),
                 facts: $facts[$termId] ?? [],
                 introduced: $introduced[$termId] ?? false,
                 today: $today,
@@ -179,6 +178,12 @@ final readonly class PlanStandings
                 kind: $kind,
                 pairCounter: self::pairCounterFor($termId),
                 yesterday: $yesterday,
+                // THE RESCUE KIT NEVER RETIRES (канон §5, «из ротации не выпадают»). Its stages end
+                // where every line's do — at B — and its training does not: it keeps coming back in
+                // the warm-up every other day for the rest of the plan
+                // ({@see PlanStageLadder::maintenanceModeFor()}). Told by the SHELF, here, because
+                // the ladder is a table of trainers and this is a fact about what a card is for.
+                staysInRotation: $termContent->shelf === self::SHELF_RESCUE,
             );
         }
 
@@ -198,7 +203,6 @@ final readonly class PlanStandings
         TermContentView $content,
         array $openAtLevel,
         string $kind,
-        string $termId,
         array $pool,
         int $optionCount,
         UserId $user,
@@ -222,11 +226,15 @@ final readonly class PlanStandings
         // The trainers this KIND is ever dealt, intersected with the level's open list. Without
         // this the level would keep offering `typing` to a spoken line: the level says what a
         // learner at this level meets, and the kind says what this card can be asked at all.
+        //
+        // BOTH assembly alternatives are in this set, whichever one the pair prefers — see
+        // {@see PlanStageLadder::modesEverDealtTo()}. Asking for the preferred one alone is what
+        // made a line that drew `scramble` lose its assembly step altogether (С-7): the gate struck
+        // `word_bank` out as a trainer of the wrong kind, and then `scramble` was refused for want
+        // of an example, so the step had nothing left to fall back on.
         $forKind = [];
-        foreach (PlanStage::cases() as $stage) {
-            foreach (PlanStageLadder::modesOf($stage, $kind, self::pairCounterFor($termId)) as $mode) {
-                $forKind[$mode->value] = true;
-            }
+        foreach (PlanStageLadder::modesEverDealtTo($kind) as $mode) {
+            $forKind[$mode->value] = true;
         }
 
         // THE FLOOR, not the level's preference. A day that can furnish three same-shape,
@@ -338,6 +346,9 @@ final readonly class PlanStandings
             $floor - 1,
         ));
     }
+
+    /** The shelf the server's own five phrases stand on — {@see PlanShelf::Rescue}. */
+    private const SHELF_RESCUE = 'rescue';
 
     /**
      * The pair's own stable number — the input to the one alternation a plan makes.

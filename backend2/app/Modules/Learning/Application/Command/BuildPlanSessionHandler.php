@@ -15,8 +15,6 @@ use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\HomePlanReader;
 use App\Modules\Learning\Application\Port\ModeAdmissionReader;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
-use App\Modules\Learning\Application\Query\GetPracticeTerms;
-use App\Modules\Learning\Application\Query\GetPracticeTermsHandler;
 use App\Modules\Learning\Application\Service\CardLanguageResolver;
 use App\Modules\Learning\Application\Service\PlanDayPassing;
 use App\Modules\Learning\Application\Service\PlanProgress;
@@ -71,10 +69,21 @@ use App\Modules\Vocabulary\Application\Query\TermContentReader;
  *      ({@see PlanDayOrder}): the pieces, then the connectors, then the replies built out of them,
  *      then the interlocutor's own line. Each brings its whole remaining stage-A checklist, because
  *      stage A has to close in ONE sitting or the day does not pass.
- *   2. **plan reviews** — words of this plan, introduced on an EARLIER day, that the repetition
- *      planner says are due and that stand on stage B or C. B before C, because a word two stages
- *      from ready needs the sitting more than one that is nearly there. This is the seam the learner
- *      reads as «Повторение · из прошлых дней».
+ *   2. **plan reviews** — words of this plan, introduced on ANOTHER day, that THE PLAN'S OWN LADDER
+ *      owes a card today: stage A closed, a night passed, so the standing stands on B or C with a
+ *      `nextMode`. B before C, because a word two stages from ready needs the sitting more than one
+ *      that is nearly there. This is the seam the learner reads as «Повторение · из прошлых дней».
+ *
+ *      IT IS THE LADDER AND NOT `due_at`, and that sentence is the whole of E2E-SIM-2 С-2. The seam
+ *      used to be assembled from {@see DueTermsReader::selectableForPlan()} — the plan's own words
+ *      that the REPETITION PLANNER had made due — while the STAGE was computed from the plan's
+ *      ladder. The two agree only while SM-2's interval happens to be shorter than the plan, and
+ *      they part company on the second night of any plan: measured on the stand (Э4.2), every one of
+ *      day 1's sixteen cards stood on stage B with a `nextMode`, and not one of them was dealt,
+ *      because their `due_at` had gone out to 2026-10-21…2027-01-09. The rescue kit went the same
+ *      way — out to 2027 — so «спасатели каждый день до конца плана» quietly stopped after two days.
+ *      A plan deals BY THE PLAN; `due_at` goes on being written by the ordinary scheduler and goes
+ *      on being read the day the plan ends and its words return to the pool.
  *
  * ## There is no third bucket, and «no» here means NOT CALLED
  *
@@ -88,8 +97,9 @@ use App\Modules\Vocabulary\Application\Query\TermContentReader;
  *
  * The rule is cancelled rather than tightened. A filter is a promise that somebody remembered every
  * way a foreign card can look like a local one, and two rounds of that promise were broken by cards
- * nobody had thought of. So the read itself is scoped ({@see DueTermsReader::selectableForPlan()}):
- * the session cannot deal a word this plan did not enrol, because it never reads one.
+ * nobody had thought of. So the read itself is scoped ({@see planViews()}): the session cannot deal
+ * a word this plan did not enrol, because the only term ids it ever asks about are the ones its own
+ * days hold.
  *
  * The other direction is the same rule seen from the pool: a plan's words are dealt BY THE PLAN and
  * by nothing else — out of the ordinary session and out of «Повторить N»
@@ -111,15 +121,45 @@ use App\Modules\Vocabulary\Application\Query\TermContentReader;
  *
  * ## A day opened ahead of the focus
  *
- * Soft, deliberately. The learner may look at day 3 on day 1 — the material exists, and refusing to
- * show it would be pretending it does not. But it is a PRACTICE session: it schedules nothing,
- * closes no stage and does not move the focus, because a day walked through before its turn has not
- * been done, it has been read.
+ * STRICT, like every other day of the plan, and this is the second half of E2E-SIM-2 (С-1).
+ *
+ * It used to be a «мягкий прогон»: the day's collection, shuffled, one card each, no stages, mode
+ * chosen by the ORDINARY selector. The learner may look at day 3 on day 1 — the material exists and
+ * refusing to show it would be pretending it does not — but what they were shown was not the day. It
+ * was an exam before the introduction: measured on the stand (Э3.2) and again on the owner's live
+ * evening (03.09), seventeen tasks with no `intro` among them, six of them dictations of a sentence
+ * the learner had never been shown, the running order shuffled against канон §11, and cards of the
+ * `numbers` shelf that no session is supposed to deal at all. The screen captioned it «СТУПЕНЬ A ·
+ * ПОВТОРЕНИЕ» over material that had neither.
+ *
+ * So a day opened early is dealt exactly what it would be dealt in its turn — its own cards, at
+ * whatever rung the plan's ladder stands them on, in канон §11's order, the intro first and once.
+ * Since none of those cards has been introduced, that is stage A and nothing else: the железное
+ * правило «B не раньше закрытой A + ночи» is what makes «only stage A» a CONSEQUENCE here rather
+ * than a second rule to keep in step.
+ *
+ * Two things it does not get: the seam (an early day is not a day whose earlier days are being
+ * revised — the learner came to look ahead, and «Повторение» over material from tomorrow's lesson is
+ * an answer to a question nobody asked), and any special treatment of the focus, which moves when
+ * days PASS and therefore moves on its own if the learner actually finishes what they opened.
  */
 final readonly class BuildPlanSessionHandler
 {
-    /** Seconds a card costs when this learner has no measured figure yet — the home screen's. */
-    private const DEFAULT_CARD_SECONDS = 8;
+    /**
+     * Seconds a card costs when this learner has no measured figure yet.
+     *
+     * SIXTEEN, measured, and it used to be eight «because that is the home screen's number». Eight
+     * was never a measurement of anything: at eight seconds a card, twenty minutes buys 150 cards
+     * and a day-scene of 68–81 fits in one присест, which is why the «присест пройден» screen never
+     * appeared once in the whole E2E-SIM-2 run (С-12) — the mechanism was right and there was
+     * nothing to switch it on. The owner's own live day 1 is the figure used here: 60 answers in
+     * 962 seconds ≈ 16 s a card, the first sitting of a plan, with the reading and the audio in it.
+     *
+     * It is a DEFAULT and it is replaced the moment the learner has fifty answers of their own
+     * ({@see taskBudget()}), so a fast reader is measured and not assumed — the number only has to
+     * be honest about somebody who has never sat down yet.
+     */
+    private const DEFAULT_CARD_SECONDS = 16;
 
     /** How many recent answers the per-learner card-seconds figure is measured over. */
     private const LATENCY_SAMPLE = 50;
@@ -150,12 +190,15 @@ final readonly class BuildPlanSessionHandler
         private PlanProgress $progress,
         private PlanModeSettingsReader $planSettings,
         /**
-         * The plan's OWN due words — its seam, and the only due list a plan session reads. Not
-         * {@see GetDueTermsHandler}: that query answers «what does the trainer deal next out of the
-         * POOL», and the pool is by definition everything no running plan is standing on.
+         * THE PROGRESS ROWS OF THIS PLAN'S OWN CARDS — read by term id, never by `due_at`.
+         *
+         * It is a reader of rows and not a queue any more. It used to answer «which of this plan's
+         * words has the repetition planner made due» ({@see DueTermsReader::selectableForPlan()}),
+         * which is how the seam was chosen until С-2 showed the two ideas of «owed» drifting apart
+         * on the second night of every plan. The plan asks the LADDER what is owed and asks this
+         * only for the row the card is built from ({@see planViews()}).
          */
         private DueTermsReader $dueInPlan,
-        private GetPracticeTermsHandler $practiceTerms,
         private UserCollectionTermsReader $collectionTerms,
         private TermContentReader $content,
         private CardLanguageResolver $languages,
@@ -194,19 +237,20 @@ final readonly class BuildPlanSessionHandler
         // and the screen agree about what is finished.
         $this->passing->mark($plan, $days, $progress);
 
-        $strict = $dayIndex === $progress->focusDayIndex && $day->kind() === PlanDayKind::Intro;
+        // EVERY TEACHING DAY IS STRICT — its turn or not. See the class docblock, «A day opened
+        // ahead of the focus»: the soft run is gone, and it is gone rather than gated, because a
+        // second way to deal a plan day is a second place for «B без A» to be invented.
+        $strict = $day->kind() === PlanDayKind::Intro;
         $knobs = $this->planSettings->knobsFor($plan->level());
 
-        $tasks = match (true) {
-            $strict => $this->strictTasks($plan, $progress, $dayIndex, $knobs),
+        $tasks = $strict
+            ? $this->strictTasks($plan, $progress, $dayIndex, $knobs)
             // THE FINAL DAY IS A RUN-THROUGH, not a lesson (Д-27). It introduces nothing and owns no
             // collection, which is why asking to GENERATE it is a 404 — there is no material to
             // buy. The material already exists: it is every card the plan has taught. Before this
             // the client asked for a build, got the 404 and dead-ended, so the plan could not be
             // finished from the app at all and the live run closed it from tinker.
-            $day->kind() === PlanDayKind::Final => $this->rehearsalTasks($plan, $progress, $knobs),
-            default => $this->softTasks($plan, $day, $knobs),
-        };
+            : $this->rehearsalTasks($plan, $progress, $knobs);
 
         $sessionId = $command->sessionId ?? StudySessionId::generate();
         $this->persist($sessionId, $plan, $day, $tasks, $strict);
@@ -292,32 +336,18 @@ final readonly class BuildPlanSessionHandler
             return [];
         }
 
-        $standings = $progress->allStandings();
-        $dayOf = $this->dayOfTerm($progress);
+        // WHETHER THIS IS THE DAY THE PLAN IS ON. It decides one thing and one thing only — whether
+        // the sitting carries a seam — and everything else about the sitting is identical, which is
+        // the point of «мягкого прогона больше нет».
+        $isFocusDay = $dayIndex === $progress->focusDayIndex;
 
-        // THIS PLAN'S OWN WORDS THAT THE PLANNER HAS MADE DUE AGAIN — and nothing else in the world.
+        // EVERY CARD OF THE PLAN, with its progress row — the whole input, read once.
         //
-        // It used to be the learner's whole due list ({@see GetDueTerms}), which is how bucket 3 was
-        // fed and how a word out of an abandoned holiday plan turned up in a lesson about renting a
-        // flat. The list is now the plan's own by construction rather than by filter: there is no
-        // predicate here that could be forgotten or widened, because nothing outside the plan is
-        // ever read.
-        $due = $this->dueInPlan->selectableForPlan(
-            $plan->userId(),
-            $plan->id()->value,
-            $this->clock->now(),
-            self::DUE_CAP,
-        );
-
-        /** @var array<string, DueTermView> $views */
-        $views = [];
-        foreach ($due as $view) {
-            $views[$view->termId->value] = $view;
-        }
-        // The day's own words need a view too, and they are not due — they have never been seen.
-        foreach ($this->dayViews($plan, $today) as $termId => $view) {
-            $views[$termId] ??= $view;
-        }
+        // Not «the due ones plus today's»: a card of an earlier day owes its stage-B card because
+        // the LADDER says so, and a card with no view is dropped in assembly, which is how the whole
+        // warm-up and the whole seam went missing on the stand while their standings said they were
+        // owed (С-2).
+        $views = $this->planViews($plan, $progress);
 
         $specs = [];
         $taken = [];
@@ -375,11 +405,25 @@ final readonly class BuildPlanSessionHandler
                 continue;
             }
 
-            // The kit has walked its ladder and owes nothing today — and it still comes back
-            // TOMORROW. One card at whatever rung the pair stands on, so «из ротации не выпадают»
-            // stays true for the rest of the plan rather than for the two days its ladder takes.
-            // Once, because of the skip above: this is the day's warm-up, not the sitting's.
-            $specs[] = ['term_id' => $termId, 'stage' => null, 'mode' => null, 'ordinal' => 0,
+            // THE KIT HAS WALKED ITS STAGES — and this is where «C с дня 3» happens (канон §5).
+            //
+            // A maintenance card every OTHER day, in the two modes the kit exists for: hear it said
+            // to you, and say it with nothing on the screen. Not the ordinary selector's pick, which
+            // is what «mode => null» used to mean here and what walked the five phrases up the
+            // POOL's rungs — cloze, typing — inside a plan they belong to. Not every day either:
+            // «два касания в неделю» would be too little and every morning too much for a phrase
+            // whose stages are behind it, and the owner's rule is раз в 2 дня.
+            //
+            // «Every other» is anchored on the PHRASE's own yesterday rather than on a calendar
+            // parity: a learner who misses Tuesday gets it on Wednesday instead of waiting out a
+            // rhythm they never saw. Which of the two modes falls on this touch alternates with the
+            // day, so two consecutive touches are never the same trainer.
+            if ($standing->answeredYesterday) {
+                continue;
+            }
+            $specs[] = ['term_id' => $termId, 'stage' => null,
+                'mode' => PlanStageLadder::maintenanceModeFor(intdiv(self::dayNumber($progress->today), 2)),
+                'ordinal' => 0,
                 'of' => 0, 'day' => $rescue['day'], 'softened' => false, 'source' => 'warmup',
                 'step' => null, 'section' => PlanSessionTaskView::SECTION_WARMUP];
         }
@@ -436,22 +480,43 @@ final readonly class BuildPlanSessionHandler
             ];
         }
 
-        // 2. THE SEAM: words of an EARLIER day of this plan that the planner has made due again and
-        // that stand on stage B or C — B first, because a word two stages from ready needs the
-        // sitting more than one that is nearly there. A word that is both today's and due is the
-        // day's, which is why this loop skips what the first one took.
-        foreach ([PlanStage::B, PlanStage::C] as $stage) {
-            foreach ($due as $view) {
-                $termId = $view->termId->value;
-                $standing = $standings[$termId] ?? null;
-                if ($standing === null || $standing->stage !== $stage || isset($taken[$termId])) {
-                    continue;
+        // 2. THE SEAM: cards of ANOTHER day of this plan that the PLAN'S LADDER owes a card today —
+        // stage A closed, a night passed, so they stand on B or C with something still open. B
+        // first, because a word two stages from ready needs the sitting more than one that is nearly
+        // there. A card that is both today's and owed is the day's, which is why this loop skips
+        // what the first one took.
+        //
+        // `due_at` is not consulted, and that is С-2's fix: see the class docblock. The standings
+        // are the same ones the day screen draws, so «эта карточка на ступени B» and «эту карточку
+        // сегодня раздадут» are now one statement instead of two that agree by luck.
+        //
+        // NOT ON A DAY OPENED EARLY. The learner asked to look ahead; a revision of the days behind
+        // them is not part of that question, and the canon's seam is «из прошлых дней» of the day
+        // being studied.
+        if ($isFocusDay) {
+            foreach ([PlanStage::B, PlanStage::C] as $stage) {
+                foreach ($progress->days as $index => $earlier) {
+                    if ($index === $dayIndex) {
+                        continue;
+                    }
+                    foreach ($earlier->termIds as $termId) {
+                        $standing = $earlier->standings[$termId] ?? null;
+                        if ($standing === null || isset($taken[$termId])) {
+                            continue;
+                        }
+                        // OWED TODAY, on this stage. A card whose stage is closed and whose night
+                        // has not passed has `nextMode === null` and is not in the sitting — which
+                        // is the железное правило read from the other side.
+                        if ($standing->stage !== $stage || $standing->nextMode === null) {
+                            continue;
+                        }
+                        $taken[$termId] = true;
+                        $specs = [
+                            ...$specs,
+                            ...$this->specsFor($termId, $standing, $index, 'plan_review', $knobs, $this->kindOf($progress, $termId)),
+                        ];
+                    }
                 }
-                $taken[$termId] = true;
-                $specs = [
-                    ...$specs,
-                    ...$this->specsFor($termId, $standing, $dayOf[$termId] ?? null, 'plan_review', $knobs, $this->kindOf($progress, $termId)),
-                ];
             }
         }
 
@@ -475,6 +540,19 @@ final readonly class BuildPlanSessionHandler
             $today->collectionId,
             progress: $progress,
         );
+    }
+
+    /**
+     * The learner's local day as a plain day count — the input to the maintenance alternation.
+     *
+     * A number that increases by one every calendar day and by nothing else, so two touches two days
+     * apart are always two different trainers. `Y-m-d` parsed at midnight UTC: the DATE is already
+     * the learner's own ({@see PlanProgress}), and re-applying a timezone to a date that has one
+     * baked in is how an off-by-one enters.
+     */
+    private static function dayNumber(string $localDate): int
+    {
+        return intdiv((int) (new \DateTimeImmutable($localDate . ' 00:00:00', new \DateTimeZone('UTC')))->getTimestamp(), 86400);
     }
 
     /**
@@ -587,47 +665,6 @@ final readonly class BuildPlanSessionHandler
         return PlanStageLadder::KIND_WORD;
     }
 
-    // ── the soft session ─────────────────────────────────────────────────────────────────────
-
-    /**
-     * A day opened out of turn: its collection, shuffled, one card each, no stages.
-     *
-     * @return list<PlanSessionTaskView>
-     */
-    private function softTasks(LearningPlan $plan, PlanDay $day, PlanKnobs $knobs): array
-    {
-        $collectionId = $day->collectionId()?->value;
-        if ($collectionId === null) {
-            return [];
-        }
-
-        $views = ($this->practiceTerms)(new GetPracticeTerms(
-            userId: $plan->userId(),
-            sessionSize: $this->taskBudget($plan),
-            collectionId: $collectionId,
-        ));
-
-        $byTerm = [];
-        $specs = [];
-        foreach ($views as $view) {
-            $byTerm[$view->termId->value] = $view;
-            $specs[] = ['term_id' => $view->termId->value, 'stage' => null, 'mode' => null,
-                'ordinal' => 0, 'of' => 0, 'day' => $day->dayIndex(), 'softened' => false,
-                'source' => 'soft', 'step' => null];
-        }
-
-        $ids = array_map(static fn (DueTermView $v): TermId => $v->termId, $views);
-        $content = $this->content->byIds(
-            $ids,
-            $this->languages->forTerms($plan->userId(), $ids, $collectionId),
-            scopeCollectionId: $collectionId,
-        );
-
-        return $this->assembleTasks(
-            $plan, $specs, $byTerm, $content, $knobs, $day->dayIndex(), $collectionId, isPractice: true,
-        );
-    }
-
     /**
      * THE FINAL DAY: every card the plan taught, once each, in the order it taught them.
      *
@@ -640,6 +677,26 @@ final readonly class BuildPlanSessionHandler
      * is the same content every other plan surface reads and therefore the same answer about what a
      * day holds — including the day-scoped example, which a second read here would have lost.
      *
+     * ## WHAT A RUN-THROUGH IS MADE OF — and what it stopped being made of
+     *
+     * Recognition, the situation, and saying it out loud. Nothing typed, nothing dictated.
+     *
+     * The mode used to be left null, so the ORDINARY selector chose — and on the stand (С-9) it
+     * chose, for the morning before the appointment: 16 dictations, 11 typing cards, 4 clozes and
+     * not one speaking card. Half of it was the learner typing out the INTERLOCUTOR's lines from
+     * audio, which is a keyboard test three minutes before a conversation. Канон §10/§12 asks for
+     * «прогон всех сцен … вслух», so the mode is named here, per card, by what the card is:
+     *
+     *   «Тебе скажут» (понимаю)   the situation — hear it, choose what it meant
+     *   «Ты ответишь» / «Ты спросишь»  their own situational card, and the tapped line said aloud
+     *   слова, связки, спасатели  say it
+     *
+     * Each is a LIST rather than one mode, and the list is the fallback order: a situational card
+     * whose shelf cannot furnish three same-shape options is refused by the assembler, and a
+     * rehearsal that dropped the card would quietly leave a scene out of the run-through of it. The
+     * strict path never falls back — there a refused card is dropped on purpose, because
+     * substituting a trainer would close a checklist step nobody was asked.
+     *
      * @return list<PlanSessionTaskView>
      */
     private function rehearsalTasks(LearningPlan $plan, PlanProgressView $progress, PlanKnobs $knobs): array
@@ -649,22 +706,20 @@ final readonly class BuildPlanSessionHandler
         $indexes = array_keys($progress->days);
         sort($indexes);
 
-        $views = [];
+        $views = $this->planViews($plan, $progress);
         $content = [];
         $specs = [];
         $seen = [];
         foreach ($indexes as $index) {
             $day = $progress->days[$index];
             $content += $day->content;
-            foreach ($this->dayViews($plan, $day) as $termId => $view) {
-                $views[$termId] ??= $view;
-            }
             foreach ($day->termIds as $termId) {
                 if (isset($seen[$termId]) || ! isset($day->content[$termId])) {
                     continue;
                 }
                 $seen[$termId] = true;
-                $specs[] = ['term_id' => $termId, 'stage' => null, 'mode' => null,
+                $specs[] = ['term_id' => $termId, 'stage' => null,
+                    'mode' => null, 'modes' => self::rehearsalModesFor($day->content[$termId]),
                     'ordinal' => 0, 'of' => 0, 'day' => $index, 'softened' => false,
                     'source' => 'rehearsal', 'step' => null];
             }
@@ -683,6 +738,30 @@ final readonly class BuildPlanSessionHandler
             null,
             isPractice: true,
         );
+    }
+
+    /**
+     * THE RUN-THROUGH'S TRAINERS FOR ONE CARD, best first — see {@see rehearsalTasks()}.
+     *
+     * The ladder KIND decides, exactly as it decides the checklist ({@see PlanStageLadder}), so a
+     * card that climbed the понимаю ladder is run through by understanding and a reply is run
+     * through by answering. Each list ends in a mode that needs no option pool at all, so the
+     * run-through cannot lose a card to a starved shelf.
+     *
+     * @return list<ExerciseMode>
+     */
+    private static function rehearsalModesFor(TermContentView $content): array
+    {
+        return match (PlanStageLadder::ladderKindFor($content->kind, $content->tier, $content->shelf)) {
+            // Heard, then understood. `multiple_choice` behind it is the same question with the text
+            // on the screen — the honest degradation when the shelf is too small for a situation.
+            PlanStageLadder::KIND_UNDERSTAND => [ExerciseMode::SituationalHear, ExerciseMode::MultipleChoice],
+            PlanStageLadder::KIND_LINE_SAY => [ExerciseMode::SituationalSay, ExerciseMode::Speaking],
+            PlanStageLadder::KIND_LINE_ASK => [ExerciseMode::SituationalAsk, ExerciseMode::Speaking],
+            // A line with no shelf — the rescue kit — and every word and connector: say it. There is
+            // no situation to put a rescue phrase in; it is what the learner says in all of them.
+            default => [ExerciseMode::Speaking, ExerciseMode::MultipleChoice],
+        };
     }
 
     // ── assembly ─────────────────────────────────────────────────────────────────────────────
@@ -761,22 +840,36 @@ final readonly class BuildPlanSessionHandler
                 continue;
             }
 
-            /** @var ExerciseMode|null $mode */
-            $mode = $spec['mode'];
-            $card = $this->assembler->assemble(
-                $plan->userId(), $view, $termContent, $poolIds, $enabled, $matrix,
-                isPractice: $isPractice,
-                cardIndex: $index,
-                slotStep: $spec['step'],
-                neighbours: $neighbours,
-                modeOverride: $mode,
-                supportLang: $langs->for($termId),
-                // The one knob the choice card already understood, and the level's own number.
-                optionCount: $knobs->mcOptions,
-            );
-            // The assembler refused this card — the term's data could not build it after all. The
-            // TASK is dropped rather than replaced: substituting another trainer would close a
-            // checklist step the learner was never asked.
+            // THE TRAINERS THIS SLOT WILL ACCEPT, best first.
+            //
+            // One, on every path but the run-through: a checklist step IS a named trainer, so a slot
+            // that fell back to another one would close a step the learner was never asked. The
+            // final day's run-through closes nothing, and there the list is a fallback order —
+            // {@see rehearsalModesFor()}.
+            /** @var list<ExerciseMode|null> $candidates */
+            $candidates = isset($spec['modes']) && is_array($spec['modes']) && $spec['modes'] !== []
+                ? $spec['modes']
+                : [$spec['mode']];
+
+            $card = null;
+            foreach ($candidates as $mode) {
+                $card = $this->assembler->assemble(
+                    $plan->userId(), $view, $termContent, $poolIds, $enabled, $matrix,
+                    isPractice: $isPractice,
+                    cardIndex: $index,
+                    slotStep: $spec['step'],
+                    neighbours: $neighbours,
+                    modeOverride: $mode,
+                    supportLang: $langs->for($termId),
+                    // The one knob the choice card already understood, and the level's own number.
+                    optionCount: $knobs->mcOptions,
+                );
+                if ($card !== null) {
+                    break;
+                }
+            }
+            // The assembler refused this card — the term's data could not build it after all, and on
+            // the strict path there is nothing to fall back to on purpose (see above).
             if ($card === null) {
                 continue;
             }
@@ -978,26 +1071,44 @@ final readonly class BuildPlanSessionHandler
         return $out;
     }
 
-    /** @return array<string, DueTermView> */
-    private function dayViews(LearningPlan $plan, PlanDayProgressView $day): array
+    /**
+     * THE PROGRESS ROW OF EVERY CARD THE PLAN STANDS ON, all days at once — one read.
+     *
+     * The whole plan and not «today plus whatever is due», because since С-2 the sitting is chosen
+     * by the LADDER: a card of day 1 owed its stage-B trainer, or a rescue phrase owed its daily
+     * touch, has no `due_at` claim to be found by, and a spec whose term has no view here is
+     * silently dropped in {@see assembleTasks()}. That drop is what emptied the warm-up and the seam
+     * on the stand while both said, on the very same payload, that they were owed.
+     *
+     * A card with no progress row at all is {@see DueTermView::outOfPool()} — the same answer
+     * free practice fills its gaps with. It happens for a card of a day the learner has not opened
+     * yet, which is exactly the material an early-opened day deals.
+     *
+     * NUMBERS ARE NOT HERE, and that is not this method's doing: {@see PlanProgress} leaves them out
+     * of `termIds` because no session deals them yet (канон §6). A shelf nobody can be dealt cannot
+     * be dealt by accident from here either.
+     *
+     * @return array<string, DueTermView>
+     */
+    private function planViews(LearningPlan $plan, PlanProgressView $progress): array
     {
-        if ($day->collectionId === null) {
+        $ids = [];
+        foreach ($progress->days as $day) {
+            foreach ($day->termIds as $termId) {
+                $ids[$termId] = true;
+            }
+        }
+        $ids = array_keys($ids);
+        if ($ids === []) {
             return [];
         }
 
         $out = [];
-        foreach (($this->practiceTerms)(new GetPracticeTerms(
-            userId: $plan->userId(),
-            // THE WHOLE COLLECTION, not «as many as the day owes». The two stopped being the same
-            // number in v0.4: a day's collection also holds its NUMBERS, which no session deals yet
-            // and which the plan's progress therefore leaves out of `termIds`. Asking for the
-            // smaller figure made the reader return that many rows of a bigger folder, and the
-            // cards it happened to leave out were dealt nothing at all — a stage that never closes,
-            // a day that never passes, and a day n+1 that is never written.
-            sessionSize: self::DUE_CAP,
-            collectionId: $day->collectionId,
-        )) as $view) {
+        foreach ($this->dueInPlan->allInScope($plan->userId(), $ids, count($ids)) as $view) {
             $out[$view->termId->value] = $view;
+        }
+        foreach ($ids as $termId) {
+            $out[$termId] ??= DueTermView::outOfPool(TermId::fromString($termId));
         }
 
         return $out;
@@ -1027,19 +1138,6 @@ final readonly class BuildPlanSessionHandler
         $ids = array_map(static fn (string $id): TermId => TermId::fromString($id), $missing);
 
         return $content + $this->content->byIds($ids, $this->languages->forTerms($plan->userId(), $ids));
-    }
-
-    /** @return array<string, int> term id => the day of this plan it was introduced on */
-    private function dayOfTerm(PlanProgressView $progress): array
-    {
-        $out = [];
-        foreach ($progress->days as $index => $day) {
-            foreach ($day->termIds as $termId) {
-                $out[$termId] ??= $index;
-            }
-        }
-
-        return $out;
     }
 
     /** @param list<PlanDay> $days */

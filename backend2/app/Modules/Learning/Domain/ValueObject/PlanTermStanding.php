@@ -72,6 +72,20 @@ final readonly class PlanTermStanding
          * what the card owes.
          */
         public bool $missedYesterday = false,
+        /**
+         * THIS CARD WAS ANSWERED YESTERDAY — right or wrong, anywhere in this plan.
+         *
+         * The rescue kit's own question, and only its ({@see
+         * \App\Modules\Learning\Domain\Service\PlanStageLadder::maintenanceModeFor()}). Once the
+         * kit has walked its stages it keeps coming back every OTHER day for the rest of the plan,
+         * and «every other» has to be anchored on something: this is that anchor, and it anchors on
+         * the phrase's own history rather than on a calendar parity, so a learner who misses a day
+         * gets the phrase on the next one instead of waiting out a rhythm they never saw.
+         *
+         * Beside the ladder, like {@see $answeredToday} and {@see $missedYesterday}: it says nothing
+         * about what the card owes.
+         */
+        public bool $answeredYesterday = false,
     ) {}
 
     /** Is this word's checklist closed for good? What «готовность слова» means. */

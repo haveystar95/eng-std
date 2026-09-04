@@ -93,6 +93,50 @@ it('alternates the line`s assembly step by the PAIR, never by chance', function 
         ->toBe(ExerciseMode::Scramble);
 });
 
+it('falls the assembly step BACK to the word bank rather than dropping it (С-7)', function () {
+    // `scramble` needs an example with a translation; a plan LINE has no example at all (канон §7 —
+    // it IS the sentence). So on the stand every reply whose pair preferred `scramble` came back
+    // with `of_steps = 3`: the assembly step, half of what stage A is for, silently absent, and
+    // nothing in the UI or the counters to say a step had gone missing.
+    $onlyWordBank = [ExerciseMode::Intro, ExerciseMode::MultipleChoice, ExerciseMode::WordBank, ExerciseMode::Speaking];
+
+    // The pair that PREFERS scramble is dealt the word bank when scramble cannot be built…
+    expect(PlanStageLadder::assemblyModeFor(1, $onlyWordBank))->toBe(ExerciseMode::WordBank)
+        // …and the preference still wins whenever it can be honoured.
+        ->and(PlanStageLadder::assemblyModeFor(1, [...$onlyWordBank, ExerciseMode::Scramble]))
+        ->toBe(ExerciseMode::Scramble)
+        // An empty list is «not asking» — the old signature, unchanged.
+        ->and(PlanStageLadder::assemblyModeFor(1))->toBe(ExerciseMode::Scramble);
+
+    // …so the stage still owes FOUR steps, and the fourth is the one that can be dealt.
+    $standing = (new PlanStageLadder())->standingFor(
+        applicable: $onlyWordBank,
+        facts: [],
+        introduced: false,
+        today: '2026-09-04',
+        kind: PlanStageLadder::KIND_LINE_SAY,
+        pairCounter: 1,
+    );
+
+    expect($standing->checklist)->toHaveCount(4)
+        ->and(array_column($standing->checklist, 'mode'))
+        ->toBe(['intro', 'multiple_choice', 'word_bank', 'speaking']);
+});
+
+it('names both assembly alternatives as trainers of a line, so the fallback has somewhere to go', function () {
+    // The gate that made the drop possible: asked through `modesOf()` it learned only the pair's
+    // preferred alternative, struck the other one out as «a trainer this kind is never dealt», and
+    // left the step with nothing to fall back on.
+    $forLine = PlanStageLadder::modesEverDealtTo(PlanStageLadder::KIND_LINE_SAY);
+
+    expect($forLine)->toContain(ExerciseMode::WordBank)
+        ->and($forLine)->toContain(ExerciseMode::Scramble)
+        ->and($forLine)->toContain(ExerciseMode::SituationalSay)
+        // …and it is still the KIND's list: a reply is never typed or dictated.
+        ->and($forLine)->not->toContain(ExerciseMode::Typing)
+        ->and($forLine)->not->toContain(ExerciseMode::Dictation);
+});
+
 /**
  * The rung a plan card is dealt at follows the SAME knob as the card itself.
  *

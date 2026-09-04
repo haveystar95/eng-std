@@ -231,6 +231,34 @@ final class PlanStageLadder
      */
     private const ASSEMBLY_ALTERNATIVES = [ExerciseMode::WordBank, ExerciseMode::Scramble];
 
+    /**
+     * THE RESCUE KIT'S MAINTENANCE TRAINERS — what «C с дня 3» actually is for the five phrases.
+     *
+     * Канон §5 says the kit trains harder than anything else: «разогрев ~2 минуты каждый день до
+     * конца плана, из ротации не выпадают», with «A в день 1, B в день 2, C с дня 3». There is no
+     * stage C for a line ({@see STEPS}) and there should not be one — stage C is «ничего на экране,
+     * воспроизведи точно», which for a sentence is the wrong ask. So the third stage of the kit is
+     * not a stage at all: it is a card every other day, for the rest of the plan, in the two modes
+     * that are what the kit is FOR — hearing it in the wild, and saying it without preparation.
+     *
+     * Measured on the stand (С-5): four of the five phrases stood at `stage=b finished=1 next=—`
+     * after two nights and never appeared again. The full прогон сцены that канон §5's «C» points at
+     * is SCENE-RUN; this is the honest interim, and it is what keeps the promise the docblock of
+     * `rescueTerms()` has been making since it was written.
+     *
+     * @var list<ExerciseMode>
+     */
+    private const MAINTENANCE_MODES = [ExerciseMode::Listening, ExerciseMode::Speaking];
+
+    /**
+     * The maintenance trainer for the `$slot`-th touch — alternating, never random, for exactly the
+     * reason {@see ASSEMBLY_ALTERNATIVES} is not random either.
+     */
+    public static function maintenanceModeFor(int $slot): ExerciseMode
+    {
+        return self::MAINTENANCE_MODES[abs($slot) % count(self::MAINTENANCE_MODES)];
+    }
+
     /** Misses in a row that soften the knobs for the rest of the stage. */
     public const SOFTEN_AFTER_ERRORS = 3;
 
@@ -256,10 +284,66 @@ final class PlanStageLadder
     /**
      * WORD BANK OR SCRAMBLE for this pair — the one place a plan varies what it deals, and it
      * varies by identity, never by chance. See {@see ASSEMBLY_ALTERNATIVES}.
+     *
+     * `$applicable`, when given, makes the alternation a PREFERENCE rather than a verdict: the
+     * pair's own answer if this card can be dealt it, and the other alternative if it cannot.
+     *
+     * That fallback is E2E-SIM-2 С-7, and the numbers say what the missing clause cost. `scramble`
+     * needs an example with a translation ({@see ModeContentRequirements}); a plan LINE has no
+     * example at all by канон §7 — it IS the sentence — so scramble is unbuildable for every line
+     * there is. Half the pairs draw scramble, so half the replies of every plan lost the ASSEMBLY
+     * step of stage A silently: three steps instead of four on the stand (`of_steps = 3`), the
+     * second retrieval of the stage simply absent, and nothing on any screen to say so. A step that
+     * cannot be dealt must fall back, not fall out — falling out is only right for a trainer the
+     * card has no ALTERNATIVE for, which is what the `$applicable` filter downstream still handles.
+     *
+     * @param  list<ExerciseMode>  $applicable  the trainers this card can actually be dealt; empty
+     *                                          means «not asking», which is the old behaviour
      */
-    public static function assemblyModeFor(int $pairCounter): ExerciseMode
+    public static function assemblyModeFor(int $pairCounter, array $applicable = []): ExerciseMode
     {
-        return self::ASSEMBLY_ALTERNATIVES[abs($pairCounter) % count(self::ASSEMBLY_ALTERNATIVES)];
+        $preferred = self::ASSEMBLY_ALTERNATIVES[abs($pairCounter) % count(self::ASSEMBLY_ALTERNATIVES)];
+        if ($applicable === [] || in_array($preferred, $applicable, true)) {
+            return $preferred;
+        }
+
+        foreach (self::ASSEMBLY_ALTERNATIVES as $mode) {
+            if (in_array($mode, $applicable, true)) {
+                return $mode;
+            }
+        }
+
+        // Neither can be built — the caller's own `$applicable` filter drops the step, which is the
+        // right answer when there is genuinely no way to ask this card to be assembled.
+        return $preferred;
+    }
+
+    /**
+     * EVERY TRAINER A CARD OF THIS KIND MAY EVER MEET — both assembly alternatives included.
+     *
+     * The admission gate's input ({@see \App\Modules\Learning\Application\Service\PlanStandings}),
+     * and it has to name both or the fallback above can never fire: asked through {@see modesOf()}
+     * the gate learns only the pair's PREFERRED alternative, so a line that drew `scramble` had
+     * `word_bank` filtered out as «a trainer this kind is never dealt» — and then had `scramble`
+     * refused for want of an example, with nothing left to fall back to.
+     *
+     * @return list<ExerciseMode>
+     */
+    public static function modesEverDealtTo(string $kind): array
+    {
+        $out = [];
+        foreach (PlanStage::cases() as $stage) {
+            foreach (self::STEPS[self::normalizeKind($kind)][$stage->value] as $mode) {
+                $out[$mode->value] = $mode;
+                if ($mode === ExerciseMode::WordBank) {
+                    foreach (self::ASSEMBLY_ALTERNATIVES as $alternative) {
+                        $out[$alternative->value] = $alternative;
+                    }
+                }
+            }
+        }
+
+        return array_values($out);
     }
 
     /**
@@ -479,6 +563,11 @@ final class PlanStageLadder
      *                                           `chunk`. Picks the checklist; see {@see STEPS}.
      * @param  int  $pairCounter                 the pair's own stable number, which decides the one
      *                                           thing a plan varies ({@see assemblyModeFor()})
+     * @param  bool  $staysInRotation             this card NEVER finishes — the rescue kit, whose
+     *                                            last stage is followed by maintenance rather than
+     *                                            by retirement ({@see MAINTENANCE_MODES}). It is a
+     *                                            fact about the SHELF, so the caller supplies it;
+     *                                            the ladder's own table is untouched by it.
      */
     public function standingFor(
         array $applicable,
@@ -488,6 +577,7 @@ final class PlanStageLadder
         string $kind = self::KIND_WORD,
         int $pairCounter = 0,
         ?string $yesterday = null,
+        bool $staysInRotation = false,
     ): PlanTermStanding {
         $stage = PlanStage::first();
         $cursor = 0;
@@ -496,6 +586,10 @@ final class PlanStageLadder
         // the question is about the learner's day and not about the checklist. See
         // {@see PlanTermStanding::$answeredToday} for the one caller and why it needs it.
         $answeredToday = self::answeredOn($facts, $today);
+        // AND YESTERDAY — the other half of «раз в 2 дня» for the kit's maintenance touch. Beside
+        // the ladder like `answeredToday`, and asked of the whole log for the same reason: it is a
+        // question about the learner's week, not about the stage being walked.
+        $answeredYesterday = $yesterday !== null && self::answeredOn($facts, $yesterday);
         // MISSED YESTERDAY — the warm-up's second half (канон §5, разогрев v2). Asked of the whole
         // log for the same reason `answeredToday` is: it is a question about the learner's week, not
         // about the stage being walked.
@@ -517,6 +611,7 @@ final class PlanStageLadder
                     ready: $stage === $lastStage,
                     answeredToday: $answeredToday,
                     missedYesterday: $missedYesterday,
+                    answeredYesterday: $answeredYesterday,
                 );
             }
 
@@ -541,23 +636,30 @@ final class PlanStageLadder
                     ready: $stage === $lastStage,
                     answeredToday: $answeredToday,
                     missedYesterday: $missedYesterday,
+                    answeredYesterday: $answeredYesterday,
                 );
             }
 
             if ($next === null) {
                 // Stage C closed and its night passed: three stages lived. This is «готовность
                 // слова» and the only thing that makes it true.
+                //
+                // …unless the card never leaves the rotation. The rescue kit's stages are over and
+                // its training is not: it comes back every other day for the rest of the plan
+                // ({@see MAINTENANCE_MODES}), so calling it `finished` would be the day screen
+                // stating, of a phrase that is still in tomorrow's warm-up, that it is done.
                 return new PlanTermStanding(
                     stage: $stage,
                     checklist: $walk['checklist'],
                     nextMode: null,
                     stageComplete: true,
                     waitingForNight: false,
-                    finished: true,
+                    finished: ! $staysInRotation,
                     softened: false,
                     ready: true,
                     answeredToday: $answeredToday,
                     missedYesterday: $missedYesterday,
+                    answeredYesterday: $answeredYesterday,
                 );
             }
 
@@ -611,10 +713,18 @@ final class PlanStageLadder
      */
     private function stepsFor(PlanStage $stage, array $applicable, string $kind, int $pairCounter): array
     {
-        return array_values(array_filter(
-            self::modesOf($stage, $kind, $pairCounter),
-            static fn (ExerciseMode $mode): bool => in_array($mode, $applicable, true),
-        ));
+        $steps = [];
+        foreach (self::STEPS[self::normalizeKind($kind)][$stage->value] as $mode) {
+            // THE ASSEMBLY STEP FALLS BACK RATHER THAN OUT — see {@see assemblyModeFor()}.
+            if ($mode === ExerciseMode::WordBank) {
+                $mode = self::assemblyModeFor($pairCounter, $applicable);
+            }
+            if (in_array($mode, $applicable, true)) {
+                $steps[] = $mode;
+            }
+        }
+
+        return $steps;
     }
 
     /**

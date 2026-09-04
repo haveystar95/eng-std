@@ -32,6 +32,25 @@ namespace App\Modules\Learning\Domain\Service;
 final class PlanSittings
 {
     /**
+     * THE CEILING ON ONE ПРИСЕСТ, whatever the minutes buy.
+     *
+     * Forty cards, and it is not a second budget — it is the point past which a sitting has stopped
+     * being one. The minutes decide the length a learner ASKED for; this decides the length a person
+     * can actually do in a row, and the two only disagree when the per-card estimate is generous.
+     *
+     * It exists because the budget alone never once cut a sitting in the whole E2E-SIM-2 run
+     * (С-12): `sittings` came back `[68]`, `[81]`, `[73]`, `[53]` — always one присест for the whole
+     * day, and the «присест пройден» screen was never seen. Even with the honest 16 s a card
+     * ({@see \App\Modules\Learning\Application\Command\BuildPlanSessionHandler}), twenty minutes buys
+     * 75 cards, which is still more than a day-scene holds — so the mechanism would have gone on
+     * being switched off by arithmetic. A day-scene of 68 tasks is two sittings for anybody.
+     *
+     * A SECTION longer than this is still its own присест: the cut is only ever on a section
+     * boundary, and «сорок» does not outrank «не резать посреди „Ты ответишь“».
+     */
+    public const MAX_TASKS_PER_SITTING = 40;
+
+    /**
      * The task counts of each присест, in order.
      *
      * @param  list<string>  $sections  one section key per task, in the order the tasks are dealt
@@ -43,7 +62,8 @@ final class PlanSittings
         if ($sections === []) {
             return [];
         }
-        $budget = max(1, $budget);
+        // The learner's minutes, and never more than a person sits through in one go.
+        $budget = min(max(1, $budget), self::MAX_TASKS_PER_SITTING);
 
         // The parts, in the order they arrive — sizes only, because the cut is between them.
         /** @var list<int> $parts */

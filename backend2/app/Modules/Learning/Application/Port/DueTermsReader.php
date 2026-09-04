@@ -52,7 +52,19 @@ interface DueTermsReader
     public function selectableInPool(UserId $userId, DateTimeImmutable $now, ?array $termIds, int $limit): array;
 
     /**
-     * The same population, narrowed to the pairs ONE PLAN put in the pool — its seam, «Повторение».
+     * The same population, narrowed to the pairs ONE PLAN put in the pool.
+     *
+     * NO LONGER THE SEAM, and nothing in the app calls it since E2E-SIM-2 С-2. A plan's «Повторение»
+     * is chosen by the PLAN's ladder — stage A closed plus a night — and `due_at` is the repetition
+     * planner's answer to a different question. The two agreed while a plan's intervals were short
+     * and parted company on the second night of every plan: measured, day 1's whole scene stood on
+     * stage B owing a card, with `due_at` three months out, and the sitting came back without any of
+     * it. The plan session reads rows by term id now ({@see allInScope()}).
+     *
+     * Kept because the question it answers is still a real one — «which of this plan's words has the
+     * scheduler made due» is what an archive sweep or a report would ask — and re-deriving the
+     * `enrollment_sources` predicate later would be worse than keeping it written down. It is not a
+     * selection rule for a plan sitting, and wiring it back into one would restore the defect.
      *
      * A separate method and not a scope on {@see selectableInPool()}, because the two differ by the
      * one predicate that must never be optional: `selectableInPool()` EXCLUDES everything a running

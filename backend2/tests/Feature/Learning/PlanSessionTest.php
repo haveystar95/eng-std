@@ -394,10 +394,15 @@ it('deals a role line the day’s SKELETON named, even when the card carries no 
 });
 
 it('refuses to BUILD a production card for a role line, even off the checklist (Д-33)', function () {
-    // The second gate, and the one the soft session needs. A day opened out of turn picks its
-    // trainer off the ordinary ladder and never sees a checklist — which is where the live run's
-    // dictation on the doctor's question came from. Day 2 is ahead of the focus, so its session is
-    // soft; every card of it must still be recognition for the interlocutor's line.
+    // The second gate. It was written for the SOFT session — a day opened out of turn used to pick
+    // its trainer off the ordinary ladder and never see a checklist, which is where the live run's
+    // dictation on the doctor's question came from. That path is gone (E2E-SIM-2 С-1): a day opened
+    // ahead of the focus is dealt strictly, off the plan's ladder, like any other.
+    //
+    // The gate is kept and the assertion is unchanged, because the gate is what makes the rule true
+    // BELOW the checklist: the interlocutor's line is recognition-only wherever the mode came from,
+    // and a fixture whose `speaker` column is edited after the day was written is exactly the case
+    // where the checklist and the card can disagree.
     [, $token, $planId] = startedPlan($this);
 
     $day2 = DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 2)->value('collection_id');
@@ -412,7 +417,7 @@ it('refuses to BUILD a production card for a role line, even off the checklist (
 
     $session = planSession($this, $token, $planId, 2);
 
-    expect($session['strict'])->toBeFalse();
+    expect($session['strict'])->toBeTrue();
     foreach ($session['tasks'] as $task) {
         if ($task['card']['term_id'] !== $roleLine) {
             continue;
@@ -851,23 +856,111 @@ it('builds a day on demand, idempotently, and refuses to run more than two ahead
 
 // ── a day opened out of turn ──────────────────────────────────────────────────────────────────
 
-it('gives a day opened ahead of the focus a SOFT session — no stages, no crediting', function () {
-    [$user, $token, $planId] = startedPlan($this);
+/**
+ * Э3.2 OF E2E-SIM-2, AS A TEST — the owner's own live repro, and the наряд's «падает на старом
+ * поведении» case.
+ *
+ * On the stand: day 1 left one card short of closing, day 2 opened from the plan screen's «можно
+ * открыть раньше». What came back was seventeen tasks with `strict = false`, `source = soft`,
+ * `stage = null`, not one `intro` among them, six `listening` cards dictating sentences the learner
+ * had never been shown, and a card of the `numbers` shelf that no session is supposed to deal. The
+ * screen captioned the first of them «СТУПЕНЬ A · ПОВТОРЕНИЕ». The same thing is in the owner's
+ * production log for the evening of 03.09, four sittings of it.
+ *
+ * Every assertion below fails on that payload.
+ */
+it('deals a day opened ahead of the focus its own stage A — strictly, intro first, no В-modes (Э3.2)', function () {
+    [, $token, $planId] = startedPlan($this);
 
-    // Day 2 is not generated yet, so open day 1 from a focus that has moved past it instead: the
-    // rule is «not the focus → soft», and day 2 ahead of the focus is the same rule.
+    // The focus is still day 1 — nothing has been answered — and day 2 is asked for anyway.
     $session = planSession($this, $token, $planId, 2);
 
-    expect($session['strict'])->toBeFalse()
-        ->and($session['focus_day_index'])->toBe(1);
+    expect($session['strict'])->toBeTrue()
+        ->and($session['focus_day_index'])->toBe(1)
+        ->and($session['day_index'])->toBe(2)
+        ->and($session['tasks'])->not->toBeEmpty();
 
+    $modes = [];
+    $introOf = [];
+    $seenOf = [];
     foreach ($session['tasks'] as $task) {
-        expect($task['stage'])->toBeNull()
-            ->and($task['source'])->toBe('soft');
+        $mode = (string) $task['card']['exercise_mode'];
+        $termId = (string) $task['card']['term_id'];
+        $modes[] = $mode;
+        $seenOf[$termId] = ($seenOf[$termId] ?? 0) + 1;
+        if ($mode === 'intro') {
+            // FIRST FOR ITS OWN CARD, and once. `$seenOf` is the ordinal this card has reached.
+            expect($seenOf[$termId])->toBe(1);
+            $introOf[$termId] = ($introOf[$termId] ?? 0) + 1;
+        }
+
+        // Stage A, in the plan's own ladder, on every card of the sitting — the day's own and the
+        // rescue kit's. The kit is here because it has not been answered today (день 1 не открывали)
+        // and «разогрев каждый день» does not care which day the learner opened; it stands on stage
+        // A for the same reason the day does, so «только A-режимы» covers both.
+        expect($task['stage'])->toBe('a');
+
+        if ($task['section'] === 'warmup') {
+            expect($task['shelf'])->toBe('rescue')
+                ->and($task['source'])->toBe('warmup');
+
+            continue;
+        }
+
+        expect($task['section'])->toBe('day')
+            ->and($task['source'])->toBe('new')
+            ->and($task['from_day_index'])->toBe(2);
     }
 
-    // Soft = practice: the session row says so, so nothing it produces schedules or credits.
-    expect(DB::table('study_sessions')->where('id', $session['session_id'])->value('is_practice'))->toBeTruthy();
+    // The day's own cards are the bulk of it, and the seam is empty — a day opened early revises
+    // nothing (there is nothing behind it that has closed a stage).
+    $sections = array_column($session['tasks'], 'section');
+    expect($sections)->toContain('day')
+        ->and($sections)->not->toContain('review');
+
+    // Every card of the sitting was introduced, exactly once.
+    expect($introOf)->toEqual(array_map(static fn (): int => 1, $introOf))
+        ->and(count($introOf))->toBe(count($seenOf));
+
+    // Стage B's trainers are the ones a soft run reached for, and there is no way to any of them:
+    // stage A has not closed, and a night has not passed.
+    foreach (['listening', 'typing', 'cloze', 'dictation', 'situational_hear', 'situational_say', 'situational_ask'] as $forbidden) {
+        expect($modes)->not->toContain($forbidden);
+    }
+
+    // …and no card off the `numbers` shelf, which no session deals yet (канон §6).
+    foreach ($session['tasks'] as $task) {
+        expect($task['shelf'] ?? null)->not->toBe('numbers');
+        expect($task['kind'] ?? null)->not->toBe('number');
+    }
+
+    // STRICT = STUDY. The answers of a day opened early are ordinary reviews that close its stage.
+    expect(DB::table('study_sessions')->where('id', $session['session_id'])->value('is_practice'))->toBeFalsy();
+});
+
+it('closes a day opened early when its stage A closes, and moves the focus onto it', function () {
+    // The other half of «фокус и закрытие дней работают как у фокусного»: an early day is not a
+    // read-through any more, so walking it has to COUNT. Under the soft run it counted for nothing —
+    // `ladder_step` came back null on every answer and no stage ever closed.
+    [$user, $token, $planId] = startedPlan($this);
+
+    $seq = 1;
+    for ($i = 0; $i < 8; $i++) {
+        $session = planSession($this, $token, $planId, 2);
+        if ($session['tasks'] === []) {
+            break;
+        }
+        $seq = answerTasks($this, $token, $session, $seq);
+    }
+
+    expect(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 2)->value('status'))
+        ->toBe('done')
+        // Day 1 was never opened, so the focus stays on it: «пройден» is a fact about a day, and
+        // the focus is the first day that is not.
+        ->and(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('status'))
+        ->not->toBe('done');
+
+    expect(planSession($this, $token, $planId)['focus_day_index'])->toBe(1);
 });
 
 it('answers `scope=plan` on the ordinary session path with the plan’s own day', function () {
@@ -909,4 +1002,30 @@ it('404s a plan that belongs to somebody else', function () {
     $this->withHeader('Authorization', "Bearer {$other}")
         ->postJson("/api/v1/plans/{$planId}/session")
         ->assertStatus(404);
+});
+
+it('gives every reply of a day its assembly step — four, not three (С-7)', function () {
+    // The live measure behind Ч-6: on the stand three of day 1's four «Ты ответишь» replies came
+    // back with `of_steps = 3`, and one — the pair whose counter happened to prefer `word_bank` —
+    // with four. The missing step was the assembly one, dropped because `scramble` needs an example
+    // and a line has none. Nothing in the payload said a step had gone missing; `of_steps` simply
+    // said 3, and a stage that owed three steps closed on three.
+    [, $token, $planId] = startedPlan($this);
+
+    $session = planSession($this, $token, $planId, 1);
+
+    $seen = [];
+    foreach ($session['tasks'] as $task) {
+        if ($task['section'] !== 'day' || ! in_array($task['shelf'] ?? null, ['say', 'ask'], true)) {
+            continue;
+        }
+        $seen[$task['card']['term_id']][] = $task['card']['exercise_mode'];
+        expect($task['of_steps'])->toBe(4);
+    }
+
+    expect($seen)->not->toBeEmpty();
+    foreach ($seen as $modes) {
+        // …and the step that was missing is a real assembly card, whichever of the two it is.
+        expect(array_intersect(['word_bank', 'scramble'], $modes))->not->toBeEmpty();
+    }
 });
