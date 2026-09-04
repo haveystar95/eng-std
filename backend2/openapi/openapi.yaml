@@ -1973,6 +1973,32 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such day }
 
+  /audio/lines/{audioId}:
+    get:
+      tags: [Plans]
+      summary: The server's recording of one line
+      description: >-
+        The audio a line is played with (наряд TTS-1). Addresses come from `audio_url` on a plan
+        day's terms and on a sitting's dialogue turns — a client never builds one itself.
+
+        The body is `audio/mpeg` (or `audio/wav`, when the language pack's voice is a vendor that
+        returns raw PCM). Content at an address never changes: the id identifies (line, voice, pace),
+        so a new voice is a new address rather than new bytes at the old one. That is why the answer
+        is `immutable` and why a downloaded file may be cached for as long as the device likes.
+      parameters:
+        - name: audioId
+          in: path
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+      responses:
+        '200':
+          description: The audio file
+          content:
+            audio/mpeg:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'No such recording, or its file is gone' }
+
   /plans/{planId}/days/{dayIndex}/rebuild:
     post:
       tags: [Plans]
@@ -2901,6 +2927,17 @@ components:
           description: >-
             The day that INTRODUCED it. Equal to the day being read for its own words, smaller for
             one carried in — which is what «B · со дня 1» is drawn from.
+        audio_url:
+          type: [string, 'null']
+          description: >-
+            THE SERVER'S OWN RECORDING of this line, or null — «нет файла, читай системным голосом».
+            Present for the shelves the language pack voices (`hear` and `rescue` today); words and
+            connectors keep the phone's own synthesiser on purpose. Null is the same answer for
+            «the pipe is off», «this language has no voice in the pack» and «the audio has not
+            caught up with the day yet»: there is nothing for the client to do differently, and
+            telling the three apart is the log's job. The address is unique to (line, voice, pace),
+            so a change of voice in the pack is a change of URL — an old file can never be played
+            for a new voice.
 
     PlanRehearsal:
       type: object

@@ -27,7 +27,9 @@ use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
 use App\Modules\Learning\Application\Dto\PlanDialogueTurnView;
+use App\Modules\Learning\Application\Dto\PlanLineAudioView;
 use App\Modules\Learning\Application\Dto\PlanDialogueView;
+use App\Modules\Learning\Application\Service\LineAudioIndex;
 use App\Modules\Learning\Domain\Service\PlanDayOrder;
 use App\Modules\Learning\Domain\Service\PlanDialogueChain;
 use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
@@ -218,6 +220,12 @@ final readonly class BuildPlanSessionHandler
          * learner had just finished stayed `ready` until they opened the next session.
          */
         private PlanDayPassing $passing,
+        /**
+         * КАКИЕ РЕПЛИКИ УЖЕ ЗВУЧАТ ФАЙЛОМ (наряд TTS-1). Не nullable и без дефолта: пустой ответ —
+         * законное состояние (труба выключена, файлы не догнали), а вот «сборка не спросила» — нет,
+         * и необязательная зависимость сделала бы эти два случая неразличимыми.
+         */
+        private LineAudioIndex $lineAudio,
         private PlanDayOrder $order = new PlanDayOrder(),
         /** Where a situational card's «Ситуация» comes from — pure, and stated in Domain. */
         private SituationalPrompt $situations = new SituationalPrompt(),
@@ -266,6 +274,8 @@ final readonly class BuildPlanSessionHandler
         $sessionId = $command->sessionId ?? StudySessionId::generate();
         $this->persist($sessionId, $plan, $day, $tasks, $strict);
 
+        $audio = $this->lineAudioFor($tasks, $dialogues, $plan->targetLang()->value);
+
         return new PlanSessionView(
             sessionId: $sessionId->value,
             planId: $plan->id()->value,
@@ -287,8 +297,81 @@ final readonly class BuildPlanSessionHandler
             sittings: PlanSittings::cut(array_map(self::sectionKeyOf(...), $tasks), $this->taskBudget($plan)),
             // THE CONVERSATIONS, in the order the sitting reaches them — the dialogue screen's whole
             // input beside the tasks themselves.
-            dialogues: $dialogues,
+            dialogues: self::dialoguesWithAudio($dialogues, $audio),
+            // ОЗВУЧКА (наряд TTS-1): всё, что эта посадка может сыграть файлом, — одним списком,
+            // чтобы телефон скачал её ЦЕЛИКОМ на входе в день, а не по мере того, как доходит до
+            // карточки. Реплики второго присеста готовы к его началу по этой же причине.
+            lineAudio: $audio,
         );
+    }
+
+    /**
+     * Ходы диалога, каждый со своим адресом озвучки. Отдельным проходом, потому что цепочки
+     * собираются раньше, чем известен индекс озвучки, а {@see PlanDialogueTurnView} — readonly.
+     *
+     * @param  list<PlanDialogueView>  $dialogues
+     * @param  list<PlanLineAudioView>  $audio
+     * @return list<PlanDialogueView>
+     */
+    private static function dialoguesWithAudio(array $dialogues, array $audio): array
+    {
+        if ($audio === []) {
+            return $dialogues;
+        }
+
+        $byTerm = [];
+        foreach ($audio as $row) {
+            $byTerm[$row->termId] = $row->audioId;
+        }
+
+        return array_map(static fn (PlanDialogueView $d): PlanDialogueView => new PlanDialogueView(
+            dayIndex: $d->dayIndex,
+            sceneTitle: $d->sceneTitle,
+            sceneIntro: $d->sceneIntro,
+            turns: array_map(static fn (PlanDialogueTurnView $t): PlanDialogueTurnView => new PlanDialogueTurnView(
+                turn: $t->turn,
+                termId: $t->termId,
+                text: $t->text,
+                translation: $t->translation,
+                shelf: $t->shelf,
+                audioId: $byTerm[$t->termId] ?? null,
+            ), $d->turns),
+        ), $dialogues);
+    }
+
+    /**
+     * ЧТО ИЗ ЭТОЙ ПОСАДКИ УЖЕ ЗВУЧИТ ФАЙЛОМ — карточки задач и ходы диалогов, спрошенные одним
+     * запросом.
+     *
+     * Оба источника, а не один: ход цепочки может не иметь сегодня своей задачи (диалог играется
+     * целиком, задач меньше), а спасатель разогрева не стоит ни в одной цепочке. Спросить только
+     * задачи значило бы оставить без голоса реплику, которая всё равно прозвучит.
+     *
+     * @param  list<PlanSessionTaskView>  $tasks
+     * @param  list<PlanDialogueView>  $dialogues
+     * @return list<PlanLineAudioView>
+     */
+    private function lineAudioFor(array $tasks, array $dialogues, string $targetLang): array
+    {
+        $texts = [];
+        foreach ($tasks as $task) {
+            $texts[$task->card->termId] = $task->card->answer;
+        }
+        foreach ($dialogues as $dialogue) {
+            foreach ($dialogue->turns as $turn) {
+                $texts[$turn->termId] = $turn->text;
+            }
+        }
+        if ($texts === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($this->lineAudio->forTerms(array_keys($texts), $targetLang) as $termId => $audioId) {
+            $out[] = new PlanLineAudioView($termId, (string) $texts[$termId], $audioId);
+        }
+
+        return $out;
     }
 
     /**

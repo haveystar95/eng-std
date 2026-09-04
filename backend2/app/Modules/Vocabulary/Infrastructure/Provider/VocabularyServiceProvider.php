@@ -5,6 +5,14 @@ declare(strict_types=1);
 namespace App\Modules\Vocabulary\Infrastructure\Provider;
 
 use App\Modules\Vocabulary\Application\Port\AuthoredTermAnonymizer;
+use App\Modules\Vocabulary\Application\Port\TermAudioStore;
+use App\Modules\Vocabulary\Application\Port\TermAudioWriter;
+use App\Modules\Vocabulary\Application\Query\SpeakableLineReader;
+use App\Modules\Vocabulary\Application\Query\TermAudioReader;
+use App\Modules\Vocabulary\Infrastructure\Adapter\FilesystemTermAudioStore;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentSpeakableLineReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermAudioReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermAudioWriter;
 use App\Modules\Vocabulary\Application\Port\TermEnrichmentWriter;
 use App\Modules\Vocabulary\Application\Port\TermReviewWriter;
 use App\Modules\Vocabulary\Application\Port\TermCoreWriter;
@@ -124,6 +132,14 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(TermPlanFactsWriter::class, EloquentTermPlanFactsWriter::class);
         $this->app->bind(TermExampleScopeWriter::class, EloquentTermExampleScopeWriter::class);
         $this->app->bind(KnownTermsReader::class, EloquentKnownTermsReader::class);
+
+        // ОЗВУЧКА РЕПЛИК (наряд TTS-1). Vocabulary владеет и строкой, и файлом: озвучка — свойство
+        // ТЕКСТА термина, а не плана и не пользователя, поэтому кэш общий по построению. Покупает
+        // звук Generation и приносит его сюда командой.
+        $this->app->bind(TermAudioReader::class, EloquentTermAudioReader::class);
+        $this->app->bind(TermAudioWriter::class, EloquentTermAudioWriter::class);
+        $this->app->bind(TermAudioStore::class, FilesystemTermAudioStore::class);
+        $this->app->bind(SpeakableLineReader::class, EloquentSpeakableLineReader::class);
     }
 
     public function boot(): void

@@ -17,5 +17,17 @@ final readonly class PlanDialogueTurnView
         public ?string $translation,
         /** `hear` | `say` | `ask` — which shelf the card stands on, and therefore its ladder. */
         public ?string $shelf,
+        /**
+         * АДРЕС ГОТОВОЙ ОЗВУЧКИ этой реплики, или null — «серверного файла нет» (наряд TTS-1).
+         *
+         * Null означает ровно одно: играй системным голосом, как играл всегда. Он же стоит при
+         * выключенной трубе, у чужой полки и у языка без голоса в пакете — и это сознательно одно
+         * значение на все три случая: клиенту нечего делать по-разному, а различать их — работа
+         * лога, а не экрана.
+         *
+         * Id строки, а не URL: схему и хост знает Presentation ({@see
+         * \App\Modules\Learning\Presentation\Http\LineAudioUrl}).
+         */
+        public ?string $audioId = null,
     ) {}
 }

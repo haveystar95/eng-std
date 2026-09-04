@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Presentation\Http\Resource;
 
 use App\Modules\Learning\Application\Dto\PlanDialogueTurnView;
+use App\Modules\Learning\Application\Dto\PlanLineAudioView;
 use App\Modules\Learning\Application\Dto\PlanDialogueView;
 use App\Modules\Learning\Application\Dto\PlanSessionTaskView;
 use App\Modules\Learning\Application\Dto\PlanSessionView;
 use App\Modules\Learning\Application\Dto\SessionView;
+use App\Modules\Learning\Presentation\Http\LineAudioUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -72,8 +74,19 @@ final class PlanSessionResource extends JsonResource
                     'text' => $turn->text,
                     'translation' => $turn->translation,
                     'shelf' => $turn->shelf,
+                    // ОЗВУЧКА РЕПЛИКИ (наряд TTS-1, Ч.1.3). Null = «серверного файла нет», и клиент
+                    // читает строку системным голосом, как читал всегда.
+                    'audio_url' => LineAudioUrl::for($turn->audioId),
                 ], $dialogue->turns),
             ], $view->dialogues),
+            // ВСЯ ОЗВУЧКА ЭТОЙ ПОСАДКИ одним списком — то, что телефон качает на входе в день,
+            // включая реплики второго присеста и спасателей, которых сегодня нет ни на одной
+            // карточке. Пустой список — законный ответ («озвучки нет»), не ошибка.
+            'line_audio' => array_map(static fn (PlanLineAudioView $row): array => [
+                'term_id' => $row->termId,
+                'text' => $row->text,
+                'url' => LineAudioUrl::for($row->audioId),
+            ], $view->lineAudio),
             'tasks' => array_map(static fn (PlanSessionTaskView $task): array => [
                 'stage' => $task->stage,
                 // `warmup` | `day` | `review` — which seam this task sits under. Said once here so

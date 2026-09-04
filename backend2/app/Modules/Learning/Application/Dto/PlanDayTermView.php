@@ -53,10 +53,24 @@ final readonly class PlanDayTermView
         public ?string $shelf = null,
         /** `speak` | `understand` — what the card is ever asked of (канон §3). */
         public ?string $tier = null,
+        /**
+         * АДРЕС ГОТОВОЙ ОЗВУЧКИ (наряд TTS-1), или null — «серверного файла нет».
+         *
+         * Шпаргалка сцен читает вслух с этого же экрана (канон §13), и играть там она обязана ТОТ
+         * ЖЕ файл, что и разговор: два голоса на одну реплику — это две разные реплики для уха.
+         */
+        public ?string $audioId = null,
     ) {}
 
-    /** @return array<string, mixed> */
-    public function toArray(): array
+    /**
+     * @param  string|null  $audioUrl  адрес файла озвучки, если он есть.
+     *
+     * Адрес приходит ПАРАМЕТРОМ, а не собирается здесь: URL знает схему и хост, а это Presentation
+     * ({@see \App\Modules\Learning\Presentation\Http\LineAudioUrl}), и Application туда не ходит.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(?string $audioUrl = null): array
     {
         return [
             'id' => $this->termId,
@@ -71,6 +85,7 @@ final readonly class PlanDayTermView
             'from_day_index' => $this->fromDayIndex,
             'shelf' => $this->shelf,
             'tier' => $this->tier,
+            'audio_url' => $audioUrl,
         ];
     }
 }

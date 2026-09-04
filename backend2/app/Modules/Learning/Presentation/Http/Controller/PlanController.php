@@ -25,6 +25,7 @@ use App\Modules\Learning\Application\Command\ReschedulePlanHandler;
 use App\Modules\Learning\Application\Command\StartPlan;
 use App\Modules\Learning\Application\Command\StartPlanHandler;
 use App\Modules\Learning\Application\Dto\PlanDayTermView;
+use App\Modules\Learning\Presentation\Http\LineAudioUrl;
 use App\Modules\Learning\Application\Dto\PlanDayView;
 use App\Modules\Learning\Application\Dto\PlanSummaryView;
 use App\Modules\Learning\Application\Dto\PlanView;
@@ -355,7 +356,10 @@ final class PlanController
             ...PlanResource::day($day),
             // The register, with a stage on every row. Nothing on the device could compute this —
             // a stage is a function of the review log, and the mirror holds answers, not stages.
-            'terms' => array_map(static fn (PlanDayTermView $t): array => $t->toArray(), $terms),
+            'terms' => array_map(
+                static fn (PlanDayTermView $t): array => $t->toArray(LineAudioUrl::for($t->audioId)),
+                $terms,
+            ),
             'plan_id' => $plan->id,
             'plan_title' => $plan->title,
             'support_lang' => $plan->supportLang,

@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Query;
 
 use App\Modules\Learning\Application\Dto\PlanDayProgressView;
 use App\Modules\Learning\Application\Dto\PlanDayTermView;
+use App\Modules\Learning\Application\Service\LineAudioIndex;
 use App\Modules\Learning\Application\Service\PlanProgress;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
@@ -37,6 +38,8 @@ final readonly class GetPlanDayTermsHandler
         private PlanRepository $plans,
         private PlanDayRepository $days,
         private PlanProgress $progress,
+        /** Готовая озвучка реплик — шпаргалка играет ТОТ ЖЕ файл, что и разговор (наряд TTS-1). */
+        private LineAudioIndex $lineAudio,
     ) {}
 
     /** @return list<PlanDayTermView>|null  null when the plan is not this learner's, or has no such day */
@@ -67,7 +70,44 @@ final readonly class GetPlanDayTermsHandler
             }
         }
 
-        return $out;
+        return $this->withAudio($out, $plan->targetLang()->value);
+    }
+
+    /**
+     * Тот же список, с адресами озвучки. Одним запросом на весь регистр, а не по карточке.
+     *
+     * @param  list<PlanDayTermView>  $terms
+     * @return list<PlanDayTermView>
+     */
+    private function withAudio(array $terms, string $targetLang): array
+    {
+        if ($terms === []) {
+            return [];
+        }
+
+        $audio = $this->lineAudio->forTerms(
+            array_map(static fn (PlanDayTermView $t): string => $t->termId, $terms),
+            $targetLang,
+        );
+        if ($audio === []) {
+            return $terms;
+        }
+
+        return array_map(static fn (PlanDayTermView $t): PlanDayTermView => new PlanDayTermView(
+            termId: $t->termId,
+            text: $t->text,
+            translation: $t->translation,
+            type: $t->type,
+            kind: $t->kind,
+            speaker: $t->speaker,
+            stage: $t->stage,
+            stageComplete: $t->stageComplete,
+            finished: $t->finished,
+            fromDayIndex: $t->fromDayIndex,
+            shelf: $t->shelf,
+            tier: $t->tier,
+            audioId: $audio[$t->termId] ?? null,
+        ), $terms);
     }
 
     /** @return list<PlanDayTermView> */

@@ -13,6 +13,7 @@ use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
 use App\Modules\Generation\Application\Port\PlanDefectReporter;
 use App\Modules\Generation\Application\Port\RescueKitSource;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
+use App\Modules\Generation\Application\Port\DispatchesLineSpeech;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Domain\Exception\PlanDayRefused;
 use App\Modules\Generation\Domain\Exception\PlanSpendNotRecorded;
@@ -90,6 +91,7 @@ final readonly class GeneratePlanDayHandler
         private TermTransliterationWriter $transliterations,
         private DispatchesExampleRepair $repairExamples,
         private DispatchesImageAttachment $attachImages,
+        private DispatchesLineSpeech $speakLines,
         private DifficultyScorer $scorer,
         private TransactionManager $tx,
         /**
@@ -189,6 +191,12 @@ final readonly class GeneratePlanDayHandler
         // day is already usable, exactly like the chain above — a day must not fail because a
         // photo did not arrive.
         $this->attachImages->dispatch($collectionId);
+
+        // ОЗВУЧКА РЕПЛИК (наряд TTS-1). Третья работа того же вида и с теми же правами: день уже
+        // пригоден, и она не имеет права его задержать или уронить. Внутри диспетчера стоит
+        // тумблер трубы — выключенный, он не ставит ничего, и реплики звучат системным голосом
+        // телефона, как звучали до наряда.
+        $this->speakLines->dispatch($collectionId);
     }
 
     /**

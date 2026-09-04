@@ -19,7 +19,17 @@ use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
 use App\Modules\Generation\Application\Port\GenerationAccountEraser;
 use App\Modules\Generation\Application\Port\GenerationQuota;
+use App\Modules\Generation\Application\Port\DispatchesLineSpeech;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
+use App\Modules\Generation\Application\Port\LineSpeechReporter;
+use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
+use App\Modules\Generation\Application\Command\SpeakCollectionLinesHandler;
+use App\Modules\Shared\Domain\Service\VoiceCatalog;
+use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
+use App\Modules\Generation\Infrastructure\Adapter\GeminiSpeechSynthesizer;
+use App\Modules\Generation\Infrastructure\Adapter\LoggingLineSpeechReporter;
+use App\Modules\Generation\Infrastructure\Adapter\OpenAiSpeechSynthesizer;
+use App\Modules\Generation\Infrastructure\Adapter\QueuedLineSpeechDispatcher;
 use App\Modules\Generation\Application\Port\LoggedResponseReader;
 use App\Modules\Generation\Application\Port\ObservedTokenAverages;
 use App\Modules\Generation\Application\Port\DialogSummarizerPort;
@@ -234,6 +244,14 @@ final class GenerationServiceProvider extends ServiceProvider
         $this->app->bind(RecordsGenerationRejections::class, EloquentGenerationRejectionJournal::class);
         $this->app->bind(DispatchesGeneration::class, QueuedGenerationDispatcher::class);
         $this->app->bind(DispatchesImageAttachment::class, QueuedImageAttachmentDispatcher::class);
+
+        // ---- ОЗВУЧКА РЕПЛИК (наряд TTS-1) ----------------------------------------------------
+        // Тумблер трубы сидит в ДИСПЕТЧЕРЕ: выключено — джоба не ставится, и ни один байт не
+        // уходит вендору. «Выключено» значит «никто никуда не ходил», а не «сходили и передумали».
+        $this->app->bind(DispatchesLineSpeech::class, fn (): DispatchesLineSpeech => new QueuedLineSpeechDispatcher(
+            (bool) config('generation.speech.enabled', false),
+        ));
+        $this->app->bind(LineSpeechReporter::class, LoggingLineSpeechReporter::class);
         $this->app->bind(DispatchesExampleRepair::class, QueuedExampleRepairDispatcher::class);
         // Fulfils Vocabulary's enrichment-dispatch port with the Generation queue job.
         $this->app->bind(DispatchesTermEnrichment::class, QueuedTermEnrichmentDispatcher::class);
@@ -536,6 +554,41 @@ final class GenerationServiceProvider extends ServiceProvider
                 promptVersion: (string) config('services.generation.repair_prompt_version', 'v1'),
             );
         });
+
+        $this->app->bind(SpeechSynthesizerPort::class, function (): SpeechSynthesizerPort {
+            $driver = (string) config('generation.speech.driver', 'openai');
+
+            if ($driver === 'fake') {
+                return new FakeSpeechSynthesizer();
+            }
+            // Озвучка билли́тся за символ или за секунду звука — то есть ровно так же, как модель.
+            // Дверь закрыта в тестах по той же причине, что и у соседей.
+            LiveModelGuard::refuse('speech synthesizer');
+
+            $timeout = (int) config('generation.speech.timeout', 60);
+
+            return $driver === 'gemini'
+                ? new GeminiSpeechSynthesizer(
+                    context: $this->app->make(OutboundCallContext::class),
+                    apiKey: (string) config('services.gemini.api_key'),
+                    timeout: $timeout,
+                )
+                : new OpenAiSpeechSynthesizer(
+                    context: $this->app->make(OutboundCallContext::class),
+                    apiKey: (string) config('services.openai.api_key'),
+                    timeout: $timeout,
+                );
+        });
+
+        // Полки, которые озвучиваются, — конфиг, а не константа обработчика. Контекстная привязка
+        // по имени параметра, а не ручная сборка обработчика: собрать его руками значило бы, что
+        // Infrastructure Generation'а знает классы Collections, чего ей нельзя (deptrac).
+        $this->app->when(SpeakCollectionLinesHandler::class)
+            ->needs('$shelves')
+            ->give(static fn (): array => array_values(array_filter(array_map(
+                'strval',
+                (array) config('generation.speech.shelves', ['hear', 'rescue']),
+            ))));
 
         $this->app->bind(ImageSearchPort::class, function (): ImageSearchPort {
             if (config('services.generation.image_driver') === 'fake') {
