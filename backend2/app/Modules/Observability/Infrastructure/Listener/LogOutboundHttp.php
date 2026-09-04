@@ -107,7 +107,21 @@ final class LogOutboundHttp
         return is_numeric($total) ? (int) round(((float) $total) * 1000) : null;
     }
 
-    /** @return array<mixed>|null */
+    /**
+     * The body as something a jsonb column can hold — and NEVER the bytes of a binary one.
+     *
+     * Найдено живым прогоном TTS-1: `POST /v1/audio/speech` отвечает mp3, эти байты уезжали в
+     * `['raw' => …]`, и Postgres отбивал вставку («SQLSTATE[22P05] Untranslatable character»).
+     * Отбивал он её ПОСЛЕ успешного вызова, то есть после того, как за озвучку уже заплатили: лог
+     * ронял работу, которую наблюдал. Спасали только ретрай джобы и идемпотентность кэша — то есть
+     * каждая реплика покупалась на один раз больше, чем нужно, и ровно этого никто бы не заметил.
+     *
+     * Двоичный ответ описывается, а не хранится: в строке остаются размер и статус, которые и так
+     * есть в соседних колонках, а вопрос «во что обошёлся этот вызов» отвечается ими. Правило
+     * общее, не про звук: картинка, архив, pdf — всё то же самое.
+     *
+     * @return array<mixed>|null
+     */
     private function decode(string $body): ?array
     {
         if ($body === '') {
@@ -116,6 +130,10 @@ final class LogOutboundHttp
         $decoded = json_decode($body, true);
         if (is_array($decoded)) {
             return $this->redactor->redact($decoded);
+        }
+
+        if (! mb_check_encoding($body, 'UTF-8') || str_contains($body, "\0")) {
+            return ['binary' => true, 'bytes' => strlen($body)];
         }
 
         return ['raw' => mb_substr($body, 0, self::MAX_RAW)];

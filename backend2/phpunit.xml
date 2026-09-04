@@ -46,6 +46,13 @@
         <env name="TRANSLATION_DRIVER" value="fake"/>
         <env name="PRACTICE_DRIVER" value="fake"/>
         <env name="IMAGE_DRIVER" value="fake"/>
+        <!-- ОЗВУЧКА РЕПЛИК: труба выключена и вендор подменён, как у всех соседей выше.
+             Пойман живьём: с включённым в .env `SPEECH_ENABLED` весь сьют начал ставить
+             SpeakLinesJob (очередь под тестом `sync`), и `LiveModelGuard` отбивал живой
+             адаптер прямо внутри генерации дня — 129 упавших тестов. Ровно та причина,
+             по которой здесь стоят четыре строки над этой. -->
+        <env name="SPEECH_ENABLED" value="false"/>
+        <env name="SPEECH_DRIVER" value="fake"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

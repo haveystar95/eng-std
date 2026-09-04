@@ -86,3 +86,36 @@ it('logs an outbound external call with credentials redacted', function () {
     expect($log->request_body['api_key'])->toBe('[REDACTED]');
     expect($log->request_body['model'])->toBe('gpt-4o');
 });
+
+it('records a BINARY response as a description, never as its bytes', function () {
+    // ЖИВОЙ ДЕФЕКТ TTS-1. `POST /v1/audio/speech` отвечает mp3; байты уезжали в `raw`, и Postgres
+    // отбивал вставку («SQLSTATE[22P05] Untranslatable character»). Отбивал ПОСЛЕ успешного
+    // вызова, то есть лог ронял работу, за которую уже заплатили: озвучка каждой реплики
+    // покупалась на один раз больше, чем нужно, и спасали только ретрай и идемпотентность кэша.
+    $mp3 = "\xFF\xFB\x90\x00" . random_bytes(2048);
+    Http::fake(['api.openai.com/*' => Http::response($mp3, 200, ['Content-Type' => 'audio/mpeg'])]);
+
+    Http::post('https://api.openai.com/v1/audio/speech', ['model' => 'gpt-4o-mini-tts']);
+
+    $log = ApiRequestLogModel::query()
+        ->where('direction', 'outbound')->where('path', '/v1/audio/speech')->first();
+
+    expect($log)->not->toBeNull()
+        // jsonb порядок ключей не хранит, поэтому сравниваем по значениям.
+        ->and($log->response_body['binary'] ?? null)->toBeTrue()
+        ->and($log->response_body['bytes'] ?? null)->toBe(strlen($mp3))
+        ->and($log->response_body)->not->toHaveKey('raw')
+        // Размер и статус остаются — «во что обошёлся этот вызов» отвечается ими, а не байтами.
+        ->and($log->response_bytes)->toBe(strlen($mp3))
+        ->and($log->status)->toBe(200);
+});
+
+it('still keeps a plain-text body that is not JSON', function () {
+    Http::fake(['api.pexels.com/*' => Http::response('rate limit exceeded', 429)]);
+
+    Http::get('https://api.pexels.com/v1/search');
+
+    $log = ApiRequestLogModel::query()->where('host', 'api.pexels.com')->first();
+
+    expect($log?->response_body)->toBe(['raw' => 'rate limit exceeded']);
+});
