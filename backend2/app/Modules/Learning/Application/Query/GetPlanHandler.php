@@ -8,17 +8,22 @@ use App\Modules\Learning\Application\Dto\PlanDayView;
 use App\Modules\Learning\Application\Dto\PlanProgressView;
 use App\Modules\Learning\Application\Dto\PlanView;
 use App\Modules\Learning\Application\Service\PlanProgress;
+use App\Modules\Learning\Application\Service\PlanSceneTurns;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
 use App\Modules\Learning\Domain\Exception\EventDateInPast;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
+use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
+use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
 use App\Modules\Learning\Domain\Service\PlanScheduler;
+use App\Modules\Learning\Domain\Service\SceneCensus;
 use App\Modules\Learning\Domain\ValueObject\ComputedDay;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\PlanSkill;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
+use App\Modules\Learning\Domain\ValueObject\PlanTermStage;
 use DateTimeImmutable;
 
 /**
@@ -33,6 +38,14 @@ final readonly class GetPlanHandler
         private PlanRepository $plans,
         private PlanDayRepository $days,
         private PlanProgress $progress,
+        /** Что каждая пара доказала голосом — ступень C ({@see PlanTermStage}). */
+        private PlanTermStageRepository $termStages,
+        /** Итоги прогонов: последний из них и есть строка «Прошёл сам N из M» на экране. */
+        private PlanSceneRunRepository $sceneRuns,
+        /** Какие ходы сцены — твои. Тот же ответ, что у посадки ({@see PlanSceneTurns}). */
+        private PlanSceneTurns $sceneTurns,
+        /** Порог «сразу», при котором сцена считается готовой — продуктовое суждение, не константа. */
+        private float $readyFastShare,
         private PlanScheduler $scheduler = new PlanScheduler(),
     ) {}
 
@@ -63,6 +76,9 @@ final readonly class GetPlanHandler
         // the kind of disagreement that reads as a client bug for a week.
         $progress = $this->progress->forPlan($plan, $planDays);
         $today = new DateTimeImmutable($progress->today . ' 00:00:00');
+        // ЗРЕЛОСТЬ СЦЕН — считается один раз и читается дважды: словами на экране и числом в
+        // готовности плана. Два прохода дали бы два ответа на один вопрос.
+        $scenes = $this->scenesOf($plan, $progress);
 
         return new PlanView(
             id: $plan->id()->value,
@@ -82,7 +98,7 @@ final readonly class GetPlanHandler
             entities: $outline === null ? [] : $outline->entities,
             constraints: $outline === null ? [] : $outline->constraints,
             goalTerms: $outline === null ? [] : $outline->goalTerms,
-            readiness: $this->readinessOf($progress, $days),
+            readiness: self::readinessOf($scenes, $days),
             focusDayIndex: $progress->focusDayIndex,
             nextDayIndex: $this->nextDayIndex($planDays, $progress->focusDayIndex),
             // NULL on a plan with no date — and NOT zero, which would read as «событие сегодня»
@@ -94,6 +110,7 @@ final readonly class GetPlanHandler
             canAlready: $this->canAlready($days),
             eventFeedback: $plan->eventFeedback(),
             stageCensus: self::stageCensusOf($progress),
+            scenes: $scenes,
         );
     }
 
@@ -345,35 +362,116 @@ final readonly class GetPlanHandler
      *
      * @param  list<PlanDayView>  $days
      */
-    private function readinessOf(PlanProgressView $progress, array $days): float
+    /**
+     * ГОТОВНОСТЬ ПЛАНА — доля СЦЕН, которые человек говорит сам и говорит сразу.
+     *
+     * Канон §4: «готовность единицы = C + скорость», «готовность плана — доля speak-единиц „C +
+     * скорость“ плюс чек-пойнты умений, подтверждённые прогоном сцены». До наряда SCENE-RUN ступени
+     * C не существовало, поэтому формула считала карточки на их ПОСЛЕДНЕЙ ступени и умножала на
+     * 0.4 — и первые дни любого плана честно давали ноль, который владелец три дня читал как
+     * поломку. Теперь считать есть что.
+     *
+     * Единица счёта — СЦЕНА, а не карточка, и это тоже канон: «метрика успеха — не „выучил 56
+     * слов“, а „в реальной ситуации ответил за 3 секунды“». Сцена, у которой каждый ход прозвучал
+     * голосом и достаточно быстро, — это одна ситуация, которую человек проходит; половина её
+     * карточек «на последней ступени» не значит ничего, потому что разговор нельзя пройти наполовину.
+     *
+     * Число НЕ рисуется на экранах плана (кадр D·07 говорит словами) — оно для API и админки.
+     *
+     * ## ЗНАМЕНАТЕЛЬ — СЦЕНЫ, КОТОРЫЕ ПЛАН СОБИРАЛСЯ НАУЧИТЬ (Д-31, правило цело)
+     *
+     * Не «сцены, которые уже написаны». План пишет по дню за раз, и знаменатель, растущий вместе с
+     * написанным, — это ровно тот дефект, за который заплатил живой прогон: 23 % после дня 1, 13 %
+     * после дня 2, 8 % после дня 3. Человек делал работу и смотрел, как готовность к событию падает.
+     * Дни-строки заведены сразу при сборке каркаса, поэтому их число известно с первой минуты плана
+     * и не двигается.
+     *
+     * @param  list<array{day_index: int, maturity: string, ready: bool, run: array<string, int>|null}>  $scenes
+     * @param  list<PlanDayView>  $days  все дни плана, включая ещё не написанные
+     */
+    private static function readinessOf(array $scenes, array $days): float
     {
-        $standings = $progress->allStandings();
-        if ($standings === []) {
+        $planned = 0;
+        foreach ($days as $day) {
+            if ($day->kind === PlanDayKind::Intro->value) {
+                $planned++;
+            }
+        }
+        // День = одна сцена целиком (`docs/plan-model.md` §2), поэтому дни-знакомства и есть сцены.
+        // `max` — честная защита от плана, у которого сцен вышло больше, чем дней: знаменатель
+        // растёт на то, что реально добавилось, и никогда не падает.
+        $planned = max($planned, count($scenes));
+        if ($planned === 0) {
             return 0.0;
         }
 
-        $planned = 0;
-        foreach ($days as $day) {
-            if ($day->kind !== PlanDayKind::Intro->value) {
-                // The final day introduces nothing — its cards are the teaching days' own, and
-                // counting them twice would hold the percentage down for ever.
+        $ready = 0;
+        foreach ($scenes as $scene) {
+            if ($scene['ready']) {
+                $ready++;
+            }
+        }
+
+        return round($ready / $planned, 4);
+    }
+
+    /**
+     * ПЕРЕПИСЬ СЦЕН — три слова зрелости, готовность и последний прогон (наряд SCENE-RUN, Ч.3).
+     *
+     * Считается по тем же стойкам, что и всё остальное про этот план, плюс по двум таблицам, где
+     * лежит то, чего в журнале нет: что пара доказала голосом и чем кончились её прогоны.
+     *
+     * @return list<array{day_index: int, maturity: string, ready: bool, run: array{total: int, said: int, said_fast: int, skipped: int, rescued: int}|null}>
+     */
+    private function scenesOf(LearningPlan $plan, PlanProgressView $progress): array
+    {
+        $stages = $this->termStages->forPlan($plan->id());
+
+        // ПОСЛЕДНИЙ прогон каждой сцены. Именно последний, а не лучший: строка на экране описывает
+        // прогон, который человек только что закончил, а «лучшее за всё время» живёт на паре.
+        $lastRun = [];
+        foreach ($this->sceneRuns->forPlan($plan->id()) as $run) {
+            $lastRun[$run->sceneIndex] = $run;
+        }
+
+        $indexes = array_keys($progress->days);
+        sort($indexes);
+
+        $out = [];
+        foreach ($indexes as $index) {
+            $day = $progress->days[$index];
+            $turns = $this->sceneTurns->of($day);
+            if ($turns === []) {
                 continue;
             }
-            $written = $progress->days[$day->index] ?? null;
-            $planned += max($day->termBudget, $written === null ? 0 : count($written->termIds));
-        }
 
-        $atLast = 0;
-        foreach ($standings as $standing) {
-            if ($standing->ready) {
-                $atLast++;
+            $standings = [];
+            $sceneStages = [];
+            foreach ($turns as $termId) {
+                $standing = $day->standings[$termId] ?? null;
+                if ($standing === null) {
+                    continue;
+                }
+                $standings[] = $standing;
+                $sceneStages[] = $stages[$termId] ?? new PlanTermStage($plan->id()->value, $termId);
             }
+
+            $run = $lastRun[$index] ?? null;
+            $out[] = [
+                'day_index' => $index,
+                'maturity' => SceneCensus::maturityOf($standings, $sceneStages)->value,
+                'ready' => SceneCensus::isReady($standings, $sceneStages, $this->readyFastShare),
+                'run' => $run === null ? null : [
+                    'total' => $run->total,
+                    'said' => $run->said,
+                    'said_fast' => $run->saidFast,
+                    'skipped' => $run->skipped,
+                    'rescued' => $run->rescued,
+                ],
+            ];
         }
 
-        // A plan whose skeleton carries no budgets at all (written before `term_budget` existed)
-        // falls back to what it can see, which is exactly the reading it had before this change.
-        $planned = max($planned, count($standings));
-
-        return round(0.4 * ($atLast / $planned), 4);
+        return $out;
+    
     }
 }

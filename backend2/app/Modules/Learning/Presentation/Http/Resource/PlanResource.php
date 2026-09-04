@@ -46,6 +46,10 @@ final class PlanResource
             // The plain count beside the percentage — see PlanView::$stageCensus. On the wire as a
             // whole object so «сколько всего» and «сколько закрыло A» can never be read apart.
             'stage_census' => $plan->stageCensus,
+            // ЗРЕЛОСТЬ КАЖДОЙ СЦЕНЫ и её последний прогон (наряд SCENE-RUN, Ч.3). Три слова —
+            // `met` | `applying` | `speaking` — и булево «готов»; процента здесь нет и на экранах
+            // плана не будет. `run` — итог ПОСЛЕДНЕГО прогона, а не накопленный счёт.
+            'scenes' => $plan->scenes,
             // Which of those the learner ticked after the event (кадр 1c · 14). Null = never asked,
             // `[]` = asked and none used — the finished plan says a different sentence for each.
             'event_feedback' => $plan->eventFeedback,

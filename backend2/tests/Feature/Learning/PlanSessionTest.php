@@ -525,8 +525,9 @@ it('never lets readiness FALL as a new day is written (Д-31)', function () {
         ->assertOk()
         ->json('data.readiness');
 
-    // Day 1, then two nights of its own revision — enough for its lines to reach the last stage a
-    // line has, which is what `ready` counts.
+    // Day 1, then two nights of its own revision — enough for its lines to reach stage B, and then
+    // a RUN of the scene, which is what `ready` counts since наряд SCENE-RUN: готовность плана это
+    // доля сцен, которые человек говорит сам и говорит сразу (канон §4, «C + скорость»).
     $seq = walkDay($this, $token, $planId, 1);
     for ($night = 0; $night < 3; $night++) {
         ageHistory($user->id, days: 1);
@@ -536,6 +537,25 @@ it('never lets readiness FALL as a new day is written (Д-31)', function () {
         }
         $seq = answerTasks($this, $token, $session, $seq);
     }
+
+    $turns = DB::table('collection_items as ci')
+        ->join('terms as t', 't.id', '=', 'ci.term_id')
+        ->where('ci.collection_id', DB::table('learning_plan_days')
+            ->where('plan_id', $planId)->where('day_index', 1)->value('collection_id'))
+        ->whereIn('t.shelf', ['say', 'ask'])
+        ->whereNull('ci.deleted_at')
+        ->pluck('t.id')->all();
+    expect($turns)->not->toBeEmpty();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$planId}/scene-runs", [
+            'scene_index' => 1,
+            'day_index' => 1,
+            'turns' => array_map(
+                static fn (string $id): array => ['term_id' => $id, 'outcome' => 'said_fast'],
+                $turns,
+            ),
+        ])->assertCreated();
 
     // Day 2 is written by now (passing day 1 is what queues it). Put it back to `pending` for one
     // read: this is the state the live run was measuring in, and the two readings must agree —

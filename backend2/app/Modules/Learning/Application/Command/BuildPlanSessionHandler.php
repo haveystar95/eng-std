@@ -19,6 +19,7 @@ use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Service\CardLanguageResolver;
 use App\Modules\Learning\Application\Service\PlanDayPassing;
 use App\Modules\Learning\Application\Service\PlanProgress;
+use App\Modules\Learning\Application\Service\PlanSceneTurns;
 use App\Modules\Learning\Application\Service\StudyCardAssembler;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
@@ -247,6 +248,8 @@ final readonly class BuildPlanSessionHandler
          * сегодня уже прогнали, второй раз за вечер мерила бы память о первом прогоне.
          */
         private PlanSceneRunRepository $sceneRuns,
+        /** Какие ходы сцены — твои. Один ответ на всех, кто спрашивает ({@see PlanSceneTurns}). */
+        private PlanSceneTurns $sceneTurns,
         private PlanDayOrder $order = new PlanDayOrder(),
         /** Where a situational card's «Ситуация» comes from — pure, and stated in Domain. */
         private SituationalPrompt $situations = new SituationalPrompt(),
@@ -1278,17 +1281,7 @@ final readonly class BuildPlanSessionHandler
      */
     private function sceneTurnsOf(PlanDayProgressView $day): array
     {
-        $cards = [];
-        foreach ($day->content as $termId => $view) {
-            $cards[] = new SituationalCandidate($termId, $view->shelf, $view->skillRef, $view->text);
-        }
-
-        $turns = [];
-        foreach ($this->dialogues->for($day->dialogue, $cards) as $move) {
-            if (! $move->isRole() && isset($day->content[$move->termId])) {
-                $turns[] = $move->termId;
-            }
-        }
+        $turns = $this->sceneTurns->of($day);
 
         $standings = [];
         foreach ($turns as $termId) {

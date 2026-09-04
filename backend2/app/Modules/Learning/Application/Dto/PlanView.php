@@ -111,5 +111,19 @@ final readonly class PlanView
          * @var array{total: int, stage_a_closed: int}
          */
         public array $stageCensus = ['total' => 0, 'stage_a_closed' => 0],
+        /**
+         * ЗРЕЛОСТЬ КАЖДОЙ СЦЕНЫ — три слова канона и последний прогон (наряд SCENE-RUN, Ч.3).
+         *
+         * `maturity` — `met` | `applying` | `speaking` ({@see SceneMaturity}), то, что человек
+         * читает на экране плана словами. `ready` — «C + скорость» (`docs/plan-model.md` §4), число
+         * для API и админки; на экранах плана процентов нет и это правило не двигается.
+         *
+         * `run` — итог ПОСЛЕДНЕГО прогона этой сцены, или null, если её ещё не прогоняли: «Прошёл
+         * сам N из M · сразу K» на кадре DL·10 и в итоге дня — это конкретный прогон, а не
+         * накопленный счёт, и путать их значило бы показывать вчерашний результат как сегодняшний.
+         *
+         * @var list<array{day_index: int, maturity: string, ready: bool, run: array{total: int, said: int, said_fast: int, skipped: int, rescued: int}|null}>
+         */
+        public array $scenes = [],
     ) {}
 }

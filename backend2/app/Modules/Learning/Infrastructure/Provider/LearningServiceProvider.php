@@ -38,6 +38,7 @@ use App\Modules\Learning\Application\Port\PlanTermArchiver;
 use App\Modules\Learning\Application\Port\PlanTermSweepStore;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
 use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
+use App\Modules\Learning\Application\Query\GetPlanHandler;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanSkillRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
@@ -135,6 +136,11 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(PlanTermSweepStore::class, EloquentPlanTermSweepStore::class);
         $this->app->bind(PlanTermStageRepository::class, EloquentPlanTermStageRepository::class);
         $this->app->bind(PlanSceneRunRepository::class, EloquentPlanSceneRunRepository::class);
+        // ПОРОГ «СРАЗУ» — продуктовое суждение, не константа: экран плана готовности процентом не
+        // рисует, но число обязано двигаться из конфига, а не из выката.
+        $this->app->when(GetPlanHandler::class)
+            ->needs('$readyFastShare')
+            ->give(static fn (): float => (float) config('learning.plan.scene_run.ready_fast_share', 0.7));
         // «Из плана: Отпуск в Италии» — what a review card of the top-up says about itself.
         // Singleton for the same reason the global reader is one: a per-request memo over one query.
         // A DIFFERENT instance from that reader even though it is the same table — the two read
