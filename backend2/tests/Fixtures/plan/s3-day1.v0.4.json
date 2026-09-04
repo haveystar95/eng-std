@@ -168,5 +168,19 @@
       "value": "3",
       "translation": "Возвращайтесь через три дня."
     }
+  ],
+  "dialogue": [
+    { "turn": "role", "ref": "hear[0]" },
+    { "turn": "you", "ref": "say[0]" },
+    { "turn": "role", "ref": "hear[1]" },
+    { "turn": "you", "ref": "say[1]" },
+    { "turn": "role", "ref": "hear[2]" },
+    { "turn": "you", "ref": "say[2]" },
+    { "turn": "role", "ref": "hear[3]" },
+    { "turn": "you", "ref": "say[3]" },
+    { "turn": "role", "ref": "hear[0]" },
+    { "turn": "you", "ref": "ask[0]" },
+    { "turn": "role", "ref": "hear[1]" },
+    { "turn": "you", "ref": "ask[1]" }
   ]
 }

@@ -564,3 +564,149 @@ function walkDay(object $ctx, string $token, string $planId, int $dayIndex, int 
 
     return $seq;
 }
+
+// ── the hand-written day-scenes the gates are judged on ──────────────────────────────────────
+//
+// They live HERE and not beside one test file because two suites now judge the same fixture — the
+// gates of the day itself and the gates of its conversation (наряд DAY-2) — and Pest runs each file
+// in its own process, so a helper defined in a sibling file is a helper that does not exist. A
+// second copy of a fixture builder is how two files come to disagree about what a clean day is.
+
+/** @return array<string, mixed> */
+function planFixture(string $name): array
+{
+    /** @var array<string, mixed> $raw */
+    $raw = json_decode((string) file_get_contents(__DIR__ . '/Fixtures/plan/' . $name), true);
+
+    return $raw;
+}
+
+/**
+ * The six shelves, flattened into cards exactly as
+ * {@see \App\Modules\Generation\Application\Service\PlanDayComposer::items()} flattens them —
+ * assembled cards pasted from `frame` + `filler`, the shelf deciding the kind. So what the gates
+ * judge in a test is the same object production judges.
+ *
+ * @param  array<string, mixed>  $day
+ * @return list<\App\Modules\Generation\Domain\ValueObject\PlanDayItem>
+ */
+function planItems(array $day): array
+{
+    $out = [];
+    foreach (\App\Modules\Generation\Domain\ValueObject\PlanShelf::model() as $shelf) {
+        $index = -1;
+        /** @var list<array<string, mixed>> $cards */
+        $cards = is_array($day[$shelf->value] ?? null) ? $day[$shelf->value] : [];
+        foreach ($cards as $card) {
+            $index++;
+            $assembled = $shelf->isAssembled();
+            $frame = $assembled ? (string) ($card['frame'] ?? '') : '';
+            $filler = $assembled ? (string) ($card['filler'] ?? '') : '';
+
+            $out[] = new \App\Modules\Generation\Domain\ValueObject\PlanDayItem(
+                text: $assembled
+                    ? \App\Modules\Generation\Application\Service\PlanDayComposer::assemble($frame, $filler)
+                    : (string) ($card['text'] ?? ''),
+                type: $shelf->kind() === \App\Modules\Generation\Domain\ValueObject\PlanDayItem::KIND_WORD ? 'word' : 'phrase',
+                kind: $shelf->kind(),
+                isLine: $shelf->kind() === \App\Modules\Generation\Domain\ValueObject\PlanDayItem::KIND_LINE,
+                translation: (string) ($card['translation'] ?? ''),
+                transliteration: (string) ($card['transliteration'] ?? ''),
+                description: '',
+                example: (string) ($card['example'] ?? ''),
+                exampleTranslation: (string) ($card['example_translation'] ?? ''),
+                frame: $frame,
+                filler: $filler,
+                speaker: match (true) {
+                    $shelf->isRole() => \App\Modules\Generation\Domain\ValueObject\PlanDayItem::SPEAKER_ROLE,
+                    $shelf->kind() === \App\Modules\Generation\Domain\ValueObject\PlanDayItem::KIND_LINE => \App\Modules\Generation\Domain\ValueObject\PlanDayItem::SPEAKER_LEARNER,
+                    default => null,
+                },
+                imageApiPrompt: (string) ($card['image_api_prompt'] ?? ''),
+                coversCheckpoint: null,
+                index: $index,
+                shelf: $shelf->value,
+                skillRef: ((string) ($card['skill_ref'] ?? '')) ?: null,
+                value: ((string) ($card['value'] ?? '')) ?: null,
+            );
+        }
+    }
+
+    return $out;
+}
+
+/**
+ * The S1 day-scene, with `$edits` applied to the raw answer before it is flattened.
+ *
+ * Edits are addressed the way a violation is — shelf and index — so a test reads as «break `say[1]`
+ * and see which code comes back», which is also how a repair call would be pointed at it.
+ *
+ * @param  array<string, array<int, array<string, mixed>>>  $edits  shelf => index => fields
+ * @param  list<array<string, mixed>>|null  $dialogue  the chain, or null for the fixture's own
+ */
+function planCandidate(
+    array $edits = [],
+    string $dayFixture = 's1-day1.v0.4.json',
+    string $outlineFixture = 's1-outline.v0.4.json',
+    int $scene = 1,
+    string $supportLang = 'ru',
+    string $targetLang = 'en',
+    string $level = 'basic',
+    array $rescueKit = [],
+    array $knownTexts = [],
+    ?array $dialogue = null,
+    bool $expectsDialogue = false,
+): \App\Modules\Generation\Domain\ValueObject\PlanDayCandidate {
+    $day = planFixture($dayFixture);
+    foreach ($edits as $shelf => $cards) {
+        foreach ($cards as $index => $fields) {
+            if ($fields === []) {
+                // An empty edit REMOVES the card — that is how an empty shelf is built.
+                unset($day[$shelf][$index]);
+                $day[$shelf] = array_values($day[$shelf]);
+
+                continue;
+            }
+            $day[$shelf][$index] = [...$day[$shelf][$index], ...$fields];
+        }
+    }
+
+    $outline = planFixture($outlineFixture);
+    /** @var array<string, mixed> $sceneData */
+    $sceneData = $outline['scenes'][$scene - 1];
+
+    return new \App\Modules\Generation\Domain\ValueObject\PlanDayCandidate(
+        supportLang: $supportLang,
+        targetLang: $targetLang,
+        items: planItems($day),
+        // THE IDS ARE THE SERVER'S, spelled here the way `PlanOutline::fromArray()` spells them. P1
+        // is not asked for them: an id is an address, and «s1.2» computed from the position
+        // addresses exactly what a model-written id would have.
+        skillIds: array_map(
+            static fn (int $i): string => 's' . $scene . '.' . ($i + 1),
+            array_keys($sceneData['skills']),
+        ),
+        entityNames: $sceneData['entities'] ?? [],
+        rescueKit: $rescueKit,
+        knownTexts: $knownTexts,
+        goalTerms: [],
+        level: $level,
+        sceneIntro: (string) ($sceneData['intro'] ?? ''),
+        // THE ORDER THE SCENE IS SPOKEN IN — the fixture's own chain unless a test overrides it,
+        // parsed the way `PlanDayComposer::dialogue()` parses it.
+        dialogue: array_map(
+            \App\Modules\Generation\Domain\ValueObject\PlanDialogueTurn::fromArray(...),
+            $dialogue ?? (is_array($day['dialogue'] ?? null) ? $day['dialogue'] : []),
+        ),
+        expectsDialogue: $expectsDialogue,
+    );
+}
+
+/** @param list<\App\Modules\Generation\Domain\ValueObject\PlanViolation> $violations */
+function planCodes(array $violations): array
+{
+    return array_values(array_unique(array_map(
+        static fn (\App\Modules\Generation\Domain\ValueObject\PlanViolation $v): string => $v->code,
+        $violations,
+    )));
+}

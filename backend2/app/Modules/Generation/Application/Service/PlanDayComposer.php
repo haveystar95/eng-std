@@ -17,6 +17,7 @@ use App\Modules\Generation\Domain\Service\PlanDayValidator;
 use App\Modules\Generation\Domain\Service\PlanLanguageNotes;
 use App\Modules\Generation\Domain\ValueObject\PlanDayCandidate;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
+use App\Modules\Generation\Domain\ValueObject\PlanDialogueTurn;
 use App\Modules\Generation\Domain\ValueObject\PlanShelf;
 use App\Modules\Generation\Domain\ValueObject\PlanViolation;
 use App\Modules\Generation\Domain\ValueObject\RescuePhrase;
@@ -51,7 +52,7 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
  */
 final readonly class PlanDayComposer
 {
-    public const PROMPT_VERSION = 'plan_day.v0.4';
+    public const PROMPT_VERSION = 'plan_day.v0.5';
 
     /** The slot in a frame, and the one string {@see assemble()} replaces. */
     private const SLOT = PlanDayItem::SLOT;
@@ -102,7 +103,12 @@ final readonly class PlanDayComposer
     {
         $rescue = $this->rescueFor($brief);
         [$answer, $items] = $this->ask($brief, $known, $rescue);
-        [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items);
+        // THE ORDER THE SCENE IS SPOKEN IN, read once. It survives a repair untouched: P2R is asked
+        // about CARDS and answers with cards, so the chain the day was written with is still the
+        // chain of the day that comes out of the merge — the refs are addresses, and the addresses
+        // are exactly what a repair may not move ({@see PlanDayRepairer::merge()}).
+        $dialogue = $this->dialogue($answer->payload);
+        [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue);
         $this->record($brief, $answer, $violations);
         $repairCalls = 0;
 
@@ -113,7 +119,7 @@ final readonly class PlanDayComposer
                 $this->reportWarnings($brief, $candidate, counted: false);
 
                 $items = $repair->items;
-                [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items);
+                [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue);
                 $violations = [...$violations, ...$repair->violations];
             }
         }
@@ -124,7 +130,31 @@ final readonly class PlanDayComposer
             throw PlanDayRefused::invalid($violations, $repairCalls);
         }
 
-        return $this->draft($brief, $known, $answer, $items, $repairCalls);
+        return $this->draft($brief, $known, $answer, $items, $repairCalls, $dialogue);
+    }
+
+    /**
+     * The `dialogue` array as turns — parsed, never judged (the verdict is
+     * {@see PlanDayValidator::checkDialogue()}).
+     *
+     * An entry that is not an object is skipped rather than kept as an empty turn: a turn with no
+     * side and no ref would be reported as three defects about nothing, and the day is already
+     * failing on the ones that name something.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return list<PlanDialogueTurn>
+     */
+    private function dialogue(array $payload): array
+    {
+        $out = [];
+        $rows = is_array($payload['dialogue'] ?? null) ? $payload['dialogue'] : [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $out[] = PlanDialogueTurn::fromArray($row);
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -179,9 +209,10 @@ final readonly class PlanDayComposer
      * @param  array<string, string>  $known
      * @param  list<RescuePhrase>  $rescue
      * @param  list<PlanDayItem>  $items
+     * @param  list<PlanDialogueTurn>  $dialogue
      * @return array{0: list<PlanViolation>, 1: PlanDayCandidate}
      */
-    private function judge(PlanDayGenerationBrief $brief, array $known, array $rescue, array $items): array
+    private function judge(PlanDayGenerationBrief $brief, array $known, array $rescue, array $items, array $dialogue = []): array
     {
         $candidate = new PlanDayCandidate(
             supportLang: $brief->supportLang,
@@ -194,6 +225,11 @@ final readonly class PlanDayComposer
             goalTerms: $brief->goalTerms,
             level: $brief->level,
             sceneIntro: $brief->sceneIntro,
+            dialogue: $dialogue,
+            // ASKED FOR, therefore judged. This build's prompt is v0.5 and v0.5 asks for the chain,
+            // so a missing one is a defect of THIS answer — and never of a stored day written on
+            // v0.4, which is judged by a validator built somewhere else with this flag off.
+            expectsDialogue: true,
         );
 
         return [$this->validator->validate($candidate), $candidate];
@@ -251,8 +287,9 @@ final readonly class PlanDayComposer
      *
      * @param  array<string, string>  $known
      * @param  list<PlanDayItem>  $items
+     * @param  list<PlanDialogueTurn>  $dialogue
      */
-    private function draft(PlanDayGenerationBrief $brief, array $known, ModelAnswer $answer, array $items, int $repairCalls = 0): PlanDayDraft
+    private function draft(PlanDayGenerationBrief $brief, array $known, ModelAnswer $answer, array $items, int $repairCalls = 0, array $dialogue = []): PlanDayDraft
     {
         $mandatory = $this->validator->scriptsDiffer($brief->supportLang, $brief->targetLang);
         $normalized = [];
@@ -299,6 +336,7 @@ final readonly class PlanDayComposer
             promptVersion: $this->prompts->dayVersion(),
             costUsd: $answer->costUsd,
             repairCalls: $repairCalls,
+            dialogue: $dialogue,
         );
     }
 

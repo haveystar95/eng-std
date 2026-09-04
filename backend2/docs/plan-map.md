@@ -4,7 +4,8 @@
 классы. Почему так устроено — в докблоках этих классов и в `docs/DECISIONS.md`; живые прогоны — в
 `docs/research/plan-*-run.md`; кто платит за какой промпт — в `docs/prompts/REGISTRY.md`.
 
-Проверено по коду на 02.09.2026 (дополнено нарядом PLAN-FIX-4: §2 лестница плана своя и порядок
+Проверено по коду на 04.09.2026 (**DAY-2, Ч.1: §2.2в диалог сцены — P2 v0.5, цепочка, коды секций и
+порядок посадки; §3 гейты диалога; §5 P2 = `plan_day.v0.5`**). Ранее — 02.09.2026 (дополнено нарядом PLAN-FIX-4: §2 лестница плана своя и порядок
 дня, §2.3 ключ говорения, §3 гейт `line.translation_missing_key`; PLAN-FIX-5: §2 пол выбора;
 E2E-FIX-1: §2 матрица плана перебивает глобальную, реплика роли двумя источниками, полоса длины по
 собранному тексту, пояс близости; §2.4 финальный день и завершение; §4 происхождение коллекции дня;
@@ -236,6 +237,32 @@ append-only логе, и этот ответ — ВЫБОР. Произнесе�
 могла бы спросить. Миграция `2026_09_03_150100` удаляет строки, которые старая explode-миграция
 пишет на свежей базе, и заводит `scope = plan`, включёнными на всех уровнях.
 
+### 2.2в. Диалог сцены — порядок поверх полок (DAY-2, P2 v0.5)
+
+Канон: `docs/plan-dialogue.md`. Единица интерактива — **обмен**, а не карточка; полки остались тем,
+чем были (лестница и словарь на них), диалог — **порядок**, в котором сцена звучит.
+
+| что | где в коде |
+|---|---|
+| цепочка от модели | `dialogue` в ответе P2 (`PlanSchemas::day()`), разбирается в `PlanDialogueTurn` — `{turn: role\|you, ref: "<полка>[<индекс>]"}`. Текста в ходе нет вообще: ход это АДРЕС |
+| куда легла | колонка `learning_plan_days.dialogue` (jsonb, nullable) — уже `term_id`, не адреса. Резолв один раз, в `GeneratePlanDayHandler::materialize()`, в том же проходе, что импортирует карточки: это единственный момент, когда у карточки есть оба имени |
+| одна функция на оба случая | `Learning/Domain/Service/PlanDialogueChain::for()` — сохранённая цепочка (фильтруется по карточкам, которые у дня ещё есть) или, если её нет, **пары по `skill_ref`** (та же пара, что делает `SituationalPrompt`). Дни, написанные до v0.5, не ломаются |
+| наружу | `dialogues[]` на пейлоаде посадки: `day_index`, `scene_title`, `scene_intro`, `turns[]` (`turn`, `term_id`, `text`, `translation`, `shelf`). Цепочка **целая**, задач меньше: экран играет разговор с первой реплики и отдаёт ход там, где есть задача с тем же `term_id` |
+| секции посадки | `PlanSessionSections`: `warmup` · `words` · `dialogue_intro` · `dialogue` · `numbers` · `rehearsal` · `review` · `day`. `hear`/`say`/`ask` как СЕКЦИИ отменены: ступень A трёх полок это одна секция «знакомство», ступень B — одна секция «диалог». Различает их **ступень**, а не полка (`ofShelf($shelf, $stage)`) |
+| код секции на проводе | `section_code` у задачи, рядом со старым `section` (`warmup`/`day`/`review`). Первый — подпись для человека, второй — арифметика шва и `day_task_count`. Клиент локализует по коду; наружу код, не текст |
+| порядок посадки | `BuildPlanSessionHandler::ordered()` — ключ `[день или шов, ранг секции, индекс дня, место в цепочке, исходная позиция]`. День раньше шва (PLAN-FIX-7 цел), внутри каждой сцены — порядок канона §10, внутри `dialogue` — цепочка |
+| присест не режет обмен | `sectionKeyOf()` = `section_code#день`, а `PlanSittings::cut()` режет только на границе секции. Значит рез физически не может попасть внутрь диалога |
+
+**Гейты диалога** (§3): `card.dialogue_ref_invalid` — карточное фатальное с адресом, который назвала
+сама ссылка; адрес обычно не указывает ни на какую карточку ответа, поэтому починка по карточкам
+невозможна и день переписывается целиком — честный исход, чинить в цепочке нечего.
+`day.dialogue_missing` и `day.dialogue_not_alternating` — дневные фатальные.
+`plan_day_dialogue_uncovered` — счётчик (реплика `say`/`ask` вне цепочки).
+
+**Судят только свежий ответ.** `PlanDayCandidate::$expectsDialogue` — этот прогон просили написать
+цепочку. Валидатор один на всё, а день, написанный на v0.4, пересуживается целиком при каждой
+починке: гейт по полю, которого у промпта не было, отбил бы материал, по которому человек уже идёт.
+
 ### 2.2б. Присесты и хвост посадки (SIT-1, Ч-5/Ч-6)
 
 Минуты юзера (10/20/40) — это длина ОДНОГО присеста, а не потолок дня. День раздаётся целиком;
@@ -418,14 +445,20 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 | `card.skill_ref_invalid` | `skill_ref` пуст или не из этой сцены |
 | `card.number_value_mismatch` | число в `frame` не сходится с `value` (только `numbers`) |
 
-Дневные фатальные: `day.shelf_missing` (нет полки `hear` / `say` / пары `words+chunks` целиком) и
-порог «сломано больше половины карточек» → повтор дня целиком.
+Дневные фатальные: `day.shelf_missing` (нет полки `hear` / `say` / пары `words+chunks` целиком),
+`day.dialogue_missing` и `day.dialogue_not_alternating` (§2.2в, только для ответа, которого просили
+цепочку) и порог «сломано больше половины карточек» → повтор дня целиком.
+
+Карточное фатальное диалога — `card.dialogue_ref_invalid` (§2.2в): адрес у него есть, но он почти
+всегда указывает мимо карточек ответа, и `PlanDayRepairer::brokenCards()` в этом случае отдаёт
+`null` — день переписывается целиком.
 
 Счётчики (`warnings()`): `plan_day_size_out_of_range` (полка вне ориентиров 4–6 / 4–6 / 2–3 / 6–8 /
 2–4), `plan_day_formula_cap`, `plan_day_no_question`, `plan_day_no_repair`,
 `plan_day_skill_uncovered`, `plan_day_role_line_share`, `plan_day_substitution_outside_frame`,
 `plan_day_intro_repeated`, `plan_day_filler_mismatch`, `plan_day_key_duplicated`,
-`plan_day_image_prompt_missing`, `plan_day_key_not_support_language`, `plan_day_word_is_basic`.
+`plan_day_image_prompt_missing`, `plan_day_key_not_support_language`, `plan_day_word_is_basic`,
+`plan_day_dialogue_uncovered`.
 
 **У `card.filler_not_card` два ранга, и делит их полка** (решение владельца 02.09):
 
@@ -563,7 +596,7 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 | id | версия / константа | файл | кто вызывает | схема ответа |
 |---|---|---|---|---|
 | **P1** | `plan_outline.v0.4.1` — `PlanPromptLibrary::OUTLINE_VERSION` | `plan_outline.v0.4.1.md` | `PlanOutlineService` | `PlanSchemas::outline()` |
-| **P2** | `plan_day.v0.4.1` — `DAY_VERSION` | `plan_day.v0.4.1.md` | `PlanDayComposer` | `PlanSchemas::day()` |
+| **P2** | `plan_day.v0.5` — `DAY_VERSION` | `plan_day.v0.5.md` | `PlanDayComposer` | `PlanSchemas::day()` |
 | **P2R** | `plan_day_repair.v0.2` — `REPAIR_VERSION` | `plan_day_repair.v0.2.md` | `PlanDayRepairer` | `PlanSchemas::repair()` |
 | **P-Listen** | `plan_listen.v1.1` — `LISTEN_VERSION` | `plan_listen.v1.1.md` | `PlanListenService` | `PlanSchemas::listen()` |
 

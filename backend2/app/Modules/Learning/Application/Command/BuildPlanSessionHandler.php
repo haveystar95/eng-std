@@ -26,7 +26,10 @@ use App\Modules\Learning\Domain\Exception\PlanNotFound;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
+use App\Modules\Learning\Application\Dto\PlanDialogueTurnView;
+use App\Modules\Learning\Application\Dto\PlanDialogueView;
 use App\Modules\Learning\Domain\Service\PlanDayOrder;
+use App\Modules\Learning\Domain\Service\PlanDialogueChain;
 use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
 use App\Modules\Learning\Domain\Service\PlanKnobSupport;
 use App\Modules\Learning\Domain\Service\PlanSessionSections;
@@ -218,6 +221,11 @@ final readonly class BuildPlanSessionHandler
         private PlanDayOrder $order = new PlanDayOrder(),
         /** Where a situational card's «Ситуация» comes from — pure, and stated in Domain. */
         private SituationalPrompt $situations = new SituationalPrompt(),
+        /**
+         * THE ORDER A SCENE IS SPOKEN IN — the day's own chain since P2 v0.5, and the shelves
+         * paired by `skill_ref` for every day written before it (наряд DAY-2).
+         */
+        private PlanDialogueChain $dialogues = new PlanDialogueChain(),
     ) {}
 
     public function __invoke(BuildPlanSession $command): PlanSessionView
@@ -243,14 +251,17 @@ final readonly class BuildPlanSessionHandler
         $strict = $day->kind() === PlanDayKind::Intro;
         $knobs = $this->planSettings->knobsFor($plan->level());
 
-        $tasks = $strict
+        [$tasks, $dialogues] = $strict
             ? $this->strictTasks($plan, $progress, $dayIndex, $knobs)
             // THE FINAL DAY IS A RUN-THROUGH, not a lesson (Д-27). It introduces nothing and owns no
             // collection, which is why asking to GENERATE it is a 404 — there is no material to
             // buy. The material already exists: it is every card the plan has taught. Before this
             // the client asked for a build, got the 404 and dead-ended, so the plan could not be
             // finished from the app at all and the live run closed it from tinker.
-            : $this->rehearsalTasks($plan, $progress, $knobs);
+            // A RUN-THROUGH HAS NO CONVERSATION. Every card of the plan, once each, in the order it
+            // was taught — that is a different shape from a scene being spoken, and the dialogue of
+            // the прогон is SCENE-RUN's, not this one's.
+            : [$this->rehearsalTasks($plan, $progress, $knobs), []];
 
         $sessionId = $command->sessionId ?? StudySessionId::generate();
         $this->persist($sessionId, $plan, $day, $tasks, $strict);
@@ -274,6 +285,9 @@ final readonly class BuildPlanSessionHandler
             // for the same reason `dayTaskCount` is: a spec whose card the assembler refused is not
             // a card the learner will sit through.
             sittings: PlanSittings::cut(array_map(self::sectionKeyOf(...), $tasks), $this->taskBudget($plan)),
+            // THE CONVERSATIONS, in the order the sitting reaches them — the dialogue screen's whole
+            // input beside the tasks themselves.
+            dialogues: $dialogues,
         );
     }
 
@@ -308,23 +322,185 @@ final readonly class BuildPlanSessionHandler
     /**
      * WHICH PART OF THE SITTING a task belongs to — the key присесты are cut between.
      *
-     * The warm-up and the revision are parts by their SECTION; the day's own material is parted by
-     * its SHELF, which is канон §11's own list ({@see PlanSessionSections}). Kept here rather than
-     * on the wire because it is the same grouping the client already derives for the seam captions,
-     * and two names for one grouping is how the two drift.
+     * The task already carries its own part as a code ({@see PlanSessionTaskView::$sectionCode}) and
+     * this is that code plus the DAY it belongs to. The day matters because the seam can hold two
+     * scenes at once, and two conversations running into each other with no break between them is
+     * exactly the cut the learner needs: «Диалог · сцена 1» ends, «Диалог · сцена 2» begins.
+     *
+     * Kept on the server rather than derived on the wire for the reason it always was: it is the
+     * same grouping the client draws its captions from, and two names for one grouping is how the
+     * two drift.
      */
     private static function sectionKeyOf(PlanSessionTaskView $task): string
     {
-        return match ($task->section) {
-            PlanSessionTaskView::SECTION_WARMUP => PlanSessionSections::WARMUP,
-            PlanSessionTaskView::SECTION_REVIEW => PlanSessionSections::REVIEW,
-            default => PlanSessionSections::ofShelf($task->shelf),
-        };
+        return $task->section === PlanSessionTaskView::SECTION_WARMUP
+            ? PlanSessionSections::WARMUP
+            : $task->sectionCode . '#' . ($task->fromDayIndex ?? 0);
+    }
+
+    /**
+     * WHAT THE LEARNER IS DOING with this card — the part of the sitting it belongs to, as a code.
+     *
+     * The shelf answers most of it; the RUNG answers the rest, and that is the whole of DAY-2 in one
+     * expression: a `say` card at stage A is being MET («знакомство с репликами сцены») and the same
+     * card at stage B is being SPOKEN («диалог сцены»). Nothing but the stage tells those apart, and
+     * the client used to be handed only the shelf.
+     *
+     * @param  array<string, mixed>  $spec
+     */
+    private function sectionCodeOf(array $spec, PlanProgressView $progress): string
+    {
+        if (($spec['section'] ?? null) === PlanSessionTaskView::SECTION_WARMUP) {
+            return PlanSessionSections::WARMUP;
+        }
+
+        /** @var PlanStage|null $stage */
+        $stage = $spec['stage'] ?? null;
+        /** @var string $termId */
+        $termId = $spec['term_id'];
+
+        return PlanSessionSections::ofShelf(self::shelfOf($progress, $termId), $stage?->value);
+    }
+
+    /** `terms.shelf` for a card of this plan, read off the progress the sitting was built from. */
+    private static function shelfOf(PlanProgressView $progress, string $termId): ?string
+    {
+        foreach ($progress->days as $day) {
+            $content = $day->content[$termId] ?? null;
+            if ($content !== null) {
+                return $content->shelf;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * THE RUNNING ORDER OF A SITTING — канон §10, applied to specs that already exist.
+     *
+     * «Разогрев → слова и связки → знакомство с репликами сцены → диалог сцены → цифры → прогон»,
+     * and then the seam, which is the same list again over an earlier scene. Four keys, in this
+     * order and no other:
+     *
+     *   1. the warm-up first, always, and it is not sorted with the rest — it is not a part of any
+     *      scene, it is the five phrases that keep every scene alive (канон §5);
+     *   2. THE DAY BEFORE THE SEAM. PLAN-FIX-7's rule, unchanged: a section announced after the
+     *      cards it labels is not a section;
+     *   3. the part, in канон order;
+     *   4. inside a `dialogue` part, THE SCENE'S OWN CHAIN — because an exchange is the unit and a
+     *      conversation dealt in shelf order is not a conversation.
+     *
+     * Stable throughout ({@see usort} is stable in PHP 8), so cards that tie on all four keep the
+     * order the buckets built them in — which for a scene's introduction is {@see PlanDayOrder}'s,
+     * i.e. канон §11's.
+     *
+     * @param  list<array<string, mixed>>  $specs
+     * @param  array<int, PlanDialogueView>  $chains  day index => that scene's conversation
+     * @return list<array<string, mixed>>  the same specs, ordered, each stamped with `section_code`
+     */
+    private function ordered(array $specs, PlanProgressView $progress, array $chains, int $dayIndex): array
+    {
+        // WHERE A CARD STANDS IN ITS SCENE'S CONVERSATION — «day 2, turn 5». Cards outside every
+        // chain keep a position past the end of it, so they follow the conversation rather than
+        // breaking into it.
+        $atTurn = [];
+        foreach ($chains as $day => $chain) {
+            foreach ($chain->turns as $position => $turn) {
+                $atTurn[$day . '#' . $turn->termId] ??= $position;
+            }
+        }
+
+        $warmup = [];
+        $rest = [];
+        foreach ($specs as $position => $spec) {
+            $spec['section_code'] = $this->sectionCodeOf($spec, $progress);
+            if ($spec['section_code'] === PlanSessionSections::WARMUP) {
+                $warmup[] = $spec;
+
+                continue;
+            }
+
+            $day = $spec['day'] === null ? -1 : (int) $spec['day'];
+            $rest[] = [
+                'spec' => $spec,
+                'key' => [
+                    // The day being studied, then everything behind it — the seam.
+                    $day === $dayIndex ? 0 : 1,
+                    PlanSessionSections::rankOf($spec['section_code']),
+                    $day,
+                    $atTurn[$day . '#' . $spec['term_id']] ?? PHP_INT_MAX,
+                    $position,
+                ],
+            ];
+        }
+
+        usort($rest, static fn (array $a, array $b): int => $a['key'] <=> $b['key']);
+
+        return [...$warmup, ...array_map(static fn (array $row): array => $row['spec'], $rest)];
+    }
+
+    /**
+     * THE CONVERSATIONS THIS SITTING PLAYS — one per scene that has a `dialogue` part in it.
+     *
+     * Built for the scenes the sitting actually reaches and no others: a chain the learner will not
+     * be handed a move in is a conversation nobody opens, and shipping every day's would put the
+     * whole plan on the wire on the morning of day 9.
+     *
+     * @param  list<array<string, mixed>>  $specs  already stamped with `section_code`
+     * @return array<int, PlanDialogueView>  day index => that scene's conversation
+     */
+    private function chainsFor(array $specs, PlanProgressView $progress): array
+    {
+        $wanted = [];
+        foreach ($specs as $spec) {
+            if (($spec['section_code'] ?? null) === PlanSessionSections::DIALOGUE && $spec['day'] !== null) {
+                $wanted[(int) $spec['day']] = true;
+            }
+        }
+
+        $out = [];
+        foreach (array_keys($wanted) as $index) {
+            $day = $progress->days[$index] ?? null;
+            if ($day === null) {
+                continue;
+            }
+
+            $cards = [];
+            foreach ($day->content as $termId => $view) {
+                $cards[] = new SituationalCandidate($termId, $view->shelf, $view->skillRef, $view->text);
+            }
+
+            $turns = [];
+            foreach ($this->dialogues->for($day->dialogue, $cards) as $move) {
+                $content = $day->content[$move->termId] ?? null;
+                if ($content === null) {
+                    continue;
+                }
+                $turns[] = new PlanDialogueTurnView(
+                    turn: $move->turn,
+                    termId: $move->termId,
+                    text: $content->text,
+                    translation: $content->translation,
+                    shelf: $content->shelf,
+                );
+            }
+
+            if ($turns !== []) {
+                $out[$index] = new PlanDialogueView(
+                    dayIndex: $index,
+                    sceneTitle: $day->sceneTitle,
+                    sceneIntro: $day->sceneIntro,
+                    turns: $turns,
+                );
+            }
+        }
+
+        return $out;
     }
 
     // ── the strict session ───────────────────────────────────────────────────────────────────
 
-    /** @return list<PlanSessionTaskView> */
+    /** @return array{0: list<PlanSessionTaskView>, 1: list<PlanDialogueView>} */
     private function strictTasks(
         LearningPlan $plan,
         PlanProgressView $progress,
@@ -333,7 +509,7 @@ final readonly class BuildPlanSessionHandler
     ): array {
         $today = $progress->days[$dayIndex] ?? null;
         if ($today === null) {
-            return [];
+            return [[], []];
         }
 
         // WHETHER THIS IS THE DAY THE PLAN IS ON. It decides one thing and one thing only — whether
@@ -537,16 +713,30 @@ final readonly class BuildPlanSessionHandler
         // whatever the ladder said next time. The day is one lesson; ten minutes is how long a
         // person sits down for. So the tail stays, `sittings` says where the breaks fall, and the
         // only ceiling left is {@see MAX_TASKS} — a sanity bound on a payload, not a teaching rule.
-        return $this->assembleTasks(
-            $plan,
-            array_slice($specs, 0, self::MAX_TASKS),
-            $views,
-            $this->contentFor($progress, $views, $plan),
-            $knobs,
-            $dayIndex,
-            $today->collectionId,
-            progress: $progress,
-        );
+        // THE ORDER, and the conversations that order rests on — канон §10 ({@see ordered()}).
+        // Applied before the budget bound, so «what gets cut» is the tail of the лesson rather than
+        // whatever the buckets happened to build last.
+        $specs = $this->ordered($specs, $progress, [], $dayIndex);
+        $chains = $this->chainsFor($specs, $progress);
+        // A second pass, now that the chains exist: the first one could not know where inside a
+        // conversation a card stands, because the conversations are chosen by which cards are here.
+        // Two cheap sorts over a few dozen specs, and the alternative is a chain built for every day
+        // of the plan on every sitting.
+        $specs = $chains === [] ? $specs : $this->ordered($specs, $progress, $chains, $dayIndex);
+
+        return [
+            $this->assembleTasks(
+                $plan,
+                array_slice($specs, 0, self::MAX_TASKS),
+                $views,
+                $this->contentFor($progress, $views, $plan),
+                $knobs,
+                $dayIndex,
+                $today->collectionId,
+                progress: $progress,
+            ),
+            array_values($chains),
+        ];
     }
 
     /**
@@ -956,6 +1146,13 @@ final readonly class BuildPlanSessionHandler
                 // not uploaded ({@see ExerciseMode::speaksAfterChoice()}); it is on the wire so the
                 // client does not have to know which of the three modes is which.
                 speaksAfterChoice: $dealt->speaksAfterChoice(),
+                // WHAT THE LEARNER IS DOING — «Разогрев», «Слова и связки», «Знакомство с
+                // репликами», «Диалог сцены» — as a code the client localises. Stamped by
+                // {@see ordered()} on every strict path; the run-through has no scene to be a part
+                // of and says so.
+                sectionCode: is_string($spec['section_code'] ?? null)
+                    ? $spec['section_code']
+                    : PlanSessionSections::REHEARSAL,
             );
         }
 

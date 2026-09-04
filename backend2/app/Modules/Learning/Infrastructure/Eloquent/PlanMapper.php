@@ -119,7 +119,35 @@ final class PlanMapper
                 : [],
             repairCalls: $row->repair_calls,
             failCode: $row->fail_code,
+            dialogue: self::dialogueOf($row),
         );
+    }
+
+    /**
+     * The stored chain, kept only if every turn is still a turn — `{turn, term_id}` and both
+     * strings.
+     *
+     * A row that half-decodes is treated as no chain at all rather than as a shorter one: the
+     * fallback ({@see \App\Modules\Learning\Domain\Service\PlanDialogueChain}) builds a whole
+     * conversation out of the shelves, and half a stored conversation is worse than a derived one.
+     *
+     * @return list<array{turn: string, term_id: string}>|null
+     */
+    private static function dialogueOf(PlanDayModel $row): ?array
+    {
+        if (! is_array($row->dialogue) || $row->dialogue === []) {
+            return null;
+        }
+
+        $out = [];
+        foreach ($row->dialogue as $turn) {
+            if (! is_string($turn['turn'] ?? null) || ! is_string($turn['term_id'] ?? null)) {
+                return null;
+            }
+            $out[] = ['turn' => $turn['turn'], 'term_id' => $turn['term_id']];
+        }
+
+        return $out;
     }
 
     /** @return array<string, mixed> */
@@ -134,6 +162,9 @@ final class PlanMapper
             'outcome_text' => $day->outcomeText(),
             'skills' => $day->skills(),
             'role_brief' => $day->roleBrief(),
+            // Null and not `[]` for the same reason `generation_violations` is: «no chain» and «an
+            // empty chain» are different days, and only the first one has an answer.
+            'dialogue' => $day->dialogue(),
             'scheduled_on' => $day->scheduledOn()?->format('Y-m-d'),
             'status' => $day->status()->value,
             'generation_attempts' => $day->generationAttempts(),

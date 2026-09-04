@@ -160,6 +160,7 @@ final readonly class PlanProgress
             sceneIntro: self::sceneText($day, 'intro'),
             sceneTitle: self::sceneText($day, 'title') ?? $day->title(),
             skillOutcomes: self::skillOutcomesOf($day),
+            dialogue: $day->dialogue(),
         );
     }
 

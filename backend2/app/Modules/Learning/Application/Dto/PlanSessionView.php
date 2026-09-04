@@ -53,5 +53,22 @@ final readonly class PlanSessionView
          * @var list<int>
          */
         public array $sittings = [],
+        /**
+         * THE CONVERSATIONS THIS SITTING PLAYS — one chain per scene, in the order the sitting
+         * reaches them (наряд DAY-2, канон `docs/plan-dialogue.md` §3).
+         *
+         * A chain is the WHOLE scene, not the part of it that is owed today: the dialogue screen
+         * plays the conversation from its first line, and a role line whose card closed «понимаю»
+         * last week still has to be heard for the exchange after it to make sense. So the turns
+         * outnumber the tasks, and the client matches them by `term_id` — a turn with a task is a
+         * turn where the learner answers, a turn without one is a turn that simply happens.
+         *
+         * Empty when the sitting has no dialogue section at all: the warm-up, the final day's
+         * run-through, and the first day of a plan, whose scene has only just been introduced
+         * (канон §10 — «диалог по сцене открывается на следующий календарный день»).
+         *
+         * @var list<PlanDialogueView>
+         */
+        public array $dialogues = [],
     ) {}
 }

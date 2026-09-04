@@ -61,8 +61,16 @@ final class PlanPromptLibrary implements PlanPromptSource
      * entry's listening step, which tilts the `hear` and `say` shelves toward opposite ends of
      * their guides. An empty balance is the ordinary case — every plan built without the listening
      * step passes one — and the rule says so, so the placeholder is a contract and not a stub.
+     *
+     * **v0.5 — the scene says the order it is spoken in** (наряд DAY-2, канон
+     * `docs/plan-dialogue.md` §9). One new top-level field, `dialogue`: an alternating chain of
+     * refs into the shelves this answer already wrote. It is an ORDER and not a seventh shelf —
+     * the ladder and the vocabulary go on living on `hear`/`say`/`ask`, and the chain is what the
+     * dialogue screen plays them in. A day written before v0.5 has no chain and does not need one:
+     * the server pairs its shelves by `skill_ref`
+     * ({@see \App\Modules\Learning\Domain\Service\PlanDialogueChain}).
      */
-    public const DAY_VERSION = 'plan_day.v0.4.1';
+    public const DAY_VERSION = 'plan_day.v0.5';
 
     /**
      * P2R — the day's BROKEN CARDS, and nothing else.
@@ -102,7 +110,7 @@ final class PlanPromptLibrary implements PlanPromptSource
     public const LISTEN_VERSION = 'plan_listen.v1.1';
 
     private const OUTLINE = 'plan_outline.v0.4.1.md';
-    private const DAY = 'plan_day.v0.4.1.md';
+    private const DAY = 'plan_day.v0.5.md';
     private const REPAIR = 'plan_day_repair.v0.2.md';
     private const LISTEN = 'plan_listen.v1.1.md';
 

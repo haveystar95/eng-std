@@ -230,33 +230,36 @@ it('does not deal a situational card in a session that has no scene', function (
 
 // ── Ч-3: the order of the sitting ────────────────────────────────────────────────────────────
 
-it('deals the day in the canon’s order: warm-up, pieces, what they say, your answers, your questions', function () {
+it('deals the day in the canon’s order: warm-up, pieces, meeting the scene’s lines', function () {
     [$user, $token] = learner();
     profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
     $planId = startedPlanFor($this, $token, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
     $session = planSession($this, $token, $planId);
+
+    // THE SERVER NAMES THE PART, and the client no longer derives it from the shelf (наряд DAY-2,
+    // Ч.1.4). It cannot: «Ты ответишь» at stage A is the introduction and the same card at stage B
+    // is the conversation, and `shelf` says `say` for both.
     $seen = [];
     foreach ($session['tasks'] as $task) {
-        $key = match ($task['section']) {
-            'warmup' => S::WARMUP,
-            'review' => S::REVIEW,
-            default => S::ofShelf($task['shelf']),
-        };
-        if ($seen === [] || end($seen) !== $key) {
-            $seen[] = $key;
+        if ($seen === [] || end($seen) !== $task['section_code']) {
+            $seen[] = $task['section_code'];
         }
     }
 
     // Each part appears ONCE — a part that comes back is a part that was interleaved.
     expect($seen)->toBe(array_values(array_unique($seen)));
 
-    // …and in the canon's own order (§11).
+    // …and in the canon's own order (§10).
     $ranks = array_map(S::rankOf(...), $seen);
     $sorted = $ranks;
     sort($sorted);
     expect($ranks)->toBe($sorted)
-        ->and($seen)->toContain(S::WARMUP, S::WORDS, S::HEAR, S::SAY, S::ASK);
+        // Day 1 of a plan: the kit, the pieces, and meeting the scene's lines. NOT the conversation
+        // — «в одной посадке карточка не проходит обе ступени» (канон §10), so the dialogue of this
+        // scene belongs to tomorrow.
+        ->and($seen)->toBe([S::WARMUP, S::WORDS, S::DIALOGUE_INTRO])
+        ->and($session['dialogues'])->toBe([]);
 });
 
 // ── Ч-6: присесты ────────────────────────────────────────────────────────────────────────────
@@ -290,12 +293,11 @@ it('deals the WHOLE day whatever the minutes, and says where the sittings break'
         // Nothing burns: the parts add up to the whole day.
         ->and(array_sum($session['sittings']))->toBe(count($session['tasks']));
 
-    // Every break falls where the section changes.
-    $keyOf = static fn (array $t): string => match ($t['section']) {
-        'warmup' => S::WARMUP,
-        'review' => S::REVIEW,
-        default => S::ofShelf($t['shelf']),
-    };
+    // Every break falls where the part changes — and a part is «this code, of this scene», because
+    // one sitting can hold two scenes' conversations.
+    $keyOf = static fn (array $t): string => $t['section_code'] === S::WARMUP
+        ? S::WARMUP
+        : $t['section_code'] . '#' . ($t['from_day_index'] ?? 0);
     $at = 0;
     foreach (array_slice($session['sittings'], 0, -1) as $size) {
         $at += $size;

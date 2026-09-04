@@ -280,7 +280,47 @@ final class FakePlanContentModel implements ContentModelPort
             'words' => $wordCards,
             'chunks' => $chunkCards,
             'numbers' => $numbers,
+            'dialogue' => self::dialogue(count($hear), count($say), count($ask)),
         ];
+    }
+
+    /**
+     * THE ORDER THE FAKE SCENE IS SPOKEN IN — alternating, and covering every reply (P2 v0.5).
+     *
+     * Built rather than hand-written for the same reason the shelves are: the counts move with the
+     * `[tag:…]` and `[scenes:…]` marks, and a chain of literal refs would go stale the first time
+     * one of them changed — silently, as a `day.dialogue_missing` on a day nobody edited.
+     *
+     * `role` turns run out before the learner's do (four questions, six replies), and the chain
+     * simply stops offering them: what matters for the gate is that the sides ALTERNATE, and the
+     * gate reads consecutive pairs, so a `you` turn whose `role` turn is absent is only a defect if
+     * the previous turn was also a `you`. The construction below never lets that happen — it emits
+     * a `role` turn before every reply and takes the questions round-robin, which is also what a
+     * real scene with more replies than questions does.
+     *
+     * @return list<array{turn: string, ref: string}>
+     */
+    private static function dialogue(int $hear, int $say, int $ask): array
+    {
+        if ($hear === 0) {
+            return [];
+        }
+
+        $out = [];
+        $replies = [];
+        for ($i = 0; $i < $say; $i++) {
+            $replies[] = "say[{$i}]";
+        }
+        for ($i = 0; $i < $ask; $i++) {
+            $replies[] = "ask[{$i}]";
+        }
+
+        foreach ($replies as $position => $ref) {
+            $out[] = ['turn' => 'role', 'ref' => 'hear[' . ($position % $hear) . ']'];
+            $out[] = ['turn' => 'you', 'ref' => $ref];
+        }
+
+        return $out;
     }
 
     /**

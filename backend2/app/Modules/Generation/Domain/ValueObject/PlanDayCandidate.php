@@ -48,6 +48,19 @@ final readonly class PlanDayCandidate
      * @param  string  $sceneIntro            the scene's вводка, already written and shown on the
      *                                        day screen. A card that retells it is a warning
      *                                        ({@see \App\Modules\Generation\Domain\Service\PlanDayValidator::INTRO_REPEATED}).
+     * @param  list<PlanDialogueTurn>  $dialogue  THE ORDER THE SCENE IS SPOKEN IN (P2 v0.5) — refs
+     *                                        into the shelves above, alternating role and learner.
+     *                                        EMPTY on every day written before v0.5, and empty is
+     *                                        not «no dialogue»: the day is judged for a missing
+     *                                        chain only when it came from a prompt that asks for
+     *                                        one ({@see $expectsDialogue}), and the session builds
+     *                                        one from the shelves for everything older
+     *                                        ({@see \App\Modules\Learning\Domain\Service\PlanDialogueChain}).
+     * @param  bool  $expectsDialogue      whether THIS answer was asked for a chain. False is what
+     *                                        keeps a plan started on v0.4 finishable: its days are
+     *                                        re-judged by the same validator on every repair, and a
+     *                                        gate the prompt never asked for would refuse a day the
+     *                                        learner is halfway through.
      */
     public function __construct(
         public string $supportLang,
@@ -60,6 +73,8 @@ final readonly class PlanDayCandidate
         public array $goalTerms = [],
         public string $level = 'basic',
         public string $sceneIntro = '',
+        public array $dialogue = [],
+        public bool $expectsDialogue = false,
     ) {}
 
     /**
@@ -73,6 +88,28 @@ final readonly class PlanDayCandidate
             $this->items,
             static fn (PlanDayItem $i): bool => $i->arrayName() === $shelf->value,
         ));
+    }
+
+    /**
+     * The card a dialogue turn points at, or null when it points at nothing.
+     *
+     * Looked up by SHELF AND POSITION, which is exactly what a ref is: `say[2]` is the third card
+     * the model wrote on the `say` shelf, and {@see PlanDayItem::$index} is that position as the
+     * model wrote it — the same address a violation carries and P2R repairs at.
+     */
+    public function at(PlanDialogueTurn $turn): ?PlanDayItem
+    {
+        if ($turn->shelf === null || $turn->index === null) {
+            return null;
+        }
+
+        foreach ($this->items as $item) {
+            if ($item->arrayName() === $turn->shelf->value && $item->index === $turn->index) {
+                return $item;
+            }
+        }
+
+        return null;
     }
 
     /**

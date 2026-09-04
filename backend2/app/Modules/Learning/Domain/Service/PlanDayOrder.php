@@ -59,6 +59,27 @@ use App\Modules\Learning\Domain\ValueObject\PlanLevel;
 final class PlanDayOrder
 {
     /**
+     * THE BLOCKS OF THE INTRODUCTION, and they are this class's own vocabulary.
+     *
+     * They used to be {@see PlanSessionSections}'s `HEAR`/`SAY`/`ASK`, back when each shelf was a
+     * SECTION of the sitting with a caption of its own. DAY-2 folded the three into one part —
+     * «знакомство с репликами сцены» — because on the day a scene arrives, meeting its lines is one
+     * thing that happens (канон §10). The ORDER inside that part is unchanged and still канон §11's:
+     * you hear what will be said to you, then what you answer, then what you ask.
+     *
+     * So the two vocabularies came apart: a SECTION is what the learner is told they are doing, and
+     * these are the buckets that decide which card comes next inside one of them.
+     */
+    private const BLOCK_HEAR = 'hear';
+
+    private const BLOCK_SAY = 'say';
+
+    private const BLOCK_ASK = 'ask';
+
+    /** A card of a day written before shelves existed — one undivided block, as it always was. */
+    private const BLOCK_REST = 'rest';
+
+    /**
      * @param  list<PlanDayCard>  $cards
      * @param  PlanLevel  $level  read no more: kept on the signature because the caller has it and
      *         because «the level does not decide the running order» is a statement worth being able
@@ -72,10 +93,9 @@ final class PlanDayOrder
         $blocks = [
             PlanStageLadder::KIND_WORD => [],
             PlanStageLadder::KIND_CHUNK => [],
-            PlanSessionSections::HEAR => [],
-            PlanSessionSections::SAY => [],
-            PlanSessionSections::ASK => [],
-            PlanSessionSections::DAY => [],
+            self::BLOCK_HEAR => [],
+            self::BLOCK_SAY => [],
+            self::BLOCK_ASK => [],
         ];
 
         foreach ($cards as $card) {
@@ -102,22 +122,21 @@ final class PlanDayOrder
     {
         // THE SHELF DECIDES, and it decides first: it is the fact the day was written with, and the
         // only one that can tell «Ты ответишь» from «Ты спросишь».
-        $section = PlanSessionSections::ofShelf($card->shelf);
-        if ($section === PlanSessionSections::WORDS) {
-            return $card->kind === PlanStageLadder::KIND_CHUNK
-                ? PlanStageLadder::KIND_CHUNK
-                : PlanStageLadder::KIND_WORD;
-        }
-        if ($section !== PlanSessionSections::DAY) {
-            return $section;
-        }
+        $block = match ($card->shelf) {
+            self::BLOCK_HEAR => self::BLOCK_HEAR,
+            self::BLOCK_SAY => self::BLOCK_SAY,
+            self::BLOCK_ASK => self::BLOCK_ASK,
+            'words', 'chunks' => self::BLOCK_REST,
+            // NO SHELF — a day written before v0.4, or a term re-used from outside a plan. The old
+            // two-and-two reading is still the best available: a line the interlocutor says is
+            // recognised and everything else is a piece.
+            default => $card->isLine()
+                ? ($card->isRoleLine ? self::BLOCK_HEAR : self::BLOCK_SAY)
+                : self::BLOCK_REST,
+        };
 
-        // NO SHELF — a day written before v0.4, or a term re-used from outside a plan. The old
-        // two-and-two reading is still the best available: a line the interlocutor says is
-        // recognised and everything else is a piece. It lands in the day's undivided block, which is
-        // exactly how such a day has always been drawn.
-        if ($card->isLine()) {
-            return $card->isRoleLine ? PlanSessionSections::HEAR : PlanSessionSections::SAY;
+        if ($block !== self::BLOCK_REST) {
+            return $block;
         }
 
         return $card->kind === PlanStageLadder::KIND_CHUNK

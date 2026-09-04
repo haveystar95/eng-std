@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Presentation\Http\Resource;
 
+use App\Modules\Learning\Application\Dto\PlanDialogueTurnView;
+use App\Modules\Learning\Application\Dto\PlanDialogueView;
 use App\Modules\Learning\Application\Dto\PlanSessionTaskView;
 use App\Modules\Learning\Application\Dto\PlanSessionView;
 use App\Modules\Learning\Application\Dto\SessionView;
@@ -56,11 +58,33 @@ final class PlanSessionResource extends JsonResource
             // breaks fall only on section boundaries. A client that ignores this plays the day as
             // one long session — which is what it did before.
             'sittings' => $view->sittings,
+            // THE CONVERSATIONS THIS SITTING PLAYS — one per scene it reaches, whole, in the order
+            // the scene is spoken. The turns outnumber the tasks on purpose: the screen plays the
+            // conversation from its first line and hands the learner a move only where a task with
+            // the same `term_id` exists.
+            'dialogues' => array_map(static fn (PlanDialogueView $dialogue): array => [
+                'day_index' => $dialogue->dayIndex,
+                'scene_title' => $dialogue->sceneTitle,
+                'scene_intro' => $dialogue->sceneIntro,
+                'turns' => array_map(static fn (PlanDialogueTurnView $turn): array => [
+                    'turn' => $turn->turn,
+                    'term_id' => $turn->termId,
+                    'text' => $turn->text,
+                    'translation' => $turn->translation,
+                    'shelf' => $turn->shelf,
+                ], $dialogue->turns),
+            ], $view->dialogues),
             'tasks' => array_map(static fn (PlanSessionTaskView $task): array => [
                 'stage' => $task->stage,
                 // `warmup` | `day` | `review` — which seam this task sits under. Said once here so
                 // every client does not re-derive it (and get it wrong).
                 'section' => $task->section,
+                // …and what the learner is DOING, as a code they see a caption for: `warmup`,
+                // `words`, `dialogue_intro`, `dialogue`, `numbers`, `rehearsal`, `review`, `day`.
+                // `section` is arithmetic (which side of the seam), this is the sentence over the
+                // card — and `shelf` cannot stand in for it, because the introduction of a reply and
+                // the conversation it becomes are both `say`.
+                'section_code' => $task->sectionCode,
                 // «Отпуск в Италии» — where a REVIEW card came from, so the learner is not handed
                 // a word out of nowhere in the middle of a plan's lesson. Null on the day's own
                 // cards, which need no explanation.

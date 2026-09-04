@@ -2,12 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Domain\Service\PlanDayValidator;
-use App\Modules\Generation\Domain\ValueObject\PlanDayCandidate;
-use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
-use App\Modules\Generation\Domain\ValueObject\PlanShelf;
-use App\Modules\Generation\Domain\ValueObject\PlanViolation;
 
 /**
  * The gate that decides whether a paid day is written or paid for again.
@@ -18,132 +13,14 @@ use App\Modules\Generation\Domain\ValueObject\PlanViolation;
  * regenerations and then gets switched off. Every negative below breaks exactly ONE thing in a day
  * that is otherwise clean, so a failing test names the rule it broke.
  *
- * The shelves are flattened here the way {@see PlanDayComposer::items()} flattens them — assembled
- * cards pasted from `frame` + `filler`, the shelf deciding the kind — so what the gates judge in
- * this file is the same object production judges.
+ * `planCandidate()` and its two helpers live in `tests/Pest.php`: the same fixture is now judged by
+ * two suites — the day's own gates here and its conversation's in `PlanDialogueGateTest` — and Pest
+ * runs each file in its own process, so a builder defined beside one of them does not exist for the
+ * other. The shelves are flattened there exactly as
+ * {@see \App\Modules\Generation\Application\Service\PlanDayComposer::items()} flattens them, so what
+ * the gates judge in this file is the same object production judges.
  */
 beforeEach(fn () => $this->validator = new PlanDayValidator());
-
-/** @return array<string, mixed> */
-function planFixture(string $name): array
-{
-    /** @var array<string, mixed> $raw */
-    $raw = json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/' . $name), true);
-
-    return $raw;
-}
-
-/**
- * The six shelves, flattened into cards exactly as the composer flattens them.
- *
- * @param  array<string, mixed>  $day
- * @return list<PlanDayItem>
- */
-function planItems(array $day): array
-{
-    $out = [];
-    foreach (PlanShelf::model() as $shelf) {
-        $index = -1;
-        /** @var list<array<string, mixed>> $cards */
-        $cards = is_array($day[$shelf->value] ?? null) ? $day[$shelf->value] : [];
-        foreach ($cards as $card) {
-            $index++;
-            $assembled = $shelf->isAssembled();
-            $frame = $assembled ? (string) ($card['frame'] ?? '') : '';
-            $filler = $assembled ? (string) ($card['filler'] ?? '') : '';
-
-            $out[] = new PlanDayItem(
-                text: $assembled ? PlanDayComposer::assemble($frame, $filler) : (string) ($card['text'] ?? ''),
-                type: $shelf->kind() === PlanDayItem::KIND_WORD ? 'word' : 'phrase',
-                kind: $shelf->kind(),
-                isLine: $shelf->kind() === PlanDayItem::KIND_LINE,
-                translation: (string) ($card['translation'] ?? ''),
-                transliteration: (string) ($card['transliteration'] ?? ''),
-                description: '',
-                example: (string) ($card['example'] ?? ''),
-                exampleTranslation: (string) ($card['example_translation'] ?? ''),
-                frame: $frame,
-                filler: $filler,
-                speaker: match (true) {
-                    $shelf->isRole() => PlanDayItem::SPEAKER_ROLE,
-                    $shelf->kind() === PlanDayItem::KIND_LINE => PlanDayItem::SPEAKER_LEARNER,
-                    default => null,
-                },
-                imageApiPrompt: (string) ($card['image_api_prompt'] ?? ''),
-                coversCheckpoint: null,
-                index: $index,
-                shelf: $shelf->value,
-                skillRef: ((string) ($card['skill_ref'] ?? '')) ?: null,
-                value: ((string) ($card['value'] ?? '')) ?: null,
-            );
-        }
-    }
-
-    return $out;
-}
-
-/**
- * The S1 day-scene, with `$edits` applied to the raw answer before it is flattened.
- *
- * Edits are addressed the way a violation is — shelf and index — so a test reads as «break `say[1]`
- * and see which code comes back», which is also how a repair call would be pointed at it.
- *
- * @param  array<string, array<int, array<string, mixed>>>  $edits  shelf => index => fields
- */
-function planCandidate(
-    array $edits = [],
-    string $dayFixture = 's1-day1.v0.4.json',
-    string $outlineFixture = 's1-outline.v0.4.json',
-    int $scene = 1,
-    string $supportLang = 'ru',
-    string $targetLang = 'en',
-    string $level = 'basic',
-    array $rescueKit = [],
-    array $knownTexts = [],
-): PlanDayCandidate {
-    $day = planFixture($dayFixture);
-    foreach ($edits as $shelf => $cards) {
-        foreach ($cards as $index => $fields) {
-            if ($fields === []) {
-                // An empty edit REMOVES the card — that is how an empty shelf is built.
-                unset($day[$shelf][$index]);
-                $day[$shelf] = array_values($day[$shelf]);
-
-                continue;
-            }
-            $day[$shelf][$index] = [...$day[$shelf][$index], ...$fields];
-        }
-    }
-
-    $outline = planFixture($outlineFixture);
-    /** @var array<string, mixed> $sceneData */
-    $sceneData = $outline['scenes'][$scene - 1];
-
-    return new PlanDayCandidate(
-        supportLang: $supportLang,
-        targetLang: $targetLang,
-        items: planItems($day),
-        // THE IDS ARE THE SERVER'S, spelled here the way {@see PlanOutline::fromArray()} spells
-        // them. P1 is not asked for them: an id is an address, and «s1.2» computed from the
-        // position addresses exactly what a model-written id would have.
-        skillIds: array_map(
-            static fn (int $i): string => 's' . $scene . '.' . ($i + 1),
-            array_keys($sceneData['skills']),
-        ),
-        entityNames: $sceneData['entities'] ?? [],
-        rescueKit: $rescueKit,
-        knownTexts: $knownTexts,
-        goalTerms: [],
-        level: $level,
-        sceneIntro: (string) ($sceneData['intro'] ?? ''),
-    );
-}
-
-/** @param list<PlanViolation> $violations */
-function planCodes(array $violations): array
-{
-    return array_values(array_unique(array_map(static fn (PlanViolation $v): string => $v->code, $violations)));
-}
 
 // ── the day that is right ────────────────────────────────────────────────────────────────────
 
@@ -554,7 +431,7 @@ it('teaches a common noun the skeleton mis-filed as an entity', function () {
     $day = planCandidate(
         ['words' => [3 => ['text' => 'clinic', 'translation' => 'клиника', 'example' => 'The clinic opens at eight.', 'example_translation' => 'Клиника открывается в восемь.']]],
     );
-    $day = new PlanDayCandidate(
+    $day = new \App\Modules\Generation\Domain\ValueObject\PlanDayCandidate(
         supportLang: $day->supportLang,
         targetLang: $day->targetLang,
         items: $day->items,

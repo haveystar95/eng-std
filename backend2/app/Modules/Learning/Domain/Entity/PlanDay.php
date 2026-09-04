@@ -99,6 +99,18 @@ final class PlanDay
         private int $repairCalls = 0,
         /** {@see failCode()} — the machine-readable half of {@see $failReason}. */
         private ?string $failCode = null,
+        /**
+         * THE ORDER THE SCENE IS SPOKEN IN — `[{turn: 'role'|'you', term_id: '01J…'}, …]`, or NULL
+         * on a day whose prompt never wrote one (наряд DAY-2, P2 v0.5).
+         *
+         * NULL and `[]` are different answers on purpose. Null is «this day has no chain» — every
+         * plan written before v0.5 — and the session pairs its shelves instead
+         * ({@see \App\Modules\Learning\Domain\Service\PlanDialogueChain}). An empty list would be a
+         * chain that says the scene is silent, which is not a thing a scene can be.
+         *
+         * @var list<array{turn: string, term_id: string}>|null
+         */
+        private ?array $dialogue = null,
     ) {}
 
     /**
@@ -126,6 +138,7 @@ final class PlanDay
      * @param  list<array<string, mixed>>  $skills
      * @param  array<string, mixed>|null  $roleBrief
      * @param  list<string>  $lastViolations
+     * @param  list<array{turn: string, term_id: string}>|null  $dialogue
      */
     public static function reconstitute(
         PlanDayId $id,
@@ -144,11 +157,12 @@ final class PlanDay
         array $lastViolations = [],
         int $repairCalls = 0,
         ?string $failCode = null,
+        ?array $dialogue = null,
     ): self {
         return new self(
             $id, $planId, $dayIndex, $kind, $collectionId, $title, $outcomeText, $skills,
             $roleBrief, $scheduledOn, $status, $generationAttempts, $failReason, $lastViolations,
-            $repairCalls, $failCode,
+            $repairCalls, $failCode, $dialogue,
         );
     }
 
@@ -180,14 +194,21 @@ final class PlanDay
     /**
      * @param  int  $repairCalls  P2R calls this run made — charged on the WRITTEN day exactly as on
      *                            the refused one ({@see chargeRepairs()}).
+     * @param  list<array{turn: string, term_id: string}>|null  $dialogue  the chain, already
+     *                            resolved to term ids. Null leaves whatever the day had, so a
+     *                            caller that knows nothing about dialogues cannot erase one.
      */
-    public function markReady(CollectionId $collectionId, int $repairCalls = 0): void
+    public function markReady(CollectionId $collectionId, int $repairCalls = 0, ?array $dialogue = null): void
     {
         if ($this->status !== PlanDayStatus::Generating) {
             throw InvalidPlanTransition::forDay($this->status, 'объявить день готовым');
         }
 
         $this->chargeRepairs($repairCalls);
+
+        if ($dialogue !== null && $dialogue !== []) {
+            $this->dialogue = $dialogue;
+        }
 
         $this->collectionId = $collectionId;
         $this->status = PlanDayStatus::Ready;
@@ -393,6 +414,16 @@ final class PlanDay
     public function failCode(): ?string
     {
         return $this->failCode;
+    }
+
+    /**
+     * THE ORDER THE SCENE IS SPOKEN IN, or null on a day that never had one.
+     *
+     * @return list<array{turn: string, term_id: string}>|null
+     */
+    public function dialogue(): ?array
+    {
+        return $this->dialogue;
     }
 
     /**

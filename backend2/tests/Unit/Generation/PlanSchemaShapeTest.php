@@ -93,11 +93,15 @@ it('lets P1 answer with the skeleton the v0.4 prompt asks for — scenes, and a 
         ->and(schemaMisfits($schema, planFixtureJson('s3-outline.v0.4.json')))->toBe([]);
 });
 
-it('lets P2 answer with all six shelves of a day-scene', function () {
+it('lets P2 answer with all six shelves of a day-scene, and the order it is spoken in', function () {
     $schema = PlanSchemas::day();
 
+    // Six shelves and ONE key that is not a shelf: `dialogue` is the order the scene is spoken in
+    // (P2 v0.5, канон `docs/plan-dialogue.md` §9), and it is refs into the six above rather than a
+    // seventh place a line can be written.
     expect(array_keys($schema['properties']))
-        ->toBe(['hear', 'say', 'ask', 'words', 'chunks', 'numbers']);
+        ->toBe(['hear', 'say', 'ask', 'words', 'chunks', 'numbers', 'dialogue'])
+        ->and(array_keys($schema['properties']['dialogue']['items']['properties']))->toBe(['turn', 'ref']);
 
     expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.4.json')))->toBe([])
         ->and(schemaMisfits($schema, planFixtureJson('s3-day1.v0.4.json')))->toBe([]);

@@ -45,5 +45,17 @@ final readonly class PlanDayProgressView
         public ?string $sceneTitle = null,
         /** @var array<string, string> `skill_ref` => the ability's `outcome`, support language */
         public array $skillOutcomes = [],
+        /**
+         * THE ORDER THIS SCENE IS SPOKEN IN, as the day stored it — or NULL on a day written before
+         * P2 v0.5 (наряд DAY-2).
+         *
+         * Carried beside the scene for the same reason the вводка is: the session builder is
+         * holding this day object already, and a second read of the same row is a second chance to
+         * disagree about what the day said. Null is not «no dialogue» — it is «no stored one», and
+         * {@see \App\Modules\Learning\Domain\Service\PlanDialogueChain} pairs the shelves instead.
+         *
+         * @var list<array{turn: string, term_id: string}>|null
+         */
+        public ?array $dialogue = null,
     ) {}
 }

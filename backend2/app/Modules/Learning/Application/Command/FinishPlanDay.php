@@ -37,5 +37,13 @@ final readonly class FinishPlanDay
          * Null on a failure that has no verdict — a vendor error, a write that did not land.
          */
         public ?string $failCode = null,
+        /**
+         * THE ORDER THE SCENE IS SPOKEN IN — `[{turn, term_id}, …]`, already resolved against the
+         * terms this same run imported (наряд DAY-2, P2 v0.5). Empty on a failure, and empty on a
+         * day whose prompt never wrote a chain: the day keeps whatever it had rather than losing it.
+         *
+         * @var list<array{turn: string, term_id: string}>
+         */
+        public array $dialogue = [],
     ) {}
 }

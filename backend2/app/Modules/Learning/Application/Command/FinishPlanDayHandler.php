@@ -78,7 +78,16 @@ final readonly class FinishPlanDayHandler
 
             // The repair is charged on the WRITTEN day too. A day that was patched into shape cost
             // two calls whether or not the patch worked, and the row has to say so.
-            $day->markReady(CollectionId::fromString($command->collectionId), $command->repairCalls);
+            $day->markReady(
+                CollectionId::fromString($command->collectionId),
+                $command->repairCalls,
+                // THE CHAIN, in the same write as the collection. It is the answer's, not the
+                // snapshot's, so it can only be written once the day has actually been generated —
+                // and it is written HERE rather than in a second update, because a day that is
+                // `ready` for a moment without its conversation is a day the dialogue screen can
+                // open and find nothing in.
+                $command->dialogue === [] ? null : $command->dialogue,
+            );
             $this->days->save($day);
 
             // STRICT ENROLMENT. Through the ordinary enrolment command, with the plan named as the

@@ -149,7 +149,7 @@ final readonly class GeneratePlanDayHandler
         }
 
         try {
-            [$collectionId, $termIds] = $this->tx->run(
+            [$collectionId, $termIds, $dialogue] = $this->tx->run(
                 fn (): array => $this->materialize($brief, $draft),
             );
         } catch (Throwable $e) {
@@ -169,6 +169,9 @@ final readonly class GeneratePlanDayHandler
             collectionId: $collectionId->value,
             termIds: $termIds,
             repairCalls: $draft->repairCalls,
+            // THE ORDER THE SCENE IS SPOKEN IN, resolved to term ids by the pass that imported them
+            // ({@see materialize()}). Empty on a day written by a prompt that has no chain.
+            dialogue: $dialogue,
         ));
 
         // The ordinary chain, after the learner's day is already usable: repair whatever example
@@ -189,9 +192,9 @@ final readonly class GeneratePlanDayHandler
     }
 
     /**
-     * The collection, the terms and the day-scoped examples.
+     * The collection, the terms, the day-scoped examples — and the conversation's chain, resolved.
      *
-     * @return array{0: CollectionId, 1: list<string>}
+     * @return array{0: CollectionId, 1: list<string>, 2: list<array{turn: string, term_id: string}>}
      */
     private function materialize(PlanDayGenerationBrief $brief, PlanDayDraft $draft): array
     {
@@ -213,6 +216,14 @@ final readonly class GeneratePlanDayHandler
         ));
 
         $termIds = [];
+        // WHICH TERM EACH SHELF ADDRESS BECAME — «say#2» → the ULID the card was imported as.
+        //
+        // Filled in the SAME loop that imports the cards, because that is the one moment both names
+        // of a card are in hand: the answer's own position (which is what the model's chain refers
+        // to) and the term id (which is the only name the card keeps afterwards). Resolving later
+        // would mean matching by TEXT, and a day is allowed to say the same sentence twice on two
+        // shelves.
+        $byAddress = [];
         foreach ($draft->items as $item) {
             $termId = ($this->importTerm)(new ImportTerm(
                 lang: $target,
@@ -246,6 +257,7 @@ final readonly class GeneratePlanDayHandler
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $draft->ownerId));
             $this->writeFacts($termId, $item, $brief, $collectionId, $draft->items);
 
+            $byAddress[$item->arrayName() . '#' . $item->index] = $termId->value;
             $termIds[] = $termId->value;
         }
 
@@ -276,7 +288,36 @@ final readonly class GeneratePlanDayHandler
             }
         }
 
-        return [$collectionId, $termIds];
+        return [$collectionId, $termIds, $this->dialogueOf($draft, $byAddress)];
+    }
+
+    /**
+     * THE CHAIN, from shelf addresses to term ids.
+     *
+     * A turn whose ref resolves to no imported card is DROPPED rather than kept as a hole: the
+     * validator has already refused every such day ({@see PlanDayValidator::DIALOGUE_REF_INVALID}),
+     * so reaching this line at all means a card was refused between the verdict and the import, and
+     * a chain with a missing turn plays a conversation with a silence in it. A chain that loses a
+     * turn this way is still alternating for the part that survived, and the screen plays what it
+     * is given.
+     *
+     * @param  array<string, string>  $byAddress  «say#2» → term id
+     * @return list<array{turn: string, term_id: string}>
+     */
+    private function dialogueOf(PlanDayDraft $draft, array $byAddress): array
+    {
+        $out = [];
+        foreach ($draft->dialogue as $turn) {
+            $address = $turn->address();
+            $termId = $address === null ? null : ($byAddress[$address] ?? null);
+            if ($termId === null) {
+                continue;
+            }
+
+            $out[] = ['turn' => $turn->turn, 'term_id' => $termId];
+        }
+
+        return $out;
     }
 
     /**

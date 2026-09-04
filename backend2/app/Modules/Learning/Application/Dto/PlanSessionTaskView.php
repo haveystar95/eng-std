@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Dto;
 
+use App\Modules\Learning\Domain\Service\PlanSessionSections;
+
 /**
  * ONE task of a plan session: an ordinary card, plus the four things that make it part of a plan
  * rather than part of a study session.
@@ -168,5 +170,21 @@ final readonly class PlanSessionTaskView
          * The key to say is on the card as `speaking_key`, the same key the speaking trainer reads.
          */
         public bool $speaksAfterChoice = false,
+        /**
+         * WHAT THE LEARNER IS DOING RIGHT NOW, as a CODE — `warmup`, `words`, `dialogue_intro`,
+         * `dialogue`, `numbers`, `rehearsal`, `review`, `day` ({@see PlanSessionSections}).
+         *
+         * A second, finer field beside {@see $section}, and the two answer different questions.
+         * `section` is arithmetic — which side of the seam this task is on, and therefore whether it
+         * counts towards «день пройден». This is the CAPTION: «Разогрев», «Слова и связки»,
+         * «Знакомство с репликами», «Диалог сцены». One is read by a counter and the other by a
+         * person, and the old screen had to derive the second from `shelf` — which cannot tell the
+         * introduction of a line from the conversation it later becomes, because both are `say`.
+         *
+         * A CODE and not the wording, for the same reason `origin` and `speaker` are codes: there
+         * are two languages of every caption and the client owns both. A code this build has never
+         * heard of must fall through to a neutral caption rather than to a guess.
+         */
+        public string $sectionCode = PlanSessionSections::DAY,
     ) {}
 }

@@ -153,6 +153,20 @@ final class PlanDayValidator
     /** The number the line says and the number the card is graded on are not the same number. */
     public const NUMBER_VALUE_MISMATCH = 'card.number_value_mismatch';
 
+    /**
+     * A TURN OF THE DIALOGUE POINTS AT NOTHING — `hear[7]` on a shelf of five, `numbers[0]` on a
+     * learner's turn, `hear` with no index at all (`docs/plan-dialogue.md` §9).
+     *
+     * CARDED, and the address is the one the ref claims. Which has a consequence worth stating
+     * rather than discovering: an address that names no card of the answer sends the day down the
+     * WHOLE-DAY path ({@see \App\Modules\Generation\Application\Service\PlanDayRepairer::brokenCards()}
+     * returns null on it), so a broken ref is never repaired card by card. That is the honest
+     * outcome and not a hole — there is no card to repair; what is wrong is the chain, and the
+     * chain is not a card. The address still earns its keep in `fail_reason`, where a person reads
+     * WHICH turn was nonsense.
+     */
+    public const DIALOGUE_REF_INVALID = 'card.dialogue_ref_invalid';
+
     // ── about the DAY, no address, so the day goes back whole ────────────────────────────────
 
     /**
@@ -165,6 +179,26 @@ final class PlanDayValidator
      * clarify is a real scene.
      */
     public const SHELF_MISSING = 'day.shelf_missing';
+
+    /**
+     * THE SCENE CAME BACK WITHOUT ITS CONVERSATION (P2 v0.5).
+     *
+     * A day with shelves and no chain is a day the dialogue screen cannot play: the fallback that
+     * pairs shelves by `skill_ref` exists for days written BEFORE v0.5
+     * ({@see \App\Modules\Learning\Domain\Service\PlanDialogueChain}), and using it for a fresh
+     * answer would mean paying for an order and silently accepting a guess instead.
+     */
+    public const DIALOGUE_MISSING = 'day.dialogue_missing';
+
+    /**
+     * TWO TURNS OF THE SAME SIDE IN A ROW — or a turn that is neither side.
+     *
+     * «An alternating chain of role turns and your turns» is the whole shape of an exchange
+     * (канон §3): they say something, you answer. Two `role` turns running is a monologue with the
+     * learner watching, and two `you` turns running is the learner talking to themselves. Neither
+     * has an address that means anything, so the day goes back whole.
+     */
+    public const DIALOGUE_NOT_ALTERNATING = 'day.dialogue_not_alternating';
 
     // ── counted, never refused ───────────────────────────────────────────────────────────────
 
@@ -246,6 +280,17 @@ final class PlanDayValidator
      * counted at all because a counter that climbs means the prompt is being ignored.
      */
     public const LINE_EXAMPLE_DROPPED = 'plan_day_line_example_dropped';
+
+    /**
+     * A `say` OR `ask` CARD THE CONVERSATION NEVER REACHES (`docs/plan-dialogue.md` §9).
+     *
+     * «Every say and ask item should appear in the dialogue at least once» — a counter and not a
+     * refusal, for the reason every counter here is one: a reply left out of the chain is still a
+     * card on its shelf, still climbs its ladder, and still comes back in the seam. What it loses is
+     * its place in the scene, and a day is not worth a paid re-run over that. `hear` is deliberately
+     * outside the rule: the prompt says those «may appear once», which is permission, not a quota.
+     */
+    public const DIALOGUE_UNCOVERED = 'plan_day_dialogue_uncovered';
 
     /**
      * The guide sizes of the six shelves — канон §2, and the only place they are written.
@@ -356,6 +401,7 @@ final class PlanDayValidator
             ...$this->checkKeys($day),
             ...$this->checkLineTranslations($day),
             ...$this->checkNumbers($day),
+            ...$this->checkDialogue($day),
         ];
     }
 
@@ -381,6 +427,7 @@ final class PlanDayValidator
             ...$this->warnCoverage($day),
             ...$this->warnCards($day),
             ...$this->warnHearTranslations($day),
+            ...$this->warnDialogueCoverage($day),
         ];
     }
 
@@ -1005,7 +1052,126 @@ final class PlanDayValidator
         return $out;
     }
 
+    /**
+     * THE ORDER THE SCENE IS SPOKEN IN — P2 v0.5, канон `docs/plan-dialogue.md` §9.
+     *
+     * Three gates and one silence:
+     *
+     *   a day that was asked for a chain and answered without one — {@see DIALOGUE_MISSING};
+     *   a ref that names no card of this day, or a card of a shelf this side may not speak from —
+     *   {@see DIALOGUE_REF_INVALID}, carded at the address the ref claims;
+     *   two turns of the same side in a row, or a side that is neither — {@see DIALOGUE_NOT_ALTERNATING}.
+     *
+     * The silence is a day written before v0.5 ({@see PlanDayCandidate::$expectsDialogue} false):
+     * it has no chain, it was never asked for one, and the session pairs its shelves instead
+     * ({@see \App\Modules\Learning\Domain\Service\PlanDialogueChain}). Judging it here would refuse
+     * every stored day the moment a repair re-runs the validator over it.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkDialogue(PlanDayCandidate $day): array
+    {
+        if (! $day->expectsDialogue) {
+            return [];
+        }
+
+        if ($day->dialogue === []) {
+            return [PlanViolation::onAnswer(
+                self::DIALOGUE_MISSING,
+                'сцена вернулась без цепочки диалога — играть её нечем',
+                'the answer has no `dialogue` chain, so the scene has no order it is spoken in',
+            )];
+        }
+
+        $out = [];
+        $previous = null;
+        foreach ($day->dialogue as $turn) {
+            // WHOSE TURN, checked before WHICH CARD: a turn that is neither side has no allowed
+            // shelves, so every ref it carries would read as invalid — one defect reported as two.
+            if (! $turn->isRole() && ! $turn->isLearner()) {
+                $out[] = PlanViolation::onAnswer(
+                    self::DIALOGUE_NOT_ALTERNATING,
+                    "в цепочке ход «{$turn->turn}» — в разговоре две стороны, «role» и «you»",
+                    'a dialogue turn is neither `role` nor `you`',
+                );
+                $previous = null;
+
+                continue;
+            }
+
+            if ($previous !== null && $previous === $turn->turn) {
+                $out[] = PlanViolation::onAnswer(
+                    self::DIALOGUE_NOT_ALTERNATING,
+                    'два хода подряд одной стороны — это не обмен репликами, а монолог',
+                    'two consecutive turns belong to the same side; the chain must alternate',
+                );
+            }
+            $previous = $turn->turn;
+
+            $card = $day->at($turn);
+            if ($card !== null && $turn->shelfFits()) {
+                continue;
+            }
+
+            // Addressed at the ref's OWN claim, whatever it claims. When the address names no card
+            // the repairer refuses the whole day — see {@see DIALOGUE_REF_INVALID}.
+            $out[] = new PlanViolation(
+                self::DIALOGUE_REF_INVALID,
+                $card === null
+                    ? "ход диалога ссылается на «{$turn->ref}» — такой карточки в этом дне нет"
+                    : "ход «{$turn->turn}» ссылается на «{$turn->ref}» — это чужая полка",
+                $card?->text,
+                $turn->shelf === null ? 'dialogue' : $turn->shelf->value,
+                $turn->index,
+                'ref',
+                'a dialogue turn references a card this day does not have on a shelf that side may speak from',
+            );
+        }
+
+        return $out;
+    }
+
     // ── counted ──────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * EVERY REPLY THE LEARNER LEARNS SHOULD BE SAID SOMEWHERE IN THE SCENE — {@see DIALOGUE_UNCOVERED}.
+     *
+     * Counted per DAY and not per card: «три реплики нигде не звучат» is one fact about the answer,
+     * and thirteen counter rows for one weak day would drown the signal the counters exist for.
+     * Silent when there is no chain at all — that day's defect is {@see DIALOGUE_MISSING}, and a day
+     * written before v0.5 has nothing to be uncovered by.
+     *
+     * @return list<PlanViolation>
+     */
+    private function warnDialogueCoverage(PlanDayCandidate $day): array
+    {
+        if ($day->dialogue === []) {
+            return [];
+        }
+
+        $covered = [];
+        foreach ($day->dialogue as $turn) {
+            $address = $turn->address();
+            if ($address !== null) {
+                $covered[$address] = true;
+            }
+        }
+
+        $missing = 0;
+        foreach ([PlanShelf::Say, PlanShelf::Ask] as $shelf) {
+            foreach ($day->shelf($shelf) as $item) {
+                if (! isset($covered[$shelf->value . '#' . $item->index])) {
+                    $missing++;
+                }
+            }
+        }
+
+        return $missing === 0 ? [] : [PlanViolation::onAnswer(
+            self::DIALOGUE_UNCOVERED,
+            "реплик ученика вне диалога: {$missing} — их учат, но в разговоре они не звучат",
+            'some say/ask cards never appear in the dialogue chain',
+        )];
+    }
 
     /** @return list<PlanViolation> */
     private function warnShelfSizes(PlanDayCandidate $day): array

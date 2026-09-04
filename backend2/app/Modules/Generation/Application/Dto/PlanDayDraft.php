@@ -33,5 +33,20 @@ final readonly class PlanDayDraft
          * ({@see \App\Modules\Learning\Domain\Entity\PlanDay::markFailed()}).
          */
         public int $repairCalls = 0,
+        /**
+         * THE ORDER THE SCENE IS SPOKEN IN — refs into the shelves above, alternating (P2 v0.5).
+         *
+         * Still ADDRESSES here and not term ids: the terms do not exist until the day is written,
+         * and resolving a ref to a card is only possible while the answer's own indexes are still
+         * the truth. {@see \App\Modules\Generation\Application\Command\GeneratePlanDayHandler}
+         * turns them into term ids in the same pass that imports the cards, which is the one moment
+         * both halves are in hand.
+         *
+         * Empty on a day the model answered without a chain — impossible on v0.5, where the gate
+         * refuses it, and ordinary for anything replayed from an older fixture.
+         *
+         * @var list<\App\Modules\Generation\Domain\ValueObject\PlanDialogueTurn>
+         */
+        public array $dialogue = [],
     ) {}
 }

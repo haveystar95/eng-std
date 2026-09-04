@@ -172,6 +172,16 @@ final class PlanSchemas
         // means that feature is dormant rather than removed: the reader that files those examples
         // is still in {@see PlanDayComposer::knownExamples()} and starts working again the day the
         // canon asks for the shelf back. Flagged to the owner as a v0.3 capability v0.4 drops.
+        // v0.5: ONE key that is not a shelf. `dialogue` is the order the scene is spoken in — an
+        // alternating chain of refs into the six above — and it is expressed as refs rather than as
+        // copies of the lines for the reason the prompt states out loud: «dialogue only orders the
+        // shelves». A chain carrying its own text would be a seventh place a line can be written,
+        // and the day would have two answers to «what does the interlocutor say».
+        $turn = self::object([
+            'turn' => ['type' => 'string', 'enum' => ['role', 'you']],
+            'ref' => self::string(),
+        ]);
+
         return self::object([
             'hear' => self::arrayOf($hear),
             'say' => self::arrayOf($line),
@@ -179,6 +189,7 @@ final class PlanSchemas
             'words' => self::arrayOf($word),
             'chunks' => self::arrayOf($chunk),
             'numbers' => self::arrayOf($number),
+            'dialogue' => self::arrayOf($turn),
         ]);
     }
 
