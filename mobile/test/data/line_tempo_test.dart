@@ -102,6 +102,25 @@ void main() {
     expect(lineRate!, lessThan(wordRate!));
   });
 
+  test('a line the server does NOT voice is still read at the line tempo', () async {
+    // Труба выключена — файлов нет вовсе, а вопрос в восемь слов всё равно не должен звучать со
+    // скоростью одиночного слова (канон §7). Посадка называет свои реплики отдельно.
+    final cache = LineAudioCache(http: _refusing(), directory: dir);
+    cache.note(const ['What were your main responsibilities in your last role?']);
+
+    ttsCalls.clear();
+    await Pronouncer(null, cache)
+        .speakText('What were your main responsibilities in your last role?', targetLang: 'en');
+    final lineRate = rateOf(ttsCalls);
+
+    ttsCalls.clear();
+    await Pronouncer(null, cache).speakText('responsibilities', targetLang: 'en');
+
+    expect(playerCalls, isEmpty);
+    expect(lineRate, isNotNull);
+    expect(lineRate!, lessThan(rateOf(ttsCalls)!));
+  });
+
   test('with no cache at all the app speaks exactly as it did before the наряд', () async {
     await Pronouncer().speakText('Thanks for joining today.', targetLang: 'en');
 

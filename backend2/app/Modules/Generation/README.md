@@ -179,6 +179,17 @@ two halves of today's pipeline and can have different winners; C is the one-shot
 `LanguagePurity` and, through Vocabulary's Application, `AddresseeIsomorphism`. `--dry` prints the
 plan and spends nothing; `--pace=` spaces calls under an org token-per-minute cap.
 
+## Озвучка реплик (наряд TTS-1)
+
+Третья работа того же вида, что починка примеров и картинки: `SpeakLinesJob` идёт ПОСЛЕ того, как
+день уже пригоден, и не имеет права его задержать или уронить. `SpeechSynthesizerPort` — один
+метод («скажи эту строку этим голосом»), три адаптера (OpenAI, Gemini, Fake). Байты уезжают в
+Vocabulary командой `StoreTermAudio`; какие полки озвучиваются и каким голосом — конфиг
+(`generation.speech.*`), карта — `../../../docs/plan-map.md` §6.
+
+Тумблер трубы сидит в диспетчере (`QueuedLineSpeechDispatcher`), а не в обработчике: «выключено»
+обязано значить «никто никуда не ходил», а не «сходили и передумали».
+
 ## Boundaries
 
 Generation never touches other modules' tables or Domain. It calls, through Application only:

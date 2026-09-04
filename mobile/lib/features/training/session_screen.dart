@@ -375,7 +375,20 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   /// той репликой, чей файл ещё не приехал ([_voiceReadyFor]). Уже скачанное живёт между сессиями,
   /// поэтому повторный вход в тот же день не ходит в сеть вообще.
   Future<void> _preloadVoices() async {
-    final lines = widget.session.plan?.lineAudio ?? const <LineAudioRef>[];
+    final plan = widget.session.plan;
+    if (plan == null) return;
+
+    // СНАЧАЛА — «вот это реплики», и только потом файлы. Темп реплик ниже темпа слов НЕЗАВИСИМО от
+    // того, кто их читает (канон §7): с выключенной трубой файлов не будет вовсе, а вопрос в восемь
+    // слов всё равно не должен звучать со скоростью одиночного слова.
+    _lineAudio.note([
+      for (final dialogue in plan.dialogues)
+        for (final turn in dialogue.turns) turn.text,
+      for (var i = 0; i < _cards.length; i++)
+        if (plan.kindAt(i) == 'line') _cards[i].answerText,
+    ]);
+
+    final lines = plan.lineAudio;
     if (lines.isEmpty) return;
 
     await _lineAudio.preload(lines, bearer: ref.read(tokenStoreProvider).current);

@@ -620,3 +620,36 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 
 Версии v0.2/v0.3 остались файлами и строками реестра: план, начатый на них, дочитывается
 (`PlanOutline::fromArray()` понимает обе формы каркаса).
+
+---
+
+## 6. Озвучка реплик (TTS-1, 04.09)
+
+Канон: `docs/plan-dialogue.md` §7. Замер, кандидаты и образцы — `../docs/research/tts-1.md`.
+Реплики полок `hear` и `rescue` получают ФАЙЛ, сделанный заранее; слова и связки остаются на
+системном синтезе телефона.
+
+| что | где в коде |
+|---|---|
+| чем говорит язык | `config/generation.php → speech.voices.<target>` → `Shared/Domain/Service/VoiceCatalog` → `Shared/Domain/ValueObject/LineVoice`. Ключ `provider:model:voice`, вариант `p<темп×100>` |
+| тумблер трубы | `generation.speech.enabled` (`SPEECH_ENABLED`, дефолт **выкл**), читается в `QueuedLineSpeechDispatcher` — выключено значит «джоба не поставлена», а не «поставлена и передумала» |
+| какие полки | `generation.speech.shelves` (`SPEECH_SHELVES`, дефолт `hear,rescue`) → контекстная привязка `$shelves` у `SpeakCollectionLinesHandler` |
+| когда покупается | `GeneratePlanDayHandler::__invoke()` — третий fire-and-forget рядом с починкой примеров и картинками, после того как день уже пригоден |
+| станок | `Generation/Application/Command/SpeakCollectionLinesHandler` — та же форма, что у `AttachCollectionImagesHandler`: читатели держат идемпотентность, невозвратный отказ пропускает реплику, возвратный уходит наружу |
+| вендор | `SpeechSynthesizerPort` → `OpenAiSpeechSynthesizer` (mp3 прямо с вызова) / `GeminiSpeechSynthesizer` (сырой PCM → WAV, втрое тяжелее) / `FakeSpeechSynthesizer`. `SPEECH_DRIVER` |
+| повторы | `SpeakLinesJob`: `tries = 4`, backoff `15/60/180` — у бесплатного Gemini лимит 10 запросов/мин на модель, а сцена это 5 реплик плюс 5 спасателей |
+| хранение | таблица `term_audios` (Vocabulary), уникальный ключ (`term_id`, `voice`, `variant`) — он же идемпотентность; файл на приватном диске (`FilesystemTermAudioStore`) |
+| кэш общий | ключ — термин, а термины дедуплицированы глобально: второй план с той же фразой берёт готовый файл. О пользователях в таблице нет ни слова |
+| наружу | `audio_url` у хода диалога и у карточки регистра дня; `line_audio[]` на пейлоаде посадки — ВСЯ озвучка сцены парами «текст → адрес», под предзагрузку клиента |
+| раздача | `GET /api/v1/audio/lines/{id}` (`TermAudioController`), Sanctum, `immutable`. Адрес строится от ТЕКУЩЕГО запроса (`LineAudioUrl`), а не от `APP_URL`: телефон ходит через ngrok |
+| счётчик недоозвученного | `LineSpeechReporter` → `LoggingLineSpeechReporter`: `plan lines voiced` (info) / `plan lines left without audio` (warning) |
+| цена | `Shared/Domain/Service/SpeechCost` — две формы счёта (за символы и за секунды звука) и приведение к одной мере для сравнения |
+
+**Смена голоса не ломает уже озвученное.** Новый голос — новая строка, новый id, новый URL; старые
+файлы лежат под своим ключом. Клиент отличает их по адресу, поэтому «старый кэш не играется за
+новый голос» — свойство схемы, а не дисциплины клиента.
+
+**Тумблер пришпилен в `phpunit.xml`** (`SPEECH_ENABLED=false`, `SPEECH_DRIVER=fake`) — как и
+четыре соседних драйвера, и по той же причине: с включённым в `.env` тумблером весь сьют начал
+ставить джобу (очередь под тестом `sync`), а `LiveModelGuard` отбивал живой адаптер внутри
+генерации дня.

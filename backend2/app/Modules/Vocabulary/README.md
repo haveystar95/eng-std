@@ -57,6 +57,21 @@ learner is already being asked. Moving the pin takes `Term::pinTranslation()`, w
 authorities in the trust hierarchy call — the learner (a translation they were shown and confirmed)
 and a curator.
 
+## Озвучка реплики (`term_audios`) — наряд TTS-1
+
+Файл, которым читается реплика сцены, и строка о нём. Ключ — (`term_id`, `voice`, `variant`), и
+уникальный индекс по нему И ЕСТЬ идемпотентность: та же реплика тем же голосом и темпом второй раз
+не покупается. О пользователях в таблице нет ни слова — термины дедуплицированы глобально, поэтому
+кэш общий по построению, а второй план с той же фразой берёт готовый файл.
+
+`terms.audio_url` был и удалён (0 из 483 строк, миграция `2026_08_20_160000`); одна колонка вернуть
+нельзя — голос это конфиг языкового пакета, и смена голоса при одной колонке означала бы перезапись,
+то есть потерю старого кэша до того, как владелец решил, что новый лучше.
+
+Байты лежат отдельно от строки (`TermAudioStore`) и раздаются `GET /api/v1/audio/lines/{id}` под
+обычным bearer-токеном. Покупает звук Generation (`SpeakCollectionLinesHandler`) и приносит сюда
+командой `StoreTermAudio`; кто и какие полки озвучивает — `../../../docs/plan-map.md` §6.
+
 ## Search (`TermSearchReader`)
 
 Exact + prefix over `terms.normalized_text` and the learner-language rows of `term_translations`.
