@@ -32,6 +32,8 @@ use App\Modules\Generation\Infrastructure\Adapter\LameSpeechEncoder;
 use App\Modules\Generation\Infrastructure\Adapter\LoggingLineSpeechReporter;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiSpeechSynthesizer;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedLineSpeechDispatcher;
+use App\Modules\Generation\Infrastructure\Adapter\QueuedLineSpeechOrders;
+use App\Modules\Learning\Application\Port\OrdersLineSpeech;
 use App\Modules\Generation\Application\Port\LoggedResponseReader;
 use App\Modules\Generation\Application\Port\ObservedTokenAverages;
 use App\Modules\Generation\Application\Port\DialogSummarizerPort;
@@ -252,6 +254,13 @@ final class GenerationServiceProvider extends ServiceProvider
         // уходит вендору. «Выключено» значит «никто никуда не ходил», а не «сходили и передумали».
         $this->app->bind(DispatchesLineSpeech::class, fn (): DispatchesLineSpeech => new QueuedLineSpeechDispatcher(
             (bool) config('generation.speech.enabled', false),
+        ));
+        // …и тот же диспетчер, отданный ПОСАДКЕ: она видит недостачу первой, потому что ищет
+        // адреса файлов ровно перед тем, как человек их услышит (наряд DAY-2-FIX, доп. про
+        // «Готовим озвучку» навсегда). Порт живёт в Learning, адаптер здесь — Learning не зависит
+        // от Generation, и deptrac это держит.
+        $this->app->bind(OrdersLineSpeech::class, fn (): OrdersLineSpeech => new QueuedLineSpeechOrders(
+            $this->app->make(DispatchesLineSpeech::class),
         ));
         $this->app->bind(LineSpeechReporter::class, LoggingLineSpeechReporter::class);
         // Кодировщик озвучки: PCM вендора → mp3. Битрейт — конфиг, потому что это решение «по уху».

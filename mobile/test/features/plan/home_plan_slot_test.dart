@@ -62,11 +62,11 @@ void main() {
 
     expect(find.text('ПЛАН · ДЕНЬ 2 ИЗ 3'), findsOneWidget);
     expect(find.text('К врачу из-за боли'), findsOneWidget);
-    // The headline number is the plan's own work — the cards that closed stage A — and not the
-    // readiness percentage, which counts the cards that reached their LAST stage and therefore reads
-    // zero for the first days of every plan (02.09, «0% готовность» over fifty-six walked cards).
-    expect(find.text('12'), findsOneWidget);
-    expect(find.text('14 карточек · 12 закрыли ступень A · 2 осталось'), findsOneWidget);
+    // ВЕРДИКТ СЛОВАМИ ЗРЕЛОСТИ (наряд DAY-2-FIX, Ч.2.1) — не перепись ступеней и не процент.
+    // Процент честен и для первых дней плана всегда ноль: он считает карточки, дошедшие до
+    // ПОСЛЕДНЕЙ ступени (02.09, «0% готовность» над пятьюдесятью шестью пройденными карточками).
+    expect(find.text('Знакомишься с материалом · 12 из 14 карточек'), findsOneWidget);
+    expect(find.textContaining('ступень'), findsNothing);
     expect(find.text('50'), findsNothing);
     expect(find.text('%'), findsNothing);
     // The focus day is named beside the action, so the button is not «continue what exactly».

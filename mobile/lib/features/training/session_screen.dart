@@ -395,12 +395,66 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     if (mounted) setState(() {});
   }
 
+  /// «ГОТОВИМ ОЗВУЧКУ» — СОСТОЯНИЕ НА СЕКУНДЫ.
+  ///
+  /// Сколько ждём файл, прежде чем отдать реплику системному голосу. Канон §7 запрещает подавать
+  /// реплику, пока озвучка не готова, и он прав про ПЕРВЫЕ СЕКУНДЫ: голос, который вот-вот
+  /// приедет, стоит того, чтобы его подождать. Он не про «навсегда» — вечное ожидание это не
+  /// бережность, это молчащий экран, и живьём владелец получил именно его.
+  static const Duration _voiceWait = Duration(seconds: 8);
+
+  /// Когда ждём повторно дёрнуть докачку: одна упавшая попытка не должна решать судьбу реплики.
+  static const Duration _voiceRetryAfter = Duration(seconds: 3);
+
+  /// Реплики, ждать которые мы перестали. Ключ — нормализованный текст, как в кэше.
+  final Set<String> _voiceGaveUp = {};
+
+  Timer? _voiceRetryTimer, _voiceGiveUpTimer;
+
+  /// Строка, ожидание которой сейчас отсчитывается, или null.
+  String? _voiceWaitingFor;
+
   /// Можно ли подавать ЭТУ строку на слух: движок поднят, и её файл приехал, если он вообще есть.
   ///
   /// Строка, которую сервер не озвучивает, готова вместе с движком — её всегда собирался читать
-  /// телефон, и ждать ей нечего.
-  bool _voiceReadyFor(String? text) =>
-      _voiceWarm && (text == null || _lineAudio.isReady(text));
+  /// телефон, и ждать ей нечего. Строка, которую мы ждали дольше [_voiceWait], тоже готова:
+  /// прозвучит она системным голосом, кэш засчитает тихий фолбэк, и дев-бейдж это покажет
+  /// ({@see PlanVoiceTrouble}) — «честно упасть на системный голос» вместо «ждать вечно».
+  bool _voiceReadyFor(String? text) {
+    if (!_voiceWarm) return false;
+    if (text == null) return true;
+    if (_lineAudio.isReady(text)) return true;
+    if (_voiceGaveUp.contains(LineAudioCache.keyOf(text))) return true;
+    _startVoiceWait(text);
+
+    return false;
+  }
+
+  /// Завести отсчёт по этой строке: сначала повторная докачка, потом — сдаться в пользу движка.
+  ///
+  /// Отсчёт идёт от МОМЕНТА, когда строка стала живой, а не от входа в день: реплика второго
+  /// присеста могла ждать своего файла честные полчаса, пока человек отвечал на карточки.
+  void _startVoiceWait(String text) {
+    if (_voiceWaitingFor == text) return;
+    _voiceWaitingFor = text;
+    _voiceRetryTimer?.cancel();
+    _voiceGiveUpTimer?.cancel();
+
+    _voiceRetryTimer = Timer(_voiceRetryAfter, () {
+      if (!mounted) return;
+      unawaited(
+        _lineAudio
+            .retryMissing(bearer: ref.read(tokenStoreProvider).current)
+            .whenComplete(() {
+              if (mounted) setState(() {});
+            }),
+      );
+    });
+    _voiceGiveUpTimer = Timer(_voiceWait, () {
+      if (!mounted) return;
+      setState(() => _voiceGaveUp.add(LineAudioCache.keyOf(text)));
+    });
+  }
 
   /// PICK THE SITTING BACK UP where it was left (Ч-6).
   ///
@@ -517,6 +571,8 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
   @override
   void dispose() {
+    _voiceRetryTimer?.cancel();
+    _voiceGiveUpTimer?.cancel();
     PerfLog.instance.screen = 'app';
     // Hands the iOS audio session back (and un-ducks other audio) exactly once, here — not after
     // every spoken word, which is what froze the trainer for ~600 ms per utterance (F20-r).
@@ -1047,13 +1103,15 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   ///              recognition card, and it is what every other surface prints.
   String? _carriedCaption(AppLocalizations l, PlanSessionEnvelope plan) {
     if (!_answered) return null;
+    // Ступень больше не в строке (наряд DAY-2-FIX, Ч.3а), но остаётся условием: подпись про
+    // ПЕРЕНЕСЁННУЮ карточку, а карточка вне лестницы плана перенесена ниоткуда.
     final stage = plan.stageLetterAt(_playing);
     final from = plan.carriedFromAt(_playing);
     if (stage == null || from == null) return null;
 
     final text = (_termTexts[_card.termId] ?? _card.answerText).trim();
 
-    return text.isEmpty ? null : l.planSessionCarried(text, from, stage);
+    return text.isEmpty ? null : l.planSessionCarried(text, from);
   }
 
   /// THE RUNG'S OWN NAME for the card at the front — the same five words the word card, the pool row
@@ -1324,10 +1382,13 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                 // WHAT PART OF THE SITTING THIS IS, beside the group's numbers — the part is the
                 // sentence a person reads, the numbers are how far through it they are.
                 sectionLabel: plan == null ? null : planSectionCaption(l, plan, _playing),
-                // «A» / «B» — the rung, in brass, in the corner (кадр 6b). It is a mark for oneself
-                // and not a grade, so it is never explained: the stage's meaning is on the day
-                // screen, and repeating it over every card would be a legend nobody reads twice.
-                stageBadge: plan?.stageLetterAt(_playing),
+                // ЛАТУННОЙ «B» В УГЛУ БОЛЬШЕ НЕТ (наряд DAY-2-FIX, Ч.3б).
+                //
+                // Кадр 6b звал её «меткой для себя, которая не объясняется», и живьём она ровно так
+                // и работала: буква, которую не объясняют, ничего не значит для того, кто её
+                // читает. Что человек делает — говорит такт над карточкой; где он в посадке —
+                // говорит подпись полосы. Третья метка на том же экране была именем механики,
+                // вывешенным на витрину.
                 // The plan's brass mark REPLACES the phase word in the header (кадр 1c · 03): the
                 // rung's own name moves down to the caption over the task, where it can be said in
                 // full beside the stage. Two labels competing for the one centred slot is how a
@@ -1565,7 +1626,6 @@ class _SessionHeader extends StatelessWidget {
     this.pair,
     this.planBadge,
     this.planProgress,
-    this.stageBadge,
     this.sectionLabel,
   });
 
@@ -1577,9 +1637,6 @@ class _SessionHeader extends StatelessWidget {
   /// The two-group bar of a plan sitting (кадр 6b), or null in an ordinary session — which keeps the
   /// one-line [SessionSegments] it has always had.
   final _PlanProgress? planProgress;
-
-  /// «A» / «B» — the rung, in brass, in the header's right corner. A mark for oneself, not a grade.
-  final String? stageBadge;
 
   /// «План · День 2» — the brass pill a plan session wears instead of the phase word.
   final String? planBadge;
@@ -1637,13 +1694,10 @@ class _SessionHeader extends StatelessWidget {
             // 44pt floor is still there to balance the × on the left when the counter is short.
             ConstrainedBox(
               constraints: const BoxConstraints(minWidth: AppSpacing.minTap),
-              // THE RUNG, in brass, in the corner the eye reaches last (кадр 6b) — a mark for
-              // oneself, never explained. A plan card that has no stage (the warm-up's light touch,
-              // the run-through) leaves the corner empty rather than borrowing the counter back: the
-              // counter has moved, and two homes for one number is how they drift apart.
-              child: stageBadge != null
-                  ? Align(alignment: Alignment.centerRight, child: _StagePill(stageBadge!))
-                  : planBadge != null
+              // ЛАТУННАЯ БУКВА СТУПЕНИ СТОЯЛА ЗДЕСЬ (наряд DAY-2-FIX, Ч.3б). Угол плановой посадки
+              // теперь пуст — счётчик уехал в полосу, и возвращать его сюда значило бы завести
+              // одному числу два дома.
+              child: planBadge != null
                   ? const SizedBox.shrink()
                   : Text(
                       l.triageCounter(current, total),
@@ -1671,26 +1725,6 @@ class _SessionHeader extends StatelessWidget {
       ],
     );
   }
-}
-
-/// «A» / «B» — the rung, latunью, bordered, and never explained (кадр 6b).
-class _StagePill extends StatelessWidget {
-  const _StagePill(this.letter);
-
-  final String letter;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-    decoration: BoxDecoration(
-      border: Border.all(color: AppColors.brassInk.withValues(alpha: .38)),
-      borderRadius: BorderRadius.circular(5),
-    ),
-    child: Text(
-      letter.toUpperCase(),
-      style: AppText.blockLabel.copyWith(color: AppColors.brassInk, letterSpacing: .4),
-    ),
-  );
 }
 
 /// One section of the day inside the bar — how many cards it holds and how many are behind us.

@@ -662,14 +662,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Three states, three sentences — and «Собирается» belongs to the ONE day a worker holds.
-    expect(find.text('Не собрался'), findsOneWidget);
-    expect(find.text('В очереди'), findsOneWidget);
-    expect(find.text('Собирается'), findsOneWidget);
+    // Пять честных статусов, каждый СЛОВОМ (кадр D·07). «Собирается» принадлежит ОДНОМУ дню —
+    // тому, который держит воркер; «ждёт очереди» — тому, до которого расписание не дошло.
+    expect(find.text('не собрался'), findsOneWidget);
+    expect(find.text('ждёт очереди'), findsOneWidget);
+    expect(find.text('собирается'), findsOneWidget);
+    expect(find.text('пройден'), findsOneWidget);
 
-    // …and the burned focus day is not offered as something to continue.
+    // …и у сгоревшего дня своя кнопка в его же строке, с честной подписью почему.
+    expect(find.text('Собрать заново'), findsOneWidget);
+    expect(find.textContaining('Сорвалась сборка реплик'), findsOneWidget);
     expect(find.text('Продолжить день 2'), findsNothing);
-    expect(find.text('Открыть день 2'), findsOneWidget);
   });
 
   testWidgets('a day out of attempts does not offer a button that cannot work', (tester) async {
@@ -766,7 +769,7 @@ void main() {
     expect(find.textContaining('не удалось собрать день'), findsOneWidget);
   });
 
-  testWidgets('the plan card shows the stage count, not a percentage nobody can move', (
+  testWidgets('the plan list is the goal, the days and no ladder word anywhere (D·07)', (
     tester,
   ) async {
     // «0% готовность к событию» over fifty-six walked cards, on the owner's phone (02.09). The
@@ -782,11 +785,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('12'), findsOneWidget);
-    expect(find.text('14 карточек · 12 закрыли ступень A · 2 осталось'), findsOneWidget);
+    // Шапка кадра и вход в шпаргалку.
+    expect(find.text('ПЛАН ПОДГОТОВКИ'), findsOneWidget);
+    expect(find.text('Шпаргалка'), findsOneWidget);
 
-    // The percentage and its caption are gone from the plate — `readiness` is 0.5 in this fixture,
-    // so «50» would be found if the plate still drew it.
+    // Карточка цели: название, длина, дата, обратный отсчёт — и ни одного слова лестницы.
+    expect(find.text('К врачу из-за боли'), findsOneWidget);
+    expect(find.textContaining('2 дня'), findsWidgets);
+    expect(find.textContaining('ступень'), findsNothing);
+    expect(find.textContaining('rung'), findsNothing);
+
+    // Процента плана нет ни в каком виде — `readiness` в фикстуре 0.5.
     expect(find.text('%'), findsNothing);
     expect(find.text('50'), findsNothing);
 

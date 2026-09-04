@@ -224,14 +224,13 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
           // plan has closed stage A at all.
           PlanLabel(l.planLadderLegend),
           const SizedBox(height: 8),
-          _LadderRow(letter: 'A', name: l.planLadderA, value: l.planDayInWork(byTerm.length)),
+          _LadderRow(name: l.planLadderA, value: l.planDayInWork(byTerm.length)),
           if (plan != null)
             _LadderRow(
-              letter: 'B',
               name: l.planLadderB,
               value: l.planDialogueCountOf(plan.stageAClosed, plan.cardsTotal),
             ),
-          _LadderRow(letter: 'C', name: l.planLadderC, value: ''),
+          _LadderRow(name: l.planLadderC, value: ''),
           const SizedBox(height: 10),
           Text(
             l.planLadderNoReadiness,
@@ -298,15 +297,15 @@ class _CardLine extends StatelessWidget {
   );
 }
 
-/// «A · познакомился» — one rung of the ladder, with the word a person uses for it.
+/// «Познакомился · 14» — одна ступень зрелости, СЛОВОМ, без буквы.
 ///
-/// The letter stays a mark for oneself (brass, bordered, never terracotta) and the WORD beside it is
-/// what makes it legible without a legend — кадр D·06в puts the explanation next to the letters
-/// rather than in a help screen.
+/// Кадр D·06в ставит расшифровку рядом с лестницей, а не в справке, и она здесь и осталась. Ушла
+/// только латунная буква: A/B/C — внутреннее имя механики, и на экранах продукта его нет нигде
+/// (наряд DAY-2-FIX, Ч.3а). Слово «познакомился» человек понимает без легенды, буква «A» — нет.
 class _LadderRow extends StatelessWidget {
-  const _LadderRow({required this.letter, required this.name, required this.value});
+  const _LadderRow({required this.name, required this.value});
 
-  final String letter, name, value;
+  final String name, value;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -316,8 +315,6 @@ class _LadderRow extends StatelessWidget {
     ),
     child: Row(
       children: [
-        PlanStageMark(letter),
-        const SizedBox(width: AppSpacing.s12),
         Expanded(
           child: Text(
             name,

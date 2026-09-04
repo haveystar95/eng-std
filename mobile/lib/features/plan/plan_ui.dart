@@ -118,35 +118,6 @@ class PlanBrassCard extends StatelessWidget {
   }
 }
 
-/// The stage a word stands on — a brass A / B / C at the right edge of the register.
-///
-/// A LETTER and not a dot, unlike the acquisition ladder's five dots: the plan's ladder is three
-/// named stages the learner is told about by name in the session header, and a second dot language
-/// on the same screens would be two vocabularies for one idea.
-class PlanStageMark extends StatelessWidget {
-  const PlanStageMark(this.letter, {super.key, this.suffix});
-
-  final String letter;
-
-  /// «· со дня 1» — where a carried word came from, set beside the letter in the same brass.
-  final String? suffix;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    suffix == null ? letter : '$letter $suffix',
-    style: AppText.translation.copyWith(
-      fontSize: 10.5,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.4,
-      color: AppColors.brassInk,
-    ),
-  );
-}
-
-/// One line of «Ты уже можешь» / «Что закроем» — a ✓ or an em dash, then the ability.
-///
-/// The unhit lines are grey and keep their full text: a plan's promises are what the learner bought,
-/// and hiding the ones not yet delivered would leave the list looking shorter every time it grew.
 class PlanAbilityRow extends StatelessWidget {
   const PlanAbilityRow({
     super.key,
@@ -337,6 +308,20 @@ class PlanNotice extends StatelessWidget {
     ),
   );
 }
+
+/// ЗРЕЛОСТЬ ПЛАНА СЛОВАМИ — «Знакомишься с материалом · 21 из 51 карточки».
+///
+/// Канон §2 знает у материала три состояния: познакомился → применяю → говорю сам. Это язык, на
+/// котором о плане говорит ПРОДУКТ; «ступень A», «rung», «stage» — язык, на котором о нём говорит
+/// код, и на экранах его больше нет нигде (наряд DAY-2-FIX, Ч.2.1 и Ч.3а).
+///
+/// Считается по тому, что сервер действительно шлёт (`stage_census`), и ничего сверх того не
+/// обещает: пока хоть одна карточка не закрыла знакомство — «Знакомишься с материалом»; когда все
+/// закрыли — «Применяешь в разговоре». Третьего состояния здесь нет и быть не может, потому что
+/// перепись ступени C на провод не приезжает, а вердикт, выведенный из данных, которых нет, — это
+/// ровно тот процент, который владелец три дня читал нулём.
+String planMaturityVerdict(AppLocalizations l, {required int total, required int closed}) =>
+    total > 0 && closed >= total ? l.planMaturityApplying : l.planMaturityMeeting;
 
 /// «2 сентября» — an event date written the way a person says it.
 ///

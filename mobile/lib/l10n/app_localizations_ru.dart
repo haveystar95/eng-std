@@ -2864,7 +2864,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planDaySoftNote =>
-      'Это день впереди текущего. Тренировка настоящая: карточки идут ступенью A, ответы засчитываются.';
+      'Это день впереди текущего. Тренировка настоящая: реплики этого дня встречаешь впервые, ответы засчитываются.';
 
   @override
   String get planDayTrain => 'Тренировать';
@@ -3012,7 +3012,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planDayNotClosedNote =>
-      'Часть карточек ответена неверно — ступень по ним не закрылась. Открой день ещё раз: он раздаст только то, что осталось.';
+      'Часть карточек ответена неверно, и они остались недоученными. Открой день ещё раз: он раздаст только то, что осталось.';
 
   @override
   String planDaySoftDone(int index) {
@@ -3262,6 +3262,84 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planDialogueTailAsk => 'Ещё раз вопрос этой сцены';
 
   @override
+  String get planListTitle => 'План подготовки';
+
+  @override
+  String get planCheatSheet => 'Шпаргалка';
+
+  @override
+  String get planRowPassed => 'пройден';
+
+  @override
+  String get planRowToday => 'сегодня';
+
+  @override
+  String get planRowBuilding => 'собирается';
+
+  @override
+  String get planRowNotBuilt => 'не собрался';
+
+  @override
+  String get planRowWaiting => 'ждёт очереди';
+
+  @override
+  String get planRowStartDay => 'Начать день';
+
+  @override
+  String get planRowNotBuiltWhy => 'Сорвалась сборка реплик. Займёт около минуты.';
+
+  @override
+  String get planRowRehearsalWhen => 'Накануне';
+
+  @override
+  String get planRowRehearsalLead => 'Все сцены подряд, вслух';
+
+  @override
+  String get planMaturityMeeting => 'Знакомишься с материалом';
+
+  @override
+  String get planMaturityApplying => 'Применяешь в разговоре';
+
+  @override
+  String get planMaturitySpeaking => 'Говоришь сам';
+
+  @override
+  String planEventAt(String date) {
+    return 'событие $date';
+  }
+
+  @override
+  String planDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'осталось $days дня',
+      many: 'осталось $days дней',
+      few: 'осталось $days дня',
+      one: 'осталось $days день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planRowDayScene(int day, int scene) {
+    return 'День $day · сцена $scene';
+  }
+
+  @override
+  String planMaturityCards(int done, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$done из $total карточки',
+      many: '$done из $total карточек',
+      few: '$done из $total карточек',
+      one: '$done из $total карточки',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get planDayRescueLead =>
       'С них начинается день — чтобы было чем ответить, если растеряешься.';
 
@@ -3354,11 +3432,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planDayClosedCount => 'Закрыто в дне';
 
   @override
-  String get planLadderLegend => 'Ступени';
+  String get planLadderLegend => 'Зрелость материала';
 
   @override
   String get planLadderNoReadiness =>
-      'Готовность к сцене появится, когда сервер её посчитает. Пока — ступени.';
+      'Готовность к сцене появится, когда сервер её посчитает. Пока — то, докуда дошёл материал.';
 
   @override
   String get planLadderA => 'познакомился';
@@ -3368,15 +3446,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planLadderC => 'говоришь сам';
-
-  @override
-  String get planStageAClosed => 'Ступень A пройдена';
-
-  @override
-  String get planStageBReturns => 'Вернутся на ступени B';
-
-  @override
-  String get planStageBWhen => 'в следующий день';
 
   @override
   String get planNext => 'Дальше';
@@ -3395,13 +3464,8 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String planSessionStage(String stage, String trainer) {
-    return 'Ступень $stage · $trainer';
-  }
-
-  @override
-  String planSessionCarried(String term, int index, String stage) {
-    return 'Слово «$term» идёт со дня $index — сегодня оно на ступени $stage.';
+  String planSessionCarried(String term, int index) {
+    return 'Слово «$term» идёт со дня $index — сегодня оно возвращается.';
   }
 
   @override
@@ -3444,14 +3508,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planWordsReleasedBody =>
-      'Они никуда не делись — ступени, расписание и вся история на месте. Сами в ежедневные занятия они не придут: чтобы вернуть слово в работу, открой его карточку и нажми «Учить это слово».';
+      'Они никуда не делись — прогресс, расписание и вся история на месте. Сами в ежедневные занятия они не придут: чтобы вернуть слово в работу, открой его карточку и нажми «Учить это слово».';
 
   @override
   String get planRehearsalDoneTitle => 'Подготовка завершена';
 
   @override
   String get planRehearsalDoneBody =>
-      'Ты прошёл весь материал плана. Он ушёл в архив: слова, ступени и вся история сохранены.';
+      'Ты прошёл весь материал плана. Он ушёл в архив: слова, прогресс и вся история сохранены.';
 
   @override
   String get planRehearsalDoneAction => 'К плану';
@@ -3468,9 +3532,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planCompleteConfirm => 'Завершить';
-
-  @override
-  String get planCheatSheet => 'Шпаргалка';
 
   @override
   String planCheatSheetTitle(int index) {
@@ -3516,7 +3577,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planDoneCards => 'Карточек в плане';
 
   @override
-  String get planDoneStageA => 'Закрыли ступень A';
+  String get planDoneStageA => 'Познакомились с материалом';
 
   @override
   String get planDoneArchiveNote =>
@@ -3531,48 +3592,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get planRehearsalLead =>
       'Финальный день ничего не добавляет — это прогон всего, чему план научил. Пройди его перед событием.';
-
-  @override
-  String planStageCensusCards(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count карточки',
-      many: '$count карточек',
-      few: '$count карточки',
-      one: '$count карточка',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String planStageCensusClosed(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count закрыли ступень A',
-      many: '$count закрыли ступень A',
-      few: '$count закрыли ступень A',
-      one: '$count закрыла ступень A',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String planStageCensusLeft(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count осталось',
-      many: '$count осталось',
-      few: '$count осталось',
-      one: '$count осталась',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planStageCensusCaption => 'ступень A · знакомство с материалом';
 
   @override
   String get planArchive => 'Архив';

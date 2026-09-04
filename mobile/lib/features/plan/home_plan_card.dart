@@ -83,31 +83,17 @@ class _PlanCard extends ConsumerWidget {
           const SizedBox(height: AppSpacing.s8),
           Text(plan.title, style: AppText.displayTerm.copyWith(fontSize: 23, height: 1.22)),
           const SizedBox(height: AppSpacing.s12),
-          // The same count the plan's own plate shows, and for the same reason: the percentage is
-          // honest and always zero for the first days of a plan, because it counts the cards that
-          // reached their LAST stage. See `plan_screen.dart`; the formula is untouched.
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${plan.stageAClosed}',
-                style: AppText.displayNumber.copyWith(fontSize: 34, height: 1),
-              ),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 3),
-                  child: Text(
-                    [
-                      l.planStageCensusCards(plan.cardsTotal),
-                      l.planStageCensusClosed(plan.stageAClosed),
-                      if (plan.stageALeft > 0) l.planStageCensusLeft(plan.stageALeft),
-                    ].join(' · '),
-                    style: AppText.translation.copyWith(fontSize: 14, color: AppColors.inkBody),
-                  ),
-                ),
-              ),
-            ],
+          // ВЕРДИКТ СЛОВАМИ ЗРЕЛОСТИ, а не переписью ступеней (наряд DAY-2-FIX, Ч.2.1).
+          //
+          // Здесь стояло «51 карточка · 21 закрыла ступень A · 30 осталось» с подписью «ступень A ·
+          // знакомство с материалом». Числа были правдой; «ступень A» — служебное слово лестницы, о
+          // котором человек не просил и которого в продукте нет больше нигде. Процент по-прежнему
+          // не показывается: он считает карточки, дошедшие до ПОСЛЕДНЕЙ ступени, и первые дни плана
+          // честно даёт ноль (владелец прошёл 56 карточек и прочитал 0%).
+          Text(
+            '${planMaturityVerdict(l, total: plan.cardsTotal, closed: plan.stageAClosed)}'
+            ' · ${l.planMaturityCards(plan.stageAClosed, plan.cardsTotal)}',
+            style: AppText.translation.copyWith(fontSize: 14, color: AppColors.inkBody),
           ),
           const SizedBox(height: 10),
           PlanReadinessBar(value: plan.cardsTotal == 0 ? 0 : plan.stageAClosed / plan.cardsTotal),

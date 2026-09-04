@@ -855,8 +855,9 @@ class _ShelfLine extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.s8),
-          PlanStageMark(term.stage.letter),
+          // ЛАТУННОЙ БУКВЫ СТУПЕНИ ЗДЕСЬ БОЛЬШЕ НЕТ (наряд DAY-2-FIX, Ч.3а). Кадр D·01 её не
+          // рисует, а сама по себе «B» рядом с репликой не значит для человека ничего: это
+          // внутреннее имя механики, вывешенное на витрину.
         ],
       ),
     );

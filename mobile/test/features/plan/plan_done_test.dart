@@ -63,7 +63,9 @@ void main() {
     // Cards, not «реплик»: the census counts cards, of which lines are a part.
     expect(find.text('Карточек в плане'), findsOneWidget);
     expect(find.text('27'), findsOneWidget);
-    expect(find.text('Закрыли ступень A'), findsOneWidget);
+    // Слова лестницы с экранов ушли (наряд DAY-2-FIX, Ч.3а): число то же, вердикт человеческий.
+    expect(find.text('Познакомились с материалом'), findsOneWidget);
+    expect(find.textContaining('ступень'), findsNothing);
     expect(find.text('25 из 27'), findsOneWidget);
 
     // …and nothing that was never measured.

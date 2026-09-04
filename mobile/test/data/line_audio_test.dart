@@ -44,6 +44,29 @@ void main() {
     expect(c.isReady('Thanks for joining today.'), isFalse);
   });
 
+  test('упавшая докачка повторяется — иначе «Готовим озвучку» стоит навсегда', () async {
+    // Одна попытка на входе в день была ЕДИНСТВЕННОЙ: 503, обрыв сети или 401 на непрогретом
+    // токене оставляли реплику не готовой до конца посадки, а экран честно ждал того, чего никто
+    // больше не просил (доп. к наряду DAY-2-FIX).
+    const line = 'Tell me a little about your background.';
+    const url = 'https://x/api/v1/audio/lines/A.mp3';
+
+    // Сеть, которая падает один раз и потом работает, — то, что и происходит на телефоне.
+    final asked = <String>[];
+    final flaky = Dio();
+    flaky.httpClientAdapter = _FlakyAdapter([1, 2, 3], failFirst: 1, onGet: asked.add);
+
+    final c = cache(http: flaky);
+    await c.preload([(text: line, url: url)]);
+    expect(c.isReady(line), isFalse);
+    expect(c.trouble.downloads, 1);
+
+    await c.retryMissing();
+
+    expect(asked, [url, url]);
+    expect(c.isReady(line), isTrue);
+  });
+
   test('a line the server does not voice is ready the moment it is asked about', () async {
     final c = cache();
 
@@ -145,5 +168,32 @@ class _FakeAdapter implements HttpClientAdapter {
     onGet?.call(options.uri.toString());
 
     return ResponseBody.fromBytes(bytes, status);
+  }
+}
+
+/// Сеть, которая падает первые [failFirst] раз и потом работает.
+class _FlakyAdapter implements HttpClientAdapter {
+  _FlakyAdapter(this.bytes, {required this.failFirst, this.onGet});
+
+  final List<int> bytes;
+  final int failFirst;
+  final void Function(String url)? onGet;
+  int _seen = 0;
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<List<int>>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    onGet?.call(options.uri.toString());
+    _seen++;
+
+    return _seen <= failFirst
+        ? ResponseBody.fromBytes(const [], 503)
+        : ResponseBody.fromBytes(bytes, 200);
   }
 }

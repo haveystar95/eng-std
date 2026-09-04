@@ -4134,7 +4134,7 @@ abstract class AppLocalizations {
   /// Строка над кнопкой для дня впереди фокуса: посадка строгая, как у любого дня (E2E-SIM-2, С-1).
   ///
   /// In ru, this message translates to:
-  /// **'Это день впереди текущего. Тренировка настоящая: карточки идут ступенью A, ответы засчитываются.'**
+  /// **'Это день впереди текущего. Тренировка настоящая: реплики этого дня встречаешь впервые, ответы засчитываются.'**
   String get planDaySoftNote;
 
   /// Главная кнопка экрана дня.
@@ -4380,7 +4380,7 @@ abstract class AppLocalizations {
   /// Пояснение под заголовком незакрытого дня.
   ///
   /// In ru, this message translates to:
-  /// **'Часть карточек ответена неверно — ступень по ним не закрылась. Открой день ещё раз: он раздаст только то, что осталось.'**
+  /// **'Часть карточек ответена неверно, и они остались недоученными. Открой день ещё раз: он раздаст только то, что осталось.'**
   String get planDayNotClosedNote;
 
   /// Заголовок итога мягкого прохода — ступени не закрывались.
@@ -4743,6 +4743,114 @@ abstract class AppLocalizations {
   /// **'Ещё раз вопрос этой сцены'**
   String get planDialogueTailAsk;
 
+  /// Надзаголовок списка дней плана (кадр D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'План подготовки'**
+  String get planListTitle;
+
+  /// Точка входа в лист шпаргалки — в шапке экрана дня и списка дней (кадры D-01, D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'Шпаргалка'**
+  String get planCheatSheet;
+
+  /// Статус строки дня — словом, не иконкой (кадр D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'пройден'**
+  String get planRowPassed;
+
+  /// Статус сегодняшнего дня (кадр D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'сегодня'**
+  String get planRowToday;
+
+  /// День держит воркер прямо сейчас (кадр D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'собирается'**
+  String get planRowBuilding;
+
+  /// Сборка дня сорвалась; кнопка «Собрать заново» стоит в той же строке (кадр D-07, урок Д-20).
+  ///
+  /// In ru, this message translates to:
+  /// **'не собрался'**
+  String get planRowNotBuilt;
+
+  /// День ещё не наступил по расписанию (кадр D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'ждёт очереди'**
+  String get planRowWaiting;
+
+  /// Действие сегодняшнего дня, в его же строке (кадр D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать день'**
+  String get planRowStartDay;
+
+  /// Честная подпись под «Собрать заново»: что сорвалось и сколько это займёт (кадр D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сорвалась сборка реплик. Займёт около минуты.'**
+  String get planRowNotBuiltWhy;
+
+  /// Надзаголовок строки прогона вместо «День N · сцена N» (кадр D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'Накануне'**
+  String get planRowRehearsalWhen;
+
+  /// Подстрока строки прогона (кадр D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'Все сцены подряд, вслух'**
+  String get planRowRehearsalLead;
+
+  /// Зрелость плана словами — первое состояние (канон §2: познакомился → применяю → говорю сам). Заменило «ступень A · знакомство с материалом».
+  ///
+  /// In ru, this message translates to:
+  /// **'Знакомишься с материалом'**
+  String get planMaturityMeeting;
+
+  /// Второе состояние зрелости плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Применяешь в разговоре'**
+  String get planMaturityApplying;
+
+  /// Третье состояние зрелости плана; ждёт переписи ступени C на проводе.
+  ///
+  /// In ru, this message translates to:
+  /// **'Говоришь сам'**
+  String get planMaturitySpeaking;
+
+  /// Дата события в карточке цели (кадр D-07: «приём 14 марта»).
+  ///
+  /// In ru, this message translates to:
+  /// **'событие {date}'**
+  String planEventAt(String date);
+
+  /// Обратный отсчёт в карточке цели (кадр D-07).
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{осталось {days} день} few{осталось {days} дня} many{осталось {days} дней} other{осталось {days} дня}}'**
+  String planDaysLeft(int days);
+
+  /// Надзаголовок строки дня. Номер сцены различает два дня, начинающихся одинаково (кадр D-07, урок Д-23).
+  ///
+  /// In ru, this message translates to:
+  /// **'День {day} · сцена {scene}'**
+  String planRowDayScene(int day, int scene);
+
+  /// Человеческая подпись прогресса рядом с вердиктом зрелости: «21 из 51 карточки». Склоняется по ЗНАМЕНАТЕЛЮ — склоняется слово при нём.
+  ///
+  /// In ru, this message translates to:
+  /// **'{total, plural, one{{done} из {total} карточки} few{{done} из {total} карточек} many{{done} из {total} карточек} other{{done} из {total} карточки}}'**
+  String planMaturityCards(int done, int total);
+
   /// Пояснение блока спасателей на экране дня (кадр D-01).
   ///
   /// In ru, this message translates to:
@@ -4860,13 +4968,13 @@ abstract class AppLocalizations {
   /// Надзаголовок расшифровки A/B/C на итоге посадки (кадр D-06в).
   ///
   /// In ru, this message translates to:
-  /// **'Ступени'**
+  /// **'Зрелость материала'**
   String get planLadderLegend;
 
   /// Почему на итоге нет процента: его не считают, а не прячут (кадр D-06в). Пока процент не считается, его нет вообще.
   ///
   /// In ru, this message translates to:
-  /// **'Готовность к сцене появится, когда сервер её посчитает. Пока — ступени.'**
+  /// **'Готовность к сцене появится, когда сервер её посчитает. Пока — то, докуда дошёл материал.'**
   String get planLadderNoReadiness;
 
   /// Ступень A человеческим словом — расшифровка стоит рядом, а не в справке (кадр D-06в).
@@ -4886,24 +4994,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'говоришь сам'**
   String get planLadderC;
-
-  /// Строка итога дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ступень A пройдена'**
-  String get planStageAClosed;
-
-  /// Строка итога дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Вернутся на ступени B'**
-  String get planStageBReturns;
-
-  /// Значение строки «вернутся на ступени B».
-  ///
-  /// In ru, this message translates to:
-  /// **'в следующий день'**
-  String get planStageBWhen;
 
   /// Подпись строки перехода в итоге дня.
   ///
@@ -4929,17 +5019,11 @@ abstract class AppLocalizations {
   /// **'План · день {index}'**
   String planSessionBadge(int index);
 
-  /// Подпись ступени над заданием плановой сессии.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ступень {stage} · {trainer}'**
-  String planSessionStage(String stage, String trainer);
-
   /// Строка внизу карточки: откуда слово.
   ///
   /// In ru, this message translates to:
-  /// **'Слово «{term}» идёт со дня {index} — сегодня оно на ступени {stage}.'**
-  String planSessionCarried(String term, int index, String stage);
+  /// **'Слово «{term}» идёт со дня {index} — сегодня оно возвращается.'**
+  String planSessionCarried(String term, int index);
 
   /// Пустой таб «План» (кадр 1c-10).
   ///
@@ -4998,7 +5082,7 @@ abstract class AppLocalizations {
   /// Пояснение к судьбе слов: завершённый план — архив, слова в ежедневные занятия сами не приходят.
   ///
   /// In ru, this message translates to:
-  /// **'Они никуда не делись — ступени, расписание и вся история на месте. Сами в ежедневные занятия они не придут: чтобы вернуть слово в работу, открой его карточку и нажми «Учить это слово».'**
+  /// **'Они никуда не делись — прогресс, расписание и вся история на месте. Сами в ежедневные занятия они не придут: чтобы вернуть слово в работу, открой его карточку и нажми «Учить это слово».'**
   String get planWordsReleasedBody;
 
   /// Итог прогона финального дня — план закрыт (Д-27).
@@ -5010,7 +5094,7 @@ abstract class AppLocalizations {
   /// Пояснение под итогом прогона.
   ///
   /// In ru, this message translates to:
-  /// **'Ты прошёл весь материал плана. Он ушёл в архив: слова, ступени и вся история сохранены.'**
+  /// **'Ты прошёл весь материал плана. Он ушёл в архив: слова, прогресс и вся история сохранены.'**
   String get planRehearsalDoneBody;
 
   /// Кнопка с экрана итога прогона обратно к плану.
@@ -5042,12 +5126,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Завершить'**
   String get planCompleteConfirm;
-
-  /// Точка входа в лист шпаргалки — в шапке экрана дня и списка дней (кадры D-01, D-07).
-  ///
-  /// In ru, this message translates to:
-  /// **'Шпаргалка'**
-  String get planCheatSheet;
 
   /// Надзаголовок листа шпаргалки (кадр D-09). «День» здесь законно: это расписание, а не материал.
   ///
@@ -5130,7 +5208,7 @@ abstract class AppLocalizations {
   /// Третий факт экрана завершённого плана — единственное про ступени число, которое сервер знает.
   ///
   /// In ru, this message translates to:
-  /// **'Закрыли ступень A'**
+  /// **'Познакомились с материалом'**
   String get planDoneStageA;
 
   /// Что происходит с материалом после завершения (кадр D-12, канон §1: архив целиком).
@@ -5156,30 +5234,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Финальный день ничего не добавляет — это прогон всего, чему план научил. Пройди его перед событием.'**
   String get planRehearsalLead;
-
-  /// Первая часть строки прогресса на карточке плана — сколько карточек план уже написал.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}'**
-  String planStageCensusCards(int count);
-
-  /// Вторая часть: сколько карточек закрыли ступень A — то, что двигает сидение.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} закрыла ступень A} few{{count} закрыли ступень A} many{{count} закрыли ступень A} other{{count} закрыли ступень A}}'**
-  String planStageCensusClosed(int count);
-
-  /// Третья часть: сколько ещё не закрыли. Не рисуется, когда ноль.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} осталась} few{{count} осталось} many{{count} осталось} other{{count} осталось}}'**
-  String planStageCensusLeft(int count);
-
-  /// Подпись под строкой прогресса — вместо «готовность к событию», пока каноническая формула не пришла (SIT-1).
-  ///
-  /// In ru, this message translates to:
-  /// **'ступень A · знакомство с материалом'**
-  String get planStageCensusCaption;
 
   /// Лейбл списка прошлых планов.
   ///

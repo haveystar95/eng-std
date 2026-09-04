@@ -209,6 +209,25 @@ class LineAudioCache {
     ]);
   }
 
+  /// ДОКАЧАТЬ ВСЁ, ЧТО ИЗВЕСТНО КАК РЕПЛИКА, НО ЕЩЁ НЕ СКАЧАНО.
+  ///
+  /// Ровно одна причина существовать: докачка на входе в день — ОДНА попытка, и упавшая попытка не
+  /// повторялась ничем. Реплика с адресом и без файла оставалась не готова навсегда, а экран честно
+  /// показывал «Готовим озвучку» — вечно, потому что ждать было нечего.
+  ///
+  /// Обрыв сети на входе в день, 401 на непрогретом токене, файл, вычищенный системой между
+  /// запусками, — все они лечатся повтором, и ни один из них не лечился.
+  Future<void> retryMissing({String? bearer}) async {
+    await load();
+    final pending = [
+      for (final entry in _urlOf.entries)
+        if (!_fileOf.containsKey(entry.key)) entry,
+    ];
+    if (pending.isEmpty) return;
+
+    await Future.wait([for (final entry in pending) _fetch(entry.key, entry.value, bearer)]);
+  }
+
   Future<void> _fetch(String key, String url, String? bearer) async {
     final dir = _dir;
     if (dir == null || !_inFlight.add(url)) return;

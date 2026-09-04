@@ -14,6 +14,7 @@ use App\Modules\Learning\Application\Port\DueTermsReader;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\HomePlanReader;
 use App\Modules\Learning\Application\Port\ModeAdmissionReader;
+use App\Modules\Learning\Application\Port\OrdersLineSpeech;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Service\CardLanguageResolver;
 use App\Modules\Learning\Application\Service\PlanDayPassing;
@@ -227,6 +228,7 @@ final readonly class BuildPlanSessionHandler
          * и необязательная зависимость сделала бы эти два случая неразличимыми.
          */
         private LineAudioIndex $lineAudio,
+        private OrdersLineSpeech $speechOrders,
         private PlanDayOrder $order = new PlanDayOrder(),
         /** Where a situational card's «Ситуация» comes from — pure, and stated in Domain. */
         private SituationalPrompt $situations = new SituationalPrompt(),
@@ -276,6 +278,11 @@ final readonly class BuildPlanSessionHandler
         $this->persist($sessionId, $plan, $day, $tasks, $strict);
 
         $audio = $this->lineAudioFor($tasks, $dialogues, $plan->targetLang()->value);
+        // …И ЗАКАЗАТЬ ТО, ЧЕГО НЕ ХВАТИЛО. «Готовим озвучку» — состояние на секунды, а не навсегда
+        // (канон §7): реплика, у которой файла нет и заказа не было, держала бы экран-диалог в
+        // ожидании вечно. Посадка видит недостачу первой и единственная — она ищет адреса ровно
+        // перед тем, как человек эти реплики услышит.
+        $this->orderMissingSpeech($plan, $dialogues, $audio);
 
         return new PlanSessionView(
             sessionId: $sessionId->value,
@@ -373,6 +380,57 @@ final readonly class BuildPlanSessionHandler
         }
 
         return $out;
+    }
+
+    /**
+     * РЕПЛИКИ ПОСАДКИ БЕЗ ФАЙЛА — заказать их озвучку и идти дальше.
+     *
+     * Считается по ЦЕПОЧКАМ, а не по задачам: экран-диалог играет разговор целиком, и молчащий ход
+     * — это ход, у которого сегодня своей карточки может и не быть. Полки — те же две, что
+     * озвучивает станок ({@see \App\Modules\Generation\Application\Command\SpeakCollectionLinesHandler}):
+     * «Тебе скажут» и спасатели. Ярус «говорю» файлом не читается вовсе — там говорит человек.
+     *
+     * Ничего не ждёт и ничего не ломает: заказ идемпотентен (покупается только то, чего нет для
+     * ЭТОГО голоса), тумблер трубы стоит в диспетчере, а посадка отдаётся клиенту в любом случае —
+     * с теми адресами, которые уже есть.
+     *
+     * @param  list<PlanDialogueView>  $dialogues
+     * @param  list<PlanLineAudioView>  $audio
+     */
+    private function orderMissingSpeech(LearningPlan $plan, array $dialogues, array $audio): void
+    {
+        $voiced = [];
+        foreach ($audio as $row) {
+            $voiced[$row->termId] = true;
+        }
+
+        $missingDays = [];
+        foreach ($dialogues as $dialogue) {
+            foreach ($dialogue->turns as $turn) {
+                if (! in_array($turn->shelf, [PlanDialogueChain::SHELF_HEAR, self::SHELF_RESCUE], true)) {
+                    continue;
+                }
+                if (! isset($voiced[$turn->termId])) {
+                    $missingDays[$dialogue->dayIndex] = true;
+                }
+            }
+        }
+        if ($missingDays === []) {
+            return;
+        }
+
+        // Заказывается КОЛЛЕКЦИЯ дня целиком, а не отдельная реплика: станок работает полкой и сам
+        // отбирает недостающее, а список из одной строки заставил бы его завести второй путь.
+        $collections = [];
+        foreach ($this->days->listForPlan($plan->id()) as $day) {
+            $collectionId = $day->collectionId();
+            if ($collectionId !== null && isset($missingDays[$day->dayIndex()])) {
+                $collections[] = $collectionId;
+            }
+        }
+        if ($collections !== []) {
+            $this->speechOrders->order($collections);
+        }
     }
 
     /**
