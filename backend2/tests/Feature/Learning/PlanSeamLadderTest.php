@@ -195,3 +195,35 @@ function rescueTasksOf(array $session): array
         static fn (array $t): bool => ($t['shelf'] ?? null) === 'rescue',
     ));
 }
+
+it('revises the days BEHIND the one being studied, never the ones ahead of it', function () {
+    // A day opened early is walked strictly now (С-1), so a LATER day can stand on stage B while an
+    // earlier one is still the focus. Its cards are not «Повторение · из прошлых дней» — that
+    // caption is the seam's own word — and they are not lost either: bucket 1 deals whatever the day
+    // being studied owes, at whatever stage, so they come round when that day does.
+    [$user, $token, $planId] = startedPlan($this, [
+        'goal_text' => 'Иду к врачу, болит спина, надо объяснить и понять назначение [scenes:3]',
+        'event_date' => now()->addDays(10)->format('Y-m-d'),
+    ]);
+
+    // Day 2, walked out of turn while the focus is still day 1.
+    $seq = 1;
+    for ($i = 0; $i < 8; $i++) {
+        $session = planSession($this, $token, $planId, 2);
+        if ($session['tasks'] === []) {
+            break;
+        }
+        $seq = answerTasks($this, $token, $session, $seq);
+    }
+    ageHistory($user->id, days: 1);
+    scheduleFarAway($user->id);
+
+    $session = planSession($this, $token, $planId);
+    expect($session['focus_day_index'])->toBe(1)
+        ->and($session['day_index'])->toBe(1);
+
+    foreach ($session['tasks'] as $task) {
+        expect($task['section'])->not->toBe('review');
+        expect($task['from_day_index'])->not->toBe(2);
+    }
+});

@@ -496,7 +496,14 @@ final readonly class BuildPlanSessionHandler
         if ($isFocusDay) {
             foreach ([PlanStage::B, PlanStage::C] as $stage) {
                 foreach ($progress->days as $index => $earlier) {
-                    if ($index === $dayIndex) {
+                    // EARLIER, and that is the caption's own word: «Повторение · из прошлых дней».
+                    //
+                    // A LATER day can stand on stage B too — the learner opened it ahead of its turn
+                    // and walked it — and its cards are not stranded by being left out: bucket 1
+                    // deals whatever the day being studied owes, at whatever stage it owes it, so
+                    // they are dealt when that day comes round. Which is next, since the focus is
+                    // the first day that has not passed.
+                    if ($index >= $dayIndex) {
                         continue;
                     }
                     foreach ($earlier->termIds as $termId) {
