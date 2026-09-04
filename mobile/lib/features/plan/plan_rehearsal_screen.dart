@@ -43,7 +43,9 @@ class PlanRehearsalScreen extends ConsumerStatefulWidget {
 }
 
 class _PlanRehearsalScreenState extends ConsumerState<PlanRehearsalScreen> {
-  final _pronouncer = Pronouncer();
+  /// The shared line cache (наряд TTS-1): a rehearsal line the plan has a server recording for is
+  /// played from it, so the morning of the event sounds like the days that led up to it.
+  late final Pronouncer _pronouncer = Pronouncer(null, ref.read(lineAudioCacheProvider));
   late Future<PlanRehearsal> _rehearsal;
   int _pos = 0;
 

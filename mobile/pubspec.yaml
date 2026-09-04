@@ -129,6 +129,11 @@ flutter:
     # The offline autocomplete dictionary (~47k words, 363 KB). Regenerate with
     # scripts/build_wordlist.sh — the source and the filtering rules live in its header.
     - assets/wordlist/
+    # ОБРАЗЦЫ ГОЛОСОВ для дев-экрана «Голоса реплик» (наряд TTS-1, Ч.2.4) — живые реплики
+    # qa-плана, озвученные каждым кандидатом одним и тем же набором и темпом. Владелец выбирает
+    # голос ушами на телефоне, а не по файлам на диске, поэтому они едут в сборке.
+    # ~1.3 МБ; удаляются вместе с экраном, как только голос выбран.
+    - assets/tts_samples/
 
   # Bundled fonts — offline-first, no runtime fetch. Instanced from the OFL
   # variable fonts down to exactly the token-list weights (no extra weights);

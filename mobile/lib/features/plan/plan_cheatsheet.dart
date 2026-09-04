@@ -28,6 +28,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../data/api_client.dart';
+import '../../data/line_audio.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
 import '../../data/pronouncer.dart';
@@ -76,7 +77,10 @@ class PlanCheatSheet extends ConsumerStatefulWidget {
 }
 
 class _PlanCheatSheetState extends ConsumerState<PlanCheatSheet> {
-  final _pronouncer = Pronouncer();
+  /// Built with the shared line cache (наряд TTS-1): шпаргалка играет ТОТ ЖЕ файл, что и разговор.
+  /// Два голоса на одну реплику — это две разные реплики для уха.
+  late final LineAudioCache _lineAudio = ref.read(lineAudioCacheProvider);
+  late final Pronouncer _pronouncer = Pronouncer(null, _lineAudio);
 
   /// Which line is sounding right now — one at a time, and the others do not grey out (записка
   /// «Озвучка в шпаргалке»). Null when nothing is playing.
@@ -92,6 +96,18 @@ class _PlanCheatSheetState extends ConsumerState<PlanCheatSheet> {
   void dispose() {
     _pronouncer.release();
     super.dispose();
+  }
+
+  /// Докачать озвучку реплик этого дня, если её ещё нет в общем кэше.
+  Future<void> _preload(List<PlanTermRow> terms) async {
+    final lines = [
+      for (final term in terms)
+        if ((term.audioUrl ?? '').isNotEmpty) (text: term.text, url: term.audioUrl!),
+    ];
+    if (lines.isEmpty) return;
+
+    await _lineAudio.preload(lines, bearer: ref.read(tokenStoreProvider).current);
+    if (mounted) setState(() {});
   }
 
   /// Tap to play, tap again to stop. A second line taps over the first: одновременно играет одна.
@@ -138,11 +154,14 @@ class _PlanCheatSheetState extends ConsumerState<PlanCheatSheet> {
               padding: const EdgeInsets.all(20),
               child: PlanNotice(text: isOffline(e) ? l.planErrorOffline : l.planErrorLoadFailed),
             ),
-            data: (detail) => _Sheet(
-              detail: detail,
-              speaking: _speaking,
-              onSay: _say,
-            ),
+            data: (detail) {
+              // Шпаргалка тоже качает: её открывают отдельно от посадки (канон §13 — «с любого
+              // экрана плана»), и реплика, у которой файл ещё не приехал, иначе прозвучала бы
+              // системным голосом на экране, где рядом играет серверный.
+              unawaited(_preload(detail.terms));
+
+              return _Sheet(detail: detail, speaking: _speaking, onSay: _say);
+            },
           ),
         ),
       ),

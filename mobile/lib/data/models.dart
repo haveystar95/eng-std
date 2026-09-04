@@ -855,6 +855,12 @@ abstract interface class PlanSessionEnvelope {
   /// Empty on the day a scene is introduced (its dialogue opens tomorrow — канон §10), on the final
   /// day's run-through, and on a payload from a server that predates the field.
   List<PlanDialogue> get dialogues;
+
+  /// ОЗВУЧКА, КОТОРУЮ ЭТА ПОСАДКА МОЖЕТ СЫГРАТЬ ФАЙЛОМ — пары «текст → адрес» (наряд TTS-1).
+  ///
+  /// Пусто — законный ответ, и он значит «читай системным голосом»: труба выключена, у языка нет
+  /// голоса в пакете, файлы ещё не догнали день, или сервер этого поля не знает.
+  List<({String text, String url})> get lineAudio => const [];
 }
 
 /// ONE SCENE'S CONVERSATION — the dialogue screen's whole input beside the sitting's own tasks.
@@ -919,6 +925,7 @@ class PlanDialogueTurn {
     required this.text,
     this.translation,
     this.shelf,
+    this.audioUrl,
   });
 
   /// `role` — the other person speaks; `you` — the learner's move.
@@ -928,6 +935,9 @@ class PlanDialogueTurn {
   final String? translation;
   final String? shelf;
 
+  /// СЕРВЕРНАЯ ОЗВУЧКА этой реплики, или null — «файла нет, читай системным голосом» (наряд TTS-1).
+  final String? audioUrl;
+
   bool get isRole => turn == 'role';
 
   factory PlanDialogueTurn.fromJson(Map<String, dynamic> j) => PlanDialogueTurn(
@@ -936,6 +946,7 @@ class PlanDialogueTurn {
     text: (j['text'] as String?) ?? '',
     translation: (j['translation'] as String?),
     shelf: j['shelf'] as String?,
+    audioUrl: j['audio_url'] as String?,
   );
 }
 

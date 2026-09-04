@@ -5906,6 +5906,54 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Поставить дату'**
   String get planPreviewSetDate;
+
+  /// Dev-экран прослушки голосов (наряд TTS-1, Ч.2.4) и пункт в секции «Разработка».
+  ///
+  /// In ru, this message translates to:
+  /// **'Голоса реплик'**
+  String get devVoicesTitle;
+
+  /// Пояснение под заголовком дев-экрана голосов.
+  ///
+  /// In ru, this message translates to:
+  /// **'Одни и те же пять реплик qa-плана, прочитанные каждым кандидатом одним темпом. Слушайте на телефоне, а не в файлах: динамик и наушники решают больше, чем спектрограмма.'**
+  String get devVoicesLead;
+
+  /// Заголовок последнего блока — то, чем приложение читает сейчас.
+  ///
+  /// In ru, this message translates to:
+  /// **'Системный голос телефона'**
+  String get devVoicesSystem;
+
+  /// Подпись под системным голосом: он не файл, а живой синтез.
+  ///
+  /// In ru, this message translates to:
+  /// **'Играется вживую, темпом реплик. Голос — тот, что стоит в Настройках iOS; enhanced-голос надо скачать там же.'**
+  String get devVoicesSystemNote;
+
+  /// Цена озвучки всего плана этим голосом.
+  ///
+  /// In ru, this message translates to:
+  /// **'≈ {price} за план'**
+  String devVoicesPrice(String price);
+
+  /// Кнопка «проиграть все пять реплик подряд».
+  ///
+  /// In ru, this message translates to:
+  /// **'Подряд'**
+  String get devVoicesPlayAll;
+
+  /// Остановить проигрывание.
+  ///
+  /// In ru, this message translates to:
+  /// **'Стоп'**
+  String get devVoicesStop;
+
+  /// Метка у голоса, который предложен как фаворит. Решение — за владельцем.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фаворит сессии'**
+  String get devVoicesFavourite;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

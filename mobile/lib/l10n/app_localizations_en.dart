@@ -3904,4 +3904,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planPreviewSetDate => 'Set a date';
+
+  @override
+  String get devVoicesTitle => 'Line voices';
+
+  @override
+  String get devVoicesLead =>
+      'The same five lines of the qa plan, read by every candidate at one pace. Judge them on the phone rather than in the files: the speaker and the headphones decide more than a spectrogram.';
+
+  @override
+  String get devVoicesSystem => 'The phone\'s own voice';
+
+  @override
+  String get devVoicesSystemNote =>
+      'Spoken live, at the line tempo. The voice is whichever one iOS Settings has; an enhanced voice is downloaded there.';
+
+  @override
+  String devVoicesPrice(String price) {
+    return '≈ $price per plan';
+  }
+
+  @override
+  String get devVoicesPlayAll => 'All five';
+
+  @override
+  String get devVoicesStop => 'Stop';
+
+  @override
+  String get devVoicesFavourite => 'This session\'s favourite';
 }

@@ -13,6 +13,7 @@ import 'config.dart';
 import 'device_timezone.dart';
 import 'exposure_sync.dart';
 import 'generation_controller.dart';
+import 'line_audio.dart';
 import '../features/daily/word_challenge.dart';
 import '../features/daily/word_challenge_store.dart';
 import 'local/app_database.dart';
@@ -81,6 +82,18 @@ final connectivityProvider = StreamProvider<bool>((ref) async* {
 
 /// Per-user monotonic sequence counters (triage / review), persisted in the keychain
 /// separately from the durable queues so they survive a queue clear.
+/// СЕРВЕРНАЯ ОЗВУЧКА РЕПЛИК — один кэш на приложение (наряд TTS-1).
+///
+/// Один, потому что манифест на диске один: два объекта, пишущих его порознь, — это две карты,
+/// которые однажды разойдутся. Экземпляр поднимает манифест сразу, чтобы повторный вход в день
+/// работал без сети — реплики, скачанные вчера, уже известны к первому кадру.
+final lineAudioCacheProvider = Provider<LineAudioCache>((ref) {
+  final cache = LineAudioCache();
+  unawaited(cache.load());
+
+  return cache;
+});
+
 final seqCounterProvider = Provider<SeqCounter>((ref) => SeqCounter());
 
 /// The durable review queue lives in the local DB, not the Keychain (F20-r2) — an append is one

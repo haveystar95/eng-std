@@ -68,6 +68,11 @@ class PlanDialogueShell extends StatefulWidget {
   /// (без „тишины вместо голоса“)». False draws кадр DL·08 instead of the bubble: the line is not
   /// offered, the options are not asked for, and nothing promises when it will be — the time is not
   /// known, so no countdown is printed.
+  ///
+  /// Two things have to be true for it, and the session answers both: the speech ENGINE is up, and
+  /// THIS line's audio has arrived if the server has one for it (наряд TTS-1, Ч.2.1). A line the
+  /// server does not voice is ready the moment the engine is — it was always going to be read by
+  /// the phone, and there is nothing to wait for.
   final bool voiceReady;
 
   /// The plan's five rescue phrases — кадр DL·09. Empty when the sitting has no warm-up in it.
@@ -75,6 +80,23 @@ class PlanDialogueShell extends StatefulWidget {
 
   /// Term ids the learner has already answered in this conversation — the «сказано вслух» mark.
   final Set<String> answeredAloud;
+
+  /// THE ROLE LINE THE CARD AT [turnIndex] ANSWERS — the live bubble above it, or null.
+  ///
+  /// Only when the card at the front is the learner's turn. When the card IS the role turn, the
+  /// card itself is the bubble (`situational_hear` plays the line and asks what it meant), and a
+  /// second bubble above it would be the same line twice.
+  ///
+  /// Static and public because the SESSION also has to answer it: «озвучка готова» is a fact about
+  /// the line that is about to sound, not about the engine (наряд TTS-1), and the screen deciding
+  /// that separately from the shell drawing it is two answers to one question.
+  static PlanDialogueTurn? liveRoleTurnOf(PlanDialogue dialogue, int turnIndex) {
+    if (turnIndex <= 0 || turnIndex >= dialogue.turns.length) return null;
+    if (dialogue.turns[turnIndex].isRole) return null;
+    final previous = dialogue.turns[turnIndex - 1];
+
+    return previous.isRole ? previous : null;
+  }
 
   @override
   State<PlanDialogueShell> createState() => _PlanDialogueShellState();
@@ -113,19 +135,8 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
     widget.onSpeak(turn.text);
   }
 
-  /// The role line THIS card answers — drawn as the live bubble above it.
-  ///
-  /// Only when the card at the front is the learner's turn. When the card IS the role turn, the
-  /// card itself is the bubble (`situational_hear` plays the line and asks what it meant), and a
-  /// second bubble above it would be the same line twice.
-  PlanDialogueTurn? get _liveRoleTurn {
-    final i = widget.turnIndex;
-    if (i <= 0 || i >= widget.dialogue.turns.length) return null;
-    if (widget.dialogue.turns[i].isRole) return null;
-    final previous = widget.dialogue.turns[i - 1];
-
-    return previous.isRole ? previous : null;
-  }
+  PlanDialogueTurn? get _liveRoleTurn =>
+      PlanDialogueShell.liveRoleTurnOf(widget.dialogue, widget.turnIndex);
 
   /// How many turns of the feed stand behind the current exchange.
   int get _feedEnd {
@@ -149,6 +160,7 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
           exchange: _exchangeNumber,
           exchanges: widget.dialogue.exchanges,
           rescue: widget.rescue,
+          onSpeak: widget.onSpeak,
         ),
         const SizedBox(height: AppSpacing.s16),
         // THE FEED — everything already spoken, quieter and smaller the further back it is. The
@@ -207,10 +219,12 @@ class _DialogueBar extends StatelessWidget {
     required this.exchange,
     required this.exchanges,
     required this.rescue,
+    required this.onSpeak,
   });
 
   final int scene, exchange, exchanges;
   final List<({String text, String? translation})> rescue;
+  final void Function(String text) onSpeak;
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +239,7 @@ class _DialogueBar extends StatelessWidget {
         ),
         if (rescue.isNotEmpty) ...[
           const SizedBox(width: AppSpacing.s8),
-          _RescueButton(rescue: rescue),
+          _RescueButton(rescue: rescue, onSpeak: onSpeak),
         ],
       ],
     );
@@ -234,9 +248,10 @@ class _DialogueBar extends StatelessWidget {
 
 /// «Спасатели» — brass, never terracotta: it is a means to hand, not the step being asked for.
 class _RescueButton extends StatelessWidget {
-  const _RescueButton({required this.rescue});
+  const _RescueButton({required this.rescue, required this.onSpeak});
 
   final List<({String text, String? translation})> rescue;
+  final void Function(String text) onSpeak;
 
   @override
   Widget build(BuildContext context) {
@@ -250,7 +265,7 @@ class _RescueButton extends StatelessWidget {
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
-          builder: (_) => PlanRescueSheet(rescue: rescue),
+          builder: (_) => PlanRescueSheet(rescue: rescue, onSpeak: onSpeak),
         );
       },
       child: Container(
@@ -281,9 +296,15 @@ class _RescueButton extends StatelessWidget {
 /// the way out as the thing to do would be the app answering for them. The note says out loud that
 /// using one is not a mistake — канон §8, «их использование не ошибка, а нормальный ход».
 class PlanRescueSheet extends StatelessWidget {
-  const PlanRescueSheet({super.key, required this.rescue});
+  const PlanRescueSheet({super.key, required this.rescue, this.onSpeak});
 
   final List<({String text, String? translation})> rescue;
+
+  /// Say one of them out loud. THE SAME VOICE AS THE CONVERSATION, and that is the point of routing
+  /// it through the session rather than through a pronouncer of the sheet's own (наряд TTS-1): a
+  /// rescue phrase is trained in the warm-up, shown here, and read again on the cheat sheet, and
+  /// three voices for one phrase would be three phrases for the ear.
+  final void Function(String text)? onSpeak;
 
   @override
   Widget build(BuildContext context) {
@@ -314,12 +335,43 @@ class PlanRescueSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.s12),
             for (final phrase in rescue) ...[
-              Text(phrase.text, style: AppText.collectionNameCard.copyWith(fontSize: 17, height: 1.35)),
-              if ((phrase.translation ?? '').isNotEmpty)
-                Text(
-                  phrase.translation!,
-                  style: AppText.translation.copyWith(fontSize: 13.5, color: AppColors.secondary),
+              InkWell(
+                onTap: onSpeak == null
+                    ? null
+                    : () {
+                        AppHaptics.light();
+                        onSpeak!(phrase.text);
+                      },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              phrase.text,
+                              style: AppText.collectionNameCard.copyWith(fontSize: 17, height: 1.35),
+                            ),
+                            if ((phrase.translation ?? '').isNotEmpty)
+                              Text(
+                                phrase.translation!,
+                                style: AppText.translation
+                                    .copyWith(fontSize: 13.5, color: AppColors.secondary),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (onSpeak != null) ...[
+                        const SizedBox(width: AppSpacing.s12),
+                        const Icon(LucideIcons.volume2, size: 16, color: AppColors.brassInk),
+                      ],
+                    ],
+                  ),
                 ),
+              ),
               const SizedBox(height: 12),
             ],
             Text(

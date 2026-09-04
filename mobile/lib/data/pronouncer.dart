@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show debugPrint, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_tts/flutter_tts.dart';
 
+import 'line_audio.dart';
 import 'models.dart';
 import 'languages.dart';
 
@@ -8,14 +9,28 @@ import 'languages.dart';
 ///
 /// System TTS is the default: it is free, offline (so a session works with no
 /// network), instant, and covers 100% of terms — including user words that will
-/// never have server audio. `audioUrl` is an optional override, applied
-/// point-wise only where it pays off (curated phrases, hard pronunciations);
-/// `ttsHint` fixes the most common system-synth misreadings ("ATM" → "A T M")
-/// without generating any audio.
+/// never have server audio. `ttsHint` fixes the most common system-synth
+/// misreadings ("ATM" → "A T M") without generating any audio.
+///
+/// ОДНО ИСКЛЮЧЕНИЕ, и оно про реплики сцены (наряд TTS-1). Реплика собеседника,
+/// спасатель и такт 1 диалога стоят на СЛУШАНИИ: их не читают глазами, их
+/// понимают на слух, и системный синтез на них слышно (канон
+/// `../backend2/docs/plan-dialogue.md` §7). У них есть файл, сделанный сервером
+/// заранее, — [LineAudioCache] знает какой, и [speakText] играет его. Всё
+/// остальное — слова, связки, поиск, коллекции — как было.
 class Pronouncer {
-  Pronouncer([FlutterTts? tts]) : _tts = tts ?? FlutterTts();
+  Pronouncer([FlutterTts? tts, LineAudioCache? lines]) : _tts = tts ?? FlutterTts(), _lines = lines;
 
   final FlutterTts _tts;
+
+  /// СЕРВЕРНАЯ ОЗВУЧКА РЕПЛИК, если труба включена (наряд TTS-1). Null — приложение говорит ровно
+  /// как до наряда, одним системным синтезом.
+  ///
+  /// Кэш стоит ЗДЕСЬ, а не на экранах, потому что здесь единственное место, через которое проходит
+  /// каждое произнесение: пузырь диалога, кнопка повтора, панель спасателей, шпаргалка, разогрев и
+  /// интро-карточка зовут один и тот же `speak`. Развести их по вызывающим значило бы шесть раз
+  /// написать одно правило и один раз забыть.
+  final LineAudioCache? _lines;
   bool _audioSessionReady = false;
   // Cache what we've already pushed to the engine so a repeat speak() is ONE platform-channel call
   // (speak) instead of three (setLanguage + setSpeechRate + speak). The redundant round-trips were a
@@ -35,6 +50,19 @@ class Pronouncer {
   /// «замедленно» replay — a beat slower so a learner can catch each sound (кадр 12g/12h).
   static const double _rateNormal = 0.45;
   static const double _rateSlow = 0.30;
+
+  /// ТЕМП РЕПЛИК — своя ручка, ниже темпа слов (канон §7: «темп реплик ниже темпа слов»).
+  ///
+  /// Отдельная константа, а не `_rateSlow`: медленный повтор — это ЖЕСТ («ещё раз, помедленнее»),
+  /// а это ОБЫЧНАЯ скорость целого яруса. Слово живёт секунду и произносится в вакууме; реплика в
+  /// восемь слов на той же скорости проезжает мимо уха целиком, и первое, что теряется, — конец
+  /// вопроса, то есть ровно то, что надо было расслышать.
+  ///
+  /// 0.38 против 0.45 у слов — примерно −15 % темпа. Цифра выбрана по замеру Ч.0.3: серверные
+  /// файлы читаются со скоростью ~11 знаков в секунду против ~15 у системного голоса на 0.45, и
+  /// эта ручка сближает системный путь с серверным, чтобы переключение трубы не меняло ощущение
+  /// урока. Для серверных файлов темп заложен ПРИ ГЕНЕРАЦИИ и здесь не участвует.
+  static const double _rateLine = 0.38;
 
   /// Open the iOS audio session ONCE for the whole training session and push the engine's language
   /// and rate before any card needs them.
@@ -90,21 +118,48 @@ class Pronouncer {
     _lastSpokeAt = DateTime.now();
   }
 
-  /// audio_url != null → play the file; audio_url == null → system TTS. [slow] drops the rate for a
-  /// deliberate, easier-to-parse replay (listening exercise).
-  Future<void> speak(Word word, {required String targetLang, bool slow = false}) async {
-    if (word.audioUrl != null) {
-      // TODO(audio-override): play the remote file once an audio player package
-      // is added. No term carries audio_url yet (server audio is deferred), so
-      // this falls through to system TTS and every term stays audible.
+  /// Say a card's term. [slow] drops the rate for a deliberate, easier-to-parse replay (listening
+  /// exercise). Goes through [speakText] so a card whose term IS a scene's line gets the same file
+  /// the conversation plays — one line, one voice, whichever screen asks for it.
+  Future<void> speak(Word word, {required String targetLang, bool slow = false}) =>
+      speakText(word.ttsHint ?? word.term, targetLang: targetLang, slow: slow);
+
+  /// Say [text] — a line of a scene from its own file when there is one, and the system voice
+  /// everywhere else.
+  ///
+  /// ONE method, and the branch inside it is the whole of наряд TTS-1's Ч.2.2. Which path a string
+  /// takes is decided by the CACHE and not by the caller: a caller that had to know would be a
+  /// caller that can be wrong, and there are six of them.
+  Future<void> speakText(String text, {required String targetLang, bool slow = false}) async {
+    final line = text.trim();
+    if (line.isEmpty) return;
+
+    final lines = _lines;
+    if (lines != null && !slow && await lines.play(line)) {
+      // Файл этой реплики уже на диске: играем ЕГО. Темп в нём заложен при генерации, поэтому
+      // ускорять и замедлять нечего — и кнопка повтора играет ровно тот же файл, мгновенно.
+      _lastSpokeAt = DateTime.now();
+
+      return;
     }
+
+    await _speakWithEngine(line, targetLang: targetLang, slow: slow, isLine: lines?.knows(line) ?? false);
+  }
+
+  Future<void> _speakWithEngine(
+    String line, {
+    required String targetLang,
+    required bool slow,
+    required bool isLine,
+  }) async {
     await _configureIosAudioSession();
     // Interrupt any still-playing utterance instead of queueing behind it — a growing TTS queue was
     // a per-card platform-thread load that got worse through a session (F20). This is
     // `stopSpeaking(.immediate)`, which raises `didCancel`, NOT `didFinish` — so it never trips the
     // session teardown that [warmUp] disables.
     await _tts.stop();
-    final rate = slow ? _rateSlow : _rateNormal;
+    // Три темпа, не два: слово, реплика и замедленный повтор — разные вещи (see [_rateLine]).
+    final rate = slow ? _rateSlow : (isLine ? _rateLine : _rateNormal);
     // Only touch the engine when a setting actually changes — otherwise speak() is one channel call,
     // not three, so it stops stalling the card transition (F20).
     await _applyLocale(ttsLocaleFor(targetLang));
@@ -113,30 +168,6 @@ class Pronouncer {
       await _tts.setSpeechRate(rate);
     }
     // Queued BEFORE the word, so a cold route wakes up during silence rather than mid-syllable.
-    await _wakeRoute();
-    await _tts.speak(word.ttsHint ?? word.term);
-    _lastSpokeAt = DateTime.now();
-  }
-
-  /// The same voice, for a line that is not a [Word] — the entry's listening warm-up (кадр V4·03б).
-  ///
-  /// Its three lines exist for one minute, are never stored and never become terms, so wrapping
-  /// them in a `Word` to be allowed to speak them would be inventing a card to play a sound. Every
-  /// engine setting below is [speak]'s, in [speak]'s order, because the reasons for them (the iOS
-  /// audio session, the immediate stop, the cold-route wake-up) are about the ENGINE and have
-  /// nothing to do with where the text came from.
-  Future<void> speakText(String text, {required String targetLang, bool slow = false}) async {
-    final line = text.trim();
-    if (line.isEmpty) return;
-
-    await _configureIosAudioSession();
-    await _tts.stop();
-    final rate = slow ? _rateSlow : _rateNormal;
-    await _applyLocale(ttsLocaleFor(targetLang));
-    if (_lastRate != rate) {
-      _lastRate = rate;
-      await _tts.setSpeechRate(rate);
-    }
     await _wakeRoute();
     await _tts.speak(line);
     _lastSpokeAt = DateTime.now();
@@ -192,13 +223,23 @@ class Pronouncer {
     }
   }
 
-  Future<void> stop() => _tts.stop();
+  /// Silence whatever is sounding — the synthesiser FIRST.
+  ///
+  /// Order matters and it is not stylistic: «Дальше» must cut the engine in the same turn of the
+  /// event loop it is tapped in (QA-21, and its test pins the flutter_tts channel call). Awaiting
+  /// the file player first pushes `stop` past a microtask, and the word carries over the slide onto
+  /// the next card again.
+  Future<void> stop() async {
+    final stopping = _tts.stop();
+    await _lines?.stop();
+    await stopping;
+  }
 
   /// Give the audio session back when the training session ends. This is the one place the
   /// expensive `setActive(false)` runs — on a screen the user is already leaving, where a stall
   /// costs nothing — instead of after every spoken word.
   Future<void> release() async {
-    await _tts.stop();
+    await stop();
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       _audioSessionReady = false;
       // Hand the plugin back to its DEFAULT self-deactivating behaviour BEFORE dropping the

@@ -9,6 +9,7 @@
 /// The wire shapes are `backend2`'s `PlanResource` / `PlanSessionResource`, field for field.
 library;
 
+import 'line_audio.dart';
 import 'models.dart'
     show ExerciseMode, PlanDialogue, PlanSessionEnvelope, PlanSituation, SessionCard, StudySession;
 
@@ -544,6 +545,7 @@ class PlanTermRow {
     this.speaker,
     this.shelf,
     this.tier,
+    this.audioUrl,
   });
 
   /// The shelves of a scene, as the server names them (канон §2). `numbers` is stored and not yet
@@ -607,6 +609,10 @@ class PlanTermRow {
   /// `speak` | `understand` — the ladder this term climbs, or null outside a scene.
   final String? tier;
 
+  /// СЕРВЕРНАЯ ОЗВУЧКА реплики, или null — «файла нет» (наряд TTS-1). Шпаргалка играет ТОТ ЖЕ файл,
+  /// что и разговор: два голоса на одну реплику — это две разные реплики для уха.
+  final String? audioUrl;
+
   /// Something to UNDERSTAND, never something to say — see [isRoleLine] for the older half of it.
   ///
   /// The shelf decides the tier structurally (канон §3), so the server answers it and the client
@@ -627,6 +633,7 @@ class PlanTermRow {
     fromDayIndex: (j['from_day_index'] as num?)?.toInt() ?? 0,
     shelf: j['shelf'] as String?,
     tier: j['tier'] as String?,
+    audioUrl: j['audio_url'] as String?,
   );
 }
 
@@ -880,6 +887,7 @@ class PlanSession implements PlanSessionEnvelope {
     required this.tasks,
     this.sittings = const [],
     this.dialogues = const [],
+    this.lineAudio = const [],
     this.raw = const {},
   });
 
@@ -920,6 +928,17 @@ class PlanSession implements PlanSessionEnvelope {
   /// card, exactly as it was.
   @override
   final List<PlanDialogue> dialogues;
+
+  /// ВСЯ ОЗВУЧКА ЭТОЙ ПОСАДКИ, парами «текст → файл» (наряд TTS-1, Ч.2.1).
+  ///
+  /// Списком, а не полем на задаче, потому что качается она ЦЕЛИКОМ на входе в день: реплики
+  /// второго присеста готовы к его началу, а не к моменту, когда до них дошла лента; спасателей
+  /// сегодня может не быть ни на одной карточке, а панель и разогрев их всё равно произносят.
+  ///
+  /// Пусто — законный ответ: труба выключена, у языка нет голоса в пакете, или файлы ещё не догнали
+  /// день. Во всех трёх случаях реплики звучат системным синтезом, как звучали до наряда.
+  @override
+  final List<LineAudioRef> lineAudio;
 
   /// The conversation of the scene taught on `dayIndex`, or null when this sitting has none.
   PlanDialogue? dialogueForDay(int dayIndex) {
@@ -1022,6 +1041,11 @@ class PlanSession implements PlanSessionEnvelope {
         .whereType<Map<String, dynamic>>()
         .map(PlanDialogue.fromJson)
         .whereType<PlanDialogue>()
+        .toList(growable: false),
+    lineAudio: ((j['line_audio'] as List?) ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map((e) => (text: (e['text'] as String?) ?? '', url: (e['url'] as String?) ?? ''))
+        .where((e) => e.text.isNotEmpty && e.url.isNotEmpty)
         .toList(growable: false),
     raw: j,
   );

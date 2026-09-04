@@ -1,4 +1,5 @@
 import AudioToolbox
+import AVFoundation
 import Flutter
 import UIKit
 
@@ -26,6 +27,67 @@ import UIKit
     // `applicationRegistrar` is the app's own registrar (as opposed to a per-plugin one) — this is
     // an application-level channel, not a plugin, so that is the right messenger to hang it on.
     registerFeedbackSoundChannel(engineBridge.applicationRegistrar.messenger())
+    registerLineAudioChannel(engineBridge.applicationRegistrar.messenger())
+  }
+
+  /// ОЗВУЧКА РЕПЛИКИ, сделанная сервером заранее (наряд TTS-1) — см. `lib/data/line_audio.dart`.
+  ///
+  /// Почему снова нативный канал, а не пакет-плеер: тот же довод, что и у звука вердикта выше, плюс
+  /// один новый. Тренажёр весь стоит на `AVSpeechSynthesizer`, который держит СВОЮ аудиосессию
+  /// (`playback` + `mixWithOthers`, поднятую один раз на всю посадку в `Pronouncer.warmUp`), и
+  /// пакет-плеер поднял бы вторую — со своими категориями, своим временем жизни и своей манерой
+  /// деактивировать сессию после каждого файла. Ровно эта деактивация уже стоила проекта ~600 мс
+  /// заморозки на каждом произнесённом слове (F20). `AVAudioPlayer` без единой настройки сессии
+  /// играет в ТУ ЖЕ сессию, которую поднял синтезатор, и делить им нечего.
+  ///
+  /// Плеер один и переиспользуется: реплики звучат по одной, а вторая начатая перебивает первую —
+  /// то же поведение, что и `Pronouncer.stop()` перед каждой фразой.
+  private var linePlayer: AVAudioPlayer?
+
+  private func registerLineAudioChannel(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "com.denis.engstd/line_audio", binaryMessenger: messenger)
+
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(FlutterError(code: "gone", message: "no app delegate", details: nil))
+        return
+      }
+
+      switch call.method {
+      case "stop":
+        self.linePlayer?.stop()
+        self.linePlayer = nil
+        result(nil)
+
+      case "play":
+        guard let path = (call.arguments as? [String: Any])?["path"] as? String else {
+          result(FlutterError(code: "bad_args", message: "expected a `path`", details: nil))
+          return
+        }
+        // Путь приходит ИЗ НАШЕГО кэша, который эта же сборка и наполняет (файлы лежат в Application
+        // Support). Проверка на существование — не безопасность, а честный ответ: файла может не
+        // быть после чистки диска, и тогда Dart играет системным голосом вместо тишины.
+        guard FileManager.default.fileExists(atPath: path) else {
+          result(FlutterError(code: "no_file", message: "no audio at \(path)", details: nil))
+          return
+        }
+
+        do {
+          self.linePlayer?.stop()
+          let player = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
+          self.linePlayer = player
+          player.prepareToPlay()
+          player.play()
+          result(nil)
+        } catch {
+          result(FlutterError(code: "play_failed", message: error.localizedDescription, details: nil))
+        }
+
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
   }
 
   /// `AppFeedback`'s side of the verdict sound — see `lib/theme/feedback.dart`.

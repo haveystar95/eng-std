@@ -14,6 +14,7 @@ import '../../data/pronouncer.dart';
 import '../../data/api_client.dart';
 import '../../data/app_settings.dart';
 import '../../data/languages.dart';
+import '../../data/line_audio.dart';
 import '../../data/models.dart';
 import '../../data/perf_log.dart';
 // For the shelf names alone — the session plays a plan's cards through the envelope in
@@ -271,7 +272,13 @@ class _SessionShell extends ConsumerStatefulWidget {
 }
 
 class _SessionShellState extends ConsumerState<_SessionShell> {
-  final _pronouncer = Pronouncer();
+  /// The one voice of the sitting — see [Pronouncer]. Built with the line cache so a reply of the
+  /// scene is played from its own file and everything else keeps the system synthesiser
+  /// (наряд TTS-1, Ч.2.2).
+  late final Pronouncer _pronouncer;
+
+  /// СЕРВЕРНАЯ ОЗВУЧКА РЕПЛИК этой посадки.
+  late final LineAudioCache _lineAudio;
   final _scroll = ScrollController();
   int _pos = 0;
   bool _finished = false;
@@ -322,6 +329,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   void initState() {
     super.initState();
     PerfLog.instance.screen = 'session'; // stall monitor: which screen a hitch belongs to
+    _lineAudio = ref.read(lineAudioCacheProvider);
+    _pronouncer = Pronouncer(null, _lineAudio);
+    unawaited(_preloadVoices());
     // Raise the iOS audio session and prime the synthesizer ONCE, behind the loading spinner —
     // never on the first listening card, whose whole content is the sound (F20-r).
     // The pairs are not resolved yet, so this primes the engine with the session's fallback; every
@@ -354,6 +364,30 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     );
     unawaited(_restoreSitting());
   }
+
+  /// ДОКАЧКА ОЗВУЧКИ ВСЕЙ ПОСАДКИ — вход в день, один залп, в фоне (наряд TTS-1, Ч.2.1).
+  ///
+  /// Всей, а не «до первой карточки»: реплики ВТОРОГО присеста обязаны быть готовы к его началу, а
+  /// спасателей сегодня может не быть ни на одной карточке, хотя панель и разогрев их произносят.
+  /// Пейлоад отдаёт весь список парами «текст → файл» именно для этого.
+  ///
+  /// Ничего не ждёт и ничего не блокирует: экран уже нарисован, а «Готовим озвучку» стоит ровно над
+  /// той репликой, чей файл ещё не приехал ([_voiceReadyFor]). Уже скачанное живёт между сессиями,
+  /// поэтому повторный вход в тот же день не ходит в сеть вообще.
+  Future<void> _preloadVoices() async {
+    final lines = widget.session.plan?.lineAudio ?? const <LineAudioRef>[];
+    if (lines.isEmpty) return;
+
+    await _lineAudio.preload(lines, bearer: ref.read(tokenStoreProvider).current);
+    if (mounted) setState(() {});
+  }
+
+  /// Можно ли подавать ЭТУ строку на слух: движок поднят, и её файл приехал, если он вообще есть.
+  ///
+  /// Строка, которую сервер не озвучивает, готова вместе с движком — её всегда собирался читать
+  /// телефон, и ждать ей нечего.
+  bool _voiceReadyFor(String? text) =>
+      _voiceWarm && (text == null || _lineAudio.isReady(text));
 
   /// PICK THE SITTING BACK UP where it was left (Ч-6).
   ///
@@ -1229,7 +1263,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                           turnIndex: _dialogueHere!.turns.indexWhere(
                             (t) => t.termId == _card.termId,
                           ),
-                          voiceReady: _voiceWarm,
+                          voiceReady: _voiceReadyFor(
+                            PlanDialogueShell.liveRoleTurnOf(
+                              _dialogueHere!,
+                              _dialogueHere!.turns.indexWhere((t) => t.termId == _card.termId),
+                            )?.text,
+                          ),
                           onSpeak: (text) => unawaited(
                             _pronouncer.speakText(text, targetLang: _sessionLang),
                           ),

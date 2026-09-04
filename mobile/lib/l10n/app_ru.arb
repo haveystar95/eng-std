@@ -2898,6 +2898,23 @@
   "planPreviewEditAnswers": "Изменить ответы",
   "@planPreviewEditAnswers": { "description": "Вторая кнопка превью с датой." },
   "planPreviewSetDate": "Поставить дату",
-  "@planPreviewSetDate": { "description": "Вторая кнопка превью без даты — единственное, чего плану не хватает." }
+  "@planPreviewSetDate": { "description": "Вторая кнопка превью без даты — единственное, чего плану не хватает." },
+
+  "devVoicesTitle": "Голоса реплик",
+  "@devVoicesTitle": { "description": "Dev-экран прослушки голосов (наряд TTS-1, Ч.2.4) и пункт в секции «Разработка»." },
+  "devVoicesLead": "Одни и те же пять реплик qa-плана, прочитанные каждым кандидатом одним темпом. Слушайте на телефоне, а не в файлах: динамик и наушники решают больше, чем спектрограмма.",
+  "@devVoicesLead": { "description": "Пояснение под заголовком дев-экрана голосов." },
+  "devVoicesSystem": "Системный голос телефона",
+  "@devVoicesSystem": { "description": "Заголовок последнего блока — то, чем приложение читает сейчас." },
+  "devVoicesSystemNote": "Играется вживую, темпом реплик. Голос — тот, что стоит в Настройках iOS; enhanced-голос надо скачать там же.",
+  "@devVoicesSystemNote": { "description": "Подпись под системным голосом: он не файл, а живой синтез." },
+  "devVoicesPrice": "≈ {price} за план",
+  "@devVoicesPrice": { "description": "Цена озвучки всего плана этим голосом.", "placeholders": { "price": { "type": "String" } } },
+  "devVoicesPlayAll": "Подряд",
+  "@devVoicesPlayAll": { "description": "Кнопка «проиграть все пять реплик подряд»." },
+  "devVoicesStop": "Стоп",
+  "@devVoicesStop": { "description": "Остановить проигрывание." },
+  "devVoicesFavourite": "Фаворит сессии",
+  "@devVoicesFavourite": { "description": "Метка у голоса, который предложен как фаворит. Решение — за владельцем." }
 
 }

@@ -159,6 +159,8 @@ class _Envelope implements PlanSessionEnvelope {
   final List<String?> kinds;
 
   @override
+  List<({String text, String url})> get lineAudio => const [];
+  @override
   String get planId => '01PLAN';
   @override
   int get dayIndex => 1;

@@ -1300,6 +1300,15 @@
   "planPreviewStartDay": "Start the first day",
   "planPreviewStartScene": "Start the first scene",
   "planPreviewEditAnswers": "Change my answers",
-  "planPreviewSetDate": "Set a date"
+  "planPreviewSetDate": "Set a date",
+
+  "devVoicesTitle": "Line voices",
+  "devVoicesLead": "The same five lines of the qa plan, read by every candidate at one pace. Judge them on the phone rather than in the files: the speaker and the headphones decide more than a spectrogram.",
+  "devVoicesSystem": "The phone's own voice",
+  "devVoicesSystemNote": "Spoken live, at the line tempo. The voice is whichever one iOS Settings has; an enhanced voice is downloaded there.",
+  "devVoicesPrice": "≈ {price} per plan",
+  "devVoicesPlayAll": "All five",
+  "devVoicesStop": "Stop",
+  "devVoicesFavourite": "This session's favourite"
 
 }

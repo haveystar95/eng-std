@@ -4073,4 +4073,32 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planPreviewSetDate => 'Поставить дату';
+
+  @override
+  String get devVoicesTitle => 'Голоса реплик';
+
+  @override
+  String get devVoicesLead =>
+      'Одни и те же пять реплик qa-плана, прочитанные каждым кандидатом одним темпом. Слушайте на телефоне, а не в файлах: динамик и наушники решают больше, чем спектрограмма.';
+
+  @override
+  String get devVoicesSystem => 'Системный голос телефона';
+
+  @override
+  String get devVoicesSystemNote =>
+      'Играется вживую, темпом реплик. Голос — тот, что стоит в Настройках iOS; enhanced-голос надо скачать там же.';
+
+  @override
+  String devVoicesPrice(String price) {
+    return '≈ $price за план';
+  }
+
+  @override
+  String get devVoicesPlayAll => 'Подряд';
+
+  @override
+  String get devVoicesStop => 'Стоп';
+
+  @override
+  String get devVoicesFavourite => 'Фаворит сессии';
 }

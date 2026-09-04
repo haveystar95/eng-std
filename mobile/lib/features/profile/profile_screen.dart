@@ -18,6 +18,7 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
 import 'perf_log_screen.dart';
+import 'voice_bakeoff_screen.dart';
 import '../../data/local/cached_image_provider.dart';
 
 /// Профиль (кадры 11a / 13a). Sections: обучение · приложение · подписка · аккаунт. Reads local
@@ -656,9 +657,17 @@ class _DevFlags extends ConsumerWidget {
         // On-device stall monitor, off by default — the release build has no console to read.
         _ChevronRow(
           label: l.perfMonitorTitle,
-          last: true,
           onTap: () =>
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PerfLogScreen())),
+        ),
+        // ГОЛОСА РЕПЛИК (наряд TTS-1, Ч.2.4). Дверь стоит здесь, а не за длинным тапом: дев-секция
+        // и есть заведённая дев-дверь этого приложения, и второй способ войти в одно и то же — это
+        // второе место, где чинить одну и ту же поломку.
+        _ChevronRow(
+          label: l.devVoicesTitle,
+          last: true,
+          onTap: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const VoiceBakeoffScreen())),
         ),
       ],
     );
