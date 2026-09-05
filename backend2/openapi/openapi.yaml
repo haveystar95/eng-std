@@ -2064,6 +2064,137 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such plan for this learner }
 
+  /plans/{planId}/session:
+    post:
+      tags: [Plans]
+      summary: Today's sitting of this plan
+      description: >-
+        THE DAY, ASSEMBLED. A self-contained package like `POST /study/sessions`, plus the plan's own
+        envelope around every card: which stage this is, where in the stage, which day the card came
+        from, what part of the sitting it belongs to and how strict the learner's own turn is.
+
+        Two shapes on purpose. Without a day index the server answers with the day the learner is
+        actually ON — the focus is the server's to know, so it must be askable without recomputing it
+        on the device. With one, the client names the day it is showing.
+
+        The CONVERSATIONS come whole (`dialogues`), and they are longer than the task list: the
+        screen plays the scene from its first line and hands the learner a move only where a task
+        with the same `term_id` exists.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PlanSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan or day for this learner }
+
+  /plans/{planId}/days/{dayIndex}/session:
+    post:
+      tags: [Plans]
+      summary: The sitting of one named day
+      description: 'The same package as `POST /plans/{planId}/session`, for the day the client names.'
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - name: dayIndex
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PlanSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan or day for this learner }
+
+  /plans/{planId}/scene-runs:
+    post:
+      tags: [Plans]
+      summary: A finished run of one scene — stage C, spoken
+      description: >-
+        THE LAST RUNG OF THE LADDER, reported once per finished run (наряд SCENE-RUN, Ч.2).
+
+        The client sends WHAT HAPPENED on each turn and no computed number at all. «Прошёл сам 2 из
+        4 · сразу 1» is what the learner is shown and what the scene's maturity is later read from,
+        and a number counted on the phone would be a second source of truth about what they achieved
+        — the first one that could disagree with the plan screen.
+
+        The ANSWERS of the run are not here: each turn has already travelled through
+        `POST /reviews/batch` as an ordinary review — said is `speaking`/good, skipped is
+        `speaking`/again, the same semantics as speaking a phrase. Sending them again would put one
+        answer into an append-only log twice.
+
+        Two rows are written, and they say different things: the run itself is an EVENT and is never
+        edited, while the (plan, term) pair keeps the BEST result — one run in which the learner was
+        tired does not take away a line they have already said aloud.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                scene_index:
+                  type: integer
+                  description: 'The scene that was run — the index of the day that introduced it.'
+                day_index:
+                  type: integer
+                  description: >-
+                    The day the run HAPPENED on. The same number as `scene_index` on an ordinary
+                    day and a different one on the last, where every scene is run in a row.
+                turns:
+                  type: array
+                  minItems: 1
+                  maxItems: 40
+                  items:
+                    type: object
+                    properties:
+                      term_id: { type: string }
+                      outcome:
+                        type: string
+                        enum: [said, said_fast, skipped, rescued]
+                        description: >-
+                          `said` — the line's key sounded in the learner's own voice; `said_fast` —
+                          and it sounded straight away (`plan.scene_run.fast_seconds`); `skipped` —
+                          «Пропустить», by hand or by the watchdog; `rescued` — the turn was made
+                          with a rescue phrase, which is not a mistake (канон §8) and not «сам».
+                    required: [term_id, outcome]
+              required: [scene_index, day_index, turns]
+      responses:
+        '201':
+          description: The run, as the server counted it
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      scene_index: { type: integer }
+                      day_index: { type: integer }
+                      total: { type: integer }
+                      said: { type: integer }
+                      said_fast: { type: integer }
+                      skipped: { type: integer }
+                      rescued: { type: integer }
+                    required: [scene_index, day_index, total, said, said_fast, skipped, rescued]
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
   /plans/{planId}/feedback:
     post:
       tags: [Plans]
@@ -2724,11 +2855,12 @@ components:
           minimum: 0
           maximum: 1
           description: >-
-            How ready the learner is, 0…1. v1a formula and deliberately a number that cannot
-            flatter: the checkpoint half needs the conversation (CONV-1) and contributes a literal
-            zero, and the term half is capped at 0.4 — its weight in the full formula. A learner
-            who has acquired every word of every day reads 0.4, not «готов». The number only ever
-            grows when the ladder ships; it never has to be taken back.
+            How ready the learner is, 0…1 — the share of SCENES they say themselves and say
+            straight away (канон §4, «C + скорость»; наряд SCENE-RUN, Ч.3). The unit of count is a
+            scene rather than a card, and that is the canon too: a conversation cannot be half
+            passed. The denominator is the scenes the plan set out to teach, not the ones already
+            written, so a new day never makes readiness fall (Д-31). NOT drawn as a percentage on
+            any plan screen — those speak in words; this is for the API and the admin panel.
         stage_census:
           type: object
           description: >-
@@ -2747,6 +2879,43 @@ components:
                 The second half matters on the day itself: the stage closes in the sitting and the
                 card only LEAVES A after the night.
           required: [total, stage_a_closed]
+        scenes:
+          type: array
+          description: >-
+            THE MATURITY OF EVERY SCENE, in three words, and the result of its last run (наряд
+            SCENE-RUN, Ч.3). The plan screen prints the word; the number lives in `readiness`.
+          items:
+            type: object
+            properties:
+              day_index: { type: integer, description: 'the day that introduced this scene' }
+              maturity:
+                type: string
+                enum: [met, applying, speaking]
+                description: >-
+                  «Познакомился → применяю → говорю сам» (`docs/plan-dialogue.md` §2). `speaking`
+                  means every turn of the scene has sounded in the learner's own voice during a
+                  run; a skipped turn and one made by a rescue phrase both leave the scene where it
+                  was. Read as an OPEN set — an unknown code should degrade to `met`.
+              ready:
+                type: boolean
+                description: >-
+                  «C + скорость»: the scene is `speaking` AND enough of its turns came straight
+                  away (`config/learning.php → plan.scene_run.ready_fast_share`). A scene said
+                  slowly is honest maturity and not yet readiness.
+              run:
+                type: [object, 'null']
+                description: >-
+                  The LAST run of this scene, or null if it has never been run. The last one and
+                  not the best one: this line describes a run the learner just finished, while
+                  «best ever» lives on the (plan, term) pair.
+                properties:
+                  total: { type: integer }
+                  said: { type: integer, description: 'turns the learner said in their own voice' }
+                  said_fast: { type: integer, description: 'of those, how many came straight away' }
+                  skipped: { type: integer }
+                  rescued: { type: integer, description: 'made with a rescue phrase — not a mistake, not «сам»' }
+                required: [total, said, said_fast, skipped, rescued]
+            required: [day_index, maturity, ready]
         entities:
           type: array
           description: >-
@@ -3239,6 +3408,144 @@ components:
         confirmed_count: { type: integer, description: "Proven by exercises (review, interval >= 21)" }
         familiar_count: { type: integer, description: Marked known (self-assessed) }
         in_progress_count: { type: integer, description: Started but not yet mastered }
+
+    PlanSession:
+      type: object
+      description: >-
+        One sitting of a plan day: the cards, the conversations they are played inside, and the
+        numbers the screen needs to draw itself honestly.
+      properties:
+        session_id: { type: string }
+        plan_id: { type: string }
+        day_index: { type: integer }
+        strict:
+          type: boolean
+          description: >-
+            FALSE only on the final day, whose sitting grades nothing and closes no stage: the plan
+            must not be able to go backwards on its last morning.
+        focus_day_index: { type: integer, description: 'the day the plan is actually on' }
+        knobs: { type: object, description: "the level's six knobs, as this sitting ran on them" }
+        day_task_count:
+          type: integer
+          description: >-
+            How many of the tasks are the DAY's own — what «N из N» counts. The warm-up and the seam
+            («Повторение · из прошлых дней») are outside it.
+        sittings:
+          type: array
+          items: { type: integer }
+          description: >-
+            ПРИСЕСТЫ: the task counts of each sitting, adding up to the number of tasks. The
+            learner's minutes are the length of ONE sitting, not a limit on the day, and the breaks
+            fall only on part boundaries — so a break can never land inside an exchange.
+        scene_run:
+          type: object
+          description: >-
+            THE SECONDS OF A SCENE RUN (наряд SCENE-RUN, Ч.2). On the wire rather than in the app's
+            own code: how long a person thinks is a product judgement, and it has to move without a
+            release. `config/learning.php → plan.scene_run`.
+          properties:
+            fast_seconds:
+              type: integer
+              description: 'from the microphone opening to the line''s key, for the turn to count as «сразу»'
+            listen_seconds: { type: integer, description: 'the watchdog: the screen makes the turn after this' }
+            skip_after_seconds: { type: integer, description: 'when «Пропустить» appears — before it is needed' }
+            turn_seconds: { type: integer, description: 'what one turn costs in the day''s minutes' }
+          required: [fast_seconds, listen_seconds, skip_after_seconds, turn_seconds]
+        dialogues:
+          type: array
+          description: 'One per scene this sitting reaches, whole, in the order the scene is spoken.'
+          items:
+            type: object
+            properties:
+              day_index: { type: integer }
+              scene_title: { type: [string, 'null'] }
+              scene_intro: { type: [string, 'null'], description: 'the вводка, on the support language' }
+              run_ready:
+                type: boolean
+                description: >-
+                  The scene has matured enough to be RUN — every turn of the learner's has passed
+                  stage B at least once. Always true for a scene whose run was actually dealt on an
+                  ordinary day; it becomes interesting on the LAST day, where every scene is run
+                  including the ones the ladder never reached, and the summary marks those rather
+                  than pretending they were like the others.
+              turns:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    turn: { type: string, enum: [role, you] }
+                    term_id: { type: string }
+                    text: { type: string }
+                    translation: { type: [string, 'null'] }
+                    shelf: { type: [string, 'null'] }
+                    audio_url:
+                      type: [string, 'null']
+                      description: 'null = no server file; read it with the phone''s own voice'
+                    level:
+                      type: [string, 'null']
+                      enum: [choose, assemble, say, null]
+                      description: >-
+                        HOW STRICT this turn of the learner's is (наряд SCENE-RUN). Rides on the
+                        chain and not only on the task, because the chain is longer than the task
+                        list and the feed is drawn ahead. Null on the interlocutor's line.
+                  required: [turn, term_id, text]
+        line_audio:
+          type: array
+          description: >-
+            Everything this sitting can play from a file, as «text → address» pairs, so the phone
+            downloads the whole day on entry rather than card by card. An empty list is a legitimate
+            answer and means «read it with the phone's own voice».
+          items:
+            type: object
+            properties:
+              term_id: { type: string }
+              text: { type: string }
+              url: { type: [string, 'null'] }
+        tasks:
+          type: array
+          items:
+            type: object
+            properties:
+              stage: { type: [string, 'null'], enum: [a, b, c, null] }
+              section:
+                type: string
+                enum: [warmup, day, review]
+                description: 'ARITHMETIC: which side of the seam, and therefore whether it counts towards the day.'
+              section_code:
+                type: string
+                enum: [warmup, words, dialogue_intro, dialogue, numbers, scene_run, rehearsal, review, day]
+                description: >-
+                  WHAT THE LEARNER IS DOING, as a code they see a caption for. `shelf` cannot stand
+                  in for it: meeting a reply and speaking it in the conversation are two parts of
+                  the sitting and both are `say`. Read as an OPEN set.
+              turn_level:
+                type: [string, 'null']
+                enum: [choose, assemble, say, null]
+                description: >-
+                  HOW STRICT this turn is — three levels of ONE trainer, never three trainers
+                  (наряд SCENE-RUN). `choose` offers lines of the plan; `assemble` replaces them
+                  with blocks (`card.chips`, no `card.options`); `say` takes everything away and
+                  leaves the support-language hint and the microphone. Null on anything that is not
+                  a turn of the learner's.
+              origin: { type: [object, 'null'] }
+              ordinal: { type: integer }
+              of_steps: { type: integer }
+              from_day_index: { type: [integer, 'null'] }
+              softened: { type: boolean }
+              source: { type: string }
+              speaking_form: { type: [string, 'null'] }
+              cloze_source: { type: [string, 'null'] }
+              speaker: { type: [string, 'null'], enum: [role, learner, null] }
+              kind: { type: [string, 'null'], enum: [word, chunk, line, number, null] }
+              shelf: { type: [string, 'null'] }
+              tier: { type: [string, 'null'], enum: [speak, understand, null] }
+              situation: { type: [object, 'null'] }
+              speaks_after_choice: { type: boolean }
+              knobs_applied: { type: array, items: { type: string } }
+              knobs_ignored: { type: array, items: { type: string } }
+              card: { $ref: '#/components/schemas/SessionCard' }
+            required: [section, section_code, card]
+      required: [session_id, plan_id, day_index, strict, tasks]
 
     SessionCard:
       type: object
