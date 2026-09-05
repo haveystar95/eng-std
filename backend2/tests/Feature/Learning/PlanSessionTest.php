@@ -57,9 +57,10 @@ it('deals day 1 as stage A: intro first, then the two recognitions, the word ban
         ->and($session['tasks'][0]['section'])->toBe('warmup')
         ->and($session['day_task_count'])->toBe(count($day));
 
-    // Every task of a never-studied day is stage A, and belongs to day 1.
+    // Every task of a never-studied day is stage A — or the stage B a scene line opens the same
+    // day its A closes (DAY-FIX-2) — and belongs to day 1.
     foreach ($day as $task) {
-        expect($task['stage'])->toBe('a')
+        expect($task['stage'])->toBeIn(['a', 'b'])
             ->and($task['source'])->toBe('new')
             ->and($task['from_day_index'])->toBe(1);
     }
@@ -73,13 +74,19 @@ it('deals day 1 as stage A: intro first, then the two recognitions, the word ban
         }
     }
 
-    // The chain a card is dealt depends on what it IS. A word is met, recognised twice and said;
-    // a line is met, recognised once, put together and read aloud — and never typed.
+    // The chain a card is dealt depends on what it IS — and on DAY 1 it is one touch per stage
+    // (DAY-FIX-2, Ч.2.4): a word is met today and recognised tomorrow; a line of the scene is met
+    // and then SPOKEN in the same sitting (its stage B opens the day A closes, DECISIONS п. 266),
+    // as the interlocutor's line to understand or as the learner's own to answer.
     $kind = DB::table('terms')->where('id', $first)->value('kind');
 
-    expect($chain)->toBe($kind === 'line'
-        ? ['intro', 'multiple_choice', 'word_bank', 'speaking']
-        : ['intro', 'multiple_choice', 'multiple_choice', 'speaking']);
+    if ($kind === 'line') {
+        expect($chain)->toHaveCount(2)
+            ->and($chain[0])->toBe('intro')
+            ->and($chain[1])->toBeIn(['situational_hear', 'situational_say', 'situational_ask']);
+    } else {
+        expect($chain)->toBe(['intro']);
+    }
 });
 
 it('lays the day out as pieces, connectors and then replies — whatever the level says', function () {
@@ -131,9 +138,9 @@ it('deals a line and a word different chains in the same session', function () {
             ->and($chain[0])->toBe('intro');
     }
 
-    // A WORD gets two recognitions and no assembly step.
+    // A WORD is met on day 1 and nothing more — its recognition is tomorrow's touch (DAY-FIX-2).
     foreach ($chains['word'] ?? [] as $chain) {
-        expect(array_slice($chain, 0, 4))->toBe(['intro', 'multiple_choice', 'multiple_choice', 'speaking']);
+        expect($chain)->toBe(['intro']);
     }
 
     expect($chains['line'] ?? [])->not->toBeEmpty()
@@ -143,7 +150,10 @@ it('deals a line and a word different chains in the same session', function () {
 it('never pads a choice with another kind — a connector is offered connectors (Д-2)', function () {
     Cache::forget(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED);
 
-    [, $token, $planId] = startedPlan($this);
+    [$user, $token, $planId] = startedPlan($this);
+    // Choice cards are stage B — the day after the pieces were met (DAY-FIX-2).
+    walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 1);
 
     $session = planSession($this, $token, $planId);
 
@@ -172,9 +182,11 @@ it('never pads a choice with another kind — a connector is offered connectors 
         }
     }
 
-    // And the connector now HAS a choice card, which is the half that changed: its two wrong
-    // answers come out of the catalogue instead of out of a day that holds one.
-    expect($checked)->toHaveKeys(['word', 'chunk', 'line']);
+    // And the connector's choice card, when the sitting holds one, is padded with connectors — the
+    // loop above checked it. A LINE has no choice card of this trainer any more — its stage B is
+    // the conversation (DAY-FIX-2) — and the seam of a 40-card day holds the words first, so the
+    // connectors' cards may wait a morning: the WORD is what this day is sure to deal.
+    expect($checked)->toHaveKey('word');
 });
 
 
@@ -222,7 +234,11 @@ it('owes a choice the DAY cannot furnish but the catalogue can — one populatio
     // catalogue holds more, so the step must be owed AND dealt.
     Cache::forget(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED);
 
-    [, $token, $planId] = startedPlan($this, ['level' => 'conversational']);
+    [$user, $token, $planId] = startedPlan($this, ['level' => 'conversational']);
+    // A word's choice card is its stage B, dealt the day after it was met (DAY-FIX-2, one touch
+    // per stage): walk day 1, sleep a night, and the seam of day 2 owes the choice.
+    walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 1);
 
     $day1 = DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('collection_id');
     $words = DB::table('collection_items')->where('collection_id', $day1)
@@ -262,7 +278,9 @@ it('shrinks a starved choice to three options instead of dropping it (PLAN-FIX-5
     Cache::forget(LoggingModeFallbackReporter::PLAN_DISTRACTOR_STARVED);
 
     // `conversational` PREFERS four options. The floor under that preference is three.
-    [, $token, $planId] = startedPlan($this, ['level' => 'conversational']);
+    [$user, $token, $planId] = startedPlan($this, ['level' => 'conversational']);
+    walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 1);
     $target = narrowWordPoolTo($planId, keep: 3);
 
     $session = planSession($this, $token, $planId);
@@ -330,14 +348,15 @@ it('deals the interlocutor’s own line for recognition only, and says whose it 
     // not: the live run spent a word bank making the learner build the doctor's question word by
     // word, and then a speaking card making them read it out.
     expect($modes[$roleLine])->toContain('intro')
-        ->and($modes[$roleLine])->toContain('multiple_choice')
+        ->and($modes[$roleLine])->toContain('situational_hear')
         ->and($modes[$roleLine])->not->toContain('word_bank')
         ->and($modes[$roleLine])->not->toContain('scramble')
         ->and($modes[$roleLine])->not->toContain('typing')
         ->and($modes[$roleLine])->not->toContain('speaking');
 
-    // The learner's OWN lines are untouched — this is about whose turn it is, not about lines.
-    expect($modes[$learnerLine])->toContain('speaking');
+    // The learner's OWN lines are untouched — this is about whose turn it is, not about lines:
+    // a line of the learner's is met and then answered in the conversation (DAY-FIX-2).
+    expect($modes[$learnerLine])->toContain('situational_say');
 
     // …and the card SAYS whose line it is, in both directions. A recognition card that did not
     // would be indistinguishable from one the learner is expected to produce.
@@ -432,9 +451,15 @@ it('measures the length band on the text the card SHOWS, not on the term behind 
     // neighbours' TRANSLATIONS. The band used to be measured on those neighbours' English while
     // their Russian was what went on screen, so the answer kept coming out the only long option
     // there (скрины 120, 247) with every English side comfortably inside the band.
-    [, $token, $planId] = startedPlan($this, ['level' => 'zero']);
+    [$user, $token, $planId] = startedPlan($this, ['level' => 'zero']);
+    walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 1);
 
-    $words = DB::table('terms')->where('kind', 'word')->orderBy('id')->pluck('id')->all();
+    // DAY 1's words: the ones on stage B today, and so the ones dealt a choice card.
+    $day1 = DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('collection_id');
+    $words = DB::table('collection_items')->where('collection_id', $day1)
+        ->join('terms', 'terms.id', '=', 'collection_items.term_id')
+        ->where('terms.kind', 'word')->orderBy('terms.id')->pluck('terms.id')->all();
     expect(count($words))->toBeGreaterThan(2);
 
     // Every OTHER word keeps its English length and loses its Russian one: a two-letter option
@@ -465,7 +490,10 @@ it('measures the length band on the text the card SHOWS, not on the term behind 
 });
 
 it('carries the level’s knobs, and says which of them the card actually honoured', function () {
-    [, $token, $planId] = startedPlan($this, ['level' => 'zero']);
+    [$user, $token, $planId] = startedPlan($this, ['level' => 'zero']);
+    // The choice card is tomorrow's touch (DAY-FIX-2): meet the day, sleep, read the seam.
+    walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 1);
 
     $session = planSession($this, $token, $planId);
 
@@ -495,18 +523,25 @@ it('carries the level’s knobs, and says which of them the card actually honour
 });
 
 it('names the speaking card’s form per stage, so the client knows what to put on screen', function () {
-    [, $token, $planId] = startedPlan($this);
+    [$user, $token, $planId] = startedPlan($this);
+
+    // A word is SAID on stage C — met on day 1, recognised on day 2, said on day 3 (DAY-FIX-2,
+    // one touch per stage); the two nights are what put the spoken card in the seam.
+    $seq = walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 1);
+    walkDay($this, $token, $planId, 2, $seq);
+    ageHistory($user->id, days: 1);
 
     $session = planSession($this, $token, $planId);
 
     $speaking = array_values(array_filter(
         $session['tasks'],
-        static fn (array $t): bool => $t['card']['exercise_mode'] === 'speaking',
+        static fn (array $t): bool => $t['card']['exercise_mode'] === 'speaking' && $t['stage'] === 'c',
     ));
 
     expect($speaking)->not->toBeEmpty()
-        // Stage A: the word is on the screen and the learner reads it aloud.
-        ->and($speaking[0]['speaking_form'])->toBe('word_on_screen');
+        // Stage C: nothing on the screen, the learner says the word's sentence from memory.
+        ->and($speaking[0]['speaking_form'])->toBe('example_from_memory');
 });
 
 // ── the day passing, and the focus moving ─────────────────────────────────────────────────────
@@ -645,9 +680,13 @@ it('opens stage B when the planner makes the word due again — the night alone 
         ->pluck('term_id')
         ->all();
 
-    // Same day: day 1's words owe nothing at all, so nothing of theirs is dealt.
+    // Same day: day 1's words owe nothing at all, so nothing of theirs is dealt. (Day 2's own
+    // lines DO stand on stage B today — the scene is spoken the day it is met, DAY-FIX-2.)
     $sameDay = planSession($this, $token, $planId, 2);
-    $stageB = array_filter($sameDay['tasks'] ?? [], static fn (array $t): bool => ($t['stage'] ?? null) === 'b');
+    $stageB = array_filter(
+        $sameDay['tasks'] ?? [],
+        static fn (array $t): bool => ($t['stage'] ?? null) === 'b' && in_array($t['card']['term_id'], $day1Terms, true),
+    );
     expect($stageB)->toBe([]);
 
     // A night passes and the words move to stage B — but the PLANNER still decides when each of
@@ -917,8 +956,9 @@ it('deals a day opened ahead of the focus its own stage A — strictly, intro fi
         // Stage A, in the plan's own ladder, on every card of the sitting — the day's own and the
         // rescue kit's. The kit is here because it has not been answered today (день 1 не открывали)
         // and «разогрев каждый день» does not care which day the learner opened; it stands on stage
-        // A for the same reason the day does, so «только A-режимы» covers both.
-        expect($task['stage'])->toBe('a');
+        // A for the same reason the day does, so «только A-режимы» covers both — plus the stage B a
+        // scene line opens behind its intro the same day (DAY-FIX-2).
+        expect($task['stage'])->toBeIn(['a', 'b']);
 
         if ($task['section'] === 'warmup') {
             expect($task['shelf'])->toBe('rescue')
@@ -942,9 +982,9 @@ it('deals a day opened ahead of the focus its own stage A — strictly, intro fi
     expect($introOf)->toEqual(array_map(static fn (): int => 1, $introOf))
         ->and(count($introOf))->toBe(count($seenOf));
 
-    // Стage B's trainers are the ones a soft run reached for, and there is no way to any of them:
-    // stage A has not closed, and a night has not passed.
-    foreach (['listening', 'typing', 'cloze', 'dictation', 'situational_hear', 'situational_say', 'situational_ask'] as $forbidden) {
+    // The keyboard trainers a soft run reached for are out of a plan for good (DAY-FIX-2); the
+    // situational ones are the scene's own conversation, which opens the day the scene is met.
+    foreach (['listening', 'typing', 'cloze', 'dictation'] as $forbidden) {
         expect($modes)->not->toContain($forbidden);
     }
 
@@ -1040,12 +1080,16 @@ it('gives every reply of a day its assembly step — four, not three (С-7)', fu
             continue;
         }
         $seen[$task['card']['term_id']][] = $task['card']['exercise_mode'];
-        expect($task['of_steps'])->toBe(4);
+        // One touch per stage (DAY-FIX-2): A is the intro alone, B is two situational touches.
+        expect($task['of_steps'])->toBe($task['stage'] === 'a' ? 1 : 2);
     }
 
     expect($seen)->not->toBeEmpty();
     foreach ($seen as $modes) {
-        // …and the step that was missing is a real assembly card, whichever of the two it is.
-        expect(array_intersect(['word_bank', 'scramble'], $modes))->not->toBeEmpty();
+        // …and every reply is met AND answered in the conversation on its first day (DAY-FIX-2):
+        // the intro, then one situational touch — never an assembly trainer of the word ladder.
+        expect($modes[0])->toBe('intro')
+            ->and($modes)->toHaveCount(2)
+            ->and($modes[1])->toBeIn(['situational_say', 'situational_ask']);
     }
 });

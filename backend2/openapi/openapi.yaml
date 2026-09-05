@@ -2195,6 +2195,65 @@ paths:
         '404': { description: No such plan for this learner }
         '422': { $ref: '#/components/responses/ValidationError' }
 
+  /qa/plan-clock:
+    get:
+      tags: [Plans]
+      summary: 'QA (non-prod): how many days the account''s «today» is shifted by'
+      description: >-
+        THE DEV DOOR FOR CHANGING DAYS (наряд DAY-FIX-2). A plan's ladder is measured in days, and
+        a live run of «день 1 → день 2 → финал» cannot be walked in an afternoon without moving the
+        clock. This moves the CLOCK of one QA account by N days — kept beside the account, never
+        written into a table — behind the SAME door as the password-less sign-in and the transcript
+        substitution: `is_qa` AND a non-production environment with the flag on. Everybody else
+        gets a 404, exactly as for a stranger's plan id.
+
+        While a shift is set, every request of the account sees «today» N days ahead, and the
+        dates the client stamps on reviews and exposures are shifted the same way on the way in —
+        so the phone and the server live in one calendar.
+      responses:
+        '200':
+          description: The current shift
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      days: { type: integer }
+                    required: [days]
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: The door is shut for this account }
+    post:
+      tags: [Plans]
+      summary: 'QA (non-prod): shift the account''s «today» by N days (0 clears it)'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                days: { type: integer, minimum: -60, maximum: 60 }
+              required: [days]
+      responses:
+        '200':
+          description: The shift as stored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      days: { type: integer }
+                    required: [days]
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: The door is shut for this account }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
   /plans/{planId}/feedback:
     post:
       tags: [Plans]
@@ -3007,6 +3066,22 @@ components:
             had failed on `day.example_is_a_term` telling the owner the model had answered in the
             wrong language (Д-19).
         term_budget: { type: integer }
+        day_state:
+          type: string
+          enum: [not_started, in_progress, done]
+          description: >-
+            ONE WORD ABOUT THE DAY (наряд DAY-FIX-2, Ч.3) — «не начат» / «идёт» / «пройден».
+            Computed by the server and by nothing else: the plan tab, the day screen and the sitting
+            header all read this field, and none of them keeps a counter of its own. Distinct from
+            `status`, which is about GENERATION; a `ready` day may be untouched or half-walked.
+            `done` is true from the moment every card of the scene has closed its first rung, which
+            can be seconds before `status` says so.
+        minutes_left:
+          type: integer
+          description: >-
+            «около N минут» — cards the day still deals × `plan.budget.card_seconds`, rounded up to
+            a whole minute. The cards are the SAME sitting `POST …/session` would deal, planned by
+            the same code. Zero once the day is done.
         outcome:
           type: array
           items: { type: string }
@@ -3065,6 +3140,22 @@ components:
             («Тебе скажут», «Ты ответишь», «Ты спросишь», «Слова и связки») are drawn from. `rescue`
             is the survival kit: five phrases the SERVER writes into day 1 of every plan, which
             belong to the plan rather than to this scene. Null on a term from a pre-v0.4 day.
+        next_step:
+          type: [string, 'null']
+          enum: [meet, recognize, hear, choose, assemble, say, null]
+          description: >-
+            WHAT THE LEARNER WILL DO with this row next (наряд DAY-FIX-2, Ч.4.2) — the code the day
+            screen turns into «познакомишься» / «выберешь перевод» / «услышишь и разберёшь» /
+            «выберешь ответ» / «соберёшь из блоков» / «скажешь голосом». Computed from the row's
+            standing and the turn level the sitting would deal it at, so the caption and the card
+            cannot disagree. Null when the row owes nothing today.
+        mark:
+          type: [string, 'null']
+          enum: [passed, said_self, null]
+          description: >-
+            THE ROW'S MARK once the day has been walked (Ч.4.3): `passed` — met and closed its first
+            rung; `said_self` — sounded in the learner's own voice in a scene run. Words, never
+            numbers.
         tier:
           type: [string, 'null']
           enum: [speak, understand, null]
@@ -3443,9 +3534,19 @@ components:
           type: array
           items: { type: integer }
           description: >-
-            ПРИСЕСТЫ: the task counts of each sitting, adding up to the number of tasks. The
-            learner's minutes are the length of ONE sitting, not a limit on the day, and the breaks
-            fall only on part boundaries — so a break can never land inside an exchange.
+            ПРИСЕСТЫ: the task counts of each sitting, adding up to the number of tasks. Since
+            наряд DAY-FIX-2 (Ч.2.1) a DAY is ONE sitting of at most 40 cards and the only second
+            sitting is the scene run — so the list is `[day]` or `[day, run]`, never more.
+        day_state:
+          type: string
+          enum: [not_started, in_progress, done]
+          description: >-
+            THE SAME WORD the plan payload carries for this day (`PlanDay.day_state`), computed by
+            the same census over the same planned sitting — the sitting header reads it from here
+            and keeps no counter of its own (наряд DAY-FIX-2, Ч.3).
+        minutes_left:
+          type: integer
+          description: 'The same number as `PlanDay.minutes_left` for this day.'
         scene_run:
           type: object
           description: >-
@@ -3496,7 +3597,17 @@ components:
                       description: >-
                         HOW STRICT this turn of the learner's is (наряд SCENE-RUN). Rides on the
                         chain and not only on the task, because the chain is longer than the task
-                        list and the feed is drawn ahead. Null on the interlocutor's line.
+                        list and the feed is drawn ahead. Null on the interlocutor's line. Since
+                        DAY-FIX-2 an `ask` turn is never `choose`, and a turn dealt from a day
+                        behind the one being studied is always `assemble`.
+                    pair:
+                      type: [string, 'null']
+                      enum: [answer, ask, null]
+                      description: >-
+                        THE TYPE OF THE EXCHANGE this turn belongs to (P2 v0.6, наряд DAY-FIX-2):
+                        `answer` — the other person asked or stated and the learner answers; `ask`
+                        — the other person INVITED a question and the learner asks one. On BOTH
+                        turns of the pair. Null on a chain written before pairs existed.
                   required: [turn, term_id, text]
         line_audio:
           type: array

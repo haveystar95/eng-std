@@ -5,14 +5,24 @@ declare(strict_types=1);
 use App\Modules\Learning\Presentation\Http\Controller\HomeController;
 use App\Modules\Learning\Presentation\Http\Controller\PlanController;
 use App\Modules\Learning\Presentation\Http\Controller\PoolController;
+use App\Modules\Learning\Presentation\Http\Controller\QaPlanClockController;
 use App\Modules\Learning\Presentation\Http\Controller\ReviewController;
 use App\Modules\Learning\Presentation\Http\Controller\StudyController;
 use App\Modules\Learning\Presentation\Http\Controller\SyncController;
 use App\Modules\Learning\Presentation\Http\Controller\TriageController;
+use App\Modules\Learning\Presentation\Http\Middleware\ShiftQaPlanClock;
 use Illuminate\Support\Facades\Route;
 
 // Prefixed with /api/v1 by LearningServiceProvider.
-Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
+// ПОДСТАНОВКА «СЕГОДНЯ» для QA-аккаунта стоит на всей группе (наряд DAY-FIX-2): плановые экраны,
+// посадка и партия ответов обязаны жить в одном календаре, и для всех, кому дверь закрыта, это
+// no-op.
+Route::middleware(['throttle:120,1', 'auth:sanctum', ShiftQaPlanClock::class])->group(function (): void {
+    // ДЕВ-ДВЕРЬ СМЕНЫ ДНЕЙ — та же дверь, что у входа без пароля: аккаунт `is_qa` И среда не
+    // production при включённом флаге. Всем остальным — 404, как чужому плану.
+    Route::get('/qa/plan-clock', [QaPlanClockController::class, 'show']);
+    Route::post('/qa/plan-clock', [QaPlanClockController::class, 'set']);
+
     Route::post('/study/sessions', [StudyController::class, 'session']);
     Route::post('/study/sessions/{sessionId}/complete', [StudyController::class, 'complete']);
     Route::get('/study/progress', [StudyController::class, 'progress']);

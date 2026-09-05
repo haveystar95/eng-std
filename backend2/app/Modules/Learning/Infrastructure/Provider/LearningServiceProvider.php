@@ -36,10 +36,18 @@ use App\Modules\Learning\Application\Port\ModeFallbackReporter;
 use App\Modules\Learning\Infrastructure\Adapter\LoggingModeFallbackReporter;
 use App\Modules\Learning\Application\Port\PlanTermArchiver;
 use App\Modules\Learning\Application\Port\PlanTermSweepStore;
+use App\Modules\Learning\Application\Port\QaPlanClock;
+use App\Modules\Learning\Application\Service\QaClockShift;
+use App\Modules\Learning\Application\Service\ShiftableClock;
+use App\Modules\Learning\Infrastructure\Qa\CachedQaPlanClock;
+use App\Modules\Shared\Domain\Service\Clock;
+use Illuminate\Contracts\Container\Container;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
 use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
 use App\Modules\Learning\Application\Query\GetPlanHandler;
 use App\Modules\Learning\Application\Command\BuildPlanSessionHandler;
+use App\Modules\Learning\Application\Service\PlanDayStateCensus;
+use App\Modules\Learning\Application\Service\PlanSittingPlanner;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanSkillRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
@@ -137,6 +145,16 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(PlanTermSweepStore::class, EloquentPlanTermSweepStore::class);
         $this->app->bind(PlanTermStageRepository::class, EloquentPlanTermStageRepository::class);
         $this->app->bind(PlanSceneRunRepository::class, EloquentPlanSceneRunRepository::class);
+        // ДЕВ-ДВЕРЬ СМЕНЫ ДНЕЙ (наряд DAY-FIX-2) — сдвиг «сегодня» QA-аккаунта живёт в кэше, не в
+        // таблице; замки — те же, что у входа без пароля, сложенные в `qa_tools` пользователя.
+        $this->app->bind(QaPlanClock::class, CachedQaPlanClock::class);
+        // …и сам сдвиг — ОДИН держатель на запрос, который читает каждый Clock в контейнере: сервис,
+        // собранный до middleware, видит сдвинутый день так же, как собранный после.
+        $this->app->singleton(QaClockShift::class);
+        $this->app->extend(
+            Clock::class,
+            static fn (Clock $base, Container $app): Clock => new ShiftableClock($base, $app->make(QaClockShift::class)),
+        );
         // ПОРОГ «СРАЗУ» — продуктовое суждение, не константа: экран плана готовности процентом не
         // рисует, но число обязано двигаться из конфига, а не из выката.
         $this->app->when(BuildPlanSessionHandler::class)
@@ -150,6 +168,16 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->when(GetPlanHandler::class)
             ->needs('$readyFastShare')
             ->give(static fn (): float => (float) config('learning.plan.scene_run.ready_fast_share', 0.7));
+        // БЮДЖЕТ ДНЯ (наряд DAY-FIX-2, Ч.2) — один присест ≤ 40, слова ≤ 12, спасатели ≤ 5,
+        // секунды на карточку. Читают планировщик посадки и перепись состояния дня, из одного места.
+        $budget = static fn (): array => [
+            'sitting_max_cards' => (int) config('learning.plan.budget.sitting_max_cards', 40),
+            'words_section_cards' => (int) config('learning.plan.budget.words_section_cards', 12),
+            'rescue_warmup_cards' => (int) config('learning.plan.budget.rescue_warmup_cards', 5),
+            'card_seconds' => (int) config('learning.plan.budget.card_seconds', 16),
+        ];
+        $this->app->when(PlanSittingPlanner::class)->needs('$budget')->give($budget);
+        $this->app->when(PlanDayStateCensus::class)->needs('$budget')->give($budget);
         // «Из плана: Отпуск в Италии» — what a review card of the top-up says about itself.
         // Singleton for the same reason the global reader is one: a per-request memo over one query.
         // A DIFFERENT instance from that reader even though it is the same table — the two read

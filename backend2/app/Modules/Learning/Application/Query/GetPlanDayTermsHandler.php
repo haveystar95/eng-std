@@ -10,7 +10,12 @@ use App\Modules\Learning\Application\Service\LineAudioIndex;
 use App\Modules\Learning\Application\Service\PlanProgress;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
+use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
+use App\Modules\Learning\Domain\ValueObject\PlanStage;
+use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
+use App\Modules\Learning\Domain\ValueObject\PlanTurnLevel;
 
 /**
  * THE DAY SCREEN'S REGISTER — «фразы дня» and «слова в этих фразах», each with its stage
@@ -38,8 +43,10 @@ final readonly class GetPlanDayTermsHandler
         private PlanRepository $plans,
         private PlanDayRepository $days,
         private PlanProgress $progress,
-        /** Готовая озвучка реплик — шпаргалка играет ТОТ ЖЕ файл, что и разговор (наряд TTS-1). */
+        /** Готовая озвучка реплик — экран дня играет ТОТ ЖЕ файл, что и разговор (наряд TTS-1). */
         private LineAudioIndex $lineAudio,
+        /** Что пары доказали голосом — отметка «сказал сам» у строки (наряд DAY-FIX-2, Ч.4.3). */
+        private PlanTermStageRepository $termStages,
     ) {}
 
     /** @return list<PlanDayTermView>|null  null when the plan is not this learner's, or has no such day */
@@ -52,18 +59,24 @@ final readonly class GetPlanDayTermsHandler
 
         $days = $this->days->listForPlan($plan->id());
         $progress = $this->progress->forPlan($plan, $days);
+        $said = [];
+        foreach ($this->termStages->forPlan($plan->id()) as $termId => $stage) {
+            if ($stage->saidInRun) {
+                $said[$termId] = true;
+            }
+        }
 
         $out = [];
         // The day's own words first, in the order the collection holds them, then everything still
         // in flight from the days before it — oldest day first, so the register reads as a history.
-        foreach ($this->termsOf($progress->days[$query->dayIndex] ?? null, $query->dayIndex) as $term) {
+        foreach ($this->termsOf($progress->days[$query->dayIndex] ?? null, $query->dayIndex, $query->dayIndex, $said) as $term) {
             $out[] = $term;
         }
         foreach ($progress->days as $index => $day) {
             if ($index >= $query->dayIndex) {
                 continue;
             }
-            foreach ($this->termsOf($day, $index) as $term) {
+            foreach ($this->termsOf($day, $index, $query->dayIndex, $said) as $term) {
                 if (! $term->finished) {
                     $out[] = $term;
                 }
@@ -71,6 +84,55 @@ final readonly class GetPlanDayTermsHandler
         }
 
         return $this->withAudio($out, $plan->targetLang()->value);
+    }
+
+    /**
+     * WHAT THE ROW WILL BE ASKED NEXT — the code the day screen turns into «выберешь ответ».
+     *
+     * Read off the standing's next owed trainer and the turn level the planner would deal it at,
+     * so the caption and the card cannot disagree ({@see PlanTurnLevel::forTurn()}).
+     */
+    private static function nextStepOf(PlanTermStanding $standing, ?string $shelf, bool $inSeam): ?string
+    {
+        $mode = $standing->nextMode;
+        if ($mode === null) {
+            return null;
+        }
+
+        $ordinal = 1;
+        foreach ($standing->checklist as $step) {
+            if (! $step['done']) {
+                $ordinal = (int) $step['ordinal'];
+
+                break;
+            }
+        }
+
+        return match ($mode) {
+            ExerciseMode::Intro => PlanDayTermView::STEP_MEET,
+            ExerciseMode::MultipleChoice, ExerciseMode::DescriptionMatch, ExerciseMode::PickCorrect => PlanDayTermView::STEP_RECOGNIZE,
+            ExerciseMode::SituationalHear => PlanDayTermView::STEP_HEAR,
+            ExerciseMode::SituationalSay, ExerciseMode::SituationalAsk => PlanTurnLevel::forTurn($shelf, $ordinal, $inSeam) === PlanTurnLevel::Choose
+                ? PlanDayTermView::STEP_CHOOSE
+                : PlanDayTermView::STEP_ASSEMBLE,
+            ExerciseMode::WordBank, ExerciseMode::Scramble => PlanDayTermView::STEP_ASSEMBLE,
+            ExerciseMode::Speaking => PlanDayTermView::STEP_SAY,
+            // A typed trainer is never dealt by a plan (DAY-FIX-2, Ч.2.6); a row that owes one is a
+            // row that owes nothing the screen can name.
+            ExerciseMode::Typing, ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Dictation => null,
+        };
+    }
+
+    /** «пройдено» / «сказал сам» / nothing — the row's mark once the day has been walked. */
+    private static function markOf(PlanTermStanding $standing, bool $saidSelf): ?string
+    {
+        if ($saidSelf) {
+            return PlanDayTermView::MARK_SAID_SELF;
+        }
+
+        return $standing->stage !== PlanStage::A || $standing->stageComplete
+            ? PlanDayTermView::MARK_PASSED
+            : null;
     }
 
     /**
@@ -107,11 +169,16 @@ final readonly class GetPlanDayTermsHandler
             shelf: $t->shelf,
             tier: $t->tier,
             audioId: $audio[$t->termId] ?? null,
+            nextStep: $t->nextStep,
+            mark: $t->mark,
         ), $terms);
     }
 
-    /** @return list<PlanDayTermView> */
-    private function termsOf(?PlanDayProgressView $day, int $index): array
+    /**
+     * @param  array<string, true>  $said  term ids that have been said by the learner's own voice
+     * @return list<PlanDayTermView>
+     */
+    private function termsOf(?PlanDayProgressView $day, int $index, int $dayBeingRead, array $said): array
     {
         if ($day === null) {
             return [];
@@ -141,6 +208,8 @@ final readonly class GetPlanDayTermsHandler
                 fromDayIndex: $index,
                 shelf: $content->shelf,
                 tier: $content->tier,
+                nextStep: self::nextStepOf($standing, $content->shelf, $index < $dayBeingRead),
+                mark: self::markOf($standing, isset($said[$termId])),
             );
         }
 

@@ -265,11 +265,11 @@ it('deals the day in the canon’s order: warm-up, pieces, meeting the scene’s
     $sorted = $ranks;
     sort($sorted);
     expect($ranks)->toBe($sorted)
-        // Day 1 of a plan: the kit, the pieces, and meeting the scene's lines. NOT the conversation
-        // — «в одной посадке карточка не проходит обе ступени» (канон §10), so the dialogue of this
-        // scene belongs to tomorrow.
-        ->and($seen)->toBe([S::WARMUP, S::WORDS, S::DIALOGUE_INTRO])
-        ->and($session['dialogues'])->toBe([]);
+        // Day 1 of a plan: the kit, the pieces, meeting the scene's lines — and the conversation
+        // behind them, the same day (DAY-FIX-2, DECISIONS п. 266 — the scene is spoken the day it
+        // is met; the intro still comes first).
+        ->and($seen)->toBe([S::WARMUP, S::WORDS, S::DIALOGUE_INTRO, S::DIALOGUE])
+        ->and($session['dialogues'])->toHaveCount(1);
 });
 
 // ── Ч-6: присесты ────────────────────────────────────────────────────────────────────────────

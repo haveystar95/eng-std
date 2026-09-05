@@ -108,8 +108,10 @@ it('gives a plan on a SEEDED database the intro card first (Д-15)', function ()
         }
     }
 
-    // Met, then recognised, then produced, then said out loud — the checklist the plan ladder has
-    // always described and a fresh account never got.
-    expect($chain[0])->toBe('intro')
-        ->and($chain)->toContain('speaking');
+    // Met — and, since DAY-FIX-2, nothing more on the first day (one touch per stage); the point is
+    // that the intro is dealt at all on a fresh account, which is what the seeder used to lose.
+    expect($chain[0])->toBe('intro');
+    foreach ($chain as $mode) {
+        expect($mode)->not->toBeIn(['typing', 'dictation', 'cloze', 'listening']);
+    }
 });

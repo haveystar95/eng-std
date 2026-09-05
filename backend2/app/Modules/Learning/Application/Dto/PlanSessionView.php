@@ -106,5 +106,12 @@ final readonly class PlanSessionView
             'skip_after_seconds' => 5,
             'turn_seconds' => 20,
         ],
+        /**
+         * СЛОВО О ДНЕ — `not_started` | `in_progress` | `done` — и его минуты, тем же счётом, что на
+         * пейлоаде плана ({@see \App\Modules\Learning\Application\Service\PlanDayStateCensus}).
+         * Шапка присеста читает это и ничего не считает сама (наряд DAY-FIX-2, Ч.3).
+         */
+        public \App\Modules\Learning\Domain\ValueObject\PlanDayState $dayState = \App\Modules\Learning\Domain\ValueObject\PlanDayState::InProgress,
+        public int $minutesLeft = 0,
     ) {}
 }

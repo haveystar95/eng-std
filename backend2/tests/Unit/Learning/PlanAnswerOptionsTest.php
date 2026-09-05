@@ -44,6 +44,17 @@ it('не берёт кандидата без умения — «неизвес�
     expect(PlanAnswerOptions::forTurn(answerCandidate('target', 'say', 's1'), $scenes, 1))->toBe(['other']);
 });
 
+it('не берёт реплику, которая в этом разговоре уже прозвучала — любой стороной (DAY-FIX-2, Ч.1.5)', function () {
+    // Живой прогон 05.09: среди вариантов стояла реплика, сказанная двумя обменами выше.
+    $scenes = [1 => [
+        answerCandidate('said-earlier', 'say', 's2'),
+        answerCandidate('fresh', 'say', 's3'),
+    ]];
+
+    expect(PlanAnswerOptions::forTurn(answerCandidate('target', 'say', 's1'), $scenes, 1, alreadySaid: ['said-earlier']))
+        ->toBe(['fresh']);
+});
+
 it('не берёт ничего, когда умения нет у самого хода', function () {
     $scenes = [1 => [answerCandidate('other', 'say', 's2')]];
 

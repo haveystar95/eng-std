@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Query;
 
+use App\Modules\Learning\Application\Dto\PlanDayStateView;
 use App\Modules\Learning\Application\Dto\PlanDayView;
 use App\Modules\Learning\Application\Dto\PlanProgressView;
 use App\Modules\Learning\Application\Dto\PlanView;
+use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
+use App\Modules\Learning\Application\Service\PlanDayStateCensus;
 use App\Modules\Learning\Application\Service\PlanProgress;
 use App\Modules\Learning\Application\Service\PlanSceneTurns;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
@@ -46,6 +49,10 @@ final readonly class GetPlanHandler
         private PlanSceneTurns $sceneTurns,
         /** Порог «сразу», при котором сцена считается готовой — продуктовое суждение, не константа. */
         private float $readyFastShare,
+        /** СЛОВО О ДНЕ и его минуты — один счёт на все экраны (наряд DAY-FIX-2, Ч.3). */
+        private PlanDayStateCensus $census,
+        /** Ручки уровня — вход планировщика посадки, которым перепись считает минуты фокусного дня. */
+        private PlanModeSettingsReader $planSettings,
         private PlanScheduler $scheduler = new PlanScheduler(),
     ) {}
 
@@ -69,7 +76,6 @@ final readonly class GetPlanHandler
         $support = $plan->supportLang();
 
         $planDays = $this->days->listForPlan($plan->id());
-        $days = array_map(fn (PlanDay $day): PlanDayView => $this->dayView($day), $planDays);
 
         // The same computation the plan SESSION runs on — one answer to «where is this learner»,
         // shared, because a screen drawn against one focus and a session built against another is
@@ -79,6 +85,17 @@ final readonly class GetPlanHandler
         // ЗРЕЛОСТЬ СЦЕН — считается один раз и читается дважды: словами на экране и числом в
         // готовности плана. Два прохода дали бы два ответа на один вопрос.
         $scenes = $this->scenesOf($plan, $progress);
+
+        // СЛОВО О КАЖДОМ ДНЕ и его минуты — тем же счётом, что посадка (наряд DAY-FIX-2, Ч.3).
+        $knobs = $this->planSettings->knobsFor($plan->level());
+        $stages = $this->termStages->forPlan($plan->id());
+        $days = array_map(
+            fn (PlanDay $day): PlanDayView => $this->dayView(
+                $day,
+                $this->census->of($plan, $planDays, $progress, $day->dayIndex(), $knobs, $stages),
+            ),
+            $planDays,
+        );
 
         return new PlanView(
             id: $plan->id()->value,
@@ -279,7 +296,7 @@ final readonly class GetPlanHandler
         return is_string($intro) ? trim($intro) : '';
     }
 
-    private function dayView(PlanDay $day): PlanDayView
+    private function dayView(PlanDay $day, PlanDayStateView $state): PlanDayView
     {
         $brief = $day->roleBrief() ?? [];
 
@@ -320,6 +337,8 @@ final readonly class GetPlanHandler
             // scheduled before v0.4 has neither, and an empty вводка is a day without one rather
             // than a plan that cannot be read.
             intro: self::introOf($brief),
+            dayState: $state->state->value,
+            minutesLeft: $state->minutesLeft,
         );
     }
 

@@ -106,7 +106,7 @@ it('walks a plan from the goal to a closed day, and the day is a scene all the w
             continue;
         }
         expect($task['card']['exercise_mode'])
-            ->toBeIn(['intro', 'multiple_choice', 'listening', 'description_match', 'pick_correct'])
+            ->toBeIn(['intro', 'multiple_choice', 'situational_hear', 'description_match', 'pick_correct'])
             ->and($task['shelf'])->toBeIn(['hear', 'numbers']);
     }
 

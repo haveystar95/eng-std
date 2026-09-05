@@ -86,6 +86,10 @@ final class PlanResource
             // The scene's вводка. Additive, and the one string on this payload written to be READ
             // rather than rendered: the day screen puts it above the register (канон §2).
             'intro' => $day->intro,
+            // ОДНО СЛОВО О ДНЕ и его минуты (наряд DAY-FIX-2, Ч.3): `not_started` | `in_progress` |
+            // `done`. Три экрана читают это поле; ни один не считает «осталось N» сам.
+            'day_state' => $day->dayState,
+            'minutes_left' => $day->minutesLeft,
         ];
     }
 }

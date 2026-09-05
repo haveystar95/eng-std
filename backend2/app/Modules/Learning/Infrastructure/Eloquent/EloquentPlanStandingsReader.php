@@ -70,7 +70,7 @@ final class EloquentPlanStandingsReader implements PlanStandingsReader
         return $out;
     }
 
-    public function introducedAmong(UserId $user, array $termIds, array $since = []): array
+    public function introducedAmong(UserId $user, array $termIds, DateTimeZone $tz, array $since = []): array
     {
         if ($termIds === []) {
             return [];
@@ -81,6 +81,7 @@ final class EloquentPlanStandingsReader implements PlanStandingsReader
             DB::table('term_exposures')
                 ->where('user_id', $user->value)
                 ->whereIn('term_id', $termIds)
+                ->orderBy('shown_at')
                 ->get(['term_id', 'shown_at']) as $row
         ) {
             $termId = (string) $row->term_id;
@@ -90,7 +91,9 @@ final class EloquentPlanStandingsReader implements PlanStandingsReader
             if ($this->predates($since, $termId, (string) $row->shown_at)) {
                 continue;
             }
-            $out[$termId] = true;
+            // THE FIRST counting exposure: that is the day stage A closed, and the day the night is
+            // measured from. Rows come ordered, so the first one written wins.
+            $out[$termId] ??= $this->localDate((string) $row->shown_at, $tz->getName());
         }
 
         return $out;

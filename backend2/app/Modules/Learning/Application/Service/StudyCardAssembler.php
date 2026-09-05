@@ -702,7 +702,11 @@ final readonly class StudyCardAssembler
         // и голодная полка отбить её не может. Это не послабление — это единственная форма, в
         // которой третье касание ступени B закрывается у всех, а не только у тех, кому хватило
         // соседей.
-        if ($turnLevel === PlanTurnLevel::Assemble) {
+        //
+        // «ТЫ СПРОСИШЬ» — НИКОГДА НЕ ВЫБОР (наряд DAY-FIX-2, Ч.1.4). Замок стоит и здесь, а не только
+        // в планировщике: карточка — последнее место, где вопрос мог бы стать выбором из четырёх
+        // одинаково уместных, и сборщик обязан отказать, кто бы его ни попросил.
+        if ($turnLevel === PlanTurnLevel::Assemble || $mode === ExerciseMode::SituationalAsk) {
             return $this->assemblyCard($view, $content, $mode, $neighbours, $step);
         }
 

@@ -143,7 +143,7 @@ final readonly class PlanStandings
         }
 
         $facts = $this->reader->factsFor($user, $termIds, $tz, $since);
-        $introduced = $this->reader->introducedAmong($user, $termIds, $since);
+        $introduced = $this->reader->introducedAmong($user, $termIds, $tz, $since);
         $openAtLevel = $this->planSettings->openModesFor($level);
         $spokenByRole = RoleLineModes::index($roleLines);
         // HOW MANY CARDS OF EACH SHAPE THIS PLAN HOLDS — the fifth filter, and the one that keeps a
@@ -170,7 +170,7 @@ final readonly class PlanStandings
             $out[$termId] = $this->ladder->standingFor(
                 applicable: $this->applicableFor($termContent, $openAtLevel, $kind, $content, $optionCount, $user, $spokenByRole),
                 facts: $facts[$termId] ?? [],
-                introduced: $introduced[$termId] ?? false,
+                introducedOn: $introduced[$termId] ?? null,
                 today: $today,
                 // What the card DOES in its day picks the checklist; the pair's own number picks
                 // the one thing a plan varies (word bank or scramble). Both are read here rather

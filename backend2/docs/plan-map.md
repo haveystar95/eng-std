@@ -269,6 +269,19 @@ append-only логе, и этот ответ — ВЫБОР. Произнесе�
 разрешились в `term_id` даже там, где карточка дедуплицировалась с каталогом, — резолв идёт по
 адресу полки, а не по тексту.
 
+**P2 v0.6 — сцена ПАРАМИ (DAY-FIX-2, Ч.1).** Ответ модели больше не несёт `hear`/`say`/`ask` и
+`dialogue`: он несёт `pairs[]` = `{kind: answer|ask, role, you}`, и сервер выводит из пар полки
+(`PlanDayComposer::explodePairs()` — `role` → `hear`, `you` → `say`/`ask` по `kind`) и цепочку
+(пары по порядку). Каждую пару судит P2J (`PlanPairCourt::hold()`, «B прямой ответ на A?»);
+«нет» → P2P переписывает `you` ≤ 2 раз, потом пара выбрасывается; сцена после суда < 4 пар —
+`day.pairs_too_few` (дневной фатальный, `PlanDayValidator::checkDialogue()` при
+`PlanDayCandidate::$expectsPairs`). Ход цепочки хранит `pair` (`answer`/`ask`) в
+`learning_plan_days.dialogue` и отдаёт его наружу (`turns[].pair`). Старые дни не мигрируются:
+`PlanDialogueChain::for()` читает их как раньше и ОБРЕЗАЕТ всё, что не в паре
+(`exchangesOnly()` — свой ход без реплики роли перед ним в цепочку не попадает и уходит в хвост
+посадки карточкой «Ещё в этой сцене»). Счётчики: `plan_day_pair_dropped`,
+`plan_day_pair_rewritten`; учёт — `PlanSpend::CALL_PAIR_JUDGE` / `CALL_PAIR_REWRITE`.
+
 ### 2.2г. Строгость своего хода: выбор → сборка → сам (SCENE-RUN)
 
 Канон: `docs/plan-dialogue.md` §5. Три уровня ОДНОГО тренажёра, а не три тренажёра: ситуационная
@@ -277,8 +290,9 @@ append-only логе, и этот ответ — ВЫБОР. Произнесе�
 | что | где в коде |
 |---|---|
 | сами уровни | `Learning/Domain/ValueObject/PlanTurnLevel`: `choose` \| `assemble` \| `say`. **Не** значения `ExerciseMode`: строка в матрице «Тренажёры» разрешила бы состояние «сборка выключена», то есть ступень B без выхода |
-| правило перехода | `PlanTurnLevel::forStep()` — первое касание ступени B выбирают, следующее собирают. Сборка привязана к ПОВТОРНОМУ ПОЯВЛЕНИЮ реплики, а не к счётчику удач |
-| ступень B — два касания | `PlanStageLadder::STEPS[KIND_LINE_SAY][b]` (и `ASK`) — `[situational_say ×2]`. С одним касанием реплика с закрытым выбором становится `finished` и не показывается больше никогда: сборка была бы недостижима, а не редка |
+| правило перехода | `PlanTurnLevel::forStep()` — первое касание ступени B выбирают, следующее собирают. Сборка привязана к ПОВТОРНОМУ ПОЯВЛЕНИЮ реплики, а не к счётчику удач. **`forTurn(shelf, ordinal, inSeam)`** (DAY-FIX-2, Ч.1.6/Ч.2.3): ход `ask` — ВСЕГДА сборка или голос, выбором не бывает; шов (реплика прошлой сцены) — всегда сборка. Сервер запирает это в `BuildPlanSessionHandler::assembleTasks()`, клиент только читает `turn_level` |
+| ступень B — два касания | `PlanStageLadder::STEPS[KIND_LINE_SAY][b]` (и `ASK`) — `[situational_say ×2]`. С одним касанием реплика с закрытым выбором становится `finished` и не показывается больше никогда: сборка была бы недостижима, а не редка. **Один показ на ступень в день** (`PlanStageLadder::oneShowPerDay()`, DAY-FIX-2, Ч.2.4): планировщик раздаёт реплике не больше одного шага ступени за посадку; верный ответ — реплика в этот день не возвращается |
+| дистракторы ответа | `PlanAnswerOptions::forTurn(..., alreadySaid)` (DAY-FIX-2, Ч.1.7): варианты на такте ответа не содержат реплик, уже сказанных в ЭТОМ разговоре любой стороной (`BuildPlanSessionHandler::saidBefore()`), и реплик того же умения |
 | что хранится | **ничего**. Уровень читается из места шага в чек-листе, а чек-лист — проекция append-only журнала. `learning_plan_term_stages` держит только `said_in_run`/`said_fast` (решения 254 и 255 отозваны) |
 | ошибка на сборке | второй шаг остаётся незакрытым, реплика возвращается снова сборкой: первый шаг по-прежнему закрыт |
 | блоки сборки | `Learning/Domain/Service/PlanAssemblyBlocks` — слова реплики + 2–4 чужих блока с полок `words`/`chunks` ЭТОГО плана, по той же полосе длины (`DistractorLength`). Каталог не читается |
@@ -299,11 +313,47 @@ append-only логе, и этот ответ — ВЫБОР. Произнесе�
 | зрелость и готовность | `Learning/Domain/Service/SceneCensus` — три слова (`SceneMaturity`) и «C + скорость»; читает `GetPlanHandler::scenesOf()`, наружу `scenes[]` |
 | готовность плана | `GetPlanHandler::readinessOf()` — доля ГОТОВЫХ СЦЕН. Знаменатель — сцены, которые план собирался научить (Д-31 цел), а не написанные |
 
+### 2.2е. Бюджет дня и одно состояние дня (DAY-FIX-2, Ч.2–Ч.3)
+
+`config/learning.php → plan.budget`: `sitting_max_cards` 40 · `words_section_cards` 12 ·
+`rescue_warmup_cards` 5 · `card_seconds` 16. Планировщик посадки —
+`Learning/Application/Service/PlanSittingPlanner` (вынесен из `BuildPlanSessionHandler`; хендлер
+только собирает карточки по его раскладке `PlanSittingLayout`):
+
+| правило | где |
+|---|---|
+| день = ОДИН присест ≤ 40 карточек; второй присест — только прогон сцены | `PlanSittings::split()` режет по секции `scene_run`; `PlanSittingLayout::trimmed()` сбрасывает с хвоста сначала `plan_review`, потом лишний разогрев, пока день не влезет |
+| слова + связки в дне ≤ 12 | `words_section_cards` в `PlanSittingPlanner::plan()` |
+| спасатели в разогреве ≤ 5, промахи вчерашнего ≤ 5 | `rescue_warmup_cards`, `WARMUP_MISS_CAP` |
+| шов — одно касание сборкой, выбор в шве запрещён | `PlanTurnLevel::forTurn(inSeam: true)`; шов только из дней позади фокуса |
+| реплика ≤ одного показа на ступень в день | `PlanStageLadder::oneShowPerDay()` → `specsFor()` берёт первый незакрытый шаг |
+| клавиатуры в плане нет | `assembleTasks()` пропускает режимы с `forgivesTypos()` (замок), лестница не называет typed-шагов (`PlanStageLadderTest`). Прогрев клавиатуры на клиенте остаётся — он ничего не показывает, а его пропуск ломает «Пропустить» на говорении |
+| ступень B реплик открывается В ТОТ ЖЕ день, что закрылась A | `PlanStageLadder::OPENS_B_SAME_DAY` (`UNDERSTAND`, `LINE_SAY`, `LINE_ASK`), `standingFor(introducedOn)` — дата первого показа считается днём закрытия A (канон `plan-dialogue.md` §10, уточнение) |
+
+**Одно состояние дня.** `Learning/Application/Service/PlanDayStateCensus::of()` считает
+`day_state ∈ not_started | in_progress | done` и `minutes_left` (карточки × `card_seconds`,
+вверх до минуты) ОДНИМ кодом для трёх пейлоадов: `GET /plans/{id}` (у каждого дня),
+`GET /plans/{id}/days/{n}` (тот же `day_state`, плюс `next_step` и `mark` у строки —
+`GetPlanDayTermsHandler`) и `POST /study/sessions` (`day_state`, `minutes_left` на посадке).
+`done` — строка дня `done` или перепись прогресса «все карточки сцены закрыли A»; `not_started` —
+ни одна карточка сцены (без спасателей) не тронута; иначе `in_progress`. Клиент это НЕ считает и
+локальных «осталось N» не держит.
+
+**QA-часы плана.** `Learning/Application/Port/QaPlanClock` → `Infrastructure/Qa/CachedQaPlanClock`
+(кэш `qa:plan_clock_shift:{user}`, 30 дней) и middleware `ShiftQaPlanClock` на всех плановых
+роутах: подменяет `Clock` на `ShiftedClock` и сдвигает `answered_at`/`shown_at` в теле запроса.
+Дверь та же, что у QA-входа и подстановки транскрипта (`is_qa` И `DevLoginGate`); закрыта — 404 на
+`GET/POST /qa/plan-clock`. Не таблица и не UPDATE: сдвиг живёт в кэше и истекает сам.
+
 ### 2.2б. Присесты и хвост посадки (SIT-1, Ч-5/Ч-6)
 
 Минуты юзера (10/20/40) — это длина ОДНОГО присеста, а не потолок дня. День раздаётся целиком;
 `sittings` на пейлоаде говорит, где честно остановиться (`PlanSittings::cut()`), и рез падает только
 на границу секции. Секцию не рвём: секция длиннее бюджета — она и есть присест.
+
+> **С DAY-FIX-2 (05.09) минуты юзера присест не режут**: день — один присест ≤ 40 карточек, второй
+> присест только у прогона сцены (`PlanSittings::split()`, §2.2е). `cut()` по минутам остался
+> кодом для обычных сессий и как справка.
 
 Неверно отвеченное задание клиент возвращает в конец ТЕКУЩЕГО присеста, один раз за посадку
 (`SittingQueue`). Полоса не откатывается: позиция стоит, хвост растёт. Второй промах — уже серверный:
@@ -549,6 +599,13 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 | `failed` | вызовы P2 исчерпаны | «Не собрался», и без кнопки «Продолжить» |
 | `done` | ступень A дня закрыта | «пройден» |
 
+Рядом со статусом сборки у дня едет **`day_state`** (`not_started` / `in_progress` / `done`) и
+**`minutes_left`** — одно слово состояния и минуты, которые вкладка «План», экран дня, шапка
+посадки и карточка на главной читают из одного расчёта (`PlanDayStateCensus`, §2.2е). Подпись в
+приложении: «не начат» / «идёт · около N минут» / «пройден»; кнопка — «Начать день» /
+«Продолжить» / «Пройти ещё раз». Статус сборки (`pending`/`generating`/`failed`) остаётся словом
+о сборке у дня БЕЗ материала.
+
 День `done` пишется в двух моментах и одним кодом (`PlanDayPassing`): в конце сидения — по
 `POST /study/sessions/{id}/complete`, который клиент шлёт последним ответом (DECISIONS п. 229), — и
 на входе в следующую плановую сессию. Второе было единственным до 02.09, и день оставался `ready`
@@ -612,7 +669,8 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 `plan_day_skill_uncovered`, `plan_day_filler_mismatch`, `plan_day_substitution_outside_frame`,
 `plan_day_role_line_share`, `plan_day_intro_repeated`, `plan_day_key_duplicated`,
 `plan_day_image_prompt_missing`, `plan_day_key_not_support_language`, `plan_day_word_is_basic`,
-`plan_day_transliteration_dropped`.
+`plan_day_transliteration_dropped`, `plan_day_pair_dropped`, `plan_day_pair_rewritten` (DAY-FIX-2:
+суд пар, §2.2в).
 
 Особняком — `plan_distractor_starved` (§2): его пишет НЕ этот репортер, а
 `Learning/Infrastructure/Adapter/LoggingModeFallbackReporter` через порт `ModeFallbackReporter`,
@@ -632,7 +690,9 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 | id | версия / константа | файл | кто вызывает | схема ответа |
 |---|---|---|---|---|
 | **P1** | `plan_outline.v0.4.1` — `PlanPromptLibrary::OUTLINE_VERSION` | `plan_outline.v0.4.1.md` | `PlanOutlineService` | `PlanSchemas::outline()` |
-| **P2** | `plan_day.v0.5` — `DAY_VERSION` | `plan_day.v0.5.md` | `PlanDayComposer` | `PlanSchemas::day()` |
+| **P2** | `plan_day.v0.6` — `DAY_VERSION` | `plan_day.v0.6.md` | `PlanDayComposer` | `PlanSchemas::day()` (`pairs` + `words` + `chunks` + `numbers`) |
+| **P2J** | `plan_pair_judge.v0.1` — `PAIR_JUDGE_VERSION` | `plan_pair_judge.v0.1.md` | `PlanPairCourt` (из `PlanDayComposer::shelved()`) | `PlanSchemas::pairVerdict()` |
+| **P2P** | `plan_pair_rewrite.v0.1` — `PAIR_REWRITE_VERSION` | `plan_pair_rewrite.v0.1.md` | `PlanPairCourt` | `PlanSchemas::pairYou()` |
 | **P2R** | `plan_day_repair.v0.2` — `REPAIR_VERSION` | `plan_day_repair.v0.2.md` | `PlanDayRepairer` | `PlanSchemas::repair()` |
 | **P-Listen** | `plan_listen.v1.1` — `LISTEN_VERSION` | `plan_listen.v1.1.md` | `PlanListenService` | `PlanSchemas::listen()` |
 

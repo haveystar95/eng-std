@@ -60,6 +60,10 @@ final class PlanSessionResource extends JsonResource
             // breaks fall only on section boundaries. A client that ignores this plays the day as
             // one long session — which is what it did before.
             'sittings' => $view->sittings,
+            // СЛОВО О ДНЕ и его минуты — те же, что на пейлоаде плана (наряд DAY-FIX-2, Ч.3). Шапка
+            // присеста читает их отсюда; локального счётчика «осталось N» у неё нет.
+            'day_state' => $view->dayState->value,
+            'minutes_left' => $view->minutesLeft,
             // СЕКУНДЫ ПРОГОНА СЦЕНЫ — «сразу», «Пропустить», сторож и цена хода в минутах дня
             // (наряд SCENE-RUN). На проводе, а не в коде экрана: это продуктовые суждения о том,
             // сколько человек думает, и они обязаны двигаться без выката приложения.
@@ -89,6 +93,9 @@ final class PlanSessionResource extends JsonResource
                     // собеседника (наряд SCENE-RUN, Ч.1). Едет на цепочке, а не только на задаче:
                     // ходов больше, чем задач, и лента рисуется вперёд.
                     'level' => $turn->level,
+                    // ТИП ОБМЕНА (P2 v0.6): `answer` — спросили, ты ответил; `ask` — пригласили
+                    // спросить, ты спросил. Null на цепочке, написанной до пар.
+                    'pair' => $turn->pairKind,
                 ], $dialogue->turns),
             ], $view->dialogues),
             // ВСЯ ОЗВУЧКА ЭТОЙ ПОСАДКИ одним списком — то, что телефон качает на входе в день,

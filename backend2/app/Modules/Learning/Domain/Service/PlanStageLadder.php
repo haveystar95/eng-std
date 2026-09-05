@@ -120,78 +120,55 @@ final class PlanStageLadder
      *
      * @var array<string, array<string, list<ExerciseMode>>>
      */
+    // ## ОДИН ПРИСЕСТ ≤ 40 КАРТОЧЕК — лестница, ужатая до одного касания на ступень (наряд DAY-FIX-2, Ч.2)
+    //
+    // Живой день 2 давал 50–61 карточку: четыре шага ступени A у каждого слова и каждой реплики,
+    // три у ступени B спасателя, и всё это в один вечер. Владелец задал день ≤ 40 карточек, слова и
+    // связки ≤ 12, спасатели в разогреве ≤ 5, «реплика — не больше одного показа на ступень в
+    // день», и системной клавиатуры в плане не бывает никогда (канон §9). Отсюда таблица ниже:
+    //
+    //   слово / связка   A  познакомился (интро)   B  узнал (выбор)   C  сказал сам (голос)
+    //   спасатель        A  познакомился           B  узнал (выбор)   дальше — поддержка через день
+    //   «Тебе скажут»    A  познакомился           B  услышал → выбрал смысл
+    //   «Ты ответишь»    A  познакомился           B  выбрал ответ → (следующий показ) собрал
+    //   «Ты спросишь»    A  познакомился           B  собрал → (следующий показ) собрал
+    //
+    // Ни одного ПЕЧАТНОГО режима в таблице ({@see ExerciseMode::forgivesTypos()} — `typing`,
+    // `cloze`, `listening`, `dictation`): это замок, а не вкус, и его держит юнит-тест. Печать
+    // вернётся в план только плитками/блоками, а такого тренажёра у слова пока нет.
+    //
+    // «Читать вслух рано, говорить без текста поздно» (докблок {@see PlanStage}) при этом
+    // перевернулось у слова: говорение ушло в C, потому что на день знакомства бюджет даёт слову
+    // ОДНУ карточку, и это интро. Слово произносится внутри реплик сцены с первого дня — ходами
+    // диалога, — так что рот его всё равно учит сразу.
     private const STEPS = [
         self::KIND_LINE => [
-            PlanStage::A->value => [
-                ExerciseMode::Intro,
-                ExerciseMode::MultipleChoice,
-                // WordBank or Scramble — see {@see assemblyModeFor()}. Not a random pick: the pair
-                // decides, once, and keeps its answer for as long as the pair exists.
-                ExerciseMode::WordBank,
-                ExerciseMode::Speaking,
-            ],
-            PlanStage::B->value => [
-                ExerciseMode::Cloze,
-                ExerciseMode::Listening,
-                ExerciseMode::Speaking,
-            ],
+            PlanStage::A->value => [ExerciseMode::Intro],
+            PlanStage::B->value => [ExerciseMode::MultipleChoice],
             PlanStage::C->value => [],
         ],
         self::KIND_WORD => [
-            PlanStage::A->value => [
-                ExerciseMode::Intro,
-                ExerciseMode::MultipleChoice,
-                ExerciseMode::MultipleChoice,
-                ExerciseMode::Speaking,
-            ],
-            PlanStage::B->value => [
-                ExerciseMode::Cloze,
-                ExerciseMode::Typing,
-            ],
-            PlanStage::C->value => [
-                ExerciseMode::Dictation,
-                ExerciseMode::PickCorrect,
-            ],
+            PlanStage::A->value => [ExerciseMode::Intro],
+            PlanStage::B->value => [ExerciseMode::MultipleChoice],
+            PlanStage::C->value => [ExerciseMode::Speaking],
         ],
-        // TWO TOUCHES AND A NIGHT BETWEEN THEM, and nothing that asks for the sentence back.
+        // TWO TOUCHES, and nothing that asks for the sentence back.
         //
-        //   A  meet it → choose what it means
-        //   B  hear it and take it down
+        //   A  meet it
+        //   B  hear it → choose what it meant (the situational card, канон §3 «услышал → выбрал смысл»)
         //   C  —
         //
-        // `listening` is the one production-looking mode that stays, and it stays for the reason
-        // DECISIONS п. 223 gives: hearing a line said to you and writing down what you heard is
-        // exactly the skill the shelf exists for. Everything that asks the learner to PRODUCE the
-        // interlocutor's turn — the word bank, the speaking card, the dictation of a sentence they
-        // will never say — is absent here and refused again downstream ({@see RoleLineModes}),
-        // because a day opened out of turn never sees this checklist at all.
+        // Everything that asks the learner to PRODUCE the interlocutor's turn — the word bank, the
+        // speaking card, the dictation of a sentence they will never say — is absent here and refused
+        // again downstream ({@see RoleLineModes}), because a day opened out of turn never sees this
+        // checklist at all.
         self::KIND_UNDERSTAND => [
-            PlanStage::A->value => [
-                ExerciseMode::Intro,
-                ExerciseMode::MultipleChoice,
-            ],
-            // THE SECOND TOUCH IS THE SITUATIONAL ONE (наряд SIT-1). Канон §3 asks for «услышал →
-            // выбрал смысл» and this is that card said exactly: the line is PLAYED, with no text
-            // until the learner asks for it, and the options are meanings in their own language.
-            //
-            // It REPLACES `listening` rather than joining it, and that is the whole rule of this
-            // наряд: «прежний B-чек-лист замещается, не дополняется — день не растёт». The two ask
-            // the same question anyway — what did they just say — and `listening` asked it by
-            // making the learner WRITE the interlocutor's sentence down, which is a keyboard test
-            // wearing a comprehension card's clothes.
-            PlanStage::B->value => [
-                ExerciseMode::SituationalHear,
-            ],
+            PlanStage::A->value => [ExerciseMode::Intro],
+            PlanStage::B->value => [ExerciseMode::SituationalHear],
             PlanStage::C->value => [],
         ],
-        // «ТЫ ОТВЕТИШЬ» and «ТЫ СПРОСИШЬ»: stage A unchanged — meet it, recognise it, assemble it,
-        // read it aloud — and stage B is the situation, three times.
-        //
-        // Замещение, не дополнение: B used to be cloze → listening → speaking, three cards per
-        // line, and a day of eight replies therefore owed twenty-four. The canon's B is one act
-        // («выбрал ответ в ситуации»), the tap is followed by saying the chosen line out loud
-        // ({@see ExerciseMode::speaksAfterChoice()}), and C for a line is the прогон сцены, which
-        // is a session and not a checklist step.
+        // «ТЫ ОТВЕТИШЬ» and «ТЫ СПРОСИШЬ»: stage A is meeting the line, and stage B is the
+        // situation, twice.
         //
         // ## ДВА КАСАНИЯ: ВЫБОР, ПОТОМ СБОРКА — B и B+ на одном тренажёре (наряд SCENE-RUN, Ч.1)
         //
@@ -202,20 +179,18 @@ final class PlanStageLadder
         //
         // ВЫБОР ЗАКРЫВАЕТСЯ ОДНИМ ВЕРНЫМ ОТВЕТОМ, и сборка привязана не к счётчику, а к ПОВТОРНОМУ
         // ПОЯВЛЕНИЮ реплики: первое касание ступени — выбор, следующее — сборка
-        // ({@see PlanTurnLevel::forStep()}). Поэтому шагов два, а не один: с одним шагом реплика с
+        // ({@see PlanTurnLevel::forTurn()}). Поэтому шагов два, а не один: с одним шагом реплика с
         // закрытым выбором становится `finished` и не показывается больше никогда — сборка была бы
-        // недостижима, а не редка.
+        // недостижима, а не редка. «Один показ на ступень в день» (DAY-FIX-2, Ч.2.4) — правило
+        // РАЗДАЧИ ({@see \App\Modules\Learning\Application\Service\PlanSittingPlanner}), а не
+        // таблицы: второй шаг наступает следующим показом, то есть следующим днём.
+        //
+        // «Ты спросишь» — никогда не выбор ({@see PlanTurnLevel::forTurn()}): оба касания — сборка.
         //
         // Ошибка на сборке ступень не открывает и в выбор не откатывает: второй шаг остаётся
-        // незакрытым, и реплика возвращается — в хвост присеста, в шов следующего дня — снова
-        // сборкой, потому что первый шаг по-прежнему закрыт.
+        // незакрытым, и реплика возвращается — в шов следующего дня — снова сборкой.
         self::KIND_LINE_SAY => [
-            PlanStage::A->value => [
-                ExerciseMode::Intro,
-                ExerciseMode::MultipleChoice,
-                ExerciseMode::WordBank,
-                ExerciseMode::Speaking,
-            ],
+            PlanStage::A->value => [ExerciseMode::Intro],
             PlanStage::B->value => [
                 ExerciseMode::SituationalSay,
                 ExerciseMode::SituationalSay,
@@ -223,12 +198,7 @@ final class PlanStageLadder
             PlanStage::C->value => [],
         ],
         self::KIND_LINE_ASK => [
-            PlanStage::A->value => [
-                ExerciseMode::Intro,
-                ExerciseMode::MultipleChoice,
-                ExerciseMode::WordBank,
-                ExerciseMode::Speaking,
-            ],
+            PlanStage::A->value => [ExerciseMode::Intro],
             PlanStage::B->value => [
                 ExerciseMode::SituationalAsk,
                 ExerciseMode::SituationalAsk,
@@ -236,6 +206,50 @@ final class PlanStageLadder
             PlanStage::C->value => [],
         ],
     ];
+
+    /**
+     * СТУПЕНЬ B РЕПЛИКИ ОТКРЫВАЕТСЯ В ТОТ ЖЕ ДЕНЬ, ЧТО ЗАКРЫЛАСЬ A (наряд DAY-FIX-2, решение
+     * владельца 05.09) — для трёх полок реплик, и только для них.
+     *
+     * Канон `docs/plan-dialogue.md` §10 держал ночь между знакомством и диалогом. Идеал владельца
+     * 05.09 ставит знакомство и диалог в ОДИН день — и на трёхдневном плане (день 1, день 2,
+     * финал) иначе быть не может: сцена 2 знакомится в день 2, и её диалог с ночью пришёлся бы на
+     * финал, где диалога нет. Слова и спасатели ночь держат: их B — узнавание, и узнавать слово в
+     * тот же вечер, что его показали, значит проверять память на двадцать минут.
+     */
+    private const OPENS_B_SAME_DAY = [self::KIND_UNDERSTAND, self::KIND_LINE_SAY, self::KIND_LINE_ASK];
+
+    /** Does stage B of this kind open on the day stage A closed, with no night in between? */
+    /**
+     * THE FIRST TRAINER OF A STAGE for this kind, and how many steps the stage has — what the planner
+     * needs to deal a line's stage B in the SAME sitting as its A ({@see opensBSameDay()}), before
+     * the log holds a single fact about that stage.
+     *
+     * @return array{0: ExerciseMode, 1: int}|null  null for a stage this kind never climbs
+     */
+    public static function firstStepOf(PlanStage $stage, string $kind): ?array
+    {
+        $steps = self::STEPS[self::normalizeKind($kind)][$stage->value];
+
+        return $steps === [] ? null : [$steps[0], count($steps)];
+    }
+
+    public static function opensBSameDay(string $kind): bool
+    {
+        return in_array(self::normalizeKind($kind), self::OPENS_B_SAME_DAY, true);
+    }
+
+    /**
+     * ОДИН ПОКАЗ НА СТУПЕНЬ В ДЕНЬ — для реплик сцены (наряд DAY-FIX-2, Ч.2.4).
+     *
+     * Полки реплик получают из чек-листа ступени ОДИН шаг за посадку; слова и спасатели — весь
+     * остаток ступени, как раньше (у них он и так один шаг). Правило раздачи, читается планировщиком
+     * посадки, живёт здесь, потому что оно про то, что лестница ОБЕЩАЕТ показать за день.
+     */
+    public static function oneShowPerDay(string $kind): bool
+    {
+        return in_array(self::normalizeKind($kind), self::OPENS_B_SAME_DAY, true);
+    }
 
     /**
      * The alternative to the word bank in a LINE's stage A, chosen by the pair rather than by
@@ -267,7 +281,9 @@ final class PlanStageLadder
      *
      * @var list<ExerciseMode>
      */
-    private const MAINTENANCE_MODES = [ExerciseMode::Listening, ExerciseMode::Speaking];
+    // ASSEMBLE IT, or SAY IT — never take it down by ear: `listening` is a keyboard card
+    // ({@see ExerciseMode::forgivesTypos()}) and the plan has no keyboard (DAY-FIX-2, Ч.2.6).
+    private const MAINTENANCE_MODES = [ExerciseMode::WordBank, ExerciseMode::Speaking];
 
     /**
      * The maintenance trainer for the `$slot`-th touch — alternating, never random, for exactly the
@@ -290,14 +306,10 @@ final class PlanStageLadder
      */
     public static function modesOf(PlanStage $stage, string $kind = self::KIND_WORD, int $pairCounter = 0): array
     {
-        $steps = self::STEPS[self::normalizeKind($kind)][$stage->value];
-
-        return array_map(
-            static fn (ExerciseMode $mode): ExerciseMode => $mode === ExerciseMode::WordBank
-                ? self::assemblyModeFor($pairCounter)
-                : $mode,
-            $steps,
-        );
+        // THE ASSEMBLY STEP LEFT THE STAGES (DAY-FIX-2, Ч.2.4 — one touch per stage): a word is
+        // assembled at the ASSEMBLY rung of stage C ({@see MAINTENANCE_MODES}), never inside A or B,
+        // so there is no word-bank step here to swap for its alternative any more.
+        return self::STEPS[self::normalizeKind($kind)][$stage->value];
     }
 
     /**
@@ -354,12 +366,13 @@ final class PlanStageLadder
         foreach (PlanStage::cases() as $stage) {
             foreach (self::STEPS[self::normalizeKind($kind)][$stage->value] as $mode) {
                 $out[$mode->value] = $mode;
-                if ($mode === ExerciseMode::WordBank) {
-                    foreach (self::ASSEMBLY_ALTERNATIVES as $alternative) {
-                        $out[$alternative->value] = $alternative;
-                    }
-                }
             }
+        }
+        // …and the maintenance trainers a card meets after its stages (rescue kit, retired words),
+        // with the assembly alternatives among them — the gate has to know every trainer a card can
+        // be dealt, or the fallback in {@see assemblyModeFor()} can never fire.
+        foreach ([...self::MAINTENANCE_MODES, ...self::ASSEMBLY_ALTERNATIVES] as $mode) {
+            $out[$mode->value] = $mode;
         }
 
         return array_values($out);
@@ -558,7 +571,15 @@ final class PlanStageLadder
             return $mode === ExerciseMode::Speaking ? LearningLadder::STEP_DICTATION : LearningLadder::STEP_ASSEMBLY;
         }
 
-        // Stage C takes the screen away: typed production and above.
+        // Stage C of a WORD is «сказал сам»: the translation on the screen, the word from memory,
+        // out loud. The assembly rung is the one that asks for the WORD
+        // ({@see ExerciseMode::gradesAgainstExample()}); the dictation rung would ask the learner
+        // to recite the example sentence, which is a different card and a keyboard-shaped one.
+        if ($mode === ExerciseMode::Speaking) {
+            return LearningLadder::STEP_ASSEMBLY;
+        }
+
+        // Anything else at C takes the screen away: typed production and above.
         return LearningLadder::STEP_DICTATION;
     }
 
@@ -570,10 +591,13 @@ final class PlanStageLadder
      *                                          term's data. Everything else falls out of the
      *                                          checklist rather than blocking it.
      * @param  list<PlanStageFact>  $facts      this term's plan-relevant answers, oldest first
-     * @param  bool  $introduced                the word has been SHOWN (a `term_exposures` row). The
+     * @param  string|null  $introducedOn       the local day the word was SHOWN (its first counting
+     *                                          `term_exposures` row), or null — never shown. The
      *                                          intro card is the one step that writes no review, so
      *                                          it is the one step closed by something other than a
-     *                                          fact.
+     *                                          fact — and since stage A is the intro alone
+     *                                          (DAY-FIX-2), its DATE is what the night is measured
+     *                                          from.
      * @param  string  $today                   the learner's local day, `Y-m-d`
      * @param  string|null  $yesterday            the day before it, `Y-m-d`. An argument rather than
      *                                            `$today` minus a day, because a calendar day is a
@@ -591,7 +615,7 @@ final class PlanStageLadder
     public function standingFor(
         array $applicable,
         array $facts,
-        bool $introduced,
+        ?string $introducedOn,
         string $today,
         string $kind = self::KIND_WORD,
         int $pairCounter = 0,
@@ -616,7 +640,12 @@ final class PlanStageLadder
 
         while (true) {
             $steps = $this->stepsFor($stage, $applicable, $kind, $pairCounter);
-            $walk = $this->walk($steps, $facts, $cursor, $introduced && $stage === PlanStage::A);
+            $walk = $this->walk($steps, $facts, $cursor, $introducedOn !== null && $stage === PlanStage::A);
+            // A STAGE CLOSED BY THE EXPOSURE ALONE has no fact to date it by: the intro is the one
+            // step that writes no review. Its closing day is the day the card was shown.
+            if ($walk['complete'] && $walk['closedOn'] === null && ! $walk['empty'] && $stage === PlanStage::A) {
+                $walk['closedOn'] = $introducedOn;
+            }
 
             if (! $walk['complete']) {
                 return new PlanTermStanding(
@@ -639,7 +668,12 @@ final class PlanStageLadder
             // A stage NOBODY can be dealt — every one of its trainers switched off, or none of them
             // buildable from this term — is passed through rather than waited on. It closed on no
             // day, so there is no night to wait for.
-            $advanceable = $walk['empty'] || ($walk['closedOn'] !== null && $walk['closedOn'] < $today);
+            //
+            // …AND A LINE'S STAGE B OPENS THE SAME DAY ITS A CLOSED ({@see opensBSameDay()}): the
+            // scene is met and then spoken in one sitting (решение владельца 05.09).
+            $advanceable = $walk['empty']
+                || ($walk['closedOn'] !== null && $walk['closedOn'] < $today)
+                || ($stage === PlanStage::A && self::opensBSameDay($kind));
 
             // Closed, and the night has not passed. The word owes nothing today — which is a
             // different sentence from «this word is done» and the API says both.
@@ -734,10 +768,6 @@ final class PlanStageLadder
     {
         $steps = [];
         foreach (self::STEPS[self::normalizeKind($kind)][$stage->value] as $mode) {
-            // THE ASSEMBLY STEP FALLS BACK RATHER THAN OUT — see {@see assemblyModeFor()}.
-            if ($mode === ExerciseMode::WordBank) {
-                $mode = self::assemblyModeFor($pairCounter, $applicable);
-            }
             if (in_array($mode, $applicable, true)) {
                 $steps[] = $mode;
             }

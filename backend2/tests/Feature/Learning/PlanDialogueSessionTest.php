@@ -80,15 +80,17 @@ function orderedWithinScene(array $session, int $dayIndex): bool
     return $ranks === $sorted;
 }
 
-it('opens a scene with the pieces and the introduction, and no conversation yet', function () {
+it('opens a scene with the pieces, the introduction — and the conversation, the same day', function () {
     [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
     $session = planSession($this, $token, $planId);
 
-    expect(sectionRuns($session))->toBe([S::WARMUP, S::WORDS, S::DIALOGUE_INTRO])
-        // «Гейт B без A»: the dialogue of this scene opens on the next calendar day, so there is no
-        // conversation to hand the screen — and the field says so rather than shipping half of one.
-        ->and($session['dialogues'])->toBe([]);
+    // THE SCENE IS SPOKEN THE DAY IT IS MET (DAY-FIX-2, DECISIONS п. 266): the introduction first,
+    // then the conversation, in one sitting — «гейт B без A» still holds, A simply closes on the
+    // intro and B opens behind it the same day.
+    expect(sectionRuns($session))->toBe([S::WARMUP, S::WORDS, S::DIALOGUE_INTRO, S::DIALOGUE])
+        ->and($session['dialogues'])->toHaveCount(1)
+        ->and($session['dialogues'][0]['day_index'])->toBe(1);
 });
 
 it('plays yesterday’s scene as a conversation, whole and in order', function () {
@@ -100,10 +102,11 @@ it('plays yesterday’s scene as a conversation, whole and in order', function (
     $session = planSession($this, $token, $planId);
     expect($session['day_index'])->toBe(2);
 
-    // ONE CONVERSATION, and it is scene 1's — the day being studied is 2, whose lines are only
-    // being met today.
-    expect($session['dialogues'])->toHaveCount(1);
-    $dialogue = $session['dialogues'][0];
+    // TWO CONVERSATIONS — scene 2's own (met and spoken today, DAY-FIX-2) and scene 1's, back in
+    // the seam by assembly. The one under test is yesterday's.
+    expect($session['dialogues'])->toHaveCount(2);
+    $dialogue = collect($session['dialogues'])->firstWhere('day_index', 1);
+    expect($dialogue)->not->toBeNull();
     expect($dialogue['day_index'])->toBe(1)
         ->and($dialogue['scene_title'])->not->toBeEmpty()
         ->and($dialogue['turns'])->not->toBeEmpty();
@@ -135,7 +138,7 @@ it('plays yesterday’s scene as a conversation, whole and in order', function (
     // learner a move only where a task with the same `term_id` exists.
     $dialogueTasks = array_values(array_filter(
         $session['tasks'],
-        static fn (array $t): bool => $t['section_code'] === S::DIALOGUE,
+        static fn (array $t): bool => $t['section_code'] === S::DIALOGUE && ($t['from_day_index'] ?? null) === 1,
     ));
     $turnIds = array_column($dialogue['turns'], 'term_id');
     foreach ($dialogueTasks as $task) {
@@ -191,8 +194,8 @@ it('builds a conversation for a day written before the prompt wrote one', functi
 
     $session = planSession($this, $token, $planId);
 
-    expect($session['dialogues'])->toHaveCount(1)
-        ->and($session['dialogues'][0]['day_index'])->toBe(1)
-        ->and($session['dialogues'][0]['turns'])->not->toBeEmpty()
+    $yesterday = collect($session['dialogues'])->firstWhere('day_index', 1);
+    expect($yesterday)->not->toBeNull()
+        ->and($yesterday['turns'])->not->toBeEmpty()
         ->and(sectionRuns($session))->toContain(S::DIALOGUE);
 });

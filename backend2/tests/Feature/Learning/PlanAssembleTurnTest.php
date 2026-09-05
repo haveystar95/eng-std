@@ -47,6 +47,15 @@ function turnsOfTerm(array $session, string $termId): array
     ));
 }
 
+/** Ходы ВЧЕРАШНЕЙ сцены — те, что пришли швом, а не сегодняшняя сцена (она играется выбором). */
+function seamTurns(array $session): array
+{
+    return array_values(array_filter(
+        dialogueTurns($session),
+        static fn (array $t): bool => $t['section'] === 'review',
+    ));
+}
+
 /**
  * Ответить на один ход посадки.
  *
@@ -69,16 +78,13 @@ function answerTurn(object $ctx, string $token, array $session, array $task, str
 }
 
 it('пока выбор не закрыт — ход раздаётся выбором', function () {
-    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    walkDay($this, $token, $planId, 1);
-    ageHistory($user->id, days: 1);
-
+    // Ступень B открывается В ТОТ ЖЕ день, что и знакомство (DAY-FIX-2, решение 266): разговор
+    // сцены стоит в посадке первого дня, и первое касание каждой реплики — выбор.
     $session = planSession($this, $token, $planId);
     $turns = dialogueTurns($session);
     expect($turns)->not->toBeEmpty();
-
-    // Ступень B только открылась: первое касание каждой реплики — выбор.
     $termId = (string) $turns[0]['card']['term_id'];
     $ofTerm = turnsOfTerm($session, $termId);
 
@@ -90,20 +96,17 @@ it('пока выбор не закрыт — ход раздаётся выбо
 it('закрытый выбор возвращает реплику СБОРКОЙ на следующем показе', function () {
     [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    $seq = walkDay($this, $token, $planId, 1);
+    // День 1 пройден целиком — каждая реплика сцены выбрана верно ОДИН раз. Второго показа в тот же
+    // день нет (DAY-FIX-2, Ч.2.4: одно касание ступени в день); назавтра реплика возвращается сборкой.
+    walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
 
     $session = planSession($this, $token, $planId);
-    $turns = dialogueTurns($session);
+    $turns = seamTurns($session);
     expect($turns)->not->toBeEmpty();
 
     $termId = (string) $turns[0]['card']['term_id'];
-    $first = turnsOfTerm($session, $termId)[0];
-    // ОДИН верный выбор — и он закрыт.
-    answerTurn($this, $token, $session, $first, (string) $first['card']['answer'], $seq++);
-
-    $again = planSession($this, $token, $planId);
-    $back = turnsOfTerm($again, $termId);
+    $back = turnsOfTerm($session, $termId);
 
     expect($back)->not->toBeEmpty()
         ->and($back[0]['turn_level'])->toBe('assemble')
@@ -123,25 +126,25 @@ it('ошибка на сборке не откатывает ход в выбо�
     ageHistory($user->id, days: 1);
 
     $session = planSession($this, $token, $planId);
-    $turns = dialogueTurns($session);
+    $turns = seamTurns($session);
     expect($turns)->not->toBeEmpty();
 
+    // Выбор закрыт ещё вчера (в день знакомства); сегодня реплика приходит сборкой — и ПРОВАЛЕНА.
     $termId = (string) $turns[0]['card']['term_id'];
-    $first = turnsOfTerm($session, $termId)[0];
-    answerTurn($this, $token, $session, $first, (string) $first['card']['answer'], $seq++);
-
-    // Сборка ПРОВАЛЕНА.
-    $second = planSession($this, $token, $planId);
-    $assemble = turnsOfTerm($second, $termId)[0];
+    $assemble = turnsOfTerm($session, $termId)[0];
     expect($assemble['turn_level'])->toBe('assemble');
-    answerTurn($this, $token, $second, $assemble, 'not the line at all', $seq++);
+    answerTurn($this, $token, $session, $assemble, 'not the line at all', $seq++);
+    ageHistory($user->id, days: 1);
 
-    // Ступень не открылась и в выбор не откатилась.
-    $third = planSession($this, $token, $planId);
-    $back = turnsOfTerm($third, $termId);
+    // Ступень не открылась и в выбор не откатилась: назавтра реплике снова должна сборка. Читается
+    // с экрана дня (`next_step`), а не из посадки: посадка режется бюджетом в 40 карточек, и шов
+    // дня 1 в неё может и не влезть — а что реплике ДОЛЖНО, лестница знает без посадки.
+    $terms = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$planId}/days/1")->assertOk()->json('data.terms');
+    $row = collect($terms)->firstWhere('id', $termId);
 
-    expect($back)->not->toBeEmpty()
-        ->and($back[0]['turn_level'])->toBe('assemble');
+    expect($row)->not->toBeNull()
+        ->and($row['next_step'])->toBe('assemble');
 });
 
 it('не хранит про строгость хода ни строки — она выводится из чек-листа', function () {

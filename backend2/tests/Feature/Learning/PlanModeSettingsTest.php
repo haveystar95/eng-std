@@ -64,7 +64,7 @@ it('reports a level’s open trainers, and closes one when its row is switched o
     $open = (new App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanModeSettingsReader())->openModesFor(PlanLevel::Basic);
 
     expect($open)->not->toContain(ExerciseMode::Dictation)
-        ->and($open)->toContain(ExerciseMode::Typing);
+        ->and($open)->toContain(ExerciseMode::MultipleChoice);
 });
 
 it('refuses a plan row without a level, and a global row with one', function () {

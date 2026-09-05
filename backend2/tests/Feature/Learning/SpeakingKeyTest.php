@@ -88,7 +88,12 @@ it('sends the client the same key it grades by', function () {
     // this test would pass by measuring nothing.
     DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->update(['enabled' => true]);
 
-    [, $token, $planId] = startedPlan($this);
+    [$user, $token, $planId] = startedPlan($this);
+    // The spoken card is a word's stage C — two nights after it was met (DAY-FIX-2).
+    $seq = walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 1);
+    walkDay($this, $token, $planId, 2, $seq);
+    ageHistory($user->id, days: 1);
 
     $session = planSession($this, $token, $planId);
 

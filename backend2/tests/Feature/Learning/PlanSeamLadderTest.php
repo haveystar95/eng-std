@@ -69,8 +69,10 @@ it('deals the seam off the plan`s ladder, not off due_at — a season out and st
     // …and its trainers are SIT-1's table for stage B, which is what proves the seam came off the
     // ladder rather than off a queue: a `due_at` selection could only have produced the same cards
     // by coincidence, and did not produce them at all.
-    expect($seamModes)->toContain('situational_hear')
-        ->and($seamModes)->toContain('situational_say');
+    // The learner's replies come back for their second touch; the interlocutor's lines do not —
+    // «понимаю» is one touch, taken the day the scene was met (DAY-FIX-2).
+    expect($seamModes)->toContain('situational_say')
+        ->and($seamModes)->not->toContain('situational_hear');
 
     // THE WARM-UP IS THERE TOO, on the kit's own accelerated rung.
     expect($bySection['warmup'] ?? [])->not->toBeEmpty();
@@ -82,7 +84,13 @@ it('deals the seam off the plan`s ladder, not off due_at — a season out and st
     // of the above.
     expect($bySection['day'] ?? [])->not->toBeEmpty();
     foreach ($bySection['day'] as $task) {
-        expect($task['stage'])->toBe('a')
+        // The scene run of yesterday's scene is «part of the day» and stands on stage C — not day
+        // 2's own material (SCENE-RUN).
+        if ($task['section_code'] === 'scene_run') {
+            continue;
+        }
+        // Stage A — or the stage B a scene line opens behind its intro the same day (DAY-FIX-2).
+        expect($task['stage'])->toBeIn(['a', 'b'])
             ->and($task['from_day_index'])->toBe(2);
     }
 });
@@ -162,7 +170,9 @@ it('brings the rescue kit back after its stages are over — every other day, in
     $maintenance = rescueTasksOf(planSession($this, $token, $planId));
     expect($maintenance)->not->toBeEmpty();
     foreach ($maintenance as $task) {
-        expect($task['card']['exercise_mode'])->toBeIn(['listening', 'speaking'])
+        // Assembled or said — never `listening`, a keyboard card, since the plan has no keyboard
+        // (DAY-FIX-2, Ч.2.6).
+        expect($task['card']['exercise_mode'])->toBeIn(['word_bank', 'scramble', 'speaking'])
             ->and($task['section'])->toBe('warmup');
     }
 });

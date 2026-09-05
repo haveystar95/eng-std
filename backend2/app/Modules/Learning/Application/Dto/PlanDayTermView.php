@@ -60,7 +60,38 @@ final readonly class PlanDayTermView
          * ЖЕ файл, что и разговор: два голоса на одну реплику — это две разные реплики для уха.
          */
         public ?string $audioId = null,
+        /**
+         * ЧТО С ЭТОЙ СТРОКОЙ БУДЕТ ДЕЛАТЬ ЧЕЛОВЕК — код упражнения, которым экран дня подписывает
+         * секцию словами (наряд DAY-FIX-2, Ч.4.2): `meet` · `recognize` · `hear` · `choose` ·
+         * `assemble` · `say`, или null — сегодня строка ничего не должна.
+         *
+         * Считает сервер по стойке и уровню хода — тому же правилу, что раздаёт карточку
+         * ({@see \App\Modules\Learning\Domain\ValueObject\PlanTurnLevel::forTurn()}); экран только
+         * переводит код в слово.
+         */
+        public ?string $nextStep = null,
+        /**
+         * ОТМЕТКА У СТРОКИ, если день шёл: `passed` — знакомство закрыто; `said_self` — реплика
+         * прозвучала голосом человека в прогоне; null — пусто (Ч.4.3). Не цифры.
+         */
+        public ?string $mark = null,
     ) {}
+
+    public const STEP_MEET = 'meet';
+
+    public const STEP_RECOGNIZE = 'recognize';
+
+    public const STEP_HEAR = 'hear';
+
+    public const STEP_CHOOSE = 'choose';
+
+    public const STEP_ASSEMBLE = 'assemble';
+
+    public const STEP_SAY = 'say';
+
+    public const MARK_PASSED = 'passed';
+
+    public const MARK_SAID_SELF = 'said_self';
 
     /**
      * @param  string|null  $audioUrl  адрес файла озвучки, если он есть.
@@ -86,6 +117,8 @@ final readonly class PlanDayTermView
             'shelf' => $this->shelf,
             'tier' => $this->tier,
             'audio_url' => $audioUrl,
+            'next_step' => $this->nextStep,
+            'mark' => $this->mark,
         ];
     }
 }

@@ -59,11 +59,19 @@ final class PlanAnswerOptions
     /**
      * Кандидаты в варианты хода [$target], своей сценой вперёд.
      *
+     * ## 3. Уже сказанное в этом разговоре — не вариант (наряд DAY-FIX-2, Ч.1.5)
+     *
+     * Живой прогон 05.09: среди вариантов стояла реплика, которую человек сказал двумя обменами
+     * выше. Она верна по форме и мертва по смыслу — в разговоре её уже произнесли. Поэтому вызывающий
+     * отдаёт сюда всё, что в цепочке звучало ДО этого хода, любой стороной, и оно не попадает в
+     * варианты. Замок стоит здесь, а не в сборщике: сборщик не знает, что такое цепочка.
+     *
      * @param  array<int, list<SituationalCandidate>>  $scenes  карточки плана по индексу дня
      * @param  int|null  $ownDay  день сцены, которой принадлежит сам ход
+     * @param  list<string>  $alreadySaid  term id реплик, прозвучавших в разговоре до этого хода
      * @return list<string>  term id, в порядке предпочтения
      */
-    public static function forTurn(SituationalCandidate $target, array $scenes, ?int $ownDay): array
+    public static function forTurn(SituationalCandidate $target, array $scenes, ?int $ownDay, array $alreadySaid = []): array
     {
         // Своя сцена первой, остальные — по возрастанию дня, чтобы посадка была воспроизводимой.
         $order = array_keys($scenes);
@@ -72,10 +80,12 @@ final class PlanAnswerOptions
             $order = [$ownDay, ...array_values(array_filter($order, static fn (int $d): bool => $d !== $ownDay))];
         }
 
+        $said = array_fill_keys($alreadySaid, true);
+
         $ids = [];
         foreach ($order as $day) {
             foreach ($scenes[$day] ?? [] as $candidate) {
-                if ($candidate->termId === $target->termId) {
+                if ($candidate->termId === $target->termId || isset($said[$candidate->termId])) {
                     continue;
                 }
                 if (! self::isSpokenShelf($candidate->shelf)) {

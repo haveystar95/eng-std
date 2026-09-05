@@ -45,11 +45,16 @@ interface PlanStandingsReader
     /**
      * Which of these terms this learner has already been SHOWN — the intro step's evidence.
      *
+     * ON WHICH LOCAL DAY, and not merely whether (наряд DAY-FIX-2, Ч.2): since the ladder's stage A
+     * is the intro alone, the exposure is the only thing that closes it, and «has the night passed
+     * since» needs a date. The learner's own calendar, like {@see factsFor()}'s facts.
+     *
      * @param  list<string>  $termIds
      * @param  array<string, \DateTimeImmutable>  $since  as in {@see factsFor()}: an exposure older
      *         than the card's arrival in this plan is a meeting that happened elsewhere, and the
      *         plan's own intro is still owed.
-     * @return array<string, bool>  term id => true (absent means «never shown»)
+     * @return array<string, string>  term id => `Y-m-d` of the first counting exposure (absent means
+     *                                «never shown»)
      */
-    public function introducedAmong(UserId $user, array $termIds, array $since = []): array;
+    public function introducedAmong(UserId $user, array $termIds, DateTimeZone $tz, array $since = []): array;
 }

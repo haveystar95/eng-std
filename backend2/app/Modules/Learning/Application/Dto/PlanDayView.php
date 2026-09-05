@@ -43,5 +43,12 @@ final readonly class PlanDayView
          * every day scheduled before v0.4.
          */
         public string $intro = '',
+        /**
+         * ОДНО СЛОВО О ДНЕ — `not_started` | `in_progress` | `done` — и сколько минут он ещё стоит
+         * (наряд DAY-FIX-2, Ч.3). Считает только сервер ({@see \App\Modules\Learning\Application\Service\PlanDayStateCensus});
+         * вкладка «План», экран дня и шапка присеста читают это поле и не считают ничего сами.
+         */
+        public string $dayState = 'not_started',
+        public int $minutesLeft = 0,
     ) {}
 }

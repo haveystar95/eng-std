@@ -123,7 +123,12 @@ it('puts every task of the day before every task of the seam, and says where the
     // with (канон §5), then the day, then the revision of the days before it. `day_task_count` is a
     // COUNT of the middle one and not an index into the list — the warm-up stands before it.
     $warmup = array_keys($sections, PlanSessionTaskView::SECTION_WARMUP, true);
-    $dayTasks = array_keys($sections, PlanSessionTaskView::SECTION_DAY, true);
+    // The scene run is «part of the day» whichever scene it runs, and it is dealt LAST, behind the
+    // seam (SCENE-RUN; DAY-FIX-2 orders it after everything) — so it is not part of this contiguity.
+    $dayTasks = array_values(array_filter(
+        array_keys($sections, PlanSessionTaskView::SECTION_DAY, true),
+        static fn (int $i): bool => $session['tasks'][$i]['section_code'] !== 'scene_run',
+    ));
     $review = array_keys($sections, PlanSessionTaskView::SECTION_REVIEW, true);
 
     expect($session)->toHaveKey('day_task_count')
@@ -134,7 +139,11 @@ it('puts every task of the day before every task of the seam, and says where the
         // a caption rather than a label on scattered cards.
         ->and(max($warmup))->toBeLessThan(min($dayTasks))
         ->and(max($dayTasks))->toBeLessThan(min($review))
-        ->and($session['day_task_count'])->toBe(count($dayTasks))
+        // `day_task_count` counts the whole day part — the run of yesterday's scene included.
+        ->and($session['day_task_count'])->toBe(count($dayTasks) + count(array_filter(
+            $session['tasks'],
+            static fn (array $t): bool => $t['section_code'] === 'scene_run',
+        )))
         ->and($session['day_task_count'])->toBeLessThan(count($session['tasks']));
 
     // And `section` agrees with the day each card was introduced on — which is what it now MEANS.
@@ -145,6 +154,13 @@ it('puts every task of the day before every task of the seam, and says where the
             // The kit lives on day 1 and comes back every morning after it, so «which day» says
             // nothing about which section it is in — the shelf does.
             expect($task['shelf'])->toBe('rescue')->and($task['origin'])->toBeNull();
+
+            continue;
+        }
+        // THE SCENE RUN is part of the DAY whichever scene it runs (SCENE-RUN: «часть дня, а не
+        // шва»), so its day says nothing about its section either.
+        if ($task['section_code'] === 'scene_run') {
+            expect($task['section'])->toBe(PlanSessionTaskView::SECTION_DAY);
 
             continue;
         }
@@ -251,15 +267,23 @@ it('marks the day passed as soon as its session is completed, without building a
 });
 
 it('leaves the day alone when the sitting ended with a word still owed a card', function () {
-    // One card answered wrong is what actually kept the live day open, and it SHOULD keep it open:
-    // stage A closes when every word of the day has closed it.
+    // A card never MET is what keeps the day open: stage A closes when every card of the day has
+    // been introduced (one touch per stage, DAY-FIX-2), and a day with one intro unseen is not
+    // passed, however many of its other cards were answered.
     [, $token, $planId] = startedPlan($this);
 
     $session = planSession($this, $token, $planId);
-    // Everything except the last task of the day.
+    // Everything except the LAST INTRO of the day.
+    $lastIntro = null;
+    foreach ($session['tasks'] as $i => $task) {
+        if ($task['section'] === 'day' && $task['card']['exercise_mode'] === 'intro') {
+            $lastIntro = $i;
+        }
+    }
+    expect($lastIntro)->not->toBeNull();
     $partial = [
         'session_id' => $session['session_id'],
-        'tasks' => array_slice($session['tasks'], 0, max(0, count($session['tasks']) - 1)),
+        'tasks' => array_values(array_filter($session['tasks'], static fn (array $t, int $i): bool => $i !== $lastIntro, ARRAY_FILTER_USE_BOTH)),
     ];
     answerTasks($this, $token, $partial);
 
@@ -316,7 +340,10 @@ it('lets no word of another plan in, as a task or as an option — line or not',
 it('offers a word no line as a wrong answer, whatever the session is carrying', function () {
     // «passport» offered «Hello. Do you have a reservation?» — not a wrong answer but a different
     // kind of question, and one that gives the right one away by length alone.
-    [, $token, $planId] = startedPlan($this);
+    [$user, $token, $planId] = startedPlan($this);
+    // Option cards are stage B, the day after the words were met (DAY-FIX-2).
+    walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 1);
 
     $session = planSession($this, $token, $planId);
 
