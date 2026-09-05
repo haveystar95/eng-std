@@ -3259,6 +3259,15 @@ components:
           oneOf:
             - { $ref: '#/components/schemas/Profile' }
             - { type: 'null' }
+        qa_tools:
+          type: boolean
+          description: >-
+            MAY THIS SESSION USE QA TOOLS — the same door the password-less dev sign-in stands
+            behind (наряд SCENE-RUN, Ч.2.9). BOTH locks, answered here so the client never has to
+            put them together: the account is marked `is_qa` AND the environment is not production
+            with the opt-in flag on (`DevLoginGate`). Always `false` in production, whatever the
+            database says. Today it gates one thing — substituting a transcript on a scene-run turn,
+            which a simulator has no microphone to produce.
         generation:
           description: >
             The caller's generation allowance, so the client can grey the create button before

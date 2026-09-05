@@ -1302,6 +1302,17 @@ class AppUser {
   /// [toJson]) so a cached user never carries a stale quota — the create screen fetches it fresh.
   final GenerationQuota? quota;
 
+  /// ЭТОЙ СЕССИИ РАЗРЕШЕНЫ QA-ИНСТРУМЕНТЫ (наряд SCENE-RUN, Ч.2.9).
+  ///
+  /// Решает СЕРВЕР, и решает обоими замками сразу: аккаунт помечен `is_qa` И среда не production
+  /// при включённом флаге — та же дверь, что у входа без пароля. Клиент складывать это сам не
+  /// вправе: правило, записанное дважды, однажды расходится, и расходится оно в ту сторону, где
+  /// дверь открыта.
+  ///
+  /// Транзиентно, как и квота: право не кэшируется вместе с пользователем, чтобы сборка, ушедшая в
+  /// production со старым кэшем, не унесла его с собой.
+  final bool qaTools;
+
   AppUser({
     required this.id,
     required this.name,
@@ -1309,6 +1320,7 @@ class AppUser {
     this.avatar,
     this.profile,
     this.quota,
+    this.qaTools = false,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
@@ -1320,6 +1332,7 @@ class AppUser {
     quota: j['generation'] != null
         ? GenerationQuota.fromJson(j['generation'] as Map<String, dynamic>)
         : null,
+    qaTools: j['qa_tools'] == true,
   );
 
   Map<String, dynamic> toJson() => {

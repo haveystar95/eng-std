@@ -6,6 +6,7 @@ namespace App\Modules\Identity\Infrastructure\Eloquent;
 
 use App\Modules\Identity\Application\Dto\ProfileView;
 use App\Modules\Identity\Application\Dto\UserView;
+use App\Modules\Identity\Domain\Service\DevLoginGate;
 
 /** Builds the client-facing {@see UserView} from the Eloquent user, keeping models out of Application. */
 final class UserViewMapper
@@ -29,6 +30,10 @@ final class UserViewMapper
                 timezone: $profile->timezone ?? 'UTC',
                 onboardedAt: $profile->onboarded_at?->toISOString(),
             ) : null,
+            // ОБА ЗАМКА, спрошенные здесь, а не на клиенте: пометка аккаунта И та же дверь, что у
+            // входа без пароля. Клиент читает один ответ и не складывает его сам.
+            qaTools: (bool) $user->is_qa
+                && DevLoginGate::isOpen((string) app()->environment(), (bool) config('qa.dev_login')),
         );
     }
 }

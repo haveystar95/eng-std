@@ -488,6 +488,30 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     }
   }
 
+  /// ПОДСТАВИТЬ ТРАНСКРИПТ ВМЕСТО ГОЛОСА — дев-дверь QA (наряд SCENE-RUN, Ч.2.9).
+  ///
+  /// На симуляторе микрофона нет, и без этой двери ступень C нечем пройти живьём: прогон сцены
+  /// невозможно ни снять, ни принять. Дверь та же, что у входа без пароля, и решает её СЕРВЕР
+  /// ({@see AppUser.qaTools}): аккаунт помечен `is_qa` И среда не production. В релизной сборке у
+  /// боевого аккаунта поле всегда `false`, поэтому кнопок здесь не бывает.
+  ///
+  /// Что она делает: кладёт готовый текст в тот же путь, которым уходит услышанное, и подделывает
+  /// ОДНУ вещь сверх текста — момент начала прослушивания, потому что «сразу» это про время, а
+  /// подстановка мгновенна по построению. Без этого любой подставленный ход был бы «сразу», и
+  /// проверить «сказал, но медленно» стало бы нечем.
+  void _substituteTranscript(String text, {required bool fast}) {
+    final knobs = widget.sceneRun;
+    if (_answered || knobs == null) return;
+
+    unawaited(_recognizer?.cancel());
+    _runGuardTimer?.cancel();
+    setState(() => _listeningNow = false);
+    _listenStartedAt = DateTime.now().subtract(
+      fast ? Duration.zero : Duration(seconds: knobs.fastSeconds + 1),
+    );
+    _commit(text);
+  }
+
   /// СТОРОЖ ПРОГОНА И ВЫХОД ИЗ НЕГО — секунды приходят с сервера ({@see SceneRunKnobs}).
   ///
   /// Два таймера и разные вопросы: первый показывает «Пропустить» (выход обязан быть виден ДО того,
@@ -917,6 +941,20 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         if (!_answered && _isSpeaking) ...[
           const SizedBox(height: AppSpacing.s16),
           _speakingControls(l),
+        ],
+        // ДЕВ-ДВЕРЬ QA: подстановка транскрипта вместо голоса. Ни в релизе, ни у боевого аккаунта
+        // её нет — право приезжает с сервера одним полем ({@see _substituteTranscript}).
+        if (!_answered && _isSceneRun && (ref.watch(authControllerProvider).value?.qaTools ?? false)) ...[
+          const SizedBox(height: AppSpacing.s12),
+          _QaTranscriptRow(
+            onSaid: (fast) => _substituteTranscript(
+              _card.spokenTarget ?? _card.answerText,
+              fast: fast,
+            ),
+            // «Мимо» — не пустой ответ, а ЧУЖОЙ текст: пустой это «не помню», а прогон проверяет,
+            // прозвучал ли ключ, и мимо ключа сказанное — тоже сказанное.
+            onMissed: () => _substituteTranscript('nothing like the line', fast: false),
+          ),
         ],
         if (!_answered && (_mode.isTyped && !_isRecognitionListening)) ...[
           const SizedBox(height: AppSpacing.s12),
@@ -2096,6 +2134,39 @@ class _SayItAloud extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// ДЕВ-РЯД QA: подставить транскрипт вместо голоса — наряд SCENE-RUN, Ч.2.9.
+///
+/// Существует ровно ради одного: на симуляторе микрофона нет, и без подстановки ступень C нечем
+/// пройти живьём — прогон сцены невозможно ни снять, ни принять. Дверь стережёт сервер
+/// ({@see AppUser.qaTools}), поэтому здесь нет ни одной собственной проверки: второе правило про то
+/// же самое однажды разошлось бы с первым, и разошлось бы в сторону открытой двери.
+///
+/// Три кнопки, потому что исходов у хода три и они не выводятся один из другого: «сразу» и «сказал»
+/// различаются ВРЕМЕНЕМ, а не текстом, и без отдельной кнопки подставленный ход всегда был бы
+/// быстрым.
+///
+/// Подписи латиницей и намеренно: это не интерфейс продукта, а инструмент, и человеку, который
+/// учит язык, его не показывают.
+class _QaTranscriptRow extends StatelessWidget {
+  const _QaTranscriptRow({required this.onSaid, required this.onMissed});
+
+  final void Function(bool fast) onSaid;
+  final VoidCallback onMissed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: QuietButton(label: 'QA · fast', onPressed: () => onSaid(true))),
+        const SizedBox(width: 8),
+        Expanded(child: QuietButton(label: 'QA · said', onPressed: () => onSaid(false))),
+        const SizedBox(width: 8),
+        Expanded(child: QuietButton(label: 'QA · miss', onPressed: onMissed)),
+      ],
     );
   }
 }

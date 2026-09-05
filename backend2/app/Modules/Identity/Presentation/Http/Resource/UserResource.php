@@ -39,6 +39,11 @@ final class UserResource extends JsonResource
                 ? ProfileResource::make($this->resource->profile)->resolve()
                 : null,
             'generation' => $this->generation,
+            // QA-ИНСТРУМЕНТЫ ЭТОЙ СЕССИИ (наряд SCENE-RUN, Ч.2.9). Дверь одна на всё: аккаунт
+            // помечен `is_qa` И среда не production при включённом флаге. В production поле всегда
+            // `false`, поэтому сборка, попавшая туда, инструментов не покажет, даже если её об этом
+            // попросить.
+            'qa_tools' => $this->resource->qaTools,
         ];
     }
 }

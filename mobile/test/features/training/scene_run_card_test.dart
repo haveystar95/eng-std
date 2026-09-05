@@ -68,7 +68,7 @@ void main() {
     ladderStep: 3,
   );
 
-  Widget host(SessionCard c, {SceneRunKnobs? run, SpeechRecognizer? recognizer}) => ProviderScope(
+  Widget host(SessionCard c, {SceneRunKnobs? run, SpeechRecognizer? recognizer, AppUser? qa}) => ProviderScope(
     overrides: [
       appDatabaseProvider.overrideWith((ref) {
         final db = AppDatabase.forTesting(NativeDatabase.memory());
@@ -76,6 +76,7 @@ void main() {
         return db;
       }),
       speechRecognizerProvider.overrideWithValue(recognizer ?? _SilentRecognizer()),
+      if (qa != null) authControllerProvider.overrideWith(() => _QaAuth(qa)),
     ],
     child: MaterialApp(
       locale: const Locale('ru'),
@@ -125,6 +126,33 @@ void main() {
     expect(find.textContaining(key), findsWidgets);
   });
 
+  testWidgets('дев-двери QA нет у обычного аккаунта', (tester) async {
+    // Право приезжает с сервера одним полем, и клиент его не складывает сам: инструмент, который
+    // засчитывает ход, не открывая рта, не должен зависеть от того, как собрана сборка.
+    await tester.pumpWidget(
+      host(runCard(), run: const SceneRunKnobs(), qa: AppUser(id: '01U', name: 'Learner')),
+    );
+    await tester.pump();
+
+    expect(find.text('QA · fast'), findsNothing);
+    expect(find.text('QA · said'), findsNothing);
+  });
+
+  testWidgets('QA-аккаунту за открытой дверью подстановка доступна', (tester) async {
+    await tester.pumpWidget(
+      host(
+        runCard(),
+        run: const SceneRunKnobs(),
+        qa: AppUser(id: '01U', name: 'QA', qaTools: true),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('QA · fast'), findsOneWidget);
+    expect(find.text('QA · said'), findsOneWidget);
+    expect(find.text('QA · miss'), findsOneWidget);
+  });
+
   testWidgets('открывает «Пропустить» по времени, а не по поломке микрофона', (tester) async {
     // В говорении фраз выход появляется после отказа канала: там молчание это железо. В прогоне
     // молчание — законный ход человека, который не вспомнил, и держать его до поломки значило бы
@@ -144,4 +172,14 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();
   });
+}
+
+/// Аутентификация, отвечающая заранее известным пользователем — дверь QA решает СЕРВЕР.
+class _QaAuth extends AuthController {
+  _QaAuth(this._user);
+
+  final AppUser _user;
+
+  @override
+  Future<AppUser?> build() async => _user;
 }
