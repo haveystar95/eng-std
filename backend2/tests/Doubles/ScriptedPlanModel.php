@@ -32,14 +32,24 @@ final class ScriptedPlanModel implements ContentModelPort
     /** @var list<string> the user message of every P2R call, in order */
     public array $repairMessages = [];
 
+    /** @var list<string> the user message of every P2J (pair judge) call, in order */
+    public array $judgeMessages = [];
+
+    /** @var list<string> the user message of every P2P (pair rewrite) call, in order */
+    public array $rewriteMessages = [];
+
     /**
-     * @param  list<array<string, mixed>>  $days     one P2 answer per call
-     * @param  list<array<string, mixed>>  $repairs  one P2R answer per call
+     * @param  list<array<string, mixed>>  $days      one P2 answer per call
+     * @param  list<array<string, mixed>>  $repairs   one P2R answer per call
+     * @param  list<bool>  $verdicts                  one P2J verdict per call; exhausted = «fits»
+     * @param  list<array<string, mixed>>  $rewrites  one P2P answer per call; exhausted = a stock line
      */
     public function __construct(
         private array $days,
         private array $repairs = [],
         private string $outlineFixture = 's1-outline.v0.4.json',
+        private array $verdicts = [],
+        private array $rewrites = [],
     ) {}
 
     public function provider(): ProviderId
@@ -61,9 +71,23 @@ final class ScriptedPlanModel implements ContentModelPort
             $this->repairPrompts[] = $prompt->text;
             $this->repairMessages[] = $userMessage;
             $payload = array_shift($this->repairs) ?? ['cards' => []];
-        } elseif (isset($properties['hear'])) {
+        } elseif (isset($properties['pairs']) || isset($properties['hear'])) {
             $this->dayMessages[] = $userMessage;
             $payload = array_shift($this->days) ?? [];
+        } elseif (isset($properties['fits'])) {
+            $this->judgeMessages[] = $userMessage;
+            $verdict = array_shift($this->verdicts);
+            $payload = ['fits' => $verdict ?? true, 'reason' => $verdict === false ? 'scripted: does not follow' : 'scripted: fits'];
+        } elseif (isset($properties['frame'])) {
+            $this->rewriteMessages[] = $userMessage;
+            $payload = array_shift($this->rewrites) ?? [
+                'skill_ref' => 's1.1',
+                // A FORMULA — no gap, empty filler — so the stock rewrite passes the day's gates.
+                'frame' => 'Scripted rewritten line.',
+                'filler' => '',
+                'translation' => 'Переписанная по сценарию реплика.',
+                'transliteration' => '',
+            ];
         } else {
             /** @var array<string, mixed> $payload */
             $payload = json_decode(
@@ -91,5 +115,15 @@ final class ScriptedPlanModel implements ContentModelPort
     public function repairCalls(): int
     {
         return count($this->repairMessages);
+    }
+
+    public function judgeCalls(): int
+    {
+        return count($this->judgeMessages);
+    }
+
+    public function rewriteCalls(): int
+    {
+        return count($this->rewriteMessages);
     }
 }

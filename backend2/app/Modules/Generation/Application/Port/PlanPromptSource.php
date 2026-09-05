@@ -38,6 +38,20 @@ interface PlanPromptSource
     public function listen(array $placeholders): RenderedPrompt;
 
     /**
+     * P2J — «B отвечает на A?», один вызов на одну пару дня (наряд DAY-FIX-2, Ч.1.2).
+     *
+     * @param  array<string, string>  $placeholders  keys WITHOUT the braces
+     */
+    public function pairJudge(array $placeholders): RenderedPrompt;
+
+    /**
+     * P2P — переписать `you` пары, которую судья отбил. Не больше двух раз на пару.
+     *
+     * @param  array<string, string>  $placeholders  keys WITHOUT the braces
+     */
+    public function pairRewrite(array $placeholders): RenderedPrompt;
+
+    /**
      * The version each prompt is stamped with — what lands in the ledger row and in
      * `terms.prompt_version`.
      *
@@ -54,4 +68,8 @@ interface PlanPromptSource
     public function repairVersion(): string;
 
     public function listenVersion(): string;
+
+    public function pairJudgeVersion(): string;
+
+    public function pairRewriteVersion(): string;
 }

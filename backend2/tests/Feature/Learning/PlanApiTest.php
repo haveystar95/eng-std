@@ -293,7 +293,8 @@ it('starts the plan, writes day 1 as a real collection and enrols its terms stri
 
     // A real collection with real terms — every trainer works on it without knowing plans exist.
     $termIds = DB::table('collection_items')->where('collection_id', $day1->collection_id)->pluck('term_id');
-    // Eighteen cards of the scene plus the five rescue phrases the server writes into day 1.
+    // Eighteen cards of the scene (five pairs = ten lines, four words, two chunks, two numbers)
+    // plus the five rescue phrases the server writes into day 1.
     expect($termIds)->toHaveCount(23);
 
     // Strictly enrolled, with the plan named as the reason.
@@ -323,8 +324,8 @@ it('writes the two plan facts onto the terms — is_line and a difficulty score'
         ->get(['t.is_line', 't.difficulty_score', 't.kind', 't.shelf', 't.tier', 't.frame',
             't.speaker', 't.image_api_prompt']);
 
-    // The day-scene: ten spoken and heard lines, six pieces, two numbers — plus the five rescue
-    // phrases, which are lines the server wrote rather than the model.
+    // The day-scene: ten spoken and heard lines (five pairs), six pieces, two numbers — plus the
+    // five rescue phrases, which are lines the server wrote rather than the model.
     expect($terms->where('kind', 'line'))->toHaveCount(15)
         ->and($terms->where('kind', 'chunk'))->toHaveCount(2)
         ->and($terms->where('kind', 'word'))->toHaveCount(4)
@@ -337,7 +338,7 @@ it('writes the two plan facts onto the terms — is_line and a difficulty score'
         ->and($terms->where('tier', 'speak')->pluck('shelf')->unique()->sort()->values()->all())
         ->toBe(['ask', 'chunks', 'rescue', 'say', 'words'])
         // Whose turn it is, and who has no turn at all.
-        ->and($terms->where('shelf', 'hear')->where('speaker', 'role'))->toHaveCount(4)
+        ->and($terms->where('shelf', 'hear')->where('speaker', 'role'))->toHaveCount(5)
         ->and($terms->where('kind', 'word')->whereNotNull('speaker'))->toHaveCount(0)
         ->and($terms->whereNull('difficulty_score'))->toHaveCount(0);
 });
@@ -707,17 +708,22 @@ it('leaves a ledger row for every paid call the plan made', function () {
     outlinePlan($this, $token, $plan['id']);
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
 
-    $rows = DB::table('generation_requests')->where('plan_id', $plan['id'])->orderBy('created_at')->get();
+    $all = DB::table('generation_requests')->where('plan_id', $plan['id'])->orderBy('created_at')->get();
+    // The pair court's judgements are ledger rows of their own (DAY-FIX-2, Ч.1.3) — one per pair,
+    // five pairs a day — and they are counted apart from the day calls they serve.
+    $judgements = $all->where('prompt_version', 'plan_pair_judge.v0.1');
+    expect($judgements)->toHaveCount(10);
+    $rows = $all->where('prompt_version', '!=', 'plan_pair_judge.v0.1')->values();
 
     // One outline + two days. Every one of them is a call that cost money on the live model, and
     // the PLAN-1a run proved what «recorded only in the request log» is worth.
     expect($rows)->toHaveCount(3)
-        ->and($rows->pluck('purpose')->unique()->all())->toBe(['plan'])
-        ->and($rows->pluck('user_id')->unique()->all())->toBe([$user->id])
+        ->and($all->pluck('purpose')->unique()->all())->toBe(['plan'])
+        ->and($all->pluck('user_id')->unique()->all())->toBe([$user->id])
         // Two versions and not one: the ledger says which prompt each call actually used rather
         // than stamping both with a single number that would be wrong for one of them the moment
         // they are revised apart.
-        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.4.1', 'plan_day.v0.5'])
+        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.4.1', 'plan_day.v0.6'])
         ->and($rows[0]->prompt)->toStartWith('outline:')
         ->and($rows[1]->prompt)->toStartWith('day:')
         ->and($rows[1]->size)->toBe(\App\Modules\Learning\Domain\Service\SceneDay::UNITS);

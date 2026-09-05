@@ -76,26 +76,41 @@ final class FakePlanContentModel implements ContentModelPort
     public function complete(RenderedPrompt $prompt, string $userMessage, array $schema): ModelAnswer
     {
         $properties = $schema['properties'] ?? [];
-        $isDay = is_array($properties) && isset($properties['hear']);
+        $properties = is_array($properties) ? $properties : [];
+        $isDay = isset($properties['pairs']) || isset($properties['hear']);
         // P2R. This double never reaches it — its days pass every gate — and the branch exists so
         // that a day which somehow does not comes back as an empty repair rather than as a
         // SKELETON, which is what «anything that is not a day» used to mean here.
-        $isRepair = is_array($properties) && isset($properties['cards']);
+        $isRepair = isset($properties['cards']);
 
         if ($isRepair) {
-            return new ModelAnswer(
-                payload: ['cards' => []],
-                model: 'fake-plan',
-                latencyMs: 0,
-                tokensIn: 0,
-                tokensOut: 0,
-                costUsd: '0.000000',
-                raw: '{}',
-            );
+            return $this->answer(['cards' => []]);
+        }
+        // P2J — the judge of one pair. The fake's own pairs fit by construction, and a court that
+        // said otherwise would make every feature test a test of the rewrite path.
+        if (isset($properties['fits'])) {
+            return $this->answer(['fits' => true, 'reason' => 'fake: fits']);
+        }
+        // P2P — never reached while the judge above says yes; answers with a line of the right
+        // shape so a test that scripts a «no» elsewhere still gets a card back.
+        if (isset($properties['frame']) && ! $isDay) {
+            return $this->answer([
+                'skill_ref' => 's1.1',
+                'frame' => 'Fake rewritten line.',
+                'filler' => '',
+                'translation' => 'Фейковая переписанная реплика.',
+                'transliteration' => 'фейк',
+            ]);
         }
 
+        return $this->answer($isDay ? $this->day($prompt->text) : $this->outline($prompt->text));
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function answer(array $payload): ModelAnswer
+    {
         return new ModelAnswer(
-            payload: $isDay ? $this->day($prompt->text) : $this->outline($prompt->text),
+            payload: $payload,
             model: 'fake-plan',
             latencyMs: 0,
             tokensIn: 0,
@@ -184,12 +199,18 @@ final class FakePlanContentModel implements ContentModelPort
             $chunks[] = ["{$tag}day{$day} chunk {$i}", "{$tag}день{$day} связка {$i}"];
         }
 
+        // ONE ROLE LINE PER PAIR: three questions for the three replies, two invitations for the two
+        // questions the learner asks (P2 v0.6 — an `ask` pair's role line is an invitation). FIVE
+        // pairs, the top of the prompt's own guide (4–5): a day of one sitting ≤ 40 cards has to
+        // hold the scene met AND spoken (DAY-FIX-2, Ч.2) with room for a seam behind it.
         $hear = [];
-        for ($i = 1; $i <= 4; $i++) {
+        for ($i = 1; $i <= 5; $i++) {
             $hear[] = [
                 'kind' => 'line',
                 'skill_ref' => $skill($i - 1),
-                'frame' => "Day {$day} question {$i}{$mark}, please?",
+                'frame' => $i <= 3
+                    ? "Day {$day} question {$i}{$mark}, please?"
+                    : "Day {$day} anything to ask{$mark}, part " . ($i - 3) . '?',
                 'filler' => '',
                 'speaker' => 'role',
                 // THE TAG BELONGS IN THE TRANSLATION TOO, like it does on every other shelf. Without
@@ -203,7 +224,9 @@ final class FakePlanContentModel implements ContentModelPort
         }
 
         $say = [];
-        foreach ($words as $i => [$text, $key]) {
+        // Three replies for four words: the fourth word lives on the words shelf alone, which is
+        // what keeps the day at five pairs.
+        foreach (array_slice($words, 0, 3) as $i => [$text, $key]) {
             $say[] = [
                 'kind' => 'line',
                 'skill_ref' => $skill($i),
@@ -274,50 +297,38 @@ final class FakePlanContentModel implements ContentModelPort
         }
 
         return [
-            'hear' => $hear,
-            'say' => $say,
-            'ask' => $ask,
+            'pairs' => self::pairs($hear, $say, $ask),
             'words' => $wordCards,
             'chunks' => $chunkCards,
             'numbers' => $numbers,
-            'dialogue' => self::dialogue(count($hear), count($say), count($ask)),
         ];
     }
 
     /**
-     * THE ORDER THE FAKE SCENE IS SPOKEN IN — alternating, and covering every reply (P2 v0.5).
+     * THE FAKE SCENE AS PAIRS (P2 v0.6) — one exchange per reply, `answer` for a `say` line and
+     * `ask` for an `ask` line, the role lines taken round-robin when the replies outnumber them.
      *
      * Built rather than hand-written for the same reason the shelves are: the counts move with the
-     * `[tag:…]` and `[scenes:…]` marks, and a chain of literal refs would go stale the first time
-     * one of them changed — silently, as a `day.dialogue_missing` on a day nobody edited.
+     * `[tag:…]` and `[scenes:…]` marks, and a literal list would go stale the first time one of
+     * them changed. Every pair has its OWN role line — the composer lays each pair's role onto its
+     * own `hear[i]`, so a role line shared by two pairs would be two cards with one text and
+     * `card.clone` would refuse the day. Four questions plus two invitations is what six
+     * exchanges need.
      *
-     * `role` turns run out before the learner's do (four questions, six replies), and the chain
-     * simply stops offering them: what matters for the gate is that the sides ALTERNATE, and the
-     * gate reads consecutive pairs, so a `you` turn whose `role` turn is absent is only a defect if
-     * the previous turn was also a `you`. The construction below never lets that happen — it emits
-     * a `role` turn before every reply and takes the questions round-robin, which is also what a
-     * real scene with more replies than questions does.
-     *
-     * @return list<array{turn: string, ref: string}>
+     * @param  list<array<string, mixed>>  $hear  role lines, at least as many as replies
+     * @param  list<array<string, mixed>>  $say
+     * @param  list<array<string, mixed>>  $ask
+     * @return list<array<string, mixed>>
      */
-    private static function dialogue(int $hear, int $say, int $ask): array
+    private static function pairs(array $hear, array $say, array $ask): array
     {
-        if ($hear === 0) {
-            return [];
-        }
-
         $out = [];
-        $replies = [];
-        for ($i = 0; $i < $say; $i++) {
-            $replies[] = "say[{$i}]";
+        $position = 0;
+        foreach ($say as $you) {
+            $out[] = ['kind' => 'answer', 'role' => $hear[$position++], 'you' => $you];
         }
-        for ($i = 0; $i < $ask; $i++) {
-            $replies[] = "ask[{$i}]";
-        }
-
-        foreach ($replies as $position => $ref) {
-            $out[] = ['turn' => 'role', 'ref' => 'hear[' . ($position % $hear) . ']'];
-            $out[] = ['turn' => 'you', 'ref' => $ref];
+        foreach ($ask as $you) {
+            $out[] = ['kind' => 'ask', 'role' => $hear[$position++], 'you' => $you];
         }
 
         return $out;

@@ -310,7 +310,7 @@ final readonly class GeneratePlanDayHandler
      * is given.
      *
      * @param  array<string, string>  $byAddress  «say#2» → term id
-     * @return list<array{turn: string, term_id: string}>
+     * @return list<array{turn: string, term_id: string, pair: string|null}>
      */
     private function dialogueOf(PlanDayDraft $draft, array $byAddress): array
     {
@@ -322,7 +322,9 @@ final readonly class GeneratePlanDayHandler
                 continue;
             }
 
-            $out[] = ['turn' => $turn->turn, 'term_id' => $termId];
+            // THE PAIR'S TYPE RIDES WITH THE TURN (v0.6): `answer` or `ask`, and null on a chain a
+            // v0.5 answer wrote — the session reads it back and the client draws the exchange by it.
+            $out[] = ['turn' => $turn->turn, 'term_id' => $termId, 'pair' => $turn->pair];
         }
 
         return $out;

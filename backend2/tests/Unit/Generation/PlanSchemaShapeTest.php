@@ -93,16 +93,28 @@ it('lets P1 answer with the skeleton the v0.4 prompt asks for — scenes, and a 
         ->and(schemaMisfits($schema, planFixtureJson('s3-outline.v0.4.json')))->toBe([]);
 });
 
-it('lets P2 answer with all six shelves of a day-scene, and the order it is spoken in', function () {
+it('lets P2 answer with a day-scene as PAIRS plus the three written shelves (v0.6)', function () {
     $schema = PlanSchemas::day();
 
-    // Six shelves and ONE key that is not a shelf: `dialogue` is the order the scene is spoken in
-    // (P2 v0.5, канон `docs/plan-dialogue.md` §9), and it is refs into the six above rather than a
-    // seventh place a line can be written.
+    // PAIRS and not shelves for the conversation (P2 v0.6, наряд DAY-FIX-2): the other person's
+    // line and the reply TO THAT LINE, typed `answer` or `ask`. The old `hear`/`say`/`ask` arrays
+    // and the v0.5 `dialogue` field are NOT permitted — a model handed the familiar shape would
+    // fill it back in, and the server would then have two answers to «what is said».
     expect(array_keys($schema['properties']))
-        ->toBe(['hear', 'say', 'ask', 'words', 'chunks', 'numbers', 'dialogue'])
-        ->and(array_keys($schema['properties']['dialogue']['items']['properties']))->toBe(['turn', 'ref']);
+        ->toBe(['pairs', 'words', 'chunks', 'numbers'])
+        ->and(array_keys($schema['properties']['pairs']['items']['properties']))->toBe(['kind', 'role', 'you'])
+        ->and($schema['properties']['pairs']['items']['properties']['kind']['enum'])->toBe(['answer', 'ask']);
 
-    expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.4.json')))->toBe([])
-        ->and(schemaMisfits($schema, planFixtureJson('s3-day1.v0.4.json')))->toBe([]);
+    expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.6.json')))->toBe([]);
+
+    // …and the v0.4 shape is exactly what the schema refuses now.
+    expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.4.json')))->not->toBe([]);
+});
+
+it('keeps the two court schemas to the one question each asks', function () {
+    // P2J answers yes/no and says why; P2P answers with ONE `you` item in the day's own shape, so
+    // the rewritten card is judged by every day gate as if P2 had written it.
+    expect(array_keys(PlanSchemas::pairVerdict()['properties']))->toBe(['fits', 'reason'])
+        ->and(array_keys(PlanSchemas::pairYou()['properties']))
+        ->toBe(['skill_ref', 'frame', 'filler', 'translation', 'transliteration']);
 });

@@ -51,12 +51,24 @@ beforeEach(function (): void {
         public function complete(RenderedPrompt $prompt, string $userMessage, array $schema): ModelAnswer
         {
             $properties = $schema['properties'] ?? [];
-            $isDay = is_array($properties) && isset($properties['hear']);
+            $isDay = is_array($properties) && (isset($properties['pairs']) || isset($properties['hear']));
+            // THE PAIR COURT asks about every pair (P2J); the fixture's pairs fit by construction.
+            if (is_array($properties) && isset($properties['fits'])) {
+                return new ModelAnswer(
+                    payload: ['fits' => true, 'reason' => 'fixture'],
+                    model: 'fixture-plan',
+                    latencyMs: 0,
+                    tokensIn: 0,
+                    tokensOut: 0,
+                    costUsd: '0.000000',
+                    raw: '{}',
+                );
+            }
 
             /** @var array<string, mixed> $payload */
             $payload = json_decode(
                 (string) file_get_contents(
-                    __DIR__ . '/../../Fixtures/plan/' . ($isDay ? 's1-day1.v0.4.json' : 's1-outline.v0.4.json'),
+                    __DIR__ . '/../../Fixtures/plan/' . ($isDay ? 's1-day1.v0.6.json' : 's1-outline.v0.4.json'),
                 ),
                 true,
             );
@@ -82,6 +94,7 @@ beforeEach(function (): void {
         $prompts,
         $ledger,
         app(PlanDefectReporter::class),
+        court: new \App\Modules\Generation\Application\Service\PlanPairCourt($model, $prompts, $ledger, app(PlanDefectReporter::class)),
     ));
 });
 
@@ -115,7 +128,7 @@ it('walks S1 from the skeleton to a ready day 1, and every gate lets it through'
 
     $day1 = DB::table('learning_plan_days')->where('plan_id', $plan['id'])->where('day_index', 1)->first();
 
-    expect($day1->status)->toBe('ready')
+    expect($day1->status)->toBe('ready', (string) $day1->fail_reason)
         ->and($day1->fail_reason)->toBeNull()
         ->and($day1->collection_id)->not->toBeNull();
 
@@ -128,8 +141,9 @@ it('walks S1 from the skeleton to a ready day 1, and every gate lets it through'
     // THE SHELVES, landed as rows: four lines the learner will hear, four they will say, two they
     // will ask, six pieces, two numbers — plus the five rescue phrases the SERVER writes into day 1.
     expect($terms)->toHaveCount(23)
-        ->and($terms->where('shelf', 'hear'))->toHaveCount(4)
-        ->and($terms->where('shelf', 'say'))->toHaveCount(4)
+        // Five pairs: three answers and two questions, one role line each (P2 v0.6).
+        ->and($terms->where('shelf', 'hear'))->toHaveCount(5)
+        ->and($terms->where('shelf', 'say'))->toHaveCount(3)
         ->and($terms->where('shelf', 'ask'))->toHaveCount(2)
         ->and($terms->where('shelf', 'words'))->toHaveCount(4)
         ->and($terms->where('shelf', 'chunks'))->toHaveCount(2)
@@ -137,7 +151,7 @@ it('walks S1 from the skeleton to a ready day 1, and every gate lets it through'
         ->and($terms->where('shelf', 'rescue'))->toHaveCount(5)
         // THE TIER IS THE SERVER'S, derived from the shelf and stored: «Тебе скажут» and the
         // numbers are understood, everything else is produced (канон §3).
-        ->and($terms->where('tier', 'understand'))->toHaveCount(6)
+        ->and($terms->where('tier', 'understand'))->toHaveCount(7)
         ->and($terms->where('shelf', 'hear')->whereNull('tier'))->toHaveCount(0)
         // Every card of the scene names one skill of it; the rescue kit names none, because it
         // serves the plan rather than this scene.

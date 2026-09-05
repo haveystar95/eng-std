@@ -39,5 +39,11 @@ final readonly class PlanDialogueTurnView
          * её не говорят.
          */
         public ?string $level = null,
+        /**
+         * ТИП ОБМЕНА, к которому ход принадлежит — `answer` | `ask`, или null на цепочке, написанной
+         * до пар (P2 v0.6, наряд DAY-FIX-2). Стоит на ОБОИХ ходах пары: реплика роли в паре `ask` —
+         * приглашение, и экрану это нужно знать раньше, чем дойдёт до своего хода.
+         */
+        public ?string $pairKind = null,
     ) {}
 }

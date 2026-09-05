@@ -203,11 +203,16 @@ function fakePlanModel(): void
         $ledger,
         app(\App\Modules\Generation\Application\Port\PlanDefectReporter::class),
     );
+    $defects = app(\App\Modules\Generation\Application\Port\PlanDefectReporter::class);
     $days = new \App\Modules\Generation\Application\Service\PlanDayComposer(
         $model,
         $prompts,
         $ledger,
-        app(\App\Modules\Generation\Application\Port\PlanDefectReporter::class),
+        $defects,
+        // THE PAIR COURT rides along (DAY-FIX-2, Ч.1.3): the fake answers every judgement «fits», so
+        // a fixture day survives whole — and every judgement still leaves its ledger row, as it will
+        // on the live model.
+        court: new \App\Modules\Generation\Application\Service\PlanPairCourt($model, $prompts, $ledger, $defects),
     );
 
     app()->instance(\App\Modules\Learning\Application\Port\PlanOutlinePort::class, $outlines);
@@ -592,6 +597,14 @@ function planFixture(string $name): array
  */
 function planItems(array $day): array
 {
+    // A v0.6 fixture is PAIRS; lay them onto the shelves exactly as the composer does, so the
+    // gates judge the same cards at the same addresses production judges.
+    if (is_array($day['pairs'] ?? null)) {
+        $day = [...$day, ...\App\Modules\Generation\Application\Service\PlanDayComposer::explodePairs(
+            array_values(array_filter($day['pairs'], static fn (mixed $p): bool => is_array($p))),
+        )];
+    }
+
     $out = [];
     foreach (\App\Modules\Generation\Domain\ValueObject\PlanShelf::model() as $shelf) {
         $index = -1;
@@ -656,8 +669,17 @@ function planCandidate(
     array $knownTexts = [],
     ?array $dialogue = null,
     bool $expectsDialogue = false,
+    bool $expectsPairs = false,
 ): \App\Modules\Generation\Domain\ValueObject\PlanDayCandidate {
     $day = planFixture($dayFixture);
+    // A v0.6 fixture: pairs become shelves and a chain before any edit is applied, so an edit is
+    // addressed the way a violation is — by shelf and index.
+    if (is_array($day['pairs'] ?? null)) {
+        $day = [...$day, ...\App\Modules\Generation\Application\Service\PlanDayComposer::explodePairs(
+            array_values(array_filter($day['pairs'], static fn (mixed $p): bool => is_array($p))),
+        )];
+        unset($day['pairs']);
+    }
     foreach ($edits as $shelf => $cards) {
         foreach ($cards as $index => $fields) {
             if ($fields === []) {
@@ -699,6 +721,7 @@ function planCandidate(
             $dialogue ?? (is_array($day['dialogue'] ?? null) ? $day['dialogue'] : []),
         ),
         expectsDialogue: $expectsDialogue,
+        expectsPairs: $expectsPairs,
     );
 }
 

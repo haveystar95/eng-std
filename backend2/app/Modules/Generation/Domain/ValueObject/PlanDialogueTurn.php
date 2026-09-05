@@ -39,6 +39,17 @@ final readonly class PlanDialogueTurn
     /** `hear[0]`, `say[12]` — the one form a ref may take. */
     private const REF = '/^([a-z_]+)\[(\d+)\]$/';
 
+    /**
+     * THE TYPE OF THE PAIR this turn belongs to (P2 v0.6, наряд DAY-FIX-2, Ч.1.1).
+     *
+     * `answer` — the other person asked or stated, the user answers; `ask` — the other person
+     * INVITED a question («Anything you'd like to ask?») and the user asks one. Null on a chain
+     * written before v0.6, where the day was shelves plus an order and no pair had a type.
+     */
+    public const PAIR_ANSWER = 'answer';
+
+    public const PAIR_ASK = 'ask';
+
     public function __construct(
         /** {@see ROLE} or {@see YOU}; anything else is the model inventing a third speaker. */
         public string $turn,
@@ -48,6 +59,8 @@ final readonly class PlanDialogueTurn
         public ?PlanShelf $shelf,
         /** The position on that shelf, or null when the ref did not parse. */
         public ?int $index,
+        /** {@see PAIR_ANSWER} | {@see PAIR_ASK}, or null on a chain that predates pairs. */
+        public ?string $pair = null,
     ) {}
 
     /**
@@ -59,13 +72,17 @@ final readonly class PlanDialogueTurn
     {
         $turn = is_string($raw['turn'] ?? null) ? mb_strtolower(trim($raw['turn'])) : '';
         $ref = is_string($raw['ref'] ?? null) ? mb_strtolower(trim($raw['ref'])) : '';
+        $pair = is_string($raw['pair'] ?? null) ? mb_strtolower(trim($raw['pair'])) : null;
+        if ($pair !== self::PAIR_ANSWER && $pair !== self::PAIR_ASK) {
+            $pair = null;
+        }
 
         $matches = [];
         if (preg_match(self::REF, $ref, $matches) !== 1) {
-            return new self($turn, $ref, null, null);
+            return new self($turn, $ref, null, null, $pair);
         }
 
-        return new self($turn, $ref, PlanShelf::tryFromName($matches[1]), (int) $matches[2]);
+        return new self($turn, $ref, PlanShelf::tryFromName($matches[1]), (int) $matches[2], $pair);
     }
 
     /** Whose side of the conversation this turn is — and `false` for a word the model made up. */

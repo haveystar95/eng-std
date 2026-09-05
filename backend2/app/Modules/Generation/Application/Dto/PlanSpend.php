@@ -29,6 +29,17 @@ final readonly class PlanSpend
      */
     public const CALL_LISTEN = 'listen';
 
+    /**
+     * P2J — the judge of ONE pair of the day: «does B follow A?» (наряд DAY-FIX-2, Ч.1.2).
+     *
+     * One row per pair, so a day of five pairs writes five of these beside its `day` row. Tiny
+     * calls, and they are still money: the ledger is what says a day cost $0.07 and not $0.06.
+     */
+    public const CALL_PAIR_JUDGE = 'pair_judge';
+
+    /** P2P — the rewrite of a pair's `you` line after the judge said «no». At most two per pair. */
+    public const CALL_PAIR_REWRITE = 'pair_rewrite';
+
     public function __construct(
         /** NULL only for {@see CALL_LISTEN} — see the note there. */
         public ?string $planId,

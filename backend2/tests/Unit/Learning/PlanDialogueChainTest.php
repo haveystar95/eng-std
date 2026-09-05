@@ -76,8 +76,9 @@ it('pairs the shelves by skill_ref when the day has no chain of its own', functi
             'role:t-hear-1', 'you:t-say-1',
             'role:t-hear-2', 'you:t-say-2',
             // «Ты спросишь» after «Ты ответишь» (канон §11), and its own ability's line is already
-            // spent, so the question rides the next unused one — there is none, so it stands alone.
-            'you:t-ask-1',
+            // spent, so the question would ride the next unused one — there is none, and a turn of
+            // the learner's with nobody speaking before it is NOT in the conversation: it is the
+            // tail, dealt as a card after it (наряд DAY-FIX-2, Ч.5.5).
         ]);
 });
 
@@ -86,13 +87,15 @@ it('answers the same for a chain stored empty as for one never stored', function
         ->toBe(dialogueTrace($this->chain->for(null, dialogueCards())));
 });
 
-it('puts every reply of the scene in the chain, and every role line too', function () {
+it('puts every ANSWERED reply of the scene in the chain, and every role line too', function () {
     $moves = $this->chain->for(null, dialogueCards());
     $inChain = array_map(static fn (PlanDialogueMove $m): string => $m->termId, $moves);
 
-    foreach (['t-say-1', 't-say-2', 't-ask-1', 't-hear-1', 't-hear-2'] as $termId) {
+    foreach (['t-say-1', 't-say-2', 't-hear-1', 't-hear-2'] as $termId) {
         expect($inChain)->toContain($termId);
     }
+    // The question that ran out of role lines is the tail, not the conversation (DAY-FIX-2, Ч.5.5).
+    expect($inChain)->not->toContain('t-ask-1');
 
     // …and the word is NOT: «слова и связки» is its own part of the sitting, and a conversation
     // made of vocabulary cards is not a conversation.

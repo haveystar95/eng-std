@@ -75,7 +75,27 @@ final readonly class PlanDayCandidate
         public string $sceneIntro = '',
         public array $dialogue = [],
         public bool $expectsDialogue = false,
+        /**
+         * THIS ANSWER WAS WRITTEN AS PAIRS (P2 v0.6) — so the minimum number of pairs is judged
+         * ({@see \App\Modules\Generation\Domain\Service\PlanDayValidator::PAIRS_TOO_FEW}). The
+         * court may have dropped some; a scene of three exchanges is not a scene. False on every
+         * answer written by shelves, where nothing was ever paired.
+         */
+        public bool $expectsPairs = false,
     ) {}
+
+    /** How many exchanges the chain holds — the learner's turns, which is one per pair. */
+    public function pairCount(): int
+    {
+        $n = 0;
+        foreach ($this->dialogue as $turn) {
+            if ($turn->isLearner()) {
+                $n++;
+            }
+        }
+
+        return $n;
+    }
 
     /**
      * The cards of one shelf, in the order the model wrote them.

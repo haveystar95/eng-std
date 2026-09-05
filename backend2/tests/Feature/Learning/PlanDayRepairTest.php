@@ -161,7 +161,10 @@ it('repairs ONE broken card with one short call and leaves the other thirteen al
         ->where(function ($q): void {
             $q->where('prompt', 'like', 'day: день 1 %')->orWhere('prompt', 'like', 'day_repair: починка дня 1 %');
         })
+        // Within one second the timestamps tie — the pair court's judgements land between these
+        // two rows now (DAY-FIX-2) — and the ULID id is what keeps the order honest.
         ->orderBy('created_at')
+        ->orderBy('id')
         ->get();
 
     expect($spend)->toHaveCount(2)

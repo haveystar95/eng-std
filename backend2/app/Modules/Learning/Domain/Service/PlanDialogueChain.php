@@ -33,13 +33,19 @@ use App\Modules\Learning\Domain\ValueObject\SituationalCandidate;
  * and that asymmetry is the point: a gate is what we buy with a paid call, and a fallback is what we
  * do with a day that was already paid for under different rules.
  *
- * ## Every card of the scene is in the chain exactly once
+ * ## A learner's turn is always an ANSWER to something — the tail lock (наряд DAY-FIX-2, Ч.5.5)
  *
- * Both paths, and it is what makes the chain safe to ORDER A SITTING with: a card the session owes
- * today but the chain never names would have to be dealt somewhere outside the conversation, which
- * is the three separate situational screens DAY-2 replaced. The stored path gets this from the gate
- * (`plan_day_dialogue_uncovered` counts the exceptions); the derived path gets it by construction —
- * every reply is emitted, and the role lines that never found a reply are appended at the end.
+ * Neither path may emit a `you` move that no `role` move stands directly before. The derived chain
+ * used to: a day whose replies outnumber its role lines ran out of questions and emitted the rest
+ * of the replies in a row, and the screen drew them as three bubbles of the learner talking to
+ * nobody (живой прогон 05.09). The stored chain could do the same after a card of the day went
+ * missing. Both are cut here, in the one place both paths meet: a reply with no line before it is
+ * NOT in the conversation. It stays on its shelf, keeps its ladder and is dealt AFTER the
+ * conversation as a card of its own — «Ещё в этой сцене» — which is what the client draws for every
+ * card the chain does not name.
+ *
+ * A trailing `role` move with no reply is kept: «он попрощался» is the honest shape of a scene that
+ * ends on the other side, and it sounds without asking the learner for anything.
  *
  * Pure, in Domain, and it names no Vocabulary type: the caller flattens the day into
  * {@see SituationalCandidate}s, exactly as {@see SituationalPrompt}'s caller does.
@@ -57,7 +63,7 @@ final class PlanDialogueChain
     /**
      * The scene's conversation, in the order it happens.
      *
-     * @param  list<array{turn: string, term_id: string}>|null  $stored  the day's own chain, or null
+     * @param  list<array{turn: string, term_id: string, pair?: string|null}>|null  $stored  the day's own chain, or null
      * @param  list<SituationalCandidate>  $dayCards  every card of the day, in any order
      * @return list<PlanDialogueMove>
      */
@@ -68,9 +74,30 @@ final class PlanDialogueChain
             $byId[$card->termId] = $card;
         }
 
-        return $stored === null || $stored === []
+        return self::exchangesOnly($stored === null || $stored === []
             ? $this->derive($dayCards)
-            : $this->restore($stored, $byId);
+            : $this->restore($stored, $byId));
+    }
+
+    /**
+     * THE TAIL LOCK: drop every learner's move that does not directly follow the other person's.
+     *
+     * @param  list<PlanDialogueMove>  $moves
+     * @return list<PlanDialogueMove>
+     */
+    private static function exchangesOnly(array $moves): array
+    {
+        $out = [];
+        $previousIsRole = false;
+        foreach ($moves as $move) {
+            if (! $move->isRole() && ! $previousIsRole) {
+                continue;
+            }
+            $out[] = $move;
+            $previousIsRole = $move->isRole();
+        }
+
+        return $out;
     }
 
     /**
@@ -81,7 +108,7 @@ final class PlanDialogueChain
      * it is about the day being re-read years later through a shelf that has since been renamed. A
      * `role` turn drawn over a card the learner is expected to SAY is exactly the defect Д-8 was.
      *
-     * @param  list<array{turn: string, term_id: string}>  $stored
+     * @param  list<array{turn: string, term_id: string, pair?: string|null}>  $stored
      * @param  array<string, SituationalCandidate>  $byId
      * @return list<PlanDialogueMove>
      */
@@ -99,7 +126,12 @@ final class PlanDialogueChain
                 continue;
             }
 
-            $out[] = new PlanDialogueMove($turn['turn'], $card->termId);
+            $pair = $turn['pair'] ?? null;
+            $out[] = new PlanDialogueMove(
+                $turn['turn'],
+                $card->termId,
+                $pair === PlanDialogueMove::PAIR_ANSWER || $pair === PlanDialogueMove::PAIR_ASK ? $pair : null,
+            );
         }
 
         return $out;
@@ -121,10 +153,14 @@ final class PlanDialogueChain
         foreach ($learner as $reply) {
             $question = self::pairFor($reply, $hear, $used)
                 ?? self::firstUnused($hear, $used);
-            if ($question !== null) {
-                $used[$question->termId] = true;
-                $out[] = new PlanDialogueMove(PlanDialogueMove::ROLE, $question->termId);
+            if ($question === null) {
+                // OUT OF QUESTIONS. The reply is not put into the conversation on its own: a turn
+                // of the learner's with nobody speaking before it is the tail
+                // ({@see exchangesOnly()}), and it is dealt after the conversation as a card.
+                break;
             }
+            $used[$question->termId] = true;
+            $out[] = new PlanDialogueMove(PlanDialogueMove::ROLE, $question->termId);
             $out[] = new PlanDialogueMove(PlanDialogueMove::LEARNER, $reply->termId);
         }
 

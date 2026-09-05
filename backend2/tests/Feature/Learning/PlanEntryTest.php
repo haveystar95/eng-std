@@ -212,7 +212,9 @@ it('carries a mixed listening result into both prompts as «упор на пон
         ->and($dayPrompt)->not->toBeNull()
         // THE BALANCE RULE: the value reaches P2, and the rule that reads it is in the prompt.
         ->and($dayPrompt)->toContain("Balance (may be empty): understanding")
-        ->and($dayPrompt)->toContain('fill the hear shelf toward the upper end of its guide');
+        // P2 v0.6 speaks in pairs: the rule reads «make the role lines richer and the you lines
+        // shorter» instead of «fill the hear shelf», the shelves being the server's now.
+        ->and($dayPrompt)->toContain('make the role lines richer and the you lines shorter');
 });
 
 it('carries an all-understood result as «упор на говорение»', function () {

@@ -163,8 +163,6 @@ final class PlanSchemas
             'example_translation' => self::string(),
         ]);
 
-        // SIX SHELVES AND NOTHING ELSE — «OUTPUT: one JSON object» of the v0.4 canon, verbatim.
-        //
         // v0.3 asked for a seventh array, `known`: fresh examples for the terms an earlier day of
         // this plan already taught, so a carried word was re-met in TODAY's situation instead of
         // yesterday's. The v0.4 prompt names the known units as INPUT only — «never reintroduce
@@ -172,24 +170,63 @@ final class PlanSchemas
         // means that feature is dormant rather than removed: the reader that files those examples
         // is still in {@see PlanDayComposer::knownExamples()} and starts working again the day the
         // canon asks for the shelf back. Flagged to the owner as a v0.3 capability v0.4 drops.
-        // v0.5: ONE key that is not a shelf. `dialogue` is the order the scene is spoken in — an
-        // alternating chain of refs into the six above — and it is expressed as refs rather than as
-        // copies of the lines for the reason the prompt states out loud: «dialogue only orders the
-        // shelves». A chain carrying its own text would be a seventh place a line can be written,
-        // and the day would have two answers to «what does the interlocutor say».
-        $turn = self::object([
-            'turn' => ['type' => 'string', 'enum' => ['role', 'you']],
-            'ref' => self::string(),
+        //
+        // v0.6: THE CONVERSATION IS PAIRS (наряд DAY-FIX-2, Ч.1). The three line shelves and the
+        // v0.5 `dialogue` field are gone from the answer: the model writes `pairs[]` — the other
+        // person's line and the user's reply TO THAT LINE — and the server lays them onto `hear`
+        // and `say`/`ask` itself ({@see PlanDayComposer::explodePairs()}). A chain that is the
+        // pairs in order cannot be non-alternating, cannot point at a missing card and cannot leave
+        // a reply out; and «B answers A» becomes a question one short judge call can be asked about
+        // one pair ({@see pairVerdict()}). `additionalProperties: false` is what keeps the old
+        // arrays out: a model handed a familiar shape tends to fill it back in.
+        $pair = self::object([
+            'kind' => ['type' => 'string', 'enum' => ['answer', 'ask']],
+            'role' => $hear,
+            'you' => $line,
         ]);
 
         return self::object([
-            'hear' => self::arrayOf($hear),
-            'say' => self::arrayOf($line),
-            'ask' => self::arrayOf($line),
+            'pairs' => self::arrayOf($pair),
             'words' => self::arrayOf($word),
             'chunks' => self::arrayOf($chunk),
             'numbers' => self::arrayOf($number),
-            'dialogue' => self::arrayOf($turn),
+        ]);
+    }
+
+    /**
+     * P2J — the verdict on ONE pair: does B follow A?
+     *
+     * Two fields and no more. `fits` is the whole answer; `reason` rides along because a refused
+     * pair is handed to the rewrite call, and «why it did not follow» is the one thing that call
+     * needs beyond the two lines themselves.
+     *
+     * @return array<string, mixed>
+     */
+    public static function pairVerdict(): array
+    {
+        return self::object([
+            'fits' => ['type' => 'boolean'],
+            'reason' => self::string(),
+        ]);
+    }
+
+    /**
+     * P2P — a rewritten `you` line, in the exact shape a `you` item has in {@see day()}.
+     *
+     * Same fields, same names, so the rewritten card is judged by every day gate as if the model
+     * had written it in the first place ({@see PlanDayComposer}). `kind` is absent on purpose: the
+     * card's shelf is decided by the PAIR it belongs to, and a rewrite cannot move it.
+     *
+     * @return array<string, mixed>
+     */
+    public static function pairYou(): array
+    {
+        return self::object([
+            'skill_ref' => self::string(),
+            'frame' => self::string(),
+            'filler' => self::string(),
+            'translation' => self::string(),
+            'transliteration' => self::string(),
         ]);
     }
 

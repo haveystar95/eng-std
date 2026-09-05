@@ -200,6 +200,19 @@ final class PlanDayValidator
      */
     public const DIALOGUE_NOT_ALTERNATING = 'day.dialogue_not_alternating';
 
+    /**
+     * FEWER THAN FOUR EXCHANGES SURVIVED (P2 v0.6, наряд DAY-FIX-2, Ч.1.2).
+     *
+     * The court judges every pair and drops the ones no rewrite could save; what is left has to
+     * still be a conversation. Three exchanges is a greeting, and a day that spends its budget on
+     * one is bought again whole rather than patched — there is no card to repair, the scene is
+     * simply too short.
+     */
+    public const PAIRS_TOO_FEW = 'day.pairs_too_few';
+
+    /** The fewest exchanges a v0.6 scene may keep — «сцена ≥ 4 пар». */
+    public const MIN_PAIRS = 4;
+
     // ── counted, never refused ───────────────────────────────────────────────────────────────
 
     /** A shelf outside its guide size — 4–6 / 4–6 / 2–3 / 6–8 / 2–4. */
@@ -383,7 +396,10 @@ final class PlanDayValidator
     /** @return list<PlanViolation> empty = the day may be written */
     public function validate(PlanDayCandidate $day): array
     {
-        $violations = $this->checkShelves($day);
+        // TOO FEW PAIRS IS NAMED FIRST (DAY-FIX-2, Ч.1.3): after the court has dropped pairs the
+        // shelves are thin or empty, and «полка пуста» would be the symptom stamped on the day where
+        // «обменов осталось меньше четырёх» is the cause.
+        $violations = [...$this->checkPairCount($day), ...$this->checkShelves($day)];
         if ($day->items === []) {
             return $violations;
         }
@@ -1050,6 +1066,26 @@ final class PlanDayValidator
         }
 
         return $out;
+    }
+
+    /**
+     * A SCENE OF FEWER THAN FOUR EXCHANGES cannot be played as a conversation — the day's fatal
+     * verdict when the pair court has dropped too much (DAY-FIX-2, Ч.1.3). Judged only for an
+     * answer that was asked for pairs; a day written on v0.5 is not measured by a rule it never had.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkPairCount(PlanDayCandidate $day): array
+    {
+        if (! $day->expectsPairs || $day->pairCount() >= self::MIN_PAIRS) {
+            return [];
+        }
+
+        return [PlanViolation::onAnswer(
+            self::PAIRS_TOO_FEW,
+            'в сцене осталось ' . $day->pairCount() . ' обменов — меньше ' . self::MIN_PAIRS . ', разговором это не сыграть',
+            'fewer than ' . self::MIN_PAIRS . ' exchanges survived — the scene is too short to be played as a conversation',
+        )];
     }
 
     /**

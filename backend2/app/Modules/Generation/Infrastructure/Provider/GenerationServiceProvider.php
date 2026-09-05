@@ -102,6 +102,7 @@ use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Application\Port\RescueKitSource;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Application\Service\PlanDayRepairer;
+use App\Modules\Generation\Application\Service\PlanPairCourt;
 use App\Modules\Generation\Application\Port\ListenWarmupReporter;
 use App\Modules\Generation\Application\Service\PlanListenService;
 use App\Modules\Generation\Application\Service\PlanOutlineService;
@@ -214,6 +215,17 @@ final class GenerationServiceProvider extends ServiceProvider
             return new ConfigRescueKit(is_array($pack) ? $pack : []);
         });
 
+        // СУД НАД ПАРАМИ (P2 v0.6) — на том же адаптере, что и день: судья и переписчик судят
+        // реплики, которые модель дня написала, и второй вендор здесь был бы вторым вкусом.
+        $this->app->bind(PlanPairCourt::class, function (): PlanPairCourt {
+            return new PlanPairCourt(
+                model: $this->planModel(),
+                prompts: $this->app->make(PlanPromptSource::class),
+                ledger: $this->app->make(RecordsPlanSpend::class),
+                defects: $this->app->make(PlanDefectReporter::class),
+            );
+        });
+
         $this->app->bind(PlanDayComposer::class, function (): PlanDayComposer {
             return new PlanDayComposer(
                 model: $this->planModel(),
@@ -223,6 +235,7 @@ final class GenerationServiceProvider extends ServiceProvider
                 repairer: $this->app->make(PlanDayRepairer::class),
                 validator: $this->planDayValidator(),
                 rescueKit: $this->app->make(RescueKitSource::class),
+                court: $this->app->make(PlanPairCourt::class),
             );
         });
         // The admin sandbox's own registry. A SECOND catalogue beside the one above, not a widening

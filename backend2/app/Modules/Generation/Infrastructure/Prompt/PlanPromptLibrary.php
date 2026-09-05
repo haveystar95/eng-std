@@ -69,8 +69,23 @@ final class PlanPromptLibrary implements PlanPromptSource
      * dialogue screen plays them in. A day written before v0.5 has no chain and does not need one:
      * the server pairs its shelves by `skill_ref`
      * ({@see \App\Modules\Learning\Domain\Service\PlanDialogueChain}).
+     *
+     * **v0.6 — the scene is written as PAIRS** (наряд DAY-FIX-2, Ч.1). No `hear`/`say`/`ask`
+     * arrays and no `dialogue` field: the model answers with `pairs[]` — the other person's line
+     * and the user's reply to THAT line, typed `answer` or `ask` — and the server lays them onto
+     * the shelves and reads the chain off their order ({@see \App\Modules\Generation\Application\Service\PlanDayComposer}).
+     * Each pair is then judged by a separate call ({@see PAIR_JUDGE_VERSION}) and rewritten at
+     * most twice ({@see PAIR_REWRITE_VERSION}) before it is dropped. The live run of 05.09 is
+     * why: replies that answered a different question of the same scene, invisible to a prompt
+     * that wrote both halves in one breath.
      */
-    public const DAY_VERSION = 'plan_day.v0.5';
+    public const DAY_VERSION = 'plan_day.v0.6';
+
+    /** P2J — «B отвечает на A?», один вызов на пару. Ответ да/нет со строкой причины. */
+    public const PAIR_JUDGE_VERSION = 'plan_pair_judge.v0.1';
+
+    /** P2P — переписать `you` пары, которую судья отбил. ≤ 2 раз на пару, потом пара выбрасывается. */
+    public const PAIR_REWRITE_VERSION = 'plan_pair_rewrite.v0.1';
 
     /**
      * P2R — the day's BROKEN CARDS, and nothing else.
@@ -110,9 +125,11 @@ final class PlanPromptLibrary implements PlanPromptSource
     public const LISTEN_VERSION = 'plan_listen.v1.1';
 
     private const OUTLINE = 'plan_outline.v0.4.1.md';
-    private const DAY = 'plan_day.v0.5.md';
+    private const DAY = 'plan_day.v0.6.md';
     private const REPAIR = 'plan_day_repair.v0.2.md';
     private const LISTEN = 'plan_listen.v1.1.md';
+    private const PAIR_JUDGE = 'plan_pair_judge.v0.1.md';
+    private const PAIR_REWRITE = 'plan_pair_rewrite.v0.1.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}
 
@@ -154,6 +171,26 @@ final class PlanPromptLibrary implements PlanPromptSource
     public function listenVersion(): string
     {
         return self::LISTEN_VERSION;
+    }
+
+    public function pairJudge(array $placeholders): RenderedPrompt
+    {
+        return $this->render(self::PAIR_JUDGE, self::PAIR_JUDGE_VERSION, $placeholders);
+    }
+
+    public function pairRewrite(array $placeholders): RenderedPrompt
+    {
+        return $this->render(self::PAIR_REWRITE, self::PAIR_REWRITE_VERSION, $placeholders);
+    }
+
+    public function pairJudgeVersion(): string
+    {
+        return self::PAIR_JUDGE_VERSION;
+    }
+
+    public function pairRewriteVersion(): string
+    {
+        return self::PAIR_REWRITE_VERSION;
     }
 
     /** @param array<string, string> $placeholders */
