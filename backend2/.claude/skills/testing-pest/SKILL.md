@@ -66,6 +66,16 @@ One per endpoint, covering: success, 403 (wrong owner / shared collection edit),
 - an out-of-order offline batch produces the same progress as an in-order one
 - a client-supplied ULID that already exists returns 200, not 500
 
+## Two traps a Feature test falls into once each
+
+- **`app('auth')->forgetGuards()` before the SECOND learner.** Sanctum's guard caches the resolved
+  user for the whole test method, so a request made with another account's token is still
+  authenticated as the first one — and a «чужой план» test passes 500 where it means to prove 404.
+- **`client_seq` continues the device's numbering.** The plan's ladder reads the review log ordered
+  by `client_seq`, never by time (devices disagree about the clock). An answer posted with a lower
+  number lands in the log BEFORE the stage that precedes it, and the stage never sees it. Helpers
+  return the next number (`walkDay`, `answerTasks`) — thread it through instead of restarting at 1.
+
 ## Architecture tests
 
 These are cheap and catch the drift that reviews miss:
