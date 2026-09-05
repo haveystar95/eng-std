@@ -1180,7 +1180,10 @@ class PlanDialogueDone extends StatelessWidget {
             _Fact(label: l.planDialogueAskedRepeat, value: l.planDialogueTimes(rescueUsed)),
           const SizedBox(height: AppSpacing.s16),
           Text(
-            l.planDialogueNextAssembly,
+            // ПОСЛЕ ПРОГОНА СБОРКИ УЖЕ НЕ БУДЕТ: она позади, и обещать её значит звать назад.
+            // Живой прогон показал эту строку под итогом ступени C — «дальше сборка» после того,
+            // как человек сказал сцену голосом.
+            run == null ? l.planDialogueNextAssembly : l.planSceneRunNext,
             style: AppText.translation.copyWith(
               fontSize: 13.5,
               height: 1.55,

@@ -2319,11 +2319,23 @@ abstract class AppLocalizations {
   /// **'собери свой ответ из блоков'**
   String get sessionInstrAssembleTurn;
 
+  /// Подпись части посадки — ступень C: реплики нет, есть подсказка и микрофон (SCENE-RUN, Ч.2).
+  ///
+  /// In ru, this message translates to:
+  /// **'Прогон сцены'**
+  String get planSectionSceneRun;
+
   /// Подсказка на ходу прогона сцены: реплики на экране нет, есть только перевод (SCENE-RUN, Ч.2).
   ///
   /// In ru, this message translates to:
   /// **'скажи свою реплику — текста не будет'**
   String get planSceneRunHint;
+
+  /// Строка под итогом прогона сцены: после ступени C сборки уже не будет (SCENE-RUN, Ч.2.7).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сцена сказана голосом. Что не прозвучало — вернётся своим чередом.'**
+  String get planSceneRunNext;
 
   /// Итог прогона сцены: сколько ходов человек сказал своим голосом (кадр DL·10).
   ///

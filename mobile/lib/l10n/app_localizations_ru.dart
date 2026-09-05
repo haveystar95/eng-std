@@ -1441,7 +1441,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrAssembleTurn => 'собери свой ответ из блоков';
 
   @override
+  String get planSectionSceneRun => 'Прогон сцены';
+
+  @override
   String get planSceneRunHint => 'скажи свою реплику — текста не будет';
+
+  @override
+  String get planSceneRunNext =>
+      'Сцена сказана голосом. Что не прозвучало — вернётся своим чередом.';
 
   @override
   String get planSceneRunSaidSelf => 'Прошёл сам';

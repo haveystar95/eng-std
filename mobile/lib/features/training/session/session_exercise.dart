@@ -888,8 +888,21 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   }
 
   /// Set the card aside: the microphone lost, and nothing about this word is recorded anywhere.
+  ///
+  /// В ПРОГОНЕ СЦЕНЫ ЭТО ЗНАЧИТ ДРУГОЕ (наряд SCENE-RUN, Ч.2.4). Там «Пропустить» — не отказ
+  /// железа, а законный ход человека, который не вспомнил: он ПИШЕТ `speaking/again` для пары, та
+  /// же семантика, что у говорения фраз, и разговор идёт дальше. Молчаливый пропуск оставил бы ход
+  /// вне прогона вовсе — итог «Прошёл сам 4 из 4» на сцене из пяти ходов, что живой прогон и
+  /// показал.
   void _skipCard() {
     if (_answered) return;
+    if (_isSceneRun) {
+      _runGuardTimer?.cancel();
+      unawaited(_recognizer?.cancel());
+      _giveUp();
+
+      return;
+    }
     _answered = true; // no second exit from this card
     widget.onSkipped?.call();
   }

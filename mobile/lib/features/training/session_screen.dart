@@ -2669,12 +2669,21 @@ String? planSeamCaption(AppLocalizations l, PlanSessionEnvelope plan, int i) {
 
 /// THE CONVERSATION the card at [i] belongs to, or null when it is not part of one.
 ///
-/// Two conditions and both are the server's: the card is in the `dialogue` part of the sitting, and
-/// the payload carries that scene's chain. A card of the conversation whose chain never arrived —
-/// an older server, a scene whose chain the day lost — falls back to the ordinary card layout,
-/// which is what the sitting looked like before this наряд.
+/// Two conditions and both are the server's: the card is in a part of the sitting that is PLAYED as
+/// a conversation, and the payload carries that scene's chain. A card of the conversation whose
+/// chain never arrived — an older server, a scene whose chain the day lost — falls back to the
+/// ordinary card layout, which is what the sitting looked like before this наряд.
+///
+/// ДВЕ ЧАСТИ, А НЕ ОДНА: диалог (ступень B) и ПРОГОН (ступень C). «Лента прогона — та же цепочка
+/// dialogue сцены» (наряд SCENE-RUN, Ч.2.2), и спасатели на ходу прогона законны (Ч.2.5) — а лента
+/// и панель спасателей живут в оболочке. Без прогона в этом списке ход ступени C оставался голой
+/// карточкой: ни реплики собеседника перед ним, ни выхода к спасателям.
 PlanDialogue? planDialogueAt(PlanSessionEnvelope plan, int i) {
-  if (plan.sectionCodeAt(i) != PlanSessionTask.sectionCodeDialogue) return null;
+  const played = {
+    PlanSessionTask.sectionCodeDialogue,
+    PlanSessionTask.sectionCodeSceneRun,
+  };
+  if (!played.contains(plan.sectionCodeAt(i))) return null;
   // The card's OWN scene, not the day being studied: the conversation dealt on day 2 is scene 1's.
   final day = plan.carriedFromAt(i) ?? plan.dayIndex;
   for (final dialogue in plan.dialogues) {
@@ -2704,6 +2713,9 @@ String? planSectionCaption(AppLocalizations l, PlanSessionEnvelope plan, int i) 
           PlanSessionTask.sectionCodeWords => l.planShelfWords,
           PlanSessionTask.sectionCodeDialogueIntro => l.planSectionDialogueIntro,
           PlanSessionTask.sectionCodeDialogue => l.planSectionDialogue,
+          // «Прогон сцены» — своя подпись, а не «диалог»: человек делает другое, и назвать это
+          // диалогом значило бы обещать варианты, которых на ступени C нет (SCENE-RUN, Ч.2).
+          PlanSessionTask.sectionCodeSceneRun => l.planSectionSceneRun,
           PlanSessionTask.sectionCodeNumbers => l.planSectionNumbers,
           PlanSessionTask.sectionCodeRehearsal => l.planSectionRehearsal,
           PlanSessionTask.sectionCodeReview => l.planReviewSection,
