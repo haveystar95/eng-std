@@ -1400,6 +1400,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionInstrAssembleTurn => 'put your reply together from the blocks';
 
   @override
+  String get planSceneRunHint => 'say your line — there will be no text';
+
+  @override
+  String get planSceneRunSaidSelf => 'Said it yourself';
+
+  @override
+  String get planSceneRunSaidFast => 'Straight away';
+
+  @override
   String get sessionInstrSituationalAsk => 'choose what you will ask';
 
   @override

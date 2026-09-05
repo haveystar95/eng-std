@@ -250,6 +250,12 @@ final readonly class BuildPlanSessionHandler
         private PlanSceneRunRepository $sceneRuns,
         /** Какие ходы сцены — твои. Один ответ на всех, кто спрашивает ({@see PlanSceneTurns}). */
         private PlanSceneTurns $sceneTurns,
+        /**
+         * Секунды прогона сцены — `config/learning.php → plan.scene_run`.
+         *
+         * @var array{fast_seconds: int, listen_seconds: int, skip_after_seconds: int, turn_seconds: int}
+         */
+        private array $sceneRunKnobs,
         private PlanDayOrder $order = new PlanDayOrder(),
         /** Where a situational card's «Ситуация» comes from — pure, and stated in Domain. */
         private SituationalPrompt $situations = new SituationalPrompt(),
@@ -331,6 +337,9 @@ final readonly class BuildPlanSessionHandler
             // чтобы телефон скачал её ЦЕЛИКОМ на входе в день, а не по мере того, как доходит до
             // карточки. Реплики второго присеста готовы к его началу по этой же причине.
             lineAudio: $audio,
+            // СЕКУНДЫ ПРОГОНА — из конфига, а не из кода экрана: сколько человек думает, это
+            // продуктовое суждение, и оно обязано двигаться без выката приложения.
+            sceneRun: $this->sceneRunKnobs,
         );
     }
 

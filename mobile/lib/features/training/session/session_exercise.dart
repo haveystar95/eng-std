@@ -86,12 +86,20 @@ class SessionAnswer {
     required this.verdict,
     required this.usedHint,
     required this.latencyMs,
+    this.listenedMs,
   });
 
   final String response;
   final LocalCheck verdict;
   final bool usedHint;
   final int? latencyMs;
+
+  /// СКОЛЬКО ПРОШЛО ОТ НАЧАЛА ПРОСЛУШИВАНИЯ ДО ОТВЕТА, или null вне говорения.
+  ///
+  /// Не [latencyMs], и это разные вопросы: латентность меряется от появления карточки и включает
+  /// чтение подсказки, а «сразу» канона §4 — про то, как быстро человек начал ГОВОРИТЬ. Ход,
+  /// который слушали пятнадцать секунд и на четырнадцатой услышали, — успех, но не быстрый.
+  final int? listenedMs;
 }
 
 /// A card the learner LEFT rather than answered: the speaking trainer's channel skip.
@@ -157,6 +165,7 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     this.situation,
     this.speaksAfterChoice = false,
     this.inDialogue = false,
+    this.sceneRun,
   });
 
   static bool _alwaysCurrent() => true;
@@ -180,6 +189,17 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   /// autoplay, keyboard focus) check it so a fast «Дальше-Дальше» that leaves the card before the
   /// post-transition callback fires cancels the effect instead of firing it on the next card (F20).
   final bool Function() isCurrent;
+
+  /// ЭТО ХОД ПРОГОНА СЦЕНЫ — ступень C, и её секунды (наряд SCENE-RUN, Ч.2).
+  ///
+  /// Null у всего остального, включая обычную карточку говорения: прогон отличается от неё не
+  /// тренажёром, а тем, что с экрана убрали. На карточке остаётся подсказка на языке поддержки и
+  /// микрофон; ни ключа реплики, ни фотографии, ни самой реплики — иначе ступень C была бы чтением
+  /// вслух под другим именем.
+  ///
+  /// Секунды приходят с сервера ({@see SceneRunKnobs}), а не лежат константами здесь: сколько
+  /// человек думает — продуктовое суждение, и оно обязано двигаться без выката приложения.
+  final SceneRunKnobs? sceneRun;
 
   /// Called exactly once, when the user commits their answer. The shell then reveals the pinned
   /// «Дальше» bar (advancing lives on the shell, not in the card — device-batch F9).
@@ -272,6 +292,19 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   bool get _isSituationalSpeak =>
       _mode == ExerciseMode.situationalSay || _mode == ExerciseMode.situationalAsk;
 
+  /// ХОД ПРОГОНА СЦЕНЫ — ступень C: подсказка на языке поддержки и микрофон, больше ничего.
+  bool get _isSceneRun => widget.sceneRun != null && _isSpeaking;
+
+  /// «Пропустить» уже на экране — по времени, а не по отказу микрофона ({@see _canSkip}).
+  bool _skipOffered = false;
+
+  /// Когда началось ЭТО прослушивание — от него меряется «сразу» (канон §4, ≤ 3 с).
+  DateTime? _listenStartedAt;
+
+  /// Сторож прогона и таймер, открывающий выход.
+  Timer? _runSkipTimer;
+  Timer? _runGuardTimer;
+
   /// B+ · СБОРКА — тот же ход, но реплики целиком на экране больше нет (наряд SCENE-RUN, Ч.1).
   ///
   /// Читается по СОДЕРЖИМОМУ карточки, а не по новому режиму: сервер кладёт блоки вместо вариантов,
@@ -328,8 +361,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// second half: once the budget is spent the escape hatch stays put instead of blinking away
   /// under the finger.
   bool get _canSkip =>
-      widget.onSkipped != null &&
-      (_channelFailure != null || _attempts >= SpokenAnswer.maxChannelAttempts);
+      // В ПРОГОНЕ выход открывается по ВРЕМЕНИ, а не по отказу микрофона: молчание — законный ход
+      // человека, который не вспомнил, и держать его в карточке до поломки железа значило бы
+      // наказывать за незнание отсутствием выхода (наряд SCENE-RUN, Ч.2.4).
+      _isSceneRun
+      ? _skipOffered
+      : widget.onSkipped != null &&
+            (_channelFailure != null || _attempts >= SpokenAnswer.maxChannelAttempts);
 
   /// The words the recogniser is listening for, and what the answer is graded against.
   List<String> get _spokenTargets =>
@@ -439,6 +477,42 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_isCloze) {
       _input.addListener(_onClozeInput);
     }
+    // ПРОГОН СЛУШАЕТ СРАЗУ — «слушаем сразу, без отдельного нажатия» (наряд SCENE-RUN, Ч.2.2).
+    //
+    // Отдельная кнопка «Говорить» перед каждым ходом превращает разговор в очередь из нажатий: в
+    // жизни собеседник договаривает и ты отвечаешь, а не жмёшь запись. После слайда, как и всё
+    // остальное здесь, — микрофон, поднятый на первом кадре перехода, стоил бы того самого лага.
+    if (_isSceneRun) {
+      _afterTransition(() => unawaited(_listenOnce()));
+      _armSceneRunGuards();
+    }
+  }
+
+  /// СТОРОЖ ПРОГОНА И ВЫХОД ИЗ НЕГО — секунды приходят с сервера ({@see SceneRunKnobs}).
+  ///
+  /// Два таймера и разные вопросы: первый показывает «Пропустить» (выход обязан быть виден ДО того,
+  /// как он понадобится), второй нажимает его за человека. Между ними человек видит живой
+  /// «Услышали: …» и может договорить.
+  ///
+  /// Отсчёт идёт от появления карточки, а не от начала прослушивания: сторож существует ради того,
+  /// чтобы в разговоре не образовалась дыра, а дыра начинается там, где ход передали.
+  void _armSceneRunGuards() {
+    final knobs = widget.sceneRun;
+    if (knobs == null) return;
+
+    _runSkipTimer?.cancel();
+    _runSkipTimer = Timer(Duration(seconds: knobs.skipAfterSeconds), () {
+      if (mounted && !_answered) setState(() => _skipOffered = true);
+    });
+    _runGuardTimer?.cancel();
+    _runGuardTimer = Timer(Duration(seconds: knobs.listenSeconds), () {
+      if (!mounted || _answered) return;
+      // ХОД ДЕЛАЕТ СТОРОЖ, и делает его тем же, чем сделал бы человек: пустым ответом, который
+      // сервер оценивает как `again` (наряд Ч.2.4 — «та же семантика, что у говорения фраз»).
+      // Разговор идёт дальше, никто не застревает.
+      unawaited(_recognizer?.cancel());
+      _giveUp();
+    });
   }
 
   /// Run [fn] once the slide-in animation has settled, unless the card was left in the meantime.
@@ -461,6 +535,8 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     _speakTimer?.cancel();
     _settleTimer?.cancel();
     _stallTimer?.cancel();
+    _runSkipTimer?.cancel();
+    _runGuardTimer?.cancel();
     if (_isCloze) _input.removeListener(_onClozeInput);
     // A card left mid-utterance must not leave the microphone open behind it — and must not have
     // its transcript arrive over the next card either. Cancel keeps nothing, which is right: an
@@ -560,6 +636,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         verdict: verdict,
         usedHint: usedHint,
         latencyMs: _latency(),
+        listenedMs: _listenStartedAt == null
+            ? null
+            : DateTime.now().difference(_listenStartedAt!).inMilliseconds,
       ),
     );
   }
@@ -669,6 +748,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       _channelFailure = null;
     });
     _manualStop = false;
+    // ОТСЧЁТ «СРАЗУ» начинается здесь — от момента, когда микрофон открылся, а не от появления
+    // карточки: между ними лежит чтение подсказки, и оно не про скорость речи.
+    _listenStartedAt = DateTime.now();
 
     final contextualStrings = await _contextualStrings();
     if (!mounted) return;
@@ -1116,7 +1198,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!asksExample)
+          // ФОТОГРАФИИ В ПРОГОНЕ НЕТ: она подсказка к слову, а здесь вспоминают реплику, и
+          // картинка чужого слова рядом с ней — шум.
+          if (!asksExample && !_isSceneRun)
             _PromptPhoto(
               termId: _card.termId,
               url: widget.photoUrl,
@@ -1149,6 +1233,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   /// What this spoken card is actually asking for, in one line. See [_speakingPrompt].
   String _speakHint(AppLocalizations l) {
+    // В ПРОГОНЕ КЛЮЧ НЕ ПОКАЗЫВАЮТ. Ключ написан на изучаемом языке, а прогон — это «скажи сам, без
+    // текста»: строка «главное — a fever» отдала бы половину реплики и превратила ступень C в
+    // чтение вслух. Что делать, говорит подсказка на языке поддержки над микрофоном.
+    if (_isSceneRun) return l.planSceneRunHint;
+
     final key = _card.spokenTarget;
     if (key != null) return l.sessionSpeakHintKey(key);
 

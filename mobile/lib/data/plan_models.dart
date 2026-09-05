@@ -11,7 +11,14 @@ library;
 
 import 'line_audio.dart';
 import 'models.dart'
-    show ExerciseMode, PlanDialogue, PlanSessionEnvelope, PlanSituation, SessionCard, StudySession;
+    show
+        ExerciseMode,
+        PlanDialogue,
+        PlanSessionEnvelope,
+        PlanSituation,
+        SceneRunKnobs,
+        SessionCard,
+        StudySession;
 
 /// Where a plan is in its life. `draft` has no days and cost nothing; `active` is the commitment.
 enum PlanStatus {
@@ -701,6 +708,7 @@ class PlanSessionTask {
     this.situation,
     this.speaksAfterChoice = false,
     this.sectionCode,
+    this.turnLevel,
   });
 
   /// This task is the day's own material — it counts towards «день пройден».
@@ -782,6 +790,15 @@ class PlanSessionTask {
   /// conversation are two parts of the sitting, and `shelf` says `say` for both.
   final String? sectionCode;
 
+  /// СТРОГОСТЬ ЭТОГО ХОДА — `choose` | `assemble` | `say`, или null (наряд SCENE-RUN).
+  ///
+  /// Отдельно от режима: тренажёр один и тот же, а рисуется он вариантами, блоками или микрофоном.
+  /// Null у всего, что ходом человека не является, и на пейлоаде сервера, который поля не знает.
+  final String? turnLevel;
+
+  /// Ход отдан ГОЛОСОМ: ни вариантов, ни блоков — подсказка и микрофон. Ступень C.
+  bool get isSpokenTurn => turnLevel == 'say';
+
   /// The plan's five rescue phrases, before the day, every day (канон §5).
   static const sectionCodeWarmup = 'warmup';
 
@@ -797,7 +814,10 @@ class PlanSessionTask {
   /// «Цифры на слух» (канон §6). No session deals one yet — the code exists so it can.
   static const sectionCodeNumbers = 'numbers';
 
-  /// «Прогон сцены» — the final day's run-through.
+  /// «Прогон сцены» — ступень C: та же цепочка, подсказка и микрофон (наряд SCENE-RUN, Ч.2).
+  static const sectionCodeSceneRun = 'scene_run';
+
+  /// «Прогон перед событием» — the final day's run-through over the whole plan.
   static const sectionCodeRehearsal = 'rehearsal';
 
   /// «Повторение · из прошлых дней» — this plan's earlier material, after the day.
@@ -849,6 +869,7 @@ class PlanSessionTask {
             (j['card'] as Map<String, dynamic>?)?['exercise_mode'] as String?,
           ).speaksAfterChoice,
       sectionCode: (j['section_code'] as String?)?.trim(),
+      turnLevel: (j['turn_level'] as String?)?.trim(),
     );
   }
 }
@@ -888,6 +909,7 @@ class PlanSession implements PlanSessionEnvelope {
     this.sittings = const [],
     this.dialogues = const [],
     this.lineAudio = const [],
+    this.sceneRun = const SceneRunKnobs(),
     this.raw = const {},
   });
 
@@ -939,6 +961,12 @@ class PlanSession implements PlanSessionEnvelope {
   /// день. Во всех трёх случаях реплики звучат системным синтезом, как звучали до наряда.
   @override
   final List<LineAudioRef> lineAudio;
+
+  /// СЕКУНДЫ ПРОГОНА СЦЕНЫ, как их назвал сервер (наряд SCENE-RUN, Ч.2).
+  final SceneRunKnobs sceneRun;
+
+  @override
+  SceneRunKnobs get sceneRunKnobs => sceneRun;
 
   /// The conversation of the scene taught on `dayIndex`, or null when this sitting has none.
   PlanDialogue? dialogueForDay(int dayIndex) {
@@ -999,6 +1027,9 @@ class PlanSession implements PlanSessionEnvelope {
   String? sectionCodeAt(int i) => i >= 0 && i < tasks.length ? tasks[i].sectionCode : null;
 
   @override
+  String? turnLevelAt(int i) => i >= 0 && i < tasks.length ? tasks[i].turnLevel : null;
+
+  @override
   PlanSituation? situationAt(int i) => i >= 0 && i < tasks.length ? tasks[i].situation : null;
 
   @override
@@ -1047,6 +1078,7 @@ class PlanSession implements PlanSessionEnvelope {
         .map((e) => (text: (e['text'] as String?) ?? '', url: (e['url'] as String?) ?? ''))
         .where((e) => e.text.isNotEmpty && e.url.isNotEmpty)
         .toList(growable: false),
+    sceneRun: SceneRunKnobs.fromJson(j['scene_run'] as Map<String, dynamic>?),
     raw: j,
   );
 }

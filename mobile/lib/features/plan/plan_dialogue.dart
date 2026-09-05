@@ -53,6 +53,7 @@ class PlanDialogueShell extends StatefulWidget {
     this.spokenUntasked = const {},
     this.onSpokeUntasked,
     this.voiceTrouble,
+    this.onRescueUsed,
   });
 
   final PlanDialogue dialogue;
@@ -68,6 +69,13 @@ class PlanDialogueShell extends StatefulWidget {
   /// Say a line out loud. The SESSION owns the speech engine — it raises the audio route once for
   /// the whole sitting — so the shell asks rather than warming up an engine of its own.
   final void Function(String text) onSpeak;
+
+  /// СПАСАТЕЛЕМ ВОСПОЛЬЗОВАЛИСЬ на текущем ходу (наряд SCENE-RUN, Ч.2.5).
+  ///
+  /// Панель спасателей законна на любом ходу, включая прогон, и её использование не ошибка — но и
+  /// не «сказал сам»: в прогоне это третий исход хода. Экран, который об этом промолчал бы, записал
+  /// бы сцену как сказанную голосом там, где голос был чужой.
+  final VoidCallback? onRescueUsed;
 
   /// THE VOICE IS READY — canon §7: «никакая реплика не подаётся на слух, пока озвучка не готова
   /// (без „тишины вместо голоса“)». False draws кадр DL·08 instead of the bubble: the line is not
@@ -266,6 +274,7 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
           exchanges: widget.dialogue.exchanges,
           rescue: widget.rescue,
           onSpeak: widget.onSpeak,
+          onRescueUsed: widget.onRescueUsed,
         ),
         const SizedBox(height: AppSpacing.s16),
         // THE FEED — everything already spoken, quieter and smaller the further back it is. The
@@ -359,11 +368,15 @@ class _DialogueBar extends StatelessWidget {
     required this.exchanges,
     required this.rescue,
     required this.onSpeak,
+    this.onRescueUsed,
   });
 
   final int scene, exchange, exchanges;
   final List<({String text, String? translation})> rescue;
   final void Function(String text) onSpeak;
+
+  /// Спасателем воспользовались на этом ходу — {@see _RescueButton.onUsed}.
+  final VoidCallback? onRescueUsed;
 
   @override
   Widget build(BuildContext context) {
@@ -378,7 +391,7 @@ class _DialogueBar extends StatelessWidget {
         ),
         if (rescue.isNotEmpty) ...[
           const SizedBox(width: AppSpacing.s8),
-          _RescueButton(rescue: rescue, onSpeak: onSpeak),
+          _RescueButton(rescue: rescue, onSpeak: onSpeak, onUsed: onRescueUsed),
         ],
       ],
     );
@@ -387,10 +400,16 @@ class _DialogueBar extends StatelessWidget {
 
 /// «Спасатели» — brass, never terracotta: it is a means to hand, not the step being asked for.
 class _RescueButton extends StatelessWidget {
-  const _RescueButton({required this.rescue, required this.onSpeak});
+  const _RescueButton({required this.rescue, required this.onSpeak, this.onUsed});
 
   final List<({String text, String? translation})> rescue;
   final void Function(String text) onSpeak;
+
+  /// СПАСАТЕЛЕМ ВОСПОЛЬЗОВАЛИСЬ — не ошибка и не «сам» (канон §8, наряд SCENE-RUN, Ч.2.5).
+  ///
+  /// В прогоне это третий исход хода: человек его сделал, но сделал не сам. Молчать об этом значило
+  /// бы записать сцену как сказанную голосом там, где голос был чужой.
+  final VoidCallback? onUsed;
 
   @override
   Widget build(BuildContext context) {
@@ -404,7 +423,13 @@ class _RescueButton extends StatelessWidget {
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
-          builder: (_) => PlanRescueSheet(rescue: rescue, onSpeak: onSpeak),
+          builder: (_) => PlanRescueSheet(
+            rescue: rescue,
+            onSpeak: (text) {
+              onUsed?.call();
+              onSpeak(text);
+            },
+          ),
         );
       },
       child: Container(
@@ -959,6 +984,7 @@ class PlanDialogueDone extends StatelessWidget {
     required this.hearable,
     required this.rescueUsed,
     required this.onDone,
+    this.run,
   });
 
   final PlanDialogue dialogue;
@@ -971,6 +997,12 @@ class PlanDialogueDone extends StatelessWidget {
 
   final int rescueUsed;
   final VoidCallback onDone;
+
+  /// ИТОГ ПРОГОНА СЦЕНЫ — «Прошёл сам N из M · сразу K» (кадр DL·10, наряд SCENE-RUN, Ч.2.7).
+  ///
+  /// Null у обычного финала диалога: там мерили выбор, а не голос, и «прошёл сам» было бы не про
+  /// ту ступень. Процента здесь нет и не будет — на экранах плана его нет нигде.
+  final ({int total, int said, int fast})? run;
 
   @override
   Widget build(BuildContext context) {
@@ -1011,8 +1043,18 @@ class PlanDialogueDone extends StatelessWidget {
           const SizedBox(height: AppSpacing.s22),
           PlanLabel(l.planDialogueResult),
           const SizedBox(height: 10),
-          _Fact(label: l.planDialogueAnsweredSelf, value: l.planDialogueCountOf(answeredSelf, answerable)),
-          if (hearable > 0)
+          if (run case final r?) ...[
+            // ПРОГОН МЕРИТ ДРУГОЕ: не «сколько ходов ты сделал», а «сколько ты СКАЗАЛ сам» и
+            // «сколько из них — сразу». Две строки вместо одной, потому что медленный успех
+            // остаётся успехом (канон §4) и прятать его за одним числом было бы неправдой.
+            _Fact(label: l.planSceneRunSaidSelf, value: l.planDialogueCountOf(r.said, r.total)),
+            _Fact(label: l.planSceneRunSaidFast, value: '${r.fast}'),
+          ] else
+            _Fact(
+              label: l.planDialogueAnsweredSelf,
+              value: l.planDialogueCountOf(answeredSelf, answerable),
+            ),
+          if (run == null && hearable > 0)
             _Fact(label: l.planDialogueHeardOut, value: l.planDialogueCountOf(heardOut, hearable)),
           if (rescueUsed > 0)
             _Fact(label: l.planDialogueAskedRepeat, value: l.planDialogueTimes(rescueUsed)),

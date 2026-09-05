@@ -2319,6 +2319,24 @@ abstract class AppLocalizations {
   /// **'собери свой ответ из блоков'**
   String get sessionInstrAssembleTurn;
 
+  /// Подсказка на ходу прогона сцены: реплики на экране нет, есть только перевод (SCENE-RUN, Ч.2).
+  ///
+  /// In ru, this message translates to:
+  /// **'скажи свою реплику — текста не будет'**
+  String get planSceneRunHint;
+
+  /// Итог прогона сцены: сколько ходов человек сказал своим голосом (кадр DL·10).
+  ///
+  /// In ru, this message translates to:
+  /// **'Прошёл сам'**
+  String get planSceneRunSaidSelf;
+
+  /// Итог прогона сцены: сколько ходов прозвучало без раздумья (канон §4, «C + скорость»).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сразу'**
+  String get planSceneRunSaidFast;
+
   /// Инструкция «Ты спросишь» на ситуационной карточке (SIT-1, канон §4).
   ///
   /// In ru, this message translates to:

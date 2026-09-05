@@ -60,6 +60,10 @@ final class PlanSessionResource extends JsonResource
             // breaks fall only on section boundaries. A client that ignores this plays the day as
             // one long session — which is what it did before.
             'sittings' => $view->sittings,
+            // СЕКУНДЫ ПРОГОНА СЦЕНЫ — «сразу», «Пропустить», сторож и цена хода в минутах дня
+            // (наряд SCENE-RUN). На проводе, а не в коде экрана: это продуктовые суждения о том,
+            // сколько человек думает, и они обязаны двигаться без выката приложения.
+            'scene_run' => $view->sceneRun,
             // THE CONVERSATIONS THIS SITTING PLAYS — one per scene it reaches, whole, in the order
             // the scene is spoken. The turns outnumber the tasks on purpose: the screen plays the
             // conversation from its first line and hands the learner a move only where a task with

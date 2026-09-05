@@ -709,6 +709,32 @@ class ApiClient {
     return PlanRehearsal.fromJson(_data(r) as Map<String, dynamic>);
   }
 
+  /// ПРОГОН СЦЕНЫ ЗАВЕРШЁН — ходы с исходами, и ни одного посчитанного числа (наряд SCENE-RUN).
+  ///
+  /// «Прошёл сам 2 из 4 · сразу 1» считает сервер: это то, что человеку показывают и что потом
+  /// читает зрелость сцены, и число, посчитанное на телефоне, было бы вторым источником правды о
+  /// том, чего он добился.
+  ///
+  /// Ответы каждого хода уже уехали обычной очередью ревью — сказал это `speaking/good`, пропустил
+  /// `speaking/again`. Здесь их нет: append-only журнал не должен получить один ответ дважды.
+  Future<void> recordSceneRun({
+    required String planId,
+    required int sceneIndex,
+    required int dayIndex,
+    required List<({String termId, String outcome})> turns,
+  }) async {
+    await _dio.post(
+      '/plans/$planId/scene-runs',
+      data: {
+        'scene_index': sceneIndex,
+        'day_index': dayIndex,
+        'turns': [
+          for (final turn in turns) {'term_id': turn.termId, 'outcome': turn.outcome},
+        ],
+      },
+    );
+  }
+
   /// «Как прошло?» — the checkpoints the learner ticked by hand after the event.
   ///
   /// It CLOSES the plan, which is why it answers with the whole plan rather than with a receipt:

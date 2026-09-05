@@ -1441,6 +1441,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrAssembleTurn => 'собери свой ответ из блоков';
 
   @override
+  String get planSceneRunHint => 'скажи свою реплику — текста не будет';
+
+  @override
+  String get planSceneRunSaidSelf => 'Прошёл сам';
+
+  @override
+  String get planSceneRunSaidFast => 'Сразу';
+
+  @override
   String get sessionInstrSituationalAsk => 'выбери, что спросишь';
 
   @override

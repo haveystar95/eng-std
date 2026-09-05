@@ -87,5 +87,24 @@ final readonly class PlanSessionView
          * @var list<PlanLineAudioView>
          */
         public array $lineAudio = [],
+        /**
+         * ЧИСЛА ПРОГОНА СЦЕНЫ — секунды, из которых состоит ступень C (наряд SCENE-RUN, Ч.2.3/Ч.2.4).
+         *
+         * `fast_seconds` — от начала прослушивания до ключа, чтобы ход засчитался «сразу»;
+         * `skip_after_seconds` — когда на экране появляется «Пропустить»; `listen_seconds` — когда
+         * сторож делает это за человека; `turn_seconds` — цена хода в минутах дня.
+         *
+         * ЕДУТ С СЕРВЕРА, а не лежат в коде экрана: это продуктовые суждения о том, сколько человек
+         * думает, и первый раз, когда одно из них окажется неверным, оно должно сдвинуться без
+         * выката приложения. Живут в `config/learning.php → plan.scene_run`.
+         *
+         * @var array{fast_seconds: int, listen_seconds: int, skip_after_seconds: int, turn_seconds: int}
+         */
+        public array $sceneRun = [
+            'fast_seconds' => 3,
+            'listen_seconds' => 15,
+            'skip_after_seconds' => 5,
+            'turn_seconds' => 20,
+        ],
     ) {}
 }

@@ -636,6 +636,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       if (url != null) precacheSessionImage(context, url);
     }
     _results.add((card: played, verdict: a.verdict));
+    if (_isSceneRunTurn(_playing)) _recordRunTurn(played, a);
     ref
         .read(reviewSyncProvider)
         .record(
@@ -922,17 +923,110 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         : l.planDialogueTailSay;
   }
 
+  /// ЧЕМ КОНЧИЛИСЬ ХОДЫ ПРОГОНА, по сценам — вход в `POST /plans/{id}/scene-runs`.
+  ///
+  /// Копится на экране, а не считается на сервере, потому что сервер этого не видит: исход хода
+  /// складывается из вердикта, времени до ключа и того, звал ли человек спасателя. Числа («сам N из
+  /// M · сразу K») по этому списку считает СЕРВЕР — телефон присылает, что случилось, и не считает
+  /// итог сам: два места, считающих одно число, — это два разных числа на двух экранах.
+  final Map<int, Map<String, String>> _runOutcomes = {};
+
+  /// Ходы, на которых человек звал спасателя. Не ошибка и не «сам» — третий исход (канон §8).
+  final Set<String> _rescuedTurns = {};
+
+  /// Сцены, чей прогон уже отправлен: посадку можно переоткрыть, а событие случается один раз.
+  final Set<int> _runsSent = {};
+
+  /// Записать исход хода прогона и, если сцена кончилась, отправить прогон.
+  void _recordRunTurn(SessionCard played, SessionAnswer a) {
+    final plan = widget.session.plan;
+    if (plan == null) return;
+    final day = plan.carriedFromAt(_playing) ?? plan.dayIndex;
+    final fastMs = plan.sceneRunKnobs.fastSeconds * 1000;
+
+    // ТРИ ИСХОДА, и «сразу» это разновидность первого. Спасатель перебивает вердикт: ход, сделанный
+    // спасателем, не «сам», даже если после него человек произнёс реплику верно.
+    final outcome = _rescuedTurns.contains(played.termId)
+        ? 'rescued'
+        : !a.verdict.isAccepted
+        ? 'skipped'
+        : (a.listenedMs != null && a.listenedMs! <= fastMs)
+        ? 'said_fast'
+        : 'said';
+
+    _runOutcomes.putIfAbsent(day, () => {})[played.termId] = outcome;
+    _sendRunIfComplete(day);
+  }
+
+  /// Отправить прогон сцены, когда её последний ход закрыт.
+  ///
+  /// «Одна строка на ЗАВЕРШЁННЫЙ прогон» (наряд Ч.2.6): пока хоть один ход этой сцены в посадке
+  /// ещё не отвечен, отправлять нечего — незавершённый прогон это не результат, а середина.
+  void _sendRunIfComplete(int day) {
+    final plan = widget.session.plan;
+    if (plan == null || _runsSent.contains(day)) return;
+
+    final expected = <String>{};
+    for (var i = 0; i < _cards.length; i++) {
+      if (_isSceneRunTurn(i) && (plan.carriedFromAt(i) ?? plan.dayIndex) == day) {
+        expected.add(_cards[i].termId);
+      }
+    }
+    final done = _runOutcomes[day] ?? const {};
+    if (expected.isEmpty || !expected.every(done.containsKey)) return;
+
+    _runsSent.add(day);
+    unawaited(
+      ref
+          .read(apiClientProvider)
+          .recordSceneRun(
+            planId: plan.planId,
+            sceneIndex: day,
+            dayIndex: plan.dayIndex,
+            turns: [for (final id in expected) (termId: id, outcome: done[id]!)],
+          )
+          // Прогон уже прожит и его ответы уже в очереди ревью; провал этой записи не должен
+          // отнимать у человека экран. Ошибка — в лог, не на экран.
+          .catchError((Object _) {}),
+    );
+  }
+
+  /// КАРТОЧКА НА ПОЗИЦИИ [i] — ЭТО ХОД ПРОГОНА СЦЕНЫ (наряд SCENE-RUN, Ч.2).
+  ///
+  /// Два признака и оба обязательны: секция говорит, ЗАЧЕМ карточку раздали, уровень — что с неё
+  /// убрали. По одной секции судить нельзя (последний день гоняет сцены той же секцией, но это
+  /// по-прежнему прогон), по одному уровню тоже: `say` наступит и в других местах, когда они
+  /// появятся.
+  bool _isSceneRunTurn(int i) {
+    final plan = widget.session.plan;
+    if (plan == null) return false;
+
+    return plan.sectionCodeAt(i) == PlanSessionTask.sectionCodeSceneRun &&
+        plan.turnLevelAt(i) == 'say';
+  }
+
   /// КРУПНЫЙ ВОПРОС ТАКТА для карточки на позиции [i] (кадры DL·02, DL·03; наряд Ч.1.1).
   ///
   /// Такт понимания и такт ответа обязаны различаться с одного взгляда, и различает их вопрос, а не
   /// серая строка кеглем 12 под пузырём.
-  String? _taktQuestion(AppLocalizations l, int i) => switch (_cards[i].mode) {
-    ExerciseMode.situationalHear => l.planDialogueAskHeard,
-    ExerciseMode.situationalSay => l.planDialogueAskSay,
-    ExerciseMode.situationalAsk => l.planDialogueAskAsk,
-    // Любой другой тренажёр внутри диалога сам называет, что делать, — его подпись не трогаем.
-    _ => null,
-  };
+  String? _taktQuestion(AppLocalizations l, int i) {
+    // ПРОГОН СПРАШИВАЕТ ТО ЖЕ САМОЕ, и это не оговорка: такт не про строгость, а про то, чей сейчас
+    // ход. «Что ты ответишь?» над микрофоном — тот же вопрос, что над вариантами, только отвечать
+    // на него теперь нечем, кроме голоса. Полка различает ответ и вопрос, как и в диалоге.
+    if (_isSceneRunTurn(i)) {
+      return widget.session.plan?.shelfAt(i) == 'ask'
+          ? l.planDialogueAskAsk
+          : l.planDialogueAskSay;
+    }
+
+    return switch (_cards[i].mode) {
+      ExerciseMode.situationalHear => l.planDialogueAskHeard,
+      ExerciseMode.situationalSay => l.planDialogueAskSay,
+      ExerciseMode.situationalAsk => l.planDialogueAskAsk,
+      // Любой другой тренажёр внутри диалога сам называет, что делать, — его подпись не трогаем.
+      _ => null,
+    };
+  }
 
   /// Term ids of this sitting's answered cards — what puts «сказано вслух» under a bubble already
   /// in the feed (кадр DL·05). A fact, never a grade: it says the turn was taken, not that it was
@@ -1195,6 +1289,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         }
 
         final facts = _dialogueFacts(dialogue);
+        // ЧТО ЭТО БЫЛО — разговор или прогон. Числа у них разные, потому что мерят они разное:
+        // выбор в разговоре и голос в прогоне.
+        final outcomes = _runOutcomes[day];
 
         return PlanDialogueDone(
           dialogue: dialogue,
@@ -1207,6 +1304,13 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
           // would be a number the app does not know. The row is simply absent (кадр DL·10 draws it
           // only when there is something to draw).
           rescueUsed: 0,
+          run: outcomes == null || outcomes.isEmpty
+              ? null
+              : (
+                  total: outcomes.length,
+                  said: outcomes.values.where((o) => o.startsWith('said')).length,
+                  fast: outcomes.values.where((o) => o == 'said_fast').length,
+                ),
           onDone: () => setState(() => _dialogueFinished = null),
         );
       }
@@ -1368,6 +1472,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             // По СЕКЦИИ, а не по членству в цепочке: хвост — та же сцена, и подписан он так же.
             inDialogue: _dialogueAtPosition(_pos) != null,
             speaksAfterChoice: plan?.speaksAfterChoiceAt(_playing) ?? false,
+            // ХОД ПРОГОНА СЦЕНЫ — ступень C (наряд SCENE-RUN, Ч.2). Не режим и не флаг экрана:
+            // сервер сказал, что этот ход отдан голосом, и вместе с этим прислал секунды, из
+            // которых прогон состоит. Null у всего остального, включая обычное говорение фразы.
+            sceneRun: _isSceneRunTurn(_playing) ? plan?.sceneRunKnobs : null,
             // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's
             // deferred speak/focus is cancelled instead of firing on the next card.
             isCurrent: () => mounted && _pos == builtAt,
@@ -1458,6 +1566,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                             _pronouncer.speakText(text, targetLang: _sessionLang),
                           ),
                           rescue: _rescuePhrases(),
+                          // СПАСАТЕЛЬ НА ХОДУ ПРОГОНА — третий исход: ход сделан, но не сам
+                          // (наряд SCENE-RUN, Ч.2.5). Вне прогона запоминать нечего: там
+                          // спасатель просто нормальный ход разговора.
+                          onRescueUsed: _isSceneRunTurn(_playing)
+                              ? () => _rescuedTurns.add(_cards[_playing].termId)
+                              : null,
                           voiceTrouble: PlanVoiceTrouble(cache: _lineAudio),
                           answeredAloud: _spokenTerms,
                           dealtTerms: _dealtTerms,

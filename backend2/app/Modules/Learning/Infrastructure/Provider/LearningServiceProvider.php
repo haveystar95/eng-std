@@ -39,6 +39,7 @@ use App\Modules\Learning\Application\Port\PlanTermSweepStore;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
 use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
 use App\Modules\Learning\Application\Query\GetPlanHandler;
+use App\Modules\Learning\Application\Command\BuildPlanSessionHandler;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanSkillRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
@@ -138,6 +139,14 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(PlanSceneRunRepository::class, EloquentPlanSceneRunRepository::class);
         // ПОРОГ «СРАЗУ» — продуктовое суждение, не константа: экран плана готовности процентом не
         // рисует, но число обязано двигаться из конфига, а не из выката.
+        $this->app->when(BuildPlanSessionHandler::class)
+            ->needs('$sceneRunKnobs')
+            ->give(static fn (): array => [
+                'fast_seconds' => (int) config('learning.plan.scene_run.fast_seconds', 3),
+                'listen_seconds' => (int) config('learning.plan.scene_run.listen_seconds', 15),
+                'skip_after_seconds' => (int) config('learning.plan.scene_run.skip_after_seconds', 5),
+                'turn_seconds' => (int) config('learning.plan.scene_run.turn_seconds', 20),
+            ]);
         $this->app->when(GetPlanHandler::class)
             ->needs('$readyFastShare')
             ->give(static fn (): float => (float) config('learning.plan.scene_run.ready_fast_share', 0.7));

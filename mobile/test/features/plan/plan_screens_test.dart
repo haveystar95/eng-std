@@ -160,6 +160,9 @@ class _Envelope implements PlanSessionEnvelope {
 
   @override
   List<({String text, String url})> get lineAudio => const [];
+
+  @override
+  SceneRunKnobs get sceneRunKnobs => const SceneRunKnobs();
   @override
   String get planId => '01PLAN';
   @override
@@ -206,6 +209,9 @@ class _Envelope implements PlanSessionEnvelope {
   // counts cards, and both are the session frame's business (`plan_session_seam_test.dart`).
   @override
   String? sectionCodeAt(int i) => null;
+
+  @override
+  String? turnLevelAt(int i) => null;
   @override
   List<PlanDialogue> get dialogues => const [];
 }

@@ -850,6 +850,13 @@ abstract interface class PlanSessionEnvelope {
   /// as it did before.
   String? sectionCodeAt(int i);
 
+  /// СТРОГОСТЬ ХОДА, которым дана карточка [i] — `choose` | `assemble` | `say`, или null.
+  ///
+  /// Отдельно от режима: тренажёр на всех трёх уровнях один, а рисуется он вариантами, блоками или
+  /// микрофоном (наряд SCENE-RUN). Null у всего, что не является ходом человека в разговоре, и на
+  /// пейлоаде сервера, который поля не знает.
+  String? turnLevelAt(int i);
+
   /// THE CONVERSATIONS this sitting plays — one per scene it reaches, whole and in order.
   ///
   /// Empty on the day a scene is introduced (its dialogue opens tomorrow — канон §10), on the final
@@ -861,6 +868,46 @@ abstract interface class PlanSessionEnvelope {
   /// Пусто — законный ответ, и он значит «читай системным голосом»: труба выключена, у языка нет
   /// голоса в пакете, файлы ещё не догнали день, или сервер этого поля не знает.
   List<({String text, String url})> get lineAudio => const [];
+
+  /// СЕКУНДЫ ПРОГОНА СЦЕНЫ, как их назвал сервер — {@see SceneRunKnobs}.
+  SceneRunKnobs get sceneRunKnobs => const SceneRunKnobs();
+}
+
+/// СЕКУНДЫ ПРОГОНА СЦЕНЫ — ступень C, как её отмеряет сервер (наряд SCENE-RUN, Ч.2).
+///
+/// Четыре числа, и все четыре продуктовые суждения о том, сколько человек думает: поэтому они
+/// приезжают с сервера (`config/learning.php → plan.scene_run`), а не лежат константами в коде
+/// экрана. Первый раз, когда одно из них окажется неверным, оно должно сдвинуться без выката.
+///
+/// Дефолты здесь — не второе мнение, а поведение для пейлоада сервера, который поля ещё не знает:
+/// те же числа, что стоят в конфиге.
+class SceneRunKnobs {
+  const SceneRunKnobs({
+    this.fastSeconds = 3,
+    this.listenSeconds = 15,
+    this.skipAfterSeconds = 5,
+    this.turnSeconds = 20,
+  });
+
+  /// «СРАЗУ» — от начала прослушивания до ключа. Канон §4: готовность это «C + скорость».
+  final int fastSeconds;
+
+  /// СТОРОЖ: столько экран слушает, прежде чем сделать ход за человека.
+  final int listenSeconds;
+
+  /// …и через столько появляется «Пропустить». Раньше сторожа: выход должен быть виден до того,
+  /// как он понадобится.
+  final int skipAfterSeconds;
+
+  /// Цена одного хода в минутах дня — считает сервер, клиент только показывает.
+  final int turnSeconds;
+
+  static SceneRunKnobs fromJson(Map<String, dynamic>? j) => SceneRunKnobs(
+    fastSeconds: (j?['fast_seconds'] as num?)?.toInt() ?? 3,
+    listenSeconds: (j?['listen_seconds'] as num?)?.toInt() ?? 15,
+    skipAfterSeconds: (j?['skip_after_seconds'] as num?)?.toInt() ?? 5,
+    turnSeconds: (j?['turn_seconds'] as num?)?.toInt() ?? 20,
+  );
 }
 
 /// ONE SCENE'S CONVERSATION — the dialogue screen's whole input beside the sitting's own tasks.
@@ -875,6 +922,7 @@ class PlanDialogue {
     required this.turns,
     this.sceneTitle,
     this.sceneIntro,
+    this.runReady = true,
   });
 
   /// Which day of the plan this scene is — «Сцена 2» is drawn from the plan, this is the address.
@@ -887,6 +935,14 @@ class PlanDialogue {
   final String? sceneIntro;
 
   final List<PlanDialogueTurn> turns;
+
+  /// ДОЗРЕЛА ЛИ СЦЕНА ДО ПРОГОНА — каждый её ход прошёл ступень B хотя бы одним верным выбором.
+  ///
+  /// В обычный день у сцены, чей прогон вообще собрали, это всегда true. Значение появляется на
+  /// ПОСЛЕДНЕМ дне, где прогоняются все сцены подряд, включая те, до которых лестница не дошла
+  /// (наряд SCENE-RUN, Ч.2.8): итог такую сцену помечает, а не делает вид, что она была как
+  /// остальные.
+  final bool runReady;
 
   /// How many EXCHANGES this conversation is — «4 обмена» on кадр DL·01.
   ///
@@ -913,6 +969,7 @@ class PlanDialogue {
       sceneTitle: (j['scene_title'] as String?)?.trim(),
       sceneIntro: (j['scene_intro'] as String?)?.trim(),
       turns: turns,
+      runReady: (j['run_ready'] as bool?) ?? true,
     );
   }
 }
@@ -926,6 +983,7 @@ class PlanDialogueTurn {
     this.translation,
     this.shelf,
     this.audioUrl,
+    this.level,
   });
 
   /// `role` — the other person speaks; `you` — the learner's move.
@@ -938,6 +996,13 @@ class PlanDialogueTurn {
   /// СЕРВЕРНАЯ ОЗВУЧКА этой реплики, или null — «файла нет, читай системным голосом» (наряд TTS-1).
   final String? audioUrl;
 
+  /// СТРОГОСТЬ СВОЕГО ХОДА — `choose` | `assemble` | `say`, null у реплики собеседника.
+  ///
+  /// Едет на цепочке, а не только на задаче (наряд SCENE-RUN, Ч.1): ходов больше, чем задач, и
+  /// лента рисуется вперёд — ход, до которого лестница сегодня не дошла, должен выглядеть тем, чем
+  /// он станет.
+  final String? level;
+
   bool get isRole => turn == 'role';
 
   factory PlanDialogueTurn.fromJson(Map<String, dynamic> j) => PlanDialogueTurn(
@@ -947,6 +1012,7 @@ class PlanDialogueTurn {
     translation: (j['translation'] as String?),
     shelf: j['shelf'] as String?,
     audioUrl: j['audio_url'] as String?,
+    level: j['level'] as String?,
   );
 }
 
