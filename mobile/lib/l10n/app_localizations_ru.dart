@@ -1447,6 +1447,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSceneRunSaidSelf => 'Прошёл сам';
 
   @override
+  String get planDialogueSayIt => 'Сказать вслух';
+
+  @override
+  String get planDialogueNotHeard => 'Не расслышали — попробуйте ещё раз.';
+
+  @override
   String get planSceneRunSaidFast => 'Сразу';
 
   @override

@@ -2331,6 +2331,18 @@ abstract class AppLocalizations {
   /// **'Прошёл сам'**
   String get planSceneRunSaidSelf;
 
+  /// Кнопка микрофона на своём ходу диалога: экран слушает, но ничего не оценивает (SCENE-RUN, Ч.4).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сказать вслух'**
+  String get planDialogueSayIt;
+
+  /// Первая пустая попытка микрофона на своём ходу диалога (SCENE-RUN, Ч.4).
+  ///
+  /// In ru, this message translates to:
+  /// **'Не расслышали — попробуйте ещё раз.'**
+  String get planDialogueNotHeard;
+
   /// Итог прогона сцены: сколько ходов прозвучало без раздумья (канон §4, «C + скорость»).
   ///
   /// In ru, this message translates to:

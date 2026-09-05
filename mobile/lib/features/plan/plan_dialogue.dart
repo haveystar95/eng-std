@@ -22,7 +22,10 @@
 /// by the type rather than by a caption.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -30,6 +33,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../data/models.dart' show PlanDialogue, PlanDialogueTurn;
+import '../../data/providers.dart' show speechRecognizerProvider;
 import 'plan_ui.dart';
 
 /// ONE SCENE'S CONVERSATION, around one card of it.
@@ -726,10 +730,19 @@ class _BubbleAction extends StatelessWidget {
 /// «ты это сказал» человеку, который не открывал рта. Канон §1 держит обратное: единица интерактива
 /// — обмен, и в каждом своём ходу человек участвует.
 ///
-/// Что здесь НЕ происходит: ничего не оценивается, ничего не сравнивается, ревью не пишется и
-/// лестница не двигается. Подпись говорит это вслух, потому что кнопка с микрофоном обещает разбор
-/// произношения, которого тут нет.
-class PlanDialogueSayAloud extends StatelessWidget {
+/// ## МИКРОФОН ВМЕСТО ЧЕСТНОГО СЛОВА (наряд SCENE-RUN, Ч.4)
+///
+/// Кнопка «Сказал вслух» была заглушкой ровно в одном смысле: она спрашивала человека, сделал ли
+/// он то, чего экран не видел. Теперь экран слушает — и всё равно НИЧЕГО НЕ ОЦЕНИВАЕТ: пузырь
+/// ставит сам ФАКТ речи, а не её правильность. Разбор произношения здесь по-прежнему не обещан и
+/// не делается; в append-only журнал не уходит ни строки, и лестница не двигается.
+///
+/// Тишина — не отказ: первая пустая попытка просит повторить, вторая ставит пузырь всё равно.
+/// Микрофон, который не расслышал, не имеет права остановить разговор.
+///
+/// Без разрешения на микрофон остаётся прежняя текстовая кнопка — и тап по микрофону спрашивает
+/// разрешение: экран, который просто прячет кнопку, выглядит сломанным.
+class PlanDialogueSayAloud extends ConsumerStatefulWidget {
   const PlanDialogueSayAloud({
     super.key,
     required this.turn,
@@ -746,8 +759,85 @@ class PlanDialogueSayAloud extends StatelessWidget {
   final VoidCallback onDone;
 
   @override
+  ConsumerState<PlanDialogueSayAloud> createState() => _PlanDialogueSayAloudState();
+}
+
+class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
+  /// Сколько попыток микрофона уже потрачено. Вторая пустая ставит пузырь всё равно.
+  static const _maxAttempts = 2;
+
+  /// Сколько экран слушает один ход. Тот же порог, что у говорения фраз: дольше человек не
+  /// вспоминает, он мучается.
+  static const _window = Duration(seconds: 15);
+
+  bool _listening = false;
+  int _attempts = 0;
+  String _heard = '';
+
+  /// Микрофон доступен: разрешение уже дано. Null — ещё не спрашивали.
+  bool? _permitted;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_askPermission());
+  }
+
+  Future<void> _askPermission() async {
+    final granted = await ref.read(speechRecognizerProvider).hasPermission;
+    if (mounted) setState(() => _permitted = granted);
+  }
+
+  Future<void> _listen() async {
+    if (_listening) return;
+    final recognizer = ref.read(speechRecognizerProvider);
+    if (_permitted != true) {
+      // ТАП — ЭТО И ЕСТЬ ЗАПРОС РАЗРЕШЕНИЯ. Экран, который прячет кнопку до разрешения, выглядит
+      // сломанным; экран, который просит разрешение до того, как человек захотел говорить, —
+      // навязчивым.
+      final ready = await recognizer.prepare();
+      if (!mounted) return;
+      setState(() => _permitted = ready);
+      if (!ready) return;
+    }
+
+    AppHaptics.light();
+    setState(() {
+      _listening = true;
+      _heard = '';
+    });
+
+    final attempt = await recognizer.listenOnce(
+      // Ход не оценивается, поэтому «ожидаемого» у него нет: реплика уходит только подсказкой
+      // распознавателю, и ни с чем не сравнивается.
+      expected: const [],
+      localeId: '',
+      timeout: _window,
+      contextualStrings: [widget.turn.text],
+      onPartial: (text) {
+        if (mounted && _listening) setState(() => _heard = text);
+      },
+    );
+    if (!mounted) return;
+
+    setState(() {
+      _listening = false;
+      _attempts++;
+      if (attempt.isHeard) _heard = attempt.text;
+    });
+
+    // СКАЗАНО — это непустой транскрипт, и только он. Вторая пустая попытка тоже ставит пузырь:
+    // микрофон, который не расслышал, не имеет права держать человека в этом ходу.
+    if (attempt.isHeard || _attempts >= _maxAttempts) {
+      widget.onDone();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final turn = widget.turn;
+    final onSpeak = widget.onSpeak;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -791,14 +881,44 @@ class PlanDialogueSayAloud extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.s16),
-        PrimaryButton(
-          label: l.planDialogueSaidIt,
-          minHeight: 52,
-          onPressed: () {
-            AppHaptics.light();
-            onDone();
-          },
-        ),
+        // «УСЛЫШАЛИ: …» — живым, пока микрофон открыт, и после него. Не вердикт: строка говорит,
+        // что дошло до экрана, и ничего не утверждает о том, верно ли это.
+        if (_listening || _heard.isNotEmpty) ...[
+          Text(
+            _heard.isEmpty ? l.sessionSpeakListening : l.sessionSpeakHeard(_heard),
+            style: AppText.translation.copyWith(fontSize: 14, height: 1.5),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+        ],
+        // ПЕРВАЯ ПУСТАЯ ПОПЫТКА просит повторить; вторая пузырь уже поставила.
+        if (!_listening && _attempts == 1 && _heard.isEmpty) ...[
+          Text(
+            l.planDialogueNotHeard,
+            style: AppText.translation.copyWith(
+              fontSize: 13.5,
+              height: 1.55,
+              color: AppColors.secondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+        ],
+        // БЕЗ РАЗРЕШЕНИЯ — прежняя текстовая кнопка. Она не хуже: ход всё равно не оценивается,
+        // и человек, который сказал реплику вслух, сказал её вслух.
+        if (_permitted == false)
+          PrimaryButton(
+            label: l.planDialogueSaidIt,
+            minHeight: 52,
+            onPressed: () {
+              AppHaptics.light();
+              widget.onDone();
+            },
+          )
+        else
+          PrimaryButton(
+            label: _listening ? l.sessionSpeakStop : l.planDialogueSayIt,
+            minHeight: 52,
+            onPressed: _listening ? null : () => unawaited(_listen()),
+          ),
       ],
     );
   }

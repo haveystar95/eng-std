@@ -1406,6 +1406,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSceneRunSaidSelf => 'Said it yourself';
 
   @override
+  String get planDialogueSayIt => 'Say it aloud';
+
+  @override
+  String get planDialogueNotHeard => 'We did not catch that — try again.';
+
+  @override
   String get planSceneRunSaidFast => 'Straight away';
 
   @override

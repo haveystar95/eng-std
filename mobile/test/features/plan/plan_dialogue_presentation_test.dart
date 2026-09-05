@@ -22,6 +22,7 @@ import 'package:eng_std/data/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/review_sync.dart';
 import 'package:eng_std/data/session_completion_sync.dart';
+import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/training/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
@@ -125,6 +126,9 @@ void main() {
   Widget host(List<PlanSessionTask> tasks, {List<String>? log}) => ProviderScope(
     overrides: [
       apiClientProvider.overrideWithValue(_PlanApi()),
+      // МИКРОФОН, КОТОРЫЙ СЛЫШИТ (наряд SCENE-RUN, Ч.4): свой ход теперь отдают голосом, и без
+      // подмены тест мерил бы плагин, которого на симуляторе нет.
+      speechRecognizerProvider.overrideWithValue(_HeardRecognizer()),
       appDatabaseProvider.overrideWith((ref) {
         final database = AppDatabase.forTesting(NativeDatabase.memory());
         ref.onDispose(database.close);
@@ -233,11 +237,12 @@ void main() {
     // Пока ход не отдан, следующая реплика собеседника не звучит и такта ответа нет.
     expect(find.text('Что ты ответишь?'), findsNothing);
 
-    await tester.tap(find.text('Сказал вслух'));
+    await tester.tap(find.text('Сказать вслух'));
     await tester.pumpAndSettle();
 
-    // Пузырь встал в ленту, разговор пошёл дальше — и ни одного ревью за это не написано.
-    expect(find.text('Сказал вслух'), findsNothing);
+    // Пузырь встал в ленту, разговор пошёл дальше — и ни одного ревью за это не написано:
+    // микрофон здесь фиксирует ФАКТ речи и ничего не оценивает (наряд SCENE-RUN, Ч.4).
+    expect(find.text('Сказать вслух'), findsNothing);
     expect(find.text('Что ты ответишь?'), findsOneWidget);
     expect(log, isEmpty);
 
@@ -257,7 +262,7 @@ void main() {
     );
 
     // Отдать первый ход, потом ответить на свой — и выйти из разговора в хвост.
-    await tester.tap(find.text('Сказал вслух'));
+    await tester.tap(find.text('Сказать вслух'));
     await tester.pumpAndSettle();
     await tester.tap(find.text("I'm building a learning app."));
     await tester.pumpAndSettle();
@@ -329,4 +334,35 @@ class _RecordingReviewSync extends ReviewSync {
 
   @override
   Future<void> flush() async {}
+}
+
+/// Микрофон, который всегда слышит — свой ход диалога отдают голосом (наряд SCENE-RUN, Ч.4).
+///
+/// Что он НЕ проверяет: правильность. Ход не оценивается ни здесь, ни в приложении — пузырь ставит
+/// сам факт речи.
+class _HeardRecognizer implements SpeechRecognizer {
+  @override
+  bool get isReady => true;
+
+  @override
+  Future<bool> prepare() async => true;
+
+  @override
+  Future<bool> get hasPermission async => true;
+
+  @override
+  Future<SpeechAttempt> listenOnce({
+    required List<String> expected,
+    required String localeId,
+    Duration timeout = const Duration(seconds: 8),
+    Duration pauseFor = const Duration(seconds: 2),
+    List<String> contextualStrings = const [],
+    ValueChanged<String>? onPartial,
+  }) async => const SpeechAttempt.heard('my background is in backend development');
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> cancel() async {}
 }

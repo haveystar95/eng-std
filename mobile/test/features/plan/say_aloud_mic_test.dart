@@ -1,0 +1,139 @@
+import 'package:drift/native.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:eng_std/data/local/app_database.dart';
+import 'package:eng_std/data/models.dart';
+import 'package:eng_std/data/providers.dart';
+import 'package:eng_std/data/speech/speech_recognizer.dart';
+import 'package:eng_std/features/plan/plan_dialogue.dart';
+import 'package:eng_std/l10n/app_localizations.dart';
+
+/// МИКРОФОН ВМЕСТО ЧЕСТНОГО СЛОВА — наряд SCENE-RUN, Ч.4.
+///
+/// Кнопка «Сказал вслух» спрашивала человека, сделал ли он то, чего экран не видел. Теперь экран
+/// слушает — и по-прежнему НИЧЕГО не оценивает: пузырь ставит сам факт речи. Здесь прибиты три
+/// вещи, которые легко потерять: тишина не запирает ход, вторая попытка его отпускает, а телефон
+/// без разрешения на микрофон остаётся с прежней текстовой кнопкой.
+class _ScriptedRecognizer implements SpeechRecognizer {
+  _ScriptedRecognizer(this._script, {this.permitted = true});
+
+  final List<SpeechAttempt> _script;
+  final bool permitted;
+  int calls = 0;
+
+  @override
+  bool get isReady => permitted;
+
+  @override
+  Future<bool> prepare() async => permitted;
+
+  @override
+  Future<bool> get hasPermission async => permitted;
+
+  @override
+  Future<SpeechAttempt> listenOnce({
+    required List<String> expected,
+    required String localeId,
+    Duration timeout = const Duration(seconds: 8),
+    Duration pauseFor = const Duration(seconds: 2),
+    List<String> contextualStrings = const [],
+    ValueChanged<String>? onPartial,
+  }) async {
+    final attempt = _script[calls.clamp(0, _script.length - 1)];
+    calls++;
+
+    return attempt;
+  }
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> cancel() async {}
+}
+
+void main() {
+  const turn = PlanDialogueTurn(
+    turn: 'you',
+    termId: '01SAY',
+    text: 'My background is in backend development.',
+    shelf: 'say',
+  );
+
+  late int done;
+
+  setUp(() => done = 0);
+
+  Widget host(SpeechRecognizer recognizer) => ProviderScope(
+    overrides: [
+      appDatabaseProvider.overrideWith((ref) {
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        ref.onDispose(db.close);
+        return db;
+      }),
+      speechRecognizerProvider.overrideWithValue(recognizer),
+    ],
+    child: MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru'), Locale('en')],
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: PlanDialogueSayAloud(
+            turn: turn,
+            onSpeak: (_) {},
+            onDone: () => done++,
+          ),
+        ),
+      ),
+    ),
+  );
+
+  testWidgets('услышанная реплика ставит пузырь — и ничего не оценивает', (tester) async {
+    await tester.pumpWidget(host(_ScriptedRecognizer(const [SpeechAttempt.heard('my background')])));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Сказать вслух'));
+    await tester.pumpAndSettle();
+
+    expect(done, 1);
+    // Ни «верно», ни «не то»: разбора произношения здесь не обещали и не делают.
+    expect(find.textContaining('Не то'), findsNothing);
+  });
+
+  testWidgets('первая тишина просит повторить, вторая отпускает ход', (tester) async {
+    final recognizer = _ScriptedRecognizer(const [SpeechAttempt.silent(), SpeechAttempt.silent()]);
+    await tester.pumpWidget(host(recognizer));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Сказать вслух'));
+    await tester.pumpAndSettle();
+
+    // Ход ещё за человеком, и экран говорит почему.
+    expect(done, 0);
+    expect(find.textContaining('Не расслышали'), findsOneWidget);
+
+    await tester.tap(find.text('Сказать вслух'));
+    await tester.pumpAndSettle();
+
+    // Микрофон, который не расслышал дважды, не имеет права держать человека в этом ходу.
+    expect(done, 1);
+    expect(recognizer.calls, 2);
+  });
+
+  testWidgets('без разрешения на микрофон остаётся прежняя текстовая кнопка', (tester) async {
+    await tester.pumpWidget(host(_ScriptedRecognizer(const [], permitted: false)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Сказал вслух'), findsOneWidget);
+    expect(find.text('Сказать вслух'), findsNothing);
+
+    // И она работает: ход всё равно не оценивается, а человек, который сказал реплику вслух,
+    // сказал её вслух.
+    await tester.tap(find.text('Сказал вслух'));
+    await tester.pumpAndSettle();
+    expect(done, 1);
+  });
+}
