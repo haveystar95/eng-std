@@ -340,6 +340,52 @@ class PlanDay {
   );
 }
 
+/// ЗРЕЛОСТЬ ОДНОЙ СЦЕНЫ И ЕЁ ПОСЛЕДНИЙ ПРОГОН — наряд SCENE-RUN, Ч.3.
+///
+/// Три слова канона (познакомился → применяю → говорю сам) приходят с сервера кодом, а не
+/// вычисляются здесь: «говоришь сам» стоит на переписи ступени C, которой у экрана нет и быть не
+/// может. Выводить вердикт из того, чего нет, — это ровно тот процент, который владелец три дня
+/// читал нулём.
+class PlanSceneCensus {
+  const PlanSceneCensus({
+    required this.dayIndex,
+    required this.maturity,
+    required this.ready,
+    this.run,
+  });
+
+  final int dayIndex;
+
+  /// `met` | `applying` | `speaking` — открытый набор: код, которого эта сборка не знает, честнее
+  /// показать первым состоянием, чем угадать.
+  final String maturity;
+
+  /// «C + скорость» (канон §4). Числом на экраны плана не выходит — там говорят словами.
+  final bool ready;
+
+  /// Итог ПОСЛЕДНЕГО прогона этой сцены, или null — её ещё не прогоняли.
+  final ({int total, int said, int saidFast, int skipped, int rescued})? run;
+
+  static PlanSceneCensus fromJson(Map<String, dynamic> j) {
+    final run = j['run'] as Map<String, dynamic>?;
+
+    return PlanSceneCensus(
+      dayIndex: (j['day_index'] as num?)?.toInt() ?? 0,
+      maturity: (j['maturity'] as String?) ?? 'met',
+      ready: j['ready'] == true,
+      run: run == null
+          ? null
+          : (
+              total: (run['total'] as num?)?.toInt() ?? 0,
+              said: (run['said'] as num?)?.toInt() ?? 0,
+              saidFast: (run['said_fast'] as num?)?.toInt() ?? 0,
+              skipped: (run['skipped'] as num?)?.toInt() ?? 0,
+              rescued: (run['rescued'] as num?)?.toInt() ?? 0,
+            ),
+    );
+  }
+}
+
 /// A whole plan, structure and all — `GET /plans/active` and `GET /plans/{id}`.
 class LearningPlan {
   const LearningPlan({
@@ -356,6 +402,7 @@ class LearningPlan {
     required this.startedAt,
     required this.completedAt,
     required this.readiness,
+    this.scenes = const [],
     required this.focusDayIndex,
     required this.nextDayIndex,
     required this.daysToEvent,
@@ -389,6 +436,19 @@ class LearningPlan {
   /// 0…1. `0.6 × чек-пойнты, сказанные вслух + 0.4 × слова на ступени C` — and the first half is a
   /// literal zero until CONV-1 lands, so the number can only ever grow, never be revised down.
   final double readiness;
+
+  /// ЗРЕЛОСТЬ КАЖДОЙ СЦЕНЫ и её последний прогон (наряд SCENE-RUN, Ч.3). Пусто на пейлоаде
+  /// сервера, который поля ещё не знает, — и тогда экран говорит ровно то, что говорил раньше.
+  final List<PlanSceneCensus> scenes;
+
+  /// Перепись сцены, введённой днём [dayIndex], или null.
+  PlanSceneCensus? sceneAt(int dayIndex) {
+    for (final scene in scenes) {
+      if (scene.dayIndex == dayIndex) return scene;
+    }
+
+    return null;
+  }
 
   /// The day the learner is ON, derived by the server from the review log on every read.
   final int focusDayIndex;
@@ -479,6 +539,10 @@ class LearningPlan {
     startedAt: j['started_at'] as String?,
     completedAt: j['completed_at'] as String?,
     readiness: (j['readiness'] as num?)?.toDouble() ?? 0,
+    scenes: ((j['scenes'] as List?) ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(PlanSceneCensus.fromJson)
+        .toList(growable: false),
     cardsTotal: ((j['stage_census'] as Map<String, dynamic>?)?['total'] as num?)?.toInt() ?? 0,
     stageAClosed:
         ((j['stage_census'] as Map<String, dynamic>?)?['stage_a_closed'] as num?)?.toInt() ?? 0,

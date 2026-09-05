@@ -4863,6 +4863,12 @@ abstract class AppLocalizations {
   /// **'Говоришь сам'**
   String get planMaturitySpeaking;
 
+  /// Строка итога прогона сцены на экране плана и в итоге дня (кадр DL·10, SCENE-RUN).
+  ///
+  /// In ru, this message translates to:
+  /// **'Прошёл сам {said} из {total} · сразу {fast}'**
+  String planSceneRunLine(int said, int total, int fast);
+
   /// Дата события в карточке цели (кадр D-07: «приём 14 марта»).
   ///
   /// In ru, this message translates to:

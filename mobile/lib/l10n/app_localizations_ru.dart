@@ -3322,6 +3322,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planMaturitySpeaking => 'Говоришь сам';
 
   @override
+  String planSceneRunLine(int said, int total, int fast) {
+    return 'Прошёл сам $said из $total · сразу $fast';
+  }
+
+  @override
   String planEventAt(String date) {
     return 'событие $date';
   }

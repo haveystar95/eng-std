@@ -323,6 +323,17 @@ class PlanNotice extends StatelessWidget {
 String planMaturityVerdict(AppLocalizations l, {required int total, required int closed}) =>
     total > 0 && closed >= total ? l.planMaturityApplying : l.planMaturityMeeting;
 
+/// ЗРЕЛОСТЬ ОДНОЙ СЦЕНЫ СЛОВОМ — три состояния канона §2 (наряд SCENE-RUN, Ч.3).
+///
+/// Слово приходит с сервера кодом, и экран его только переводит: «говоришь сам» стоит на переписи
+/// ступени C, которой у телефона нет. Код, которого эта сборка не знает, честнее показать первым
+/// состоянием, чем угадать: «познакомился» верно про любую сцену, до которой человек дошёл.
+String planSceneMaturity(AppLocalizations l, String maturity) => switch (maturity) {
+  'speaking' => l.planMaturitySpeaking,
+  'applying' => l.planMaturityApplying,
+  _ => l.planMaturityMeeting,
+};
+
 /// «2 сентября» — an event date written the way a person says it.
 ///
 /// The plan speaks in DATES and in «через N дней», never in a countdown of hours: the event is a day

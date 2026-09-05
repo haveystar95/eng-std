@@ -3185,6 +3185,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planMaturitySpeaking => 'Saying it yourself';
 
   @override
+  String planSceneRunLine(int said, int total, int fast) {
+    return 'Said $said of $total yourself · $fast straight away';
+  }
+
+  @override
   String planEventAt(String date) {
     return 'event on $date';
   }

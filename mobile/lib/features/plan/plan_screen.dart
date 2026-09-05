@@ -333,6 +333,22 @@ class _DayRow extends StatelessWidget {
                 ),
               ),
             ],
+            // ЗРЕЛОСТЬ СЦЕНЫ ТРЕМЯ СЛОВАМИ и результат её последнего прогона (наряд SCENE-RUN,
+            // Ч.3.3). Слово приходит с сервера — «говоришь сам» стоит на переписи ступени C,
+            // которой у экрана нет. Процента здесь нет и не будет: план говорит словами.
+            if (plan.sceneAt(day.index) case final scene? when !rehearsal) ...[
+              const SizedBox(height: 6),
+              Text(
+                scene.run == null
+                    ? planSceneMaturity(l, scene.maturity)
+                    : '${planSceneMaturity(l, scene.maturity)} · '
+                          '${l.planSceneRunLine(scene.run!.said, scene.run!.total, scene.run!.saidFast)}',
+                style: AppText.blockLabel.copyWith(
+                  color: AppColors.brassInk,
+                  letterSpacing: .4,
+                ),
+              ),
+            ],
             if (today) ...[
               const SizedBox(height: AppSpacing.s12),
               PrimaryButton(
