@@ -10,18 +10,14 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * `learning_plan_term_stages` — ТО, ЧЕГО ЖУРНАЛ ОТВЕТОВ НЕ ЗНАЕТ (наряд SCENE-RUN, Ч.1 и Ч.2).
+     * `learning_plan_term_stages` — ТО, ЧЕГО ЖУРНАЛ ОТВЕТОВ НЕ ЗНАЕТ (наряд SCENE-RUN, Ч.2).
      *
      * Лестница плана и дальше считается по append-only журналу и не хранится
-     * ({@see \App\Modules\Learning\Domain\Service\PlanStageLadder}). Эта таблица её не дублирует и
-     * не может: в ней три факта, которые из журнала не выводятся вовсе
+     * ({@see \App\Modules\Learning\Domain\Service\PlanStageLadder}) — включая строгость хода,
+     * которая выводится из места шага в чек-листе. Эта таблица лестницу не дублирует и не может: в
+     * ней два факта, которые из журнала не выводятся вовсе
      * ({@see \App\Modules\Learning\Domain\ValueObject\PlanTermStage}).
      *
-     *   `choice_streak`  безошибочных ВЫБОРОВ подряд на ступени B. Выбор и сборка — один тренажёр
-     *                    (уровень строгости это подача, а не режим), поэтому в журнале они
-     *                    неотличимы, и неверная сборка сбрасывала бы счётчик, отбирая у человека
-     *                    сборку за то, что он не сдал её с первого раза. Наряд запрещает такой
-     *                    откат прямо.
      *   `said_in_run`    реплика прозвучала голосом человека в прогоне сцены — ступень C.
      *   `said_fast`      …и прозвучала СРАЗУ. Латентность карточки (`reviews.latency_ms`) на этот
      *                    вопрос не отвечает: карточка живёт до пятнадцати секунд сторожа, а «сразу»
@@ -44,7 +40,6 @@ return new class extends Migration
         Schema::create('learning_plan_term_stages', function (Blueprint $table): void {
             $table->char('plan_id', 26);
             $table->char('term_id', 26);
-            $table->integer('choice_streak')->default(0);
             $table->boolean('said_in_run')->default(false);
             $table->boolean('said_fast')->default(false);
             $table->timestampsTz();
@@ -56,10 +51,6 @@ return new class extends Migration
             $table->foreign('term_id')->references('id')->on('terms')->restrictOnDelete();
         });
 
-        DB::statement(
-            'ALTER TABLE learning_plan_term_stages ADD CONSTRAINT learning_plan_term_stages_streak_check '
-            . 'CHECK (choice_streak >= 0)'
-        );
         // «Сразу» — это разновидность «сказал», а не отдельное событие: строка `said_fast` без
         // `said_in_run` означала бы реплику, которая прозвучала быстро и не прозвучала.
         DB::statement(

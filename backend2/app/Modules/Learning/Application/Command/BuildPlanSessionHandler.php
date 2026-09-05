@@ -37,7 +37,6 @@ use App\Modules\Learning\Domain\Service\PlanDayOrder;
 use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
 use App\Modules\Learning\Domain\Service\PlanDialogueChain;
-use App\Modules\Learning\Domain\Service\PlanDialogueLevel;
 use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
 use App\Modules\Learning\Domain\Service\PlanSceneRunGate;
 use App\Modules\Learning\Domain\Service\PlanKnobSupport;
@@ -694,7 +693,7 @@ final readonly class BuildPlanSessionHandler
                     // Уровень строгости — на КАЖДОМ своём ходу цепочки, а не только на тех, у
                     // которых сегодня есть задача: экран рисует ленту вперёд, и ход, до которого
                     // лестница ещё не дошла, должен выглядеть тем, чем он станет.
-                    level: $move->isRole() ? null : self::turnLevelFor($move->termId, $stages)->value,
+                    level: $move->isRole() ? null : self::turnLevelFor($move->termId, $progress->days)->value,
                 );
             }
 
@@ -715,28 +714,35 @@ final readonly class BuildPlanSessionHandler
     }
 
     /**
-     * СТРОГОСТЬ ХОДА ЭТОЙ РЕПЛИКИ — выбор, пока пара не закрыла выбор без ошибок дважды.
+     * СТРОГОСТЬ ХОДА ЭТОЙ РЕПЛИКИ ДЛЯ ЛЕНТЫ — по стойке пары, а не по задаче.
      *
-     * Пара, о которой строки ещё нет, стоит на выборе: счётчик по умолчанию ноль, и это верное
-     * прочтение — «ничего ещё не доказано» и «доказано ноль раз» здесь одно и то же.
+     * Цепочка приходит целой, а задач меньше: ход, до которого лестница сегодня не дошла, всё равно
+     * должен выглядеть тем, чем он станет. Ответ тот же, что у задачи, только прочитанный с другой
+     * стороны — сколько шагов ступени B уже закрыто.
      *
-     * @param  array<string, PlanTermStage>  $stages
+     * @param  array<int, PlanDayProgressView>  $days
      */
-    private static function turnLevelFor(string $termId, array $stages): PlanTurnLevel
+    private static function turnLevelFor(string $termId, array $days): PlanTurnLevel
     {
-        return PlanDialogueLevel::forStreak(self::streakOf($termId, $stages));
-    }
+        foreach ($days as $day) {
+            $standing = $day->standings[$termId] ?? null;
+            if ($standing === null || $standing->stage !== PlanStage::B) {
+                continue;
+            }
 
-    /**
-     * Безошибочных выборов подряд у этой пары — ноль у пары, о которой строки ещё нет.
-     *
-     * @param  array<string, PlanTermStage>  $stages
-     */
-    private static function streakOf(string $termId, array $stages): int
-    {
-        $stage = $stages[$termId] ?? null;
+            $done = 0;
+            foreach ($standing->checklist as $step) {
+                if ($step['done']) {
+                    $done++;
+                }
+            }
 
-        return $stage === null ? 0 : $stage->choiceStreak;
+            return PlanTurnLevel::forStep($done + 1);
+        }
+
+        // Ступень B ещё не началась (знакомство) или уже позади (прогон): ход выглядит выбором —
+        // тем, чем он станет, когда до него дойдут.
+        return PlanTurnLevel::Choose;
     }
 
     // ── the strict session ───────────────────────────────────────────────────────────────────
@@ -1373,8 +1379,6 @@ final readonly class BuildPlanSessionHandler
         }
 
         $tasks = [];
-        /** @var array<string, int> $projected — счётчик выборов, спроецированный на эту посадку */
-        $projected = [];
         foreach ($specs as $index => $spec) {
             /** @var string $termId */
             $termId = $spec['term_id'];
@@ -1407,19 +1411,13 @@ final readonly class BuildPlanSessionHandler
             // СТРОГОСТЬ ХОДА, если это ход. Считается ДО раздачи, потому что от неё зависит, что
             // вообще строится: выбор с вариантами или сборка с блоками.
             //
-            // И считается ПО ХОДУ СБОРКИ ПОСАДКИ, а не один раз по хранимому счётчику. Ступень
-            // проходят за одну посадку («переход к следующему тренажёру — сразу после успеха»), то
-            // есть все три касания ступени B лежат в ОДНОМ пейлоаде; спросив хранимый счётчик
-            // трижды, посадка раздала бы три выбора и закрыла ступень, ни разу не показав сборку —
-            // то есть B+ не наступил бы никогда. Поэтому счётчик проецируется вперёд, как если бы
-            // каждый выданный выбор был верным: ошибка возвращает карточку в хвост присеста, а
-            // следующая сборка посадки берёт уже настоящий счётчик.
-            $level = null;
-            if (PlanAnswerOptions::isSpokenShelf($termContent->shelf)) {
-                $streak = $projected[$termId] ?? self::streakOf($termId, $stages);
-                $level = PlanDialogueLevel::forStreak($streak);
-                $projected[$termId] = PlanDialogueLevel::after($streak, correct: true);
-            }
+            // И считается ПО МЕСТУ ШАГА В ЧЕК-ЛИСТЕ: первое касание ступени B — выбор, следующее —
+            // сборка ({@see PlanTurnLevel::forStep()}). Хранить для этого нечего и проецировать
+            // нечего: чек-лист сам является проекцией журнала, и «выбор уже закрыт» — это ровно
+            // «первый шаг отмечен сделанным».
+            $level = PlanAnswerOptions::isSpokenShelf($termContent->shelf)
+                ? PlanTurnLevel::forStep((int) $spec['ordinal'])
+                : null;
 
             $card = null;
             foreach ($candidates as $mode) {

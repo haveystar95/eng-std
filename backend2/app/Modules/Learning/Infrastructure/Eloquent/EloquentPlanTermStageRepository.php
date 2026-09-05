@@ -20,7 +20,6 @@ final class EloquentPlanTermStageRepository implements PlanTermStageRepository
             $out[(string) $row->term_id] = new PlanTermStage(
                 planId: (string) $row->plan_id,
                 termId: (string) $row->term_id,
-                choiceStreak: (int) $row->choice_streak,
                 saidInRun: (bool) $row->said_in_run,
                 saidFast: (bool) $row->said_fast,
             );
@@ -37,14 +36,13 @@ final class EloquentPlanTermStageRepository implements PlanTermStageRepository
             [[
                 'plan_id' => $stage->planId,
                 'term_id' => $stage->termId,
-                'choice_streak' => $stage->choiceStreak,
                 'said_in_run' => $stage->saidInRun,
                 'said_fast' => $stage->saidFast,
                 'updated_at' => now(),
                 'created_at' => now(),
             ]],
             ['plan_id', 'term_id'],
-            ['choice_streak', 'said_in_run', 'said_fast', 'updated_at'],
+            ['said_in_run', 'said_fast', 'updated_at'],
         );
     }
 }

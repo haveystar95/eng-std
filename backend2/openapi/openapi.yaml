@@ -3524,7 +3524,8 @@ components:
                 description: >-
                   HOW STRICT this turn is — three levels of ONE trainer, never three trainers
                   (наряд SCENE-RUN). `choose` offers lines of the plan; `assemble` replaces them
-                  with blocks (`card.chips`, no `card.options`); `say` takes everything away and
+                  with blocks (`card.chips`, no `card.options`) and is what a line comes back as once its
+                  choice has been closed; `say` takes everything away and
                   leaves the support-language hint and the microphone. Null on anything that is not
                   a turn of the learner's.
               origin: { type: [object, 'null'] }

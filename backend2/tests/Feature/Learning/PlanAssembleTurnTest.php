@@ -11,9 +11,13 @@ uses(RefreshDatabase::class);
 /**
  * B+ · СБОРКА — наряд SCENE-RUN, Ч.1, на собранном ответе API.
  *
- * Уровень строгости не виден по коду одной функции: он рождается из хранимого счётчика, проекции
- * этого счётчика на посадку и того, что из него собрал сборщик карточек. Поэтому замки стоят там же,
- * где стоял бы человек, — на пейлоаде посадки.
+ * Правило после вердикта владельца: сборка привязана не к счётчику удач, а к ПОВТОРНОМУ ПОЯВЛЕНИЮ
+ * реплики. Выбор закрывается ОДНИМ верным ответом; реплика, вернувшись — в хвост присеста, в шов
+ * следующего дня, — показывается сборкой. Ошибка на сборке ступень не открывает: реплика вернётся
+ * сборкой ещё раз.
+ *
+ * Замки стоят на пейлоаде, а не рядом с правилом: уровень рождается из чек-листа, чек-лист из
+ * журнала, а карточка из сборщика, и увидеть их согласие можно только там, где стоял бы человек.
  */
 beforeEach(function (): void {
     fakePlanModel();
@@ -43,7 +47,28 @@ function turnsOfTerm(array $session, string $termId): array
     ));
 }
 
-it('раздаёт ход дважды выбором, а третий раз — сборкой', function () {
+/**
+ * Ответить на один ход посадки.
+ *
+ * `$seq` продолжает нумерацию устройства и НЕ начинается с единицы: журнал читается по `client_seq`
+ * (устройства расходятся часами, и партия, пришедшая не в том порядке, обязана сложиться одинаково).
+ * Ответ с меньшим номером встаёт в журнал ПЕРЕД ступенью A — и ступень B его не увидит вовсе.
+ */
+function answerTurn(object $ctx, string $token, array $session, array $task, string $response, int $seq): void
+{
+    $ctx->withHeader('Authorization', "Bearer {$token}")->postJson('/api/v1/reviews/batch', ['reviews' => [[
+        'id' => (string) \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+        'term_id' => $task['card']['term_id'],
+        'exercise_mode' => $task['card']['exercise_mode'],
+        'response' => $response,
+        'answered_at' => now()->toIso8601String(),
+        'client_seq' => $seq,
+        'session_id' => $session['session_id'],
+        'ladder_step' => $task['card']['ladder_step'],
+    ]]])->assertOk();
+}
+
+it('пока выбор не закрыт — ход раздаётся выбором', function () {
     [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
     walkDay($this, $token, $planId, 1);
@@ -53,45 +78,19 @@ it('раздаёт ход дважды выбором, а третий раз �
     $turns = dialogueTurns($session);
     expect($turns)->not->toBeEmpty();
 
+    // Ступень B только открылась: первое касание каждой реплики — выбор.
     $termId = (string) $turns[0]['card']['term_id'];
     $ofTerm = turnsOfTerm($session, $termId);
 
-    // Три касания ступени B в одной посадке — «ступень проходят за одну посадку». Первые два —
-    // выбор, третье — сборка: иначе B+ не наступил бы никогда.
-    expect($ofTerm)->toHaveCount(3)
-        ->and(array_column($ofTerm, 'turn_level'))->toBe(['choose', 'choose', 'assemble']);
+    expect($ofTerm[0]['turn_level'])->toBe('choose')
+        ->and($ofTerm[0]['card']['options'])->toBeArray()
+        ->and($ofTerm[0]['card']['chips'])->toBeNull();
 });
 
-it('кладёт на сборку блоки вместо вариантов — и клавиатуры не просит', function () {
+it('закрытый выбор возвращает реплику СБОРКОЙ на следующем показе', function () {
     [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    walkDay($this, $token, $planId, 1);
-    ageHistory($user->id, days: 1);
-
-    $session = planSession($this, $token, $planId);
-    $assembles = array_values(array_filter(
-        dialogueTurns($session),
-        static fn (array $t): bool => $t['turn_level'] === 'assemble',
-    ));
-    expect($assembles)->not->toBeEmpty();
-
-    foreach ($assembles as $task) {
-        $card = $task['card'];
-        // Вариантов нет вовсе, блоки есть, и среди блоков — все слова самой реплики.
-        expect($card['options'])->toBeNull()
-            ->and($card['chips'])->toBeArray()
-            ->and($card['chips'])->not->toBeEmpty();
-
-        foreach (preg_split('/\s+/u', trim((string) $card['answer']), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $block) {
-            expect($card['chips'])->toContain($block);
-        }
-    }
-});
-
-it('не откатывает ход в выбор после неверной сборки, и откатывает после неверного выбора', function () {
-    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
-
-    walkDay($this, $token, $planId, 1);
+    $seq = walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
 
     $session = planSession($this, $token, $planId);
@@ -99,73 +98,67 @@ it('не откатывает ход в выбор после неверной �
     expect($turns)->not->toBeEmpty();
 
     $termId = (string) $turns[0]['card']['term_id'];
-    $ofTerm = turnsOfTerm($session, $termId);
-    $sessionId = (string) $session['session_id'];
-
-    // Два верных выбора и ПРОВАЛЕННАЯ сборка.
-    $reviews = [];
-    $seq = 1;
-    foreach ($ofTerm as $task) {
-        $reviews[] = [
-            'id' => (string) \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
-            'term_id' => $termId,
-            'exercise_mode' => $task['card']['exercise_mode'],
-            'response' => $task['turn_level'] === 'assemble' ? 'not the line at all' : $task['card']['answer'],
-            'answered_at' => now()->toIso8601String(),
-            'client_seq' => $seq++,
-            'session_id' => $sessionId,
-            'ladder_step' => $task['card']['ladder_step'],
-        ];
-    }
-    $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/reviews/batch', ['reviews' => $reviews])->assertOk();
-
-    // Счётчик дозрел и ошибка сборки его не сбросила: ход возвращается СБОРКОЙ.
-    expect((int) DB::table('learning_plan_term_stages')
-        ->where('plan_id', $planId)->where('term_id', $termId)->value('choice_streak'))->toBe(2);
+    $first = turnsOfTerm($session, $termId)[0];
+    // ОДИН верный выбор — и он закрыт.
+    answerTurn($this, $token, $session, $first, (string) $first['card']['answer'], $seq++);
 
     $again = planSession($this, $token, $planId);
     $back = turnsOfTerm($again, $termId);
+
+    expect($back)->not->toBeEmpty()
+        ->and($back[0]['turn_level'])->toBe('assemble')
+        // Вариантов нет вовсе, блоки есть, и среди них — все слова самой реплики.
+        ->and($back[0]['card']['options'])->toBeNull()
+        ->and($back[0]['card']['chips'])->toBeArray();
+
+    foreach (preg_split('/\s+/u', trim((string) $back[0]['card']['answer']), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $block) {
+        expect($back[0]['card']['chips'])->toContain($block);
+    }
+});
+
+it('ошибка на сборке не откатывает ход в выбор — он вернётся сборкой ещё раз', function () {
+    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $seq = walkDay($this, $token, $planId, 1);
+    ageHistory($user->id, days: 1);
+
+    $session = planSession($this, $token, $planId);
+    $turns = dialogueTurns($session);
+    expect($turns)->not->toBeEmpty();
+
+    $termId = (string) $turns[0]['card']['term_id'];
+    $first = turnsOfTerm($session, $termId)[0];
+    answerTurn($this, $token, $session, $first, (string) $first['card']['answer'], $seq++);
+
+    // Сборка ПРОВАЛЕНА.
+    $second = planSession($this, $token, $planId);
+    $assemble = turnsOfTerm($second, $termId)[0];
+    expect($assemble['turn_level'])->toBe('assemble');
+    answerTurn($this, $token, $second, $assemble, 'not the line at all', $seq++);
+
+    // Ступень не открылась и в выбор не откатилась.
+    $third = planSession($this, $token, $planId);
+    $back = turnsOfTerm($third, $termId);
+
     expect($back)->not->toBeEmpty()
         ->and($back[0]['turn_level'])->toBe('assemble');
 });
 
-it('оставляет ход на выборе, если один ответ верный, а другой нет', function () {
+it('не хранит про строгость хода ни строки — она выводится из чек-листа', function () {
+    // Решение 254 отозвано: счётчик выборов удалён целиком. Лестница плана снова целиком проекция
+    // append-only журнала, и таблица пары хранит только то, что доказано голосом.
     [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    walkDay($this, $token, $planId, 1);
+    $seq = walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
 
     $session = planSession($this, $token, $planId);
     $turns = dialogueTurns($session);
-    expect($turns)->not->toBeEmpty();
-
     $termId = (string) $turns[0]['card']['term_id'];
-    $ofTerm = turnsOfTerm($session, $termId);
-    $mode = (string) $ofTerm[0]['card']['exercise_mode'];
+    answerTurn($this, $token, $session, turnsOfTerm($session, $termId)[0], (string) $turns[0]['card']['answer'], $seq);
 
-    $this->withHeader('Authorization', "Bearer {$token}")->postJson('/api/v1/reviews/batch', ['reviews' => [
-        [
-            'id' => (string) \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
-            'term_id' => $termId, 'exercise_mode' => $mode,
-            'response' => $ofTerm[0]['card']['answer'],
-            'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
-            'session_id' => $session['session_id'], 'ladder_step' => $ofTerm[0]['card']['ladder_step'],
-        ],
-        [
-            'id' => (string) \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
-            'term_id' => $termId, 'exercise_mode' => $mode,
-            'response' => 'nothing like the line',
-            'answered_at' => now()->toIso8601String(), 'client_seq' => 2,
-            'session_id' => $session['session_id'], 'ladder_step' => $ofTerm[1]['card']['ladder_step'],
-        ],
-    ]])->assertOk();
-
-    expect((int) DB::table('learning_plan_term_stages')
-        ->where('plan_id', $planId)->where('term_id', $termId)->value('choice_streak'))->toBe(0);
-
-    $again = planSession($this, $token, $planId);
-    $back = turnsOfTerm($again, $termId);
-    expect($back)->not->toBeEmpty()
-        ->and($back[0]['turn_level'])->toBe('choose');
+    expect(DB::table('learning_plan_term_stages')->where('plan_id', $planId)->count())->toBe(0);
+    expect(collect(DB::select("SELECT column_name FROM information_schema.columns WHERE table_name = 'learning_plan_term_stages'"))
+        ->pluck('column_name')->all())
+        ->not->toContain('choice_streak');
 });

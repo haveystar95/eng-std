@@ -15,6 +15,10 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// Тот же экран диалога и тот же тренажёр: сервер кладёт на карточку блоки вместо вариантов, и
 /// этого достаточно, чтобы ход перестал быть выбором. Здесь прибито ровно то, что человек видит:
 /// вариантов нет, блоки есть, клавиатуры не появляется, а ответом уезжает собранная реплика.
+///
+/// КОГДА ход становится сборкой, решает СЕРВЕР: выбор закрывается одним верным ответом, и реплика,
+/// вернувшись, приходит уже с блоками. Экран рисует то, что прислали, и уровня сам не выводит —
+/// иначе «сборка» без блоков дала бы пустой экран вместо задания.
 void main() {
   const reply = 'My child has a fever';
 
@@ -104,6 +108,29 @@ void main() {
     // Ответ уезжает тем же режимом: сборка — это подача ступени B, а не второй тренажёр, и в
     // append-only журнал ложится ровно один ответ, как и на выборе.
     expect(assembleCard().mode, ExerciseMode.situationalSay);
+  });
+
+  testWidgets('та же карточка с вариантами и без блоков остаётся ВЫБОРОМ', (tester) async {
+    // Другая половина того же правила: пока сервер шлёт варианты, ход — выбор, и экран не имеет
+    // права решить иначе. Один и тот же тренажёр, разная подача.
+    await tester.pumpWidget(
+      host(
+        SessionCard(
+          termId: '01SAY',
+          mode: ExerciseMode.situationalSay,
+          type: 'phrase',
+          answer: reply,
+          options: const [reply, 'We need a doctor today.', 'Is it at the front desk?'],
+          speakingKey: 'a fever',
+          ladderStep: 3,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(reply), findsOneWidget);
+    expect(find.text('Проверить'), findsNothing);
+    expect(find.text('fever'), findsNothing);
   });
 
   testWidgets('неверная сборка остаётся неверной — опечатки тут не прощаются', (tester) async {

@@ -193,20 +193,22 @@ final class PlanStageLadder
         // ({@see ExerciseMode::speaksAfterChoice()}), and C for a line is the прогон сцены, which
         // is a session and not a checklist step.
         //
-        // ## ТРИ КАСАНИЯ, А НЕ ОДНО — B и B+ на одном тренажёре (наряд SCENE-RUN, Ч.1)
+        // ## ДВА КАСАНИЯ: ВЫБОР, ПОТОМ СБОРКА — B и B+ на одном тренажёре (наряд SCENE-RUN, Ч.1)
         //
         // Канон `docs/plan-dialogue.md` §5 ставит между выбором и прогоном ступень B+ — «блоки
-        // связок сцены, собрал ответ → сказал» — и правило перехода «B → B+ когда выбор закрыт без
-        // ошибок дважды». Оба уровня живут ВНУТРИ диалога и на одном тренажёре: отдельного режима
-        // у сборки нет ({@see \App\Modules\Learning\Domain\ValueObject\PlanTurnLevel}), меняется
-        // только то, сколько убрали с экрана.
+        // связок сцены, собрал ответ → сказал». Отдельного режима у сборки нет
+        // ({@see \App\Modules\Learning\Domain\ValueObject\PlanTurnLevel}): это тот же ход, с
+        // которого убрали варианты.
         //
-        // Отсюда три шага и ни одним меньше. С одним шагом «двух безошибочных выборов подряд» не
-        // бывает физически: первый верный выбор закрывает ступень, реплика становится `finished`, и
-        // второй раз её не раздают никогда — то есть сборка была бы недостижима, а не редка. Первые
-        // два касания — выбор, третье — сборка, если счётчик дозрел, и снова выбор, если нет
-        // ({@see \App\Modules\Learning\Domain\Service\PlanDialogueLevel}); тем и держится, что
-        // ступень закрывается у всех, а не только у тех, кто не ошибся.
+        // ВЫБОР ЗАКРЫВАЕТСЯ ОДНИМ ВЕРНЫМ ОТВЕТОМ, и сборка привязана не к счётчику, а к ПОВТОРНОМУ
+        // ПОЯВЛЕНИЮ реплики: первое касание ступени — выбор, следующее — сборка
+        // ({@see PlanTurnLevel::forStep()}). Поэтому шагов два, а не один: с одним шагом реплика с
+        // закрытым выбором становится `finished` и не показывается больше никогда — сборка была бы
+        // недостижима, а не редка.
+        //
+        // Ошибка на сборке ступень не открывает и в выбор не откатывает: второй шаг остаётся
+        // незакрытым, и реплика возвращается — в хвост присеста, в шов следующего дня — снова
+        // сборкой, потому что первый шаг по-прежнему закрыт.
         self::KIND_LINE_SAY => [
             PlanStage::A->value => [
                 ExerciseMode::Intro,
@@ -215,7 +217,6 @@ final class PlanStageLadder
                 ExerciseMode::Speaking,
             ],
             PlanStage::B->value => [
-                ExerciseMode::SituationalSay,
                 ExerciseMode::SituationalSay,
                 ExerciseMode::SituationalSay,
             ],
@@ -229,7 +230,6 @@ final class PlanStageLadder
                 ExerciseMode::Speaking,
             ],
             PlanStage::B->value => [
-                ExerciseMode::SituationalAsk,
                 ExerciseMode::SituationalAsk,
                 ExerciseMode::SituationalAsk,
             ],

@@ -25,7 +25,6 @@ use App\Modules\Identity\Infrastructure\Eloquent\User;
 use App\Modules\Learning\Application\Command\EnrollTerm;
 use App\Modules\Learning\Application\Command\EnrollTermHandler;
 use App\Modules\Learning\Application\Command\SubmitReviewsHandler;
-use App\Modules\Learning\Application\Service\PlanTurnProgress;
 use App\Modules\Learning\Domain\Service\AnswerGrader;
 use App\Modules\Learning\Domain\Service\Fuzz;
 use App\Modules\Learning\Domain\Service\Sm2Scheduler;
@@ -44,8 +43,6 @@ use Tests\Doubles\FakeTermAnswerKeyReader;
 use Tests\Doubles\FakeTermExistenceReader;
 use Tests\Doubles\FixedClock;
 use Tests\Doubles\ImmediateTransactionManager;
-use Tests\Doubles\InMemoryPlanRepository;
-use Tests\Doubles\InMemoryPlanTermStages;
 use Tests\Doubles\InMemoryReviewRepository;
 use Tests\Doubles\InMemoryStudySessions;
 use Tests\Doubles\InMemoryTermExposureRepository;
@@ -398,9 +395,6 @@ function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHan
         profile: new FakeLearnerProfileReader(),
         tx: new ImmediateTransactionManager(),
         clock: new FixedClock(new DateTimeImmutable('2026-07-27T12:00:00Z')),
-        // Аккаунт без плана: `findActiveFor()` вернёт null, и строгость хода не пишется — точно так
-        // же, как в бою у человека, который план не заводил.
-        turns: new PlanTurnProgress(new InMemoryPlanRepository(), new InMemoryPlanTermStages()),
     );
 }
 

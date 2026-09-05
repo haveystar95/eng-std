@@ -13,7 +13,6 @@ use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ProgressSnapshotReader;
 use App\Modules\Learning\Application\Port\SessionContextReader;
 use App\Modules\Learning\Application\Port\StatsProjector;
-use App\Modules\Learning\Application\Service\PlanTurnProgress;
 use App\Modules\Learning\Domain\Entity\Review;
 use App\Modules\Learning\Domain\Entity\TermExposure;
 use App\Modules\Learning\Domain\Entity\TermProgress;
@@ -71,7 +70,6 @@ final readonly class SubmitReviewsHandler
         private LearnerProfileReader $profile,
         private TransactionManager $tx,
         private Clock $clock,
-        private PlanTurnProgress $turns,
     ) {}
 
     public function __invoke(SubmitReviews $command): ReviewBatchResult
@@ -179,11 +177,6 @@ final readonly class SubmitReviewsHandler
             }
 
             $introduced = $this->foldIntoProgress($command, $accepted);
-
-            // СТРОГОСТЬ СЛЕДУЮЩЕГО ХОДА — единственный факт про план, который приходится хранить
-            // ({@see PlanTurnProgress}). В той же транзакции, что и ответ: строка, разошедшаяся с
-            // журналом, показала бы человеку сборку за выбор, которого он не делал.
-            $this->turns->record($command->actorId, $accepted);
 
             if ($accepted !== [] || $exposed !== []) {
                 $this->stats->project(new ReviewsSubmitted($this->clock->now(), $accepted, $introduced, $exposed));
