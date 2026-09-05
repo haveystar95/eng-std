@@ -152,6 +152,10 @@ class _Envelope implements PlanSessionEnvelope {
 
   @override
   List<int> get sittings => const [];
+  @override
+  String get dayState => PlanDayStateWire.inProgress;
+  @override
+  int get minutesLeft => 0;
 
   @override
   PlanSituation? situationAt(int i) => null;

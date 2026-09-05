@@ -717,6 +717,20 @@ class ApiClient {
   ///
   /// Ответы каждого хода уже уехали обычной очередью ревью — сказал это `speaking/good`, пропустил
   /// `speaking/again`. Здесь их нет: append-only журнал не должен получить один ответ дважды.
+  /// ДЕВ-ДВЕРЬ СМЕНЫ ДНЕЙ (наряд DAY-FIX-2): сдвинуть «сегодня» QA-аккаунта на [days] дней.
+  ///
+  /// Дверь стережёт сервер — та же, что у входа без пароля и подстановки транскрипта: всем, кому
+  /// она закрыта, это 404. Клиент своей проверки не держит ({@see AppUser.qaTools}).
+  Future<int> setQaPlanClock(int days) async {
+    final r = await _dio.post('/qa/plan-clock', data: {'days': days});
+    return ((_data(r) as Map<String, dynamic>)['days'] as num?)?.toInt() ?? 0;
+  }
+
+  Future<int> qaPlanClock() async {
+    final r = await _dio.get('/qa/plan-clock');
+    return ((_data(r) as Map<String, dynamic>)['days'] as num?)?.toInt() ?? 0;
+  }
+
   Future<void> recordSceneRun({
     required String planId,
     required int sceneIndex,

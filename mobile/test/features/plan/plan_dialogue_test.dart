@@ -258,7 +258,9 @@ void main() {
     // The whole conversation is in the feed — including the turn the sitting never asked for.
     expect(find.text('Could you tell me about your background?'), findsOneWidget);
     expect(find.text('Отвечал сам'), findsOneWidget);
-    expect(find.text('1 из 1'), findsOneWidget);
+    // Словами, без «N из M» (наряд DAY-FIX-2, Ч.5.6).
+    expect(find.text('на все'), findsOneWidget);
+    expect(find.text('1 из 1'), findsNothing);
     // «Разобрал реплику на слух» is absent, and that is the rule rather than an omission: the hear
     // card was not owed today, so there is no number to print and nothing is invented.
     expect(find.text('Разобрал реплику на слух'), findsNothing);

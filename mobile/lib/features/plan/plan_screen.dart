@@ -9,7 +9,6 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/api_client.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
-import 'plan_cheatsheet.dart';
 import 'plan_day_screen.dart';
 import 'plan_feedback_screen.dart';
 import 'plan_rehearsal_screen.dart';
@@ -93,29 +92,9 @@ class _PlanBody extends ConsumerWidget {
           bottomInset,
         ),
         children: [
-          // ШАПКА: название экрана и шпаргалка — кадр D·07. «Шпаргалка» стоит здесь и на экране дня,
-          // потому что «подглядеть перед дверью врача» нужно раньше, чем начнётся занятие.
-          Row(
-            children: [
-              Expanded(child: PlanLabel(l.planListTitle)),
-              MinTapHeight(
-                minHeight: 32,
-                onTap: () => showPlanCheatSheet(
-                  context,
-                  planId: plan.id,
-                  dayIndex: plan.focusDayIndex,
-                  targetLang: plan.targetLang,
-                ),
-                child: Text(
-                  l.planCheatSheet,
-                  style: AppText.translation.copyWith(
-                    fontSize: 13.5,
-                    color: AppColors.brassInk,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          // ШАПКА: название экрана — кадр D·07. «Шпаргалки» здесь больше нет (наряд DAY-FIX-2,
+          // Ч.4.4): её содержимое и есть экран дня, который открывается тапом по строке.
+          PlanLabel(l.planListTitle),
           const SizedBox(height: AppSpacing.s16),
           _GoalCard(plan: plan),
           const SizedBox(height: AppSpacing.s22),
@@ -240,14 +219,16 @@ class _GoalCard extends StatelessWidget {
 
 /// ОДИН ДЕНЬ ПЛАНА СТРОКОЙ — кадр D·07.
 ///
-/// Пять честных статусов, каждый СЛОВОМ: пройден · сегодня · собирается · не собрался · ждёт
-/// очереди. Иконка только у пройденного (галочка), потому что слово читается, а кружок с номером —
-/// нет: живой прогон показал два дня подряд, начинающихся одинаково, и различал их только номер в
-/// кружке (урок Д-23). Теперь их различают номер сцены сверху и подстрока вводки под названием.
+/// У дня с материалом ОДНО слово состояния, и его считает сервер (наряд DAY-FIX-2, Ч.3): «не
+/// начат» · «идёт · около N минут» · «пройден». Живой прогон 05.09 показал три экрана с тремя
+/// счётами одного дня; теперь вкладка, экран дня и шапка присеста читают одно поле. Дню без
+/// материала — слово о сборке: «собирается» / «не собрался» / «ждёт очереди», это другой факт.
 ///
-/// Действие стоит В СТРОКЕ и только там, где оно есть: «Начать день» у сегодняшнего, «Собрать
-/// заново» у несобравшегося вместе с честной подписью, почему. День, который «ждёт очереди», не
-/// притворяется открытым.
+/// Иконка только у пройденного (галочка), потому что слово читается, а кружок с номером — нет
+/// (урок Д-23). Дни различают номер сцены сверху и подстрока вводки под названием.
+///
+/// Действие стоит В СТРОКЕ и только у сегодняшнего дня, и оно говорит ТО ЖЕ, что слово состояния:
+/// «Начать день» у не начатого, «Продолжить» у идущего. «Собрать заново» — у несобравшегося.
 class _DayRow extends StatelessWidget {
   const _DayRow({
     required this.plan,
@@ -308,7 +289,7 @@ class _DayRow extends StatelessWidget {
                     child: Icon(LucideIcons.check, size: 12, color: AppColors.brassInk),
                   ),
                 Text(
-                  state.word(l),
+                  state.word(l, day),
                   style: AppText.blockLabel.copyWith(color: state.color, letterSpacing: .6),
                 ),
               ],
@@ -333,26 +314,14 @@ class _DayRow extends StatelessWidget {
                 ),
               ),
             ],
-            // ЗРЕЛОСТЬ СЦЕНЫ ТРЕМЯ СЛОВАМИ и результат её последнего прогона (наряд SCENE-RUN,
-            // Ч.3.3). Слово приходит с сервера — «говоришь сам» стоит на переписи ступени C,
-            // которой у экрана нет. Процента здесь нет и не будет: план говорит словами.
-            if (plan.sceneAt(day.index) case final scene? when !rehearsal) ...[
-              const SizedBox(height: 6),
-              Text(
-                scene.run == null
-                    ? planSceneMaturity(l, scene.maturity)
-                    : '${planSceneMaturity(l, scene.maturity)} · '
-                          '${l.planSceneRunLine(scene.run!.said, scene.run!.total, scene.run!.saidFast)}',
-                style: AppText.blockLabel.copyWith(
-                  color: AppColors.brassInk,
-                  letterSpacing: .4,
-                ),
-              ),
-            ],
+            // СТРОКИ ЗРЕЛОСТИ И ПРОГОНА ЗДЕСЬ БОЛЬШЕ НЕТ (наряд DAY-FIX-2, Ч.3): у дня ОДНО слово
+            // состояния, и оно уже стоит справа от номера. «Прошёл сам 5 из 5 · сразу 0» было
+            // счётчиком, а счётчиков на экранах плана не бывает.
             if (today) ...[
               const SizedBox(height: AppSpacing.s12),
+              // КНОПКА ГОВОРИТ ТО ЖЕ, ЧТО СЛОВО: «Начать день» / «Продолжить» / «Пройти ещё раз».
               PrimaryButton(
-                label: rehearsal ? l.planRehearsalOpen : l.planRowStartDay,
+                label: rehearsal ? l.planRehearsalOpen : planDayAction(l, day.dayState),
                 minHeight: 46,
                 onPressed: rehearsal ? () => _openRehearsalFrom(context) : onOpen,
               ),
@@ -398,11 +367,14 @@ class _DayRow extends StatelessWidget {
   }
 }
 
-/// ПЯТЬ ЧЕСТНЫХ СТАТУСОВ — кадр D·07, и это ровно те пять состояний, в которых день бывает.
+/// СТАТУС СТРОКИ — кадр D·07, и это ровно те состояния, в которых день бывает.
 ///
 /// Отдельным типом, а не цепочкой тернарников в вёрстке, потому что слово, цвет и «открывается ли
 /// строка» — три ответа на один вопрос, и три отдельных выражения над одним днём расходятся: живой
 /// прогон уже ловил день, подписанный «собирается» и открывающийся в пустоту (Д-20).
+///
+/// СЛОВО У ДНЯ С МАТЕРИАЛОМ — серверное `day_state` (наряд DAY-FIX-2, Ч.3): «не начат» / «идёт ·
+/// около N минут» / «пройден». Вкладка его не выводит из фокуса и статуса сборки, а читает.
 enum _PlanRowState {
   passed,
   today,
@@ -412,19 +384,23 @@ enum _PlanRowState {
 
   static _PlanRowState of(LearningPlan plan, PlanDay day) {
     if (day.status == PlanDayStatus.failed) return _PlanRowState.notBuilt;
-    if (day.index < plan.focusDayIndex) return _PlanRowState.passed;
+    if (day.dayState == PlanDayState.done || day.index < plan.focusDayIndex) return _PlanRowState.passed;
     if (day.index == plan.focusDayIndex && day.status.hasMaterial) return _PlanRowState.today;
     if (day.status.isGenerating) return _PlanRowState.building;
 
     return _PlanRowState.waiting;
   }
 
-  String word(AppLocalizations l) => switch (this) {
-    _PlanRowState.passed => l.planRowPassed,
-    _PlanRowState.today => l.planRowToday,
+  String word(AppLocalizations l, PlanDay day) => switch (this) {
+    _PlanRowState.passed => l.planStateDone,
+    // ОДНО СЛОВО, серверное: «не начат» или «идёт · около N минут». Прогон накануне — тоже день
+    // с материалом, и слово у него то же.
+    _PlanRowState.today => planDayStateWord(l, day.dayState, day.minutesLeft),
     _PlanRowState.building => l.planRowBuilding,
     _PlanRowState.notBuilt => l.planRowNotBuilt,
-    _PlanRowState.waiting => l.planRowWaiting,
+    _PlanRowState.waiting => day.status.hasMaterial
+        ? planDayStateWord(l, day.dayState, day.minutesLeft)
+        : l.planRowWaiting,
   };
 
   Color get color => switch (this) {

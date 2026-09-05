@@ -275,7 +275,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Хвост — обычная карточка с честной вводкой: ни пузырей, ни счётчика обменов.
-    expect(find.text('ЕЩЁ РАЗ ОТВЕТ ЭТОЙ СЦЕНЫ'), findsOneWidget);
+    // Одна подпись на ответ и вопрос (наряд DAY-FIX-2, Ч.5.5): хвост — карточка, не пузырь.
+    expect(find.text('ЕЩЁ В ЭТОЙ СЦЕНЕ'), findsOneWidget);
     expect(find.textContaining('говорит собеседник'), findsNothing);
     expect(find.textContaining('обмен'), findsNothing);
     // …и своей служебной строки у хвоста тоже нет: вводка над ним уже сказала, что это (живой

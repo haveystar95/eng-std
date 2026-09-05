@@ -49,7 +49,7 @@ Widget host() => ProviderScope(
 );
 
 void main() {
-  testWidgets('states the three facts the server knows, and not the ones it does not', (
+  testWidgets('states what the server knows, in words, and not what it does not', (
     tester,
   ) async {
     await tester.pumpWidget(host());
@@ -57,29 +57,30 @@ void main() {
 
     expect(find.text('Подготовка завершена'), findsWidgets);
 
-    // Two teaching scenes, both closed; the run-through is not a scene.
+    // Two teaching scenes, both closed; the run-through is not a scene. In WORDS — no «2 из 2»
+    // on a plan screen (наряд DAY-FIX-2, Ч.5.6).
     expect(find.text('Сцены пройдены'), findsOneWidget);
-    expect(find.text('2 из 2'), findsOneWidget);
-    // Cards, not «реплик»: the census counts cards, of which lines are a part.
-    expect(find.text('Карточек в плане'), findsOneWidget);
-    expect(find.text('27'), findsOneWidget);
-    // Слова лестницы с экранов ушли (наряд DAY-2-FIX, Ч.3а): число то же, вердикт человеческий.
+    expect(find.text('все'), findsOneWidget);
+    // The card count is gone with the counters.
+    expect(find.text('Карточек в плане'), findsNothing);
+    // Слова лестницы с экранов ушли (наряд DAY-2-FIX, Ч.3а): вердикт человеческий.
     expect(find.text('Познакомились с материалом'), findsOneWidget);
     expect(find.textContaining('ступень'), findsNothing);
-    expect(find.text('25 из 27'), findsOneWidget);
+    expect(find.text('не со всем'), findsOneWidget);
+    expect(find.textContaining(' из '), findsNothing);
 
     // …and nothing that was never measured.
     expect(find.textContaining('вслух'), findsNothing);
     expect(find.textContaining('%'), findsNothing);
   });
 
-  testWidgets('the cheat sheet is the main action — on the day of the event that is what is needed', (
+  testWidgets('«К плану» is the one action — the cheat sheet is gone, the day screen is the sheet', (
     tester,
   ) async {
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
 
-    expect(find.text('Открыть шпаргалку'), findsOneWidget);
+    expect(find.textContaining('шпаргалк'), findsNothing);
     expect(find.text('К плану'), findsOneWidget);
     // The archive is named rather than promised away: the plan's words do not return by themselves.
     expect(find.textContaining('Автоматических повторений не будет'), findsOneWidget);

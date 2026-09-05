@@ -256,14 +256,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Twenty-two divisions, twenty-two in the number — and the part the learner is in named
-      // beside it, which is what the bare counter in the header used to say badly.
-      expect(find.textContaining('Сцена 0/22'), findsOneWidget);
+      // Twenty-two divisions on the bar — and NO number over them (наряд DAY-FIX-2, Ч.5.4): the
+      // label names the part the learner is in, and the state word rides the header corner.
+      expect(find.textContaining('Сцена 0/22'), findsNothing);
+      expect(find.textContaining('/22'), findsNothing);
       // The word «День» is gone from the sitting: it belongs to the schedule and to today's landing,
       // never over the material (DAY-2, терминология).
       expect(find.textContaining('День 0/'), findsNothing);
       // …and the bare «N из M» beside the plan pill is gone with it: a number with no address.
       expect(find.text('1 из 22'), findsNothing);
+      // The server's one word about the day, where the counter used to be.
+      expect(find.text('идёт'), findsOneWidget);
 
       await teardownTree(tester);
     });
@@ -288,7 +291,11 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      expect(find.textContaining('ПРИСЕСТ'), findsOneWidget);
+      // In words, no «присест 1 из 2 · осталось N» (наряд DAY-FIX-2, Ч.2.1): the second sitting
+      // is only ever the scene run, and the screen says exactly that.
+      expect(find.textContaining('ПРОГОН СЦЕНЫ'), findsOneWidget);
+      expect(find.textContaining('ПРИСЕСТ'), findsNothing);
+      expect(find.textContaining('осталось'), findsNothing);
 
       await teardownTree(tester);
     });

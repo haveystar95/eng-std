@@ -219,16 +219,21 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
             for (final entry in gotIt.take(4)) _CardLine(text: entry.card.answerText),
             const SizedBox(height: AppSpacing.s22),
           ],
-          // THE LADDER, in the words a person uses — and not a percentage, because none is computed
-          // (кадр D·06в). The counts are the sitting's own: what it introduced, and what of the
-          // plan has closed stage A at all.
+          // THE LADDER, in the words a person uses — no percentage and no «N из M» (кадр D·06в,
+          // наряд DAY-FIX-2, Ч.5.6): what this sitting met, and whether the plan's material has
+          // all been met yet.
           PlanLabel(l.planLadderLegend),
           const SizedBox(height: 8),
-          _LadderRow(name: l.planLadderA, value: l.planDayInWork(byTerm.length)),
+          _LadderRow(
+            name: l.planLadderA,
+            value: byTerm.isEmpty ? '' : l.planSummaryMetToday,
+          ),
           if (plan != null)
             _LadderRow(
               name: l.planLadderB,
-              value: l.planDialogueCountOf(plan.stageAClosed, plan.cardsTotal),
+              value: plan.stageAClosed >= plan.cardsTotal
+                  ? l.planSummaryAppliedAll
+                  : l.planSummaryAppliedSome,
             ),
           _LadderRow(name: l.planLadderC, value: ''),
           const SizedBox(height: 10),
@@ -255,8 +260,10 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
           // warm-up. Both are named before either is pressed, so «оставить» is a decision and not a
           // thing that happens by walking away.
           if (almost && widget.onTrainMore != null) ...[
+            // The number that used to ride the button is gone (DAY-FIX-2): the cards are named
+            // above, and a plan screen does not count out loud.
             PrimaryButton(
-              label: '${l.planDayTrainMore} · ${missed.length}',
+              label: l.planDayTrainMore,
               minHeight: 52,
               onPressed: widget.onTrainMore!,
             ),

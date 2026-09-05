@@ -857,6 +857,15 @@ abstract interface class PlanSessionEnvelope {
   /// пейлоаде сервера, который поля не знает.
   String? turnLevelAt(int i);
 
+  /// ОДНО СЛОВО О ДНЕ — `not_started` | `in_progress` | `done` — как его посчитал СЕРВЕР
+  /// (наряд DAY-FIX-2, Ч.3). Шапка присеста читает его отсюда и ничего не считает сама: тот же
+  /// счёт, что на вкладке «План» и на экране дня. Пейлоад сервера, который поля не знает, читается
+  /// как «идёт» — посадка открыта, значит день идёт.
+  String get dayState => PlanDayStateWire.inProgress;
+
+  /// «около N минут» — тем же счётом, что на вкладке «План». Ноль на пейлоаде без поля.
+  int get minutesLeft => 0;
+
   /// THE CONVERSATIONS this sitting plays — one per scene it reaches, whole and in order.
   ///
   /// Empty on the day a scene is introduced (its dialogue opens tomorrow — канон §10), on the final
@@ -871,6 +880,14 @@ abstract interface class PlanSessionEnvelope {
 
   /// СЕКУНДЫ ПРОГОНА СЦЕНЫ, как их назвал сервер — {@see SceneRunKnobs}.
   SceneRunKnobs get sceneRunKnobs => const SceneRunKnobs();
+}
+
+/// ТРИ СЛОВА О ДНЕ, как они едут по проводу (наряд DAY-FIX-2, Ч.3). Открытый набор: код, которого
+/// эта сборка не знает, читается как «идёт» — честнее, чем гадать «пройден».
+abstract final class PlanDayStateWire {
+  static const notStarted = 'not_started';
+  static const inProgress = 'in_progress';
+  static const done = 'done';
 }
 
 /// СЕКУНДЫ ПРОГОНА СЦЕНЫ — ступень C, как её отмеряет сервер (наряд SCENE-RUN, Ч.2).
@@ -984,7 +1001,13 @@ class PlanDialogueTurn {
     this.shelf,
     this.audioUrl,
     this.level,
+    this.pair,
   });
+
+  /// ТИП ОБМЕНА, к которому ход принадлежит — `answer` (спросили — ты ответил) или `ask`
+  /// (пригласили спросить — ты спросил), на ОБОИХ ходах пары (P2 v0.6, наряд DAY-FIX-2). Null на
+  /// цепочке, написанной до пар; полка тогда по-прежнему различает ответ и вопрос.
+  final String? pair;
 
   /// `role` — the other person speaks; `you` — the learner's move.
   final String turn;
@@ -1013,6 +1036,7 @@ class PlanDialogueTurn {
     shelf: j['shelf'] as String?,
     audioUrl: j['audio_url'] as String?,
     level: j['level'] as String?,
+    pair: j['pair'] as String?,
   );
 }
 

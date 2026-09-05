@@ -19,7 +19,7 @@ import '../../data/models.dart';
 import '../../data/perf_log.dart';
 // For the shelf names alone — the session plays a plan's cards through the envelope in
 // `models.dart` and knows nothing else about a plan.
-import '../../data/plan_models.dart' show PlanSession, PlanSessionTask, PlanTermRow;
+import '../../data/plan_models.dart' show PlanDayState, PlanSession, PlanSessionTask, PlanTermRow;
 import '../../data/plan_sitting_store.dart';
 import '../../data/practice/recognition_replay.dart';
 import '../../data/providers.dart';
@@ -137,6 +137,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      // В ПЛАНОВОЙ ПОСАДКЕ КЛАВИАТУРЫ НЕТ (наряд DAY-FIX-2, Ч.2.5), и замок стоит на СЕРВЕРЕ:
+      // ни один режим с набором в план не выдаётся (`BuildPlanSessionHandler::assembleTasks`,
+      // лестница без typed-шагов). Прогрев здесь остаётся и в плане: он не показывает клавиатуру
+      // (фокус на скрытом поле на один кадр), а его пропуск ломает выход «Пропустить» с карточки
+      // говорения — карточка перестраивается до перехода и падает на пустом вердикте
+      // (`plan_sitting_repairs_test`, С-4). Живой прогон 05.09 видел клавиатуру над СЛОВОМ — это
+      // была карточка набора, которой у плана больше нет, а не прогрев.
       _kbWarm.requestFocus();
       // Drop focus next frame — the keyboard engine stays warm after this, but nothing is shown.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -912,15 +919,15 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
   /// Вводка ХВОСТОВОЙ карточки сцены, или null — карточка в цепочке и подаётся разговором.
   ///
-  /// «Ещё раз ответ этой сцены» / «Ещё раз вопрос этой сцены» — по полке, потому что вопрос это не
-  /// ответ. Полка приходит с сервера ({@see PlanSessionEnvelope.shelfAt}), а не угадывается по
-  /// режиму: реплику могут выдать любым тренажёром, а полка у неё одна.
+  /// «Ещё в этой сцене» — одна подпись на ответ и вопрос (наряд DAY-FIX-2, Ч.5.5): хвост — это
+  /// отдельная карточка ПОСЛЕ разговора, не пузырь. Почему прежняя починка не держала: цепочка с
+  /// сервера могла кончаться ходом `you` без реплики роли перед ним, и такой ход попадал в ленту
+  /// оболочки; теперь сервер отдаёт цепочку только парами (`PlanDialogueChain::exchangesOnly`),
+  /// и всё, что не в паре, оказывается здесь.
   String? _tailIntro(AppLocalizations l, int at) {
     if (_dialogueAtPosition(at) == null || _inChainAt(at)) return null;
 
-    return widget.session.plan?.shelfAt(_playing) == 'ask'
-        ? l.planDialogueTailAsk
-        : l.planDialogueTailSay;
+    return l.planDialogueTail;
   }
 
   /// ЧЕМ КОНЧИЛИСЬ ХОДЫ ПРОГОНА, по сценам — вход в `POST /plans/{id}/scene-runs`.
@@ -1338,9 +1345,6 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // DAY-2», and a milestone screen here would compete with the one the day itself ends on.
     if (_betweenSittings && plan != null) {
       return _SittingBreak(
-        sitting: _queue.sittingAt(_pos - 1),
-        sittings: _queue.sittings,
-        remaining: _queue.length - _pos,
         onContinue: () => setState(() => _betweenSittings = false),
         onStop: () => Navigator.of(context).pop(),
       );
@@ -1508,6 +1512,13 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                 // WHAT PART OF THE SITTING THIS IS, beside the group's numbers — the part is the
                 // sentence a person reads, the numbers are how far through it they are.
                 sectionLabel: plan == null ? null : planSectionCaption(l, plan, _playing),
+                planStateLabel: plan == null
+                    ? null
+                    : planDayStateWord(
+                        l,
+                        PlanDayState.fromWire(plan.dayState),
+                        plan.minutesLeft,
+                      ),
                 // ЛАТУННОЙ «B» В УГЛУ БОЛЬШЕ НЕТ (наряд DAY-2-FIX, Ч.3б).
                 //
                 // Кадр 6b звал её «меткой для себя, которая не объясняется», и живьём она ровно так
@@ -1759,12 +1770,17 @@ class _SessionHeader extends StatelessWidget {
     this.planBadge,
     this.planProgress,
     this.sectionLabel,
+    this.planStateLabel,
   });
 
-  /// The part of the sitting the learner is in right now — «Диалог сцены» — drawn beside the scene
-  /// group's numbers (кадры D-03 / D-04). Null outside a plan, and null for a part this build has no
-  /// name for.
+  /// The part of the sitting the learner is in right now — «Диалог сцены» — over the scene group's
+  /// divisions (кадры D-03 / D-04). Null outside a plan, and null for a part this build has no name
+  /// for.
   final String? sectionLabel;
+
+  /// «идёт · около 9 минут» — the day's state word, the server's (наряд DAY-FIX-2, Ч.3). Null
+  /// outside a plan.
+  final String? planStateLabel;
 
   /// The two-group bar of a plan sitting (кадр 6b), or null in an ordinary session — which keeps the
   /// one-line [SessionSegments] it has always had.
@@ -1830,7 +1846,15 @@ class _SessionHeader extends StatelessWidget {
               // теперь пуст — счётчик уехал в полосу, и возвращать его сюда значило бы завести
               // одному числу два дома.
               child: planBadge != null
-                  ? const SizedBox.shrink()
+                  // ОДНО СЛОВО О ДНЕ, серверное — то же, что на вкладке «План» и на экране дня
+                  // (наряд DAY-FIX-2, Ч.3). Не локальный счётчик: минуты приходят с посадкой.
+                  ? Text(
+                      planStateLabel ?? '',
+                      maxLines: 1,
+                      softWrap: false,
+                      textAlign: TextAlign.right,
+                      style: AppText.blockLabel.copyWith(color: AppColors.tertiary),
+                    )
                   : Text(
                       l.triageCounter(current, total),
                       maxLines: 1,
@@ -1911,8 +1935,10 @@ class _PlanProgressBar extends StatelessWidget {
     final hasDay = progress.sceneTotal > 0;
     if (!hasWarmup && !hasDay) return const SizedBox.shrink();
 
-    final scene = l.planSceneProgress(progress.sceneDone, progress.sceneTotal);
-
+    // ПОДПИСИ БЕЗ ЧИСЕЛ (наряд DAY-FIX-2, Ч.5.4): «Сцена 45/61» и «Разогрев 19/…» были счётчиками
+    // над делениями, и живой прогон 05.09 прочитал их как три разных счёта одного дня. Полоса
+    // по-прежнему карта посадки — деления и заливка считают карточки, — а подпись говорит
+    // словами, где человек: группа и секция.
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -1920,7 +1946,7 @@ class _PlanProgressBar extends StatelessWidget {
           Expanded(
             flex: progress.warmupTotal,
             child: _group(
-              label: l.planWarmupProgress(progress.warmupDone, progress.warmupTotal),
+              label: l.planWarmupSection,
               labelColor: AppColors.brassInk,
               bars: [
                 for (var i = 0; i < progress.warmupTotal; i++)
@@ -1939,12 +1965,9 @@ class _PlanProgressBar extends StatelessWidget {
           Expanded(
             flex: progress.sceneTotal,
             child: _group(
-              // «Сцена 11/22 · Диалог сцены» — the numbers and the part in one line, which is
-              // where кадр D-03 puts them. The part is what the learner is DOING; the numbers say
-              // how far through the scene's material this sitting is.
-              label: sectionLabel == null
-                  ? scene
-                  : l.planProgressWithSection(scene, sectionLabel!),
+              // The part is what the learner is DOING — «Диалог сцены» — and that is the whole
+              // label; the divisions under it say how far through the scene this sitting is.
+              label: sectionLabel ?? l.planDialogueSceneWord,
               labelColor: AppColors.tertiary,
               bars: [
                 for (final segment in progress.segments)
@@ -2022,19 +2045,7 @@ class _PlanProgressBar extends StatelessWidget {
 /// reached, and make continuing and stopping equally easy, because the whole point of a присест is
 /// that leaving costs nothing.
 class _SittingBreak extends StatelessWidget {
-  const _SittingBreak({
-    required this.sitting,
-    required this.sittings,
-    required this.remaining,
-    required this.onContinue,
-    required this.onStop,
-  });
-
-  /// Zero-based index of the sitting just finished, and how many there are in the day.
-  final int sitting, sittings;
-
-  /// Cards left in the whole day — what «Продолжить · осталось 11» counts.
-  final int remaining;
+  const _SittingBreak({required this.onContinue, required this.onStop});
 
   final VoidCallback onContinue, onStop;
 
@@ -2053,14 +2064,17 @@ class _SittingBreak extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // СЛОВАМИ, БЕЗ СЧЁТА (наряд DAY-FIX-2, Ч.2.1): день — один присест, второй бывает только
+          // у прогона сцены, поэтому этот экран всегда стоит перед прогоном и говорит ровно это.
+          // «Присест 1 из 2 · осталось 11 карточек» было двумя счётчиками на служебном экране.
           Text(
-            l.planSittingDone(sitting, sittings).toUpperCase(),
+            l.planSittingRunNext.toUpperCase(),
             textAlign: TextAlign.center,
             style: AppText.blockLabel.copyWith(color: AppColors.brassInk, letterSpacing: 1.32),
           ),
           const SizedBox(height: AppSpacing.s12),
           Text(
-            l.planSittingRemaining(remaining),
+            l.planSittingRunLead,
             textAlign: TextAlign.center,
             style: AppText.translation.copyWith(height: 1.5),
           ),

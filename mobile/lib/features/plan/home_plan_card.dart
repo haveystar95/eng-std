@@ -90,13 +90,20 @@ class _PlanCard extends ConsumerWidget {
           // котором человек не просил и которого в продукте нет больше нигде. Процент по-прежнему
           // не показывается: он считает карточки, дошедшие до ПОСЛЕДНЕЙ ступени, и первые дни плана
           // честно даёт ноль (владелец прошёл 56 карточек и прочитал 0%).
+          //
+          // ТЕПЕРЬ — ОДНО СЛОВО О СЕГОДНЯШНЕМ ДНЕ, серверное (наряд DAY-FIX-2, Ч.3): «День 2 · не
+          // начат» / «идёт · около 9 минут» / «пройден». Перепись «12 из 14 карточек» и полоса
+          // готовности ушли: счётчик и процент, которых на экранах плана не бывает. Та же функция,
+          // что на вкладке и на экране дня — три места читают одно поле.
           Text(
-            '${planMaturityVerdict(l, total: plan.cardsTotal, closed: plan.stageAClosed)}'
-            ' · ${l.planMaturityCards(plan.stageAClosed, plan.cardsTotal)}',
+            focus == null
+                ? planMaturityVerdict(l, total: plan.cardsTotal, closed: plan.stageAClosed)
+                : l.planHomeDayState(
+                    focus.index,
+                    planDayStateWord(l, focus.dayState, focus.minutesLeft),
+                  ),
             style: AppText.translation.copyWith(fontSize: 14, color: AppColors.inkBody),
           ),
-          const SizedBox(height: 10),
-          PlanReadinessBar(value: plan.cardsTotal == 0 ? 0 : plan.stageAClosed / plan.cardsTotal),
           // The abilities are drawn only once one of them can be true — until CONV-1 confirms a
           // checkpoint, `left` is the whole list and the card would carry a permanent complaint.
           if (done.isNotEmpty) ...[

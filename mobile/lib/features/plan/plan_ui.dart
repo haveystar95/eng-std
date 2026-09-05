@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 
 import 'package:eng_std/data/config.dart';
 import 'package:eng_std/data/line_audio.dart';
+import 'package:eng_std/data/plan_models.dart' show PlanDayState;
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
@@ -322,6 +323,29 @@ class PlanNotice extends StatelessWidget {
 /// ровно тот процент, который владелец три дня читал нулём.
 String planMaturityVerdict(AppLocalizations l, {required int total, required int closed}) =>
     total > 0 && closed >= total ? l.planMaturityApplying : l.planMaturityMeeting;
+
+/// ОДНО СЛОВО О ДНЕ — «не начат» / «идёт · около N минут» / «пройден» (наряд DAY-FIX-2, Ч.3).
+///
+/// Слово и минуты приходят с сервера; здесь они только переводятся. Три экрана — вкладка «План»,
+/// экран дня и шапка присеста — зовут ОДНУ функцию, чтобы «идёт» на одном не стало «продолжить ·
+/// осталось 1» на другом. Минуты — единственная цифра, которую плановые экраны говорят вслух.
+String planDayStateWord(AppLocalizations l, PlanDayState state, int minutesLeft) => switch (state) {
+  PlanDayState.notStarted => minutesLeft > 0
+      ? '${l.planStateNotStarted} · ${l.planStateMinutes(minutesLeft)}'
+      : l.planStateNotStarted,
+  PlanDayState.inProgress => minutesLeft > 0
+      ? '${l.planStateInProgress} · ${l.planStateMinutes(minutesLeft)}'
+      : l.planStateInProgress,
+  PlanDayState.done => l.planStateDone,
+};
+
+/// ТО ЖЕ СЛОВО, КНОПКОЙ: «Начать день» / «Продолжить» / «Пройти ещё раз». Кнопка у сегодняшнего
+/// дня обязана говорить то же, что слово состояния рядом с ним (наряд DAY-FIX-2, идеал).
+String planDayAction(AppLocalizations l, PlanDayState state) => switch (state) {
+  PlanDayState.notStarted => l.planRowStartDay,
+  PlanDayState.inProgress => l.planSittingContinue,
+  PlanDayState.done => l.planDayRepeat,
+};
 
 /// ЗРЕЛОСТЬ ОДНОЙ СЦЕНЫ СЛОВОМ — три состояния канона §2 (наряд SCENE-RUN, Ч.3).
 ///

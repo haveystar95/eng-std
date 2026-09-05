@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart'
     show CupertinoPicker, CupertinoPickerDefaultSelectionOverlay;
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -637,6 +639,7 @@ class _DevFlags extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final flags = ref.watch(featureFlagsProvider);
     final notifier = ref.read(featureFlagsProvider.notifier);
+    final qa = ref.watch(authControllerProvider).value?.qaTools ?? false;
     return Column(
       children: [
         _SwitchRow(
@@ -665,11 +668,97 @@ class _DevFlags extends ConsumerWidget {
         // второе место, где чинить одну и ту же поломку.
         _ChevronRow(
           label: l.devVoicesTitle,
-          last: true,
+          last: !qa,
           onTap: () => Navigator.of(context)
               .push(MaterialPageRoute(builder: (_) => const VoiceBakeoffScreen())),
         ),
+        // «СЕГОДНЯ» ПЛАНА, СДВИНУТОЕ (наряд DAY-FIX-2, Ч.7). За той же дверью, что QA-вход и
+        // подстановка транскрипта: аккаунт `is_qa` И среда не production — сервер отвечает 404,
+        // когда дверь закрыта, и клиент своей проверки не держит ({@see AppUser.qaTools}).
+        if (qa) const _QaPlanClockRow(),
       ],
+    );
+  }
+}
+
+/// Сдвиг «сегодня» плана на QA-аккаунте: «+1 день» и «сбросить», текущий сдвиг словом.
+///
+/// Кэшируется на сервере, не в таблице — сдвигает и серверное «сегодня», и штампы ответов с
+/// телефона, чтобы пройти дни 1 → 2 → финал на симуляторе, не дожидаясь полуночи.
+class _QaPlanClockRow extends ConsumerStatefulWidget {
+  const _QaPlanClockRow();
+
+  @override
+  ConsumerState<_QaPlanClockRow> createState() => _QaPlanClockRowState();
+}
+
+class _QaPlanClockRowState extends ConsumerState<_QaPlanClockRow> {
+  int? _days;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_load());
+  }
+
+  Future<void> _load() async {
+    try {
+      final days = await ref.read(apiClientProvider).qaPlanClock();
+      if (mounted) setState(() => _days = days);
+    } catch (_) {
+      // Дверь закрыта или сети нет — строка молчит о сдвиге, кнопки остаются.
+    }
+  }
+
+  Future<void> _set(int days) async {
+    AppHaptics.light();
+    try {
+      final now = await ref.read(apiClientProvider).setQaPlanClock(days);
+      if (!mounted) return;
+      setState(() => _days = now);
+      // План читается живьём — после сдвига все его поверхности перечитываются.
+      ref.invalidate(activePlanProvider);
+    } catch (_) {
+      // Как и выше: не наш сценарий, если дверь закрыта.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return _RowShell(
+      last: true,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.devQaClockTitle,
+                  style: const TextStyle(
+                    fontFamily: AppFonts.inter,
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.ink,
+                  ),
+                ),
+                if (_days case final d?) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    l.devQaClockShift(d),
+                    style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          QuietButton(label: l.devQaClockReset, onPressed: () => _set(0)),
+          const SizedBox(width: 6),
+          QuietButton(label: l.devQaClockPlus, onPressed: () => _set((_days ?? 0) + 1)),
+        ],
+      ),
     );
   }
 }

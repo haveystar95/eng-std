@@ -62,10 +62,10 @@ void main() {
 
     expect(find.text('ПЛАН · ДЕНЬ 2 ИЗ 3'), findsOneWidget);
     expect(find.text('К врачу из-за боли'), findsOneWidget);
-    // ВЕРДИКТ СЛОВАМИ ЗРЕЛОСТИ (наряд DAY-2-FIX, Ч.2.1) — не перепись ступеней и не процент.
-    // Процент честен и для первых дней плана всегда ноль: он считает карточки, дошедшие до
-    // ПОСЛЕДНЕЙ ступени (02.09, «0% готовность» над пятьюдесятью шестью пройденными карточками).
-    expect(find.text('Знакомишься с материалом · 12 из 14 карточек'), findsOneWidget);
+    // ОДНО СЛОВО О ДНЕ ФОКУСА, серверное (наряд DAY-FIX-2, Ч.3) — не перепись карточек «12 из
+    // 14» и не процент. Фикстура без `day_state` читается как «не начат».
+    expect(find.text('День 2 · не начат'), findsOneWidget);
+    expect(find.textContaining(' из 14'), findsNothing);
     expect(find.textContaining('ступень'), findsNothing);
     expect(find.text('50'), findsNothing);
     expect(find.text('%'), findsNothing);

@@ -198,6 +198,10 @@ class _Envelope implements PlanSessionEnvelope {
 
   @override
   List<int> get sittings => const [];
+  @override
+  String get dayState => PlanDayStateWire.inProgress;
+  @override
+  int get minutesLeft => 0;
 
   @override
   PlanSituation? situationAt(int i) => null;
@@ -548,23 +552,25 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('СЛОВА И СВЯЗКИ'), findsOneWidget);
+    // Six sections with their own captions (наряд DAY-FIX-2, Ч.4.2): «Слова» stands alone now,
+    // «Слова и связки» was the SITTING's caption for one part that held both.
+    expect(find.text('СЛОВА'), findsOneWidget);
     expect(find.text('ТЕБЕ СКАЖУТ'), findsOneWidget);
     expect(find.text('ТЫ ОТВЕТИШЬ'), findsOneWidget);
     expect(find.text("It's a sharp pain."), findsOneWidget);
     expect(find.text('sharp'), findsOneWidget);
-    // The interlocutor's shelf says what it is for, and its line is marked «он» in the margin.
-    expect(find.textContaining('только понимать'), findsOneWidget);
+    // The interlocutor's line is marked «он» in the margin.
     expect(find.text('он'), findsOneWidget);
     // A card of an EARLIER day is another scene's and is not laid out here.
     expect(find.text('back'), findsNothing);
 
-    // The composition, counted off the material: three cards of this scene, three parts.
-    await tester.scrollUntilVisible(find.textContaining('карточки'), 200);
-    await tester.pumpAndSettle();
-    expect(find.textContaining('3 карточки · 3 секции'), findsOneWidget);
+    // No composition line and no counters: the only number a plan screen says is minutes.
+    expect(find.textContaining('карточк'), findsNothing);
+    expect(find.textContaining('секци'), findsNothing);
     // The locked «Разговор» plate is gone: the conversation exists and is played in the sitting.
     expect(find.text('РАЗГОВОР'), findsNothing);
+    // One button, and it says what the state word says.
+    expect(find.text('Начать день'), findsOneWidget);
   });
 
   testWidgets('the day opens with the scene’s вводка, above everything it is made of', (
@@ -593,7 +599,7 @@ void main() {
     // …and it stands above the register rather than inside it.
     expect(
       tester.getTopLeft(find.textContaining('Ты у стойки регистрации')).dy,
-      lessThan(tester.getTopLeft(find.text('СЛОВА И СВЯЗКИ')).dy),
+      lessThan(tester.getTopLeft(find.text('СЛОВА')).dy),
     );
   });
 
@@ -611,7 +617,7 @@ void main() {
     // The title is followed straight by the day's own blocks — no blank paragraph, no placeholder.
     expect(find.text(''), findsNothing);
     expect(find.text('Уточнить симптомы и помощь'), findsOneWidget);
-    expect(find.text('СЛОВА И СВЯЗКИ'), findsOneWidget);
+    expect(find.text('СЛОВА'), findsOneWidget);
   });
 
   testWidgets('a running plan can always be given up — there is no other way out', (tester) async {
@@ -791,9 +797,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Шапка кадра и вход в шпаргалку.
+    // Шапка кадра. «Шпаргалки» в ней больше нет (наряд DAY-FIX-2, Ч.4.4): экран дня — программа.
     expect(find.text('ПЛАН ПОДГОТОВКИ'), findsOneWidget);
-    expect(find.text('Шпаргалка'), findsOneWidget);
+    expect(find.textContaining('Шпаргалк'), findsNothing);
 
     // Карточка цели: название, длина, дата, обратный отсчёт — и ни одного слова лестницы.
     expect(find.text('К врачу из-за боли'), findsOneWidget);
@@ -899,13 +905,12 @@ void main() {
     expect(find.textContaining('%'), findsNothing);
     expect(find.textContaining('Готовность по сценам появится'), findsOneWidget);
 
-    // «Шпаргалка под рукой» is a promise the screen keeps: the run-through has no prompts and no
-    // options, so the sheet is the only thing there is to reach for. Two of them on screen — the
-    // header's and the button's — and the header's is the one every plan screen carries.
+    // The cheat sheet is gone (наряд DAY-FIX-2, Ч.4.4): the day screens ARE the sheet now, and
+    // this screen offers nothing of the kind.
     expect(find.textContaining('Вслух, без остановок'), findsOneWidget);
     await tester.drag(find.byType(ListView).last, const Offset(0, -400));
     await tester.pumpAndSettle();
-    expect(find.text('Шпаргалка'), findsNWidgets(2));
+    expect(find.textContaining('Шпаргалк'), findsNothing);
 
     // «Завершить план» pushes the ending, and the ending is a BODY: [PlanRehearsalDone] is what the
     // run-through returns INSIDE the session's Scaffold. Pushed bare it has no Material over it and
@@ -1053,7 +1058,10 @@ void main() {
     // The verdict is the над-title now, in caps like every надзаголовок of the series; the headline
     // under it is the SCENE (наряд DAY-2, Ч.2.3).
     expect(find.text('ДЕНЬ 1 ПРОЙДЕН'), findsOneWidget);
-    expect(find.text('3 фразы и слова в работе'), findsOneWidget);
+    // In words, not «3 фразы и слова в работе» (наряд DAY-FIX-2, Ч.5.6): the ladder row says
+    // what was met — today's scene — and no plan screen counts out loud.
+    expect(find.text('сегодняшняя сцена'), findsOneWidget);
+    expect(find.textContaining('в работе'), findsNothing);
     expect(find.textContaining('выучен'), findsNothing);
 
     // Nothing else was due, so there is no revision row to draw.
@@ -1119,8 +1127,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // THREE, not five: the headline is the day.
-    expect(find.text('3 фразы и слова в работе'), findsOneWidget);
+    // The day's own material is what the ladder row is about, in words — the top-up is not it.
+    expect(find.text('сегодняшняя сцена'), findsOneWidget);
+    expect(find.textContaining('в работе'), findsNothing);
 
     // …and the revision is said, on its own row, in its own words.
     expect(find.text('Повторение'), findsOneWidget);

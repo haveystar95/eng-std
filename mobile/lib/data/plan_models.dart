@@ -13,6 +13,7 @@ import 'line_audio.dart';
 import 'models.dart'
     show
         ExerciseMode,
+        PlanDayStateWire,
         PlanDialogue,
         PlanSessionEnvelope,
         PlanSituation,
@@ -82,6 +83,25 @@ enum PlanDayStatus {
 /// one question only: is this failure retryable. A day past it is a day the server will never build,
 /// so a screen that still offers «Собрать день» is offering a button that cannot work.
 const int _maxGenerationAttempts = 2;
+
+/// ОДНО СЛОВО О ДНЕ — «не начат» · «идёт» · «пройден» (наряд DAY-FIX-2, Ч.3).
+///
+/// Считает СЕРВЕР, и только он: вкладка «План», экран дня и шапка присеста читают это поле, и ни
+/// один из них не держит счётчика «осталось N». Отдельно от [PlanDayStatus], который про СБОРКУ
+/// дня: `ready` день может быть нетронутым или пройденным наполовину.
+enum PlanDayState {
+  notStarted,
+  inProgress,
+  done;
+
+  /// Открытый набор: код, которого эта сборка не знает, читается как «идёт»; поля нет вовсе
+  /// (сервер до DAY-FIX-2) — день ещё не начат, потому что о нём ничего не известно.
+  static PlanDayState fromWire(String? v) => switch (v) {
+    null || PlanDayStateWire.notStarted => PlanDayState.notStarted,
+    PlanDayStateWire.done => PlanDayState.done,
+    _ => PlanDayState.inProgress,
+  };
+}
 
 /// The three stages of the plan's own ladder. Rendered as a brass A / B / C beside a word.
 enum PlanStage {
@@ -262,6 +282,8 @@ class PlanDay {
     required this.topics,
     required this.role,
     this.intro = '',
+    this.dayState = PlanDayState.inProgress,
+    this.minutesLeft = 0,
   });
 
   final String id;
@@ -271,6 +293,11 @@ class PlanDay {
   final String? scheduledOn;
   final String? collectionId;
   final PlanDayStatus status;
+
+  /// ОДНО СЛОВО О ДНЕ и его минуты, как их посчитал сервер (наряд DAY-FIX-2, Ч.3). Экран не
+  /// считает «осталось N» сам: живой прогон показал три экрана с тремя разными счётами.
+  final PlanDayState dayState;
+  final int minutesLeft;
 
   /// CLAIMS, not failures, and the server's cap is two ({@link PlanDay::MAX_ATTEMPTS}).
   ///
@@ -337,6 +364,8 @@ class PlanDay {
     topics: _strings(j['topics']),
     role: j['role'] as Map<String, dynamic>?,
     intro: (j['intro'] as String?)?.trim() ?? '',
+    dayState: PlanDayState.fromWire(j['day_state'] as String?),
+    minutesLeft: (j['minutes_left'] as num?)?.toInt() ?? 0,
   );
 }
 
@@ -617,7 +646,27 @@ class PlanTermRow {
     this.shelf,
     this.tier,
     this.audioUrl,
+    this.nextStep,
+    this.mark,
   });
+
+  /// ЧТО С ЭТОЙ СТРОКОЙ БУДЕТ ДЕЛАТЬ ЧЕЛОВЕК — код упражнения с сервера (наряд DAY-FIX-2, Ч.4.2):
+  /// `meet` · `recognize` · `hear` · `choose` · `assemble` · `say`, или null — сегодня строка
+  /// ничего не должна. Экран дня переводит код в слово под секцией; считать его сам он не вправе.
+  final String? nextStep;
+
+  /// ОТМЕТКА У СТРОКИ, если день шёл: `passed` / `said_self` / null (Ч.4.3). Словом, не цифрой.
+  final String? mark;
+
+  static const stepMeet = 'meet';
+  static const stepRecognize = 'recognize';
+  static const stepHear = 'hear';
+  static const stepChoose = 'choose';
+  static const stepAssemble = 'assemble';
+  static const stepSay = 'say';
+
+  static const markPassed = 'passed';
+  static const markSaidSelf = 'said_self';
 
   /// The shelves of a scene, as the server names them (канон §2). `numbers` is stored and not yet
   /// dealt; `rescue` is the plan's five universal phrases, played in the warm-up.
@@ -705,6 +754,8 @@ class PlanTermRow {
     shelf: j['shelf'] as String?,
     tier: j['tier'] as String?,
     audioUrl: j['audio_url'] as String?,
+    nextStep: j['next_step'] as String?,
+    mark: j['mark'] as String?,
   );
 }
 
@@ -975,7 +1026,16 @@ class PlanSession implements PlanSessionEnvelope {
     this.lineAudio = const [],
     this.sceneRun = const SceneRunKnobs(),
     this.raw = const {},
+    this.dayState = PlanDayStateWire.inProgress,
+    this.minutesLeft = 0,
   });
+
+  /// СЛОВО О ДНЕ и его минуты — те же, что на пейлоаде плана (наряд DAY-FIX-2, Ч.3).
+  @override
+  final String dayState;
+
+  @override
+  final int minutesLeft;
 
   /// Every task that belongs to TODAY, in order — `tasks` minus the revision of earlier days.
   List<PlanSessionTask> get dayTasks => tasks.where((t) => t.isDay).toList(growable: false);
@@ -1144,6 +1204,8 @@ class PlanSession implements PlanSessionEnvelope {
         .toList(growable: false),
     sceneRun: SceneRunKnobs.fromJson(j['scene_run'] as Map<String, dynamic>?),
     raw: j,
+    dayState: (j['day_state'] as String?) ?? PlanDayStateWire.inProgress,
+    minutesLeft: (j['minutes_left'] as num?)?.toInt() ?? 0,
   );
 }
 

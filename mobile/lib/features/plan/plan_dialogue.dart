@@ -192,6 +192,12 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
   /// asked for once, not a setting.
   bool _revealed = false;
 
+  /// КАКАЯ РЕПЛИКА РОЛИ УЖЕ ПРОЗВУЧАЛА — индекс живого пузыря в цепочке, НЕ индекс хода.
+  ///
+  /// Почему прежняя починка не держала (наряд DAY-FIX-2, Ч.5.1): такт 1 и такт 2 одного обмена —
+  /// два хода с двумя индексами (`role` и `you`), а живой пузырь у них один и тот же. Ключ по
+  /// индексу хода обнулялся на такте 2, и реплика звучала второй раз. Ключ по индексу пузыря
+  /// переживает смену такта: звук — только с «Ещё раз».
   int _spokenFor = -1;
 
   @override
@@ -203,9 +209,15 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
   @override
   void didUpdateWidget(PlanDialogueShell old) {
     super.didUpdateWidget(old);
-    if (old.turnIndex != widget.turnIndex) {
+    final oldLive = PlanDialogueShell.liveRoleIndexOf(old.dialogue, old.turnIndex);
+    if (oldLive != _liveIndex) {
+      // Новый обмен — новый пузырь: текст снова скрыт, реплика ещё не звучала.
       _revealed = false;
       _spokenFor = -1;
+    } else if (old.turnIndex != widget.turnIndex && _liveIndex >= 0) {
+      // ТОТ ЖЕ ПУЗЫРЬ, СЛЕДУЮЩИЙ ТАКТ: такт 1 отвечен верно, и текст реплики открывается и
+      // остаётся (Ч.5.1) — человек отвечает на то, что видит, а не на то, что вспомнил.
+      _revealed = true;
     }
     // …и когда свой ход наконец произнесён: реплика собеседника ждала его и теперь звучит сама.
     if (old.turnIndex != widget.turnIndex ||
@@ -215,15 +227,15 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
     }
   }
 
-  /// The live role line, said once per turn — never on every rebuild.
+  /// The live role line, said once per BUBBLE — never on every rebuild, and never again on такт 2.
   ///
   /// Не звучит, пока на экране стоит чужой шаг: «Скажи вслух» ([_untaken]) — это ход ЧЕЛОВЕКА, и
   /// реплика собеседника, зазвучавшая поверх него, отвечала бы за него же.
   void _speakLive() {
     final turn = _liveRoleTurn;
     if (!mounted || !widget.voiceReady || turn == null || _untaken != null) return;
-    if (_spokenFor == widget.turnIndex) return;
-    _spokenFor = widget.turnIndex;
+    if (_spokenFor == _liveIndex) return;
+    _spokenFor = _liveIndex;
     widget.onSpeak(turn.text);
   }
 
@@ -274,8 +286,6 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
         if (widget.voiceTrouble != null) widget.voiceTrouble!,
         _DialogueBar(
           scene: widget.dialogue.dayIndex,
-          exchange: _exchangeNumber,
-          exchanges: widget.dialogue.exchanges,
           rescue: widget.rescue,
           onSpeak: widget.onSpeak,
           onRescueUsed: widget.onRescueUsed,
@@ -292,8 +302,12 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
             PlanDialogueBubble(
               turn: turns[i],
               past: true,
-              aloud: widget.answeredAloud.contains(turns[i].termId) ||
-                  widget.spokenUntasked.contains(turns[i].termId),
+              // «СКАЗАНО ВСЛУХ» — ТОЛЬКО ПОД СВОИМИ пузырями (наряд DAY-FIX-2, Ч.5.2): это факт
+              // о голосе человека, и под репликой собеседника он приписывал бы её ему.
+              aloud: !turns[i].isRole &&
+                  (widget.answeredAloud.contains(turns[i].termId) ||
+                      widget.spokenUntasked.contains(turns[i].termId)),
+              caption: i == _firstRoleIndex ? l.planDialogueRoleName : null,
               onReplay: turns[i].isRole ? () => widget.onSpeak(turns[i].text) : null,
             ),
             const SizedBox(height: 10),
@@ -316,6 +330,7 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
                 turn: live,
                 past: false,
                 revealed: _revealed,
+                caption: _liveIndex == _firstRoleIndex ? l.planDialogueRoleName : null,
                 onReplay: () => widget.onSpeak(live.text),
                 onToggleText: () => setState(() => _revealed = !_revealed),
                 // «Знакомая реплика · разбор не нужен» — the line has closed «понимаю», so the
@@ -348,34 +363,23 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
     );
   }
 
-  /// «обмен 2 из 5» — WHICH EXCHANGE IS BEING PLAYED.
-  ///
-  /// Counted by the ROLE turns behind us, because an exchange OPENS when the other person speaks:
-  /// their line and the answer to it are one exchange, so the number must not tick over between the
-  /// two halves of it. Counting the learner's turns instead left «обмен 1 из 5» standing over the
-  /// second line the interlocutor said.
-  int get _exchangeNumber {
-    var n = 0;
-    for (var i = 0; i <= widget.turnIndex && i < widget.dialogue.turns.length; i++) {
-      if (widget.dialogue.turns[i].isRole) n++;
-    }
-
-    return n == 0 ? 1 : n;
-  }
+  /// ПЕРВЫЙ ПУЗЫРЬ СОБЕСЕДНИКА — над ним стоит подпись «собеседник» (наряд DAY-FIX-2, Ч.5.3), и
+  /// только над ним: дальше роли различает сторона и тон, подпись над каждым была бы легендой.
+  int get _firstRoleIndex => widget.dialogue.turns.indexWhere((t) => t.isRole);
 }
 
-/// The header of the dialogue: where we are, and the rescue button that never leaves.
+/// The header of the dialogue: the scene, and the rescue button that never leaves.
+///
+/// «Обмен 2 из 5» стоял здесь и ушёл (наряд DAY-FIX-2, Ч.5.4): счётчик на экране плана.
 class _DialogueBar extends StatelessWidget {
   const _DialogueBar({
     required this.scene,
-    required this.exchange,
-    required this.exchanges,
     required this.rescue,
     required this.onSpeak,
     this.onRescueUsed,
   });
 
-  final int scene, exchange, exchanges;
+  final int scene;
   final List<({String text, String? translation})> rescue;
   final void Function(String text) onSpeak;
 
@@ -389,9 +393,7 @@ class _DialogueBar extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: PlanLabel(
-            '${l.planDialogueScene(scene)} · ${l.planDialogueExchangeOf(exchange, exchanges)}',
-          ),
+          child: PlanLabel('${l.planDialogueScene(scene)} · ${l.planSectionDialogue}'),
         ),
         if (rescue.isNotEmpty) ...[
           const SizedBox(width: AppSpacing.s8),
@@ -562,8 +564,13 @@ class PlanRescueSheet extends StatelessWidget {
   }
 }
 
-/// ONE TURN IN THE FEED — the other person's on the left in italic serif, the learner's on the
-/// right in the grotesque.
+/// ONE TURN IN THE FEED — the other person's on the left in italic serif on light paper, the
+/// learner's on the right in the grotesque on a NOTICEABLY DARKER plate.
+///
+/// Роли различаются с одного взгляда (наряд DAY-FIX-2, Ч.5.3): сторона, тон, шрифт — и подпись
+/// «собеседник» над первым чужим пузырём. Свой пузырь темнее кадра DL·02 (`planSelected` там —
+/// слишком близкая к бумаге заливка, живьём стороны сливались); это сознательное расхождение по
+/// контрасту, отмечено в design-map и ждёт кадра.
 class PlanDialogueBubble extends StatelessWidget {
   const PlanDialogueBubble({
     super.key,
@@ -572,11 +579,15 @@ class PlanDialogueBubble extends StatelessWidget {
     this.revealed = false,
     this.aloud = false,
     this.note,
+    this.caption,
     this.onReplay,
     this.onToggleText,
   });
 
   final PlanDialogueTurn turn;
+
+  /// «собеседник» over the bubble — only the FIRST role bubble of a conversation carries it.
+  final String? caption;
 
   /// Already behind us: smaller, quieter, and with no controls — the conversation moves forward.
   final bool past;
@@ -604,18 +615,27 @@ class PlanDialogueBubble extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
           decoration: BoxDecoration(
+            // Собеседник — светлая бумага; свой ход — тёмная подложка карточки-плашки. Оба токена
+            // существующие; нового цвета серия не заводит.
             color: turn.isRole ? AppColors.surfaceRaised : AppColors.photoPlate,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: past
-                  ? AppColors.dividerFaint
-                  : AppColors.brassInk.withValues(alpha: turn.isRole ? .3 : .0),
+              color: turn.isRole
+                  ? (past ? AppColors.dividerFaint : AppColors.brassInk.withValues(alpha: .3))
+                  : AppColors.ink.withValues(alpha: past ? .12 : .22),
             ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (caption != null) ...[
+                Text(
+                  caption!,
+                  style: AppText.blockLabel.copyWith(color: AppColors.brassInk, letterSpacing: .4),
+                ),
+                const SizedBox(height: 4),
+              ],
               if (showText)
                 Text(
                   turn.text,
@@ -1029,18 +1049,11 @@ class PlanDialogueIntro extends StatelessWidget {
           ),
         ],
         const SizedBox(height: AppSpacing.s22),
-        _IntroBlock(
-          label: l.planDialogueLabel,
-          value: l.planDialogueExchanges(dialogue.exchanges),
-          body: l.planDialogueLead,
-        ),
+        // БЕЗ «N ОБМЕНОВ» (наряд DAY-FIX-2, Ч.5.4): счётчик на экране плана.
+        _IntroBlock(label: l.planDialogueLabel, body: l.planDialogueLead),
         if (rescueCount > 0) ...[
           const SizedBox(height: AppSpacing.s16),
-          _IntroBlock(
-            label: l.planDialogueRescueAtHand,
-            value: l.planDialogueRescuePhrases(rescueCount),
-            body: l.planDialogueRescueLead,
-          ),
+          _IntroBlock(label: l.planDialogueRescueAtHand, body: l.planDialogueRescueLead),
         ],
         const SizedBox(height: AppSpacing.s26),
         PrimaryButton(label: l.planDialogueStart, minHeight: 52, onPressed: onStart),
@@ -1057,9 +1070,9 @@ class PlanDialogueIntro extends StatelessWidget {
 }
 
 class _IntroBlock extends StatelessWidget {
-  const _IntroBlock({required this.label, required this.value, required this.body});
+  const _IntroBlock({required this.label, required this.body});
 
-  final String label, value, body;
+  final String label, body;
 
   @override
   Widget build(BuildContext context) => PaperCard(
@@ -1068,12 +1081,7 @@ class _IntroBlock extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(child: PlanLabel(label)),
-            Text(value, style: AppText.blockLabel.copyWith(color: AppColors.brassInk)),
-          ],
-        ),
+        PlanLabel(label),
         const SizedBox(height: 8),
         Text(
           body,
@@ -1090,10 +1098,11 @@ class _IntroBlock extends StatelessWidget {
 
 /// ФИНАЛ ДИАЛОГА — кадр DL·10.
 ///
-/// The whole conversation, and then three facts in the mono face with not one percentage among
-/// them. «Просил повторить · 1 раз» stands beside the others without apology: it is part of a
-/// conversation, and a screen that hid it would be teaching the learner to avoid the one move that
-/// keeps a real one alive.
+/// The whole conversation, and then the facts IN WORDS — «Отвечал сам на все» / «Отвечал сам, два
+/// раза подсказали» / «Разобрал все реплики на слух» — with not one percentage and not one «N из
+/// M» among them (наряд DAY-FIX-2, Ч.5.6). «Просил повторить» stands beside the others without
+/// apology: it is part of a conversation, and a screen that hid it would be teaching the learner
+/// to avoid the one move that keeps a real one alive.
 class PlanDialogueDone extends StatelessWidget {
   const PlanDialogueDone({
     super.key,
@@ -1156,26 +1165,47 @@ class PlanDialogueDone extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.s22),
-          for (final turn in dialogue.turns) ...[
-            PlanDialogueBubble(turn: turn, past: true),
+          for (var i = 0; i < dialogue.turns.length; i++) ...[
+            PlanDialogueBubble(
+              turn: dialogue.turns[i],
+              past: true,
+              caption: i == dialogue.turns.indexWhere((t) => t.isRole)
+                  ? l.planDialogueRoleName
+                  : null,
+            ),
             const SizedBox(height: 8),
           ],
           const SizedBox(height: AppSpacing.s22),
           PlanLabel(l.planDialogueResult),
           const SizedBox(height: 10),
           if (run case final r?) ...[
-            // ПРОГОН МЕРИТ ДРУГОЕ: не «сколько ходов ты сделал», а «сколько ты СКАЗАЛ сам» и
-            // «сколько из них — сразу». Две строки вместо одной, потому что медленный успех
-            // остаётся успехом (канон §4) и прятать его за одним числом было бы неправдой.
-            _Fact(label: l.planSceneRunSaidSelf, value: l.planDialogueCountOf(r.said, r.total)),
-            _Fact(label: l.planSceneRunSaidFast, value: '${r.fast}'),
+            // ПРОГОН МЕРИТ ДРУГОЕ: не «сколько ходов ты сделал», а «СКАЗАЛ ли сам» и «сразу ли».
+            // Две строки вместо одной, потому что медленный успех остаётся успехом (канон §4) и
+            // прятать его за одним словом было бы неправдой. Словами, без «N из M».
+            _Fact(
+              label: l.planSceneRunSaidSelf,
+              value: r.said >= r.total ? l.planSceneRunSaidAll : l.planSceneRunSaidSome(r.total - r.said),
+            ),
+            _Fact(
+              label: l.planSceneRunSaidFast,
+              value: r.fast >= r.total
+                  ? l.planSceneRunFastAll
+                  : (r.fast == 0 ? l.planSceneRunFastNone : l.planSceneRunFastSome),
+            ),
           ] else
             _Fact(
               label: l.planDialogueAnsweredSelf,
-              value: l.planDialogueCountOf(answeredSelf, answerable),
+              value: answeredSelf >= answerable
+                  ? l.planDialogueAnsweredAll
+                  : l.planDialogueAnsweredHinted(answerable - answeredSelf),
             ),
           if (run == null && hearable > 0)
-            _Fact(label: l.planDialogueHeardOut, value: l.planDialogueCountOf(heardOut, hearable)),
+            _Fact(
+              label: l.planDialogueHeardOut,
+              value: heardOut >= hearable
+                  ? l.planDialogueHeardAll
+                  : l.planDialogueHeardHinted(hearable - heardOut),
+            ),
           if (rescueUsed > 0)
             _Fact(label: l.planDialogueAskedRepeat, value: l.planDialogueTimes(rescueUsed)),
           const SizedBox(height: AppSpacing.s16),

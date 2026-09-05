@@ -9,7 +9,6 @@ import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
-import 'plan_cheatsheet.dart';
 import 'plan_ui.dart';
 
 /// «ПОДГОТОВКА ЗАВЕРШЕНА» — кадр D·12, and the act that closes the plan.
@@ -20,21 +19,19 @@ import 'plan_ui.dart';
 /// from tinker (Д-27). Now the run-through ends here, `POST /plans/{id}/complete` runs the ordinary
 /// `EndPlan(Complete)` — the same archive `abandon` performs.
 ///
-/// ## Числа — только те, что сервер действительно знает
+/// ## Словами, не числами (наряд DAY-FIX-2, Ч.5.6)
 ///
-/// The frame lists four facts and the server computes two and a half of them. «Реплик в плане» is
-/// not a number this product has — the census counts CARDS, of which lines are a part — and «сказали
-/// сами, без ключа» and «прогон вслух 17 мин» are not measured anywhere. So the screen states the
-/// three it can stand behind and leaves the rest out, rather than printing a plausible number
-/// nobody computed (записка серии, «Числа»).
+/// The frame lists four facts as numbers; the plan's screens say things in WORDS now — «N из M» is
+/// gone from every one of them. What the ending can stand behind is whether every scene was walked
+/// and whether the material was met, and it says exactly that.
 ///
 /// ## «Как прошло?» IS NOT A STUB HERE
 ///
 /// The frame draws it as one — «спросим после приёма, механика придёт позже». It has since been
 /// built ({@see PlanFeedbackScreen}, reachable from the plan screen once the event is behind), so
 /// drawing a dotted placeholder over a working screen would be the app lying in the other
-/// direction. The main action is the cheat sheet, exactly as the frame has it: on the day of the
-/// event that is what is needed, not a new plan.
+/// direction. The cheat sheet the frame made the main action is gone (DAY-FIX-2, Ч.4.4): the day
+/// screen IS the sheet, and «К плану» leads to it.
 class PlanRehearsalDone extends ConsumerStatefulWidget {
   const PlanRehearsalDone({super.key, required this.planId, required this.onDone});
 
@@ -109,19 +106,16 @@ class _PlanRehearsalDoneState extends ConsumerState<PlanRehearsalDone> {
               color: AppColors.secondary,
             ),
           ),
-          // THE THREE FACTS THE SERVER KNOWS — see the class docblock for the ones it does not.
-          // Mono figures, no percentage: the plan's own readiness is on its card, and a second
-          // number for the same thing on the screen that ends it would be a second opinion.
+          // WHAT THE SERVER KNOWS, IN WORDS — no «N из M» on a plan screen (DAY-FIX-2, Ч.5.6).
           if (plan != null) ...[
             const SizedBox(height: 30),
             _Fact(
               label: l.planDoneScenes,
-              value: l.planDialogueCountOf(_scenesPassed(plan), _scenes(plan)),
+              value: _scenesPassed(plan) >= _scenes(plan) ? l.planDoneScenesAll : l.planDoneScenesSome,
             ),
-            _Fact(label: l.planDoneCards, value: '${plan.cardsTotal}'),
             _Fact(
               label: l.planDoneStageA,
-              value: l.planDialogueCountOf(plan.stageAClosed, plan.cardsTotal),
+              value: plan.stageAClosed >= plan.cardsTotal ? l.planDoneMaterialAll : l.planDoneMaterialSome,
             ),
             const SizedBox(height: AppSpacing.s16),
             Text(
@@ -141,23 +135,11 @@ class _PlanRehearsalDoneState extends ConsumerState<PlanRehearsalDone> {
               setState(() => _closed = null);
               unawaited(_close());
             })
-          else ...[
-            // THE CHEAT SHEET IS THE MAIN ACTION (кадр D·12): «в день события нужна она, а не новый
-            // план». It opens on the LAST scene — the one closest to the conversation ahead.
-            if (plan != null && _scenes(plan) > 0)
-              PrimaryButton(
-                label: l.planDoneOpenCheatSheet,
-                minHeight: 52,
-                onPressed: () => showPlanCheatSheet(
-                  context,
-                  planId: widget.planId,
-                  dayIndex: plan.introDays.last.index,
-                  targetLang: plan.targetLang,
-                ),
-              ),
-            const SizedBox(height: AppSpacing.s12),
-            QuietButton(label: l.planRehearsalDoneAction, onPressed: widget.onDone),
-          ],
+          else
+            // «К ПЛАНУ» — the one action. The cheat sheet the frame put here is gone (DAY-FIX-2,
+            // Ч.4.4): the day screen shows the whole scene with translations, and the plan leads
+            // to it.
+            PrimaryButton(label: l.planRehearsalDoneAction, minHeight: 52, onPressed: widget.onDone),
         ],
       ),
     );
@@ -172,7 +154,7 @@ class _PlanRehearsalDoneState extends ConsumerState<PlanRehearsalDone> {
       plan.introDays.where((d) => d.status == PlanDayStatus.done).length;
 }
 
-/// One fact of the ending — the label, and the number in the mono face.
+/// One fact of the ending — the label, and the word in the mono face.
 class _Fact extends StatelessWidget {
   const _Fact({required this.label, required this.value});
 
