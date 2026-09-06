@@ -95,11 +95,46 @@
 - «How much is it?» — Сколько это стоит?
 - «One moment, let me check.» — Секунду, я проверю.
 
-## День 2 — Разбор опыта (intro, failed, попыток 2, починок 2)
+## День 2 — Разбор опыта (intro, ready, попыток 2, починок 2)
 
-**Отбой `card.skill_ref_invalid`:** День не прошёл валидатор: card.skill_ref_invalid [It helped clients track orders and pay.]: умения «s1» у этой сцены нет; card.skill_ref_invalid [I wrote backend code and fixed bugs.]: умения «s2» у этой сцены нет; card.skill_ref_invalid [Yes, I used REST API and MySQL.]: умения «s3» у этой сцены нет; card.skill_ref_invalid [We used Laravel and Docker.]: умения «s4» у этой сцены нет; card.skill_ref_invalid [Will I work with Git?]: умения «s5» у этой сцены нет; card.skill_ref_invalid [internal AP
+### Пары (по цепочке)
 
-_материала нет_
+**1. [answer]**
+- role: «Can you tell me more about your last project?» — Можете рассказать подробнее о вашем последнем проекте?
+- you: «It was a customer support platform.» — Это была платформа поддержки клиентов. · ключ: `platform` · ещё: `support platform` / `customer platform` · s2.1
+
+**2. [answer]**
+- role: «What was your role on the team?» — Какова была ваша роль в команде?
+- you: «I built backend logic and APIs.» — Я создавал серверную логику и API. · ключ: `APIs` · ещё: `backend and APIs` / `server logic` · s2.2
+
+**3. [answer]**
+- role: «Did you work with databases or APIs?» — Вы работали с базами данных или API?
+- you: «Yes, I wrote SQL queries.» — Да, я писал SQL-запросы. · ключ: `SQL` · ещё: `wrote queries` / `yes SQL queries` · s2.2
+
+**4. [answer]**
+- role: «What technologies did you use?» — Какие технологии вы использовали?
+- you: «I used Laravel, Docker, and Redis.» — Я использовал Laravel, Docker и Redis. · ключ: `Redis` · ещё: `Laravel and Docker` / `and Redis` · s2.3
+
+**5. [ask]**
+- role: «Is there anything you'd like to ask?» — Есть ли что-нибудь, что вы хотели бы спросить?
+- you: «Do you use Docker in production?» — Вы используете Docker в продакшене? · ключ: `in production` · ещё: `use Docker here` / `Docker in production` · s2.3
+
+### Слова и связки
+
+- [words] **platform** — платформа · пример: «The platform had tools for support agents.» — У платформы были инструменты для сотрудников поддержки.
+- [words] **queries** — запросы · пример: «I checked slow queries in the database.» — Я проверял медленные запросы в базе данных.
+- [words] **use** — использовать · пример: «We use Docker for local development.» — Мы используем Docker для локальной разработки.
+- [words] **wrote** — писал · пример: «I wrote tests for new backend code.» — Я писал тесты для нового серверного кода.
+- [words] **production** — продакшен · пример: «The team deploys updates to production every week.» — Команда выкатывает обновления в продакшен каждую неделю.
+- [chunks] **customer support** — поддержка клиентов · пример: «The product was for customer support teams.» — Этот продукт был для команд поддержки клиентов.
+- [chunks] **backend logic** — серверная логика · пример: «I worked on backend logic for user accounts.» — Я работал над серверной логикой для учетных записей пользователей.
+- [chunks] **in production** — в продакшене · пример: «We tested everything before it went in production.» — Мы все тестировали перед тем, как это шло в продакшен.
+
+### Числа на слух
+
+- «How many people were on the team? There were five.» — Сколько человек было в команде? Нас было 5. · value `5`
+- «How many APIs did you support? About three.» — Сколько API вы поддерживали? Около 3. · value `3`
+- «How many months did you use Docker? About six.» — Сколько месяцев вы использовали Docker? Около 6. · value `6`
 
 ## День 3 — Прогон перед событием (final, pending, попыток 0, починок 0)
 
@@ -116,11 +151,11 @@ _материала нет_
 | pair_judge: пара 0 — Could you briefly introduce yourself? | succeeded | plan_pair_judge.v0.2 | 0.002888 |
 | pair_judge: пара 1 — Tell me about yourself. | succeeded | plan_pair_judge.v0.2 | 0.003120 |
 | pair_rewrite: пара 1 — Tell me about yourself. | succeeded | plan_pair_rewrite.v0.2 | 0.002975 |
-| pair_judge: пара 1 — Tell me about yourself. | succeeded | plan_pair_judge.v0.2 | 0.002888 |
 | pair_judge: пара 2 — What are you doing in your current role? | succeeded | plan_pair_judge.v0.2 | 0.002905 |
+| pair_judge: пара 1 — Tell me about yourself. | succeeded | plan_pair_judge.v0.2 | 0.002888 |
 | pair_judge: пара 3 — What kind of projects have you worked on? | succeeded | plan_pair_judge.v0.2 | 0.002910 |
-| pair_judge: пара 4 — Is there anything you would like to ask? | succeeded | plan_pair_judge.v0.2 | 0.002900 |
 | day: день 1 — Начало собеседования | failed | plan_day.v0.7 | 0.030490 |
+| pair_judge: пара 4 — Is there anything you would like to ask? | succeeded | plan_pair_judge.v0.2 | 0.002900 |
 | day_repair: починка дня 1 — карточек 2 | succeeded | plan_day_repair.v0.3 | 0.011538 |
 | pair_judge: пара 0 — Could you briefly introduce yourself? | succeeded | plan_pair_judge.v0.2 | 0.003158 |
 | pair_judge: пара 1 — Tell me about yourself. | succeeded | plan_pair_judge.v0.2 | 0.002888 |
@@ -166,12 +201,49 @@ _материала нет_
 | pair_rewrite: пара 3 — Did you work with databases or APIs? | succeeded | plan_pair_rewrite.v0.2 | 0.003165 |
 | pair_judge: пара 3 — Did you work with databases or APIs? | succeeded | plan_pair_judge.v0.2 | 0.002915 |
 | pair_judge: пара 4 — What technologies did you use? | succeeded | plan_pair_judge.v0.2 | 0.003048 |
-| pair_rewrite: пара 4 — What technologies did you use? | succeeded | plan_pair_rewrite.v0.2 | 0.002943 |
 | pair_judge: пара 4 — What technologies did you use? | succeeded | plan_pair_judge.v0.2 | 0.002883 |
+| pair_rewrite: пара 4 — What technologies did you use? | succeeded | plan_pair_rewrite.v0.2 | 0.002943 |
 | pair_judge: пара 5 — Is there anything you would like to ask? | succeeded | plan_pair_judge.v0.2 | 0.003097 |
 | pair_rewrite: пара 5 — Is there anything you would like to ask? | succeeded | plan_pair_rewrite.v0.2 | 0.002953 |
 | pair_judge: пара 5 — Is there anything you would like to ask? | succeeded | plan_pair_judge.v0.2 | 0.002902 |
 | day: день 2 — Разбор опыта | failed | plan_day.v0.7 | 0.036630 |
 | day_repair: починка дня 2 — карточек 6 | succeeded | plan_day_repair.v0.3 | 0.019780 |
-| **итого** | | | **0.469846** |
+| pair_judge: пара 0 — Can you tell me more about your last project? | succeeded | plan_pair_judge.v0.2 | 0.003177 |
+| pair_judge: пара 0 — Can you tell me more about your last project? | succeeded | plan_pair_judge.v0.2 | 0.002902 |
+| pair_rewrite: пара 0 — Can you tell me more about your last project? | succeeded | plan_pair_rewrite.v0.2 | 0.002930 |
+| pair_judge: пара 1 — What was your role on the team? | succeeded | plan_pair_judge.v0.2 | 0.002905 |
+| pair_judge: пара 2 — Did you work with databases or APIs? | succeeded | plan_pair_judge.v0.2 | 0.002905 |
+| pair_judge: пара 3 — What technologies did you use? | succeeded | plan_pair_judge.v0.2 | 0.002895 |
+| day: день 2 — Разбор опыта | failed | plan_day.v0.7 | 0.032025 |
+| pair_judge: пара 4 — Would you like to ask anything? | succeeded | plan_pair_judge.v0.2 | 0.002890 |
+| day_repair: починка дня 2 — карточек 2 | succeeded | plan_day_repair.v0.3 | 0.011803 |
+| pair_judge: пара 0 — Can you tell me more about your last project? | succeeded | plan_pair_judge.v0.2 | 0.002912 |
+| pair_judge: пара 1 — What was your role on the team? | succeeded | plan_pair_judge.v0.2 | 0.002908 |
+| pair_judge: пара 2 — Did you work with databases or APIs? | succeeded | plan_pair_judge.v0.2 | 0.003153 |
+| pair_rewrite: пара 2 — Did you work with databases or APIs? | succeeded | plan_pair_rewrite.v0.2 | 0.003123 |
+| pair_judge: пара 2 — Did you work with databases or APIs? | succeeded | plan_pair_judge.v0.2 | 0.003123 |
+| pair_rewrite: пара 2 — Did you work with databases or APIs? | succeeded | plan_pair_rewrite.v0.2 | 0.003077 |
+| pair_judge: пара 3 — What technologies did you use? | succeeded | plan_pair_judge.v0.2 | 0.002895 |
+| pair_judge: пара 2 — Did you work with databases or APIs? | succeeded | plan_pair_judge.v0.2 | 0.002908 |
+| day: день 2 — Разбор опыта | failed | plan_day.v0.7 | 0.032085 |
+| pair_judge: пара 4 — Is there anything you would like to ask? | succeeded | plan_pair_judge.v0.2 | 0.002910 |
+| pair_judge: пара 0 — Can you tell me more about your last project? | succeeded | plan_pair_judge.v0.2 | 0.003130 |
+| pair_rewrite: пара 0 — Can you tell me more about your last project? | succeeded | plan_pair_rewrite.v0.2 | 0.002943 |
+| pair_judge: пара 0 — Can you tell me more about your last project? | succeeded | plan_pair_judge.v0.2 | 0.002902 |
+| pair_judge: пара 1 — What was your role on the team? | succeeded | plan_pair_judge.v0.2 | 0.002915 |
+| pair_judge: пара 2 — Did you work with databases or APIs? | succeeded | plan_pair_judge.v0.2 | 0.003115 |
+| pair_judge: пара 2 — Did you work with databases or APIs? | succeeded | plan_pair_judge.v0.2 | 0.002908 |
+| pair_rewrite: пара 2 — Did you work with databases or APIs? | succeeded | plan_pair_rewrite.v0.2 | 0.003060 |
+| pair_judge: пара 3 — What technologies did you use? | succeeded | plan_pair_judge.v0.2 | 0.002890 |
+| pair_judge: пара 4 — Is there anything you'd like to ask? | succeeded | plan_pair_judge.v0.2 | 0.003157 |
+| pair_rewrite: пара 4 — Is there anything you'd like to ask? | succeeded | plan_pair_rewrite.v0.2 | 0.003018 |
+| day: день 2 — Разбор опыта | failed | plan_day.v0.7 | 0.033385 |
+| pair_judge: пара 4 — Is there anything you'd like to ask? | succeeded | plan_pair_judge.v0.2 | 0.002908 |
+| pair_judge: пара 0 — Can you tell me more about your last project? | succeeded | plan_pair_judge.v0.2 | 0.002908 |
+| pair_judge: пара 1 — What was your role on the team? | succeeded | plan_pair_judge.v0.2 | 0.002908 |
+| pair_judge: пара 2 — Did you work with databases or APIs? | succeeded | plan_pair_judge.v0.2 | 0.002905 |
+| pair_judge: пара 3 — What technologies did you use? | succeeded | plan_pair_judge.v0.2 | 0.002895 |
+| pair_judge: пара 4 — Is there anything you'd like to ask? | succeeded | plan_pair_judge.v0.2 | 0.002912 |
+| day: день 2 — Разбор опыта | succeeded | plan_day.v0.7 | 0.034478 |
+| **итого** | | | **0.708709** |
 

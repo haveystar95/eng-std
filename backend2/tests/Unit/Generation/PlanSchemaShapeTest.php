@@ -111,6 +111,21 @@ it('lets P2 answer with a day-scene as PAIRS plus the three written shelves (v0.
     expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.4.json')))->not->toBe([]);
 });
 
+it('turns skill_ref into an enum of the scene ids when the caller knows them', function () {
+    // The live day 2 of «интервью» answered slugs for `skill_ref` on four retries told the rule in
+    // prose; a strict schema is the one instruction a model cannot skip (V14).
+    $ids = ['s2.1', 's2.2', 's2.3'];
+
+    $you = PlanSchemas::day($ids)['properties']['pairs']['items']['properties']['you']['properties']['skill_ref'];
+    expect($you)->toBe(['type' => 'string', 'enum' => $ids])
+        ->and(PlanSchemas::day($ids)['properties']['words']['items']['properties']['skill_ref']['enum'])->toBe($ids)
+        ->and(PlanSchemas::pairYou($ids)['properties']['skill_ref']['enum'])->toBe($ids)
+        ->and(PlanSchemas::repair($ids)['properties']['cards']['items']['properties']['card']['properties']['skill_ref'])
+        ->toBe(['type' => ['string', 'null'], 'enum' => [...$ids, null]])
+        // Without ids — a brief from before skills had them — the field stays a plain string.
+        ->and(PlanSchemas::day()['properties']['words']['items']['properties']['skill_ref'])->toBe(['type' => 'string']);
+});
+
 it('keeps the two court schemas to the one question each asks', function () {
     // P2J answers yes/no and says why; P2P answers with ONE `you` item in the day's own shape, so
     // the rewritten card is judged by every day gate as if P2 had written it.

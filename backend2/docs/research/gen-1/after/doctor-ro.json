@@ -309,10 +309,348 @@
                     "example_translation": null
                 }
             ]
+        },
+        {
+            "day_index": 2,
+            "title": "Consultația",
+            "status": "ready",
+            "attempts": 2,
+            "repairs": 2,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Where exactly does it hurt?",
+                        "translation": "Unde anume vă doare?",
+                        "shelf": "hear",
+                        "frame": "Where exactly does it ___?",
+                        "filler": "hurt",
+                        "speaking_key": "hurt",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "My lower back hurts.",
+                        "translation": "Mă doare partea de jos a spatelui.",
+                        "shelf": "say",
+                        "frame": "My ___ hurts.",
+                        "filler": "lower back",
+                        "speaking_key": "lower back",
+                        "speaking_keys": [
+                            "low back",
+                            "my back"
+                        ],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Is it sharp or dull?",
+                        "translation": "Este ascuțită sau surdă?",
+                        "shelf": "hear",
+                        "frame": "Is it ___ or dull?",
+                        "filler": "sharp",
+                        "speaking_key": "sharp",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It is more dull pain.",
+                        "translation": "Este mai mult o durere surdă.",
+                        "shelf": "say",
+                        "frame": "It is more ___ pain.",
+                        "filler": "dull",
+                        "speaking_key": "dull",
+                        "speaking_keys": [
+                            "dull pain",
+                            "more dull"
+                        ],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Does it hurt when you bend or walk?",
+                        "translation": "Te doare când te apleci sau mergi?",
+                        "shelf": "hear",
+                        "frame": "Does it hurt when you bend or ___?",
+                        "filler": "walk",
+                        "speaking_key": "walk",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, bending makes it worse.",
+                        "translation": "Da, când mă aplec doare mai rău.",
+                        "shelf": "say",
+                        "frame": "Yes, bending makes it ___.",
+                        "filler": "worse",
+                        "speaking_key": "worse",
+                        "speaking_keys": [
+                            "yes, worse",
+                            "bending hurts"
+                        ],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Does the pain go down your leg?",
+                        "translation": "Durerea coboară pe picior?",
+                        "shelf": "hear",
+                        "frame": "Does the pain go down your ___?",
+                        "filler": "leg",
+                        "speaking_key": "leg",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, sometimes to my right leg.",
+                        "translation": "Da, uneori coboară în piciorul drept.",
+                        "shelf": "say",
+                        "frame": "Yes, sometimes to my right ___.",
+                        "filler": "leg",
+                        "speaking_key": "leg",
+                        "speaking_keys": [
+                            "yes, my leg",
+                            "sometimes right leg"
+                        ],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "How bad is the pain right now?",
+                        "translation": "Cât de rea este durerea acum?",
+                        "shelf": "hear",
+                        "frame": "How bad is the pain right ___?",
+                        "filler": "now",
+                        "speaking_key": "now",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Right now, about six out of ten.",
+                        "translation": "Acum este cam șase din zece.",
+                        "shelf": "say",
+                        "frame": "Right now, about ___ out of ten.",
+                        "filler": "six",
+                        "speaking_key": "six",
+                        "speaking_keys": [
+                            "about six",
+                            "six now"
+                        ],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Any questions about the medicine?",
+                        "translation": "Aveți întrebări despre medicament?",
+                        "shelf": "hear",
+                        "frame": "Any questions about the ___?",
+                        "filler": "medicine",
+                        "speaking_key": "medicine",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "How often should I take it?",
+                        "translation": "Cât de des să îl iau?",
+                        "shelf": "ask",
+                        "frame": "How often should I take ___?",
+                        "filler": "it",
+                        "speaking_key": "it",
+                        "speaking_keys": [
+                            "how often",
+                            "take it how often"
+                        ],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "sharp",
+                    "translation": "ascuțită",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "The pain is sharp in one spot.",
+                    "example_translation": "Durerea este ascuțită într-un singur loc."
+                },
+                {
+                    "text": "leg",
+                    "translation": "picior",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "Sometimes the pain goes into my leg.",
+                    "example_translation": "Uneori durerea se duce în picior."
+                },
+                {
+                    "text": "dull",
+                    "translation": "surd(ă)",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "It is a dull pain all day.",
+                    "example_translation": "Este o durere surdă toată ziua."
+                },
+                {
+                    "text": "walk",
+                    "translation": "mergi",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "It hurts more when I walk.",
+                    "example_translation": "Mă doare mai tare când merg."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "lower back",
+                    "translation": "partea de jos a spatelui",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "My lower back feels stiff in the morning.",
+                    "example_translation": "Partea de jos a spatelui se simte înțepenită dimineața."
+                },
+                {
+                    "text": "makes it worse",
+                    "translation": "mai rău",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "Twisting makes it worse.",
+                    "example_translation": "Răsucirea o agravează."
+                },
+                {
+                    "text": "right now",
+                    "translation": "chiar acum",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "The pain is strong right now.",
+                    "example_translation": "Durerea este puternică chiar acum."
+                },
+                {
+                    "text": "about the medicine",
+                    "translation": "despre medicament",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "I have one question about the medicine.",
+                    "example_translation": "Am o întrebare despre medicament."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "On a scale of one to ten, six?",
+                    "translation": "Pe o scară de la unu la zece, șase?",
+                    "shelf": "numbers",
+                    "frame": "On a scale of one to ten, ___?",
+                    "filler": "six",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": "6",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Take it 2 times a day.",
+                    "translation": "Luați-l de 2 ori pe zi.",
+                    "shelf": "numbers",
+                    "frame": "Take it ___ a day.",
+                    "filler": "2 times",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": "2",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
         }
     ],
     "spend": {
-        "calls": 57,
-        "total_usd": 0.392228
+        "calls": 65,
+        "total_usd": 0.452305
     }
 }

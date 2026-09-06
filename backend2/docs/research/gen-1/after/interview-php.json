@@ -264,10 +264,329 @@
                     "example_translation": null
                 }
             ]
+        },
+        {
+            "day_index": 2,
+            "title": "Разбор опыта",
+            "status": "ready",
+            "attempts": 2,
+            "repairs": 2,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Can you tell me more about your last project?",
+                        "translation": "Можете рассказать подробнее о вашем последнем проекте?",
+                        "shelf": "hear",
+                        "frame": "Can you tell me more about your last ___?",
+                        "filler": "project",
+                        "speaking_key": "project",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It was a customer support platform.",
+                        "translation": "Это была платформа поддержки клиентов.",
+                        "shelf": "say",
+                        "frame": "It was a customer support ___.",
+                        "filler": "platform",
+                        "speaking_key": "platform",
+                        "speaking_keys": [
+                            "support platform",
+                            "customer platform"
+                        ],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What was your role on the team?",
+                        "translation": "Какова была ваша роль в команде?",
+                        "shelf": "hear",
+                        "frame": "What was your role on the ___?",
+                        "filler": "team",
+                        "speaking_key": "team",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I built backend logic and APIs.",
+                        "translation": "Я создавал серверную логику и API.",
+                        "shelf": "say",
+                        "frame": "I built backend logic and ___.",
+                        "filler": "APIs",
+                        "speaking_key": "APIs",
+                        "speaking_keys": [
+                            "backend and APIs",
+                            "server logic"
+                        ],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Did you work with databases or APIs?",
+                        "translation": "Вы работали с базами данных или API?",
+                        "shelf": "hear",
+                        "frame": "Did you work with databases or ___?",
+                        "filler": "APIs",
+                        "speaking_key": "APIs",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, I wrote SQL queries.",
+                        "translation": "Да, я писал SQL-запросы.",
+                        "shelf": "say",
+                        "frame": "Yes, I wrote ___ queries.",
+                        "filler": "SQL",
+                        "speaking_key": "SQL",
+                        "speaking_keys": [
+                            "wrote queries",
+                            "yes SQL queries"
+                        ],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What technologies did you use?",
+                        "translation": "Какие технологии вы использовали?",
+                        "shelf": "hear",
+                        "frame": "What technologies did you ___?",
+                        "filler": "use",
+                        "speaking_key": "use",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I used Laravel, Docker, and Redis.",
+                        "translation": "Я использовал Laravel, Docker и Redis.",
+                        "shelf": "say",
+                        "frame": "I used Laravel, Docker, and ___.",
+                        "filler": "Redis",
+                        "speaking_key": "Redis",
+                        "speaking_keys": [
+                            "Laravel and Docker",
+                            "and Redis"
+                        ],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Is there anything you'd like to ask?",
+                        "translation": "Есть ли что-нибудь, что вы хотели бы спросить?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Do you use Docker in production?",
+                        "translation": "Вы используете Docker в продакшене?",
+                        "shelf": "ask",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "in production",
+                        "speaking_keys": [
+                            "use Docker here",
+                            "Docker in production"
+                        ],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "platform",
+                    "translation": "платформа",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "The platform had tools for support agents.",
+                    "example_translation": "У платформы были инструменты для сотрудников поддержки."
+                },
+                {
+                    "text": "queries",
+                    "translation": "запросы",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I checked slow queries in the database.",
+                    "example_translation": "Я проверял медленные запросы в базе данных."
+                },
+                {
+                    "text": "use",
+                    "translation": "использовать",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "We use Docker for local development.",
+                    "example_translation": "Мы используем Docker для локальной разработки."
+                },
+                {
+                    "text": "wrote",
+                    "translation": "писал",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I wrote tests for new backend code.",
+                    "example_translation": "Я писал тесты для нового серверного кода."
+                },
+                {
+                    "text": "production",
+                    "translation": "продакшен",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "The team deploys updates to production every week.",
+                    "example_translation": "Команда выкатывает обновления в продакшен каждую неделю."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "customer support",
+                    "translation": "поддержка клиентов",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "The product was for customer support teams.",
+                    "example_translation": "Этот продукт был для команд поддержки клиентов."
+                },
+                {
+                    "text": "backend logic",
+                    "translation": "серверная логика",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I worked on backend logic for user accounts.",
+                    "example_translation": "Я работал над серверной логикой для учетных записей пользователей."
+                },
+                {
+                    "text": "in production",
+                    "translation": "в продакшене",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "We tested everything before it went in production.",
+                    "example_translation": "Мы все тестировали перед тем, как это шло в продакшен."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "How many people were on the team? There were five.",
+                    "translation": "Сколько человек было в команде? Нас было 5.",
+                    "shelf": "numbers",
+                    "frame": "How many people were on the team? There were ___.",
+                    "filler": "five",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.1",
+                    "number_value": "5",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "How many APIs did you support? About three.",
+                    "translation": "Сколько API вы поддерживали? Около 3.",
+                    "shelf": "numbers",
+                    "frame": "How many APIs did you support? About ___.",
+                    "filler": "three",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": "3",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "How many months did you use Docker? About six.",
+                    "translation": "Сколько месяцев вы использовали Docker? Около 6.",
+                    "shelf": "numbers",
+                    "frame": "How many months did you use Docker? About ___.",
+                    "filler": "six",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": "6",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
         }
     ],
     "spend": {
-        "calls": 64,
-        "total_usd": 0.469846
+        "calls": 101,
+        "total_usd": 0.708709
     }
 }

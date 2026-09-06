@@ -549,15 +549,23 @@ final class PlanDayValidator
                 continue;
             }
 
-            $out[] = PlanViolation::onCard(
-                self::SKILL_REF_INVALID,
-                $item,
-                'skill_ref',
-                $ref === ''
-                    ? 'карточка не называет умение сцены — непонятно, зачем она в этом дне'
-                    : "умения «{$ref}» у этой сцены нет",
-                'the card names no skill of this scene; `skill_ref` must be one of the scene\'s skill ids',
-            );
+            $detail = $ref === ''
+                ? 'карточка не называет умение сцены — непонятно, зачем она в этом дне'
+                : "умения «{$ref}» у этой сцены нет";
+            // The valid ids are NAMED in the reason the retry is handed: the live day 2 of
+            // «интервью» answered a slug («answering_work_experience») after two rounds of «must be
+            // one of the scene's skill ids», and a list is an instruction where a rule was not.
+            $reason = 'the card names no skill of this scene; `skill_ref` must be exactly one of: '
+                . implode(', ', $day->skillIds);
+
+            // A PAIRED answer (v0.7): a ref the server could not read unambiguously
+            // ({@see PlanSkillRefNormalizer}) is a WHOLE-DAY defect — the model numbered the
+            // abilities its own way, and two live days showed P2R cannot renumber eight cards it
+            // does not understand. No address, so the day goes back whole and is not buried on a
+            // repair (вердикт владельца по GEN-1, V14).
+            $out[] = $day->expectsPairs
+                ? PlanViolation::onAnswer(self::SKILL_REF_INVALID, "{$item->arrayName()}[{$item->index}]: {$detail}", $reason)
+                : PlanViolation::onCard(self::SKILL_REF_INVALID, $item, 'skill_ref', $detail, $reason);
         }
 
         return $out;

@@ -104,6 +104,37 @@ it('counts a cognate gloss in a shared script and still refuses the term copied 
     expect(planCodes($this->validator->validate($ru)))->toContain(PlanDayValidator::TRANSLATION_IS_TRANSLITERATION);
 });
 
+it('brings a misnumbered skill_ref back onto the scene id when the ordinal is unambiguous', function () {
+    $ids = ['s2.1', 's2.2', 's2.3'];
+    $n = \App\Modules\Generation\Domain\Service\PlanSkillRefNormalizer::normalize(...);
+
+    expect($n('s2.2', $ids))->toBe('s2.2')
+        // The live shapes: a wrong scene prefix, a bare number, a zero-based count.
+        ->and($n('s1.2', $ids))->toBe('s2.2')
+        ->and($n('s3', $ids))->toBe('s2.3')
+        ->and($n('s2.0', $ids))->toBe('s2.1')
+        ->and($n(' S2.1 ', $ids))->toBe('s2.1')
+        // Nobody's: an ordinal the scene does not have, no number at all, an empty ref.
+        ->and($n('s1.4', $ids))->toBeNull()
+        ->and($n('intro', $ids))->toBeNull()
+        ->and($n('', $ids))->toBeNull()
+        // One skill — every ref means it.
+        ->and($n('s9.9', ['s3.1']))->toBe('s3.1')
+        ->and($n('', ['s3.1']))->toBe('s3.1');
+});
+
+it('refuses a paired day with an unreadable skill_ref WHOLE, and a shelved day card by card', function () {
+    $paired = gen1Candidate(['say' => [0 => ['skill_ref' => 's1.9']]]);
+    $violations = $this->validator->validate($paired);
+    expect(planCodes($violations))->toBe([PlanDayValidator::SKILL_REF_INVALID])
+        ->and($violations[0]->isAddressed())->toBeFalse();
+
+    $shelved = planCandidate(['say' => [0 => ['skill_ref' => 's1.9']]]);
+    $violations = $this->validator->validate($shelved);
+    expect(planCodes($violations))->toBe([PlanDayValidator::SKILL_REF_INVALID])
+        ->and($violations[0]->isAddressed())->toBeTrue();
+});
+
 it('treats the plural of a listed basic word as basic', function () {
     $basics = new BasicVocabulary();
 

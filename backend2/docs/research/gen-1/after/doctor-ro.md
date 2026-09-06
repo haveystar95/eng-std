@@ -74,11 +74,49 @@ La final, medicul îți spune ce tratament să urmezi și îți poate da o rețe
 - «Did the pain start three days ago?» — Durerea a început acum trei zile? · value `3`
 - «Your appointment is at ten thirty.» — Programarea dumneavoastră este la ora 10:30. · value `10:30`
 
-## День 2 — Consultația (intro, failed, попыток 2, починок 2)
+## День 2 — Consultația (intro, ready, попыток 2, починок 2)
 
-**Отбой `card.skill_ref_invalid`:** День не прошёл валидатор: card.skill_ref_invalid [Yes, it goes down my leg.]: умения «s1.4» у этой сцены нет; card.number_value_mismatch [Take one tablet twice a day.]: `value` «twice» — не цифры и не дата; ученик вводит число цифрами
+### Пары (по цепочке)
 
-_материала нет_
+**1. [answer]**
+- role: «Where exactly does it hurt?» — Unde anume vă doare?
+- you: «My lower back hurts.» — Mă doare partea de jos a spatelui. · ключ: `lower back` · ещё: `low back` / `my back` · s2.1
+
+**2. [answer]**
+- role: «Is it sharp or dull?» — Este ascuțită sau surdă?
+- you: «It is more dull pain.» — Este mai mult o durere surdă. · ключ: `dull` · ещё: `dull pain` / `more dull` · s2.1
+
+**3. [answer]**
+- role: «Does it hurt when you bend or walk?» — Te doare când te apleci sau mergi?
+- you: «Yes, bending makes it worse.» — Da, când mă aplec doare mai rău. · ключ: `worse` · ещё: `yes, worse` / `bending hurts` · s2.2
+
+**4. [answer]**
+- role: «Does the pain go down your leg?» — Durerea coboară pe picior?
+- you: «Yes, sometimes to my right leg.» — Da, uneori coboară în piciorul drept. · ключ: `leg` · ещё: `yes, my leg` / `sometimes right leg` · s2.3
+
+**5. [answer]**
+- role: «How bad is the pain right now?» — Cât de rea este durerea acum?
+- you: «Right now, about six out of ten.» — Acum este cam șase din zece. · ключ: `six` · ещё: `about six` / `six now` · s2.3
+
+**6. [ask]**
+- role: «Any questions about the medicine?» — Aveți întrebări despre medicament?
+- you: «How often should I take it?» — Cât de des să îl iau? · ключ: `it` · ещё: `how often` / `take it how often` · s2.3
+
+### Слова и связки
+
+- [words] **sharp** — ascuțită · пример: «The pain is sharp in one spot.» — Durerea este ascuțită într-un singur loc.
+- [words] **leg** — picior · пример: «Sometimes the pain goes into my leg.» — Uneori durerea se duce în picior.
+- [words] **dull** — surd(ă) · пример: «It is a dull pain all day.» — Este o durere surdă toată ziua.
+- [words] **walk** — mergi · пример: «It hurts more when I walk.» — Mă doare mai tare când merg.
+- [chunks] **lower back** — partea de jos a spatelui · пример: «My lower back feels stiff in the morning.» — Partea de jos a spatelui se simte înțepenită dimineața.
+- [chunks] **makes it worse** — mai rău · пример: «Twisting makes it worse.» — Răsucirea o agravează.
+- [chunks] **right now** — chiar acum · пример: «The pain is strong right now.» — Durerea este puternică chiar acum.
+- [chunks] **about the medicine** — despre medicament · пример: «I have one question about the medicine.» — Am o întrebare despre medicament.
+
+### Числа на слух
+
+- «On a scale of one to ten, six?» — Pe o scară de la unu la zece, șase? · value `6`
+- «Take it 2 times a day.» — Luați-l de 2 ori pe zi. · value `2`
 
 ## День 3 — Rehearsal before the event (final, pending, попыток 0, починок 0)
 
@@ -145,5 +183,13 @@ _материала нет_
 | pair_judge: пара 5 — Any questions about the medicine? | succeeded | plan_pair_judge.v0.2 | 0.003245 |
 | day: день 2 — Consultația | failed | plan_day.v0.7 | 0.035108 |
 | day_repair: починка дня 2 — карточек 2 | succeeded | plan_day_repair.v0.3 | 0.011477 |
-| **итого** | | | **0.392228** |
+| pair_judge: пара 0 — Where exactly does it hurt? | succeeded | plan_pair_judge.v0.2 | 0.002888 |
+| pair_judge: пара 1 — Is it sharp or dull? | succeeded | plan_pair_judge.v0.2 | 0.002898 |
+| pair_judge: пара 2 — Does it hurt when you bend or walk? | succeeded | plan_pair_judge.v0.2 | 0.002915 |
+| pair_judge: пара 3 — Does the pain go down your leg? | succeeded | plan_pair_judge.v0.2 | 0.002912 |
+| pair_judge: пара 4 — How bad is the pain right now? | succeeded | plan_pair_judge.v0.2 | 0.002908 |
+| pair_judge: пара 5 — Any questions about the medicine? | succeeded | plan_pair_judge.v0.2 | 0.002895 |
+| day: день 2 — Consultația | failed | plan_day.v0.7 | 0.033168 |
+| day_repair: починка дня 2 — карточек 1 | succeeded | plan_day_repair.v0.3 | 0.009493 |
+| **итого** | | | **0.452305** |
 

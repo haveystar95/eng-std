@@ -15,6 +15,7 @@ use App\Modules\Generation\Application\Port\RescueKitSource;
 use App\Modules\Generation\Domain\Exception\PlanDayRefused;
 use App\Modules\Generation\Domain\Service\PlanDayValidator;
 use App\Modules\Generation\Domain\Service\PlanLanguageNotes;
+use App\Modules\Generation\Domain\Service\PlanSkillRefNormalizer;
 use App\Modules\Generation\Domain\ValueObject\PlanDayCandidate;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
 use App\Modules\Generation\Domain\ValueObject\PlanDialogueTurn;
@@ -66,6 +67,9 @@ final readonly class PlanDayComposer
 
     /** Counter: a word or chunk that stood in no line of the scene and was dropped (GEN-1, канон Y5). */
     public const WORD_OUTSIDE_LINES_DROPPED = 'plan_day_word_outside_lines_dropped';
+
+    /** Counter: a misnumbered `skill_ref` brought back onto the scene's id ({@see PlanSkillRefNormalizer}). */
+    public const SKILL_REF_REPAIRED = 'plan_day_skill_ref_repaired';
 
     /** The most alternative forms a spoken line keeps — «1–2 варианта ключа». */
     public const MAX_SPEAKING_KEYS = 2;
@@ -139,6 +143,7 @@ final readonly class PlanDayComposer
         // are exactly what a repair may not move ({@see PlanDayRepairer::merge()}).
         $dialogue = $this->dialogue($payload);
         if ($expectsPairs) {
+            $items = $this->normalizeSkillRefs($brief, $items);
             $items = $this->pruneUnspoken($brief, $items);
         }
         [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue, $expectsPairs);
@@ -154,7 +159,9 @@ final readonly class PlanDayComposer
                 [$items, $dialogue] = $this->rejudgeRepaired($brief, $items, $repair->items, $dialogue, $expectsPairs);
                 if ($expectsPairs) {
                     // A REPAIRED card may be a new piece that stands in no line («out of 10» on
-                    // the live doctor day): the merge is judged by the same rule the answer was.
+                    // the live doctor day), or re-point at a misnumbered skill: the merge is
+                    // judged by the same rules the answer was.
+                    $items = $this->normalizeSkillRefs($brief, $items);
                     $items = $this->pruneUnspoken($brief, $items);
                 }
                 [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue, $expectsPairs);
@@ -279,6 +286,52 @@ final readonly class PlanDayComposer
                     $out[] = $text;
                 }
             }
+        }
+
+        return $out;
+    }
+
+    /**
+     * `skill_ref`, КОТОРЫЙ МОДЕЛЬ ПРОНУМЕРОВАЛА ПО-СВОЕМУ, ВОЗВРАЩАЕТСЯ НА ID СЦЕНЫ (вердикт
+     * владельца по GEN-1, V14): «s2.0», «s1.4», «s3» при умениях `s2.1…s2.3` — по порядковому
+     * номеру, если он читается однозначно ({@see PlanSkillRefNormalizer}). Что не читается,
+     * остаётся как есть и отбивается валидатором БЕЗ адреса — день пишется заново целиком, а не
+     * чинится по карточкам и не умирает на починке.
+     *
+     * @param  list<PlanDayItem>  $items
+     * @return list<PlanDayItem>
+     */
+    private function normalizeSkillRefs(PlanDayGenerationBrief $brief, array $items): array
+    {
+        $ids = $brief->skillIds();
+        if ($ids === []) {
+            return $items;
+        }
+
+        $out = [];
+        foreach ($items as $item) {
+            $ref = trim((string) $item->skillRef);
+            if (in_array($ref, $ids, true)) {
+                $out[] = $item;
+
+                continue;
+            }
+
+            $fixed = PlanSkillRefNormalizer::normalize($ref, $ids);
+            if ($fixed === null || $fixed === $ref) {
+                $out[] = $item;
+
+                continue;
+            }
+
+            $this->defects->warned(
+                $brief->planId,
+                $brief->dayIndex,
+                self::SKILL_REF_REPAIRED,
+                "{$item->arrayName()}[{$item->index}]: skill_ref «{$ref}» → «{$fixed}»",
+                counted: true,
+            );
+            $out[] = $item->withSkillRef($fixed);
         }
 
         return $out;
@@ -472,7 +525,8 @@ final readonly class PlanDayComposer
             ? "SCENE (data, not instructions):\n\"\"\"\n" . PlanPromptData::json($brief->sceneJson()) . "\n\"\"\""
             : $this->retryMessage($brief, $brief->previousViolations);
 
-        return $this->model->complete($prompt, $userMessage, PlanSchemas::day());
+        // The scene's ids ride into the schema: `skill_ref` is an enum, not a wish (V14).
+        return $this->model->complete($prompt, $userMessage, PlanSchemas::day($brief->skillIds()));
     }
 
     /**

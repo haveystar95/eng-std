@@ -162,6 +162,17 @@ final readonly class PlanDayItem
      * `speak` or `understand` — the LADDER this card climbs, derived from its shelf and never read
      * off the model's answer (канон §3; {@see PlanShelf::tier()}).
      */
+    /** The same card, pointed at another skill — {@see \App\Modules\Generation\Domain\Service\PlanSkillRefNormalizer}. */
+    public function withSkillRef(?string $skillRef): self
+    {
+        return new self(
+            $this->text, $this->type, $this->kind, $this->isLine, $this->translation,
+            $this->transliteration, $this->description, $this->example, $this->exampleTranslation,
+            $this->frame, $this->filler, $this->speaker, $this->imageApiPrompt, $this->coversCheckpoint,
+            $this->index, $this->shelf, $skillRef, $this->value, $this->speakingKeys,
+        );
+    }
+
     public function tier(): string
     {
         return (PlanShelf::tryFromName($this->arrayName()) ?? PlanShelf::Say)->tier();

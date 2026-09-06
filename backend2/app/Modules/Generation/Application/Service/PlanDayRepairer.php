@@ -95,7 +95,7 @@ final readonly class PlanDayRepairer
         $answer = $this->model->complete(
             $this->prompt($brief, $items, $broken),
             $this->userMessage($broken),
-            PlanSchemas::repair(),
+            PlanSchemas::repair($brief->skillIds()),
         );
 
         $fixed = $this->fixedCards($answer->payload);

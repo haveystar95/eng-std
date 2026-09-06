@@ -130,13 +130,16 @@ final class PlanSchemas
      * stands in decides what it is, exactly as it did in v0.3. `speaker` exists only on `hear`,
      * where its one legal value is `role` — the tier is the server's and the shelf already said it.
      *
+     * @param  list<string>  $skillIds  the scene's skill ids; when given, `skill_ref` is an ENUM of
+     *                                  them and a strict provider cannot emit anything else
+     *                                  ({@see skillRef()})
      * @return array<string, mixed>
      */
-    public static function day(): array
+    public static function day(array $skillIds = []): array
     {
         $common = [
             'kind' => ['type' => 'string', 'enum' => ['line', 'word', 'chunk', 'number']],
-            'skill_ref' => self::string(),
+            'skill_ref' => self::skillRef($skillIds),
             'translation' => self::string(),
         ];
 
@@ -229,12 +232,13 @@ final class PlanSchemas
      * had written it in the first place ({@see PlanDayComposer}). `kind` is absent on purpose: the
      * card's shelf is decided by the PAIR it belongs to, and a rewrite cannot move it.
      *
+     * @param  list<string>  $skillIds  the scene's ids — `skill_ref` becomes an enum ({@see skillRef()})
      * @return array<string, mixed>
      */
-    public static function pairYou(): array
+    public static function pairYou(array $skillIds = []): array
     {
         return self::object([
-            'skill_ref' => self::string(),
+            'skill_ref' => self::skillRef($skillIds),
             'frame' => self::string(),
             'filler' => self::string(),
             'translation' => self::string(),
@@ -274,14 +278,15 @@ final class PlanSchemas
      * without merging anything. «Exactly as many entries as cards under BROKEN» is therefore stated
      * in the prompt and checked after the answer, on purpose.
      *
+     * @param  list<string>  $skillIds  the scene's ids — `skill_ref` becomes an enum ({@see skillRef()})
      * @return array<string, mixed>
      */
-    public static function repair(): array
+    public static function repair(array $skillIds = []): array
     {
         $card = self::object([
             'text' => self::nullableString(),
             'kind' => ['type' => 'string', 'enum' => ['line', 'word', 'chunk', 'number']],
-            'skill_ref' => self::nullableString(),
+            'skill_ref' => self::skillRef($skillIds, nullable: true),
             'translation' => self::string(),
             'transliteration' => self::string(),
             'example' => self::string(),
@@ -330,6 +335,33 @@ final class PlanSchemas
     private static function arrayOf(array $items): array
     {
         return ['type' => 'array', 'items' => $items];
+    }
+
+    /**
+     * `skill_ref` — AN ENUM OF THE SCENE'S IDS when the caller knows them (вердикт владельца по
+     * GEN-1, V14).
+     *
+     * Four live runs of one day 2 came back with `s1`…`s5`, `s2.0`, and then slugs
+     * («answer_question_about_last_project») — every one a retry told in prose that the ref must
+     * be one of the scene's ids, and prose a model can ignore. A `strict` schema it cannot: with the
+     * ids listed here a provider that enforces the schema physically cannot emit anything else.
+     * {@see \App\Modules\Generation\Domain\Service\PlanSkillRefNormalizer} stays behind it for a
+     * provider that does not enforce enums, and for a fixture written by hand.
+     *
+     * Empty ids — a brief written before skills had ids — leave the field a plain string.
+     *
+     * @param  list<string>  $skillIds
+     * @return array<string, mixed>
+     */
+    private static function skillRef(array $skillIds, bool $nullable = false): array
+    {
+        if ($skillIds === []) {
+            return $nullable ? self::nullableString() : self::string();
+        }
+
+        return $nullable
+            ? ['type' => ['string', 'null'], 'enum' => [...$skillIds, null]]
+            : ['type' => 'string', 'enum' => $skillIds];
     }
 
     /** @return array<string, mixed> */

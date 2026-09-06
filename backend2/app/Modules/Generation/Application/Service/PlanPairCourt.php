@@ -247,7 +247,7 @@ final readonly class PlanPairCourt
             . ($dayWords === [] ? '(none)' : PlanPromptData::bullets($dayWords))
             . "\n\"\"\"";
 
-        $answer = $this->model->complete($prompt, $message, PlanSchemas::pairYou());
+        $answer = $this->model->complete($prompt, $message, PlanSchemas::pairYou($brief->skillIds()));
         $this->record($brief, PlanSpend::CALL_PAIR_REWRITE, "пара {$position} — {$a}", $answer, $this->prompts->pairRewriteVersion());
 
         $frame = is_string($answer->payload['frame'] ?? null) ? trim($answer->payload['frame']) : '';

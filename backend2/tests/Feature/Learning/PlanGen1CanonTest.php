@@ -230,3 +230,50 @@ it('grades by the simpler forms once the toggle is on', function () {
 
     expect((string) DB::table('reviews')->where('id', $reviewId)->value('grade'))->not->toBe('again');
 });
+
+it('brings misnumbered skill_refs back onto the scene ids and writes the day without a repair', function () {
+    // The live shape (V14): the model counted abilities its own way — «s1», «s2.0», «s3» — on a
+    // scene whose ids are s1.1 and s1.2.
+    $day = $this->day;
+    $day['pairs'][0]['you']['skill_ref'] = 's1';
+    $day['pairs'][1]['you']['skill_ref'] = 's1.0';
+    $day['pairs'][2]['role']['skill_ref'] = 's2';
+    $day['words'][0]['skill_ref'] = 's9.2';
+
+    [$planId, $model] = runGen1PlanWith(new ScriptedPlanModel([$day]), $this->defects);
+
+    $row = gen1DayRow($planId);
+    expect($row->status)->toBe('ready', (string) $row->fail_reason)
+        ->and($model->repairCalls())->toBe(0)
+        // One P2 call for day 1 (the model's other calls are day 2's, which the script leaves empty).
+        ->and($row->generation_attempts)->toBe(1)
+        ->and($this->defects->warnings(PlanDayComposer::SKILL_REF_REPAIRED))->toBe(4);
+
+    $refs = DB::table('terms')
+        ->join('collection_items', 'collection_items.term_id', '=', 'terms.id')
+        ->where('collection_items.collection_id', $row->collection_id)
+        ->whereIn('terms.text', ['I need to check in, please.', 'It hurts in my lower back.', 'Please wait here for a few minutes.', 'lower back'])
+        ->pluck('terms.skill_ref', 'terms.text')->all();
+    ksort($refs);
+    expect($refs)->toBe([
+        'I need to check in, please.' => 's1.1',
+        'It hurts in my lower back.' => 's1.1',
+        'Please wait here for a few minutes.' => 's1.2',
+        'lower back' => 's1.2',
+    ]);
+});
+
+it('rewrites the day whole — not card by card — when a skill_ref cannot be read', function () {
+    $broken = $this->day;
+    $broken['pairs'][0]['you']['skill_ref'] = 's1.7';   // no seventh ability, on any scene
+
+    [$planId, $model] = runGen1PlanWith(new ScriptedPlanModel([$broken, $this->day]), $this->defects);
+
+    $row = gen1DayRow($planId);
+    expect($row->status)->toBe('ready', (string) $row->fail_reason)
+        // Two day calls for day 1, no repair: the unreadable ref has no address, so P2R was never
+        // bought. The retry was told the code, and only the code.
+        ->and($row->generation_attempts)->toBe(2)
+        ->and($model->repairCalls())->toBe(0)
+        ->and($model->dayMessages[1])->toContain('card.skill_ref_invalid');
+});
