@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $scheduled_on
  * @property string $status
  * @property int $generation_attempts
+ * @property string|null $claimed_at
  * @property int $repair_calls
  * @property string|null $fail_code
  * @property string|null $fail_reason

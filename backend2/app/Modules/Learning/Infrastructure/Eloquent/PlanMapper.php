@@ -120,6 +120,7 @@ final class PlanMapper
             repairCalls: $row->repair_calls,
             failCode: $row->fail_code,
             dialogue: self::dialogueOf($row),
+            claimedAt: $row->claimed_at !== null ? new DateTimeImmutable((string) $row->claimed_at) : null,
         );
     }
 
@@ -168,6 +169,7 @@ final class PlanMapper
             'scheduled_on' => $day->scheduledOn()?->format('Y-m-d'),
             'status' => $day->status()->value,
             'generation_attempts' => $day->generationAttempts(),
+            'claimed_at' => $day->claimedAt()?->format('Y-m-d H:i:sP'),
             'repair_calls' => $day->repairCalls(),
             'fail_code' => $day->failCode(),
             'fail_reason' => $day->failReason(),

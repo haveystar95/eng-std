@@ -35,6 +35,7 @@ final readonly class RequestPlanDayHandler
         private PlanDayRepository $days,
         private PlanProgress $progress,
         private DispatchesPlanDay $dispatcher,
+        private \App\Modules\Learning\Application\Service\PlanDayStaleSweeper $stale,
     ) {}
 
     /** @return string the day's status after the call — `generating`, `ready` or `done` */
@@ -45,7 +46,9 @@ final readonly class RequestPlanDayHandler
             throw PlanNotFound::withId($command->planId);
         }
 
-        $days = $this->days->listForPlan($plan->id());
+        // A day whose worker died is taken back HERE, on the poll that would otherwise show
+        // «собирается» for ever ({@see \App\Modules\Learning\Application\Service\PlanDayStaleSweeper}).
+        $days = $this->stale->sweep($command->planId, $this->days->listForPlan($plan->id()));
         $day = null;
         foreach ($days as $candidate) {
             if ($candidate->dayIndex() === $command->dayIndex) {

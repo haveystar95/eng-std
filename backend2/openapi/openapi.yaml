@@ -3064,7 +3064,9 @@ components:
             and is never the source of what the app displays. Codes the client does not know get a
             neutral «не удалось собрать день» rather than a guess — the live run showed a day that
             had failed on `day.example_is_a_term` telling the owner the model had answered in the
-            wrong language (Д-19).
+            wrong language (Д-19). `day.generation_timed_out` (GEN-1) — the worker went silent twice
+            for longer than `learning.plan.generation_stale_minutes`; both attempts are spent and
+            «Собрать заново» is the only way on.
         term_budget: { type: integer }
         day_state:
           type: string

@@ -111,7 +111,15 @@ final class PlanDay
          * @var list<array{turn: string, term_id: string}>|null
          */
         private ?array $dialogue = null,
+        /**
+         * WHEN A WORKER TOOK THE DAY — what a timeout is measured from ({@see reclaimStale()}).
+         * Null until the first claim; stamped by every claim, never by anything else.
+         */
+        private ?DateTimeImmutable $claimedAt = null,
     ) {}
+
+    /** The code a day fails with when its worker never answered — {@see reclaimStale()}. */
+    public const TIMED_OUT = 'day.generation_timed_out';
 
     /**
      * @param  list<array<string, mixed>>  $skills
@@ -158,11 +166,12 @@ final class PlanDay
         int $repairCalls = 0,
         ?string $failCode = null,
         ?array $dialogue = null,
+        ?DateTimeImmutable $claimedAt = null,
     ): self {
         return new self(
             $id, $planId, $dayIndex, $kind, $collectionId, $title, $outcomeText, $skills,
             $roleBrief, $scheduledOn, $status, $generationAttempts, $failReason, $lastViolations,
-            $repairCalls, $failCode, $dialogue,
+            $repairCalls, $failCode, $dialogue, $claimedAt,
         );
     }
 
@@ -170,7 +179,7 @@ final class PlanDay
      * Take this day for generation. Returns false when somebody else already has it or it is done —
      * the caller returns rather than paying for a second copy.
      */
-    public function claim(): bool
+    public function claim(?DateTimeImmutable $now = null): bool
     {
         if ($this->kind === PlanDayKind::Final) {
             // The final day introduces nothing. There is no call to make and no collection to fill.
@@ -187,8 +196,56 @@ final class PlanDay
         $this->generationAttempts++;
         $this->failReason = null;
         $this->failCode = null;
+        $this->claimedAt = $now;
 
         return true;
+    }
+
+    /**
+     * A DAY WHOSE WORKER NEVER ANSWERED — re-queued once, then failed (вердикт владельца по GEN-1).
+     *
+     * `generating` was a state nothing could leave except the worker that set it, and a worker
+     * that died mid-call (timeout, OOM, a restart) left the day «собирается» for ever
+     * (`docs/research/gen-1/pipeline.md` §1.3). Now a day claimed more than `$staleMinutes` ago
+     * is taken back by whoever reads it next:
+     *
+     *   the first time, it goes back to `pending` — the claim it spent stays spent, so the next
+     *   worker takes the SECOND attempt, and the reason says why;
+     *   the second time — both attempts spent and neither answered — it is `failed` with
+     *   {@see TIMED_OUT}, which the plan payload carries like any other failure.
+     *
+     * Returns what happened: `pending`, `failed`, or null when the day was not stale — a day still
+     * inside its window, or not `generating` at all, or claimed by a build that never stamped it.
+     */
+    public function reclaimStale(DateTimeImmutable $now, int $staleMinutes): ?PlanDayStatus
+    {
+        if ($this->status !== PlanDayStatus::Generating || $this->claimedAt === null) {
+            return null;
+        }
+        $age = $now->getTimestamp() - $this->claimedAt->getTimestamp();
+        if ($age < max(1, $staleMinutes) * 60) {
+            return null;
+        }
+
+        $minutes = intdiv($age, 60);
+        if ($this->generationAttempts < self::MAX_ATTEMPTS) {
+            $this->status = PlanDayStatus::Pending;
+            $this->failReason = "воркер не ответил за {$minutes} мин — день поставлен в очередь снова";
+            $this->failCode = null;
+
+            return $this->status;
+        }
+
+        $this->status = PlanDayStatus::Failed;
+        $this->failCode = self::TIMED_OUT;
+        $this->failReason = "воркер дважды не ответил (последний раз — {$minutes} мин назад); обе попытки потрачены";
+
+        return $this->status;
+    }
+
+    public function claimedAt(): ?DateTimeImmutable
+    {
+        return $this->claimedAt;
     }
 
     /**

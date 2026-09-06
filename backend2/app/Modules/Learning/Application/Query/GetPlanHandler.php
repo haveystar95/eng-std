@@ -53,6 +53,7 @@ final readonly class GetPlanHandler
         private PlanDayStateCensus $census,
         /** Ручки уровня — вход планировщика посадки, которым перепись считает минуты фокусного дня. */
         private PlanModeSettingsReader $planSettings,
+        private \App\Modules\Learning\Application\Service\PlanDayStaleSweeper $stale,
         private PlanScheduler $scheduler = new PlanScheduler(),
     ) {}
 
@@ -75,7 +76,9 @@ final readonly class GetPlanHandler
         // The PLAN's language, not the account's — see LearningPlan::$supportLang.
         $support = $plan->supportLang();
 
-        $planDays = $this->days->listForPlan($plan->id());
+        // A day whose worker died is taken back on the read that would otherwise show it
+        // «собирается» for ever; a failed one is carried in this payload like any other failure.
+        $planDays = $this->stale->sweep($plan->id()->value, $this->days->listForPlan($plan->id()));
 
         // The same computation the plan SESSION runs on — one answer to «where is this learner»,
         // shared, because a screen drawn against one focus and a session built against another is

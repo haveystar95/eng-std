@@ -179,6 +179,12 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->when(PlanSittingPlanner::class)->needs('$budget')->give($budget);
         $this->app->when(PlanDayStateCensus::class)->needs('$budget')->give($budget);
 
+        // ОКНО, ПОСЛЕ КОТОРОГО ЗАВИСШИЙ ДЕНЬ ПЕРЕЗАХВАТЫВАЕТСЯ (вердикт по GEN-1) —
+        // `config/learning.php → plan.generation_stale_minutes`.
+        $this->app->when(\App\Modules\Learning\Application\Service\PlanDayStaleSweeper::class)
+            ->needs('$staleMinutes')
+            ->give(static fn (): int => max(1, (int) config('learning.plan.generation_stale_minutes', 10)));
+
         // ЗАСЧИТЫВАТЬ ЛИ `speaking_keys` НА ГОВОРЕНИИ (наряд GEN-1) — тумблер, выключенный, пока
         // телефон судит по одному ключу; см. `config/learning.php → plan.speaking_keys_graded`.
         $this->app->when(\App\Modules\Learning\Application\Command\SubmitReviewsHandler::class)

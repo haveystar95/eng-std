@@ -38,6 +38,8 @@ final readonly class ClaimPlanDayHandler
         private PlanRepository $plans,
         private PlanDayRepository $days,
         private TransactionManager $tx,
+        /** Stamps the claim — what {@see PlanDay::reclaimStale()} measures a timeout from. */
+        private \App\Modules\Shared\Domain\Service\Clock $clock,
     ) {}
 
     public function __invoke(ClaimPlanDay $command): ?PlanDayGenerationBrief
@@ -49,7 +51,7 @@ final readonly class ClaimPlanDayHandler
             }
 
             $day = $this->days->findByIndexForUpdate($plan->id(), $command->dayIndex);
-            if ($day === null || ! $day->claim()) {
+            if ($day === null || ! $day->claim($this->clock->now())) {
                 return null;
             }
             $this->days->save($day);
