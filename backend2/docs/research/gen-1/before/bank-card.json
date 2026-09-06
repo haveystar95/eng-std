@@ -1,0 +1,247 @@
+{
+    "plan_id": "01M1VTFKZ4N3HXVY5X8EYASNX7",
+    "goal": "Звоню в банк: карту заблокировали, надо выяснить причину и разблокировать её",
+    "pair": "ru→en",
+    "level": "basic",
+    "days": [
+        {
+            "day_index": 1,
+            "title": "Звонок в банк",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Hello, how can I help you?",
+                        "translation": "Здравствуйте, чем я могу помочь?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "My card is blocked.",
+                        "translation": "Моя карта заблокирована.",
+                        "shelf": "say",
+                        "frame": "My card is ___.",
+                        "filler": "blocked",
+                        "speaking_key": "blocked",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Please tell me what the problem is.",
+                        "translation": "Скажите, в чем проблема.",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It is not working.",
+                        "translation": "Она не работает.",
+                        "shelf": "say",
+                        "frame": "It is not ___.",
+                        "filler": "working",
+                        "speaking_key": "working",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Is it a debit card or credit card?",
+                        "translation": "Это дебетовая карта или кредитная карта?",
+                        "shelf": "hear",
+                        "frame": "Is it a ___ or credit card?",
+                        "filler": "debit card",
+                        "speaking_key": "debit card",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It is a debit card.",
+                        "translation": "Это дебетовая карта.",
+                        "shelf": "say",
+                        "frame": "It is a ___.",
+                        "filler": "debit card",
+                        "speaking_key": "debit card",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Can I help with anything else?",
+                        "translation": "Я могу еще чем-нибудь помочь?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Please connect me to card services.",
+                        "translation": "Соедините меня, пожалуйста, с отделом карт.",
+                        "shelf": "ask",
+                        "frame": "Please connect me to ___.",
+                        "filler": "card services",
+                        "speaking_key": "card services",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Please hold for a moment.",
+                        "translation": "Пожалуйста, подождите немного.",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Sure, I'll hold.",
+                        "translation": "Конечно, я подожду.",
+                        "shelf": "say",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "blocked",
+                    "translation": "заблокирована",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "The app says my card is blocked.",
+                    "example_translation": "В приложении написано, что моя карта заблокирована."
+                },
+                {
+                    "text": "working",
+                    "translation": "работает",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "My card was working this morning.",
+                    "example_translation": "Моя карта работала сегодня утром."
+                },
+                {
+                    "text": "team",
+                    "translation": "отдел",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The team for cards is checking my account now.",
+                    "example_translation": "Отдел по картам сейчас проверяет мой счет."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "debit card",
+                    "translation": "дебетовая карта",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "I use my debit card every day.",
+                    "example_translation": "Я пользуюсь своей дебетовой картой каждый день."
+                },
+                {
+                    "text": "card services",
+                    "translation": "отдел карт",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Card services can check why it was blocked.",
+                    "example_translation": "Отдел карт может проверить, почему ее заблокировали."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "Please stay on the line for two minutes.",
+                    "translation": "Пожалуйста, оставайтесь на линии две минуты.",
+                    "shelf": "numbers",
+                    "frame": "Please stay on the line for ___.",
+                    "filler": "two minutes",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": "2",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Are the last four digits four eight two one?",
+                    "translation": "Последние четыре цифры — четыре восемь два один?",
+                    "shelf": "numbers",
+                    "frame": "Are the last four digits ___?",
+                    "filler": "four eight two one",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": "four eight two one",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        }
+    ],
+    "spend": {
+        "calls": 30,
+        "total_usd": 0.163076
+    }
+}

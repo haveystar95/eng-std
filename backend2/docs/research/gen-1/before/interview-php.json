@@ -1,0 +1,581 @@
+{
+    "plan_id": "01M1VTF3PZP7TTKE4S15HEP7D1",
+    "goal": "Собеседование на позицию PHP-разработчика: рассказать о своём опыте и ответить на вопросы интервьюера",
+    "pair": "ru→en",
+    "level": "basic",
+    "days": [
+        {
+            "day_index": 1,
+            "title": "О себе и опыт",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Could you tell me about yourself?",
+                        "translation": "Не могли бы вы рассказать о себе?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I am a PHP developer.",
+                        "translation": "Я PHP-разработчик.",
+                        "shelf": "say",
+                        "frame": "I am a ___ developer.",
+                        "filler": "PHP",
+                        "speaking_key": "PHP",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "How many years of experience do you have with PHP?",
+                        "translation": "Сколько лет опыта у вас с PHP?",
+                        "shelf": "hear",
+                        "frame": "How many years of experience do you have with ___?",
+                        "filler": "PHP",
+                        "speaking_key": "PHP",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I have two years of commercial experience.",
+                        "translation": "У меня коммерческий опыт два года.",
+                        "shelf": "say",
+                        "frame": "I have two years of ___ experience.",
+                        "filler": "commercial",
+                        "speaking_key": "commercial",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What kind of projects have you worked on?",
+                        "translation": "Над какими проектами вы работали?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Mostly web applications and REST API.",
+                        "translation": "В основном веб-приложения и REST API.",
+                        "shelf": "say",
+                        "frame": "Mostly web applications and ___.",
+                        "filler": "REST API",
+                        "speaking_key": "REST API",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What was your role in your last job?",
+                        "translation": "Какова была ваша роль на вашей последней работе?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I did backend support.",
+                        "translation": "Я занимался поддержкой бэкенда.",
+                        "shelf": "say",
+                        "frame": "I did ___ support.",
+                        "filler": "backend",
+                        "speaking_key": "backend",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Is there anything else you'd like to ask?",
+                        "translation": "Есть ли что-то еще, что вы хотели бы спросить?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "What technologies does the team use?",
+                        "translation": "Какие технологии использует команда?",
+                        "shelf": "ask",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "commercial",
+                    "translation": "коммерческий",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "This was my first commercial project.",
+                    "example_translation": "Это был мой первый коммерческий проект."
+                },
+                {
+                    "text": "backend",
+                    "translation": "бэкенд",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "I worked mostly on the backend.",
+                    "example_translation": "Я работал в основном над бэкендом."
+                },
+                {
+                    "text": "responsibilities",
+                    "translation": "обязанности",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "My responsibilities included API development and bug fixing.",
+                    "example_translation": "В мои обязанности входили разработка API и исправление ошибок."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "work with",
+                    "translation": "работать с",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "I work with Laravel and MySQL.",
+                    "example_translation": "Я работаю с Laravel и MySQL."
+                },
+                {
+                    "text": "be responsible for",
+                    "translation": "отвечать за",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "I was be responsible for the API integration.",
+                    "example_translation": "Я должен был отвечать за интеграцию API."
+                },
+                {
+                    "text": "bug fixing",
+                    "translation": "исправление ошибок",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Bug fixing was part of my daily work.",
+                    "example_translation": "Исправление ошибок было частью моей ежедневной работы."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "So, you have two years of experience with PHP?",
+                    "translation": "Итак, у вас 2 года опыта с PHP?",
+                    "shelf": "numbers",
+                    "frame": "So, you have ___ of experience with PHP?",
+                    "filler": "two years",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": "2",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "The last project lasted six months, right?",
+                    "translation": "Последний проект длился 6 месяцев, верно?",
+                    "shelf": "numbers",
+                    "frame": "The last project lasted ___, right?",
+                    "filler": "six months",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": "6",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "The team had five developers?",
+                    "translation": "Команда состояла из 5 разработчиков?",
+                    "shelf": "numbers",
+                    "frame": "The team had ___ developers?",
+                    "filler": "five",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": "5",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        },
+        {
+            "day_index": 2,
+            "title": "Технологии и задачи",
+            "status": "ready",
+            "attempts": 2,
+            "repairs": 2,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Which PHP frameworks have you used?",
+                        "translation": "С какими PHP-фреймворками вы работали?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Mostly Laravel and Symfony.",
+                        "translation": "В основном Laravel и Symfony.",
+                        "shelf": "say",
+                        "frame": "Mostly ___ and Symfony.",
+                        "filler": "Laravel",
+                        "speaking_key": "Laravel",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Have you worked with databases?",
+                        "translation": "Вы работали с базами данных?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, mostly SQL .",
+                        "translation": "Да, в основном с SQL.",
+                        "shelf": "say",
+                        "frame": "Yes, mostly ___ .",
+                        "filler": "SQL",
+                        "speaking_key": "SQL",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Can you describe a technical problem you solved?",
+                        "translation": "Можете описать техническую проблему, которую вы решили?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I debugged a slow API request.",
+                        "translation": "Я отладил медленный API-запрос.",
+                        "shelf": "say",
+                        "frame": "I ___ a slow API request.",
+                        "filler": "debugged",
+                        "speaking_key": "debugged",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "How do you usually debug issues?",
+                        "translation": "Как вы обычно отлаживаете проблемы?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "debug",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "First, I check the error logs .",
+                        "translation": "Сначала я проверяю логи.",
+                        "shelf": "say",
+                        "frame": "First, I check the ___ .",
+                        "filler": "error logs",
+                        "speaking_key": "error logs",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What tools do you use in development?",
+                        "translation": "Какие инструменты вы используете в разработке?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Sorry, what does tools mean?",
+                        "translation": "Извините, что значит tools?",
+                        "shelf": "say",
+                        "frame": "Sorry, what does ___ mean?",
+                        "filler": "tools",
+                        "speaking_key": "tools",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Do you have any questions for me?",
+                        "translation": "Есть ли у вас вопросы ко мне?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "What tech stack does the team use?",
+                        "translation": "Какой техстек использует команда?",
+                        "shelf": "ask",
+                        "frame": "What ___ does the team use?",
+                        "filler": "tech stack",
+                        "speaking_key": "tech stack",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "debug",
+                    "translation": "отлаживать",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I use Xdebug to debug API issues.",
+                    "example_translation": "Я использую Xdebug, чтобы отлаживать проблемы с API."
+                },
+                {
+                    "text": "database",
+                    "translation": "база данных",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "The project uses one database for user data.",
+                    "example_translation": "Проект использует одну базу данных для данных пользователей."
+                },
+                {
+                    "text": "request",
+                    "translation": "запрос",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "This request was slow because of one query.",
+                    "example_translation": "Этот запрос был медленным из-за одного запроса к базе."
+                },
+                {
+                    "text": "tool",
+                    "translation": "инструмент",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "Postman is a useful tool for API testing.",
+                    "example_translation": "Postman — полезный инструмент для тестирования API."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "tech stack",
+                    "translation": "техстек",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "My tech stack includes PHP, SQL, and Docker.",
+                    "example_translation": "Мой техстек включает PHP, SQL и Docker."
+                },
+                {
+                    "text": "error logs",
+                    "translation": "логи ошибок",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I checked the error logs before changing the code.",
+                    "example_translation": "Я проверил логи ошибок перед изменением кода."
+                },
+                {
+                    "text": "find the cause",
+                    "translation": "найти причину",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "First, I try to find the cause of the bug.",
+                    "example_translation": "Сначала я пытаюсь найти причину бага."
+                },
+                {
+                    "text": "work with APIs",
+                    "translation": "работать с API",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "I often work with APIs in backend tasks.",
+                    "example_translation": "Я часто работаю с API в задачах бэкенда."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "We used two main databases in this project.",
+                    "translation": "Мы использовали 2 основные базы данных в этом проекте.",
+                    "shelf": "numbers",
+                    "frame": "We used ___ main databases in this project.",
+                    "filler": "two",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": "2",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "I fixed this issue in three hours.",
+                    "translation": "Я исправил эту проблему за 3 часа.",
+                    "shelf": "numbers",
+                    "frame": "I fixed this issue in ___ hours.",
+                    "filler": "three",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": "3",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "There were four backend developers on the team.",
+                    "translation": "В команде было 4 бэкенд-разработчика.",
+                    "shelf": "numbers",
+                    "frame": "There were ___ backend developers on the team.",
+                    "filler": "four",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": "4",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        }
+    ],
+    "spend": {
+        "calls": 29,
+        "total_usd": 0.183953
+    }
+}

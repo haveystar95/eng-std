@@ -1,0 +1,506 @@
+{
+    "plan_id": "01M1VTFZ518QG7Q9RDK425994G",
+    "goal": "Merg la medic din cauza unei dureri de spate: să explic ce și cum mă doare și să înțeleg ce mi-a prescris",
+    "pair": "ro→en",
+    "level": "basic",
+    "days": [
+        {
+            "day_index": 1,
+            "title": "La recepție",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Do you have an appointment?",
+                        "translation": "Aveți o programare?",
+                        "shelf": "hear",
+                        "frame": "Do you have an ___?",
+                        "filler": "appointment",
+                        "speaking_key": "appointment",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "No, no appointment.",
+                        "translation": "Nu, nu am programare.",
+                        "shelf": "say",
+                        "frame": "No, no ___.",
+                        "filler": "appointment",
+                        "speaking_key": "appointment",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What seems to be the problem?",
+                        "translation": "Care pare să fie problema?",
+                        "shelf": "hear",
+                        "frame": "What seems to be the ___?",
+                        "filler": "problem",
+                        "speaking_key": "problem",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I have back pain.",
+                        "translation": "Am dureri de spate.",
+                        "shelf": "say",
+                        "frame": "I have ___ pain.",
+                        "filler": "back",
+                        "speaking_key": "back",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "How long have you had this pain?",
+                        "translation": "De cât timp aveți durerea aceasta?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "For two days.",
+                        "translation": "De două zile.",
+                        "shelf": "say",
+                        "frame": "For two ___.",
+                        "filler": "days",
+                        "speaking_key": "days",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Is it your lower back or upper back?",
+                        "translation": "Este partea de jos a spatelui sau partea de sus?",
+                        "shelf": "hear",
+                        "frame": "Is it your ___ or upper back?",
+                        "filler": "lower back",
+                        "speaking_key": "lower back",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Lower back, sorry.",
+                        "translation": "Partea de jos a spatelui, scuze.",
+                        "shelf": "say",
+                        "frame": "___, sorry.",
+                        "filler": "Lower back",
+                        "speaking_key": "Lower back",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Please take a seat. Anything else?",
+                        "translation": "Vă rog să luați loc. Mai doriți să întrebați ceva?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "anything else",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Do I need a doctor today?",
+                        "translation": "Am nevoie de un doctor astăzi?",
+                        "shelf": "ask",
+                        "frame": "Do I need a ___ today?",
+                        "filler": "doctor",
+                        "speaking_key": "doctor",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "back",
+                    "translation": "spate",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "My back hurts when I sit.",
+                    "example_translation": "Mă doare spatele când stau jos."
+                },
+                {
+                    "text": "doctor",
+                    "translation": "medic",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "The doctor will see you soon.",
+                    "example_translation": "Medicul vă va consulta în curând."
+                },
+                {
+                    "text": "days",
+                    "translation": "zile",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The pain started two days ago.",
+                    "example_translation": "Durerea a început acum două zile."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "lower back",
+                    "translation": "partea de jos a spatelui",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The pain is in my lower back.",
+                    "example_translation": "Durerea este în partea de jos a spatelui."
+                },
+                {
+                    "text": "anything else",
+                    "translation": "altceva",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "Do you need anything else before I sit down?",
+                    "example_translation": "Aveți nevoie de altceva înainte să mă așez?"
+                },
+                {
+                    "text": "take a seat",
+                    "translation": "a lua loc",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "Please take a seat near the window.",
+                    "example_translation": "Vă rog să luați loc lângă fereastră."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "The doctor can see you in fifteen minutes.",
+                    "translation": "Doctorul vă poate vedea în 15 minute.",
+                    "shelf": "numbers",
+                    "frame": "The doctor can see you in ___.",
+                    "filler": "fifteen minutes",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": "15",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Your appointment is in room two.",
+                    "translation": "Programarea dumneavoastră este la camera 2.",
+                    "shelf": "numbers",
+                    "frame": "Your appointment is in room ___.",
+                    "filler": "two",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": "2",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        },
+        {
+            "day_index": 2,
+            "title": "În cabinet",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Where exactly does it hurt?",
+                        "translation": "Unde anume vă doare?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "My upper back hurts.",
+                        "translation": "Mă doare partea de sus.",
+                        "shelf": "say",
+                        "frame": "My ___ hurts.",
+                        "filler": "upper back",
+                        "speaking_key": "upper back",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Is the pain sharp or dull?",
+                        "translation": "Durerea este ascuțită sau surdă?",
+                        "shelf": "hear",
+                        "frame": "Is the pain ___ or dull?",
+                        "filler": "sharp",
+                        "speaking_key": "sharp",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It's mostly dull.",
+                        "translation": "Este mai degrabă surdă.",
+                        "shelf": "say",
+                        "frame": "It's mostly ___.",
+                        "filler": "dull",
+                        "speaking_key": "dull",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Does it get worse when you move?",
+                        "translation": "Se agravează când vă mișcați?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, when I bend forward.",
+                        "translation": "Da, când mă aplec.",
+                        "shelf": "say",
+                        "frame": "Yes, when I ___.",
+                        "filler": "bend forward",
+                        "speaking_key": "bend forward",
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Did you injure your back?",
+                        "translation": "V-ați rănit spatele?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "No, just some dull pain.",
+                        "translation": "Nu, doar o durere surdă.",
+                        "shelf": "say",
+                        "frame": "No, just some ___ pain.",
+                        "filler": "dull",
+                        "speaking_key": "dull",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Okay. Any questions?",
+                        "translation": "Bine. Aveți vreo întrebare?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Sorry, what does constant mean?",
+                        "translation": "Scuze, ce înseamnă „constant”?",
+                        "shelf": "ask",
+                        "frame": "Sorry, what does ___ mean?",
+                        "filler": "constant",
+                        "speaking_key": "constant",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "dull",
+                    "translation": "surd(ă)",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "The pain is dull in the morning.",
+                    "example_translation": "Durerea este surdă dimineața."
+                },
+                {
+                    "text": "constant",
+                    "translation": "continuu",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "The pain is constant when I sit down.",
+                    "example_translation": "Durerea este continuă când mă așez."
+                },
+                {
+                    "text": "lifting",
+                    "translation": "ridicare",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "It started after lifting at work.",
+                    "example_translation": "A început după ridicare la muncă."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "upper back",
+                    "translation": "partea de sus a spatelui",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "The pain is in my upper back.",
+                    "example_translation": "Durerea este în partea de sus a spatelui meu."
+                },
+                {
+                    "text": "sharp pain",
+                    "translation": "durere ascuțită",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I get a sharp pain when I stand up.",
+                    "example_translation": "Am o durere ascuțită când mă ridic în picioare."
+                },
+                {
+                    "text": "bend forward",
+                    "translation": "a te apleca în față",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "I can bend forward, but it hurts.",
+                    "example_translation": "Pot să mă aplec în față, dar mă doare."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "Take this medicine twice a day.",
+                    "translation": "Luați acest medicament de două ori pe zi.",
+                    "shelf": "numbers",
+                    "frame": "Take this medicine ___ a day.",
+                    "filler": "twice",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": "twice",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Take one after breakfast and one in the evening.",
+                    "translation": "Luați una după micul dejun și una seara.",
+                    "shelf": "numbers",
+                    "frame": "Take one after breakfast and one in the ___.",
+                    "filler": "evening",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": "evening",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        }
+    ],
+    "spend": {
+        "calls": 17,
+        "total_usd": 0.10476
+    }
+}

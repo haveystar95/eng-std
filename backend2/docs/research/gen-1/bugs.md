@@ -1,0 +1,54 @@
+# GEN-1, Ч.4 — баги судей и валидаторов (воспроизведение → причина → правка)
+
+Источники: пробник судьи `tools/judge-probe.php` (16 пар × 3 повтора, `judge-probe-v0.1.json`),
+шесть живых планов «было» (`before/`), код на HEAD `e1ce2af`.
+
+## Ч.4.1 — судья пар P2J v0.1
+
+Пробник: 48 вызовов, $0.057. Вердикты **устойчивы** — все 16 пар дали 3/3 одинаковых ответа,
+значит температура (адаптер её не задаёт) ни при чём: судья отвечает ровно на тот вопрос, который
+ему задали, и вопрос задан неверно.
+
+| # | воспроизведение (пара → вердикт v0.1) | по канону | причина | правка (Ч.5) |
+|---|---|---|---|---|
+| J1 | `clarify-1` «What tools do you use in development?» → «Sorry, what does tools mean?» — **fits 3/3**; `clarify-2` «…do you mean the users?» — 3/3; `repeat` «Could you say that again, please?» — 3/3 | ✗ Y2: переспрос — не ответ | промпт v0.1 прямо разрешает: «For a statement in A, B must react to it (acknowledge, **clarify, ask to repeat**…)». Плюс P2 v0.6 сам просит «at least one clarifying question and at least one repair move» среди `you` | P2J v0.2 — отдельный вопрос `not_clarification`; P2 v0.7 — переспросы вон из `answer`-пар, починки — у спасателей |
+| J2 | `formal-1` «I was responsible for planning and delivery.» — 3/3; `formal-2` (10 слов, книжная лексика) — 3/3; `too-long` (15 слов) — 3/3 | ✗ Y3 | «Register and length do not matter; only whether B follows A» — судья освобождён от уровня; `{{level}}` в P2J не передаётся | P2J v0.2 — вопрос `level_fits` («сказал бы так человек уровня basic?»), `{{level}}` на входе |
+| J3 | `tr-added` перевод «…платформой кредитной отчётности» — 3/3; `tr-wrong` «Что кажется проблемой?» / «стейк простыл» — 3/3 | ✗ T1 | судья переводов **не видит**: `PlanPairCourt::judge()` шлёт только `kind`, `A`, `B` | P2J v0.2 — на вход `A_translation`/`B_translation`, вопрос `translation_exact` |
+| J4 | `nonsense` «What seems to be the problem?» → «The problem is my steak.» — 3/3 («B directly answers A by stating what the problem is»); живой аналог — аренда 1·2 «Oh, that's a bit odd then.» | ✗ Y1/Y3 | вопрос «follows A?» удовлетворяется любой строкой по теме; «сказал бы это человек» не спрашивается | P2J v0.2 — `answers` уточнён: «a real, meaningful reply a person would actually say» |
+| J5 | `ask-not-q` «Can I help with anything else?» → «Please connect me to card services.» — 3/3; `ask-yes` «Can I check that for you?» → «Yes, please. It's the wrong dish.» — 3/3 | ✗ H2 | `kind` едет в сообщении, но промпт **не объясняет, что такое `kind: ask`**; судья читает A как утверждение/вопрос и применяет правило реакции | P2J v0.2 — правило по `kind`: у `ask` A — приглашение, B — вопрос, иначе «нет» |
+| J6 | `wrong-q`, `wrong-q-2` — 0/3 fits (ловит) | ✓ | — | сохранить |
+| J7 | ответ — `{fits, reason}`, парсинг `fits === true` | форма ок | структуры по четырём вопросам нет; P2P получает одну строку `reason` и не знает, ЧТО чинить | P2J v0.2 — `{answers, not_clarification, level_fits, translation_exact, fits, reason}`; парсинг строгий: `fits` = все четыре `true`, иначе «нет» независимо от того, что модель написала в `fits` |
+
+Итог пробника v0.1: по канону судья прав на **5 парах из 16** (три хорошие + две «не на тот
+вопрос»); 11 видов брака проходят как «directly answers».
+
+## Ч.4.2 — валидаторы кода
+
+| # | что проверяется / не проверяется | воспроизведение | правка |
+|---|---|---|---|
+| V1 | **переспрос в полке `say`** — не проверяется никем | interview 2·5, аренда 1·5, 2·2 (см. `before/EVAL.md`) | по вердикту судьи (`not_clarification = false`) пара переписывается P2P, после двух неудач — выбрасывается (Ч.5.3) |
+| V2 | **слово/связка, не стоящие ни в одной реплике** — `plan_day_substitution_outside_frame` — **счётчик**, день проходит | «было»: 21 карточка из 75 (interview день 1 — 4 из 6) | `PlanDayComposer::pruneUnspoken()` — карточка **отбрасывается** до суда над днём, счётчик `plan_day_word_outside_lines_dropped`; адреса остальных не сдвигаются (индекс — позиция в ответе) |
+| V3 | **`numbers.value` не цифры** — `NumberSpelling::heardIn()` первой веткой ищет `value` дословно в реплике, и «twice» / «four eight two one» / «evening» проходят | doctor-ro: `twice`, `evening`; bank: `four eight two one`; doctor-back: `twice` ×2 | `card.number_value_mismatch`, если `value` — не число и не ISO-дата (`PlanDayValidator::checkNumbers()`), до поиска в реплике |
+| V4 | **пробел перед знаком препинания в собранной реплике** («I came in for lower back pain .») — `assemble()` вклеивает точно, валидатор не смотрит | doctor-back 1·1, 1·2, 1·4; interview 2·2, 2·4 | `PlanDayComposer::assemble()` убирает пробел между наполнителем и знаком препинания, стоящим сразу за дыркой — правило шва, не содержания (DECISIONS) |
+| V5 | **пример связки изуродован под гейт**: `card.filler_not_card` требует текст связки дословно, а связка написана инфинитивом («be responsible for») | interview день 1: «I was be responsible for the API integration» | P2 v0.7: связка пишется в той форме, в какой стоит в реплике («responsible for», «take a seat»), без «be/to» впереди |
+| V6 | **P1: чек-пойнт по-английски** — у `checkpoint` в промпте нет языка, а пример дан по-английски («can state the problem and ask the price»); `PlanOutlineValidator::checkSupportLanguage()` отбивает | 3 каркаса из 8 вызовов отбиты дважды подряд (врач, аренда — планы умерли; $0.062 впустую); интервью и ресторан — приняты со второй | P1 v0.4.2: «"checkpoint": one observable check **in {{support_lang}}**», пример переписан как описание формы, не как английская фраза |
+| V7 | **P2R не пересуживает пару**: починенная `say[i]` остаётся в паре с `hear[i]`, а «отвечает ли» после починки никто не спрашивает | код: `PlanDayComposer::compose()` → `judge()` после `merge()` без суда; живого случая не поймано (починки «было» правили примеры/переводы) | после починки — P2J заново на пары, у которых изменилась любая половина; «нет» → пара выброшена (без P2P: второго вызова у починки нет) |
+| V8 | **P2R не укорачивает реплику**: дважды вернул «My last four digits are four eight two one.» (9 слов) на `card.kind_size` | bank день 2 — `failed` | P2R v0.3: пределы длины по полкам названы явно («you 3–8 words, role ≤ 12»); плюс `value`-правило для чисел |
+| V9 | стоп-список базового не знает форм: `days` при `day` в списке | doctor-ro: карточка «days» | `BasicVocabulary::isBasic()` — проверка формы без хвоста `s`/`es` (Ч.5.3, мелочь) |
+| V10 | **перевод карточки слова** никто не судит («cold — простуда», «team — отдел», «fever — температура жар») | restaurant, bank, doctor-back | гейта нет и не будет (нужен судья слов — вне наряда); P2 v0.7 — правило «translation of a word is its meaning IN THIS SCENE'S LINE» |
+| V11 | дубли реплик между сценами — **уже держится**: `KnownTermsReader::metInPlan()` отдаёт ВСЕ термины прошлых дней (реплики тоже), `card.clone` — фатальный; дни пишутся строго по очереди (`nextAfterReady`) | «было»: ни одного дубля | тест-контракт на клон реплики из прошлого дня (Ч.5.5) |
+| V12 | `speaking_keys[]` — проверять нечего: ни в схеме, ни в таблице | — | Ч.5.1/5.3: схема, валидатор «непустые у `you`», колонка |
+
+## Ч.4.3 — ретраи и починка
+
+| механизм | ломает ли пары | вывод |
+|---|---|---|
+| суд пар (P2J → P2P ≤ 2) | нет: P2P меняет только `you`, `role` цела; выброс забирает пару целиком | ок |
+| P2R | **пары не рвёт** — адреса стабильны, `merge()` кладёт карточку на своё место, цепочка не меняется; **но пару не пересуживает** (V7) | правка V7 |
+| повтор дня целиком | нет — новый ответ, новый суд | ок; в сообщение едут только адреса и коды |
+| выброс карточки словом (V2, новое) | нет — индексы не сдвигаются; при пустых `words+chunks` сработает `day.shelf_missing` | ок |
+| отбой `day.pairs_too_few` после суда | честный | ок |
+
+Живая статистика «было»: 11 дней написано, **10 потребовали P2R** (в среднем 2,6 карточки на
+починку), 4 дня — по два запуска, 1 день не собрался. Починка чинит в основном `card.clone` примеров,
+`card.example_skeleton_clone`, `card.translation_missing_key`, `card.kind_size` — форму, не смысл.

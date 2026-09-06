@@ -1,0 +1,632 @@
+{
+    "plan_id": "01M1VTKC54VWVFCVTA5QG66PCC",
+    "goal": "Иду к врачу из-за боли в спине: объяснить, что и как болит, и понять, что он назначил",
+    "pair": "ru→en",
+    "level": "basic",
+    "days": [
+        {
+            "day_index": 1,
+            "title": "На приеме",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What brings you in today?",
+                        "translation": "Что вас сегодня беспокоит?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I came in for lower back pain .",
+                        "translation": "Я пришел из-за боли в пояснице.",
+                        "shelf": "say",
+                        "frame": "I came in for ___ .",
+                        "filler": "lower back pain",
+                        "speaking_key": "lower back pain",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Where exactly does it hurt?",
+                        "translation": "Где именно болит?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "hurt",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It hurts most right here .",
+                        "translation": "Больше всего болит здесь.",
+                        "shelf": "say",
+                        "frame": "It hurts most ___ .",
+                        "filler": "right here",
+                        "speaking_key": "right here",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "How would you describe the pain?",
+                        "translation": "Как бы вы описали боль?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It is a sharp pain.",
+                        "translation": "Это острая боль.",
+                        "shelf": "say",
+                        "frame": "It is a ___ pain.",
+                        "filler": "sharp",
+                        "speaking_key": "sharp",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "When did the pain start?",
+                        "translation": "Когда началась боль?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It started after lifting a box .",
+                        "translation": "Она началась после поднятия коробки.",
+                        "shelf": "say",
+                        "frame": "It started after ___ .",
+                        "filler": "lifting a box",
+                        "speaking_key": "lifting a box",
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Does anything make it worse?",
+                        "translation": "Что-нибудь делает ее хуже?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Bending forward makes it worse.",
+                        "translation": "Наклоняться хуже.",
+                        "shelf": "say",
+                        "frame": "___ makes it worse.",
+                        "filler": "Bending forward",
+                        "speaking_key": "Bending forward",
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Anything else you want to ask?",
+                        "translation": "Есть что-нибудь еще, что вы хотите спросить?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "What does rest mean?",
+                        "translation": "Что значит отдых?",
+                        "shelf": "ask",
+                        "frame": "What does ___ mean?",
+                        "filler": "rest",
+                        "speaking_key": "rest",
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "sharp",
+                    "translation": "острая",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The pain feels sharp when I move.",
+                    "example_translation": "Боль ощущается как острая, когда я двигаюсь."
+                },
+                {
+                    "text": "dull",
+                    "translation": "тупой",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Sometimes it is a dull pain.",
+                    "example_translation": "Иногда это тупая боль."
+                },
+                {
+                    "text": "hurt",
+                    "translation": "болеть",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Does it hurt when you bend forward?",
+                    "example_translation": "Болит, когда вы наклоняетесь вперед?"
+                },
+                {
+                    "text": "rest",
+                    "translation": "отдых",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.3",
+                    "number_value": null,
+                    "example": "The doctor says rest may help.",
+                    "example_translation": "Врач говорит, что отдых может помочь."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "lower back pain",
+                    "translation": "боль в пояснице",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "I am here because of lower back pain.",
+                    "example_translation": "Я здесь из-за боли в пояснице."
+                },
+                {
+                    "text": "right here",
+                    "translation": "прямо здесь",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "It hurts right here on the left side.",
+                    "example_translation": "Болит прямо здесь с левой стороны."
+                },
+                {
+                    "text": "lifting a box",
+                    "translation": "поднимать коробку",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.3",
+                    "number_value": null,
+                    "example": "The problem started after lifting a box at home.",
+                    "example_translation": "Проблема началась после поднятия коробки дома."
+                },
+                {
+                    "text": "bending forward",
+                    "translation": "наклоняться вперед",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.3",
+                    "number_value": null,
+                    "example": "Bending forward is hard today.",
+                    "example_translation": "Наклоняться вперед сегодня трудно."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "The pain started two days ago.",
+                    "translation": "Боль началась два дня назад.",
+                    "shelf": "numbers",
+                    "frame": "The pain started ___ ago.",
+                    "filler": "two days",
+                    "speaking_key": null,
+                    "skill_ref": "s1.3",
+                    "number_value": "2",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Please take this twice a day.",
+                    "translation": "Пожалуйста, принимайте это два раза в день.",
+                    "shelf": "numbers",
+                    "frame": "Please take this ___ a day.",
+                    "filler": "twice",
+                    "speaking_key": null,
+                    "skill_ref": "s1.3",
+                    "number_value": "twice",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Come back in seven days if it does not improve.",
+                    "translation": "Вернитесь через семь дней, если не станет лучше.",
+                    "shelf": "numbers",
+                    "frame": "Come back in ___ if it does not improve.",
+                    "filler": "seven days",
+                    "speaking_key": null,
+                    "skill_ref": "s1.3",
+                    "number_value": "7",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        },
+        {
+            "day_index": 2,
+            "title": "Вопросы врача",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "On a scale of one to ten, how bad is the pain?",
+                        "translation": "По шкале от одного до десяти, насколько сильная боль?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "pain",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It is quite bad.",
+                        "translation": "Она довольно сильная.",
+                        "shelf": "say",
+                        "frame": "It is quite ___.",
+                        "filler": "bad",
+                        "speaking_key": "bad",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Is the pain constant or does it come and go?",
+                        "translation": "Боль постоянная или приходит и уходит?",
+                        "shelf": "hear",
+                        "frame": "Is the pain ___?",
+                        "filler": "constant or does it come and go",
+                        "speaking_key": "constant or does it come and go",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It comes and goes",
+                        "translation": "Она приходит и уходит.",
+                        "shelf": "say",
+                        "frame": "It ___",
+                        "filler": "comes and goes",
+                        "speaking_key": "comes and goes",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Do you have any numbness or weakness?",
+                        "translation": "У вас есть онемение или слабость?",
+                        "shelf": "hear",
+                        "frame": "Do you have any ___?",
+                        "filler": "numbness or weakness",
+                        "speaking_key": "numbness or weakness",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "No numbness but some weakness.",
+                        "translation": "Онемения нет, но есть слабость.",
+                        "shelf": "say",
+                        "frame": "No numbness but some ___.",
+                        "filler": "weakness",
+                        "speaking_key": "weakness",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Have you taken anything for the pain?",
+                        "translation": "Вы что нибудь принимали от боли?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "pain",
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I tried rest and pills.",
+                        "translation": "Я пробовал отдых и таблетки.",
+                        "shelf": "say",
+                        "frame": "I tried ___ and pills.",
+                        "filler": "rest",
+                        "speaking_key": "rest",
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Is there anything you want to ask?",
+                        "translation": "Есть что-нибудь, что вы хотите спросить?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "What does take it easy mean?",
+                        "translation": "Что значит полегче себя вести?",
+                        "shelf": "ask",
+                        "frame": "What does ___ mean?",
+                        "filler": "take it easy",
+                        "speaking_key": "take it easy",
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Did anything help?",
+                        "translation": "Помогло хоть что нибудь?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, I took pills.",
+                        "translation": "Да, я принял таблетки.",
+                        "shelf": "say",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "took pills",
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "weakness",
+                    "translation": "слабость",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I have some weakness in my leg.",
+                    "example_translation": "У меня есть некоторая слабость в ноге."
+                },
+                {
+                    "text": "pain",
+                    "translation": "боль",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "The pain is worse in the morning.",
+                    "example_translation": "Боль сильнее утром."
+                },
+                {
+                    "text": "fever",
+                    "translation": "температура жар",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I do not have a fever.",
+                    "example_translation": "У меня нет температуры."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "comes and goes",
+                    "translation": "приходит и уходит",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "The pain comes and goes during the day.",
+                    "example_translation": "Боль приходит и уходит в течение дня."
+                },
+                {
+                    "text": "constant pain",
+                    "translation": "постоянная боль",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "It is more like constant pain now.",
+                    "example_translation": "Сейчас это скорее постоянная боль."
+                },
+                {
+                    "text": "numbness or weakness",
+                    "translation": "онемение или слабость",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I do not have numbness or weakness in my foot.",
+                    "example_translation": "У меня нет онемения или слабости в ступне."
+                },
+                {
+                    "text": "take it easy",
+                    "translation": "полегче себя вести",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "The doctor says to take it easy for a few days.",
+                    "example_translation": "Врач говорит, что нужно поберечь себя несколько дней."
+                },
+                {
+                    "text": "took pills",
+                    "translation": "принял таблетки",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "I took pills this morning, but the pain is still there.",
+                    "example_translation": "Я принял таблетки сегодня утром, но боль все еще есть."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "That sounds like about seven out of ten.",
+                    "translation": "Это примерно семь из десяти.",
+                    "shelf": "numbers",
+                    "frame": "That sounds like about ___ out of ten.",
+                    "filler": "seven",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": "7",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Take one pill twice a day.",
+                    "translation": "Принимайте по одной таблетке два раза в день.",
+                    "shelf": "numbers",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.3",
+                    "number_value": "twice",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Try this for three days, then come back.",
+                    "translation": "Попробуйте это три дня, потом вернитесь.",
+                    "shelf": "numbers",
+                    "frame": "Try this for ___ days, then come back.",
+                    "filler": "three",
+                    "speaking_key": null,
+                    "skill_ref": "s2.3",
+                    "number_value": "3",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        }
+    ],
+    "spend": {
+        "calls": 19,
+        "total_usd": 0.122663
+    }
+}

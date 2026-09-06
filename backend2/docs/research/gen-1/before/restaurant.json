@@ -1,0 +1,518 @@
+{
+    "plan_id": "01M1VTFSNVJ1VXXG95A582QKVR",
+    "goal": "Ужин в ресторане: сделать заказ, а потом пожаловаться, что блюдо принесли холодным и не то",
+    "pair": "ru→en",
+    "level": "basic",
+    "days": [
+        {
+            "day_index": 1,
+            "title": "Заказ у стола",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 0,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Here is the menu.",
+                        "translation": "Вот меню.",
+                        "shelf": "hear",
+                        "frame": "Here is the ___.",
+                        "filler": "menu",
+                        "speaking_key": "menu",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Thanks. Can I order now?",
+                        "translation": "Спасибо. Можно уже заказать?",
+                        "shelf": "say",
+                        "frame": "Thanks. Can I ___?",
+                        "filler": "order now",
+                        "speaking_key": "order now",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What would you like to have?",
+                        "translation": "Что вы хотели бы взять?",
+                        "shelf": "hear",
+                        "frame": "What would you like to ___?",
+                        "filler": "have",
+                        "speaking_key": "have",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I'd like the soup.",
+                        "translation": "Я хочу суп.",
+                        "shelf": "say",
+                        "frame": "I'd like the ___.",
+                        "filler": "soup",
+                        "speaking_key": "soup",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What would you like to drink?",
+                        "translation": "Что вы хотели бы выпить?",
+                        "shelf": "hear",
+                        "frame": "What would you like to ___?",
+                        "filler": "drink",
+                        "speaking_key": "drink",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Still water, please.",
+                        "translation": "Воду, пожалуйста.",
+                        "shelf": "say",
+                        "frame": "___, please.",
+                        "filler": "Still water",
+                        "speaking_key": "Still water",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Anything else?",
+                        "translation": "Что-нибудь еще?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Which soup is today?",
+                        "translation": "Какой суп сегодня?",
+                        "shelf": "ask",
+                        "frame": "Which soup is ___?",
+                        "filler": "today",
+                        "speaking_key": "today",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Here is your dish.",
+                        "translation": "Вот ваше блюдо.",
+                        "shelf": "hear",
+                        "frame": "Here is your ___.",
+                        "filler": "dish",
+                        "speaking_key": "dish",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Sorry, it's cold and not my order.",
+                        "translation": "Извините, это холодное и не то блюдо.",
+                        "shelf": "say",
+                        "frame": "Sorry, it's ___ and not my order.",
+                        "filler": "cold",
+                        "speaking_key": "cold",
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "cold",
+                    "translation": "простуда",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "This fish is cold.",
+                    "example_translation": "Эта рыба холодная."
+                },
+                {
+                    "text": "menu",
+                    "translation": "меню",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "The menu is on the table.",
+                    "example_translation": "Меню на столе."
+                },
+                {
+                    "text": "soup",
+                    "translation": "суп",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The soup looks good today.",
+                    "example_translation": "Суп сегодня выглядит хорошо."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "order now",
+                    "translation": "заказать сейчас",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "We can order now if you are ready.",
+                    "example_translation": "Мы можем заказать сейчас, если вы готовы."
+                },
+                {
+                    "text": "Still water",
+                    "translation": "негазированная вода",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Still water is fine for me.",
+                    "example_translation": "Негазированная вода мне подойдет."
+                },
+                {
+                    "text": "not my order",
+                    "translation": "не мой заказ",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Sorry, this is not my order.",
+                    "example_translation": "Извините, это не мой заказ."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "The soup of the day is eight pounds.",
+                    "translation": "Суп дня стоит 8 фунтов.",
+                    "shelf": "numbers",
+                    "frame": "The soup of the day is ___ pounds.",
+                    "filler": "eight",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": "8",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Still water is two pounds.",
+                    "translation": "Негазированная вода стоит 2 фунта.",
+                    "shelf": "numbers",
+                    "frame": "Still water is ___ pounds.",
+                    "filler": "two",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": "2",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        },
+        {
+            "day_index": 2,
+            "title": "Проблема с блюдом",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Here is your steak.",
+                        "translation": "Вот, пожалуйста, ваш стейк.",
+                        "shelf": "hear",
+                        "frame": "Here is your ___.",
+                        "filler": "steak",
+                        "speaking_key": "steak",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Sorry, I ordered the salad.",
+                        "translation": "Извините, я заказывал салат.",
+                        "shelf": "say",
+                        "frame": "Sorry, I ordered the ___.",
+                        "filler": "salad",
+                        "speaking_key": "salad",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Can I check that for you?",
+                        "translation": "Я могу что-нибудь проверить для вас?",
+                        "shelf": "hear",
+                        "frame": "Can I check ___ for you?",
+                        "filler": "that",
+                        "speaking_key": "that",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, please. It's the wrong dish.",
+                        "translation": "Да, пожалуйста. Это не то блюдо.",
+                        "shelf": "ask",
+                        "frame": "Yes, please. It's the ___.",
+                        "filler": "wrong dish",
+                        "speaking_key": "wrong dish",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Is there another problem?",
+                        "translation": "Есть еще какая-то проблема?",
+                        "shelf": "hear",
+                        "frame": "Is there another ___?",
+                        "filler": "problem",
+                        "speaking_key": "problem",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Also, the steak is cold.",
+                        "translation": "И еще, стейк холодный.",
+                        "shelf": "say",
+                        "frame": "Also, the steak is ___.",
+                        "filler": "cold",
+                        "speaking_key": "cold",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What seems to be the problem?",
+                        "translation": "Что кажется проблемой?",
+                        "shelf": "hear",
+                        "frame": "What seems to be the ___?",
+                        "filler": "problem",
+                        "speaking_key": "problem",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "The problem is my steak.",
+                        "translation": "Проблема в том, что мой стейк.",
+                        "shelf": "say",
+                        "frame": "The problem is my ___.",
+                        "filler": "steak",
+                        "speaking_key": "steak",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "I'm sorry about that.",
+                        "translation": "Простите за это.",
+                        "shelf": "hear",
+                        "frame": "I'm sorry about ___.",
+                        "filler": "that",
+                        "speaking_key": "that",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Thanks, I'll wait for a new dish.",
+                        "translation": "Спасибо, я подожду новое блюдо.",
+                        "shelf": "say",
+                        "frame": "Thanks, I'll wait for a new ___.",
+                        "filler": "dish",
+                        "speaking_key": "dish",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "salad",
+                    "translation": "салат",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "The salad is for another table.",
+                    "example_translation": "Салат для другого стола."
+                },
+                {
+                    "text": "steak",
+                    "translation": "стейк",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "I didn't order the steak.",
+                    "example_translation": "Я не заказывал стейк."
+                },
+                {
+                    "text": "dish",
+                    "translation": "блюдо",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "This dish isn't what I ordered.",
+                    "example_translation": "Это блюдо не то, что я заказывал."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "wrong dish",
+                    "translation": "неправильное блюдо",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "I think this is the wrong dish.",
+                    "example_translation": "Мне кажется, это неправильное блюдо."
+                },
+                {
+                    "text": "heat up",
+                    "translation": "разогреть",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "Could you heat up the soup, please?",
+                    "example_translation": "Не могли бы вы разогреть суп, пожалуйста?"
+                },
+                {
+                    "text": "have a look",
+                    "translation": "взглянуть",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "Can you have a look at my steak?",
+                    "example_translation": "Вы можете взглянуть на мой стейк?"
+                },
+                {
+                    "text": "new dish",
+                    "translation": "новое блюдо",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "They will bring a new dish soon.",
+                    "example_translation": "Они скоро принесут новое блюдо."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "The salad will be ready in ten minutes.",
+                    "translation": "Салат готовится через 10 минут.",
+                    "shelf": "numbers",
+                    "frame": "The salad will be ready in ___.",
+                    "filler": "ten minutes",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": "10",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "A new steak will take fifteen minutes.",
+                    "translation": "Новый стейк будет через 15 минут.",
+                    "shelf": "numbers",
+                    "frame": "A new steak will take ___.",
+                    "filler": "fifteen minutes",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": "15",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        }
+    ],
+    "spend": {
+        "calls": 19,
+        "total_usd": 0.110458
+    }
+}

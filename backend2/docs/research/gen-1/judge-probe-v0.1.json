@@ -1,0 +1,396 @@
+{
+    "version": "plan_pair_judge.v0.1",
+    "reps": 3,
+    "calls": 48,
+    "cost": 0.057118,
+    "results": [
+        {
+            "id": "good-answer",
+            "kind": "answer",
+            "A": "How many years of experience do you have with PHP?",
+            "B": "About two years.",
+            "expect": true,
+            "why": "прямой короткий ответ",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly answers A's question about PHP experience."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers A's question about PHP experience."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers A's question about PHP experience."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 3
+        },
+        {
+            "id": "good-ask",
+            "kind": "ask",
+            "A": "Is there anything you would like to ask?",
+            "B": "What tools does the team use?",
+            "expect": true,
+            "why": "вопрос на приглашение",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "A invites questions, and B asks a relevant one."
+                },
+                {
+                    "fits": true,
+                    "reason": "B is a natural question in response to an invitation to ask something."
+                },
+                {
+                    "fits": true,
+                    "reason": "B is a relevant question that directly answers the invitation to ask something."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 3
+        },
+        {
+            "id": "good-state",
+            "kind": "answer",
+            "A": "Please hold for a moment.",
+            "B": "Sure, I will hold.",
+            "expect": true,
+            "why": "реакция на утверждение",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly acknowledges and agrees to A's request to wait."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly acknowledges and agrees to A's request to wait."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly agrees to A's request to wait."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 3
+        },
+        {
+            "id": "wrong-q",
+            "kind": "answer",
+            "A": "What kinds of projects did you work on?",
+            "B": "Later, I moved into an in-house team.",
+            "expect": false,
+            "why": "живой брак 05.09 — ответ на другой вопрос",
+            "verdicts": [
+                {
+                    "fits": false,
+                    "reason": "B does not answer what kinds of projects they worked on."
+                },
+                {
+                    "fits": false,
+                    "reason": "B does not answer what kinds of projects were worked on; it changes to a later career move."
+                },
+                {
+                    "fits": false,
+                    "reason": "B does not answer what kinds of projects they worked on; it shifts to a different point in the story."
+                }
+            ],
+            "fits_yes": 0,
+            "by_canon": 3
+        },
+        {
+            "id": "wrong-q-2",
+            "kind": "answer",
+            "A": "Where exactly does it hurt?",
+            "B": "It started two days ago.",
+            "expect": false,
+            "why": "ответ на «когда», спросили «где»",
+            "verdicts": [
+                {
+                    "fits": false,
+                    "reason": "B gives timing rather than answering the location asked in A."
+                },
+                {
+                    "fits": false,
+                    "reason": "B talks about when it started, not where the pain is."
+                },
+                {
+                    "fits": false,
+                    "reason": "B does not answer the location question; it talks about when the pain started."
+                }
+            ],
+            "fits_yes": 0,
+            "by_canon": 3
+        },
+        {
+            "id": "nonsense",
+            "kind": "answer",
+            "A": "What seems to be the problem?",
+            "B": "The problem is my steak.",
+            "expect": false,
+            "why": "живой (restaurant, день 2): фраза бессмысленна",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly answers A by stating what the problem is."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers A by stating what the problem is."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers A by stating what the problem is."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        },
+        {
+            "id": "clarify-1",
+            "kind": "answer",
+            "A": "What tools do you use in development?",
+            "B": "Sorry, what does tools mean?",
+            "expect": false,
+            "why": "живой (interview, день 2): переспрос вместо ответа",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly asks for clarification about a word in A's question."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly asks for clarification of a word in A's question."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly asks for clarification about a word in A's question."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        },
+        {
+            "id": "clarify-2",
+            "kind": "answer",
+            "A": "Do you have experience with our users?",
+            "B": "Sorry, do you mean the users?",
+            "expect": false,
+            "why": "переспрос из наряда",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly asks for clarification of A’s question, which is a natural immediate reply."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly asks for clarification about the question A just asked."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly asks for clarification about the question A just asked."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        },
+        {
+            "id": "repeat",
+            "kind": "answer",
+            "A": "Which PHP frameworks have you used?",
+            "B": "Could you say that again, please?",
+            "expect": false,
+            "why": "починка, а не ответ — место у спасателей",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B is a natural immediate response asking A to repeat the question."
+                },
+                {
+                    "fits": true,
+                    "reason": "B is a natural direct response asking A to repeat the question."
+                },
+                {
+                    "fits": true,
+                    "reason": "B naturally asks for repetition of A's question before answering."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        },
+        {
+            "id": "formal-1",
+            "kind": "answer",
+            "A": "What was your role in your last job?",
+            "B": "I was responsible for planning and delivery.",
+            "expect": false,
+            "why": "канцелярит из наряда",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly answers the question about the user's role in their last job."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers the question about the user's role in the last job."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers the question about the user's role in their last job."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        },
+        {
+            "id": "formal-2",
+            "kind": "answer",
+            "A": "What do you do when you do not know the answer?",
+            "B": "I undertake a comprehensive investigation of the relevant documentation.",
+            "expect": false,
+            "why": "не basic: 10 слов, книжная лексика",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly answers A by explaining what the speaker does in that situation."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers A by explaining what the speaker does in that situation."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers A by explaining what the speaker does in that situation."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        },
+        {
+            "id": "too-long",
+            "kind": "answer",
+            "A": "Have you worked with databases?",
+            "B": "Yes, I have worked with several relational databases in production for many years now.",
+            "expect": false,
+            "why": "15 слов на уровне basic",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly answers A's question about database experience."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers A by confirming database experience and adding relevant detail."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers A by confirming database experience and adding relevant detail."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        },
+        {
+            "id": "ask-not-q",
+            "kind": "ask",
+            "A": "Can I help with anything else?",
+            "B": "Please connect me to card services.",
+            "expect": false,
+            "why": "живой (bank, день 1): you — просьба, не вопрос",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly responds to the offer of further help by requesting a specific service."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers the offer for further help by making a specific request."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers the offer of further help by stating what help is needed."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        },
+        {
+            "id": "ask-yes",
+            "kind": "ask",
+            "A": "Can I check that for you?",
+            "B": "Yes, please. It is the wrong dish.",
+            "expect": false,
+            "why": "живой (restaurant, день 2): role — вопрос, you — не вопрос",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly accepts the offer and explains the problem."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly accepts the offer and explains the problem."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly accepts the offer and briefly explains the problem."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        },
+        {
+            "id": "tr-added",
+            "kind": "answer",
+            "A": "What kind of projects have you worked on?",
+            "A_translation": "Над какими проектами вы работали?",
+            "B": "I worked on a reporting platform.",
+            "B_translation": "Я работал над платформой кредитной отчётности.",
+            "expect": false,
+            "why": "добавка «кредитной» из наряда",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly answers A by naming a project worked on."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers the question by naming a project worked on."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly answers A by naming a project worked on."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        },
+        {
+            "id": "tr-wrong",
+            "kind": "answer",
+            "A": "What seems to be the problem?",
+            "A_translation": "Что кажется проблемой?",
+            "B": "Also, the steak is cold.",
+            "B_translation": "И ещё, стейк простыл.",
+            "expect": false,
+            "why": "перевод role буквальный, перевод you неверный",
+            "verdicts": [
+                {
+                    "fits": true,
+                    "reason": "B directly states an additional problem in response to being asked what is wrong."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly states an additional problem in response to being asked what is wrong."
+                },
+                {
+                    "fits": true,
+                    "reason": "B directly states another problem in response to being asked what is wrong."
+                }
+            ],
+            "fits_yes": 3,
+            "by_canon": 0
+        }
+    ]
+}

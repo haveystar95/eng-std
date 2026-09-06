@@ -1,0 +1,566 @@
+{
+    "plan_id": "01M1VTKH6HX9AVRQ15K7CKQ4VB",
+    "goal": "Снимаю квартиру: осмотр с хозяином и разговор об условиях аренды, залоге и коммунальных",
+    "pair": "ru→en",
+    "level": "basic",
+    "days": [
+        {
+            "day_index": 1,
+            "title": "Осмотр квартиры",
+            "status": "ready",
+            "attempts": 2,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Let me show you the apartment.",
+                        "translation": "Позвольте показать вам квартиру.",
+                        "shelf": "hear",
+                        "frame": "___",
+                        "filler": "Let me show you the apartment.",
+                        "speaking_key": "Let me show you the apartment.",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Sure, let's see the apartment.",
+                        "translation": "Конечно, давайте посмотрим квартиру.",
+                        "shelf": "say",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "The washing machine is in the kitchen.",
+                        "translation": "Стиральная машина на кухне.",
+                        "shelf": "hear",
+                        "frame": "The ___ is in the kitchen.",
+                        "filler": "washing machine",
+                        "speaking_key": "washing machine",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Oh, that's a bit odd then.",
+                        "translation": "О, это немного странно тогда.",
+                        "shelf": "say",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Do you have any questions about the flat?",
+                        "translation": "Есть вопросы о квартире?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Is internet included in rent?",
+                        "translation": "Интернет включён в арендную плату?",
+                        "shelf": "ask",
+                        "frame": "Is ___ included in rent?",
+                        "filler": "internet",
+                        "speaking_key": "internet",
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Anything else you want to ask?",
+                        "translation": "Есть что-нибудь еще, что вы хотите спросить?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "What about overnight guests?",
+                        "translation": "Как насчет гостей на ночь?",
+                        "shelf": "ask",
+                        "frame": "What about ___?",
+                        "filler": "overnight guests",
+                        "speaking_key": "overnight guests",
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Pets are not allowed.",
+                        "translation": "Домашние животные не разрешены.",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Sorry, do you mean no pets at all?",
+                        "translation": "Простите, вы имеете в виду вообще никаких животных?",
+                        "shelf": "say",
+                        "frame": "Sorry, do you mean ___?",
+                        "filler": "no pets at all",
+                        "speaking_key": "no pets at all",
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "lamp",
+                    "translation": "лампа",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The lamp in the bathroom is broken.",
+                    "example_translation": "Лампа в ванной сломана."
+                },
+                {
+                    "text": "internet",
+                    "translation": "интернет-связь",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "Is the internet included in rent?",
+                    "example_translation": "Интернет включён в арендную плату?"
+                },
+                {
+                    "text": "pressure",
+                    "translation": "напор",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The water pressure is low in the shower.",
+                    "example_translation": "Напор воды в душе слабый."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "water pressure",
+                    "translation": "напор воды",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Can you check the water pressure in the bathroom?",
+                    "example_translation": "Вы можете проверить напор воды в ванной?"
+                },
+                {
+                    "text": "overnight guests",
+                    "translation": "гости на ночь",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.3",
+                    "number_value": null,
+                    "example": "Are overnight guests allowed here?",
+                    "example_translation": "Здесь разрешены гости на ночь?"
+                },
+                {
+                    "text": "no pets at all",
+                    "translation": "никаких животных вообще",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.3",
+                    "number_value": null,
+                    "example": "So it is no pets at all in this flat?",
+                    "example_translation": "То есть в этой квартире вообще никаких животных?"
+                },
+                {
+                    "text": "included in rent",
+                    "translation": "включено в аренду",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "Is the washing machine included in rent?",
+                    "example_translation": "Стиральная машина включена в аренду?"
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "The internet is twenty pounds a month.",
+                    "translation": "Интернет стоит 20 фунтов в месяц.",
+                    "shelf": "numbers",
+                    "frame": "The internet is ___ a month.",
+                    "filler": "twenty pounds",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": "20",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "The deposit is five hundred pounds.",
+                    "translation": "Залог составляет 500 фунтов.",
+                    "shelf": "numbers",
+                    "frame": "The deposit is ___ pounds.",
+                    "filler": "five hundred",
+                    "speaking_key": null,
+                    "skill_ref": "s1.3",
+                    "number_value": "500",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "The rent is nine hundred pounds a month.",
+                    "translation": "Аренда составляет 900 фунтов в месяц.",
+                    "shelf": "numbers",
+                    "frame": "The rent is ___ pounds a month.",
+                    "filler": "nine hundred",
+                    "speaking_key": null,
+                    "skill_ref": "s1.1",
+                    "number_value": "900",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        },
+        {
+            "day_index": 2,
+            "title": "Условия аренды",
+            "status": "ready",
+            "attempts": 2,
+            "repairs": 2,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Bills are not included.",
+                        "translation": "Коммунальные не включены.",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "What is the monthly rent then?",
+                        "translation": "Какая тогда месячная аренда?",
+                        "shelf": "say",
+                        "frame": "What is the ___ rent then?",
+                        "filler": "monthly",
+                        "speaking_key": "monthly",
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "The minimum stay is six months.",
+                        "translation": "Минимальный срок аренды — шесть месяцев.",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "minimum stay",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Sorry, is that the minimum stay?",
+                        "translation": "Простите, это минимальный срок?",
+                        "shelf": "say",
+                        "frame": "Sorry, is that the ___ stay?",
+                        "filler": "minimum",
+                        "speaking_key": "minimum",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Would you like to move in next week?",
+                        "translation": "Вы бы хотели заехать на следующей неделе?",
+                        "shelf": "hear",
+                        "frame": "Would you like to move in ___?",
+                        "filler": "next week",
+                        "speaking_key": "next week",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "What is the notice period?",
+                        "translation": "Какой срок предупреждения?",
+                        "shelf": "ask",
+                        "frame": "What is the ___ period?",
+                        "filler": "notice",
+                        "speaking_key": "notice",
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "The apartment is available from next week.",
+                        "translation": "Квартира доступна со следующей недели.",
+                        "shelf": "hear",
+                        "frame": "The apartment is available from ___.",
+                        "filler": "next week",
+                        "speaking_key": "next week",
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Can I move in this month?",
+                        "translation": "Я могу заехать в этом месяце?",
+                        "shelf": "say",
+                        "frame": "Can I move in ___?",
+                        "filler": "this month",
+                        "speaking_key": "this month",
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "When would you like to move in?",
+                        "translation": "Когда вы хотели бы заехать?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "move in",
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Next week would be better.",
+                        "translation": "Лучше со следующей недели.",
+                        "shelf": "say",
+                        "frame": "___ would be better.",
+                        "filler": "Next week",
+                        "speaking_key": "Next week",
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "monthly",
+                    "translation": "месячный",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "I need to know the monthly rent first.",
+                    "example_translation": "Мне нужно сначала узнать месячную аренду."
+                },
+                {
+                    "text": "minimum",
+                    "translation": "минимальный",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "Is there a minimum stay for this apartment?",
+                    "example_translation": "Есть ли минимальный срок аренды для этой квартиры?"
+                },
+                {
+                    "text": "notice",
+                    "translation": "предупреждение",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "Do I need to give notice before I leave?",
+                    "example_translation": "Мне нужно предупредить заранее перед выездом?"
+                },
+                {
+                    "text": "available",
+                    "translation": "доступный",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "Is the apartment available now or later?",
+                    "example_translation": "Квартира доступна сейчас или позже?"
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "notice period",
+                    "translation": "период уведомления",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "The notice period is one month.",
+                    "example_translation": "Срок предупреждения — один месяц."
+                },
+                {
+                    "text": "minimum stay",
+                    "translation": "минимальный срок",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "The minimum stay is longer than I expected.",
+                    "example_translation": "Минимальный срок дольше, чем я ожидал."
+                },
+                {
+                    "text": "move in",
+                    "translation": "заехать",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "I can move in after work on Friday.",
+                    "example_translation": "Я могу заехать после работы в пятницу."
+                },
+                {
+                    "text": "from next week",
+                    "translation": "со следующей недели",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "The room is free from next week.",
+                    "example_translation": "Комната свободна со следующей недели."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "The rent is eight hundred a month.",
+                    "translation": "Аренда — восемьсот в месяц.",
+                    "shelf": "numbers",
+                    "frame": "The rent is ___ a month.",
+                    "filler": "eight hundred",
+                    "speaking_key": null,
+                    "skill_ref": "s2.1",
+                    "number_value": "800",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "The stay is six months.",
+                    "translation": "Срок аренды — шесть месяцев.",
+                    "shelf": "numbers",
+                    "frame": "The stay is ___.",
+                    "filler": "six months",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": "6",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "You need to give one month's notice.",
+                    "translation": "Вам нужно предупредить за один месяц.",
+                    "shelf": "numbers",
+                    "frame": "You need to give ___ notice.",
+                    "filler": "one month's",
+                    "speaking_key": null,
+                    "skill_ref": "s2.2",
+                    "number_value": "1",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        }
+    ],
+    "spend": {
+        "calls": 42,
+        "total_usd": 0.235114
+    }
+}
