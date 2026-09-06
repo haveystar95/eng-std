@@ -152,6 +152,11 @@ final readonly class PlanDayComposer
                 $this->reportWarnings($brief, $candidate, counted: false);
 
                 [$items, $dialogue] = $this->rejudgeRepaired($brief, $items, $repair->items, $dialogue, $expectsPairs);
+                if ($expectsPairs) {
+                    // A REPAIRED card may be a new piece that stands in no line («out of 10» on
+                    // the live doctor day): the merge is judged by the same rule the answer was.
+                    $items = $this->pruneUnspoken($brief, $items);
+                }
                 [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue, $expectsPairs);
                 $violations = [...$violations, ...$repair->violations];
             }

@@ -1,0 +1,318 @@
+{
+    "plan_id": "01M1W3MA8NSTJXYQE7SFD1KDXE",
+    "goal": "Merg la medic din cauza unei dureri de spate: să explic ce și cum mă doare și să înțeleg ce mi-a prescris",
+    "pair": "ro→en",
+    "level": "basic",
+    "days": [
+        {
+            "day_index": 1,
+            "title": "La recepție",
+            "status": "ready",
+            "attempts": 2,
+            "repairs": 2,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "How can I help you?",
+                        "translation": "Cu ce vă pot ajuta?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "help you",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I have back pain.",
+                        "translation": "Am dureri de spate.",
+                        "shelf": "say",
+                        "frame": "I have ___ .",
+                        "filler": "back pain",
+                        "speaking_key": "back pain",
+                        "speaking_keys": [
+                            "My back hurts",
+                            "Back pain"
+                        ],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Do you have an appointment?",
+                        "translation": "Aveți o programare?",
+                        "shelf": "hear",
+                        "frame": "Do you have an ___?",
+                        "filler": "appointment",
+                        "speaking_key": "appointment",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, I have an appointment.",
+                        "translation": "Da, am o programare.",
+                        "shelf": "say",
+                        "frame": "Yes, I have an ___ .",
+                        "filler": "appointment",
+                        "speaking_key": "appointment",
+                        "speaking_keys": [
+                            "Yes, I do",
+                            "Yes appointment"
+                        ],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "How long have you had this pain?",
+                        "translation": "De cât timp aveți durerea aceasta?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "how long",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "For three days.",
+                        "translation": "De trei zile.",
+                        "shelf": "say",
+                        "frame": "For ___ .",
+                        "filler": "three days",
+                        "speaking_key": "three days",
+                        "speaking_keys": [
+                            "Three days",
+                            "About three days"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Is it getting worse?",
+                        "translation": "Se agravează?",
+                        "shelf": "hear",
+                        "frame": "Is it getting ___?",
+                        "filler": "worse",
+                        "speaking_key": "worse",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, a little worse.",
+                        "translation": "Da, puțin mai rău.",
+                        "shelf": "say",
+                        "frame": "Yes, a little ___ .",
+                        "filler": "worse",
+                        "speaking_key": "worse",
+                        "speaking_keys": [
+                            "A little worse",
+                            "Yes worse"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Anything else you'd like to ask?",
+                        "translation": "Mai doriți să întrebați ceva?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Is it urgent?",
+                        "translation": "Este urgent?",
+                        "shelf": "ask",
+                        "frame": "Is it ___?",
+                        "filler": "urgent",
+                        "speaking_key": "urgent",
+                        "speaking_keys": [
+                            "Urgent?",
+                            "Is this urgent?"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "urgent",
+                    "translation": "urgent",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The receptionist asks if it is urgent.",
+                    "example_translation": "Recepționera întreabă dacă este urgent."
+                },
+                {
+                    "text": "back",
+                    "translation": "spate",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "My back hurts when I sit down.",
+                    "example_translation": "Mă doare spatele când mă așez."
+                },
+                {
+                    "text": "appointment",
+                    "translation": "programare",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "I have an appointment at the clinic.",
+                    "example_translation": "Am o programare la clinică."
+                },
+                {
+                    "text": "worse",
+                    "translation": "mai rău",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The pain is worse this morning.",
+                    "example_translation": "Durerea este mai rea în această dimineață."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "getting worse",
+                    "translation": "se agravează",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The pain is getting worse after work.",
+                    "example_translation": "Durerea se agravează după muncă."
+                },
+                {
+                    "text": "back pain",
+                    "translation": "durere de spate",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "I am here because of back pain.",
+                    "example_translation": "Sunt aici din cauza unei dureri de spate."
+                },
+                {
+                    "text": "how long",
+                    "translation": "de cât timp",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "She asks how long I have this pain.",
+                    "example_translation": "Ea întreabă de cât timp am această durere."
+                },
+                {
+                    "text": "help you",
+                    "translation": "cu ce vă pot ajuta",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "The woman at reception says she can help you.",
+                    "example_translation": "Femeia de la recepție spune că vă poate ajuta."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "Did the pain start three days ago?",
+                    "translation": "Durerea a început acum trei zile?",
+                    "shelf": "numbers",
+                    "frame": "Did the pain start ___ ago?",
+                    "filler": "three days",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": "3",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Your appointment is at ten thirty.",
+                    "translation": "Programarea dumneavoastră este la ora 10:30.",
+                    "shelf": "numbers",
+                    "frame": "Your appointment is at ___.",
+                    "filler": "ten thirty",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": "10:30",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        }
+    ],
+    "spend": {
+        "calls": 57,
+        "total_usd": 0.392228
+    }
+}

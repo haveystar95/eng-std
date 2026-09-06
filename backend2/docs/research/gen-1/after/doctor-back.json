@@ -1,0 +1,611 @@
+{
+    "plan_id": "01M1W3GV9JGRF614751Y6QBFR4",
+    "goal": "Иду к врачу из-за боли в спине: объяснить, что и как болит, и понять, что он назначил",
+    "pair": "ru→en",
+    "level": "basic",
+    "days": [
+        {
+            "day_index": 1,
+            "title": "Запись и цель визита",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "What seems to be the problem?",
+                        "translation": "Что кажется проблемой?",
+                        "shelf": "hear",
+                        "frame": "What seems to be the ___?",
+                        "filler": "problem",
+                        "speaking_key": "problem",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "My back hurts.",
+                        "translation": "У меня болит спина.",
+                        "shelf": "say",
+                        "frame": "My ___ hurts.",
+                        "filler": "back",
+                        "speaking_key": "back",
+                        "speaking_keys": [
+                            "Back pain",
+                            "My back"
+                        ],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Are you here for an appointment?",
+                        "translation": "Вы пришли по записи?",
+                        "shelf": "hear",
+                        "frame": "Are you here for an ___?",
+                        "filler": "appointment",
+                        "speaking_key": "appointment",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "No, I need an appointment.",
+                        "translation": "Нет, мне нужна запись.",
+                        "shelf": "say",
+                        "frame": "No, I need an ___.",
+                        "filler": "appointment",
+                        "speaking_key": "appointment",
+                        "speaking_keys": [
+                            "No appointment",
+                            "I need to book"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "When would you like to come in?",
+                        "translation": "Когда вы хотели бы прийти?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "As soon as possible, please.",
+                        "translation": "Как можно скорее, пожалуйста.",
+                        "shelf": "say",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "as soon as possible",
+                        "speaking_keys": [
+                            "Soon, please",
+                            "Earliest time"
+                        ],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "The doctor can see you at 3 p.m..",
+                        "translation": "Врач может принять вас в 3 часа дня.",
+                        "shelf": "hear",
+                        "frame": "The doctor can see you at ___.",
+                        "filler": "3 p.m.",
+                        "speaking_key": "3 p.m.",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, that works.",
+                        "translation": "Да, это подходит.",
+                        "shelf": "say",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "that works",
+                        "speaking_keys": [
+                            "Yes, okay",
+                            "That is fine"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Any other questions?",
+                        "translation": "Есть еще вопросы?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Which doctor should I see?",
+                        "translation": "К какому врачу мне идти?",
+                        "shelf": "ask",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "doctor",
+                        "speaking_keys": [
+                            "Which doctor?",
+                            "Who is the doctor?"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Please wait here.",
+                        "translation": "Пожалуйста, подождите здесь.",
+                        "shelf": "hear",
+                        "frame": "Please wait ___.",
+                        "filler": "here",
+                        "speaking_key": "here",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Okay, I'll wait here.",
+                        "translation": "Хорошо, я подожду здесь.",
+                        "shelf": "say",
+                        "frame": "Okay, I'll wait ___.",
+                        "filler": "here",
+                        "speaking_key": "here",
+                        "speaking_keys": [
+                            "I'll wait here",
+                            "Okay, sure"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "back",
+                    "translation": "спина",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "My back feels stiff.",
+                    "example_translation": "Моя спина кажется скованной."
+                },
+                {
+                    "text": "doctor",
+                    "translation": "врач",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The doctor is with another patient.",
+                    "example_translation": "Врач сейчас с другим пациентом."
+                },
+                {
+                    "text": "hurts",
+                    "translation": "болит",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "It hurts when I sit.",
+                    "example_translation": "Болит, когда я сижу."
+                },
+                {
+                    "text": "appointment",
+                    "translation": "запись на прием",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "I have an appointment this afternoon.",
+                    "example_translation": "У меня запись на прием сегодня днем."
+                },
+                {
+                    "text": "problem",
+                    "translation": "проблема",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "The problem started last week.",
+                    "example_translation": "Проблема началась на прошлой неделе."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "as soon as possible",
+                    "translation": "как можно скорее",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "I would like to come in as soon as possible.",
+                    "example_translation": "Я хотел бы прийти как можно скорее."
+                },
+                {
+                    "text": "wait here",
+                    "translation": "подождите здесь",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Please wait here for the doctor.",
+                    "example_translation": "Пожалуйста, подождите здесь врача."
+                },
+                {
+                    "text": "that works",
+                    "translation": "это подходит",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Three o'clock? Yes, that works.",
+                    "example_translation": "Три часа? Да, это подходит."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "We can book you for 3 p.m..",
+                    "translation": "Мы можем записать вас на 3 часа дня.",
+                    "shelf": "numbers",
+                    "frame": "We can book you for ___.",
+                    "filler": "3 p.m.",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": "3:00",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "We can book you for 10 a.m..",
+                    "translation": "Мы можем записать вас на 10 часов утра.",
+                    "shelf": "numbers",
+                    "frame": "We can book you for ___.",
+                    "filler": "10 a.m.",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": "10:00",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        },
+        {
+            "day_index": 2,
+            "title": "Разговор с врачом",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Is the pain sharp or dull?",
+                        "translation": "Боль острая или тупая?",
+                        "shelf": "hear",
+                        "frame": "Is the pain ___ or dull?",
+                        "filler": "sharp",
+                        "speaking_key": "sharp",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It is sharp and strong.",
+                        "translation": "Она острая и сильная.",
+                        "shelf": "say",
+                        "frame": "It is ___ and strong.",
+                        "filler": "sharp",
+                        "speaking_key": "sharp",
+                        "speaking_keys": [
+                            "sharp pain",
+                            "very sharp"
+                        ],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "When did it start?",
+                        "translation": "Когда это началось?",
+                        "shelf": "hear",
+                        "frame": "When did it ___?",
+                        "filler": "start",
+                        "speaking_key": "start",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It started two days ago.",
+                        "translation": "Она началась два дня назад.",
+                        "shelf": "say",
+                        "frame": "It started ___ ago.",
+                        "filler": "two days",
+                        "speaking_key": "two days",
+                        "speaking_keys": [
+                            "two days ago",
+                            "started yesterday"
+                        ],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Does it get worse when you move?",
+                        "translation": "Становится хуже, когда вы двигаетесь?",
+                        "shelf": "hear",
+                        "frame": "Does it get worse when you ___?",
+                        "filler": "move",
+                        "speaking_key": "move",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, it gets worse when I move.",
+                        "translation": "Да, становится хуже, когда я двигаюсь.",
+                        "shelf": "say",
+                        "frame": "Yes, it gets worse when I ___.",
+                        "filler": "move",
+                        "speaking_key": "move",
+                        "speaking_keys": [
+                            "Yes, when I move",
+                            "Yes, it does"
+                        ],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Any questions?",
+                        "translation": "Есть вопросы?",
+                        "shelf": "hear",
+                        "frame": "Any ___?",
+                        "filler": "questions",
+                        "speaking_key": "questions",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Can I walk to work?",
+                        "translation": "Можно ли мне ходить на работу?",
+                        "shelf": "ask",
+                        "frame": "Can I ___ to work?",
+                        "filler": "walk",
+                        "speaking_key": "walk",
+                        "speaking_keys": [
+                            "can I walk",
+                            "is walking okay"
+                        ],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "sharp",
+                    "translation": "острая",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "The pain feels sharp when I stand up.",
+                    "example_translation": "Боль кажется острой, когда я встаю."
+                },
+                {
+                    "text": "strong",
+                    "translation": "сильный",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "The pain is strong this morning.",
+                    "example_translation": "Боль сильная этим утром."
+                },
+                {
+                    "text": "move",
+                    "translation": "двигаться",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "It hurts more when I move.",
+                    "example_translation": "Болит сильнее, когда я двигаюсь."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "get worse",
+                    "translation": "становиться хуже",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "Does it get worse at night?",
+                    "example_translation": "Становится хуже ночью?"
+                },
+                {
+                    "text": "out of 10",
+                    "translation": "по шкале от 1 до 10",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "My pain is 7 out of 10 now.",
+                    "example_translation": "Моя боль сейчас на уровне 7 из 10."
+                },
+                {
+                    "text": "walk to work",
+                    "translation": "ходить на работу",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "Can I walk to work tomorrow?",
+                    "example_translation": "Можно мне завтра ходить на работу пешком?"
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "Take this 2 times a day.",
+                    "translation": "Принимайте это 2 раза в день.",
+                    "shelf": "numbers",
+                    "frame": "Take this ___ times a day.",
+                    "filler": "2",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": "2",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Come back in 3 days.",
+                    "translation": "Приходите снова через 3 дня.",
+                    "shelf": "numbers",
+                    "frame": "Come back in ___ days.",
+                    "filler": "3",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": "3",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Is your pain 7 out of 10 now?",
+                    "translation": "Ваша боль сейчас на уровне 7 из 10?",
+                    "shelf": "numbers",
+                    "frame": "Is your pain ___ out of 10 now?",
+                    "filler": "7",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": "7",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        }
+    ],
+    "spend": {
+        "calls": 23,
+        "total_usd": 0.16118
+    }
+}

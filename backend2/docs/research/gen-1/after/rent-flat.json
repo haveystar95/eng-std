@@ -1,0 +1,695 @@
+{
+    "plan_id": "01M1W3H273M0RZQ7DE4AM555TD",
+    "goal": "Снимаю квартиру: осмотр с хозяином и разговор об условиях аренды, залоге и коммунальных",
+    "pair": "ru→en",
+    "level": "basic",
+    "days": [
+        {
+            "day_index": 1,
+            "title": "Осмотр квартиры",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "This is the living room.",
+                        "translation": "Это гостиная.",
+                        "shelf": "hear",
+                        "frame": "This is the ___.",
+                        "filler": "living room",
+                        "speaking_key": "living room",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I like the living room.",
+                        "translation": "Мне нравится гостиная.",
+                        "shelf": "say",
+                        "frame": "I like the ___.",
+                        "filler": "living room",
+                        "speaking_key": "living room",
+                        "speaking_keys": [
+                            "Looks good",
+                            "Nice room"
+                        ],
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "The rent includes the washing machine and the fridge.",
+                        "translation": "В аренду входят стиральная машина и холодильник.",
+                        "shelf": "hear",
+                        "frame": "The rent includes the ___ and the fridge.",
+                        "filler": "washing machine",
+                        "speaking_key": "washing machine",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "That is good for me.",
+                        "translation": "Это хорошо для меня.",
+                        "shelf": "say",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [
+                            "Good for me",
+                            "That works"
+                        ],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "The heating works well.",
+                        "translation": "Отопление работает хорошо.",
+                        "shelf": "hear",
+                        "frame": "The ___ works well.",
+                        "filler": "heating",
+                        "speaking_key": "heating",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Good, that is important.",
+                        "translation": "Хорошо, это важно.",
+                        "shelf": "say",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [
+                            "Very important",
+                            "Good to know"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "There is a small problem with the window.",
+                        "translation": "Есть небольшая проблема с окном.",
+                        "shelf": "hear",
+                        "frame": "There is a small problem with the ___.",
+                        "filler": "window",
+                        "speaking_key": "window",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Okay, I'll check the window.",
+                        "translation": "Хорошо, я проверю окно.",
+                        "shelf": "say",
+                        "frame": "Okay, I'll check the ___.",
+                        "filler": "window",
+                        "speaking_key": "window",
+                        "speaking_keys": [
+                            "I'll check it",
+                            "Okay, I'll look"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Do you have any questions about the flat?",
+                        "translation": "Есть вопросы о квартире?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Is there hot water in the bathroom?",
+                        "translation": "В ванной есть горячая вода?",
+                        "shelf": "ask",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "bathroom",
+                        "speaking_keys": [
+                            "Hot water there?",
+                            "Does it have hot water?"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "The previous tenant moved out last week.",
+                        "translation": "Предыдущий жилец съехал на прошлой неделе.",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [],
+                        "skill_ref": "s1.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Oh, that's good.",
+                        "translation": "О, это хорошо.",
+                        "shelf": "say",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [
+                            "That's good",
+                            "Oh, good"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "living room",
+                    "translation": "гостиная",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "The living room is very bright.",
+                    "example_translation": "Гостиная очень светлая."
+                },
+                {
+                    "text": "washing machine",
+                    "translation": "стиральная машина",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "The washing machine is in the kitchen.",
+                    "example_translation": "Стиральная машина находится на кухне."
+                },
+                {
+                    "text": "heating",
+                    "translation": "отопление",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The heating is on in winter.",
+                    "example_translation": "Отопление включено зимой."
+                },
+                {
+                    "text": "window",
+                    "translation": "окно",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The window in the bedroom is open.",
+                    "example_translation": "Окно в спальне открыто."
+                },
+                {
+                    "text": "bathroom",
+                    "translation": "ванная",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Is the bathroom clean?",
+                    "example_translation": "Ванная чистая?"
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "rent includes",
+                    "translation": "входит в аренду",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "The rent includes a table and two chairs.",
+                    "example_translation": "В аренду входят стол и два стула."
+                },
+                {
+                    "text": "works well",
+                    "translation": "работает хорошо",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "The shower works well now.",
+                    "example_translation": "Душ теперь работает хорошо."
+                },
+                {
+                    "text": "small problem",
+                    "translation": "небольшая проблема",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "There is a small problem in the kitchen.",
+                    "example_translation": "На кухне есть небольшая проблема."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "The deposit is five hundred pounds.",
+                    "translation": "Залог составляет 500 фунтов.",
+                    "shelf": "numbers",
+                    "frame": "The deposit is ___.",
+                    "filler": "five hundred pounds",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.3",
+                    "number_value": "500",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "The rent is nine hundred pounds a month.",
+                    "translation": "Аренда составляет 900 фунтов в месяц.",
+                    "shelf": "numbers",
+                    "frame": "The rent is ___ a month.",
+                    "filler": "nine hundred pounds",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.3",
+                    "number_value": "900",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "The bills are usually eighty pounds a month.",
+                    "translation": "Коммунальные обычно составляют 80 фунтов в месяц.",
+                    "shelf": "numbers",
+                    "frame": "The bills are usually ___ a month.",
+                    "filler": "eighty pounds",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.3",
+                    "number_value": "80",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        },
+        {
+            "day_index": 2,
+            "title": "Условия аренды",
+            "status": "ready",
+            "attempts": 2,
+            "repairs": 2,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "The rent is eight hundred pounds a month.",
+                        "translation": "Аренда составляет восемьсот фунтов в месяц.",
+                        "shelf": "hear",
+                        "frame": "The rent is ___.",
+                        "filler": "eight hundred pounds a month",
+                        "speaking_key": "eight hundred pounds a month",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Okay, that is fine for me.",
+                        "translation": "Хорошо, это нормально для меня.",
+                        "shelf": "say",
+                        "frame": "Okay, that is ___ for me.",
+                        "filler": "fine",
+                        "speaking_key": "fine",
+                        "speaking_keys": [
+                            "That is okay",
+                            "Okay for me"
+                        ],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "We usually sign a one-year contract.",
+                        "translation": "Обычно мы подписываем договор на один год.",
+                        "shelf": "hear",
+                        "frame": "We usually sign a ___ contract.",
+                        "filler": "one-year",
+                        "speaking_key": "one-year",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "I need a shorter term.",
+                        "translation": "Мне нужен более короткий срок.",
+                        "shelf": "say",
+                        "frame": "I need a ___ term.",
+                        "filler": "shorter",
+                        "speaking_key": "shorter",
+                        "speaking_keys": [
+                            "Less time",
+                            "A short term"
+                        ],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "I need one month’s rent in advance.",
+                        "translation": "Мне нужна аренда за один месяц вперед.",
+                        "shelf": "hear",
+                        "frame": "I need one month’s rent ___.",
+                        "filler": "in advance",
+                        "speaking_key": "in advance",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Okay, I understand.",
+                        "translation": "Хорошо, я понимаю.",
+                        "shelf": "say",
+                        "frame": "Okay, I ___.",
+                        "filler": "understand",
+                        "speaking_key": "understand",
+                        "speaking_keys": [
+                            "I understand",
+                            "Okay got it"
+                        ],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Do you have proof of income?",
+                        "translation": "У вас есть подтверждение дохода?",
+                        "shelf": "hear",
+                        "frame": "Do you have ___?",
+                        "filler": "proof of income",
+                        "speaking_key": "proof of income",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, I have it.",
+                        "translation": "Да, оно у меня есть.",
+                        "shelf": "say",
+                        "frame": "Yes, I have ___.",
+                        "filler": "it",
+                        "speaking_key": "it",
+                        "speaking_keys": [
+                            "Yes I do",
+                            "I have it"
+                        ],
+                        "skill_ref": "s2.3",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Any more questions?",
+                        "translation": "Есть еще вопросы?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "What is the minimum term?",
+                        "translation": "Какой минимальный срок?",
+                        "shelf": "ask",
+                        "frame": "What is the ___ term?",
+                        "filler": "minimum",
+                        "speaking_key": "minimum",
+                        "speaking_keys": [
+                            "Minimum term?",
+                            "What term?"
+                        ],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "minimum",
+                    "translation": "минимальный",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "The minimum term is important for me.",
+                    "example_translation": "Минимальный срок важен для меня."
+                },
+                {
+                    "text": "fine",
+                    "translation": "нормально",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "The rent is fine for me.",
+                    "example_translation": "Аренда для меня нормальная."
+                },
+                {
+                    "text": "shorter",
+                    "translation": "более короткий",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I need a shorter contract.",
+                    "example_translation": "Мне нужен более короткий договор."
+                },
+                {
+                    "text": "understand",
+                    "translation": "понимаю",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "I understand the payment before move-in.",
+                    "example_translation": "Я понимаю оплату до заселения."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "in advance",
+                    "translation": "вперед",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "Do I pay the first month in advance?",
+                    "example_translation": "Я плачу за первый месяц вперед?"
+                },
+                {
+                    "text": "proof of income",
+                    "translation": "подтверждение дохода",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": null,
+                    "example": "I can send my proof of income tonight.",
+                    "example_translation": "Я могу отправить подтверждение дохода сегодня вечером."
+                },
+                {
+                    "text": "one-year contract",
+                    "translation": "договор на один год",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "A one-year contract is too long for me.",
+                    "example_translation": "Договор на один год для меня слишком долгий."
+                },
+                {
+                    "text": "minimum term",
+                    "translation": "минимальный срок",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "Is the minimum term six months?",
+                    "example_translation": "Минимальный срок — шесть месяцев?"
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "The rent is 800 pounds a month.",
+                    "translation": "Аренда — 800 фунтов в месяц.",
+                    "shelf": "numbers",
+                    "frame": "The rent is 800 pounds ___.",
+                    "filler": "a month",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.1",
+                    "number_value": "800",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "The minimum term is six months.",
+                    "translation": "Минимальный срок — шесть месяцев.",
+                    "shelf": "numbers",
+                    "frame": "The minimum term is ___.",
+                    "filler": "six months",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": "6",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "I need 1 month’s rent in advance.",
+                    "translation": "Мне нужен 1 месяц аренды вперед.",
+                    "shelf": "numbers",
+                    "frame": "I need 1 month’s rent ___.",
+                    "filler": "in advance",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.3",
+                    "number_value": "1",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "We usually sign a contract for one year.",
+                    "translation": "Обычно мы подписываем договор на 1 год.",
+                    "shelf": "numbers",
+                    "frame": "We usually sign a contract for ___.",
+                    "filler": "one year",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": "1",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        }
+    ],
+    "spend": {
+        "calls": 29,
+        "total_usd": 0.233017
+    }
+}

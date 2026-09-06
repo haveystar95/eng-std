@@ -87,6 +87,23 @@ it('trusts the four answers of the judge and never its own fits', function () {
         ->and(PlanPairCourt::verdictOf(['fits' => true, 'reason' => ''])['failed'])->toBe(PlanPairCourt::CHECKS);
 });
 
+it('counts a cognate gloss in a shared script and still refuses the term copied into the other alphabet', function () {
+    // ro→en: «urgent» IS «urgent». The live run refused day 1 twice over it.
+    $ro = planCandidate(
+        ['words' => [0 => ['text' => 'urgent', 'translation' => 'urgent', 'example' => 'It is urgent, please.', 'example_translation' => 'Este urgent, vă rog.']]],
+        dayFixture: 's3-day1.v0.4.json',
+        outlineFixture: 's3-outline.v0.4.json',
+        supportLang: 'ro',
+        targetLang: 'en',
+    );
+    expect(planCodes($this->validator->validate($ro)))->not->toContain(PlanDayValidator::TRANSLATION_IS_TRANSLITERATION)
+        ->and(planCodes($this->validator->warnings($ro)))->toContain(PlanDayValidator::TRANSLATION_EQUALS_TERM);
+
+    // ru→en: the same gloss is the term written in Latin letters where Cyrillic was asked for.
+    $ru = gen1Candidate(['words' => [0 => ['translation' => 'lower back']]]);
+    expect(planCodes($this->validator->validate($ru)))->toContain(PlanDayValidator::TRANSLATION_IS_TRANSLITERATION);
+});
+
 it('treats the plural of a listed basic word as basic', function () {
     $basics = new BasicVocabulary();
 

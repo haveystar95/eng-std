@@ -271,6 +271,15 @@ final class PlanDayValidator
     public const WORD_IS_BASIC_WARNING = 'plan_day_word_is_basic';
 
     /**
+     * THE GLOSS IS THE TERM ITSELF, IN A SHARED SCRIPT — «urgent — urgent» on a ro→en day (GEN-1).
+     *
+     * A cognate teaches little, and the card is worth a counter; it is not worth refusing the day,
+     * which is what {@see TRANSLATION_IS_TRANSLITERATION} did twice on the live run. Fatal stays
+     * for the term copied into the other alphabet.
+     */
+    public const TRANSLATION_EQUALS_TERM = 'plan_day_translation_equals_term';
+
+    /**
      * THE INTERLOCUTOR'S LINE DOES NOT RENDER ITS KEY — the same rule {@see TRANSLATION_MISSING_KEY}
      * names, on the one shelf where being wrong is not fatal.
      *
@@ -984,6 +993,17 @@ final class PlanDayValidator
             // «Ivanov» glossed «Иванов» is one word and one piece of information: the learner reads
             // the Latin, says the Cyrillic, and has learned that a name is spelled as it sounds.
             // Every other gate passes it, because character by character the two differ.
+            //
+            // A COGNATE IN ONE SCRIPT IS NOT THIS DEFECT (наряд GEN-1, живой ro→en день): «urgent»
+            // glossed «urgent» is the correct Romanian, and refusing the day twice over it left the
+            // plan without a day 1. When the two languages share a script an identical gloss is
+            // COUNTED ({@see TRANSLATION_EQUALS_TERM}) — a weak card, not an unplayable one — and
+            // the fatal rule keeps the case it was written for: the term copied into the other
+            // alphabet, or copied verbatim where the alphabets differ.
+            if ($this->normalize($translation) === $this->normalize($item->text)
+                && ! $this->scriptsDiffer($day->supportLang, $day->targetLang)) {
+                continue;
+            }
             if ($this->normalize($translation) === $this->normalize($item->text)
                 || $this->sameness->same($translation, $item->text)) {
                 $out[] = PlanViolation::onCard(
@@ -1520,6 +1540,15 @@ final class PlanDayValidator
             }
 
             $key = $this->normalize($item->translation);
+            if ($key !== '' && $key === $this->normalize($item->text) && ! $this->scriptsDiffer($day->supportLang, $day->targetLang)) {
+                $out[] = PlanViolation::onCard(
+                    self::TRANSLATION_EQUALS_TERM,
+                    $item,
+                    'translation',
+                    'перевод совпадает с карточкой (когнат в одной письменности) — карточка учит мало',
+                    'the `translation` is the term itself; a cognate teaches little',
+                );
+            }
             if ($key !== '' && isset($seenKeys[$key])) {
                 $out[] = PlanViolation::onCard(
                     self::KEY_DUPLICATED,

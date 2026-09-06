@@ -702,7 +702,10 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 счётчик `plan_day_word_outside_lines_dropped`); пара, половину которой переписал P2R, идёт к судье
 снова (`rejudgeRepaired()`, «нет» — обе карточки и оба хода вон, без переписки); `card.speaking_keys_missing`
 — у `say`/`ask` нет ни одного упрощённого варианта; `card.number_value_mismatch` — и когда `value`
-не цифры; шов `assemble()` закрывает пробел между дыркой и знаком препинания; `terms.speaking_keys`
+не цифры; `card.translation_is_transliteration` при ОБЩЕЙ письменности пары стал счётчиком
+`plan_day_translation_equals_term` (когнат «urgent — urgent», решение 281); обрезка слов вне реплик
+повторяется после слияния починки; шов `assemble()` закрывает пробел между дыркой и знаком
+препинания; `terms.speaking_keys`
 (jsonb) → `TermAnswerKeyView::$speakingKeys` / карточка сессии `speaking_keys` (additive), грейдер
 засчитывает их только за тумблером `learning.plan.speaking_keys_graded` (выкл, пока телефон судит по
 одному ключу).

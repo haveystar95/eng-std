@@ -1,0 +1,572 @@
+{
+    "plan_id": "01M1W3H8F4GC64T76YTEAR0EY5",
+    "goal": "Звоню в банк: карту заблокировали, надо выяснить причину и разблокировать её",
+    "pair": "ru→en",
+    "level": "basic",
+    "days": [
+        {
+            "day_index": 1,
+            "title": "Звонок в банк",
+            "status": "ready",
+            "attempts": 1,
+            "repairs": 1,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "How can I help you today?",
+                        "translation": "Чем я могу вам помочь?",
+                        "shelf": "hear",
+                        "frame": "How can I help you ___?",
+                        "filler": "today",
+                        "speaking_key": "today",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "My card is blocked.",
+                        "translation": "Моя карта заблокирована.",
+                        "shelf": "say",
+                        "frame": "My card is ___.",
+                        "filler": "blocked",
+                        "speaking_key": "blocked",
+                        "speaking_keys": [
+                            "Card blocked",
+                            "My card blocked"
+                        ],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Please tell me what the problem is.",
+                        "translation": "Скажите, в чем проблема.",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "My bank card is blocked.",
+                        "translation": "Моя банковская карта заблокирована.",
+                        "shelf": "say",
+                        "frame": "My bank card is ___.",
+                        "filler": "blocked",
+                        "speaking_key": "blocked",
+                        "speaking_keys": [
+                            "My card is blocked",
+                            "It's blocked"
+                        ],
+                        "skill_ref": "s1.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Are you calling about your bank card?",
+                        "translation": "Вы звоните насчет вашей банковской карты?",
+                        "shelf": "hear",
+                        "frame": "Are you calling about your ___?",
+                        "filler": "bank card",
+                        "speaking_key": "bank card",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, it does not work.",
+                        "translation": "Да, она не работает.",
+                        "shelf": "say",
+                        "frame": "Yes, it does not ___.",
+                        "filler": "work",
+                        "speaking_key": "work",
+                        "speaking_keys": [
+                            "It doesn't work",
+                            "Yes not working"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "I'll connect you to card services.",
+                        "translation": "Я соединю вас с отделом по картам.",
+                        "shelf": "hear",
+                        "frame": "I'll connect you to ___.",
+                        "filler": "card services",
+                        "speaking_key": "card services",
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Thanks, I need help with my card.",
+                        "translation": "Спасибо, мне нужна помощь с картой.",
+                        "shelf": "say",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "help with",
+                        "speaking_keys": [
+                            "Need help",
+                            "Help with my card"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Is there anything else you'd like to ask?",
+                        "translation": "Есть ли что-то еще, что вы хотели бы спросить?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Can you help with my card?",
+                        "translation": "Вы можете помочь с моей картой?",
+                        "shelf": "ask",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": "help with",
+                        "speaking_keys": [
+                            "Can you help",
+                            "Help with my card?"
+                        ],
+                        "skill_ref": "s1.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "blocked",
+                    "translation": "заблокирована",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": null,
+                    "example": "The app says my card is blocked.",
+                    "example_translation": "Приложение говорит, что моя карта заблокирована."
+                },
+                {
+                    "text": "work",
+                    "translation": "работать",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "My bank card does not work in stores.",
+                    "example_translation": "Моя банковская карта не работает в магазинах."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "card services",
+                    "translation": "отдел карт",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Please transfer me to card services.",
+                    "example_translation": "Пожалуйста, переведите меня в отдел по картам."
+                },
+                {
+                    "text": "bank card",
+                    "translation": "банковская карта",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "I am calling about my bank card.",
+                    "example_translation": "Я звоню насчет моей банковской карты."
+                },
+                {
+                    "text": "help with",
+                    "translation": "помочь с",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": null,
+                    "example": "Can you help with this problem?",
+                    "example_translation": "Вы можете помочь с этой проблемой?"
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "The last four digits are 4821?",
+                    "translation": "Последние четыре цифры — 4821?",
+                    "shelf": "numbers",
+                    "frame": "The last four digits are ___?",
+                    "filler": "4821",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.1",
+                    "number_value": "4821",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "I'll connect you in two minutes.",
+                    "translation": "Я соединю вас через 2 минуты.",
+                    "shelf": "numbers",
+                    "frame": "I'll connect you in ___.",
+                    "filler": "two minutes",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s1.2",
+                    "number_value": "2",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        },
+        {
+            "day_index": 2,
+            "title": "Проверка личности",
+            "status": "ready",
+            "attempts": 2,
+            "repairs": 2,
+            "fail_code": null,
+            "pairs": [
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Before we continue, I need to verify your identity.",
+                        "translation": "Прежде чем мы продолжим, мне нужно подтвердить вашу личность.",
+                        "shelf": "hear",
+                        "frame": "Before we continue, I need to ___ your identity.",
+                        "filler": "verify",
+                        "speaking_key": "verify",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Yes, of course.",
+                        "translation": "Да, конечно.",
+                        "shelf": "say",
+                        "frame": "Yes, of ___.",
+                        "filler": "course",
+                        "speaking_key": "course",
+                        "speaking_keys": [
+                            "yes sure",
+                            "okay"
+                        ],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Can you confirm your full name, please?",
+                        "translation": "Вы можете подтвердить свое полное имя, пожалуйста?",
+                        "shelf": "hear",
+                        "frame": "Can you confirm your ___, please?",
+                        "filler": "full name",
+                        "speaking_key": "full name",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "My full name is Ivan Petrov.",
+                        "translation": "Мое полное имя Иван Петров.",
+                        "shelf": "say",
+                        "frame": "My ___ is Ivan Petrov.",
+                        "filler": "full name",
+                        "speaking_key": "full name",
+                        "speaking_keys": [
+                            "ivan petrov",
+                            "my name is ivan"
+                        ],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Please confirm your date of birth.",
+                        "translation": "Пожалуйста, подтвердите дату вашего рождения.",
+                        "shelf": "hear",
+                        "frame": "Please confirm your ___ of birth.",
+                        "filler": "date",
+                        "speaking_key": "date",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "It is 14 May 1990.",
+                        "translation": "Это 14 мая 1990 года.",
+                        "shelf": "say",
+                        "frame": "It is ___.",
+                        "filler": "14 May 1990",
+                        "speaking_key": "14 May 1990",
+                        "speaking_keys": [
+                            "may fourteenth",
+                            "fourteen may nineteen ninety"
+                        ],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "answer",
+                    "role": {
+                        "text": "Can you give me your address?",
+                        "translation": "Вы можете назвать мне свой адрес?",
+                        "shelf": "hear",
+                        "frame": "Can you give me your ___?",
+                        "filler": "address",
+                        "speaking_key": "address",
+                        "speaking_keys": [],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "My address is 12 Green Street.",
+                        "translation": "Мой адрес 12 Green Street.",
+                        "shelf": "say",
+                        "frame": "My ___ is 12 Green Street.",
+                        "filler": "address",
+                        "speaking_key": "address",
+                        "speaking_keys": [
+                            "twelve green street",
+                            "my address is green street"
+                        ],
+                        "skill_ref": "s2.2",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                },
+                {
+                    "kind": "ask",
+                    "role": {
+                        "text": "Do you need anything else from me?",
+                        "translation": "Вам еще что-нибудь нужно от меня?",
+                        "shelf": "hear",
+                        "frame": "",
+                        "filler": "",
+                        "speaking_key": null,
+                        "speaking_keys": [],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    },
+                    "you": {
+                        "text": "Why is my card blocked?",
+                        "translation": "Почему моя карта заблокирована?",
+                        "shelf": "ask",
+                        "frame": "Why is my card ___?",
+                        "filler": "blocked",
+                        "speaking_key": "blocked",
+                        "speaking_keys": [
+                            "why blocked",
+                            "why is it blocked"
+                        ],
+                        "skill_ref": "s2.1",
+                        "number_value": null,
+                        "example": null,
+                        "example_translation": null
+                    }
+                }
+            ],
+            "words": [
+                {
+                    "text": "verify",
+                    "translation": "подтверждать",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "The bank must verify my identity first.",
+                    "example_translation": "Банк должен сначала подтвердить мою личность."
+                },
+                {
+                    "text": "course",
+                    "translation": "конечно",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.1",
+                    "number_value": null,
+                    "example": "Yes, of course, I can answer that.",
+                    "example_translation": "Да, конечно, я могу на это ответить."
+                },
+                {
+                    "text": "address",
+                    "translation": "адрес",
+                    "shelf": "words",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "The address on my account is correct.",
+                    "example_translation": "Адрес в моем счете указан верно."
+                }
+            ],
+            "chunks": [
+                {
+                    "text": "full name",
+                    "translation": "полное имя",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "Please say your full name clearly.",
+                    "example_translation": "Пожалуйста, назовите свое полное имя четко."
+                },
+                {
+                    "text": "date of birth",
+                    "translation": "дата рождения",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "I can confirm my date of birth now.",
+                    "example_translation": "Я могу сейчас подтвердить свою дату рождения."
+                },
+                {
+                    "text": "confirm your",
+                    "translation": "подтвердить свое",
+                    "shelf": "chunks",
+                    "frame": "",
+                    "filler": "",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": null,
+                    "example": "They need to confirm your details first.",
+                    "example_translation": "Им нужно сначала подтвердить ваши данные."
+                }
+            ],
+            "numbers": [
+                {
+                    "text": "Is it 14 May 1990?",
+                    "translation": "Это 14 мая 1990 года?",
+                    "shelf": "numbers",
+                    "frame": "Is it ___?",
+                    "filler": "14 May 1990",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": "1990-05-14",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Is your address 12 Green Street?",
+                    "translation": "Ваш адрес 12 Green Street?",
+                    "shelf": "numbers",
+                    "frame": "Is your address ___?",
+                    "filler": "12 Green Street",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": "12",
+                    "example": null,
+                    "example_translation": null
+                },
+                {
+                    "text": "Are the last four digits 4821?",
+                    "translation": "Последние четыре цифры 4821?",
+                    "shelf": "numbers",
+                    "frame": "Are the last four digits ___?",
+                    "filler": "4821",
+                    "speaking_key": null,
+                    "speaking_keys": [],
+                    "skill_ref": "s2.2",
+                    "number_value": "4821",
+                    "example": null,
+                    "example_translation": null
+                }
+            ]
+        }
+    ],
+    "spend": {
+        "calls": 27,
+        "total_usd": 0.206633
+    }
+}
