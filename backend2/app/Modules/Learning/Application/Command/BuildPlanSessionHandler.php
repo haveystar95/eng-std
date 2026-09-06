@@ -586,6 +586,12 @@ final readonly class BuildPlanSessionHandler
             if ($card === null) {
                 continue;
             }
+            // A CHOICE THAT CAME OUT AS BLOCKS — the plan's pool could not furnish the floor and the
+            // assembler fell back to assembly (DAY-FIX-2, Ч.1.7) — is reported as what it IS, so the
+            // caption over the card and the day screen's word say «соберёшь», not «выберешь».
+            if ($level === PlanTurnLevel::Choose && $card->chips !== null) {
+                $level = PlanTurnLevel::Assemble;
+            }
 
             /** @var PlanStage|null $stage */
             $stage = $spec['stage'];

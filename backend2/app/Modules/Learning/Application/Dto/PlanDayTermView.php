@@ -75,6 +75,12 @@ final readonly class PlanDayTermView
          * прозвучала голосом человека в прогоне; null — пусто (Ч.4.3). Не цифры.
          */
         public ?string $mark = null,
+        /**
+         * И ЧТО БУДЕТ СРАЗУ ЗА ЭТИМ В ТОЙ ЖЕ ПОСАДКЕ — второй код, или null. Реплика сцены в день
+         * знакомства проходит две ступени подряд (DECISIONS п. 266): «познакомишься · выберешь
+         * ответ». Экран дня пишет оба слова, потому что человек увидит оба упражнения сегодня.
+         */
+        public ?string $thenStep = null,
     ) {}
 
     public const STEP_MEET = 'meet';
@@ -118,6 +124,7 @@ final readonly class PlanDayTermView
             'tier' => $this->tier,
             'audio_url' => $audioUrl,
             'next_step' => $this->nextStep,
+            'then_step' => $this->thenStep,
             'mark' => $this->mark,
         ];
     }

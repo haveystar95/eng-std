@@ -11,6 +11,7 @@ use App\Modules\Learning\Application\Service\PlanProgress;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
+use App\Modules\Learning\Domain\Service\PlanDialogueChain;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
@@ -123,6 +124,27 @@ final readonly class GetPlanDayTermsHandler
         };
     }
 
+    /**
+     * THE STEP THAT FOLLOWS IN THE SAME SITTING, or null: a scene line met today is spoken today —
+     * its stage B opens the day A closes ({@see PlanStageLadder::opensBSameDay()}, DECISIONS
+     * п. 266) — so the row's word is «познакомишься · выберешь ответ», the same two touches the
+     * planner deals ({@see PlanSittingPlanner}). Only for a row whose intro is still owed and only on
+     * its own day: in the seam a line comes back for one touch.
+     */
+    private static function thenStepOf(PlanTermStanding $standing, ?string $shelf, bool $inSeam): ?string
+    {
+        if ($inSeam || $standing->nextMode !== ExerciseMode::Intro || $standing->answeredToday) {
+            return null;
+        }
+
+        return match ($shelf) {
+            PlanDialogueChain::SHELF_HEAR => PlanDayTermView::STEP_HEAR,
+            PlanDialogueChain::SHELF_SAY => PlanDayTermView::STEP_CHOOSE,
+            PlanDialogueChain::SHELF_ASK => PlanDayTermView::STEP_ASSEMBLE,
+            default => null,
+        };
+    }
+
     /** «пройдено» / «сказал сам» / nothing — the row's mark once the day has been walked. */
     private static function markOf(PlanTermStanding $standing, bool $saidSelf): ?string
     {
@@ -171,6 +193,7 @@ final readonly class GetPlanDayTermsHandler
             audioId: $audio[$t->termId] ?? null,
             nextStep: $t->nextStep,
             mark: $t->mark,
+            thenStep: $t->thenStep,
         ), $terms);
     }
 
@@ -210,6 +233,7 @@ final readonly class GetPlanDayTermsHandler
                 tier: $content->tier,
                 nextStep: self::nextStepOf($standing, $content->shelf, $index < $dayBeingRead),
                 mark: self::markOf($standing, isset($said[$termId])),
+                thenStep: self::thenStepOf($standing, $content->shelf, $index < $dayBeingRead),
             );
         }
 

@@ -58,9 +58,22 @@ class PlanDialogueShell extends StatefulWidget {
     this.onSpokeUntasked,
     this.voiceTrouble,
     this.onRescueUsed,
+    this.spokenLines = const {},
+    this.onSpokeLine,
   });
 
   final PlanDialogue dialogue;
+
+  /// РЕПЛИКИ РОЛИ, УЖЕ ПРОЗВУЧАВШИЕ В ЭТОЙ ПОСАДКЕ — по `term_id` (наряд DAY-FIX-2, Ч.5.1).
+  ///
+  /// Живёт в ЭКРАНЕ, а не в оболочке: оболочка пересоздаётся на каждой карточке, и любая её
+  /// собственная память о «уже звучало» умирает на такте 2 — так реплика и звучала второй раз,
+  /// какой бы ключ оболочка ни держала (DAY-2-FIX ключ по ходу, потом по пузырю — оба не помогли,
+  /// потому что помнить было некому). Экран отдаёт множество, оболочка спрашивает и дописывает.
+  final Set<String> spokenLines;
+
+  /// Реплика роли прозвучала — экран запоминает.
+  final void Function(String termId)? onSpokeLine;
 
   /// Where the card at the front stands in the chain, or -1 when it is not in it at all — which
   /// happens for a card the ladder owes that the model left out of the conversation
@@ -234,9 +247,21 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
   void _speakLive() {
     final turn = _liveRoleTurn;
     if (!mounted || !widget.voiceReady || turn == null || _untaken != null) return;
-    if (_spokenFor == _liveIndex) return;
+    if (_spokenFor == _liveIndex || widget.spokenLines.contains(turn.termId)) return;
     _spokenFor = _liveIndex;
+    widget.onSpokeLine?.call(turn.termId);
     widget.onSpeak(turn.text);
+  }
+
+  /// ТЕКСТ ЖИВОГО ПУЗЫРЯ ОТКРЫТ: человек попросил, или такт 1 этой реплики уже позади — карточка
+  /// впереди его собственная, а реплику роли он только что разобрал (Ч.5.1: «после верного
+  /// такта 1 текст открывается и остаётся»). Считается от ходов, а не от памяти оболочки, потому
+  /// что памяти у неё между карточками нет.
+  bool get _textOpen {
+    if (_revealed) return true;
+    final live = _liveRoleTurn;
+
+    return live != null && _liveIndex != widget.turnIndex && widget.dealtTerms.contains(live.termId);
   }
 
   int get _liveIndex => PlanDialogueShell.liveRoleIndexOf(widget.dialogue, widget.turnIndex);
@@ -329,10 +354,13 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
               PlanDialogueBubble(
                 turn: live,
                 past: false,
-                revealed: _revealed,
+                revealed: _textOpen,
                 caption: _liveIndex == _firstRoleIndex ? l.planDialogueRoleName : null,
                 onReplay: () => widget.onSpeak(live.text),
-                onToggleText: () => setState(() => _revealed = !_revealed),
+                // Once такт 1 has opened the text it stays: the toggle then only shows it.
+                onToggleText: _textOpen && !_revealed
+                    ? null
+                    : () => setState(() => _revealed = !_revealed),
                 // «Знакомая реплика · разбор не нужен» — the line has closed «понимаю», so the
                 // screen plays it and goes straight to the answer (кадр DL·06). It is a fact about
                 // the card, not a compliment, so it is a caption and not praise — and it is only

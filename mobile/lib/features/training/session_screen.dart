@@ -914,6 +914,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   /// карточке и потому что финал разговора спрашивает у него же, не остался ли ход неотданным.
   final Set<String> _spokenUntasked = {};
 
+  /// Реплики роли, уже прозвучавшие в этой посадке — ключ `term_id` (наряд DAY-FIX-2, Ч.5.1).
+  /// Без setState: множество читает оболочка при следующей сборке, перерисовки оно не просит.
+  final Set<String> _spokenLines = {};
+
   /// Термины, у которых в этой посадке есть карточка — что оболочка считает «сегодня разбираем».
   late final Set<String> _dealtTerms = {for (final c in _cards) c.termId};
 
@@ -1038,7 +1042,13 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   /// Term ids of this sitting's answered cards — what puts «сказано вслух» under a bubble already
   /// in the feed (кадр DL·05). A fact, never a grade: it says the turn was taken, not that it was
   /// right.
-  Set<String> get _spokenTerms => {for (final r in _results) r.card.termId};
+  /// «СКАЗАНО ВСЛУХ» — ТОЛЬКО ГОЛОСОМ (наряд DAY-FIX-2, Ч.5.2): реплики, которые человек произнёс
+  /// в микрофон на карточке говорения. Выбор варианта — не голос, и озвучка телефона поверх
+  /// выбора — тоже не голос; подпись под пузырём говорит о человеке, а не о динамике.
+  Set<String> get _spokenTerms => {
+    for (final r in _results)
+      if (r.card.mode == ExerciseMode.speaking) r.card.termId,
+  };
 
   /// The sitting's conversation for the scene taught on [day], or null when it carries none.
   static PlanDialogue? _dialogueOf(PlanSessionEnvelope plan, int day) {
@@ -1586,6 +1596,11 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                           voiceTrouble: PlanVoiceTrouble(cache: _lineAudio),
                           answeredAloud: _spokenTerms,
                           dealtTerms: _dealtTerms,
+                          // «ЕЩЁ РАЗ» — ЕДИНСТВЕННЫЙ ПОВТОР (наряд DAY-FIX-2, Ч.5.1): реплика
+                          // роли звучит один раз на пузырь, и помнит это ЭКРАН — оболочка
+                          // пересоздаётся на каждой карточке и сама помнить не может.
+                          spokenLines: _spokenLines,
+                          onSpokeLine: _spokenLines.add,
                           spokenUntasked: _spokenUntasked,
                           onSpokeUntasked: (termId) =>
                               setState(() => _spokenUntasked.add(termId)),
@@ -1967,7 +1982,11 @@ class _PlanProgressBar extends StatelessWidget {
             child: _group(
               // The part is what the learner is DOING — «Диалог сцены» — and that is the whole
               // label; the divisions under it say how far through the scene this sitting is.
-              label: sectionLabel ?? l.planDialogueSceneWord,
+              // While the WARM-UP is playing the scene group has no part of its own yet, so it
+              // says «Сцена» rather than repeating the warm-up's name over the scene's bars.
+              label: sectionLabel == null || sectionLabel == l.planWarmupSection
+                  ? l.planDialogueSceneWord
+                  : sectionLabel!,
               labelColor: AppColors.tertiary,
               bars: [
                 for (final segment in progress.segments)

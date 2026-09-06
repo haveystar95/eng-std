@@ -648,6 +648,7 @@ class PlanTermRow {
     this.audioUrl,
     this.nextStep,
     this.mark,
+    this.thenStep,
   });
 
   /// ЧТО С ЭТОЙ СТРОКОЙ БУДЕТ ДЕЛАТЬ ЧЕЛОВЕК — код упражнения с сервера (наряд DAY-FIX-2, Ч.4.2):
@@ -657,6 +658,10 @@ class PlanTermRow {
 
   /// ОТМЕТКА У СТРОКИ, если день шёл: `passed` / `said_self` / null (Ч.4.3). Словом, не цифрой.
   final String? mark;
+
+  /// И ЧТО СРАЗУ ЗА ЭТИМ в той же посадке, или null: реплика сцены в день знакомства проходит
+  /// две ступени подряд — «познакомишься · выберешь ответ». Тоже серверное.
+  final String? thenStep;
 
   static const stepMeet = 'meet';
   static const stepRecognize = 'recognize';
@@ -756,6 +761,7 @@ class PlanTermRow {
     audioUrl: j['audio_url'] as String?,
     nextStep: j['next_step'] as String?,
     mark: j['mark'] as String?,
+    thenStep: j['then_step'] as String?,
   );
 }
 

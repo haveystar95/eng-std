@@ -3149,6 +3149,14 @@ components:
             «выберешь ответ» / «соберёшь из блоков» / «скажешь голосом». Computed from the row's
             standing and the turn level the sitting would deal it at, so the caption and the card
             cannot disagree. Null when the row owes nothing today.
+        then_step:
+          type: [string, 'null']
+          enum: [hear, choose, assemble, null]
+          description: >-
+            THE STEP THAT FOLLOWS IN THE SAME SITTING, or null. A scene line met today is spoken
+            today — its stage B opens the day A closes (DECISIONS п. 266) — so the day screen
+            writes both words: «познакомишься · выберешь ответ». Null for words, for the seam and
+            for a row whose intro is already behind it.
         mark:
           type: [string, 'null']
           enum: [passed, said_self, null]

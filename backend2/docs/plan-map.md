@@ -328,7 +328,9 @@ append-only логе, и этот ответ — ВЫБОР. Произнесе�
 | шов — одно касание сборкой, выбор в шве запрещён | `PlanTurnLevel::forTurn(inSeam: true)`; шов только из дней позади фокуса |
 | реплика ≤ одного показа на ступень в день | `PlanStageLadder::oneShowPerDay()` → `specsFor()` берёт первый незакрытый шаг |
 | клавиатуры в плане нет | `assembleTasks()` пропускает режимы с `forgivesTypos()` (замок), лестница не называет typed-шагов (`PlanStageLadderTest`). Прогрев клавиатуры на клиенте остаётся — он ничего не показывает, а его пропуск ломает «Пропустить» на говорении |
-| ступень B реплик открывается В ТОТ ЖЕ день, что закрылась A | `PlanStageLadder::OPENS_B_SAME_DAY` (`UNDERSTAND`, `LINE_SAY`, `LINE_ASK`), `standingFor(introducedOn)` — дата первого показа считается днём закрытия A (канон `plan-dialogue.md` §10, уточнение) |
+| ступень B реплик открывается В ТОТ ЖЕ день, что закрылась A | `PlanStageLadder::OPENS_B_SAME_DAY` (`UNDERSTAND`, `LINE_SAY`, `LINE_ASK`), `standingFor(introducedOn)` — дата первого показа считается днём закрытия A (канон `plan-dialogue.md` §10, уточнение). Планировщик кладёт первый шаг B сразу за интро (`PlanSittingPlanner::sameDayStageB`); экран дня пишет оба слова через `then_step` |
+| «день пройден» = знакомство И первое касание диалога | `PlanProgress::stageAClosedForAll()`: у реплики сцены требуется ещё и B тронута — иначе день проходил на одних интро, и фокус уезжал на день 2 посреди посадки (живой прогон 05.09) |
+| ход выбором, которому не хватило вариантов, становится СБОРКОЙ, а не отбоем | `StudyCardAssembler::situationalCard()` — пул плана худеет на уже сказанное и одноумельное, третья-четвёртая реплика сцены законно остаётся без чужих ответов; `turn_level` задачи тогда `assemble`. Такт «что тебе сказали?» при голоде по длине берёт вопросы плана любой длины (`recognitionCard(anyLength)`) |
 
 **Одно состояние дня.** `Learning/Application/Service/PlanDayStateCensus::of()` считает
 `day_state ∈ not_started | in_progress | done` и `minutes_left` (карточки × `card_seconds`,

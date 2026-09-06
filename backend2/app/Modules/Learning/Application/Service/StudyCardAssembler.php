@@ -680,13 +680,19 @@ final readonly class StudyCardAssembler
         ?PlanTurnLevel $turnLevel = null,
     ): ?SessionCardView {
         if ($mode === ExerciseMode::SituationalHear) {
-            foreach ([$choiceFloor, self::MIN_OPTIONS] as $floor) {
+            // THE LENGTH BAND GIVES WAY BEFORE THE CARD DOES (наряд DAY-FIX-2): the interlocutor's
+            // line has to be understood, and a scene's five questions are rarely of one length —
+            // «Is it getting worse?» beside «How long have you had this pain?» left the live run
+            // without its такт 1, the line without its stage B, and the day without its «пройден».
+            // Among the plan's own questions a longer wrong answer is still a wrong answer.
+            foreach ([[$choiceFloor, false], [self::MIN_OPTIONS, false], [$choiceFloor, true], [self::MIN_OPTIONS, true]] as [$floor, $anyLength]) {
                 $card = $this->recognitionCard(
                     $user, $view, $content,
                     LearningLadder::STEP_RECOGNITION_FORWARD,
                     $neighbours, $cardIndex, $supportLang, $optionCount, $floor,
                     as: $mode,
                     reportedStep: $step,
+                    anyLength: $anyLength,
                 );
                 if ($card !== null) {
                     return $card;
@@ -731,6 +737,16 @@ final readonly class StudyCardAssembler
         // beside one wrong line is a coin toss written into an append-only log.
         if (count($options) < $choiceFloor) {
             $this->fallbacks->distractorStarved($user, $view->termId, $mode->value, $choiceFloor, count($options));
+
+            // A PLAN'S TURN FALLS BACK TO ASSEMBLY, NOT OUT (наряд DAY-FIX-2, Ч.1.7): the pool a plan
+            // names shrinks by what the conversation has already said and by the lines of the same
+            // skill, so the third and fourth reply of a scene legitimately run out of wrong answers.
+            // The turn is still the learner's — they build the line from blocks instead of choosing
+            // it. Dropping the card left day 1 without those replies and the day could never pass
+            // (the live run of 05.09 found it: no review for any «say» line after a full walk).
+            if ($answerPoolIds !== null) {
+                return $this->assemblyCard($view, $content, $mode, $neighbours, $step);
+            }
 
             return null;
         }
@@ -882,6 +898,7 @@ final readonly class StudyCardAssembler
         ?int $choiceFloor = null,
         ?ExerciseMode $as = null,
         ?int $reportedStep = null,
+        bool $anyLength = false,
     ): ?SessionCardView {
         if ($supportLang === null) {
             return null;
@@ -935,7 +952,7 @@ final readonly class StudyCardAssembler
             // the session's own neighbours, which makes them fair, not exempt.
             if (DistractorFamily::of($neighbour['kind'] ?? null, $text)
                 !== DistractorFamily::of($content->kind, $own)
-                || ! $this->length->fits($content->kind, $own, $text)) {
+                || (! $anyLength && ! $this->length->fits($content->kind, $own, $text))) {
                 continue;
             }
             $pool[] = ['term_id' => $neighbour['term_id'], 'text' => $text];

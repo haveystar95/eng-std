@@ -559,8 +559,12 @@ class _Section {
   String? stepLine(AppLocalizations l) {
     final words = <String>[];
     for (final term in terms) {
-      final word = _stepWord(l, term.nextStep);
-      if (word != null && !words.contains(word)) words.add(word);
+      // Two words for a line met and spoken today («познакомишься · выберешь ответ»): the server
+      // names both steps, the screen only strings them.
+      for (final step in [term.nextStep, term.thenStep]) {
+        final word = _stepWord(l, step);
+        if (word != null && !words.contains(word)) words.add(word);
+      }
     }
 
     return words.isEmpty ? null : l.planDayStepLead(words.join(' · '));

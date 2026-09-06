@@ -95,6 +95,58 @@ it('calls a day «идёт» after the first answer, and «пройден» ever
         ->and(dayPayload($this, $token, $planId, 1)['day_state'])->toBe('done');
 });
 
+it('does not call a day «пройден» on its intros alone — the scene has to be spoken once', function () {
+    // The live run of 05.09: every intro acknowledged, the dialogue still ahead — and the day
+    // passed, the focus moved to day 2 in the middle of day 1's sitting. A scene line opens its
+    // stage B the day it is met (DECISIONS п. 266), so «пройден» is the introduction AND the first
+    // touch of the conversation.
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $session = planSession($this, $token, $planId);
+    $intros = array_values(array_filter(
+        $session['tasks'],
+        static fn (array $t): bool => $t['card']['exercise_mode'] === 'intro',
+    ));
+    $rest = array_values(array_filter(
+        $session['tasks'],
+        static fn (array $t): bool => $t['card']['exercise_mode'] !== 'intro',
+    ));
+    expect($intros)->not->toBeEmpty()->and($rest)->not->toBeEmpty();
+
+    $seq = answerTasks($this, $token, ['session_id' => $session['session_id'], 'tasks' => $intros]);
+
+    $plan = planPayload($this, $token, $planId);
+    expect(dayOf($plan, 1)['day_state'])->toBe('in_progress')
+        ->and($plan['focus_day_index'])->toBe(1);
+
+    answerTasks($this, $token, ['session_id' => $session['session_id'], 'tasks' => $rest], $seq);
+
+    expect(dayOf(planPayload($this, $token, $planId), 1)['day_state'])->toBe('done');
+});
+
+it('names BOTH touches of a scene line on the day screen — met today, spoken today', function () {
+    // «познакомишься · выберешь ответ»: the row's `next_step` is the intro, `then_step` the stage-B
+    // exercise that follows in the same sitting. A word owes only its intro today, so it has none.
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $rows = dayPayload($this, $token, $planId, 1)['terms'];
+    $byShelf = [];
+    foreach ($rows as $row) {
+        $byShelf[$row['shelf']][] = $row;
+    }
+    expect($byShelf)->toHaveKeys(['hear', 'say', 'ask', 'words']);
+
+    foreach (['hear' => 'hear', 'say' => 'choose', 'ask' => 'assemble'] as $shelf => $then) {
+        foreach ($byShelf[$shelf] as $row) {
+            expect($row['next_step'])->toBe('meet', "{$shelf}: {$row['text']}")
+                ->and($row['then_step'])->toBe($then, "{$shelf}: {$row['text']}");
+        }
+    }
+    foreach ($byShelf['words'] as $row) {
+        expect($row['then_step'])->toBeNull($row['text']);
+    }
+});
+
 it('never prints a counter the screens could disagree on — one word, and the minutes are whole', function () {
     [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 

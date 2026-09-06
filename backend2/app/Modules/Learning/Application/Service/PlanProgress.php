@@ -10,6 +10,7 @@ use App\Modules\Learning\Application\Dto\PlanProgressView;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
+use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\Service\RoleLineModes;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
@@ -288,8 +289,31 @@ final readonly class PlanProgress
             return false;
         }
 
-        foreach ($scene as $standing) {
+        foreach ($scene as $termId => $standing) {
             if ($standing->stage === PlanStage::A && ! $standing->stageComplete) {
+                return false;
+            }
+            // …AND SPOKEN, for a line of the scene: its stage B opens the day it is met
+            // (DAY-FIX-2, DECISIONS п. 266), so «день пройден» is the introduction AND the first
+            // touch of the conversation. Without this a day passed the moment its intros were
+            // acknowledged, with the dialogue still ahead — the live run of 05.09 moved the focus
+            // to day 2 in the middle of day 1's sitting.
+            $row = $content[$termId] ?? null;
+            $kind = $row === null || $row->kind === null
+                ? PlanStageLadder::KIND_WORD
+                : PlanStageLadder::ladderKindFor($row->kind, $row->tier, $row->shelf);
+            if (! PlanStageLadder::opensBSameDay($kind)) {
+                continue;
+            }
+            $bTouched = false;
+            foreach ($standing->checklist as $step) {
+                if ($step['done']) {
+                    $bTouched = true;
+
+                    break;
+                }
+            }
+            if ($standing->stage === PlanStage::A || ($standing->stage === PlanStage::B && ! $bTouched && ! $standing->stageComplete)) {
                 return false;
             }
         }

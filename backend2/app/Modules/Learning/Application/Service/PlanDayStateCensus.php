@@ -8,6 +8,7 @@ use App\Modules\Learning\Application\Dto\PlanDayStateView;
 use App\Modules\Learning\Application\Dto\PlanProgressView;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
+use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanDayState;
 use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
@@ -140,6 +141,14 @@ final readonly class PlanDayStateCensus
                 if (! $step['done']) {
                     $cards++;
                 }
+            }
+            // …plus the conversation the day opens behind its intros (DAY-FIX-2, DECISIONS п. 266):
+            // a scene line is met AND spoken in the same sitting, and the minutes say so.
+            $kind = $content === null || $content->kind === null
+                ? PlanStageLadder::KIND_WORD
+                : PlanStageLadder::ladderKindFor($content->kind, $content->tier, $content->shelf);
+            if ($standing->stage === PlanStage::A && ! $standing->stageComplete && PlanStageLadder::opensBSameDay($kind)) {
+                $cards++;
             }
         }
 
