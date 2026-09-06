@@ -52,7 +52,7 @@ final class PlanPromptLibrary implements PlanPromptSource
      * where the вводка already says it — the subtitle repeated the intro and pushed the name out of
      * one line. The details belong to the intro, and the title is what you call the scene.
      */
-    public const OUTLINE_VERSION = 'plan_outline.v0.4.1';
+    public const OUTLINE_VERSION = 'plan_outline.v0.4.2';
 
     /**
      * v0.4.1 — two edits by the architect, one bump (наряд ENTRY-2, Ч-6).
@@ -78,14 +78,31 @@ final class PlanPromptLibrary implements PlanPromptSource
      * most twice ({@see PAIR_REWRITE_VERSION}) before it is dropped. The live run of 05.09 is
      * why: replies that answered a different question of the same scene, invisible to a prompt
      * that wrote both halves in one breath.
+     *
+     * **v0.7 — the quality canon of наряд GEN-1 written into the text** (`docs/research/gen-1`).
+     * The live «было» run showed the prompt asking for half of the defects itself: it REQUIRED a
+     * clarifying question and a repair move among the replies, so «Sorry, what does tools mean?»
+     * landed in the answer shelf by instruction. v0.7: an `answer` pair's reply is an answer and
+     * never a clarification; the level is a number of words and a register; every `you` line
+     * carries `speaking_keys[]` (1–2 simpler forms that also count when spoken); a translation is
+     * the exact meaning; a word or chunk stands in a line of the scene or is dropped; an `ask`
+     * pair's role line is an invitation; a number's `value` is digits.
      */
-    public const DAY_VERSION = 'plan_day.v0.6';
+    public const DAY_VERSION = 'plan_day.v0.7';
 
-    /** P2J — «B отвечает на A?», один вызов на пару. Ответ да/нет со строкой причины. */
-    public const PAIR_JUDGE_VERSION = 'plan_pair_judge.v0.1';
+    /**
+     * P2J — four questions about one pair, not one (v0.2, наряд GEN-1, Ч.5.2).
+     *
+     * v0.1 asked «does B follow A?» and, probed on 16 pairs × 3 (`judge-probe-v0.1.json`), passed
+     * 11 kinds of defect out of 16 — stably, 3/3 each — because the question itself allowed
+     * clarifications, dismissed register and length and never saw a translation. v0.2 asks
+     * `answers` / `not_clarification` / `level_fits` / `translation_exact` separately, and the
+     * server trusts the four answers, never the model's own `fits` ({@see \App\Modules\Generation\Application\Service\PlanPairCourt}).
+     */
+    public const PAIR_JUDGE_VERSION = 'plan_pair_judge.v0.2';
 
-    /** P2P — переписать `you` пары, которую судья отбил. ≤ 2 раз на пару, потом пара выбрасывается. */
-    public const PAIR_REWRITE_VERSION = 'plan_pair_rewrite.v0.1';
+    /** P2P — переписать `you` пары по канону: без переспросов, по уровню, с `speaking_keys`. ≤ 2 раз на пару. */
+    public const PAIR_REWRITE_VERSION = 'plan_pair_rewrite.v0.2';
 
     /**
      * P2R — the day's BROKEN CARDS, and nothing else.
@@ -107,8 +124,13 @@ final class PlanPromptLibrary implements PlanPromptSource
      * out loud that an `example` is a NEW sentence and DAY TERMS is a clone-check list rather than
      * the only vocabulary allowed — the same answer had swapped a word into an example to avoid a
      * clone and produced «I'll have pasta and two nights.»
+     *
+     * **v0.3 (наряд GEN-1):** the size limits are numbers now — a live day died on a 9-word reply
+     * that two repairs returned unchanged, because «at level length» is not a number — plus
+     * `speaking_keys` on spoken lines, digits-only `value`, and the reminder that a repaired
+     * `say`/`ask` line is half of an exchange and is judged again as one.
      */
-    public const REPAIR_VERSION = 'plan_day_repair.v0.2';
+    public const REPAIR_VERSION = 'plan_day_repair.v0.3';
 
     /**
      * P-Listen — the entry's optional listening warm-up (наряд ENTRY-2, Ч-3).
@@ -124,12 +146,12 @@ final class PlanPromptLibrary implements PlanPromptSource
      */
     public const LISTEN_VERSION = 'plan_listen.v1.1';
 
-    private const OUTLINE = 'plan_outline.v0.4.1.md';
-    private const DAY = 'plan_day.v0.6.md';
-    private const REPAIR = 'plan_day_repair.v0.2.md';
+    private const OUTLINE = 'plan_outline.v0.4.2.md';
+    private const DAY = 'plan_day.v0.7.md';
+    private const REPAIR = 'plan_day_repair.v0.3.md';
     private const LISTEN = 'plan_listen.v1.1.md';
-    private const PAIR_JUDGE = 'plan_pair_judge.v0.1.md';
-    private const PAIR_REWRITE = 'plan_pair_rewrite.v0.1.md';
+    private const PAIR_JUDGE = 'plan_pair_judge.v0.2.md';
+    private const PAIR_REWRITE = 'plan_pair_rewrite.v0.2.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}
 
