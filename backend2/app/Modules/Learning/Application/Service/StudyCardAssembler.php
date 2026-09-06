@@ -450,6 +450,7 @@ final readonly class StudyCardAssembler
             // reads it — and only where the day left one; the client then underlines the piece
             // instead of every word the recogniser missed, and says which piece it wants.
             speakingKey: $mode === ExerciseMode::Speaking ? $content->speakingKey : null,
+            speakingKeys: $mode === ExerciseMode::Speaking ? $content->speakingKeys : [],
         );
     }
 
@@ -773,6 +774,7 @@ final readonly class StudyCardAssembler
             // card would have used. Nothing is graded on it and nothing is uploaded; it rides here
             // so the device underlines the piece the day cared about instead of the whole line.
             speakingKey: $content->speakingKey,
+            speakingKeys: $content->speakingKeys,
         );
     }
 
@@ -834,6 +836,7 @@ final readonly class StudyCardAssembler
             synonyms: [],
             ladderStep: $step,
             speakingKey: $content->speakingKey,
+            speakingKeys: $content->speakingKeys,
         );
     }
 

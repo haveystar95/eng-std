@@ -54,6 +54,10 @@ final class SessionResource extends JsonResource
                 // leaves, and a device grading fifteen words while the server grades three is a
                 // «Верно» the log then contradicts.
                 'speaking_key' => $card->speakingKey,
+                // ADDITIVE (GEN-1). Simpler forms of the same reply that also count when spoken.
+                // Empty on every card that is not a plan line of v0.7 or later. Graded by the
+                // server only once the client reads them (see SessionCardView).
+                'speaking_keys' => $card->speakingKeys,
             ], $this->resource->cards),
         ];
     }

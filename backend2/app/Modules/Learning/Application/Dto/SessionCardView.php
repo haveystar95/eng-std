@@ -81,5 +81,16 @@ final readonly class SessionCardView
          * server contradicts. Null means «the whole line», and the card says so.
          */
         public ?string $speakingKey = null,
+        /**
+         * WHAT ELSE COUNTS WHEN THE LINE IS SPOKEN — 1–2 simpler forms beside `speakingKey`
+         * (наряд GEN-1, канон Y4). ADDITIVE and, until the client reads it, INFORMATIONAL: the
+         * server grades by them only behind `learning.plan.speaking_keys_graded`, which stays off
+         * until the phone accepts the same list — a server looser than the phone would print «Не то»
+         * over a reading the log then counts as correct, and that is the one direction the
+         * contract forbids ({@see \App\Modules\Learning\Application\Command\SubmitReviewsHandler}).
+         *
+         * @var list<string>
+         */
+        public array $speakingKeys = [],
     ) {}
 }

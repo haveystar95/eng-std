@@ -70,6 +70,12 @@ final readonly class SubmitReviewsHandler
         private LearnerProfileReader $profile,
         private TransactionManager $tx,
         private Clock $clock,
+        /**
+         * Whether the simpler forms of a spoken line (`speaking_keys`) count as correct — the
+         * `learning.plan.speaking_keys_graded` toggle, given by the provider. Off until the phone
+         * judges by the same list (наряд GEN-1; see the config note).
+         */
+        private bool $speakingKeysGraded = false,
     ) {}
 
     public function __invoke(SubmitReviews $command): ReviewBatchResult
@@ -265,7 +271,15 @@ final readonly class SubmitReviewsHandler
         if ($input->exerciseMode === ExerciseMode::Speaking
             && $key->speakingKey !== null
             && trim($key->speakingKey) !== '') {
-            return new ExpectedAnswer([$key->speakingKey], isPhrase: true, policy: MatchPolicy::Coverage);
+            // THE SIMPLER FORMS COUNT TOO (наряд GEN-1, канон Y4) — «two years» for «I have two years
+            // of commercial experience» — but only behind the toggle: the phone judges by the one
+            // `speaking_key` today, and a server that accepts what the phone refuses prints «Не
+            // то» over a reading the log then counts as correct. The toggle flips with the client.
+            $accepted = $this->speakingKeysGraded
+                ? [$key->speakingKey, ...$key->speakingKeys]
+                : [$key->speakingKey];
+
+            return new ExpectedAnswer($accepted, isPhrase: true, policy: MatchPolicy::Coverage);
         }
 
         // WORD-LEVEL. The key is the term's own forms, plus its near-synonyms where the card asked

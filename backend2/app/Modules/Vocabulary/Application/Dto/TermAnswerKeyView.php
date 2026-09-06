@@ -46,5 +46,13 @@ final readonly class TermAnswerKeyView
          * with no piece to pick out, and the grader then asks for the line entire, as it always did.
          */
         public ?string $speakingKey = null,
+        /**
+         * WHAT ELSE COUNTS WHEN THE LINE IS SPOKEN — 1–2 simpler forms of the same reply the day
+         * wrote beside the key (наряд GEN-1, P2 v0.7). Target-language text the term itself owns,
+         * like the key; empty on everything else and on every line written before v0.7.
+         *
+         * @var list<string>
+         */
+        public array $speakingKeys = [],
     ) {}
 }

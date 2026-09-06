@@ -90,6 +90,13 @@ final readonly class TermContentView
          */
         public ?string $speakingKey = null,
         /**
+         * WHAT ELSE COUNTS WHEN THE LINE IS SPOKEN — 1–2 simpler forms beside the key (наряд GEN-1,
+         * P2 v0.7). Empty on everything that is not a spoken plan line of v0.7 or later.
+         *
+         * @var list<string>
+         */
+        public array $speakingKeys = [],
+        /**
          * WHICH SHELF OF ITS DAY-SCENE this card stands on — `hear` | `say` | `ask` | `words` |
          * `chunks` | `numbers` | `rescue`, and null on everything that never came from a plan.
          *

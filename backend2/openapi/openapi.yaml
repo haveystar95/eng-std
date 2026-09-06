@@ -3726,6 +3726,16 @@ components:
             and judge the same one. NULL on every other mode, on a spoken word, and on a line the
             day left no piece of — and null there MEANS «say the whole line», which is what the card
             should say out loud.
+        speaking_keys:
+          type: array
+          items: { type: string }
+          description: >
+            ADDITIVE (GEN-1). Beside `speaking_key`: one or two SHORTER or SIMPLER forms of the same
+            reply that also count as correct when spoken («two years» for «I have two years of
+            commercial experience»). Empty on every card that is not a plan line written on P2 v0.7
+            or later. The server grades by them only once the client judges by the same list
+            (`learning.plan.speaking_keys_graded`), so a client that ignores the field is never
+            stricter than the server.
         example: { type: string, nullable: true }
         example_translation: { type: string, nullable: true }
         options:

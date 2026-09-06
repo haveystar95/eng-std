@@ -180,6 +180,7 @@ final class EloquentTermContentReader implements TermContentReader
                 frame: $term->frame !== null ? (string) $term->frame : null,
                 speaker: $term->speaker !== null ? (string) $term->speaker : null,
                 speakingKey: $term->speaking_key !== null ? (string) $term->speaking_key : null,
+                speakingKeys: self::speakingKeysOf($term->speaking_keys ?? null),
                 shelf: $term->shelf !== null ? (string) $term->shelf : null,
                 tier: $term->tier !== null ? (string) $term->tier : null,
                 skillRef: $term->skill_ref !== null ? (string) $term->skill_ref : null,
@@ -217,6 +218,28 @@ final class EloquentTermContentReader implements TermContentReader
             foreach (DB::table('term_translations')->whereIn('term_id', $groupIds)->where('lang', $lang)
                 ->orderByDesc('is_primary')->orderBy('id')->get(['term_id', 'text']) as $row) {
                 $out[(string) $row->term_id][] = (string) $row->text;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * `terms.speaking_keys` as a list of non-empty strings — a JSON list on the row, or null.
+     *
+     * @return list<string>
+     */
+    private static function speakingKeysOf(mixed $raw): array
+    {
+        $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+        if (! is_array($decoded)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($decoded as $value) {
+            if (is_string($value) && trim($value) !== '') {
+                $out[] = trim($value);
             }
         }
 

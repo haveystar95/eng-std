@@ -45,6 +45,7 @@ use App\Modules\Shared\Domain\ValueObject\TermId;
  */
 interface TermPlanFactsWriter
 {
+    /** @param list<string>|null $speakingKeys */
     public function write(
         TermId $termId,
         bool $isLine,
@@ -58,5 +59,12 @@ interface TermPlanFactsWriter
         ?string $tier = null,
         ?string $skillRef = null,
         ?string $numberValue = null,
+        /**
+         * WHAT ELSE COUNTS WHEN THE LINE IS SPOKEN — 1–2 simpler forms beside `speakingKey`
+         * (наряд GEN-1, P2 v0.7). Null on everything that is not a spoken plan line.
+         *
+         * @var list<string>|null
+         */
+        ?array $speakingKeys = null,
     ): void;
 }

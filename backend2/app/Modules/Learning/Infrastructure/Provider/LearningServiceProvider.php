@@ -178,6 +178,12 @@ final class LearningServiceProvider extends ServiceProvider
         ];
         $this->app->when(PlanSittingPlanner::class)->needs('$budget')->give($budget);
         $this->app->when(PlanDayStateCensus::class)->needs('$budget')->give($budget);
+
+        // ЗАСЧИТЫВАТЬ ЛИ `speaking_keys` НА ГОВОРЕНИИ (наряд GEN-1) — тумблер, выключенный, пока
+        // телефон судит по одному ключу; см. `config/learning.php → plan.speaking_keys_graded`.
+        $this->app->when(\App\Modules\Learning\Application\Command\SubmitReviewsHandler::class)
+            ->needs('$speakingKeysGraded')
+            ->give(static fn (): bool => (bool) config('learning.plan.speaking_keys_graded', false));
         // «Из плана: Отпуск в Италии» — what a review card of the top-up says about itself.
         // Singleton for the same reason the global reader is one: a per-request memo over one query.
         // A DIFFERENT instance from that reader even though it is the same table — the two read
