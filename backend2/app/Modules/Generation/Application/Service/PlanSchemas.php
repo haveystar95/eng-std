@@ -143,7 +143,10 @@ final class PlanSchemas
         $assembled = [...$common, 'frame' => self::string(), 'filler' => self::string()];
 
         $hear = self::object([...$assembled, 'speaker' => ['type' => 'string', 'enum' => ['role']], 'transliteration' => self::string()]);
-        $line = self::object([...$assembled, 'transliteration' => self::string()]);
+        // v0.7 (наряд GEN-1): a spoken line carries `speaking_keys` — one or two shorter or simpler
+        // forms of the same reply that also count when spoken. REQUIRED by strict mode, and the
+        // validator refuses a `you` line whose list is empty ({@see PlanDayValidator::SPEAKING_KEYS_MISSING}).
+        $line = self::object([...$assembled, 'transliteration' => self::string(), 'speaking_keys' => self::arrayOf(self::string())]);
         $number = self::object([...$assembled, 'value' => self::string()]);
 
         $word = self::object([
@@ -204,7 +207,16 @@ final class PlanSchemas
      */
     public static function pairVerdict(): array
     {
+        // v0.2 (наряд GEN-1): FOUR answers and a summary. The four are what the court reads —
+        // `fits` is kept for the model's own bookkeeping and for a reader of the raw answer, and
+        // the court recomputes it as the conjunction, because a model that has just written
+        // «level_fits: false» will still write «fits: true» often enough to matter
+        // ({@see PlanPairCourt::verdictOf()}).
         return self::object([
+            'answers' => ['type' => 'boolean'],
+            'not_clarification' => ['type' => 'boolean'],
+            'level_fits' => ['type' => 'boolean'],
+            'translation_exact' => ['type' => 'boolean'],
             'fits' => ['type' => 'boolean'],
             'reason' => self::string(),
         ]);
@@ -227,6 +239,7 @@ final class PlanSchemas
             'filler' => self::string(),
             'translation' => self::string(),
             'transliteration' => self::string(),
+            'speaking_keys' => self::arrayOf(self::string()),
         ]);
     }
 
@@ -278,6 +291,10 @@ final class PlanSchemas
             'filler' => self::nullableString(),
             'speaker' => self::nullableString(),
             'value' => self::nullableString(),
+            // v0.3: a repaired `say`/`ask` line carries its keys like a freshly written one; every
+            // other kind answers null. Nullable rather than absent, because strict mode lists every
+            // property and the card shape is one for all kinds.
+            'speaking_keys' => ['type' => ['array', 'null'], 'items' => self::string()],
         ]);
 
         // The SHELF is the first half of an address, and a repaired card goes back onto the shelf

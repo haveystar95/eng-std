@@ -691,11 +691,21 @@ distractor_length`. Одной формы мало: `key` среди `accommodat
 
 | id | версия / константа | файл | кто вызывает | схема ответа |
 |---|---|---|---|---|
-| **P1** | `plan_outline.v0.4.1` — `PlanPromptLibrary::OUTLINE_VERSION` | `plan_outline.v0.4.1.md` | `PlanOutlineService` | `PlanSchemas::outline()` |
-| **P2** | `plan_day.v0.6` — `DAY_VERSION` | `plan_day.v0.6.md` | `PlanDayComposer` | `PlanSchemas::day()` (`pairs` + `words` + `chunks` + `numbers`) |
-| **P2J** | `plan_pair_judge.v0.1` — `PAIR_JUDGE_VERSION` | `plan_pair_judge.v0.1.md` | `PlanPairCourt` (из `PlanDayComposer::shelved()`) | `PlanSchemas::pairVerdict()` |
-| **P2P** | `plan_pair_rewrite.v0.1` — `PAIR_REWRITE_VERSION` | `plan_pair_rewrite.v0.1.md` | `PlanPairCourt` | `PlanSchemas::pairYou()` |
-| **P2R** | `plan_day_repair.v0.2` — `REPAIR_VERSION` | `plan_day_repair.v0.2.md` | `PlanDayRepairer` | `PlanSchemas::repair()` |
+| **P1** | `plan_outline.v0.4.2` — `PlanPromptLibrary::OUTLINE_VERSION` | `plan_outline.v0.4.2.md` | `PlanOutlineService` | `PlanSchemas::outline()` |
+| **P2** | `plan_day.v0.7` — `DAY_VERSION` | `plan_day.v0.7.md` | `PlanDayComposer` | `PlanSchemas::day()` (`pairs` + `words` + `chunks` + `numbers`; у `you` — `speaking_keys[]`) |
+| **P2J** | `plan_pair_judge.v0.2` — `PAIR_JUDGE_VERSION` | `plan_pair_judge.v0.2.md` | `PlanPairCourt` (из `PlanDayComposer::shelved()` и `rejudgeRepaired()`) | `PlanSchemas::pairVerdict()` — четыре ответа, сервер читает их, не `fits` |
+| **P2P** | `plan_pair_rewrite.v0.2` — `PAIR_REWRITE_VERSION` | `plan_pair_rewrite.v0.2.md` | `PlanPairCourt` | `PlanSchemas::pairYou()` |
+| **P2R** | `plan_day_repair.v0.3` — `REPAIR_VERSION` | `plan_day_repair.v0.3.md` | `PlanDayRepairer` | `PlanSchemas::repair()` |
+
+**GEN-1 (06.09) — канон качества `docs/research/gen-1/README.md` в коде:** слово/связка, не стоящие
+ни в одной реплике сцены, **выбрасываются** до суда над днём (`PlanDayComposer::pruneUnspoken()`,
+счётчик `plan_day_word_outside_lines_dropped`); пара, половину которой переписал P2R, идёт к судье
+снова (`rejudgeRepaired()`, «нет» — обе карточки и оба хода вон, без переписки); `card.speaking_keys_missing`
+— у `say`/`ask` нет ни одного упрощённого варианта; `card.number_value_mismatch` — и когда `value`
+не цифры; шов `assemble()` закрывает пробел между дыркой и знаком препинания; `terms.speaking_keys`
+(jsonb) → `TermAnswerKeyView::$speakingKeys` / карточка сессии `speaking_keys` (additive), грейдер
+засчитывает их только за тумблером `learning.plan.speaking_keys_graded` (выкл, пока телефон судит по
+одному ключу).
 | **P-Listen** | `plan_listen.v1.1` — `LISTEN_VERSION` | `plan_listen.v1.1.md` | `PlanListenService` | `PlanSchemas::listen()` |
 
 Обе половины плейсхолдеров форматирует `Generation/Application/Service/PlanPromptData`

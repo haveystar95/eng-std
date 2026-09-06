@@ -711,9 +711,9 @@ it('leaves a ledger row for every paid call the plan made', function () {
     $all = DB::table('generation_requests')->where('plan_id', $plan['id'])->orderBy('created_at')->get();
     // The pair court's judgements are ledger rows of their own (DAY-FIX-2, Ч.1.3) — one per pair,
     // five pairs a day — and they are counted apart from the day calls they serve.
-    $judgements = $all->where('prompt_version', 'plan_pair_judge.v0.1');
+    $judgements = $all->where('prompt_version', \App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary::PAIR_JUDGE_VERSION);
     expect($judgements)->toHaveCount(10);
-    $rows = $all->where('prompt_version', '!=', 'plan_pair_judge.v0.1')->values();
+    $rows = $all->where('prompt_version', '!=', \App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary::PAIR_JUDGE_VERSION)->values();
 
     // One outline + two days. Every one of them is a call that cost money on the live model, and
     // the PLAN-1a run proved what «recorded only in the request log» is worth.
@@ -723,7 +723,10 @@ it('leaves a ledger row for every paid call the plan made', function () {
         // Two versions and not one: the ledger says which prompt each call actually used rather
         // than stamping both with a single number that would be wrong for one of them the moment
         // they are revised apart.
-        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.4.1', 'plan_day.v0.6'])
+        ->and($rows->pluck('prompt_version')->unique()->all())->toBe([
+            \App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary::OUTLINE_VERSION,
+            \App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary::DAY_VERSION,
+        ])
         ->and($rows[0]->prompt)->toStartWith('outline:')
         ->and($rows[1]->prompt)->toStartWith('day:')
         ->and($rows[1]->size)->toBe(\App\Modules\Learning\Domain\Service\SceneDay::UNITS);

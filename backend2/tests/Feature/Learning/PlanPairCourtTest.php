@@ -31,7 +31,7 @@ uses(RefreshDatabase::class);
  */
 beforeEach(function (): void {
     /** @var array<string, mixed> $day */
-    $this->day = planFixture('s1-day1.v0.6.json');
+    $this->day = planFixture('s1-day1.v0.7.json');
     $this->defects = new RecordingPlanDefectReporter();
 });
 
@@ -127,7 +127,7 @@ it('rewrites a reply the judge refused, once, and keeps the pair with the new li
         ->where('collection_items.collection_id', $row->collection_id)
         ->pluck('terms.text')->all();
     expect($texts)->toContain('Scripted rewritten line.')
-        ->and($texts)->not->toContain('Sorry, could you say that again?');
+        ->and($texts)->not->toContain('Okay, I will wait here.');
 
     expect($this->defects->warnings(PlanPairCourt::PAIR_REWRITTEN))->toBe(1)
         ->and($this->defects->warnings(PlanPairCourt::PAIR_DROPPED))->toBe(0);

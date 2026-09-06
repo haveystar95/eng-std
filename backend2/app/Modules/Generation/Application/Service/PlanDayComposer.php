@@ -49,10 +49,26 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
  *   is now `card.clone` (carded, so it is REPAIRABLE, which `plan.term_repeated` never was), a
  *   duplicated checkpoint is P1's own rule about promising an ability twice, and the entity
  *   agreement check lost its input the day P1 stopped answering with gender and number.
+ *
+ * ## GEN-1 (v0.7): two things the server now does to a PAIRED answer before the gate
+ *
+ *   a word or chunk that stands in no line of the scene is DROPPED ({@see pruneUnspoken()}) — the
+ *   canon says the day's pieces come out of its lines, and the live run shipped 21 of 75 that came
+ *   out of nowhere; a dropped card is a counter, never a refusal, and the addresses of the rest do
+ *   not move;
+ *   a pair whose half a REPAIR rewrote is judged again ({@see rejudgeRepaired()}) — P2R fixes a
+ *   card at an address and knows nothing about the exchange it stands in, so «does the fixed reply
+ *   still answer its question» was a question nobody asked.
  */
 final readonly class PlanDayComposer
 {
-    public const PROMPT_VERSION = 'plan_day.v0.6';
+    public const PROMPT_VERSION = 'plan_day.v0.7';
+
+    /** Counter: a word or chunk that stood in no line of the scene and was dropped (GEN-1, канон Y5). */
+    public const WORD_OUTSIDE_LINES_DROPPED = 'plan_day_word_outside_lines_dropped';
+
+    /** The most alternative forms a spoken line keeps — «1–2 варианта ключа». */
+    public const MAX_SPEAKING_KEYS = 2;
 
     /** The slot in a frame, and the one string {@see assemble()} replaces. */
     private const SLOT = PlanDayItem::SLOT;
@@ -96,9 +112,9 @@ final readonly class PlanDayComposer
      *
      * The order is what makes the repair safe. The day is judged whole; if the fatal verdict lands
      * on at most half its cards and every violation has a card behind it, P2R is asked for those
-     * cards and nothing else; the answer is merged at the addresses that were asked about; and the
-     * MERGED day is judged whole again, from scratch. A repaired card meets every rule the original
-     * had to meet.
+     * cards and nothing else; the answer is merged at the addresses that were asked about; the
+     * pairs a merged card belongs to are judged again; and the MERGED day is judged whole again,
+     * from scratch. A repaired card meets every rule the original had to meet.
      *
      * @param  array<string, string>  $known  term id → text, met on an earlier day of this plan
      *
@@ -122,6 +138,9 @@ final readonly class PlanDayComposer
         // chain of the day that comes out of the merge — the refs are addresses, and the addresses
         // are exactly what a repair may not move ({@see PlanDayRepairer::merge()}).
         $dialogue = $this->dialogue($payload);
+        if ($expectsPairs) {
+            $items = $this->pruneUnspoken($brief, $items);
+        }
         [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue, $expectsPairs);
         $this->record($brief, $answer, $violations);
         $repairCalls = 0;
@@ -132,7 +151,7 @@ final readonly class PlanDayComposer
                 $repairCalls = 1;
                 $this->reportWarnings($brief, $candidate, counted: false);
 
-                $items = $repair->items;
+                [$items, $dialogue] = $this->rejudgeRepaired($brief, $items, $repair->items, $dialogue, $expectsPairs);
                 [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue, $expectsPairs);
                 $violations = [...$violations, ...$repair->violations];
             }
@@ -258,6 +277,156 @@ final readonly class PlanDayComposer
         }
 
         return $out;
+    }
+
+    /**
+     * СЛОВО, КОТОРОГО НЕТ НИ В ОДНОЙ РЕПЛИКЕ, В ДЕНЬ НЕ ПОПАДАЕТ (наряд GEN-1, канон Y5).
+     *
+     * «Слова и связки — из этих же реплик» (канон §2) было счётчиком
+     * ({@see PlanDayValidator::SUBSTITUTION_OUTSIDE_FRAME}), и живой прогон отдал 21 карточку из
+     * 75, которые ни в одной реплике не стоят — `lamp` в сцене, где никто не говорит о лампе. Такая
+     * карточка не чинится (чинить нечего — реплики целы) и не стоит повтора дня; она просто не
+     * карточка ЭТОЙ сцены, и день пишется без неё.
+     *
+     * Совпадение — по границам слов, регистр и пунктуация сняты, любая реплика сцены (роли или
+     * ученика): то же правило, которым валидатор считал счётчик. Форма слова не угадывается —
+     * «hurt» при реплике «It hurts» отбрасывается, и промпт v0.7 просит писать карточку в той
+     * форме, в какой она стоит в реплике. Индексы остальных карточек не двигаются: адрес — позиция
+     * в ответе, а не в списке.
+     *
+     * @param  list<PlanDayItem>  $items
+     * @return list<PlanDayItem>
+     */
+    private function pruneUnspoken(PlanDayGenerationBrief $brief, array $items): array
+    {
+        $lines = '';
+        foreach ($items as $item) {
+            if ($item->kind === PlanDayItem::KIND_LINE) {
+                $lines .= ' ' . self::fold($item->text) . ' ';
+            }
+        }
+
+        $kept = [];
+        foreach ($items as $item) {
+            $shelf = PlanShelf::tryFromName($item->arrayName());
+            if ($shelf !== PlanShelf::Words && $shelf !== PlanShelf::Chunks) {
+                $kept[] = $item;
+
+                continue;
+            }
+
+            $needle = self::fold($item->text);
+            if ($needle === '' || str_contains($lines, ' ' . $needle . ' ')) {
+                $kept[] = $item;
+
+                continue;
+            }
+
+            $this->defects->warned(
+                $brief->planId,
+                $brief->dayIndex,
+                self::WORD_OUTSIDE_LINES_DROPPED,
+                "«{$item->text}» ({$item->arrayName()}[{$item->index}]) не стоит ни в одной реплике сцены — выброшено",
+                counted: true,
+            );
+        }
+
+        return $kept;
+    }
+
+    /**
+     * ПАРА, У КОТОРОЙ ПОЧИНКА ПЕРЕПИСАЛА ПОЛОВИНУ, СУДИТСЯ ЗАНОВО (наряд GEN-1, Ч.4.2 V7).
+     *
+     * P2R чинит карточку ПО АДРЕСУ и не знает, что `say[2]` — ответ на `hear[2]`. До этого
+     * починенная реплика возвращалась в цепочку без суда, и «отвечает ли она» проверял никто.
+     * Теперь каждая пара, у которой изменилась любая половина (текст или перевод), идёт к судье;
+     * «нет» — обе карточки пары и оба хода уходят из дня. Переписки здесь нет: второго вызова у
+     * починки не бывает, а пара без ответа хуже отсутствующей. Сцена, потерявшая четвёртую пару,
+     * отбивается валидатором (`day.pairs_too_few`) — честно.
+     *
+     * @param  list<PlanDayItem>  $before  the day as judged before the repair
+     * @param  list<PlanDayItem>  $after   the merged day
+     * @param  list<PlanDialogueTurn>  $dialogue
+     * @return array{0: list<PlanDayItem>, 1: list<PlanDialogueTurn>}
+     */
+    private function rejudgeRepaired(PlanDayGenerationBrief $brief, array $before, array $after, array $dialogue, bool $expectsPairs): array
+    {
+        if (! $expectsPairs || $this->court === null || $dialogue === []) {
+            return [$after, $dialogue];
+        }
+
+        $was = [];
+        foreach ($before as $item) {
+            $was[$item->arrayName() . '#' . $item->index] = $item;
+        }
+        $now = [];
+        foreach ($after as $item) {
+            $now[$item->arrayName() . '#' . $item->index] = $item;
+        }
+        $changed = static function (?PlanDayItem $a, ?PlanDayItem $b): bool {
+            if ($a === null || $b === null) {
+                return $a !== $b;
+            }
+
+            return $a->text !== $b->text || $a->translation !== $b->translation;
+        };
+
+        $dropAddresses = [];
+        $keptTurns = [];
+        for ($i = 0; $i + 1 < count($dialogue); $i += 2) {
+            $roleTurn = $dialogue[$i];
+            $youTurn = $dialogue[$i + 1];
+            $roleAddress = $roleTurn->address();
+            $youAddress = $youTurn->address();
+            $role = $roleAddress === null ? null : ($now[$roleAddress] ?? null);
+            $you = $youAddress === null ? null : ($now[$youAddress] ?? null);
+
+            $touched = $changed($roleAddress === null ? null : ($was[$roleAddress] ?? null), $role)
+                || $changed($youAddress === null ? null : ($was[$youAddress] ?? null), $you);
+
+            if ($touched && $role !== null && $you !== null) {
+                $verdict = $this->court->judgeOne(
+                    $brief,
+                    intdiv($i, 2),
+                    $youTurn->pair ?? PlanDialogueTurn::PAIR_ANSWER,
+                    $role->text,
+                    $you->text,
+                    $role->translation,
+                    $you->translation,
+                );
+                if (! $verdict['fits']) {
+                    $dropAddresses[$roleAddress] = true;
+                    $dropAddresses[$youAddress] = true;
+                    $this->defects->warned(
+                        $brief->planId,
+                        $brief->dayIndex,
+                        PlanPairCourt::PAIR_DROPPED,
+                        'пара ' . intdiv($i, 2) . ": после починки «{$you->text}» не отвечает на «{$role->text}» — {$verdict['reason']}; выброшена",
+                        counted: true,
+                    );
+
+                    continue;
+                }
+            }
+
+            $keptTurns[] = $roleTurn;
+            $keptTurns[] = $youTurn;
+        }
+        // A trailing turn with no partner (a chain of odd length) is kept as it was.
+        if (count($dialogue) % 2 === 1) {
+            $keptTurns[] = $dialogue[count($dialogue) - 1];
+        }
+
+        if ($dropAddresses === []) {
+            return [$after, $dialogue];
+        }
+
+        $items = array_values(array_filter(
+            $after,
+            static fn (PlanDayItem $item): bool => ! isset($dropAddresses[$item->arrayName() . '#' . $item->index]),
+        ));
+
+        return [$items, $keptTurns];
     }
 
     /**
@@ -427,6 +596,7 @@ final readonly class PlanDayComposer
                 shelf: $item->shelf,
                 skillRef: $item->skillRef,
                 value: $item->value,
+                speakingKeys: $item->speakingKeys,
             );
         }
 
@@ -522,7 +692,41 @@ final readonly class PlanDayComposer
                     shelf: $shelf->value,
                     skillRef: $this->text($card['skill_ref'] ?? '') ?: null,
                     value: $this->text($card['value'] ?? '') ?: null,
+                    // Only a spoken line of the learner's carries keys; a role line that wrote
+                    // some (the schema does not let it, but a fixture might) keeps none.
+                    speakingKeys: $shelf->isAssembled() && ! $shelf->isRole() && $shelf !== PlanShelf::Numbers
+                        ? self::speakingKeysOf($card['speaking_keys'] ?? null)
+                        : [],
                 );
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * `speaking_keys` as the model wrote them — trimmed, non-empty, unique, at most
+     * {@see MAX_SPEAKING_KEYS}. Anything that is not a list of strings reads as no keys.
+     *
+     * PUBLIC for the same reason {@see assemble()} is: the repairer and the fixtures read a key
+     * list the same way the day does.
+     *
+     * @return list<string>
+     */
+    public static function speakingKeysOf(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($raw as $value) {
+            $key = is_scalar($value) ? trim((string) $value) : '';
+            if ($key !== '' && ! in_array($key, $out, true)) {
+                $out[] = $key;
+            }
+            if (count($out) === self::MAX_SPEAKING_KEYS) {
+                break;
             }
         }
 
@@ -536,10 +740,11 @@ final readonly class PlanDayComposer
      * ({@see PlanDayValidator::GAP_MISSING}), and pasting into both would hide it behind a sentence
      * that reads fine. A frame with no slot IS the line — that is what a formula is.
      *
-     * Nothing else is done to the string: no spacing repair, no capitalisation, no full stop. The
-     * paste is exact by construction, and a paste that reads wrong is a frame or a filler that is
-     * wrong. Repairing it here would mean the sentence the validator judges is not the sentence the
-     * model was told it was writing.
+     * ONE thing is done to the seam, and nothing to the content (наряд GEN-1, Ч.4.2 V4): a space
+     * between the slot and the punctuation right after it is closed — «… for ___ .» pastes as
+     * «… for lower back pain.», never «… pain .». Five live lines shipped with that gap; it is a
+     * property of the paste, not of the sentence the model was told it was writing, and the
+     * validator judges the pasted line. No other spacing repair, no capitalisation, no full stop.
      *
      * PUBLIC because this is the formula, and the formula belongs to one place: the fixtures and
      * the tests build their days through it rather than re-implementing the paste beside it.
@@ -551,7 +756,10 @@ final readonly class PlanDayComposer
             return $frame;
         }
 
-        return mb_substr($frame, 0, $at) . $filler . mb_substr($frame, $at + mb_strlen(self::SLOT));
+        $tail = mb_substr($frame, $at + mb_strlen(self::SLOT));
+        $tail = (string) preg_replace('/^\s+(?=[.,!?;:])/u', '', $tail);
+
+        return mb_substr($frame, 0, $at) . $filler . $tail;
     }
 
     /**
@@ -620,6 +828,14 @@ final readonly class PlanDayComposer
         }
 
         return $out;
+    }
+
+    /** Case and punctuation off, spaces collapsed — the shape a line and a piece are compared in. */
+    private static function fold(string $text): string
+    {
+        $folded = preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', mb_strtolower(trim($text))) ?? '';
+
+        return trim((string) preg_replace('/\s+/u', ' ', $folded));
     }
 
     private function text(mixed $raw): string

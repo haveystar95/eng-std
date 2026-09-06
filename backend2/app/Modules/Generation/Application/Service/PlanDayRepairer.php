@@ -428,6 +428,9 @@ final readonly class PlanDayRepairer
                 // the answer says nothing.
                 skillRef: $this->text($card['skill_ref'] ?? '') ?: $item->skillRef,
                 value: $this->text($card['value'] ?? '') ?: null,
+                // The keys come back with the fixed line, or the card keeps the ones it had: a
+                // repair that only touched the example must not strip a spoken line of its keys.
+                speakingKeys: PlanDayComposer::speakingKeysOf($card['speaking_keys'] ?? null) ?: $item->speakingKeys,
             );
         }
 

@@ -55,7 +55,8 @@ beforeEach(function (): void {
             // THE PAIR COURT asks about every pair (P2J); the fixture's pairs fit by construction.
             if (is_array($properties) && isset($properties['fits'])) {
                 return new ModelAnswer(
-                    payload: ['fits' => true, 'reason' => 'fixture'],
+                    // v0.2: the court reads the four answers, never `fits` itself.
+                    payload: ['answers' => true, 'not_clarification' => true, 'level_fits' => true, 'translation_exact' => true, 'fits' => true, 'reason' => 'fixture'],
                     model: 'fixture-plan',
                     latencyMs: 0,
                     tokensIn: 0,
@@ -68,7 +69,7 @@ beforeEach(function (): void {
             /** @var array<string, mixed> $payload */
             $payload = json_decode(
                 (string) file_get_contents(
-                    __DIR__ . '/../../Fixtures/plan/' . ($isDay ? 's1-day1.v0.6.json' : 's1-outline.v0.4.json'),
+                    __DIR__ . '/../../Fixtures/plan/' . ($isDay ? 's1-day1.v0.7.json' : 's1-outline.v0.4.json'),
                 ),
                 true,
             );

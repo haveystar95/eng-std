@@ -77,7 +77,20 @@ final class ScriptedPlanModel implements ContentModelPort
         } elseif (isset($properties['fits'])) {
             $this->judgeMessages[] = $userMessage;
             $verdict = array_shift($this->verdicts);
-            $payload = ['fits' => $verdict ?? true, 'reason' => $verdict === false ? 'scripted: does not follow' : 'scripted: fits'];
+            // v0.2 — four answers and a summary. A scripted «no» fails the FIRST question
+            // (`answers`) unless the script says otherwise: a verdict may also be an array of the
+            // four booleans, for a test about one particular question.
+            $checks = is_array($verdict)
+                ? $verdict
+                : array_fill_keys(\App\Modules\Generation\Application\Service\PlanPairCourt::CHECKS, $verdict ?? true);
+            if (! is_array($verdict) && $verdict === false) {
+                $checks['answers'] = false;
+                foreach (['not_clarification', 'level_fits', 'translation_exact'] as $ok) {
+                    $checks[$ok] = true;
+                }
+            }
+            $fits = ! in_array(false, $checks, true);
+            $payload = [...$checks, 'fits' => $fits, 'reason' => $fits ? 'scripted: fits' : 'scripted: does not follow'];
         } elseif (isset($properties['frame'])) {
             $this->rewriteMessages[] = $userMessage;
             $payload = array_shift($this->rewrites) ?? [
@@ -87,6 +100,7 @@ final class ScriptedPlanModel implements ContentModelPort
                 'filler' => '',
                 'translation' => 'Переписанная по сценарию реплика.',
                 'transliteration' => '',
+                'speaking_keys' => ['scripted rewritten'],
             ];
         } else {
             /** @var array<string, mixed> $payload */

@@ -121,7 +121,24 @@ final class BasicVocabulary
             return true;
         }
 
-        return in_array($normalized, $this->listFor($targetLang), true);
+        $list = $this->listFor($targetLang);
+        if (in_array($normalized, $list, true)) {
+            return true;
+        }
+
+        // A PLURAL OF A LISTED WORD IS THE SAME WORD — «days» beside «day», «weeks» beside «week»
+        // (наряд GEN-1: a live ro→en day carded «days»). The list holds base forms; the one
+        // inflection English puts on a noun this list is about is the plural, and a stop list that
+        // has to enumerate both is a stop list that will be missing one of them.
+        foreach (['es', 's'] as $suffix) {
+            if (str_ends_with($normalized, $suffix)
+                && mb_strlen($normalized) > mb_strlen($suffix) + 2
+                && in_array(mb_substr($normalized, 0, -mb_strlen($suffix)), $list, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

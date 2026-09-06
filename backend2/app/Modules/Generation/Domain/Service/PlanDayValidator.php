@@ -154,6 +154,16 @@ final class PlanDayValidator
     public const NUMBER_VALUE_MISMATCH = 'card.number_value_mismatch';
 
     /**
+     * A SPOKEN LINE WITH NO ALTERNATIVE FORMS — `speaking_keys` empty on a `say`/`ask` card
+     * (P2 v0.7, наряд GEN-1, канон Y4).
+     *
+     * Judged only on an answer written as pairs ({@see PlanDayCandidate::$expectsPairs}): a day
+     * written on v0.6 or earlier never had the field, and a repair that re-judges it whole must not
+     * refuse material the learner is halfway through. Carded, so P2R is pointed at the line.
+     */
+    public const SPEAKING_KEYS_MISSING = 'card.speaking_keys_missing';
+
+    /**
      * A TURN OF THE DIALOGUE POINTS AT NOTHING — `hear[7]` on a shelf of five, `numbers[0]` on a
      * learner's turn, `hear` with no index at all (`docs/plan-dialogue.md` §9).
      *
@@ -417,8 +427,40 @@ final class PlanDayValidator
             ...$this->checkKeys($day),
             ...$this->checkLineTranslations($day),
             ...$this->checkNumbers($day),
+            ...$this->checkSpeakingKeys($day),
             ...$this->checkDialogue($day),
         ];
+    }
+
+    /**
+     * EVERY SPOKEN LINE OF THE LEARNER'S CARRIES ITS ALTERNATIVE FORMS — {@see SPEAKING_KEYS_MISSING}.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkSpeakingKeys(PlanDayCandidate $day): array
+    {
+        if (! $day->expectsPairs) {
+            return [];
+        }
+
+        $out = [];
+        foreach ([PlanShelf::Say, PlanShelf::Ask] as $shelf) {
+            foreach ($day->shelf($shelf) as $item) {
+                if ($item->speakingKeys !== []) {
+                    continue;
+                }
+
+                $out[] = PlanViolation::onCard(
+                    self::SPEAKING_KEYS_MISSING,
+                    $item,
+                    'speaking_keys',
+                    'у реплики нет ни одного упрощённого варианта ответа — на говорении засчитывался бы только один ключ',
+                    'a spoken line must carry 1–2 `speaking_keys` — shorter or simpler forms of the same reply that also count',
+                );
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -1052,6 +1094,22 @@ final class PlanDayValidator
                 continue;
             }
 
+            // DIGITS, OR AN ISO DATE — never words (наряд GEN-1, Ч.4.2 V3). `heardIn()` looks for the
+            // literal value in the line first, so «twice» and «four eight two one» passed as a value
+            // whenever the line spelled them; the learner types digits, and there was nothing to
+            // grade them against.
+            if (preg_match('/^\d[\d.,:\/\-\s]*$/u', $value) !== 1) {
+                $out[] = PlanViolation::onCard(
+                    self::NUMBER_VALUE_MISMATCH,
+                    $item,
+                    'value',
+                    "`value` «{$value}» — не цифры и не дата; ученик вводит число цифрами",
+                    'a `numbers` card writes `value` as digits or an ISO date only, never as words',
+                );
+
+                continue;
+            }
+
             if ($this->numbers->heardIn($day->targetLang, $item->text, $value)) {
                 continue;
             }
@@ -1220,14 +1278,29 @@ final class PlanDayValidator
             'numbers' => count($day->shelf(PlanShelf::Numbers)),
         ];
 
+        $guide = self::SHELF_GUIDE;
+        if ($day->expectsPairs) {
+            // A PAIRED day (v0.6+) is measured in exchanges, not in shelves: «4–6 пар» is the
+            // canon's number, and `say` and `ask` together are the learner's half of them. The
+            // separate 4–6 / 2–3 guides were written for the six-shelf day and would count a
+            // three-answer-two-question scene as two shortfalls.
+            unset($guide['say'], $guide['ask']);
+            $guide['pairs'] = [self::MIN_PAIRS, 6];
+            $counted['pairs'] = $counted['say'] + $counted['ask'];
+        }
+
         $out = [];
-        foreach (self::SHELF_GUIDE as $shelf => [$min, $max]) {
-            $have = $counted[$shelf];
+        foreach ($guide as $shelf => [$min, $max]) {
+            $have = $counted[$shelf] ?? 0;
             if ($have >= $min && $have <= $max) {
                 continue;
             }
 
-            $label = $shelf === 'words' ? 'слов и связок' : "полка «{$shelf}»";
+            $label = match ($shelf) {
+                'words' => 'слов и связок',
+                'pairs' => 'обменов',
+                default => "полка «{$shelf}»",
+            };
             $out[] = PlanViolation::onAnswer(
                 self::SIZE_OUT_OF_RANGE,
                 "{$label}: {$have}, а ориентир — {$min}–{$max}",
@@ -1286,7 +1359,10 @@ final class PlanDayValidator
             );
         }
 
-        if (! $repair && $markers !== []) {
+        // A PAIRED answer (v0.7) is asked NOT to write repair moves — «could you repeat» is the
+        // rescue kit's line, and a reply that asks for a repeat is not an answer (канон Y2) — so
+        // counting their absence there would count the prompt being obeyed.
+        if (! $repair && $markers !== [] && ! $day->expectsPairs) {
             $out[] = PlanViolation::onAnswer(
                 self::NO_REPAIR,
                 'ни одной реплики-починки («Could you repeat…») — на настоящем разговоре ломается ровно это',

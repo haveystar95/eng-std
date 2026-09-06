@@ -124,6 +124,15 @@ final readonly class PlanDayItem
          * and not the words the line spells them with. Null everywhere else.
          */
         public ?string $value = null,
+        /**
+         * WHAT ELSE COUNTS WHEN THE LINE IS SPOKEN — 1–2 shorter or simpler forms of the same reply
+         * (P2 v0.7, наряд GEN-1, канон Y4). Only a `say`/`ask` line carries them; empty everywhere
+         * else, and empty on a `you` line is a carded defect
+         * ({@see \App\Modules\Generation\Domain\Service\PlanDayValidator::SPEAKING_KEYS_MISSING}).
+         *
+         * @var list<string>
+         */
+        public array $speakingKeys = [],
     ) {}
 
     /**

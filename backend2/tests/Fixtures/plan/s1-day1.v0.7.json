@@ -17,7 +17,8 @@
         "frame": "I need to ___, please.",
         "filler": "check in",
         "translation": "Мне нужно отметиться на стойке, пожалуйста.",
-        "transliteration": "ай нид ту чек-ин плиз"
+        "transliteration": "ай нид ту чек-ин плиз",
+        "speaking_keys": ["I need to check in", "check in please"]
       }
     },
     {
@@ -37,7 +38,8 @@
         "frame": "It hurts in my ___.",
         "filler": "lower back",
         "translation": "Болит в пояснице.",
-        "transliteration": "ит хётс ин май лоуэр бэк"
+        "transliteration": "ит хётс ин май лоуэр бэк",
+        "speaking_keys": ["my back hurts", "back pain"]
       }
     },
     {
@@ -54,10 +56,11 @@
       "you": {
         "kind": "line",
         "skill_ref": "s1.2",
-        "frame": "Sorry, could you say that again?",
+        "frame": "Okay, I will wait here.",
         "filler": "",
-        "translation": "Извините, не могли бы вы сказать это ещё раз?",
-        "transliteration": "сорри куд ю сэй зэт эгейн"
+        "translation": "Хорошо, буду ждать здесь.",
+        "transliteration": "оукей ай уил уэйт хиэ",
+        "speaking_keys": ["I will wait", "okay"]
       }
     },
     {
@@ -77,7 +80,8 @@
         "frame": "How often should I take the ___?",
         "filler": "painkiller",
         "translation": "Как часто мне принимать обезболивающее?",
-        "transliteration": "хау офен шуд ай тэйк зэ пэйнкиллер"
+        "transliteration": "хау офен шуд ай тэйк зэ пэйнкиллер",
+        "speaking_keys": ["how often the painkiller", "painkiller how often"]
       }
     },
     {
@@ -97,7 +101,8 @@
         "frame": "Where do I ___?",
         "filler": "take a seat",
         "translation": "Где мне присесть?",
-        "transliteration": "уэа ду ай тэйк э сит"
+        "transliteration": "уэа ду ай тэйк э сит",
+        "speaking_keys": ["where to take a seat", "where do I sit"]
       }
     }
   ],
@@ -115,16 +120,6 @@
     {
       "kind": "word",
       "skill_ref": "s1.2",
-      "text": "prescription",
-      "translation": "рецепт",
-      "transliteration": "прескрипшен",
-      "example": "The nurse handed me a prescription at the desk.",
-      "example_translation": "Медсестра дала мне рецепт на стойке.",
-      "image_api_prompt": "a small printed slip of paper lying on a clinic reception counter, close-up"
-    },
-    {
-      "kind": "word",
-      "skill_ref": "s1.2",
       "text": "painkiller",
       "translation": "обезболивающее",
       "transliteration": "пэйнкиллер",
@@ -135,12 +130,22 @@
     {
       "kind": "word",
       "skill_ref": "s1.1",
-      "text": "referral",
-      "translation": "направление",
-      "transliteration": "рифёрал",
-      "example": "Without a referral the clinic will not see me.",
-      "example_translation": "Без направления в клинике меня не примут.",
-      "image_api_prompt": "a hand passing a folded form across a hospital desk"
+      "text": "appointment",
+      "translation": "запись на приём",
+      "transliteration": "эпойнтмент",
+      "example": "I made an appointment for Monday morning.",
+      "example_translation": "Я записался на приём на утро понедельника.",
+      "image_api_prompt": "a hand writing a date into a paper diary on a clinic desk"
+    },
+    {
+      "kind": "word",
+      "skill_ref": "s1.1",
+      "text": "questions",
+      "translation": "вопросы",
+      "transliteration": "куэсченз",
+      "example": "I have two questions about the tablets.",
+      "example_translation": "У меня два вопроса о таблетках.",
+      "image_api_prompt": "a patient holding a small note with a list while talking to a nurse"
     }
   ],
   "chunks": [

@@ -444,6 +444,9 @@ final readonly class GeneratePlanDayHandler
             // Only a `numbers` card has one, and it is what NUM-1 will grade against: the digits
             // never appear on the screen, so nothing but a gate can notice them being wrong.
             numberValue: $item->value,
+            // THE SIMPLER FORMS beside the key (P2 v0.7, канон Y4) — written for a spoken line,
+            // null for everything else, exactly as they arrived from the day.
+            speakingKeys: $item->speakingKeys === [] ? null : $item->speakingKeys,
         );
 
         // AN EXAMPLE BELONGS TO A WORD OR A CONNECTOR, AND TO NOTHING ELSE (канон §7,

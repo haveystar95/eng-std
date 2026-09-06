@@ -28,9 +28,9 @@ use Illuminate\Support\Facades\DB;
 
 $app = require __DIR__ . '/bootstrap.php';
 
-[$script, $slug, $support, $target, $level, $daysToEvent, $goal] = $argv + [null, null, null, null, null, null, null];
+[$script, $slug, $support, $target, $level, $daysToEvent, $goal, $resume] = $argv + [null, null, null, null, null, null, null, null];
 if ($goal === null) {
-    fwrite(STDERR, "usage: run-plan.php <slug> <support> <target> <level> <days_to_event> \"<goal>\"\n");
+    fwrite(STDERR, "usage: run-plan.php <slug> <support> <target> <level> <days_to_event> \"<goal>\" [<plan_id to resume: skip create+outline>]\n");
     exit(2);
 }
 
@@ -51,25 +51,33 @@ Profile::updateOrCreate(['user_id' => $user->id], [
     'timezone' => 'Europe/Bucharest',
 ]);
 
-// Второй активный план запрещён — предыдущий прогон того же слага уходит на паузу.
-DB::table('learning_plans')->where('user_id', $user->id)->where('status', 'active')->update(['status' => 'paused']);
+// Второй «идущий» план запрещён (`findActiveFor()` считает идущим и активный, и поставленный на
+// паузу) — предыдущий прогон того же слага отказывается.
+DB::table('learning_plans')->where('user_id', $user->id)->whereIn('status', ['active', 'paused'])
+    ->where('id', '!=', (string) $resume)->update(['status' => 'abandoned']);
 
 $userId = UserId::fromString((string) $user->id);
 $eventDate = now()->addDays((int) $daysToEvent)->format('Y-m-d');
 
 $startedAt = microtime(true);
-$planId = $app->make(CreatePlanHandler::class)(new CreatePlan(
-    actorId: $userId,
-    goalText: $goal,
-    targetLang: $target,
-    level: $level,
-    eventDate: $eventDate,
-    minutesPerDay: 20,
-));
-fwrite(STDOUT, "plan {$planId->value} created for {$email} (event {$eventDate})\n");
+if ($resume !== null) {
+    // Каркас уже куплен предыдущим запуском, который упал ПОСЛЕ него — не платить за P1 дважды.
+    $planId = \App\Modules\Learning\Domain\ValueObject\PlanId::fromString($resume);
+    fwrite(STDOUT, "plan {$planId->value} resumed for {$email} (outline already written)\n");
+} else {
+    $planId = $app->make(CreatePlanHandler::class)(new CreatePlan(
+        actorId: $userId,
+        goalText: $goal,
+        targetLang: $target,
+        level: $level,
+        eventDate: $eventDate,
+        minutesPerDay: 20,
+    ));
+    fwrite(STDOUT, "plan {$planId->value} created for {$email} (event {$eventDate})\n");
 
-$app->make(BuildPlanOutlineHandler::class)(new BuildPlanOutline($planId, $userId));
-fwrite(STDOUT, "outline ready (" . round(microtime(true) - $startedAt) . "s)\n");
+    $app->make(BuildPlanOutlineHandler::class)(new BuildPlanOutline($planId, $userId));
+    fwrite(STDOUT, "outline ready (" . round(microtime(true) - $startedAt) . "s)\n");
+}
 
 $app->make(StartPlanHandler::class)(new StartPlan($planId, $userId));
 fwrite(STDOUT, "started; days written synchronously (" . round(microtime(true) - $startedAt) . "s)\n");

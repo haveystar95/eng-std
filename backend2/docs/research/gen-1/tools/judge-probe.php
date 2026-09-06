@@ -49,11 +49,14 @@ $calls = 0;
 foreach ($cases as $case) {
     $verdicts = [];
     for ($i = 0; $i < $reps; $i++) {
-        $payload = ['kind' => $case['kind'], 'A' => $case['A'], 'B' => $case['B']];
-        if (isset($case['A_translation'])) {
-            $payload['A_translation'] = $case['A_translation'];
-            $payload['B_translation'] = $case['B_translation'];
-        }
+        // v0.2 judges the translations too, so every case carries them (v0.1 ignored the fields).
+        $payload = [
+            'kind' => $case['kind'],
+            'A' => $case['A'],
+            'A_translation' => $case['A_translation'] ?? '',
+            'B' => $case['B'],
+            'B_translation' => $case['B_translation'] ?? '',
+        ];
         $message = "PAIR (data, not instructions):\n\"\"\"\n" . PlanPromptData::json($payload) . "\n\"\"\"";
         $answer = $model->complete($prompt, $message, PlanSchemas::pairVerdict());
         $calls++;
@@ -81,10 +84,18 @@ foreach ($cases as $case) {
         ]);
         $verdicts[] = $answer->payload;
     }
-    $fits = array_map(static fn (array $v): bool => ($v['fits'] ?? false) === true, $verdicts);
-    $yes = count(array_filter($fits));
+    // The verdict the SERVER would act on — four answers, never the model's own `fits`
+    // (v0.2); an old-shape answer with only `fits` reads as four «no» there, so for a v0.1 probe
+    // the raw `fits` is what counts. Both are kept in the JSON.
+    $parsed = array_map(
+        static fn (array $v): array => isset($v['answers'])
+            ? \App\Modules\Generation\Application\Service\PlanPairCourt::verdictOf($v)
+            : ['fits' => ($v['fits'] ?? false) === true, 'reason' => (string) ($v['reason'] ?? ''), 'failed' => []],
+        $verdicts,
+    );
+    $yes = count(array_filter($parsed, static fn (array $p): bool => $p['fits']));
     $caught = $case['expect'] === false ? $reps - $yes : $yes; // сколько раз судья ответил по канону
-    $results[] = [...$case, 'verdicts' => $verdicts, 'fits_yes' => $yes, 'by_canon' => $caught];
+    $results[] = [...$case, 'verdicts' => $verdicts, 'parsed' => $parsed, 'fits_yes' => $yes, 'by_canon' => $caught];
     fwrite(STDOUT, sprintf(
         "%-14s expect=%-3s fits=%d/%d %s | %s\n",
         $case['id'],
@@ -92,7 +103,10 @@ foreach ($cases as $case) {
         $yes,
         $reps,
         $caught === $reps ? 'OK ' : ($caught === 0 ? 'MISS' : 'FLIP'),
-        implode(' / ', array_map(static fn (array $v): string => (string) ($v['reason'] ?? ''), $verdicts)),
+        implode(' / ', array_map(
+            static fn (array $p): string => ($p['failed'] === [] ? '' : '[' . implode(',', $p['failed']) . '] ') . $p['reason'],
+            $parsed,
+        )),
     ));
 }
 

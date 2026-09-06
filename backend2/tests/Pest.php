@@ -641,6 +641,11 @@ function planItems(array $day): array
                 shelf: $shelf->value,
                 skillRef: ((string) ($card['skill_ref'] ?? '')) ?: null,
                 value: ((string) ($card['value'] ?? '')) ?: null,
+                // v0.7: the learner's spoken lines carry their simpler forms, read the way the
+                // composer reads them.
+                speakingKeys: $assembled && ! $shelf->isRole() && $shelf !== \App\Modules\Generation\Domain\ValueObject\PlanShelf::Numbers
+                    ? \App\Modules\Generation\Application\Service\PlanDayComposer::speakingKeysOf($card['speaking_keys'] ?? null)
+                    : [],
             );
         }
     }

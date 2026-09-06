@@ -75,7 +75,7 @@ foreach ($days as $day) {
         ->join('collection_items as ci', 'ci.term_id', '=', 't.id')
         ->where('ci.collection_id', $day->collection_id)
         ->orderBy('t.id')
-        ->get(['t.id', 't.text', 't.shelf', 't.kind', 't.frame', 't.filler', 't.speaking_key', 't.skill_ref', 't.number_value']);
+        ->get(['t.id', 't.text', 't.shelf', 't.kind', 't.frame', 't.filler', 't.speaking_key', 't.speaking_keys', 't.skill_ref', 't.number_value']);
     $ids = $rows->pluck('id')->all();
     $translations = [];
     foreach (DB::table('term_translations')->whereIn('term_id', $ids)->where('lang', $plan->support_lang)->orderByDesc('is_primary')->get() as $tr) {
@@ -93,6 +93,7 @@ foreach ($days as $day) {
             'frame' => (string) $row->frame,
             'filler' => (string) $row->filler,
             'speaking_key' => $row->speaking_key !== null ? (string) $row->speaking_key : null,
+            'speaking_keys' => is_string($row->speaking_keys ?? null) ? (json_decode($row->speaking_keys, true) ?: []) : [],
             'skill_ref' => $row->skill_ref !== null ? (string) $row->skill_ref : null,
             'number_value' => $row->number_value !== null ? (string) $row->number_value : null,
             'example' => $examples[(string) $row->id]['example'] ?? null,
@@ -114,6 +115,7 @@ foreach ($days as $day) {
         $md[] = '- role: «' . ($role['text'] ?? '—') . '» — ' . ($role['translation'] ?? '—');
         $md[] = '- you: «' . ($you['text'] ?? '—') . '» — ' . ($you['translation'] ?? '—')
             . ' · ключ: ' . (isset($you['speaking_key']) ? '`' . $you['speaking_key'] . '`' : '_вся фраза_')
+            . (($you['speaking_keys'] ?? []) !== [] ? ' · ещё: ' . implode(' / ', array_map(static fn ($k): string => '`' . (string) $k . '`', $you['speaking_keys'])) : '')
             . ' · ' . (string) ($you['skill_ref'] ?? '');
         $md[] = '';
         $pairs[] = ['kind' => $kind, 'role' => $role, 'you' => $you];

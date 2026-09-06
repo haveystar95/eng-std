@@ -89,7 +89,15 @@ final class FakePlanContentModel implements ContentModelPort
         // P2J — the judge of one pair. The fake's own pairs fit by construction, and a court that
         // said otherwise would make every feature test a test of the rewrite path.
         if (isset($properties['fits'])) {
-            return $this->answer(['fits' => true, 'reason' => 'fake: fits']);
+            // v0.2: four answers and a summary; the court reads the four ({@see PlanPairCourt::verdictOf()}).
+            return $this->answer([
+                'answers' => true,
+                'not_clarification' => true,
+                'level_fits' => true,
+                'translation_exact' => true,
+                'fits' => true,
+                'reason' => 'fake: fits',
+            ]);
         }
         // P2P — never reached while the judge above says yes; answers with a line of the right
         // shape so a test that scripts a «no» elsewhere still gets a card back.
@@ -100,6 +108,7 @@ final class FakePlanContentModel implements ContentModelPort
                 'filler' => '',
                 'translation' => 'Фейковая переписанная реплика.',
                 'transliteration' => 'фейк',
+                'speaking_keys' => ['fake rewritten'],
             ]);
         }
 
@@ -208,8 +217,12 @@ final class FakePlanContentModel implements ContentModelPort
             $hear[] = [
                 'kind' => 'line',
                 'skill_ref' => $skill($i - 1),
+                // The fourth word stands on the words shelf alone, so the role lines carry it:
+                // since v0.7 a word that stands in no line of the scene is DROPPED by the server
+                // ({@see \App\Modules\Generation\Application\Service\PlanDayComposer::pruneUnspoken()}),
+                // and a fake day that lost a card would fail every count a test makes.
                 'frame' => $i <= 3
-                    ? "Day {$day} question {$i}{$mark}, please?"
+                    ? "Day {$day} question {$i}{$mark} about {$words[3][0]}, please?"
                     : "Day {$day} anything to ask{$mark}, part " . ($i - 3) . '?',
                 'filler' => '',
                 'speaker' => 'role',
@@ -237,6 +250,8 @@ final class FakePlanContentModel implements ContentModelPort
                 // has no way to know what to say.
                 'translation' => 'День ' . $day . ', реплика номер ' . ($i + 1) . ", про «{$key}».",
                 'transliteration' => 'дэй лайн эбаут',
+                // v0.7: a spoken line carries 1–2 simpler forms that also count when spoken.
+                'speaking_keys' => ["about {$text}"],
             ];
         }
 
@@ -249,6 +264,7 @@ final class FakePlanContentModel implements ContentModelPort
                 'filler' => $text,
                 'translation' => "Где находится «{$key}»?",
                 'transliteration' => 'уэа из',
+                'speaking_keys' => ["where {$text}"],
             ];
         }
 

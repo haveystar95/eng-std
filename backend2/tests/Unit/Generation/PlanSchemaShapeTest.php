@@ -105,7 +105,7 @@ it('lets P2 answer with a day-scene as PAIRS plus the three written shelves (v0.
         ->and(array_keys($schema['properties']['pairs']['items']['properties']))->toBe(['kind', 'role', 'you'])
         ->and($schema['properties']['pairs']['items']['properties']['kind']['enum'])->toBe(['answer', 'ask']);
 
-    expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.6.json')))->toBe([]);
+    expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.7.json')))->toBe([]);
 
     // …and the v0.4 shape is exactly what the schema refuses now.
     expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.4.json')))->not->toBe([]);
@@ -114,7 +114,9 @@ it('lets P2 answer with a day-scene as PAIRS plus the three written shelves (v0.
 it('keeps the two court schemas to the one question each asks', function () {
     // P2J answers yes/no and says why; P2P answers with ONE `you` item in the day's own shape, so
     // the rewritten card is judged by every day gate as if P2 had written it.
-    expect(array_keys(PlanSchemas::pairVerdict()['properties']))->toBe(['fits', 'reason'])
+    // v0.2 (GEN-1): four answers the court reads, plus the model's own summary it does not.
+    expect(array_keys(PlanSchemas::pairVerdict()['properties']))
+        ->toBe(['answers', 'not_clarification', 'level_fits', 'translation_exact', 'fits', 'reason'])
         ->and(array_keys(PlanSchemas::pairYou()['properties']))
-        ->toBe(['skill_ref', 'frame', 'filler', 'translation', 'transliteration']);
+        ->toBe(['skill_ref', 'frame', 'filler', 'translation', 'transliteration', 'speaking_keys']);
 });
