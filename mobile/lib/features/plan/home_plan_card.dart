@@ -123,7 +123,12 @@ class _PlanCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.s12),
-              _BrassAction(label: l.homePlanCardContinue, onTap: () => _open(context, ref)),
+              // THE SAME VERB AS THE WORD BESIDE IT (наряд DAY-FIX-2, Ч.3): «не начат» goes with
+              // «Начать день», not «Продолжить» — the live run of 06.09 read both on one card.
+              _BrassAction(
+                label: focus == null ? l.homePlanCardContinue : planDayAction(l, focus.dayState),
+                onTap: () => _open(context, ref),
+              ),
             ],
           ),
         ],

@@ -499,15 +499,20 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// ОДНУ вещь сверх текста — момент начала прослушивания, потому что «сразу» это про время, а
   /// подстановка мгновенна по построению. Без этого любой подставленный ход был бы «сразу», и
   /// проверить «сказал, но медленно» стало бы нечем.
+  ///
+  /// Дверь стоит на ЛЮБОЙ карточке говорения, а не только в прогоне (наряд DAY-FIX-2, Ч.7):
+  /// спасатель, дошедший до ступени «скажи вслух», встаёт в разогрев дня, и без микрофона его не
+  /// пройти иначе как «Не помню» — а это ошибка в append-only журнале и возврат карточки. Вне
+  /// прогона секунд «сразу» нет, и подделывать нечего: подставляется только текст.
   void _substituteTranscript(String text, {required bool fast}) {
+    if (_answered) return;
     final knobs = widget.sceneRun;
-    if (_answered || knobs == null) return;
 
     unawaited(_recognizer?.cancel());
     _runGuardTimer?.cancel();
     setState(() => _listeningNow = false);
     _listenStartedAt = DateTime.now().subtract(
-      fast ? Duration.zero : Duration(seconds: knobs.fastSeconds + 1),
+      fast || knobs == null ? Duration.zero : Duration(seconds: knobs.fastSeconds + 1),
     );
     _commit(text);
   }
@@ -956,8 +961,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           _speakingControls(l),
         ],
         // ДЕВ-ДВЕРЬ QA: подстановка транскрипта вместо голоса. Ни в релизе, ни у боевого аккаунта
-        // её нет — право приезжает с сервера одним полем ({@see _substituteTranscript}).
-        if (!_answered && _isSceneRun && (ref.watch(authControllerProvider).value?.qaTools ?? false)) ...[
+        // её нет — право приезжает с сервера одним полем ({@see _substituteTranscript}). На
+        // каждой карточке говорения, не только в прогоне: разогрев дня тоже просит сказать вслух.
+        if (!_answered && _isSpeaking && (ref.watch(authControllerProvider).value?.qaTools ?? false)) ...[
           const SizedBox(height: AppSpacing.s12),
           _QaTranscriptRow(
             onSaid: (fast) => _substituteTranscript(

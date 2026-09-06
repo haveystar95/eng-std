@@ -1096,6 +1096,46 @@ void main() {
     expect(find.textContaining('Открой день ещё раз'), findsOneWidget);
   });
 
+  testWidgets('the summary says «пройден» from the SAME word the plan tab reads', (tester) async {
+    // Живой прогон 06.09: вкладка «План» уже говорила «пройден», а итог дня — «почти».
+    // `status` строки становится `done` только когда доедет `POST /complete`; перепись
+    // (`day_state`) знает раньше, и три экрана плана обязаны говорить одно слово (Ч.3).
+    await tester.pumpWidget(
+      _summaryScope(
+        _CompletionSpy(),
+        _app(
+          PlanDaySummary(
+            envelope: const _Envelope(kinds: ['word']),
+            cards: [_card('t1', 'word')],
+            onDone: () {},
+          ),
+        ),
+        plan: LearningPlan.fromJson({
+          ..._planJson(),
+          'focus_day_index': 2,
+          'days': [
+            {
+              'id': 'd1',
+              'index': 1,
+              'kind': 'intro',
+              'title': 'Начать приём',
+              // Ряд ещё `ready`, а перепись уже досчитала день.
+              'status': 'ready',
+              'day_state': 'done',
+              'minutes_left': 0,
+            },
+            {'id': 'd2', 'index': 2, 'kind': 'intro', 'title': 'Уточнить симптомы', 'status': 'ready'},
+          ],
+        }),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('ДЕНЬ 1 ПРОЙДЕН'), findsOneWidget);
+    expect(find.text('ДЕНЬ 1 · ПОЧТИ'), findsNothing);
+    expect(find.textContaining('Открой день ещё раз'), findsNothing);
+  });
+
   testWidgets('the summary counts the day apart from what the queue added to the sitting', (
     tester,
   ) async {

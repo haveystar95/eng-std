@@ -101,7 +101,13 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
     final planAsync = ref.watch(planProvider(envelope.planId));
     final plan = planAsync.value;
     final fresh = planAsync.isLoading ? null : planAsync.value;
-    final dayPassed = fresh?.dayAt(envelope.dayIndex)?.status == PlanDayStatus.done;
+    // THE SAME WORD AS THE PLAN TAB (наряд DAY-FIX-2, Ч.3): `day_state` is the census the tab, the
+    // day screen and the sitting read; the row's `status` turns `done` only when `POST /complete`
+    // lands, and between the two the summary said «почти» over a day the tab already called
+    // «пройден» (живой прогон 06.09).
+    final freshDay = fresh?.dayAt(envelope.dayIndex);
+    final dayPassed =
+        freshDay?.dayState == PlanDayState.done || freshDay?.status == PlanDayStatus.done;
     final verdictKnown = fresh != null;
 
     // Distinct TERMS, not cards: one word arrives as three cards inside a stage, and «9 фраз и слов»

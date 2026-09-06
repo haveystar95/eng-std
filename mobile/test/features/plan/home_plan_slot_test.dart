@@ -22,7 +22,10 @@ MaterialApp _app(Widget home) => MaterialApp(
   home: Scaffold(body: home),
 );
 
-LearningPlan _plan() => LearningPlan.fromJson({
+LearningPlan _plan() => LearningPlan.fromJson(_planJson());
+
+/// Тот же план без списка дней — чтобы второй тест заменил только `days`.
+Map<String, dynamic> _planJson() => {
   'id': '01PLAN',
   'status': 'active',
   'title': 'К врачу из-за боли',
@@ -46,7 +49,7 @@ LearningPlan _plan() => LearningPlan.fromJson({
     {'id': 'd2', 'index': 2, 'kind': 'intro', 'title': 'Уточнить симптомы', 'status': 'ready'},
     {'id': 'd3', 'index': 3, 'kind': 'final', 'title': 'Прогон приёма', 'status': 'pending'},
   ],
-});
+};
 
 void main() {
   testWidgets('with a plan the slot leads with the plan\'s own progress, not with words done', (
@@ -71,7 +74,45 @@ void main() {
     expect(find.text('%'), findsNothing);
     // The focus day is named beside the action, so the button is not «continue what exactly».
     expect(find.text('Уточнить симптомы'), findsOneWidget);
+    // …И ГЛАГОЛ КНОПКИ — ТО ЖЕ СЛОВО (живой прогон 06.09): «не начат» рядом с «Продолжить» — это
+    // два ответа на один вопрос, ровно то, что наряд закрывал на трёх экранах.
+    expect(find.text('Начать день'), findsOneWidget);
+    expect(find.text('Продолжить'), findsNothing);
+  });
+
+  testWidgets('a day already going says «Продолжить» — the verb follows the server\'s word', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          activePlanProvider.overrideWith(
+            (ref) async => LearningPlan.fromJson({
+              ..._planJson(),
+              'days': [
+                {'id': 'd1', 'index': 1, 'kind': 'intro', 'title': 'Начать приём', 'status': 'done'},
+                {
+                  'id': 'd2',
+                  'index': 2,
+                  'kind': 'intro',
+                  'title': 'Уточнить симптомы',
+                  'status': 'ready',
+                  'day_state': 'in_progress',
+                  'minutes_left': 7,
+                },
+                {'id': 'd3', 'index': 3, 'kind': 'final', 'title': 'Прогон приёма', 'status': 'pending'},
+              ],
+            }),
+          ),
+        ],
+        child: _app(const HomePlanSlot()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('День 2 · идёт · около 7 минут'), findsOneWidget);
     expect(find.text('Продолжить'), findsOneWidget);
+    expect(find.text('Начать день'), findsNothing);
   });
 
   testWidgets('with no plan the SAME slot invites one — it is not an empty gap', (tester) async {
