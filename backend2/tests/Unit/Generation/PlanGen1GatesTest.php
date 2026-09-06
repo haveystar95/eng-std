@@ -144,3 +144,17 @@ it('treats the plural of a listed basic word as basic', function () {
         // Not every word ending in «s» is a plural of a basic word.
         ->and($basics->isBasic('en', 'painkillers'))->toBeFalse();
 });
+
+it('does not fold an acronym into the pronoun it spells — «in IT» is a chunk, «in it» is not', function () {
+    // The live plan of 07.09: the repair wrote the chunk «in IT» and the gate read «in it».
+    $basics = new BasicVocabulary();
+
+    expect($basics->isBasic('en', 'IT'))->toBeFalse()
+        ->and($basics->isBasic('en', 'it'))->toBeTrue()
+        ->and($basics->isBasic('en', 'HR'))->toBeFalse()
+        ->and($basics->allBasic('en', 'in IT'))->toBeFalse()
+        ->and($basics->allBasic('en', 'in it'))->toBeTrue()
+        ->and($basics->allBasic('en', 'see it'))->toBeTrue()
+        // A capitalised sentence-initial pronoun is still the pronoun: one capital, not all.
+        ->and($basics->isBasic('en', 'It'))->toBeTrue();
+});

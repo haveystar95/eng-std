@@ -112,6 +112,14 @@ final class BasicVocabulary
     /** Is the card's own text a piece of basic vocabulary? */
     public function isBasic(string $targetLang, string $text): bool
     {
+        // AN ACRONYM IS NOT THE PRONOUN IT FOLDS INTO. «IT» (the industry) case-folded to «it»
+        // and killed a live day 1 on «in IT» — «связка из базовых слов» (07.09, план владельца).
+        // Two to five capitals with no lowercase is a written acronym, whatever list its folded
+        // form is on; a pronoun is never written that way in running text.
+        if (self::isAcronym($text)) {
+            return false;
+        }
+
         $normalized = self::normalize($text);
         if ($normalized === '') {
             return false;
@@ -174,7 +182,9 @@ final class BasicVocabulary
             return false;
         }
 
-        $words = explode(' ', $normalized);
+        // The ORIGINAL words, not the folded ones: the acronym guard in {@see isBasic()} needs
+        // to see «IT» as written.
+        $words = preg_split('/[^\p{L}\p{N}]+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY) ?: [];
         foreach ($words as $word) {
             if (! $this->isBasic($targetLang, $word)) {
                 return false;
@@ -220,6 +230,12 @@ final class BasicVocabulary
     }
 
     /** Case-folded, punctuation-free, whitespace-collapsed — the day validator's own normalisation. */
+    /** «IT», «HR», «API», «CV» — written in capitals only, two to five letters, no digits. */
+    private static function isAcronym(string $value): bool
+    {
+        return preg_match('/^\p{Lu}{2,5}$/u', trim($value)) === 1;
+    }
+
     private static function normalize(string $value): string
     {
         $lower = mb_strtolower(trim($value));
