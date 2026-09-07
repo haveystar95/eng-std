@@ -8,6 +8,7 @@ import 'data/providers.dart';
 import 'features/auth/login_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/profile/qa_report_button.dart';
 import 'l10n/app_localizations.dart';
 
 void main() {
@@ -50,6 +51,11 @@ class EngStdApp extends ConsumerWidget {
       supportedLocales: kSupportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       localeResolutionCallback: (device, supported) => resolveLocale(device, supported),
+      // «ЖАЛОБА» ЖИВЁТ НАД ВСЕМ ПРИЛОЖЕНИЕМ (наряд DAY-GATE-1, Ч.0.5), а не на отдельных экранах:
+      // нажимают её там, где что-то не так, и заранее известного списка таких мест нет. Обёртка
+      // ставится через `builder`, чтобы попасть ВНУТРЬ навигатора — иначе снимок не поймал бы ни
+      // одного вытолкнутого экрана. Кнопки нет ни у кого, кроме QA-аккаунта; решает сервер.
+      builder: (context, child) => QaReportOverlay(child: child ?? const SizedBox.shrink()),
       home: const _AuthGate(),
     );
   }

@@ -1144,6 +1144,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionSpeakNoMic => 'The microphone isn\'t available. You can skip this card.';
 
   @override
+  String buildStamp(String client, String server) {
+    return 'client $client · server $server';
+  }
+
+  @override
+  String get buildStampUnstamped => 'unstamped';
+
+  @override
+  String get buildStampWaiting => '…';
+
+  @override
+  String get buildStampNoServer => 'offline';
+
+  @override
+  String get qaReportButton => 'Report';
+
+  @override
+  String qaReportSent(String id) {
+    return 'Report saved: $id';
+  }
+
+  @override
+  String get qaReportFailed => 'Report was not sent';
+
+  @override
   String get speechPermissionRecognitionDenied =>
       'Speech recognition is off. Allow speech recognition in Settings — without it the phone hears you but cannot understand.';
 

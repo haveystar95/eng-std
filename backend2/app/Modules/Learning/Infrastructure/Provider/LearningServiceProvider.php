@@ -39,7 +39,9 @@ use App\Modules\Learning\Application\Port\PlanTermSweepStore;
 use App\Modules\Learning\Application\Port\QaPlanClock;
 use App\Modules\Learning\Application\Service\QaClockShift;
 use App\Modules\Learning\Application\Service\ShiftableClock;
+use App\Modules\Learning\Application\Port\QaReportStore;
 use App\Modules\Learning\Infrastructure\Qa\CachedQaPlanClock;
+use App\Modules\Learning\Infrastructure\Qa\FileQaReportStore;
 use App\Modules\Shared\Domain\Service\Clock;
 use Illuminate\Contracts\Container\Container;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
@@ -148,6 +150,16 @@ final class LearningServiceProvider extends ServiceProvider
         // ДЕВ-ДВЕРЬ СМЕНЫ ДНЕЙ (наряд DAY-FIX-2) — сдвиг «сегодня» QA-аккаунта живёт в кэше, не в
         // таблице; замки — те же, что у входа без пароля, сложенные в `qa_tools` пользователя.
         $this->app->bind(QaPlanClock::class, CachedQaPlanClock::class);
+        // «ЖАЛОБА» С ТЕЛЕФОНА (наряд DAY-GATE-1, Ч.0.5) — на диск того же контейнера, наружу
+        // ничего. Путь задаётся здесь: `storage_path` — это Laravel, а порту про фреймворк знать
+        // нечего.
+        $this->app->bind(
+            QaReportStore::class,
+            static fn (Container $app): QaReportStore => new FileQaReportStore(
+                $app->make(Clock::class),
+                storage_path('qa-reports'),
+            ),
+        );
         // …и сам сдвиг — ОДИН держатель на запрос, который читает каждый Clock в контейнере: сервис,
         // собранный до middleware, видит сдвинутый день так же, как собранный после.
         $this->app->singleton(QaClockShift::class);

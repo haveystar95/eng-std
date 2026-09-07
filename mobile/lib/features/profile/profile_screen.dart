@@ -19,6 +19,7 @@ import '../../data/locale_controller.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
+import '../plan/build_stamp.dart';
 import 'perf_log_screen.dart';
 import 'qa_speech_view.dart';
 import 'voice_bakeoff_screen.dart';
@@ -681,7 +682,41 @@ class _DevFlags extends ConsumerWidget {
         // строки выше: строка показывает статусы разрешений и внутренности движка, и боевому
         // аккаунту в релизе она не показывается.
         if (qa) const _QaSpeechRow(),
+        // ВЕРСИЯ ЦЕЛИКОМ (наряд DAY-GATE-1, Ч.0.4). Внизу вкладки «План» стоит короткая строка для
+        // всех; здесь — полная, с адресом сервера: «почему телефон разговаривает не с тем» это
+        // отдельный вопрос, и он решается только этой строкой.
+        const _DevBuildRow(),
       ],
+    );
+  }
+}
+
+/// Полная версия сборки в дев-двери — {@see BuildStampLine} плюс адрес API.
+class _DevBuildRow extends ConsumerWidget {
+  const _DevBuildRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+
+    return _RowShell(
+      last: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Обычный `Text`, не `SelectableText`: выделяемый текст поднимает внутри себя ещё один
+          // `Scrollable`, а этот экран — один длинный список, по которому тесты и пальцы скроллят.
+          Text(
+            BuildStampLine.buildStampText(l, ref.watch(backendCommitProvider)),
+            style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.secondary),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            AppConfig.apiBaseUrl,
+            style: AppText.transcription.copyWith(fontSize: 11, color: AppColors.tertiary),
+          ),
+        ],
+      ),
     );
   }
 }

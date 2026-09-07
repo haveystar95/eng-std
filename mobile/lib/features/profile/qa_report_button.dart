@@ -1,0 +1,132 @@
+import 'dart:async';
+import 'dart:ui' as ui;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/theme/theme.dart';
+
+import '../../data/providers.dart';
+import '../../data/qa_report.dart';
+import '../plan/build_stamp.dart';
+
+/// «ЖАЛОБА» ОДНИМ ТАПОМ, С ЛЮБОГО ЭКРАНА — наряд DAY-GATE-1, Ч.0.5.
+///
+/// Живой прогон 07.09 стоил суток именно потому, что от поломки остались одни слова владельца:
+/// какая карточка была на экране, какой это был день, что в этот момент делал микрофон — всё это
+/// пришлось восстанавливать догадками, и часть догадок была неверной. Кнопка превращает «тут что-то
+/// не так» в файл на диске сервера за одно касание, ПОКА ЭКРАН ЕЩЁ ТОТ САМЫЙ.
+///
+/// Наружу не уходит ничего: ни Notion, ни почты. Файл ложится рядом с API
+/// (`backend2/storage/qa-reports/`), и что с ним делать дальше — решение владельца.
+///
+/// ВИДНА ТОЛЬКО QA-АККАУНТУ, и решает это СЕРВЕР ({@see AppUser.qaTools}: `is_qa` И среда не
+/// production) — то же правило, что у входа без пароля, подстановки транскрипта и сдвига часов.
+/// Своей проверки клиент не держит: второе правило про ту же дверь однажды разошлось бы с первым.
+class QaReportOverlay extends ConsumerStatefulWidget {
+  const QaReportOverlay({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<QaReportOverlay> createState() => _QaReportOverlayState();
+}
+
+class _QaReportOverlayState extends ConsumerState<QaReportOverlay> {
+  /// Граница перерисовки ВОКРУГ ВСЕГО ПРИЛОЖЕНИЯ — снимок делается с неё.
+  ///
+  /// Именно вокруг всего, а не вокруг экрана: «жалоба» нажимается там, где что-то не так, и заранее
+  /// известного списка таких мест нет. Пустая `RepaintBoundary` в корне не стоит ничего, пока
+  /// снимок не запрошен.
+  final _boundary = GlobalKey();
+
+  bool _sending = false;
+
+  Future<void> _send() async {
+    if (_sending) return;
+    setState(() => _sending = true);
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    try {
+      final report = buildQaReport(
+        context: ref.read(qaContextProvider),
+        speech: ref.read(speechDiagnosticsProvider),
+        // Уже прочитанный SHA сервера, если он есть; ходить за ним ещё раз ради отчёта незачем.
+        backendCommit: ref.read(backendCommitProvider).value ?? '',
+      );
+      final id = await ref.read(apiClientProvider).sendQaReport(
+        report: report,
+        screenshotPng: await _screenshot(),
+      );
+      messenger?.showSnackBar(SnackBar(content: Text(l.qaReportSent(id))));
+    } catch (_) {
+      // Отчёт не ушёл — говорим об этом и не пытаемся повторить сами: повтор в фоне превратил бы
+      // одну «жалобу» в несколько файлов про разные моменты.
+      messenger?.showSnackBar(SnackBar(content: Text(l.qaReportFailed)));
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  /// PNG всего, что сейчас на экране, или null.
+  ///
+  /// Снимок необязателен НАМЕРЕННО: он единственная часть отчёта, которая может не получиться
+  /// (граница ещё не отрисована, устройство отказало в буфере), и потерять из-за неё описание
+  /// состояния было бы обидно ровно в тот момент, ради которого всё заведено.
+  Future<List<int>?> _screenshot() async {
+    try {
+      final object = _boundary.currentContext?.findRenderObject();
+      if (object is! RenderRepaintBoundary) return null;
+      final image = await object.toImage(pixelRatio: 2);
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      image.dispose();
+
+      return bytes?.buffer.asUint8List();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final qa = ref.watch(authControllerProvider).value?.qaTools ?? false;
+    final l = AppLocalizations.of(context);
+
+    return RepaintBoundary(
+      key: _boundary,
+      child: Stack(
+        children: [
+          widget.child,
+          // Правый край и середина по высоте: снизу тянется плавающая полоса вкладок, сверху —
+          // шапки экранов, а середина правого края свободна на всех экранах серии.
+          if (qa)
+            Positioned(
+              right: 0,
+              top: MediaQuery.sizeOf(context).height * 0.42,
+              child: SafeArea(
+                child: Semantics(
+                  label: l.qaReportButton,
+                  button: true,
+                  child: Material(
+                    color: AppColors.destructiveText.withValues(alpha: _sending ? .35 : .85),
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(14)),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: _sending ? null : () => unawaited(_send()),
+                      child: const Padding(
+                        padding: EdgeInsets.fromLTRB(9, 10, 7, 10),
+                        child: Icon(LucideIcons.flag, size: 16, color: AppColors.paper),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

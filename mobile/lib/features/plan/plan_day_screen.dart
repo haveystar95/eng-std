@@ -10,6 +10,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/api_client.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
+import '../../data/qa_report.dart';
 import '../training/session_screen.dart';
 import 'plan_building_screen.dart';
 import 'plan_fail_reason.dart';
@@ -51,6 +52,9 @@ class PlanDayScreen extends ConsumerWidget {
           bottom: false,
           child: Column(
             children: [
+              // АДРЕС ЭКРАНА ДЛЯ «ЖАЛОБЫ» (наряд DAY-GATE-1, Ч.0.5): снимок показывает, ЧТО было
+              // видно, а идентификаторы — за чем идти в базу.
+              QaAddress(QaContext(screen: 'plan_day', planId: plan.id, dayIndex: dayIndex)),
               _DayBar(label: l.planDayOfPlan(dayIndex, plan.days.length)),
               Expanded(
                 child: day.when(

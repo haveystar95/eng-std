@@ -1935,6 +1935,48 @@ abstract class AppLocalizations {
   /// **'Микрофон недоступен. Можно пропустить эту карточку.'**
   String get sessionSpeakNoMic;
 
+  /// Строка версии внизу вкладки «План» (DAY-GATE-1, Ч.0.4): какая сборка клиента и какая сборка сервера сейчас перед человеком.
+  ///
+  /// In ru, this message translates to:
+  /// **'клиент {client} · сервер {server}'**
+  String buildStamp(String client, String server);
+
+  /// Сборка собрана мимо scripts/build_ios.sh — версии у неё нет, и экран говорит это, а не выдумывает SHA.
+  ///
+  /// In ru, this message translates to:
+  /// **'без метки'**
+  String get buildStampUnstamped;
+
+  /// Сервер ещё не ответил про свою сборку.
+  ///
+  /// In ru, this message translates to:
+  /// **'…'**
+  String get buildStampWaiting;
+
+  /// За версией сервера не удалось сходить.
+  ///
+  /// In ru, this message translates to:
+  /// **'нет связи'**
+  String get buildStampNoServer;
+
+  /// Плавающая QA-кнопка (DAY-GATE-1, Ч.0.5): снимок экрана и слепок состояния уходят на диск сервера.
+  ///
+  /// In ru, this message translates to:
+  /// **'Жалоба'**
+  String get qaReportButton;
+
+  /// Отчёт записан; id — имя файла на сервере.
+  ///
+  /// In ru, this message translates to:
+  /// **'Жалоба сохранена: {id}'**
+  String qaReportSent(String id);
+
+  /// Отправка отчёта не удалась — сеть или закрытая дверь.
+  ///
+  /// In ru, this message translates to:
+  /// **'Жалоба не ушла'**
+  String get qaReportFailed;
+
   /// Отказано в NSSpeechRecognition (DAY-GATE-1, Ч.0.2). iOS спрашивает один раз за установку, поэтому «нажми ещё раз» не выход — только Настройки.
   ///
   /// In ru, this message translates to:

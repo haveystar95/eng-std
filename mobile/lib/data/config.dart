@@ -117,6 +117,20 @@ class AppConfig {
     defaultValue: 'https://greedily-thermos-finer.ngrok-free.dev',
   );
 
+  /// КОРОТКИЙ SHA СБОРКИ, зашитый при компиляции — наряд DAY-GATE-1, Ч.0.4.
+  ///
+  /// Ставит его `scripts/build_ios.sh`, и только он: версия, которую вбивают руками, отвечает на
+  /// вопрос «ту ли сборку я смотрю» ровно до первого раза, когда её забыли обновить. Суффикс `+`
+  /// значит «коммит плюс несохранённые правки» — это другая сборка, и называть её именем коммита
+  /// было бы враньём в том единственном месте, где врать нельзя.
+  ///
+  /// Пусто у сборки, собранной мимо скрипта (`flutter run` руками): экран тогда так и говорит —
+  /// «сборка не помечена», а не выдумывает версию.
+  static const String buildSha = String.fromEnvironment('BUILD_SHA');
+
+  /// Когда собран клиент — «2026-09-07 21:55», из того же скрипта.
+  static const String buildAt = String.fromEnvironment('BUILD_AT');
+
   /// Google iOS OAuth client id (from Google Cloud Console / credentials.plist).
   static const String googleIosClientId = String.fromEnvironment(
     'GOOGLE_IOS_CLIENT_ID',

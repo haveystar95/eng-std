@@ -1,3 +1,4 @@
+import 'dart:convert' show jsonEncode;
 import 'dart:io' show SocketException;
 import 'dart:math';
 
@@ -729,6 +730,33 @@ class ApiClient {
   Future<int> qaPlanClock() async {
     final r = await _dio.get('/qa/plan-clock');
     return ((_data(r) as Map<String, dynamic>)['days'] as num?)?.toInt() ?? 0;
+  }
+
+  /// КАКАЯ СБОРКА СЕРВЕРА ОТВЕЧАЕТ — короткий SHA (наряд DAY-GATE-1, Ч.0.4).
+  ///
+  /// Открытый эндпоинт без состояния; ошибки НЕ проглатываются здесь — их видит тот, кто рисует
+  /// строку версии, и печатает «сервер не ответил» вместо выдуманного SHA.
+  Future<String> health() async {
+    final r = await _dio.get('/health');
+    return ((_data(r) as Map<String, dynamic>)['commit'] as String?) ?? '';
+  }
+
+  /// «ЖАЛОБА» ОДНИМ ТАПОМ (наряд DAY-GATE-1, Ч.0.5): слепок состояния и снимок экрана — на диск
+  /// сервера, и никуда больше.
+  ///
+  /// Состав отчёта не фиксирован контрактом намеренно: он растёт от наряда к наряду, а «жалоба»,
+  /// отбитая из-за нового ключа, — это потерянный слепок поломки, ради которой её нажали.
+  Future<String> sendQaReport({
+    required Map<String, dynamic> report,
+    List<int>? screenshotPng,
+  }) async {
+    final form = FormData.fromMap({
+      'report': jsonEncode(report),
+      if (screenshotPng != null)
+        'screenshot': MultipartFile.fromBytes(screenshotPng, filename: 'screen.png'),
+    });
+    final r = await _dio.post('/qa/report', data: form);
+    return ((_data(r) as Map<String, dynamic>)['id'] as String?) ?? '';
   }
 
   Future<void> recordSceneRun({

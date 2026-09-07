@@ -23,6 +23,7 @@ import '../../data/plan_models.dart' show PlanDayState, PlanSession, PlanSession
 import '../../data/plan_sitting_store.dart';
 import '../../data/practice/recognition_replay.dart';
 import '../../data/providers.dart';
+import '../../data/qa_report.dart';
 import '../home/home_providers.dart';
 import '../plan/plan_day_summary.dart';
 import '../plan/plan_dialogue.dart';
@@ -391,6 +392,20 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       _prepareCard(2);
     });
     unawaited(_resolvePairs());
+    // АДРЕС ЭТОЙ ПОСАДКИ — для «жалобы» (наряд DAY-GATE-1, Ч.0.5). Снимок экрана показывает, ЧТО
+    // было видно; без плана, дня и посадки за этим нельзя сходить в базу, а именно этого не хватало
+    // при разборе живого прогона 07.09.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(qaContextProvider.notifier).enter(
+        QaContext(
+          screen: 'session',
+          planId: widget.session.plan?.planId,
+          dayIndex: widget.session.plan?.dayIndex,
+          sessionId: widget.session.sessionId,
+        ),
+      );
+    });
     _queue = SittingQueue.of(
       cards: _cards.length,
       sittings: widget.session.plan?.sittings ?? const [],
@@ -1513,6 +1528,16 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // and a card built before it landed would otherwise carry the fallback language for as long as
     // it is on screen — which is precisely the first card of the session.
     final played = _card;
+    // КАКАЯ КАРТОЧКА СЕЙЧАС ПЕРЕД ЧЕЛОВЕКОМ — для «жалобы» (наряд DAY-GATE-1, Ч.0.5). После кадра,
+    // а не во время: построение экрана не имеет права менять состояние провайдеров. Запись молчит,
+    // когда карточка та же.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(qaContextProvider.notifier)
+            .card(termId: played.termId, mode: played.mode.name);
+      }
+    });
     final cardLang = _langOfCard(played);
     Future<void> speakCard(String text, {bool slow = false}) =>
         _speak(_langOfCard(played), text, slow: slow);

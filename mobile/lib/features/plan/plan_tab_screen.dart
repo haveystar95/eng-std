@@ -10,6 +10,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/api_client.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
+import 'build_stamp.dart';
 import 'entry/plan_entry_screen.dart';
 import 'plan_screen.dart';
 import 'plan_ui.dart';
@@ -125,6 +126,9 @@ class _EmptyPlanTab extends ConsumerWidget {
           minHeight: 52,
           onPressed: () => openPlanBuilder(context, ref),
         ),
+        // Строка версии стоит и здесь: план ещё не составлен, а вопрос «ту ли сборку я смотрю»
+        // задают в том числе про экран, на котором ничего не происходит (Ч.0.4).
+        const BuildStampLine(),
       ],
     );
   }
@@ -237,6 +241,7 @@ class _FinishedPlanTab extends ConsumerWidget {
           minHeight: 52,
           onPressed: () => openPlanBuilder(context, ref),
         ),
+        const BuildStampLine(),
       ],
     );
   }

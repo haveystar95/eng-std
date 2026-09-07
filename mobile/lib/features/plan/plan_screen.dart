@@ -13,6 +13,7 @@ import 'plan_day_screen.dart';
 import 'plan_feedback_screen.dart';
 import 'plan_rehearsal_screen.dart';
 import 'plan_tab_screen.dart' show abandonPlan;
+import 'build_stamp.dart';
 import 'plan_ui.dart';
 
 /// THE ACTIVE PLAN — кадр 1c · 01, plus the readiness block the наряд asks for.
@@ -137,6 +138,10 @@ class _PlanBody extends ConsumerWidget {
               ),
             ),
           ),
+          // КАКАЯ СБОРКА ПЕРЕД ЧЕЛОВЕКОМ (наряд DAY-GATE-1, Ч.0.4) — колофоном, внизу вкладки, на
+          // всех трёх её лицах. Не под дев-флагом: вопрос «ту ли сборку мы смотрим» задают именно
+          // тогда, когда что-то сломалось, а сломаться может и у владельца в релизе.
+          const BuildStampLine(),
         ],
       ),
     );

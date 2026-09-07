@@ -1168,6 +1168,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionSpeakNoMic => 'Микрофон недоступен. Можно пропустить эту карточку.';
 
   @override
+  String buildStamp(String client, String server) {
+    return 'клиент $client · сервер $server';
+  }
+
+  @override
+  String get buildStampUnstamped => 'без метки';
+
+  @override
+  String get buildStampWaiting => '…';
+
+  @override
+  String get buildStampNoServer => 'нет связи';
+
+  @override
+  String get qaReportButton => 'Жалоба';
+
+  @override
+  String qaReportSent(String id) {
+    return 'Жалоба сохранена: $id';
+  }
+
+  @override
+  String get qaReportFailed => 'Жалоба не ушла';
+
+  @override
   String get speechPermissionRecognitionDenied =>
       'Распознавание речи выключено. Разреши распознавание речи в настройках — без него телефон слышит, но не понимает.';
 

@@ -6,6 +6,7 @@ use App\Modules\Learning\Presentation\Http\Controller\HomeController;
 use App\Modules\Learning\Presentation\Http\Controller\PlanController;
 use App\Modules\Learning\Presentation\Http\Controller\PoolController;
 use App\Modules\Learning\Presentation\Http\Controller\QaPlanClockController;
+use App\Modules\Learning\Presentation\Http\Controller\QaReportController;
 use App\Modules\Learning\Presentation\Http\Controller\ReviewController;
 use App\Modules\Learning\Presentation\Http\Controller\StudyController;
 use App\Modules\Learning\Presentation\Http\Controller\SyncController;
@@ -22,6 +23,8 @@ Route::middleware(['throttle:120,1', 'auth:sanctum', ShiftQaPlanClock::class])->
     // production при включённом флаге. Всем остальным — 404, как чужому плану.
     Route::get('/qa/plan-clock', [QaPlanClockController::class, 'show']);
     Route::post('/qa/plan-clock', [QaPlanClockController::class, 'set']);
+    // «ЖАЛОБА» ОДНИМ ТАПОМ (наряд DAY-GATE-1, Ч.0.5) — снимок экрана и слепок состояния на диск.
+    Route::post('/qa/report', [QaReportController::class, 'store']);
 
     Route::post('/study/sessions', [StudyController::class, 'session']);
     Route::post('/study/sessions/{sessionId}/complete', [StudyController::class, 'complete']);
