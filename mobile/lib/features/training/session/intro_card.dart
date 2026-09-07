@@ -12,7 +12,9 @@ import '../../../data/app_settings.dart';
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/models.dart';
 import '../../../data/providers.dart';
+import '../../../data/speech/speech_diagnostics.dart';
 import '../../../data/speech/speech_recognizer.dart';
+import '../../../data/speech/speech_turn.dart';
 import 'session_exercise.dart';
 import 'session_grading.dart';
 
@@ -100,6 +102,19 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   /// widget that is already coming down.
   late final SpeechRecognizer _recognizer = ref.read(speechRecognizerProvider);
 
+  /// ТОТ ЖЕ ЖУРНАЛ, ЧТО У ВСЕХ ОСТАЛЬНЫХ КАРТОЧЕК ГОВОРЕНИЯ (наряд DAY-GATE-1, доработка Ч.0.1).
+  late final SpeechDiagnostics _diagnostics = ref.read(speechDiagnosticsProvider);
+
+  /// ОДИН ДВИЖОК СЛУШАНИЯ НА ВСЕ КАРТОЧКИ ({@see SpeechTurn}). Эхо ходило в плагин НАПРЯМУЮ — мимо
+  /// склейки, мимо сторожа и мимо диагностики, — и поэтому: запинка длиннее паузы плагина обрывала
+  /// попытку на полуслове («ба…» вместо «background»), а служебная строка про этот микрофон молчала
+  /// вовсе, хотя эхо знакомства — очень часто ПЕРВЫЙ микрофон в запуске и, значит, первое место,
+  /// где поломка канала видна.
+  ///
+  /// Что НЕ изменилось: ход по-прежнему ничего не пишет — ни ревью, ни показа, ни лестницы. Ключа
+  /// движку не дают (`isAnswer` не передан), потому что здесь нечего засчитывать.
+  SpeechTurn? _turn;
+
   /// Set once an async, non-prompting OS permission check (below) confirms it — or once the learner
   /// taps the microphone invitation and the OS says yes — a brand-new word's
   /// intro card is very often the FIRST speech-touching card in a fresh app run, and its echo is
@@ -171,7 +186,13 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   @override
   void dispose() {
     _speakTimer?.cancel();
-    if (_echo == _Echo.listening) unawaited(_recognizer.cancel());
+    // Карточку покинули посреди эха: ход бросается и НИЧЕГО не хранит — он и так ничего не писал.
+    final turn = _turn;
+    if (turn != null) {
+      unawaited(turn.cancel());
+    } else if (_echo == _Echo.listening) {
+      unawaited(_recognizer.cancel());
+    }
     super.dispose();
   }
 
@@ -188,7 +209,7 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   /// (QA-21). Tapping again AFTER a result simply starts a fresh attempt, replacing the old text.
   Future<void> _echoBack() async {
     if (_echo == _Echo.listening) {
-      await _recognizer.stop();
+      await _turn?.stop();
 
       return;
     }
@@ -199,21 +220,32 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
     });
 
     final term = widget.card.answerText;
-    final attempt = await _recognizer.listenOnce(
-      expected: [term],
-      localeId: widget.speechLocaleId,
-      // Same window the speaking word form picks for a term of this length — a phrase-shaped
-      // term needs the sentence-sized one (QA-21).
-      timeout: SpokenAnswer.windowFor(asksForExample: false, term: term).listenFor,
-      pauseFor: SpokenAnswer.windowFor(asksForExample: false, term: term).pauseFor,
-      // The same vocabulary hint the speaking word form sends (QA-20): the term whole, plus its
-      // individual words. Nothing here grades against it — it only helps the recogniser print
-      // back what was actually said.
-      contextualStrings: _contextualStrings(term),
-      onPartial: (text) {
-        if (mounted && _echo == _Echo.listening) setState(() => _heard = text);
-      },
+    // Окно то же, что у говорения слова такой длины: фразоподобный термин требует
+    // «предложенческого» (QA-21). Движку оно отдаётся паузой после речи — правилом закрытия
+    // попытки владеет он, а не плагин.
+    final window = SpokenAnswer.windowFor(asksForExample: false, term: term);
+    final turn = SpeechTurn(
+      _recognizer,
+      config: SpeechTurnConfig(silenceAfterSpeech: window.pauseFor),
+      diagnostics: _diagnostics,
     );
+    _turn = turn;
+    final SpeechTurnResult attempt;
+    try {
+      attempt = await turn.listen(
+        expected: [term],
+        localeId: widget.speechLocaleId,
+        // The same vocabulary hint the speaking word form sends (QA-20): the term whole, plus its
+        // individual words. Nothing here grades against it — it only helps the recogniser print
+        // back what was actually said.
+        contextualStrings: _contextualStrings(term),
+        onPartial: (text) {
+          if (mounted && _echo == _Echo.listening) setState(() => _heard = text);
+        },
+      );
+    } finally {
+      if (_turn == turn) _turn = null;
+    }
 
     if (!mounted) return;
     // «Услышал тебя» means exactly that — the microphone worked. It is deliberately NOT a check
@@ -221,7 +253,7 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
     // way to make them stop trying it out loud.
     setState(() {
       _echo = attempt.isHeard ? _Echo.heard : _Echo.again;
-      _heard = attempt.isHeard ? attempt.text.trim() : '';
+      _heard = attempt.isHeard ? attempt.transcript.trim() : '';
     });
   }
 

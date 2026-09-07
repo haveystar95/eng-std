@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
+import 'package:eng_std/data/speech/speech_diagnostics.dart';
+import 'package:eng_std/data/speech/speech_turn.dart';
 import 'package:eng_std/features/training/session/intro_card.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -130,8 +133,16 @@ void main() {
     ladderStep: 0,
   );
 
+  /// Журнал канала, тот же, что у карточек говорения (наряд DAY-GATE-1, доработка Ч.0.1). Живёт на
+  /// весь тест, чтобы проверку «эхо пишет сюда» можно было задать после хода.
+  late SpeechDiagnostics diagnostics;
+  setUp(() => diagnostics = SpeechDiagnostics(channel: const MethodChannel('test/absent')));
+
   Widget host(_FakeRecognizer recognizer) => ProviderScope(
-    overrides: [speechRecognizerProvider.overrideWithValue(recognizer)],
+    overrides: [
+      speechRecognizerProvider.overrideWithValue(recognizer),
+      speechDiagnosticsProvider.overrideWithValue(diagnostics),
+    ],
     child: MaterialApp(
       locale: const Locale('ru'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -194,7 +205,10 @@ void main() {
     // needs to judge their own attempt by.
     expect(find.text('Услышали: «reserve ation»'), findsOneWidget);
     expect(find.text('Попробуй ещё'), findsNothing);
-    expect(recognizer.calls, 1);
+    // ОДИН ИСХОД, а не одно открытие плагина (наряд DAY-GATE-1, доработка Ч.0.1): эхо перешло на
+    // общий движок, и попытку закрывает ПРАВИЛО, а не первый `finalResult`. Плагин переоткрывается
+    // столько раз, сколько нужно склейке; человеку это один ход и один результат.
+    expect(recognizer.calls, greaterThanOrEqualTo(1));
   });
 
   testWidgets('invites another go when it heard nothing — and never calls it wrong', (
@@ -357,7 +371,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // A second attempt, not a second line: the old transcript is gone, replaced by this one.
-      expect(recognizer.calls, 2);
+      // Открытий плагина при этом больше двух — попытку закрывает движок, а не плагин (см. выше).
       expect(find.text('Услышали: «reservation»'), findsOneWidget);
     });
 
@@ -374,11 +388,38 @@ void main() {
       await tester.tap(find.text('Повторить вслух'));
       await tester.pumpAndSettle();
 
-      // A one-word term, so the short window — the same rule the speaking card follows, which is
-      // what keeps a phrase-shaped term from being cut off here too.
-      expect(recognizer.timeoutsPerCall.single, SpokenAnswer.wordFormListenFor);
-      expect(recognizer.pauseForsPerCall.single, SpokenAnswer.wordFormPauseFor);
-      expect(recognizer.contextualStringsPerCall.single, ['reservation']);
+      // ПЛАГИНУ ОТДАЮТСЯ ЧИСЛА ДВИЖКА — то же правило, что у карточки говорения (DAY-FIX-3, Ч.1.3):
+      // окно плагина это ПОТОЛОК, а не правило, и закрывает попытку движок. Пауза после речи
+      // остаётся той, которую просит длина слова, — это и есть «то же окно, что у говорения».
+      const engine = SpeechTurnConfig();
+      expect(recognizer.timeoutsPerCall.first, engine.maxSpeech + engine.silenceBeforeSkip);
+      expect(recognizer.pauseForsPerCall.first, SpokenAnswer.wordFormPauseFor);
+      expect(recognizer.contextualStringsPerCall.first, ['reservation']);
+    });
+
+    // ПРАВИЛО: наряд DAY-GATE-1, доработка Ч.0.1 — один движок слушания на все карточки говорения,
+    // и одна диагностика.
+    // ЛОВИТ: эхо, которое ходит в плагин напрямую. Так и было: эхо знакомства — очень часто ПЕРВЫЙ
+    // микрофон в запуске, то есть первое место, где поломка канала видна, — и именно оно молчало в
+    // служебной строке. Плюс запинка длиннее паузы плагина обрывала его попытку на полуслове, хотя
+    // у всех остальных карточек склейка это чинит.
+    testWidgets('эхо ходит через общий движок и пишет в общий журнал', (tester) async {
+      final recognizer = _FakeRecognizer(
+        attempt: const SpeechAttempt.heard('reservation'),
+        isReady: true,
+      );
+      await tester.pumpWidget(host(recognizer));
+      await tester.pumpAndSettle();
+
+      expect(diagnostics.phase, SpeechPhase.idle, reason: 'до хода журнал молчит');
+
+      await tester.tap(find.text('Повторить вслух'));
+      await tester.pumpAndSettle();
+
+      expect(diagnostics.phase, SpeechPhase.closedBySilence);
+      expect(diagnostics.log, isNotEmpty);
+      // …и по-прежнему НИЧЕГО не пишет в лестницу: у карточки нет ни ответа, ни вердикта.
+      expect(find.textContaining('Не то'), findsNothing);
     });
   });
 
