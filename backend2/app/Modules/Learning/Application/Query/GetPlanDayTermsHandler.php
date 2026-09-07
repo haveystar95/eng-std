@@ -11,7 +11,7 @@ use App\Modules\Learning\Application\Service\PlanProgress;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
-use App\Modules\Learning\Domain\Service\PlanDialogueChain;
+use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
@@ -109,14 +109,29 @@ final readonly class GetPlanDayTermsHandler
             }
         }
 
+        return self::stepWord($mode, $standing->stage, $shelf, $ordinal, $inSeam);
+    }
+
+    /**
+     * THE WORD FOR ONE STEP of the ladder, as the day screen prints it (наряд DAY-FIX-3, Ч.5.1).
+     *
+     * Stage A tells a word's «переведёшь» from its later «узнаешь» and a line's «соберёшь из
+     * блоков» from the conversation's «выберешь ответ»: the exercise that closes the introduction
+     * is a different act from the touch that follows a night, and the screen says so.
+     */
+    private static function stepWord(ExerciseMode $mode, PlanStage $stage, ?string $shelf, int $ordinal, bool $inSeam): ?string
+    {
         return match ($mode) {
             ExerciseMode::Intro => PlanDayTermView::STEP_MEET,
-            ExerciseMode::MultipleChoice, ExerciseMode::DescriptionMatch, ExerciseMode::PickCorrect => PlanDayTermView::STEP_RECOGNIZE,
+            ExerciseMode::MultipleChoice => $stage === PlanStage::A ? PlanDayTermView::STEP_TRANSLATE : PlanDayTermView::STEP_RECOGNIZE,
+            ExerciseMode::DescriptionMatch, ExerciseMode::PickCorrect => PlanDayTermView::STEP_RECOGNIZE,
             ExerciseMode::SituationalHear => PlanDayTermView::STEP_HEAR,
-            ExerciseMode::SituationalSay, ExerciseMode::SituationalAsk => PlanTurnLevel::forTurn($shelf, $ordinal, $inSeam) === PlanTurnLevel::Choose
+            ExerciseMode::SituationalSay, ExerciseMode::SituationalAsk => $stage !== PlanStage::A
+                && PlanTurnLevel::forTurn($shelf, $ordinal, $inSeam) === PlanTurnLevel::Choose
                 ? PlanDayTermView::STEP_CHOOSE
                 : PlanDayTermView::STEP_ASSEMBLE,
-            ExerciseMode::WordBank, ExerciseMode::Scramble => PlanDayTermView::STEP_ASSEMBLE,
+            ExerciseMode::WordBank => $stage === PlanStage::A ? PlanDayTermView::STEP_TILES : PlanDayTermView::STEP_ASSEMBLE,
+            ExerciseMode::Scramble => PlanDayTermView::STEP_ASSEMBLE,
             ExerciseMode::Speaking => PlanDayTermView::STEP_SAY,
             // A typed trainer is never dealt by a plan (DAY-FIX-2, Ч.2.6); a row that owes one is a
             // row that owes nothing the screen can name.
@@ -125,36 +140,77 @@ final readonly class GetPlanDayTermsHandler
     }
 
     /**
-     * THE STEP THAT FOLLOWS IN THE SAME SITTING, or null: a scene line met today is spoken today —
-     * its stage B opens the day A closes ({@see PlanStageLadder::opensBSameDay()}, DECISIONS
-     * п. 266) — so the row's word is «познакомишься · выберешь ответ», the same two touches the
-     * planner deals ({@see PlanSittingPlanner}). Only for a row whose intro is still owed and only on
-     * its own day: in the seam a line comes back for one touch.
+     * EVERY STEP THAT FOLLOWS THE NEXT ONE IN THE SAME SITTING, in order (наряд DAY-FIX-3, Ч.5.1).
+     *
+     * The rest of stage A's checklist — the exercise that closes the introduction — and, for a
+     * scene line, the first touch of the conversation its A opens the same day
+     * ({@see PlanStageLadder::opensBSameDay()}, DECISIONS п. 266): «познакомишься · соберёшь из
+     * блоков · выберешь ответ», the same touches the planner deals ({@see PlanSittingPlanner}).
+     * Only on the row's own day and only while it stands on A: in the seam a line comes back for
+     * one touch.
+     *
+     * @return list<string>
      */
-    private static function thenStepOf(PlanTermStanding $standing, ?string $shelf, bool $inSeam): ?string
+    private static function thenStepsOf(PlanTermStanding $standing, ?string $shelf, string $kind, bool $inSeam): array
     {
-        if ($inSeam || $standing->nextMode !== ExerciseMode::Intro || $standing->answeredToday) {
-            return null;
+        if ($inSeam || $standing->nextMode === null || $standing->stage !== PlanStage::A) {
+            return [];
         }
 
-        return match ($shelf) {
-            PlanDialogueChain::SHELF_HEAR => PlanDayTermView::STEP_HEAR,
-            PlanDialogueChain::SHELF_SAY => PlanDayTermView::STEP_CHOOSE,
-            PlanDialogueChain::SHELF_ASK => PlanDayTermView::STEP_ASSEMBLE,
-            default => null,
-        };
+        $out = [];
+        $skipped = false;
+        foreach ($standing->checklist as $step) {
+            if ($step['done']) {
+                continue;
+            }
+            if (! $skipped) {
+                $skipped = true;
+
+                continue;
+            }
+            $mode = ExerciseMode::tryFrom($step['mode']);
+            $word = $mode === null ? null : self::stepWord($mode, PlanStage::A, $shelf, (int) $step['ordinal'], false);
+            if ($word !== null) {
+                $out[] = $word;
+            }
+        }
+
+        if (! $standing->answeredToday && PlanStageLadder::opensBSameDay($kind)) {
+            $first = PlanStageLadder::firstStepOf(PlanStage::B, $kind);
+            if ($first !== null) {
+                $word = self::stepWord($first[0], PlanStage::B, $shelf, 1, false);
+                // «соберёшь из блоков · соберёшь из блоков» is one act said twice: a question is
+                // assembled to close A and assembled again as its first turn, and the screen
+                // names the act once.
+                if ($word !== null && $word !== end($out)) {
+                    $out[] = $word;
+                }
+            }
+        }
+
+        return $out;
     }
 
-    /** «пройдено» / «сказал сам» / nothing — the row's mark once the day has been walked. */
+    /**
+     * «познакомился» / «применяешь» / «говоришь сам» / nothing — the row's mark once the day has
+     * been walked (наряд DAY-FIX-3, Ч.5.2). A word, never a digit: the intro acknowledged is
+     * «познакомился»; the exercise of stage A passed — or any later stage — is «применяешь».
+     */
     private static function markOf(PlanTermStanding $standing, bool $saidSelf): ?string
     {
         if ($saidSelf) {
             return PlanDayTermView::MARK_SAID_SELF;
         }
+        if ($standing->stage !== PlanStage::A || $standing->stageComplete) {
+            return PlanDayTermView::MARK_APPLYING;
+        }
+        foreach ($standing->checklist as $step) {
+            if ($step['mode'] === ExerciseMode::Intro->value && $step['done']) {
+                return PlanDayTermView::MARK_MET;
+            }
+        }
 
-        return $standing->stage !== PlanStage::A || $standing->stageComplete
-            ? PlanDayTermView::MARK_PASSED
-            : null;
+        return null;
     }
 
     /**
@@ -194,6 +250,7 @@ final readonly class GetPlanDayTermsHandler
             nextStep: $t->nextStep,
             mark: $t->mark,
             thenStep: $t->thenStep,
+            thenSteps: $t->thenSteps,
             topical: $t->topical,
         ), $terms);
     }
@@ -219,6 +276,8 @@ final readonly class GetPlanDayTermsHandler
                 continue;
             }
 
+            $kind = PlanStageLadder::ladderKindFor($content->kind, $content->tier, $content->shelf);
+            $then = self::thenStepsOf($standing, $content->shelf, $kind, $index < $dayBeingRead);
             $out[] = new PlanDayTermView(
                 termId: $termId,
                 text: $content->text,
@@ -234,7 +293,8 @@ final readonly class GetPlanDayTermsHandler
                 tier: $content->tier,
                 nextStep: self::nextStepOf($standing, $content->shelf, $index < $dayBeingRead),
                 mark: self::markOf($standing, isset($said[$termId])),
-                thenStep: self::thenStepOf($standing, $content->shelf, $index < $dayBeingRead),
+                thenStep: $then[0] ?? null,
+                thenSteps: $then,
                 topical: $content->topical,
             );
         }

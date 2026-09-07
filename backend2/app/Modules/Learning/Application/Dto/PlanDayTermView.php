@@ -62,8 +62,9 @@ final readonly class PlanDayTermView
         public ?string $audioId = null,
         /**
          * ЧТО С ЭТОЙ СТРОКОЙ БУДЕТ ДЕЛАТЬ ЧЕЛОВЕК — код упражнения, которым экран дня подписывает
-         * секцию словами (наряд DAY-FIX-2, Ч.4.2): `meet` · `recognize` · `hear` · `choose` ·
-         * `assemble` · `say`, или null — сегодня строка ничего не должна.
+         * секцию словами (наряд DAY-FIX-2, Ч.4.2; DAY-FIX-3, Ч.5.1): `meet` · `translate` ·
+         * `tiles` · `recognize` · `hear` · `choose` · `assemble` · `say`, или null — сегодня строка
+         * ничего не должна.
          *
          * Считает сервер по стойке и уровню хода — тому же правилу, что раздаёт карточку
          * ({@see \App\Modules\Learning\Domain\ValueObject\PlanTurnLevel::forTurn()}); экран только
@@ -71,16 +72,27 @@ final readonly class PlanDayTermView
          */
         public ?string $nextStep = null,
         /**
-         * ОТМЕТКА У СТРОКИ, если день шёл: `passed` — знакомство закрыто; `said_self` — реплика
-         * прозвучала голосом человека в прогоне; null — пусто (Ч.4.3). Не цифры.
+         * ОТМЕТКА У СТРОКИ, если день шёл (Ч.4.3; DAY-FIX-3, Ч.5.2): `met` — познакомился, а
+         * упражнение знакомства ещё впереди; `applying` — знакомство закрыто упражнением, строка
+         * в работе; `said_self` — реплика прозвучала голосом человека в прогоне; null — пусто.
+         * Слово или знак, не цифра.
          */
         public ?string $mark = null,
         /**
          * И ЧТО БУДЕТ СРАЗУ ЗА ЭТИМ В ТОЙ ЖЕ ПОСАДКЕ — второй код, или null. Реплика сцены в день
-         * знакомства проходит две ступени подряд (DECISIONS п. 266): «познакомишься · выберешь
-         * ответ». Экран дня пишет оба слова, потому что человек увидит оба упражнения сегодня.
+         * знакомства проходит две ступени подряд (DECISIONS п. 266): «познакомишься · соберёшь из
+         * блоков · выберешь ответ». Первый из {@see $thenSteps}; остался ради клиентов, читающих
+         * одно слово.
          */
         public ?string $thenStep = null,
+        /**
+         * ВСЁ, ЧТО БУДЕТ ЗА ПЕРВЫМ ШАГОМ В ТОЙ ЖЕ ПОСАДКЕ, по порядку (наряд DAY-FIX-3, Ч.5.1):
+         * у слова — `translate`; у связки — `tiles`; у «Ты ответишь» — `assemble`, `choose`; у
+         * «Ты спросишь» — `assemble`; у «Тебе скажут» — `hear`. Экран дня пишет каждое слово.
+         *
+         * @var list<string>
+         */
+        public array $thenSteps = [],
         /**
          * СЛОВО «ПО ТЕМЕ» (наряд DAY-FIX-3, Ч.5.4): тематическое слово ситуации, которого в
          * репликах сцены нет — экран дня подписывает его словами, чтобы человек понимал, почему
@@ -90,6 +102,12 @@ final readonly class PlanDayTermView
     ) {}
 
     public const STEP_MEET = 'meet';
+
+    /** «переведёшь» — a word's translation chosen out of four, the day it is met (DAY-FIX-3, Ч.3.1). */
+    public const STEP_TRANSLATE = 'translate';
+
+    /** «соберёшь из плиток» — a connector tiled from its words, the day it is met. */
+    public const STEP_TILES = 'tiles';
 
     public const STEP_RECOGNIZE = 'recognize';
 
@@ -101,7 +119,9 @@ final readonly class PlanDayTermView
 
     public const STEP_SAY = 'say';
 
-    public const MARK_PASSED = 'passed';
+    public const MARK_MET = 'met';
+
+    public const MARK_APPLYING = 'applying';
 
     public const MARK_SAID_SELF = 'said_self';
 
@@ -131,6 +151,7 @@ final readonly class PlanDayTermView
             'audio_url' => $audioUrl,
             'next_step' => $this->nextStep,
             'then_step' => $this->thenStep,
+            'then_steps' => $this->thenSteps,
             'mark' => $this->mark,
             'topical' => $this->topical,
         ];

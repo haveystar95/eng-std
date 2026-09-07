@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Service;
 
 use App\Modules\Learning\Application\Dto\PlanDialogueView;
 use App\Modules\Learning\Domain\Service\PlanSessionSections;
+use App\Modules\Learning\Domain\Service\PlanSittings;
 
 /**
  * WHAT ONE SITTING WILL DEAL, before a single card is built — {@see PlanSittingPlanner}'s answer.
@@ -32,7 +33,7 @@ final readonly class PlanSittingLayout
         return count($this->specs);
     }
 
-    /** The cards before the прогон — what the first (and usually only) sitting holds. */
+    /** The cards before the прогон — what the day part holds. */
     public function dayCards(): int
     {
         return count(array_filter(
@@ -41,10 +42,32 @@ final readonly class PlanSittingLayout
         ));
     }
 
+    /** «Материал» — the cards the learner meets and exercises (наряд DAY-FIX-3, Ч.4). */
+    public function materialCards(): int
+    {
+        return PlanSittingPlanner::cardsOfKind($this->specs, PlanSittings::MATERIAL);
+    }
+
+    /** «Разговор» — the cards the learner says: the dialogue, the seam's lines, the прогон. */
+    public function conversationCards(): int
+    {
+        return PlanSittingPlanner::cardsOfKind($this->specs, PlanSittings::CONVERSATION);
+    }
+
     /** «около N минут» — cards × seconds, rounded UP to a whole minute; zero for an empty sitting. */
     public function minutes(): int
     {
         return self::minutesFor($this->cards(), $this->cardSeconds);
+    }
+
+    public function materialMinutes(): int
+    {
+        return self::minutesFor($this->materialCards(), $this->cardSeconds);
+    }
+
+    public function conversationMinutes(): int
+    {
+        return self::minutesFor($this->conversationCards(), $this->cardSeconds);
     }
 
     public static function minutesFor(int $cards, int $cardSeconds): int
@@ -56,7 +79,7 @@ final readonly class PlanSittingLayout
         return (int) ceil($cards * max(1, $cardSeconds) / 60);
     }
 
-    /** ПРИСЕСТЫ — the day, then the прогон. */
+    /** ПРИСЕСТЫ — «Материал», then «Разговор». */
     /** @return list<int> */
     public function sittings(): array
     {

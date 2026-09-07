@@ -13,6 +13,7 @@ use App\Modules\Learning\Domain\Entity\PlanDay;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\Service\RoleLineModes;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
+use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
 use App\Modules\Shared\Domain\Service\Clock;
@@ -336,6 +337,14 @@ final readonly class PlanProgress
         foreach ($days as $day) {
             $lastIndex = max($lastIndex, $day->dayIndex());
             if ($day->kind() !== PlanDayKind::Intro) {
+                continue;
+            }
+            // A DAY THE PLAN HAS ALREADY CALLED «ПРОЙДЕН» STAYS PASSED (наряд DAY-FIX-3, Ч.3): the
+            // ladder grew a step under stage A, and an old day re-read by the new ladder can owe
+            // that step again — which must not drag the focus back onto a day the learner walked
+            // last week. The row's status is the fact the plan wrote; the standings are what it
+            // is written from, and only until it is written.
+            if ($day->status() === PlanDayStatus::Done) {
                 continue;
             }
             if (! (isset($progress[$day->dayIndex()]) && $progress[$day->dayIndex()]->passed)) {

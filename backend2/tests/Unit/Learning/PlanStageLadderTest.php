@@ -14,8 +14,10 @@ use App\Modules\Learning\Domain\ValueObject\PlanStageFact;
  * word owe next» comes out. No database, no clock — the standing is a projection over the review
  * log and this file is the contract that says so.
  *
- * SINCE DAY-FIX-2 (Ч.2) the ladder is ONE TOUCH PER STAGE, and no stage of any kind deals a typed
- * trainer: a day is one sitting of at most forty cards, and the keyboard is not a plan exercise.
+ * SINCE DAY-FIX-2 (Ч.2) the ladder is ONE TOUCH PER STAGE past the introduction, and no stage of
+ * any kind deals a typed trainer: the keyboard is not a plan exercise. SINCE DAY-FIX-3 (Ч.3) the
+ * introduction is closed by an EXERCISE — a word chooses its translation, a connector is tiled, a
+ * reply is built from blocks — and the intro alone closes nothing.
  */
 beforeEach(fn () => $this->ladder = new PlanStageLadder());
 
@@ -37,10 +39,21 @@ function miss(ExerciseMode $mode, string $date): PlanStageFact
 
 // ── the stage order ───────────────────────────────────────────────────────────────────────────
 
-it('deals a WORD its ladder: meet it, then recognise it, then say it — one touch a stage', function () {
-    expect(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_WORD))->toBe([ExerciseMode::Intro])
+it('deals a WORD its ladder: meet it and choose its translation, then recognise it, then say it', function () {
+    expect(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_WORD))->toBe([ExerciseMode::Intro, ExerciseMode::MultipleChoice])
         ->and(PlanStageLadder::modesOf(PlanStage::B, PlanStageLadder::KIND_WORD))->toBe([ExerciseMode::MultipleChoice])
         ->and(PlanStageLadder::modesOf(PlanStage::C, PlanStageLadder::KIND_WORD))->toBe([ExerciseMode::Speaking]);
+});
+
+it('closes a CONNECTOR’s introduction by tiling it, and climbs the word’s stages after (DAY-FIX-3, Ч.3.1)', function () {
+    expect(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_CHUNK))->toBe([ExerciseMode::Intro, ExerciseMode::WordBank])
+        ->and(PlanStageLadder::modesOf(PlanStage::B, PlanStageLadder::KIND_CHUNK))->toBe([ExerciseMode::MultipleChoice])
+        ->and(PlanStageLadder::modesOf(PlanStage::C, PlanStageLadder::KIND_CHUNK))->toBe([ExerciseMode::Speaking])
+        ->and(PlanStageLadder::lastStageFor(PlanStageLadder::KIND_CHUNK))->toBe(PlanStage::C)
+        ->and(PlanStageLadder::isWordLike(PlanStageLadder::KIND_CHUNK))->toBeTrue()
+        ->and(PlanStageLadder::isWordLike(PlanStageLadder::KIND_LINE_SAY))->toBeFalse()
+        // The tiles are dealt at the assembly rung — the chips are the connector's own words.
+        ->and(PlanStageLadder::ladderStepFor(PlanStage::A, ExerciseMode::WordBank, 1, false, PlanStageLadder::KIND_CHUNK))->toBe(3);
 });
 
 it('deals a LINE (the rescue kit) its own ladder — met, recognised, and no stage C at all', function () {
@@ -51,8 +64,8 @@ it('deals a LINE (the rescue kit) its own ladder — met, recognised, and no sta
         ->and(PlanStageLadder::nextStageFor(PlanStage::B, PlanStageLadder::KIND_LINE))->toBeNull();
 });
 
-it('gives a CONNECTOR the word`s ladder exactly — the difference is where its gap is cut', function () {
-    foreach (PlanStage::cases() as $stage) {
+it('gives a CONNECTOR the word`s ladder past the introduction — the difference is how it is met', function () {
+    foreach ([PlanStage::B, PlanStage::C] as $stage) {
         expect(PlanStageLadder::modesOf($stage, PlanStageLadder::KIND_CHUNK))
             ->toBe(PlanStageLadder::modesOf($stage, PlanStageLadder::KIND_WORD));
     }
@@ -130,29 +143,36 @@ it('says what the speaking card shows at each stage', function () {
 
 // ── walking a stage ───────────────────────────────────────────────────────────────────────────
 
-it('starts a never-seen word at the intro of stage A — and that is the whole of stage A', function () {
+it('starts a never-seen word at the intro of stage A, with its translation choice behind it', function () {
     $standing = $this->ladder->standingFor(allModes(), [], introducedOn: null, today: '2026-09-01');
 
     expect($standing->stage)->toBe(PlanStage::A)
         ->and($standing->nextMode)->toBe(ExerciseMode::Intro)
         ->and($standing->stageComplete)->toBeFalse()
-        ->and($standing->checklist)->toHaveCount(1);
+        ->and($standing->checklist)->toHaveCount(2);
 });
 
-it('closes stage A of a word on the EXPOSURE, and holds it until the night', function () {
-    $standing = $this->ladder->standingFor(allModes(), [], introducedOn: '2026-09-01', today: '2026-09-01');
+it('does NOT close stage A of a word on the exposure alone — the intro is closed by its exercise (DAY-FIX-3, Ч.3)', function () {
+    $shown = $this->ladder->standingFor(allModes(), [], introducedOn: '2026-09-01', today: '2026-09-01');
 
-    expect($standing->stage)->toBe(PlanStage::A)
-        ->and($standing->stageComplete)->toBeTrue()
-        ->and($standing->waitingForNight)->toBeTrue()
-        ->and($standing->nextMode)->toBeNull()
-        ->and($standing->checklist[0])->toBe(['mode' => 'intro', 'ordinal' => 1, 'done' => true]);
+    expect($shown->stage)->toBe(PlanStage::A)
+        ->and($shown->stageComplete)->toBeFalse()
+        ->and($shown->nextMode)->toBe(ExerciseMode::MultipleChoice)
+        ->and($shown->checklist[0])->toBe(['mode' => 'intro', 'ordinal' => 1, 'done' => true])
+        ->and($shown->checklist[1]['done'])->toBeFalse();
+
+    // …and the same evening, translated: closed, and held until the night.
+    $chosen = $this->ladder->standingFor(allModes(), [hit(ExerciseMode::MultipleChoice, '2026-09-01')], introducedOn: '2026-09-01', today: '2026-09-01');
+    expect($chosen->stage)->toBe(PlanStage::A)
+        ->and($chosen->stageComplete)->toBeTrue()
+        ->and($chosen->waitingForNight)->toBeTrue()
+        ->and($chosen->nextMode)->toBeNull();
 });
 
 it('does not let a miss close a step', function () {
     $standing = $this->ladder->standingFor(
         allModes(),
-        [miss(ExerciseMode::MultipleChoice, '2026-09-02')],
+        [hit(ExerciseMode::MultipleChoice, '2026-09-01'), miss(ExerciseMode::MultipleChoice, '2026-09-02')],
         introducedOn: '2026-09-01',
         today: '2026-09-02',
     );
@@ -164,10 +184,11 @@ it('does not let a miss close a step', function () {
 
 // ── the night ─────────────────────────────────────────────────────────────────────────────────
 
-it('opens stage B of a word on the next local day, at recognition — the night is measured from the exposure', function () {
-    // The exposure is the ONLY thing that closes stage A now, so its date is what the night is
-    // measured from: shown on the 1st, recognised from the 2nd.
-    $standing = $this->ladder->standingFor(allModes(), [], introducedOn: '2026-09-01', today: '2026-09-02');
+it('opens stage B of a word on the next local day, at recognition — the night is measured from the exercise', function () {
+    // The exercise closes stage A, so its date is what the night is measured from: shown and
+    // translated on the 1st, recognised from the 2nd.
+    $facts = [hit(ExerciseMode::MultipleChoice, '2026-09-01')];
+    $standing = $this->ladder->standingFor(allModes(), $facts, introducedOn: '2026-09-01', today: '2026-09-02');
 
     expect($standing->stage)->toBe(PlanStage::B)
         ->and($standing->nextMode)->toBe(ExerciseMode::MultipleChoice)
@@ -176,24 +197,26 @@ it('opens stage B of a word on the next local day, at recognition — the night 
 });
 
 it('walks a word through B and C, one night each, and calls it ready only after C', function () {
+    $met = hit(ExerciseMode::MultipleChoice, '2026-09-01');
     $facts = [
+        $met,
         hit(ExerciseMode::MultipleChoice, '2026-09-02'),
         hit(ExerciseMode::Speaking, '2026-09-03'),
     ];
 
-    // ON THE DAY IT WAS MET a word stands on A, closed by the exposure, waiting for its night: the
-    // choice logged the same day belongs to tomorrow's B (one touch per stage, DAY-FIX-2).
-    $b = $this->ladder->standingFor(allModes(), [hit(ExerciseMode::MultipleChoice, '2026-09-02')], '2026-09-02', '2026-09-02');
+    // ON THE DAY IT WAS MET a word stands on A, closed by its exercise, waiting for its night: a
+    // second choice logged the same day belongs to tomorrow's B (one touch per stage, DAY-FIX-2).
+    $b = $this->ladder->standingFor(allModes(), [$met, hit(ExerciseMode::MultipleChoice, '2026-09-01')], '2026-09-01', '2026-09-01');
     expect($b->stage)->toBe(PlanStage::A)
         ->and($b->stageComplete)->toBeTrue()
         ->and($b->waitingForNight)->toBeTrue()
         ->and($b->nextMode)->toBeNull();
 
-    $c = $this->ladder->standingFor(allModes(), [hit(ExerciseMode::MultipleChoice, '2026-09-02')], '2026-09-02', '2026-09-03');
+    $c = $this->ladder->standingFor(allModes(), [$met, hit(ExerciseMode::MultipleChoice, '2026-09-02')], '2026-09-01', '2026-09-03');
     expect($c->stage)->toBe(PlanStage::C)
         ->and($c->nextMode)->toBe(ExerciseMode::Speaking);
 
-    $onTheDay = $this->ladder->standingFor(allModes(), $facts, '2026-09-02', '2026-09-03');
+    $onTheDay = $this->ladder->standingFor(allModes(), $facts, '2026-09-01', '2026-09-03');
     expect($onTheDay->stage)->toBe(PlanStage::C)
         ->and($onTheDay->stageComplete)->toBeTrue()
         ->and($onTheDay->finished)->toBeTrue()
@@ -203,16 +226,20 @@ it('walks a word through B and C, one night each, and calls it ready only after 
 
 // ── the same-day dialogue (решение владельца 05.09) ──────────────────────────────────────────
 
-it('opens stage B of a scene line the SAME day its A closed — met, then spoken, in one sitting', function () {
+it('opens stage B of a scene line the SAME day its A closed — met, exercised, then spoken, in one sitting', function () {
     foreach ([PlanStageLadder::KIND_LINE_SAY, PlanStageLadder::KIND_LINE_ASK, PlanStageLadder::KIND_UNDERSTAND] as $kind) {
-        $standing = $this->ladder->standingFor(allModes(), [], introducedOn: '2026-09-01', today: '2026-09-01', kind: $kind);
+        $exercise = match ($kind) {
+            PlanStageLadder::KIND_LINE_SAY => ExerciseMode::SituationalSay,
+            PlanStageLadder::KIND_LINE_ASK => ExerciseMode::SituationalAsk,
+            default => ExerciseMode::SituationalHear,
+        };
+        // A spoken line owes its ASSEMBLY before the conversation (DAY-FIX-3, Ч.3.1); the
+        // interlocutor's line is met and heard, as before.
+        $facts = $kind === PlanStageLadder::KIND_UNDERSTAND ? [] : [hit($exercise, '2026-09-01')];
+        $standing = $this->ladder->standingFor(allModes(), $facts, introducedOn: '2026-09-01', today: '2026-09-01', kind: $kind);
 
         expect($standing->stage)->toBe(PlanStage::B, $kind)
-            ->and($standing->nextMode)->toBe(match ($kind) {
-                PlanStageLadder::KIND_LINE_SAY => ExerciseMode::SituationalSay,
-                PlanStageLadder::KIND_LINE_ASK => ExerciseMode::SituationalAsk,
-                default => ExerciseMode::SituationalHear,
-            });
+            ->and($standing->nextMode)->toBe($exercise);
         expect(PlanStageLadder::opensBSameDay($kind))->toBeTrue()
             ->and(PlanStageLadder::oneShowPerDay($kind))->toBeTrue();
     }
@@ -226,14 +253,15 @@ it('opens stage B of a scene line the SAME day its A closed — met, then spoken
     }
 });
 
-it('gives «Ты ответишь» and «Ты спросишь» their stage B as the situational card, twice', function () {
+it('gives «Ты ответишь» and «Ты спросишь» an assembly to close A, and their stage B as the situational card, twice', function () {
     // B and B+ on one trainer: the choice, and then the assembly on the line's NEXT appearance
     // (наряд SCENE-RUN, Ч.1). One step would make the assembly unreachable rather than rare.
     expect(PlanStageLadder::modesOf(PlanStage::B, PlanStageLadder::KIND_LINE_SAY))
         ->toBe([ExerciseMode::SituationalSay, ExerciseMode::SituationalSay])
         ->and(PlanStageLadder::modesOf(PlanStage::B, PlanStageLadder::KIND_LINE_ASK))
         ->toBe([ExerciseMode::SituationalAsk, ExerciseMode::SituationalAsk])
-        ->and(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_LINE_SAY))->toBe([ExerciseMode::Intro])
+        ->and(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_LINE_SAY))->toBe([ExerciseMode::Intro, ExerciseMode::SituationalSay])
+        ->and(PlanStageLadder::modesOf(PlanStage::A, PlanStageLadder::KIND_LINE_ASK))->toBe([ExerciseMode::Intro, ExerciseMode::SituationalAsk])
         ->and(PlanStageLadder::modesOf(PlanStage::C, PlanStageLadder::KIND_LINE_SAY))->toBe([])
         ->and(PlanStageLadder::modesOf(PlanStage::C, PlanStageLadder::KIND_LINE_ASK))->toBe([]);
 });
@@ -245,7 +273,8 @@ it('makes the second touch of «Тебе скажут» the situational card, no
 });
 
 it('closes a reply’s first B step on the situational card and leaves the second for the next show', function () {
-    $facts = [hit(ExerciseMode::SituationalSay, '2026-09-01')];
+    // The first situational answer closes stage A (the assembly), the second the first step of B.
+    $facts = [hit(ExerciseMode::SituationalSay, '2026-09-01'), hit(ExerciseMode::SituationalSay, '2026-09-01')];
 
     $standing = $this->ladder->standingFor(
         allModes(), $facts, introducedOn: '2026-09-01', today: '2026-09-01',
@@ -270,7 +299,12 @@ it('drops an inapplicable trainer OUT of the checklist instead of blocking on it
     // No speaking → stage C is empty and passed straight through: the word is finished after B.
     $applicable = [ExerciseMode::Intro, ExerciseMode::MultipleChoice];
 
-    $standing = $this->ladder->standingFor($applicable, [hit(ExerciseMode::MultipleChoice, '2026-09-02')], '2026-09-02', '2026-09-03');
+    $standing = $this->ladder->standingFor(
+        $applicable,
+        [hit(ExerciseMode::MultipleChoice, '2026-09-01'), hit(ExerciseMode::MultipleChoice, '2026-09-02')],
+        '2026-09-01',
+        '2026-09-03',
+    );
 
     expect($standing->stage)->toBe(PlanStage::C)
         ->and($standing->checklist)->toBe([])
@@ -290,6 +324,7 @@ it('reads the shelf to tell a reply from a question, and only for a spoken line'
 
 it('softens the knobs after three misses in a row and keeps them soft to the end of the stage', function () {
     $facts = [
+        hit(ExerciseMode::MultipleChoice, '2026-09-01'),   // the translation that closed stage A
         miss(ExerciseMode::MultipleChoice, '2026-09-02'),
         miss(ExerciseMode::MultipleChoice, '2026-09-02'),
         miss(ExerciseMode::MultipleChoice, '2026-09-02'),
@@ -299,7 +334,7 @@ it('softens the knobs after three misses in a row and keeps them soft to the end
     // A word on stage B (introduced, night passed — measured by the caller): three misses on the
     // recognition card soften the stage.
     $standing = $this->ladder->standingFor(
-        allModes(), $facts, introducedOn: '2026-09-01', today: '2026-09-02', kind: PlanStageLadder::KIND_LINE_SAY,
+        allModes(), $facts, introducedOn: '2026-09-01', today: '2026-09-02',
     );
 
     expect($standing->stage)->toBe(PlanStage::B)

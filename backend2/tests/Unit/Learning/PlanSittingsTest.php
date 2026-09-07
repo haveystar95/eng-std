@@ -12,22 +12,26 @@ function part(string $section, int $count): array
 }
 
 /**
- * ДЕНЬ = ОДИН ПРИСЕСТ, ПРОГОН — ВТОРОЙ (наряд DAY-FIX-2, Ч.2.1).
+ * ДВА ПРИСЕСТА — «МАТЕРИАЛ» И «РАЗГОВОР» (наряд DAY-FIX-3, Ч.4).
  *
- * The minutes used to cut the day on section boundaries; now the day is one sitting whatever the
- * minutes, and the only second sitting is the прогон сцены — a different act, with the microphone
- * and nothing on the screen.
+ * The cut fell between the day and the прогон (DAY-FIX-2); now it falls between what the learner
+ * meets and exercises and what they say: the dialogue, the seam's lines and the прогон are one
+ * sitting, everything before them another.
  */
-it('is one sitting for a day with no прогон in it', function () {
-    $day = [...part(S::WARMUP, 5), ...part(S::WORDS . '#1', 6), ...part(S::DIALOGUE_INTRO . '#1', 12), ...part(S::DIALOGUE . '#1', 12)];
+it('cuts a day into the material and the conversation', function () {
+    $day = [...part(S::WARMUP, 5), ...part(S::WORDS . '#1', 12), ...part(S::DIALOGUE_INTRO . '#1', 15), ...part(S::DIALOGUE . '#1', 10)];
 
-    expect(PlanSittings::split($day))->toBe([35]);
+    expect(PlanSittings::split($day))->toBe([32, 10])
+        ->and(PlanSittings::plan($day))->toBe([
+            ['kind' => PlanSittings::MATERIAL, 'cards' => 32],
+            ['kind' => PlanSittings::CONVERSATION, 'cards' => 10],
+        ]);
 });
 
-it('puts the прогон into a sitting of its own, after the day', function () {
-    $day = [...part(S::WARMUP, 5), ...part(S::DIALOGUE . '#2', 10), ...part(S::REVIEW . '#1', 6), ...part(S::SCENE_RUN . '#1', 6)];
+it('puts the seam’s lines and the прогон into the conversation, the seam’s words into the material', function () {
+    $day = [...part(S::WARMUP, 5), ...part(S::WORDS . '#2', 8), ...part(S::WORDS . '#1', 6), ...part(S::DIALOGUE . '#2', 10), ...part(S::DIALOGUE . '#1', 5), ...part(S::SCENE_RUN . '#1', 6)];
 
-    expect(PlanSittings::split($day))->toBe([21, 6]);
+    expect(PlanSittings::split($day))->toBe([19, 21]);
 });
 
 it('adds up to the whole day, so nothing the learner passed can burn', function () {
@@ -39,13 +43,32 @@ it('adds up to the whole day, so nothing the learner passed can burn', function 
 });
 
 it('answers an empty day with no sittings at all', function () {
-    expect(PlanSittings::split([]))->toBe([]);
+    expect(PlanSittings::split([]))->toBe([])
+        ->and(PlanSittings::plan([]))->toBe([]);
 });
 
-it('is a single прогон sitting on the final day, which has no day part', function () {
-    expect(PlanSittings::split([...part(S::SCENE_RUN . '#1', 5), ...part(S::SCENE_RUN . '#2', 4)]))->toBe([9]);
+it('is a single conversation sitting on the final day, which has no material', function () {
+    $day = [...part(S::SCENE_RUN . '#1', 5), ...part(S::REHEARSAL . '#2', 4)];
+
+    expect(PlanSittings::split($day))->toBe([9])
+        ->and(PlanSittings::plan($day))->toBe([['kind' => PlanSittings::CONVERSATION, 'cards' => 9]]);
 });
 
-it('states the owner`s ceiling — forty — as the domain`s own number', function () {
-    expect(PlanSittings::MAX_TASKS_PER_SITTING)->toBe(40);
+it('is a single material sitting for a day of introductions with no conversation yet', function () {
+    expect(PlanSittings::plan([...part(S::WARMUP, 3), ...part(S::WORDS . '#1', 6)]))
+        ->toBe([['kind' => PlanSittings::MATERIAL, 'cards' => 9]]);
+});
+
+it('names the sitting of every section the planner keys', function () {
+    foreach ([S::WARMUP, S::WORDS . '#1', S::DIALOGUE_INTRO . '#1', S::NUMBERS . '#1', S::REVIEW . '#1', S::DAY . '#1'] as $section) {
+        expect(PlanSittings::kindOf($section))->toBe(PlanSittings::MATERIAL, $section);
+    }
+    foreach ([S::DIALOGUE . '#1', S::SCENE_RUN . '#1', S::REHEARSAL . '#1'] as $section) {
+        expect(PlanSittings::kindOf($section))->toBe(PlanSittings::CONVERSATION, $section);
+    }
+});
+
+it('states the owner`s ceilings — forty-five and twenty-five — as the domain`s own numbers', function () {
+    expect(PlanSittings::MATERIAL_MAX_CARDS)->toBe(45)
+        ->and(PlanSittings::CONVERSATION_MAX_CARDS)->toBe(25);
 });

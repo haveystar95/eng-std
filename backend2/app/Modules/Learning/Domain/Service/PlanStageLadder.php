@@ -141,6 +141,26 @@ final class PlanStageLadder
     // перевернулось у слова: говорение ушло в C, потому что на день знакомства бюджет даёт слову
     // ОДНУ карточку, и это интро. Слово произносится внутри реплик сцены с первого дня — ходами
     // диалога, — так что рот его всё равно учит сразу.
+    //
+    // ## СТУПЕНЬ A ЗАКРЫВАЕТСЯ УПРАЖНЕНИЕМ, А НЕ ПОКАЗОМ (наряд DAY-FIX-3, Ч.3)
+    //
+    // Живой день 07.09: человек прошёл знакомство — и попал в диалог, где реплику надо было
+    // выбрать, ни разу её не тронув руками. Интро само по себе ступень A больше не закрывает —
+    // у каждого вида карточки за интро стоит СВОЙ тренажёр, без клавиатуры:
+    //
+    //   слово            A  познакомился → выбрал перевод (из четырёх)   B  узнал      C  сказал сам
+    //   связка           A  познакомился → собрал из плиток              B  узнал      C  сказал сам
+    //   «Ты ответишь»    A  познакомился → собрал из блоков              B  выбрал → (следующий показ) собрал
+    //   «Ты спросишь»    A  познакомился → собрал из блоков              B  собрал → собрал
+    //   «Тебе скажут»    A  познакомился                                 B  услышал → выбрал смысл (такт диалога)
+    //   спасатель        A  познакомился                                 B  узнал (выбор)
+    //
+    // Ошибка на упражнении ступень не закрывает: карточка уходит в хвост присеста
+    // ({@see \App\Modules\Learning\Application\Service\PlanSittingPlanner} — сборка идёт после ВСЕХ
+    // упражнений A), а диалог собирается только из реплик, у которых A закрыта. Сборка реплики на
+    // ступени A — та же ситуационная карточка на уровне «сборка»
+    // ({@see \App\Modules\Learning\Domain\ValueObject\PlanTurnLevel::forTurn()}), поэтому
+    // «выбор → сборка на повторном появлении» ступени B не сдвинулся ни на шаг.
     private const STEPS = [
         self::KIND_LINE => [
             PlanStage::A->value => [ExerciseMode::Intro],
@@ -148,7 +168,13 @@ final class PlanStageLadder
             PlanStage::C->value => [],
         ],
         self::KIND_WORD => [
-            PlanStage::A->value => [ExerciseMode::Intro],
+            PlanStage::A->value => [ExerciseMode::Intro, ExerciseMode::MultipleChoice],
+            PlanStage::B->value => [ExerciseMode::MultipleChoice],
+            PlanStage::C->value => [ExerciseMode::Speaking],
+        ],
+        // A CONNECTOR is assembled from tiles the day it is met — its pieces are what it is made of.
+        self::KIND_CHUNK => [
+            PlanStage::A->value => [ExerciseMode::Intro, ExerciseMode::WordBank],
             PlanStage::B->value => [ExerciseMode::MultipleChoice],
             PlanStage::C->value => [ExerciseMode::Speaking],
         ],
@@ -190,7 +216,7 @@ final class PlanStageLadder
         // Ошибка на сборке ступень не открывает и в выбор не откатывает: второй шаг остаётся
         // незакрытым, и реплика возвращается — в шов следующего дня — снова сборкой.
         self::KIND_LINE_SAY => [
-            PlanStage::A->value => [ExerciseMode::Intro],
+            PlanStage::A->value => [ExerciseMode::Intro, ExerciseMode::SituationalSay],
             PlanStage::B->value => [
                 ExerciseMode::SituationalSay,
                 ExerciseMode::SituationalSay,
@@ -198,7 +224,7 @@ final class PlanStageLadder
             PlanStage::C->value => [],
         ],
         self::KIND_LINE_ASK => [
-            PlanStage::A->value => [ExerciseMode::Intro],
+            PlanStage::A->value => [ExerciseMode::Intro, ExerciseMode::SituationalAsk],
             PlanStage::B->value => [
                 ExerciseMode::SituationalAsk,
                 ExerciseMode::SituationalAsk,
@@ -206,6 +232,14 @@ final class PlanStageLadder
             PlanStage::C->value => [],
         ],
     ];
+
+    /** Does this kind climb the WORD's three stages — a piece or a connector? */
+    public static function isWordLike(string $kind): bool
+    {
+        $normalized = self::normalizeKind($kind);
+
+        return $normalized === self::KIND_WORD || $normalized === self::KIND_CHUNK;
+    }
 
     /**
      * СТУПЕНЬ B РЕПЛИКИ ОТКРЫВАЕТСЯ В ТОТ ЖЕ ДЕНЬ, ЧТО ЗАКРЫЛАСЬ A (наряд DAY-FIX-2, решение
@@ -240,11 +274,13 @@ final class PlanStageLadder
     }
 
     /**
-     * ОДИН ПОКАЗ НА СТУПЕНЬ В ДЕНЬ — для реплик сцены (наряд DAY-FIX-2, Ч.2.4).
+     * ОДИН ПОКАЗ НА СТУПЕНЬ В ДЕНЬ — для реплик сцены (наряд DAY-FIX-2, Ч.2.4), на ступени B.
      *
-     * Полки реплик получают из чек-листа ступени ОДИН шаг за посадку; слова и спасатели — весь
-     * остаток ступени, как раньше (у них он и так один шаг). Правило раздачи, читается планировщиком
-     * посадки, живёт здесь, потому что оно про то, что лестница ОБЕЩАЕТ показать за день.
+     * Полки реплик получают из чек-листа ступени B ОДИН шаг за посадку; слова и спасатели — весь
+     * остаток ступени, как раньше. Ступень A — знакомство и его упражнение — раздаётся целиком в
+     * один день у всех (наряд DAY-FIX-3, Ч.3: интро само по себе A не закрывает), поэтому правило
+     * читается планировщиком только для B и выше. Живёт здесь, потому что оно про то, что лестница
+     * ОБЕЩАЕТ показать за день.
      */
     public static function oneShowPerDay(string $kind): bool
     {
@@ -388,7 +424,7 @@ final class PlanStageLadder
     private static function normalizeKind(string $kind): string
     {
         return match ($kind) {
-            self::KIND_LINE, self::KIND_UNDERSTAND,
+            self::KIND_LINE, self::KIND_UNDERSTAND, self::KIND_CHUNK,
             self::KIND_LINE_SAY, self::KIND_LINE_ASK => $kind,
             default => self::KIND_WORD,
         };
@@ -458,7 +494,7 @@ final class PlanStageLadder
     /** The LAST stage a card of this kind lives on — B for a line, C for everything else. */
     public static function lastStageFor(string $kind): PlanStage
     {
-        return self::normalizeKind($kind) === self::KIND_WORD ? PlanStage::C : PlanStage::B;
+        return self::isWordLike($kind) ? PlanStage::C : PlanStage::B;
     }
 
     /**
@@ -469,7 +505,7 @@ final class PlanStageLadder
     public static function allModes(): array
     {
         $out = [];
-        foreach ([self::KIND_LINE, self::KIND_WORD, self::KIND_UNDERSTAND,
+        foreach ([self::KIND_LINE, self::KIND_WORD, self::KIND_CHUNK, self::KIND_UNDERSTAND,
             self::KIND_LINE_SAY, self::KIND_LINE_ASK] as $kind) {
             foreach (PlanStage::cases() as $stage) {
                 foreach (self::STEPS[$kind][$stage->value] as $mode) {
@@ -553,7 +589,7 @@ final class PlanStageLadder
         // A LINE is graded against ITSELF, at every stage, and so is a card of the понимаю tier:
         // the dictation rung means «ask for the example», and their example is a different
         // sentence. What is asked for is the line, so the rung stays the assembly one.
-        if (self::normalizeKind($kind) !== self::KIND_WORD) {
+        if (! self::isWordLike($kind)) {
             return LearningLadder::STEP_ASSEMBLY;
         }
 

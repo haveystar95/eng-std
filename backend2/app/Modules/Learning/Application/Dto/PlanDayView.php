@@ -50,5 +50,11 @@ final readonly class PlanDayView
          */
         public string $dayState = 'not_started',
         public int $minutesLeft = 0,
+        /**
+         * МИНУТЫ ДВУХ ПРИСЕСТОВ — «Материал» и «Разговор» врозь (наряд DAY-FIX-3, Ч.5.1): экран
+         * дня пишет обе, вкладка «План» — ту, что впереди.
+         */
+        public int $materialMinutes = 0,
+        public int $conversationMinutes = 0,
     ) {}
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Service;
 
+use App\Modules\Learning\Application\Dto\PlanDayProgressView;
 use App\Modules\Learning\Application\Dto\PlanDayStateView;
 use App\Modules\Learning\Application\Dto\PlanProgressView;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
@@ -16,7 +17,8 @@ use App\Modules\Learning\Domain\ValueObject\PlanKnobs;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
 
 /**
- * ОДНО СОСТОЯНИЕ ДНЯ — «не начат» / «идёт · около N минут» / «пройден» (наряд DAY-FIX-2, Ч.3).
+ * ОДНО СОСТОЯНИЕ ДНЯ — «не начат» / «идёт» / «материал пройден · разговор около N минут» /
+ * «пройден» (наряд DAY-FIX-2, Ч.3; наряд DAY-FIX-3, Ч.4.3).
  *
  * Считает только сервер, и считает ОДНИМ кодом для трёх экранов: вкладка «План» (пейлоад плана),
  * экран дня (тот же пейлоад дня) и шапка присеста (пейлоад посадки). Живой прогон 05.09 показал
@@ -25,23 +27,27 @@ use App\Modules\Learning\Domain\ValueObject\PlanStage;
  *
  * ## Слово
  *
- *   `done`         день `done` в базе ИЛИ его стойки говорят «пройден» ({@see PlanDayProgressView::$passed})
- *                  — второе раньше первого на те секунды, пока `POST /complete` едет с телефона;
- *   `not_started`  ни одна карточка сцены не тронута: все стоят на A с пустым чек-листом;
- *   `in_progress`  всё остальное.
+ *   `done`           день `done` в базе ИЛИ его стойки говорят «пройден» ({@see PlanDayProgressView::$passed})
+ *                    — второе раньше первого на те секунды, пока `POST /complete` едет с телефона;
+ *   `not_started`    ни одна карточка сцены не тронута: все стоят на A с пустым чек-листом;
+ *   `material_done`  присест «Материал» отдал всё, что должен был, и впереди только «Разговор»
+ *                    ({@see \App\Modules\Learning\Domain\Service\PlanSittings}) — день, который
+ *                    изучают, и только он: у дня впереди фокуса материал ещё не начат;
+ *   `in_progress`    всё остальное.
  *
  * ## Минуты
  *
- * Карточек × `card_seconds`, до целой минуты вверх. Для дня, который изучают (фокус), карточки —
- * это ТОТ ЖЕ план посадки, который раздаст сессия ({@see PlanSittingPlanner}): разогрев, день, шов,
- * прогон. Для дня впереди фокуса — его собственные карточки на ступени A: шва у него нет. Для
+ * Карточек × `card_seconds`, до целой минуты вверх — по каждому присесту отдельно и вместе. Для
+ * дня, который изучают (фокус), карточки — это ТОТ ЖЕ план посадки, который раздаст сессия
+ * ({@see PlanSittingPlanner}): разогрев, день, шов, прогон. Для дня впереди фокуса — его
+ * собственные карточки на ступени A и разговор, который они открывают: шва у него нет. Для
  * пройденного — ноль.
  */
 final readonly class PlanDayStateCensus
 {
     public function __construct(
         private PlanSittingPlanner $planner,
-        /** @var array{sitting_max_cards: int, words_section_cards: int, rescue_warmup_cards: int, card_seconds: int} */
+        /** @var array{material_max_cards: int, conversation_max_cards: int, words_section_cards: int, rescue_warmup_cards: int, card_seconds: int, word_choice_options: int} */
         private array $budget,
     ) {}
 
@@ -72,14 +78,14 @@ final readonly class PlanDayStateCensus
         $view = $progress->days[$dayIndex] ?? null;
 
         // THE FINAL DAY has no material of its own: it is «идёт» while the plan runs and the прогон
-        // of every scene is what it costs.
+        // of every scene is what it costs — a conversation, whole.
         if ($day !== null && $day->kind() === PlanDayKind::Final) {
             $layout ??= $this->planner->rehearsal($plan, $progress);
 
-            return new PlanDayStateView(
+            return $this->priced(
                 $layout->cards() === 0 ? PlanDayState::NotStarted : PlanDayState::InProgress,
+                0,
                 $layout->cards(),
-                $layout->minutes(),
             );
         }
 
@@ -114,44 +120,78 @@ final readonly class PlanDayStateCensus
             }
         }
 
-        $cards = $dayIndex === $progress->focusDayIndex
-            ? ($layout ?? $this->planner->plan($plan, $progress, $dayIndex, $knobs, $stages))->cards()
-            : $this->ownCardsOf($view);
+        if ($dayIndex === $progress->focusDayIndex) {
+            $layout ??= $this->planner->plan($plan, $progress, $dayIndex, $knobs, $stages);
+            $material = $layout->materialCards();
+            $conversation = $layout->conversationCards();
+        } else {
+            [$material, $conversation] = $this->ownCardsOf($view);
+        }
+
+        // «МАТЕРИАЛ ПРОЙДЕН» — nothing left to meet, the conversation still ahead, and the day
+        // actually walked to that point: an untouched day whose material happens to be empty is
+        // not a day the learner finished half of.
+        $state = match (true) {
+            ! $touched => PlanDayState::NotStarted,
+            $material === 0 && $conversation > 0 && $dayIndex === $progress->focusDayIndex => PlanDayState::MaterialDone,
+            default => PlanDayState::InProgress,
+        };
+
+        return $this->priced($state, $material, $conversation);
+    }
+
+    private function priced(PlanDayState $state, int $material, int $conversation): PlanDayStateView
+    {
+        $seconds = $this->budget['card_seconds'];
 
         return new PlanDayStateView(
-            $touched ? PlanDayState::InProgress : PlanDayState::NotStarted,
-            $cards,
-            PlanSittingLayout::minutesFor($cards, $this->budget['card_seconds']),
+            $state,
+            $material + $conversation,
+            PlanSittingLayout::minutesFor($material + $conversation, $seconds),
+            materialCards: $material,
+            materialMinutes: PlanSittingLayout::minutesFor($material, $seconds),
+            conversationCards: $conversation,
+            conversationMinutes: PlanSittingLayout::minutesFor($conversation, $seconds),
         );
     }
 
     /**
-     * A day AHEAD of the focus: what its own cards still owe on their stage — no seam, no warm-up.
+     * A day AHEAD of the focus: what its own cards still owe on their stage — no seam, no warm-up —
+     * split into the material (the checklist of stage A) and the conversation it opens.
+     *
+     * @return array{0: int, 1: int}  material, conversation
      */
-    private function ownCardsOf(\App\Modules\Learning\Application\Dto\PlanDayProgressView $view): int
+    private function ownCardsOf(PlanDayProgressView $view): array
     {
-        $cards = 0;
+        $material = 0;
+        $conversation = 0;
         foreach ($view->termIds as $termId) {
             $content = $view->content[$termId] ?? null;
             $standing = $view->standings[$termId] ?? null;
             if ($standing === null || ($content !== null && $content->shelf === PlanSittingPlanner::SHELF_RESCUE)) {
                 continue;
             }
+            $kind = $content === null || $content->kind === null
+                ? PlanStageLadder::KIND_WORD
+                : PlanStageLadder::ladderKindFor($content->kind, $content->tier, $content->shelf);
             foreach ($standing->checklist as $step) {
-                if (! $step['done']) {
-                    $cards++;
+                if ($step['done']) {
+                    continue;
+                }
+                // A step of stage A is material; a step of a line's stage B is the conversation.
+                if ($standing->stage === PlanStage::A) {
+                    $material++;
+                } else {
+                    $conversation++;
                 }
             }
             // …plus the conversation the day opens behind its intros (DAY-FIX-2, DECISIONS п. 266):
             // a scene line is met AND spoken in the same sitting, and the minutes say so.
-            $kind = $content === null || $content->kind === null
-                ? PlanStageLadder::KIND_WORD
-                : PlanStageLadder::ladderKindFor($content->kind, $content->tier, $content->shelf);
             if ($standing->stage === PlanStage::A && ! $standing->stageComplete && PlanStageLadder::opensBSameDay($kind)) {
-                $cards++;
+                $conversation++;
             }
         }
 
-        return $cards;
+        return [$material, $conversation];
     }
 }

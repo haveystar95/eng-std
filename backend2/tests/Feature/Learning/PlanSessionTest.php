@@ -74,18 +74,26 @@ it('deals day 1 as stage A: intro first, then the two recognitions, the word ban
         }
     }
 
-    // The chain a card is dealt depends on what it IS — and on DAY 1 it is one touch per stage
-    // (DAY-FIX-2, Ч.2.4): a word is met today and recognised tomorrow; a line of the scene is met
-    // and then SPOKEN in the same sitting (its stage B opens the day A closes, DECISIONS п. 266),
-    // as the interlocutor's line to understand or as the learner's own to answer.
+    // The chain a card is dealt depends on what it IS — and on DAY 1 the introduction is closed
+    // by an EXERCISE (DAY-FIX-3, Ч.3): a word is met and translates itself today, recognised
+    // tomorrow; a line of the scene is met, BUILT from blocks and then SPOKEN in the same sitting
+    // (its stage B opens the day A closes, DECISIONS п. 266) — or, as the interlocutor's line, met
+    // and understood.
     $kind = DB::table('terms')->where('id', $first)->value('kind');
 
     if ($kind === 'line') {
-        expect($chain)->toHaveCount(2)
-            ->and($chain[0])->toBe('intro')
-            ->and($chain[1])->toBeIn(['situational_hear', 'situational_say', 'situational_ask']);
+        expect($chain[0])->toBe('intro');
+        if ($chain[1] === 'situational_hear') {
+            expect($chain)->toHaveCount(2);
+        } else {
+            expect($chain)->toHaveCount(3)
+                ->and($chain[1])->toBeIn(['situational_say', 'situational_ask'])
+                ->and($chain[2])->toBe($chain[1]);
+        }
+    } elseif ($kind === 'chunk') {
+        expect($chain)->toBe(['intro', 'word_bank']);
     } else {
-        expect($chain)->toBe(['intro']);
+        expect($chain)->toBe(['intro', 'multiple_choice']);
     }
 });
 
@@ -138,9 +146,10 @@ it('deals a line and a word different chains in the same session', function () {
             ->and($chain[0])->toBe('intro');
     }
 
-    // A WORD is met on day 1 and nothing more — its recognition is tomorrow's touch (DAY-FIX-2).
+    // A WORD is met on day 1 and chooses its translation — its recognition is tomorrow's touch
+    // (DAY-FIX-2; the translation choice closes the introduction since DAY-FIX-3, Ч.3.1).
     foreach ($chains['word'] ?? [] as $chain) {
-        expect($chain)->toBe(['intro']);
+        expect($chain)->toBe(['intro', 'multiple_choice']);
     }
 
     expect($chains['line'] ?? [])->not->toBeEmpty()
@@ -1079,17 +1088,23 @@ it('gives every reply of a day its assembly step — four, not three (С-7)', fu
         if ($task['section'] !== 'day' || ! in_array($task['shelf'] ?? null, ['say', 'ask'], true)) {
             continue;
         }
-        $seen[$task['card']['term_id']][] = $task['card']['exercise_mode'];
-        // One touch per stage (DAY-FIX-2): A is the intro alone, B is two situational touches.
-        expect($task['of_steps'])->toBe($task['stage'] === 'a' ? 1 : 2);
+        $seen[$task['card']['term_id']][] = [$task['card']['exercise_mode'], $task['turn_level'], $task['section_code']];
+        // A is the intro and the assembly that closes it (DAY-FIX-3, Ч.3.1); B is two situational
+        // touches (DAY-FIX-2).
+        expect($task['of_steps'])->toBe(2);
     }
 
     expect($seen)->not->toBeEmpty();
-    foreach ($seen as $modes) {
-        // …and every reply is met AND answered in the conversation on its first day (DAY-FIX-2):
-        // the intro, then one situational touch — never an assembly trainer of the word ladder.
-        expect($modes[0])->toBe('intro')
-            ->and($modes)->toHaveCount(2)
-            ->and($modes[1])->toBeIn(['situational_say', 'situational_ask']);
+    foreach ($seen as $touches) {
+        // …and every reply is met, BUILT and answered in the conversation on its first day: the
+        // intro, the assembly among the introductions, then one situational touch in the dialogue —
+        // never an assembly trainer of the word ladder.
+        expect($touches[0][0])->toBe('intro')
+            ->and($touches)->toHaveCount(3)
+            ->and($touches[1][0])->toBeIn(['situational_say', 'situational_ask'])
+            ->and($touches[1][1])->toBe('assemble')
+            ->and($touches[1][2])->toBe('dialogue_intro')
+            ->and($touches[2][0])->toBe($touches[1][0])
+            ->and($touches[2][2])->toBe('dialogue');
     }
 });

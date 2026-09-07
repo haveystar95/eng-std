@@ -3070,13 +3070,16 @@ components:
         term_budget: { type: integer }
         day_state:
           type: string
-          enum: [not_started, in_progress, done]
+          enum: [not_started, in_progress, material_done, done]
           description: >-
-            ONE WORD ABOUT THE DAY (наряд DAY-FIX-2, Ч.3) — «не начат» / «идёт» / «пройден».
-            Computed by the server and by nothing else: the plan tab, the day screen and the sitting
-            header all read this field, and none of them keeps a counter of its own. Distinct from
-            `status`, which is about GENERATION; a `ready` day may be untouched or half-walked.
-            `done` is true from the moment every card of the scene has closed its first rung, which
+            ONE WORD ABOUT THE DAY (наряд DAY-FIX-2, Ч.3; DAY-FIX-3, Ч.4.3) — «не начат» / «идёт» /
+            «материал пройден» / «пройден». Computed by the server and by nothing else: the plan
+            tab, the day screen and the sitting header all read this field, and none of them keeps
+            a counter of its own. Distinct from `status`, which is about GENERATION; a `ready` day
+            may be untouched or half-walked. `material_done` — the first sitting («Материал»:
+            warm-up, words, introductions and their exercises) has nothing left to deal and the
+            conversation is still ahead; the button reads «К разговору». `done` is true from the
+            moment every card of the scene has closed its first rung and been spoken once, which
             can be seconds before `status` says so.
         minutes_left:
           type: integer
@@ -3084,6 +3087,17 @@ components:
             «около N минут» — cards the day still deals × `plan.budget.card_seconds`, rounded up to
             a whole minute. The cards are the SAME sitting `POST …/session` would deal, planned by
             the same code. Zero once the day is done.
+        material_minutes:
+          type: integer
+          description: >-
+            THE FIRST SITTING PRICED APART (наряд DAY-FIX-3, Ч.5.1): «Материал» — the cards the
+            learner meets and exercises — × `card_seconds`, rounded up. Zero once that sitting is
+            walked. The day screen prints «материал около 12 минут · разговор около 6».
+        conversation_minutes:
+          type: integer
+          description: >-
+            THE SECOND SITTING: «Разговор» — the scene's dialogue, the seam's lines by assembly,
+            the прогон — priced the same way. What the plan tab shows beside «материал пройден».
         outcome:
           type: array
           items: { type: string }
@@ -3144,28 +3158,40 @@ components:
             belong to the plan rather than to this scene. Null on a term from a pre-v0.4 day.
         next_step:
           type: [string, 'null']
-          enum: [meet, recognize, hear, choose, assemble, say, null]
+          enum: [meet, translate, tiles, recognize, hear, choose, assemble, say, null]
           description: >-
-            WHAT THE LEARNER WILL DO with this row next (наряд DAY-FIX-2, Ч.4.2) — the code the day
-            screen turns into «познакомишься» / «выберешь перевод» / «услышишь и разберёшь» /
-            «выберешь ответ» / «соберёшь из блоков» / «скажешь голосом». Computed from the row's
-            standing and the turn level the sitting would deal it at, so the caption and the card
-            cannot disagree. Null when the row owes nothing today.
+            WHAT THE LEARNER WILL DO with this row next (наряд DAY-FIX-2, Ч.4.2; DAY-FIX-3, Ч.5.1)
+            — the code the day screen turns into «познакомишься» / «переведёшь» / «соберёшь из
+            плиток» / «узнаешь» / «услышишь и разберёшь» / «выберешь ответ» / «соберёшь из блоков» /
+            «скажешь голосом». `translate` and `tiles` are the exercises that close a word's and a
+            connector's introduction the day they are met (Ч.3.1). Computed from the row's standing
+            and the turn level the sitting would deal it at, so the caption and the card cannot
+            disagree. Null when the row owes nothing today.
         then_step:
           type: [string, 'null']
-          enum: [hear, choose, assemble, null]
+          enum: [translate, tiles, hear, choose, assemble, null]
           description: >-
-            THE STEP THAT FOLLOWS IN THE SAME SITTING, or null. A scene line met today is spoken
-            today — its stage B opens the day A closes (DECISIONS п. 266) — so the day screen
-            writes both words: «познакомишься · выберешь ответ». Null for words, for the seam and
-            for a row whose intro is already behind it.
+            THE STEP THAT FOLLOWS IN THE SAME SITTING, or null — the first of `then_steps`, kept
+            for a client that reads one word.
+        then_steps:
+          type: array
+          items:
+            type: string
+            enum: [translate, tiles, hear, choose, assemble]
+          description: >-
+            EVERYTHING THAT FOLLOWS THE NEXT STEP IN THE SAME SITTING, in order (наряд DAY-FIX-3,
+            Ч.5.1): a word — `[translate]`; a connector — `[tiles]`; «Ты ответишь» — `[assemble,
+            choose]` (built from blocks among the introductions, then chosen in the conversation,
+            DECISIONS п. 266); «Ты спросишь» — `[assemble]`; «Тебе скажут» — `[hear]`. Empty for
+            the seam and for a row whose introduction is behind it.
         mark:
           type: [string, 'null']
-          enum: [passed, said_self, null]
+          enum: [met, applying, said_self, null]
           description: >-
-            THE ROW'S MARK once the day has been walked (Ч.4.3): `passed` — met and closed its first
-            rung; `said_self` — sounded in the learner's own voice in a scene run. Words, never
-            numbers.
+            THE ROW'S MARK once the day has been walked (Ч.4.3; DAY-FIX-3, Ч.5.2): `met` — the
+            introduction acknowledged, its exercise still ahead; `applying` — the introduction
+            closed by its exercise, or any later stage; `said_self` — sounded in the learner's own
+            voice in a scene run. Words or a sign, never numbers.
         topical:
           type: boolean
           description: >-
@@ -3553,11 +3579,32 @@ components:
           items: { type: integer }
           description: >-
             ПРИСЕСТЫ: the task counts of each sitting, adding up to the number of tasks. Since
-            наряд DAY-FIX-2 (Ч.2.1) a DAY is ONE sitting of at most 40 cards and the only second
-            sitting is the scene run — so the list is `[day]` or `[day, run]`, never more.
+            наряд DAY-FIX-3 (Ч.4) a day is «Материал» (at most 45 cards) and then «Разговор» (at
+            most 25) — `[material, conversation]`, either absent when empty, never more than two.
+            Named in `sitting_plan`.
+        sitting_plan:
+          type: array
+          items:
+            type: object
+            required: [kind, cards]
+            properties:
+              kind: { type: string, enum: [material, conversation] }
+              cards: { type: integer }
+          description: >-
+            THE SAME SITTINGS, NAMED (наряд DAY-FIX-3, Ч.4): `material` — the warm-up, the words
+            and connectors, the introductions and the exercises that close them; `conversation` —
+            the scene's dialogue, the seam's lines by assembly, the прогон. The client draws the
+            break screen («Материал пройден · К разговору») and the resume point («К разговору»
+            opens the conversation sitting) off this list.
+        material_minutes:
+          type: integer
+          description: 'The same number as `PlanDay.material_minutes` for this day.'
+        conversation_minutes:
+          type: integer
+          description: 'The same number as `PlanDay.conversation_minutes` for this day.'
         day_state:
           type: string
-          enum: [not_started, in_progress, done]
+          enum: [not_started, in_progress, material_done, done]
           description: >-
             THE SAME WORD the plan payload carries for this day (`PlanDay.day_state`), computed by
             the same census over the same planned sitting — the sitting header reads it from here

@@ -15,5 +15,14 @@ final readonly class PlanDayStateView
         public int $cardsLeft,
         /** «около N минут» — cards × seconds, rounded up to a whole minute. */
         public int $minutesLeft,
+        /**
+         * THE TWO SITTINGS, PRICED APART (наряд DAY-FIX-3, Ч.4.3 / Ч.5.1): «Материал» and
+         * «Разговор», cards and minutes each. The day screen prints both — «материал около 12
+         * минут · разговор около 6», — and the plan tab prints the one still ahead.
+         */
+        public int $materialCards = 0,
+        public int $materialMinutes = 0,
+        public int $conversationCards = 0,
+        public int $conversationMinutes = 0,
     ) {}
 }

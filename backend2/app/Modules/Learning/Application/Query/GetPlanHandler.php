@@ -342,6 +342,8 @@ final readonly class GetPlanHandler
             intro: self::introOf($brief),
             dayState: $state->state->value,
             minutesLeft: $state->minutesLeft,
+            materialMinutes: $state->materialMinutes,
+            conversationMinutes: $state->conversationMinutes,
         );
     }
 

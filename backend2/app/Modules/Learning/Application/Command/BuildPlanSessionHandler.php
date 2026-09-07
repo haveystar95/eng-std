@@ -210,9 +210,12 @@ final readonly class BuildPlanSessionHandler
                 $tasks,
                 static fn (PlanSessionTaskView $t): bool => $t->section === PlanSessionTaskView::SECTION_DAY,
             )),
-            // WHERE IT IS HONEST TO STOP: the day, then the прогон (Ч.2.1). Computed from the tasks
-            // that actually survived assembly, for the same reason `dayTaskCount` is.
+            // WHERE IT IS HONEST TO STOP: «Материал», then «Разговор» (DAY-FIX-3, Ч.4). Computed
+            // from the tasks that actually survived assembly, for the same reason `dayTaskCount` is.
             sittings: PlanSittings::split(array_map(self::sectionKeyOf(...), $tasks)),
+            sittingPlan: PlanSittings::plan(array_map(self::sectionKeyOf(...), $tasks)),
+            materialMinutes: $state->materialMinutes,
+            conversationMinutes: $state->conversationMinutes,
             // THE CONVERSATIONS, in the order the sitting reaches them — the dialogue screen's whole
             // input beside the tasks themselves.
             dialogues: self::dialoguesWithAudio($dialogues, $audio),
@@ -619,7 +622,9 @@ final readonly class BuildPlanSessionHandler
                 neighbours: $neighbours,
                 modeOverride: $mode,
                 supportLang: $langs->for($termId),
-                optionCount: $knobs->mcOptions,
+                // A WORD MET TODAY CHOOSES ITS TRANSLATION OUT OF FOUR (DAY-FIX-3, Ч.3.1) — the
+                // planner says so on the spec; everything else takes the level's knob.
+                optionCount: is_int($spec['options'] ?? null) ? max($knobs->mcOptions, $spec['options']) : $knobs->mcOptions,
                 answerPoolIds: $answerPool,
                 turnLevel: $level,
             );

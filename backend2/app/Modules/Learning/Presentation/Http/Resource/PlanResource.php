@@ -90,6 +90,10 @@ final class PlanResource
             // `done`. Три экрана читают это поле; ни один не считает «осталось N» сам.
             'day_state' => $day->dayState,
             'minutes_left' => $day->minutesLeft,
+            // …И МИНУТЫ ДВУХ ПРИСЕСТОВ врозь (наряд DAY-FIX-3, Ч.5.1) — «материал около 12 минут ·
+            // разговор около 6».
+            'material_minutes' => $day->materialMinutes,
+            'conversation_minutes' => $day->conversationMinutes,
         ];
     }
 }

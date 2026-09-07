@@ -168,13 +168,16 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->when(GetPlanHandler::class)
             ->needs('$readyFastShare')
             ->give(static fn (): float => (float) config('learning.plan.scene_run.ready_fast_share', 0.7));
-        // БЮДЖЕТ ДНЯ (наряд DAY-FIX-2, Ч.2) — один присест ≤ 40, слова ≤ 12, спасатели ≤ 5,
-        // секунды на карточку. Читают планировщик посадки и перепись состояния дня, из одного места.
+        // БЮДЖЕТ ДНЯ (наряд DAY-FIX-2, Ч.2; DAY-FIX-3, Ч.4) — материал ≤ 45, разговор ≤ 25, слова
+        // ≤ 12, спасатели ≤ 5, секунды на карточку, варианты перевода слова. Читают планировщик
+        // посадки и перепись состояния дня, из одного места.
         $budget = static fn (): array => [
-            'sitting_max_cards' => (int) config('learning.plan.budget.sitting_max_cards', 40),
-            'words_section_cards' => (int) config('learning.plan.budget.words_section_cards', 12),
+            'material_max_cards' => (int) config('learning.plan.budget.material_max_cards', 45),
+            'conversation_max_cards' => (int) config('learning.plan.budget.conversation_max_cards', 25),
+            'words_section_cards' => (int) config('learning.plan.budget.words_section_cards', 40),
             'rescue_warmup_cards' => (int) config('learning.plan.budget.rescue_warmup_cards', 5),
             'card_seconds' => (int) config('learning.plan.budget.card_seconds', 16),
+            'word_choice_options' => (int) config('learning.plan.budget.word_choice_options', 4),
         ];
         $this->app->when(PlanSittingPlanner::class)->needs('$budget')->give($budget);
         $this->app->when(PlanDayStateCensus::class)->needs('$budget')->give($budget);

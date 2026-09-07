@@ -113,5 +113,15 @@ final readonly class PlanSessionView
          */
         public \App\Modules\Learning\Domain\ValueObject\PlanDayState $dayState = \App\Modules\Learning\Domain\ValueObject\PlanDayState::InProgress,
         public int $minutesLeft = 0,
+        /**
+         * ПРИСЕСТЫ, НАЗВАННЫЕ (наряд DAY-FIX-3, Ч.4): `{kind: material|conversation, cards}` в том
+         * же порядке, что и `$sittings`, — телефон рисует по ним экран между присестами
+         * («Материал пройден · К разговору») и знает, с какого присеста начинать по «К разговору».
+         *
+         * @var list<array{kind: string, cards: int}>
+         */
+        public array $sittingPlan = [],
+        public int $materialMinutes = 0,
+        public int $conversationMinutes = 0,
     ) {}
 }

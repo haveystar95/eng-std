@@ -64,6 +64,11 @@ final class PlanSessionResource extends JsonResource
             // присеста читает их отсюда; локального счётчика «осталось N» у неё нет.
             'day_state' => $view->dayState->value,
             'minutes_left' => $view->minutesLeft,
+            // ПРИСЕСТЫ, НАЗВАННЫЕ (наряд DAY-FIX-3, Ч.4): «Материал», «Разговор» — те же числа, что
+            // в `sittings`, с именем у каждого, и минуты каждого врозь.
+            'sitting_plan' => $view->sittingPlan,
+            'material_minutes' => $view->materialMinutes,
+            'conversation_minutes' => $view->conversationMinutes,
             // СЕКУНДЫ ПРОГОНА СЦЕНЫ — «сразу», «Пропустить», сторож и цена хода в минутах дня
             // (наряд SCENE-RUN). На проводе, а не в коде экрана: это продуктовые суждения о том,
             // сколько человек думает, и они обязаны двигаться без выката приложения.

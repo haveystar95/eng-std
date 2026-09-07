@@ -124,9 +124,11 @@ it('does not call a day «пройден» on its intros alone — the scene has
     expect(dayOf(planPayload($this, $token, $planId), 1)['day_state'])->toBe('done');
 });
 
-it('names BOTH touches of a scene line on the day screen — met today, spoken today', function () {
-    // «познакомишься · выберешь ответ»: the row's `next_step` is the intro, `then_step` the stage-B
-    // exercise that follows in the same sitting. A word owes only its intro today, so it has none.
+it('names EVERY touch of a row on the day screen — met, exercised, spoken, in the order of the sitting', function () {
+    // «познакомишься · соберёшь из блоков · выберешь ответ»: the row's `next_step` is the intro,
+    // `then_steps` everything that follows in the same sitting (наряд DAY-FIX-3, Ч.5.1). A word
+    // meets its translation choice, a connector its tiles; a question is assembled once for A and
+    // once as its turn, and the screen says «соберёшь» once.
     [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
     $rows = dayPayload($this, $token, $planId, 1)['terms'];
@@ -136,23 +138,68 @@ it('names BOTH touches of a scene line on the day screen — met today, spoken t
     }
     expect($byShelf)->toHaveKeys(['hear', 'say', 'ask', 'words']);
 
-    foreach (['hear' => 'hear', 'say' => 'choose', 'ask' => 'assemble'] as $shelf => $then) {
-        foreach ($byShelf[$shelf] as $row) {
+    foreach (['hear' => ['hear'], 'say' => ['assemble', 'choose'], 'ask' => ['assemble'], 'words' => ['translate'], 'chunks' => ['tiles']] as $shelf => $then) {
+        foreach ($byShelf[$shelf] ?? [] as $row) {
             expect($row['next_step'])->toBe('meet', "{$shelf}: {$row['text']}")
-                ->and($row['then_step'])->toBe($then, "{$shelf}: {$row['text']}");
+                ->and($row['then_steps'])->toBe($then, "{$shelf}: {$row['text']}")
+                ->and($row['then_step'])->toBe($then[0], "{$shelf}: {$row['text']}")
+                ->and($row['mark'])->toBeNull("{$shelf}: {$row['text']}");
         }
     }
-    foreach ($byShelf['words'] as $row) {
-        expect($row['then_step'])->toBeNull($row['text']);
+});
+
+it('calls a day «материал пройден» between its two sittings, and prices each sitting apart', function () {
+    // The two sittings of a day (наряд DAY-FIX-3, Ч.4): «Материал» — every card met and
+    // exercised — then «Разговор». The word between them is the server's, and so are both minute
+    // counts, on the plan and on the day.
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $session = planSession($this, $token, $planId);
+    expect($session['sitting_plan'])->toHaveCount(2)
+        ->and($session['sitting_plan'][0]['kind'])->toBe('material')
+        ->and($session['sitting_plan'][1]['kind'])->toBe('conversation')
+        ->and(array_column($session['sitting_plan'], 'cards'))->toBe($session['sittings'])
+        ->and($session['material_minutes'])->toBe((int) ceil($session['sittings'][0] * 16 / 60))
+        ->and($session['conversation_minutes'])->toBe((int) ceil($session['sittings'][1] * 16 / 60))
+        ->and($session['minutes_left'])->toBeGreaterThanOrEqual($session['material_minutes']);
+
+    $day1 = dayOf(planPayload($this, $token, $planId), 1);
+    expect($day1['material_minutes'])->toBe($session['material_minutes'])
+        ->and($day1['conversation_minutes'])->toBe($session['conversation_minutes']);
+
+    // THE MATERIAL, whole — and the day says so everywhere, with the conversation still priced.
+    $material = array_slice($session['tasks'], 0, $session['sittings'][0]);
+    answerTasks($this, $token, ['session_id' => $session['session_id'], 'tasks' => $material]);
+
+    $plan = planPayload($this, $token, $planId);
+    expect(dayOf($plan, 1)['day_state'])->toBe('material_done')
+        ->and(dayOf($plan, 1)['material_minutes'])->toBe(0)
+        ->and(dayOf($plan, 1)['conversation_minutes'])->toBeGreaterThan(0)
+        ->and($plan['focus_day_index'])->toBe(1)
+        ->and(dayPayload($this, $token, $planId, 1)['day_state'])->toBe('material_done');
+
+    // The rows of the material carry their marks: «применяешь» on what was exercised.
+    foreach (dayPayload($this, $token, $planId, 1)['terms'] as $row) {
+        if ($row['shelf'] === 'rescue') {
+            continue;
+        }
+        expect($row['mark'])->toBeIn(['met', 'applying'], "{$row['shelf']}: {$row['text']}");
     }
+
+    // A fresh sitting picks the day up at the conversation — nothing of the material comes back.
+    $again = planSession($this, $token, $planId);
+    expect($again['day_state'])->toBe('material_done')
+        ->and($again['sitting_plan'])->toHaveCount(1)
+        ->and($again['sitting_plan'][0]['kind'])->toBe('conversation');
 });
 
 it('never prints a counter the screens could disagree on — one word, and the minutes are whole', function () {
     [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
     foreach (planPayload($this, $token, $planId)['days'] as $day) {
-        expect($day['day_state'])->toBeIn(['not_started', 'in_progress', 'done'])
+        expect($day['day_state'])->toBeIn(['not_started', 'in_progress', 'material_done', 'done'])
             ->and($day['minutes_left'])->toBeInt()
-            ->and($day['minutes_left'])->toBeGreaterThanOrEqual(0);
+            ->and($day['minutes_left'])->toBeGreaterThanOrEqual(0)
+            ->and($day['material_minutes'] + $day['conversation_minutes'])->toBeGreaterThanOrEqual($day['minutes_left'] > 0 ? 1 : 0);
     }
 });

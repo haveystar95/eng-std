@@ -48,13 +48,13 @@ use App\Modules\Learning\Domain\ValueObject\SituationalCandidate;
  *      stage B or C, as ONE touch by assembly (Ч.2.3), words capped by the words-section budget;
  *   3. **the прогон** — ступень C of every scene that has matured, once a day (SCENE-RUN).
  *
- * ## THE BUDGET (Ч.2, `config/learning.php → plan.budget`)
+ * ## THE BUDGET (Ч.2, `config/learning.php → plan.budget`; наряд DAY-FIX-3, Ч.4)
  *
- * A day is ONE sitting of at most `sitting_max_cards`; the прогон is the only second sitting. The
- * day's own material fits by construction of the ladder; what can overrun is the seam and the
- * misses, and they are trimmed from the tail — the seam first (a card of a day behind comes back
- * tomorrow), then the misses. The words section («Слова и связки») holds at most
- * `words_section_cards`: today's own words first, the seam's words while they fit.
+ * A day is TWO sittings: «Материал» — the warm-up, the words, the introductions and their
+ * exercises — of at most `material_max_cards`, and «Разговор» — the dialogue, the seam's lines and
+ * the прогон — of at most `conversation_max_cards`. What can overrun is trimmed from the tail
+ * ({@see trimmed()}). The words section («Слова и связки») holds at most `words_section_cards`:
+ * today's own words first, the seam's words while they fit.
  *
  * ## «Когда» is not this planner's business
  *
@@ -73,7 +73,7 @@ final readonly class PlanSittingPlanner
         private PlanSceneRunRepository $sceneRuns,
         private PlanSceneTurns $sceneTurns,
         /**
-         * @var array{sitting_max_cards: int, words_section_cards: int, rescue_warmup_cards: int, card_seconds: int}
+         * @var array{material_max_cards: int, conversation_max_cards: int, words_section_cards: int, rescue_warmup_cards: int, card_seconds: int, word_choice_options: int}
          */
         private array $budget,
         private PlanDayOrder $order = new PlanDayOrder(),
@@ -164,6 +164,10 @@ final readonly class PlanSittingPlanner
             $owed = $this->specsFor($termId, $standing, $dayIndex, 'new', $knobs, $kind);
             if (self::isWordKind($kind)) {
                 $wordCards += count($owed);
+                // WHAT THE BUDGET MAY GIVE UP LAST: a topical word stands in no line of the scene
+                // (P2 v0.8), so it is the one card of the day the conversation can do without.
+                $topical = isset($today->content[$termId]) && $today->content[$termId]->topical;
+                $owed = array_map(static fn (array $s): array => $s + ['topical' => $topical], $owed);
             }
             // THE SCENE IS SPOKEN THE DAY IT IS MET (решение владельца 05.09, DECISIONS п. 266): a
             // line's stage B opens in the SAME sitting as its A, so the conversation follows the
@@ -235,7 +239,7 @@ final readonly class PlanSittingPlanner
         // THE LEVEL OF EVERY TURN, decided here so the census, the chain and the card agree.
         $specs = $this->withTurnLevels($specs, $progress, $dayIndex);
 
-        // THE BUDGET: one sitting of at most `sitting_max_cards` before the прогон.
+        // THE BUDGET: «Материал» and «Разговор», each under its own ceiling.
         $specs = $this->trimmed($specs);
 
         return new PlanSittingLayout(
@@ -281,22 +285,28 @@ final readonly class PlanSittingPlanner
     }
 
     /**
-     * ОДИН ПРИСЕСТ ≤ 40: drop from the tail of the seam first, then the warm-up's misses, until the
-     * day part fits. The day's own material and the прогон are never trimmed.
+     * ДВА ПРИСЕСТА, ДВА ПОТОЛКА (наряд DAY-FIX-3, Ч.4.1): «Материал» ≤ `material_max_cards`,
+     * «Разговор» ≤ `conversation_max_cards`.
+     *
+     * The material gives way from its tail: the seam first, then the warm-up's misses, then the
+     * day's own TOPICAL words — the one card of the day the scene's conversation does not need (P2
+     * v0.8). The conversation gives way the same way: the seam's lines first (a line of a day behind
+     * comes back tomorrow), then the прогон of the OLDEST scene, whole — a scene run is one act and
+     * cannot be dealt half. Today's own dialogue is never trimmed: the day cannot pass without it.
      *
      * @param  list<array<string, mixed>>  $specs
      * @return list<array<string, mixed>>
      */
     private function trimmed(array $specs): array
     {
-        $max = max(1, $this->budget['sitting_max_cards']);
-        $dayCount = static fn (array $list): int => count(array_filter(
+        $count = static fn (array $list, string $kind): int => count(array_filter(
             $list,
-            static fn (array $s): bool => ($s['section_code'] ?? null) !== PlanSessionSections::SCENE_RUN,
+            static fn (array $s): bool => PlanSittings::kindOf(self::sectionKeyOfSpec($s)) === $kind,
         ));
 
-        foreach (['plan_review', 'warmup_miss'] as $source) {
-            while ($dayCount($specs) > $max) {
+        $material = max(1, $this->budget['material_max_cards']);
+        foreach (['plan_review', 'warmup_miss', 'topical'] as $source) {
+            while ($count($specs, PlanSittings::MATERIAL) > $material) {
                 // THE SEAM GIVES WAY NEWEST DAY FIRST: a card of the day before yesterday has waited
                 // longer than one of yesterday, and its rung (C for a word) is what the plan is
                 // walking toward. Within a day, WORDS before the scene's lines — the seam is there
@@ -305,7 +315,13 @@ final readonly class PlanSittingPlanner
                 $drop = null;
                 $dropKey = null;
                 foreach ($specs as $i => $spec) {
-                    if (($spec['source'] ?? null) !== $source) {
+                    if (PlanSittings::kindOf(self::sectionKeyOfSpec($spec)) !== PlanSittings::MATERIAL) {
+                        continue;
+                    }
+                    $matches = $source === 'topical'
+                        ? (($spec['topical'] ?? false) === true)
+                        : ($spec['source'] ?? null) === $source;
+                    if (! $matches) {
                         continue;
                     }
                     $key = [(int) ($spec['day'] ?? 0), ($spec['seam_word'] ?? false) ? 1 : 0, $i];
@@ -319,6 +335,42 @@ final readonly class PlanSittingPlanner
                 }
                 array_splice($specs, $drop, 1);
             }
+        }
+
+        $conversation = max(1, $this->budget['conversation_max_cards']);
+        while ($count($specs, PlanSittings::CONVERSATION) > $conversation) {
+            $drop = null;
+            $dropKey = null;
+            foreach ($specs as $i => $spec) {
+                if (PlanSittings::kindOf(self::sectionKeyOfSpec($spec)) !== PlanSittings::CONVERSATION
+                    || ($spec['source'] ?? null) !== 'plan_review') {
+                    continue;
+                }
+                $key = [(int) ($spec['day'] ?? 0), $i];
+                if ($drop === null || $key >= $dropKey) {
+                    $drop = $i;
+                    $dropKey = $key;
+                }
+            }
+            if ($drop !== null) {
+                array_splice($specs, $drop, 1);
+
+                continue;
+            }
+            // No seam left — the прогон of the oldest scene goes, whole.
+            $oldest = null;
+            foreach ($specs as $spec) {
+                if (($spec['section_code'] ?? null) === PlanSessionSections::SCENE_RUN) {
+                    $oldest = $oldest === null ? (int) $spec['day'] : min($oldest, (int) $spec['day']);
+                }
+            }
+            if ($oldest === null) {
+                break;
+            }
+            $specs = array_values(array_filter(
+                $specs,
+                static fn (array $s): bool => ! (($s['section_code'] ?? null) === PlanSessionSections::SCENE_RUN && (int) $s['day'] === $oldest),
+            ));
         }
 
         return $specs;
@@ -342,11 +394,16 @@ final readonly class PlanSittingPlanner
             if (! in_array($shelf, [PlanDialogueChain::SHELF_SAY, PlanDialogueChain::SHELF_ASK], true)) {
                 continue;
             }
-            $specs[$i]['turn_level'] = PlanTurnLevel::forTurn(
-                $shelf,
-                (int) $spec['ordinal'],
-                inSeam: $spec['day'] !== null && (int) $spec['day'] !== $dayIndex,
-            );
+            // THE EXERCISE OF STAGE A IS THE ASSEMBLY (наряд DAY-FIX-3, Ч.3.1): a line just met is
+            // built from its blocks before it is ever chosen among others. Choice is the
+            // conversation's first touch, and the conversation is stage B.
+            $specs[$i]['turn_level'] = ($spec['stage'] ?? null) === PlanStage::A
+                ? PlanTurnLevel::Assemble
+                : PlanTurnLevel::forTurn(
+                    $shelf,
+                    (int) $spec['ordinal'],
+                    inSeam: $spec['day'] !== null && (int) $spec['day'] !== $dayIndex,
+                );
         }
 
         return $specs;
@@ -365,7 +422,7 @@ final readonly class PlanSittingPlanner
     }
 
     /**
-     * ПРИСЕСТЫ, as the layout would cut them — the day, then the прогон.
+     * ПРИСЕСТЫ, as the layout would cut them — «Материал», then «Разговор».
      *
      * @param  list<array<string, mixed>>  $specs
      * @return list<int>
@@ -373,6 +430,19 @@ final readonly class PlanSittingPlanner
     public static function sittingsOf(array $specs): array
     {
         return PlanSittings::split(array_map(self::sectionKeyOfSpec(...), $specs));
+    }
+
+    /**
+     * How many cards of the layout fall into the sitting of this kind.
+     *
+     * @param  list<array<string, mixed>>  $specs
+     */
+    public static function cardsOfKind(array $specs, string $kind): int
+    {
+        return count(array_filter(
+            $specs,
+            static fn (array $s): bool => PlanSittings::kindOf(self::sectionKeyOfSpec($s)) === $kind,
+        ));
     }
 
     // ── the pieces ───────────────────────────────────────────────────────────────────────────
@@ -422,7 +492,10 @@ final readonly class PlanSittingPlanner
             if ($step['done']) {
                 continue;
             }
-            if ($oneShow && $specs !== []) {
+            // …AND STAGE A IS DEALT WHOLE (наряд DAY-FIX-3, Ч.3): the introduction and the exercise
+            // that closes it are one evening's work for every kind of card. «One show» is a rule
+            // about the conversation's stage, not about meeting the line.
+            if ($oneShow && $specs !== [] && $standing->stage !== PlanStage::A) {
                 break;
             }
 
@@ -443,6 +516,12 @@ final readonly class PlanSittingPlanner
                     $recognitionOptions,
                     $kind,
                 ),
+                // A WORD'S TRANSLATION IS CHOSEN OUT OF FOUR on the day it is met (Ч.3.1) — the
+                // level's knob sets the choice everywhere else. Null means «the knob».
+                'options' => $standing->stage === PlanStage::A && $mode === ExerciseMode::MultipleChoice
+                    && PlanStageLadder::isWordLike($kind)
+                    ? $this->budget['word_choice_options']
+                    : null,
             ];
         }
 
@@ -590,10 +669,13 @@ final readonly class PlanSittingPlanner
             $rest[] = [
                 'spec' => $spec,
                 'key' => [
-                    // THE DAY, THEN THE SEAM, THEN THE ПРОГОН — last of everything, whichever scene
-                    // it runs: it is the second sitting (PlanSittings::split), and a seam dealt
-                    // after it would land inside that sitting.
-                    $spec['section_code'] === PlanSessionSections::SCENE_RUN ? 2 : ($day === $dayIndex ? 0 : 1),
+                    // «МАТЕРИАЛ», ПОТОМ «РАЗГОВОР» (наряд DAY-FIX-3, Ч.4): everything the learner
+                    // meets and exercises, then everything they say — today's dialogue, the seam's
+                    // lines, the прогон. Two sittings, cut here and nowhere else
+                    // ({@see PlanSittings::split()}).
+                    PlanSittings::kindOf($spec['section_code'] . '#' . $day) === PlanSittings::CONVERSATION ? 1 : 0,
+                    // THE DAY, THEN THE SEAM, within each sitting.
+                    $day === $dayIndex ? 0 : 1,
                     PlanSessionSections::rankOf($spec['section_code']),
                     $day,
                     $atTurn[$day . '#' . $spec['term_id']] ?? PHP_INT_MAX,

@@ -7,72 +7,102 @@ namespace App\Modules\Learning\Domain\Service;
 /**
  * ПРИСЕСТЫ — how a day's sitting is cut into the pieces a person actually sits down for.
  *
- * ## ДЕНЬ = ОДИН ПРИСЕСТ, ПРОГОН СЦЕНЫ — ВТОРОЙ (наряд DAY-FIX-2, Ч.2.1)
+ * ## ДВА ПРИСЕСТА: «МАТЕРИАЛ» И «РАЗГОВОР» (наряд DAY-FIX-3, Ч.4)
  *
- * It used to be cut by the learner's minutes, on section boundaries, with a ceiling of forty. The
- * minutes are gone from the cut: the owner's rule is that a DAY is one sitting of at most
- * {@see MAX_TASKS_PER_SITTING} cards, and the only thing that earns a second sitting is the прогон
- * сцены — ступень C, which is a different act (the microphone, nothing on the screen) and which
- * the learner is right to want a breath before. Everything else the planner has already trimmed to
- * fit ({@see \App\Modules\Learning\Application\Service\PlanSittingPlanner}), so a first sitting
- * longer than the ceiling is a bug there, not a case here.
+ * It used to be «день = один присест ≤ 40, прогон — второй» (DAY-FIX-2, Ч.2.1). Then stage A
+ * stopped closing on the intro alone (DAY-FIX-3, Ч.3): every word chooses its translation, every
+ * connector is tiled, every reply is built from blocks BEFORE the conversation — and a day of
+ * around seventy cards is not one sitting by any honest measure. So the cut moved to the seam the
+ * material itself has: everything the learner MEETS and exercises, then everything they SAY.
+ *
+ *   «Материал»   the warm-up, the words and connectors, the introductions and their exercises —
+ *                at most {@see MATERIAL_MAX_CARDS};
+ *   «Разговор»   the scene's dialogue (stage B), the seam's lines by assembly, the прогон —
+ *                at most {@see CONVERSATION_MAX_CARDS}.
+ *
+ * The owner accepted the day at ~70 cards / ~18 minutes across the two (07.09). What decides a
+ * card's sitting is its SECTION and nothing else — the same code the seam captions are drawn from —
+ * so the client and the planner cannot cut the day in two different places.
  *
  * ## Nothing here is a limit on the day
  *
  * Every task is in exactly one присест and every присест is non-empty, so `array_sum()` of the
  * result is the number of tasks it was given. That is the property the client's progress bar rests
- * on: «пройденное не сгорает» is only true if the parts add up to the whole.
+ * on: «пройденное не сгорает» is only true if the parts add up to the whole. The CEILINGS are the
+ * planner's business ({@see \App\Modules\Learning\Application\Service\PlanSittingPlanner::trimmed()}),
+ * which trims before the cut; a sitting longer than its ceiling is a bug there, not a case here.
  */
 final class PlanSittings
 {
-    /**
-     * THE CEILING ON ONE ПРИСЕСТ — «день ≤ 40 карточек» (решение владельца 05.09).
-     *
-     * Forty is the point past which a sitting has stopped being one: the stand's own day-scene
-     * came back at 68, and the live day 2 of 05.09 at 50–61, and neither was finished in an
-     * evening. Read from `config/learning.php → plan.budget.sitting_max_cards` by the planner; this
-     * constant is the domain's own statement of the same number, and the two are pinned together
-     * by a test.
-     */
-    public const MAX_TASKS_PER_SITTING = 40;
+    /** The two kinds of sitting, as the wire names them. */
+    public const MATERIAL = 'material';
+
+    public const CONVERSATION = 'conversation';
 
     /**
-     * The task counts of each присест, in order: everything before the прогон, then the прогон.
+     * THE CEILINGS — «материал ≤ 45, разговор ≤ 25» (решение владельца 07.09).
+     *
+     * Read from `config/learning.php → plan.budget.material_max_cards` /
+     * `conversation_max_cards` by the planner; these constants are the domain's own statement of
+     * the same numbers, and the two are pinned together by a test.
+     */
+    public const MATERIAL_MAX_CARDS = 45;
+
+    public const CONVERSATION_MAX_CARDS = 25;
+
+    /**
+     * The task counts of each присест, in order: «Материал», then «Разговор». A sitting with no
+     * card in it is not listed, so a day of intros alone is `[n]` and the final day — the прогон
+     * of every scene — is `[n]` too.
      *
      * @param  list<string>  $sections  one section key per task, in the order the tasks are dealt
      * @return list<int>
      */
     public static function split(array $sections): array
     {
-        if ($sections === []) {
-            return [];
-        }
+        return array_map(static fn (array $row): int => $row['cards'], self::plan($sections));
+    }
 
-        $day = 0;
-        $run = 0;
+    /**
+     * The same cut, with each sitting NAMED — what the client draws the break screen and the
+     * day's two minute counts from.
+     *
+     * @param  list<string>  $sections
+     * @return list<array{kind: string, cards: int}>
+     */
+    public static function plan(array $sections): array
+    {
+        $counts = [self::MATERIAL => 0, self::CONVERSATION => 0];
         foreach ($sections as $section) {
-            if (self::isSceneRun($section)) {
-                $run++;
-            } else {
-                $day++;
-            }
+            $counts[self::kindOf($section)]++;
         }
 
         $out = [];
-        if ($day > 0) {
-            $out[] = $day;
-        }
-        if ($run > 0) {
-            $out[] = $run;
+        foreach ($counts as $kind => $cards) {
+            if ($cards > 0) {
+                $out[] = ['kind' => $kind, 'cards' => $cards];
+            }
         }
 
         return $out;
     }
 
-    /** A section key of the прогон — `scene_run#<day>`, as the planner keys it. */
-    private static function isSceneRun(string $section): bool
+    /**
+     * WHICH SITTING a card of this section falls into.
+     *
+     * A section key is `warmup` or `<code>#<day>`, as the planner keys it; the conversation is the
+     * dialogue (stage B of the scene's lines, today's or the seam's), the прогон and the final
+     * day's run-through. Everything else — the warm-up, the words, the introductions with their
+     * exercises, a pre-shelf day's undivided block — is material.
+     */
+    public static function kindOf(string $section): string
     {
-        return $section === PlanSessionSections::SCENE_RUN
-            || str_starts_with($section, PlanSessionSections::SCENE_RUN . '#');
+        $code = explode('#', $section, 2)[0];
+
+        return in_array($code, [
+            PlanSessionSections::DIALOGUE,
+            PlanSessionSections::SCENE_RUN,
+            PlanSessionSections::REHEARSAL,
+        ], true) ? self::CONVERSATION : self::MATERIAL;
     }
 }
