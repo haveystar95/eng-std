@@ -8,11 +8,13 @@
 > **v0.8 против v0.7 — наряд DAY-FIX-3, Ч.2.1: больше слов.** Три дня свежего плана прошлись за
 > десять минут — материала мало. Слова дня теперь = слова из реплик сцены (как было) ПЛЮС 6–10
 > ТЕМАТИЧЕСКИХ существительных и связок ситуации, которых в репликах нет («рецепт», «страховка»,
-> «анализы» у врача). У каждой карточки `words`/`chunks` — поле `topical`: `true` у тематической,
-> `false` у той, что стоит в реплике. Правило Y5 канона GEN-1 меняется: слово либо стоит в реплике,
-> либо помечено `topical: true`; больше ничего — иначе сервер выбрасывает
-> (`PlanDayComposer::pruneUnspoken()`). Судья слов не нужен. Тематические слова тренируются как
-> обычные слова (интро → перевод выбором), в диалог не входят; экран дня подписывает их «по теме».
+> «анализы» у врача). Тематические — ОТДЕЛЬНЫМ массивом `topical[]` (у каждой `kind: word | chunk`);
+> первая редакция v0.8 держала булев флаг `topical` на карточках `words`/`chunks`, и два живых дня
+> на стенде 07.09 показали: модель помечает куски реплик `false` и ничего не добавляет. Правило Y5
+> канона GEN-1 меняется: слово либо стоит в реплике, либо пришло в `topical[]`; больше ничего — иначе
+> сервер выбрасывает (`PlanDayComposer::pruneUnspoken()`); тематическое, стоящее в реплике, —
+> слово реплики. Судья слов не нужен. Тематические слова тренируются как обычные слова (интро →
+> перевод выбором), в диалог не входят; экран дня подписывает их «по теме».
 >
 > Всё остальное — v0.7 (канон качества GEN-1): полка ответов — только ответы; уровень числом;
 > `speaking_keys[]` у каждой `you`; перевод ровно по смыслу; `ask`-пара — приглашение → вопрос;
@@ -47,8 +49,9 @@ INPUT
 OUTPUT — one JSON object, nothing else:
 {
   "pairs":   [ ... ],   // the conversation as EXCHANGES, in the order they happen. Guide: 4–6, never fewer than 4.
-  "words":   [ ... ],   // single words: the pieces of the lines (with chunks: guide 4–6) PLUS the topical words (guide 6–10).
-  "chunks":  [ ... ],   // set combinations of 2–4 words.
+  "words":   [ ... ],   // single words: the PIECES OF THE LINES only (with chunks: guide 4–6).
+  "chunks":  [ ... ],   // set combinations of 2–4 words that stand in the lines.
+  "topical": [ ... ],   // the TOPICAL vocabulary of the situation that the lines do not use — words and chunks, 6–10 items, never fewer than 6. See TOPICAL CARDS.
   "numbers": [ ... ]    // numbers in live scene context, listening only. Guide: 2–4.
 }
 
@@ -118,30 +121,43 @@ SHELF SPECIFICS
   years» for «I have two years of commercial experience»; each 1–6 words, in {{target_lang}},
   never identical to the assembled line and never identical to the filler alone.
 - words: at most 3 words. Also carry "example" — a NEW sentence in the scene's world using
-  the word (never the word alone, never equal to any line of this day), "example_translation",
-  "image_api_prompt" — a concrete photographable moment — and "topical" (see below). Only words
-  get images. The word's "translation" is its meaning IN THIS SCENE — «cold» in «the soup is
-  cold» is «холодный», not «простуда»; «team» is «команда», not «отдел».
+  the word (never the word alone, never equal to any line of this day), "example_translation"
+  and "image_api_prompt" — a concrete photographable moment. Only words get images. The word's
+  "translation" is its meaning IN THIS SCENE — «cold» in «the soup is cold» is «холодный», not
+  «простуда»; «team» is «команда», not «отдел».
 - chunks: 2–4 words, set combinations (like "make an appointment"). Carry "example" /
-  "example_translation" and "topical" as words do; no image.
+  "example_translation" as words do; no image.
   A chunk is a self-sufficient piece of language that lives outside this one sentence (front desk,
   make an appointment, water pressure). NOT a chunk: a fragment cut off from its object (works
-  for), an article plus a noun (the location), or a combination of basic words (see it). Translate
-  the chunk's text exactly — never add words the text does not contain.
-- WORDS AND CHUNKS ARE OF TWO KINDS, and "topical" says which:
-  * "topical": false — a PIECE OF THE LINES. It must stand, character for character, inside at
-    least one line of this scene (a "role" or a "you" line) — «hurts» in the line means the card
-    is «hurts», not «hurt»; a chunk is written in the form it takes in the line («responsible for»,
-    «take a seat» — never «be responsible for», never «to take a seat»). Guide: 4–6 such cards,
-    words and chunks together.
-  * "topical": true — a TOPICAL word or chunk of this situation that the lines do not happen to
-    use: the nouns and set phrases a person meets at this encounter and will hear or read there
-    (for a doctor's visit: «prescription», «insurance», «test results», «waiting room»; for a flat
-    viewing: «deposit», «lease», «utilities»). Concrete, specific to the situation, at the user's
-    level. Guide: 6–10 such cards. They are trained as words and never enter the conversation.
-  A card that stands in no line of the day and is not marked topical is dropped by the server,
-  so do not write it. A topical card that happens to stand in a line is simply a piece of the
-  lines — mark it "topical": false.
+  for), an article plus a noun (the location), or a combination of basic words (see it, for a
+  week, in the morning). Translate the chunk's text exactly — never add words the text does not
+  contain.
+- WORDS AND CHUNKS ARE THE PIECES OF THE LINES. Every card in "words" and "chunks" must stand,
+  character for character, inside at least one line of this scene (a "role" or a "you" line) —
+  «hurts» in the line means the card is «hurts», not «hurt»; a chunk is written in the form it
+  takes in the line («responsible for», «take a seat» — never «be responsible for», never «to take
+  a seat»). Guide: 4–6 such cards, words and chunks together. A card that stands in no line is
+  dropped by the server, so do not write it there — a word of the situation that the lines do not
+  use belongs in "topical".
+
+TOPICAL CARDS — the "topical" array, REQUIRED
+- "topical" holds the vocabulary of THIS SITUATION that the lines do not happen to use: the
+  nouns and set phrases a person SEES, HEARS and READS at this encounter — signs, documents,
+  objects, roles, places, procedures. At a doctor's: «prescription», «insurance card», «waiting
+  room», «blood test», «pharmacy», «symptoms», «follow-up»; at a flat viewing: «deposit», «lease»,
+  «utilities»; at an airport: «boarding pass», «gate», «carry-on», «customs».
+- At least 6 and up to 10 items. A day with fewer than 6 topical cards is INCOMPLETE and is
+  sent back: this is the second half of the day's vocabulary and it is as important as the lines.
+- Each item is a word or a chunk with "kind": "word" | "chunk", written exactly like a card of
+  "words" / "chunks": "text", "translation" (the meaning in this scene), "transliteration",
+  its own "example" sentence in the scene's world, "example_translation", and
+  "image_api_prompt" (a concrete photographable moment for a word; "" for a chunk). Concrete,
+  specific to the situation, at the user's level. The same rules as for chunks apply: no
+  combination of basic words («for a week», «at the door»), no fragment cut off from its object.
+- A topical card does not stand in any line and is not the filler of any line; it never
+  repeats a piece of the lines, a KNOWN unit or the rescue kit. One that turns out to stand in a
+  line is simply a piece of the lines — the server files it as such.
+- Topical cards are trained as words and never enter the conversation.
 - numbers: "frame" is a natural line the other person says that contains the number, price,
   date or address; "filler" is the number expression as spoken; add "value" — the SAME number
   as DIGITS only («20», «9:30», «2026-09-08»), never words («twice», «four eight two one» —
@@ -165,8 +181,8 @@ CONTENT RULES
   assembled text in the support alphabet.
 - If balance is 'understanding', make the role lines richer and the you lines shorter; if
   'speaking' — the opposite. If balance is empty, ignore this rule.
-- Counts in this prompt are guidance, not law — except the minimum of four pairs. Never pad with
-  filler cards to hit a number.
+- Counts in this prompt are guidance, not law — except the minimum of four pairs and the minimum
+  of six topical cards. Never pad with filler cards to hit a number.
 - Answer with the JSON object only.
 
 ---
@@ -177,24 +193,26 @@ CONTENT RULES
     role item    {kind:"line", skill_ref, frame, filler, speaker:"role", translation, transliteration}
     you item     {kind:"line", skill_ref, frame, filler, translation, transliteration, speaking_keys:[string, string?]}
     words[i]     {kind:"word",  skill_ref, text, translation, transliteration,
-                  example, example_translation, image_api_prompt, topical:boolean}
+                  example, example_translation, image_api_prompt}
     chunks[i]    {kind:"chunk", skill_ref, text, translation, transliteration,
-                  example, example_translation, topical:boolean}
+                  example, example_translation}
+    topical[i]   {kind:"word"|"chunk", skill_ref, text, translation, transliteration,
+                  example, example_translation, image_api_prompt}
     numbers[i]   {kind:"number", skill_ref, frame, filler, value, translation}
 
 - A PAIR is the unit. The server lays `role` of pair i onto the `hear` shelf and `you` onto `say`
   (kind `answer`) or `ask` (kind `ask`), and the conversation is the pairs in order. There is no
   `dialogue` field and no separate `hear`/`say`/`ask` arrays — writing them is a schema error.
 - A WORD and a CHUNK are the card themselves, so they write `text` — the term — and
-  `translation` is the term's own key, not a sentence. A piece of the lines (`topical: false`)
-  stands in a line of this scene; a topical card (`topical: true`) does not have to.
+  `translation` is the term's own key, not a sentence. A card of `words` / `chunks` stands in a
+  line of this scene; a card of `topical` does not have to and normally does not.
 - A LINE (role / you) and a NUMBER are assembled: `frame` carries `___` at most once and
   `filler` is the key that goes into it — a word or a chunk of THIS day, character for
   character. A line the user says whole (a formula) has no `___` and an empty `filler`; a quoted
   interlocutor line is the same shape.
 - `speaking_keys` is REQUIRED on every `you` item and holds 1–2 non-empty strings; the server
   refuses a `you` line that carries none.
-- `topical` is REQUIRED on every `words` and `chunks` item.
+- `topical` is a REQUIRED array of at least SIX items; the server counts a day short of them.
 - `transliteration` is required whenever the two languages use different scripts, and is written
   in the letters of {{support_lang}} only — no punctuation, no Latin letters.
 - Nothing carries a `text` field on a line: the server assembles it and would overwrite yours.

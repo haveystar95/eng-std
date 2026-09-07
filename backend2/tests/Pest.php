@@ -652,6 +652,42 @@ function planItems(array $day): array
         }
     }
 
+    // v0.8: the TOPICAL cards of their own array, laid onto the word/chunk shelf with the mark —
+    // the way {@see \App\Modules\Generation\Application\Service\PlanDayComposer::items()} lays them.
+    /** @var list<array<string, mixed>> $topical */
+    $topical = is_array($day[\App\Modules\Generation\Application\Service\PlanDayComposer::TOPICAL_ARRAY] ?? null)
+        ? $day[\App\Modules\Generation\Application\Service\PlanDayComposer::TOPICAL_ARRAY]
+        : [];
+    $index = \App\Modules\Generation\Application\Service\PlanDayComposer::TOPICAL_INDEX_BASE - 1;
+    foreach ($topical as $card) {
+        $index++;
+        $shelf = ($card['kind'] ?? null) === \App\Modules\Generation\Domain\ValueObject\PlanDayItem::KIND_CHUNK
+            ? \App\Modules\Generation\Domain\ValueObject\PlanShelf::Chunks
+            : \App\Modules\Generation\Domain\ValueObject\PlanShelf::Words;
+        $out[] = new \App\Modules\Generation\Domain\ValueObject\PlanDayItem(
+            text: (string) ($card['text'] ?? ''),
+            type: $shelf->kind() === \App\Modules\Generation\Domain\ValueObject\PlanDayItem::KIND_WORD ? 'word' : 'phrase',
+            kind: $shelf->kind(),
+            isLine: false,
+            translation: (string) ($card['translation'] ?? ''),
+            transliteration: (string) ($card['transliteration'] ?? ''),
+            description: '',
+            example: (string) ($card['example'] ?? ''),
+            exampleTranslation: (string) ($card['example_translation'] ?? ''),
+            frame: '',
+            filler: '',
+            speaker: null,
+            imageApiPrompt: (string) ($card['image_api_prompt'] ?? ''),
+            coversCheckpoint: null,
+            index: $index,
+            shelf: $shelf->value,
+            skillRef: ((string) ($card['skill_ref'] ?? '')) ?: null,
+            value: null,
+            speakingKeys: [],
+            topical: true,
+        );
+    }
+
     return $out;
 }
 

@@ -147,7 +147,7 @@ final class PlanPromptLibrary implements PlanPromptSource
     public const LISTEN_VERSION = 'plan_listen.v1.1';
 
     private const OUTLINE = 'plan_outline.v0.4.2.md';
-    private const DAY = 'plan_day.v0.7.md';
+    private const DAY = 'plan_day.v0.8.md';
     private const REPAIR = 'plan_day_repair.v0.3.md';
     private const LISTEN = 'plan_listen.v1.1.md';
     private const PAIR_JUDGE = 'plan_pair_judge.v0.2.md';

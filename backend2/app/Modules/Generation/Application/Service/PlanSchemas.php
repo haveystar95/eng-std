@@ -152,10 +152,6 @@ final class PlanSchemas
         $line = self::object([...$assembled, 'transliteration' => self::string(), 'speaking_keys' => self::arrayOf(self::string())]);
         $number = self::object([...$assembled, 'value' => self::string()]);
 
-        // v0.8 (наряд DAY-FIX-3, Ч.2.1): a word or chunk says whether it is a PIECE OF THE LINES
-        // or a TOPICAL word of the situation. Required by strict mode, so the model has to decide
-        // for every card; the composer keeps a topical card that stands in no line and drops an
-        // unmarked one ({@see PlanDayComposer::pruneUnspoken()}).
         $word = self::object([
             ...$common,
             'text' => self::string(),
@@ -163,7 +159,6 @@ final class PlanSchemas
             'example' => self::string(),
             'example_translation' => self::string(),
             'image_api_prompt' => self::string(),
-            'topical' => ['type' => 'boolean'],
         ]);
 
         $chunk = self::object([
@@ -172,7 +167,25 @@ final class PlanSchemas
             'transliteration' => self::string(),
             'example' => self::string(),
             'example_translation' => self::string(),
-            'topical' => ['type' => 'boolean'],
+        ]);
+
+        // v0.8 (наряд DAY-FIX-3, Ч.2.1): the TOPICAL cards of the situation — nouns and set phrases
+        // the lines do not happen to use — are an ARRAY OF THEIR OWN, not a boolean on the pieces.
+        // The first live day on the stand (07.09) proved the boolean useless: asked to mark every
+        // word, the model marked the pieces `false` and added nothing, twice, under two wordings
+        // of the rule; a separate array is a list the model has to FILL, and strict mode makes it
+        // required. Each item says whether it is a word or a chunk, and the composer lays it onto
+        // that shelf with the topical mark ({@see PlanDayComposer::items()}); one that stands in a
+        // line after all is demoted to a piece ({@see PlanDayComposer::pruneUnspoken()}).
+        $topical = self::object([
+            'kind' => ['type' => 'string', 'enum' => ['word', 'chunk']],
+            'skill_ref' => self::skillRef($skillIds),
+            'text' => self::string(),
+            'translation' => self::string(),
+            'transliteration' => self::string(),
+            'example' => self::string(),
+            'example_translation' => self::string(),
+            'image_api_prompt' => self::string(),
         ]);
 
         // v0.3 asked for a seventh array, `known`: fresh examples for the terms an earlier day of
@@ -201,6 +214,7 @@ final class PlanSchemas
             'pairs' => self::arrayOf($pair),
             'words' => self::arrayOf($word),
             'chunks' => self::arrayOf($chunk),
+            'topical' => self::arrayOf($topical),
             'numbers' => self::arrayOf($number),
         ]);
     }

@@ -602,13 +602,17 @@ final readonly class PlanDayComposer
     }
 
     /**
-     * Did the answer write the v0.8 `topical` mark on its words? A payload without it is a v0.7
-     * answer, and the topical guide is not held against it.
+     * Is this a v0.8 answer — one that carries the `topical[]` array (or, from the first wording of
+     * v0.8, the mark on its words)? A payload with neither is a v0.7 answer, and the topical guide
+     * is not held against it.
      *
      * @param  array<string, mixed>  $payload
      */
     private static function carriesTopicalMark(array $payload): bool
     {
+        if (is_array($payload[self::TOPICAL_ARRAY] ?? null)) {
+            return true;
+        }
         foreach ([PlanShelf::Words->value, PlanShelf::Chunks->value] as $shelf) {
             $cards = is_array($payload[$shelf] ?? null) ? $payload[$shelf] : [];
             foreach ($cards as $card) {
@@ -820,8 +824,52 @@ final readonly class PlanDayComposer
             }
         }
 
+        // ТЕМАТИЧЕСКИЕ КАРТОЧКИ — ОТДЕЛЬНЫМ МАССИВОМ `topical[]` (v0.8, после первого живого дня на
+        // стенде: булев флаг на словах модель читала как «отметь», а не «добавь», и не добавляла
+        // ничего). Каждая ложится на полку своего вида — `words` или `chunks` — с меткой; адрес
+        // {@see PlanDayItem::arrayName()}#index у неё своего диапазона ({@see TOPICAL_INDEX_BASE}),
+        // чтобы починка (P2R) не перепутала её с куском реплики под тем же номером.
+        $topicalCards = is_array($payload[self::TOPICAL_ARRAY] ?? null) ? $payload[self::TOPICAL_ARRAY] : [];
+        $index = self::TOPICAL_INDEX_BASE - 1;
+        foreach ($topicalCards as $card) {
+            $index++;
+            if (! is_array($card)) {
+                continue;
+            }
+            $shelf = ($card['kind'] ?? null) === PlanDayItem::KIND_CHUNK ? PlanShelf::Chunks : PlanShelf::Words;
+
+            $out[] = new PlanDayItem(
+                text: $this->text($card['text'] ?? ''),
+                type: $shelf->kind() === PlanDayItem::KIND_WORD ? 'word' : 'phrase',
+                kind: $shelf->kind(),
+                isLine: false,
+                translation: $this->text($card['translation'] ?? ''),
+                transliteration: $this->text($card['transliteration'] ?? ''),
+                description: '',
+                example: $this->text($card['example'] ?? ''),
+                exampleTranslation: $this->text($card['example_translation'] ?? ''),
+                frame: '',
+                filler: '',
+                speaker: null,
+                imageApiPrompt: $shelf === PlanShelf::Words ? $this->text($card['image_api_prompt'] ?? '') : '',
+                coversCheckpoint: null,
+                index: $index,
+                shelf: $shelf->value,
+                skillRef: $this->text($card['skill_ref'] ?? '') ?: null,
+                value: null,
+                speakingKeys: [],
+                topical: true,
+            );
+        }
+
         return $out;
     }
+
+    /** The answer's array of topical cards (v0.8). */
+    public const TOPICAL_ARRAY = 'topical';
+
+    /** Where the indexes of topical cards start — clear of any piece of the same shelf. */
+    public const TOPICAL_INDEX_BASE = 1000;
 
     /**
      * `speaking_keys` as the model wrote them — trimmed, non-empty, unique, at most

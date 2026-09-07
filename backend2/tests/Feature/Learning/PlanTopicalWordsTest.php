@@ -87,7 +87,6 @@ it('keeps a topical word that stands in no line, drops an unmarked one, and writ
         'kind' => 'word', 'skill_ref' => 's1.1', 'text' => 'lamp', 'translation' => 'лампа',
         'transliteration' => 'лэмп', 'example' => 'The lamp in the bathroom is broken.',
         'example_translation' => 'Лампа в ванной сломана.', 'image_api_prompt' => 'a small lamp on a bedside table',
-        'topical' => false,
     ];
 
     [$planId, $model, $token] = runTopicalPlanWith(new ScriptedPlanModel([$day]), $this->defects);
@@ -137,8 +136,11 @@ it('keeps a topical word that stands in no line, drops an unmarked one, and writ
 
 it('demotes a «topical» card that stands in a line after all — «по теме» never lies about a word of the dialogue', function () {
     $day = $this->day;
-    // The model marked «appointment» topical, but «Do you have an appointment?» is a role line.
-    $day['words'][2]['topical'] = true;
+    // The model put «appointment» among the topical cards, but «Do you have an appointment?» is a
+    // role line: it is a piece of the lines, whatever array it came in.
+    $appointment = $day['words'][2];
+    array_splice($day['words'], 2, 1);
+    $day['topical'][] = $appointment;
 
     [$planId] = runTopicalPlanWith(new ScriptedPlanModel([$day]), $this->defects);
 
@@ -150,7 +152,7 @@ it('demotes a «topical» card that stands in a line after all — «по тем
 
 it('counts a v0.8 day short of topical words', function () {
     $thin = $this->day;
-    $thin['words'] = array_values(array_filter($thin['words'], static fn (array $w): bool => $w['topical'] === false));
+    $thin['topical'] = [];
     [$planId] = runTopicalPlanWith(new ScriptedPlanModel([$thin]), $this->defects);
     expect(topicalDayRow($planId)->status)->toBe('ready')
         ->and($this->defects->warnings(PlanDayValidator::SIZE_OUT_OF_RANGE))->toBe(1);

@@ -315,17 +315,19 @@ append-only логе, и этот ответ — ВЫБОР. Произнесе�
 | зрелость и готовность | `Learning/Domain/Service/SceneCensus` — три слова (`SceneMaturity`) и «C + скорость»; читает `GetPlanHandler::scenesOf()`, наружу `scenes[]` |
 | готовность плана | `GetPlanHandler::readinessOf()` — доля ГОТОВЫХ СЦЕН. Знаменатель — сцены, которые план собирался научить (Д-31 цел), а не написанные |
 
-### 2.2е. Бюджет дня и одно состояние дня (DAY-FIX-2, Ч.2–Ч.3)
+### 2.2е. Бюджет дня и одно состояние дня (DAY-FIX-2, Ч.2–Ч.3; DAY-FIX-3, Ч.4)
 
-`config/learning.php → plan.budget`: `sitting_max_cards` 40 · `words_section_cards` 12 ·
-`rescue_warmup_cards` 5 · `card_seconds` 16. Планировщик посадки —
-`Learning/Application/Service/PlanSittingPlanner` (вынесен из `BuildPlanSessionHandler`; хендлер
-только собирает карточки по его раскладке `PlanSittingLayout`):
+`config/learning.php → plan.budget`: `material_max_cards` 45 · `conversation_max_cards` 25 ·
+`word_choice_options` 4 · `words_section_cards` 40 · `rescue_warmup_cards` 5 · `card_seconds` 16.
+Планировщик посадки — `Learning/Application/Service/PlanSittingPlanner` (вынесен из
+`BuildPlanSessionHandler`; хендлер только собирает карточки по его раскладке `PlanSittingLayout`):
 
 | правило | где |
 |---|---|
-| день = ОДИН присест ≤ 40 карточек; второй присест — только прогон сцены | `PlanSittings::split()` режет по секции `scene_run`; `PlanSittingLayout::trimmed()` сбрасывает с хвоста сначала `plan_review`, потом лишний разогрев, пока день не влезет |
-| слова + связки в дне ≤ 12 | `words_section_cards` в `PlanSittingPlanner::plan()` |
+| день = ДВА присеста: «Материал» ≤ 45 (разогрев, слова, знакомство и упражнения) и «Разговор» ≤ 25 (диалог, реплики шва, прогон) | `PlanSittings::kindOf()/split()/plan()` режет по СЕКЦИИ (`dialogue`, `scene_run`, `rehearsal` — разговор); `PlanSittingPlanner::trimmed()`: у материала с хвоста `plan_review` → `warmup_miss` → тематические слова (`topical`), у разговора `plan_review` → прогон самой старой сцены целиком; сегодняшний диалог не режется. `ordered()` кладёт весь материал перед всем разговором |
+| слова + связки в дне ≤ 40 карточек | `words_section_cards` в `PlanSittingPlanner::plan()` — с DAY-FIX-3 у слова два касания в день и до десяти тематических слов; секцию держит потолок материала |
+| ступень A закрывается УПРАЖНЕНИЕМ (DAY-FIX-3, Ч.3) | `PlanStageLadder::STEPS`: `word` A = `[intro, multiple_choice]` (из четырёх — спека `options` → `optionCount`), `chunk` A = `[intro, word_bank]`, `line_say`/`line_ask` A = `[intro, situational_*]` на уровне `assemble` (`withTurnLevels()`: stage A → `Assemble`), `understand` и спасатель как были. `specsFor()` раздаёт A целиком, `oneShowPerDay` — только для B+. `PlanStageLadder::isWordLike()` — слово и связка |
+| старый день `done` держит фокус | `PlanProgress::focusOf()` пропускает день со статусом `done` в базе: новая ступень A не возвращает пройденный день |
 | спасатели в разогреве ≤ 5, промахи вчерашнего ≤ 5 | `rescue_warmup_cards`, `WARMUP_MISS_CAP` |
 | шов — одно касание сборкой, выбор в шве запрещён | `PlanTurnLevel::forTurn(inSeam: true)`; шов только из дней позади фокуса |
 | реплика ≤ одного показа на ступень в день | `PlanStageLadder::oneShowPerDay()` → `specsFor()` берёт первый незакрытый шаг |
@@ -335,13 +337,21 @@ append-only логе, и этот ответ — ВЫБОР. Произнесе�
 | ход выбором, которому не хватило вариантов, становится СБОРКОЙ, а не отбоем | `StudyCardAssembler::situationalCard()` — пул плана худеет на уже сказанное и одноумельное, третья-четвёртая реплика сцены законно остаётся без чужих ответов; `turn_level` задачи тогда `assemble`. Такт «что тебе сказали?» при голоде по длине берёт вопросы плана любой длины (`recognitionCard(anyLength)`) |
 
 **Одно состояние дня.** `Learning/Application/Service/PlanDayStateCensus::of()` считает
-`day_state ∈ not_started | in_progress | done` и `minutes_left` (карточки × `card_seconds`,
-вверх до минуты) ОДНИМ кодом для трёх пейлоадов: `GET /plans/{id}` (у каждого дня),
-`GET /plans/{id}/days/{n}` (тот же `day_state`, плюс `next_step` и `mark` у строки —
-`GetPlanDayTermsHandler`) и `POST /study/sessions` (`day_state`, `minutes_left` на посадке).
-`done` — строка дня `done` или перепись прогресса «все карточки сцены закрыли A»; `not_started` —
-ни одна карточка сцены (без спасателей) не тронута; иначе `in_progress`. Клиент это НЕ считает и
-локальных «осталось N» не держит.
+`day_state ∈ not_started | in_progress | material_done | done`, `minutes_left` и минуты
+присестов врозь (`material_minutes`, `conversation_minutes`; карточки × `card_seconds`, вверх до
+минуты) ОДНИМ кодом для трёх пейлоадов: `GET /plans/{id}` (у каждого дня),
+`GET /plans/{id}/days/{n}` (тот же `day_state`, плюс `next_step`, `then_steps[]`, `mark`,
+`topical` у строки — `GetPlanDayTermsHandler`) и `POST /study/sessions` (`day_state`,
+`minutes_left`, `sitting_plan[]` на посадке). `done` — строка дня `done` или перепись прогресса
+«все карточки сцены закрыли A и сказаны раз»; `not_started` — ни одна карточка сцены (без
+спасателей) не тронута; `material_done` — день в фокусе тронут, материала не осталось, разговор
+впереди; иначе `in_progress`. Клиент это НЕ считает и локальных «осталось N» не держит.
+
+**Слова экрана дня (DAY-FIX-3, Ч.5).** `next_step` ∈ `meet | translate | tiles | recognize |
+hear | choose | assemble | say`; `then_steps[]` — всё за первым шагом в той же посадке
+(`GetPlanDayTermsHandler::thenStepsOf()`: остаток A + первый шаг B у реплики, дубль подряд
+схлопывается); `mark` ∈ `met | applying | said_self` (`markOf()`: интро закрыто / A закрыта
+упражнением или дальше / голосом в прогоне).
 
 **QA-часы плана.** `Learning/Application/Port/QaPlanClock` → `Infrastructure/Qa/CachedQaPlanClock`
 (кэш `qa:plan_clock_shift:{user}`, 30 дней) и middleware `ShiftQaPlanClock` на всех плановых

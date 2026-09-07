@@ -101,20 +101,22 @@ it('lets P2 answer with a day-scene as PAIRS plus the three written shelves (v0.
     // and the v0.5 `dialogue` field are NOT permitted — a model handed the familiar shape would
     // fill it back in, and the server would then have two answers to «what is said».
     expect(array_keys($schema['properties']))
-        ->toBe(['pairs', 'words', 'chunks', 'numbers'])
+        ->toBe(['pairs', 'words', 'chunks', 'topical', 'numbers'])
         ->and(array_keys($schema['properties']['pairs']['items']['properties']))->toBe(['kind', 'role', 'you'])
         ->and($schema['properties']['pairs']['items']['properties']['kind']['enum'])->toBe(['answer', 'ask']);
 
     expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.8.json')))->toBe([]);
 
-    // …and the v0.4 shape is exactly what the schema refuses now — and so is v0.7, whose words
-    // do not say whether they are topical (наряд DAY-FIX-3, Ч.2.1): the mark is REQUIRED, so a
-    // model cannot leave a word undecided.
+    // …and the v0.4 shape is exactly what the schema refuses now — and so is v0.7, which has no
+    // `topical[]` array (наряд DAY-FIX-3, Ч.2.1): the array is REQUIRED, so a model cannot leave
+    // the situation's vocabulary out. An ARRAY and not a mark on the pieces: the first live day
+    // on the stand marked every piece `false` and added nothing.
     expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.4.json')))->not->toBe([])
         ->and(schemaMisfits($schema, planFixtureJson('s1-day1.v0.7.json')))->not->toBe([]);
-    $topical = $schema['properties']['words']['items']['properties']['topical'] ?? null;
-    expect($topical)->toBe(['type' => 'boolean'])
-        ->and($schema['properties']['chunks']['items']['properties']['topical'] ?? null)->toBe(['type' => 'boolean']);
+    $topical = $schema['properties']['topical']['items']['properties'] ?? [];
+    expect(array_keys($topical))->toBe(['kind', 'skill_ref', 'text', 'translation', 'transliteration', 'example', 'example_translation', 'image_api_prompt'])
+        ->and($topical['kind']['enum'])->toBe(['word', 'chunk'])
+        ->and($schema['properties']['words']['items']['properties'])->not->toHaveKey('topical');
 });
 
 it('turns skill_ref into an enum of the scene ids when the caller knows them', function () {

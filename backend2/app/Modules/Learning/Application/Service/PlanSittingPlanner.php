@@ -333,7 +333,17 @@ final readonly class PlanSittingPlanner
                 if ($drop === null) {
                     break;
                 }
-                array_splice($specs, $drop, 1);
+                // A TOPICAL WORD GOES WHOLE — its introduction with its exercise. Dropping the
+                // exercise alone left the intro in the sitting and the word «познакомился» with
+                // its tiles owed tomorrow, and the day could not pass on the evening it was walked
+                // (живой прогон 07.09: «health insurance», 46 cards against 45).
+                $termId = $specs[$drop]['term_id'];
+                $specs = array_values(array_filter(
+                    $specs,
+                    static fn (array $s, int $i): bool => $i !== $drop
+                        && ! ($source === 'topical' && $s['term_id'] === $termId && ($s['source'] ?? null) === 'new'),
+                    ARRAY_FILTER_USE_BOTH,
+                ));
             }
         }
 

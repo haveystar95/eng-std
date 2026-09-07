@@ -137,8 +137,20 @@ it('puts every task of the day before every task of the seam, and says where the
         ->and($review)->not->toBeEmpty()
         // Each section is one contiguous run, in this order — that is what makes a caption over it
         // a caption rather than a label on scattered cards.
-        ->and(max($warmup))->toBeLessThan(min($dayTasks))
-        ->and(max($dayTasks))->toBeLessThan(min($review))
+        ->and(max($warmup))->toBeLessThan(min($dayTasks));
+
+    // …WITHIN EACH SITTING (наряд DAY-FIX-3, Ч.4): the seam's words stand in «Материал» behind the
+    // day's own words, the seam's lines in «Разговор» behind the day's own dialogue. Across the
+    // two the day and the seam alternate by design — material first, whichever day it is from.
+    $cut = $session['sittings'][0];
+    foreach ([[0, $cut], [$cut, count($session['tasks'])]] as [$from, $to]) {
+        $dayPart = array_filter($dayTasks, static fn (int $i): bool => $i >= $from && $i < $to);
+        $reviewPart = array_filter($review, static fn (int $i): bool => $i >= $from && $i < $to);
+        if ($dayPart !== [] && $reviewPart !== []) {
+            expect(max($dayPart))->toBeLessThan(min($reviewPart));
+        }
+    }
+    expect($session)
         // `day_task_count` counts the whole day part — the run of yesterday's scene included.
         ->and($session['day_task_count'])->toBe(count($dayTasks) + count(array_filter(
             $session['tasks'],
