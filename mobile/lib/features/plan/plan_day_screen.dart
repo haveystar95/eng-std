@@ -119,11 +119,30 @@ class _DayBody extends ConsumerWidget {
         // ОДНО СЛОВО О ДНЕ, серверное, и минуты рядом (Ч.3). Та же функция, что на вкладке «План»
         // и в шапке присеста — три экрана не могут разойтись, потому что читают одно поле.
         PlanLabel(
-          planDayStateWord(l, day.dayState, day.minutesLeft),
+          planDayStateWord(
+            l,
+            day.dayState,
+            day.minutesLeft,
+            conversationMinutes: day.conversationMinutes,
+          ),
           color: day.dayState == PlanDayState.done ? AppColors.brassInk : AppColors.tertiary,
         ),
         const SizedBox(height: 10),
         Text(day.title, style: AppText.collectionNameScreen.copyWith(fontSize: 27, height: 1.2)),
+        // МИНУТЫ ОБОИХ ПРИСЕСТОВ (наряд DAY-FIX-3, Ч.5.1): «материал около 12 минут · разговор
+        // около 6 минут» — человек видит, что день — два захода, и сколько каждый стоит.
+        if (planDaySittingMinutes(
+              l,
+              material: day.materialMinutes,
+              conversation: day.conversationMinutes,
+            )
+            case final sittings?) ...[
+          const SizedBox(height: 6),
+          Text(
+            sittings,
+            style: AppText.translation.copyWith(fontSize: 13, color: AppColors.tertiary),
+          ),
+        ],
         // THE ВВОДКА IS THE MAIN TEXT OF THE SCREEN, in the ink colour and not in grey (записка
         // «Вводка»): a person reads the situation before the lines.
         if (day.intro.isNotEmpty) ...[
@@ -553,15 +572,16 @@ class _Section {
     _ => l.planDayPhrases,
   };
 
-  /// ЧТО СЕГОДНЯ БУДЕТ С ЭТОЙ СЕКЦИЕЙ, словами — «познакомишься», «выберешь ответ», «соберёшь из
-  /// блоков»… The codes are the server's (`next_step`, Ч.4.2), one word per distinct code, in the
-  /// order the rows go. Null when nothing on the shelf is asked today.
+  /// ЧТО СЕГОДНЯ БУДЕТ С ЭТОЙ СЕКЦИЕЙ, словами — «познакомишься · переведёшь», «соберёшь из
+  /// плиток», «познакомишься · соберёшь из блоков · выберешь ответ»… The codes are the server's
+  /// (`next_step` + `then_steps`, Ч.4.2; DAY-FIX-3, Ч.5.1), one word per distinct code, in the
+  /// order the sitting deals them. Null when nothing on the shelf is asked today.
   String? stepLine(AppLocalizations l) {
     final words = <String>[];
     for (final term in terms) {
-      // Two words for a line met and spoken today («познакомишься · выберешь ответ»): the server
-      // names both steps, the screen only strings them.
-      for (final step in [term.nextStep, term.thenStep]) {
+      // Every touch of a row met today, in the order of the sitting: the server names the steps,
+      // the screen only strings them.
+      for (final step in [term.nextStep, ...term.thenSteps]) {
         final word = _stepWord(l, step);
         if (word != null && !words.contains(word)) words.add(word);
       }
@@ -572,6 +592,8 @@ class _Section {
 
   static String? _stepWord(AppLocalizations l, String? step) => switch (step) {
     PlanTermRow.stepMeet => l.planStepMeet,
+    PlanTermRow.stepTranslate => l.planStepTranslate,
+    PlanTermRow.stepTiles => l.planStepTiles,
     PlanTermRow.stepRecognize => l.planStepRecognize,
     PlanTermRow.stepHear => l.planStepHear,
     PlanTermRow.stepChoose => l.planStepChoose,
@@ -627,9 +649,11 @@ class _ProgramRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final role = term.isRecognitionOnly;
-    // ОТМЕТКА СЛОВОМ — «пройдено» / «сказал сам» (Ч.4.3), the server's, or nothing.
+    // ОТМЕТКА СЛОВОМ — «познакомился» / «применяешь» / «говоришь сам» (Ч.4.3; DAY-FIX-3, Ч.5.2),
+    // the server's, or nothing. Never a digit.
     final mark = switch (term.mark) {
-      PlanTermRow.markPassed => l.planMarkPassed,
+      PlanTermRow.markMet => l.planMarkMet,
+      PlanTermRow.markApplying => l.planMarkApplying,
       PlanTermRow.markSaidSelf => l.planMarkSaidSelf,
       _ => null,
     };
@@ -674,6 +698,15 @@ class _ProgramRow extends StatelessWidget {
                       fontSize: 13,
                       color: AppColors.secondary,
                     ),
+                  ),
+                ],
+                // «ПО ТЕМЕ» (DAY-FIX-3, Ч.5.4): a word of the situation that stands in no line —
+                // said so, or the learner wonders why it never sounds in the conversation.
+                if (term.topical) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    l.planTermTopical,
+                    style: AppText.blockLabel.copyWith(color: AppColors.tertiary),
                   ),
                 ],
               ],

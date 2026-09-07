@@ -695,6 +695,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // matter how tall the feedback grows (the photo loads async and kept pushing an in-scroll
     // button below the fold — device-batch F9).
     setState(() => _answered = true);
+    // …AND THE FEED FOLLOWS THE ANSWER (DAY-FIX-3, Ч.6): inside a conversation the verdict lands
+    // under the bubbles, and the screen goes to it instead of leaving the learner to drag.
+    if (_inChainAt(_pos)) _scrollFeedToEnd();
     // AND THE SITTING HAS MOVED ON — «Проверить» is what passes a card, «Дальше» only turns the
     // page (E2E-SIM-2, С-13).
     //
@@ -910,13 +913,49 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       // and nothing can navigate to it again. Keeps the session's decoded-image footprint flat
       // instead of climbing pass after pass within one app launch (F20-r).
       unawaited(evictSessionImage(context, _photoUrl[_pos - 3]));
-      // New card starts at the top (the previous one may have been scrolled to its feedback).
+      // New card starts at the top (the previous one may have been scrolled to its feedback) —
+      // unless it is a turn of a conversation, where the new card stands UNDER the feed and the
+      // feed is what the learner has already read (DAY-FIX-3, Ч.6).
       if (_scroll.hasClients) _scroll.jumpTo(0);
+      if (_inChainAt(_pos)) _scrollFeedToEnd();
     }
   }
 
   /// The conversation the card at the FRONT belongs to — the shell's whole switch.
   PlanDialogue? get _dialogueHere => _dialogueAtPosition(_pos);
+
+  /// THE ПРИСЕСТ JUST FINISHED WAS «МАТЕРИАЛ» and the next is «Разговор» (наряд DAY-FIX-3, Ч.4).
+  ///
+  /// Read off the server's named sittings (`sitting_plan`) by the queue's own count of them, so a
+  /// tail added by a wrong answer cannot shift the name. A payload without names — an older server
+  /// — answers false, and the break screen says what it said before.
+  bool _finishedSittingIsMaterial() {
+    final plan = widget.session.plan;
+    if (plan == null || _pos == 0) return false;
+    final kinds = plan.sittingPlan;
+    if (kinds.length != _queue.sittings) return false;
+    final finished = _queue.sittingAt(_pos - 1);
+    final next = _queue.sittingAt(_pos);
+
+    return finished < kinds.length &&
+        next < kinds.length &&
+        kinds[finished].kind == PlanSittingKind.material &&
+        kinds[next].kind == PlanSittingKind.conversation;
+  }
+
+  /// ЛЕНТА ДОКРУЧИВАЕТСЯ ДО НИЗА (наряд DAY-FIX-3, Ч.6) — after any answer inside a conversation
+  /// and on every new card of one: the newest bubble and the card's verdict are what the learner
+  /// is looking for, and until now they had to drag past the feed to find them. Post-frame, so the
+  /// new bubble is in the tree and the extent is the real one; short, so it reads as the feed
+  /// settling rather than as a scroll the learner did not make.
+  void _scrollFeedToEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final end = _scroll.position.maxScrollExtent;
+      if (end <= _scroll.offset) return;
+      _scroll.animateTo(end, duration: AppMotion.swipeReturn, curve: Curves.easeOut);
+    });
+  }
 
   /// ГДЕ КАРТОЧКА СТОИТ В ЦЕПОЧКЕ, или -1 — она в сцене есть, а в разговоре её нет.
   ///
@@ -1378,12 +1417,22 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       }
     }
 
-    // BETWEEN TWO ПРИСЕСТЫ — the minimal service screen (Ч-6). Deliberately служебный: «красота —
-    // DAY-2», and a milestone screen here would compete with the one the day itself ends on.
+    // BETWEEN TWO ПРИСЕСТЫ — the service screen (Ч-6). Since наряд DAY-FIX-3 (Ч.4.4) the seam is
+    // the one between «Материал» and «Разговор», and the screen says what was passed and what is
+    // ahead, in words: «Материал пройден» → «К разговору» / «Позже».
     if (_betweenSittings && plan != null) {
       return _SittingBreak(
+        material: _finishedSittingIsMaterial(),
         onContinue: () => setState(() => _betweenSittings = false),
         onStop: () => Navigator.of(context).pop(),
+        // «ПОЗЖЕ» — the conversation comes next time. The server already knows the material is
+        // walked (`day_state = material_done`) and will deal the conversation alone, so the stored
+        // sitting — half of it answered — is let go rather than resumed over a payload the day
+        // has outgrown.
+        onLater: () {
+          _forgetPosition();
+          Navigator.of(context).pop();
+        },
       );
     }
 
@@ -1561,6 +1610,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                         l,
                         PlanDayState.fromWire(plan.dayState),
                         plan.minutesLeft,
+                        conversationMinutes: plan.conversationMinutes,
                       ),
                 // ЛАТУННОЙ «B» В УГЛУ БОЛЬШЕ НЕТ (наряд DAY-2-FIX, Ч.3б).
                 //
@@ -2089,16 +2139,27 @@ class _PlanProgressBar extends StatelessWidget {
   );
 }
 
-/// «ПРИСЕСТ N ПРОЙДЕН» — the service screen between two sittings (Ч-6).
+/// THE SCREEN BETWEEN TWO SITTINGS (Ч-6) — and since наряд DAY-FIX-3 (Ч.4.4) the ИТОГ МАТЕРИАЛА:
+/// «Материал пройден», what that means in words, and two ways on — «К разговору» / «Позже».
 ///
 /// Deliberately plain: «красота — DAY-2», and anything more here would compete with the milestone
 /// the DAY ends on. What it has to do is exactly two things — say that a stopping point has been
 /// reached, and make continuing and stopping equally easy, because the whole point of a присест is
-/// that leaving costs nothing.
+/// that leaving costs nothing. [material] false — a payload without named sittings, or a seam
+/// that is not the material one — keeps the older wording, «Дальше — прогон сцены».
 class _SittingBreak extends StatelessWidget {
-  const _SittingBreak({required this.onContinue, required this.onStop});
+  const _SittingBreak({
+    required this.onContinue,
+    required this.onStop,
+    this.material = false,
+    this.onLater,
+  });
 
   final VoidCallback onContinue, onStop;
+  final bool material;
+
+  /// «Позже» on the material summary — leave, and let the server deal the conversation next time.
+  final VoidCallback? onLater;
 
   @override
   Widget build(BuildContext context) {
@@ -2115,24 +2176,30 @@ class _SittingBreak extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // СЛОВАМИ, БЕЗ СЧЁТА (наряд DAY-FIX-2, Ч.2.1): день — один присест, второй бывает только
-          // у прогона сцены, поэтому этот экран всегда стоит перед прогоном и говорит ровно это.
-          // «Присест 1 из 2 · осталось 11 карточек» было двумя счётчиками на служебном экране.
+          // СЛОВАМИ, БЕЗ СЧЁТА (наряд DAY-FIX-2, Ч.2.1; DAY-FIX-3, Ч.4.4): что пройдено и что
+          // впереди. «Присест 1 из 2 · осталось 11 карточек» было двумя счётчиками на служебном
+          // экране.
           Text(
-            l.planSittingRunNext.toUpperCase(),
+            (material ? l.planMaterialDoneTitle : l.planSittingRunNext).toUpperCase(),
             textAlign: TextAlign.center,
             style: AppText.blockLabel.copyWith(color: AppColors.brassInk, letterSpacing: 1.32),
           ),
           const SizedBox(height: AppSpacing.s12),
           Text(
-            l.planSittingRunLead,
+            material ? l.planMaterialDoneLead : l.planSittingRunLead,
             textAlign: TextAlign.center,
             style: AppText.translation.copyWith(height: 1.5),
           ),
           const SizedBox(height: AppSpacing.s26),
-          PrimaryButton(label: l.planSittingContinue, onPressed: onContinue),
+          PrimaryButton(
+            label: material ? l.planSittingToConversation : l.planSittingContinue,
+            onPressed: onContinue,
+          ),
           const SizedBox(height: AppSpacing.s12),
-          QuietButton(label: l.planSittingStop, onPressed: onStop),
+          QuietButton(
+            label: material ? l.planSittingLater : l.planSittingStop,
+            onPressed: material ? (onLater ?? onStop) : onStop,
+          ),
         ],
       ),
     );

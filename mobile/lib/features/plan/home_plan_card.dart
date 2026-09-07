@@ -100,7 +100,12 @@ class _PlanCard extends ConsumerWidget {
                 ? planMaturityVerdict(l, total: plan.cardsTotal, closed: plan.stageAClosed)
                 : l.planHomeDayState(
                     focus.index,
-                    planDayStateWord(l, focus.dayState, focus.minutesLeft),
+                    planDayStateWord(
+                      l,
+                      focus.dayState,
+                      focus.minutesLeft,
+                      conversationMinutes: focus.conversationMinutes,
+                    ),
                   ),
             style: AppText.translation.copyWith(fontSize: 14, color: AppColors.inkBody),
           ),

@@ -874,14 +874,24 @@ abstract interface class PlanSessionEnvelope {
   /// пейлоаде сервера, который поля не знает.
   String? turnLevelAt(int i);
 
-  /// ОДНО СЛОВО О ДНЕ — `not_started` | `in_progress` | `done` — как его посчитал СЕРВЕР
-  /// (наряд DAY-FIX-2, Ч.3). Шапка присеста читает его отсюда и ничего не считает сама: тот же
-  /// счёт, что на вкладке «План» и на экране дня. Пейлоад сервера, который поля не знает, читается
-  /// как «идёт» — посадка открыта, значит день идёт.
+  /// ОДНО СЛОВО О ДНЕ — `not_started` | `in_progress` | `material_done` | `done` — как его
+  /// посчитал СЕРВЕР (наряд DAY-FIX-2, Ч.3). Шапка присеста читает его отсюда и ничего не считает
+  /// сама: тот же счёт, что на вкладке «План» и на экране дня. Пейлоад сервера, который поля не
+  /// знает, читается как «идёт» — посадка открыта, значит день идёт.
   String get dayState => PlanDayStateWire.inProgress;
 
   /// «около N минут» — тем же счётом, что на вкладке «План». Ноль на пейлоаде без поля.
   int get minutesLeft => 0;
+
+  /// МИНУТЫ ДВУХ ПРИСЕСТОВ врозь — «Материал» и «Разговор» (наряд DAY-FIX-3, Ч.4). Ноль без поля.
+  int get materialMinutes => 0;
+
+  int get conversationMinutes => 0;
+
+  /// ПРИСЕСТЫ, НАЗВАННЫЕ — тот же счёт, что [sittings], с именем у каждого: `material` /
+  /// `conversation`. Пусто на пейлоаде сервера, который поля не знает, — и тогда экран между
+  /// присестами говорит то, что говорил всегда.
+  List<({String kind, int cards})> get sittingPlan => const [];
 
   /// THE CONVERSATIONS this sitting plays — one per scene it reaches, whole and in order.
   ///
@@ -899,12 +909,24 @@ abstract interface class PlanSessionEnvelope {
   SceneRunKnobs get sceneRunKnobs => const SceneRunKnobs();
 }
 
-/// ТРИ СЛОВА О ДНЕ, как они едут по проводу (наряд DAY-FIX-2, Ч.3). Открытый набор: код, которого
-/// эта сборка не знает, читается как «идёт» — честнее, чем гадать «пройден».
+/// ЧЕТЫРЕ СЛОВА О ДНЕ, как они едут по проводу (наряд DAY-FIX-2, Ч.3; DAY-FIX-3, Ч.4). Открытый
+/// набор: код, которого эта сборка не знает, читается как «идёт» — честнее, чем гадать «пройден».
 abstract final class PlanDayStateWire {
   static const notStarted = 'not_started';
   static const inProgress = 'in_progress';
+
+  /// Присест «Материал» пройден, впереди «Разговор» — кнопка говорит «К разговору».
+  static const materialDone = 'material_done';
   static const done = 'done';
+}
+
+/// ДВА ПРИСЕСТА ДНЯ, как их называет сервер (`sitting_plan[].kind`, наряд DAY-FIX-3, Ч.4).
+abstract final class PlanSittingKind {
+  /// Разогрев, слова и связки, знакомство с репликами и их упражнения.
+  static const material = 'material';
+
+  /// Диалог сцены, реплики шва, прогон.
+  static const conversation = 'conversation';
 }
 
 /// СЕКУНДЫ ПРОГОНА СЦЕНЫ — ступень C, как её отмеряет сервер (наряд SCENE-RUN, Ч.2).

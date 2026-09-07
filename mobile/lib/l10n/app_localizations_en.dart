@@ -3883,6 +3883,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planStateDone => 'done';
 
   @override
+  String get planStateMaterialDone => 'material done';
+
+  @override
+  String planStateMaterialAbout(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'material about $minutes minutes',
+      one: 'material about $minutes minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planStateConversationAbout(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'conversation about $minutes minutes',
+      one: 'conversation about $minutes minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planSittingToConversation => 'To the conversation';
+
+  @override
+  String get planSittingLater => 'Later';
+
+  @override
+  String get planMaterialDoneTitle => 'Material done';
+
+  @override
+  String get planMaterialDoneLead =>
+      'The words, connectors and lines of the scene are behind you. Next — the conversation: you will hear the other side and answer yourself.';
+
+  @override
   String planStateMinutes(int minutes) {
     String _temp0 = intl.Intl.pluralLogic(
       minutes,
@@ -3911,6 +3949,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planStepMeet => 'you will meet it';
 
   @override
+  String get planStepTranslate => 'you will translate it';
+
+  @override
+  String get planStepTiles => 'you will assemble it from tiles';
+
+  @override
   String get planStepRecognize => 'you will pick the translation';
 
   @override
@@ -3926,10 +3970,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planStepSay => 'you will say it aloud';
 
   @override
-  String get planMarkPassed => 'passed';
+  String get planMarkMet => 'met';
 
   @override
-  String get planMarkSaidSelf => 'said it yourself';
+  String get planMarkApplying => 'applying';
+
+  @override
+  String get planMarkSaidSelf => 'saying it yourself';
+
+  @override
+  String get planTermTopical => 'topical';
 
   @override
   String get planDialogueRoleName => 'the other person';

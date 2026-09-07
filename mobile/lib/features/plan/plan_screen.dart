@@ -395,11 +395,21 @@ enum _PlanRowState {
     _PlanRowState.passed => l.planStateDone,
     // ОДНО СЛОВО, серверное: «не начат» или «идёт · около N минут». Прогон накануне — тоже день
     // с материалом, и слово у него то же.
-    _PlanRowState.today => planDayStateWord(l, day.dayState, day.minutesLeft),
+    _PlanRowState.today => planDayStateWord(
+      l,
+      day.dayState,
+      day.minutesLeft,
+      conversationMinutes: day.conversationMinutes,
+    ),
     _PlanRowState.building => l.planRowBuilding,
     _PlanRowState.notBuilt => l.planRowNotBuilt,
     _PlanRowState.waiting => day.status.hasMaterial
-        ? planDayStateWord(l, day.dayState, day.minutesLeft)
+        ? planDayStateWord(
+            l,
+            day.dayState,
+            day.minutesLeft,
+            conversationMinutes: day.conversationMinutes,
+          )
         : l.planRowWaiting,
   };
 

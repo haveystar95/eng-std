@@ -1176,7 +1176,11 @@ class PlanDialogueDone extends StatelessWidget {
     final l = AppLocalizations.of(context);
 
     return SafeArea(
-      child: ListView(
+      // ИТОГ ОТКРЫВАЕТСЯ НА ФАКТАХ, НЕ НА ПЕРВОМ ПУЗЫРЕ (наряд DAY-FIX-3, Ч.6): лента разговора
+      // выше — то, что человек уже прочёл, а «Отвечал сам» и кнопка — то, зачем экран.
+      child: PlanScrollsToEnd(
+        builder: (scroll) => ListView(
+        controller: scroll,
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.screenH,
           AppSpacing.s26,
@@ -1261,9 +1265,47 @@ class PlanDialogueDone extends StatelessWidget {
           const SizedBox(height: AppSpacing.s22),
           PrimaryButton(label: l.planDialogueBackToSession, minHeight: 52, onPressed: onDone),
         ],
+        ),
       ),
     );
   }
+}
+
+/// A SCROLL VIEW THAT OPENS AT ITS END (наряд DAY-FIX-3, Ч.6) — the scene's summary, whose feed
+/// is what was just read and whose facts are what the screen is for.
+///
+/// The controller is this widget's, the view is the caller's ([builder] gets the controller): one
+/// post-frame jump to the far end, when the extent is the real one, and nothing after — the
+/// learner scrolls back up freely.
+class PlanScrollsToEnd extends StatefulWidget {
+  const PlanScrollsToEnd({super.key, required this.builder});
+
+  final Widget Function(ScrollController scroll) builder;
+
+  @override
+  State<PlanScrollsToEnd> createState() => _PlanScrollsToEndState();
+}
+
+class _PlanScrollsToEndState extends State<PlanScrollsToEnd> {
+  final _scroll = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      _scroll.jumpTo(_scroll.position.maxScrollExtent);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(_scroll);
 }
 
 class _Fact extends StatelessWidget {

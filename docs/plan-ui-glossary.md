@@ -25,7 +25,15 @@
 | сказано вслух | `planDialogueSaidAloud` | под СВОИМ пузырём, когда сказано голосом |
 | не начат | `planStateNotStarted` | вкладка «План», экран дня, шапка присеста, главная |
 | идёт | `planStateInProgress` | там же; рядом — минуты (`planStateMinutes`) |
+| материал пройден | `planStateMaterialDone` | там же (day_state = material_done); рядом — `planStateConversationAbout` |
 | пройден | `planStateDone` | там же |
+| материал около N минут · разговор около N минут | `planStateMaterialAbout` · `planStateConversationAbout` | экран дня под названием сцены (оба присеста); вкладка «План» при «материал пройден» |
+| К разговору | `planSittingToConversation` | вкладка «План», экран дня (material_done), итог материала между присестами |
+| Позже | `planSittingLater` | итог материала между присестами |
+| Материал пройден | `planMaterialDoneTitle` + `planMaterialDoneLead` | итог материала между присестами |
+| познакомишься · переведёшь / соберёшь из плиток / соберёшь из блоков / выберешь ответ / скажешь голосом | `planStepMeet` · `planStepTranslate` / `planStepTiles` / `planStepAssemble` / `planStepChoose` / `planStepSay` | экран дня, строка под секцией (`next_step` + `then_steps`) |
+| познакомился / применяешь / говоришь сам | `planMarkMet` / `planMarkApplying` / `planMarkSaidSelf` | экран дня, отметка у строки |
+| по теме | `planTermTopical` | экран дня, у тематического слова секции «Слова» |
 | познакомился | `planLadderA` | итог дня |
 | применяешь | `planLadderB` | итог дня |
 | говоришь сам | `planLadderC` | итог дня |
@@ -427,19 +435,30 @@
 | `planStateNotStarted` | не начат | общие подписи плана |
 | `planStateInProgress` | идёт | общие подписи плана |
 | `planStateDone` | пройден | вкладка «План» (D·07); общие подписи плана |
+| `planStateMaterialDone` | материал пройден | общие подписи плана |
+| `planStateMaterialAbout` | {minutes, plural, one{материал около {minutes} минуты} few{материал около {minutes} минут} many{материал около {minutes} минут} other{материал около {minutes} минуты}} | общие подписи плана (экран дня) |
+| `planStateConversationAbout` | {minutes, plural, one{разговор около {minutes} минуты} few{разговор около {minutes} минут} many{разговор около {minutes} минут} other{разговор около {minutes} минуты}} | общие подписи плана (вкладка «План», экран дня) |
+| `planSittingToConversation` | К разговору | общие подписи плана; посадка (итог материала) |
+| `planSittingLater` | Позже | посадка (итог материала) |
+| `planMaterialDoneTitle` | Материал пройден | посадка (итог материала) |
+| `planMaterialDoneLead` | Слова, связки и реплики сцены разобраны. Дальше — разговор: услышишь собеседника и ответишь сам. | посадка (итог материала) |
 | `planStateMinutes` | {minutes, plural, one{около {minutes} минуты} few{около {minutes} минут} many{около {minutes} минут} other{около {minutes} минуты}} | общие подписи плана |
 | `planDayRepeat` | Пройти ещё раз | общие подписи плана |
 | `planShelfWordsOnly` | Слова | экран дня |
 | `planShelfChunks` | Связки | экран дня |
 | `planDayStepLead` | сегодня — {step} | экран дня |
 | `planStepMeet` | познакомишься | экран дня |
+| `planStepTranslate` | переведёшь | экран дня |
+| `planStepTiles` | соберёшь из плиток | экран дня |
 | `planStepRecognize` | узнаешь по переводу | экран дня |
 | `planStepHear` | услышишь и разберёшь на слух | экран дня |
 | `planStepChoose` | выберешь ответ | экран дня |
 | `planStepAssemble` | соберёшь из блоков | экран дня |
 | `planStepSay` | скажешь голосом | экран дня |
-| `planMarkPassed` | пройдено | экран дня |
-| `planMarkSaidSelf` | сказал сам | экран дня |
+| `planMarkMet` | познакомился | экран дня |
+| `planMarkApplying` | применяешь | экран дня |
+| `planMarkSaidSelf` | говоришь сам | экран дня |
+| `planTermTopical` | по теме | экран дня |
 | `planDialogueRoleName` | собеседник | диалог сцены / итог сцены |
 | `planDialogueSceneWord` | Сцена | посадка (шапка, швы, присест) |
 | `planDialogueTail` | Ещё в этой сцене | посадка (шапка, швы, присест) |

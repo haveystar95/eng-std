@@ -84,7 +84,8 @@ enum PlanDayStatus {
 /// so a screen that still offers «Собрать день» is offering a button that cannot work.
 const int _maxGenerationAttempts = 2;
 
-/// ОДНО СЛОВО О ДНЕ — «не начат» · «идёт» · «пройден» (наряд DAY-FIX-2, Ч.3).
+/// ОДНО СЛОВО О ДНЕ — «не начат» · «идёт» · «материал пройден» · «пройден» (наряд DAY-FIX-2,
+/// Ч.3; DAY-FIX-3, Ч.4.3).
 ///
 /// Считает СЕРВЕР, и только он: вкладка «План», экран дня и шапка присеста читают это поле, и ни
 /// один из них не держит счётчика «осталось N». Отдельно от [PlanDayStatus], который про СБОРКУ
@@ -92,12 +93,16 @@ const int _maxGenerationAttempts = 2;
 enum PlanDayState {
   notStarted,
   inProgress,
+
+  /// Присест «Материал» пройден, впереди «Разговор».
+  materialDone,
   done;
 
   /// Открытый набор: код, которого эта сборка не знает, читается как «идёт»; поля нет вовсе
   /// (сервер до DAY-FIX-2) — день ещё не начат, потому что о нём ничего не известно.
   static PlanDayState fromWire(String? v) => switch (v) {
     null || PlanDayStateWire.notStarted => PlanDayState.notStarted,
+    PlanDayStateWire.materialDone => PlanDayState.materialDone,
     PlanDayStateWire.done => PlanDayState.done,
     _ => PlanDayState.inProgress,
   };
@@ -284,6 +289,8 @@ class PlanDay {
     this.intro = '',
     this.dayState = PlanDayState.inProgress,
     this.minutesLeft = 0,
+    this.materialMinutes = 0,
+    this.conversationMinutes = 0,
   });
 
   final String id;
@@ -298,6 +305,10 @@ class PlanDay {
   /// считает «осталось N» сам: живой прогон показал три экрана с тремя разными счётами.
   final PlanDayState dayState;
   final int minutesLeft;
+
+  /// МИНУТЫ ДВУХ ПРИСЕСТОВ врозь — «материал около 12 минут · разговор около 6» (наряд DAY-FIX-3,
+  /// Ч.5.1). Ноль у присеста, который пройден, и на сервере, который поля не знает.
+  final int materialMinutes, conversationMinutes;
 
   /// CLAIMS, not failures, and the server's cap is two ({@link PlanDay::MAX_ATTEMPTS}).
   ///
@@ -366,6 +377,8 @@ class PlanDay {
     intro: (j['intro'] as String?)?.trim() ?? '',
     dayState: PlanDayState.fromWire(j['day_state'] as String?),
     minutesLeft: (j['minutes_left'] as num?)?.toInt() ?? 0,
+    materialMinutes: (j['material_minutes'] as num?)?.toInt() ?? 0,
+    conversationMinutes: (j['conversation_minutes'] as num?)?.toInt() ?? 0,
   );
 }
 
@@ -649,28 +662,43 @@ class PlanTermRow {
     this.nextStep,
     this.mark,
     this.thenStep,
+    this.thenSteps = const [],
+    this.topical = false,
   });
 
-  /// ЧТО С ЭТОЙ СТРОКОЙ БУДЕТ ДЕЛАТЬ ЧЕЛОВЕК — код упражнения с сервера (наряд DAY-FIX-2, Ч.4.2):
-  /// `meet` · `recognize` · `hear` · `choose` · `assemble` · `say`, или null — сегодня строка
-  /// ничего не должна. Экран дня переводит код в слово под секцией; считать его сам он не вправе.
+  /// ЧТО С ЭТОЙ СТРОКОЙ БУДЕТ ДЕЛАТЬ ЧЕЛОВЕК — код упражнения с сервера (наряд DAY-FIX-2, Ч.4.2;
+  /// DAY-FIX-3, Ч.5.1): `meet` · `translate` · `tiles` · `recognize` · `hear` · `choose` ·
+  /// `assemble` · `say`, или null — сегодня строка ничего не должна. Экран дня переводит код в
+  /// слово под секцией; считать его сам он не вправе.
   final String? nextStep;
 
-  /// ОТМЕТКА У СТРОКИ, если день шёл: `passed` / `said_self` / null (Ч.4.3). Словом, не цифрой.
+  /// ОТМЕТКА У СТРОКИ, если день шёл: `met` / `applying` / `said_self` / null (Ч.4.3; DAY-FIX-3,
+  /// Ч.5.2). Словом, не цифрой.
   final String? mark;
 
-  /// И ЧТО СРАЗУ ЗА ЭТИМ в той же посадке, или null: реплика сцены в день знакомства проходит
-  /// две ступени подряд — «познакомишься · выберешь ответ». Тоже серверное.
+  /// И ЧТО СРАЗУ ЗА ЭТИМ в той же посадке, или null — первое из [thenSteps]. Тоже серверное.
   final String? thenStep;
 
+  /// ВСЁ, ЧТО ЗА ПЕРВЫМ ШАГОМ в той же посадке, по порядку: реплика сцены в день знакомства —
+  /// «познакомишься · соберёшь из блоков · выберешь ответ» (наряд DAY-FIX-3, Ч.5.1).
+  final List<String> thenSteps;
+
+  /// СЛОВО «ПО ТЕМЕ» — тематическое слово ситуации, которого в репликах сцены нет (P2 v0.8, наряд
+  /// DAY-FIX-3, Ч.5.4). Экран дня подписывает его, чтобы человек понимал, почему его нет в
+  /// диалоге.
+  final bool topical;
+
   static const stepMeet = 'meet';
+  static const stepTranslate = 'translate';
+  static const stepTiles = 'tiles';
   static const stepRecognize = 'recognize';
   static const stepHear = 'hear';
   static const stepChoose = 'choose';
   static const stepAssemble = 'assemble';
   static const stepSay = 'say';
 
-  static const markPassed = 'passed';
+  static const markMet = 'met';
+  static const markApplying = 'applying';
   static const markSaidSelf = 'said_self';
 
   /// The shelves of a scene, as the server names them (канон §2). `numbers` is stored and not yet
@@ -762,6 +790,8 @@ class PlanTermRow {
     nextStep: j['next_step'] as String?,
     mark: j['mark'] as String?,
     thenStep: j['then_step'] as String?,
+    thenSteps: _strings(j['then_steps']),
+    topical: j['topical'] == true,
   );
 }
 
@@ -1034,6 +1064,9 @@ class PlanSession implements PlanSessionEnvelope {
     this.raw = const {},
     this.dayState = PlanDayStateWire.inProgress,
     this.minutesLeft = 0,
+    this.materialMinutes = 0,
+    this.conversationMinutes = 0,
+    this.sittingPlan = const [],
   });
 
   /// СЛОВО О ДНЕ и его минуты — те же, что на пейлоаде плана (наряд DAY-FIX-2, Ч.3).
@@ -1042,6 +1075,14 @@ class PlanSession implements PlanSessionEnvelope {
 
   @override
   final int minutesLeft;
+
+  /// МИНУТЫ ДВУХ ПРИСЕСТОВ врозь (наряд DAY-FIX-3, Ч.4).
+  @override
+  final int materialMinutes, conversationMinutes;
+
+  /// ПРИСЕСТЫ, НАЗВАННЫЕ — `material` / `conversation`, тот же счёт, что [sittings].
+  @override
+  final List<({String kind, int cards})> sittingPlan;
 
   /// Every task that belongs to TODAY, in order — `tasks` minus the revision of earlier days.
   List<PlanSessionTask> get dayTasks => tasks.where((t) => t.isDay).toList(growable: false);
@@ -1212,6 +1253,13 @@ class PlanSession implements PlanSessionEnvelope {
     raw: j,
     dayState: (j['day_state'] as String?) ?? PlanDayStateWire.inProgress,
     minutesLeft: (j['minutes_left'] as num?)?.toInt() ?? 0,
+    materialMinutes: (j['material_minutes'] as num?)?.toInt() ?? 0,
+    conversationMinutes: (j['conversation_minutes'] as num?)?.toInt() ?? 0,
+    sittingPlan: ((j['sitting_plan'] as List?) ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map((e) => (kind: (e['kind'] as String?) ?? '', cards: (e['cards'] as num?)?.toInt() ?? 0))
+        .where((e) => e.kind.isNotEmpty && e.cards > 0)
+        .toList(growable: false),
   );
 }
 

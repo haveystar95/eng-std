@@ -5973,6 +5973,48 @@ abstract class AppLocalizations {
   /// **'пройден'**
   String get planStateDone;
 
+  /// Слово состояния дня (DAY-FIX-3, Ч.4.3): day_state = material_done — присест «Материал» пройден, впереди «Разговор». Рядом — planStateConversationAbout.
+  ///
+  /// In ru, this message translates to:
+  /// **'материал пройден'**
+  String get planStateMaterialDone;
+
+  /// Минуты присеста «Материал» (DAY-FIX-3, Ч.5.1): серверное material_minutes. Экран дня, рядом с planStateConversationAbout.
+  ///
+  /// In ru, this message translates to:
+  /// **'{minutes, plural, one{материал около {minutes} минуты} few{материал около {minutes} минут} many{материал около {minutes} минут} other{материал около {minutes} минуты}}'**
+  String planStateMaterialAbout(int minutes);
+
+  /// Минуты присеста «Разговор» (DAY-FIX-3, Ч.4.3 / Ч.5.1): серверное conversation_minutes. Вкладка «План» и экран дня при «материал пройден»; экран дня рядом с planStateMaterialAbout.
+  ///
+  /// In ru, this message translates to:
+  /// **'{minutes, plural, one{разговор около {minutes} минуты} few{разговор около {minutes} минут} many{разговор около {minutes} минут} other{разговор около {minutes} минуты}}'**
+  String planStateConversationAbout(int minutes);
+
+  /// Кнопка дня в состоянии material_done (DAY-FIX-3, Ч.4.3): вкладка «План», экран дня, итог материала между присестами.
+  ///
+  /// In ru, this message translates to:
+  /// **'К разговору'**
+  String get planSittingToConversation;
+
+  /// Вторая кнопка итога материала (DAY-FIX-3, Ч.4.4): выйти, разговор — следующим заходом; сервер уже помнит, что материал пройден.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позже'**
+  String get planSittingLater;
+
+  /// Заголовок итога материала между присестами (DAY-FIX-3, Ч.4.4).
+  ///
+  /// In ru, this message translates to:
+  /// **'Материал пройден'**
+  String get planMaterialDoneTitle;
+
+  /// Строка под planMaterialDoneTitle — что пройдено и что впереди, словами, без счётчиков.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова, связки и реплики сцены разобраны. Дальше — разговор: услышишь собеседника и ответишь сам.'**
+  String get planMaterialDoneLead;
+
   /// Минуты дня (DAY-FIX-2, Ч.3): серверное minutes_left, карточки × 16 с, округлённые до минуты. Единственная цифра на экранах плана.
   ///
   /// In ru, this message translates to:
@@ -6009,6 +6051,18 @@ abstract class AppLocalizations {
   /// **'познакомишься'**
   String get planStepMeet;
 
+  /// Упражнение дня словом (next_step = translate, DAY-FIX-3, Ч.3.1): слово выбирает перевод из четырёх в день знакомства.
+  ///
+  /// In ru, this message translates to:
+  /// **'переведёшь'**
+  String get planStepTranslate;
+
+  /// Упражнение дня словом (next_step = tiles, DAY-FIX-3, Ч.3.1): связка собирается из плиток в день знакомства.
+  ///
+  /// In ru, this message translates to:
+  /// **'соберёшь из плиток'**
+  String get planStepTiles;
+
   /// Упражнение дня словом (next_step = recognize): выбор перевода слова или связки.
   ///
   /// In ru, this message translates to:
@@ -6039,17 +6093,29 @@ abstract class AppLocalizations {
   /// **'скажешь голосом'**
   String get planStepSay;
 
-  /// Отметка у строки экрана дня (DAY-FIX-2, Ч.4.3): карточка закрыла свою ступень сегодня.
+  /// Отметка у строки экрана дня (DAY-FIX-3, Ч.5.2): интро пройдено, упражнение знакомства ещё впереди. Слово, не цифра.
   ///
   /// In ru, this message translates to:
-  /// **'пройдено'**
-  String get planMarkPassed;
+  /// **'познакомился'**
+  String get planMarkMet;
 
-  /// Отметка у строки экрана дня (DAY-FIX-2, Ч.4.3): реплика сказана голосом на прогоне.
+  /// Отметка у строки экрана дня (DAY-FIX-3, Ч.5.2): знакомство закрыто упражнением, строка в работе.
   ///
   /// In ru, this message translates to:
-  /// **'сказал сам'**
+  /// **'применяешь'**
+  String get planMarkApplying;
+
+  /// Отметка у строки экрана дня (DAY-FIX-2, Ч.4.3; DAY-FIX-3, Ч.5.2): реплика сказана голосом на прогоне.
+  ///
+  /// In ru, this message translates to:
+  /// **'говоришь сам'**
   String get planMarkSaidSelf;
+
+  /// Подпись у тематического слова на экране дня (DAY-FIX-3, Ч.5.4): слово ситуации, которого нет в репликах сцены.
+  ///
+  /// In ru, this message translates to:
+  /// **'по теме'**
+  String get planTermTopical;
 
   /// Подпись над ПЕРВЫМ пузырём роли в диалоге и в итоге сцены (DAY-FIX-2, Ч.5.3).
   ///

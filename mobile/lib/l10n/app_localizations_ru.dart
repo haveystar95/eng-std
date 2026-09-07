@@ -4033,6 +4033,48 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planStateDone => 'пройден';
 
   @override
+  String get planStateMaterialDone => 'материал пройден';
+
+  @override
+  String planStateMaterialAbout(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'материал около $minutes минуты',
+      many: 'материал около $minutes минут',
+      few: 'материал около $minutes минут',
+      one: 'материал около $minutes минуты',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planStateConversationAbout(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'разговор около $minutes минуты',
+      many: 'разговор около $minutes минут',
+      few: 'разговор около $minutes минут',
+      one: 'разговор около $minutes минуты',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planSittingToConversation => 'К разговору';
+
+  @override
+  String get planSittingLater => 'Позже';
+
+  @override
+  String get planMaterialDoneTitle => 'Материал пройден';
+
+  @override
+  String get planMaterialDoneLead =>
+      'Слова, связки и реплики сцены разобраны. Дальше — разговор: услышишь собеседника и ответишь сам.';
+
+  @override
   String planStateMinutes(int minutes) {
     String _temp0 = intl.Intl.pluralLogic(
       minutes,
@@ -4063,6 +4105,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planStepMeet => 'познакомишься';
 
   @override
+  String get planStepTranslate => 'переведёшь';
+
+  @override
+  String get planStepTiles => 'соберёшь из плиток';
+
+  @override
   String get planStepRecognize => 'узнаешь по переводу';
 
   @override
@@ -4078,10 +4126,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planStepSay => 'скажешь голосом';
 
   @override
-  String get planMarkPassed => 'пройдено';
+  String get planMarkMet => 'познакомился';
 
   @override
-  String get planMarkSaidSelf => 'сказал сам';
+  String get planMarkApplying => 'применяешь';
+
+  @override
+  String get planMarkSaidSelf => 'говоришь сам';
+
+  @override
+  String get planTermTopical => 'по теме';
 
   @override
   String get planDialogueRoleName => 'собеседник';

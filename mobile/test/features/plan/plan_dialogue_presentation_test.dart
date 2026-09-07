@@ -123,7 +123,12 @@ void main() {
     shelf: shelf,
   );
 
-  Widget host(List<PlanSessionTask> tasks, {List<String>? log}) => ProviderScope(
+  Widget host(
+    List<PlanSessionTask> tasks, {
+    List<String>? log,
+    List<int> sittings = const [],
+    List<({String kind, int cards})> sittingPlan = const [],
+  }) => ProviderScope(
     overrides: [
       apiClientProvider.overrideWithValue(_PlanApi()),
       // МИКРОФОН, КОТОРЫЙ СЛЫШИТ (наряд SCENE-RUN, Ч.4): свой ход теперь отдают голосом, и без
@@ -143,6 +148,8 @@ void main() {
           dayIndex: args.dayIndex ?? 2,
           strict: true,
           tasks: tasks,
+          sittings: sittings,
+          sittingPlan: sittingPlan,
           dialogues: const [chain],
           raw: const {'session_id': 'S', 'plan_id': planId, 'day_index': 2, 'strict': true},
         ).asStudySession(),
@@ -287,6 +294,79 @@ void main() {
     // прогон поймал «выбери, что спросишь» под вводкой — то же самое тише и мельче).
     expect(find.textContaining('выбери, что'), findsNothing);
     expect(find.text('That experience is relevant.'), findsWidgets);
+
+    await teardownTree(tester);
+  });
+
+  testWidgets('DAY-FIX-3 Ч.6 — после ответа лента докручивается до низа, к вердикту', (
+    tester,
+  ) async {
+    // Экран невысокий, лента из трёх пузырей и карточка под ней — и «Проверить»-вердикт стоит
+    // ниже края. Живой прогон 07.09: кнопка «Дальше» видна, а вердикт и пузырь — нет, и человек
+    // не знает, что ответил.
+    tester.view.physicalSize = const Size(400, 560);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(host([task(sayCard('01SAY2', "I'm building a learning app."))]));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Начать диалог'));
+    await tester.tap(find.text('Начать диалог'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Сказать вслух'));
+    await tester.tap(find.text('Сказать вслух'));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+
+    // The option stands below the fold — reach it the way a person would, then answer.
+    await tester.ensureVisible(find.text("I'm building a learning app.").last);
+    await tester.tap(find.text("I'm building a learning app.").last);
+    await tester.pumpAndSettle();
+
+    final scroll = tester
+        .widget<SingleChildScrollView>(find.byType(SingleChildScrollView).first)
+        .controller!;
+    expect(scroll.position.maxScrollExtent, greaterThan(0), reason: 'лента должна не влезать');
+    expect(scroll.offset, scroll.position.maxScrollExtent);
+
+    await teardownTree(tester);
+  });
+
+  testWidgets('DAY-FIX-3 Ч.4.4 — между материалом и разговором стоит итог материала словами', (
+    tester,
+  ) async {
+    // Две задачи в двух присестах: сборка реплики среди знакомства (материал) и её же выбор в
+    // диалоге (разговор). Сервер назвал присесты — экран между ними говорит «Материал пройден».
+    final intro = task(
+      sayCard('01SAY', 'My background is in backend development.'),
+      section: PlanSessionTask.sectionCodeDialogueIntro,
+    );
+    final turn = task(sayCard('01SAY', 'My background is in backend development.'));
+    await tester.pumpWidget(
+      host(
+        [intro, turn],
+        sittings: const [1, 1],
+        sittingPlan: const [(kind: 'material', cards: 1), (kind: 'conversation', cards: 1)],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Карточка знакомства — вне ленты: ни «Начать диалог», ни пузырей.
+    expect(find.text('Начать диалог'), findsNothing);
+    await tester.tap(find.text('My background is in backend development.'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Дальше'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('МАТЕРИАЛ ПРОЙДЕН'), findsOneWidget);
+    expect(find.text('К разговору'), findsOneWidget);
+    expect(find.text('Позже'), findsOneWidget);
+    expect(find.textContaining('из 2'), findsNothing);
+
+    // «К разговору» — и разговор открывается своим входом.
+    await tester.tap(find.text('К разговору'));
+    await tester.pumpAndSettle();
+    expect(find.text('Начать диалог'), findsOneWidget);
 
     await teardownTree(tester);
   });

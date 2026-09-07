@@ -324,28 +324,53 @@ class PlanNotice extends StatelessWidget {
 String planMaturityVerdict(AppLocalizations l, {required int total, required int closed}) =>
     total > 0 && closed >= total ? l.planMaturityApplying : l.planMaturityMeeting;
 
-/// ОДНО СЛОВО О ДНЕ — «не начат» / «идёт · около N минут» / «пройден» (наряд DAY-FIX-2, Ч.3).
+/// ОДНО СЛОВО О ДНЕ — «не начат» / «идёт · около N минут» / «материал пройден · разговор около
+/// N минут» / «пройден» (наряд DAY-FIX-2, Ч.3; DAY-FIX-3, Ч.4.3).
 ///
 /// Слово и минуты приходят с сервера; здесь они только переводятся. Три экрана — вкладка «План»,
 /// экран дня и шапка присеста — зовут ОДНУ функцию, чтобы «идёт» на одном не стало «продолжить ·
 /// осталось 1» на другом. Минуты — единственная цифра, которую плановые экраны говорят вслух.
-String planDayStateWord(AppLocalizations l, PlanDayState state, int minutesLeft) => switch (state) {
+/// [conversationMinutes] — минуты второго присеста: при «материал пройден» они и есть то, что
+/// впереди.
+String planDayStateWord(
+  AppLocalizations l,
+  PlanDayState state,
+  int minutesLeft, {
+  int conversationMinutes = 0,
+}) => switch (state) {
   PlanDayState.notStarted => minutesLeft > 0
       ? '${l.planStateNotStarted} · ${l.planStateMinutes(minutesLeft)}'
       : l.planStateNotStarted,
   PlanDayState.inProgress => minutesLeft > 0
       ? '${l.planStateInProgress} · ${l.planStateMinutes(minutesLeft)}'
       : l.planStateInProgress,
+  PlanDayState.materialDone => conversationMinutes > 0
+      ? '${l.planStateMaterialDone} · ${l.planStateConversationAbout(conversationMinutes)}'
+      : l.planStateMaterialDone,
   PlanDayState.done => l.planStateDone,
 };
 
-/// ТО ЖЕ СЛОВО, КНОПКОЙ: «Начать день» / «Продолжить» / «Пройти ещё раз». Кнопка у сегодняшнего
-/// дня обязана говорить то же, что слово состояния рядом с ним (наряд DAY-FIX-2, идеал).
+/// ТО ЖЕ СЛОВО, КНОПКОЙ: «Начать день» / «Продолжить» / «К разговору» / «Пройти ещё раз». Кнопка у
+/// сегодняшнего дня обязана говорить то же, что слово состояния рядом с ним (наряд DAY-FIX-2,
+/// идеал).
 String planDayAction(AppLocalizations l, PlanDayState state) => switch (state) {
   PlanDayState.notStarted => l.planRowStartDay,
   PlanDayState.inProgress => l.planSittingContinue,
+  PlanDayState.materialDone => l.planSittingToConversation,
   PlanDayState.done => l.planDayRepeat,
 };
+
+/// МИНУТЫ ДВУХ ПРИСЕСТОВ, СЛОВАМИ — «материал около 12 минут · разговор около 6 минут» (наряд
+/// DAY-FIX-3, Ч.5.1), или null, когда ни один присест ничего не стоит. Присест, который уже
+/// пройден, не упоминается: «материал около 0 минут» — не предложение.
+String? planDaySittingMinutes(AppLocalizations l, {required int material, required int conversation}) {
+  final parts = [
+    if (material > 0) l.planStateMaterialAbout(material),
+    if (conversation > 0) l.planStateConversationAbout(conversation),
+  ];
+
+  return parts.isEmpty ? null : parts.join(' · ');
+}
 
 /// ЗРЕЛОСТЬ ОДНОЙ СЦЕНЫ СЛОВОМ — три состояния канона §2 (наряд SCENE-RUN, Ч.3).
 ///
