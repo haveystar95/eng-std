@@ -18,9 +18,14 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 /**
  * «ЭТОТ ДЕНЬ ПРОЙДЕН» — written onto the row, and the one event day n+1 is generated from.
  *
- * `passed` is a DERIVED fact: every word of the day has closed stage A. Deriving it is cheap and a
- * read could do it, but two things need it written down — the generation policy waits for a day to
- * be `done` before queueing the next one, and a queue cannot subscribe to a projection.
+ * `passed` is a DERIVED fact: все три этапа дня пройдены насквозь
+ * ({@see \App\Modules\Learning\Domain\Service\PlanDayPassage}). Deriving it is cheap and a read
+ * could do it, but two things need it written down — the generation policy waits for a day to be
+ * `done` before queueing the next one, and a queue cannot subscribe to a projection.
+ *
+ * С наряда DAY-GATE-1 это ЕДИНСТВЕННОЕ событие, по которому пишется следующий день: короткий план
+ * больше не пишется целиком на старте. Поэтому строчка ниже — «после отметки, вне транзакции» —
+ * теперь не оптимизация, а вся цепочка плана.
  *
  * ## Why this is a service and not a private method any more
  *
@@ -70,9 +75,6 @@ final readonly class PlanDayPassing
      */
     public function mark(LearningPlan $plan, array $days, PlanProgressView $progress): void
     {
-        $computed = $plan->computed();
-        $introDays = is_int($computed['intro_days'] ?? null) ? $computed['intro_days'] : 1;
-
         $toMark = [];
         foreach ($days as $day) {
             $view = $progress->days[$day->dayIndex()] ?? null;
@@ -101,7 +103,6 @@ final readonly class PlanDayPassing
                 $fresh,
                 $day->dayIndex(),
                 $progress->focusDayIndex,
-                $introDays,
             );
             if ($next !== null) {
                 $this->dispatcher->dispatchDay($day->planId()->value, $next);

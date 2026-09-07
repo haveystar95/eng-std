@@ -98,21 +98,11 @@ final readonly class FinishPlanDayHandler
                 ($this->enroll)(new EnrollTerm($plan->userId(), TermId::fromString($termId), $source));
             }
 
-            // A SHORT plan continues here, on `ready`: there is no learner in the loop yet and the
-            // whole point is that it arrives written. A long one is chained from the session path,
-            // when a day is actually walked. Either way ONE day at a time — day n+1 is written from
-            // day n's terms, so it cannot be written beside it.
-            $computed = $plan->computed();
-            $introDays = is_int($computed['intro_days'] ?? null) ? $computed['intro_days'] : 1;
-
-            return [
-                'retry' => false,
-                'next' => PlanGenerationPolicy::nextAfterReady(
-                    $this->days->listForPlan($planId),
-                    $command->dayIndex,
-                    $introDays,
-                ),
-            ];
+            // ЦЕПОЧКА ОТСЮДА БОЛЬШЕ НЕ ИДЁТ (наряд DAY-GATE-1, Ч.1.3). День, который только что
+            // написан, — это ещё не день, который прошли, а следующий пишется по факту «день N
+            // пройден» ({@see \App\Modules\Learning\Application\Service\PlanDayPassing}). Здесь
+            // остаётся ровно одно: сказать, что этот день готов.
+            return ['retry' => false, 'next' => null];
         });
 
         // Outside the transaction: a worker can pick a job up before the commit lands.

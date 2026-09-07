@@ -11,37 +11,34 @@ use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
 /**
  * WHEN A PLAN SPENDS MONEY — the whole policy, in one pure place.
  *
- * Every day of a plan is a paid model call, and the two ways of getting this wrong are opposite.
- * Generate everything at the start and a learner who abandons on day two has paid for fourteen days
- * nobody will ever open. Generate strictly one day ahead and a fourteen-day plan makes the learner
- * wait for a vendor round trip every single morning.
+ * Every day of a plan is a paid model call, and there is now ONE rule for every plan, short or
+ * long: **the next day is written when the previous one is DONE** — walked by the learner, all
+ * three of its stages passed through ({@see \App\Modules\Learning\Domain\Service\PlanDayPassage}).
+ * Done, not ready: «ready» means the material exists, «done» means somebody actually did it, and it
+ * is the second one that is evidence they will come back. It is also what makes a broken day stop a
+ * plan instead of producing five more broken days.
  *
- * So the policy splits on the one number that decides which mistake is cheaper:
+ * ## Короткий план больше НЕ пишется целиком на старте (наряд DAY-GATE-1, Ч.1.3)
  *
- * **A short plan ({@see EAGER_INTRO_DAYS} days or fewer) is written whole, at the start.** Three
- * days is a plan somebody either does or does not do; there is no meaningful abandonment window,
- * and the alternative — a learner opening day 2 tomorrow and watching a spinner — is a worse
- * product for the sake of at most two calls.
+ * Правило «план из трёх дней и короче пишется весь при старте» отменено решением владельца 07.09,
+ * и отменено вместе с тем, ради чего оно существовало. Оно покупало одно — чтобы человек не смотрел
+ * на спиннер утром второго дня, — и продавало два: план платил за дни, до которых можно не дойти
+ * (живой прогон 07.09 написал три дня за девяносто секунд, а пройден был один), и день N+1
+ * писался, когда о дне N не было известно НИЧЕГО, кроме того, что он существует.
  *
- * **A longer plan is written one day at a time, and the next day is queued when the previous one is
- * DONE.** Done, not ready: «ready» means the material exists, «done» means the learner has actually
- * walked it, and it is the second one that is evidence they will come back. This is also what makes
- * a broken day stop the plan instead of producing five more broken days.
+ * Ожидание никуда не делось, оно стало честным: день N+1 встаёт в очередь в тот момент, когда
+ * закрыт день N, и человек видит экран сборки, а не пустую строку. Замок дня ({@see \App\Modules\Learning\Domain\ValueObject\PlanDayStage})
+ * и так не пустил бы его дальше.
  *
- * ## «Whole» never means «at once», and that distinction cost a live run
+ * ## Один день за раз, и это не про скорость
  *
- * Both branches queue exactly ONE day at a time. The eager branch differs only in WHAT it waits
- * for — `ready` instead of `done` — so a short plan is written end to end in one sitting without a
- * learner in the loop.
- *
- * The first version of this class fanned the whole short plan out in a single dispatch, and the
- * live S1 run showed what that costs: day 2's model call started one second after day 1's and
- * finished before day 1's collection existed, so `KnownTermsReader::metInPlan` returned nothing,
- * the prompt's KNOWN block went out empty, and day 2 was written as if day 1 had never happened.
- * Nothing failed — the day was valid, the coherence gate had nothing to compare against, and the
- * only visible trace was that not one of day 1's nine terms got the fresh example day 2 was
- * supposed to give it. Day n is written FROM days 1…n−1; that is the sequence, and a fan-out is
- * not a faster way to walk a sequence, it is a way to not walk it.
+ * Первая версия этого класса выстреливала весь короткий план одним залпом, и живой прогон S1
+ * показал цену: вызов дня 2 стартовал через секунду после дня 1 и закончился раньше, чем появилась
+ * коллекция дня 1, поэтому `KnownTermsReader::metInPlan` вернул пусто, блок KNOWN ушёл в модель
+ * пустым, и день 2 был написан так, будто дня 1 не было. Ничего не упало: день был валиден, гейту
+ * связности не с чем было сравнивать, и единственным следом было то, что ни один из девяти терминов
+ * дня 1 не получил свежего примера. День N пишется ИЗ дней 1…N−1 — это последовательность, и
+ * веерный запуск не быстрый способ её пройти, а способ её не проходить.
  *
  * **On demand, anything, one at a time.** A learner may look ahead — the day exists in the skeleton,
  * and refusing to build it would be pretending it does not. What that path may NOT do is run away:
@@ -50,9 +47,6 @@ use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
  */
 final class PlanGenerationPolicy
 {
-    /** At or below this many introduction days, the whole plan is written at the start. */
-    public const EAGER_INTRO_DAYS = 3;
-
     /**
      * How many days may stand ready or generating AHEAD of the focus.
      *
@@ -63,18 +57,11 @@ final class PlanGenerationPolicy
      */
     public const MAX_READY_AHEAD = 2;
 
-    /** Is this plan short enough to be written whole at the start? */
-    public static function generatesEagerly(int $introDays): bool
-    {
-        return $introDays <= self::EAGER_INTRO_DAYS;
-    }
-
     /**
      * The FIRST day to queue when the plan starts — one, on every plan.
      *
-     * Both branches start the same way and differ only in what carries the chain forward
-     * ({@see nextAfterReady()} on a short plan, {@see nextAfterDone()} on a long one). See the class
-     * docblock for why «written whole» must not mean «written at once».
+     * The only day a plan pays for before anybody has done anything: without it there would be
+     * nothing to open. Everything after it is carried by {@see nextAfterDone()}.
      *
      * @param  list<PlanDay>  $days
      */
@@ -90,40 +77,16 @@ final class PlanGenerationPolicy
     }
 
     /**
-     * SHORT PLAN ONLY: the next day to queue now that `$readyDayIndex` has been written.
+     * THE NEXT DAY TO QUEUE now that `$doneDayIndex` has been WALKED — на любом плане, длинном и
+     * коротком (наряд DAY-GATE-1, Ч.1.3).
      *
-     * This is what makes a three-day plan arrive whole without a learner in the loop — and it fires
-     * on `ready` rather than on `done` precisely because there is no learner in the loop yet.
-     *
-     * Null on a long plan, where the chain is carried by {@see nextAfterDone()} instead: writing
-     * day 5 because day 4 came back would spend the whole plan's budget on the afternoon it
-     * started, which is the thing the split exists to prevent.
+     * Единственная цепочка, которая ведёт план вперёд. Раньше их было две, и вторая («короткий план
+     * целиком на старте») отменена вместе с ветвлением по длине: см. докблок класса.
      *
      * @param  list<PlanDay>  $days
      */
-    public static function nextAfterReady(array $days, int $readyDayIndex, int $introDays): ?int
+    public static function nextAfterDone(array $days, int $doneDayIndex, int $focusDayIndex): ?int
     {
-        if (! self::generatesEagerly($introDays)) {
-            return null;
-        }
-
-        return self::nextPendingAfter($days, $readyDayIndex);
-    }
-
-    /**
-     * LONG PLAN ONLY: the next day to queue now that `$doneDayIndex` has been WALKED.
-     *
-     * Null on a short plan is the correct answer and not an omission: its chain already ran on
-     * `ready` and the whole plan is written.
-     *
-     * @param  list<PlanDay>  $days
-     */
-    public static function nextAfterDone(array $days, int $doneDayIndex, int $focusDayIndex, int $introDays): ?int
-    {
-        if (self::generatesEagerly($introDays)) {
-            return null;
-        }
-
         $next = self::nextPendingAfter($days, $doneDayIndex);
 
         return $next !== null && self::hasRoomAhead($days, $focusDayIndex) ? $next : null;

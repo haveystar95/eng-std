@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Command;
 
+use App\Modules\Learning\Application\Service\PlanDayPassing;
 use App\Modules\Learning\Domain\Exception\PlanNotFound;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
@@ -30,6 +31,14 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * Каждый ход прогона уже уехал в `reviews` обычной партией — сказал это `speaking/good`, пропустил
  * `speaking/again` (наряд Ч.2.4, та же семантика, что у говорения фраз). Дублировать их здесь
  * значило бы записать один ответ дважды в append-only журнал.
+ *
+ * ## …А ВОТ ВЕРДИКТ ДНЯ ПИШЕТ ИМЕННО ОН (наряд DAY-GATE-1, Ч.1.1)
+ *
+ * Прогон — третий и последний этап дня («Скажи сам»), и запись прогона это ровно тот момент, когда
+ * день может стать пройденным. Раньше вердикт дописывался на входе в СЛЕДУЮЩУЮ посадку, и этого
+ * хватало: прогон в «день пройден» не входил. Теперь входит — а человек, закончивший прогон, чаще
+ * всего закрывает приложение, и следующей посадки в этот вечер уже нет. День остался бы «идёт» до
+ * завтра, и следующий день не встал бы в очередь.
  */
 final readonly class RecordSceneRunHandler
 {
@@ -38,6 +47,8 @@ final readonly class RecordSceneRunHandler
         private PlanSceneRunRepository $runs,
         private PlanTermStageRepository $stages,
         private TransactionManager $tx,
+        /** «День пройден» — тем же кодом, что и конец посадки ({@see PlanDayPassing}). */
+        private PlanDayPassing $passing,
     ) {}
 
     public function __invoke(RecordSceneRun $command): PlanSceneRun
@@ -73,7 +84,7 @@ final readonly class RecordSceneRunHandler
             rescued: $rescued,
         );
 
-        return $this->tx->run(function () use ($plan, $command, $run): PlanSceneRun {
+        $written = $this->tx->run(function () use ($plan, $command, $run): PlanSceneRun {
             $this->runs->add($run);
 
             $stages = $this->stages->forPlan($plan->id());
@@ -84,5 +95,11 @@ final readonly class RecordSceneRunHandler
 
             return $run;
         });
+
+        // ВНЕ ТРАНЗАКЦИИ, как и во всех остальных местах: отметка дня ставит в очередь следующий, а
+        // воркер может взять задачу раньше, чем ляжет коммит.
+        $this->passing->refreshActiveFor($plan->userId());
+
+        return $written;
     }
 }
