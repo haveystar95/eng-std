@@ -16,16 +16,21 @@ import 'package:eng_std/l10n/app_localizations_ru.dart';
 void main() {
   final l = AppLocalizationsRu();
 
-  PlanDay day(List<Map<String, dynamic>> stages, {int index = 1, int? lockedBy}) =>
-      PlanDay.fromJson({
-        'id': 'd$index',
-        'index': index,
-        'kind': 'intro',
-        'title': 'Начать приём',
-        'status': 'ready',
-        'stages': stages,
-        'locked_by_day_index': lockedBy,
-      });
+  PlanDay day(
+    List<Map<String, dynamic>> stages, {
+    int index = 1,
+    int? lockedBy,
+    String status = 'ready',
+    String title = 'Начать приём',
+  }) => PlanDay.fromJson({
+    'id': 'd$index',
+    'index': index,
+    'kind': 'intro',
+    'title': title,
+    'status': status,
+    'stages': stages,
+    'locked_by_day_index': lockedBy,
+  });
 
   group('состояние этапа словом', () {
     // ПРАВИЛО: наряд Ч.2.1 — состояния называются словами «пройдено / сейчас / после <имя>».
@@ -91,6 +96,102 @@ void main() {
       ]);
 
       expect(planNextDayLine(l, d, hasNextDay: false), isNull);
+    });
+  });
+
+  group('итог присеста зовёт туда, где человек действительно дальше', () {
+    List<Map<String, dynamic>> upTo(String current) => [
+      {'stage': 'material', 'state': current == 'material' ? 'current' : 'done'},
+      {
+        'stage': 'conversation',
+        'state': switch (current) {
+          'material' => 'locked',
+          'conversation' => 'current',
+          _ => 'done',
+        },
+        'opens_after': 'material',
+      },
+      {
+        'stage': 'rehearsal',
+        'state': switch (current) {
+          'rehearsal' => 'current',
+          'done' => 'done',
+          _ => 'locked',
+        },
+        'opens_after': 'conversation',
+      },
+    ];
+
+    // ПРАВИЛО: наряд DAY-GATE-1 (доработка), п. 2 — пока день не пройден, итог зовёт в ТЕКУЩИЙ
+    // этап, а не в следующий день.
+    // ЛОВИТ: строку «Дальше · День 2 — У стойки» под присестом «Слова и фразы» дня 1, у которого
+    // впереди ещё разговор. Живой прогон 07.09: экран дня говорил «до дня 2 — ещё Разговор · Скажи
+    // сам», а итог того же дня звал в день 2 — два экрана об одном дне, и один зовёт не туда.
+    test('день не пройден — зовёт в текущий этап, а не в следующий день', () {
+      final next = day(const [], index: 2, status: 'ready', title: 'У стойки');
+
+      expect(
+        planSittingNextTitle(l, day: day(upTo('conversation')), nextDay: next, dayPassed: false),
+        'Разговор',
+      );
+      expect(
+        planSittingNextTitle(l, day: day(upTo('rehearsal')), nextDay: next, dayPassed: false),
+        'Скажи сам',
+      );
+    });
+
+    test('день пройден и следующий открыт — зовёт в него', () {
+      expect(
+        planSittingNextTitle(
+          l,
+          day: day(upTo('done')),
+          nextDay: day(const [], index: 2, status: 'ready', title: 'У стойки'),
+          dayPassed: true,
+        ),
+        'День 2 — У стойки',
+      );
+    });
+
+    // ПРАВИЛО: тот же п. 2 — следующий день ещё пишется, и об этом говорится словом «собираю», а не
+    // приглашением в дверь, которой пока нет (решение 294: день N+1 встаёт в очередь по факту).
+    // ЛОВИТ: «Дальше · День 2 — …» над днём, которого ещё нет: человек жмёт и попадает на экран
+    // сборки, не понимая, почему обещанный день оказался спиннером.
+    test('следующий день ещё собирается — так и говорит', () {
+      for (final status in ['pending', 'generating']) {
+        expect(
+          planSittingNextTitle(
+            l,
+            day: day(upTo('done')),
+            nextDay: day(const [], index: 2, status: status, title: 'У стойки'),
+            dayPassed: true,
+          ),
+          'Собираю день 2',
+          reason: status,
+        );
+      }
+    });
+
+    test('звать некуда — строки нет: последний день, запертая дверь, день без этапов', () {
+      // Последний день плана: следующего нет вовсе.
+      expect(
+        planSittingNextTitle(l, day: day(upTo('done')), nextDay: null, dayPassed: true),
+        isNull,
+      );
+      // Следующий день заперт (сервер держит его другим днём) — в запертую дверь итог не зовёт.
+      expect(
+        planSittingNextTitle(
+          l,
+          day: day(upTo('done')),
+          nextDay: day(const [], index: 2, lockedBy: 1),
+          dayPassed: true,
+        ),
+        isNull,
+      );
+      // День со старого сервера, без этапов: текущего этапа нет — и выдумывать его не из чего.
+      expect(
+        planSittingNextTitle(l, day: day(const []), nextDay: null, dayPassed: false),
+        isNull,
+      );
     });
   });
 

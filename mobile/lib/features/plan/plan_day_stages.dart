@@ -60,6 +60,38 @@ String? planNextDayLine(AppLocalizations l, PlanDay day, {required bool hasNextD
   return l.planNextDayLeft(next, left);
 }
 
+/// КУДА ЗОВЁТ ИТОГ ПРИСЕСТА — наряд DAY-GATE-1 (доработка), п. 2.
+///
+/// Итог звал в день N+1 всегда: строка «Дальше» бралась из `next_day_index` и печаталась независимо
+/// от того, пройден ли день, который человек только что закрывал. Живой прогон 07.09 дал ровно эту
+/// картинку — «Дальше · День 2» под днём 1, у которого впереди ещё разговор и «Скажи сам».
+///
+/// Три ответа, и все три читаются с пейлоада:
+///
+///   день НЕ пройден      → имя ТЕКУЩЕГО этапа («Разговор», «Скажи сам»): дальше — вот это;
+///   пройден, день N+1 открыт     → его номер и название;
+///   пройден, день N+1 собирается → «Собираю день N+1» — тот же текст, что на экране сборки.
+///
+/// Null там, где сказать нечего: этапов нет (старый сервер), следующего дня нет (последний день
+/// плана), или он есть, но не открыт — в запертую дверь итог не зовёт.
+String? planSittingNextTitle(
+  AppLocalizations l, {
+  required PlanDay? day,
+  required PlanDay? nextDay,
+  required bool dayPassed,
+}) {
+  if (!dayPassed) {
+    final current = day?.currentStage;
+
+    return current == null ? null : planStageLabel(l, current.stage);
+  }
+  if (nextDay == null) return null;
+  if (nextDay.status.isBuilding) return l.planBuildingTitle(nextDay.index);
+  if (!nextDay.status.hasMaterial || nextDay.isLocked) return null;
+
+  return l.planNextDay(nextDay.index, nextDay.title);
+}
+
 /// Список этапов дня — по строке на этап, состояние словом справа.
 class PlanDayStagesBlock extends StatelessWidget {
   const PlanDayStagesBlock({super.key, required this.stages});

@@ -10,6 +10,7 @@ import '../../data/models.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
 import '../training/session/session_grading.dart' show LocalCheck;
+import 'plan_day_stages.dart';
 import 'plan_ui.dart';
 
 /// ИТОГ ПОСАДКИ — три вердикта одной вёрсткой (серия «День v1», кадры D·06, D·06б, D·06в).
@@ -151,8 +152,16 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
     // (канон §13). What the day's terms are still counted for is the ladder's first rung: how many
     // things this sitting introduced.
 
+    // «ДАЛЬШЕ» ЗОВЁТ В ТО, ЧТО ДЕЙСТВИТЕЛЬНО ДАЛЬШЕ (наряд DAY-GATE-1, доработка, п. 2), и пока
+    // вердикт не известен, не зовёт никуда: строка, напечатанная по плану ДО присеста, назвала бы
+    // следующим то, что человек только что прошёл.
     final nextIndex = plan?.nextDayIndex;
-    final nextDay = nextIndex == null ? null : plan?.dayAt(nextIndex);
+    final nextDay = nextIndex == null || nextIndex <= envelope.dayIndex
+        ? null
+        : plan?.dayAt(nextIndex);
+    final nextTitle = verdictKnown
+        ? planSittingNextTitle(l, day: freshDay, nextDay: nextDay, dayPassed: dayPassed)
+        : null;
     final scene = plan?.dayAt(envelope.dayIndex)?.title ?? '';
 
     // WHAT WENT WELL AND WHAT DID NOT, by card and once each. The LAST verdict of a term wins: a
@@ -269,11 +278,7 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
             _SummaryRow(label: l.planReviewRow, value: l.planReviewCount(reviewTerms.length)),
           ],
           const SizedBox(height: AppSpacing.s22),
-          if (nextDay != null)
-            _NextRow(
-              caption: l.planNext,
-              title: l.planNextDay(nextDay.index, nextDay.title),
-            ),
+          if (nextTitle != null) _NextRow(caption: l.planNext, title: nextTitle),
           const SizedBox(height: AppSpacing.s26),
           // THE CHOICE, and only on «почти»: finish the remainder now, or meet it in tomorrow's
           // warm-up. Both are named before either is pressed, so «оставить» is a decision and not a
