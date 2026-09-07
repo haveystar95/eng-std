@@ -289,8 +289,9 @@ final readonly class PlanSittingPlanner
      * «Разговор» ≤ `conversation_max_cards`.
      *
      * The material gives way from its tail: the seam first, then the warm-up's misses, then the
-     * day's own TOPICAL words — the one card of the day the scene's conversation does not need (P2
-     * v0.8). The conversation gives way the same way: the seam's lines first (a line of a day behind
+     * warm-up's own rescue cards (the kit is back tomorrow), and only then the day's own TOPICAL
+     * words, whole — the one card of the day the scene's conversation does not need (P2 v0.8). The
+     * conversation gives way the same way: the seam's lines first (a line of a day behind
      * comes back tomorrow), then the прогон of the OLDEST scene, whole — a scene run is one act and
      * cannot be dealt half. Today's own dialogue is never trimmed: the day cannot pass without it.
      *
@@ -304,8 +305,11 @@ final readonly class PlanSittingPlanner
             static fn (array $s): bool => PlanSittings::kindOf(self::sectionKeyOfSpec($s)) === $kind,
         ));
 
+        // THE DAY'S OWN MATERIAL GIVES WAY LAST, and a rescue card of the warm-up before it: the
+        // kit comes back every morning anyway, a topical word of the scene does not (живой стенд
+        // 07.09 — day 1 and day 2 stood at 46 against 45, and the card that went was the scene's).
         $material = max(1, $this->budget['material_max_cards']);
-        foreach (['plan_review', 'warmup_miss', 'topical'] as $source) {
+        foreach (['plan_review', 'warmup_miss', 'warmup', 'topical'] as $source) {
             while ($count($specs, PlanSittings::MATERIAL) > $material) {
                 // THE SEAM GIVES WAY NEWEST DAY FIRST: a card of the day before yesterday has waited
                 // longer than one of yesterday, and its rung (C for a word) is what the plan is
