@@ -368,6 +368,52 @@ it('keeps TODAY’s misses out of TODAY’s warm-up', function () {
     expect($misses)->toBe([]);
 });
 
+it('brings a reply missed in yesterday’s conversation back as today’s dialogue turn, not as a warm-up choice', function () {
+    // The live day 2 of 07.09 (наряд DAY-FIX-3): three replies missed in the dialogue came back the
+    // next morning as translation choices in the warm-up, that choice was the line's one show of
+    // the day, and the dialogue never dealt them — the day stood at «почти» with nothing left to
+    // deal. A line past its introduction is the conversation's to touch.
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
+    $planId = startedPlanFor($this, $token, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $first = planSession($this, $token, $planId);
+    $missed = null;
+    foreach ($first['tasks'] as $task) {
+        if ($task['stage'] === 'b' && $task['card']['exercise_mode'] === 'situational_say') {
+            $missed = $task;
+
+            break;
+        }
+    }
+    expect($missed)->not->toBeNull();
+    $termId = $missed['card']['term_id'];
+
+    $rest = array_values(array_filter(
+        $first['tasks'],
+        static fn (array $t): bool => $t['card']['term_id'] !== $termId || $t['card']['exercise_mode'] !== 'situational_say' || $t['stage'] !== 'b',
+    ));
+    $seq = answerTasks($this, $token, ['session_id' => $first['session_id'], 'tasks' => $rest]);
+    answerTasksWrong($this, $token, ['session_id' => $first['session_id'], 'tasks' => [$missed]], $seq);
+    ageHistory($user->id, days: 1);
+
+    $session = planSession($this, $token, $planId);
+    $ofLine = array_values(array_filter(
+        $session['tasks'],
+        static fn (array $t): bool => $t['card']['term_id'] === $termId,
+    ));
+
+    expect($ofLine)->not->toBeEmpty()
+        ->and(array_column($ofLine, 'source'))->not->toContain('warmup_miss')
+        ->and(array_column(array_column($ofLine, 'card'), 'exercise_mode'))->toContain('situational_say');
+
+    // …and the day closes on that turn — the line was the one thing holding it open.
+    answerTasks($this, $token, $session);
+    $day = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$planId}/days/1")->assertOk()->json('data');
+    expect($day['day_state'])->toBe('done');
+});
+
 /** Answer every gradable task of a session WRONG, in the order it was dealt. */
 function answerTasksWrong(object $ctx, string $token, array $session, int $seq = 1): int
 {

@@ -144,6 +144,16 @@ final readonly class PlanSittingPlanner
             if (isset($taken[$termId]) || $missed['standing']->answeredToday) {
                 continue;
             }
+            // A LINE PAST ITS INTRODUCTION IS NOT TOUCHED HERE (наряд DAY-FIX-3, стенд 07.09). Its
+            // stage shows ONCE a day (Ч.2.4), and a recognition card would BE that show: the line
+            // is «taken», the dialogue turn the ladder owes it today is never dealt, and a day whose
+            // line was missed yesterday cannot close today — the live day 2 stood at «почти» with
+            // three replies answered by a translation choice and nothing left to deal. The ladder's
+            // own card is the light touch: a missed reply comes back in today's conversation.
+            if ($missed['standing']->stage !== PlanStage::A
+                && PlanStageLadder::oneShowPerDay($this->kindOf($progress, $termId))) {
+                continue;
+            }
             $taken[$termId] = true;
             $misses++;
             $specs[] = ['term_id' => $termId, 'stage' => null, 'mode' => ExerciseMode::MultipleChoice,
