@@ -80,9 +80,10 @@ function answerTurn(object $ctx, string $token, array $session, array $task, str
 it('пока выбор не закрыт — ход раздаётся выбором', function () {
     [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    // Ступень B открывается В ТОТ ЖЕ день, что и знакомство (DAY-FIX-2, решение 266): разговор
-    // сцены стоит в посадке первого дня, и первое касание каждой реплики — выбор.
-    $session = planSession($this, $token, $planId);
+    // Ступень B открывается В ТОТ ЖЕ день, что и знакомство (канон DAY-FIX-2, приведено к нему
+    // нарядом DAY-GATE-1): разговор сцены — присест «Разговор» первого дня, и первое касание каждой
+    // реплики там — выбор.
+    [$session] = stageSession($this, $token, $planId, 1, 'conversation');
     $turns = dialogueTurns($session);
     expect($turns)->not->toBeEmpty();
     $termId = (string) $turns[0]['card']['term_id'];
@@ -91,6 +92,42 @@ it('пока выбор не закрыт — ход раздаётся выбо
     expect($ofTerm[0]['turn_level'])->toBe('choose')
         ->and($ofTerm[0]['card']['options'])->toBeArray()
         ->and($ofTerm[0]['card']['chips'])->toBeNull();
+})->todo(
+    'Ждёт ложных реплик от P2 (решение 296): у дня 1 чужих сцен нет — план пишется по одному дню, — '
+    . 'и пул вариантов хода меньше пола, поэтому выбор честно откатывается в сборку. Оживёт, когда '
+    . 'день будет приносить свои decoys.',
+);
+
+it('при голодном пуле ход раздаётся СБОРКОЙ и говорит, что именно сказать', function () {
+    // ДЕНЬ ОБЯЗАН БЫТЬ САМОДОСТАТОЧНЫМ (решение владельца 07.09). План на один день существует по
+    // канону, и чужих сцен у него нет: пул законных «неправильных» реплик собирается из своей сцены
+    // и после отсева «не отвечает на тот же вопрос» может не дотянуть до пола вариантов. Тогда
+    // карточка не отбивается и не превращается в монетку из двух — она приходит СБОРКОЙ
+    // (DAY-FIX-2, Ч.1.7), и на ней стоит строка-намерение: без неё человек смотрит на россыпь блоков
+    // и не понимает, чего от него хотят (живой прогон 07.09, скрины 5–7).
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    [$session] = stageSession($this, $token, $planId, 1, 'conversation');
+    $assembled = array_values(array_filter(
+        dialogueTurns($session),
+        static fn (array $t): bool => $t['turn_level'] === 'assemble',
+    ));
+
+    expect($assembled)->not->toBeEmpty();
+    foreach ($assembled as $task) {
+        expect($task['card']['options'])->toBeNull()
+            ->and($task['card']['chips'])->toBeArray()
+            // ЧТО СКАЗАТЬ — на языке поддержки, и это перевод именно этой реплики.
+            ->and($task['intent'])->toBeString()
+            ->and($task['intent'])->not->toBe('');
+    }
+
+    // …и на карточке ВЫБОРА этой строки нет никогда: там перевод назвал бы правильный вариант.
+    foreach (dialogueTurns($session) as $task) {
+        if ($task['turn_level'] === 'choose') {
+            expect($task['intent'])->toBeNull();
+        }
+    }
 });
 
 it('закрытый выбор возвращает реплику СБОРКОЙ на следующем показе', function () {
@@ -101,7 +138,7 @@ it('закрытый выбор возвращает реплику СБОРКО
     walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
 
-    $session = planSession($this, $token, $planId);
+    [$session] = stageSession($this, $token, $planId, 2, 'conversation');
     $turns = seamTurns($session);
     expect($turns)->not->toBeEmpty();
 
@@ -125,7 +162,7 @@ it('ошибка на сборке не откатывает ход в выбо�
     $seq = walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
 
-    $session = planSession($this, $token, $planId);
+    [$session, $seq] = stageSession($this, $token, $planId, 2, 'conversation', $seq);
     $turns = seamTurns($session);
     expect($turns)->not->toBeEmpty();
 
@@ -155,12 +192,17 @@ it('не хранит про строгость хода ни строки — �
     $seq = walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
 
-    $session = planSession($this, $token, $planId);
+    [$session] = stageSession($this, $token, $planId, 2, 'conversation', $seq);
     $turns = dialogueTurns($session);
     $termId = (string) $turns[0]['card']['term_id'];
+
+    // СЧИТАЕТСЯ ДЕЛЬТА, а не ноль: с наряда DAY-GATE-1 день закрывается прогоном, и прогон пишет в
+    // эту таблицу то, что доказано ГОЛОСОМ. Вопрос теста другой — добавляет ли сюда что-нибудь ХОД
+    // в разговоре, — и ответ обязан быть «ни строки».
+    $before = DB::table('learning_plan_term_stages')->where('plan_id', $planId)->count();
     answerTurn($this, $token, $session, turnsOfTerm($session, $termId)[0], (string) $turns[0]['card']['answer'], $seq);
 
-    expect(DB::table('learning_plan_term_stages')->where('plan_id', $planId)->count())->toBe(0);
+    expect(DB::table('learning_plan_term_stages')->where('plan_id', $planId)->count())->toBe($before);
     expect(collect(DB::select("SELECT column_name FROM information_schema.columns WHERE table_name = 'learning_plan_term_stages'"))
         ->pluck('column_name')->all())
         ->not->toContain('choice_streak');

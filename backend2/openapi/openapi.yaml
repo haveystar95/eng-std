@@ -2093,6 +2093,17 @@ paths:
                   data: { $ref: '#/components/schemas/PlanSession' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such plan or day for this learner }
+        '409':
+          description: >-
+            `plan_day_locked` — день ещё закрыт, пока не пройден предыдущий (наряд DAY-GATE-1,
+            решение 293); `meta.blocked_by_day` называет номер того, который держит, и клиент говорит
+            об этом своими словами. Тот же код — на этап, названный не по очереди (`meta.stage`).
+
+            `plan_sitting_empty` — собирать нечего (решение 295). На НЕ пройденном этапе такого быть
+            не может по построению: этап текущий ровно тогда, когда он что-то должен. Остаётся один
+            законный случай — спек есть, а карточку сборщик построить не смог, — и о нём сервер
+            говорит кодом, а не пустой лентой: живой прогон 07.09 оставил одну сессию из единственной
+            интро-карточки и шесть пустых незакрытых подряд.
 
   /plans/{planId}/days/{dayIndex}/session:
     post:
@@ -2105,6 +2116,25 @@ paths:
           in: path
           required: true
           schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stage:
+                  type: string
+                  enum: [retrain]
+                  description: >-
+                    КАКОЙ ЭТАП СОБРАТЬ. Без поля сервер собирает ТЕКУЩИЙ — это и есть «Продолжить».
+                    Клиент называет этап ровно в одном случае: `retrain` («Повторить ошибки»),
+                    единственная дверь не по порядку и единственное исключение из показа раз в день
+                    — один дополнительный показ промахнувшейся сегодня реплики (решение 295).
+                    Запертый этап отбивается 409, а не подменяется текущим молча.
+                session_id:
+                  type: string
+                  description: 'ULID, если посадку начинает клиент.'
       responses:
         '200':
           description: OK
@@ -2116,6 +2146,17 @@ paths:
                   data: { $ref: '#/components/schemas/PlanSession' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such plan or day for this learner }
+        '409':
+          description: >-
+            `plan_day_locked` — день ещё закрыт, пока не пройден предыдущий (наряд DAY-GATE-1,
+            решение 293); `meta.blocked_by_day` называет номер того, который держит, и клиент говорит
+            об этом своими словами. Тот же код — на этап, названный не по очереди (`meta.stage`).
+
+            `plan_sitting_empty` — собирать нечего (решение 295). На НЕ пройденном этапе такого быть
+            не может по построению: этап текущий ровно тогда, когда он что-то должен. Остаётся один
+            законный случай — спек есть, а карточку сборщик построить не смог, — и о нём сервер
+            говорит кодом, а не пустой лентой: живой прогон 07.09 оставил одну сессию из единственной
+            интро-карточки и шесть пустых незакрытых подряд.
 
   /plans/{planId}/scene-runs:
     post:
@@ -3014,6 +3055,37 @@ components:
         days:
           type: array
           items: { $ref: '#/components/schemas/PlanDay' }
+    PlanDayStage:
+      type: object
+      description: >-
+        ОДИН ЭТАП ДНЯ И ЕГО СОСТОЯНИЕ (наряд DAY-GATE-1, решение 291). «Этап пройден» значит ПРОЙДЕН
+        НАСКВОЗЬ: все его карточки показаны и отвечены — верно или нет. Лестница пары (A/B/C) и
+        прохождение дня разные вещи, и реплика, сказанная неверно, день не держит: она вернётся
+        завтра разогревом и швом, а сегодня её можно взять ещё раз через `retrain`.
+      required: [stage, state, opens_after]
+      properties:
+        stage:
+          type: string
+          enum: [material, conversation, rehearsal, retrain]
+          description: >-
+            `material` — «Слова и фразы» (разогрев, слова, связки, знакомство с репликами);
+            `conversation` — «Разговор» (ступень B реплик сцены, своей и шва); `rehearsal` — «Скажи
+            сам» (прогон сцены голосом); `retrain` — «Повторить ошибки», НЕОБЯЗАТЕЛЬНЫЙ: день не
+            держит, «пройден» от него не зависит, и в списке его нет, когда повторять нечего.
+        state:
+          type: string
+          enum: [done, current, locked]
+          description: >-
+            «пройдено» / «сейчас» / «после <предыдущего>». `current` ровно один на день, пока день не
+            пройден; `retrain` приходит с `current`, когда есть что повторять.
+        opens_after:
+          type: string
+          nullable: true
+          enum: [material, conversation, null]
+          description: >-
+            Этап, после которого этот открывается, — чтобы экран сказал «после разговора», а не
+            «закрыт». Едет всегда, а не только у запертого: «после чего» это свойство этапа. Null у
+            `material` и у `retrain`.
     PlanDay:
       type: object
       description: >-
@@ -3098,6 +3170,22 @@ components:
           description: >-
             THE SECOND SITTING: «Разговор» — the scene's dialogue, the seam's lines by assembly,
             the прогон — priced the same way. What the plan tab shows beside «материал пройден».
+        stages:
+          type: array
+          items: { $ref: '#/components/schemas/PlanDayStage' }
+          description: >-
+            ЭТАПЫ ДНЯ (наряд DAY-GATE-1, решение 291) — «Слова и фразы» → «Разговор» → «Скажи сам»,
+            в этом порядке, и `retrain` («Повторить ошибки») последней строкой, только когда есть что
+            повторять. Экран дня рисует по ним список и ставит «Продолжить» на `current`; вкладка
+            «План» читает отсюда же. Кодами, без подписей и без чисел: подписи клиентские, в двух
+            языках, а чисел «N из M» на экранах плана не бывает.
+        locked_by_day_index:
+          type: integer
+          nullable: true
+          description: >-
+            НОМЕР ДНЯ, КОТОРЫЙ ДЕРЖИТ ЭТОТ ЗАКРЫТЫМ, или null (наряд DAY-GATE-1, решение 293). День
+            N+1 открывается, только когда день N пройден. Запрос его сессии отбивается 409
+            `plan_day_locked` — замок стоит на сервере, а не только на экране.
         outcome:
           type: array
           items: { type: string }
@@ -3612,6 +3700,22 @@ components:
         minutes_left:
           type: integer
           description: 'The same number as `PlanDay.minutes_left` for this day.'
+        stage:
+          type: string
+          nullable: true
+          enum: [material, conversation, rehearsal, retrain, null]
+          description: >-
+            КАКОЙ ЭТАП ДНЯ ЭТА ПОСАДКА (наряд DAY-GATE-1, решение 295). Сессия собирается ТОЛЬКО из
+            текущего этапа — «Продолжить» ведёт в него, — а разогрев остаётся в любой: он ритуал дня,
+            а не этапа. Клиент называет этап в запросе (`stage` в теле) ровно в одном случае —
+            `retrain`, единственная дверь не по порядку. Null у дня-прогона перед событием: он не
+            день и этапов не имеет.
+        day_stages:
+          type: array
+          items: { $ref: '#/components/schemas/PlanDayStage' }
+          description: >-
+            ВСЕ ЭТАПЫ ЭТОГО ДНЯ — тот же список, что на `PlanDay.stages`, чтобы экран мог показать
+            «где я» не перечитывая план посреди занятия.
         scene_run:
           type: object
           description: >-
@@ -3713,6 +3817,15 @@ components:
                   choice has been closed; `say` takes everything away and
                   leaves the support-language hint and the microphone. Null on anything that is not
                   a turn of the learner's.
+              intent:
+                type: [string, 'null']
+                description: >-
+                  ЧТО ИМЕННО НАДО СКАЗАТЬ, на языке поддержки — перевод целевой реплики, и ТОЛЬКО на
+                  карточке СБОРКИ (наряд DAY-GATE-1, решение 297). Экран печатает его с префиксом
+                  «Скажи:»; префикс клиентский, строка серверная. Null на карточке ВЫБОРА: там
+                  перевод назвал бы правильный вариант и вернул ситуацию в перевод (канон §4, §13).
+                  На сборке вариантов нет, ответ строится по порядку слов — перевод здесь не ответ,
+                  а задание, и без него задание не сформулировано.
               origin: { type: [object, 'null'] }
               ordinal: { type: integer }
               of_steps: { type: integer }

@@ -344,11 +344,13 @@ it('deals the interlocutor’s own line for recognition only, and says whose it 
         ->and(DB::table('terms')->where('id', $roleLine)->value('tier'))->toBe('understand')
         ->and(DB::table('terms')->where('id', $learnerLine)->value('tier'))->toBe('speak');
 
-    $session = planSession($this, $token, $planId);
+    // ЗНАКОМСТВО И «УСЛЫШАЛ» ЛЕЖАТ В РАЗНЫХ ЭТАПАХ ДНЯ (наряд DAY-GATE-1): вопрос теста про
+    // ВСЕ касания реплики за день, поэтому день проходится целиком.
+    [$sittings] = walkDaySittings($this, $token, $planId, 1);
 
     $modes = [];
     $speakers = [];
-    foreach ($session['tasks'] as $task) {
+    foreach (tasksOfSittings($sittings) as $task) {
         $modes[$task['card']['term_id']][] = $task['card']['exercise_mode'];
         $speakers[$task['card']['term_id']] = $task['speaker'];
     }
@@ -798,7 +800,7 @@ it('moves the reported focus as days are passed', function () {
 // ── when a plan spends money ──────────────────────────────────────────────────────────────────
 
 /**
- * A short plan arrives whole — one day at a time, never side by side.
+ * ДЕНЬ N ПИШЕТСЯ ИЗ ДНЕЙ 1…N−1 — последовательность, а не веер.
  *
  * The sequence is the assertion. Day n is written FROM days 1…n−1: its terms go into the prompt's
  * KNOWN block so the model gives them fresh examples in the new situation instead of teaching them
@@ -806,9 +808,17 @@ it('moves the reported focus as days are passed', function () {
  * showed the cost — day 2's call finished before day 1's collection existed, its KNOWN block went
  * out empty, and not one of day 1's nine terms got its day-2 example. Nothing failed; the material
  * was simply written as if the previous day had not happened.
+ *
+ * С наряда DAY-GATE-1 очередь ведёт не «жадная ветка», а факт «день N пройден» (Ч.1.3) — но правило
+ * о ПОРЯДКЕ от этого не изменилось, и проверяется оно здесь.
  */
-it('writes a short plan whole, but strictly one day at a time', function () {
+it('пишет день 2 из дня 1 — строго после того, как день 1 пройден', function () {
     [, $token, $planId] = startedPlan($this);
+
+    // На старте написан только день 1; день 2 приходит по факту пройденного дня.
+    expect(DB::table('learning_plan_days')->where('plan_id', $planId)->whereNotNull('collection_id')->count())->toBe(1);
+
+    walkDay($this, $token, $planId, 1);
 
     $collections = DB::table('learning_plan_days')->where('plan_id', $planId)
         ->whereNotNull('collection_id')->orderBy('day_index')->pluck('collection_id', 'day_index')->all();
@@ -876,9 +886,10 @@ it('closes the day off the CLIENT’S complete, and queues day 2 from that alone
     expect($statuses()[1])->toBe('ready')
         ->and($statuses()[2])->toBe('pending');
 
-    // ONE sitting: build it, answer every task, and close it the way the app does.
-    $session = planSession($this, $token, $planId);
-    answerTasks($this, $token, $session);
+    // ПОСЛЕДНЯЯ ПОСАДКА ДНЯ — «Скажи сам» (наряд DAY-GATE-1): день закрывается ею, и закрыться он
+    // обязан на СОБСТВЕННОМ завершении, не дожидаясь сборки следующей.
+    [$session, $seq] = stageSession($this, $token, $planId, 1, 'rehearsal');
+    answerTasks($this, $token, $session, $seq);
 
     // …and before the completion, nothing has moved. This is the state the live run was stuck in.
     expect($statuses()[1])->toBe('ready')
@@ -886,6 +897,7 @@ it('closes the day off the CLIENT’S complete, and queues day 2 from that alone
         ->and(DB::table('study_sessions')->where('id', $session['session_id'])->value('ended_at'))
         ->toBeNull();
 
+    recordSceneRun($this, $token, $planId, 1, $session);
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson("/api/v1/study/sessions/{$session['session_id']}/complete")
         ->assertOk();
@@ -925,111 +937,50 @@ it('builds a day on demand, idempotently, and refuses to run more than two ahead
 // ── a day opened out of turn ──────────────────────────────────────────────────────────────────
 
 /**
- * Э3.2 OF E2E-SIM-2, AS A TEST — the owner's own live repro, and the наряд's «падает на старом
- * поведении» case.
+ * Э3.2 OF E2E-SIM-2 — ЗАКРЫТО ЗАМКОМ, а не строгой раздачей (наряд DAY-GATE-1, Ч.1.2).
  *
- * On the stand: day 1 left one card short of closing, day 2 opened from the plan screen's «можно
- * открыть раньше». What came back was seventeen tasks with `strict = false`, `source = soft`,
- * `stage = null`, not one `intro` among them, six `listening` cards dictating sentences the learner
- * had never been shown, and a card of the `numbers` shelf that no session is supposed to deal. The
- * screen captioned the first of them «СТУПЕНЬ A · ПОВТОРЕНИЕ». The same thing is in the owner's
- * production log for the evening of 03.09, four sittings of it.
+ * На стенде: день 1 не дошёл одной карточки до закрытия, день 2 открыли с экрана плана «можно
+ * открыть раньше», и пришло семнадцать задач `strict = false`, `stage = null`, шесть диктовок
+ * фразами, которых человек не видел. Наряд DAY-FIX-2 починил это раздачей: день, открытый вперёд,
+ * стал строгим. Наряд DAY-GATE-1 убирает саму дверь — «открыть раньше» больше нет: пока день N не
+ * пройден, дня N+1 не существует ни для экрана, ни для сервера.
  *
- * Every assertion below fails on that payload.
+ * Замок стоит НА СЕРВЕРЕ: живой прогон 07.09 показал вкладку, где день 2 открывался поверх
+ * незакрытого дня 1, потому что «открывается ли строка» решал клиент.
  */
-it('deals a day opened ahead of the focus its own stage A — strictly, intro first, no В-modes (Э3.2)', function () {
-    [, $token, $planId] = startedPlan($this);
-
-    // The focus is still day 1 — nothing has been answered — and day 2 is asked for anyway.
-    $session = planSession($this, $token, $planId, 2);
-
-    expect($session['strict'])->toBeTrue()
-        ->and($session['focus_day_index'])->toBe(1)
-        ->and($session['day_index'])->toBe(2)
-        ->and($session['tasks'])->not->toBeEmpty();
-
-    $modes = [];
-    $introOf = [];
-    $seenOf = [];
-    foreach ($session['tasks'] as $task) {
-        $mode = (string) $task['card']['exercise_mode'];
-        $termId = (string) $task['card']['term_id'];
-        $modes[] = $mode;
-        $seenOf[$termId] = ($seenOf[$termId] ?? 0) + 1;
-        if ($mode === 'intro') {
-            // FIRST FOR ITS OWN CARD, and once. `$seenOf` is the ordinal this card has reached.
-            expect($seenOf[$termId])->toBe(1);
-            $introOf[$termId] = ($introOf[$termId] ?? 0) + 1;
-        }
-
-        // Stage A, in the plan's own ladder, on every card of the sitting — the day's own and the
-        // rescue kit's. The kit is here because it has not been answered today (день 1 не открывали)
-        // and «разогрев каждый день» does not care which day the learner opened; it stands on stage
-        // A for the same reason the day does, so «только A-режимы» covers both — plus the stage B a
-        // scene line opens behind its intro the same day (DAY-FIX-2).
-        expect($task['stage'])->toBeIn(['a', 'b']);
-
-        if ($task['section'] === 'warmup') {
-            expect($task['shelf'])->toBe('rescue')
-                ->and($task['source'])->toBe('warmup');
-
-            continue;
-        }
-
-        expect($task['section'])->toBe('day')
-            ->and($task['source'])->toBe('new')
-            ->and($task['from_day_index'])->toBe(2);
-    }
-
-    // The day's own cards are the bulk of it, and the seam is empty — a day opened early revises
-    // nothing (there is nothing behind it that has closed a stage).
-    $sections = array_column($session['tasks'], 'section');
-    expect($sections)->toContain('day')
-        ->and($sections)->not->toContain('review');
-
-    // Every card of the sitting was introduced, exactly once.
-    expect($introOf)->toEqual(array_map(static fn (): int => 1, $introOf))
-        ->and(count($introOf))->toBe(count($seenOf));
-
-    // The keyboard trainers a soft run reached for are out of a plan for good (DAY-FIX-2); the
-    // situational ones are the scene's own conversation, which opens the day the scene is met.
-    foreach (['listening', 'typing', 'cloze', 'dictation'] as $forbidden) {
-        expect($modes)->not->toContain($forbidden);
-    }
-
-    // …and no card off the `numbers` shelf, which no session deals yet (канон §6).
-    foreach ($session['tasks'] as $task) {
-        expect($task['shelf'] ?? null)->not->toBe('numbers');
-        expect($task['kind'] ?? null)->not->toBe('number');
-    }
-
-    // STRICT = STUDY. The answers of a day opened early are ordinary reviews that close its stage.
-    expect(DB::table('study_sessions')->where('id', $session['session_id'])->value('is_practice'))->toBeFalsy();
-});
-
-it('closes a day opened early when its stage A closes, and moves the focus onto it', function () {
-    // The other half of «фокус и закрытие дней работают как у фокусного»: an early day is not a
-    // read-through any more, so walking it has to COUNT. Under the soft run it counted for nothing —
-    // `ladder_step` came back null on every answer and no stage ever closed.
+it('отказывает в дне, открытом вперёд фокуса, и ничего при этом не создаёт (Э3.2)', function () {
     [$user, $token, $planId] = startedPlan($this);
 
-    $seq = 1;
-    for ($i = 0; $i < 8; $i++) {
-        $session = planSession($this, $token, $planId, 2);
-        if ($session['tasks'] === []) {
-            break;
-        }
-        $seq = answerTasks($this, $token, $session, $seq);
-    }
+    $sessionsBefore = DB::table('study_sessions')->where('user_id', $user->id)->count();
 
-    expect(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 2)->value('status'))
+    $refused = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$planId}/days/2/session")
+        ->assertStatus(409);
+
+    expect($refused->json('code'))->toBe('plan_day_locked')
+        ->and($refused->json('meta.blocked_by_day'))->toBe(1)
+        // ОТКАЗ НЕ СОЗДАЁТ ПОСАДКУ: шесть пустых незакрытых сессий подряд — это ровно то, что
+        // живой прогон 07.09 оставил в базе.
+        ->and(DB::table('study_sessions')->where('user_id', $user->id)->count())->toBe($sessionsBefore);
+});
+
+it('открывает день 2 только после дня 1 — и тогда он проходится и закрывается как обычный', function () {
+    // Вторая половина того же правила: замок не отнимает у дня 2 ничего, кроме очереди. Как только
+    // день 1 пройден насквозь, день 2 пишется, открывается и закрывается ровно так же.
+    [, $token, $planId] = startedPlan($this);
+
+    walkDay($this, $token, $planId, 1);
+    walkDay($this, $token, $planId, 2);
+
+    expect(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('status'))
         ->toBe('done')
-        // Day 1 was never opened, so the focus stays on it: «пройден» is a fact about a day, and
-        // the focus is the first day that is not.
-        ->and(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('status'))
-        ->not->toBe('done');
+        ->and(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 2)->value('status'))
+        ->toBe('done');
 
-    expect(planSession($this, $token, $planId)['focus_day_index'])->toBe(1);
+    // …и фокус ушёл дальше: «пройден» — это факт про день, а фокус — первый день, который не пройден.
+    $plan = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$planId}")->assertOk()->json('data');
+    expect($plan['focus_day_index'])->toBeGreaterThan(2);
 });
 
 it('answers `scope=plan` on the ordinary session path with the plan’s own day', function () {
@@ -1081,12 +1032,17 @@ it('gives every reply of a day its assembly step — four, not three (С-7)', fu
     // said 3, and a stage that owed three steps closed on three.
     [, $token, $planId] = startedPlan($this);
 
-    $session = planSession($this, $token, $planId, 1);
+    // ТРИ КАСАНИЯ РЕПЛИКИ ЛЕЖАТ В ДВУХ ЭТАПАХ ДНЯ (наряд DAY-GATE-1): знакомство и сборка — в
+    // «Словах и фразах», ход в разговоре — в «Разговоре». Вопрос теста про день целиком.
+    [$sittings] = walkDaySittings($this, $token, $planId, 1);
 
     $seen = [];
-    foreach ($session['tasks'] as $task) {
+    foreach (tasksOfSittings($sittings) as $task) {
         if ($task['section'] !== 'day' || ! in_array($task['shelf'] ?? null, ['say', 'ask'], true)) {
             continue;
+        }
+        if ($task['section_code'] === 'scene_run') {
+            continue; // «Скажи сам» — это ступень C, а не шаг ступени B
         }
         $seen[$task['card']['term_id']][] = [$task['card']['exercise_mode'], $task['turn_level'], $task['section_code']];
         // A is the intro and the assembly that closes it (DAY-FIX-3, Ч.3.1); B is two situational

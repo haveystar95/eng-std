@@ -88,9 +88,16 @@ it('opens a scene with the pieces, the introduction — and the conversation, th
     // THE SCENE IS SPOKEN THE DAY IT IS MET (DAY-FIX-2, DECISIONS п. 266): the introduction first,
     // then the conversation, in one sitting — «гейт B без A» still holds, A simply closes on the
     // intro and B opens behind it the same day.
-    expect(sectionRuns($session))->toBe([S::WARMUP, S::WORDS, S::DIALOGUE_INTRO, S::DIALOGUE])
+    // ПОРЯДОК КАНОНА ДЕРЖИТСЯ ПО ДНЮ, а не внутри одной посадки (наряд DAY-GATE-1, Ч.1.4):
+    // «разогрев → слова → знакомство» это присест «Слова и фразы», «диалог» — следующий этап.
+    expect(sectionRuns($session))->toBe([S::WARMUP, S::WORDS, S::DIALOGUE_INTRO])
         ->and($session['dialogues'])->toHaveCount(1)
         ->and($session['dialogues'][0]['day_index'])->toBe(1);
+
+    answerTasks($this, $token, $session);
+    $conversation = planSession($this, $token, $planId, 1);
+    expect($conversation['stage'])->toBe('conversation')
+        ->and(sectionRuns($conversation))->toBe([S::DIALOGUE]);
 });
 
 it('plays yesterday’s scene as a conversation, whole and in order', function () {
@@ -99,7 +106,8 @@ it('plays yesterday’s scene as a conversation, whole and in order', function (
     walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
 
-    $session = planSession($this, $token, $planId);
+    // ЛЕНТА РАЗГОВОРА — присест «Разговор» (наряд DAY-GATE-1).
+    [$session] = stageSession($this, $token, $planId, 2, 'conversation');
     expect($session['day_index'])->toBe(2);
 
     // TWO CONVERSATIONS — scene 2's own (met and spoken today, DAY-FIX-2) and scene 1's, back in
@@ -131,8 +139,10 @@ it('plays yesterday’s scene as a conversation, whole and in order', function (
         // TODAY'S SCENE, THEN THE SEAM (PLAN-FIX-7), and each of them in канон §10's own order.
         ->and(orderedWithinScene($session, 2))->toBeTrue()
         ->and(orderedWithinScene($session, 1))->toBeTrue()
-        ->and(array_search(S::DIALOGUE_INTRO, sectionRuns($session), true))
-        ->toBeLessThan(array_search(S::DIALOGUE, sectionRuns($session), true));
+        // ЗНАКОМСТВО ОСТАЛОСЬ В ПРЕДЫДУЩЕМ ЭТАПЕ (наряд DAY-GATE-1): «раньше диалога» это теперь
+        // свойство ПОРЯДКА ЭТАПОВ дня, а не порядка секций внутри одной посадки, и присест
+        // «Разговор» знакомства не содержит вовсе.
+        ->and(sectionRuns($session))->not->toContain(S::DIALOGUE_INTRO);
 
     // THE CONVERSATION IS WHOLE and the sitting is not: the screen plays every turn and hands the
     // learner a move only where a task with the same `term_id` exists.
@@ -192,7 +202,7 @@ it('builds a conversation for a day written before the prompt wrote one', functi
     // The day as v0.4 left it: material, no chain.
     DB::table('learning_plan_days')->where('plan_id', $planId)->update(['dialogue' => null]);
 
-    $session = planSession($this, $token, $planId);
+    [$session] = stageSession($this, $token, $planId, 2, 'conversation');
 
     $yesterday = collect($session['dialogues'])->firstWhere('day_index', 1);
     expect($yesterday)->not->toBeNull()

@@ -45,13 +45,27 @@ function situationalTasks(array $session): array
     ));
 }
 
+/**
+ * ВСЁ, ЧТО ДЕНЬ 2 РАЗДАЛ, одним списком — и шов, и диалог (наряд DAY-GATE-1).
+ *
+ * Ступень B живёт в присесте «Разговор», а он открывается только после «Слов и фраз», поэтому
+ * увидеть её одной посадкой больше нельзя: тест обязан пройти день так же, как человек. Сессия здесь
+ * не подделка — это ровно те карточки, которые получит телефон.
+ */
+function situationalDayTasks(object $ctx, array $f, int $dayIndex = 2): array
+{
+    [$sittings] = walkDaySittings($ctx, $f['token'], $f['plan'], $dayIndex, $f['seq']);
+
+    return tasksOfSittings($sittings);
+}
+
 it('deals each shelf its own situational trainer at stage B, and nothing else at B', function () {
     $f = situationalFixture($this);
 
-    // Day 1's own cards come back as the seam of day 2, standing on stage B.
-    $session = planSession($this, $f['token'], $f['plan']);
+    // Day 1's own cards come back as the seam of day 2, standing on stage B — в присесте
+    // «Разговор», поэтому день проходится по этапам, а не читается одной посадкой.
     $byMode = [];
-    foreach ($session['tasks'] as $task) {
+    foreach (situationalDayTasks($this, $f) as $task) {
         if ($task['stage'] !== 'b') {
             continue;
         }
@@ -69,10 +83,9 @@ it('deals each shelf its own situational trainer at stage B, and nothing else at
 
 it('puts the понимаю card on its second touch and never asks it to be produced', function () {
     $f = situationalFixture($this);
-    $session = planSession($this, $f['token'], $f['plan']);
 
     $hear = array_values(array_filter(
-        $session['tasks'],
+        situationalDayTasks($this, $f),
         static fn (array $t): bool => ($t['shelf'] ?? null) === 'hear' && $t['stage'] === 'b',
     ));
 
@@ -185,7 +198,9 @@ it('grades a tapped meaning by ID, and never drops it as a stale ladder answer',
     // stale ladder answer. Read off the rung, every second touch of the понимаю tier would have
     // vanished from the log without a single test going red.
     $f = situationalFixture($this);
-    $session = planSession($this, $f['token'], $f['plan']);
+    $material = planSession($this, $f['token'], $f['plan'], 2);
+    $f['seq'] = answerTasks($this, $f['token'], $material, $f['seq']);
+    $session = planSession($this, $f['token'], $f['plan'], 2);
 
     $hear = array_values(array_filter(
         $session['tasks'],
@@ -245,7 +260,11 @@ it('deals the day in the canon’s order: warm-up, pieces, meeting the scene’s
     profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
     $planId = startedPlanFor($this, $token, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    $session = planSession($this, $token, $planId);
+    // ДЕНЬ — ЭТО ЭТАПЫ (наряд DAY-GATE-1): порядок канона держится по всему дню, а не внутри одной
+    // посадки. «Разогрев → слова → знакомство» это присест «Слова и фразы», «диалог» — «Разговор».
+    $f = ['token' => $token, 'plan' => $planId, 'seq' => 1];
+    $dayTasks = situationalDayTasks($this, $f, 1);
+    $session = ['tasks' => $dayTasks, 'dialogues' => [1]];
 
     // THE SERVER NAMES THE PART, and the client no longer derives it from the shelf (наряд DAY-2,
     // Ч.1.4). It cannot: «Ты ответишь» at stage A is the introduction and the same card at stage B
@@ -268,8 +287,9 @@ it('deals the day in the canon’s order: warm-up, pieces, meeting the scene’s
         // Day 1 of a plan: the kit, the pieces, meeting the scene's lines — and the conversation
         // behind them, the same day (DAY-FIX-2, DECISIONS п. 266 — the scene is spoken the day it
         // is met; the intro still comes first).
-        ->and($seen)->toBe([S::WARMUP, S::WORDS, S::DIALOGUE_INTRO, S::DIALOGUE])
-        ->and($session['dialogues'])->toHaveCount(1);
+        // Первый день плана: набор, куски, знакомство с репликами сцены — и разговор за ними, в тот
+        // же день (решение 266, приведённое к канону нарядом DAY-GATE-1), а следом прогон голосом.
+        ->and($seen)->toBe([S::WARMUP, S::WORDS, S::DIALOGUE_INTRO, S::DIALOGUE, S::SCENE_RUN]);
 });
 
 // ── Ч-6: присесты ────────────────────────────────────────────────────────────────────────────
@@ -377,7 +397,10 @@ it('brings a reply missed in yesterday’s conversation back as today’s dialog
     profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
     $planId = startedPlanFor($this, $token, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    $first = planSession($this, $token, $planId);
+    // Материал — целиком, разговор — с одним промахом: ступень B живёт в присесте «Разговор».
+    $seq = answerTasks($this, $token, planSession($this, $token, $planId, 1));
+    $first = planSession($this, $token, $planId, 1);
+
     $missed = null;
     foreach ($first['tasks'] as $task) {
         if ($task['stage'] === 'b' && $task['card']['exercise_mode'] === 'situational_say') {
@@ -393,13 +416,15 @@ it('brings a reply missed in yesterday’s conversation back as today’s dialog
         $first['tasks'],
         static fn (array $t): bool => $t['card']['term_id'] !== $termId || $t['card']['exercise_mode'] !== 'situational_say' || $t['stage'] !== 'b',
     ));
-    $seq = answerTasks($this, $token, ['session_id' => $first['session_id'], 'tasks' => $rest]);
+    $seq = answerTasks($this, $token, ['session_id' => $first['session_id'], 'tasks' => $rest], $seq);
     answerTasksWrong($this, $token, ['session_id' => $first['session_id'], 'tasks' => [$missed]], $seq);
     ageHistory($user->id, days: 1);
 
-    $session = planSession($this, $token, $planId);
+    // СЕГОДНЯШНИЙ ДЕНЬ ЦЕЛИКОМ, по этапам: слово, закрывшее вчера ступень A, сегодня стоит на B и
+    // снова принадлежит присесту «Слова и фразы», поэтому ход реплики приходит следующим присестом.
+    [$sittings] = walkDaySittings($this, $token, $planId, 1, $seq + 1);
     $ofLine = array_values(array_filter(
-        $session['tasks'],
+        tasksOfSittings($sittings),
         static fn (array $t): bool => $t['card']['term_id'] === $termId,
     ));
 
@@ -408,36 +433,7 @@ it('brings a reply missed in yesterday’s conversation back as today’s dialog
         ->and(array_column(array_column($ofLine, 'card'), 'exercise_mode'))->toContain('situational_say');
 
     // …and the day closes on that turn — the line was the one thing holding it open.
-    answerTasks($this, $token, $session);
     $day = $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson("/api/v1/plans/{$planId}/days/1")->assertOk()->json('data');
     expect($day['day_state'])->toBe('done');
 });
-
-/** Answer every gradable task of a session WRONG, in the order it was dealt. */
-function answerTasksWrong(object $ctx, string $token, array $session, int $seq = 1): int
-{
-    $reviews = [];
-    foreach ($session['tasks'] as $task) {
-        $card = $task['card'];
-        if ($card['exercise_mode'] === 'intro') {
-            continue;
-        }
-        $reviews[] = [
-            'id' => (string) \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
-            'term_id' => $card['term_id'],
-            'exercise_mode' => $card['exercise_mode'],
-            'response' => 'решительно не тот ответ',
-            'answered_at' => now()->toIso8601String(),
-            'client_seq' => $seq++,
-            'session_id' => $session['session_id'],
-            'ladder_step' => $card['ladder_step'],
-        ];
-    }
-
-    $ctx->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/reviews/batch', ['reviews' => $reviews])
-        ->assertOk();
-
-    return $seq;
-}

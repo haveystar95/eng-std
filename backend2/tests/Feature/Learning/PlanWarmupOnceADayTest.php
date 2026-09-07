@@ -127,12 +127,18 @@ it('closes the introduction of a card an earlier plan had already shown', functi
     expect($reIntroduced)->toBe([], 'a card shown in this plan is introduced once');
 });
 
-it('passes a day whose every scene card was answered, in one sitting', function () {
+it('passes a day whose every scene card was answered — все три этапа насквозь', function () {
     [, $token, $planId] = startedPlan($this);
 
-    answerTasks($this, $token, planSession($this, $token, $planId, 1));
+    // ДЕНЬ — ЭТО ТРИ ЭТАПА (наряд DAY-GATE-1): «Слова и фразы», «Разговор», «Скажи сам». Раньше он
+    // закрывался одной посадкой на ступени A, и это была та самая дыра, из-за которой прогон
+    // голосом человеку не предлагали ни разу (живой прогон 07.09).
+    walkDay($this, $token, $planId, 1);
 
-    // The focus moves off day 1 the moment the scene has closed stage A — the kit does not hold it
-    // open, and neither does a card whose intro was shown.
-    expect(planSession($this, $token, $planId)['focus_day_index'])->toBeGreaterThan(1);
+    // Фокус уходит с дня 1: спасательный набор его не держит, и карточка с показанным интро — тоже.
+    $plan = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$planId}")->assertOk()->json('data');
+
+    expect($plan['focus_day_index'])->toBeGreaterThan(1)
+        ->and(collect($plan['days'])->firstWhere('index', 1)['day_state'])->toBe('done');
 });

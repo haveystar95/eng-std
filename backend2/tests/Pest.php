@@ -526,6 +526,40 @@ function answerTasks(object $ctx, string $token, array $session, int $seq = 1, ?
 }
 
 /**
+ * Ответить на КАЖДУЮ оцениваемую задачу посадки НЕВЕРНО, в порядке раздачи.
+ *
+ * Живёт здесь, а не рядом с одним файлом: промах — вход сразу нескольких правил (разогрев вчерашних
+ * промахов, «Повторить ошибки», прохождение этапа насквозь), а Pest гоняет каждый файл своим
+ * процессом — helper, объявленный у соседа, это helper, которого не существует.
+ */
+function answerTasksWrong(object $ctx, string $token, array $session, int $seq = 1): int
+{
+    $reviews = [];
+    foreach ($session['tasks'] as $task) {
+        $card = $task['card'];
+        if ($card['exercise_mode'] === 'intro') {
+            continue;
+        }
+        $reviews[] = [
+            'id' => (string) \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+            'term_id' => $card['term_id'],
+            'exercise_mode' => $card['exercise_mode'],
+            'response' => 'решительно не тот ответ',
+            'answered_at' => now()->toIso8601String(),
+            'client_seq' => $seq++,
+            'session_id' => $session['session_id'],
+            'ladder_step' => $card['ladder_step'],
+        ];
+    }
+
+    $ctx->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => $reviews])
+        ->assertOk();
+
+    return $seq;
+}
+
+/**
  * PUSH THE LEARNER'S HISTORY BACK `$days` DAYS — the same trick `qa:time-travel` plays on a real
  * account, and the reason a plan test uses it instead of moving the clock.
  *
@@ -554,20 +588,130 @@ function ageHistory(string $userId, int $days): void
 }
 
 /**
- * Play day `$dayIndex` until the focus leaves it — the session's card budget can be smaller than the
- * day's whole checklist, so «пройти день» is more than one sitting and the test has to say so.
+ * Play day `$dayIndex` until the focus leaves it.
+ *
+ * С наряда DAY-GATE-1 день — это ЭТАПЫ, и каждый из них своя посадка: «Слова и фразы», «Разговор»,
+ * «Скажи сам». Поэтому helper и раньше крутил цикл (бюджет присеста мог быть меньше чек-листа), а
+ * теперь цикл — это ещё и переход по этапам, ровно как у человека: закончил, вернулся на экран дня,
+ * нажал «Продолжить».
+ *
+ * ПРОГОН ЗАКРЫВАЕТСЯ СВОИМ СОБЫТИЕМ, а не ответами на карточки: `POST /scene-runs` — это то, что
+ * телефон шлёт в конце «Скажи сам», и без него этап честно остаётся текущим. Тест, который просто
+ * отвечал на карточки говорения, крутился бы по нему вечно — и это правильно: день не пройден, пока
+ * человек не проговорил сцену.
  */
 function walkDay(object $ctx, string $token, string $planId, int $dayIndex, int $seq = 1): int
 {
+    [, $seq] = walkDaySittings($ctx, $token, $planId, $dayIndex, $seq);
+
+    return $seq;
+}
+
+/**
+ * ТО ЖЕ САМОЕ, НО С ПОСАДКАМИ НА РУКАХ — что день фактически раздал, по этапам.
+ *
+ * С наряда DAY-GATE-1 «что раздаёт день» больше не помещается в одну посадку: «Слова и фразы»,
+ * «Разговор» и «Скажи сам» — три захода, и увидеть карточки разговора можно только пройдя материал.
+ * Тест, который спрашивает «получила ли реплика свой ход», обязан пройти день так же, как человек.
+ *
+ * @return array{0: list<array<string, mixed>>, 1: int}  посадки в порядке этапов, и следующий `client_seq`
+ */
+function walkDaySittings(object $ctx, string $token, string $planId, int $dayIndex, int $seq = 1): array
+{
+    $sittings = [];
     for ($i = 0; $i < 8; $i++) {
-        $session = planSession($ctx, $token, $planId);
-        if ($session['focus_day_index'] !== $dayIndex || $session['tasks'] === []) {
+        // ДЕНЬ НАЗЫВАЕТСЯ ЯВНО. Раньше helper просил «сессию фокуса» и по нему же понимал, что день
+        // кончился, — но фокус уходит с дня в ТОТ ЖЕ запрос, который дописывает вердикт, и следующий
+        // заход просил бы уже завтрашний день, которого ещё нет.
+        $plan = $ctx->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/plans/{$planId}")->assertOk()->json('data');
+        foreach ($plan['days'] as $row) {
+            if ($row['index'] === $dayIndex && $row['day_state'] === 'done') {
+                return [$sittings, $seq];
+            }
+        }
+
+        $session = planSession($ctx, $token, $planId, $dayIndex);
+        if ($session['tasks'] === []) {
+            break;
+        }
+        $sittings[] = $session;
+        $seq = answerTasks($ctx, $token, $session, $seq);
+        if (($session['stage'] ?? null) === 'rehearsal') {
+            recordSceneRun($ctx, $token, $planId, $dayIndex, $session);
+        }
+    }
+
+    return [$sittings, $seq];
+}
+
+/**
+ * ДОЙТИ ДО НАЗВАННОГО ЭТАПА и вернуть его посадку — пройдя всё, что стоит перед ним.
+ *
+ * «Разговор» открывается только после «Слов и фраз», «Скажи сам» — после разговора (наряд
+ * DAY-GATE-1, Ч.1.1), поэтому тест, который смотрит на карточки диалога, обязан сначала пройти
+ * материал. Ровно то же самое делает человек, и ровно поэтому helper не подделывает состояние.
+ *
+ * @return array{0: array<string, mixed>, 1: int}  посадка нужного этапа и следующий `client_seq`
+ */
+function stageSession(object $ctx, string $token, string $planId, int $dayIndex, string $stage, int $seq = 1): array
+{
+    for ($i = 0; $i < 6; $i++) {
+        $session = planSession($ctx, $token, $planId, $dayIndex);
+        if (($session['stage'] ?? null) === $stage) {
+            return [$session, $seq];
+        }
+        if ($session['tasks'] === []) {
             break;
         }
         $seq = answerTasks($ctx, $token, $session, $seq);
+        if (($session['stage'] ?? null) === 'rehearsal') {
+            recordSceneRun($ctx, $token, $planId, $dayIndex, $session);
+        }
     }
 
-    return $seq;
+    throw new RuntimeException("day {$dayIndex} never reached stage «{$stage}»");
+}
+
+/**
+ * Все задачи, которые день раздал за свои этапы, одним списком — в порядке, в котором они пришли.
+ *
+ * @param  list<array<string, mixed>>  $sittings
+ * @return list<array<string, mixed>>
+ */
+function tasksOfSittings(array $sittings): array
+{
+    $tasks = [];
+    foreach ($sittings as $sitting) {
+        foreach ($sitting['tasks'] as $task) {
+            $tasks[] = $task;
+        }
+    }
+
+    return $tasks;
+}
+
+/** «Скажи сам» пройден: каждый ход сцены сказан голосом — то, что шлёт телефон в конце прогона. */
+function recordSceneRun(object $ctx, string $token, string $planId, int $dayIndex, array $session): void
+{
+    $turns = [];
+    foreach ($session['tasks'] as $task) {
+        if (($task['section_code'] ?? null) !== 'scene_run') {
+            continue;
+        }
+        $turns[] = ['term_id' => $task['card']['term_id'], 'outcome' => 'said'];
+    }
+    if ($turns === []) {
+        return;
+    }
+
+    $ctx->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$planId}/scene-runs", [
+            'scene_index' => $dayIndex,
+            'day_index' => $dayIndex,
+            'turns' => $turns,
+        ])
+        ->assertSuccessful();
 }
 
 // ── the hand-written day-scenes the gates are judged on ──────────────────────────────────────

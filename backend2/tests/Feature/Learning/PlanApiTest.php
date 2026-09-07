@@ -390,15 +390,15 @@ it('scopes the day example to the day collection, never to the term at large', f
 });
 
 /**
- * A SHORT plan is written whole at the start — and the final day is still never sent to a model.
+ * ПЛАН ПИШЕТСЯ ПО ОДНОМУ ДНЮ — на старте только первый (наряд DAY-GATE-1, Ч.1.3).
  *
- * The «one day at a time» rule PLAN-1a shipped is now the rule for LONG plans only
- * ({@see \App\Modules\Learning\Domain\Service\PlanGenerationPolicy}): three teaching days or fewer
- * and there is no meaningful abandonment window to protect, while making the learner watch a
- * spinner on day 2 is a real cost. The long-plan half of the split is asserted in PlanSessionTest,
- * where a day can actually be walked to `done`.
+ * Правило «короткий план пишется целиком» отменено решением владельца 07.09 вместе с тем, ради чего
+ * существовало: оно покупало отсутствие спиннера на дне 2 и продавало деньги за дни, до которых
+ * можно не дойти (живой прогон написал три дня за полторы минуты, пройден был один). Следующий день
+ * встаёт в очередь по факту «день N пройден» — это и проверяет PlanSessionTest, где день можно
+ * реально пройти. Последний день модели не отправляется никогда.
  */
-it('writes a short plan whole at the start, and never sends the final day to a model', function () {
+it('writes only the first day at the start, and never sends the final day to a model', function () {
     [$user, $token] = learner();
     profileFor($user, ['native_language' => 'ru']);
 
@@ -406,12 +406,12 @@ it('writes a short plan whole at the start, and never sends the final day to a m
     outlinePlan($this, $token, $plan['id']);
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
 
-    // Two teaching days, so the whole plan is eager. The queue is `sync`, so both were written
-    // inside the request.
+    // Очередь `sync`, поэтому день 1 написан внутри запроса. День 2 ждёт, пока день 1 пройдут.
     $days = DB::table('learning_plan_days')->where('plan_id', $plan['id'])->orderBy('day_index')->get();
 
     expect($days[0]->status)->toBe('ready')
-        ->and($days[1]->status)->toBe('ready')
+        ->and($days[1]->status)->toBe('pending')
+        ->and($days[1]->collection_id)->toBeNull()
         ->and($days[2]->status)->toBe('pending')
         ->and($days[2]->collection_id)->toBeNull()
         ->and($days[2]->generation_attempts)->toBe(0);
@@ -712,12 +712,14 @@ it('leaves a ledger row for every paid call the plan made', function () {
     // The pair court's judgements are ledger rows of their own (DAY-FIX-2, Ч.1.3) — one per pair,
     // five pairs a day — and they are counted apart from the day calls they serve.
     $judgements = $all->where('prompt_version', \App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary::PAIR_JUDGE_VERSION);
-    expect($judgements)->toHaveCount(10);
+    // ПЯТЬ, А НЕ ДЕСЯТЬ: на старте пишется ОДИН день (наряд DAY-GATE-1, Ч.1.3), и суд пар судит
+    // пары этого одного. Это и есть та экономия, ради которой отменена жадная ветка.
+    expect($judgements)->toHaveCount(5);
     $rows = $all->where('prompt_version', '!=', \App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary::PAIR_JUDGE_VERSION)->values();
 
-    // One outline + two days. Every one of them is a call that cost money on the live model, and
+    // One outline + ONE day. Every one of them is a call that cost money on the live model, and
     // the PLAN-1a run proved what «recorded only in the request log» is worth.
-    expect($rows)->toHaveCount(3)
+    expect($rows)->toHaveCount(2)
         ->and($all->pluck('purpose')->unique()->all())->toBe(['plan'])
         ->and($all->pluck('user_id')->unique()->all())->toBe([$user->id])
         // Two versions and not one: the ledger says which prompt each call actually used rather

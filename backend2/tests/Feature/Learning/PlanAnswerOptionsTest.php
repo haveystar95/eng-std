@@ -51,7 +51,8 @@ it('никогда не предлагает реплику собеседник
     walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
 
-    $session = planSession($this, $token, $planId);
+    // ДИАЛОГ ЖИВЁТ В ПРИСЕСТЕ «РАЗГОВОР» (наряд DAY-GATE-1): до него надо дойти, пройдя материал.
+    [$session] = stageSession($this, $token, $planId, 2, 'conversation');
     $turns = array_values(array_filter(
         $session['tasks'],
         static fn (array $t): bool => $t['section_code'] === S::DIALOGUE
@@ -75,7 +76,8 @@ it('на каждом ходу сцены ровно один вариант о�
     walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
 
-    $session = planSession($this, $token, $planId);
+    // ДИАЛОГ ЖИВЁТ В ПРИСЕСТЕ «РАЗГОВОР» (наряд DAY-GATE-1): до него надо дойти, пройдя материал.
+    [$session] = stageSession($this, $token, $planId, 2, 'conversation');
     $turns = array_values(array_filter(
         $session['tasks'],
         static fn (array $t): bool => $t['section_code'] === S::DIALOGUE

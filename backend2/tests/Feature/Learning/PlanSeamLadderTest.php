@@ -48,11 +48,14 @@ it('deals the seam off the plan`s ladder, not off due_at — a season out and st
     ageHistory($user->id, days: 1);
     scheduleFarAway($user->id);
 
-    $session = planSession($this, $token, $planId);
-    expect($session['day_index'])->toBe(2);
+    // ШОВ РАЗЛОЖЕН ПО ЭТАПАМ (наряд DAY-GATE-1): слова прошлых дней приходят в «Слова и фразы»,
+    // реплики — в «Разговор». Вопрос теста про шов ЦЕЛИКОМ, поэтому день проходится целиком.
+    [$sittings] = walkDaySittings($this, $token, $planId, 2);
+    expect($sittings)->not->toBeEmpty()
+        ->and($sittings[0]['day_index'])->toBe(2);
 
     $bySection = [];
-    foreach ($session['tasks'] as $task) {
+    foreach (tasksOfSittings($sittings) as $task) {
         $bySection[$task['section']][] = $task;
     }
 
@@ -115,17 +118,18 @@ it('keeps dealing a card up to the ceiling of its own shelf, however far the sch
 
     // Night 1 → day 1's cards stand on stage B and are dealt in day 2's seam. Answering the whole
     // sitting walks that stage and closes day 2's own.
-    $seq = answerTasks($this, $token, planSession($this, $token, $planId), $seq);
+    $seq = walkDay($this, $token, $planId, 2, $seq);
     ageHistory($user->id, days: 1);
     scheduleFarAway($user->id);
 
     // Night 2 → day 3 is the focus, and day 1's WORDS have a stage C to climb. Their `due_at` is a
     // season out, so under the old rule this seam was empty.
-    $session = planSession($this, $token, $planId);
-    expect($session['day_index'])->toBe(3);
+    [$sittings] = walkDaySittings($this, $token, $planId, 3, $seq);
+    expect($sittings)->not->toBeEmpty()
+        ->and($sittings[0]['day_index'])->toBe(3);
 
     $stagesOfDay1 = [];
-    foreach ($session['tasks'] as $task) {
+    foreach (tasksOfSittings($sittings) as $task) {
         if (($task['from_day_index'] ?? null) === 1 && $task['section'] === 'review') {
             $stagesOfDay1[] = $task['stage'];
         }
@@ -206,25 +210,43 @@ function rescueTasksOf(array $session): array
     ));
 }
 
+it('не пускает в день 2 поверх незакрытого дня 1 — и говорит, кто держит', function () {
+    // ЗАМОК ДНЯ (наряд DAY-GATE-1, Ч.1.2). Раньше день можно было открыть вперёд «посмотреть», и
+    // живой прогон 07.09 показал, чем это кончается: вкладка предлагала день 2 над днём 1, который
+    // человек не закрыл, и было непонятно, что вообще от него хотят. Замок стоит на СЕРВЕРЕ —
+    // замок, о котором знает один клиент, это не замок.
+    [, $token, $planId] = startedPlan($this, [
+        'goal_text' => 'Иду к врачу, болит спина, надо объяснить и понять назначение [scenes:3]',
+        'event_date' => now()->addDays(10)->format('Y-m-d'),
+    ]);
+
+    $refused = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$planId}/days/2/session")
+        ->assertStatus(409);
+
+    expect($refused->json('code'))->toBe('plan_day_locked')
+        // НОМЕР ДНЯ, КОТОРЫЙ ДЕРЖИТ — экран говорит «сначала закончи день 1» своими словами.
+        ->and($refused->json('meta.blocked_by_day'))->toBe(1)
+        ->and($refused->json('meta.day_index'))->toBe(2);
+
+    // …и вкладка «План» читает тот же замок из пейлоада, а не выводит его сама.
+    $plan = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$planId}")->assertOk()->json('data');
+    $byIndex = collect($plan['days'])->keyBy('index');
+
+    expect($byIndex[1]['locked_by_day_index'])->toBeNull()
+        ->and($byIndex[2]['locked_by_day_index'])->toBe(1)
+        ->and($byIndex[3]['locked_by_day_index'])->toBe(1);
+});
+
 it('revises the days BEHIND the one being studied, never the ones ahead of it', function () {
-    // A day opened early is walked strictly now (С-1), so a LATER day can stand on stage B while an
-    // earlier one is still the focus. Its cards are not «Повторение · из прошлых дней» — that
-    // caption is the seam's own word — and they are not lost either: bucket 1 deals whatever the day
-    // being studied owes, at whatever stage, so they come round when that day does.
+    // Шов — это дни ПОЗАДИ фокуса. Дней впереди в посадке нет и быть не может: с наряда DAY-GATE-1
+    // до них просто не добраться, пока не закрыт текущий.
     [$user, $token, $planId] = startedPlan($this, [
         'goal_text' => 'Иду к врачу, болит спина, надо объяснить и понять назначение [scenes:3]',
         'event_date' => now()->addDays(10)->format('Y-m-d'),
     ]);
 
-    // Day 2, walked out of turn while the focus is still day 1.
-    $seq = 1;
-    for ($i = 0; $i < 8; $i++) {
-        $session = planSession($this, $token, $planId, 2);
-        if ($session['tasks'] === []) {
-            break;
-        }
-        $seq = answerTasks($this, $token, $session, $seq);
-    }
     ageHistory($user->id, days: 1);
     scheduleFarAway($user->id);
 

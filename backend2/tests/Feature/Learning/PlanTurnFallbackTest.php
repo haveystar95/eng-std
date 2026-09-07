@@ -40,7 +40,8 @@ it('deals EVERY spoken line of the scene a turn when the pool runs dry — by as
         ->all();
     expect($spoken)->not->toBeEmpty();
 
-    $session = planSession($this, $token, $planId);
+    // ХОДЫ ЧЕЛОВЕКА — присест «Разговор» (наряд DAY-GATE-1): до него доходят, пройдя материал.
+    [$session] = stageSession($this, $token, $planId, 1, 'conversation');
     $turns = array_values(array_filter(
         $session['tasks'],
         static fn (array $t): bool => $t['section_code'] === S::DIALOGUE

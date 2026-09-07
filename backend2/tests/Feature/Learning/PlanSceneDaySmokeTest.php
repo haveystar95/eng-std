@@ -126,10 +126,18 @@ it('walks a plan from the goal to a closed day, and the day is a scene all the w
             'ended_at' => now()->toIso8601String(),
         ])->assertOk();
 
+    // …И ЭТОГО МАЛО (наряд DAY-GATE-1): «Слова и фразы» пройдены, а день — это ещё «Разговор» и
+    // «Скажи сам». Пока они не пройдены насквозь, день не закрыт и следующий не пишется.
+    expect(DB::table('learning_plan_days')->where('id', $day1->id)->value('status'))->toBe('ready')
+        ->and(DB::table('learning_plan_days')->where('plan_id', $plan['id'])->where('day_index', 2)->value('status'))
+        ->toBe('pending');
+
+    walkDay($this, $token, $plan['id'], 1);
+
     $statuses = DB::table('learning_plan_days')->where('plan_id', $plan['id'])
         ->orderBy('day_index')->pluck('status', 'day_index')->all();
 
-    // THE DAY CLOSED ON THE CLIENT'S OWN COMPLETE, and day 2 went into the queue behind it.
+    // ДЕНЬ ЗАКРЫТ ПРОЙДЕННЫМИ ЭТАПАМИ, и день 2 встал в очередь ЗА НИМ — по факту, а не заранее.
     expect($statuses[1])->toBe('done')
         ->and($statuses[2])->toBe('ready')
         ->and(DB::table('study_sessions')->where('id', $session['session_id'])->value('ended_at'))

@@ -192,7 +192,8 @@ it('offers meanings of role lines of ANOTHER function on такт 1, never two p
         return false;
     };
 
-    $session = planSession($this, $token, $planId);
+    // ТАКТ «ЧТО ТЕБЕ СКАЗАЛИ» — присест «Разговор» (наряд DAY-GATE-1).
+    [$session] = stageSession($this, $token, $planId, 1, 'conversation');
     $hear = array_values(array_filter(
         $session['tasks'],
         static fn (array $t): bool => $t['card']['exercise_mode'] === 'situational_hear',

@@ -261,11 +261,14 @@ it('marks the day passed as soon as its session is completed, without building a
     // only ever WRITTEN while assembling the next session, so nobody had asked for it yet.
     [, $token, $planId] = startedPlan($this);
 
-    $session = planSession($this, $token, $planId);
-    answerTasks($this, $token, $session);
+    // ПОСЛЕДНИЙ ЭТАП ДНЯ — «Скажи сам» (наряд DAY-GATE-1): день проходится до него, и вердикт
+    // должен лечь по концу ЭТОЙ посадки, а не при сборке следующей.
+    [$session, $seq] = stageSession($this, $token, $planId, 1, 'rehearsal');
+    answerTasks($this, $token, $session, $seq);
+    recordSceneRun($this, $token, $planId, 1, $session);
 
-    expect(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->value('status'))
-        ->toBe('ready');
+    // Прогон записан, но посадка ещё не закрыта клиентом.
+    DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 1)->update(['status' => 'ready']);
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson("/api/v1/study/sessions/{$session['session_id']}/complete", [

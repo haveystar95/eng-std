@@ -45,35 +45,39 @@ function typedModes(): array
 it('deals day 1 as TWO sittings within their ceilings — the material, then the scene spoken', function () {
     [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    $session = planSession($this, $token, $planId);
+    // ДВА ПРИСЕСТА — ЭТО ДВА ЗАХОДА (наряд DAY-GATE-1, Ч.1.4). До него оба ехали одной посадкой и
+    // резались на экране; теперь «Слова и фразы» и «Разговор» — разные этапы дня и разные сессии,
+    // и потолок у каждого свой.
+    $material = planSession($this, $token, $planId, 1);
+    expect($material['stage'])->toBe('material')
+        ->and($material['sittings'])->toBe([count($material['tasks'])])
+        ->and(count($material['tasks']))->toBeLessThanOrEqual(PlanSittings::MATERIAL_MAX_CARDS)
+        ->and(count(tasksIn($material, S::WARMUP)))->toBeLessThanOrEqual(5)
+        ->and(tasksIn($material, S::DIALOGUE))->toBeEmpty();
 
-    $dialogue = count(tasksIn($session, S::DIALOGUE));
-    expect($session['sittings'])->toBe([count($session['tasks']) - $dialogue, $dialogue])
-        ->and($session['sittings'][0])->toBeLessThanOrEqual(PlanSittings::MATERIAL_MAX_CARDS)
-        ->and($session['sittings'][1])->toBeLessThanOrEqual(PlanSittings::CONVERSATION_MAX_CARDS)
-        ->and(count(tasksIn($session, S::WARMUP)))->toBeLessThanOrEqual(5);
+    answerTasks($this, $token, $material);
+    $conversation = planSession($this, $token, $planId, 1);
+    expect($conversation['stage'])->toBe('conversation')
+        ->and(count($conversation['tasks']))->toBeLessThanOrEqual(PlanSittings::CONVERSATION_MAX_CARDS)
+        ->and($conversation['dialogues'])->toHaveCount(1);
 
-    // THE SCENE IS SPOKEN THE DAY IT IS MET (решение владельца 05.09): the dialogue section is in
-    // day 1's own day, after the introduction — and it IS the second sitting (DAY-FIX-3, Ч.4).
-    $codes = array_values(array_unique(array_column($session['tasks'], 'section_code')));
-    expect($codes)->toContain(S::DIALOGUE_INTRO)
-        ->and($codes)->toContain(S::DIALOGUE)
-        ->and(array_search(S::DIALOGUE_INTRO, $codes, true))->toBeLessThan(array_search(S::DIALOGUE, $codes, true))
-        ->and($session['dialogues'])->toHaveCount(1);
-    foreach (array_slice($session['tasks'], $session['sittings'][0]) as $task) {
+    // THE SCENE IS SPOKEN THE DAY IT IS MET (решение владельца 05.09): знакомство стоит в материале,
+    // разговор — следующим этапом ТОГО ЖЕ дня.
+    expect(array_column($material['tasks'], 'section_code'))->toContain(S::DIALOGUE_INTRO);
+    foreach ($conversation['tasks'] as $task) {
         expect($task['section_code'])->toBe(S::DIALOGUE);
     }
 
     // ONE SHOW PER STAGE PER DAY in the conversation: no line of the scene is dealt twice on the
     // same rung there. The introduction's own exercise stands in the material, on stage A.
     $seen = [];
-    foreach (tasksIn($session, S::DIALOGUE) as $task) {
+    foreach (tasksIn($conversation, S::DIALOGUE) as $task) {
         $key = $task['card']['term_id'] . '#' . $task['stage'];
         expect($seen)->not->toContain($key)
             ->and($task['stage'])->toBe('b');
         $seen[] = $key;
     }
-    foreach (tasksIn($session, S::DIALOGUE_INTRO) as $task) {
+    foreach (tasksIn($material, S::DIALOGUE_INTRO) as $task) {
         expect($task['stage'])->toBe('a');
     }
 });
@@ -121,11 +125,13 @@ it('never lets «Ты спросишь» be a choice — blocks or the voice, on
         }
     };
 
-    $check(planSession($this, $token, $planId));
+    [$conversation] = stageSession($this, $token, $planId, 1, 'conversation');
+    $check($conversation);
 
     walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
-    $check(planSession($this, $token, $planId));
+    [$seam] = stageSession($this, $token, $planId, 2, 'conversation');
+    $check($seam);
 });
 
 it('deals the seam as ONE touch by assembly, keeps the day under the ceiling, and runs the scene second', function () {
@@ -134,7 +140,7 @@ it('deals the seam as ONE touch by assembly, keeps the day under the ceiling, an
     walkDay($this, $token, $planId, 1);
     ageHistory($user->id, days: 1);
 
-    $session = planSession($this, $token, $planId);
+    [$session] = stageSession($this, $token, $planId, 2, 'conversation');
     expect($session['day_index'])->toBe(2);
 
     // THE SEAM: every line of scene 1 comes back once, by assembly — choose is forbidden there.
@@ -152,20 +158,20 @@ it('deals the seam as ONE touch by assembly, keeps the day under the ceiling, an
         $seen[] = $task['card']['term_id'];
     }
 
-    // THE CEILINGS bind both sittings; the conversation — today's dialogue, the seam's lines and
-    // the прогон of scene 1 — is the second (DAY-FIX-3, Ч.4).
-    $run = tasksIn($session, S::SCENE_RUN);
-    $conversation = count(tasksIn($session, S::DIALOGUE)) + count($run);
-    expect($run)->not->toBeEmpty()
-        ->and($session['sittings'])->toBe([count($session['tasks']) - $conversation, $conversation])
-        ->and($session['sittings'][0])->toBeLessThanOrEqual(PlanSittings::MATERIAL_MAX_CARDS)
-        ->and($session['sittings'][1])->toBeLessThanOrEqual(PlanSittings::CONVERSATION_MAX_CARDS)
-        ->and(count(tasksIn($session, S::WARMUP)))->toBeLessThanOrEqual(10);
+    // ПОТОЛОК ВЯЖЕТ КАЖДЫЙ ПРИСЕСТ, а присесты теперь — этапы дня (наряд DAY-GATE-1, Ч.1.4):
+    // в «Разговоре» только диалог и шов, прогон отдельным этапом после него.
+    expect(count($session['tasks']))->toBeLessThanOrEqual(PlanSittings::CONVERSATION_MAX_CARDS)
+        ->and(tasksIn($session, S::SCENE_RUN))->toBeEmpty();
+    foreach ($session['tasks'] as $task) {
+        expect($task['section_code'])->toBe(S::DIALOGUE);
+    }
 
-    // …and the material comes BEFORE the conversation, whole; the прогон closes the day.
-    $last = count($session['tasks']) - 1;
-    expect($session['tasks'][$last]['section_code'])->toBe(S::SCENE_RUN);
-    foreach (array_slice($session['tasks'], $session['sittings'][0]) as $task) {
-        expect($task['section_code'])->toBeIn([S::DIALOGUE, S::SCENE_RUN]);
+    // …И ПРОГОН ЗАКРЫВАЕТ ДЕНЬ — следующим этапом, а не хвостом того же присеста.
+    answerTasks($this, $token, $session);
+    $rehearsal = planSession($this, $token, $planId, 2);
+    expect($rehearsal['stage'])->toBe('rehearsal')
+        ->and(tasksIn($rehearsal, S::SCENE_RUN))->not->toBeEmpty();
+    foreach ($rehearsal['tasks'] as $task) {
+        expect($task['section_code'])->toBe(S::SCENE_RUN);
     }
 });

@@ -42,21 +42,18 @@ it('не собирает прогон, пока сцена не прошла с
         ->and(array_column($session['tasks'], 'section_code'))->not->toContain(S::SCENE_RUN);
 });
 
-it('собирает прогон последним в дне, когда каждый ход сцены прошёл выбор', function () {
-    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+it('собирает прогон последним этапом дня — своими ходами и голосом', function () {
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    walkDay($this, $token, $planId, 1);
-    ageHistory($user->id, days: 1);
-    // Второй день: диалог сцены 1 идёт в шве, и человек его проходит — ступень B сцены 1 закрыта.
-    walkDay($this, $token, $planId, 2);
-    ageHistory($user->id, days: 1);
-
-    // День 2 ещё раз, явно: прогон сцены 1 дозрел ПОСЛЕ того, как её диалог был сыгран, а посадка
-    // собирается один раз — значит секция появляется в следующей.
-    $session = planSession($this, $token, $planId, 2);
+    // «СКАЖИ САМ» — ТРЕТИЙ ЭТАП ДНЯ (наряд DAY-GATE-1, Ч.1.1), и открывается он ровно тогда, когда
+    // «Разговор» пройден насквозь. Зрелость сцены его больше не гейтит: несказанная реплика в
+    // прогоне — законный ход, там есть «Пропустить» и спасатель (решение владельца 07.09).
+    [$session] = stageSession($this, $token, $planId, 1, 'rehearsal');
     $run = sceneRunTasks($session);
 
-    expect($run)->not->toBeEmpty();
+    expect($run)->not->toBeEmpty()
+        // ЭТАП СОСТОИТ ТОЛЬКО ИЗ ПРОГОНА: ни слов, ни диалога в нём нет.
+        ->and(array_values(array_unique(array_column($session['tasks'], 'section_code'))))->toBe([S::SCENE_RUN]);
 
     foreach ($run as $task) {
         // Тренажёр — говорение; уровень — «сам»; реплики на экране нет.
@@ -67,21 +64,12 @@ it('собирает прогон последним в дне, когда ка�
             // Только свои ходы: пузырь роли звучит, но ходом не является.
             ->and($task['shelf'])->toBeIn(['say', 'ask']);
     }
-
-    // ПОСЛЕДНИМ В ДНЕ — порядок канона: разогрев → слова → знакомство → диалог → цифры → прогон.
-    $codes = array_values(array_unique(array_column($session['tasks'], 'section_code')));
-    expect(array_search(S::SCENE_RUN, $codes, true))->toBe(count($codes) - 1);
 });
 
 it('записывает прогон одной строкой и считает числа сам', function () {
-    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    walkDay($this, $token, $planId, 1);
-    ageHistory($user->id, days: 1);
-    walkDay($this, $token, $planId, 2);
-    ageHistory($user->id, days: 1);
-
-    $session = planSession($this, $token, $planId, 2);
+    [$session] = stageSession($this, $token, $planId, 1, 'rehearsal');
     $run = sceneRunTasks($session);
     expect(count($run))->toBeGreaterThanOrEqual(3);
 
@@ -117,36 +105,23 @@ it('записывает прогон одной строкой и считае�
         ->and($stages->where('said_fast', true)->count())->toBe(1);
 });
 
-it('не предлагает прогон второй раз в тот же день', function () {
-    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+it('не предлагает прогон второй раз в тот же день — этап пройден и день закрыт', function () {
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
-    walkDay($this, $token, $planId, 1);
-    ageHistory($user->id, days: 1);
-    walkDay($this, $token, $planId, 2);
-    ageHistory($user->id, days: 1);
-
-    $session = planSession($this, $token, $planId, 2);
+    [$session, $seq] = stageSession($this, $token, $planId, 1, 'rehearsal');
     $run = sceneRunTasks($session);
     expect($run)->not->toBeEmpty();
 
-    $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson("/api/v1/plans/{$planId}/scene-runs", [
-            'scene_index' => 1,
-            'day_index' => 1,
-            'turns' => array_map(
-                static fn (array $t): array => ['term_id' => $t['card']['term_id'], 'outcome' => 'said'],
-                $run,
-            ),
-        ])->assertCreated();
+    answerTasks($this, $token, $session, $seq);
+    recordSceneRun($this, $token, $planId, 1, $session);
 
-    // Прогон — событие. Второй за тот же вечер мерил бы память о первом, а не умение. (Сцена 2,
-    // сыгранная в тот же день, что и встречена, к этому моменту дозрела до своего прогона — он
-    // здесь законен; вопрос про сцену 1.)
-    $again = array_filter(
-        sceneRunTasks(planSession($this, $token, $planId, 2)),
-        static fn (array $t): bool => ($t['from_day_index'] ?? null) === 1,
-    );
-    expect($again)->toBeEmpty();
+    // ПРОГОН ЗАПИСАН — этап пройден, день пройден, и второй раз сегодня его никто не предлагает.
+    $plan = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$planId}")->assertOk()->json('data');
+    $day1 = collect($plan['days'])->firstWhere('index', 1);
+
+    expect($day1['day_state'])->toBe('done')
+        ->and(collect($day1['stages'])->firstWhere('stage', 'rehearsal')['state'])->toBe('done');
 });
 
 it('отказывает в прогоне чужого плана так же, как в чужом плане', function () {

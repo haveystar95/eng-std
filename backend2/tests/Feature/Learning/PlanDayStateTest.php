@@ -55,14 +55,21 @@ it('calls a fresh day «не начат» on the plan, on the day and on the sit
         ->and($dayScreen['minutes_left'])->toBe($day1['minutes_left']);
 
     $session = planSession($this, $token, $planId);
+    // МИНУТЫ — ПРО ДЕНЬ, А ПОСАДКА — ПРО ЭТАП (наряд DAY-GATE-1, Ч.1.4): сессия раздаёт «Слова и
+    // фразы», а «около N минут» по-прежнему считает ВЕСЬ день, потому что на экране дня написано
+    // именно это. Поэтому карточек в посадке меньше, чем минут дня, и это не расхождение.
     expect($session['day_state'])->toBe('not_started')
+        ->and($session['stage'])->toBe('material')
         ->and($session['minutes_left'])->toBe($day1['minutes_left'])
-        // The minutes ARE the sitting: cards × 16 s, rounded up to a whole minute.
-        ->and($session['minutes_left'])->toBe((int) ceil(count($session['tasks']) * 16 / 60));
+        ->and($session['minutes_left'])->toBeGreaterThanOrEqual((int) ceil(count($session['tasks']) * 16 / 60));
 
-    // A day AHEAD of the focus is «не начат» too, priced by its own cards.
+    // ДЕНЬ ВПЕРЕДИ ФОКУСА ЕЩЁ НЕ НАПИСАН (наряд DAY-GATE-1, Ч.1.3): план пишется по одному дню, и
+    // следующий встаёт в очередь по факту «день N пройден». Он «не начат», он ЗАПЕРТ, и минут у
+    // него ноль — потому что карточек у него пока нет ни одной, а выдумывать их нечем.
     expect(dayOf($plan, 2)['day_state'])->toBe('not_started')
-        ->and(dayOf($plan, 2)['minutes_left'])->toBeGreaterThan(0);
+        ->and(dayOf($plan, 2)['status'])->toBe('pending')
+        ->and(dayOf($plan, 2)['locked_by_day_index'])->toBe(1)
+        ->and(dayOf($plan, 2)['minutes_left'])->toBe(0);
 });
 
 it('calls a day «идёт» after the first answer, and «пройден» everywhere once its cards are met', function () {
@@ -119,8 +126,12 @@ it('does not call a day «пройден» on its intros alone — the scene has
     expect(dayOf($plan, 1)['day_state'])->toBe('in_progress')
         ->and($plan['focus_day_index'])->toBe(1);
 
-    answerTasks($this, $token, ['session_id' => $session['session_id'], 'tasks' => $rest], $seq);
+    $seq = answerTasks($this, $token, ['session_id' => $session['session_id'], 'tasks' => $rest], $seq);
 
+    // …И ЭТОГО ВСЁ ЕЩЁ МАЛО: материал пройден, а разговор и прогон впереди (наряд DAY-GATE-1).
+    expect(dayOf(planPayload($this, $token, $planId), 1)['day_state'])->toBe('material_done');
+
+    walkDay($this, $token, $planId, 1, $seq);
     expect(dayOf(planPayload($this, $token, $planId), 1)['day_state'])->toBe('done');
 });
 
@@ -154,13 +165,15 @@ it('calls a day «материал пройден» between its two sittings, an
     // counts, on the plan and on the day.
     [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
 
+    // ПРИСЕСТ ТЕПЕРЬ ОДИН НА СЕССИЮ — это этап дня (наряд DAY-GATE-1, Ч.1.4), — а МИНУТЫ ОБОИХ
+    // присестов по-прежнему считаются на весь день: их печатает экран дня, а не шапка посадки.
     $session = planSession($this, $token, $planId);
-    expect($session['sitting_plan'])->toHaveCount(2)
+    expect($session['stage'])->toBe('material')
+        ->and($session['sitting_plan'])->toHaveCount(1)
         ->and($session['sitting_plan'][0]['kind'])->toBe('material')
-        ->and($session['sitting_plan'][1]['kind'])->toBe('conversation')
         ->and(array_column($session['sitting_plan'], 'cards'))->toBe($session['sittings'])
-        ->and($session['material_minutes'])->toBe((int) ceil($session['sittings'][0] * 16 / 60))
-        ->and($session['conversation_minutes'])->toBe((int) ceil($session['sittings'][1] * 16 / 60))
+        ->and($session['material_minutes'])->toBeGreaterThan(0)
+        ->and($session['conversation_minutes'])->toBeGreaterThan(0)
         ->and($session['minutes_left'])->toBeGreaterThanOrEqual($session['material_minutes']);
 
     $day1 = dayOf(planPayload($this, $token, $planId), 1);
@@ -168,8 +181,7 @@ it('calls a day «материал пройден» between its two sittings, an
         ->and($day1['conversation_minutes'])->toBe($session['conversation_minutes']);
 
     // THE MATERIAL, whole — and the day says so everywhere, with the conversation still priced.
-    $material = array_slice($session['tasks'], 0, $session['sittings'][0]);
-    answerTasks($this, $token, ['session_id' => $session['session_id'], 'tasks' => $material]);
+    answerTasks($this, $token, $session);
 
     $plan = planPayload($this, $token, $planId);
     expect(dayOf($plan, 1)['day_state'])->toBe('material_done')
@@ -189,6 +201,7 @@ it('calls a day «материал пройден» between its two sittings, an
     // A fresh sitting picks the day up at the conversation — nothing of the material comes back.
     $again = planSession($this, $token, $planId);
     expect($again['day_state'])->toBe('material_done')
+        ->and($again['stage'])->toBe('conversation')
         ->and($again['sitting_plan'])->toHaveCount(1)
         ->and($again['sitting_plan'][0]['kind'])->toBe('conversation');
 });
