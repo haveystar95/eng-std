@@ -50,6 +50,7 @@ void main() {
         child: PlanDialogueShell(
           dialogue: chain,
           turnIndex: turnIndex,
+          speechLocaleId: 'en_US',
           onSpeak: spoken.add,
           dealtTerms: dealt,
           spokenLines: spokenLines,

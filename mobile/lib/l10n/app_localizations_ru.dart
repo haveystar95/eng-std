@@ -1168,6 +1168,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionSpeakNoMic => 'Микрофон недоступен. Можно пропустить эту карточку.';
 
   @override
+  String get speechPermissionRecognitionDenied =>
+      'Распознавание речи выключено. Разреши распознавание речи в настройках — без него телефон слышит, но не понимает.';
+
+  @override
+  String get speechPermissionMicDenied =>
+      'Микрофон выключен. Разреши доступ к микрофону в настройках.';
+
+  @override
+  String get speechPermissionBothDenied =>
+      'Разреши в настройках микрофон и распознавание речи — нужны оба.';
+
+  @override
+  String get speechPermissionOpenSettings => 'Открыть настройки';
+
+  @override
   String get sessionSpeakCutOff => 'Не расслышали до конца — скажи ещё раз.';
 
   @override

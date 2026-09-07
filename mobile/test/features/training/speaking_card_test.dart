@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,6 +16,8 @@ import 'package:eng_std/data/speech/speech_turn.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+
+import '../../support/speech_probe_channel.dart';
 
 /// A recogniser that returns whatever the test says, in order.
 ///
@@ -72,6 +75,7 @@ class _FakeRecognizer implements SpeechRecognizer {
     timeoutsPerCall.add(timeout);
     pauseForsPerCall.add(pauseFor);
     contextualStringsPerCall.add(contextualStrings);
+    if (throwOnListen) throw PlatformException(code: 'error_listen_failed');
     final attempt = _script[calls.clamp(0, _script.length - 1)];
     calls++;
     if (attempt.isHeard) onPartial?.call(attempt.text);
@@ -122,11 +126,17 @@ class _FakeRecognizer implements SpeechRecognizer {
   }
 
   Timer? _window;
+
+  /// Плагин, который бросает вместо ответа — `PlatformException` на живом устройстве.
+  bool throwOnListen = false;
 }
 
 void main() {
   late List<SessionAnswer> answers;
   late int skips;
+
+  /// Ответ ОС про разрешения — {@see mockSpeechProbe}.
+  final probe = mockSpeechProbe();
 
   setUp(() {
     answers = [];
@@ -137,7 +147,11 @@ void main() {
   // example-form's contextualStrings lookup (`_term` in session_exercise.dart, mirroring
   // `_PromptPhotoState._term`) a `termText` to find. Every other test doesn't care and gets a
   // fresh empty one, same as before.
-  Widget host(SessionCard card, _FakeRecognizer recognizer, {AppDatabase? db}) => ProviderScope(
+  Widget host(
+    SessionCard card,
+    _FakeRecognizer recognizer, {
+    AppDatabase? db,
+  }) => ProviderScope(
     overrides: [
       appDatabaseProvider.overrideWith((ref) {
         final database = db ?? AppDatabase.forTesting(NativeDatabase.memory());
@@ -446,6 +460,51 @@ void main() {
 
       expect(find.textContaining('Микрофон недоступен'), findsOneWidget);
       expect(answers, isEmpty);
+    });
+
+    // ПРАВИЛО: наряд DAY-GATE-1, Ч.0.2 — «если распознавание запрещено, движок показывает словами
+    // „разреши распознавание речи в настройках“ с кнопкой в настройки, а не мигает».
+    // ЛОВИТ: единственный отказ канала, который человек может починить сам, одетый в ту же строку,
+    // что и сломанное железо. iOS спрашивает разрешение ОДИН раз за установку — после отказа
+    // «Микрофон недоступен · Пропустить» это тупик навсегда, и человек об этом не узнаёт.
+    testWidgets('отказанное разрешение говорит про Настройки, а не «микрофон недоступен»', (
+      tester,
+    ) async {
+      probe.recognition = 'denied';
+      final recognizer = _FakeRecognizer([const SpeechAttempt.unavailable()], isReady: false);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Разреши распознавание речи в настройках'), findsOneWidget);
+      expect(find.text('Открыть настройки'), findsOneWidget);
+      // …и общая строка про недоступность УХОДИТ: две подряд читаются как два разных сбоя.
+      expect(find.textContaining('Микрофон недоступен'), findsNothing);
+      expect(answers, isEmpty);
+    });
+
+    // ПРАВИЛО: наряд DAY-GATE-1, Ч.0.2 — ход обязан закрыться, чем бы он ни кончился.
+    // ЛОВИТ: «Слушаю…» навсегда. Цикл движка крутится в стороне от хода (`unawaited`), поэтому
+    // исключение из плагина не доходило до того, кто ждёт исход: `turn.future` не завершался
+    // никогда, карточка оставалась «слушающей» без микрофона, и единственным выходом был
+    // «Не помню» — то есть промах в append-only журнале за поломку канала.
+    testWidgets('движок, бросивший исключение, закрывает ход, а не оставляет «Слушаю…»', (
+      tester,
+    ) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.silent()])..throwOnListen = true;
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await tester.tap(recordButton().first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Слушаю…'), findsNothing);
+      expect(find.textContaining('Микрофон недоступен'), findsOneWidget);
+      expect(answers, isEmpty, reason: 'поломка канала — не ответ про память');
     });
   });
 

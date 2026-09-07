@@ -11,7 +11,7 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/languages.dart'
-    show Language, kCefrLevels, kNativeLanguages, languageByCode, studyLanguagesFor;
+    show Language, kCefrLevels, kNativeLanguages, languageByCode, sttLocaleFor, studyLanguagesFor;
 import '../../data/app_settings.dart';
 import '../../data/config.dart';
 import '../../data/feature_flags.dart';
@@ -20,6 +20,7 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
 import 'perf_log_screen.dart';
+import 'qa_speech_view.dart';
 import 'voice_bakeoff_screen.dart';
 import '../../data/local/cached_image_provider.dart';
 
@@ -676,7 +677,30 @@ class _DevFlags extends ConsumerWidget {
         // подстановка транскрипта: аккаунт `is_qa` И среда не production — сервер отвечает 404,
         // когда дверь закрыта, и клиент своей проверки не держит ({@see AppUser.qaTools}).
         if (qa) const _QaPlanClockRow(),
+        // МИКРОФОН, ЖИВЬЁМ (наряд DAY-GATE-1, Ч.0.1). За той же дверью и по той же причине, что
+        // строки выше: строка показывает статусы разрешений и внутренности движка, и боевому
+        // аккаунту в релизе она не показывается.
+        if (qa) const _QaSpeechRow(),
       ],
+    );
+  }
+}
+
+/// Служебная строка микрофона в дев-двери — оболочка строки плюс {@see QaSpeechView}.
+class _QaSpeechRow extends ConsumerWidget {
+  const _QaSpeechRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang =
+        ref.watch(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
+
+    return _RowShell(
+      last: true,
+      child: QaSpeechView(
+        diagnostics: ref.watch(speechDiagnosticsProvider),
+        localeId: sttLocaleFor(lang),
+      ),
     );
   }
 }

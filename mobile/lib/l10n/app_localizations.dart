@@ -1935,6 +1935,30 @@ abstract class AppLocalizations {
   /// **'Микрофон недоступен. Можно пропустить эту карточку.'**
   String get sessionSpeakNoMic;
 
+  /// Отказано в NSSpeechRecognition (DAY-GATE-1, Ч.0.2). iOS спрашивает один раз за установку, поэтому «нажми ещё раз» не выход — только Настройки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Распознавание речи выключено. Разреши распознавание речи в настройках — без него телефон слышит, но не понимает.'**
+  String get speechPermissionRecognitionDenied;
+
+  /// Отказано в NSMicrophone (DAY-GATE-1, Ч.0.2).
+  ///
+  /// In ru, this message translates to:
+  /// **'Микрофон выключен. Разреши доступ к микрофону в настройках.'**
+  String get speechPermissionMicDenied;
+
+  /// Не хватает обоих разрешений сразу (DAY-GATE-1, Ч.0.2): называем оба, иначе второй заход в Настройки человек уже не сделает.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разреши в настройках микрофон и распознавание речи — нужны оба.'**
+  String get speechPermissionBothDenied;
+
+  /// Кнопка под строкой об отказанном разрешении — ведёт на страницу приложения в Настройках iOS.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть настройки'**
+  String get speechPermissionOpenSettings;
+
   /// Обрыв на полуслове (DAY-FIX-3, Ч.1.4): человек начал говорить, канал не дослушал. Не ошибка, журнал не пишется, вторая попытка.
   ///
   /// In ru, this message translates to:

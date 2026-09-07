@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+
+import 'speech_diagnostics.dart';
 
 /// What a listening attempt ended as. The card reads this and nothing else about the plugin.
 enum SpeechOutcome {
@@ -106,9 +109,15 @@ abstract class SpeechRecognizer {
 
 /// The real one, over `speech_to_text` → `SFSpeechRecognizer`.
 class PluginSpeechRecognizer implements SpeechRecognizer {
-  PluginSpeechRecognizer([SpeechToText? speech]) : _speech = speech ?? SpeechToText();
+  PluginSpeechRecognizer([SpeechToText? speech, this._diagnostics])
+    : _speech = speech ?? SpeechToText();
 
   final SpeechToText _speech;
+
+  /// Журнал канала (наряд DAY-GATE-1, Ч.0.1). Всё, что этот класс раньше говорил в `debugPrint` —
+  /// то есть НИКОМУ в релизной сборке, где консоли нет, — теперь ещё и сюда.
+  final SpeechDiagnostics? _diagnostics;
+
   bool _initialized = false;
 
   /// The attempt in flight. The plugin reports results and its own status through callbacks, so the
@@ -148,9 +157,16 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
           .timeout(_startTimeout * 4, onTimeout: () => false);
     } catch (e) {
       debugPrint('[speech] initialize failed: $e');
+      _diagnostics?.note('initialize threw: $e');
       _initialized = false;
     }
-    return _initialized && _speech.isAvailable;
+    final ready = _initialized && _speech.isAvailable;
+    // «Поднялся» и «не поднялся» — оба факта, и второй важнее: именно он стоит за «Слушаю…», из
+    // которого ничего не выходит, и именно его на устройстве не было видно ничем.
+    _diagnostics?.note(
+      ready ? 'initialize ok' : 'initialize refused (available=${_speech.isAvailable})',
+    );
+    return ready;
   }
 
   @override
@@ -162,6 +178,16 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
     List<String> contextualStrings = const [],
     ValueChanged<String>? onPartial,
   }) async {
+    // ПУСТАЯ ЛОКАЛЬ — НЕ «ЯЗЫК ПО УМОЛЧАНИЮ» (наряд DAY-GATE-1, Ч.0.2, находка F1).
+    //
+    // iOS строит `SFSpeechRecognizer(locale: Locale(identifier: ""))`, получает nil и отвечает
+    // `noRecognizerError`; хуже, он ЗАПОМИНАЕТ эту локаль как текущую вместе с нулевым
+    // распознавателем. Место, где эта строка приезжала пустой, найдено и починено, но проверка
+    // остаётся здесь: цена ошибки — молча неработающий микрофон, а цена проверки — одна строка.
+    if (localeId.trim().isEmpty) {
+      _diagnostics?.note('listen refused: empty localeId');
+      return const SpeechAttempt.unavailable();
+    }
     if (!await prepare()) return const SpeechAttempt.unavailable();
     // A second tap while listening is a stop, not a second attempt.
     if (_speech.isListening) await _speech.stop();
@@ -204,6 +230,7 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
       // A refusal, a throw, or an engine that never came up at all — all three are the same answer
       // to a card, and the third one is why there is a timeout on the await (see [_startTimeout]).
       debugPrint('[speech] listen failed: $e');
+      _diagnostics?.note('listen failed: ${e is PlatformException ? e.code : e}');
       _settle(const SpeechAttempt.unavailable());
     }
 
@@ -249,6 +276,10 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
 
   void _onError(SpeechRecognitionError error) {
     debugPrint('[speech] error: ${error.errorMsg}');
+    // КОД ПЛАГИНА ДОСЛОВНО — `error_speech_recognizer_request_not_authorized`,
+    // `error_listen_failed`, `error_no_match` и прочие. Разница между ними и есть разница между
+    // «нет разрешения», «не поднялась аудиосессия» и «человек молчал».
+    _diagnostics?.note('recognizer error: ${error.errorMsg} (permanent=${error.permanent})');
     // Every recogniser error is a CHANNEL failure. None of them is evidence about memory, so none
     // of them may become an answer.
     _settle(_heard.trim().isEmpty ? const SpeechAttempt.unavailable() : _finish());

@@ -17,6 +17,7 @@ import '../../../data/models.dart';
 import '../../../data/perf_log.dart';
 import '../../../data/practice/practice_mode_selector.dart' show TermPlayability;
 import '../../../data/providers.dart';
+import '../../../data/speech/speech_diagnostics.dart';
 import '../../../data/speech/speech_recognizer.dart';
 import '../../../data/speech/speech_turn.dart';
 import 'session_grading.dart';
@@ -349,6 +350,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// microphone, and reading a provider from a widget that is already coming down is not allowed.
   SpeechRecognizer? _recognizer;
 
+  /// Журнал и живое состояние канала (наряд DAY-GATE-1, Ч.0.1). Резолвится там же и по той же
+  /// причине, что и [_recognizer].
+  SpeechDiagnostics? _diagnostics;
+
+  /// Последний ответ ОС про разрешения и распознаватель языка карточки. Null, пока канал не падал:
+  /// спрашивать до отказа незачем, а спрашивать после — единственный способ отличить «нет
+  /// разрешения» от «нет движка».
+  SpeechProbe? _probe;
+
   /// ОДИН ДВИЖОК СЛУШАНИЯ НА ВСЕ КАРТОЧКИ ГОВОРЕНИЯ ({@see SpeechTurn}, Ч.1): склейка,
   /// закрытие по тишине после речи или по потолку речи, сторож от открытия, эхо-замок. Карточка
   /// не разбирает результаты плагина сама — она получает ОДИН исход хода.
@@ -477,7 +487,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   @override
   void initState() {
     super.initState();
-    if (_isSpeaking) _recognizer = ref.read(speechRecognizerProvider);
+    if (_isSpeaking) {
+      _recognizer = ref.read(speechRecognizerProvider);
+      _diagnostics = ref.read(speechDiagnosticsProvider);
+    }
     _settleTimer = Timer(AppMotion.nextTaskEnter + const Duration(milliseconds: 30), () {
       if (mounted) setState(() => _settled = true);
     });
@@ -528,6 +541,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
       return;
     }
+    // «Ждём конца реплики роли» — стадия, которую с телефона было не отличить от «слушаем»: в обеих
+    // микрофон закрыт, а экран выглядит одинаково (наряд DAY-GATE-1, Ч.0.1).
+    _diagnostics?.phaseIs(SpeechPhase.waitingForRole);
     void onQuiet() {
       if (speaking.value) return;
       speaking.removeListener(onQuiet);
@@ -846,22 +862,43 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     final openedAt = DateTime.now();
     _listenStartedAt = openedAt;
 
-    final contextualStrings = await _contextualStrings();
-    if (!mounted || !_listeningNow) return;
+    // ЛЮБОЙ СРЫВ ЗДЕСЬ — ЭТО «Слушаю…» НАВСЕГДА (наряд DAY-GATE-1, Ч.0.2, находка F4). Метод
+    // вызывается через `unawaited`, поэтому исключение из подсказок распознавателю (чтение зеркала
+    // терминов), из движка или из плагина не всплывает никуда: оно просто оставляет карточку в
+    // состоянии «слушаю», в котором нет ни микрофона, ни выхода. `finally` — единственное, что
+    // делает это состояние невозможным по построению, а не по бдительности.
+    final SpeechTurnResult result;
+    try {
+      final contextualStrings = await _contextualStrings();
+      if (!mounted || !_listeningNow) return;
 
-    final turn = SpeechTurn(recognizer, config: _turnConfig);
-    _turn = turn;
-    final result = await turn.listen(
-      expected: _spokenTargets,
-      localeId: widget.speechLocaleId,
-      contextualStrings: contextualStrings,
-      isAnswer: _accepts,
-      echoOf: widget.roleLineText == null ? null : _isEcho,
-      onPartial: (text) {
-        if (mounted && _listeningNow) setState(() => _partial = text);
-      },
-    );
-    if (_turn == turn) _turn = null;
+      final turn = SpeechTurn(recognizer, config: _turnConfig, diagnostics: _diagnostics);
+      _turn = turn;
+      result = await turn.listen(
+        expected: _spokenTargets,
+        localeId: widget.speechLocaleId,
+        contextualStrings: contextualStrings,
+        isAnswer: _accepts,
+        echoOf: widget.roleLineText == null ? null : _isEcho,
+        onPartial: (text) {
+          if (mounted && _listeningNow) setState(() => _partial = text);
+        },
+      );
+      if (_turn == turn) _turn = null;
+    } catch (e) {
+      _diagnostics?.phaseIs(SpeechPhase.failed, code: 'listen_threw: $e');
+      if (mounted && _listeningNow) {
+        setState(() {
+          _listeningNow = false;
+          _attempts++;
+          _partial = '';
+          _channelFailure = SpeechOutcome.unavailable;
+        });
+        unawaited(_refreshProbe());
+      }
+
+      return;
+    }
     if (!mounted) return;
     // THE CARD WAS LET OUT FIRST — QA substitution, a skip, a give-up. A result that arrives after
     // that is a result for an attempt nobody is waiting for.
@@ -913,7 +950,20 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           _channelFailure = SpeechOutcome.unavailable;
         });
         AppHaptics.warning();
+        // ПОЧЕМУ канал не поднялся, спрашиваем У ОС, а не гадаем: «нет разрешения» чинится
+        // человеком за три касания, «нет движка» — ничем, и одна строка на оба случая помогает
+        // только во втором (Ч.0.2).
+        unawaited(_refreshProbe());
     }
+  }
+
+  /// Спросить ОС про разрешения и распознаватель этого языка — {@see SpeechDiagnostics.refresh}.
+  /// Ничего не запрашивает у человека: только читает статусы.
+  Future<void> _refreshProbe() async {
+    final diagnostics = _diagnostics;
+    if (diagnostics == null) return;
+    final probe = await diagnostics.refresh(widget.speechLocaleId);
+    if (mounted) setState(() => _probe = probe);
   }
 
   Future<void> _stopListening() async {
@@ -1359,7 +1409,16 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           const SizedBox(height: AppSpacing.s12),
           Text(_partial, textAlign: TextAlign.center, style: AppTextExercise.typingInput),
         ],
-        if (_channelFailure != null || _cutOff) ...[
+        // РАЗРЕШЕНИЕ ОТОЗВАНО — это не «микрофон недоступен», а единственный отказ канала, который
+        // человек может починить сам (наряд DAY-GATE-1, Ч.0.2). Строка про Настройки ЗАМЕНЯЕТ
+        // общую: две подряд («недоступен» и «разреши») читаются как два разных сбоя.
+        if (_probe case final probe? when _channelFailure != null && probe.blockedInSettings) ...[
+          const SizedBox(height: AppSpacing.s12),
+          SpeechPermissionNotice(
+            micDenied: probe.microphone != SpeechPermission.granted,
+            recognitionDenied: probe.recognition != SpeechPermission.granted,
+          ),
+        ] else if (_channelFailure != null || _cutOff) ...[
           const SizedBox(height: AppSpacing.s12),
           Text(
             // ОБРЫВ — своя строка (Ч.1.4): не «микрофон недоступен» и не «не расслышал», а

@@ -1144,6 +1144,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionSpeakNoMic => 'The microphone isn\'t available. You can skip this card.';
 
   @override
+  String get speechPermissionRecognitionDenied =>
+      'Speech recognition is off. Allow speech recognition in Settings — without it the phone hears you but cannot understand.';
+
+  @override
+  String get speechPermissionMicDenied =>
+      'The microphone is off. Allow microphone access in Settings.';
+
+  @override
+  String get speechPermissionBothDenied =>
+      'Allow the microphone and speech recognition in Settings — both are needed.';
+
+  @override
+  String get speechPermissionOpenSettings => 'Open Settings';
+
+  @override
   String get sessionSpeakCutOff => 'Didn\'t catch the whole thing — say it again.';
 
   @override

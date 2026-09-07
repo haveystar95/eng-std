@@ -257,28 +257,7 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
       SFSpeechRecognizer.requestAuthorization({ (status) -> Void in
         success = status == SFSpeechRecognizerAuthorizationStatus.authorized
         if success {
-
-          #if os(iOS)
-
-            self.audioSession.requestRecordPermission({ (granted: Bool) -> Void in
-              if granted {
-                self.setupSpeechRecognition(result)
-              } else {
-                self.sendBoolResult(false, result)
-                os_log("User denied permission", log: self.pluginLog, type: .info)
-              }
-            })
-
-          #else
-            self.requestMacOSMicrophonePermission { success in
-              if success {
-                self.setupSpeechRecognition(result)
-              } else {
-                self.sendBoolResult(false, result)
-                os_log("User denied permission", log: self.pluginLog, type: .info)
-              }
-            }
-          #endif
+          self.requestMicrophoneThenSetup(result)
         } else {
           self.sendBoolResult(false, result)
         }
@@ -290,10 +269,57 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
       os_log("Device restriction prevented initialize", log: self.pluginLog, type: .info)
       sendBoolResult(false, result)
     default:
-      os_log("Has permissions continuing with setup", log: self.pluginLog, type: .debug)
-      setupSpeechRecognition(result)
+      // FORK-LOCAL FIX, see UPSTREAM.md change 3 — DAY-GATE-1 Ч.0.
+      //
+      // Upstream went straight to `setupSpeechRecognition` here, on the assumption that speech
+      // authorization implies microphone permission. It does not: they are two separate grants, and
+      // the microphone one can be missing on its own — never asked (an app whose FIRST speech grant
+      // predates the mic prompt) or switched off later in Settings → Privacy → Microphone. Then
+      // `initialize` answered TRUE, `listen` started an audio engine with no input, and the card sat
+      // on «Слушаю…» with no partial ever arriving and nothing to report. Both grants are asked for
+      // in both branches now, and a missing one is a plain false.
+      os_log("Speech authorized, checking microphone", log: self.pluginLog, type: .debug)
+      requestMicrophoneThenSetup(result)
     }
   }
+
+  /// The microphone half of the two permissions, then the engine. See `initialize`'s default branch.
+  private func requestMicrophoneThenSetup(_ result: @escaping FlutterResult) {
+    #if os(iOS)
+      self.requestIosMicrophonePermission({ (granted: Bool) -> Void in
+        if granted {
+          self.setupSpeechRecognition(result)
+        } else {
+          self.sendBoolResult(false, result)
+          os_log("User denied permission", log: self.pluginLog, type: .info)
+        }
+      })
+    #else
+      self.requestMacOSMicrophonePermission { success in
+        if success {
+          self.setupSpeechRecognition(result)
+        } else {
+          self.sendBoolResult(false, result)
+          os_log("User denied permission", log: self.pluginLog, type: .info)
+        }
+      }
+    #endif
+  }
+
+  #if os(iOS)
+    /// `requestRecordPermission` through whichever API this system has.
+    ///
+    /// `AVAudioSession.requestRecordPermission` is deprecated from iOS 17 in favour of
+    /// `AVAudioApplication`; the owner's phone runs iOS 27, and the deployment target is 15.0, so
+    /// both live here.
+    private func requestIosMicrophonePermission(_ completion: @escaping (Bool) -> Void) {
+      if #available(iOS 17.0, *) {
+        AVAudioApplication.requestRecordPermission(completionHandler: completion)
+      } else {
+        self.audioSession.requestRecordPermission(completion)
+      }
+    }
+  #endif
 
   fileprivate func sendBoolResult(_ value: Bool, _ result: @escaping FlutterResult) {
     DispatchQueue.main.async {

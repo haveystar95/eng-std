@@ -1,6 +1,7 @@
 import AudioToolbox
 import AVFoundation
 import Flutter
+import Speech
 import UIKit
 
 @main
@@ -28,6 +29,79 @@ import UIKit
     // an application-level channel, not a plugin, so that is the right messenger to hang it on.
     registerFeedbackSoundChannel(engineBridge.applicationRegistrar.messenger())
     registerLineAudioChannel(engineBridge.applicationRegistrar.messenger())
+    registerSpeechProbeChannel(engineBridge.applicationRegistrar.messenger())
+  }
+
+  /// ЧТО ОС ДУМАЕТ ПРО МИКРОФОН — наряд DAY-GATE-1, Ч.0.1. См. `lib/data/speech/speech_diagnostics.dart`.
+  ///
+  /// Читающий канал: НИ ОДНОГО разрешения он не запрашивает и ни одной сессии не поднимает, поэтому
+  /// служебная строка может опрашивать его хоть каждую секунду, не показывая человеку системных
+  /// окон и не отбирая аудиосессию у тренажёра.
+  ///
+  /// Почему не через `speech_to_text`: плагин отвечает на этот вопрос ОДНИМ булевым
+  /// (`hasPermission` = распознавание И микрофон), а вся диагностика 07.09 упирается ровно в то,
+  /// что эти два разрешения — разные и могут разойтись. Плюс «поддерживается ли язык цели» плагин
+  /// не отвечает вовсе: его `locales()` возвращает список имён, а не «создастся ли распознаватель
+  /// для en_US и жив ли он сейчас».
+  private func registerSpeechProbeChannel(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "com.denis.engstd/speech_probe", binaryMessenger: messenger)
+
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "probe" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      let locale = (call.arguments as? [String: Any])?["locale"] as? String ?? ""
+      // Пустая строка — это НЕ «локаль по умолчанию»: `SFSpeechRecognizer(locale:)` на ней
+      // возвращает nil, и один живой вызов с пустым localeId стоил проекта целого шага «Скажи
+      // вслух» (наряд, находка F1). Здесь она честно отвечает «языка нет».
+      let recognizer = locale.isEmpty ? nil : SFSpeechRecognizer(locale: Locale(identifier: locale))
+
+      var payload: [String: Any] = [
+        "recognition": Self.speechAuthWord(SFSpeechRecognizer.authorizationStatus()),
+        "microphone": Self.recordPermissionWord(),
+        "recognizer_supported": recognizer != nil,
+        "recognizer_available": recognizer?.isAvailable ?? false,
+        "on_device_supported": false,
+      ]
+      if #available(iOS 13.0, *), let recognizer {
+        payload["on_device_supported"] = recognizer.supportsOnDeviceRecognition
+      }
+      result(payload)
+    }
+  }
+
+  private static func speechAuthWord(_ status: SFSpeechRecognizerAuthorizationStatus) -> String {
+    switch status {
+    case .authorized: return "granted"
+    case .denied: return "denied"
+    case .restricted: return "restricted"
+    case .notDetermined: return "not_determined"
+    @unknown default: return "unknown"
+    }
+  }
+
+  /// Разрешение на запись, спрошенное тем API, которое действует на этой системе.
+  ///
+  /// `AVAudioSession.recordPermission` объявлено устаревшим в iOS 17 в пользу
+  /// `AVAudioApplication.shared.recordPermission`; телефон владельца стоит на iOS 27. Старая ветка
+  /// остаётся, потому что цель развёртывания — 15.0.
+  private static func recordPermissionWord() -> String {
+    if #available(iOS 17.0, *) {
+      switch AVAudioApplication.shared.recordPermission {
+      case .granted: return "granted"
+      case .denied: return "denied"
+      case .undetermined: return "not_determined"
+      @unknown default: return "unknown"
+      }
+    }
+    switch AVAudioSession.sharedInstance().recordPermission {
+    case .granted: return "granted"
+    case .denied: return "denied"
+    case .undetermined: return "not_determined"
+    @unknown default: return "unknown"
+    }
   }
 
   /// ОЗВУЧКА РЕПЛИКИ, сделанная сервером заранее (наряд TTS-1) — см. `lib/data/line_audio.dart`.

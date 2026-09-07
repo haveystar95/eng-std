@@ -19,4 +19,5 @@ export 'pair_badge.dart';
 export 'paper_card.dart';
 export 'progress_line.dart';
 export 'saved_state.dart';
+export 'speech_permission_notice.dart';
 export 'verdict_button.dart';

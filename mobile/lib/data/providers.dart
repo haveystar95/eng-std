@@ -32,6 +32,7 @@ import 'review_sync.dart';
 import 'pool_sync.dart';
 import 'seq_counter.dart';
 import 'session_completion_sync.dart';
+import 'speech/speech_diagnostics.dart';
 import 'speech/speech_recognizer.dart';
 import 'token_store.dart';
 import 'triage_queue.dart';
@@ -46,9 +47,20 @@ final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
 /// prepared. Overridden in tests with a fake — a simulator has no microphone, so a widget test of
 /// the speaking card can only exist through this provider.
 final speechRecognizerProvider = Provider<SpeechRecognizer>((ref) {
-  final recognizer = PluginSpeechRecognizer();
+  final recognizer = PluginSpeechRecognizer(null, ref.read(speechDiagnosticsProvider));
   ref.onDispose(recognizer.cancel);
   return recognizer;
+});
+
+/// СОСТОЯНИЕ КАНАЛА ГОЛОСА, живое (наряд DAY-GATE-1, Ч.0.1) — {@see SpeechDiagnostics}.
+///
+/// Один экземпляр на приложение, как и распознаватель, и по той же причине: журнал имеет смысл
+/// только сквозной. Он копится ВСЕГДА, а не под дев-флагом: «жалоба» (Ч.0.5) прикладывает последние
+/// пятьдесят строк к отчёту, и они нужны в тот момент, когда поломка уже случилась.
+final speechDiagnosticsProvider = Provider<SpeechDiagnostics>((ref) {
+  final diagnostics = SpeechDiagnostics();
+  ref.onDispose(diagnostics.dispose);
+  return diagnostics;
 });
 
 /// The local-first store. One instance for the app; screens read through it.

@@ -138,6 +138,7 @@ void main() {
         child: PlanDialogueShell(
           dialogue: chain,
           turnIndex: 1,
+          speechLocaleId: 'en_US',
           voiceReady: voiceReady,
           onSpeak: spoken.add,
           card: const Text('card'),

@@ -1373,6 +1373,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
               ),
               child: PlanDialogueSayAloud(
                 turn: pending.first,
+                speechLocaleId: sttLocaleFor(_sessionLang),
                 onSpeak: (text) =>
                     unawaited(_pronouncer.speakText(text, targetLang: _sessionLang)),
                 onDone: () => setState(() => _spokenUntasked.add(pending.first.termId)),
@@ -1666,6 +1667,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                       ? PlanDialogueShell(
                           dialogue: _dialogueHere!,
                           turnIndex: _turnIndexAt(_pos),
+                          speechLocaleId: sttLocaleFor(_sessionLang),
                           // «ОЗВУЧКА ГОТОВА» — про ту строку, которая сейчас зазвучит, чья бы
                           // карточка ни стояла впереди: у своего хода это реплика перед ним, у
                           // такта понимания — она же и есть карточка (наряд Ч.1.3).

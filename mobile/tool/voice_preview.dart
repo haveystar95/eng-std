@@ -146,6 +146,7 @@ class _DialoguePreview extends StatelessWidget {
       PlanDialogueShell(
         dialogue: _dialogue,
         turnIndex: 3,
+        speechLocaleId: 'en_US',
         voiceReady: voiceReady,
         rescue: _rescue,
         answeredAloud: const {'t2'},

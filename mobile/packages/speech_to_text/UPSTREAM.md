@@ -78,6 +78,29 @@ interface dependency, tests, example app) is byte-for-byte the pub.dev release.
 
   before starting the recognition task.
 
+- **`initialize` now asks for BOTH permissions on every path** (наряд DAY-GATE-1, Ч.0.2 — the
+  second fork-local change, and a straight bug fix rather than a feature).
+
+  Upstream's `switch` on `SFSpeechRecognizer.authorizationStatus()` requested the microphone only
+  inside the `.notDetermined` branch, on its way through the speech-recognition prompt. The
+  `default:` branch — i.e. speech recognition ALREADY `.authorized` — went straight to
+  `setupSpeechRecognition`, never looking at the microphone at all.
+
+  Those are two independent grants. Speech authorized + microphone missing is reachable in ordinary
+  use: an install whose first speech grant predates the microphone prompt, or a person who switches
+  the microphone off later in Settings → Privacy → Microphone. In that state upstream's
+  `initialize` answers **true** while `hasPermission` answers **false**, `listen` starts an
+  `AVAudioEngine` over an input node with no permission, no partial result ever arrives, and the
+  calling card sits on «Слушаю…» until its own watchdog — with nothing anywhere naming the cause.
+  That is the shape of the failure the owner hit on device on 07.09.
+
+  The two branches now share `requestMicrophoneThenSetup(_:)`, and the iOS request itself goes
+  through `requestIosMicrophonePermission(_:)`, which uses `AVAudioApplication.requestRecordPermission`
+  on iOS 17+ (`AVAudioSession.requestRecordPermission` is deprecated there; the owner's phone runs
+  iOS 27) and the old API below it, since the deployment target is 15.0.
+
+  **Upstream-worthy:** yes — this is a defect in upstream, not a local preference. Track with SLV-5.
+
 ### Android — untouched
 
 Per this task's scope (the app is iOS-only), the Android Kotlin plugin was not modified. It

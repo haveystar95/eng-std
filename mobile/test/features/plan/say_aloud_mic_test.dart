@@ -10,6 +10,8 @@ import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/plan/plan_dialogue.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/speech_probe_channel.dart';
+
 /// МИКРОФОН ВМЕСТО ЧЕСТНОГО СЛОВА — наряд SCENE-RUN, Ч.4.
 ///
 /// Кнопка «Сказал вслух» спрашивала человека, сделал ли он то, чего экран не видел. Теперь экран
@@ -22,6 +24,9 @@ class _ScriptedRecognizer implements SpeechRecognizer {
   final List<SpeechAttempt> _script;
   final bool permitted;
   int calls = 0;
+
+  /// Язык, на котором у плагина просили слушать, — по вызову.
+  final List<String> locales = [];
 
   @override
   bool get isReady => permitted;
@@ -41,6 +46,7 @@ class _ScriptedRecognizer implements SpeechRecognizer {
     List<String> contextualStrings = const [],
     ValueChanged<String>? onPartial,
   }) async {
+    locales.add(localeId);
     final attempt = _script[calls.clamp(0, _script.length - 1)];
     calls++;
 
@@ -64,6 +70,9 @@ void main() {
 
   late int done;
 
+  /// Ответ ОС про разрешения — {@see mockSpeechProbe}.
+  mockSpeechProbe();
+
   setUp(() => done = 0);
 
   Widget host(SpeechRecognizer recognizer) => ProviderScope(
@@ -83,6 +92,7 @@ void main() {
         body: SingleChildScrollView(
           child: PlanDialogueSayAloud(
             turn: turn,
+            speechLocaleId: 'en_US',
             onSpeak: (_) {},
             onDone: () => done++,
           ),
@@ -142,5 +152,24 @@ void main() {
     await tester.tap(find.text('Сказал вслух'));
     await tester.pumpAndSettle();
     expect(done, 1);
+  });
+
+  // ПРАВИЛО: наряд DAY-GATE-1, Ч.0.2 — микрофон слушает НА ЯЗЫКЕ ЦЕЛИ.
+  // ЛОВИТ: пустую строку вместо локали. Этот шаг открывал распознаватель с `localeId: ''`, а на
+  // iOS `SFSpeechRecognizer(locale: Locale(identifier: ""))` — это nil: `noRecognizerError` на
+  // каждом ходу, микрофон здесь не работал НИКОГДА, и молча — экран показывал «Не расслышали» и
+  // отпускал ход, будто в комнате было шумно.
+  testWidgets('микрофон открывается на языке плана, а не с пустой локалью', (tester) async {
+    final recognizer = _ScriptedRecognizer(const [SpeechAttempt.heard('my background')]);
+    await tester.pumpWidget(host(recognizer));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Сказать вслух'));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+
+    expect(recognizer.locales, isNotEmpty);
+    expect(recognizer.locales.every((l) => l.trim().isNotEmpty), isTrue);
+    expect(recognizer.locales.first, 'en_US');
   });
 }

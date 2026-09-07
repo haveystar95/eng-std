@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/speech/speech_diagnostics.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/data/speech/speech_turn.dart';
 
@@ -358,6 +360,68 @@ void main() {
       expect(mic.pauseFors.single, const Duration(seconds: 3));
       turn.cancel();
       fake.flushMicrotasks();
+    });
+  });
+
+  // ПРАВИЛО: наряд DAY-GATE-1, Ч.0.2 — «до первого звука движок ждёт хотя бы 5 с».
+  // ЛОВИТ: сторож, срабатывающий раньше, чем человек успел вдохнуть. Окно приезжает с сервера
+  // (`listen_seconds`), а сторож в прогоне ДЕЛАЕТ ХОД за человека пустым ответом (`again` в
+  // append-only журнал) — то есть один маленький конфиг превращает прогон в конвейер промахов,
+  // и починить это задним числом нечем: журнал append-only.
+  test('сторож не может сработать раньше пяти секунд, каким бы малым ни приехал listen_seconds', () {
+    fakeAsync((fake) {
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config.copyWith(silenceBeforeSkip: const Duration(seconds: 1)));
+      SpeechTurnResult? result;
+      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
+      fake.flushMicrotasks();
+
+      // Секунда, две, четыре — человек молчит, и ход всё ещё его.
+      fake.elapse(const Duration(seconds: 4, milliseconds: 900));
+      expect(result, isNull, reason: 'ход отдан раньше пола ожидания');
+
+      fake.elapse(const Duration(milliseconds: 200));
+      expect(result?.outcome, SpeechTurnOutcome.silent);
+    });
+  });
+
+  // ПРАВИЛО: наряд DAY-GATE-1, Ч.0.1 — служебная строка называет стадию хода и код отказа.
+  // ЛОВИТ: строку, которая показывает «listening» после того, как ход закрылся, и «closedBySilence»
+  // там, где канал упал. Диагностика, врущая о состоянии, хуже её отсутствия: 07.09 сутки ушли
+  // на «Слушаю…», которое значило пять разных вещей сразу.
+  test('стадии хода различают «договорил», «сторож» и «канал упал»', () {
+    fakeAsync((fake) {
+      final diagnostics = SpeechDiagnostics(channel: const MethodChannel('test/absent'));
+
+      // Договорил: слово, потом тишина.
+      final mic1 = _DrivenRecognizer();
+      SpeechTurn(mic1, config: config, diagnostics: diagnostics)
+          .listen(expected: const [], localeId: 'en_US');
+      fake.flushMicrotasks();
+      expect(diagnostics.phase, SpeechPhase.opening, reason: 'открытие — ещё не «слушаю»');
+      mic1.say('my back hurts');
+      expect(diagnostics.phase, SpeechPhase.listening);
+      expect(diagnostics.lastPartial, 'my back hurts');
+      fake.elapse(const Duration(seconds: 3));
+      expect(diagnostics.phase, SpeechPhase.closedBySilence);
+
+      // Сторож: ни слова за всё окно.
+      final mic2 = _DrivenRecognizer();
+      SpeechTurn(mic2, config: config, diagnostics: diagnostics)
+          .listen(expected: const [], localeId: 'en_US');
+      fake.flushMicrotasks();
+      fake.elapse(const Duration(seconds: 16));
+      expect(diagnostics.phase, SpeechPhase.closedByTimeout);
+
+      // Канал упал до первого слова — и код называет, чем именно.
+      final mic3 = _DrivenRecognizer();
+      SpeechTurn(mic3, config: config, diagnostics: diagnostics)
+          .listen(expected: const [], localeId: 'en_US');
+      fake.flushMicrotasks();
+      mic3.close(const SpeechAttempt.unavailable());
+      fake.elapse(const Duration(milliseconds: 200));
+      expect(diagnostics.phase, SpeechPhase.failed);
+      expect(diagnostics.lastErrorCode, 'channel_down');
     });
   });
 }

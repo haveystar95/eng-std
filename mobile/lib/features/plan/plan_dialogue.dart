@@ -33,7 +33,8 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../data/models.dart' show PlanDialogue, PlanDialogueTurn;
-import '../../data/providers.dart' show speechRecognizerProvider;
+import '../../data/providers.dart' show speechDiagnosticsProvider, speechRecognizerProvider;
+import '../../data/speech/speech_diagnostics.dart';
 import '../../data/speech/speech_turn.dart';
 import 'plan_ui.dart';
 
@@ -50,6 +51,7 @@ class PlanDialogueShell extends StatefulWidget {
     required this.turnIndex,
     required this.card,
     required this.onSpeak,
+    required this.speechLocaleId,
     this.taktQuestion,
     this.voiceReady = true,
     this.rescue = const [],
@@ -87,6 +89,14 @@ class PlanDialogueShell extends StatefulWidget {
   /// Say a line out loud. The SESSION owns the speech engine — it raises the audio route once for
   /// the whole sitting — so the shell asks rather than warming up an engine of its own.
   final void Function(String text) onSpeak;
+
+  /// ЯЗЫК, НА КОТОРОМ СЛУШАЕТ МИКРОФОН — `sttLocaleFor(<язык плана>)`, тот же, что у карточек
+  /// говорения (наряд DAY-GATE-1, Ч.0.2, находка F1).
+  ///
+  /// Приезжает сверху и обязателен. Раньше шаг «Скажи вслух» открывал распознаватель с ПУСТОЙ
+  /// строкой — на iOS это `SFSpeechRecognizer(locale: Locale(identifier: ""))`, то есть nil, то есть
+  /// `noRecognizerError` на каждый ход: микрофон не работал там вообще никогда, и молча.
+  final String speechLocaleId;
 
   /// СПАСАТЕЛЕМ ВОСПОЛЬЗОВАЛИСЬ на текущем ходу (наряд SCENE-RUN, Ч.2.5).
   ///
@@ -344,6 +354,7 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
         if (untaken != null)
           PlanDialogueSayAloud(
             turn: untaken,
+            speechLocaleId: widget.speechLocaleId,
             onSpeak: widget.onSpeak,
             onDone: () => widget.onSpokeUntasked!(untaken.termId),
           )
@@ -795,11 +806,15 @@ class PlanDialogueSayAloud extends ConsumerStatefulWidget {
   const PlanDialogueSayAloud({
     super.key,
     required this.turn,
+    required this.speechLocaleId,
     required this.onSpeak,
     required this.onDone,
   });
 
   final PlanDialogueTurn turn;
+
+  /// Язык распознавания — {@see PlanDialogueShell.speechLocaleId}.
+  final String speechLocaleId;
 
   /// «Послушать, как это звучит» — тем же голосом, что и весь разговор.
   final void Function(String text) onSpeak;
@@ -827,6 +842,10 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
   /// Микрофон доступен: разрешение уже дано. Null — ещё не спрашивали.
   bool? _permitted;
 
+  /// Что ответила ОС про разрешения в последний раз — {@see SpeechProbe}. Null, пока не спрашивали
+  /// или пока нативной двери нет (харнессы, тесты).
+  SpeechProbe? _probe;
+
   @override
   void initState() {
     super.initState();
@@ -840,18 +859,29 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
   }
 
   Future<void> _askPermission() async {
+    // ПРОБА — В СТОРОНЕ ОТ ДОРОГИ (наряд DAY-GATE-1, Ч.0.2). Диагностика никогда не стоит между
+    // человеком и микрофоном: `await` здесь означал бы, что нативная дверь, которой на этой сборке
+    // может не быть вовсе, держит кнопку записи. Ответ приезжает и перерисовывает строку сам.
+    unawaited(_refreshProbe());
     final granted = await ref.read(speechRecognizerProvider).hasPermission;
     if (mounted) setState(() => _permitted = granted);
+  }
+
+  Future<void> _refreshProbe() async {
+    final probe = await ref.read(speechDiagnosticsProvider).refresh(widget.speechLocaleId);
+    if (mounted) setState(() => _probe = probe);
   }
 
   Future<void> _listen() async {
     if (_listening) return;
     final recognizer = ref.read(speechRecognizerProvider);
+    final diagnostics = ref.read(speechDiagnosticsProvider);
     if (_permitted != true) {
       // ТАП — ЭТО И ЕСТЬ ЗАПРОС РАЗРЕШЕНИЯ. Экран, который прячет кнопку до разрешения, выглядит
       // сломанным; экран, который просит разрешение до того, как человек захотел говорить, —
       // навязчивым.
       final ready = await recognizer.prepare();
+      unawaited(_refreshProbe());
       if (!mounted) return;
       setState(() => _permitted = ready);
       if (!ready) return;
@@ -863,26 +893,37 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
       _heard = '';
     });
 
-    final turn = SpeechTurn(recognizer);
+    final turn = SpeechTurn(recognizer, diagnostics: diagnostics);
     _turn = turn;
-    final result = await turn.listen(
-      // Ход не оценивается, поэтому «ожидаемого» у него нет: реплика уходит только подсказкой
-      // распознавателю, и ни с чем не сравнивается.
-      expected: const [],
-      localeId: '',
-      contextualStrings: [widget.turn.text],
-      onPartial: (text) {
-        if (mounted && _listening) setState(() => _heard = text);
-      },
-    );
-    if (_turn == turn) _turn = null;
+    SpeechTurnResult result = const SpeechTurnResult(SpeechTurnOutcome.unavailable);
+    try {
+      result = await turn.listen(
+        // Ход не оценивается, поэтому «ожидаемого» у него нет: реплика уходит только подсказкой
+        // распознавателю, и ни с чем не сравнивается.
+        expected: const [],
+        // ЯЗЫК ОБЯЗАТЕЛЕН (наряд DAY-GATE-1, находка F1): здесь стояла пустая строка, и на iOS это
+        // распознаватель, которого нет, — молча, на каждом ходу, с самого появления шага.
+        localeId: widget.speechLocaleId,
+        contextualStrings: [widget.turn.text],
+        onPartial: (text) {
+          if (mounted && _listening) setState(() => _heard = text);
+        },
+      );
+    } finally {
+      // ХОД ОБЯЗАН ЗАКРЫТЬСЯ, ЧЕМ БЫ ОН НИ КОНЧИЛСЯ. Исключение из движка или из плагина оставляло
+      // экран на «Слушаю…» навсегда — ровно та картинка, с которой начался этот наряд.
+      if (_turn == turn) _turn = null;
+      if (mounted) {
+        setState(() {
+          _listening = false;
+          _attempts++;
+          if (result.transcript.isNotEmpty) _heard = result.transcript;
+        });
+      }
+    }
     if (!mounted) return;
-
-    setState(() {
-      _listening = false;
-      _attempts++;
-      if (result.transcript.isNotEmpty) _heard = result.transcript;
-    });
+    // Разрешение могло отозваться между ходами — строка про Настройки должна успеть появиться.
+    if (result.outcome == SpeechTurnOutcome.unavailable) unawaited(_refreshProbe());
 
     // СКАЗАНО — это непустой транскрипт, и только он. Вторая пустая попытка тоже ставит пузырь:
     // микрофон, который не расслышал, не имеет права держать человека в этом ходу.
@@ -957,6 +998,16 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
               height: 1.55,
               color: AppColors.secondary,
             ),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+        ],
+        // ОТКАЗАНО В НАСТРОЙКАХ — говорим словами и даём дорогу туда (Ч.0.2). Раньше здесь молча
+        // подменялась кнопка, и человек, у которого микрофон был выключен в Настройках, не имел
+        // ни одного способа об этом узнать.
+        if (_probe case final probe? when probe.blockedInSettings) ...[
+          SpeechPermissionNotice(
+            micDenied: probe.microphone != SpeechPermission.granted,
+            recognitionDenied: probe.recognition != SpeechPermission.granted,
           ),
           const SizedBox(height: AppSpacing.s12),
         ],

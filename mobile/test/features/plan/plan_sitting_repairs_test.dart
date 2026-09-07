@@ -16,6 +16,8 @@ import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/training/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/speech_probe_channel.dart';
+
 /// WHAT A PLAN SITTING OWES THE LEARNER — the client half of E2E-SIM-2.
 ///
 ///   С-3/С-6  the seam's footnote is drawn AFTER the answer, and names the term rather than the
@@ -27,6 +29,9 @@ import 'package:eng_std/l10n/app_localizations.dart';
 ///   С-13     the sitting's stored position moves on «Проверить», not on «Дальше»: a kill between
 ///            the two used to re-ask a card that was already answered.
 void main() {
+  // Ответ ОС про разрешения микрофона — {@see mockSpeechProbe}: на экране есть карточка говорения.
+  mockSpeechProbe();
+
   const planId = '01PLAN';
 
   setUp(() => FlutterSecureStorage.setMockInitialValues({}));
