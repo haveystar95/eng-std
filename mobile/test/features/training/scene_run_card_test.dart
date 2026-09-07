@@ -255,6 +255,40 @@ void main() {
     expect(answers.single.verdict, LocalCheck.correct);
   });
 
+  // ПРАВИЛО: «клиент никогда не строже сервера» (инвариант проекта; сервер судит по ключу только
+  // когда ключ ЕСТЬ — `SubmitReviewsHandler`, ветка `speaking_key !== null`, иначе реплика целиком).
+  // ЛОВИТ: реплику без ключа, у которой приехали упрощённые формы. Список «что засчитывается»
+  // состоял тогда из ОДНИХ альтернатив — а они не куски реплики, а другие способы её сказать, — и
+  // человек, произнёсший реплику слово в слово, получал «Не то», пока сервер писал в журнал «верно»
+  // (телефон владельца 08.09: «What skills are most important for this role?» при
+  // `speaking_keys = ["top skills?", "which skills matter most?"]`).
+  testWidgets('реплика без ключа засчитывается целиком, а не по упрощённым формам', (tester) async {
+    final mic = _DrivenRecognizer();
+    final answers = <SessionAnswer>[];
+    final noKey = SessionCard(
+      termId: '01ASK',
+      mode: ExerciseMode.speaking,
+      type: 'phrase',
+      prompt: 'Какие навыки наиболее важны для этой роли?',
+      answer: 'What skills are most important for this role?',
+      speakingKeys: const ['top skills?', 'which skills matter most?'],
+      ladderStep: 3,
+    );
+
+    await tester.pumpWidget(
+      host(noKey, run: const SceneRunKnobs(), recognizer: mic, onAnswered: answers.add),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    mic.say('what skills are most important for this role');
+    await tester.pumpAndSettle();
+
+    expect(answers, hasLength(1));
+    expect(answers.single.verdict, LocalCheck.correct);
+    expect(find.textContaining('Не то'), findsNothing);
+  });
+
   testWidgets('обрыв на полуслове — «скажи ещё раз», журнал не пишется, микрофон открывается снова (Ч.1.4)', (
     tester,
   ) async {

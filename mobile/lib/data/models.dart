@@ -512,11 +512,21 @@ class SessionCard {
 
   /// ВСЁ, ЧТО ЗАСЧИТЫВАЕТСЯ ГОЛОСОМ — ключ реплики и её упрощённые формы, без пустых. Пусто, когда
   /// ключа нет и просят всю реплику целиком.
-  List<String> get spokenTargets => [
-    ?spokenTarget,
-    for (final alt in speakingKeys)
-      if (alt.trim().isNotEmpty) alt.trim(),
-  ];
+  ///
+  /// БЕЗ КЛЮЧА СПИСКА НЕТ ВООБЩЕ, даже когда упрощённые формы приехали. Так судит сервер
+  /// (`SubmitReviewsHandler`: ветка ключа требует `speaking_key !== null`, иначе реплика
+  /// сравнивается целиком), и клиент обязан быть не строже. Без этой оговорки список выходил
+  /// СОСТОЯЩИМ ИЗ ОДНИХ АЛЬТЕРНАТИВ — а они не куски реплики, а другие способы её сказать
+  /// («top skills?» для «What skills are most important for this role?»): человек произносил
+  /// реплику слово в слово, телефон печатал «Не то», а сервер в ту же секунду засчитывал ответ
+  /// верным (телефон владельца, 08.09).
+  List<String> get spokenTargets => spokenTarget == null
+      ? const []
+      : [
+          spokenTarget!,
+          for (final alt in speakingKeys)
+            if (alt.trim().isNotEmpty) alt.trim(),
+        ];
 
   /// Present ONLY on the forward-recognition card (rung 1), aligned index-for-index with [options]:
   /// the term each option's translation belongs to. That card is graded by IDENTITY — the learner
