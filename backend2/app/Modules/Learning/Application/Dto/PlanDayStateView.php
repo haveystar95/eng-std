@@ -24,5 +24,16 @@ final readonly class PlanDayStateView
         public int $materialMinutes = 0,
         public int $conversationCards = 0,
         public int $conversationMinutes = 0,
+        /**
+         * ЭТАПЫ ДНЯ ДЛЯ ЭКРАНА — три обязательных и, если есть что повторять, «Повторить ошибки»
+         * (наряд DAY-GATE-1, Ч.1.1).
+         *
+         * Тот же список, что считает прогресс плана ({@see \App\Modules\Learning\Application\Service\PlanProgress}),
+         * плюс необязательная строка: про сегодняшние промахи знает только перепись, потому что
+         * только ей отдают журнал повторов ({@see \App\Modules\Learning\Domain\ValueObject\PlanTermStage::$retrainedOn}).
+         *
+         * @var list<array{stage: \App\Modules\Learning\Domain\ValueObject\PlanDayStage, state: \App\Modules\Learning\Domain\ValueObject\PlanDayStageState, cards: int}>
+         */
+        public array $dayStages = [],
     ) {}
 }

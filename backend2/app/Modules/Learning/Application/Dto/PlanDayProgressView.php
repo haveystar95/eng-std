@@ -24,12 +24,15 @@ final readonly class PlanDayProgressView
         public array $standings,
         public array $content,
         /**
-         * «День пройден» — every one of its words has closed STAGE A.
+         * «ДЕНЬ ПРОЙДЕН» — все три обязательных этапа пройдены НАСКВОЗЬ (решение владельца 07.09,
+         * наряд DAY-GATE-1): «Слова и фразы», «Разговор» и «Скажи сам»
+         * ({@see \App\Modules\Learning\Domain\Service\PlanDayPassage::passed()}).
          *
-         * Stage A and not all three, deliberately: a day is a sitting, and what a sitting can
-         * honestly promise is that every word of it was met, recognised both ways, assembled and
-         * said out loud. Stages B and C need nights, and waiting for them would mean the focus never
-         * moves on a three-day plan.
+         * Раньше здесь стояло «каждое слово дня закрыло ступень A», и это оказалось не тем вопросом.
+         * Лестница (A/B/C) — проекция журнала, «что эта пара ещё не умеет»; прохождение дня — факт,
+         * что человек дошёл до конца. Реплика, отвеченная сегодня неверно, день больше не держит:
+         * по правилу «один показ ступени в день» она вернётся завтра, а вечер, из которого нет
+         * выхода, — это то, что живой прогон 07.09 и показал.
          */
         public bool $passed,
         /**
@@ -57,5 +60,43 @@ final readonly class PlanDayProgressView
          * @var list<array{turn: string, term_id: string}>|null
          */
         public ?array $dialogue = null,
+        /**
+         * ЭТАПЫ ЭТОГО ДНЯ со своими состояниями — три обязательных, в порядке
+         * ({@see \App\Modules\Learning\Domain\Service\PlanDayPassage::stages()}).
+         *
+         * Здесь их ровно три: «Повторить ошибки» — строка ЭКРАНА, а не ворота, и его добавляет
+         * перепись дня ({@see \App\Modules\Learning\Application\Service\PlanDayStateCensus}), которая
+         * одна и знает про сегодняшние промахи. Прогресс плана считает то, от чего зависят замок и
+         * фокус, и ничего сверх.
+         *
+         * @var list<array{stage: \App\Modules\Learning\Domain\ValueObject\PlanDayStage, state: \App\Modules\Learning\Domain\ValueObject\PlanDayStageState, cards: int}>
+         */
+        public array $stages = [],
     ) {}
+
+    /**
+     * Тот же день, но уже посчитанный машиной этапов.
+     *
+     * Прохождение считается ПОСЛЕ того, как стойки собраны — прогон сцены нужно спросить у журнала
+     * прогонов, а свои ходы сцены читаются из этой самой цепочки, — поэтому вид рождается без
+     * вердикта и получает его вторым проходом. Копией, а не мутацией: DTO остаётся readonly.
+     *
+     * @param  list<array{stage: \App\Modules\Learning\Domain\ValueObject\PlanDayStage, state: \App\Modules\Learning\Domain\ValueObject\PlanDayStageState, cards: int}>  $stages
+     */
+    public function withPassage(bool $passed, array $stages): self
+    {
+        return new self(
+            index: $this->index,
+            collectionId: $this->collectionId,
+            termIds: $this->termIds,
+            standings: $this->standings,
+            content: $this->content,
+            passed: $passed,
+            sceneIntro: $this->sceneIntro,
+            sceneTitle: $this->sceneTitle,
+            skillOutcomes: $this->skillOutcomes,
+            dialogue: $this->dialogue,
+            stages: $stages,
+        );
+    }
 }

@@ -37,6 +37,18 @@ final readonly class PlanTermStage
         public bool $saidInRun = false,
         /** …и хотя бы раз — в первые секунды прослушивания. */
         public bool $saidFast = false,
+        /**
+         * ЛОКАЛЬНЫЙ ДЕНЬ, В КОТОРЫЙ РЕПЛИКУ УЖЕ БРАЛИ «ПОВТОРИТЬ ОШИБКИ» (наряд DAY-GATE-1).
+         *
+         * Третий факт, которого нет в журнале, и по той же причине, что и первые два: журнал хранит
+         * режим и вердикт, а это про то, ОТКУДА взялась карточка. Очередь посадки на телефоне
+         * переспрашивает промах в той же сессии и пишет за него ответ, так что по числу ответов
+         * повтор по кнопке от переспроса очереди не отличить.
+         *
+         * Один дополнительный показ в день, и дата — это то, что делает «в день» правдой без ночной
+         * уборки. `Y-m-d` в часовом поясе учащегося; null — сегодня ещё не брали.
+         */
+        public ?string $retrainedOn = null,
     ) {}
 
     /** Тот же факт после хода в прогоне сцены — лучшим результатом, никогда не хуже. */
@@ -47,6 +59,19 @@ final readonly class PlanTermStage
             $this->termId,
             $this->saidInRun || $said,
             $this->saidFast || ($said && $fast),
+            $this->retrainedOn,
         );
+    }
+
+    /** Реплику взяли «Повторить ошибки» сегодня — больше сегодня её этой дверью не выдать. */
+    public function afterRetrain(string $today): self
+    {
+        return new self($this->planId, $this->termId, $this->saidInRun, $this->saidFast, $today);
+    }
+
+    /** Брали ли её этой дверью СЕГОДНЯ. */
+    public function retrainedOn(string $today): bool
+    {
+        return $this->retrainedOn === $today;
     }
 }

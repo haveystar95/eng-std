@@ -22,6 +22,9 @@ final class EloquentPlanTermStageRepository implements PlanTermStageRepository
                 termId: (string) $row->term_id,
                 saidInRun: (bool) $row->said_in_run,
                 saidFast: (bool) $row->said_fast,
+                // Postgres отдаёт `date` строкой `Y-m-d`; лестница плана меряет днями в этом же
+                // виде, поэтому дата не разворачивается в объект и обратно.
+                retrainedOn: $row->retrained_on === null ? null : substr((string) $row->retrained_on, 0, 10),
             );
         }
 
@@ -38,11 +41,12 @@ final class EloquentPlanTermStageRepository implements PlanTermStageRepository
                 'term_id' => $stage->termId,
                 'said_in_run' => $stage->saidInRun,
                 'said_fast' => $stage->saidFast,
+                'retrained_on' => $stage->retrainedOn,
                 'updated_at' => now(),
                 'created_at' => now(),
             ]],
             ['plan_id', 'term_id'],
-            ['said_in_run', 'said_fast', 'updated_at'],
+            ['said_in_run', 'said_fast', 'retrained_on', 'updated_at'],
         );
     }
 }

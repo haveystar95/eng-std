@@ -10,11 +10,14 @@ use App\Modules\Learning\Application\Dto\PlanProgressView;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
+use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
+use App\Modules\Learning\Domain\Service\PlanDayPassage;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\Service\RoleLineModes;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
+use App\Modules\Learning\Domain\ValueObject\PlanTermCard;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\TermId;
@@ -58,6 +61,12 @@ final readonly class PlanProgress
         private PlanStandings $standings,
         private LearnerProfileReader $profile,
         private Clock $clock,
+        /**
+         * БЫЛ ЛИ ПРОГОН ЭТОЙ СЦЕНЫ — третий этап дня спрашивают у журнала прогонов, а не у лестницы
+         * (наряд DAY-GATE-1, Ч.1.1): «Скажи сам» закрывается фактом, что человек сцену проговорил.
+         */
+        private PlanSceneRunRepository $sceneRuns,
+        private PlanSceneTurns $sceneTurns = new PlanSceneTurns(),
     ) {}
 
     /** @param list<PlanDay> $days */
@@ -78,6 +87,18 @@ final readonly class PlanProgress
                 continue;
             }
             $progress[$day->dayIndex()] = $this->dayProgress($plan, $day, $today, $tz, $yesterday);
+        }
+
+        // ВТОРЫМ ПРОХОДОМ — ЭТАПЫ И ВЕРДИКТ (наряд DAY-GATE-1, Ч.1.1). Отдельно, потому что «Скажи
+        // сам» спрашивает журнал прогонов (один запрос на план, не на день), а свои ходы сцены
+        // читаются из уже собранной цепочки этого же вида.
+        $ranScenes = [];
+        foreach ($this->sceneRuns->forPlan($plan->id()) as $run) {
+            $ranScenes[$run->sceneIndex] = true;
+        }
+        foreach ($progress as $index => $view) {
+            $stages = $this->stagesOf($view, isset($ranScenes[$index]));
+            $progress[$index] = $view->withPassage(PlanDayPassage::passed($stages), $stages);
         }
 
         return new PlanProgressView(
@@ -158,7 +179,9 @@ final readonly class PlanProgress
             termIds: $termIds,
             standings: $standings,
             content: $content,
-            passed: $this->stageAClosedForAll($standings, $content),
+            // ВЕРДИКТ СТАВИТСЯ ВТОРЫМ ПРОХОДОМ ({@see forPlan()}): здесь стоек ещё нет ни у одного
+            // другого дня, а «Скажи сам» спрашивают у журнала прогонов всего плана сразу.
+            passed: false,
             sceneIntro: self::sceneText($day, 'intro'),
             sceneTitle: self::sceneText($day, 'title') ?? $day->title(),
             skillOutcomes: self::skillOutcomesOf($day),
@@ -256,70 +279,58 @@ final readonly class PlanProgress
     }
 
     /**
-     * Every card OF THE SCENE has closed stage A.
+     * ЭТАПЫ ЭТОГО ДНЯ — «Слова и фразы», «Разговор», «Скажи сам» (наряд DAY-GATE-1, Ч.1.1).
      *
-     * A day with no readable word is NOT passed — an empty checklist is «nothing happened», not
-     * «everything happened», and letting it pass would walk the focus through a broken day silently.
+     * Здесь только СБОР входа; само правило — в Domain ({@see PlanDayPassage}), потому что вопрос
+     * «пройден ли этап» задают четверо: вкладка «План» (замок), экран дня, итог и сборщик сессии.
      *
-     * ## THE RESCUE KIT DOES NOT HOLD A DAY OPEN, and it is day 1's alone that could
+     * ## ДЕНЬ БЕЗ ЕДИНОЙ ЧИТАЕМОЙ КАРТОЧКИ НЕ ПРОЙДЕН
      *
-     * The five phrases (канон §5) are written into day 1 and dealt in every warm-up after it. They
-     * belong to the PLAN rather than to that scene: «день пройден» answers «я прошёл эту ситуацию»,
-     * and «Помедленнее, пожалуйста» is not part of the situation — it is what the learner says in
-     * all of them.
+     * Пустой чек-лист — это «ничего не случилось», а не «случилось всё», и пропустить фокус сквозь
+     * сломанный день молча нельзя. Поэтому день без карточек сцены отвечает «не пройден» до всякой
+     * машины этапов.
      *
-     * The practical half matters as much as the principle. A card the checklist owes and the
-     * assembler cannot build is a step that never closes ({@see PlanStandings}, the fifth filter's
-     * own approximation), and every one of those is survivable except on day 1 of every plan: a
-     * rescue card in that state would hold day 1 open for ever, and with it the focus, the next
-     * day's generation and the whole plan. The kit keeps coming back in the warm-up either way,
-     * which is where it is supposed to come back.
+     * ## СПАСАТЕЛИ ДЕНЬ НЕ ДЕРЖАТ, и держать мог бы только день 1
      *
-     * @param  array<string, PlanTermStanding>  $standings
-     * @param  array<string, TermContentView>  $content
+     * Пять фраз (канон §5) записаны в день 1 и раздаются в каждом разогреве после него. Они
+     * принадлежат ПЛАНУ, а не сцене: «день пройден» отвечает на «я прошёл эту ситуацию», а
+     * «Помедленнее, пожалуйста» — не часть ситуации, это то, что человек говорит во всех.
+     *
+     * Практическая половина важна не меньше принципа. Карточка, которую чек-лист должен, а сборщик
+     * собрать не может ({@see PlanStandings}, пятый фильтр), выживаема везде, кроме дня 1 любого
+     * плана: спасатель в таком состоянии держал бы день 1 открытым вечно, а с ним фокус, генерацию
+     * следующего дня и весь план.
+     *
+     * @return list<array{stage: \App\Modules\Learning\Domain\ValueObject\PlanDayStage, state: \App\Modules\Learning\Domain\ValueObject\PlanDayStageState, cards: int}>
      */
-    private function stageAClosedForAll(array $standings, array $content): bool
+    private function stagesOf(PlanDayProgressView $view, bool $sceneRan): array
     {
-        $scene = array_filter(
-            $standings,
-            static fn (string $termId): bool => ($content[$termId]->shelf ?? null) !== self::SHELF_RESCUE,
-            ARRAY_FILTER_USE_KEY,
-        );
-
-        if ($scene === []) {
-            return false;
-        }
-
-        foreach ($scene as $termId => $standing) {
-            if ($standing->stage === PlanStage::A && ! $standing->stageComplete) {
-                return false;
-            }
-            // …AND SPOKEN, for a line of the scene: its stage B opens the day it is met
-            // (DAY-FIX-2, DECISIONS п. 266), so «день пройден» is the introduction AND the first
-            // touch of the conversation. Without this a day passed the moment its intros were
-            // acknowledged, with the dialogue still ahead — the live run of 05.09 moved the focus
-            // to day 2 in the middle of day 1's sitting.
-            $row = $content[$termId] ?? null;
-            $kind = $row === null || $row->kind === null
-                ? PlanStageLadder::KIND_WORD
-                : PlanStageLadder::ladderKindFor($row->kind, $row->tier, $row->shelf);
-            if (! PlanStageLadder::opensBSameDay($kind)) {
+        $cards = [];
+        foreach ($view->termIds as $termId) {
+            $standing = $view->standings[$termId] ?? null;
+            $row = $view->content[$termId] ?? null;
+            if ($standing === null || ($row->shelf ?? null) === self::SHELF_RESCUE) {
                 continue;
             }
-            $bTouched = false;
-            foreach ($standing->checklist as $step) {
-                if ($step['done']) {
-                    $bTouched = true;
-
-                    break;
-                }
-            }
-            if ($standing->stage === PlanStage::A || ($standing->stage === PlanStage::B && ! $bTouched && ! $standing->stageComplete)) {
-                return false;
-            }
+            $cards[] = new PlanTermCard(
+                termId: $termId,
+                shelf: $row?->shelf,
+                kind: $row === null || $row->kind === null
+                    ? PlanStageLadder::KIND_WORD
+                    : PlanStageLadder::ladderKindFor($row->kind, $row->tier, $row->shelf),
+                standing: $standing,
+            );
         }
 
-        return true;
+        if ($cards === []) {
+            return [];
+        }
+
+        // ПРОГОНЯТЬ НЕЧЕГО — тоже «пройден»: у сцены без единого своего хода «Скажи сам» это пустая
+        // строка, и запирать ею день значило бы держать человека в дне, у которого нет разговора.
+        $rehearsalDone = $sceneRan || $this->sceneTurns->of($view) === [];
+
+        return PlanDayPassage::stages($cards, $rehearsalDone);
     }
 
     /** The shelf the server's own five phrases stand on — {@see PlanShelf::Rescue}. */

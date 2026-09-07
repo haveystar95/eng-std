@@ -11,6 +11,8 @@ use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
+use App\Modules\Learning\Domain\ValueObject\PlanDayStage;
+use App\Modules\Learning\Domain\ValueObject\PlanDayStageState;
 use App\Modules\Learning\Domain\ValueObject\PlanDayState;
 use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
 use App\Modules\Learning\Domain\ValueObject\PlanKnobs;
@@ -90,11 +92,23 @@ final readonly class PlanDayStateCensus
         }
 
         if (($day !== null && $day->status() === PlanDayStatus::Done) || ($view !== null && $view->passed)) {
-            return new PlanDayStateView(PlanDayState::Done, 0, 0);
+            return new PlanDayStateView(PlanDayState::Done, 0, 0, dayStages: $view === null ? [] : $view->stages);
         }
 
         if ($view === null || $view->termIds === []) {
             return new PlanDayStateView(PlanDayState::NotStarted, 0, 0);
+        }
+
+        // ЭТАПЫ ЭКРАНА = три обязательных, посчитанных прогрессом, плюс «Повторить ошибки», которое
+        // видит только перепись: сегодняшние промахи и то, брали ли их уже этой дверью.
+        $dayStages = $view->stages;
+        $retrain = $this->retrainCards($view, $stages, $progress->today);
+        if ($retrain > 0) {
+            $dayStages[] = [
+                'stage' => PlanDayStage::Retrain,
+                'state' => PlanDayStageState::Current,
+                'cards' => $retrain,
+            ];
         }
 
         $touched = false;
@@ -137,10 +151,49 @@ final readonly class PlanDayStateCensus
             default => PlanDayState::InProgress,
         };
 
-        return $this->priced($state, $material, $conversation);
+        return $this->priced($state, $material, $conversation, $dayStages);
     }
 
-    private function priced(PlanDayState $state, int $material, int $conversation): PlanDayStateView
+    /**
+     * СКОЛЬКО РЕПЛИК МОЖНО ВЗЯТЬ «ПОВТОРИТЬ ОШИБКИ» — промахнулись сегодня, этой дверью сегодня не
+     * брали, и шаг у них ещё открыт (наряд DAY-GATE-1; решение владельца 07.09, п. 4).
+     *
+     * Спрашивается у Domain с поднятым флагом «мимо правила одного показа»
+     * ({@see PlanStageLadder::owedStepsToday()}) — иначе ответ был бы всегда «ноль», ведь именно
+     * это правило сегодня их и закрыло.
+     *
+     * @param  array<string, \App\Modules\Learning\Domain\ValueObject\PlanTermStage>  $stages
+     */
+    private function retrainCards(PlanDayProgressView $view, array $stages, string $today): int
+    {
+        $count = 0;
+        foreach ($view->termIds as $termId) {
+            $standing = $view->standings[$termId] ?? null;
+            $content = $view->content[$termId] ?? null;
+            if ($standing === null || ! $standing->missedToday) {
+                continue;
+            }
+            if ($content !== null && $content->shelf === PlanSittingPlanner::SHELF_RESCUE) {
+                continue;
+            }
+            if (($stages[$termId] ?? null)?->retrainedOn($today) === true) {
+                continue;
+            }
+            $kind = $content === null || $content->kind === null
+                ? PlanStageLadder::KIND_WORD
+                : PlanStageLadder::ladderKindFor($content->kind, $content->tier, $content->shelf);
+            if (PlanStageLadder::owedStepsToday($standing, $kind, ignoreOneShow: true) !== []) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param  list<array{stage: PlanDayStage, state: PlanDayStageState, cards: int}>  $dayStages
+     */
+    private function priced(PlanDayState $state, int $material, int $conversation, array $dayStages = []): PlanDayStateView
     {
         $seconds = $this->budget['card_seconds'];
 
@@ -152,6 +205,7 @@ final readonly class PlanDayStateCensus
             materialMinutes: PlanSittingLayout::minutesFor($material, $seconds),
             conversationCards: $conversation,
             conversationMinutes: PlanSittingLayout::minutesFor($conversation, $seconds),
+            dayStages: $dayStages,
         );
     }
 

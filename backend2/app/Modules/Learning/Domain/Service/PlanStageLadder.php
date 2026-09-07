@@ -288,6 +288,57 @@ final class PlanStageLadder
     }
 
     /**
+     * ЧТО ЭТА КАРТОЧКА ДОЛЖНА СЕГОДНЯ — шаги чек-листа, и ни одним больше (наряд DAY-GATE-1, Ч.1.1).
+     *
+     * Одно правило на двоих, и это главное в нём. Раньше его знал только планировщик, внутри
+     * {@see \App\Modules\Learning\Application\Service\PlanSittingPlanner::specsFor()}, — а теперь тот
+     * же ответ нужен машине этапов дня ({@see PlanDayPassage}): «этап пройден насквозь» это ровно
+     * «ни одна его карточка сегодня ничего не должна». Два места, считающие это порознь, разошлись
+     * бы в тот же вечер, когда разошлись три экрана про минуты дня (DAY-FIX-2, Ч.3).
+     *
+     * Правила ровно два:
+     *
+     *   ОДИН ПОКАЗ НА СТУПЕНЬ В ДЕНЬ ({@see oneShowPerDay}) — реплика, отвеченная сегодня, верно или
+     *   нет, сегодня больше ничего не должна: её следующий шаг завтрашний. Кроме ступени A —
+     *   знакомство и его упражнение раздаются целиком в один вечер.
+     *
+     *   СТУПЕНЬ A РАЗДАЁТСЯ ЦЕЛИКОМ, ступень B и выше у реплики — по одному шагу за посадку.
+     *
+     * @param  bool  $ignoreOneShow  «Повторить ошибки» — ЕДИНСТВЕННОЕ исключение из показа раз в
+     *                               день (решение владельца 07.09, п. 4): по явному нажатию реплика
+     *                               с промахом этого дня показывается ещё раз тем же шагом. Не
+     *                               ворота: этап от него не зависит, и день тоже.
+     * @return list<array{mode: string, ordinal: int, done: bool}>
+     */
+    public static function owedStepsToday(
+        PlanTermStanding $standing,
+        string $kind,
+        bool $ignoreOneShow = false,
+    ): array {
+        $oneShow = self::oneShowPerDay($kind);
+
+        // ПОКАЗ СЧИТАЕТСЯ ПО СТУПЕНИ, а не по карточке ({@see PlanTermStanding::$stageAnsweredToday}):
+        // реплика, собранная сегодня на знакомстве, свой ход в разговоре получает сегодня же
+        // (решение 266), а второй ход на той же ступени — уже завтра.
+        if ($oneShow && ! $ignoreOneShow && $standing->stageAnsweredToday && $standing->stage !== PlanStage::A) {
+            return [];
+        }
+
+        $owed = [];
+        foreach ($standing->checklist as $step) {
+            if ($step['done']) {
+                continue;
+            }
+            if ($oneShow && $owed !== [] && $standing->stage !== PlanStage::A) {
+                break;
+            }
+            $owed[] = $step;
+        }
+
+        return $owed;
+    }
+
+    /**
      * The alternative to the word bank in a LINE's stage A, chosen by the pair rather than by
      * chance.
      *
@@ -673,9 +724,15 @@ final class PlanStageLadder
         // log for the same reason `answeredToday` is: it is a question about the learner's week, not
         // about the stage being walked.
         $missedYesterday = $yesterday !== null && self::missedOn($facts, $yesterday);
+        // …И СЕГОДНЯ — вход «Повторить ошибки» (наряд DAY-GATE-1). Тот же вопрос к тому же журналу,
+        // но про сегодняшний вечер: разогрев берёт вчерашние промахи, а необязательный этап дня —
+        // те, что случились только что.
+        $missedToday = self::missedOn($facts, $today);
 
         while (true) {
             $steps = $this->stepsFor($stage, $applicable, $kind, $pairCounter);
+            // «СЕГОДНЯ УЖЕ ПОКАЗЫВАЛИ» — про ЭТУ ступень, с того места журнала, где она началась.
+            $stageAnsweredToday = self::answeredOnFrom($facts, $today, $cursor);
             $walk = $this->walk($steps, $facts, $cursor, $introducedOn !== null && $stage === PlanStage::A);
             // A STAGE CLOSED BY THE EXPOSURE ALONE has no fact to date it by: the intro is the one
             // step that writes no review. Its closing day is the day the card was shown.
@@ -696,6 +753,8 @@ final class PlanStageLadder
                     answeredToday: $answeredToday,
                     missedYesterday: $missedYesterday,
                     answeredYesterday: $answeredYesterday,
+                    missedToday: $missedToday,
+                    stageAnsweredToday: $stageAnsweredToday,
                 );
             }
 
@@ -726,6 +785,8 @@ final class PlanStageLadder
                     answeredToday: $answeredToday,
                     missedYesterday: $missedYesterday,
                     answeredYesterday: $answeredYesterday,
+                    missedToday: $missedToday,
+                    stageAnsweredToday: $stageAnsweredToday,
                 );
             }
 
@@ -749,12 +810,37 @@ final class PlanStageLadder
                     answeredToday: $answeredToday,
                     missedYesterday: $missedYesterday,
                     answeredYesterday: $answeredYesterday,
+                    missedToday: $missedToday,
+                    stageAnsweredToday: $stageAnsweredToday,
                 );
             }
 
             $stage = $next;
             $cursor = $walk['cursor'];
         }
+    }
+
+    /**
+     * ОТВЕЧЕНА ЛИ КАРТОЧКА СЕГОДНЯ НА ЭТОЙ СТУПЕНИ — с `$from`, где ступень начала читать журнал.
+     *
+     * Правило «один показ на ступень в день» названо ступенью и должно ступенью же и считаться
+     * (наряд DAY-GATE-1). Считалось оно ВСЕМ журналом — `answeredToday`, — и пока ступени A и B
+     * раздавались одной посадкой, разницы не было видно: первый шаг B клался рядом с A и до правила
+     * не доходил. Как только день стал этапами, разница стала дырой: реплика, собранная сегодня на
+     * знакомстве, оказывалась «уже показанной» и свой ход в разговоре не получала — этап «Разговор»
+     * закрывался, не показав ни одной собственной реплики человека.
+     *
+     * @param  list<PlanStageFact>  $facts
+     */
+    private static function answeredOnFrom(array $facts, string $today, int $from): bool
+    {
+        for ($i = max(0, $from); $i < count($facts); $i++) {
+            if ($facts[$i]->localDate === $today) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
