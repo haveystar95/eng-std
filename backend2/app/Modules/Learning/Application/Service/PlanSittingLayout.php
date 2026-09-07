@@ -7,6 +7,8 @@ namespace App\Modules\Learning\Application\Service;
 use App\Modules\Learning\Application\Dto\PlanDialogueView;
 use App\Modules\Learning\Domain\Service\PlanSessionSections;
 use App\Modules\Learning\Domain\Service\PlanSittings;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
+use App\Modules\Learning\Domain\ValueObject\PlanDayStage;
 
 /**
  * WHAT ONE SITTING WILL DEAL, before a single card is built — {@see PlanSittingPlanner}'s answer.
@@ -31,6 +33,43 @@ final readonly class PlanSittingLayout
     public function cards(): int
     {
         return count($this->specs);
+    }
+
+    /**
+     * ТОЛЬКО ОДИН ЭТАП ДНЯ — то, что «Продолжить» действительно раздаёт (наряд DAY-GATE-1, Ч.1.4).
+     *
+     * План посадки считается ЦЕЛИКОМ (экран дня должен знать про день всё), а раздаётся по этапу:
+     * человек садится за «Слова и фразы», возвращается на экран дня и видит, что осталось. До этого
+     * наряда сессия несла оба присеста сразу, и человеку негде было увидеть, где он.
+     *
+     * РАЗОГРЕВ ОСТАЁТСЯ ВСЕГДА. Спасательный набор — ритуал ДНЯ, а не этапа (канон §5), он раз в день
+     * и перед всем; выбрасывать его из вечернего присеста значило бы, что порядок «разогрев →
+     * остальное» зависит от того, в какой из двух заходов человек попал.
+     */
+    public function onlyStage(PlanDayStage $stage): self
+    {
+        return new self(
+            array_values(array_filter($this->specs, static function (array $spec) use ($stage): bool {
+                $key = PlanSittingPlanner::sectionKeyOfSpec($spec);
+
+                return explode('#', $key, 2)[0] === PlanSessionSections::WARMUP
+                    || PlanDayStage::ofSection($key) === $stage;
+            })),
+            $this->chains,
+            $this->cardSeconds,
+        );
+    }
+
+    /** Есть ли в этой посадке хоть одно УПРАЖНЕНИЕ — карточка, на которую человек отвечает. */
+    public function hasExercises(): bool
+    {
+        foreach ($this->specs as $spec) {
+            if (($spec['mode'] ?? null) !== ExerciseMode::Intro) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** The cards before the прогон — what the day part holds. */

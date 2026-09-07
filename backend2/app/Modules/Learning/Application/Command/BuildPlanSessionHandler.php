@@ -28,12 +28,15 @@ use App\Modules\Learning\Application\Service\StudyCardAssembler;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
 use App\Modules\Learning\Domain\Entity\StudySession;
+use App\Modules\Learning\Domain\Exception\PlanDayLocked;
 use App\Modules\Learning\Domain\Exception\PlanNotFound;
+use App\Modules\Learning\Domain\Exception\PlanSittingEmpty;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
 use App\Modules\Learning\Domain\Service\PlanAnswerOptions;
+use App\Modules\Learning\Domain\Service\PlanDayPassage;
 use App\Modules\Learning\Domain\Service\PlanDialogueChain;
 use App\Modules\Learning\Domain\Service\PlanHearOptions;
 use App\Modules\Learning\Domain\Service\PlanKnobSupport;
@@ -43,10 +46,14 @@ use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\Service\SituationalPrompt;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
+use App\Modules\Learning\Domain\ValueObject\PlanDayStage;
+use App\Modules\Learning\Domain\ValueObject\PlanDayStageState;
+use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
 use App\Modules\Learning\Domain\ValueObject\PlanDialogueMove;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\PlanKnobs;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
+use App\Modules\Learning\Domain\ValueObject\PlanTermStage;
 use App\Modules\Learning\Domain\ValueObject\PlanTurnLevel;
 use App\Modules\Learning\Domain\ValueObject\SituationalCandidate;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
@@ -173,27 +180,69 @@ final readonly class BuildPlanSessionHandler
         // introduces nothing, owns no collection, and its sitting is the прогон of every scene.
         $strict = $day->kind() === PlanDayKind::Intro;
         $knobs = $this->planSettings->knobsFor($plan->level());
-        $stages = $this->termStages->forPlan($plan->id());
+        $termStages = $this->termStages->forPlan($plan->id());
+
+        // ЗАМОК ДНЯ (наряд DAY-GATE-1, Ч.1.2): день N+1 открывается, только когда день N пройден.
+        // Стоит ЗДЕСЬ, а не только на экране: замок, который знает один клиент, — это не замок.
+        if ($strict) {
+            $blocker = self::lockedBy($days, $progress, $dayIndex);
+            if ($blocker !== null) {
+                throw PlanDayLocked::behind($command->planId, $dayIndex, $blocker);
+            }
+        }
 
         $layout = $strict
-            ? $this->planner->plan($plan, $progress, $dayIndex, $knobs, $stages)
+            ? $this->planner->plan($plan, $progress, $dayIndex, $knobs, $termStages)
             : $this->planner->rehearsal($plan, $progress);
+
+        // СЛОВО И МИНУТЫ ДНЯ — по ЦЕЛОМУ дню, до раскроя по этапам: экран дня должен знать про день
+        // всё, а раздаётся ему только текущий этап (Ч.3.3 наряда DAY-FIX-3 + Ч.1.4 этого).
+        $state = $this->census->of($plan, $days, $progress, $dayIndex, $knobs, $termStages, $layout);
+
+        // …И ТЕПЕРЬ — ТОЛЬКО ОДИН ЭТАП. «Продолжить» ведёт в текущий; названный клиентом этап —
+        // это всегда «Повторить ошибки», единственная дверь не по порядку.
+        $dealtStage = null;
+        if ($strict) {
+            $dealtStage = $command->stage ?? PlanDayPassage::current($state->dayStages);
+            if ($command->stage === PlanDayStage::Retrain) {
+                $layout = $this->planner->retrain($plan, $progress, $dayIndex, $knobs, $termStages);
+            } elseif ($dealtStage !== null) {
+                self::assertOpen($command, $state->dayStages, $dealtStage, $dayIndex);
+                $layout = $layout->onlyStage($dealtStage);
+            }
+        }
+
         $tasks = $strict
             ? $this->strictTasks($plan, $progress, $dayIndex, $knobs, $layout)
             : $this->rehearsalTasks($plan, $progress, $knobs, $layout);
         $dialogues = $layout->chains;
 
+        // ВЫРОЖДЕННАЯ ПОСАДКА НЕ СОБИРАЕТСЯ НИКОГДА (наряд DAY-GATE-1, Ч.1.4). Одна интро-карточка и
+        // ноль упражнений — это то, что живой прогон 07.09 получил по «Дотренировать», а следом
+        // шесть сессий подряд вообще без карточек, ни одна из которых не была закрыта.
+        //
+        // На НЕ пройденном этапе такого быть не может по построению: этап текущий ровно тогда, когда
+        // он что-то должен. Остаётся один случай — спек есть, а карточку сборщик построить не смог
+        // (пятый фильтр, {@see PlanStandings}), — и он честно отвечает отказом, а не пустым экраном.
+        if ($tasks === []) {
+            throw PlanSittingEmpty::forDay($command->planId, $dayIndex, $dealtStage?->value);
+        }
+
         $sessionId = $command->sessionId ?? StudySessionId::generate();
         $this->persist($sessionId, $plan, $day, $tasks, $strict);
+
+        // ОДИН ДОПОЛНИТЕЛЬНЫЙ ПОКАЗ В ДЕНЬ — отмечается в момент выдачи, а не ответа: дверь открыта
+        // один раз, и человек, закрывший экран не ответив, потратил свой повтор. Иначе «повторить»
+        // стало бы способом молотить одну реплику весь вечер.
+        if ($command->stage === PlanDayStage::Retrain) {
+            $this->markRetrained($plan, $termStages, $tasks, $progress->today);
+        }
 
         $audio = $this->lineAudioFor($tasks, $dialogues, $plan->targetLang()->value);
         // …И ЗАКАЗАТЬ ТО, ЧЕГО НЕ ХВАТИЛО. «Готовим озвучку» — состояние на секунды, а не навсегда
         // (канон §7): реплика, у которой файла нет и заказа не было, держала бы экран-диалог в
         // ожидании вечно. Посадка видит недостачу первой и единственная.
         $this->orderMissingSpeech($plan, $dialogues, $audio);
-
-        // СЛОВО И МИНУТЫ ДНЯ — одним и тем же счётом, что и на экране плана (Ч.3.3).
-        $state = $this->census->of($plan, $days, $progress, $dayIndex, $knobs, $stages, $layout);
 
         return new PlanSessionView(
             sessionId: $sessionId->value,
@@ -226,7 +275,74 @@ final readonly class BuildPlanSessionHandler
             sceneRun: $this->sceneRunKnobs,
             dayState: $state->state,
             minutesLeft: $state->minutesLeft,
+            // КАКОЙ ЭТАП ЭТА ПОСАДКА И ЧТО У ДНЯ ОСТАЛОСЬ — шапка присеста и экран дня читают одно
+            // и то же (наряд DAY-GATE-1, Ч.1.4).
+            stage: $dealtStage,
+            dayStages: $state->dayStages,
         );
+    }
+
+    /**
+     * ЧТО ДЕРЖИТ ЭТОТ ДЕНЬ ЗАКРЫТЫМ — индекс предыдущего непройденного дня, или null (Ч.1.2).
+     *
+     * Правило одно: пока день N не пройден, дня N+1 нет. Не «по расписанию» и не «по дате» — по
+     * факту прохождения, тому же, что двигает фокус ({@see PlanProgress}). Забежать вперёд нельзя
+     * даже с прямой ссылкой: живой прогон 07.09 показал вкладку, где день 2 открывался поверх
+     * незакрытого дня 1, и человек не понимал, что от него хотят.
+     *
+     * @param  list<PlanDay>  $days
+     */
+    public static function lockedBy(array $days, PlanProgressView $progress, int $dayIndex): ?int
+    {
+        foreach ($days as $day) {
+            if ($day->kind() !== PlanDayKind::Intro || $day->dayIndex() >= $dayIndex) {
+                continue;
+            }
+            if ($day->status() === PlanDayStatus::Done) {
+                continue;
+            }
+            if (! ($progress->days[$day->dayIndex()]->passed ?? false)) {
+                return $day->dayIndex();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Названный этап должен быть открыт. Запертый — отказ, а не тихая подмена на текущий: клиент,
+     * который просит «Скажи сам» поверх неоконченного разговора, ошибается, и молчаливая подмена
+     * спрятала бы ошибку под правильным экраном.
+     *
+     * @param  list<array{stage: PlanDayStage, state: PlanDayStageState, cards: int}>  $stages
+     */
+    private static function assertOpen(BuildPlanSession $command, array $stages, PlanDayStage $stage, int $dayIndex): void
+    {
+        foreach ($stages as $row) {
+            if ($row['stage'] === $stage && $row['state'] === PlanDayStageState::Locked) {
+                throw PlanDayLocked::stage($command->planId, $dayIndex, $stage->value);
+            }
+        }
+    }
+
+    /**
+     * Отметить, что эти реплики сегодня уже брали «Повторить ошибки».
+     *
+     * @param  array<string, PlanTermStage>  $termStages
+     * @param  list<PlanSessionTaskView>  $tasks
+     */
+    private function markRetrained(LearningPlan $plan, array $termStages, array $tasks, string $today): void
+    {
+        $seen = [];
+        foreach ($tasks as $task) {
+            $termId = $task->card->termId;
+            if (isset($seen[$termId])) {
+                continue;
+            }
+            $seen[$termId] = true;
+            $stage = $termStages[$termId] ?? new PlanTermStage($plan->id()->value, $termId);
+            $this->termStages->save($stage->afterRetrain($today));
+        }
     }
 
     /**
@@ -627,6 +743,10 @@ final readonly class BuildPlanSessionHandler
                 optionCount: is_int($spec['options'] ?? null) ? max($knobs->mcOptions, $spec['options']) : $knobs->mcOptions,
                 answerPoolIds: $answerPool,
                 turnLevel: $level,
+                // ЗНАКОМСТВО СОБИРАЕТСЯ ИЗ СВОИХ СЛОВ (наряд DAY-GATE-1, Ч.1.5). Ступень A на полке
+                // реплики — это «Слова и фразы», первая встреча с фразой; чужие блоки там не выбор,
+                // а помеха. В разговоре они остаются.
+                ownBlocksOnly: ($spec['stage'] ?? null) === PlanStage::A,
             );
             // The assembler refused this card — the term's data could not build it after all, and on
             // the strict path there is nothing to fall back to on purpose.
@@ -688,6 +808,10 @@ final readonly class BuildPlanSessionHandler
                     $level !== null && ($dealt->speaksAfterChoice() || $level === PlanTurnLevel::Say) => $level->value,
                     default => null,
                 },
+                // ЧТО ИМЕННО НАДО СКАЗАТЬ — только на сборке, и по факту КАРТОЧКИ, а не спека:
+                // выбор, откатившийся в сборку из-за голодного пула (DAY-FIX-2, Ч.1.7), — это тоже
+                // сборка, и человек имеет право знать, что от него хотят.
+                intent: $card->chips !== null && $dealt->isSituational() ? $termContent->translation : null,
             );
         }
 

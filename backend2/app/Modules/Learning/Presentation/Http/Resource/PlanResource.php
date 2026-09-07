@@ -94,6 +94,27 @@ final class PlanResource
             // разговор около 6».
             'material_minutes' => $day->materialMinutes,
             'conversation_minutes' => $day->conversationMinutes,
+            // ЭТАПЫ ДНЯ (наряд DAY-GATE-1, Ч.1.1) — кодами, без подписей и без чисел: из чего день
+            // состоит, что пройдено и что откроется после чего. Подписи — клиентские, в двух
+            // языках, как у всех кодов плана (Д-19); чисел «N из M» на экранах плана не бывает.
+            'stages' => self::stages($day->stages),
+            // ЗАМОК (Ч.1.2): номер дня, который держит этот закрытым, или null.
+            'locked_by_day_index' => $day->lockedByDayIndex,
         ];
+    }
+
+    /**
+     * @param  list<array{stage: \App\Modules\Learning\Domain\ValueObject\PlanDayStage, state: \App\Modules\Learning\Domain\ValueObject\PlanDayStageState, cards: int}>  $stages
+     * @return list<array{stage: string, state: string, opens_after: string|null}>
+     */
+    public static function stages(array $stages): array
+    {
+        return array_map(static fn (array $row): array => [
+            'stage' => $row['stage']->value,
+            'state' => $row['state']->value,
+            // ПОСЛЕ КАКОГО ЭТАПА ОТКРОЕТСЯ — чтобы экран сказал «после разговора», а не «закрыт».
+            // Едет всегда, а не только у запертого: строка «после чего» это свойство этапа.
+            'opens_after' => $row['stage']->opensAfter()?->value,
+        ], $stages);
     }
 }

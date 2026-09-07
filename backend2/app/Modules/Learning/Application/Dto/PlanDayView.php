@@ -56,5 +56,19 @@ final readonly class PlanDayView
          */
         public int $materialMinutes = 0,
         public int $conversationMinutes = 0,
+        /**
+         * ЭТАПЫ ДНЯ — «Слова и фразы» → «Разговор» → «Скажи сам», и «Повторить ошибки», если есть
+         * что повторять (наряд DAY-GATE-1, Ч.1.1). Экран дня рисует по ним список и ставит
+         * «Продолжить» на текущий; вкладка «План» читает из них то же слово о дне.
+         *
+         * @var list<array{stage: \App\Modules\Learning\Domain\ValueObject\PlanDayStage, state: \App\Modules\Learning\Domain\ValueObject\PlanDayStageState, cards: int}>
+         */
+        public array $stages = [],
+        /**
+         * ДЕНЬ ЗАПЕРТ, ПОКА НЕ ПРОЙДЕН ЭТОТ (наряд DAY-GATE-1, Ч.1.2) — номер дня, который держит,
+         * или null. Запрос сессии такого дня отбивается 409 `plan_day_locked`: замок, о котором
+         * знает один клиент, — это не замок.
+         */
+        public ?int $lockedByDayIndex = null,
     ) {}
 }

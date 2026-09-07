@@ -43,6 +43,7 @@ use App\Modules\Learning\Application\Query\ListPlansHandler;
 use App\Modules\Learning\Domain\ValueObject\PlanEnding;
 use App\Modules\Learning\Domain\ValueObject\SceneRunOutcome;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
+use App\Modules\Learning\Domain\ValueObject\PlanDayStage;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Learning\Presentation\Http\Request\CreatePlanRequest;
 use App\Modules\Learning\Presentation\Http\Request\ListenWarmupRequest;
@@ -245,6 +246,11 @@ final class PlanController
             sessionId: $request->string('session_id')->toString() !== ''
                 ? StudySessionId::fromString($request->string('session_id')->toString())
                 : null,
+            // КАКОЙ ЭТАП СОБРАТЬ — необязательное поле, и его называют ровно в одном случае:
+            // «Повторить ошибки» (наряд DAY-GATE-1, Ч.1.4). Без него сервер собирает ТЕКУЩИЙ этап,
+            // и это то, что делает «Продолжить». Неизвестное слово — то же, что молчание: сервер
+            // сам знает, где человек стоит, и угадывать за клиента ему нечего.
+            stage: PlanDayStage::tryFrom($request->string('stage')->toString()),
         ));
 
         return new JsonResponse(['data' => (new PlanSessionResource($session))->toArray($request)]);

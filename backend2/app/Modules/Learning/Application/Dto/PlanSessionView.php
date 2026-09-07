@@ -123,5 +123,18 @@ final readonly class PlanSessionView
         public array $sittingPlan = [],
         public int $materialMinutes = 0,
         public int $conversationMinutes = 0,
+        /**
+         * КАКОЙ ЭТАП ДНЯ ЭТА ПОСАДКА (наряд DAY-GATE-1, Ч.1.4) — «Слова и фразы», «Разговор»,
+         * «Скажи сам» или «Повторить ошибки». Null на дне-прогоне перед событием: он не день, у него
+         * нет этапов, и притворяться иначе было бы враньём в шапке.
+         */
+        public ?\App\Modules\Learning\Domain\ValueObject\PlanDayStage $stage = null,
+        /**
+         * ВСЕ ЭТАПЫ ЭТОГО ДНЯ — тот же список, что на пейлоаде дня, чтобы экран мог показать «где я»
+         * не перечитывая план посреди занятия.
+         *
+         * @var list<array{stage: \App\Modules\Learning\Domain\ValueObject\PlanDayStage, state: \App\Modules\Learning\Domain\ValueObject\PlanDayStageState, cards: int}>
+         */
+        public array $dayStages = [],
     ) {}
 }

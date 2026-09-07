@@ -260,6 +260,63 @@ final readonly class PlanSittingPlanner
     }
 
     /**
+     * «ПОВТОРИТЬ ОШИБКИ» — реплики, промахнувшиеся СЕГОДНЯ, ещё один раз (наряд DAY-GATE-1, Ч.1.1;
+     * решение владельца 07.09, п. 4).
+     *
+     * Единственное место во всём плане, где правило «один показ ступени в день» отступает, и
+     * отступает оно только по явному нажатию: этап необязательный, день не держит, «пройден» от него
+     * не зависит. Один дополнительный показ за день на реплику — второй раз сегодня эта дверь её не
+     * выдаст ({@see \App\Modules\Learning\Domain\ValueObject\PlanTermStage::$retrainedOn}), и промах
+     * в повторе уводит реплику на завтра как обычно.
+     *
+     * Тем же шагом, что и в разговоре: сборкой. Другой тренажёр был бы другой карточкой, а человек
+     * нажал «повторить», а не «покажи иначе».
+     *
+     * @param  array<string, \App\Modules\Learning\Domain\ValueObject\PlanTermStage>  $termStages
+     */
+    public function retrain(
+        LearningPlan $plan,
+        PlanProgressView $progress,
+        int $dayIndex,
+        PlanKnobs $knobs,
+        array $termStages,
+    ): PlanSittingLayout {
+        $today = $progress->days[$dayIndex] ?? null;
+        if ($today === null) {
+            return new PlanSittingLayout([], [], $this->budget['card_seconds']);
+        }
+
+        $specs = [];
+        foreach ($this->orderedDayTerms($plan, $today) as $termId) {
+            $standing = $today->standings[$termId] ?? null;
+            $content = $today->content[$termId] ?? null;
+            if ($standing === null || ! $standing->missedToday) {
+                continue;
+            }
+            if (($content->shelf ?? null) === self::SHELF_RESCUE) {
+                continue;
+            }
+            if (($termStages[$termId] ?? null)?->retrainedOn($progress->today) === true) {
+                continue;
+            }
+            $specs = [...$specs, ...$this->specsFor(
+                $termId, $standing, $dayIndex, 'retrain', $knobs,
+                $this->kindOf($progress, $termId), null, ignoreOneShow: true,
+            )];
+        }
+
+        $specs = $this->ordered($specs, $progress, [], $dayIndex);
+        $chains = $this->chainsFor($specs, $progress, $dayIndex);
+        $specs = $this->withTurnLevels($specs, $progress, $dayIndex);
+
+        return new PlanSittingLayout(
+            array_slice($specs, 0, self::MAX_TASKS),
+            array_values($chains),
+            $this->budget['card_seconds'],
+        );
+    }
+
+    /**
      * THE FINAL DAY: the прогон of EVERY scene, in order, matured or not (наряд SCENE-RUN, Ч.2.8).
      *
      * A run-through and nothing more — it schedules nothing, closes no stage and moves no focus.
@@ -481,6 +538,7 @@ final readonly class PlanSittingPlanner
      * remainder for a word or a rescue phrase, ONE step for a line of the scene (Ч.2.4: «реплика
      * сцены в один день — не больше одного показа на ступень»).
      *
+     * @param  bool  $ignoreOneShow  «Повторить ошибки» и только он ({@see PlanStageLadder::owedStepsToday()}).
      * @return list<array<string, mixed>>
      */
     private function specsFor(
@@ -491,36 +549,30 @@ final readonly class PlanSittingPlanner
         PlanKnobs $knobs,
         string $kind = PlanStageLadder::KIND_WORD,
         ?string $section = null,
+        bool $ignoreOneShow = false,
     ): array {
         $specs = [];
-        $seen = [];
         $total = count($standing->checklist);
         $recognitionOptions = $knobs->optionsPolicy() === OptionsPolicy::Distant;
-        $oneShow = PlanStageLadder::oneShowPerDay($kind);
 
-        // ONE SHOW PER STAGE PER DAY (DAY-FIX-2, Ч.2.4): a line answered today — right or wrong —
-        // owes nothing more today on the stage it answered. Its next step is tomorrow's; a miss is
-        // re-dealt by the sitting's own queue, not by a second server card. An intro still open is
-        // not an answer, though: a reply chosen before its intro was acknowledged (the sitting was
-        // left mid-way) still owes the intro, or stage A would never close.
-        if ($oneShow && $standing->answeredToday && $standing->stage !== PlanStage::A) {
-            return [];
+        // КАКОЙ ПО СЧЁТУ ЭТОТ РЕЖИМ В ЧЕК-ЛИСТЕ — считается по ВСЕМУ списку, закрытые шаги включая:
+        // `ladderStepFor` спрашивает «второе ли это говорение ступени», а не «второе ли оставшееся».
+        $seen = [];
+        $ordinalOf = [];
+        foreach ($standing->checklist as $step) {
+            $seen[$step['mode']] = ($seen[$step['mode']] ?? 0) + 1;
+            $ordinalOf[$step['ordinal']] = $seen[$step['mode']];
         }
 
-        foreach ($standing->checklist as $step) {
+        // ЧТО ЭТА КАРТОЧКА ДОЛЖНА СЕГОДНЯ — правило живёт в Domain и одно на всех
+        // ({@see PlanStageLadder::owedStepsToday()}): «один показ ступени в день» для реплик, вся
+        // ступень A целиком у каждого. Планировщик здесь только превращает шаги в спеки — считать
+        // долг вторым кодом нельзя, иначе список этапов дня и то, что раздаёт сессия, разойдутся
+        // (наряд DAY-GATE-1, Ч.1.1).
+        foreach (PlanStageLadder::owedStepsToday($standing, $kind, $ignoreOneShow) as $step) {
             $mode = ExerciseMode::tryFrom($step['mode']);
             if ($mode === null) {
                 continue;
-            }
-            $seen[$step['mode']] = ($seen[$step['mode']] ?? 0) + 1;
-            if ($step['done']) {
-                continue;
-            }
-            // …AND STAGE A IS DEALT WHOLE (наряд DAY-FIX-3, Ч.3): the introduction and the exercise
-            // that closes it are one evening's work for every kind of card. «One show» is a rule
-            // about the conversation's stage, not about meeting the line.
-            if ($oneShow && $specs !== [] && $standing->stage !== PlanStage::A) {
-                break;
             }
 
             $specs[] = [
@@ -536,7 +588,7 @@ final readonly class PlanSittingPlanner
                 'step' => PlanStageLadder::ladderStepFor(
                     $standing->stage,
                     $mode,
-                    $seen[$step['mode']],
+                    $ordinalOf[$step['ordinal']] ?? 1,
                     $recognitionOptions,
                     $kind,
                 ),
@@ -588,7 +640,22 @@ final readonly class PlanSittingPlanner
     }
 
     /**
-     * ХОДЫ ПРОГОНА СЦЕНЫ ЭТОГО ДНЯ, или пусто — сцена до прогона ещё не дозрела (наряд SCENE-RUN).
+     * ХОДЫ ПРОГОНА СЦЕНЫ ЭТОГО ДНЯ — «Скажи сам» (наряд SCENE-RUN; наряд DAY-GATE-1, Ч.1.1).
+     *
+     * ЗРЕЛОСТЬ СЦЕНЫ БОЛЬШЕ НЕ ГЕЙТ (решение владельца 07.09, п. 3). Раньше прогон собирался только
+     * у сцены, каждый ход которой прошёл ступень B хотя бы одним верным выбором
+     * ({@see PlanSceneRunGate}), и довод был честный: просить сказать по памяти реплику, которую
+     * человек ни разу не выбрал, — это не сложная карточка, а неотвечаемая. Живой прогон 07.09
+     * показал цену: три хода из пяти отвечены неверно, сцена не дозрела, и прогон голосом не
+     * предложили НИ РАЗУ — ровно тому человеку, которому он и был нужен.
+     *
+     * Порядок стережёт то же, что стерёг гейт: «Скажи сам» открывается только после того, как
+     * «Разговор» пройден насквозь ({@see \App\Modules\Learning\Domain\Service\PlanDayPassage}), то
+     * есть каждая реплика уже была на экране. А несказанная реплика в прогоне — законный ход: есть
+     * «Пропустить» и есть спасатель, и промах ничего не ломает.
+     *
+     * `runReady` на цепочке остаётся и остаётся честным: экран отмечает им сцену, до которой
+     * лестница не дошла, — но не решает больше, быть прогону или нет.
      *
      * @return list<array<string, mixed>>
      */
@@ -614,8 +681,8 @@ final readonly class PlanSittingPlanner
                 continue;
             }
 
-            [$turns, $ready] = $this->sceneTurnsOf($progress->days[$index]);
-            if ($turns === [] || ! $ready) {
+            [$turns] = $this->sceneTurnsOf($progress->days[$index]);
+            if ($turns === []) {
                 continue;
             }
 

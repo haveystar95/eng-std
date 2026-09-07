@@ -112,6 +112,8 @@ final readonly class StudyCardAssembler
      *                              ({@see PlanTurnLevel}). `assemble` заменяет варианты блоками
      *                              ({@see \App\Modules\Learning\Domain\Service\PlanAssemblyBlocks});
      *                              null и `choose` — прежняя карточка выбора.
+     * @param  bool  $ownBlocksOnly  ЗНАКОМСТВО, А НЕ РАЗГОВОР: на сборке ступени A лежат только слова
+     *                              САМОЙ реплики, без чужих блоков (наряд DAY-GATE-1, Ч.1.5).
      */
     public function assemble(
         UserId $user,
@@ -129,6 +131,7 @@ final readonly class StudyCardAssembler
         ?int $optionCount = null,
         ?array $answerPoolIds = null,
         ?PlanTurnLevel $turnLevel = null,
+        bool $ownBlocksOnly = false,
     ): ?SessionCardView {
         // How many options a choice card is dealt, the right one included. A NUMBER rather than the
         // constant, because a plan deals its level's number ({@see PlanKnobs}: three for a learner
@@ -233,7 +236,7 @@ final readonly class StudyCardAssembler
             return $this->situationalCard(
                 $user, $view, $content, $mode, $poolTermIds, $neighbours,
                 $cardIndex, $supportLang, $optionCount, $choiceFloor, $step, $answerPoolIds,
-                $turnLevel,
+                $turnLevel, $ownBlocksOnly,
             );
         }
         // Where the wrong options come from is POLICY, read from the matrix, not inferred from the
@@ -679,6 +682,7 @@ final readonly class StudyCardAssembler
         ?int $step,
         ?array $answerPoolIds = null,
         ?PlanTurnLevel $turnLevel = null,
+        bool $ownBlocksOnly = false,
     ): ?SessionCardView {
         if ($mode === ExerciseMode::SituationalHear) {
             // ИЗ ЧЕГО БЫВАЮТ ВАРИАНТЫ ТАКТА «ЧТО ТЕБЕ СКАЗАЛИ?» (наряд DAY-FIX-3, Ч.2.2). When
@@ -746,7 +750,7 @@ final readonly class StudyCardAssembler
         // в планировщике: карточка — последнее место, где вопрос мог бы стать выбором из четырёх
         // одинаково уместных, и сборщик обязан отказать, кто бы его ни попросил.
         if ($turnLevel === PlanTurnLevel::Assemble || $mode === ExerciseMode::SituationalAsk) {
-            return $this->assemblyCard($view, $content, $mode, $neighbours, $step);
+            return $this->assemblyCard($view, $content, $mode, $neighbours, $step, $ownBlocksOnly);
         }
 
         // ИЗ ЧЕГО БЫВАЮТ ВАРИАНТЫ ТВОЕГО ХОДА — наряд DAY-2-FIX, Ч.1.5.
@@ -778,7 +782,7 @@ final readonly class StudyCardAssembler
             // it. Dropping the card left day 1 without those replies and the day could never pass
             // (the live run of 05.09 found it: no review for any «say» line after a full walk).
             if ($answerPoolIds !== null) {
-                return $this->assemblyCard($view, $content, $mode, $neighbours, $step);
+                return $this->assemblyCard($view, $content, $mode, $neighbours, $step, $ownBlocksOnly);
             }
 
             return null;
@@ -830,6 +834,7 @@ final readonly class StudyCardAssembler
         ExerciseMode $mode,
         array $neighbours,
         ?int $step,
+        bool $ownBlocksOnly = false,
     ): SessionCardView {
         $own = PlanAssemblyBlocks::own($content->text);
 
@@ -849,7 +854,12 @@ final readonly class StudyCardAssembler
         /** @var list<string> $chips */
         $chips = $this->rng->shuffleArray([
             ...$own,
-            ...PlanAssemblyBlocks::decoys($own, $pool, $this->length),
+            // ЗНАКОМСТВО — БЕЗ ЧУЖИХ БЛОКОВ (наряд DAY-GATE-1, Ч.1.5). На сборке ступени A человек
+            // видит реплику ВПЕРВЫЕ: чужие плитки там не выбор, а помеха — они спрашивают «какие из
+            // этих слов вообще из твоей фразы», когда сама фраза ещё не прочитана. В разговоре
+            // (ступень B и выше, шов, разогрев) лишние блоки остаются: там реплика уже знакома, и
+            // отличить её слова от соседних — это и есть задача.
+            ...($ownBlocksOnly ? [] : PlanAssemblyBlocks::decoys($own, $pool, $this->length)),
         ]);
 
         return new SessionCardView(

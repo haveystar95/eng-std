@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Command;
 
+use App\Modules\Learning\Domain\ValueObject\PlanDayStage;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 
@@ -22,5 +23,15 @@ final readonly class BuildPlanSession
         public string $planId,
         public ?int $dayIndex = null,
         public ?StudySessionId $sessionId = null,
+        /**
+         * КАКОЙ ЭТАП ДНЯ СОБРАТЬ — null значит «текущий», и так приходит «Продолжить»
+         * (наряд DAY-GATE-1, Ч.1.4).
+         *
+         * Клиент называет этап ровно в одном случае — «Повторить ошибки»
+         * ({@see \App\Modules\Learning\Domain\ValueObject\PlanDayStage::Retrain}), потому что это
+         * единственная дверь, которую человек открывает не по порядку. Назвать ЗАПЕРТЫЙ этап нельзя:
+         * сервер отвечает отказом, а не собирает то, до чего очередь не дошла.
+         */
+        public ?PlanDayStage $stage = null,
     ) {}
 }

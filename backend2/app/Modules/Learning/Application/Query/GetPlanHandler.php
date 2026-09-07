@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Application\Query;
 
 use App\Modules\Learning\Application\Dto\PlanDayStateView;
+use App\Modules\Learning\Application\Command\BuildPlanSessionHandler;
 use App\Modules\Learning\Application\Dto\PlanDayView;
 use App\Modules\Learning\Application\Dto\PlanProgressView;
 use App\Modules\Learning\Application\Dto\PlanView;
@@ -96,6 +97,9 @@ final readonly class GetPlanHandler
             fn (PlanDay $day): PlanDayView => $this->dayView(
                 $day,
                 $this->census->of($plan, $planDays, $progress, $day->dayIndex(), $knobs, $stages),
+                // ЗАМОК ДНЯ (наряд DAY-GATE-1, Ч.1.2) — считается тем же кодом, что отбивает запрос
+                // сессии, чтобы экран и сервер не разошлись в том, что открыто.
+                BuildPlanSessionHandler::lockedBy($planDays, $progress, $day->dayIndex()),
             ),
             $planDays,
         );
@@ -299,7 +303,7 @@ final readonly class GetPlanHandler
         return is_string($intro) ? trim($intro) : '';
     }
 
-    private function dayView(PlanDay $day, PlanDayStateView $state): PlanDayView
+    private function dayView(PlanDay $day, PlanDayStateView $state, ?int $lockedBy = null): PlanDayView
     {
         $brief = $day->roleBrief() ?? [];
 
@@ -344,6 +348,8 @@ final readonly class GetPlanHandler
             minutesLeft: $state->minutesLeft,
             materialMinutes: $state->materialMinutes,
             conversationMinutes: $state->conversationMinutes,
+            stages: $state->dayStages,
+            lockedByDayIndex: $lockedBy,
         );
     }
 

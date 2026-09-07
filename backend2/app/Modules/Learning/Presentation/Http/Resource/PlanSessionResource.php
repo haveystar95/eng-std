@@ -69,6 +69,10 @@ final class PlanSessionResource extends JsonResource
             'sitting_plan' => $view->sittingPlan,
             'material_minutes' => $view->materialMinutes,
             'conversation_minutes' => $view->conversationMinutes,
+            // ЭТАП, КОТОРЫЙ ЭТА ПОСАДКА, И ВСЕ ЭТАПЫ ДНЯ (наряд DAY-GATE-1, Ч.1.4): шапка присеста
+            // и экран дня читают одно и то же, поэтому «где я» не меняется от того, откуда смотреть.
+            'stage' => $view->stage?->value,
+            'day_stages' => PlanResource::stages($view->dayStages),
             // СЕКУНДЫ ПРОГОНА СЦЕНЫ — «сразу», «Пропустить», сторож и цена хода в минутах дня
             // (наряд SCENE-RUN). На проводе, а не в коде экрана: это продуктовые суждения о том,
             // сколько человек думает, и они обязаны двигаться без выката приложения.
@@ -155,6 +159,10 @@ final class PlanSessionResource extends JsonResource
                 // уровнях, а рисуется он вариантами, блоками или микрофоном. Null у всего, что не
                 // является ходом человека в диалоге.
                 'turn_level' => $task->turnLevel,
+                // ЧТО ИМЕННО НАДО СКАЗАТЬ, на языке поддержки — только на сборке (наряд DAY-GATE-1).
+                // Экран печатает это с префиксом «Скажи:»; префикс клиентский, строка серверная.
+                // На карточке выбора поле null: там перевод назвал бы правильный вариант.
+                'intent' => $task->intent,
                 'knobs_applied' => $task->knobsApplied,
                 'knobs_ignored' => $task->knobsIgnored,
                 'card' => self::card($task),
