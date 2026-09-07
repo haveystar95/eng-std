@@ -543,6 +543,14 @@ class PlanRescueSheet extends StatelessWidget {
                 ),
               ],
             ),
+            // ЗАЧЕМ ОНИ ЗДЕСЬ — одной строкой (наряд DAY-GATE-1, доработка Ч.2.7). «Спасатели»
+            // объясняли себя сами именем; «На всякий случай» — нет, и без подписи это пять фраз
+            // без повода.
+            const SizedBox(height: 4),
+            Text(
+              l.planRescueHint,
+              style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.secondary),
+            ),
             const SizedBox(height: AppSpacing.s12),
             for (final phrase in rescue) ...[
               InkWell(

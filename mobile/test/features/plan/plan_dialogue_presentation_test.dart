@@ -336,7 +336,7 @@ void main() {
     tester,
   ) async {
     // Две задачи в двух присестах: сборка реплики среди знакомства (материал) и её же выбор в
-    // диалоге (разговор). Сервер назвал присесты — экран между ними говорит «Материал пройден».
+    // диалоге (разговор). Сервер назвал присесты — экран между ними говорит «Слова и фразы пройдены» (DAY-GATE-1, Ч.2.7).
     final intro = task(
       sayCard('01SAY', 'My background is in backend development.'),
       section: PlanSessionTask.sectionCodeDialogueIntro,
@@ -358,7 +358,7 @@ void main() {
     await tester.tap(find.text('Дальше'));
     await tester.pumpAndSettle();
 
-    expect(find.text('МАТЕРИАЛ ПРОЙДЕН'), findsOneWidget);
+    expect(find.text('СЛОВА И ФРАЗЫ ПРОЙДЕНЫ'), findsOneWidget);
     expect(find.text('К разговору'), findsOneWidget);
     expect(find.text('Позже'), findsOneWidget);
     expect(find.textContaining('из 2'), findsNothing);

@@ -1484,7 +1484,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrAssembleTurn => 'собери свой ответ из блоков';
 
   @override
-  String get planSectionSceneRun => 'Прогон сцены';
+  String get planSectionSceneRun => 'Скажи сам';
 
   @override
   String get planSceneRunHint => 'скажи свою реплику — текста не будет';
@@ -2666,10 +2666,10 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: 'Подготовка $days дня + прогон',
-      many: 'Подготовка $days дней + прогон',
-      few: 'Подготовка $days дня + прогон',
-      one: 'Подготовка $days день + прогон',
+      other: 'Подготовка $days дня + финал',
+      many: 'Подготовка $days дней + финал',
+      few: 'Подготовка $days дня + финал',
+      one: 'Подготовка $days день + финал',
     );
     return '$_temp0';
   }
@@ -2897,6 +2897,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get planRescueHint => 'если не понял или не расслышал';
+
+  @override
   String get planStageMaterial => 'Слова и фразы';
 
   @override
@@ -2994,7 +2997,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planDayExhausted =>
-      'Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает материал не на том языке. План придётся собрать заново.';
+      'Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает слова и фразы не на том языке. План придётся собрать заново.';
 
   @override
   String get planDayExhaustedLead =>
@@ -3018,7 +3021,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'к примеру не приехал перевод, и читать его было бы нечем';
 
   @override
-  String get planFailNotTargetLanguage => 'материал вернулся не на том языке';
+  String get planFailNotTargetLanguage => 'слова и фразы вернулись не на том языке';
 
   @override
   String get planFailKeyIsTheTerm =>
@@ -3064,7 +3067,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planFailTermRepeated =>
-      'карточка повторяла другую — этого дня, спасательного набора или прошлого дня';
+      'карточка повторяла другую — этого дня, набора «на всякий случай» или прошлого дня';
 
   @override
   String get planFailUnknown => 'не удалось собрать день';
@@ -3137,7 +3140,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planReviewSection => 'Повторение · из прошлых дней';
 
   @override
-  String get planWarmupSection => 'Разогрев';
+  String get planWarmupSection => 'Из прошлых дней';
 
   @override
   String get planShelfHear => 'Тебе скажут';
@@ -3161,7 +3164,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSectionNumbers => 'Цифры на слух';
 
   @override
-  String get planSectionRehearsal => 'Прогон сцены';
+  String get planSectionRehearsal => 'Скажи сам';
 
   @override
   String planSectionOfScene(String section, int index) {
@@ -3184,7 +3187,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Собеседник говорит — вы отвечаете. Отвечать будете выбором из фраз плана, включая выученные в прошлых сценах.';
 
   @override
-  String get planDialogueRescueAtHand => 'Спасатели под рукой';
+  String get planDialogueRescueAtHand => 'На всякий случай — под рукой';
 
   @override
   String get planDialogueRescueLead =>
@@ -3225,7 +3228,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Реплика прозвучит, когда голос будет готов. Диалог начнётся с неё — тишины не будет.';
 
   @override
-  String get planDialogueRescue => 'Спасатели';
+  String get planDialogueRescue => 'На всякий случай';
 
   @override
   String planDialogueRescuePhrases(int count) {
@@ -3336,7 +3339,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planRowRehearsalLead => 'Все сцены подряд, вслух';
 
   @override
-  String get planMaturityMeeting => 'Знакомишься с материалом';
+  String get planMaturityMeeting => 'Знакомишься со словами и фразами';
 
   @override
   String get planMaturityApplying => 'Применяешь в разговоре';
@@ -3403,7 +3406,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planDayMissed => 'Не далось';
 
   @override
-  String get planDayMissedNote => 'Непослушные карточки вернутся в разогреве.';
+  String get planDayMissedNote => 'Непослушные карточки вернутся в следующем дне.';
 
   @override
   String get planDayTrainMore => 'Дотренировать';
@@ -3413,14 +3416,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planDayLeaveNote =>
-      'Если оставить — они придут в разогреве следующего дня, а этот останется открытым.';
+      'Если оставить — они придут в следующем дне, а этот останется открытым.';
 
   @override
-  String get planLadderLegend => 'Зрелость материала';
+  String get planLadderLegend => 'Докуда дошли слова и фразы';
 
   @override
   String get planLadderNoReadiness =>
-      'Готовность к сцене появится, когда сервер её посчитает. Пока — то, докуда дошёл материал.';
+      'Готовность к сцене появится, когда сервер её посчитает. Пока — то, докуда дошли слова и фразы.';
 
   @override
   String get planLadderA => 'познакомился';
@@ -3466,7 +3469,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planEmptyStep2 => 'Каждый день — фразы, которые реально скажешь, и слова из них';
 
   @override
-  String get planEmptyStep3 => 'В конце — разговор в роли и прогон всей ситуации';
+  String get planEmptyStep3 => 'В конце — разговор в роли и вся ситуация вслух';
 
   @override
   String get planEmptyCta => 'Составить план';
@@ -3499,7 +3502,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planRehearsalDoneBody =>
-      'Ты прошёл весь материал плана. Он ушёл в архив: слова, прогресс и вся история сохранены.';
+      'Ты прошёл все слова и фразы плана. Он ушёл в архив: слова, прогресс и вся история сохранены.';
 
   @override
   String get planRehearsalDoneAction => 'К плану';
@@ -3530,10 +3533,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planRehearsalSceneReady => 'в работе';
 
   @override
-  String get planRehearsalUntrainedNote => 'Войдёт в прогон как есть — реплики с подсказкой.';
+  String get planRehearsalUntrainedNote => 'Войдёт как есть — реплики с подсказкой.';
 
   @override
-  String get planRehearsalAloudNote => 'Вслух, без остановок. Спасатели под рукой.';
+  String get planRehearsalAloudNote => 'Вслух, без остановок. На всякий случай — под рукой.';
 
   @override
   String get planRehearsalNoPercent =>
@@ -3543,18 +3546,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planDoneScenes => 'Сцены пройдены';
 
   @override
-  String get planDoneStageA => 'Познакомились с материалом';
+  String get planDoneStageA => 'Познакомились со словами и фразами';
 
   @override
   String get planDoneArchiveNote =>
       'Слова и реплики плана останутся в архиве — открыть можно с его карточки. Автоматических повторений не будет: план закончился вместе с событием.';
 
   @override
-  String get planRehearsalStart => 'Пройти прогон';
+  String get planRehearsalStart => 'Начать';
 
   @override
   String get planRehearsalLead =>
-      'Финальный день ничего не добавляет — это прогон всего, чему план научил. Пройди его перед событием.';
+      'Финальный день ничего не добавляет — это всё, чему план научил, вслух. Пройди его перед событием.';
 
   @override
   String get planArchive => 'Архив';
@@ -4043,7 +4046,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planPreviewRescueBody =>
-      'Пять фраз-спасателей — с первого дня, на случай если растерялся.';
+      'Пять фраз на всякий случай — с первого дня, если не понял или не расслышал.';
 
   @override
   String get planPreviewRescueQuote =>
@@ -4056,7 +4059,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planPreviewRehearsalEndLabel => 'В КОНЦЕ';
 
   @override
-  String get planPreviewRehearsalTitle => 'Прогон перед событием';
+  String get planPreviewRehearsalTitle => 'Скажи сам перед событием';
 
   @override
   String planPreviewRehearsalEveBody(int scenes) {
@@ -4130,17 +4133,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planStateDone => 'пройден';
 
   @override
-  String get planStateMaterialDone => 'материал пройден';
+  String get planStateMaterialDone => 'слова и фразы пройдены';
 
   @override
   String planStateMaterialAbout(int minutes) {
     String _temp0 = intl.Intl.pluralLogic(
       minutes,
       locale: localeName,
-      other: 'материал около $minutes минуты',
-      many: 'материал около $minutes минут',
-      few: 'материал около $minutes минут',
-      one: 'материал около $minutes минуты',
+      other: 'слова и фразы около $minutes минуты',
+      many: 'слова и фразы около $minutes минут',
+      few: 'слова и фразы около $minutes минут',
+      one: 'слова и фразы около $minutes минуты',
     );
     return '$_temp0';
   }
@@ -4165,7 +4168,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSittingLater => 'Позже';
 
   @override
-  String get planMaterialDoneTitle => 'Материал пройден';
+  String get planMaterialDoneTitle => 'Слова и фразы пройдены';
 
   @override
   String get planMaterialDoneLead =>
@@ -4298,7 +4301,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSceneRunFastNone => 'пока нет';
 
   @override
-  String get planSittingRunNext => 'Дальше — прогон сцены';
+  String get planSittingRunNext => 'Дальше — скажи сам';
 
   @override
   String get planSittingRunLead => 'Скажешь реплики сцены голосом — текста на экране не будет.';
@@ -4319,10 +4322,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSummaryMetToday => 'сегодняшняя сцена';
 
   @override
-  String get planSummaryAppliedAll => 'весь материал плана';
+  String get planSummaryAppliedAll => 'все слова и фразы плана';
 
   @override
-  String get planSummaryAppliedSome => 'часть материала плана';
+  String get planSummaryAppliedSome => 'часть слов и фраз плана';
 
   @override
   String planHomeDayState(int index, String state) {

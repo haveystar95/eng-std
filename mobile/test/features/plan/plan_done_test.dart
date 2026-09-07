@@ -64,7 +64,7 @@ void main() {
     // The card count is gone with the counters.
     expect(find.text('Карточек в плане'), findsNothing);
     // Слова лестницы с экранов ушли (наряд DAY-2-FIX, Ч.3а): вердикт человеческий.
-    expect(find.text('Познакомились с материалом'), findsOneWidget);
+    expect(find.text('Познакомились со словами и фразами'), findsOneWidget);
     expect(find.textContaining('ступень'), findsNothing);
     expect(find.text('не со всем'), findsOneWidget);
     expect(find.textContaining(' из '), findsNothing);

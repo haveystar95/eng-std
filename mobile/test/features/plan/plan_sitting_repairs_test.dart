@@ -298,7 +298,7 @@ void main() {
 
       // In words, no «присест 1 из 2 · осталось N» (наряд DAY-FIX-2, Ч.2.1): the second sitting
       // is only ever the scene run, and the screen says exactly that.
-      expect(find.textContaining('ПРОГОН СЦЕНЫ'), findsOneWidget);
+      expect(find.textContaining('СКАЖИ САМ'), findsOneWidget);
       expect(find.textContaining('ПРИСЕСТ'), findsNothing);
       expect(find.textContaining('осталось'), findsNothing);
 

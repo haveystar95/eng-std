@@ -262,7 +262,7 @@ void main() {
       });
 
       expect(captions(session), [
-        'Разогрев',
+        'Из прошлых дней',
         null,
         'Тебе скажут',
         null,

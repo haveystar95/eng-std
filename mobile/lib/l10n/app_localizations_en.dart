@@ -1443,7 +1443,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionInstrAssembleTurn => 'put your reply together from the blocks';
 
   @override
-  String get planSectionSceneRun => 'Scene run';
+  String get planSectionSceneRun => 'Say it yourself';
 
   @override
   String get planSceneRunHint => 'say your line — there will be no text';
@@ -2552,8 +2552,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: '$days days of preparation + run-through',
-      one: '$days day of preparation + run-through',
+      other: '$days days of preparation + the final day',
+      one: '$days day of preparation + the final day',
     );
     return '$_temp0';
   }
@@ -2769,6 +2769,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get planRescueHint => 'for when you didn\'t understand or didn\'t catch it';
+
+  @override
   String get planStageMaterial => 'Words and phrases';
 
   @override
@@ -2867,7 +2870,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planDayExhausted =>
-      'This day failed to build twice in a row, and the server will not try again. It happens when the model returns material in the wrong language. The plan has to be built again.';
+      'This day failed to build twice in a row, and the server will not try again. It happens when the model returns words and phrases in the wrong language. The plan has to be built again.';
 
   @override
   String get planDayExhaustedLead =>
@@ -2891,7 +2894,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'an example arrived with no translation beside it, so there would be nothing to read it by';
 
   @override
-  String get planFailNotTargetLanguage => 'the material came back in the wrong language';
+  String get planFailNotTargetLanguage => 'the words and phrases came back in the wrong language';
 
   @override
   String get planFailKeyIsTheTerm =>
@@ -2936,7 +2939,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planFailTermRepeated =>
-      'a card repeated another one — of this day, of the rescue kit, or of an earlier day';
+      'a card repeated another one — of this day, of the «just in case» set, or of an earlier day';
 
   @override
   String get planFailUnknown => 'the day could not be built';
@@ -3007,7 +3010,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planReviewSection => 'Revision · from earlier days';
 
   @override
-  String get planWarmupSection => 'Warm-up';
+  String get planWarmupSection => 'From earlier days';
 
   @override
   String get planShelfHear => 'You will hear';
@@ -3031,7 +3034,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSectionNumbers => 'Numbers by ear';
 
   @override
-  String get planSectionRehearsal => 'Run-through';
+  String get planSectionRehearsal => 'Say it yourself';
 
   @override
   String planSectionOfScene(String section, int index) {
@@ -3054,7 +3057,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'They speak — you answer. You will answer by choosing from your plan\'s own lines, including the ones you learned in earlier scenes.';
 
   @override
-  String get planDialogueRescueAtHand => 'Rescue phrases at hand';
+  String get planDialogueRescueAtHand => 'Just in case — at hand';
 
   @override
   String get planDialogueRescueLead =>
@@ -3095,7 +3098,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The line will play once the voice is ready. The dialogue starts with it — there will be no silence.';
 
   @override
-  String get planDialogueRescue => 'Rescue phrases';
+  String get planDialogueRescue => 'Just in case';
 
   @override
   String planDialogueRescuePhrases(int count) {
@@ -3204,7 +3207,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planRowRehearsalLead => 'Every scene in a row, out loud';
 
   @override
-  String get planMaturityMeeting => 'Meeting the material';
+  String get planMaturityMeeting => 'Meeting the words and phrases';
 
   @override
   String get planMaturityApplying => 'Using it in conversation';
@@ -3268,7 +3271,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDayMissed => 'Did not go well';
 
   @override
-  String get planDayMissedNote => 'The cards that went wrong come back in the warm-up.';
+  String get planDayMissedNote => 'The cards that went wrong come back in the next day.';
 
   @override
   String get planDayTrainMore => 'Finish them';
@@ -3278,14 +3281,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planDayLeaveNote =>
-      'If you leave them, they come back in the next day\'s warm-up and this day stays open.';
+      'If you leave them, they come back in the next day and this day stays open.';
 
   @override
-  String get planLadderLegend => 'How far the material has got';
+  String get planLadderLegend => 'How far the words and phrases have got';
 
   @override
   String get planLadderNoReadiness =>
-      'Readiness for the scene appears once the server computes it. For now — how far the material has got.';
+      'Readiness for the scene appears once the server computes it. For now — how far the words and phrases have got.';
 
   @override
   String get planLadderA => 'met it';
@@ -3331,8 +3334,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEmptyStep2 => 'Every day — phrases you will actually say, and the words in them';
 
   @override
-  String get planEmptyStep3 =>
-      'At the end — a role conversation and a run-through of the whole situation';
+  String get planEmptyStep3 => 'At the end — a role conversation and the whole situation out loud';
 
   @override
   String get planEmptyCta => 'Make a plan';
@@ -3363,7 +3365,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planRehearsalDoneBody =>
-      'You have been through everything the plan taught. It has gone to the archive: the words, the progress and the whole history are kept.';
+      'You have been through all the plan\'s words and phrases. It has gone to the archive: the words, the progress and the whole history are kept.';
 
   @override
   String get planRehearsalDoneAction => 'Back to the plan';
@@ -3394,11 +3396,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planRehearsalSceneReady => 'in progress';
 
   @override
-  String get planRehearsalUntrainedNote =>
-      'It goes into the run-through as it is — lines with a hint.';
+  String get planRehearsalUntrainedNote => 'It goes in as it is — lines with a hint.';
 
   @override
-  String get planRehearsalAloudNote => 'Out loud, no stopping. The rescue phrases are at hand.';
+  String get planRehearsalAloudNote => 'Out loud, no stopping. Just in case — at hand.';
 
   @override
   String get planRehearsalNoPercent =>
@@ -3408,18 +3409,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDoneScenes => 'Scenes passed';
 
   @override
-  String get planDoneStageA => 'Met the material';
+  String get planDoneStageA => 'Met the words and phrases';
 
   @override
   String get planDoneArchiveNote =>
       'The plan\'s words and lines stay in its archive — open it from the plan\'s card. There will be no automatic repeats: the plan ended with the event.';
 
   @override
-  String get planRehearsalStart => 'Start the run-through';
+  String get planRehearsalStart => 'Start';
 
   @override
   String get planRehearsalLead =>
-      'The final day adds nothing new — it is a run-through of everything the plan taught. Walk it before the event.';
+      'The final day adds nothing new — it is everything the plan taught, out loud. Walk it before the event.';
 
   @override
   String get planArchive => 'Archive';
@@ -3896,7 +3897,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planPreviewRescueBody => 'Five rescue phrases — from day one, for when you freeze.';
+  String get planPreviewRescueBody =>
+      'Five phrases just in case — from day one, for when you didn\'t understand or didn\'t catch it.';
 
   @override
   String get planPreviewRescueQuote =>
@@ -3909,7 +3911,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planPreviewRehearsalEndLabel => 'AT THE END';
 
   @override
-  String get planPreviewRehearsalTitle => 'Rehearsal before the event';
+  String get planPreviewRehearsalTitle => 'Say it yourself before the event';
 
   @override
   String planPreviewRehearsalEveBody(int scenes) {
@@ -3981,15 +3983,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planStateDone => 'done';
 
   @override
-  String get planStateMaterialDone => 'material done';
+  String get planStateMaterialDone => 'words and phrases done';
 
   @override
   String planStateMaterialAbout(int minutes) {
     String _temp0 = intl.Intl.pluralLogic(
       minutes,
       locale: localeName,
-      other: 'material about $minutes minutes',
-      one: 'material about $minutes minute',
+      other: 'words and phrases about $minutes minutes',
+      one: 'words and phrases about $minutes minute',
     );
     return '$_temp0';
   }
@@ -4012,7 +4014,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSittingLater => 'Later';
 
   @override
-  String get planMaterialDoneTitle => 'Material done';
+  String get planMaterialDoneTitle => 'Words and phrases done';
 
   @override
   String get planMaterialDoneLead =>
@@ -4140,7 +4142,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSceneRunFastNone => 'not yet';
 
   @override
-  String get planSittingRunNext => 'Next — the scene run';
+  String get planSittingRunNext => 'Next — say it yourself';
 
   @override
   String get planSittingRunLead =>
@@ -4162,10 +4164,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSummaryMetToday => 'today\'s scene';
 
   @override
-  String get planSummaryAppliedAll => 'all of the plan\'s material';
+  String get planSummaryAppliedAll => 'all the plan\'s words and phrases';
 
   @override
-  String get planSummaryAppliedSome => 'part of the plan\'s material';
+  String get planSummaryAppliedSome => 'some of the plan\'s words and phrases';
 
   @override
   String planHomeDayState(int index, String state) {

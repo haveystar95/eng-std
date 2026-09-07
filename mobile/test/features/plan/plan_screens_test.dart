@@ -864,7 +864,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Пройти прогон'), findsOneWidget);
+    expect(find.text('Начать'), findsOneWidget);
     expect(find.text('Собрать день'), findsNothing);
     expect(find.text('Собрать план заново'), findsNothing);
   });
@@ -919,7 +919,7 @@ void main() {
     expect(find.text('в работе'), findsOneWidget);
     // An untrained scene admits it out loud and does not block the run-through.
     expect(find.text('не тренировали'), findsOneWidget);
-    expect(find.textContaining('Войдёт в прогон как есть'), findsOneWidget);
+    expect(find.textContaining('Войдёт как есть'), findsOneWidget);
     // No percentage anywhere, and the screen says why rather than leaving a hole.
     expect(find.textContaining('%'), findsNothing);
     expect(find.textContaining('Готовность по сценам появится'), findsOneWidget);

@@ -663,6 +663,16 @@ class _SectionBlock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         PlanLabel(section.label(l), color: AppColors.tertiary, fontSize: 11.5),
+        // «НА ВСЯКИЙ СЛУЧАЙ» ОБЪЯСНЯЕТ СЕБЯ (наряд DAY-GATE-1, доработка Ч.2.7): прежнее имя
+        // «Спасатели» несло смысл в себе, новое — нет, и без подписи это пять фраз без повода.
+        // Остальные секции подписаны шагом дня, и второй строки им не нужно.
+        if (section.shelf == PlanTermRow.shelfRescue) ...[
+          const SizedBox(height: 4),
+          Text(
+            l.planRescueHint,
+            style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.secondary),
+          ),
+        ],
         if (step != null) ...[
           const SizedBox(height: 4),
           Text(

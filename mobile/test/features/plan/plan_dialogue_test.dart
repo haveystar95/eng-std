@@ -225,9 +225,9 @@ void main() {
     await tester.tap(find.text('Начать диалог'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Спасатели'), findsOneWidget);
+    expect(find.text('На всякий случай'), findsOneWidget);
 
-    await tester.tap(find.text('Спасатели'));
+    await tester.tap(find.text('На всякий случай'));
     await tester.pumpAndSettle();
 
     // The panel names the phrase and says out loud that asking is not a mistake.
