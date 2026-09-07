@@ -46,6 +46,7 @@ use App\Modules\Shared\Domain\Service\Clock;
 use Illuminate\Contracts\Container\Container;
 use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
 use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
+use App\Modules\Learning\Domain\Repository\PlanStagePassageRepository;
 use App\Modules\Learning\Application\Query\GetPlanHandler;
 use App\Modules\Learning\Application\Command\BuildPlanSessionHandler;
 use App\Modules\Learning\Application\Service\PlanDayStateCensus;
@@ -66,6 +67,7 @@ use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermArchiver;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermSweepStore;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermStageRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanSceneRunRepository;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanStagePassageRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesWriter;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDailyStatsProjector;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDueTermsReader;
@@ -147,6 +149,9 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(PlanTermSweepStore::class, EloquentPlanTermSweepStore::class);
         $this->app->bind(PlanTermStageRepository::class, EloquentPlanTermStageRepository::class);
         $this->app->bind(PlanSceneRunRepository::class, EloquentPlanSceneRunRepository::class);
+        // ЖУРНАЛ ПРОЙДЕННЫХ ЭТАПОВ (наряд DAY-GATE-1, доработка) — append-only: «пройден» это
+        // событие, а не пересчёт долга на сегодняшний день.
+        $this->app->bind(PlanStagePassageRepository::class, EloquentPlanStagePassageRepository::class);
         // ДЕВ-ДВЕРЬ СМЕНЫ ДНЕЙ (наряд DAY-FIX-2) — сдвиг «сегодня» QA-аккаунта живёт в кэше, не в
         // таблице; замки — те же, что у входа без пароля, сложенные в `qa_tools` пользователя.
         $this->app->bind(QaPlanClock::class, CachedQaPlanClock::class);

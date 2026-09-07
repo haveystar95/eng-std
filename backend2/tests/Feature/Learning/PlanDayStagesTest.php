@@ -231,3 +231,77 @@ it('даёт реплике, собранной сегодня на знаком
         expect($task['stage'])->not->toBe('b');
     }
 });
+
+// ПРАВИЛО: наряд DAY-GATE-1, доработка — «этап пройден» это СОБЫТИЕ журнала, а не пересчёт долга на
+// сегодняшний день; полночь ничего не сбрасывает.
+// ЛОВИТ: ровно то, что живой прогон 07–08.09 показал вживую. В 23:51 у дня стояло
+// `rehearsal: current`; в 00:07 — снова `material: current`, потому что лестница пересчитала долг на
+// новый календарный день и «отвечено сегодня» перестало быть правдой. Человек, начавший день
+// вечером, наутро видел его непройденным — и день, который он прошёл наполовину, требовал пройти
+// заново с первого этапа.
+it('ночь не сбрасывает пройденные этапы: событие сильнее пересчёта', function () {
+    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $material = planSession($this, $token, $planId, 1);
+    $seq = answerTasks($this, $token, $material);
+    completeSitting($this, $token, $material);
+    $conversation = planSession($this, $token, $planId, 1);
+    answerTasks($this, $token, $conversation, $seq);
+    completeSitting($this, $token, $conversation);
+
+    // 23:51 — материал и разговор позади, впереди «Скажи сам».
+    expect(stagesOfDay($this, $token, $planId, 1))
+        ->toBe(['material' => 'done', 'conversation' => 'done', 'rehearsal' => 'current']);
+
+    // …ПОЛНОЧЬ. Вся история сдвигается на день назад — то же самое делает `qa:time-travel`, и то же
+    // самое делает с данными настоящая ночь: «отвечено сегодня» перестаёт быть правдой.
+    ageHistory($user->id, 1);
+
+    // 00:07 — ничего не изменилось. Пройденное остаётся пройденным.
+    expect(stagesOfDay($this, $token, $planId, 1))
+        ->toBe(['material' => 'done', 'conversation' => 'done', 'rehearsal' => 'current']);
+
+    // …и «Продолжить» по-прежнему ведёт в прогон, а не обратно в слова.
+    expect(planSession($this, $token, $planId, 1)['stage'])->toBe('rehearsal');
+});
+
+// ПРАВИЛО: то же событие — но и день целиком не разучивается.
+// ЛОВИТ: пройденный день, который наутро снова просит себя пройти. Он держал бы фокус, замок дня
+// N+1 и генерацию следующего дня — то есть остановил бы план.
+it('пройденный день остаётся пройденным и после ночи', function () {
+    [$user, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    walkDay($this, $token, $planId, 1);
+    expect(stagesOfDay($this, $token, $planId, 1))
+        ->toBe(['material' => 'done', 'conversation' => 'done', 'rehearsal' => 'done']);
+
+    ageHistory($user->id, 1);
+
+    expect(stagesOfDay($this, $token, $planId, 1))
+        ->toBe(['material' => 'done', 'conversation' => 'done', 'rehearsal' => 'done']);
+
+    $plan = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/plans/{$planId}")->assertOk()->json('data');
+    expect(collect($plan['days'])->firstWhere('index', 1)['day_state'])->toBe('done');
+});
+
+// ПРАВИЛО: наряд DAY-GATE-1, доработка — журнал append-only, событие случается один раз.
+// ЛОВИТ: повторную запись при каждом чтении плана. Дубль в append-only журнале — это уже не журнал,
+// а счётчик обращений, и по нему нельзя ответить «когда этап закрылся».
+it('событие «этап пройден» пишется один раз, сколько бы раз план ни читали', function () {
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $material = planSession($this, $token, $planId, 1);
+    answerTasks($this, $token, $material);
+    completeSitting($this, $token, $material);
+
+    for ($i = 0; $i < 3; $i++) {
+        stagesOfDay($this, $token, $planId, 1);
+    }
+
+    $rows = DB::table('learning_plan_day_stage_passages')
+        ->where('plan_id', $planId)->where('day_index', 1)->get();
+
+    expect($rows)->toHaveCount(1)
+        ->and($rows[0]->stage)->toBe('material');
+});

@@ -11,6 +11,7 @@ use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
 use App\Modules\Learning\Domain\Repository\PlanSceneRunRepository;
+use App\Modules\Learning\Domain\Repository\PlanStagePassageRepository;
 use App\Modules\Learning\Domain\Service\PlanDayPassage;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\Service\RoleLineModes;
@@ -66,6 +67,11 @@ final readonly class PlanProgress
          * (наряд DAY-GATE-1, Ч.1.1): «Скажи сам» закрывается фактом, что человек сцену проговорил.
          */
         private PlanSceneRunRepository $sceneRuns,
+        /**
+         * ЧТО В ЭТОМ ПЛАНЕ УЖЕ ПРОЙДЕНО — журнал этапов (наряд DAY-GATE-1, доработка). Один запрос
+         * на план: «пройден» это событие, и читать его надо раньше, чем считать долг на сегодня.
+         */
+        private PlanStagePassageRepository $stagePassages,
         private PlanSceneTurns $sceneTurns = new PlanSceneTurns(),
     ) {}
 
@@ -96,8 +102,11 @@ final readonly class PlanProgress
         foreach ($this->sceneRuns->forPlan($plan->id()) as $run) {
             $ranScenes[$run->sceneIndex] = true;
         }
+        // ЖУРНАЛ ЭТАПОВ — до всякого счёта: записанное пройдено, что бы ни насчитала лестница на
+        // сегодняшний день (наряд DAY-GATE-1, доработка).
+        $passed = $this->stagePassages->forPlan($plan->id());
         foreach ($progress as $index => $view) {
-            $stages = $this->stagesOf($view, isset($ranScenes[$index]));
+            $stages = $this->stagesOf($view, isset($ranScenes[$index]), $passed[$index] ?? []);
             $progress[$index] = $view->withPassage(PlanDayPassage::passed($stages), $stages);
         }
 
@@ -301,9 +310,10 @@ final readonly class PlanProgress
      * плана: спасатель в таком состоянии держал бы день 1 открытым вечно, а с ним фокус, генерацию
      * следующего дня и весь план.
      *
+     * @param  list<string>  $passed  этапы этого дня, про которые уже записано «пройден»
      * @return list<array{stage: \App\Modules\Learning\Domain\ValueObject\PlanDayStage, state: \App\Modules\Learning\Domain\ValueObject\PlanDayStageState, cards: int}>
      */
-    private function stagesOf(PlanDayProgressView $view, bool $sceneRan): array
+    private function stagesOf(PlanDayProgressView $view, bool $sceneRan, array $passed): array
     {
         $cards = [];
         foreach ($view->termIds as $termId) {
@@ -330,7 +340,7 @@ final readonly class PlanProgress
         // строка, и запирать ею день значило бы держать человека в дне, у которого нет разговора.
         $rehearsalDone = $sceneRan || $this->sceneTurns->of($view) === [];
 
-        return PlanDayPassage::stages($cards, $rehearsalDone);
+        return PlanDayPassage::stages($cards, $rehearsalDone, 0, $passed);
     }
 
     /** The shelf the server's own five phrases stand on — {@see PlanShelf::Rescue}. */

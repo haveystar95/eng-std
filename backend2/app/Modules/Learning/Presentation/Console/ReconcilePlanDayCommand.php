@@ -8,6 +8,7 @@ use App\Modules\Learning\Application\Service\PlanDayPassing;
 use App\Modules\Learning\Application\Service\PlanProgress;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
+use App\Modules\Learning\Domain\Repository\PlanStagePassageRepository;
 use App\Modules\Learning\Domain\Service\PlanDayPassage;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use Illuminate\Console\Command;
@@ -31,6 +32,18 @@ use Illuminate\Console\Command;
  * что и конец посадки ({@see PlanDayPassing}). Никаких UPDATE мимо домена — ровно поэтому она и
  * существует вместо «поправить строку в базе».
  *
+ * ## Что она делает с наряда DAY-GATE-1 (доработка)
+ *
+ * «Этап пройден» стало СОБЫТИЕМ в журнале
+ * ({@see \App\Modules\Learning\Domain\Repository\PlanStagePassageRepository}), и у планов,
+ * которые шли ДО этой правки, событий нет — есть только пересчёт, который к полуночи обнуляется.
+ * Поэтому команда дописывает недостающие события: она считает то же, что считает любой запрос
+ * плана, и записывает закрытые этапы тем же кодом, что и конец посадки. Отдельного «бэкфилла» с
+ * прямыми UPDATE нет и не будет.
+ *
+ * Дата у дописанных событий — дата СВЕРКИ: она восстанавливает факт, а не время, и делать вид, что
+ * знает время, ей нечем.
+ *
  * Побочный эффект у неё ровно один и он законный: день, ставший `done`, ставит в очередь следующий
  * ({@see \App\Modules\Learning\Domain\Service\PlanGenerationPolicy::nextAfterDone()}), потому что
  * это одно и то же событие. `--dry-run` показывает расклад и не пишет ничего.
@@ -47,6 +60,7 @@ final class ReconcilePlanDayCommand extends Command
         PlanDayRepository $days,
         PlanProgress $progress,
         PlanDayPassing $passing,
+        PlanStagePassageRepository $stagePassages,
     ): int {
         $plan = $this->argument('plan');
         $planId = is_string($plan) ? $plan : '';
@@ -61,6 +75,7 @@ final class ReconcilePlanDayCommand extends Command
         $only = $only === null ? null : (int) $only;
 
         $planDays = $days->listForPlan($plan->id());
+        $eventsBefore = self::countEvents($stagePassages->forPlan($plan->id()));
         $before = $progress->forPlan($plan, $planDays);
 
         $this->line('БЫЛО:');
@@ -80,6 +95,7 @@ final class ReconcilePlanDayCommand extends Command
         $passing->mark($plan, $planDays, $before);
 
         $planDays = $days->listForPlan($plan->id());
+        $log = $stagePassages->forPlan($plan->id());
         $after = $progress->forPlan($plan, $planDays);
 
         $this->line('СТАЛО:');
@@ -88,7 +104,28 @@ final class ReconcilePlanDayCommand extends Command
             $this->rows($planDays, $after, $only),
         );
 
+        // СКОЛЬКО СОБЫТИЙ ДОПИСАНО — главное число этой команды с наряда DAY-GATE-1: именно они
+        // делают пройденное неотменяемым полуночью.
+        $written = self::countEvents($log) - $eventsBefore;
+        $this->line("Событий «этап пройден» дописано: {$written}.");
+        foreach ($log as $index => $stages) {
+            if ($only === null || $index === $only) {
+                $this->line("  день {$index}: " . implode(' · ', $stages));
+            }
+        }
+
         return self::SUCCESS;
+    }
+
+    /** @param array<int, list<string>> $log */
+    private static function countEvents(array $log): int
+    {
+        $n = 0;
+        foreach ($log as $stages) {
+            $n += count($stages);
+        }
+
+        return $n;
     }
 
     /**

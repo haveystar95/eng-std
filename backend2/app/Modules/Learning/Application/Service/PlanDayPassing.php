@@ -10,6 +10,8 @@ use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
+use App\Modules\Learning\Domain\Repository\PlanStagePassageRepository;
+use App\Modules\Learning\Domain\Service\PlanDayPassage;
 use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
 use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
 use App\Modules\Shared\Domain\Service\TransactionManager;
@@ -47,6 +49,12 @@ final readonly class PlanDayPassing
         private PlanProgress $progress,
         private DispatchesPlanDay $dispatcher,
         private TransactionManager $tx,
+        /**
+         * ЖУРНАЛ ЭТАПОВ (наряд DAY-GATE-1, доработка). Этот сервис и есть «момент, когда этап мог
+         * закрыться»: его зовут конец присеста, запись прогона, сборка следующей посадки и сверка —
+         * ровно те четыре места. Поэтому событие пишется здесь, а не на пути чтения.
+         */
+        private PlanStagePassageRepository $stagePassages,
     ) {}
 
     /**
@@ -69,12 +77,39 @@ final readonly class PlanDayPassing
     }
 
     /**
+     * ЗАПИСАТЬ ЭТАПЫ, КОТОРЫЕ ТОЛЬКО ЧТО ЗАКРЫЛИСЬ (наряд DAY-GATE-1, доработка).
+     *
+     * Первым делом в {@see mark()}, до вердикта о дне: «день пройден» складывается из этапов, и
+     * записывать его раньше, чем их, значило бы держать вывод, который завтра не из чего повторить.
+     *
+     * Идемпотентно на уровне базы, поэтому вызывать можно из каждого места, где этап мог закрыться,
+     * не сверяясь предварительно.
+     */
+    private function recordClosedStages(LearningPlan $plan, PlanProgressView $progress): void
+    {
+        $passed = $this->stagePassages->forPlan($plan->id());
+
+        $rows = [];
+        foreach ($progress->days as $index => $view) {
+            foreach (PlanDayPassage::justClosed($view->stages, $passed[$index] ?? []) as $stage) {
+                $rows[] = ['day_index' => $index, 'stage' => $stage];
+            }
+        }
+
+        // Дата ученика, а не сервера: этап закрылся в ЕГО день, и «сегодня» у него своё
+        // ({@see PlanProgressView::$today}).
+        $this->stagePassages->record($plan->id(), $rows, $progress->today);
+    }
+
+    /**
      * Write `done` onto every day of this plan whose words have all closed stage A.
      *
      * @param  list<PlanDay>  $days
      */
     public function mark(LearningPlan $plan, array $days, PlanProgressView $progress): void
     {
+        $this->recordClosedStages($plan, $progress);
+
         $toMark = [];
         foreach ($days as $day) {
             $view = $progress->days[$day->dayIndex()] ?? null;

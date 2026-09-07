@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Domain\Service;
 
+use App\Modules\Learning\Application\Service\PlanProgress;
+use App\Modules\Learning\Domain\Repository\PlanStagePassageRepository;
 use App\Modules\Learning\Domain\ValueObject\PlanDayStage;
 use App\Modules\Learning\Domain\ValueObject\PlanDayStageState;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
@@ -17,13 +19,21 @@ use App\Modules\Learning\Domain\ValueObject\PlanTermCard;
  * ровно потому, что живой прогон 05.09 уже ловил три экрана с тремя ответами про один день, и урок
  * был записан: считает сервер, и одним кодом.
  *
- * ## Пройден = пройден насквозь
+ * ## Пройден — это СОБЫТИЕ, а не пересчёт
  *
- * Этап пройден, когда ни одна его карточка сегодня ничего не должна
- * ({@see PlanStageLadder::owedStepsToday()}). «Ничего не должна» включает реплику, отвеченную
- * СЕГОДНЯ неверно: по правилу «один показ ступени в день» её следующий показ завтрашний, и держать
- * ею день значит запереть человека в дне, из которого сегодня нет выхода. Именно это и случилось у
- * владельца 07.09.
+ * Этап пройден, когда про него ЗАПИСАНО, что он пройден
+ * ({@see PlanStagePassageRepository}). Пересчёт по
+ * лестнице остался ровно тем, чем должен быть: он ПОРОЖДАЕТ событие — этап, которому сегодня нечего
+ * показать, закрывается, и в тот же миг это записывается, — но не заменяет его.
+ *
+ * Разница видна ночью, и она стоила живого прогона 07–08.09: «ничего не должна СЕГОДНЯ» кончается в
+ * полночь, и в 00:07 день, у которого в 23:51 стояло `rehearsal: current`, снова показывал
+ * `material: current`. Человек, начавший день вечером, наутро видел его непройденным. Мнение о
+ * сегодняшнем дне пересчитывается; событие — нет.
+ *
+ * Правило «один показ ступени в день» этим не тронуто: оно про ПОКАЗЫ карточек и живёт в
+ * {@see PlanStageLadder}. Реплика, отвеченная сегодня неверно, по-прежнему не держит день — её
+ * следующий показ завтрашний, а этап закрывается и записывается.
  *
  * Несказанное не теряется: промахнутая реплика возвращается завтра разогревом и швом, а сегодня её
  * можно взять ещё раз явным нажатием — «Повторить ошибки» ({@see PlanDayStage::Retrain}), и это
@@ -33,7 +43,7 @@ use App\Modules\Learning\Domain\ValueObject\PlanTermCard;
  *
  * Спасательный наборе — карточки ПЛАНА, а не сцены (канон §5): они приходят в разогрев каждое утро и
  * ни один день не держат. Тот же довод, по которому они не держали «день пройден» и раньше
- * ({@see \App\Modules\Learning\Application\Service\PlanProgress}) — карточка, которую сборщик может
+ * ({@see PlanProgress}) — карточка, которую сборщик может
  * не собрать, держала бы день 1 открытым вечно, а с ним фокус, генерацию следующего дня и весь план.
  * Отбор — на вызывающем: сюда приходят карточки СЦЕНЫ.
  */
@@ -47,7 +57,7 @@ final class PlanDayPassage
      * фактом ({@see stages()}).
      *
      * @param  list<PlanTermCard>  $cards  карточки сцены этого дня со своими стойками
-     * @return array<string, int>  значение {@see PlanDayStage} => сколько карточек должно
+     * @return array<string, int> значение {@see PlanDayStage} => сколько карточек должно
      */
     public static function owed(array $cards): array
     {
@@ -94,18 +104,30 @@ final class PlanDayPassage
      *                               прогонять нечего: у сцены нет ни одного своего хода
      * @param  int  $retrainCards  сколько реплик можно взять ещё раз «Повторить ошибки»; 0 — строки
      *                             нет вовсе
+     * @param  list<string>  $passed  этапы, про которые ЗАПИСАНО, что они пройдены — журнал
+     *                                ({@see PlanStagePassageRepository}).
+     *                                Событие сильнее пересчёта: полночь его не отменяет.
      * @return list<array{stage: PlanDayStage, state: PlanDayStageState, cards: int}>
      */
-    public static function stages(array $cards, bool $rehearsalDone, int $retrainCards = 0): array
-    {
+    public static function stages(
+        array $cards,
+        bool $rehearsalDone,
+        int $retrainCards = 0,
+        array $passed = [],
+    ): array {
         $owed = self::owed($cards);
 
         $out = [];
         $currentTaken = false;
         foreach (PlanDayStage::REQUIRED as $stage) {
-            $left = $stage === PlanDayStage::Rehearsal
-                ? ($rehearsalDone ? 0 : 1)
-                : ($owed[$stage->value] ?? 0);
+            // СОБЫТИЕ ПЕРВЫМ. Записанный этап закрыт навсегда, сколько бы ни насчитала лестница на
+            // новый календарный день; несписанный — закрывается пересчётом и тут же записывается
+            // тем, кто позвал ({@see justClosed()}).
+            $left = in_array($stage->value, $passed, true)
+                ? 0
+                : ($stage === PlanDayStage::Rehearsal
+                    ? ($rehearsalDone ? 0 : 1)
+                    : ($owed[$stage->value] ?? 0));
 
             // ПОРЯДОК СИЛЬНЕЕ СЧЁТА: этап после текущего заперт, даже если карточек в нём ноль.
             // «Скажи сам» с нулём — это не «пройден», это «до него ещё не дошли»; открыть его над
@@ -131,6 +153,32 @@ final class PlanDayPassage
                 'state' => PlanDayStageState::Current,
                 'cards' => $retrainCards,
             ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * ЭТАПЫ, КОТОРЫЕ ТОЛЬКО ЧТО ЗАКРЫЛИСЬ и которых ещё нет в журнале — их и надо записать.
+     *
+     * Отдельная функция, а не побочный эффект {@see stages()}: Domain ничего не пишет, он только
+     * называет. Пишет вызывающий, и делает это в тех четырёх местах, где этап может закрыться, —
+     * конец присеста, запись прогона, сборка следующей посадки, сверка.
+     *
+     * @param  list<array{stage: PlanDayStage, state: PlanDayStageState, cards: int}>  $stages
+     * @param  list<string>  $passed  что уже в журнале
+     * @return list<string> значения {@see PlanDayStage}
+     */
+    public static function justClosed(array $stages, array $passed): array
+    {
+        $out = [];
+        foreach ($stages as $row) {
+            if ($row['state'] === PlanDayStageState::Done
+                && in_array($row['stage'], PlanDayStage::REQUIRED, true)
+                && ! in_array($row['stage']->value, $passed, true)
+            ) {
+                $out[] = $row['stage']->value;
+            }
         }
 
         return $out;

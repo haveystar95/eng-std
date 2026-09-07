@@ -640,9 +640,26 @@ function walkDaySittings(object $ctx, string $token, string $planId, int $dayInd
         if (($session['stage'] ?? null) === 'rehearsal') {
             recordSceneRun($ctx, $token, $planId, $dayIndex, $session);
         }
+        completeSitting($ctx, $token, $session);
     }
 
     return [$sittings, $seq];
+}
+
+/**
+ * ПРИСЕСТ ЗАКОНЧЕН — то же, что шлёт телефон в конце сидения (`sessionCompletionSync`).
+ *
+ * Не украшение теста: с наряда DAY-GATE-1 (доработка) именно это событие записывает в журнал
+ * закрытые этапы ({@see \App\Modules\Learning\Application\Service\PlanDayPassing}). Тест,
+ * который отвечает на карточки и уходит, проверяет не то, что делает человек, — и не увидит, что
+ * пройденное переживает ночь.
+ */
+function completeSitting(object $ctx, string $token, array $session): void
+{
+    $ctx->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/study/sessions/{$session['session_id']}/complete", [
+            'ended_at' => now()->toIso8601String(),
+        ])->assertOk();
 }
 
 /**
@@ -668,6 +685,7 @@ function stageSession(object $ctx, string $token, string $planId, int $dayIndex,
         if (($session['stage'] ?? null) === 'rehearsal') {
             recordSceneRun($ctx, $token, $planId, $dayIndex, $session);
         }
+        completeSitting($ctx, $token, $session);
     }
 
     throw new RuntimeException("day {$dayIndex} never reached stage «{$stage}»");
