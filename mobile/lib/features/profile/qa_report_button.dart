@@ -51,15 +51,19 @@ class _QaReportOverlayState extends ConsumerState<QaReportOverlay> {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.maybeOf(context);
     try {
+      final shot = await _screenshot();
       final report = buildQaReport(
         context: ref.read(qaContextProvider),
         speech: ref.read(speechDiagnosticsProvider),
         // Уже прочитанный SHA сервера, если он есть; ходить за ним ещё раз ради отчёта незачем.
         backendCommit: ref.read(backendCommitProvider).value ?? '',
+        // ПОЧЕМУ СНИМКА НЕТ — в самом отчёте. Молчаливо отсутствующий снимок неотличим от снимка,
+        // который не понадобился, и разбирать по такому отчёту нечего.
+        note: shot.error,
       );
       final id = await ref.read(apiClientProvider).sendQaReport(
         report: report,
-        screenshotPng: await _screenshot(),
+        screenshotPng: shot.png,
       );
       messenger?.showSnackBar(SnackBar(content: Text(l.qaReportSent(id))));
     } catch (_) {
@@ -76,17 +80,25 @@ class _QaReportOverlayState extends ConsumerState<QaReportOverlay> {
   /// Снимок необязателен НАМЕРЕННО: он единственная часть отчёта, которая может не получиться
   /// (граница ещё не отрисована, устройство отказало в буфере), и потерять из-за неё описание
   /// состояния было бы обидно ровно в тот момент, ради которого всё заведено.
-  Future<List<int>?> _screenshot() async {
+  Future<({List<int>? png, String? error})> _screenshot() async {
     try {
+      // СНАЧАЛА ДАЁМ КАДРУ ДОРИСОВАТЬСЯ. Тап уже перекрасил кнопку и запустил чернильную волну, то
+      // есть пометил границу перерисовки грязной, а `toImage` на грязной границе падает
+      // (`!debugNeedsPaint`) — что и случилось на первом живом нажатии: отчёт пришёл без снимка и
+      // без причины. Одно ожидание конца кадра стоит миллисекунды и снимает весь класс.
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return (png: null, error: 'screenshot: gone');
       final object = _boundary.currentContext?.findRenderObject();
-      if (object is! RenderRepaintBoundary) return null;
+      if (object is! RenderRepaintBoundary) {
+        return (png: null, error: 'screenshot: no boundary');
+      }
       final image = await object.toImage(pixelRatio: 2);
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
 
-      return bytes?.buffer.asUint8List();
-    } catch (_) {
-      return null;
+      return (png: bytes?.buffer.asUint8List(), error: bytes == null ? 'screenshot: no bytes' : null);
+    } catch (e) {
+      return (png: null, error: 'screenshot failed: $e');
     }
   }
 

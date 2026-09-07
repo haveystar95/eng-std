@@ -2821,7 +2821,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planErrorSittingEmpty => 'There is nothing to do here — this stage is already done.';
+  String get planErrorSittingEmpty =>
+      'There is nothing to do here — this part of the day is already done.';
 
   @override
   String get planDayCanDo => 'You will be able to';

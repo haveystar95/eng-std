@@ -1,0 +1,31 @@
+{
+    "id": "01M1YP247WNCQJVM05GD3KADK8",
+    "received_at": "2026-09-07T19:38:28+00:00",
+    "screenshot": null,
+    "user_id": "01M1X6A1X2X0ES6MPZ8BD2V7FH",
+    "client": {
+        "build_sha": "e338c038+",
+        "build_at": "2026-09-07 22:36",
+        "api_base_url": "https://greedily-thermos-finer.ngrok-free.dev"
+    },
+    "server": {
+        "commit": "e338c038+"
+    },
+    "context": [],
+    "speech": {
+        "phase": "idle",
+        "last_error": null,
+        "last_partial": "",
+        "echoes": 0,
+        "permissions": {
+            "microphone": "granted",
+            "recognition": "granted",
+            "locale": "en_US",
+            "recognizer_supported": true,
+            "recognizer_available": true,
+            "on_device_supported": true
+        },
+        "log": []
+    },
+    "note": "screenshot failed: 'package:flutter/src/rendering/proxy_box.dart': Failed assertion: line 3553 pos 12: '!debugNeedsPaint': is not true."
+}

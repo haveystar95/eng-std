@@ -1,0 +1,30 @@
+{
+    "id": "01M1YP5GPFN1GVWRTGNCF9W1KS",
+    "received_at": "2026-09-07T19:40:19+00:00",
+    "screenshot": "20260907-194019-01M1YP5GPFN1GVWRTGNCF9W1KS.png",
+    "user_id": "01M1X6A1X2X0ES6MPZ8BD2V7FH",
+    "client": {
+        "build_sha": "e338c038+",
+        "build_at": "2026-09-07 22:39",
+        "api_base_url": "https://greedily-thermos-finer.ngrok-free.dev"
+    },
+    "server": {
+        "commit": "e338c038+"
+    },
+    "context": [],
+    "speech": {
+        "phase": "idle",
+        "last_error": null,
+        "last_partial": "",
+        "echoes": 0,
+        "permissions": {
+            "microphone": "granted",
+            "recognition": "granted",
+            "locale": "en_US",
+            "recognizer_supported": true,
+            "recognizer_available": true,
+            "on_device_supported": true
+        },
+        "log": []
+    }
+}
