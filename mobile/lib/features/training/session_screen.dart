@@ -626,6 +626,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // every spoken word, which is what froze the trainer for ~600 ms per utterance (F20-r).
     unawaited(_pronouncer.release());
     _roleSpeaking.dispose();
+    _feedScrollTimer?.cancel();
     _scroll.dispose();
     super.dispose();
   }
@@ -949,13 +950,22 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   /// new bubble is in the tree and the extent is the real one; short, so it reads as the feed
   /// settling rather than as a scroll the learner did not make.
   void _scrollFeedToEnd() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    void go() {
       if (!mounted || !_scroll.hasClients) return;
       final end = _scroll.position.maxScrollExtent;
       if (end <= _scroll.offset) return;
       _scroll.animateTo(end, duration: AppMotion.swipeReturn, curve: Curves.easeOut);
-    });
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => go());
+    // …AND ONCE THE SLIDE HAS SETTLED: the switcher lays the new card out during its transition,
+    // and the extent the first frame reports belongs to the card on its way out (живой стенд
+    // 07.09 — the seam's card opened on the top of the feed, its blocks below the fold).
+    _feedScrollTimer?.cancel();
+    _feedScrollTimer = Timer(AppMotion.nextTaskEnter + const Duration(milliseconds: 80), go);
   }
+
+  Timer? _feedScrollTimer;
 
   /// ГДЕ КАРТОЧКА СТОИТ В ЦЕПОЧКЕ, или -1 — она в сцене есть, а в разговоре её нет.
   ///
