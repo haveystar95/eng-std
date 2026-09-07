@@ -240,6 +240,11 @@ void main() {
       for (var i = 0; i < session.tasks.length; i++) planSeamCaption(l, session, i),
     ];
 
+    // ПРАВИЛО: наряд DAY-GATE-1 (доработка), п. 3 — набор «на всякий случай» зовётся своим именем;
+    // «Из прошлых дней» — это реплики прошлых дней, и больше ничего.
+    // ЛОВИТ: подпись, прибитую к КОДУ секции. Код `warmup` держит две разные вещи, и до этой правки
+    // ожидание здесь стояло на 'Из прошлых дней' над спасательным набором — то есть закрепляло
+    // дефект, который живой прогон 07.09 и назвал: прошлых дней у дня 1 нет.
     test('names the warm-up, every shelf of the scene, and the revision — once each', () {
       final session = PlanSession.fromJson({
         'session_id': '01SESSION',
@@ -262,7 +267,7 @@ void main() {
       });
 
       expect(captions(session), [
-        'Из прошлых дней',
+        'На всякий случай',
         null,
         'Тебе скажут',
         null,
@@ -331,6 +336,48 @@ void main() {
         'Повторение · из прошлых дней',
         null,
       ]);
+    });
+
+    // ПРАВИЛО: наряд DAY-GATE-1 (доработка), п. 3 — «Из прошлых дней» не рендерится, когда в ней
+    // ноль карточек; на дне 1 её нет ПО ПОСТРОЕНИЮ.
+    // ЛОВИТ: секцию, которую рисует имя, а не карточки. Живой прогон 07.09: на первом дне над
+    // спасательным набором стояло «Из прошлых дней» — прошлых дней у дня 1 не бывает.
+    test('на дне 1 «Из прошлых дней» не появляется: прошлых дней у него нет', () {
+      final session = PlanSession.fromJson({
+        'session_id': '01SESSION',
+        'plan_id': '01PLAN',
+        'day_index': 1,
+        'strict': true,
+        'tasks': [
+          task(termId: 'k1', fromDayIndex: 1, section: 'warmup', shelf: 'rescue'),
+          task(termId: 'k2', fromDayIndex: 1, section: 'warmup', shelf: 'rescue'),
+          task(termId: 's1', fromDayIndex: 1, section: 'day', shelf: 'say'),
+        ],
+      });
+
+      expect(captions(session), ['На всякий случай', null, 'Ты ответишь']);
+      expect(captions(session), isNot(contains('Из прошлых дней')));
+    });
+
+    // ПРАВИЛО: то же — и обратная половина: когда карточки прошлых дней ЕСТЬ, секция есть, со своим
+    // швом, а не молча приклеенная к набору.
+    // ЛОВИТ: склейку двух частей разогрева в одну. Промах прошлого дня подавался бы под подписью
+    // «На всякий случай» — то есть человек не узнал бы, что это его вчерашняя реплика.
+    test('реплика прошлого дня даёт «Из прошлых дней» отдельным швом', () {
+      final session = PlanSession.fromJson({
+        'session_id': '01SESSION',
+        'plan_id': '01PLAN',
+        'day_index': 2,
+        'strict': true,
+        'tasks': [
+          task(termId: 'k1', fromDayIndex: 2, section: 'warmup', shelf: 'rescue'),
+          task(termId: 'm1', fromDayIndex: 1, section: 'warmup', shelf: 'say'),
+          task(termId: 'm2', fromDayIndex: 1, section: 'warmup', shelf: 'hear'),
+          task(termId: 's1', fromDayIndex: 2, section: 'day', shelf: 'say'),
+        ],
+      });
+
+      expect(captions(session), ['На всякий случай', 'Из прошлых дней', null, 'Ты ответишь']);
     });
 
     test('a sitting that opens on the revision is captioned on its very first card', () {
