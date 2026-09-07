@@ -27,6 +27,7 @@ import '../../data/qa_report.dart';
 import '../home/home_providers.dart';
 import '../plan/plan_day_summary.dart';
 import '../plan/plan_dialogue.dart';
+import '../plan/plan_fail_reason.dart' show planRefusalText;
 import '../plan/plan_rehearsal_done.dart';
 import '../plan/plan_ui.dart';
 import 'session/intro_card.dart';
@@ -52,6 +53,7 @@ class SessionScreen extends ConsumerStatefulWidget {
     this.onlyTermId,
     this.planId,
     this.planDayIndex,
+    this.planStage,
     this.planIsFinalDay = false,
   });
 
@@ -72,6 +74,10 @@ class SessionScreen extends ConsumerStatefulWidget {
   /// is the server's to know, and recomputing it here is how a screen and a session come to
   /// disagree about which day is being studied.
   final int? planDayIndex;
+
+  /// ЭТАП ДНЯ, НАЗВАННЫЙ ЧЕЛОВЕКОМ — только `retrain` (наряд DAY-GATE-1, Ч.2.1). Null везде ещё:
+  /// без него сервер собирает ТЕКУЩИЙ этап, и это «Продолжить».
+  final String? planStage;
 
   /// THE FINAL DAY — the run-through before the event, not a lesson (Д-27).
   ///
@@ -117,6 +123,7 @@ class SessionScreen extends ConsumerStatefulWidget {
     onlyTermId: onlyTermId,
     planId: planId,
     planDayIndex: planDayIndex,
+    planStage: planStage,
     planIsFinalDay: planIsFinalDay,
   );
 
@@ -182,6 +189,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       planId: widget.planId ?? '',
       dayIndex: widget.planDayIndex,
       sessionId: _sessionId,
+      stage: widget.planStage,
     );
     // ONE screen, two builders. The plan's cards arrive wrapped in an envelope the ordinary session
     // has no use for, so the two providers are separate; everything from here down reads the same
@@ -209,14 +217,25 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                 // is idempotent under it, so a retry returns the same composition.
                 error: (e, st) {
                   debugPrint('[session] build failed: $e\n$st');
+                  // ДВА ОТКАЗА ПЛАНА ГОВОРЯТ СОБОЙ (наряд DAY-GATE-1, Ч.2.3). 409
+                  // `plan_day_locked` и `plan_sitting_empty` — это не «не удалось загрузить»: в
+                  // первом случае человеку нужно закончить прошлый день, во втором — этап уже
+                  // закрыт, и обе строки называют дело своим именем. Общая «не удалось» на их месте
+                  // отправляла человека жать «Ещё раз» на отказ, который повторится.
+                  final planRefusal = planRefusalText(l, e);
                   return _CenteredMessage(
-                    text: isOffline(e) ? l.sessionOffline : l.sessionLoadFailed,
-                    icon: isOffline(e) ? LucideIcons.cloudOff : LucideIcons.triangleAlert,
+                    text: planRefusal ?? (isOffline(e) ? l.sessionOffline : l.sessionLoadFailed),
+                    icon: planRefusal != null
+                        ? LucideIcons.lock
+                        : isOffline(e)
+                        ? LucideIcons.cloudOff
+                        : LucideIcons.triangleAlert,
                     // Not the green of a right answer: this screen is a failure, and the warning
                     // triangle was drawn in the success colour (QA-OBS-30).
                     iconColor: AppColors.destructiveText,
-                    actionLabel: l.generationRetry,
-                    onAction: retry,
+                    // «Ещё раз» на отказ, который повторится, — это кнопка, которая врёт.
+                    actionLabel: planRefusal == null ? l.generationRetry : null,
+                    onAction: planRefusal == null ? retry : null,
                   );
                 },
                 data: (s) => s.cards.isEmpty
@@ -1597,7 +1616,8 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             //
             // По СЕКЦИИ, а не по членству в цепочке: хвост — та же сцена, и подписан он так же.
             inDialogue: _dialogueAtPosition(_pos) != null,
-            speaksAfterChoice: plan?.speaksAfterChoiceAt(_playing) ?? false,
+            // «Скажи: …» — только на сборке; сервер шлёт null на карточке выбора (Ч.2.4).
+            sayIntent: plan?.intentAt(_playing),
             // ХОД ПРОГОНА СЦЕНЫ — ступень C (наряд SCENE-RUN, Ч.2). Не режим и не флаг экрана:
             // сервер сказал, что этот ход отдан голосом, и вместе с этим прислал секунды, из
             // которых прогон состоит. Null у всего остального, включая обычное говорение фразы.

@@ -13,6 +13,7 @@ import '../../data/providers.dart';
 import '../../data/qa_report.dart';
 import '../training/session_screen.dart';
 import 'plan_building_screen.dart';
+import 'plan_day_stages.dart';
 import 'plan_fail_reason.dart';
 import 'plan_rehearsal_done.dart';
 import 'plan_tab_screen.dart' show abandonPlan;
@@ -166,6 +167,27 @@ class _DayBody extends ConsumerWidget {
           const SizedBox(height: AppSpacing.s22),
           _SectionBlock(section: section),
         ],
+        // ИЗ ЧЕГО СОСТОИТ ДЕНЬ (наряд DAY-GATE-1, Ч.2.1) — четыре части, состояние каждой словом,
+        // всё с сервера. Блока нет у дня, который приехал без этапов: экран не выводит их из
+        // `day_state` — «наверное, пройдено» это ровно тот вывод, из-за которого день закрывался
+        // раньше, чем был пройден.
+        if (day.stages.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.s22),
+          PlanDayStagesBlock(stages: day.stages),
+          // «до дня 3 — ещё разговор и скажи сам»: план пишется по одному дню, и человек имеет
+          // право знать, чего не хватает, чтобы встал следующий (решение 294).
+          if (planNextDayLine(l, day, hasNextDay: day.index < plan.days.length) case final line?) ...[
+            const SizedBox(height: 10),
+            Text(
+              line,
+              style: AppText.translation.copyWith(
+                fontSize: 13,
+                height: 1.5,
+                color: AppColors.tertiary,
+              ),
+            ),
+          ],
+        ],
         const SizedBox(height: AppSpacing.s22),
         if (!_isFocus) ...[
           // Said BEFORE the button, because looking ahead is a legitimate thing to want and the
@@ -180,17 +202,32 @@ class _DayBody extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
         ],
-        // ОДНА КНОПКА, и она говорит то же, что слово состояния сверху.
+        // ОДНА КНОПКА. Куда она ведёт, решает СЕРВЕР: запрос посадки без тела собирает ТЕКУЩИЙ
+        // этап, и это и есть «Продолжить» (наряд Ч.1, контракт посадки). Пока этапов на пейлоаде
+        // нет, кнопка говорит прежнее слово о дне.
         PrimaryButton(
-          label: planDayAction(l, day.dayState),
+          label: day.stages.isEmpty ? planDayAction(l, day.dayState) : l.planStageContinue,
           minHeight: 52,
           onPressed: () => _train(context, ref),
         ),
+        // «ПОВТОРИТЬ ОШИБКИ» — ОТДЕЛЬНОЙ СТРОКОЙ И НЕОБЯЗАТЕЛЬНО (Ч.2.1). Единственный случай, когда
+        // клиент называет этап в запросе; приходит в списке, только когда есть что повторять.
+        if (day.retrainStage case final retrain? when retrain.state != PlanStageState.locked) ...[
+          const SizedBox(height: 10),
+          Center(
+            child: QuietButton(
+              label: l.planStageRetrainStart,
+              onPressed: () => _train(context, ref, stage: PlanStageCode.retrain),
+            ),
+          ),
+        ],
       ],
     );
   }
 
-  Future<void> _train(BuildContext context, WidgetRef ref) async {
+  /// В ЭТАП. Без [stage] сервер собирает ТЕКУЩИЙ этап — это «Продолжить»; с ним, и только с
+  /// `retrain`, — «Повторить ошибки» (наряд DAY-GATE-1, Ч.2.1).
+  Future<void> _train(BuildContext context, WidgetRef ref, {PlanStageCode? stage}) async {
     AppHaptics.light();
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -198,6 +235,7 @@ class _DayBody extends ConsumerWidget {
           title: detail.day.title,
           planId: plan.id,
           planDayIndex: detail.day.index,
+          planStage: stage?.wire,
           targetLang: detail.targetLang,
         ),
       ),

@@ -965,7 +965,7 @@ final planDayProvider = FutureProvider.family<PlanDayDetail, PlanDayArgs>((ref, 
 
 /// Identifies one plan session. [sessionId] is minted once by the screen, so the build is
 /// idempotent exactly as an ordinary session's is.
-typedef PlanSessionArgs = ({String planId, int? dayIndex, String sessionId});
+typedef PlanSessionArgs = ({String planId, int? dayIndex, String sessionId, String? stage});
 
 /// The store of the current присест — where the learner is inside a plan day, durably (SIT-1, Ч-6).
 final planSittingStoreProvider = Provider<PlanSittingStore>(
@@ -988,7 +988,10 @@ final planSittingProvider = FutureProvider.family<PlanSittingState?, PlanDayArgs
 /// whenever there is one for this day, and the network is asked only for a day that has not been
 /// opened yet ({@see PlanSittingStore}).
 final planSessionProvider = FutureProvider.family<StudySession, PlanSessionArgs>((ref, args) async {
-  final resumed = args.dayIndex == null
+  // ЯВНО НАЗВАННЫЙ ЭТАП НЕ ВОССТАНАВЛИВАЕТСЯ ИЗ СОХРАНЁННОГО ПРИСЕСТА: «Повторить ошибки» — это
+  // просьба про ДРУГОЙ этап, и отдать на неё недопройденный присест разговора значит ответить не на
+  // то, что спросили.
+  final resumed = args.dayIndex == null || args.stage != null
       ? null
       : await ref
             .watch(planSittingStoreProvider)
@@ -1001,6 +1004,7 @@ final planSessionProvider = FutureProvider.family<StudySession, PlanSessionArgs>
         planId: args.planId,
         sessionId: args.sessionId,
         dayIndex: args.dayIndex,
+        stage: args.stage,
       );
 
   return session.asStudySession();

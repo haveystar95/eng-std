@@ -168,7 +168,6 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final paper = AppColors.paper;
     // Which of the three steps are lit. The first is done the moment this screen exists — the
     // outline the learner just read IS «цель разобрана».
     final done = switch (_status) {
@@ -188,41 +187,43 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                PlanPlate(
-                  padding: const EdgeInsets.fromLTRB(22, 26, 22, 26),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      PlanLabel(widget.plan.title, color: AppColors.brass),
-                      const SizedBox(height: AppSpacing.s12),
-                      Text(
-                        l.planBuildingTitle(_dayIndex),
-                        style: AppText.displayTerm.copyWith(
-                          color: paper,
-                          fontSize: 28,
-                          height: 1.2,
-                        ),
+                // БУМАЖНАЯ ГАММА (наряд DAY-GATE-1, Ч.2.6). Тёмная плита осталась от превью плана,
+                // где она была продолжением одного жеста «Начать»; экран СБОРКИ ДНЯ открывается сам
+                // — из строки дня, из «Продолжить», из уведомления, — и тёмная плита посреди
+                // светлого плана читается как чужой экран. В серии тёмных плит нет.
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    PlanLabel(l.planBuildingTitle(_dayIndex)),
+                    const SizedBox(height: AppSpacing.s12),
+                    // ЦЕЛЬ ОБЫЧНЫМ ТЕКСТОМ, не более двух строк: это напоминание, ради чего человек
+                    // ждёт, а не заголовок экрана. Длинная цель, набранная крупно, съедала экран и
+                    // выталкивала шаги за его край.
+                    Text(
+                      widget.plan.goalText.isEmpty ? widget.plan.title : widget.plan.goalText,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.collectionNameScreen.copyWith(fontSize: 22, height: 1.25),
+                    ),
+                    const SizedBox(height: AppSpacing.s12),
+                    Text(
+                      l.planBuildingBody,
+                      style: AppText.translation.copyWith(
+                        fontSize: 14,
+                        height: 1.6,
+                        color: AppColors.secondary,
                       ),
-                      const SizedBox(height: AppSpacing.s12),
-                      Text(
-                        l.planBuildingBody,
-                        style: AppText.translation.copyWith(
-                          fontSize: 14,
-                          height: 1.6,
-                          color: paper.withValues(alpha: 0.78),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.s22),
-                      // Exactly ONE row is «current» — the first one not yet done — and only while
-                      // the work is still running. A pulse on a screen that has given up would be
-                      // the screen saying it is still trying.
-                      _Step(label: l.planBuildingStep1, done: done >= 1, current: !_failed && done < 1),
-                      const SizedBox(height: 10),
-                      _Step(label: l.planBuildingStep2, done: done >= 2, current: !_failed && done == 1),
-                      const SizedBox(height: 10),
-                      _Step(label: l.planBuildingStep3, done: done >= 3, current: !_failed && done == 2),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: AppSpacing.s22),
+                    // Exactly ONE row is «current» — the first one not yet done — and only while
+                    // the work is still running. A pulse on a screen that has given up would be
+                    // the screen saying it is still trying.
+                    _Step(label: l.planBuildingStep1, done: done >= 1, current: !_failed && done < 1),
+                    const SizedBox(height: 10),
+                    _Step(label: l.planBuildingStep2, done: done >= 2, current: !_failed && done == 1),
+                    const SizedBox(height: 10),
+                    _Step(label: l.planBuildingStep3, done: done >= 3, current: !_failed && done == 2),
+                  ],
                 ),
                 const Spacer(),
                 if (_failed) ...[
@@ -271,15 +272,13 @@ class _Step extends StatelessWidget {
         width: 15,
         height: 15,
         child: current
-            ? const PlanPulsingDot(color: AppColors.brass)
+            ? const PlanPulsingDot(color: AppColors.brassInk)
             : AnimatedContainer(
                 duration: AppMotion.segmentFill,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: done ? AppColors.brass : null,
-                  border: done
-                      ? null
-                      : Border.all(color: AppColors.paper.withValues(alpha: 0.4), width: 1.5),
+                  color: done ? AppColors.brassInk : null,
+                  border: done ? null : Border.all(color: AppColors.dividerFaint, width: 1.5),
                 ),
               ),
       ),
@@ -291,7 +290,7 @@ class _Step extends StatelessWidget {
             fontSize: 14,
             // The current row reads as brightly as a finished one: it is where the learner should
             // be looking, and a dimmed «happening now» is a contradiction.
-            color: AppColors.paper.withValues(alpha: done || current ? 1 : 0.55),
+            color: done || current ? AppColors.ink : AppColors.tertiary,
           ),
         ),
       ),

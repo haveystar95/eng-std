@@ -127,7 +127,7 @@ void main() {
                 onSpeak: (text, {bool slow = false}) async => spoken.add(text),
                 showDue: false,
                 situation: position,
-                speaksAfterChoice: speaks,
+                sayIntent: null,
               ),
             ),
           ),
@@ -187,7 +187,15 @@ void main() {
       expect(find.text(roleLine), findsOneWidget);
     });
 
-    testWidgets('the chosen reply is said aloud afterwards, and nothing is graded for it', (
+    // ПРАВИЛО: наряд DAY-GATE-1, Ч.2.4/Ч.2.5 — «повтори вслух» живёт В ОДНОМ месте, на эхе
+    // знакомства, а блок «Скажи вслух» после выбора удалён вместе с ключом.
+    // ЛОВИТ: возвращение второго «скажи вслух». Их было два, и они делали разное одним словом:
+    // на знакомстве микрофон слушает, после выбора — только кнопка «прочитать ещё раз», которую
+    // человек нажимал, думая, что его слышат. Живой прогон 07.09 упёрся ровно в это.
+    //
+    // Прежний тест ЗАКРЕПЛЯЛ ЭТОТ ДЕФЕКТ: он требовал, чтобы блок «СКАЖИ ВСЛУХ» стоял после
+    // выбора, — и переписан под канон, а не подогнан под код.
+    testWidgets('после выбора нет второго «скажи вслух» — оценка одна, и она за выбор', (
       tester,
     ) async {
       await tester.pumpWidget(host(sayCard(), position: situation, speaks: true));
@@ -196,10 +204,10 @@ void main() {
       await tester.tap(find.text(reply));
       await tester.pumpAndSettle();
 
-      // ONE answer for the card — the CHOICE. The spoken half writes nothing (owner's ruling).
+      // ONE answer for the card — the CHOICE, ровно как и было.
       expect(answers, hasLength(1));
       expect(answers.single.response, reply);
-      expect(find.text('СКАЖИ ВСЛУХ'), findsOneWidget);
+      expect(find.text('СКАЖИ ВСЛУХ'), findsNothing);
     });
 
     testWidgets('a situational card with no position degrades to the choice it is underneath', (

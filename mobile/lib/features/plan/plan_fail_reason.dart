@@ -23,7 +23,11 @@
 /// inherits the old one's sentence rather than a second wording of the same thing.
 library;
 
+import 'package:dio/dio.dart' show DioException;
+
 import 'package:eng_std/l10n/app_localizations.dart';
+
+import '../../data/api_client.dart' show problemCode;
 
 /// The sentence for [failCode], or the neutral one when there is no sentence to give.
 ///
@@ -51,3 +55,30 @@ String planFailReason(AppLocalizations l, String? failCode) => switch (failCode)
   'outline.target_language' => l.planFailNotTargetLanguage,
   _ => l.planFailUnknown,
 };
+
+/// ОТКАЗ ПЛАНА СЛОВАМИ — 409 `plan_day_locked` и `plan_sitting_empty` (наряд DAY-GATE-1, Ч.2.3).
+///
+/// Null для всего остального, включая «нет сети»: эта функция отвечает ровно за два отказа, у
+/// которых есть, что сказать человеку, и ни за один сбой связи. Оба локализуются ПО КОДУ — сервер
+/// шлёт `code` в RFC 7807, как и всюду, а прозу пишет клиент, потому что языка у приложения два.
+///
+/// Почему это важнее, чем кажется: без разбора обе ошибки попадали в общую «не удалось загрузить
+/// тренировку» с кнопкой «Ещё раз». Запертый день от повтора не откроется, а закрытый этап не
+/// наполнится — человек жал кнопку, получал то же самое и оставался без объяснения, что делать.
+String? planRefusalText(AppLocalizations l, Object? error) {
+  if (error is! DioException) return null;
+
+  return switch (problemCode(error)) {
+    // «сначала закончи день N» — номер держателя приезжает в `meta.blocked_by_day`.
+    'plan_day_locked' => l.planErrorDayLocked(_blockedBy(error) ?? '—'),
+    'plan_sitting_empty' => l.planErrorSittingEmpty,
+    _ => null,
+  };
+}
+
+/// Номер дня-держателя из `meta.blocked_by_day`, или null.
+String? _blockedBy(DioException error) {
+  final meta = (error.response?.data as Map?)?['meta'];
+
+  return meta is Map && meta['blocked_by_day'] != null ? '${meta['blocked_by_day']}' : null;
+}

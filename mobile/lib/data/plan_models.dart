@@ -12,7 +12,6 @@ library;
 import 'line_audio.dart';
 import 'models.dart'
     show
-        ExerciseMode,
         PlanDayStateWire,
         PlanDialogue,
         PlanSessionEnvelope,
@@ -267,6 +266,68 @@ class PlanComputed {
   );
 }
 
+/// ЭТАП ДНЯ — из чего день состоит (наряд DAY-GATE-1, Ч.1.1 на сервере, Ч.2.1 здесь).
+///
+/// Сервер везёт КОДЫ, подписи клиентские и в двух языках, как у всех кодов плана (Д-19). Набор
+/// открытый: этап, которого эта сборка не знает, честнее показать как есть, чем уронить экран или
+/// молча выбросить — выброшенный этап превратил бы «день не пройден» в «день пройден».
+enum PlanStageCode {
+  material,
+  conversation,
+  rehearsal,
+  retrain,
+  unknown;
+
+  static PlanStageCode fromWire(String? wire) => switch (wire) {
+    'material' => material,
+    'conversation' => conversation,
+    'rehearsal' => rehearsal,
+    'retrain' => retrain,
+    _ => unknown,
+  };
+
+  String get wire => this == unknown ? '' : name;
+
+  /// «Повторить ошибки» дня не держит и «пройден» от него не зависит — так решает СЕРВЕР, и это
+  /// единственное место на клиенте, где про этот этап знают что-то кроме подписи.
+  bool get isOptional => this == retrain;
+}
+
+/// `done` | `current` | `locked`. Ровно один `current` среди трёх обязательных.
+enum PlanStageState {
+  done,
+  current,
+  locked;
+
+  static PlanStageState fromWire(String? wire) => switch (wire) {
+    'done' => done,
+    'current' => current,
+    // Неизвестное состояние — самое закрытое: экран, который угадал «сейчас», отправил бы человека
+    // в 409.
+    _ => locked,
+  };
+}
+
+/// Один этап дня на пейлоаде: код, состояние и «после какого откроется».
+class PlanDayStage {
+  const PlanDayStage({required this.stage, required this.state, this.opensAfter});
+
+  final PlanStageCode stage;
+  final PlanStageState state;
+
+  /// Этап, после которого этот откроется, или null. Едет ВСЕГДА, а не только у запертого: строка
+  /// «после чего» — свойство этапа, а не его состояния.
+  final PlanStageCode? opensAfter;
+
+  factory PlanDayStage.fromJson(Map<String, dynamic> j) => PlanDayStage(
+    stage: PlanStageCode.fromWire(j['stage'] as String?),
+    state: PlanStageState.fromWire(j['state'] as String?),
+    opensAfter: j['opens_after'] == null
+        ? null
+        : PlanStageCode.fromWire(j['opens_after'] as String?),
+  );
+}
+
 /// A day that EXISTS — a row in `learning_plan_days`, with its own generation status and, once it is
 /// written, an ordinary collection behind it.
 class PlanDay {
@@ -291,6 +352,8 @@ class PlanDay {
     this.minutesLeft = 0,
     this.materialMinutes = 0,
     this.conversationMinutes = 0,
+    this.stages = const [],
+    this.lockedByDayIndex,
   });
 
   final String id;
@@ -309,6 +372,52 @@ class PlanDay {
   /// МИНУТЫ ДВУХ ПРИСЕСТОВ врозь — «материал около 12 минут · разговор около 6» (наряд DAY-FIX-3,
   /// Ч.5.1). Ноль у присеста, который пройден, и на сервере, который поля не знает.
   final int materialMinutes, conversationMinutes;
+
+  /// ИЗ ЧЕГО СОСТОИТ ДЕНЬ и что с каждой частью сегодня (наряд DAY-GATE-1). Пустой список — день
+  /// со старого сервера: экран тогда блока этапов не рисует вовсе, а не выдумывает его из
+  /// `day_state`. ЧИСЕЛ ЗДЕСЬ НЕТ НАМЕРЕННО — «N из M» на экранах плана не бывает.
+  final List<PlanDayStage> stages;
+
+  /// Номер дня, который держит этот закрытым, или null (Ч.1.2). ВЫВОДИТЬ ЗАМОК САМОСТОЯТЕЛЬНО
+  /// НЕЛЬЗЯ: поле уже на пейлоаде, а второе правило про ту же дверь однажды разошлось бы с первым —
+  /// и разошлось бы в сторону 409 у человека на экране.
+  final int? lockedByDayIndex;
+
+  bool get isLocked => lockedByDayIndex != null;
+
+  /// Обязательные этапы дня — те, от которых зависит «пройден». `retrain` в это число не входит:
+  /// так решает сервер, и здесь это только прочитано.
+  List<PlanDayStage> get requiredStages =>
+      stages.where((s) => !s.stage.isOptional).toList(growable: false);
+
+  /// Этап, который открыт прямо сейчас, или null. Ровно один среди обязательных — если сервер
+  /// прислал иначе, берётся первый: угадывать второй экран не станет.
+  PlanDayStage? get currentStage {
+    for (final stage in requiredStages) {
+      if (stage.state == PlanStageState.current) return stage;
+    }
+
+    return null;
+  }
+
+  /// «Повторить ошибки» — приходит в списке, только когда есть что повторять.
+  PlanDayStage? get retrainStage {
+    for (final stage in stages) {
+      if (stage.stage == PlanStageCode.retrain) return stage;
+    }
+
+    return null;
+  }
+
+  /// Обязательные этапы, которые ещё не пройдены, — в порядке пейлоада. Это и есть «что осталось
+  /// до следующего дня»: следующий день встаёт в очередь по факту «день N пройден» (решение 294).
+  List<PlanDayStage> get stagesLeft =>
+      requiredStages.where((s) => s.state != PlanStageState.done).toList(growable: false);
+
+  /// День пройден насквозь: все обязательные этапы закрыты (решение 291). Читается по этапам, а не
+  /// по `day_state`, потому что вопрос «что осталось» задаётся именно про этапы; когда этапов на
+  /// пейлоаде нет, ответа нет — и экран строку не печатает.
+  bool get allStagesDone => requiredStages.isNotEmpty && stagesLeft.isEmpty;
 
   /// CLAIMS, not failures, and the server's cap is two ({@link PlanDay::MAX_ATTEMPTS}).
   ///
@@ -379,6 +488,10 @@ class PlanDay {
     minutesLeft: (j['minutes_left'] as num?)?.toInt() ?? 0,
     materialMinutes: (j['material_minutes'] as num?)?.toInt() ?? 0,
     conversationMinutes: (j['conversation_minutes'] as num?)?.toInt() ?? 0,
+    stages: ((j['stages'] as List?) ?? const [])
+        .map((e) => PlanDayStage.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false),
+    lockedByDayIndex: (j['locked_by_day_index'] as num?)?.toInt(),
   );
 }
 
@@ -857,9 +970,9 @@ class PlanSessionTask {
     this.shelf,
     this.tier,
     this.situation,
-    this.speaksAfterChoice = false,
     this.sectionCode,
     this.turnLevel,
+    this.intent,
   });
 
   /// This task is the day's own material — it counts towards «день пройден».
@@ -926,9 +1039,6 @@ class PlanSessionTask {
   /// THE POSITION — on a situational card, and null on every other trainer. See [PlanSituation].
   final PlanSituation? situation;
 
-  /// The learner says the option they tapped out loud, right after tapping it — «Ты ответишь» and
-  /// «Ты спросишь». Reinforcement: nothing about it is graded or uploaded.
-  final bool speaksAfterChoice;
 
   /// WHAT THE LEARNER IS DOING — the part of the sitting, as a code (наряд DAY-2).
   ///
@@ -946,6 +1056,13 @@ class PlanSessionTask {
   /// Отдельно от режима: тренажёр один и тот же, а рисуется он вариантами, блоками или микрофоном.
   /// Null у всего, что ходом человека не является, и на пейлоаде сервера, который поля не знает.
   final String? turnLevel;
+
+  /// ЧТО ИМЕННО НАДО СКАЗАТЬ, на языке поддержки — ТОЛЬКО на карточке сборки (наряд DAY-GATE-1,
+  /// Ч.2.4). Экран печатает это с префиксом «Скажи:»; префикс клиентский, строка серверная.
+  ///
+  /// Null на карточке ВЫБОРА, и это не пропуск: там перевод реплики назвал бы правильный вариант,
+  /// то есть карточка отвечала бы на собственный вопрос.
+  final String? intent;
 
   /// Ход отдан ГОЛОСОМ: ни вариантов, ни блоков — подсказка и микрофон. Ступень C.
   bool get isSpokenTurn => turnLevel == 'say';
@@ -1014,13 +1131,9 @@ class PlanSessionTask {
       situation: PlanSituation.fromJson(j['situation'] as Map<String, dynamic>?),
       // The server names it per task; the mode is the same fact for a build that meets one of these
       // cards outside a plan envelope, which is why both exist.
-      speaksAfterChoice:
-          j['speaks_after_choice'] == true ||
-          ExerciseMode.fromWire(
-            (j['card'] as Map<String, dynamic>?)?['exercise_mode'] as String?,
-          ).speaksAfterChoice,
       sectionCode: (j['section_code'] as String?)?.trim(),
       turnLevel: (j['turn_level'] as String?)?.trim(),
+      intent: (j['intent'] as String?)?.trim(),
     );
   }
 }
@@ -1201,11 +1314,10 @@ class PlanSession implements PlanSessionEnvelope {
   String? turnLevelAt(int i) => i >= 0 && i < tasks.length ? tasks[i].turnLevel : null;
 
   @override
-  PlanSituation? situationAt(int i) => i >= 0 && i < tasks.length ? tasks[i].situation : null;
+  String? intentAt(int i) => i >= 0 && i < tasks.length ? tasks[i].intent : null;
 
   @override
-  bool speaksAfterChoiceAt(int i) =>
-      i >= 0 && i < tasks.length && tasks[i].speaksAfterChoice;
+  PlanSituation? situationAt(int i) => i >= 0 && i < tasks.length ? tasks[i].situation : null;
 
   @override
   int get dayTaskCount => dayTasks.length;

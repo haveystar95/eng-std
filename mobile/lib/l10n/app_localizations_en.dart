@@ -1477,9 +1477,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionSituationRevealText => 'Show the text';
 
   @override
-  String get sessionSituationSayAloud => 'Say it aloud';
-
-  @override
   String sessionSituationTask(String outcome) {
     return 'Your task — $outcome.';
   }
@@ -2765,6 +2762,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String planDayOfPlan(int index, int total) {
     return 'Day $index of $total';
   }
+
+  @override
+  String planSayIntent(String intent) {
+    return 'Say: $intent';
+  }
+
+  @override
+  String get planStageMaterial => 'Words and phrases';
+
+  @override
+  String get planStageConversation => 'Conversation';
+
+  @override
+  String get planStageRehearsal => 'Say it yourself';
+
+  @override
+  String get planStageRetrain => 'Redo mistakes';
+
+  @override
+  String get planStageStateDone => 'done';
+
+  @override
+  String get planStageStateCurrent => 'now';
+
+  @override
+  String planStageStateAfter(String stage) {
+    return 'after «$stage»';
+  }
+
+  @override
+  String get planStageOptional => 'optional';
+
+  @override
+  String get planStageContinue => 'Continue';
+
+  @override
+  String get planStageRetrainStart => 'Redo mistakes';
+
+  @override
+  String planNextDayLeft(int index, String left) {
+    return 'before day $index — still $left';
+  }
+
+  @override
+  String planNextDayOpen(int index) {
+    return 'day $index is open';
+  }
+
+  @override
+  String planDayLockedBy(Object index) {
+    return 'finish day $index first';
+  }
+
+  @override
+  String planErrorDayLocked(String index) {
+    return 'This day is still closed: finish day $index first.';
+  }
+
+  @override
+  String get planErrorSittingEmpty => 'There is nothing to do here — this stage is already done.';
 
   @override
   String get planDayCanDo => 'You will be able to';

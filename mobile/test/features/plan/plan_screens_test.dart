@@ -215,7 +215,7 @@ class _Envelope implements PlanSessionEnvelope {
   PlanSituation? situationAt(int i) => null;
 
   @override
-  bool speaksAfterChoiceAt(int i) => false;
+  String? intentAt(int i) => null;
 
   // Nor the part of the sitting and its conversation: this envelope exists for the SUMMARY, which
   // counts cards, and both are the session frame's business (`plan_session_seam_test.dart`).

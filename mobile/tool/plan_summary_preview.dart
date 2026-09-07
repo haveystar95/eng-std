@@ -167,7 +167,7 @@ class _Envelope implements PlanSessionEnvelope {
   PlanSituation? situationAt(int i) => null;
 
   @override
-  bool speaksAfterChoiceAt(int i) => false;
+  String? intentAt(int i) => null;
 
   @override
   String? sectionCodeAt(int i) => null;

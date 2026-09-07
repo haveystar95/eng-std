@@ -9,6 +9,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/api_client.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
+import 'plan_building_screen.dart';
 import 'plan_day_screen.dart';
 import 'plan_feedback_screen.dart';
 import 'plan_rehearsal_screen.dart';
@@ -149,8 +150,20 @@ class _PlanBody extends ConsumerWidget {
 
   void _openDay(BuildContext context, LearningPlan plan, int dayIndex) {
     AppHaptics.light();
+    // ДЕНЬ, КОТОРЫЙ СЕЙЧАС ПИШЕТСЯ, ОТКРЫВАЕТСЯ ЭКРАНОМ СБОРКИ (наряд DAY-GATE-1, Ч.2.2) — тем же
+    // самым, что и день, который человек попросил собрать. Раньше такая строка не открывалась
+    // вовсе: «Собирается» без входа читается как «сломалось и ждать нечего», а ждать как раз есть
+    // чего — и экран сборки это единственное место, которое говорит, сколько шагов уже позади.
+    final day = plan.days.firstWhere(
+      (d) => d.index == dayIndex,
+      orElse: () => plan.days.first,
+    );
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => PlanDayScreen(plan: plan, dayIndex: dayIndex)),
+      MaterialPageRoute(
+        builder: (_) => day.status.isGenerating
+            ? PlanBuildingScreen(plan: plan, dayIndex: dayIndex)
+            : PlanDayScreen(plan: plan, dayIndex: dayIndex),
+      ),
     );
   }
 
@@ -305,7 +318,9 @@ class _DayRow extends StatelessWidget {
               style: AppText.collectionNameCard.copyWith(
                 fontSize: today ? 19 : 17,
                 fontWeight: today ? FontWeight.w600 : FontWeight.w500,
-                color: state == _PlanRowState.waiting ? AppColors.tertiary : AppColors.ink,
+                color: state == _PlanRowState.waiting || state == _PlanRowState.locked
+                    ? AppColors.tertiary
+                    : AppColors.ink,
               ),
             ),
             if (_subtitle(l) case final subtitle? when subtitle.isNotEmpty) ...[
@@ -385,11 +400,20 @@ enum _PlanRowState {
   today,
   building,
   notBuilt,
+  /// ЗАПЕРТ ПРЕДЫДУЩИМ ДНЁМ — `locked_by_day_index` на пейлоаде (наряд DAY-GATE-1, Ч.2.2).
+  ///
+  /// Отдельное состояние, а не оттенок «ждёт очереди»: «ждёт очереди» — про расписание, и такой
+  /// день можно открыть и заглянуть вперёд, а запертый нельзя вовсе — сервер отобьёт 409. Строка
+  /// говорит, ЧТО его держит; серый день без объяснения читается как поломка.
+  locked,
   waiting;
 
   static _PlanRowState of(LearningPlan plan, PlanDay day) {
     if (day.status == PlanDayStatus.failed) return _PlanRowState.notBuilt;
     if (day.dayState == PlanDayState.done || day.index < plan.focusDayIndex) return _PlanRowState.passed;
+    // ЗАМОК — С СЕРВЕРА, И ТОЛЬКО С СЕРВЕРА. Выводить его самостоятельно нельзя: клиентское правило
+    // однажды разойдётся с серверным, и разойдётся в сторону 409 на экране у человека.
+    if (day.isLocked) return _PlanRowState.locked;
     if (day.index == plan.focusDayIndex && day.status.hasMaterial) return _PlanRowState.today;
     if (day.status.isGenerating) return _PlanRowState.building;
 
@@ -408,6 +432,7 @@ enum _PlanRowState {
     ),
     _PlanRowState.building => l.planRowBuilding,
     _PlanRowState.notBuilt => l.planRowNotBuilt,
+    _PlanRowState.locked => l.planDayLockedBy(day.lockedByDayIndex ?? day.index - 1),
     _PlanRowState.waiting => day.status.hasMaterial
         ? planDayStateWord(
             l,
@@ -420,7 +445,7 @@ enum _PlanRowState {
 
   Color get color => switch (this) {
     _PlanRowState.notBuilt => AppColors.destructiveText,
-    _PlanRowState.waiting => AppColors.tertiary,
+    _PlanRowState.waiting || _PlanRowState.locked => AppColors.tertiary,
     _ => AppColors.brassInk,
   };
 
@@ -430,7 +455,12 @@ enum _PlanRowState {
   /// «Ждёт очереди» открывается, если материал уже написан, и это сознательное расхождение с
   /// кадром: слово «ждёт очереди» про РАСПИСАНИЕ, а не про замок, и отнимать у человека
   /// возможность заглянуть вперёд — это правка механики, о которой наряд не просил.
+  /// …и запертый день не открывается никогда: за ним стоит 409, а экран, который в него пускает,
+  /// обещает то, чего сервер не даст.
   bool opensWith(PlanDay day) =>
-      this != _PlanRowState.notBuilt && this != _PlanRowState.building && day.status.hasMaterial;
+      this != _PlanRowState.notBuilt &&
+      this != _PlanRowState.locked &&
+      // …а «собирается» открывается ЭКРАНОМ СБОРКИ — материала у него ещё нет, но ждать есть чего.
+      (day.status.hasMaterial || this == _PlanRowState.building);
 }
 

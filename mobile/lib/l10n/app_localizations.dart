@@ -2457,12 +2457,6 @@ abstract class AppLocalizations {
   /// **'Показать текст'**
   String get sessionSituationRevealText;
 
-  /// Подпись над закреплением: выбранная реплика произносится вслух, ничего не оценивается.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажи вслух'**
-  String get sessionSituationSayAloud;
-
   /// Задача карточки, когда у дня нет парной реплики роли: умение сцены (канон §8).
   ///
   /// In ru, this message translates to:
@@ -4208,6 +4202,102 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'День {index} из {total}'**
   String planDayOfPlan(int index, int total);
+
+  /// Строка-намерение над сборкой (DAY-GATE-1, Ч.2.4): что именно надо сказать, на языке поддержки. Строка серверная (`task.intent`), префикс клиентский.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи: {intent}'**
+  String planSayIntent(String intent);
+
+  /// Этап дня `material` (DAY-GATE-1, Ч.2.1) — подпись клиентская, сервер везёт код.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова и фразы'**
+  String get planStageMaterial;
+
+  /// Этап дня `conversation`.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор'**
+  String get planStageConversation;
+
+  /// Этап дня `rehearsal` — прогон сцены голосом.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи сам'**
+  String get planStageRehearsal;
+
+  /// Этап дня `retrain`: приходит, только когда есть что повторять; день не держит.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторить ошибки'**
+  String get planStageRetrain;
+
+  /// Состояние этапа `done` — словом, без чисел: «N из M» на экранах плана не бывает.
+  ///
+  /// In ru, this message translates to:
+  /// **'пройдено'**
+  String get planStageStateDone;
+
+  /// Состояние этапа `current` — ровно один среди обязательных.
+  ///
+  /// In ru, this message translates to:
+  /// **'сейчас'**
+  String get planStageStateCurrent;
+
+  /// Состояние этапа `locked`: не «закрыт», а после какого этапа он откроется (поле `opens_after`).
+  ///
+  /// In ru, this message translates to:
+  /// **'после «{stage}»'**
+  String planStageStateAfter(String stage);
+
+  /// Подпись у «Повторить ошибки»: день от него не зависит.
+  ///
+  /// In ru, this message translates to:
+  /// **'необязательно'**
+  String get planStageOptional;
+
+  /// Единственная кнопка экрана дня — ведёт в текущий этап; какой это этап, решает сервер.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить'**
+  String get planStageContinue;
+
+  /// Отдельный вход в `retrain` — единственный случай, когда клиент называет этап.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторить ошибки'**
+  String get planStageRetrainStart;
+
+  /// Что осталось пройти, чтобы встал следующий день (решение 294): перечисление незакрытых обязательных этапов.
+  ///
+  /// In ru, this message translates to:
+  /// **'до дня {index} — ещё {left}'**
+  String planNextDayLeft(int index, String left);
+
+  /// Все обязательные этапы дня закрыты — следующий день встал в очередь.
+  ///
+  /// In ru, this message translates to:
+  /// **'день {index} открыт'**
+  String planNextDayOpen(int index);
+
+  /// Замок дня по полю `locked_by_day_index` (Ч.2.2): выводить его самостоятельно нельзя.
+  ///
+  /// In ru, this message translates to:
+  /// **'сначала закончи день {index}'**
+  String planDayLockedBy(Object index);
+
+  /// 409 `plan_day_locked` словами (Ч.2.3) — не пустой экран и не «нечего повторять».
+  ///
+  /// In ru, this message translates to:
+  /// **'Этот день ещё закрыт: сначала закончи день {index}.'**
+  String planErrorDayLocked(String index);
+
+  /// 409 `plan_sitting_empty` словами (Ч.2.3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Здесь сейчас нечего проходить — этот этап уже закрыт.'**
+  String get planErrorSittingEmpty;
 
   /// Лейбл блока умений дня.
   ///

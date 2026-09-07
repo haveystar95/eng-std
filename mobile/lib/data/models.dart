@@ -841,9 +841,6 @@ abstract interface class PlanSessionEnvelope {
   /// The POSITION the card at [i] puts the learner in — on a situational card, null on every other.
   PlanSituation? situationAt(int i);
 
-  /// The learner says the option they tapped out loud after tapping it — «Ты ответишь» / «Ты
-  /// спросишь». Reinforcement: nothing about it is graded or uploaded.
-  bool speaksAfterChoiceAt(int i);
 
   /// The card at [i] is one the learner is only ever asked to RECOGNISE — never to produce.
   ///
@@ -873,6 +870,10 @@ abstract interface class PlanSessionEnvelope {
   /// микрофоном (наряд SCENE-RUN). Null у всего, что не является ходом человека в разговоре, и на
   /// пейлоаде сервера, который поля не знает.
   String? turnLevelAt(int i);
+
+  /// «СКАЖИ: …» ДЛЯ КАРТОЧКИ [i] — что именно надо сказать, на языке поддержки (наряд DAY-GATE-1,
+  /// Ч.2.4). Только на сборке; null на карточке выбора, где перевод назвал бы правильный вариант.
+  String? intentAt(int i);
 
   /// ОДНО СЛОВО О ДНЕ — `not_started` | `in_progress` | `material_done` | `done` — как его
   /// посчитал СЕРВЕР (наряд DAY-FIX-2, Ч.3). Шапка присеста читает его отсюда и ничего не считает

@@ -695,11 +695,16 @@ class ApiClient {
     required String planId,
     required String sessionId,
     int? dayIndex,
+    String? stage,
   }) async {
     final path = dayIndex == null
         ? '/plans/$planId/session'
         : '/plans/$planId/days/$dayIndex/session';
-    final r = await _dio.post(path, data: {'session_id': sessionId});
+    // БЕЗ `stage` СЕРВЕР СОБИРАЕТ ТЕКУЩИЙ ЭТАП — это и есть «Продолжить» (наряд DAY-GATE-1, Ч.1).
+    // Единственный случай, когда этап называет клиент, — «Повторить ошибки»: он необязателен, дня
+    // не держит, и попросить его может только человек. Запертый этап отбивается 409, а не
+    // подменяется молча, поэтому угадывать здесь нечего.
+    final r = await _dio.post(path, data: {'session_id': sessionId, 'stage': ?stage});
 
     return PlanSession.fromJson(_data(r) as Map<String, dynamic>);
   }

@@ -64,7 +64,7 @@ void main() {
               onSpeak: (text, {bool slow = false}) async {},
               showDue: false,
               situation: position,
-              speaksAfterChoice: true,
+              sayIntent: null,
               inDialogue: true,
             ),
           ),

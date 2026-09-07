@@ -166,7 +166,7 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     this.photoResolved = false,
     this.showDue = true,
     this.situation,
-    this.speaksAfterChoice = false,
+    this.sayIntent,
     this.inDialogue = false,
     this.sceneRun,
     this.roleSpeaking,
@@ -250,13 +250,14 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   /// and the card degrades to the ordinary choice it is underneath.
   final PlanSituation? situation;
 
-  /// The learner SAYS the line they tapped, right after tapping it — «Ты ответишь» / «Ты спросишь».
+  /// ЧТО ИМЕННО НАДО СКАЗАТЬ, на языке поддержки — только на карточке СБОРКИ (наряд DAY-GATE-1,
+  /// Ч.2.4), и `null` везде ещё, включая карточку выбора: там перевод реплики назвал бы правильный
+  /// вариант, то есть карточка ответила бы на собственный вопрос.
   ///
-  /// Reinforcement and nothing else: it produces no answer, writes no review and moves no ladder
-  /// (owner's ruling, наряд SIT-1 — «оценка по выбору, говорение — закрепление»). Which is also why
-  /// there is no microphone here: a recogniser that grades nothing would open a permission prompt to
-  /// produce a verdict nobody reads.
-  final bool speaksAfterChoice;
+  /// Строка серверная (`task.intent`), префикс «Скажи:» клиентский. Она отвечает на вопрос, который
+  /// сборка задаёт молча: блоки лежат на изучаемом языке, и без неё человек собирает фразу, не зная,
+  /// что он собирает.
+  final String? sayIntent;
 
   /// ЭТА КАРТОЧКА ИГРАЕТСЯ РАЗГОВОРОМ — она стоит внутри оболочки диалога (серия «Диалог v1»).
   ///
@@ -1023,6 +1024,16 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // положения на экране не рисуется (наряд DAY-2-FIX, Ч.1.1). Без этой строки человек тапал
         // бы блоки и не видел, что собрал.
         if (_isAssembleTurn) ...[
+          // «СКАЖИ: …» — ЧТО ИМЕННО СОБИРАЮТ (наряд DAY-GATE-1, Ч.2.4). Блоки лежат на изучаемом
+          // языке, и без этой строки сборка — это складывание чужих слов наугад: живой прогон
+          // показал человека, который собрал грамматически верную фразу не о том.
+          if (widget.sayIntent case final intent? when intent.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s12),
+            Text(
+              l.planSayIntent(intent),
+              style: AppText.stepTitle.copyWith(fontSize: 16, height: 1.4),
+            ),
+          ],
           const SizedBox(height: AppSpacing.s12),
           PaperCard(
             child: _AssemblyLine(
@@ -1084,17 +1095,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         if (_answered && _isSituationalHear) ...[
           const SizedBox(height: AppSpacing.s12),
           _RevealedLine(text: _card.answerText, onSpeak: widget.onSpeak),
-        ],
-        // ГОВОРЕНИЕ ПО КЛЮЧУ — say the line you chose, out loud, once. Nothing is graded and nothing
-        // is uploaded; the block exists so stage B ends with the learner's own voice rather than
-        // with a tap.
-        if (_answered && widget.speaksAfterChoice) ...[
-          const SizedBox(height: AppSpacing.s12),
-          _SayItAloud(
-            line: _card.answerText,
-            speakingKey: _card.speakingKey,
-            onSpeak: widget.onSpeak,
-          ),
         ],
         if (_answered) ...[
           const SizedBox(height: AppSpacing.s12),
@@ -1355,8 +1355,14 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           ] else
             Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
           const SizedBox(height: AppSpacing.s4),
-          _instructionLine(l, withType: !asksExample),
-          const SizedBox(height: AppSpacing.s4),
+          // В ПРОГОНЕ СЛУЖЕБНОЙ СТРОКИ НЕТ (наряд DAY-GATE-1, Ч.2.7). «фраза · скажи слово вслух»
+          // говорила там неправду дважды: реплику она называла словом, а тип материала — служебным
+          // словом, которое на экраны плана не выходит. Человеческая строка стоит ниже
+          // ([_speakHint] → «скажи свою реплику — текста не будет») и говорит то же самое один раз.
+          if (!_isSceneRun) ...[
+            _instructionLine(l, withType: !asksExample),
+            const SizedBox(height: AppSpacing.s4),
+          ],
           // The frame, on the card and not only in a spec: this is recall, not pronunciation. It is
           // what makes a learner willing to speak at all.
           //
@@ -2212,46 +2218,6 @@ class _RevealedLineState extends State<_RevealedLine> {
   }
 }
 
-/// ГОВОРЕНИЕ ПО КЛЮЧУ — «скажи это вслух», once, after the tap.
-///
-/// Stage B of a scene is «выбрал ответ в ситуации» (канон §4) and the tap is what is graded; this is
-/// the half that makes the stage end in the learner's own voice. It writes nothing — no review, no
-/// verdict, no schedule — which is exactly why there is no microphone: a recogniser here would ask
-/// for a permission in order to produce a judgement nobody reads.
-///
-/// The KEY is underlined when the day left one: it is the piece the card was written to teach, and
-/// the same key the speaking trainer grades by, so the learner is told what to get right rather than
-/// asked to nail fifteen words of scaffolding.
-class _SayItAloud extends StatelessWidget {
-  const _SayItAloud({required this.line, required this.speakingKey, required this.onSpeak});
-
-  final String line;
-  final String? speakingKey;
-  final Future<void> Function(String text, {bool slow}) onSpeak;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-
-    return PaperCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l.sessionSituationSayAloud.toUpperCase(), style: AppText.sectionLabel),
-          const SizedBox(height: AppSpacing.s12),
-          _KeyedLine(line: line, speakingKey: speakingKey),
-          const SizedBox(height: AppSpacing.s12),
-          QuietButton(
-            label: l.sessionListenReplay,
-            icon: LucideIcons.volume2,
-            onPressed: () => onSpeak(line),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// ДЕВ-РЯД QA: подставить транскрипт вместо голоса — наряд SCENE-RUN, Ч.2.9.
 ///
 /// Существует ровно ради одного: на симуляторе микрофона нет, и без подстановки ступень C нечем
@@ -2281,40 +2247,6 @@ class _QaTranscriptRow extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(child: QuietButton(label: 'QA · miss', onPressed: onMissed)),
       ],
-    );
-  }
-}
-
-/// The line with its KEY underlined — brass under the piece the day cared about.
-class _KeyedLine extends StatelessWidget {
-  const _KeyedLine({required this.line, required this.speakingKey});
-
-  final String line;
-  final String? speakingKey;
-
-  @override
-  Widget build(BuildContext context) {
-    final base = AppText.stepTitle.copyWith(fontSize: 19, height: 1.35);
-    final key = speakingKey?.trim() ?? '';
-    final at = key.isEmpty ? -1 : line.toLowerCase().indexOf(key.toLowerCase());
-    if (at < 0) return Text(line, style: base);
-
-    return Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(text: line.substring(0, at)),
-          TextSpan(
-            text: line.substring(at, at + key.length),
-            style: const TextStyle(
-              color: AppColors.brassInk,
-              decoration: TextDecoration.underline,
-              decorationColor: AppColors.brassInk,
-            ),
-          ),
-          TextSpan(text: line.substring(at + key.length)),
-        ],
-      ),
-      style: base,
     );
   }
 }
