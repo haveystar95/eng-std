@@ -497,12 +497,26 @@ class SessionCard {
   /// loud rather than leaving the learner to guess.
   final String? speakingKey;
 
+  /// ЧТО ЕЩЁ ЗАСЧИТЫВАЕТСЯ НА ГОВОРЕНИИ — 1–2 упрощённые формы того же ответа рядом с
+  /// [speakingKey] («two years» для «I have two years of commercial experience»), наряд GEN-1.
+  /// Сервер судит по тому же списку (`learning.plan.speaking_keys_graded`), клиент — не строже.
+  /// Пусто на всём, что не реплика плана v0.7+.
+  final List<String> speakingKeys;
+
   /// The key as words to hold the spoken answer to, or null when there is no key and the whole
   /// line is the ask. Blank is treated as absent: an empty key would grade every reading correct.
   String? get spokenTarget {
     final key = speakingKey?.trim();
     return key == null || key.isEmpty ? null : key;
   }
+
+  /// ВСЁ, ЧТО ЗАСЧИТЫВАЕТСЯ ГОЛОСОМ — ключ реплики и её упрощённые формы, без пустых. Пусто, когда
+  /// ключа нет и просят всю реплику целиком.
+  List<String> get spokenTargets => [
+    ?spokenTarget,
+    for (final alt in speakingKeys)
+      if (alt.trim().isNotEmpty) alt.trim(),
+  ];
 
   /// Present ONLY on the forward-recognition card (rung 1), aligned index-for-index with [options]:
   /// the term each option's translation belongs to. That card is graded by IDENTITY — the learner
@@ -599,6 +613,7 @@ class SessionCard {
     this.ladderStep,
     this.optionIds,
     this.speakingKey,
+    this.speakingKeys = const [],
   });
 
   bool get isPhrase => type != 'word';
@@ -625,6 +640,8 @@ class SessionCard {
     ladderStep: (j['ladder_step'] as num?)?.toInt(),
     optionIds: (j['option_ids'] as List?)?.map((e) => e as String).toList(),
     speakingKey: j['speaking_key'] as String?,
+    speakingKeys:
+        (j['speaking_keys'] as List?)?.whereType<String>().toList(growable: false) ?? const [],
   );
 }
 

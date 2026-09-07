@@ -34,6 +34,7 @@ import 'package:eng_std/ui/ui.dart';
 
 import '../../data/models.dart' show PlanDialogue, PlanDialogueTurn;
 import '../../data/providers.dart' show speechRecognizerProvider;
+import '../../data/speech/speech_turn.dart';
 import 'plan_ui.dart';
 
 /// ONE SCENE'S CONVERSATION, around one card of it.
@@ -814,13 +815,14 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
   /// Сколько попыток микрофона уже потрачено. Вторая пустая ставит пузырь всё равно.
   static const _maxAttempts = 2;
 
-  /// Сколько экран слушает один ход. Тот же порог, что у говорения фраз: дольше человек не
-  /// вспоминает, он мучается.
-  static const _window = Duration(seconds: 15);
-
   bool _listening = false;
   int _attempts = 0;
   String _heard = '';
+
+  /// ТОТ ЖЕ ДВИЖОК, ЧТО У ПРОГОНА И У ГОВОРЕНИЯ СЛОВ (наряд DAY-FIX-3, Ч.1): склейка, тишина после
+  /// речи, потолок речи, сторож от открытия. Ход не оценивается, поэтому ни ключа, ни эхо-замка
+  /// ему не дают — только подсказку распознавателю.
+  SpeechTurn? _turn;
 
   /// Микрофон доступен: разрешение уже дано. Null — ещё не спрашивали.
   bool? _permitted;
@@ -829,6 +831,12 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
   void initState() {
     super.initState();
     unawaited(_askPermission());
+  }
+
+  @override
+  void dispose() {
+    unawaited(_turn?.cancel());
+    super.dispose();
   }
 
   Future<void> _askPermission() async {
@@ -855,28 +863,30 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
       _heard = '';
     });
 
-    final attempt = await recognizer.listenOnce(
+    final turn = SpeechTurn(recognizer);
+    _turn = turn;
+    final result = await turn.listen(
       // Ход не оценивается, поэтому «ожидаемого» у него нет: реплика уходит только подсказкой
       // распознавателю, и ни с чем не сравнивается.
       expected: const [],
       localeId: '',
-      timeout: _window,
       contextualStrings: [widget.turn.text],
       onPartial: (text) {
         if (mounted && _listening) setState(() => _heard = text);
       },
     );
+    if (_turn == turn) _turn = null;
     if (!mounted) return;
 
     setState(() {
       _listening = false;
       _attempts++;
-      if (attempt.isHeard) _heard = attempt.text;
+      if (result.transcript.isNotEmpty) _heard = result.transcript;
     });
 
     // СКАЗАНО — это непустой транскрипт, и только он. Вторая пустая попытка тоже ставит пузырь:
     // микрофон, который не расслышал, не имеет права держать человека в этом ходу.
-    if (attempt.isHeard || _attempts >= _maxAttempts) {
+    if (result.isHeard || _attempts >= _maxAttempts) {
       widget.onDone();
     }
   }

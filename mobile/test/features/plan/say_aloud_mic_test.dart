@@ -96,6 +96,8 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Сказать вслух'));
+    // Ход не оценивается, ключа у него нет — попытку закрывает тишина после последнего слова.
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
     expect(done, 1);
@@ -109,18 +111,23 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Сказать вслух'));
+    // ТИШИНУ ЗАКРЫВАЕТ СТОРОЖ ДВИЖКА (DAY-FIX-3, Ч.1.3): пустой ответ плагина попытку больше не
+    // кончает — микрофон переоткрывается, и только пятнадцать секунд без единого слова от
+    // открытия отдают ход назад.
+    await tester.pump(const Duration(seconds: 16));
     await tester.pumpAndSettle();
 
     // Ход ещё за человеком, и экран говорит почему.
     expect(done, 0);
     expect(find.textContaining('Не расслышали'), findsOneWidget);
+    expect(recognizer.calls, greaterThan(1), reason: 'микрофон переоткрывался, а не сдался');
 
     await tester.tap(find.text('Сказать вслух'));
+    await tester.pump(const Duration(seconds: 16));
     await tester.pumpAndSettle();
 
     // Микрофон, который не расслышал дважды, не имеет права держать человека в этом ходу.
     expect(done, 1);
-    expect(recognizer.calls, 2);
   });
 
   testWidgets('без разрешения на микрофон остаётся прежняя текстовая кнопка', (tester) async {

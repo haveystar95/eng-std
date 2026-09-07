@@ -11,6 +11,7 @@ import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/practice/learning_ladder.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
+import 'package:eng_std/data/speech/speech_turn.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -213,8 +214,22 @@ void main() {
     return null;
   }
 
+  /// Tap the microphone and let ONE turn of the speech engine settle: a matching answer settles at
+  /// once, anything else waits out the engine's own silence after the last word (DAY-FIX-3, Ч.1.3).
   Future<void> record(WidgetTester tester) async {
     await tester.tap(recordButton().first);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+  }
+
+  /// Tap the microphone into SILENCE and wait for the engine's watchdog — fifteen seconds without
+  /// a word from the opening of the microphone is what ends an attempt now, not the plugin's own
+  /// empty result (which merely reopens the microphone).
+  Future<void> recordSilence(WidgetTester tester) async {
+    await tester.tap(recordButton().first);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 16));
     await tester.pumpAndSettle();
   }
 
@@ -329,7 +344,7 @@ void main() {
       await tester.pumpWidget(host(wordCard(), recognizer));
       await tester.pumpAndSettle();
 
-      await record(tester);
+      await recordSilence(tester);
 
       expect(answers, isEmpty, reason: 'a microphone that heard nothing is not an answer');
       expect(skips, 0);
@@ -348,7 +363,7 @@ void main() {
       // An escape hatch offered before it is needed reads as «this probably won't work».
       expect(find.text('Пропустить'), findsNothing);
 
-      await record(tester);
+      await recordSilence(tester);
 
       // …but the moment the card says the channel let them down, the way out is on screen with it:
       // the message and the button are the same fact. Two more taps to reach it left «Не помню» —
@@ -378,7 +393,7 @@ void main() {
       await tester.pumpAndSettle();
 
       for (var i = 0; i < SpokenAnswer.maxChannelAttempts; i++) {
-        await record(tester);
+        await recordSilence(tester);
       }
       expect(find.text('Пропустить'), findsOneWidget);
     });
@@ -388,7 +403,7 @@ void main() {
       await tester.pumpWidget(host(wordCard(), recognizer));
       await tester.pumpAndSettle();
 
-      await record(tester);
+      await recordSilence(tester);
       await tester.tap(find.text('Пропустить'));
       await tester.pumpAndSettle();
 
@@ -461,47 +476,30 @@ void main() {
     });
   });
 
-  group('recording window (QA-20)', () {
-    testWidgets('the word form uses the shorter window', (tester) async {
-      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('reservation')]);
-      await tester.pumpWidget(host(wordCard(), recognizer));
-      await tester.pumpAndSettle();
-
-      await record(tester);
-
-      expect(recognizer.timeoutsPerCall.single, SpokenAnswer.wordFormListenFor);
-      expect(recognizer.pauseForsPerCall.single, SpokenAnswer.wordFormPauseFor);
-    });
-
-    testWidgets('the example form uses the longer window', (tester) async {
-      final recognizer = _FakeRecognizer([
-        const SpeechAttempt.heard('Could you take a photo of us?'),
-      ]);
-      await tester.pumpWidget(host(exampleCard(), recognizer));
-      await tester.pumpAndSettle();
-
-      await record(tester);
-
-      expect(recognizer.timeoutsPerCall.single, SpokenAnswer.exampleFormListenFor);
-      expect(recognizer.pauseForsPerCall.single, SpokenAnswer.exampleFormPauseFor);
-    });
-
-    testWidgets('a PHRASE-shaped term on the word form also gets the longer window (QA-21)', (
+  group('recording window (DAY-FIX-3, Ч.1.3)', () {
+    testWidgets('the plugin is handed the engine\'s numbers — one window for every form', (
       tester,
     ) async {
-      // The live case: an 8s/2s window cut this reading off after the first word («Heard: When»).
-      // Still the word form — the card asks for the term, not the example — but what is being said
-      // is sentence-length, and the window has to fit that.
-      final recognizer = _FakeRecognizer([
-        const SpeechAttempt.heard('Where do you see yourself in five years'),
-      ]);
-      await tester.pumpWidget(host(longTermWordCard(), recognizer));
-      await tester.pumpAndSettle();
+      // The word/example split of QA-20 is gone: the ENGINE closes an attempt (silence after the
+      // last word, the speech ceiling from the first), and the plugin's own window is only a bound
+      // under it. The same numbers for a word, a sentence and a phrase-shaped term.
+      const config = SpeechTurnConfig();
+      for (final card in [wordCard(), exampleCard(), longTermWordCard()]) {
+        // A fresh tree per card: the same widget at the same slot would keep the answered state.
+        await tester.pumpWidget(const SizedBox.shrink());
+        final recognizer = _FakeRecognizer([SpeechAttempt.heard(card.answer)]);
+        await tester.pumpWidget(host(card, recognizer));
+        await tester.pumpAndSettle();
 
-      await record(tester);
+        await record(tester);
 
-      expect(recognizer.timeoutsPerCall.single, SpokenAnswer.exampleFormListenFor);
-      expect(recognizer.pauseForsPerCall.single, SpokenAnswer.exampleFormPauseFor);
+        expect(recognizer.pauseForsPerCall.first, config.silenceAfterSpeech, reason: card.answer);
+        expect(
+          recognizer.timeoutsPerCall.first,
+          config.maxSpeech + config.silenceBeforeSkip,
+          reason: card.answer,
+        );
+      }
     });
   });
 
@@ -624,29 +622,26 @@ void main() {
     });
   });
 
-  group('a pause cutoff on the example form (QA-20 finding iii)', () {
-    testWidgets('a low-coverage reading is retried, not finalized as wrong', (tester) async {
-      // The recogniser's own window closed on it (no manual «Готово»), and it only caught half the
-      // sentence — a stumble or a channel cutoff, not a wrong answer.
+  group('a pause cutoff on the example form (QA-20 finding iii → DAY-FIX-3, Ч.1.2)', () {
+    testWidgets('a stumble does not end the attempt — the halves are joined into ONE answer', (
+      tester,
+    ) async {
+      // The recogniser's own window closed on «could you take» (a stumble), and the learner went
+      // on. The engine reopens the microphone and joins what follows onto what was heard: no
+      // verdict in between, no «Не расслышал», one answer graded whole.
       final recognizer = _FakeRecognizer([
         const SpeechAttempt.heard('could you take'), // 3 of 7 words: well under 70%
-        const SpeechAttempt.heard('Could you take a photo of us?'),
+        const SpeechAttempt.heard('a photo of us'),
       ]);
       await tester.pumpWidget(host(exampleCard(), recognizer));
       await tester.pumpAndSettle();
 
       await record(tester);
 
-      // No verdict spent — the card is still open, offering another try, exactly like a channel
-      // failure (the same budget, the same "Не расслышал" line).
-      expect(answers, isEmpty);
-      expect(find.textContaining('Не расслышал'), findsOneWidget);
-      expect(recordButton(), findsWidgets);
-
-      // The retry succeeds normally and commits like any other attempt.
-      await record(tester);
       expect(answers, hasLength(1));
       expect(answers.single.verdict, LocalCheck.correct);
+      expect(answers.single.response, 'could you take a photo of us');
+      expect(recognizer.calls, greaterThan(1), reason: 'the microphone was reopened, not judged');
     });
 
     testWidgets('a deliberate «Готово» on a short reading is graded as the final answer', (

@@ -1144,6 +1144,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionSpeakNoMic => 'The microphone isn\'t available. You can skip this card.';
 
   @override
+  String get sessionSpeakCutOff => 'Didn\'t catch the whole thing — say it again.';
+
+  @override
   String get sessionSpeakSkip => 'Skip';
 
   @override

@@ -1168,6 +1168,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionSpeakNoMic => 'Микрофон недоступен. Можно пропустить эту карточку.';
 
   @override
+  String get sessionSpeakCutOff => 'Не расслышали до конца — скажи ещё раз.';
+
+  @override
   String get sessionSpeakSkip => 'Пропустить';
 
   @override

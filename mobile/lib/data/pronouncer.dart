@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show debugPrint, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -19,7 +21,13 @@ import 'languages.dart';
 /// заранее, — [LineAudioCache] знает какой, и [speakText] играет его. Всё
 /// остальное — слова, связки, поиск, коллекции — как было.
 class Pronouncer {
-  Pronouncer([FlutterTts? tts, LineAudioCache? lines]) : _tts = tts ?? FlutterTts(), _lines = lines;
+  Pronouncer([FlutterTts? tts, LineAudioCache? lines]) : _tts = tts ?? FlutterTts(), _lines = lines {
+    // Конец произнесения — для тех, кто его ждёт ({@see speakText} с `awaitDone`). Отмена и
+    // ошибка — тоже конец: реплика, которую перебили, не зазвучит уже никогда.
+    _tts.setCompletionHandler(_finishUtterance);
+    _tts.setCancelHandler(_finishUtterance);
+    _tts.setErrorHandler((_) => _finishUtterance());
+  }
 
   final FlutterTts _tts;
 
@@ -85,6 +93,7 @@ class Pronouncer {
   /// Ducking now lasts for the whole training session instead of flickering per word, which is
   /// also the better behaviour for someone training with music on.
   Future<void> warmUp({required String targetLang}) async {
+    _released = false;
     await _configureIosAudioSession();
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       await _tts.autoStopSharedSession(false);
@@ -130,7 +139,17 @@ class Pronouncer {
   /// ONE method, and the branch inside it is the whole of наряд TTS-1's Ч.2.2. Which path a string
   /// takes is decided by the CACHE and not by the caller: a caller that had to know would be a
   /// caller that can be wrong, and there are six of them.
-  Future<void> speakText(String text, {required String targetLang, bool slow = false}) async {
+  ///
+  /// [awaitDone] — ВЕРНУТЬСЯ, КОГДА РЕПЛИКА ДОИГРАЛА (наряд DAY-FIX-3, Ч.1.1): микрофон прогона
+  /// открывается по концу воспроизведения, и «сказать» без «дождаться» ему не поможет. Файл
+  /// отвечает концом сам (нативный плеер держит результат до `didFinish`); синтезатор — своим
+  /// обработчиком завершения, а если тот молчит (тесты, чужой движок) — по оценке длины текста.
+  Future<void> speakText(
+    String text, {
+    required String targetLang,
+    bool slow = false,
+    bool awaitDone = false,
+  }) async {
     final line = text.trim();
     if (line.isEmpty) return;
 
@@ -143,10 +162,64 @@ class Pronouncer {
       return;
     }
 
-    await _speakWithEngine(line, targetLang: targetLang, slow: slow, isLine: lines?.knows(line) ?? false);
+    final utterance = awaitDone ? _expectUtterance() : null;
+    var started = false;
+    try {
+      started = await _speakWithEngine(line, targetLang: targetLang, slow: slow, isLine: lines?.knows(line) ?? false);
+    } finally {
+      // Движок не взял реплику (нет плагина — тесты, превью; отказ, исключение канала) — ждать
+      // нечего и некого.
+      if (utterance != null && !started) _finishUtterance();
+    }
+    if (utterance == null) return;
+    if (started) _armUtteranceGuard(line);
+    await utterance;
   }
 
-  Future<void> _speakWithEngine(
+  /// Текущее произнесение синтезатора, если кто-то ждёт его конца.
+  Completer<void>? _utterance;
+  Timer? _utteranceGuard;
+
+  /// Ждать конца ЭТОГО произнесения. Обработчики плагина глобальны, поэтому один completer на
+  /// движок: новая реплика закрывает ожидание предыдущей (её всё равно перебили `stop`).
+  Future<void> _expectUtterance() {
+    _finishUtterance();
+    // Экран уже отпустил голос — ждать нечего: реплика после `release` никем не слушается.
+    if (_released) return Future<void>.value();
+    final completer = Completer<void>();
+    _utterance = completer;
+
+    return completer.future;
+  }
+
+  /// Голос отпущен экраном ({@see release}); снимается следующим [warmUp].
+  bool _released = false;
+
+  /// Страховка от движка, который взял реплику и не сказал, что кончил: ~350 мс на слово плюс
+  /// секунда на разгон, но не дольше двенадцати секунд — реплика в двенадцать слов не звучит
+  /// дольше. Заводится ПОСЛЕ того, как движок взял реплику: до этого ждать нечего, а таймер,
+  /// заведённый под вызов, который никогда не вернётся (тесты), висел бы вечно.
+  void _armUtteranceGuard(String line) {
+    _utteranceGuard?.cancel();
+    if (_utterance == null || _released) return;
+    final words = line.split(RegExp(r'\s+')).length;
+    _utteranceGuard = Timer(
+      Duration(milliseconds: (1000 + words * 350).clamp(1200, 12000)),
+      _finishUtterance,
+    );
+  }
+
+  void _finishUtterance() {
+    _utteranceGuard?.cancel();
+    _utteranceGuard = null;
+    final pending = _utterance;
+    _utterance = null;
+    if (pending != null && !pending.isCompleted) pending.complete();
+  }
+
+  /// True when the engine actually took the utterance (the plugin answers 1 on success); false
+  /// where there is no engine to speak of — a test, a preview, a refused platform call.
+  Future<bool> _speakWithEngine(
     String line, {
     required String targetLang,
     required bool slow,
@@ -169,8 +242,10 @@ class Pronouncer {
     }
     // Queued BEFORE the word, so a cold route wakes up during silence rather than mid-syllable.
     await _wakeRoute();
-    await _tts.speak(line);
+    final result = await _tts.speak(line);
     _lastSpokeAt = DateTime.now();
+
+    return result == 1;
   }
 
   /// Pronunciation is intentional media, not a notification, so it must play through the iOS
@@ -230,6 +305,9 @@ class Pronouncer {
   /// the file player first pushes `stop` past a microtask, and the word carries over the slide onto
   /// the next card again.
   Future<void> stop() async {
+    // Перебитая реплика кончилась — тот, кто её ждал, не должен ждать дальше. ДО каналов, а не
+    // после: ожидание закрывается в этом же обороте, чем бы ни ответила платформа.
+    _finishUtterance();
     final stopping = _tts.stop();
     await _lines?.stop();
     await stopping;
@@ -239,6 +317,7 @@ class Pronouncer {
   /// expensive `setActive(false)` runs — on a screen the user is already leaving, where a stall
   /// costs nothing — instead of after every spoken word.
   Future<void> release() async {
+    _released = true;
     await stop();
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       _audioSessionReady = false;

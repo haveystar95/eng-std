@@ -238,6 +238,9 @@ void main() {
     expect(find.text('Что ты ответишь?'), findsNothing);
 
     await tester.tap(find.text('Сказать вслух'));
+    // Ход не оценивается и ключа не имеет — попытку закрывает тишина после последнего слова
+    // (DAY-FIX-3, Ч.1.3).
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
     // Пузырь встал в ленту, разговор пошёл дальше — и ни одного ревью за это не написано:
@@ -263,6 +266,7 @@ void main() {
 
     // Отдать первый ход, потом ответить на свой — и выйти из разговора в хвост.
     await tester.tap(find.text('Сказать вслух'));
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
     await tester.tap(find.text("I'm building a learning app."));
     await tester.pumpAndSettle();

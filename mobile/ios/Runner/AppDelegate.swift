@@ -4,7 +4,7 @@ import Flutter
 import UIKit
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, AVAudioPlayerDelegate {
   /// The verdict sounds, registered with AudioServices once each and kept for the app's life
   /// (QA-22). Keyed by the name Dart sends, so `AppFeedback` names a SOUND and never a file path.
   ///
@@ -44,6 +44,17 @@ import UIKit
   /// то же поведение, что и `Pronouncer.stop()` перед каждой фразой.
   private var linePlayer: AVAudioPlayer?
 
+  /// РЕЗУЛЬТАТ `play` ОТДАЁТСЯ, КОГДА ФАЙЛ ДОИГРАЛ (наряд DAY-FIX-3, Ч.1.1): микрофон прогона
+  /// открывается по концу реплики собеседника, и Dart ждёт именно этого ответа. `stop` и новая
+  /// `play` закрывают предыдущее ожидание сразу — перебитая реплика кончилась.
+  private var linePlayResult: FlutterResult?
+
+  private func finishLinePlay() {
+    let pending = linePlayResult
+    linePlayResult = nil
+    pending?(nil)
+  }
+
   private func registerLineAudioChannel(_ messenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(
       name: "com.denis.engstd/line_audio", binaryMessenger: messenger)
@@ -58,6 +69,7 @@ import UIKit
       case "stop":
         self.linePlayer?.stop()
         self.linePlayer = nil
+        self.finishLinePlay()
         result(nil)
 
       case "play":
@@ -75,11 +87,16 @@ import UIKit
 
         do {
           self.linePlayer?.stop()
+          self.finishLinePlay()
           let player = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
           self.linePlayer = player
+          player.delegate = self
           player.prepareToPlay()
-          player.play()
-          result(nil)
+          self.linePlayResult = result
+          if !player.play() {
+            self.linePlayResult = nil
+            result(FlutterError(code: "play_failed", message: "player refused to start", details: nil))
+          }
         } catch {
           result(FlutterError(code: "play_failed", message: error.localizedDescription, details: nil))
         }
@@ -88,6 +105,14 @@ import UIKit
         result(FlutterMethodNotImplemented)
       }
     }
+  }
+
+  func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+    if player === linePlayer { finishLinePlay() }
+  }
+
+  func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+    if player === linePlayer { finishLinePlay() }
   }
 
   /// `AppFeedback`'s side of the verdict sound — see `lib/theme/feedback.dart`.

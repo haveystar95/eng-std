@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -17,6 +18,7 @@ import '../../../data/perf_log.dart';
 import '../../../data/practice/practice_mode_selector.dart' show TermPlayability;
 import '../../../data/providers.dart';
 import '../../../data/speech/speech_recognizer.dart';
+import '../../../data/speech/speech_turn.dart';
 import 'session_grading.dart';
 
 /// The wrong-keyboard hint, by name — «похоже, раскладка не та».
@@ -166,9 +168,24 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     this.speaksAfterChoice = false,
     this.inDialogue = false,
     this.sceneRun,
+    this.roleSpeaking,
+    this.roleLineText,
   });
 
   static bool _alwaysCurrent() => true;
+
+  /// ДИНАМИК ЕЩЁ ГОВОРИТ — реплика собеседника играет (наряд DAY-FIX-3, Ч.1.1).
+  ///
+  /// Пока `true`, микрофон прогона не открывается: открытый поверх голоса собеседника, он писал
+  /// начало его реплики в транскрипт человека (диагностика 06.09, п. 1). Ставит и снимает флаг
+  /// СЕССИЯ — она владеет голосом; карточка только ждёт. Null — звука нет, микрофон открывается
+  /// сразу после слайда.
+  final ValueListenable<bool>? roleSpeaking;
+
+  /// ТЕКСТ РЕПЛИКИ РОЛИ, которая только что прозвучала, — для эхо-замка (Ч.1.5). Склейка, в
+  /// которой узнана эта реплика и не узнан ключ, выбрасывается, а не пишется ошибкой. Null вне
+  /// разговора.
+  final String? roleLineText;
 
   final SessionCard card;
   final bool autoPronounce;
@@ -295,15 +312,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// ХОД ПРОГОНА СЦЕНЫ — ступень C: подсказка на языке поддержки и микрофон, больше ничего.
   bool get _isSceneRun => widget.sceneRun != null && _isSpeaking;
 
-  /// «Пропустить» уже на экране — по времени, а не по отказу микрофона ({@see _canSkip}).
-  bool _skipOffered = false;
-
-  /// Когда началось ЭТО прослушивание — от него меряется «сразу» (канон §4, ≤ 3 с).
+  /// Когда открылся микрофон ЭТОЙ попытки — от него меряется «сразу» (канон §4, ≤ 3 с). С Ч.1.1
+  /// микрофон открывается ПОСЛЕ реплики собеседника, поэтому «сразу» больше не включает её.
   DateTime? _listenStartedAt;
-
-  /// Сторож прогона и таймер, открывающий выход.
-  Timer? _runSkipTimer;
-  Timer? _runGuardTimer;
 
   /// B+ · СБОРКА — тот же ход, но реплики целиком на экране больше нет (наряд SCENE-RUN, Ч.1).
   ///
@@ -325,27 +336,26 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   String _partial = '';
   int _attempts = 0;
 
-  /// HOW LONG PAST ITS OWN WINDOW a recording attempt may go before the card stops waiting for it.
-  ///
-  /// Fifteen seconds, the наряд's own number, and it is a grace period rather than a timeout: the
-  /// engine's window ([_window]) is what normally ends an attempt, and this only catches the case
-  /// where the engine never answers at all. Long enough that a slow start on a cold audio session
-  /// is not mistaken for a dead one; short enough that nobody waits out the two minutes it used to
-  /// take for the process to abort instead.
-  static const _channelGrace = Duration(seconds: 15);
-
   /// The last channel failure, shown as a quiet line rather than as a verdict. Null once something
   /// is heard, so a successful retry clears the apology.
   SpeechOutcome? _channelFailure;
 
-  /// Set only by [_stopListening] (the learner tapped «Готово»). Read once, right after the
-  /// attempt settles, to tell a DELIBERATE stop from the recogniser's own pauseFor/listenFor window
-  /// closing on its own — see the low-coverage guard in [_listenOnce] (QA-20).
-  bool _manualStop = false;
+  /// ОБРЫВ НА ПОЛУСЛОВЕ (наряд DAY-FIX-3, Ч.1.4): канал упал после того, как человек начал
+  /// говорить. Не ошибка и не «не помню» — «Не расслышали до конца — скажи ещё раз», журнал не
+  /// пишется, попытка вторая. Снимается следующим прослушиванием.
+  bool _cutOff = false;
 
   /// Resolved once, in [initState], and never through `ref` again — `dispose` has to close the
   /// microphone, and reading a provider from a widget that is already coming down is not allowed.
   SpeechRecognizer? _recognizer;
+
+  /// ОДИН ДВИЖОК СЛУШАНИЯ НА ВСЕ КАРТОЧКИ ГОВОРЕНИЯ ({@see SpeechTurn}, Ч.1): склейка,
+  /// закрытие по тишине после речи или по потолку речи, сторож от открытия, эхо-замок. Карточка
+  /// не разбирает результаты плагина сама — она получает ОДИН исход хода.
+  SpeechTurn? _turn;
+
+  /// Таймер повторного открытия микрофона после обрыва в прогоне — там микрофон открывается сам.
+  Timer? _reopenTimer;
 
   /// May the learner set this card aside?
   ///
@@ -361,26 +371,47 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// second half: once the budget is spent the escape hatch stays put instead of blinking away
   /// under the finger.
   bool get _canSkip =>
-      // В ПРОГОНЕ выход открывается по ВРЕМЕНИ, а не по отказу микрофона: молчание — законный ход
-      // человека, который не вспомнил, и держать его в карточке до поломки железа значило бы
-      // наказывать за незнание отсутствием выхода (наряд SCENE-RUN, Ч.2.4).
-      _isSceneRun
-      ? _skipOffered
-      : widget.onSkipped != null &&
-            (_channelFailure != null || _attempts >= SpokenAnswer.maxChannelAttempts);
+      // В ПРОГОНЕ «ПРОПУСТИТЬ» ДОСТУПНО ВСЕГДА (наряд DAY-FIX-3, Ч.1.7): ход проходится голосом,
+      // спасателем или пропуском, и выход не должен появляться по таймеру — молчание это законный
+      // ход человека, который не вспомнил, а не поломка железа (SCENE-RUN, Ч.2.4).
+      _isSceneRun ||
+      (widget.onSkipped != null &&
+          (_channelFailure != null || _attempts >= SpokenAnswer.maxChannelAttempts));
 
   /// The words the recogniser is listening for, and what the answer is graded against.
-  List<String> get _spokenTargets =>
-      _card.asksForExample ? [_card.answer] : [_card.answer, ..._card.acceptedVariants];
+  ///
+  /// У реплики плана — ключ и его упрощённые формы (`speaking_keys`, Ч.1.6): любая из них
+  /// засчитывается, и распознавателю подсказываются все.
+  List<String> get _spokenTargets => _card.spokenTargets.isNotEmpty
+      ? _card.spokenTargets
+      : (_card.asksForExample ? [_card.answer] : [_card.answer, ..._card.acceptedVariants]);
 
-  /// This card's recording window. The word form's own term can be a whole phrase, which needs the
-  /// sentence-sized window despite the card still being the word form (QA-21) — see
-  /// [SpokenAnswer.windowFor].
-  ({Duration listenFor, Duration pauseFor}) get _window =>
-      SpokenAnswer.windowFor(asksForExample: _card.asksForExample, term: _card.answerText);
+  /// ЧИСЛА ЭТОГО ХОДА. Одни на все карточки говорения (Ч.1.3); прогон сцены приносит свой сторож
+  /// с сервера (`listen_seconds`), потому что сколько человек думает над репликой — суждение
+  /// продукта, которое двигают без выката.
+  SpeechTurnConfig get _turnConfig {
+    final knobs = widget.sceneRun;
+    const base = SpeechTurnConfig();
 
-  /// Is this card's spoken answer judged by coverage rather than by equality (QA-22)? Same
-  /// «длинность» rule as [_window], from the one place that defines it.
+    return knobs == null
+        ? base
+        : base.copyWith(silenceBeforeSkip: Duration(seconds: knobs.listenSeconds));
+  }
+
+  /// «В СКЛЕЙКЕ УЗНАН КЛЮЧ» — ровно та проверка, которой карточка потом судит ответ
+  /// ({@see _commit}), спрошенная по дороге: движок закрывает попытку, не дожидаясь тишины.
+  bool _accepts(String transcript) => _verdictFor(transcript).isAccepted;
+
+  /// «В СКЛЕЙКЕ УЗНАНА РЕПЛИКА РОЛИ» — эхо динамика (Ч.1.5): покрытие её слов ≥ порога конфига.
+  bool _isEcho(String transcript) {
+    final line = widget.roleLineText?.trim() ?? '';
+    if (line.isEmpty) return false;
+
+    return SessionGrader.coverageOf(transcript, line, ignoreArticles: true) >= _turnConfig.echoCoverage;
+  }
+
+  /// Is this card's spoken answer judged by coverage rather than by equality (QA-22)? The one
+  /// «длинность» rule, from the one place that defines it.
   bool get _gradesByCoverage =>
       SpokenAnswer.gradesByCoverage(asksForExample: _card.asksForExample, term: _card.answerText);
 
@@ -437,9 +468,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   Timer? _speakTimer;
   Timer? _settleTimer;
 
-  /// The dead-engine watchdog's own timer — see [_armStallWatchdog].
-  Timer? _stallTimer;
-
   /// True once the slide-in has finished. A photo that is NOT already decoded waits for this before
   /// fading in: a picture that materialises mid-transition is exactly what reads as a lag, even
   /// though every frame is delivered on time (F20-r — the janky-looking cards had zero late frames).
@@ -477,16 +505,53 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_isCloze) {
       _input.addListener(_onClozeInput);
     }
-    // ПРОГОН СЛУШАЕТ СРАЗУ — «слушаем сразу, без отдельного нажатия» (наряд SCENE-RUN, Ч.2.2).
+    // ПРОГОН СЛУШАЕТ САМ — «слушаем сразу, без отдельного нажатия» (наряд SCENE-RUN, Ч.2.2), но
+    // ПОСЛЕ реплики собеседника (наряд DAY-FIX-3, Ч.1.1): микрофон открывается по концу её
+    // воспроизведения, а не через четверть секунды после карточки.
     //
     // Отдельная кнопка «Говорить» перед каждым ходом превращает разговор в очередь из нажатий: в
     // жизни собеседник договаривает и ты отвечаешь, а не жмёшь запись. После слайда, как и всё
     // остальное здесь, — микрофон, поднятый на первом кадре перехода, стоил бы того самого лага.
     if (_isSceneRun) {
-      _afterTransition(() => unawaited(_listenOnce()));
-      _armSceneRunGuards();
+      _afterTransition(_openMicWhenQuiet);
     }
   }
+
+  /// ОТКРЫТЬ МИКРОФОН, КОГДА ДИНАМИК ЗАМОЛЧИТ (Ч.1.1) — сразу, если он молчит уже.
+  ///
+  /// Со страховкой: голос, который не сказал, что кончил ([_roleWaitCap]), не имеет права держать
+  /// микрофон закрытым весь ход — иначе один зависший вызов синтезатора запирал бы прогон.
+  void _openMicWhenQuiet() {
+    final speaking = widget.roleSpeaking;
+    if (speaking == null || !speaking.value) {
+      unawaited(_listenOnce());
+
+      return;
+    }
+    void onQuiet() {
+      if (speaking.value) return;
+      speaking.removeListener(onQuiet);
+      _quietListener = null;
+      _roleWaitTimer?.cancel();
+      if (mounted && widget.isCurrent() && !_answered) unawaited(_listenOnce());
+    }
+
+    speaking.addListener(onQuiet);
+    _quietListener = onQuiet;
+    _roleWaitTimer?.cancel();
+    _roleWaitTimer = Timer(_roleWaitCap, () {
+      if (_quietListener == null) return;
+      speaking.removeListener(onQuiet);
+      _quietListener = null;
+      if (mounted && widget.isCurrent() && !_answered) unawaited(_listenOnce());
+    });
+  }
+
+  VoidCallback? _quietListener;
+  Timer? _roleWaitTimer;
+
+  /// Дольше этого реплика собеседника не звучит — потолок ожидания динамика.
+  static const _roleWaitCap = Duration(seconds: 15);
 
   /// ПОДСТАВИТЬ ТРАНСКРИПТ ВМЕСТО ГОЛОСА — дев-дверь QA (наряд SCENE-RUN, Ч.2.9).
   ///
@@ -508,40 +573,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_answered) return;
     final knobs = widget.sceneRun;
 
-    unawaited(_recognizer?.cancel());
-    _runGuardTimer?.cancel();
+    _reopenTimer?.cancel();
+    unawaited(_turn?.cancel());
     setState(() => _listeningNow = false);
     _listenStartedAt = DateTime.now().subtract(
       fast || knobs == null ? Duration.zero : Duration(seconds: knobs.fastSeconds + 1),
     );
-    _commit(text);
-  }
-
-  /// СТОРОЖ ПРОГОНА И ВЫХОД ИЗ НЕГО — секунды приходят с сервера ({@see SceneRunKnobs}).
-  ///
-  /// Два таймера и разные вопросы: первый показывает «Пропустить» (выход обязан быть виден ДО того,
-  /// как он понадобится), второй нажимает его за человека. Между ними человек видит живой
-  /// «Услышали: …» и может договорить.
-  ///
-  /// Отсчёт идёт от появления карточки, а не от начала прослушивания: сторож существует ради того,
-  /// чтобы в разговоре не образовалась дыра, а дыра начинается там, где ход передали.
-  void _armSceneRunGuards() {
-    final knobs = widget.sceneRun;
-    if (knobs == null) return;
-
-    _runSkipTimer?.cancel();
-    _runSkipTimer = Timer(Duration(seconds: knobs.skipAfterSeconds), () {
-      if (mounted && !_answered) setState(() => _skipOffered = true);
-    });
-    _runGuardTimer?.cancel();
-    _runGuardTimer = Timer(Duration(seconds: knobs.listenSeconds), () {
-      if (!mounted || _answered) return;
-      // ХОД ДЕЛАЕТ СТОРОЖ, и делает его тем же, чем сделал бы человек: пустым ответом, который
-      // сервер оценивает как `again` (наряд Ч.2.4 — «та же семантика, что у говорения фраз»).
-      // Разговор идёт дальше, никто не застревает.
-      unawaited(_recognizer?.cancel());
-      _giveUp();
-    });
+    _commit(text, listenedMs: fast || knobs == null ? 0 : (knobs.fastSeconds + 1) * 1000);
   }
 
   /// Run [fn] once the slide-in animation has settled, unless the card was left in the meantime.
@@ -563,15 +601,19 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     _deferTimer?.cancel();
     _speakTimer?.cancel();
     _settleTimer?.cancel();
-    _stallTimer?.cancel();
-    _runSkipTimer?.cancel();
-    _runGuardTimer?.cancel();
+    _reopenTimer?.cancel();
+    _roleWaitTimer?.cancel();
+    if (_quietListener case final listener?) widget.roleSpeaking?.removeListener(listener);
     if (_isCloze) _input.removeListener(_onClozeInput);
     // A card left mid-utterance must not leave the microphone open behind it — and must not have
     // its transcript arrive over the next card either. Cancel keeps nothing, which is right: an
     // abandoned attempt was never an answer.
-    final recognizer = _recognizer;
-    if (recognizer != null) unawaited(recognizer.cancel());
+    final turn = _turn;
+    if (turn != null) {
+      unawaited(turn.cancel());
+    } else if (_recognizer case final recognizer?) {
+      unawaited(recognizer.cancel());
+    }
     _input.dispose();
     _focus.dispose();
     super.dispose();
@@ -596,45 +638,57 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     return ms > 0 ? ms : null;
   }
 
-  void _commit(String response, {bool usedHint = false}) {
-    if (_answered) return;
+  /// THE INSTANT VERDICT for [response] — the same rule [_commit] writes and the speech engine asks
+  /// by the way ({@see _accepts}), so «договорил» and «верно» cannot be two different checks.
+  LocalCheck _verdictFor(String response) {
     // Two grading paths, exactly as the server has: an identity card's key is a term id, so the
     // check is id equality — running a ULID through the text grader's normalisation and typo
     // tolerance would be meaningless (and, before this, marked every correct tap wrong). Every
     // other card grades its text against the accepted set.
-    final verdict = _card.isIdentityGraded
-        ? (response == _card.answer ? LocalCheck.correct : LocalCheck.wrong)
-        // Anything LONG read aloud is compared by coverage, not by equality — the example form
-        // always, and since QA-22 a word form whose own term is a phrase (see
-        // [SpokenAnswer.gradesByCoverage]). A recogniser eats articles and guesses homophones, so
-        // equality here would print «Не то» over an answer the scheduler is about to count as
-        // correct, which is the one direction this check is forbidden to take.
-        // A PLAN LINE IS JUDGED ON ITS KEY — the piece in the frame's hole, which is the only
-        // thing this card teaches. The frame around it is on the screen the whole time. Held to
-        // the whole sentence, a reading that said everything but the key passed and one that said
-        // the key and little else failed; the server grades the key alone, so the phone does too,
-        // off the same string it was sent.
-        : (_isSpeaking && _card.spokenTarget != null)
-        ? (SessionGrader.covers(response, _card.spokenTarget!, ignoreArticles: true)
-              ? LocalCheck.correct
-              : LocalCheck.wrong)
-        : (_isSpeaking && _gradesByCoverage)
-        ? (SessionGrader.coversAny(response, [
-                _card.answer,
-                ..._card.acceptedVariants,
-              ], ignoreArticles: true)
-              ? LocalCheck.correct
-              : LocalCheck.wrong)
-        : SessionGrader.check(
-            response,
+    if (_card.isIdentityGraded) {
+      return response == _card.answer ? LocalCheck.correct : LocalCheck.wrong;
+    }
+    // Anything LONG read aloud is compared by coverage, not by equality — the example form
+    // always, and since QA-22 a word form whose own term is a phrase (see
+    // [SpokenAnswer.gradesByCoverage]). A recogniser eats articles and guesses homophones, so
+    // equality here would print «Не то» over an answer the scheduler is about to count as
+    // correct, which is the one direction this check is forbidden to take.
+    // A PLAN LINE IS JUDGED ON ITS KEY — the piece in the frame's hole, which is the only
+    // thing this card teaches — AND ON ITS SIMPLER FORMS (`speaking_keys`, наряд DAY-FIX-3,
+    // Ч.1.6): any of them counts, exactly the list the server grades by once
+    // `learning.plan.speaking_keys_graded` is on. The phone is never stricter than the server.
+    if (_isSpeaking && _card.spokenTargets.isNotEmpty) {
+      return SessionGrader.coversAny(response, _card.spokenTargets, ignoreArticles: true)
+          ? LocalCheck.correct
+          : LocalCheck.wrong;
+    }
+    if (_isSpeaking && _gradesByCoverage) {
+      return SessionGrader.coversAny(response, [
             _card.answer,
-            variants: _card.acceptedVariants,
-            forgiveTypos: _mode.forgivesTypos,
-            spokenSuffixTolerance: _isSpeaking,
-            // Speaking ONLY (QA-21) — see SessionGrader.check. Typing and dictation practise the
-            // article deliberately and keep failing a dropped one.
-            ignoreArticles: _isSpeaking,
-          );
+            ..._card.acceptedVariants,
+          ], ignoreArticles: true)
+          ? LocalCheck.correct
+          : LocalCheck.wrong;
+    }
+
+    return SessionGrader.check(
+      response,
+      _card.answer,
+      variants: _card.acceptedVariants,
+      forgiveTypos: _mode.forgivesTypos,
+      spokenSuffixTolerance: _isSpeaking,
+      // Speaking ONLY (QA-21) — see SessionGrader.check. Typing and dictation practise the
+      // article deliberately and keep failing a dropped one.
+      ignoreArticles: _isSpeaking,
+    );
+  }
+
+  /// [listenedMs] — сколько прошло от открытия микрофона до НАЧАЛА речи (канон §4, «сразу»), или
+  /// null вне говорения. Считает движок ({@see SpeechTurnResult.speechStartedAt}); QA-подстановка
+  /// подделывает его сама.
+  void _commit(String response, {bool usedHint = false, int? listenedMs}) {
+    if (_answered) return;
+    final verdict = _verdictFor(response);
     // Sound + haptic together, for every mode — the verdict is shared, so its feedback is too.
     switch (verdict) {
       case LocalCheck.correct:
@@ -665,9 +719,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         verdict: verdict,
         usedHint: usedHint,
         latencyMs: _latency(),
-        listenedMs: _listenStartedAt == null
-            ? null
-            : DateTime.now().difference(_listenStartedAt!).inMilliseconds,
+        listenedMs: listenedMs ??
+            (_listenStartedAt == null
+                ? null
+                : DateTime.now().difference(_listenStartedAt!).inMilliseconds),
       ),
     );
   }
@@ -765,62 +820,85 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   // ── speaking ───────────────────────────────────────────────────────────────
 
-  /// One listening attempt. Heard → the transcript is committed as the answer and graded like any
-  /// other; not heard → the ATTEMPT is spent, nothing is committed, and after a few of them the
-  /// «Пропустить» button appears.
+  /// ОДИН ХОД ГОЛОСОМ — движок ({@see SpeechTurn}) отдаёт ОДИН исход, и карточка отвечает на него
+  /// (наряд DAY-FIX-3, Ч.1.4):
+  ///
+  ///   heard        полная попытка — транскрипт уходит ответом и судится как любой другой: мимо
+  ///                ключа — честная ошибка (`speaking/again`);
+  ///   incomplete   обрыв на полуслове — «Не расслышали до конца — скажи ещё раз», журнал не
+  ///                пишется, попытка вторая (в прогоне микрофон переоткрывается сам);
+  ///   silent       сторож: 15 с тишины от открытия — в прогоне ход делает сторож пустым ответом
+  ///                (`again`, SCENE-RUN Ч.2.4), на обычной карточке — сообщение и «Пропустить»;
+  ///   unavailable  канал не поднялся — как и раньше, состояние тренажёра, не ответ.
   Future<void> _listenOnce() async {
     if (_answered || _listeningNow) return;
+    final recognizer = _recognizer;
+    if (recognizer == null) return;
     AppHaptics.light();
     setState(() {
       _listeningNow = true;
       _partial = '';
       _channelFailure = null;
+      _cutOff = false;
     });
-    _manualStop = false;
     // ОТСЧЁТ «СРАЗУ» начинается здесь — от момента, когда микрофон открылся, а не от появления
-    // карточки: между ними лежит чтение подсказки, и оно не про скорость речи.
-    _listenStartedAt = DateTime.now();
+    // карточки: между ними лежит реплика собеседника и чтение подсказки, и они не про скорость речи.
+    final openedAt = DateTime.now();
+    _listenStartedAt = openedAt;
 
     final contextualStrings = await _contextualStrings();
+    if (!mounted || !_listeningNow) return;
+
+    final turn = SpeechTurn(recognizer, config: _turnConfig);
+    _turn = turn;
+    final result = await turn.listen(
+      expected: _spokenTargets,
+      localeId: widget.speechLocaleId,
+      contextualStrings: contextualStrings,
+      isAnswer: _accepts,
+      echoOf: widget.roleLineText == null ? null : _isEcho,
+      onPartial: (text) {
+        if (mounted && _listeningNow) setState(() => _partial = text);
+      },
+    );
+    if (_turn == turn) _turn = null;
     if (!mounted) return;
-
-    _armStallWatchdog();
-
-    final attempt = await _recognizer!
-        .listenOnce(
-          expected: _spokenTargets,
-          localeId: widget.speechLocaleId,
-          timeout: _window.listenFor,
-          pauseFor: _window.pauseFor,
-          contextualStrings: contextualStrings,
-          onPartial: (text) {
-            if (mounted && _listeningNow) setState(() => _partial = text);
-          },
-        );
-
-    _stallTimer?.cancel();
-    if (!mounted) return;
-    // THE WATCHDOG GOT HERE FIRST — the card is no longer listening and has already said so. A
-    // result that arrives after that is a result for an attempt the learner has been let out of.
-    if (!_listeningNow) return;
+    // THE CARD WAS LET OUT FIRST — QA substitution, a skip, a give-up. A result that arrives after
+    // that is a result for an attempt nobody is waiting for.
+    if (!_listeningNow || _answered) return;
     setState(() => _listeningNow = false);
 
-    if (attempt.isHeard) {
-      // The recogniser's OWN pauseFor/listenFor window closed on it mid-answer (not a deliberate
-      // «Готово»), and what it caught covers under 70% of the sentence — a stumble or a channel
-      // cutoff, not a wrong answer (QA-20 finding iii: "correct reading sometimes fails to
-      // register"). Retried like a channel failure, spending an attempt but no verdict, rather than
-      // handing the scheduler a lapse for a room that cut the recording short.
-      //
-      // Still the EXAMPLE form only, deliberately, even though QA-22 gave a long word-form term a
-      // coverage verdict too: this is retry behaviour, not grading, and it was left exactly where
-      // it was. A long term cut off mid-reading therefore commits as wrong instead of being
-      // retried — which is what it already did when the word form was binary, so nothing regressed
-      // here. Worth revisiting together with the server's own retry policy, not on its own.
-      if (!_manualStop &&
-          _card.asksForExample &&
-          SessionGrader.coverageOf(attempt.text, _card.answer, ignoreArticles: true) <
-              SpokenAnswer.minCoverage) {
+    switch (result.outcome) {
+      case SpeechTurnOutcome.heard:
+        _commit(
+          result.transcript,
+          listenedMs: (result.speechStartedAt ?? DateTime.now()).difference(openedAt).inMilliseconds,
+        );
+
+      case SpeechTurnOutcome.incomplete:
+        // НЕ ОТВЕТ И НЕ ОШИБКА. Deliberately NOT `_commit('')` — an empty answer is «не помню»,
+        // a claim about the learner's memory, and a cut-off channel is not entitled to make it.
+        setState(() {
+          _partial = '';
+          _cutOff = true;
+        });
+        AppHaptics.warning();
+        // В прогоне микрофон открыл не человек, и переоткрыть его должен не человек.
+        if (_isSceneRun) {
+          _reopenTimer?.cancel();
+          _reopenTimer = Timer(const Duration(milliseconds: 900), () {
+            if (mounted && widget.isCurrent() && !_answered) unawaited(_listenOnce());
+          });
+        }
+
+      case SpeechTurnOutcome.silent:
+        if (_isSceneRun) {
+          // ХОД ДЕЛАЕТ СТОРОЖ, и делает его тем же, чем сделал бы человек: пустым ответом, который
+          // сервер оценивает как `again` (SCENE-RUN, Ч.2.4). Разговор идёт дальше, никто не застревает.
+          _giveUp();
+
+          return;
+        }
         setState(() {
           _attempts++;
           _partial = '';
@@ -828,68 +906,21 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         });
         AppHaptics.warning();
 
-        return;
-      }
-
-      _commit(attempt.text);
-
-      return;
+      case SpeechTurnOutcome.unavailable:
+        setState(() {
+          _attempts++;
+          _partial = '';
+          _channelFailure = SpeechOutcome.unavailable;
+        });
+        AppHaptics.warning();
     }
-
-    // A channel failure. Deliberately NOT `_commit('')` — an empty answer is «не помню», which is a
-    // claim about the learner's memory, and a microphone is not entitled to make that claim.
-    setState(() {
-      _attempts++;
-      _partial = '';
-      _channelFailure = attempt.outcome;
-    });
-    AppHaptics.warning();
-  }
-
-  /// THE WAY OUT OF A MICROPHONE THAT NEVER ANSWERS (E2E-SIM-2, С-4).
-  ///
-  /// The recogniser promises to settle every attempt: its own window closes, the plugin reports a
-  /// status, or an error arrives. On the simulator — and on any phone whose audio input does not
-  /// come up — none of the three happens, and the card sat in «Слушаю…» for ever. «Не помню» is
-  /// disabled while listening; «Пропустить» needs a channel failure that was never reported; two
-  /// minutes later the process died inside `AVAudioEngine startAndReturnError:`. Killing the app was
-  /// the only exit from the card, and the stage-A step it belonged to stayed open, so the day could
-  /// not be closed either.
-  ///
-  /// Fifteen seconds with NOTHING back — not a result, not an error, not even a partial — is a
-  /// channel that is not answering, and this ends the attempt exactly as a reported failure would:
-  /// the quiet «микрофон недоступен» line, «Пропустить» on screen, and «Не помню» live again because
-  /// listening has stopped. An attempt that is producing partials is left alone: the engine is
-  /// clearly alive and its own window is the right thing to end the recording.
-  void _armStallWatchdog() {
-    _stallTimer?.cancel();
-    _stallTimer = Timer(_channelGrace, () {
-      if (!mounted || !_listeningNow) return;
-      // SOMETHING IS COMING THROUGH — the engine is alive and the learner is mid-answer. Settle on
-      // what has been heard, exactly as «Готово» does, rather than holding the microphone open: a
-      // long window is a reason to wait for the sentence, not a reason to wait for ever.
-      if (_partial.trim().isNotEmpty) {
-        unawaited(_stopListening());
-
-        return;
-      }
-      unawaited(_recognizer?.cancel());
-      setState(() {
-        _listeningNow = false;
-        _attempts++;
-        _partial = '';
-        _channelFailure = SpeechOutcome.unavailable;
-      });
-      AppHaptics.warning();
-    });
   }
 
   Future<void> _stopListening() async {
     if (!_listeningNow) return;
     // A deliberate «Готово» — whatever was heard is the learner's own final answer, graded as-is
-    // even if short, never retried behind their back (see the guard in [_listenOnce]).
-    _manualStop = true;
-    await _recognizer?.stop();
+    // even if short, never retried behind their back.
+    await _turn?.stop();
   }
 
   /// Set the card aside: the microphone lost, and nothing about this word is recorded anywhere.
@@ -902,8 +933,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   void _skipCard() {
     if (_answered) return;
     if (_isSceneRun) {
-      _runGuardTimer?.cancel();
-      unawaited(_recognizer?.cancel());
+      _reopenTimer?.cancel();
+      unawaited(_turn?.cancel());
+      _listeningNow = false;
       _giveUp();
 
       return;
@@ -1327,10 +1359,14 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           const SizedBox(height: AppSpacing.s12),
           Text(_partial, textAlign: TextAlign.center, style: AppTextExercise.typingInput),
         ],
-        if (_channelFailure != null) ...[
+        if (_channelFailure != null || _cutOff) ...[
           const SizedBox(height: AppSpacing.s12),
           Text(
-            _channelFailure == SpeechOutcome.unavailable
+            // ОБРЫВ — своя строка (Ч.1.4): не «микрофон недоступен» и не «не расслышал», а
+            // «не расслышали до конца» — человек говорил, канал не дослушал.
+            _cutOff
+                ? l.sessionSpeakCutOff
+                : _channelFailure == SpeechOutcome.unavailable
                 ? l.sessionSpeakNoMic
                 : l.sessionSpeakNotHeard,
             textAlign: TextAlign.center,

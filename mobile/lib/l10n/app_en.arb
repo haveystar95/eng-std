@@ -345,6 +345,7 @@
   "sessionSpeakListening": "Listening…",
   "sessionSpeakNotHeard": "Didn't catch that. Try again — a little closer to the mic.",
   "sessionSpeakNoMic": "The microphone isn't available. You can skip this card.",
+  "sessionSpeakCutOff": "Didn't catch the whole thing — say it again.",
   "sessionSpeakSkip": "Skip",
   "sessionSpeakSkipHint": "Skipping costs nothing — the word will come back in its own time.",
   "sessionSpeakHint": "We're checking that you remembered the word, not how you pronounce it.",

@@ -318,6 +318,32 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   /// The speech engine has been raised — see the warm-up in [initState] and [PlanDialogueShell].
   bool _voiceWarm = false;
 
+  /// ДИНАМИК ГОВОРИТ РЕПЛИКУ СОБЕСЕДНИКА (наряд DAY-FIX-3, Ч.1.1). Пока `true`, карточка прогона
+  /// не открывает микрофон: открытый поверх голоса, он писал начало чужой реплики в транскрипт
+  /// человека. Ставит и снимает СЕССИЯ — она владеет голосом и единственная знает, когда файл
+  /// доиграл ({@see Pronouncer.speakText} с `awaitDone`).
+  final _roleSpeaking = ValueNotifier<bool>(false);
+
+  /// Сколько реплик сейчас звучит — «Ещё раз» поверх ещё не доигравшей не должно снять флаг раньше
+  /// времени.
+  int _roleUtterances = 0;
+
+  /// Сказать реплику разговора и ДОЖДАТЬСЯ её конца — единственный путь голоса роли в диалоге.
+  Future<void> _speakLine(String text) async {
+    if (!mounted) return;
+    _roleUtterances++;
+    _roleSpeaking.value = true;
+    try {
+      await _pronouncer.speakText(text, targetLang: _sessionLang, awaitDone: true);
+    } finally {
+      _roleUtterances--;
+      if (_roleUtterances <= 0) {
+        _roleUtterances = 0;
+        if (mounted) _roleSpeaking.value = false;
+      }
+    }
+  }
+
   /// The card index being played at the current position — the ORDER's, before the replay resolves
   /// which rung of it to deal.
   int get _slot => _queue.cardAt(_pos);
@@ -599,6 +625,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // Hands the iOS audio session back (and un-ducks other audio) exactly once, here — not after
     // every spoken word, which is what froze the trainer for ~600 ms per utterance (F20-r).
     unawaited(_pronouncer.release());
+    _roleSpeaking.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -1490,6 +1517,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             // сервер сказал, что этот ход отдан голосом, и вместе с этим прислал секунды, из
             // которых прогон состоит. Null у всего остального, включая обычное говорение фразы.
             sceneRun: _isSceneRunTurn(_playing) ? plan?.sceneRunKnobs : null,
+            // МИКРОФОН ЖДЁТ ДИНАМИК, и знает, чью реплику он мог бы услышать эхом (наряд
+            // DAY-FIX-3, Ч.1.1 и Ч.1.5): оба факта — сессии, карточка их только читает.
+            roleSpeaking: _roleSpeaking,
+            roleLineText: _dialogueHere != null && _inChainAt(_pos)
+                ? PlanDialogueShell.liveRoleTurnOf(_dialogueHere!, _turnIndexAt(_pos))?.text
+                : null,
             // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's
             // deferred speak/focus is cancelled instead of firing on the next card.
             isCurrent: () => mounted && _pos == builtAt,
@@ -1583,9 +1616,8 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                             )?.text,
                           ),
                           taktQuestion: _taktQuestion(l, _playing),
-                          onSpeak: (text) => unawaited(
-                            _pronouncer.speakText(text, targetLang: _sessionLang),
-                          ),
+                          // ГОЛОС РОЛИ — через [_speakLine], чтобы микрофон знал, когда он смолк.
+                          onSpeak: (text) => unawaited(_speakLine(text)),
                           rescue: _rescuePhrases(),
                           // СПАСАТЕЛЬ НА ХОДУ ПРОГОНА — третий исход: ход сделан, но не сам
                           // (наряд SCENE-RUN, Ч.2.5). Вне прогона запоминать нечего: там

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +11,7 @@ import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
+import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 /// Микрофон, которого не бывает на симуляторе: прогон открывает его сам, и без подмены тест мерил
@@ -65,10 +67,20 @@ void main() {
     prompt: 'У моего ребёнка температура',
     answer: line,
     speakingKey: key,
+    // Упрощённая форма ответа (GEN-1, `speaking_keys`): засчитывается наравне с ключом.
+    speakingKeys: const ['fever'],
     ladderStep: 3,
   );
 
-  Widget host(SessionCard c, {SceneRunKnobs? run, SpeechRecognizer? recognizer, AppUser? qa}) => ProviderScope(
+  Widget host(
+    SessionCard c, {
+    SceneRunKnobs? run,
+    SpeechRecognizer? recognizer,
+    AppUser? qa,
+    ValueListenable<bool>? roleSpeaking,
+    String? roleLineText,
+    ValueChanged<SessionAnswer>? onAnswered,
+  }) => ProviderScope(
     overrides: [
       appDatabaseProvider.overrideWith((ref) {
         final db = AppDatabase.forTesting(NativeDatabase.memory());
@@ -91,11 +103,13 @@ void main() {
               speechLocaleId: 'en_US',
               answerLang: 'en',
               autoPronounce: false,
-              onAnswered: (_) {},
+              onAnswered: onAnswered ?? (_) {},
               onSpeak: (text, {bool slow = false}) async {},
               showDue: false,
               inDialogue: true,
               sceneRun: run,
+              roleSpeaking: roleSpeaking,
+              roleLineText: roleLineText,
             ),
           ),
         ),
@@ -153,25 +167,158 @@ void main() {
     expect(find.text('QA · miss'), findsOneWidget);
   });
 
-  testWidgets('открывает «Пропустить» по времени, а не по поломке микрофона', (tester) async {
+  testWidgets('«Пропустить» доступно всегда, а сторож дожимает ход по тишине от ОТКРЫТИЯ микрофона', (
+    tester,
+  ) async {
     // В говорении фраз выход появляется после отказа канала: там молчание это железо. В прогоне
-    // молчание — законный ход человека, который не вспомнил, и держать его до поломки значило бы
-    // наказывать за незнание отсутствием выхода.
+    // молчание — законный ход человека, который не вспомнил (SCENE-RUN, Ч.2.4), а с DAY-FIX-3
+    // (Ч.1.7) выход не появляется по таймеру — он на экране с первого кадра.
+    final answers = <SessionAnswer>[];
     await tester.pumpWidget(
-      host(runCard(), run: const SceneRunKnobs(skipAfterSeconds: 5, listenSeconds: 8)),
+      host(runCard(), run: const SceneRunKnobs(listenSeconds: 8), onAnswered: answers.add),
     );
     await tester.pump();
-
-    expect(find.text('Пропустить'), findsNothing);
-
-    await tester.pump(const Duration(seconds: 6));
     expect(find.text('Пропустить'), findsOneWidget);
 
-    // …и сторож дожимает сам: через `listenSeconds` ход делается пустым ответом, разговор идёт
-    // дальше, никто не застревает (наряд Ч.2.4).
-    await tester.pump(const Duration(seconds: 4));
+    // Микрофон открывается после слайда; сторож считает от него (Ч.1.3), не от карточки.
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(seconds: 7));
+    expect(answers, isEmpty, reason: 'восемь секунд от открытия ещё не прошли');
+
+    // …и сторож дожимает сам: ход делается пустым ответом, разговор идёт дальше, никто не
+    // застревает.
+    await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
+    expect(answers, hasLength(1));
+    expect(answers.single.response, isEmpty);
   });
+
+  testWidgets('микрофон не открывается, пока динамик говорит реплику собеседника (Ч.1.1)', (
+    tester,
+  ) async {
+    final mic = _SilentRecognizer();
+    final speaking = ValueNotifier<bool>(true);
+    await tester.pumpWidget(
+      host(runCard(), run: const SceneRunKnobs(), recognizer: mic, roleSpeaking: speaking),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+
+    // Динамик ещё говорит — микрофон закрыт, что бы ни было на слайде.
+    expect(mic.calls, 0);
+
+    // Реплика доиграла — микрофон открылся по этому событию, а не по таймеру карточки.
+    speaking.value = false;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(mic.calls, 1);
+
+    speaking.dispose();
+  });
+
+  testWidgets('склейка, в которой слышна реплика собеседника, выбрасывается как эхо (Ч.1.5)', (
+    tester,
+  ) async {
+    final mic = _DrivenRecognizer();
+    final answers = <SessionAnswer>[];
+    await tester.pumpWidget(
+      host(
+        runCard(),
+        run: const SceneRunKnobs(),
+        recognizer: mic,
+        roleLineText: 'What seems to be the problem today?',
+        onAnswered: answers.add,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(mic.calls, 1);
+
+    // Эхо динамика: реплика роли целиком, ключа нет.
+    mic.say('what seems to be the problem today');
+    mic.close(const SpeechAttempt.heard('what seems to be the problem today'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // Не ответ и не ошибка: журнал пуст, микрофон переоткрыт.
+    expect(answers, isEmpty);
+    expect(mic.calls, 2);
+
+    // Человек: упрощённый ключ (`speaking_keys`) засчитан по дороге — Ч.1.6.
+    mic.say('fever');
+    await tester.pumpAndSettle();
+    expect(answers, hasLength(1));
+    expect(answers.single.verdict, LocalCheck.correct);
+  });
+
+  testWidgets('обрыв на полуслове — «скажи ещё раз», журнал не пишется, микрофон открывается снова (Ч.1.4)', (
+    tester,
+  ) async {
+    final mic = _DrivenRecognizer();
+    final answers = <SessionAnswer>[];
+    await tester.pumpWidget(
+      host(runCard(), run: const SceneRunKnobs(), recognizer: mic, onAnswered: answers.add),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    mic.say('my child has');
+    mic.close(const SpeechAttempt.unavailable());
+    await tester.pump();
+
+    expect(answers, isEmpty);
+    expect(find.textContaining('Не расслышали до конца'), findsOneWidget);
+
+    // Вторая попытка — сама, без нажатий: прогон открыл микрофон, прогону его и переоткрывать.
+    await tester.pump(const Duration(seconds: 1));
+    expect(mic.calls, 2);
+  });
+}
+
+/// Плагин под управлением теста — частичные результаты и исход кладёт сам тест.
+class _DrivenRecognizer implements SpeechRecognizer {
+  int calls = 0;
+  Completer<SpeechAttempt>? _pending;
+  ValueChanged<String>? _onPartial;
+
+  @override
+  bool get isReady => true;
+
+  @override
+  Future<bool> prepare() async => true;
+
+  @override
+  Future<bool> get hasPermission async => true;
+
+  @override
+  Future<SpeechAttempt> listenOnce({
+    required List<String> expected,
+    required String localeId,
+    Duration timeout = const Duration(seconds: 8),
+    Duration pauseFor = const Duration(seconds: 2),
+    List<String> contextualStrings = const [],
+    ValueChanged<String>? onPartial,
+  }) {
+    calls++;
+    _onPartial = onPartial;
+    final completer = Completer<SpeechAttempt>();
+    _pending = completer;
+
+    return completer.future;
+  }
+
+  void say(String text) => _onPartial?.call(text);
+
+  void close(SpeechAttempt attempt) {
+    final pending = _pending;
+    _pending = null;
+    if (pending != null && !pending.isCompleted) pending.complete(attempt);
+  }
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> cancel() async => close(const SpeechAttempt.silent());
 }
 
 /// Аутентификация, отвечающая заранее известным пользователем — дверь QA решает СЕРВЕР.

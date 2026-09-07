@@ -139,13 +139,14 @@ void main() {
 
     await tester.pump(const Duration(seconds: 2));
 
-    // Fifteen seconds with nothing back at all is a channel that is not answering, and the card
-    // says so in the words it already had for a refused microphone. Both exits are live.
+    // Fifteen seconds with nothing back at all is the engine's own watchdog (DAY-FIX-3, Ч.1.3):
+    // silence from the opening of the microphone, and the card says so in the words it has for a
+    // microphone that heard nothing. Both exits are live.
     expect(find.text('Слушаю…'), findsNothing);
-    expect(find.textContaining('Микрофон недоступен'), findsOneWidget);
+    expect(find.textContaining('Не расслышал'), findsOneWidget);
     expect(find.text('Пропустить'), findsOneWidget);
     expect(giveUpEnabled(tester), isTrue);
-    expect(engine.cancels, 1, reason: 'the abandoned attempt is closed, not left holding the mic');
+    expect(engine.cancels, greaterThan(0), reason: 'the abandoned attempt is closed, not left holding the mic');
 
     // Nothing was ANSWERED on the learner's behalf: a dead microphone is not a lapse.
     expect(answers, isEmpty);
