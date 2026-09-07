@@ -14,6 +14,8 @@ import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/speech_probe_channel.dart';
+
 /// Микрофон, которого не бывает на симуляторе: прогон открывает его сам, и без подмены тест мерил
 /// бы плагин, а не экран. Молчит всегда — это и есть тот случай, ради которого существуют сторож и
 /// «Пропустить».
@@ -56,6 +58,9 @@ class _SilentRecognizer implements SpeechRecognizer {
 /// Ступень C: с экрана убрали всё, кроме подсказки на языке поддержки и микрофона. Здесь прибито
 /// именно это «убрали»: реплики нет, ключа нет, вариантов нет, клавиатуры нет — и выход есть.
 void main() {
+  // Ответ ОС про разрешения — {@see mockSpeechProbe}: на карточке прогона есть микрофон.
+  mockSpeechProbe();
+
   const line = 'My child has a fever';
   const key = 'a fever';
 

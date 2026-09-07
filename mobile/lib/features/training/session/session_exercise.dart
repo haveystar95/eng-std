@@ -18,6 +18,7 @@ import '../../../data/perf_log.dart';
 import '../../../data/practice/practice_mode_selector.dart' show TermPlayability;
 import '../../../data/providers.dart';
 import '../../../data/speech/speech_diagnostics.dart';
+import '../../profile/qa_speech_view.dart';
 import '../../../data/speech/speech_recognizer.dart';
 import '../../../data/speech/speech_turn.dart';
 import 'session_grading.dart';
@@ -590,6 +591,27 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_answered) return;
     final knobs = widget.sceneRun;
 
+    // ЧЕРЕЗ ДВИЖОК, А НЕ МИМО НЕГО (наряд DAY-GATE-1, доработка Ч.3). Пока микрофон открыт, текст
+    // въезжает в ход тем же путём, каким въехал бы частичный результат плагина: склейка, первое
+    // слово, сторож, эхо-замок, проверка ключа, журнал. Подстановка, обходившая движок, проверяла
+    // КАРТОЧКУ и не проверяла ничего из починенного в Ч.0 — а на симуляторе микрофона нет, и
+    // другого способа увидеть эти состояния живьём не существует.
+    //
+    // «Сразу» и «не сразу» теперь не подделываются штампом: медленный ход просто ЖДЁТ столько,
+    // сколько ждал бы человек, и время меряет сам движок. Один источник правды вместо двух.
+    if (_turn case final turn? when _listeningNow) {
+      final delay = fast || knobs == null
+          ? Duration.zero
+          : Duration(seconds: knobs.fastSeconds + 1);
+      _reopenTimer?.cancel();
+      _reopenTimer = Timer(delay, () {
+        if (mounted && !_answered && _listeningNow) turn.injectTranscript(text);
+      });
+
+      return;
+    }
+
+    // Микрофон не открыт (разогрев дня, спасатель): ответ подставляется напрямую, как и раньше.
     _reopenTimer?.cancel();
     unawaited(_turn?.cancel());
     setState(() => _listeningNow = false);
@@ -1058,6 +1080,12 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // каждой карточке говорения, не только в прогоне: разогрев дня тоже просит сказать вслух.
         if (!_answered && _isSpeaking && (ref.watch(authControllerProvider).value?.qaTools ?? false)) ...[
           const SizedBox(height: AppSpacing.s12),
+          // СЛУЖЕБНАЯ СТРОКА ПРЯМО У МИКРОФОНА (наряд DAY-GATE-1, доработка Ч.3): стадию хода надо
+          // видеть В МОМЕНТ хода, а не на другом экране после него — `listening` живёт секунды.
+          if (_diagnostics case final diagnostics?) ...[
+            QaSpeechView(diagnostics: diagnostics, localeId: widget.speechLocaleId),
+            const SizedBox(height: AppSpacing.s8),
+          ],
           _QaTranscriptRow(
             onSaid: (fast) => _substituteTranscript(
               _card.spokenTarget ?? _card.answerText,

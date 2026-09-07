@@ -166,6 +166,12 @@ class SpeechTurn {
   Timer? _silenceTimer;
   Timer? _maxSpeechTimer;
   Timer? _skipTimer;
+
+  /// Ручки текущего хода — их же дёргает [injectTranscript], чтобы подстановка шла ТОЙ ЖЕ дорогой,
+  /// что и живой частичный результат, а не соседней.
+  ValueChanged<String>? _onPartial;
+  VoidCallback? _onSpeechStarted;
+  bool Function(String)? _isAnswer;
   bool _closing = false;
   bool _manualStop = false;
 
@@ -197,6 +203,9 @@ class SpeechTurn {
     _echoes = 0;
     _closing = false;
     _manualStop = false;
+    _onPartial = onPartial;
+    _onSpeechStarted = onSpeechStarted;
+    _isAnswer = isAnswer;
     diagnostics?.turnStarted();
 
     _armSkip();
@@ -400,6 +409,42 @@ class SpeechTurn {
       if (!isListening || _firstWordAt != null) return;
       _settle(SpeechTurnOutcome.silent, phase: SpeechPhase.closedByTimeout);
     });
+  }
+
+  /// ПОДСТАВИТЬ РАСПОЗНАННЫЙ ТЕКСТ В ОТКРЫТЫЙ ХОД — дев-дверь QA (наряд DAY-GATE-1, доработка Ч.3).
+  ///
+  /// Ведёт себя РОВНО как плагин, отдавший этот текст: обычная дорога частичного результата — первое
+  /// слово, таймеры, проверка ключа, журнал. Именно поэтому она здесь, а не в карточке: подстановка,
+  /// сделанная мимо движка, проверяет карточку и НЕ проверяет ничего из того, что чинилось в Ч.0 —
+  /// склейку, сторож, эхо-замок, стадии. На симуляторе микрофона нет, и без этой двери пять починок
+  /// остаются теорией.
+  ///
+  /// Возвращает false, когда хода нет: тогда вызывающий подставляет ответ по-старому, напрямую.
+  /// Ничего не ослабляет — ни разрешений, ни окон: это тот же путь, по которому едет живая речь.
+  bool injectTranscript(String text) {
+    final turn = _turn;
+    if (turn == null || turn.isCompleted || _closing) return false;
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return false;
+
+    _partial = trimmed;
+    if (_firstWordAt == null) {
+      _firstWordAt = _now();
+      _skipTimer?.cancel();
+      _armMaxSpeech();
+      diagnostics?.phaseIs(SpeechPhase.listening);
+      _onSpeechStarted?.call();
+    }
+    _armSilence();
+    diagnostics?.partial(transcript);
+    _onPartial?.call(transcript);
+    // Ключ узнан по дороге — договорил, ровно как с живым голосом. Не узнан — попытку закроет
+    // тишина, и это тоже настоящий путь.
+    if (_isAnswer != null && _isAnswer!(transcript)) {
+      _settle(SpeechTurnOutcome.heard, phase: SpeechPhase.closedByAnswer);
+    }
+
+    return true;
   }
 
   /// «Готово»: закрыть попытку тем, что есть. Плагин отдаст свой последний кусок, и он войдёт в

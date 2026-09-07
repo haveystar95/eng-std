@@ -385,6 +385,74 @@ void main() {
     });
   });
 
+  // ПРАВИЛО: наряд DAY-GATE-1, доработка Ч.3 — подстановка транскрипта едет ТЕМ ЖЕ путём, что и
+  // живой частичный результат, а не мимо движка.
+  // ЛОВИТ: дверь QA, которая коротит движок. Микрофона на симуляторе нет, и подстановка — это
+  // единственный способ увидеть склейку, сторож, проверку ключа и стадии живьём; подстановка,
+  // обходящая их, проверяет карточку и объявляет проверенным всё остальное.
+  test('подставленный транскрипт закрывает ход ключом — как живая речь', () {
+    fakeAsync((fake) {
+      final diagnostics = SpeechDiagnostics(channel: const MethodChannel('test/absent'));
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config, diagnostics: diagnostics);
+      SpeechTurnResult? result;
+      final partials = <String>[];
+      turn
+          .listen(
+            expected: const ['my back hurts'],
+            localeId: 'en_US',
+            isAnswer: (t) => t.contains('back hurts'),
+            onPartial: partials.add,
+          )
+          .then((r) => result = r);
+      fake.flushMicrotasks();
+
+      expect(turn.injectTranscript('my back hurts'), isTrue);
+      fake.flushMicrotasks();
+
+      // Ключ узнан по дороге — ход закрыт им, а не тишиной, и журнал говорит именно это.
+      expect(result?.outcome, SpeechTurnOutcome.heard);
+      expect(result?.transcript, 'my back hurts');
+      expect(result?.speechStartedAt, isNotNull, reason: '«сразу» меряется от первого слова');
+      expect(partials, contains('my back hurts'));
+      expect(diagnostics.phase, SpeechPhase.closedByAnswer);
+    });
+  });
+
+  test('подставленный НЕ ключ ждёт тишину, как живая речь мимо ключа', () {
+    fakeAsync((fake) {
+      final diagnostics = SpeechDiagnostics(channel: const MethodChannel('test/absent'));
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config, diagnostics: diagnostics);
+      SpeechTurnResult? result;
+      turn
+          .listen(
+            expected: const ['my back hurts'],
+            localeId: 'en_US',
+            isAnswer: (t) => t.contains('back hurts'),
+          )
+          .then((r) => result = r);
+      fake.flushMicrotasks();
+
+      turn.injectTranscript('my leg is fine');
+      fake.flushMicrotasks();
+      // Ход ещё открыт и СЛУШАЕТ — это то состояние, которого не было видно ничем.
+      expect(result, isNull);
+      expect(diagnostics.phase, SpeechPhase.listening);
+
+      fake.elapse(const Duration(seconds: 3));
+      expect(result?.outcome, SpeechTurnOutcome.heard);
+      expect(result?.transcript, 'my leg is fine');
+      expect(diagnostics.phase, SpeechPhase.closedBySilence);
+    });
+  });
+
+  test('подстановка в закрытый ход отбивается, а не притворяется услышанной', () {
+    final turn = SpeechTurn(_DrivenRecognizer(), config: config);
+
+    expect(turn.injectTranscript('my back hurts'), isFalse);
+  });
+
   // ПРАВИЛО: наряд DAY-GATE-1, Ч.0.1 — служебная строка называет стадию хода и код отказа.
   // ЛОВИТ: строку, которая показывает «listening» после того, как ход закрылся, и «closedBySilence»
   // там, где канал упал. Диагностика, врущая о состоянии, хуже её отсутствия: 07.09 сутки ушли
