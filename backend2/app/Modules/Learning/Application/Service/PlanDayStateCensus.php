@@ -92,7 +92,15 @@ final readonly class PlanDayStateCensus
         }
 
         if (($day !== null && $day->status() === PlanDayStatus::Done) || ($view !== null && $view->passed)) {
-            return new PlanDayStateView(PlanDayState::Done, 0, 0, dayStages: $view === null ? [] : $view->stages);
+            // ДЕНЬ ПРОЙДЕН — И ЭТАПЫ ГОВОРЯТ ТО ЖЕ. Вердикт, записанный в строку, сильнее пересчёта:
+            // так же его читают фокус ({@see PlanProgress::focusOf()}) и замок
+            // ({@see \App\Modules\Learning\Application\Command\BuildPlanSessionHandler::lockedBy()}).
+            // Отдать при этом список, где «Разговор» стоит текущим, значит выдать экрану пейлоад,
+            // который спорит сам с собой: день «пройден», а этап в нём «сейчас».
+            //
+            // Разойтись они могут только на дне, закрытом СТАРЫМ правилом (до наряда DAY-GATE-1):
+            // у нового дня строка становится `done` ровно тогда, когда пройдены все три этапа.
+            return new PlanDayStateView(PlanDayState::Done, 0, 0, dayStages: self::allDone($view));
         }
 
         if ($view === null || $view->termIds === []) {
@@ -152,6 +160,25 @@ final readonly class PlanDayStateCensus
         };
 
         return $this->priced($state, $material, $conversation, $dayStages);
+    }
+
+    /**
+     * Этапы пройденного дня — все три `done`, в каноническом порядке.
+     *
+     * @return list<array{stage: PlanDayStage, state: PlanDayStageState, cards: int}>
+     */
+    private static function allDone(?PlanDayProgressView $view): array
+    {
+        if ($view === null) {
+            return [];
+        }
+
+        $out = [];
+        foreach (PlanDayStage::REQUIRED as $stage) {
+            $out[] = ['stage' => $stage, 'state' => PlanDayStageState::Done, 'cards' => 0];
+        }
+
+        return $out;
     }
 
     /**
