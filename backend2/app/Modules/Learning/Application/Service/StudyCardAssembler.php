@@ -681,22 +681,54 @@ final readonly class StudyCardAssembler
         ?PlanTurnLevel $turnLevel = null,
     ): ?SessionCardView {
         if ($mode === ExerciseMode::SituationalHear) {
+            // ИЗ ЧЕГО БЫВАЮТ ВАРИАНТЫ ТАКТА «ЧТО ТЕБЕ СКАЗАЛИ?» (наряд DAY-FIX-3, Ч.2.2). When
+            // the plan has named the pool — role lines of ANOTHER function, no paraphrase of the
+            // right one or of each other, own scene first ({@see \App\Modules\Learning\Domain\Service\PlanHearOptions})
+            // — it is the whole list of legitimate wrong meanings, in that order. The neighbours
+            // are narrowed to it before any shape or length gate: a meaning from outside it is a
+            // coin toss written into an append-only log, which is what the live run photographed
+            // («Anything else?» beside «Do you have any questions?»).
+            $pools = [$neighbours];
+            if ($answerPoolIds !== null) {
+                $byId = [];
+                foreach ($neighbours as $neighbour) {
+                    $byId[$neighbour['term_id']] = $neighbour;
+                }
+                $narrowed = [];
+                foreach ($answerPoolIds as $id) {
+                    if (isset($byId[$id])) {
+                        $narrowed[] = $byId[$id];
+                    }
+                }
+                if (isset($byId[$view->termId->value])) {
+                    $narrowed[] = $byId[$view->termId->value];
+                }
+                // THE NARROWED POOL FIRST, THE OLD NEIGHBOURS BEHIND IT. A scene whose role lines
+                // all serve one function (a fixture, a thin day) leaves the rule with nothing to
+                // offer, and a такт-1 card that is refused is a stage B that never closes and a day
+                // that never passes — the checklist owes this step ({@see PlanStandings}) and
+                // cannot see the function rule. Falling back is what keeps the rule a preference
+                // the day cannot starve on.
+                $pools = [$narrowed, $neighbours];
+            }
             // THE LENGTH BAND GIVES WAY BEFORE THE CARD DOES (наряд DAY-FIX-2): the interlocutor's
             // line has to be understood, and a scene's five questions are rarely of one length —
             // «Is it getting worse?» beside «How long have you had this pain?» left the live run
             // without its такт 1, the line without its stage B, and the day without its «пройден».
             // Among the plan's own questions a longer wrong answer is still a wrong answer.
-            foreach ([[$choiceFloor, false], [self::MIN_OPTIONS, false], [$choiceFloor, true], [self::MIN_OPTIONS, true]] as [$floor, $anyLength]) {
-                $card = $this->recognitionCard(
-                    $user, $view, $content,
-                    LearningLadder::STEP_RECOGNITION_FORWARD,
-                    $neighbours, $cardIndex, $supportLang, $optionCount, $floor,
-                    as: $mode,
-                    reportedStep: $step,
-                    anyLength: $anyLength,
-                );
-                if ($card !== null) {
-                    return $card;
+            foreach ($pools as $pool) {
+                foreach ([[$choiceFloor, false], [self::MIN_OPTIONS, false], [$choiceFloor, true], [self::MIN_OPTIONS, true]] as [$floor, $anyLength]) {
+                    $card = $this->recognitionCard(
+                        $user, $view, $content,
+                        LearningLadder::STEP_RECOGNITION_FORWARD,
+                        $pool, $cardIndex, $supportLang, $optionCount, $floor,
+                        as: $mode,
+                        reportedStep: $step,
+                        anyLength: $anyLength,
+                    );
+                    if ($card !== null) {
+                        return $card;
+                    }
                 }
             }
 

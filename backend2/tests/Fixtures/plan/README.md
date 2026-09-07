@@ -58,6 +58,17 @@ wait here.» — по канону починки живут у спасател
 счётчик `plan_day_hear_translation_missing_key` на чистой фикстуре не должен подниматься). На ней стоят
 `PlanSchemaShapeTest`, `PlanFixturePathTest` и `PlanPairCourtTest`.
 
+## Форма дня — пары и тематические слова (v0.8)
+
+`s1-day1.v0.8.json` — та же сцена S1 в форме P2 v0.8 (наряд DAY-FIX-3, Ч.2.1): у каждой карточки
+`words`/`chunks` — `topical`; четыре слова и две связки из реплик (`topical: false`) плюс шесть
+тематических слов ситуации, которых в репликах нет (`prescription`, `insurance`, `test results`,
+`waiting room`, `pharmacy`, `symptoms`; `topical: true`) — они остаются в дне, потому что помечены,
+а не потому, что стоят в реплике. На ней стоят `PlanSchemaShapeTest` и `PlanTopicalWordsTest`;
+v0.7 схема больше не принимает (`topical` обязателен), но `PlanGen1CanonTest` и
+`PlanPairCourtTest` читают v0.7 через фейк модели, который схему не проверяет, — старый день
+читается композером как «ничего не по теме».
+
 ## История
 
 Фикстура `s1-day1.v0.6.json` (пары без `speaking_keys`, наряд DAY-FIX-2) удалена нарядом GEN-1:

@@ -447,6 +447,9 @@ final readonly class GeneratePlanDayHandler
             // THE SIMPLER FORMS beside the key (P2 v0.7, канон Y4) — written for a spoken line,
             // null for everything else, exactly as they arrived from the day.
             speakingKeys: $item->speakingKeys === [] ? null : $item->speakingKeys,
+            // A TOPICAL WORD of the situation (v0.8) — the day screen's «по теме», and the first
+            // thing the sitting planner trims when the material runs over its ceiling.
+            topical: $item->topical,
         );
 
         // AN EXAMPLE BELONGS TO A WORD OR A CONNECTOR, AND TO NOTHING ELSE (канон §7,

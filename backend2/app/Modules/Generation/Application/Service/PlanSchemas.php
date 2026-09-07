@@ -152,6 +152,10 @@ final class PlanSchemas
         $line = self::object([...$assembled, 'transliteration' => self::string(), 'speaking_keys' => self::arrayOf(self::string())]);
         $number = self::object([...$assembled, 'value' => self::string()]);
 
+        // v0.8 (наряд DAY-FIX-3, Ч.2.1): a word or chunk says whether it is a PIECE OF THE LINES
+        // or a TOPICAL word of the situation. Required by strict mode, so the model has to decide
+        // for every card; the composer keeps a topical card that stands in no line and drops an
+        // unmarked one ({@see PlanDayComposer::pruneUnspoken()}).
         $word = self::object([
             ...$common,
             'text' => self::string(),
@@ -159,6 +163,7 @@ final class PlanSchemas
             'example' => self::string(),
             'example_translation' => self::string(),
             'image_api_prompt' => self::string(),
+            'topical' => ['type' => 'boolean'],
         ]);
 
         $chunk = self::object([
@@ -167,6 +172,7 @@ final class PlanSchemas
             'transliteration' => self::string(),
             'example' => self::string(),
             'example_translation' => self::string(),
+            'topical' => ['type' => 'boolean'],
         ]);
 
         // v0.3 asked for a seventh array, `known`: fresh examples for the terms an earlier day of
@@ -300,6 +306,9 @@ final class PlanSchemas
             // other kind answers null. Nullable rather than absent, because strict mode lists every
             // property and the card shape is one for all kinds.
             'speaking_keys' => ['type' => ['array', 'null'], 'items' => self::string()],
+            // v0.8: a repaired word or chunk says again whether it is topical; every other kind
+            // answers null and keeps what it had.
+            'topical' => ['type' => ['boolean', 'null']],
         ]);
 
         // The SHELF is the first half of an address, and a repaired card goes back onto the shelf

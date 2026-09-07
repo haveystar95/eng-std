@@ -184,6 +184,7 @@ final class EloquentTermContentReader implements TermContentReader
                 shelf: $term->shelf !== null ? (string) $term->shelf : null,
                 tier: $term->tier !== null ? (string) $term->tier : null,
                 skillRef: $term->skill_ref !== null ? (string) $term->skill_ref : null,
+                topical: (bool) ($term->topical ?? false),
             );
         }
 

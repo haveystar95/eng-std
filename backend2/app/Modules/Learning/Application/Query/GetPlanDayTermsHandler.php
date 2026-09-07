@@ -194,6 +194,7 @@ final readonly class GetPlanDayTermsHandler
             nextStep: $t->nextStep,
             mark: $t->mark,
             thenStep: $t->thenStep,
+            topical: $t->topical,
         ), $terms);
     }
 
@@ -234,6 +235,7 @@ final readonly class GetPlanDayTermsHandler
                 nextStep: self::nextStepOf($standing, $content->shelf, $index < $dayBeingRead),
                 mark: self::markOf($standing, isset($said[$termId])),
                 thenStep: self::thenStepOf($standing, $content->shelf, $index < $dayBeingRead),
+                topical: $content->topical,
             );
         }
 

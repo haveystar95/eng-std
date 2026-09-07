@@ -66,5 +66,11 @@ interface TermPlanFactsWriter
          * @var list<string>|null
          */
         ?array $speakingKeys = null,
+        /**
+         * A TOPICAL WORD of the situation rather than a piece of the scene's lines (P2 v0.8, наряд
+         * DAY-FIX-3): trained as a word, never in the dialogue, captioned «по теме» on the day
+         * screen. False for everything else.
+         */
+        bool $topical = false,
     ): void;
 }

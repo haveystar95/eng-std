@@ -105,10 +105,16 @@ it('lets P2 answer with a day-scene as PAIRS plus the three written shelves (v0.
         ->and(array_keys($schema['properties']['pairs']['items']['properties']))->toBe(['kind', 'role', 'you'])
         ->and($schema['properties']['pairs']['items']['properties']['kind']['enum'])->toBe(['answer', 'ask']);
 
-    expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.7.json')))->toBe([]);
+    expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.8.json')))->toBe([]);
 
-    // …and the v0.4 shape is exactly what the schema refuses now.
-    expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.4.json')))->not->toBe([]);
+    // …and the v0.4 shape is exactly what the schema refuses now — and so is v0.7, whose words
+    // do not say whether they are topical (наряд DAY-FIX-3, Ч.2.1): the mark is REQUIRED, so a
+    // model cannot leave a word undecided.
+    expect(schemaMisfits($schema, planFixtureJson('s1-day1.v0.4.json')))->not->toBe([])
+        ->and(schemaMisfits($schema, planFixtureJson('s1-day1.v0.7.json')))->not->toBe([]);
+    $topical = $schema['properties']['words']['items']['properties']['topical'] ?? null;
+    expect($topical)->toBe(['type' => 'boolean'])
+        ->and($schema['properties']['chunks']['items']['properties']['topical'] ?? null)->toBe(['type' => 'boolean']);
 });
 
 it('turns skill_ref into an enum of the scene ids when the caller knows them', function () {

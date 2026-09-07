@@ -132,7 +132,7 @@ final class PlanMapper
      * fallback ({@see \App\Modules\Learning\Domain\Service\PlanDialogueChain}) builds a whole
      * conversation out of the shelves, and half a stored conversation is worse than a derived one.
      *
-     * @return list<array{turn: string, term_id: string}>|null
+     * @return list<array{turn: string, term_id: string, pair?: string|null}>|null
      */
     private static function dialogueOf(PlanDayModel $row): ?array
     {
@@ -145,7 +145,15 @@ final class PlanMapper
             if (! is_string($turn['turn'] ?? null) || ! is_string($turn['term_id'] ?? null)) {
                 return null;
             }
-            $out[] = ['turn' => $turn['turn'], 'term_id' => $turn['term_id']];
+            // THE PAIR'S TYPE RIDES WITH THE TURN (v0.6) — and it was being dropped right here on
+            // every read, so `turns[].pair` was null on the wire for every day ever written
+            // (found by наряд DAY-FIX-3, Ч.2.2: the function of a role line — invitation or
+            // question — is what the такт-1 options are chosen by). Null on a chain a v0.5 answer wrote.
+            $out[] = [
+                'turn' => $turn['turn'],
+                'term_id' => $turn['term_id'],
+                'pair' => is_string($turn['pair'] ?? null) ? $turn['pair'] : null,
+            ];
         }
 
         return $out;

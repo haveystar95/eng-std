@@ -35,6 +35,7 @@ use App\Modules\Learning\Domain\Repository\PlanTermStageRepository;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
 use App\Modules\Learning\Domain\Service\PlanAnswerOptions;
 use App\Modules\Learning\Domain\Service\PlanDialogueChain;
+use App\Modules\Learning\Domain\Service\PlanHearOptions;
 use App\Modules\Learning\Domain\Service\PlanKnobSupport;
 use App\Modules\Learning\Domain\Service\PlanSessionSections;
 use App\Modules\Learning\Domain\Service\PlanSittings;
@@ -42,6 +43,7 @@ use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\Service\SituationalPrompt;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
+use App\Modules\Learning\Domain\ValueObject\PlanDialogueMove;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\PlanKnobs;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
@@ -372,7 +374,25 @@ final readonly class BuildPlanSessionHandler
      */
     private function answerPoolFor(string $termId, TermContentView $content, mixed $day, array $scenes, array $chains): ?array
     {
-        if ($scenes === [] || ! PlanAnswerOptions::isSpokenShelf($content->shelf)) {
+        if ($scenes === []) {
+            return null;
+        }
+
+        // ВАРИАНТЫ ТАКТА «ЧТО ТЕБЕ СКАЗАЛИ?» (наряд DAY-FIX-3, Ч.2.2): реплики роли другой
+        // функции, без перефразов правильной и друг друга; своя сцена первой, потом другие сцены
+        // плана ({@see PlanHearOptions}). Функцию реплики роли знает цепочка — роль `ask`-пары
+        // приглашает, остальные служат своему умению.
+        if ($content->shelf === PlanHearOptions::SHELF_HEAR) {
+            return PlanHearOptions::forLine(
+                new SituationalCandidate($termId, $content->shelf, $content->skillRef, $content->text),
+                array_map(static fn (array $scene): array => $scene['cards'], $scenes),
+                $day === null ? null : (int) $day,
+                self::roleFunctions($chains),
+                self::saidBefore($termId, $day === null ? null : (int) $day, $chains),
+            );
+        }
+
+        if (! PlanAnswerOptions::isSpokenShelf($content->shelf)) {
             return null;
         }
 
@@ -382,6 +402,28 @@ final readonly class BuildPlanSessionHandler
             $day === null ? null : (int) $day,
             self::saidBefore($termId, $day === null ? null : (int) $day, $chains),
         );
+    }
+
+    /**
+     * THE FUNCTION OF EVERY ROLE LINE the sitting's conversations know: the role of an `ask` pair
+     * is an INVITATION whatever its skill says, and two invitations are one function
+     * ({@see PlanHearOptions::FUNCTION_INVITATION}). Every other role line answers by its skill.
+     *
+     * @param  list<PlanDialogueView>  $chains
+     * @return array<string, string>
+     */
+    private static function roleFunctions(array $chains): array
+    {
+        $out = [];
+        foreach ($chains as $chain) {
+            foreach ($chain->turns as $turn) {
+                if ($turn->turn === PlanDialogueMove::ROLE && $turn->pairKind === PlanDialogueMove::PAIR_ASK) {
+                    $out[$turn->termId] = PlanHearOptions::FUNCTION_INVITATION;
+                }
+            }
+        }
+
+        return $out;
     }
 
     /**

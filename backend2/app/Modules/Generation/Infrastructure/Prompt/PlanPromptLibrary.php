@@ -88,7 +88,7 @@ final class PlanPromptLibrary implements PlanPromptSource
      * the exact meaning; a word or chunk stands in a line of the scene or is dropped; an `ask`
      * pair's role line is an invitation; a number's `value` is digits.
      */
-    public const DAY_VERSION = 'plan_day.v0.7';
+    public const DAY_VERSION = 'plan_day.v0.8';
 
     /**
      * P2J — four questions about one pair, not one (v0.2, наряд GEN-1, Ч.5.2).

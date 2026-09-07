@@ -431,6 +431,10 @@ final readonly class PlanDayRepairer
                 // The keys come back with the fixed line, or the card keeps the ones it had: a
                 // repair that only touched the example must not strip a spoken line of its keys.
                 speakingKeys: PlanDayComposer::speakingKeysOf($card['speaking_keys'] ?? null) ?: $item->speakingKeys,
+                // The topical mark comes back with the fixed card, or the card keeps the one it
+                // had — a repair that only touched the example must not turn a topical word into
+                // a piece of the lines (v0.8).
+                topical: is_bool($card['topical'] ?? null) ? $card['topical'] : $item->topical,
             );
         }
 

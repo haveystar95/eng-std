@@ -157,7 +157,12 @@ it('judges a pair again after a repair rewrote its reply, and drops the pair on 
         ->and($texts)->toContain('I need to check in, please.');
 });
 
-it('stores speaking_keys on the term, sends them on the card, and grades by them only behind the toggle', function () {
+it('stores speaking_keys on the term, sends them on the card, and grades by the key alone with the toggle OFF', function () {
+    // The toggle is ON by default since DAY-FIX-3 (Ч.1.6); this test pins the OTHER position — the
+    // rollback of a client that judges by one key — and has to set it BEFORE the first request:
+    // the router keeps the controller, and the handler built into it, for the life of the test.
+    config(['learning.plan.speaking_keys_graded' => false]);
+
     [$planId, $model, $token] = runGen1PlanWith(new ScriptedPlanModel([$this->day]), $this->defects);
 
     $row = gen1DayRow($planId);
@@ -178,7 +183,7 @@ it('stores speaking_keys on the term, sends them on the card, and grades by them
         expect($task['card'])->toHaveKey('speaking_keys');
     }
 
-    // THE GRADER, toggle OFF (the default): the simpler form is «again».
+    // THE GRADER, toggle OFF: the simpler form is «again».
     $seq = 0;
     $speak = function (string $response) use ($token, $line, &$seq): string {
         $reviewId = Ulid::generate();
@@ -205,10 +210,13 @@ it('stores speaking_keys on the term, sends them on the card, and grades by them
         ->and($speak('it hurts in my lower back'))->not->toBe('again');
 });
 
-it('grades by the simpler forms once the toggle is on', function () {
-    // Set BEFORE the first request: the router keeps the controller — and the handler built into
-    // it — for the life of the test, so a toggle flipped mid-test would not be read.
-    config(['learning.plan.speaking_keys_graded' => true]);
+it('grades by the simpler forms BY DEFAULT — the grader is never stricter than the phone (DAY-FIX-3, Ч.1.6)', function () {
+    // THE LOCK on the contract invariant: the client judges a spoken line by `speaking_key` PLUS
+    // `speaking_keys` (`SessionCard.spokenTargets`), so the server must accept the same list out
+    // of the box. Nothing is set here on purpose — the default of `config/learning.php` is what is
+    // under test; flipping it off would make the phone show «верно» over an answer the log grades
+    // `again`, which is the one direction the pair is forbidden to drift.
+    expect(config('learning.plan.speaking_keys_graded'))->toBeTrue();
 
     [$planId, $model, $token] = runGen1PlanWith(new ScriptedPlanModel([$this->day]), $this->defects);
     $line = DB::table('terms')->where('text', 'It hurts in my lower back.')->first();

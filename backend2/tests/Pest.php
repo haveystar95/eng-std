@@ -646,6 +646,8 @@ function planItems(array $day): array
                 speakingKeys: $assembled && ! $shelf->isRole() && $shelf !== \App\Modules\Generation\Domain\ValueObject\PlanShelf::Numbers
                     ? \App\Modules\Generation\Application\Service\PlanDayComposer::speakingKeysOf($card['speaking_keys'] ?? null)
                     : [],
+                // v0.8: a word or chunk says whether it is topical, read the way the composer reads it.
+                topical: ! $assembled && ($card['topical'] ?? false) === true,
             );
         }
     }

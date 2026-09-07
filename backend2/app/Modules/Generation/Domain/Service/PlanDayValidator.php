@@ -336,9 +336,15 @@ final class PlanDayValidator
         'hear' => [4, 6],
         'say' => [4, 6],
         'ask' => [2, 3],
-        'words' => [6, 8],      // words + chunks together
+        'words' => [6, 8],      // words + chunks together (a six-shelf day); pieces of the lines alone on a paired one
         'numbers' => [2, 4],
     ];
+
+    /** A PAIRED day (v0.7+): pieces of the lines — words and chunks that stand in a line. */
+    private const PIECES_GUIDE = [4, 6];
+
+    /** A v0.8 day: TOPICAL words of the situation beside the pieces (наряд DAY-FIX-3, Ч.2.1). */
+    private const TOPICAL_GUIDE = [6, 10];
 
     /**
      * The length of a card, by what it is — канон §7, in words.
@@ -1315,6 +1321,16 @@ final class PlanDayValidator
             unset($guide['say'], $guide['ask']);
             $guide['pairs'] = [self::MIN_PAIRS, 6];
             $counted['pairs'] = $counted['say'] + $counted['ask'];
+            // …and its pieces are counted APART from the topical words (v0.8, DAY-FIX-3): the
+            // pieces stand in the lines and are few, the topical words do not and are many, and
+            // one guide over both would call a healthy day short of pieces or long of words.
+            $topical = count(array_filter($this->substitutions($day), static fn (PlanDayItem $i): bool => $i->topical));
+            $guide['words'] = self::PIECES_GUIDE;
+            $counted['words'] -= $topical;
+            if ($day->expectsTopical) {
+                $guide['topical'] = self::TOPICAL_GUIDE;
+                $counted['topical'] = $topical;
+            }
         }
 
         $out = [];
@@ -1325,7 +1341,8 @@ final class PlanDayValidator
             }
 
             $label = match ($shelf) {
-                'words' => 'слов и связок',
+                'words' => 'слов и связок из реплик',
+                'topical' => 'тематических слов',
                 'pairs' => 'обменов',
                 default => "полка «{$shelf}»",
             };
@@ -1446,6 +1463,11 @@ final class PlanDayValidator
             $lines .= ' ' . $this->normalize($line->text) . ' ';
         }
         foreach ($this->substitutions($day) as $item) {
+            // A TOPICAL word (v0.8) is a word of the situation, not of the lines — standing in
+            // none of them is what it is for, not a defect (наряд DAY-FIX-3, Ч.2.1).
+            if ($item->topical) {
+                continue;
+            }
             $needle = $this->normalize($item->text);
             if ($needle === '' || str_contains($lines, ' ' . $needle . ' ')) {
                 continue;

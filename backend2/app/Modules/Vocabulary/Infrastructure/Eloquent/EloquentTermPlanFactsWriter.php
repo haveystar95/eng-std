@@ -25,6 +25,7 @@ final readonly class EloquentTermPlanFactsWriter implements TermPlanFactsWriter
         ?string $skillRef = null,
         ?string $numberValue = null,
         ?array $speakingKeys = null,
+        bool $topical = false,
     ): void {
         $keys = $speakingKeys === null ? [] : array_values(array_filter(
             array_map(static fn (string $k): string => trim($k), $speakingKeys),
@@ -48,6 +49,9 @@ final readonly class EloquentTermPlanFactsWriter implements TermPlanFactsWriter
                 'tier' => $tier,
                 'skill_ref' => $skillRef,
                 'number_value' => $numberValue,
+                // Written for every card, like the shelf: a term re-imported by a later day answers
+                // the question again, and yesterday's «по теме» must not survive today's line.
+                'topical' => $topical,
                 // A formula («Nice to meet you») has no slot, and an empty string would read as
                 // «a frame whose hole is at the start» to every regex downstream. Same for the
                 // filler: «nothing stands in the hole» and «there is no hole» are one state here.

@@ -133,6 +133,16 @@ final readonly class PlanDayItem
          * @var list<string>
          */
         public array $speakingKeys = [],
+        /**
+         * ТЕМАТИЧЕСКОЕ СЛОВО (P2 v0.8, наряд DAY-FIX-3, Ч.2.1): существительное или связка
+         * ситуации, которых в репликах сцены нет — «рецепт», «страховка» у врача. Правило Y5
+         * канона GEN-1 теперь двоякое: карточка `words`/`chunks` либо стоит в реплике, либо
+         * помечена так; больше ничего ({@see \App\Modules\Generation\Application\Service\PlanDayComposer::pruneUnspoken()}).
+         *
+         * Тренируется как обычное слово и в диалог не входит; экран дня подписывает его «по теме».
+         * False на всём, что не слово и не связка, и на всех днях, написанных до v0.8.
+         */
+        public bool $topical = false,
     ) {}
 
     /**
@@ -169,7 +179,22 @@ final readonly class PlanDayItem
             $this->text, $this->type, $this->kind, $this->isLine, $this->translation,
             $this->transliteration, $this->description, $this->example, $this->exampleTranslation,
             $this->frame, $this->filler, $this->speaker, $this->imageApiPrompt, $this->coversCheckpoint,
-            $this->index, $this->shelf, $skillRef, $this->value, $this->speakingKeys,
+            $this->index, $this->shelf, $skillRef, $this->value, $this->speakingKeys, $this->topical,
+        );
+    }
+
+    /**
+     * The same card, with its topical mark set — what {@see \App\Modules\Generation\Application\Service\PlanDayComposer::pruneUnspoken()}
+     * does to a «topical» card that turned out to stand in a line after all: it is a piece of the
+     * lines, and the mark would tell the day screen the opposite.
+     */
+    public function withTopical(bool $topical): self
+    {
+        return new self(
+            $this->text, $this->type, $this->kind, $this->isLine, $this->translation,
+            $this->transliteration, $this->description, $this->example, $this->exampleTranslation,
+            $this->frame, $this->filler, $this->speaker, $this->imageApiPrompt, $this->coversCheckpoint,
+            $this->index, $this->shelf, $this->skillRef, $this->value, $this->speakingKeys, $topical,
         );
     }
 

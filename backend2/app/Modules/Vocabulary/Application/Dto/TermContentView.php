@@ -122,5 +122,12 @@ final readonly class TermContentView
          * ({@see \App\Modules\Learning\Domain\Service\SituationalPrompt}).
          */
         public ?string $skillRef = null,
+        /**
+         * A TOPICAL WORD of its scene's situation rather than a piece of its lines (P2 v0.8, наряд
+         * DAY-FIX-3, Ч.2.1). Trained as a word, never in the dialogue; the day screen captions it
+         * «по теме» and the sitting planner trims it first when the material sitting runs over.
+         * False on everything that is not a v0.8 plan word.
+         */
+        public bool $topical = false,
     ) {}
 }

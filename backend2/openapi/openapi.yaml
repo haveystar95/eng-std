@@ -3166,6 +3166,14 @@ components:
             THE ROW'S MARK once the day has been walked (Ч.4.3): `passed` — met and closed its first
             rung; `said_self` — sounded in the learner's own voice in a scene run. Words, never
             numbers.
+        topical:
+          type: boolean
+          description: >-
+            «ПО ТЕМЕ» (наряд DAY-FIX-3, Ч.2.1 / Ч.5.4): a topical word of the situation that stands
+            in none of the scene's lines — «рецепт», «страховка» at the doctor's (P2 v0.8). Trained
+            as a word, never in the dialogue; the day screen captions it so the learner knows why it
+            does not sound in the conversation. False on every other row and on days written before
+            v0.8.
         tier:
           type: [string, 'null']
           enum: [speak, understand, null]

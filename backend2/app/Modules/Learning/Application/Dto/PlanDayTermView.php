@@ -81,6 +81,12 @@ final readonly class PlanDayTermView
          * ответ». Экран дня пишет оба слова, потому что человек увидит оба упражнения сегодня.
          */
         public ?string $thenStep = null,
+        /**
+         * СЛОВО «ПО ТЕМЕ» (наряд DAY-FIX-3, Ч.5.4): тематическое слово ситуации, которого в
+         * репликах сцены нет — экран дня подписывает его словами, чтобы человек понимал, почему
+         * его нет в диалоге. False у всего остального.
+         */
+        public bool $topical = false,
     ) {}
 
     public const STEP_MEET = 'meet';
@@ -126,6 +132,7 @@ final readonly class PlanDayTermView
             'next_step' => $this->nextStep,
             'then_step' => $this->thenStep,
             'mark' => $this->mark,
+            'topical' => $this->topical,
         ];
     }
 }

@@ -82,6 +82,13 @@ final readonly class PlanDayCandidate
          * answer written by shelves, where nothing was ever paired.
          */
         public bool $expectsPairs = false,
+        /**
+         * THIS ANSWER WAS ASKED FOR TOPICAL WORDS (P2 v0.8, наряд DAY-FIX-3, Ч.2.1) — the guide
+         * «6–10 тематических» is counted only on an answer whose cards carry the `topical` mark; a
+         * v0.7 day re-judged whole after a repair must not be counted short of a shelf its prompt
+         * never asked for.
+         */
+        public bool $expectsTopical = false,
     ) {}
 
     /** How many exchanges the chain holds — the learner's turns, which is one per pair. */

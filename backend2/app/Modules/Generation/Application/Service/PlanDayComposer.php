@@ -63,10 +63,16 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
  */
 final readonly class PlanDayComposer
 {
-    public const PROMPT_VERSION = 'plan_day.v0.7';
+    public const PROMPT_VERSION = 'plan_day.v0.8';
 
     /** Counter: a word or chunk that stood in no line of the scene and was dropped (GEN-1, канон Y5). */
     public const WORD_OUTSIDE_LINES_DROPPED = 'plan_day_word_outside_lines_dropped';
+
+    /**
+     * Counter: a card the model marked TOPICAL stands in a line after all — kept as an ordinary
+     * piece of the lines (`topical: false`), so the day screen's «по теме» never lies (DAY-FIX-3, Ч.2.1).
+     */
+    public const TOPICAL_IN_LINE = 'plan_day_topical_in_line';
 
     /** Counter: a misnumbered `skill_ref` brought back onto the scene's id ({@see PlanSkillRefNormalizer}). */
     public const SKILL_REF_REPAIRED = 'plan_day_skill_ref_repaired';
@@ -135,6 +141,9 @@ final readonly class PlanDayComposer
         // цепочкой, которая у пар одна: их порядок. Ответ старой формы (полками) проходит здесь
         // насквозь, и это то, что держит тесты на v0.4/v0.5 живыми.
         $expectsPairs = is_array($answer->payload['pairs'] ?? null);
+        // v0.8 ANSWERED WITH THE TOPICAL MARK on its words — the guide over topical words is
+        // counted on such an answer alone ({@see PlanDayValidator::warnShelfSizes()}).
+        $expectsTopical = $expectsPairs && self::carriesTopicalMark($answer->payload);
         $payload = $this->shelved($brief, $answer->payload);
         $items = $this->items($payload);
         // THE ORDER THE SCENE IS SPOKEN IN, read once. It survives a repair untouched: P2R is asked
@@ -146,7 +155,7 @@ final readonly class PlanDayComposer
             $items = $this->normalizeSkillRefs($brief, $items);
             $items = $this->pruneUnspoken($brief, $items);
         }
-        [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue, $expectsPairs);
+        [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue, $expectsPairs, $expectsTopical);
         $this->record($brief, $answer, $violations);
         $repairCalls = 0;
 
@@ -164,7 +173,7 @@ final readonly class PlanDayComposer
                     $items = $this->normalizeSkillRefs($brief, $items);
                     $items = $this->pruneUnspoken($brief, $items);
                 }
-                [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue, $expectsPairs);
+                [$violations, $candidate] = $this->judge($brief, $known, $rescue, $items, $dialogue, $expectsPairs, $expectsTopical);
                 $violations = [...$violations, ...$repair->violations];
             }
         }
@@ -338,7 +347,8 @@ final readonly class PlanDayComposer
     }
 
     /**
-     * СЛОВО, КОТОРОГО НЕТ НИ В ОДНОЙ РЕПЛИКЕ, В ДЕНЬ НЕ ПОПАДАЕТ (наряд GEN-1, канон Y5).
+     * СЛОВО, КОТОРОГО НЕТ НИ В ОДНОЙ РЕПЛИКЕ, В ДЕНЬ НЕ ПОПАДАЕТ — ЕСЛИ ОНО НЕ ТЕМАТИЧЕСКОЕ
+     * (наряд GEN-1, канон Y5; правка DAY-FIX-3, Ч.2.1).
      *
      * «Слова и связки — из этих же реплик» (канон §2) было счётчиком
      * ({@see PlanDayValidator::SUBSTITUTION_OUTSIDE_FRAME}), и живой прогон отдал 21 карточку из
@@ -346,11 +356,17 @@ final readonly class PlanDayComposer
      * карточка не чинится (чинить нечего — реплики целы) и не стоит повтора дня; она просто не
      * карточка ЭТОЙ сцены, и день пишется без неё.
      *
+     * С v0.8 у правила второй исход: карточка, которую модель пометила `topical: true`, — слово
+     * ситуации, а не реплики («рецепт» у врача), и в реплике стоять не обязана. Она остаётся.
+     * Обратный случай — «тематическая» карточка, которая в реплике всё-таки стоит, — остаётся
+     * обычным словом реплики (`topical: false`), потому что «по теме» на экране дня значит
+     * «этого нет в диалоге», и над словом из диалога это враньё.
+     *
      * Совпадение — по границам слов, регистр и пунктуация сняты, любая реплика сцены (роли или
      * ученика): то же правило, которым валидатор считал счётчик. Форма слова не угадывается —
-     * «hurt» при реплике «It hurts» отбрасывается, и промпт v0.7 просит писать карточку в той
-     * форме, в какой она стоит в реплике. Индексы остальных карточек не двигаются: адрес — позиция
-     * в ответе, а не в списке.
+     * «hurt» при реплике «It hurts» отбрасывается, и промпт просит писать карточку в той форме, в
+     * какой она стоит в реплике. Индексы остальных карточек не двигаются: адрес — позиция в
+     * ответе, а не в списке.
      *
      * @param  list<PlanDayItem>  $items
      * @return list<PlanDayItem>
@@ -375,6 +391,24 @@ final readonly class PlanDayComposer
 
             $needle = self::fold($item->text);
             if ($needle === '' || str_contains($lines, ' ' . $needle . ' ')) {
+                if ($item->topical) {
+                    $this->defects->warned(
+                        $brief->planId,
+                        $brief->dayIndex,
+                        self::TOPICAL_IN_LINE,
+                        "«{$item->text}» ({$item->arrayName()}[{$item->index}]) помечено тематическим, но стоит в реплике — оставлено словом реплики",
+                        counted: true,
+                    );
+                    $kept[] = $item->withTopical(false);
+
+                    continue;
+                }
+                $kept[] = $item;
+
+                continue;
+            }
+
+            if ($item->topical) {
                 $kept[] = $item;
 
                 continue;
@@ -540,7 +574,7 @@ final readonly class PlanDayComposer
      * @param  list<PlanDialogueTurn>  $dialogue
      * @return array{0: list<PlanViolation>, 1: PlanDayCandidate}
      */
-    private function judge(PlanDayGenerationBrief $brief, array $known, array $rescue, array $items, array $dialogue = [], bool $expectsPairs = false): array
+    private function judge(PlanDayGenerationBrief $brief, array $known, array $rescue, array $items, array $dialogue = [], bool $expectsPairs = false, bool $expectsTopical = false): array
     {
         $candidate = new PlanDayCandidate(
             supportLang: $brief->supportLang,
@@ -561,9 +595,30 @@ final readonly class PlanDayComposer
             // ПАРАМИ, значит и минимум пар судится (v0.6): суд мог выбросить лишнее, и сцена из
             // трёх обменов — не сцена. Ответ старой формы этого гейта не знает.
             expectsPairs: $expectsPairs,
+            expectsTopical: $expectsTopical,
         );
 
         return [$this->validator->validate($candidate), $candidate];
+    }
+
+    /**
+     * Did the answer write the v0.8 `topical` mark on its words? A payload without it is a v0.7
+     * answer, and the topical guide is not held against it.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private static function carriesTopicalMark(array $payload): bool
+    {
+        foreach ([PlanShelf::Words->value, PlanShelf::Chunks->value] as $shelf) {
+            $cards = is_array($payload[$shelf] ?? null) ? $payload[$shelf] : [];
+            foreach ($cards as $card) {
+                if (is_array($card) && array_key_exists('topical', $card)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -656,6 +711,7 @@ final readonly class PlanDayComposer
                 skillRef: $item->skillRef,
                 value: $item->value,
                 speakingKeys: $item->speakingKeys,
+                topical: $item->topical,
             );
         }
 
@@ -756,6 +812,10 @@ final readonly class PlanDayComposer
                     speakingKeys: $shelf->isAssembled() && ! $shelf->isRole() && $shelf !== PlanShelf::Numbers
                         ? self::speakingKeysOf($card['speaking_keys'] ?? null)
                         : [],
+                    // ТЕМАТИЧЕСКОЕ СЛОВО (v0.8) — только у слов и связок; всё остальное не бывает
+                    // «по теме». Ответ старой формы флага не пишет и читается как «нет».
+                    topical: ($shelf === PlanShelf::Words || $shelf === PlanShelf::Chunks)
+                        && ($card['topical'] ?? false) === true,
                 );
             }
         }
