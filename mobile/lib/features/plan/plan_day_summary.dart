@@ -79,10 +79,23 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
     //
     // What is still this screen's business is READING THE PLAN BACK, so the day is struck through
     // and the next one says «Собирается» without the learner having to leave and come back.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) ref.invalidate(planProvider(widget.envelope.planId));
+    //
+    // …AFTER THE ANSWERS HAVE LANDED. The verdict is derived from the reviews, and the last of
+    // them is still on its way up when this screen opens: read back too early, the plan is the
+    // plan as it stood before the sitting, and the summary said «почти» over a day the server
+    // had already closed (живой день 2, 07.09). Until then the headline says only what is
+    // certainly true — the sitting is over.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(reviewSyncProvider).settled();
+      if (!mounted) return;
+      ref.invalidate(planProvider(widget.envelope.planId));
+      setState(() => _answersLanded = true);
     });
   }
+
+  /// The reviews of this sitting have been offered to the server; the plan read after that point
+  /// is the one whose verdict may be shown.
+  bool _answersLanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +121,7 @@ class _PlanDaySummaryState extends ConsumerState<PlanDaySummary> {
     final freshDay = fresh?.dayAt(envelope.dayIndex);
     final dayPassed =
         freshDay?.dayState == PlanDayState.done || freshDay?.status == PlanDayStatus.done;
-    final verdictKnown = fresh != null;
+    final verdictKnown = _answersLanded && fresh != null;
 
     // Distinct TERMS, not cards: one word arrives as three cards inside a stage, and «9 фраз и слов»
     // must be nine things and not twenty-seven questions.

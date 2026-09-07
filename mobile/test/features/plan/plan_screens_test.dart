@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -251,6 +253,17 @@ class _CompletionSpy implements SessionCompletionSync {
 
 /// Never sends anything: the summary flushes reviews on the way in, and this test is not about that.
 class _ReviewSyncStub implements ReviewSync {
+  @override
+  noSuchMethod(Invocation invocation) => Future<void>.value();
+}
+
+/// The answers are still on their way up until the test lets them land.
+class _HeldReviewSync implements ReviewSync {
+  final Completer<void> landed = Completer<void>();
+
+  @override
+  Future<void> settled() => landed.future;
+
   @override
   noSuchMethod(Invocation invocation) => Future<void>.value();
 }
@@ -1140,6 +1153,42 @@ void main() {
     expect(find.text('ДЕНЬ 1 ПРОЙДЕН'), findsOneWidget);
     expect(find.text('ДЕНЬ 1 · ПОЧТИ'), findsNothing);
     expect(find.textContaining('Открой день ещё раз'), findsNothing);
+  });
+
+  testWidgets('the summary reads the plan back only AFTER the sitting’s answers have landed', (
+    tester,
+  ) async {
+    // Живой день 2, 07.09: последний ответ ещё летел на сервер, итог уже перечитал план — и сказал
+    // «почти» над днём, который сервер через секунду закрыл. Пока ответы не доехали, заголовок
+    // говорит только то, что точно верно; вердикт — после.
+    final sync = _HeldReviewSync();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          planProvider('01PLAN').overrideWith((ref) async => _planWithDayOneDone()),
+          sessionCompletionSyncProvider.overrideWithValue(_CompletionSpy()),
+          reviewSyncProvider.overrideWithValue(sync),
+        ],
+        child: _app(
+          PlanDaySummary(
+            envelope: const _Envelope(kinds: ['word']),
+            cards: [_card('t1', 'word')],
+            onDone: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('ЗАНЯТИЕ ПРОЙДЕНО'), findsOneWidget);
+    expect(find.text('ДЕНЬ 1 ПРОЙДЕН'), findsNothing);
+    expect(find.text('ДЕНЬ 1 · ПОЧТИ'), findsNothing);
+
+    sync.landed.complete();
+    await tester.pumpAndSettle();
+
+    expect(find.text('ДЕНЬ 1 ПРОЙДЕН'), findsOneWidget);
+    expect(find.text('ЗАНЯТИЕ ПРОЙДЕНО'), findsNothing);
   });
 
   testWidgets('the summary counts the day apart from what the queue added to the sitting', (

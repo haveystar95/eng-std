@@ -53,6 +53,7 @@ class ReviewSync {
   final Ref _ref;
 
   bool _flushing = false;
+  Future<void>? _inFlight;
   int _failures = 0;
   DateTime? _retryAfter;
 
@@ -149,6 +150,8 @@ class ReviewSync {
     }
 
     _flushing = true;
+    final done = Completer<void>();
+    _inFlight = done.future;
     try {
       final drop = <String>{};
       var transientFailure = false;
@@ -196,6 +199,27 @@ class ReviewSync {
       }
     } finally {
       _flushing = false;
+      _inFlight = null;
+      done.complete();
+    }
+  }
+
+  /// Wait until every answer recorded so far has been OFFERED to the server once.
+  ///
+  /// A screen that asks the server for a verdict about those answers — the day summary reading the
+  /// plan back — has to ask after they have landed, or it reads the plan as it was before the
+  /// sitting. [flush] alone is not that promise: a flush already running when the last answer was
+  /// written took its snapshot before it, and a second call returns at once because one is running
+  /// (живой прогон 07.09: день закрыт на сервере, итог дня — «почти»). So: the flush in flight, if
+  /// any, then one more pass for what it missed. Under backoff the pass returns at once, and the
+  /// caller reads whatever the server knows — waiting out a failing server is not a screen's job.
+  Future<void> settled() async {
+    while (_inFlight != null) {
+      await _inFlight;
+    }
+    await flush();
+    while (_inFlight != null) {
+      await _inFlight;
     }
   }
 
