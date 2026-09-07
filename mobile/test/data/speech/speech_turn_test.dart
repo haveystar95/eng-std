@@ -107,6 +107,49 @@ void main() {
     });
   });
 
+  test('мёртвый канал: три мгновенные пустые попытки подряд — unavailable, а не сторож через 15 с', () {
+    fakeAsync((fake) {
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config);
+      SpeechTurnResult? result;
+      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
+      fake.flushMicrotasks();
+
+      // Симулятор / отозванное разрешение: плагин закрывается пустым сразу после открытия.
+      for (var i = 0; i < 3; i++) {
+        fake.elapse(const Duration(milliseconds: 50));
+        mic.close(const SpeechAttempt.silent());
+        fake.elapse(const Duration(milliseconds: 150));
+      }
+
+      expect(result?.outcome, SpeechTurnOutcome.unavailable);
+      expect(mic.opened, 3);
+    });
+  });
+
+  test('одна мгновенная пустота — ещё не мёртвый канал: микрофон переоткрывается, сторож ждёт', () {
+    fakeAsync((fake) {
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config);
+      SpeechTurnResult? result;
+      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
+      fake.flushMicrotasks();
+
+      fake.elapse(const Duration(milliseconds: 50));
+      mic.close(const SpeechAttempt.silent());
+      fake.elapse(const Duration(milliseconds: 150));
+      // Второй заход живёт нормально — человек просто молчит; сторож придёт в свой срок.
+      fake.elapse(const Duration(seconds: 3));
+      mic.close(const SpeechAttempt.silent());
+      fake.elapse(const Duration(milliseconds: 150));
+
+      expect(result, isNull);
+      expect(mic.opened, 3);
+      fake.elapse(const Duration(seconds: 15));
+      expect(result?.outcome, SpeechTurnOutcome.silent);
+    });
+  });
+
   test('потолок речи — 15 с от ПЕРВОГО слова, не от открытия микрофона', () {
     fakeAsync((fake) {
       final mic = _DrivenRecognizer();

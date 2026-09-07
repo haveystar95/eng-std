@@ -22,6 +22,8 @@ class SpeechTurnConfig {
     this.silenceBeforeSkip = const Duration(seconds: 15),
     this.echoCoverage = 0.7,
     this.reopenGap = const Duration(milliseconds: 120),
+    this.deadChannelWindow = const Duration(seconds: 1),
+    this.deadChannelStrikes = 3,
   });
 
   final Duration silenceAfterSpeech;
@@ -33,18 +35,30 @@ class SpeechTurnConfig {
   /// плагин, ответивший мгновенно, без неё крутил бы цикл, не давая таймерам попытки сработать.
   final Duration reopenGap;
 
+  /// МЁРТВЫЙ КАНАЛ: плагин закрывается пустым быстрее [deadChannelWindow] [deadChannelStrikes] раз
+  /// подряд — это не тишина человека, а микрофон, которого нет (симулятор, отозванное
+  /// разрешение). Ход кончается [SpeechTurnOutcome.unavailable], а не сторожем через 15 с: сторож
+  /// в прогоне делает ход за человека пустым ответом, и мёртвый микрофон писал бы в журнал по
+  /// промаху на каждую реплику сцены (живой стенд 07.09).
+  final Duration deadChannelWindow;
+  final int deadChannelStrikes;
+
   SpeechTurnConfig copyWith({
     Duration? silenceAfterSpeech,
     Duration? maxSpeech,
     Duration? silenceBeforeSkip,
     double? echoCoverage,
     Duration? reopenGap,
+    Duration? deadChannelWindow,
+    int? deadChannelStrikes,
   }) => SpeechTurnConfig(
     silenceAfterSpeech: silenceAfterSpeech ?? this.silenceAfterSpeech,
     maxSpeech: maxSpeech ?? this.maxSpeech,
     silenceBeforeSkip: silenceBeforeSkip ?? this.silenceBeforeSkip,
     echoCoverage: echoCoverage ?? this.echoCoverage,
     reopenGap: reopenGap ?? this.reopenGap,
+    deadChannelWindow: deadChannelWindow ?? this.deadChannelWindow,
+    deadChannelStrikes: deadChannelStrikes ?? this.deadChannelStrikes,
   );
 }
 
@@ -184,6 +198,7 @@ class SpeechTurn {
   }) async {
     final turn = _turn!;
     var reopening = false;
+    var instantSilences = 0;
     while (!turn.isCompleted && !_closing) {
       if (reopening) {
         await Future<void>.delayed(config.reopenGap);
@@ -191,6 +206,7 @@ class SpeechTurn {
       }
       reopening = true;
       _partial = '';
+      final openedAt = _now();
       final attempt = await _recognizer.listenOnce(
         expected: expected,
         localeId: localeId,
@@ -273,6 +289,18 @@ class SpeechTurn {
             _settle(transcript.isEmpty ? SpeechTurnOutcome.silent : SpeechTurnOutcome.heard);
 
             return;
+          }
+          // …КРОМЕ МЁРТВОГО КАНАЛА: пустота, вернувшаяся быстрее окна несколько раз подряд без
+          // единого слова, — это не человек молчит, это микрофона нет.
+          if (transcript.isEmpty && _now().difference(openedAt) < config.deadChannelWindow) {
+            instantSilences++;
+            if (instantSilences >= config.deadChannelStrikes) {
+              _settle(SpeechTurnOutcome.unavailable);
+
+              return;
+            }
+          } else {
+            instantSilences = 0;
           }
 
           continue;

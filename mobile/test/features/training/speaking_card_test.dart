@@ -75,6 +75,20 @@ class _FakeRecognizer implements SpeechRecognizer {
     final attempt = _script[calls.clamp(0, _script.length - 1)];
     calls++;
     if (attempt.isHeard) onPartial?.call(attempt.text);
+    // Like the plugin: a silence is reported only when its whole window has run out — the engine's
+    // own watchdog closes the turn before that. Returned at once it would read as a DEAD channel
+    // (three instant empties → unavailable, DAY-FIX-3), which is a different card state from «the
+    // room was quiet».
+    if (!completeOnStop && attempt.outcome == SpeechOutcome.silent) {
+      final completer = Completer<SpeechAttempt>();
+      _pending = completer;
+      _window?.cancel();
+      _window = Timer(timeout, () {
+        if (!completer.isCompleted) completer.complete(attempt);
+      });
+
+      return completer.future;
+    }
 
     if (completeOnStop) {
       final completer = Completer<SpeechAttempt>();
@@ -97,7 +111,17 @@ class _FakeRecognizer implements SpeechRecognizer {
   }
 
   @override
-  Future<void> cancel() async => cancels++;
+  Future<void> cancel() async {
+    cancels++;
+    // The plugin's window dies with the cancel; the attempt it was holding settles as silence.
+    _window?.cancel();
+    _window = null;
+    final pending = _pending;
+    _pending = null;
+    if (pending != null && !pending.isCompleted) pending.complete(const SpeechAttempt.silent());
+  }
+
+  Timer? _window;
 }
 
 void main() {
