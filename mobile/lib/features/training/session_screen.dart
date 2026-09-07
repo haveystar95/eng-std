@@ -1995,19 +1995,31 @@ class _SessionHeader extends StatelessWidget {
             // wrapped to two lines the moment the denominator went double-digit (QA-OBS-28). The
             // 44pt floor is still there to balance the × on the left when the counter is short.
             ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: AppSpacing.minTap),
+              // …И ПОТОЛОК ТОЖЕ (наряд DAY-GATE-1, доработка Ч.2.7). Слово о дне стало длиннее —
+              // «слова и фразы пройдены · разговор около 2 минут» вместо «материал пройден», — и
+              // строка, у которой был только минимум, вылезла за правый край живьём. Ширина
+              // ограничена долей экрана, а текст ужимается кеглем: обрезать слово о дне многоточием
+              // значило бы прятать ровно ту половину, ради которой оно тут стоит.
+              constraints: BoxConstraints(
+                minWidth: AppSpacing.minTap,
+                maxWidth: MediaQuery.sizeOf(context).width * 0.45,
+              ),
               // ЛАТУННАЯ БУКВА СТУПЕНИ СТОЯЛА ЗДЕСЬ (наряд DAY-2-FIX, Ч.3б). Угол плановой посадки
               // теперь пуст — счётчик уехал в полосу, и возвращать его сюда значило бы завести
               // одному числу два дома.
               child: planBadge != null
                   // ОДНО СЛОВО О ДНЕ, серверное — то же, что на вкладке «План» и на экране дня
                   // (наряд DAY-FIX-2, Ч.3). Не локальный счётчик: минуты приходят с посадкой.
-                  ? Text(
-                      planStateLabel ?? '',
-                      maxLines: 1,
-                      softWrap: false,
-                      textAlign: TextAlign.right,
-                      style: AppText.blockLabel.copyWith(color: AppColors.tertiary),
+                  ? FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        planStateLabel ?? '',
+                        maxLines: 1,
+                        softWrap: false,
+                        textAlign: TextAlign.right,
+                        style: AppText.blockLabel.copyWith(color: AppColors.tertiary),
+                      ),
                     )
                   : Text(
                       l.triageCounter(current, total),

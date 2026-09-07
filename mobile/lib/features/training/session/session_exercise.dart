@@ -369,6 +369,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// Таймер повторного открытия микрофона после обрыва в прогоне — там микрофон открывается сам.
   Timer? _reopenTimer;
 
+  /// Текст, который дев-дверь QA просила подставить, пока микрофон был закрыт. Кладётся в открытый
+  /// ход самим [_listenOnce] — см. {@see _substituteTranscript}.
+  String? _pendingInjection;
+
   /// May the learner set this card aside?
   ///
   /// Offered once the microphone has actually let them down — an escape hatch that appears before
@@ -611,7 +615,26 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       return;
     }
 
-    // Микрофон не открыт (разогрев дня, спасатель): ответ подставляется напрямую, как и раньше.
+    // МИКРОФОН УСПЕЛ ЗАКРЫТЬСЯ, А КАРТОЧКА ЕЩЁ ЖДЁТ — на симуляторе это обычное дело: мёртвый
+    // канал распознаётся за секунду, и к моменту тапа ход уже закрыт. Открываем заново и кладём
+    // текст в свежий ход: иначе единственный способ увидеть живые стадии движка пропадает ровно
+    // там, где он нужен (наряд DAY-GATE-1, доработка Ч.3).
+    if (_isSceneRun && !_listeningNow) {
+      // ЖДЁМ НЕ ТАЙМЕРОМ, А САМ ХОД. Канал, которого нет (симулятор), умирает через доли секунды, и
+      // подстановка «через N миллисекунд» гонялась с этим наперегонки: `_listenOnce` успевает
+      // прочитать подсказки распознавателю из зеркала терминов, и к моменту таймера хода ещё нет.
+      // Поэтому текст кладётся в очередь, а вставляет его САМ `_listenOnce`, когда ход уже открыт.
+      //
+      // «Сразу» и «не сразу» на симуляторе поэтому сливаются в одно, и это честно: разницу между
+      // ними меряет ОТКРЫТЫЙ микрофон, а его здесь нет. На устройстве ход живёт, и ветка ниже
+      // (микрофон уже открыт) сохраняет обе.
+      _pendingInjection = text;
+      unawaited(_listenOnce());
+
+      return;
+    }
+
+    // Микрофон не открыт вне прогона (разогрев дня, спасатель): ответ подставляется напрямую.
     _reopenTimer?.cancel();
     unawaited(_turn?.cancel());
     setState(() => _listeningNow = false);
@@ -897,6 +920,14 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
       final turn = SpeechTurn(recognizer, config: _turnConfig, diagnostics: _diagnostics);
       _turn = turn;
+      // ОЧЕРЕДЬ ПОДСТАНОВКИ (дев-дверь QA): ход открыт, класть текст можно. Один кадр форы —
+      // движок ещё не успел дойти до плагина, а `injectTranscript` требует живого хода.
+      if (_pendingInjection case final pending?) {
+        _pendingInjection = null;
+        // СРАЗУ, БЕЗ ТАЙМЕРА: на мёртвом канале ход живёт доли секунды (три мгновенные пустоты
+        // подряд — и он закрыт), и любая отложенная вставка гонялась бы с этим наперегонки.
+        turn.injectTranscript(pending);
+      }
       result = await turn.listen(
         expected: _spokenTargets,
         localeId: widget.speechLocaleId,
@@ -1074,27 +1105,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         if (!_answered && _isSpeaking) ...[
           const SizedBox(height: AppSpacing.s16),
           _speakingControls(l),
-        ],
-        // ДЕВ-ДВЕРЬ QA: подстановка транскрипта вместо голоса. Ни в релизе, ни у боевого аккаунта
-        // её нет — право приезжает с сервера одним полем ({@see _substituteTranscript}). На
-        // каждой карточке говорения, не только в прогоне: разогрев дня тоже просит сказать вслух.
-        if (!_answered && _isSpeaking && (ref.watch(authControllerProvider).value?.qaTools ?? false)) ...[
-          const SizedBox(height: AppSpacing.s12),
-          // СЛУЖЕБНАЯ СТРОКА ПРЯМО У МИКРОФОНА (наряд DAY-GATE-1, доработка Ч.3): стадию хода надо
-          // видеть В МОМЕНТ хода, а не на другом экране после него — `listening` живёт секунды.
-          if (_diagnostics case final diagnostics?) ...[
-            QaSpeechView(diagnostics: diagnostics, localeId: widget.speechLocaleId),
-            const SizedBox(height: AppSpacing.s8),
-          ],
-          _QaTranscriptRow(
-            onSaid: (fast) => _substituteTranscript(
-              _card.spokenTarget ?? _card.answerText,
-              fast: fast,
-            ),
-            // «Мимо» — не пустой ответ, а ЧУЖОЙ текст: пустой это «не помню», а прогон проверяет,
-            // прозвучал ли ключ, и мимо ключа сказанное — тоже сказанное.
-            onMissed: () => _substituteTranscript('nothing like the line', fast: false),
-          ),
         ],
         if (!_answered && (_mode.isTyped && !_isRecognitionListening)) ...[
           const SizedBox(height: AppSpacing.s12),
@@ -1466,6 +1476,27 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             // The colour of an ordinary note, NOT of a verdict: nothing has gone wrong with the
             // learner's memory, and the card must not look as if it has.
             style: AppTextExercise.taskInstruction,
+          ),
+        ],
+        // ДЕВ-ДВЕРЬ QA: подстановка транскрипта вместо голоса. Ни в релизе, ни у боевого аккаунта
+        // её нет — право приезжает с сервера одним полем ({@see _substituteTranscript}). На
+        // каждой карточке говорения, не только в прогоне: разогрев дня тоже просит сказать вслух.
+        if (!_answered && _isSpeaking && (ref.watch(authControllerProvider).value?.qaTools ?? false)) ...[
+          const SizedBox(height: AppSpacing.s12),
+          // СЛУЖЕБНАЯ СТРОКА ПРЯМО У МИКРОФОНА (наряд DAY-GATE-1, доработка Ч.3): стадию хода надо
+          // видеть В МОМЕНТ хода, а не на другом экране после него — `listening` живёт секунды.
+          if (_diagnostics case final diagnostics?) ...[
+            QaSpeechView(diagnostics: diagnostics, localeId: widget.speechLocaleId),
+            const SizedBox(height: AppSpacing.s8),
+          ],
+          _QaTranscriptRow(
+            onSaid: (fast) => _substituteTranscript(
+              _card.spokenTarget ?? _card.answerText,
+              fast: fast,
+            ),
+            // «Мимо» — не пустой ответ, а ЧУЖОЙ текст: пустой это «не помню», а прогон проверяет,
+            // прозвучал ли ключ, и мимо ключа сказанное — тоже сказанное.
+            onMissed: () => _substituteTranscript('nothing like the line', fast: false),
           ),
         ],
         if (_canSkip) ...[

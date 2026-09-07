@@ -289,11 +289,18 @@ class _DayRow extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
+                // ДВА `Flexible`, А НЕ `Expanded` + жёсткая строка (наряд DAY-GATE-1, доработка
+                // Ч.2.7). Слово о дне стало длиннее — «слова и фразы пройдены · разговор около 2
+                // минут», — и жёсткая строка справа съедала всю ширину: «День 1 · сцена 1» живьём
+                // осыпался в столбик по букве. Теперь короткая подпись берёт своё, длинная переносит
+                // остаток на вторую строку, и ни одна не давит другую.
+                Flexible(
                   child: Text(
                     rehearsal
                         ? l.planRowRehearsalWhen
                         : l.planRowDayScene(day.index, day.index),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: AppText.blockLabel.copyWith(
                       color: AppColors.tertiary,
                       letterSpacing: .6,
@@ -306,9 +313,13 @@ class _DayRow extends StatelessWidget {
                     padding: EdgeInsets.only(right: 5),
                     child: Icon(LucideIcons.check, size: 12, color: AppColors.brassInk),
                   ),
-                Text(
-                  state.word(l, day),
-                  style: AppText.blockLabel.copyWith(color: state.color, letterSpacing: .6),
+                Flexible(
+                  child: Text(
+                    state.word(l, day),
+                    maxLines: 2,
+                    textAlign: TextAlign.right,
+                    style: AppText.blockLabel.copyWith(color: state.color, letterSpacing: .6),
+                  ),
                 ),
               ],
             ),

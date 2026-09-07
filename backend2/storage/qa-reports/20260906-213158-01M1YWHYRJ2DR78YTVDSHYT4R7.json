@@ -1,0 +1,50 @@
+{
+    "id": "01M1YWHYRJ2DR78YTVDSHYT4R7",
+    "received_at": "2026-09-06T21:31:58+00:00",
+    "screenshot": "20260906-213158-01M1YWHYRJ2DR78YTVDSHYT4R7.png",
+    "user_id": "01M1YR92B3JGYRFFVMTYBHACJK",
+    "client": {
+        "build_sha": "6e244cfa+",
+        "build_at": "2026-09-08 00:28",
+        "api_base_url": "https://greedily-thermos-finer.ngrok-free.dev"
+    },
+    "server": {
+        "commit": "6e244cfa+"
+    },
+    "context": {
+        "screen": "session",
+        "plan_id": "01M1YR9JGRHJ9MZRFNZYMEDWAT",
+        "day_index": 1,
+        "session_id": "01M1YWEDVHEX4GGPDHQ7F400HY",
+        "card_term_id": "01M1YRATF2BAXES0MST099DQRF",
+        "card_mode": "speaking"
+    },
+    "speech": {
+        "phase": "failed",
+        "last_error": "dead_channel",
+        "last_partial": "",
+        "echoes": 0,
+        "permissions": {
+            "microphone": "granted",
+            "recognition": "granted",
+            "locale": "en_US",
+            "recognizer_supported": true,
+            "recognizer_available": true,
+            "on_device_supported": true
+        },
+        "log": [
+            "00:30:31.035  waitingForRole",
+            "00:30:32.510  opening",
+            "00:30:32.519  initialize ok",
+            "00:30:32.997  recognizer error: error_unknown (300) (permanent=true)",
+            "00:30:33.389  recognizer error: error_unknown (300) (permanent=true)",
+            "00:30:33.894  recognizer error: error_unknown (300) (permanent=true)",
+            "00:30:33.898  failed · dead_channel",
+            "00:31:16.911  opening",
+            "00:31:17.330  recognizer error: error_unknown (300) (permanent=true)",
+            "00:31:17.832  recognizer error: error_unknown (300) (permanent=true)",
+            "00:31:18.245  recognizer error: error_unknown (300) (permanent=true)",
+            "00:31:18.251  failed · dead_channel"
+        ]
+    }
+}
