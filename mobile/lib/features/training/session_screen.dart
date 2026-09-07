@@ -1268,11 +1268,15 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   /// Read off the ORDER rather than off the payload: a card sent to the tail (Ч-5) belongs to the
   /// part it was in, so its own division grows and every other one stays exactly where it was —
   /// which is «пройденное не сгорает», drawn.
-  _PlanProgress _planProgress() {
+  _PlanProgress _planProgress(AppLocalizations l) {
     final plan = widget.session.plan;
     final segments = <_ProgressSegment>[];
     var warmupTotal = 0;
     var warmupDone = 0;
+    // КАК ЗОВЁТСЯ ЛЕВАЯ ГРУППА — по карточкам, которые в ней лежат, а не по имени секции: набор
+    // «на всякий случай» и реплики прошлых дней приезжают под одним кодом `warmup`, и подпись,
+    // прибитая к коду, назвала бы день 1 днём с прошлыми днями.
+    String? warmupLabel;
     String? group;
 
     for (var at = 0; at < _queue.length; at++) {
@@ -1281,6 +1285,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       if (plan!.isWarmupAt(card)) {
         warmupTotal++;
         if (done) warmupDone++;
+        // Подпись — той карточки разогрева, на которой человек стоит; до неё и после — первой.
+        if (warmupLabel == null || card == _playing) {
+          warmupLabel = planSectionCaption(l, plan, card);
+        }
 
         continue;
       }
@@ -1298,6 +1306,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     return _PlanProgress(
       warmupTotal: warmupTotal,
       warmupDone: warmupDone,
+      warmupLabel: warmupLabel,
       segments: segments,
       sceneDone: segments.fold(0, (sum, s) => sum + s.done),
       sceneTotal: segments.fold(0, (sum, s) => sum + s.total),
@@ -1656,7 +1665,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                 // coming rather than only how far along we are.
                 planProgress: plan == null
                     ? null
-                    : _planProgress(),
+                    : _planProgress(l),
                 // WHAT PART OF THE SITTING THIS IS, beside the group's numbers — the part is the
                 // sentence a person reads, the numbers are how far through it they are.
                 sectionLabel: plan == null ? null : planSectionCaption(l, plan, _playing),
@@ -1757,7 +1766,11 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                             if (planSeamCaption(l, plan, _playing) case final seam?) ...[
                               _SectionSeam(
                                 label: seam,
-                                note: plan.isWarmupAt(_playing) ? l.planWarmupWhy : null,
+                                // «чтобы было чем ответить, если растеряешься» — это про НАБОР;
+                                // над репликами прошлых дней оно было бы объяснением не того.
+                                note: plan.isWarmupAt(_playing) && _isRescueAt(plan, _playing)
+                                    ? l.planWarmupWhy
+                                    : null,
                               ),
                               const SizedBox(height: 18),
                             ],
@@ -2071,10 +2084,15 @@ class _PlanProgress {
     required this.segments,
     required this.sceneDone,
     required this.sceneTotal,
+    this.warmupLabel,
   });
 
   final int warmupTotal, warmupDone, sceneDone, sceneTotal;
   final List<_ProgressSegment> segments;
+
+  /// Имя левой группы — «На всякий случай» или «Из прошлых дней», по её же карточкам. Null, когда
+  /// разогрева в посадке нет: группы тоже нет.
+  final String? warmupLabel;
 }
 
 /// THE BAR (кадр 6b): «Разогрев 5/5» in brass, a hairline, then «День 11/22» divided by section.
@@ -2112,7 +2130,7 @@ class _PlanProgressBar extends StatelessWidget {
           Expanded(
             flex: progress.warmupTotal,
             child: _group(
-              label: l.planWarmupSection,
+              label: progress.warmupLabel ?? l.planWarmupSection,
               labelColor: AppColors.brassInk,
               bars: [
                 for (var i = 0; i < progress.warmupTotal; i++)
@@ -2135,7 +2153,7 @@ class _PlanProgressBar extends StatelessWidget {
               // label; the divisions under it say how far through the scene this sitting is.
               // While the WARM-UP is playing the scene group has no part of its own yet, so it
               // says «Сцена» rather than repeating the warm-up's name over the scene's bars.
-              label: sectionLabel == null || sectionLabel == l.planWarmupSection
+              label: sectionLabel == null || sectionLabel == progress.warmupLabel
                   ? l.planDialogueSceneWord
                   : sectionLabel!,
               labelColor: AppColors.tertiary,
@@ -2828,13 +2846,19 @@ String _planSeamGroup(PlanSessionEnvelope plan, int i) {
   // two conversations is a lie about both.
   final code = plan.sectionCodeAt(i);
   if (code != null && code.isNotEmpty) {
+    // РАЗОГРЕВ — ЭТО ДВЕ ЧАСТИ, и ключ их различает: набор «на всякий случай» и реплики прошлых
+    // дней стоят под разными именами, а часть, в которой ноль карточек, не получает шва вовсе.
+    // Так «Из прошлых дней» на дне 1 отсутствует ПО ПОСТРОЕНИЮ, а не по проверке на экране.
     return code == PlanSessionTask.sectionCodeWarmup
-        ? code
+        ? '$code#${_isRescueAt(plan, i) ? 'rescue' : 'past'}'
         : '$code#${plan.carriedFromAt(i) ?? 0}';
   }
 
-  // A payload from a server that predates the field: the shelf decides, exactly as it did.
-  if (plan.isWarmupAt(i)) return PlanTermRow.shelfRescue;
+  // A payload from a server that predates the field: the shelf decides, exactly as it did — и так же
+  // надвое, потому что деление на набор и прошлые дни живёт в КАРТОЧКАХ, а не в имени поля.
+  if (plan.isWarmupAt(i)) {
+    return _isRescueAt(plan, i) ? PlanTermRow.shelfRescue : _seamGroupWarmupPast;
+  }
   // Everything that is not today's own material is the revision, whatever shelf it came off
   // originally: it is being replayed, not taught.
   if (!plan.isDayTaskAt(i)) return _seamGroupReview;
@@ -2847,6 +2871,13 @@ String _planSeamGroup(PlanSessionEnvelope plan, int i) {
   };
 }
 
+/// Эта карточка разогрева — из набора «на всякий случай», а не из прошлого дня.
+///
+/// Полка `rescue` — единственное, что отличает их на проводе: код секции у обоих `warmup`.
+bool _isRescueAt(PlanSessionEnvelope plan, int i) =>
+    plan.shelfAt(i) == PlanTermRow.shelfRescue;
+
+const _seamGroupWarmupPast = 'warmup_past';
 const _seamGroupReview = 'review';
 const _seamGroupDay = 'day';
 
@@ -2910,7 +2941,13 @@ String? planSectionCaption(AppLocalizations l, PlanSessionEnvelope plan, int i) 
   final name = code == null || code.isEmpty
       ? _legacySectionName(l, plan, i)
       : switch (code) {
-          PlanSessionTask.sectionCodeWarmup => l.planWarmupSection,
+          // ДВА РАЗНЫХ НАЧАЛА ПОД ОДНИМ КОДОМ (наряд DAY-GATE-1, доработка, п. 3). Секция
+          // `warmup` держит и набор «на всякий случай» (канон §5, он же на дне 1), и вчерашние
+          // промахи. Пока имя было «Разогрев», оба звались им честно; «Из прошлых дней» над
+          // спасательным набором на дне 1 — уже неправда: прошлых дней у дня 1 нет.
+          PlanSessionTask.sectionCodeWarmup => _isRescueAt(plan, i)
+              ? l.planDialogueRescue
+              : l.planWarmupSection,
           PlanSessionTask.sectionCodeWords => l.planShelfWords,
           PlanSessionTask.sectionCodeDialogueIntro => l.planSectionDialogueIntro,
           PlanSessionTask.sectionCodeDialogue => l.planSectionDialogue,
@@ -2935,7 +2972,9 @@ String? planSectionCaption(AppLocalizations l, PlanSessionEnvelope plan, int i) 
 
 /// The part's name off the SHELF — for a payload written before the server named it.
 String? _legacySectionName(AppLocalizations l, PlanSessionEnvelope plan, int i) {
-  if (plan.isWarmupAt(i)) return l.planWarmupSection;
+  if (plan.isWarmupAt(i)) {
+    return _isRescueAt(plan, i) ? l.planDialogueRescue : l.planWarmupSection;
+  }
   if (!plan.isDayTaskAt(i)) return l.planReviewSection;
 
   return switch (plan.shelfAt(i)) {

@@ -225,9 +225,16 @@ void main() {
     await tester.tap(find.text('Начать диалог'));
     await tester.pumpAndSettle();
 
-    expect(find.text('На всякий случай'), findsOneWidget);
+    // КНОПКА, а не подпись: с наряда DAY-GATE-1 (доработка, п. 3) секция разогрева зовётся тем же
+    // именем — это один и тот же набор, — и в шапке присеста оно тоже стоит. Проверяем ту, по
+    // которой можно постучать.
+    final rescueButton = find.ancestor(
+      of: find.text('На всякий случай'),
+      matching: find.byType(InkWell),
+    );
+    expect(rescueButton, findsOneWidget);
 
-    await tester.tap(find.text('На всякий случай'));
+    await tester.tap(rescueButton);
     await tester.pumpAndSettle();
 
     // The panel names the phrase and says out loud that asking is not a mistake.
