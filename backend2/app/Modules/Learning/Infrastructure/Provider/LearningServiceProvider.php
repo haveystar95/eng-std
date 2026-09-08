@@ -178,7 +178,11 @@ final class LearningServiceProvider extends ServiceProvider
             ->needs('$sceneRunKnobs')
             ->give(static fn (): array => [
                 'fast_seconds' => (int) config('learning.plan.scene_run.fast_seconds', 3),
-                'listen_seconds' => (int) config('learning.plan.scene_run.listen_seconds', 15),
+                // ПОЛ СТОРОЖА — 15 СЕКУНД (наряд SPEECH-2, Ч.2.1). `listen_seconds` теперь ограничивает
+                // ОБЩУЮ длину записи, а не окно ожидания первого слова, и запись, закрытая раньше
+                // пятнадцати секунд, режет длинную фразу на полуслове. Пол стоит и здесь, и в движке
+                // на телефоне: конфиг, уехавший ниже, не должен уметь этого даже на одном экране.
+                'listen_seconds' => max(15, (int) config('learning.plan.scene_run.listen_seconds', 15)),
                 'skip_after_seconds' => (int) config('learning.plan.scene_run.skip_after_seconds', 5),
                 'turn_seconds' => (int) config('learning.plan.scene_run.turn_seconds', 20),
             ]);
@@ -210,6 +214,16 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->when(\App\Modules\Learning\Application\Command\SubmitReviewsHandler::class)
             ->needs('$speakingKeysGraded')
             ->give(static fn (): bool => (bool) config('learning.plan.speaking_keys_graded', false));
+
+        // ПОРОГИ ЗАЧЁТА РЕЧИ (наряд SPEECH-2, Ч.3.3) — из конфига, не из литералов в грейдере.
+        // Одни и те же числа едут телефону в контракте сессии, поэтому источник обязан быть один:
+        // грейдер, судящий по 0.9, и экран, судящий по 0.7, — это «Не то» над зачтённым ответом.
+        $this->app->singleton(
+            \App\Modules\Learning\Domain\ValueObject\SpeechGradingRules::class,
+            static fn (): \App\Modules\Learning\Domain\ValueObject\SpeechGradingRules => \App\Modules\Learning\Domain\ValueObject\SpeechGradingRules::fromConfig(
+                (array) config('learning.plan.speech', []),
+            ),
+        );
         // «Из плана: Отпуск в Италии» — what a review card of the top-up says about itself.
         // Singleton for the same reason the global reader is one: a per-request memo over one query.
         // A DIFFERENT instance from that reader even though it is the same table — the two read

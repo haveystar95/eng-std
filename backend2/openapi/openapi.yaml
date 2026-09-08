@@ -1253,6 +1253,7 @@ paths:
                       cards:
                         type: array
                         items: { $ref: '#/components/schemas/SessionCard' }
+                      speech: { $ref: '#/components/schemas/SpeechContract' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
@@ -3641,6 +3642,46 @@ components:
         familiar_count: { type: integer, description: Marked known (self-assessed) }
         in_progress_count: { type: integer, description: Started but not yet mastered }
 
+    SpeechContract:
+      type: object
+      description: >-
+        HOW SPOKEN ANSWERS ARE JUDGED — the thresholds and the abbreviation table, sent with every
+        session (наряд SPEECH-2, Ч.3.3 / Ч.4.2). The client judges by THESE and keeps no numbers or
+        dictionary of its own: two copies drift, and the first sign of a drift is «the phone said
+        „не то“ over an answer the log counted correct» — the bug DAY-GATE-1 spent a night on.
+      properties:
+        thresholds:
+          type: object
+          properties:
+            read_aloud_coverage:
+              type: number
+              description: 'a phrase the learner can SEE while saying it: the share of its words that must be heard'
+            recall_rest_coverage:
+              type: number
+              description: >-
+                no text on screen: with the key said, the share of the REST of the reply that must be
+                heard with it. «Сказал проще» is about a phrase, not about one word.
+            whole_line_coverage:
+              type: number
+              description: 'no text and no key: the reply, asked for entire (фикс DAY-GATE-1)'
+            almost_floor:
+              type: number
+              description: 'below this share «почти — не хватило: …» becomes «не то»: a list holding the whole reply explains nothing'
+            filler_allowance:
+              type: integer
+              description: 'how many eaten connectors are forgiven above the bar when reading from the screen. Articles are not counted at all and are not in this number.'
+        normalization:
+          type: object
+          description: >-
+            What a recogniser WRITES → what it actually was. «sequel» is SQL, «a p i» is API — the
+            sound of a letter, not a mistake by the person. Versioned, so a disagreement between the
+            phone and the server can start from «were they reading the same table».
+          properties:
+            version: { type: string }
+            entries:
+              type: object
+              additionalProperties: { type: string }
+
     PlanSession:
       type: object
       description: >-
@@ -3726,9 +3767,17 @@ components:
             fast_seconds:
               type: integer
               description: 'from the microphone opening to the line''s key, for the turn to count as «сразу»'
-            listen_seconds: { type: integer, description: 'the watchdog: the screen makes the turn after this' }
+            listen_seconds:
+              type: integer
+              description: >-
+                THE RECORDING WATCHDOG, in seconds of the WHOLE recording (наряд SPEECH-2, Ч.2.1) —
+                not, as before, of the wait for the first word. Never below 15: a recording cut
+                sooner cuts a long reply mid-word, and the floor is enforced on both sides (here and
+                in the phone's own engine) so one config away from home cannot do it.
             skip_after_seconds: { type: integer, description: 'when «Пропустить» appears — before it is needed' }
             turn_seconds: { type: integer, description: 'what one turn costs in the day''s minutes' }
+        speech:
+          $ref: '#/components/schemas/SpeechContract'
           required: [fast_seconds, listen_seconds, skip_after_seconds, turn_seconds]
         dialogues:
           type: array
@@ -3905,7 +3954,20 @@ components:
             commercial experience»). Empty on every card that is not a plan line written on P2 v0.7
             or later. The server grades by them only once the client judges by the same list
             (`learning.plan.speaking_keys_graded`), so a client that ignores the field is never
-            stricter than the server.
+            stricter than the server. From SPEECH-2 the key is no longer enough on its own: the
+            server asks for the key AND enough of the rest of the reply (Ч.3.2). A form that is a
+            RE-PHRASING of the whole reply rather than a fragment of it still counts alone — that is
+            what it is.
+        say_as:
+          type: string
+          nullable: true
+          description: >
+            ADDITIVE (SPEECH-2, Ч.4.3). How an abbreviation on this card READS ALOUD («эс-кью-эль»
+            for SQL) — for the synthesiser, not for the grader: a spelled-out abbreviation coming
+            back from the recogniser is folded onto its canonical form by the normalisation table in
+            the session's `speech` block. ALWAYS NULL today: filling it is the pair generation's
+            job and a наряд of its own; the field ships now so a client that already reads it starts
+            pronouncing abbreviations correctly the day the data arrives, not a release later.
         example: { type: string, nullable: true }
         example_translation: { type: string, nullable: true }
         options:

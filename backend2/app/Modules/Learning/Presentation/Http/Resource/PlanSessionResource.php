@@ -11,6 +11,7 @@ use App\Modules\Learning\Application\Dto\PlanSessionTaskView;
 use App\Modules\Learning\Application\Dto\PlanSessionView;
 use App\Modules\Learning\Application\Dto\SessionView;
 use App\Modules\Learning\Presentation\Http\LineAudioUrl;
+use App\Modules\Learning\Presentation\Http\SpeechContract;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -77,6 +78,10 @@ final class PlanSessionResource extends JsonResource
             // (наряд SCENE-RUN). На проводе, а не в коде экрана: это продуктовые суждения о том,
             // сколько человек думает, и они обязаны двигаться без выката приложения.
             'scene_run' => $view->sceneRun,
+            // ПОРОГИ ЗАЧЁТА РЕЧИ И ТАБЛИЦА АББРЕВИАТУР — тот же блок, что на учебной сессии
+            // (наряд SPEECH-2). Отдельной строкой, потому что карточка здесь рендерится в
+            // одиночку ({@see self::card()}) и верхний уровень `SessionResource` сюда не доезжает.
+            'speech' => SpeechContract::block(),
             // THE CONVERSATIONS THIS SITTING PLAYS — one per scene it reaches, whole, in the order
             // the scene is spoken. The turns outnumber the tasks on purpose: the screen plays the
             // conversation from its first line and hands the learner a move only where a task with

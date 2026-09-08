@@ -58,7 +58,12 @@ function speakingVerdict(object $ctx, string $token, string $termId, string $res
     return (string) DB::table('reviews')->where('id', $reviewId)->value('grade');
 }
 
-it('marks a reading that misses the key wrong, and one that has it right', function () {
+// ПРАВИЛО: наряд SPEECH-2, Ч.3.2 — ключ ОБЯЗАТЕЛЕН и с ним покрытие остальных слов реплики.
+// ЛОВИТ: возврат к «ключ есть — верно». Это ровно то, что было до наряда, и на телефоне 08.09 оно
+// выглядело так: человек говорит длинную реплику, движок закрывается на первом узнанном ключевом
+// слове и ставит «верно». Фразу никто не дослушал, а тренажёр, который учит говорить фразами,
+// засчитал слово. Обе половины проверяются здесь, потому что ослабить можно любую.
+it('needs the key AND the rest of the line, not the key alone', function () {
     [$user, $token] = learner();
     $termId = speakingLine(
         $user,
@@ -67,10 +72,33 @@ it('marks a reading that misses the key wrong, and one that has it right', funct
         frame: "Yes, I'm looking for ___ for long-term living.",
     );
 
-    // Most of the sentence, and not the thing the card teaches.
+    // Most of the sentence, and not the thing the card teaches — the key is missing.
     expect(speakingVerdict($this, $token, $termId, 'Yes I am looking for a long-term living'))->toBe('again')
-        // The key, and hardly anything else — which is the card answered.
-        ->and(speakingVerdict($this, $token, $termId, 'I want a place to rent'))->not->toBe('again');
+        // The key, and hardly anything else. Accepted before this наряд; the whole point of Ч.3.2
+        // is that it is not an answer to a card that asks for a reply.
+        ->and(speakingVerdict($this, $token, $termId, 'I want a place to rent'))->toBe('again')
+        // The reply, said. Both halves are there, and this is what the card asked for.
+        ->and(speakingVerdict(
+            $this,
+            $token,
+            $termId,
+            "Yes I'm looking for a place to rent for long-term living",
+        ))->not->toBe('again');
+});
+
+// ПРАВИЛО: наряд SPEECH-2, Ч.3.2 — упрощённая форма это ДРУГОЙ СПОСОБ СКАЗАТЬ ВСЮ реплику, а не
+// её кусок, и «остальных слов» у неё нет.
+// ЛОВИТ: правило «ключ + остальное», применённое к перефразу. «my back hurts» не стоит в «It hurts
+// in my lower back» сплошным куском, и требовать с него «ещё и остальные слова реплики» значит
+// требовать сказать её дважды — то есть отменить канон GEN-1 Y4 боком.
+it('takes a simpler form of the WHOLE reply as the whole reply', function () {
+    [$user, $token] = learner();
+    $termId = speakingLine($user, 'It hurts in my lower back.', key: 'in my lower back', frame: 'It hurts ___.');
+    DB::table('terms')->where('id', $termId)->update(['speaking_keys' => json_encode(['my back hurts'])]);
+
+    expect(speakingVerdict($this, $token, $termId, 'my back hurts'))->not->toBe('again')
+        // …и это по-прежнему не «одно слово»: «back» — не способ сказать реплику.
+        ->and(speakingVerdict($this, $token, $termId, 'back'))->toBe('again');
 });
 
 it('keeps asking for the whole line when the day left no key', function () {

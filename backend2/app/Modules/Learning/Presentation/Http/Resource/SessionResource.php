@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Presentation\Http\Resource;
 
 use App\Modules\Learning\Application\Dto\SessionCardView;
 use App\Modules\Learning\Application\Dto\SessionView;
+use App\Modules\Learning\Presentation\Http\SpeechContract;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -58,7 +59,15 @@ final class SessionResource extends JsonResource
                 // Empty on every card that is not a plan line of v0.7 or later. Graded by the
                 // server only once the client reads them (see SessionCardView).
                 'speaking_keys' => $card->speakingKeys,
+                // ADDITIVE (SPEECH-2, Ч.4.3). Как аббревиатура читается вслух. Всегда null сегодня:
+                // заполняет её генерация пар, и это отдельный наряд — поле стоит здесь, чтобы
+                // клиент был готов раньше, чем данные приедут.
+                'say_as' => $card->sayAs,
             ], $this->resource->cards),
+            // ПОРОГИ ЗАЧЁТА РЕЧИ И ТАБЛИЦА АББРЕВИАТУР — одни на экран и на сервер (SPEECH-2,
+            // Ч.3.3/Ч.4.2). Второго словаря на клиенте нет: две таблицы разъезжаются, и первым
+            // признаком расхождения будет «телефон сказал „не то“, а сервер засчитал».
+            'speech' => SpeechContract::block(),
         ];
     }
 }

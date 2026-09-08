@@ -10,6 +10,9 @@ use App\Modules\Learning\Domain\ValueObject\ExpectedAnswer;
 use App\Modules\Learning\Domain\ValueObject\Grade;
 use App\Modules\Learning\Domain\ValueObject\LatencyBaseline;
 use App\Modules\Learning\Domain\ValueObject\MatchPolicy;
+use App\Modules\Learning\Domain\ValueObject\SpeechGradingRules;
+use App\Modules\Learning\Domain\ValueObject\SpokenCredit;
+use App\Modules\Learning\Domain\ValueObject\SpokenVerdict;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 
 /**
@@ -43,25 +46,25 @@ final class AnswerGrader
     /** The one shared definition of "the same words"; the coverage check uses it too. */
     public function __construct(
         private readonly LexicalNormalizer $normalizer = new LexicalNormalizer(),
-        private readonly SpokenCoverage $coverage = new SpokenCoverage(),
         private readonly SpokenSuffixTolerance $suffixTolerance = new SpokenSuffixTolerance(),
         /** Where the recogniser cut the words — its guess, never the learner's. {@see SpokenWordBoundary} */
         private readonly SpokenWordBoundary $boundary = new SpokenWordBoundary(),
+        /** ЗАЧЁТ ВСЕЙ ФРАЗЫ — одна функция на сервер и на экран (наряд SPEECH-2, Ч.3). */
+        private readonly SpokenLine $spokenLine = new SpokenLine(),
+        /** Пороги зачёта речи; едут из `config/learning.php → plan.speech` через провайдер. */
+        private readonly SpeechGradingRules $speechRules = new SpeechGradingRules(),
     ) {}
 
     public function grade(Answer $answer, ExerciseMode $mode, ExpectedAnswer $expected, LatencyBaseline $baseline): Grade
     {
         // A key that asks to be MATCHED LOOSELY skips the three stages below entirely — they are
-        // stages of equality, and this key is not asking for equality. Reached only by a sentence
-        // read aloud into a recogniser ({@see SpokenCoverage} for why equality is the wrong bar).
-        if ($expected->policy === MatchPolicy::Coverage) {
-            foreach ($expected->accepted as $candidate) {
-                if ($this->coverage->covers($answer->response, $candidate)) {
-                    return $this->gradeCorrect($answer, $mode, $expected->isPhrase, $baseline);
-                }
-            }
-
-            return Grade::Again;
+        // stages of equality, and this key is not asking for equality. Reached only by an answer
+        // that came out of a recogniser ({@see SpokenCoverage} for why equality is the wrong bar,
+        // {@see SpokenLine} for the three shapes «enough» now has).
+        if ($expected->policy->isSpoken()) {
+            return $this->judgeSpoken($answer->response, $expected)->isAccepted()
+                ? $this->gradeCorrect($answer, $mode, $expected->isPhrase, $baseline)
+                : Grade::Again;
         }
 
         $response = $this->normalizer->normalize($answer->response);
@@ -102,6 +105,53 @@ final class AnswerGrader
         }
 
         return Grade::Again;
+    }
+
+    /**
+     * ВЕРДИКТ ПРО СКАЗАННОЕ — публичный, потому что его читают двое: планировщик (через
+     * {@see grade()}, которому нужно только «зачёт или нет») и телефон, которому нужен весь
+     * вердикт целиком, чтобы сказать человеку «почти — не хватило: …». Одна функция, один
+     * транскрипт, один ответ (наряд SPEECH-2, Ч.3.4).
+     *
+     * Несколько кандидатов — берётся ЛУЧШИЙ: у `read_aloud` и `whole_line` в `accepted` лежат
+     * равноправные формы одной реплики, и «не подошла первая» ещё не вердикт.
+     */
+    public function judgeSpoken(string $response, ExpectedAnswer $expected): SpokenVerdict
+    {
+        if ($expected->policy === MatchPolicy::KeyAndRest) {
+            return $this->spokenLine->judge(
+                $response,
+                // Реплики нет — судить «остальное» не по чему, и ключ становится всей целью.
+                $expected->line ?? $expected->accepted[0],
+                $expected->accepted,
+                printed: false,
+                rules: $this->speechRules,
+            );
+        }
+
+        $printed = $expected->policy === MatchPolicy::ReadAloud;
+        $best = null;
+        foreach ($expected->accepted as $candidate) {
+            $verdict = $this->spokenLine->judge($response, $candidate, [], $printed, $this->speechRules);
+            if ($best === null || $this->outranks($verdict, $best)) {
+                $best = $verdict;
+            }
+        }
+
+        // `accepted` не бывает пустым ({@see ExpectedAnswer}), но тип этого не знает.
+        return $best ?? new SpokenVerdict(SpokenCredit::Wrong, 0.0);
+    }
+
+    private function outranks(SpokenVerdict $candidate, SpokenVerdict $best): bool
+    {
+        $rank = static fn (SpokenVerdict $v): int => match ($v->credit) {
+            SpokenCredit::Correct => 2,
+            SpokenCredit::Almost => 1,
+            SpokenCredit::Wrong => 0,
+        };
+
+        return $rank($candidate) > $rank($best)
+            || ($rank($candidate) === $rank($best) && $candidate->coverage > $best->coverage);
     }
 
     private function gradeCorrect(Answer $answer, ExerciseMode $mode, bool $isPhrase, LatencyBaseline $baseline): Grade

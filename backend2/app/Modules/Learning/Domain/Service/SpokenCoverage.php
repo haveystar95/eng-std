@@ -120,6 +120,44 @@ final readonly class SpokenCoverage
     }
 
     /**
+     * КАКИХ СЛОВ ЦЕЛИ НЕ ХВАТИЛО — в том виде, в каком они написаны на карточке, в порядке чтения
+     * (наряд SPEECH-2, Ч.3.5). Зеркало клиентского `SessionGrader.uncoveredWords`.
+     *
+     * Считается ТЕМ ЖЕ ходом, что и {@see ratio()} — те же границы слов, тот же хвостовой сибилянт,
+     * тот же мультимножественный расход, — иначе вердикт говорил бы «не хватило X», когда покрытие
+     * X засчитало. Группировка по НАПИСАННОМУ слову, а не по канонизированному токену: «don't» —
+     * это одно слово на экране и два токена внутри, и человеку показывают слово.
+     *
+     * @return list<string>
+     */
+    public function missing(string $response, string $expected): array
+    {
+        $raw = trim($expected);
+        if ($raw === '') {
+            return [];
+        }
+        $rawWords = preg_split('/\s+/u', $raw) ?: [];
+        $available = array_count_values($this->boundary->align($this->words($response), $this->words($expected)));
+
+        $missing = [];
+        foreach ($rawWords as $word) {
+            $tokens = $this->words($word);
+            // Слово, которое канонизируется в пустоту (одна пунктуация), не пропущено и не найдено.
+            if ($tokens === []) {
+                continue;
+            }
+            foreach ($tokens as $token) {
+                if (! $this->consume($available, $token)) {
+                    $missing[] = $word;
+                    break;
+                }
+            }
+        }
+
+        return $missing;
+    }
+
+    /**
      * Marks one occurrence of $word as used in $available and returns true — exact first, then a
      * suffix-tolerant match (QA-20: a recogniser drops a trailing sibilant far more than it
      * invents or swaps a whole word). $available is small (one sentence), so a linear scan for the

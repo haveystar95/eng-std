@@ -22,6 +22,13 @@ final readonly class ExpectedAnswer
         array $accepted,
         public bool $isPhrase = false,
         public MatchPolicy $policy = MatchPolicy::Exact,
+        /**
+         * ВСЯ РЕПЛИКА, когда зачёт считается не только по [$accepted] — то есть при
+         * {@see MatchPolicy::KeyAndRest}, где `accepted` это КЛЮЧИ, а покрытие меряется по тому,
+         * что осталось от реплики без них (наряд SPEECH-2, Ч.3.2). Null на всех остальных
+         * политиках: там ключ и есть цель целиком.
+         */
+        public ?string $line = null,
     ) {
         $accepted = array_values(array_filter($accepted, static fn (string $a): bool => trim($a) !== ''));
         if ($accepted === []) {
