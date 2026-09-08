@@ -3326,7 +3326,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planDialogueSayAloudNote =>
-      'Закрепляем произношение. Мы не оцениваем и не сравниваем — скажите и идём дальше.';
+      'Скажите реплику вслух — скажем, что услышали. В прогресс это не идёт.';
 
   @override
   String get planDialogueSaidIt => 'Сказал вслух';

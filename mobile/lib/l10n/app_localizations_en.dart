@@ -3194,7 +3194,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planDialogueSayAloudNote =>
-      'This is for the pronunciation. Nothing is graded and nothing is compared — say it and we move on.';
+      'Say the line out loud — we\'ll tell you what we heard. None of it counts toward your progress.';
 
   @override
   String get planDialogueSaidIt => 'Said it aloud';

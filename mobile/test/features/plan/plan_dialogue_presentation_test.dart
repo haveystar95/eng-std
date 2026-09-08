@@ -242,7 +242,10 @@ void main() {
     // Ход не проматывается в ленту сам: экран останавливается на нём и отдаёт его человеку.
     expect(find.text('ВАШ ОТВЕТ'), findsOneWidget);
     expect(find.text('My background is in backend development.'), findsOneWidget);
-    expect(find.textContaining('Мы не оцениваем'), findsOneWidget);
+    // ВТОРАЯ ПОЛОВИНА СТРОКИ, а не первая (наряд SPEECH-2, Ч.3.5): ход теперь ГОВОРИТ, что
+    // услышал, и «мы не оцениваем и не сравниваем» стало неправдой. Не изменилось то, ради чего
+    // строка стоит: в журнал не уходит ни строки, и лестница не двигается.
+    expect(find.textContaining('В прогресс это не идёт'), findsOneWidget);
     // Пока ход не отдан, следующая реплика собеседника не звучит и такта ответа нет.
     expect(find.text('Что ты ответишь?'), findsNothing);
 
