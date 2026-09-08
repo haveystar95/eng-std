@@ -15,6 +15,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/ui/mic_button.dart';
+
 import 'package:eng_std/data/api_client.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
@@ -244,7 +246,7 @@ void main() {
     // Пока ход не отдан, следующая реплика собеседника не звучит и такта ответа нет.
     expect(find.text('Что ты ответишь?'), findsNothing);
 
-    await tester.tap(find.text('Сказать вслух'));
+    await tester.tap(find.byType(MicButton));
     // Ход не оценивается и ключа не имеет — попытку закрывает тишина после последнего слова
     // (DAY-FIX-3, Ч.1.3).
     await tester.pump(const Duration(seconds: 3));
@@ -252,7 +254,7 @@ void main() {
 
     // Пузырь встал в ленту, разговор пошёл дальше — и ни одного ревью за это не написано:
     // микрофон здесь фиксирует ФАКТ речи и ничего не оценивает (наряд SCENE-RUN, Ч.4).
-    expect(find.text('Сказать вслух'), findsNothing);
+    expect(find.byType(MicButton), findsNothing);
     expect(find.text('Что ты ответишь?'), findsOneWidget);
     expect(log, isEmpty);
 
@@ -272,7 +274,7 @@ void main() {
     );
 
     // Отдать первый ход, потом ответить на свой — и выйти из разговора в хвост.
-    await tester.tap(find.text('Сказать вслух'));
+    await tester.tap(find.byType(MicButton));
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
     await tester.tap(find.text("I'm building a learning app."));
@@ -313,8 +315,8 @@ void main() {
     await tester.ensureVisible(find.text('Начать диалог'));
     await tester.tap(find.text('Начать диалог'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Сказать вслух'));
-    await tester.tap(find.text('Сказать вслух'));
+    await tester.ensureVisible(find.byType(MicButton));
+    await tester.tap(find.byType(MicButton));
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 

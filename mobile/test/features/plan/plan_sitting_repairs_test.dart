@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/ui/mic_button.dart';
+
 import 'package:eng_std/data/api_client.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
@@ -208,7 +210,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.bySemanticsLabel(RegExp('Сказать|Готово')).first);
+      await tester.tap(find.byType(MicButton).first);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Пропустить'));

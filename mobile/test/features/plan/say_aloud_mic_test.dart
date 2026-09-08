@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/ui/mic_button.dart';
+
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
@@ -105,14 +107,36 @@ void main() {
     await tester.pumpWidget(host(_ScriptedRecognizer(const [SpeechAttempt.heard('my background')])));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Сказать вслух'));
-    // Ход не оценивается, ключа у него нет — попытку закрывает тишина после последнего слова.
-    await tester.pump(const Duration(seconds: 3));
+    await tester.tap(find.byType(MicButton));
+    // Попытку закрывает тишина — и не раньше пятой секунды от нажатия (наряд SPEECH-2, Ч.2.2).
+    await tester.pump(const Duration(seconds: 7));
     await tester.pumpAndSettle();
 
     expect(done, 1);
-    // Ни «верно», ни «не то»: разбора произношения здесь не обещали и не делают.
-    expect(find.textContaining('Не то'), findsNothing);
+    // ВЕРДИКТ ЕСТЬ, А ЖУРНАЛА НЕТ (наряд SPEECH-2, Ч.3.5): реплика стоит перед глазами, и «я это
+    // сказал?» — вопрос с ответом. Но ход всё равно ничего не пишет и никого не держит: разбора
+    // произношения здесь не обещали и не делают.
+    expect(find.text('Не то'), findsOneWidget, reason: '«my background» — не вся реплика');
+  });
+
+  // ПРАВИЛО: наряд SPEECH-2, Ч.3.1 / Ч.3.5 — свой ход говорит, что вышло, тремя словами.
+  // ЛОВИТ: молчащий ход. Экран слушал и ставил пузырь одинаково на всё — человек, прочитавший
+  // реплику мимо, узнавал об этом только на прогоне через день.
+  testWidgets('свой ход говорит, что вышло — верно / почти / не то', (tester) async {
+    for (final (heard, expected) in [
+      ('My background is in backend development', 'Верно'),
+      ('My background is in backend', 'Почти — не хватило: development'),
+    ]) {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(host(_ScriptedRecognizer([SpeechAttempt.heard(heard)])));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(MicButton));
+      await tester.pump(const Duration(seconds: 7));
+      await tester.pumpAndSettle();
+
+      expect(find.text(expected), findsOneWidget, reason: heard);
+    }
   });
 
   testWidgets('первая тишина просит повторить, вторая отпускает ход', (tester) async {
@@ -120,7 +144,7 @@ void main() {
     await tester.pumpWidget(host(recognizer));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Сказать вслух'));
+    await tester.tap(find.byType(MicButton));
     // ТИШИНУ ЗАКРЫВАЕТ СТОРОЖ ДВИЖКА (DAY-FIX-3, Ч.1.3): пустой ответ плагина попытку больше не
     // кончает — микрофон переоткрывается, и только пятнадцать секунд без единого слова от
     // открытия отдают ход назад.
@@ -132,7 +156,7 @@ void main() {
     expect(find.textContaining('Не расслышали'), findsOneWidget);
     expect(recognizer.calls, greaterThan(1), reason: 'микрофон переоткрывался, а не сдался');
 
-    await tester.tap(find.text('Сказать вслух'));
+    await tester.tap(find.byType(MicButton));
     await tester.pump(const Duration(seconds: 16));
     await tester.pumpAndSettle();
 
@@ -164,8 +188,8 @@ void main() {
     await tester.pumpWidget(host(recognizer));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Сказать вслух'));
-    await tester.pump(const Duration(seconds: 3));
+    await tester.tap(find.byType(MicButton));
+    await tester.pump(const Duration(seconds: 7));
     await tester.pumpAndSettle();
 
     expect(recognizer.locales, isNotEmpty);

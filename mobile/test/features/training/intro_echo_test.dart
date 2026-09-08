@@ -5,6 +5,8 @@ import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/ui/mic_button.dart';
+
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
@@ -115,10 +117,10 @@ class _FakeRecognizer implements SpeechRecognizer {
   Future<void> cancel() async {}
 }
 
-/// The dimmed microphone that stands in for the echo before the permission exists. Found by its
-/// semantics rather than by its glyph: the echo's own button carries a microphone too, and the two
-/// must not be confused for one another.
-final _invite = find.bySemanticsLabel('Включить микрофон');
+/// КНОПКА МИКРОФОНА ЭХА — та же, что на двух других карточках говорения (наряд SPEECH-2, Ч.1.3).
+///
+/// По СЕМАНТИКЕ, а не по подписи: подпись меняется вместе с состоянием («Твоя очередь» → «Готово»),
+/// а кнопка одна, и тест, ищущий её по тексту, ломается ровно там, где текст и должен меняться.
 
 void main() {
   SessionCard introCard() => SessionCard(
@@ -137,6 +139,8 @@ void main() {
   /// весь тест, чтобы проверку «эхо пишет сюда» можно было задать после хода.
   late SpeechDiagnostics diagnostics;
   setUp(() => diagnostics = SpeechDiagnostics(channel: const MethodChannel('test/absent')));
+
+  Finder micButton() => find.byType(MicButton);
 
   Widget host(_FakeRecognizer recognizer) => ProviderScope(
     overrides: [
@@ -160,124 +164,63 @@ void main() {
     ),
   );
 
-  testWidgets('is hidden until the microphone has been permitted elsewhere', (tester) async {
+  // ПРАВИЛО: наряд SPEECH-2, Ч.1.4 — разрешение спрашивается ПРИ ПЕРВОМ ТАПЕ, не при открытии
+  // карточки.
+  // ЛОВИТ: карточку знакомства, которая просит микрофон, едва появившись. Её контракт — не просить
+  // ничего, и системное окно на первом же новом слове это ровно то, чего он не допускает.
+  testWidgets('asks for nothing until the microphone is actually tapped', (tester) async {
     final recognizer = _FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: false);
     await tester.pumpWidget(host(recognizer));
     await tester.pumpAndSettle();
 
-    // An intro card must never RAISE a permission prompt by itself: it is the card that asks for
-    // nothing. What it may do — since 24.08 — is stand a dimmed microphone where the echo will be,
-    // and wait to be pressed.
-    expect(find.text('Повторить вслух'), findsNothing);
-    expect(_invite, findsOneWidget);
-    expect(recognizer.prepares, 0, reason: 'nothing prompts until the glyph is tapped');
+    // Кнопка стоит на месте — приглашения, которое человеку приходилось разгадывать, больше нет.
+    expect(micButton(), findsOneWidget);
+    expect(recognizer.prepares, 0, reason: 'разрешение спрошено до нажатия');
     expect(recognizer.calls, 0);
-    // The card itself is unaffected — the word, its transcription and «Понятно» are all still there.
+    // Сама карточка не тронута: слово, транскрипция и «Понятно» на месте.
     expect(find.text('reservation'), findsOneWidget);
   });
 
-  testWidgets('offers the echo once the microphone is available', (tester) async {
-    await tester.pumpWidget(
-      host(_FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true)),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Повторить вслух'), findsOneWidget);
-  });
-
-  testWidgets('a mangled attempt still counts — the transcript is shown, never marked', (
-    tester,
-  ) async {
+  // ПРАВИЛО: Ч.1.4 — тап и есть запрос разрешения.
+  // ЛОВИТ: кнопку, которая на отказанном разрешении молча ничего не делает. Отказ — обычное
+  // состояние этой карточки, но человек должен видеть, что его нажатие дошло.
+  testWidgets('the first tap is what asks the OS — and a refusal says so', (tester) async {
     final recognizer = _FakeRecognizer(
-      attempt: const SpeechAttempt.heard('reserve ation'),
-      isReady: true,
+      attempt: const SpeechAttempt.silent(),
+      isReady: false,
+      grantsOnPrepare: false,
     );
     await tester.pumpWidget(host(recognizer));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Повторить вслух'));
+    await tester.tap(micButton());
     await tester.pumpAndSettle();
 
-    // A mangled first attempt at a new word still counts: this is a statement about the microphone,
-    // NOT a check against the term. Telling someone their first try was wrong is the fastest way to
-    // make them stop saying anything out loud. Since QA-21 it prints WHAT it heard rather than a
-    // bare «Услышал тебя» — still no verdict, just the words, which is the one thing the learner
-    // needs to judge their own attempt by.
-    expect(find.text('Услышали: «reserve ation»'), findsOneWidget);
-    expect(find.text('Попробуй ещё'), findsNothing);
-    // ОДИН ИСХОД, а не одно открытие плагина (наряд DAY-GATE-1, доработка Ч.0.1): эхо перешло на
-    // общий движок, и попытку закрывает ПРАВИЛО, а не первый `finalResult`. Плагин переоткрывается
-    // столько раз, сколько нужно склейке; человеку это один ход и один результат.
-    expect(recognizer.calls, greaterThanOrEqualTo(1));
-  });
-
-  testWidgets('invites another go when it heard nothing — and never calls it wrong', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      host(_FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true)),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Повторить вслух'));
-    await tester.pumpAndSettle();
-
+    expect(recognizer.prepares, 1);
+    expect(recognizer.calls, 0, reason: 'без разрешения микрофон не открывается');
     expect(find.text('Попробуй ещё'), findsOneWidget);
-    // The intro's own exit is untouched and still the only way forward: the echo is skippable in
-    // the most literal sense — you can ignore it entirely.
-    expect(find.text('Повторить вслух'), findsOneWidget);
   });
 
-  group('a brand-new word\'s intro card, first to touch speech this run (QA-21)', () {
-    // isReady: false here on purpose — this is the exact gap: no card has called `prepare` yet
-    // THIS run, so isReady cannot be the thing that answers. hasPermission is the OS's own answer,
-    // asked directly and without a prompt (see the interface doc), and is what QA-21 adds.
-
-    testWidgets('the echo appears once the OS confirms the mic is already permitted', (
-      tester,
-    ) async {
-      final recognizer = _FakeRecognizer(
-        attempt: const SpeechAttempt.silent(),
-        isReady: false,
-        hasPermission: true,
+  // ПРАВИЛО: Ч.3.1 / Ч.3.5 — эхо говорит, что вышло: «верно», «почти — не хватило: …», «не то».
+  // ЛОВИТ: молчащее эхо. До наряда оно говорило «Услышал тебя» на любую попытку, и человек,
+  // прочитавший слово неправильно, узнавал об этом только на карточке говорения через два дня.
+  // Порог — чтения с экрана: слово стоит перед глазами.
+  testWidgets('says what came out — right, almost, or not that', (tester) async {
+    for (final (heard, expected) in [
+      ('reservation', 'Верно'),
+      ('completely different words', 'Не то'),
+    ]) {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(
+        host(_FakeRecognizer(attempt: SpeechAttempt.heard(heard), isReady: true)),
       );
-      await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 
-      expect(find.text('Повторить вслух'), findsOneWidget);
-      // Asked once, at mount — and still never `prepare`, so still never a prompt.
-      expect(recognizer.permissionChecks, 1);
-      expect(recognizer.prepares, 0);
-    });
-
-    testWidgets('stays hidden when the OS says no too', (tester) async {
-      final recognizer = _FakeRecognizer(
-        attempt: const SpeechAttempt.silent(),
-        isReady: false,
-        hasPermission: false,
-      );
-      await tester.pumpWidget(host(recognizer));
+      await tester.tap(micButton());
       await tester.pumpAndSettle();
 
-      expect(find.text('Повторить вслух'), findsNothing);
-      expect(recognizer.permissionChecks, 1);
-      expect(recognizer.prepares, 0);
-    });
-
-    testWidgets('skips the OS round trip entirely once isReady is already true', (tester) async {
-      final recognizer = _FakeRecognizer(
-        attempt: const SpeechAttempt.silent(),
-        isReady: true,
-        hasPermission: false,
-      );
-      await tester.pumpWidget(host(recognizer));
-      await tester.pumpAndSettle();
-
-      // isReady already says yes — asking the OS again would be redundant, not wrong, so this pins
-      // it as a cheap-path guarantee rather than a strict correctness requirement.
-      expect(find.text('Повторить вслух'), findsOneWidget);
-      expect(recognizer.permissionChecks, 0);
-    });
+      expect(find.text(expected), findsOneWidget, reason: heard);
+    }
   });
 
   group('the echo makes the recording legible (QA-21)', () {
@@ -293,13 +236,15 @@ void main() {
       await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Повторить вслух'));
+      await tester.tap(micButton());
       await tester.pump();
 
       // Before this, a tap changed nothing at all on screen — the button just went disabled, so a
       // live microphone looked exactly like a dead one.
       expect(find.text('Слушаю…'), findsOneWidget);
-      expect(find.text('Готово'), findsOneWidget, reason: 'and the tap became a stop');
+      // «Готово» — СЕМАНТИКА кнопки, а не её подпись: подпись говорит человеку, что делать («Пишу
+      // — скажи и нажми „Готово“»), а имя элемента остаётся коротким для читалки экрана.
+      expect(find.bySemanticsLabel('Готово'), findsOneWidget, reason: 'and the tap became a stop');
       expect(find.text('Повторить вслух'), findsNothing);
     });
 
@@ -312,7 +257,7 @@ void main() {
       await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Повторить вслух'));
+      await tester.tap(micButton());
       await tester.pump();
       recognizer.emitPartial('reser');
       await tester.pump();
@@ -330,9 +275,9 @@ void main() {
       await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Повторить вслух'));
+      await tester.tap(micButton());
       await tester.pump();
-      await tester.tap(find.text('Готово'));
+      await tester.tap(micButton()); // второй тап — «Готово»
       await tester.pumpAndSettle();
 
       expect(recognizer.stops, 1);
@@ -346,7 +291,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Повторить вслух'));
+      await tester.tap(micButton());
       await tester.pumpAndSettle();
 
       expect(find.text('Попробуй ещё'), findsOneWidget);
@@ -363,11 +308,11 @@ void main() {
       await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Повторить вслух'));
+      await tester.tap(micButton());
       await tester.pumpAndSettle();
       expect(find.text('Услышали: «reservation»'), findsOneWidget);
 
-      await tester.tap(find.text('Повторить вслух'));
+      await tester.tap(micButton());
       await tester.pumpAndSettle();
 
       // A second attempt, not a second line: the old transcript is gone, replaced by this one.
@@ -385,14 +330,14 @@ void main() {
       await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Повторить вслух'));
+      await tester.tap(micButton());
       await tester.pumpAndSettle();
 
       // ПЛАГИНУ ОТДАЮТСЯ ЧИСЛА ДВИЖКА — то же правило, что у карточки говорения (DAY-FIX-3, Ч.1.3):
       // окно плагина это ПОТОЛОК, а не правило, и закрывает попытку движок. Пауза после речи
       // остаётся той, которую просит длина слова, — это и есть «то же окно, что у говорения».
       const engine = SpeechTurnConfig();
-      expect(recognizer.timeoutsPerCall.first, engine.maxSpeech + engine.silenceBeforeSkip);
+      expect(recognizer.timeoutsPerCall.first, engine.effectiveMaxRecording);
       expect(recognizer.pauseForsPerCall.first, SpokenAnswer.wordFormPauseFor);
       expect(recognizer.contextualStringsPerCall.first, ['reservation']);
     });
@@ -413,7 +358,7 @@ void main() {
 
       expect(diagnostics.phase, SpeechPhase.idle, reason: 'до хода журнал молчит');
 
-      await tester.tap(find.text('Повторить вслух'));
+      await tester.tap(micButton());
       await tester.pumpAndSettle();
 
       expect(diagnostics.phase, SpeechPhase.closedBySilence);
@@ -423,74 +368,27 @@ void main() {
     });
   });
 
-  group('the microphone invitation (наряд A-4.1 Ч.5)', () {
-    // The echo was undiscoverable, and not by accident: the permission is granted on the first
-    // SPEAKING card, which is high on the ladder, and every reinstall of a personal-team build
-    // resets it. A learner who had not reached that rung could not find out the echo existed.
+  // ПРИГЛАШЕНИЕ УБРАНО ВМЕСТЕ С ПРЕДВАРИТЕЛЬНЫМ ВОПРОСОМ (наряд SPEECH-2, Ч.1.4).
+  //
+  // Группа «the microphone invitation (наряд A-4.1 Ч.5)» проверяла экран из двух состояний:
+  // тусклый глиф-приглашение до разрешения и кнопку эха после. Она была права для своего наряда —
+  // эхо было недоступно и его нечем было найти, — но решала это ВТОРЫМ элементом, который человеку
+  // приходилось разгадывать. Теперь кнопка одна и всегда, а разрешение спрашивает первый тап; что
+  // от той группы осталось живым, проверяют два теста выше («asks for nothing until…» и «the first
+  // tap is what asks the OS…»).
 
-    testWidgets('a tap asks the OS, and the echo appears when it says yes', (tester) async {
-      final recognizer = _FakeRecognizer(
-        attempt: const SpeechAttempt.silent(),
-        isReady: false,
-        hasPermission: false,
-        grantsOnPrepare: true,
-      );
-      await tester.pumpWidget(host(recognizer));
-      await tester.pumpAndSettle();
+  testWidgets('the intro still requires nothing — «Понятно» never waited on any of this', (
+    tester,
+  ) async {
+    final recognizer = _FakeRecognizer(
+      attempt: const SpeechAttempt.silent(),
+      isReady: false,
+      hasPermission: false,
+    );
+    await tester.pumpWidget(host(recognizer));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Повторить вслух'), findsNothing);
-      await tester.tap(_invite);
-      await tester.pumpAndSettle();
-
-      expect(recognizer.prepares, 1, reason: 'the tap is the prompt, and the only one');
-      expect(find.text('Повторить вслух'), findsOneWidget);
-      expect(_invite, findsNothing);
-    });
-
-    testWidgets('a refusal leaves the invitation and says nothing about it', (tester) async {
-      final recognizer = _FakeRecognizer(
-        attempt: const SpeechAttempt.silent(),
-        isReady: false,
-        hasPermission: false,
-        grantsOnPrepare: false,
-      );
-      await tester.pumpWidget(host(recognizer));
-      await tester.pumpAndSettle();
-
-      await tester.tap(_invite);
-      await tester.pumpAndSettle();
-
-      expect(recognizer.prepares, 1);
-      expect(_invite, findsOneWidget);
-      expect(find.text('Повторить вслух'), findsNothing);
-      // A refused microphone is an ordinary state of this card, not an error to report.
-      expect(find.textContaining('Не удалось'), findsNothing);
-      expect(recognizer.calls, 0);
-    });
-
-    testWidgets('there is no invitation once the echo itself is there', (tester) async {
-      await tester.pumpWidget(
-        host(_FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true)),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Повторить вслух'), findsOneWidget);
-      expect(_invite, findsNothing);
-    });
-
-    testWidgets('the intro still requires nothing — «Понятно» never waited on any of this', (
-      tester,
-    ) async {
-      final recognizer = _FakeRecognizer(
-        attempt: const SpeechAttempt.silent(),
-        isReady: false,
-        hasPermission: false,
-      );
-      await tester.pumpWidget(host(recognizer));
-      await tester.pumpAndSettle();
-
-      expect(find.text('reservation'), findsOneWidget);
-      expect(recognizer.prepares, 0);
-    });
+    expect(find.text('reservation'), findsOneWidget);
+    expect(recognizer.prepares, 0);
   });
 }

@@ -13,12 +13,12 @@ import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/ui/mic_button.dart';
 
 import '../../support/speech_probe_channel.dart';
 
-/// Микрофон, которого не бывает на симуляторе: прогон открывает его сам, и без подмены тест мерил
-/// бы плагин, а не экран. Молчит всегда — это и есть тот случай, ради которого существуют сторож и
-/// «Пропустить».
+/// Микрофон, которого не бывает на симуляторе: без подмены тест мерил бы плагин, а не экран.
+/// Молчит всегда — это и есть тот случай, ради которого существуют сторож записи и «Пропустить».
 class _SilentRecognizer implements SpeechRecognizer {
   int calls = 0;
   int cancels = 0;
@@ -172,35 +172,30 @@ void main() {
     expect(find.text('QA · miss'), findsOneWidget);
   });
 
-  testWidgets('«Пропустить» доступно всегда, а сторож дожимает ход по тишине от ОТКРЫТИЯ микрофона', (
-    tester,
-  ) async {
-    // В говорении фраз выход появляется после отказа канала: там молчание это железо. В прогоне
-    // молчание — законный ход человека, который не вспомнил (SCENE-RUN, Ч.2.4), а с DAY-FIX-3
-    // (Ч.1.7) выход не появляется по таймеру — он на экране с первого кадра.
-    final answers = <SessionAnswer>[];
-    await tester.pumpWidget(
-      host(runCard(), run: const SceneRunKnobs(listenSeconds: 8), onAnswered: answers.add),
-    );
+  // ПРАВИЛО: наряд SPEECH-2, Ч.1.1 — МИКРОФОН НЕ ОТКРЫВАЕТСЯ САМ, НИГДЕ.
+  // ЛОВИТ: возврат автооткрытия. Живьём 08.09 это выглядело так: человек ещё не собрался, а его
+  // уже пишут; сторож тикает; первое, что слышит микрофон, — вдох. В тренажёре человек имеет право
+  // подумать, и «реалистичность» разговора этого права не стоит.
+  testWidgets('микрофон не открывается сам — только по нажатию (Ч.1.1)', (tester) async {
+    final mic = _SilentRecognizer();
+    await tester.pumpWidget(host(runCard(), run: const SceneRunKnobs(), recognizer: mic));
     await tester.pump();
-    expect(find.text('Пропустить'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
 
-    // Микрофон открывается после слайда; сторож считает от него (Ч.1.3), не от карточки.
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(seconds: 7));
-    expect(answers, isEmpty, reason: 'восемь секунд от открытия ещё не прошли');
+    expect(mic.calls, 0, reason: 'запись началась без нажатия');
+    // …а кнопка ЗОВЁТ — состояние без таймаута (Ч.1.2).
+    expect(find.text('Твоя очередь — нажми и говори'), findsOneWidget);
 
-    // …и сторож дожимает сам: ход делается пустым ответом, разговор идёт дальше, никто не
-    // застревает.
-    await tester.pump(const Duration(seconds: 2));
-    await tester.pumpAndSettle();
-    expect(answers, hasLength(1));
-    expect(answers.single.response, isEmpty);
+    await tester.tap(find.byType(MicButton));
+    await tester.pump();
+    expect(mic.calls, 1);
+    expect(find.text('Пишу — скажи и нажми «Готово»'), findsOneWidget);
   });
 
-  testWidgets('микрофон не открывается, пока динамик говорит реплику собеседника (Ч.1.1)', (
-    tester,
-  ) async {
+  // ПРАВИЛО: Ч.1.1 — пока звучит реплика собеседника, кнопка не зовёт и не нажимается.
+  // ЛОВИТ: тап посреди чужой реплики, который записал бы динамик. Эхо-замок его выбросит, но
+  // человек к этому моменту уже потратит попытку и не поймёт, почему.
+  testWidgets('кнопка ждёт, пока динамик говорит реплику собеседника (Ч.1.1)', (tester) async {
     final mic = _SilentRecognizer();
     final speaking = ValueNotifier<bool>(true);
     await tester.pumpWidget(
@@ -209,16 +204,49 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 2));
 
-    // Динамик ещё говорит — микрофон закрыт, что бы ни было на слайде.
-    expect(mic.calls, 0);
+    expect(find.text('Собеседник говорит'), findsOneWidget);
+    await tester.tap(find.byType(MicButton));
+    await tester.pump();
+    expect(mic.calls, 0, reason: 'кнопка нажалась посреди чужой реплики');
 
-    // Реплика доиграла — микрофон открылся по этому событию, а не по таймеру карточки.
+    // Реплика доиграла — кнопка позвала, и запись начинает человек.
     speaking.value = false;
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Твоя очередь — нажми и говори'), findsOneWidget);
+    await tester.tap(find.byType(MicButton));
+    await tester.pump();
     expect(mic.calls, 1);
 
     speaking.dispose();
+  });
+
+  // ПРАВИЛО: SCENE-RUN Ч.2.4 + SPEECH-2 Ч.2.1 — «Пропустить» на экране с первого кадра, а сторож
+  // считает ЗАПИСЬ (от нажатия), не ожидание.
+  // ЛОВИТ: выход, появляющийся по таймеру, и сторож, делающий ход за человека, который записи ещё
+  // не начинал. Пустой ответ — это `again` в append-only журнале, и право его написать сторож
+  // получает только после того, как человек нажал.
+  testWidgets('«Пропустить» доступно всегда, а сторож считает запись от НАЖАТИЯ', (tester) async {
+    final answers = <SessionAnswer>[];
+    await tester.pumpWidget(
+      host(runCard(), run: const SceneRunKnobs(), onAnswered: answers.add),
+    );
+    await tester.pump();
+    expect(find.text('Пропустить'), findsOneWidget);
+
+    // Человек думает — и сколько бы он ни думал, ход остаётся его.
+    await tester.pump(const Duration(seconds: 30));
+    expect(answers, isEmpty, reason: 'сторож сделал ход за человека, не начавшего запись');
+
+    await tester.tap(find.byType(MicButton));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 14));
+    expect(answers, isEmpty, reason: 'пятнадцать секунд записи ещё не прошли');
+
+    // …и сторож дожимает: ход делается пустым ответом, разговор идёт дальше.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(answers, hasLength(1));
+    expect(answers.single.response, isEmpty);
   });
 
   testWidgets('склейка, в которой слышна реплика собеседника, выбрасывается как эхо (Ч.1.5)', (
@@ -236,23 +264,47 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byType(MicButton));
+    await tester.pump();
     expect(mic.calls, 1);
 
-    // Эхо динамика: реплика роли целиком, ключа нет.
+    // Эхо динамика: реплика роли целиком.
     mic.say('what seems to be the problem today');
     mic.close(const SpeechAttempt.heard('what seems to be the problem today'));
     await tester.pump(const Duration(milliseconds: 300));
 
-    // Не ответ и не ошибка: журнал пуст, микрофон переоткрыт.
+    // Не ответ и не ошибка: журнал пуст, микрофон переоткрыт, ЗАПИСЬ ПРОДОЛЖАЕТСЯ.
     expect(answers, isEmpty);
     expect(mic.calls, 2);
 
-    // Человек: упрощённый ключ (`speaking_keys`) засчитан по дороге — Ч.1.6.
-    mic.say('fever');
+    // Человек говорит свою реплику — и её закрывает тишина, а не совпадение (SPEECH-2, Ч.2.1).
+    mic.say('my child has a fever');
+    await tester.pump(const Duration(seconds: 7));
     await tester.pumpAndSettle();
     expect(answers, hasLength(1));
     expect(answers.single.verdict, LocalCheck.correct);
+  });
+
+  // ПРАВИЛО: наряд SPEECH-2, Ч.3.2 — ключ обязателен И покрытие остальных слов реплики ≥ 0.6.
+  // ЛОВИТ: возврат к «ключ есть — верно». Именно так и было: «fever» вместо «My child has a fever»
+  // засчитывалось верно, а движок вдобавок закрывал на этом слове запись — фраза не дослушивалась
+  // и не оценивалась.
+  testWidgets('одно ключевое слово вместо реплики — не ответ (Ч.3.2)', (tester) async {
+    final mic = _DrivenRecognizer();
+    final answers = <SessionAnswer>[];
+    await tester.pumpWidget(
+      host(runCard(), run: const SceneRunKnobs(), recognizer: mic, onAnswered: answers.add),
+    );
+    await tester.pump();
+    await tester.tap(find.byType(MicButton));
+    await tester.pump();
+
+    mic.say('fever');
+    await tester.pump(const Duration(seconds: 7));
+    await tester.pumpAndSettle();
+
+    expect(answers, hasLength(1));
+    expect(answers.single.verdict, LocalCheck.wrong);
   });
 
   // ПРАВИЛО: «клиент никогда не строже сервера» (инвариант проекта; сервер судит по ключу только
@@ -279,9 +331,11 @@ void main() {
       host(noKey, run: const SceneRunKnobs(), recognizer: mic, onAnswered: answers.add),
     );
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byType(MicButton));
+    await tester.pump();
 
     mic.say('what skills are most important for this role');
+    await tester.pump(const Duration(seconds: 7));
     await tester.pumpAndSettle();
 
     expect(answers, hasLength(1));
@@ -289,7 +343,7 @@ void main() {
     expect(find.textContaining('Не то'), findsNothing);
   });
 
-  testWidgets('обрыв на полуслове — «скажи ещё раз», журнал не пишется, микрофон открывается снова (Ч.1.4)', (
+  testWidgets('обрыв на полуслове — «скажи ещё раз», журнал не пишется, вторую попытку начинает человек', (
     tester,
   ) async {
     final mic = _DrivenRecognizer();
@@ -298,7 +352,8 @@ void main() {
       host(runCard(), run: const SceneRunKnobs(), recognizer: mic, onAnswered: answers.add),
     );
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byType(MicButton));
+    await tester.pump();
 
     mic.say('my child has');
     mic.close(const SpeechAttempt.unavailable());
@@ -307,8 +362,14 @@ void main() {
     expect(answers, isEmpty);
     expect(find.textContaining('Не расслышали до конца'), findsOneWidget);
 
-    // Вторая попытка — сама, без нажатий: прогон открыл микрофон, прогону его и переоткрывать.
-    await tester.pump(const Duration(seconds: 1));
+    // ВТОРУЮ ПОПЫТКУ НАЧИНАЕТ ЧЕЛОВЕК (наряд SPEECH-2, Ч.1.1). Запись, начавшаяся сама сразу после
+    // «не расслышали», ловит ровно ту же неготовность, из-за которой обрыв и вышел.
+    await tester.pump(const Duration(seconds: 2));
+    expect(mic.calls, 1, reason: 'микрофон переоткрылся сам');
+    expect(find.text('Твоя очередь — нажми и говори'), findsOneWidget);
+
+    await tester.tap(find.byType(MicButton));
+    await tester.pump();
     expect(mic.calls, 2);
   });
 }

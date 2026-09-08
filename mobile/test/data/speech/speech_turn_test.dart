@@ -18,6 +18,7 @@ class _DrivenRecognizer implements SpeechRecognizer {
   Completer<SpeechAttempt>? _pending;
   ValueChanged<String>? _onPartial;
   final List<Duration> pauseFors = [];
+  final List<Duration> timeouts = [];
 
   @override
   bool get isReady => true;
@@ -39,6 +40,7 @@ class _DrivenRecognizer implements SpeechRecognizer {
   }) {
     opened++;
     pauseFors.add(pauseFor);
+    timeouts.add(timeout);
     _onPartial = onPartial;
     final completer = Completer<SpeechAttempt>();
     _pending = completer;
@@ -69,16 +71,18 @@ class _DrivenRecognizer implements SpeechRecognizer {
   }
 }
 
-/// ДВИЖОК ОДНОГО ХОДА — замки правил Ч.1.2–Ч.1.5 наряда DAY-FIX-3.
+/// ДВИЖОК ОДНОЙ ЗАПИСИ — замки правил Ч.2 наряда SPEECH-2 (и того, что от DAY-FIX-3 уцелело).
 void main() {
   const config = SpeechTurnConfig(
     silenceAfterSpeech: Duration(seconds: 2),
-    maxSpeech: Duration(seconds: 15),
-    silenceBeforeSkip: Duration(seconds: 15),
+    maxRecording: Duration(seconds: 15),
     reopenGap: Duration(milliseconds: 100),
   );
 
-  test('finalResult плагина не закрывает попытку: результаты копятся в склейку до тишины', () {
+  // ПРАВИЛО: DAY-FIX-3, Ч.1.2 — плагин не владеет концом попытки; результаты копятся в склейку.
+  // ЛОВИТ: возврат к «finalResult = конец ответа». iOS ставит его на любой запинке короче трёх
+  // секунд, и «My… back hurts» приходило как «My» — то есть ошибкой в append-only журнале.
+  test('finalResult плагина не закрывает запись: результаты копятся в склейку до тишины', () {
     fakeAsync((fake) {
       final mic = _DrivenRecognizer();
       final turn = SpeechTurn(mic, config: config);
@@ -92,20 +96,152 @@ void main() {
       mic.close(const SpeechAttempt.heard('my back'));
       fake.elapse(const Duration(milliseconds: 200));
 
-      // Микрофон переоткрыт, попытка жива, ход не отдан.
+      // Микрофон переоткрыт, запись жива, ход не отдан.
       expect(mic.opened, 2);
       expect(result, isNull);
 
-      // …человек договаривает, и через две секунды ТИШИНЫ попытка закрывается склейкой.
+      // …человек договаривает — и запись закрывается склейкой, но НЕ РАНЬШЕ пола ожидания (Ч.2.2).
       fake.elapse(const Duration(milliseconds: 800));
       mic.say('hurts');
-      fake.elapse(const Duration(seconds: 1));
-      expect(result, isNull);
-      fake.elapse(const Duration(seconds: 1));
+      fake.elapse(const Duration(seconds: 2));
+      expect(result, isNull, reason: 'тишина закрыла запись раньше пятой секунды');
+      fake.elapse(const Duration(seconds: 3));
 
       expect(result?.outcome, SpeechTurnOutcome.heard);
       expect(result?.transcript, 'my back hurts');
       expect(mic.cancels, greaterThan(0));
+    });
+  });
+
+  // ПРАВИЛО: наряд SPEECH-2, Ч.2.1 — движок НЕ закрывается по совпадению; закрывают его тишина,
+  // тап, сторож записи и ошибка канала, и больше ничего.
+  // ЛОВИТ: возврат `isAnswer`. На телефоне 08.09 это выглядело так: человек говорит длинную
+  // реплику, на первом узнанном ключевом слове микрофон закрывается и карточка ставит «верно».
+  // Фразу никто не дослушал — а тренажёр, который учит фразам, засчитал слово.
+  test('ключ, прозвучавший в начале длинной фразы, запись НЕ закрывает', () {
+    fakeAsync((fake) {
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config);
+      SpeechTurnResult? result;
+      turn.listen(expected: const ['a place to rent'], localeId: 'en_US').then((r) => result = r);
+      fake.flushMicrotasks();
+
+      // Ключ — первыми же словами.
+      mic.say('a place to rent');
+      fake.elapse(const Duration(milliseconds: 500));
+      expect(result, isNull, reason: 'запись закрылась на узнанном ключе');
+
+      // …и человек продолжает: остальная реплика доезжает в ту же склейку.
+      mic.say('a place to rent for long term living');
+      fake.elapse(const Duration(seconds: 6));
+
+      expect(result?.outcome, SpeechTurnOutcome.heard);
+      expect(
+        result?.transcript,
+        'a place to rent for long term living',
+        reason: 'на зачёт ушёл первый частичный результат, а не финальная склейка (Ч.2.3)',
+      );
+    });
+  });
+
+  // ПРАВИЛО: Ч.2.2 — до первого звука запись живёт не меньше пяти секунд.
+  // ЛОВИТ: тишину, закрывшую запись через две секунды после единственного вырвавшегося слова.
+  // Между «нажал» и фразой лежит вдох; запись, закрытая на нём, отдаёт на зачёт полфразы.
+  test('тишина не закрывает запись раньше пяти секунд от нажатия', () {
+    fakeAsync((fake) {
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config);
+      SpeechTurnResult? result;
+      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
+      fake.flushMicrotasks();
+
+      mic.say('I');
+      fake.elapse(const Duration(seconds: 2, milliseconds: 500));
+      expect(result, isNull, reason: 'две секунды тишины закрыли запись на первой секунде');
+
+      fake.elapse(const Duration(seconds: 3));
+      expect(result?.outcome, SpeechTurnOutcome.heard);
+      expect(result?.transcript, 'I');
+    });
+  });
+
+  // ПРАВИЛО: Ч.2.1 — сторож считает ВСЮ запись, от нажатия, а не речь от первого слова.
+  // ЛОВИТ: сторож, который человек может отодвигать бесконечно, продолжая говорить, — и обратное,
+  // сторож, отмеряющий только паузу до первого слова. У записи есть длина, и у неё есть потолок.
+  test('сторож закрывает запись через 15 с от НАЖАТИЯ, чем бы она ни была занята', () {
+    fakeAsync((fake) {
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config);
+      SpeechTurnResult? result;
+      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
+      fake.flushMicrotasks();
+
+      // Человек говорит без пауз по слову в секунду — тишина не срабатывает ни разу.
+      final words = <String>[];
+      for (var i = 0; i < 20; i++) {
+        words.add('w$i');
+        mic.say(words.join(' '));
+        fake.elapse(const Duration(seconds: 1));
+        if (i < 14) expect(result, isNull, reason: 'секунда ${i + 1} записи — она ещё открыта');
+      }
+
+      expect(result?.outcome, SpeechTurnOutcome.heard);
+      expect(result?.transcript.split(' ').length, 15, reason: 'ровно 15 секунд записи');
+    });
+  });
+
+  // ПРАВИЛО: Ч.2.1 — пол сторожа 15 с; серверный `listen_seconds` может его поднять и не может
+  // опустить.
+  // ЛОВИТ: конфиг, уехавший вниз. Запись, закрытая раньше пятнадцати секунд, режет длинную реплику
+  // на полуслове, а в прогоне ещё и пишет за человека промах в append-only журнал.
+  test('сторож не может встать ниже пятнадцати секунд, каким бы малым ни приехал listen_seconds', () {
+    fakeAsync((fake) {
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config.copyWith(maxRecording: const Duration(seconds: 3)));
+      SpeechTurnResult? result;
+      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
+      fake.flushMicrotasks();
+
+      fake.elapse(const Duration(seconds: 14, milliseconds: 900));
+      expect(result, isNull, reason: 'запись закрыта раньше пола сторожа');
+
+      fake.elapse(const Duration(milliseconds: 200));
+      expect(result?.outcome, SpeechTurnOutcome.silent);
+    });
+  });
+
+  // ПРАВИЛО: Ч.2.1 — тап «Готово» закрывает запись тем, что есть, и говорит об этом стадией.
+  // ЛОВИТ: «Готово», отдающее пустоту (плагин на `stop` иногда не отдаёт ничего) и стадию,
+  // неотличимую от тишины: «закрылся сам» и «закрыл человек» — разные вещи для того, кто ищет,
+  // почему ход кончился рано.
+  test('«Готово» закрывает запись тем, что есть — стадией closedByTap', () {
+    fakeAsync((fake) {
+      final diagnostics = SpeechDiagnostics(channel: const MethodChannel('test/absent'));
+      final mic = _DrivenRecognizer();
+      final opened = DateTime(2026, 9, 8, 12);
+      var elapsed = Duration.zero;
+      final turn = SpeechTurn(
+        mic,
+        config: config,
+        diagnostics: diagnostics,
+        now: () => opened.add(elapsed),
+      );
+      SpeechTurnResult? result;
+      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
+      fake.flushMicrotasks();
+
+      fake.elapse(const Duration(seconds: 4));
+      elapsed = const Duration(seconds: 4);
+      mic.say('my back');
+      fake.elapse(const Duration(milliseconds: 500));
+      turn.stop();
+      fake.flushMicrotasks();
+
+      expect(mic.stops, 1);
+      expect(result?.outcome, SpeechTurnOutcome.heard);
+      expect(result?.transcript, 'my back');
+      expect(result?.speechStartedAt, opened.add(const Duration(seconds: 4)));
+      expect(diagnostics.phase, SpeechPhase.closedByTap);
     });
   });
 
@@ -152,70 +288,6 @@ void main() {
     });
   });
 
-  test('потолок речи — 15 с от ПЕРВОГО слова, не от открытия микрофона', () {
-    fakeAsync((fake) {
-      final mic = _DrivenRecognizer();
-      final turn = SpeechTurn(mic, config: config);
-      SpeechTurnResult? result;
-      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
-      fake.flushMicrotasks();
-
-      // Человек думает 10 секунд, потом говорит без пауз по слову в секунду.
-      fake.elapse(const Duration(seconds: 10));
-      final words = <String>[];
-      for (var i = 0; i < 16; i++) {
-        words.add('w$i');
-        mic.say(words.join(' '));
-        fake.elapse(const Duration(seconds: 1));
-        if (i < 14) expect(result, isNull, reason: 'секунда ${i + 1} речи — попытка ещё открыта');
-      }
-
-      expect(result?.outcome, SpeechTurnOutcome.heard);
-      // Ровно то, что успело прозвучать за 15 секунд речи.
-      expect(result?.transcript.split(' ').length, 15);
-    });
-  });
-
-  test('сторож: 15 с тишины от открытия без единого слова — silent; слово в последнюю секунду снимает его', () {
-    fakeAsync((fake) {
-      final mic = _DrivenRecognizer();
-      final turn = SpeechTurn(mic, config: config);
-      SpeechTurnResult? result;
-      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
-      fake.flushMicrotasks();
-
-      // Плагин сам закрывает пустые попытки каждые 5 секунд — они переоткрываются молча.
-      fake.elapse(const Duration(seconds: 5));
-      mic.close(const SpeechAttempt.silent());
-      fake.elapse(const Duration(seconds: 5));
-      mic.close(const SpeechAttempt.silent());
-      fake.elapse(const Duration(milliseconds: 200));
-      expect(result, isNull);
-      expect(mic.opened, 3);
-
-      fake.elapse(const Duration(milliseconds: 4800));
-      expect(result?.outcome, SpeechTurnOutcome.silent);
-      expect(result?.transcript, '');
-    });
-
-    fakeAsync((fake) {
-      final mic = _DrivenRecognizer();
-      final turn = SpeechTurn(mic, config: config);
-      SpeechTurnResult? result;
-      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
-      fake.flushMicrotasks();
-
-      fake.elapse(const Duration(seconds: 14));
-      mic.say('a fever');
-      fake.elapse(const Duration(seconds: 1));
-      // Сторож не сработал: речь началась.
-      expect(result, isNull);
-      fake.elapse(const Duration(seconds: 1));
-      expect(result?.outcome, SpeechTurnOutcome.heard);
-      expect(result?.transcript, 'a fever');
-    });
-  });
-
   test('обрыв канала после начала речи — incomplete, а не ответ; до речи — unavailable', () {
     fakeAsync((fake) {
       final mic = _DrivenRecognizer();
@@ -246,7 +318,10 @@ void main() {
     });
   });
 
-  test('эхо-замок: узнанная реплика роли без ключа выбрасывается, микрофон переоткрывается', () {
+  // ПРАВИЛО: DAY-FIX-3, Ч.1.5 — эхо динамика выбрасывается из склейки и НЕ заканчивает запись.
+  // ЛОВИТ: эхо, ставшее ответом, и эхо, ставшее закрытием. Микрофон рядом с динамиком слышит
+  // собеседника; склейка с его репликой — не то, что сказал человек, но и не повод обрывать ход.
+  test('эхо-замок: узнанная реплика роли выбрасывается, запись продолжается', () {
     fakeAsync((fake) {
       final mic = _DrivenRecognizer();
       final turn = SpeechTurn(mic, config: config);
@@ -256,7 +331,6 @@ void main() {
           .listen(
             expected: const ['a fever'],
             localeId: 'en_US',
-            isAnswer: (t) => t.contains('fever'),
             echoOf: (t) => t.contains('what seems to be the problem'),
             onPartial: partials.add,
           )
@@ -275,9 +349,9 @@ void main() {
       // Живой «Услышали: …» на экране тоже очищен.
       expect(partials.last, '');
 
-      // Теперь человек: ключ узнан по дороге — договорил.
+      // Теперь человек — и его слова закрывает тишина, как любые другие.
       mic.say('I have a fever');
-      fake.flushMicrotasks();
+      fake.elapse(const Duration(seconds: 6));
 
       expect(result?.outcome, SpeechTurnOutcome.heard);
       expect(result?.transcript, 'I have a fever');
@@ -285,51 +359,32 @@ void main() {
     });
   });
 
-  test('склейка, в которой ключ УЗНАН, не считается эхом, даже если реплика роли в ней тоже есть', () {
+  // ПРАВИЛО: Ч.2.1 — сторож эхом не двигается: он считает запись от нажатия.
+  // ЛОВИТ: сторож, перезаводимый эхо-сбросом. Динамик, слышимый микрофоном, добавлял бы человеку
+  // времени — и запись у шумного стола жила бы вдвое дольше, чем у тихого.
+  test('эхо не отодвигает сторож записи', () {
     fakeAsync((fake) {
       final mic = _DrivenRecognizer();
       final turn = SpeechTurn(mic, config: config);
       SpeechTurnResult? result;
       turn
           .listen(
-            expected: const ['insurance'],
+            expected: const [],
             localeId: 'en_US',
-            isAnswer: (t) => t.contains('insurance'),
-            echoOf: (t) => t.contains('do you have insurance'),
+            echoOf: (t) => t.contains('hello there'),
           )
           .then((r) => result = r);
       fake.flushMicrotasks();
 
-      mic.say('do you have insurance yes I have insurance');
-      fake.flushMicrotasks();
+      fake.elapse(const Duration(seconds: 10));
+      mic.say('hello there');
+      mic.close(const SpeechAttempt.heard('hello there'));
+      fake.elapse(const Duration(milliseconds: 200));
+      expect(result, isNull);
 
-      expect(result?.outcome, SpeechTurnOutcome.heard);
-      expect(result?.echoes, 0);
-    });
-  });
-
-  test('«Готово» закрывает попытку тем, что есть; «сразу» меряется от первого слова', () {
-    fakeAsync((fake) {
-      final mic = _DrivenRecognizer();
-      // Часы теста: идут вместе с `fake.elapse`, чтобы «сразу» было измеримо.
-      final opened = DateTime(2026, 9, 7, 12);
-      var elapsed = Duration.zero;
-      final turn = SpeechTurn(mic, config: config, now: () => opened.add(elapsed));
-      SpeechTurnResult? result;
-      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
-      fake.flushMicrotasks();
-
-      fake.elapse(const Duration(seconds: 4));
-      elapsed = const Duration(seconds: 4);
-      mic.say('my back');
-      fake.elapse(const Duration(milliseconds: 500));
-      turn.stop();
-      fake.flushMicrotasks();
-
-      expect(mic.stops, 1);
-      expect(result?.outcome, SpeechTurnOutcome.heard);
-      expect(result?.transcript, 'my back');
-      expect(result?.speechStartedAt, opened.add(const Duration(seconds: 4)));
+      // Пятнадцатая секунда ОТ НАЖАТИЯ, а не от эха.
+      fake.elapse(const Duration(seconds: 5));
+      expect(result?.outcome, SpeechTurnOutcome.silent);
     });
   });
 
@@ -350,47 +405,32 @@ void main() {
     });
   });
 
-  test('плагину отдаётся пауза после речи из конфига — окно, а не правило', () {
+  test('плагину отдаётся пауза после речи и потолок записи из конфига — окно, а не правило', () {
     fakeAsync((fake) {
       final mic = _DrivenRecognizer();
-      final turn = SpeechTurn(mic, config: config.copyWith(silenceAfterSpeech: const Duration(seconds: 3)));
+      final turn = SpeechTurn(
+        mic,
+        config: config.copyWith(
+          silenceAfterSpeech: const Duration(seconds: 3),
+          maxRecording: const Duration(seconds: 20),
+        ),
+      );
       turn.listen(expected: const [], localeId: 'en_US');
       fake.flushMicrotasks();
 
       expect(mic.pauseFors.single, const Duration(seconds: 3));
+      expect(mic.timeouts.single, const Duration(seconds: 20));
       turn.cancel();
       fake.flushMicrotasks();
-    });
-  });
-
-  // ПРАВИЛО: наряд DAY-GATE-1, Ч.0.2 — «до первого звука движок ждёт хотя бы 5 с».
-  // ЛОВИТ: сторож, срабатывающий раньше, чем человек успел вдохнуть. Окно приезжает с сервера
-  // (`listen_seconds`), а сторож в прогоне ДЕЛАЕТ ХОД за человека пустым ответом (`again` в
-  // append-only журнал) — то есть один маленький конфиг превращает прогон в конвейер промахов,
-  // и починить это задним числом нечем: журнал append-only.
-  test('сторож не может сработать раньше пяти секунд, каким бы малым ни приехал listen_seconds', () {
-    fakeAsync((fake) {
-      final mic = _DrivenRecognizer();
-      final turn = SpeechTurn(mic, config: config.copyWith(silenceBeforeSkip: const Duration(seconds: 1)));
-      SpeechTurnResult? result;
-      turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
-      fake.flushMicrotasks();
-
-      // Секунда, две, четыре — человек молчит, и ход всё ещё его.
-      fake.elapse(const Duration(seconds: 4, milliseconds: 900));
-      expect(result, isNull, reason: 'ход отдан раньше пола ожидания');
-
-      fake.elapse(const Duration(milliseconds: 200));
-      expect(result?.outcome, SpeechTurnOutcome.silent);
     });
   });
 
   // ПРАВИЛО: наряд DAY-GATE-1, доработка Ч.3 — подстановка транскрипта едет ТЕМ ЖЕ путём, что и
   // живой частичный результат, а не мимо движка.
   // ЛОВИТ: дверь QA, которая коротит движок. Микрофона на симуляторе нет, и подстановка — это
-  // единственный способ увидеть склейку, сторож, проверку ключа и стадии живьём; подстановка,
-  // обходящая их, проверяет карточку и объявляет проверенным всё остальное.
-  test('подставленный транскрипт закрывает ход ключом — как живая речь', () {
+  // единственный способ увидеть склейку, сторож и стадии живьём; подстановка, обходящая их,
+  // проверяет карточку и объявляет проверенным всё остальное.
+  test('подставленный транскрипт проходит склейку и ждёт тишины — как живая речь', () {
     fakeAsync((fake) {
       final diagnostics = SpeechDiagnostics(channel: const MethodChannel('test/absent'));
       final mic = _DrivenRecognizer();
@@ -401,7 +441,6 @@ void main() {
           .listen(
             expected: const ['my back hurts'],
             localeId: 'en_US',
-            isAnswer: (t) => t.contains('back hurts'),
             onPartial: partials.add,
           )
           .then((r) => result = r);
@@ -410,39 +449,15 @@ void main() {
       expect(turn.injectTranscript('my back hurts'), isTrue);
       fake.flushMicrotasks();
 
-      // Ключ узнан по дороге — ход закрыт им, а не тишиной, и журнал говорит именно это.
+      // Ход ещё открыт и ПИШЕТ — совпадение его больше не закрывает (наряд SPEECH-2, Ч.2.1).
+      expect(result, isNull);
+      expect(diagnostics.phase, SpeechPhase.listening);
+      expect(partials, contains('my back hurts'));
+
+      fake.elapse(const Duration(seconds: 6));
       expect(result?.outcome, SpeechTurnOutcome.heard);
       expect(result?.transcript, 'my back hurts');
       expect(result?.speechStartedAt, isNotNull, reason: '«сразу» меряется от первого слова');
-      expect(partials, contains('my back hurts'));
-      expect(diagnostics.phase, SpeechPhase.closedByAnswer);
-    });
-  });
-
-  test('подставленный НЕ ключ ждёт тишину, как живая речь мимо ключа', () {
-    fakeAsync((fake) {
-      final diagnostics = SpeechDiagnostics(channel: const MethodChannel('test/absent'));
-      final mic = _DrivenRecognizer();
-      final turn = SpeechTurn(mic, config: config, diagnostics: diagnostics);
-      SpeechTurnResult? result;
-      turn
-          .listen(
-            expected: const ['my back hurts'],
-            localeId: 'en_US',
-            isAnswer: (t) => t.contains('back hurts'),
-          )
-          .then((r) => result = r);
-      fake.flushMicrotasks();
-
-      turn.injectTranscript('my leg is fine');
-      fake.flushMicrotasks();
-      // Ход ещё открыт и СЛУШАЕТ — это то состояние, которого не было видно ничем.
-      expect(result, isNull);
-      expect(diagnostics.phase, SpeechPhase.listening);
-
-      fake.elapse(const Duration(seconds: 3));
-      expect(result?.outcome, SpeechTurnOutcome.heard);
-      expect(result?.transcript, 'my leg is fine');
       expect(diagnostics.phase, SpeechPhase.closedBySilence);
     });
   });
@@ -453,11 +468,12 @@ void main() {
     expect(turn.injectTranscript('my back hurts'), isFalse);
   });
 
-  // ПРАВИЛО: наряд DAY-GATE-1, Ч.0.1 — служебная строка называет стадию хода и код отказа.
-  // ЛОВИТ: строку, которая показывает «listening» после того, как ход закрылся, и «closedBySilence»
-  // там, где канал упал. Диагностика, врущая о состоянии, хуже её отсутствия: 07.09 сутки ушли
-  // на «Слушаю…», которое значило пять разных вещей сразу.
-  test('стадии хода различают «договорил», «сторож» и «канал упал»', () {
+  // ПРАВИЛО: DAY-GATE-1 Ч.0.1 + SPEECH-2 Ч.5 — служебная строка называет стадию, код отказа,
+  // длительность речи и финальный транскрипт.
+  // ЛОВИТ: строку, которая показывает «listening» после закрытия, «closedBySilence» на упавшем
+  // канале и последний ЧАСТИЧНЫЙ текст на месте того, что ушло на зачёт. Диагностика, врущая о
+  // состоянии, хуже её отсутствия: 07.09 сутки ушли на «Слушаю…», значившее пять разных вещей.
+  test('стадии хода различают «договорил», «сторож» и «канал упал», и называют финал', () {
     fakeAsync((fake) {
       final diagnostics = SpeechDiagnostics(channel: const MethodChannel('test/absent'));
 
@@ -466,18 +482,21 @@ void main() {
       SpeechTurn(mic1, config: config, diagnostics: diagnostics)
           .listen(expected: const [], localeId: 'en_US');
       fake.flushMicrotasks();
-      expect(diagnostics.phase, SpeechPhase.opening, reason: 'открытие — ещё не «слушаю»');
+      expect(diagnostics.phase, SpeechPhase.opening, reason: 'открытие — ещё не «пишу»');
       mic1.say('my back hurts');
       expect(diagnostics.phase, SpeechPhase.listening);
       expect(diagnostics.lastPartial, 'my back hurts');
-      fake.elapse(const Duration(seconds: 3));
+      fake.elapse(const Duration(seconds: 6));
       expect(diagnostics.phase, SpeechPhase.closedBySilence);
+      expect(diagnostics.finalTranscript, 'my back hurts');
+      expect(diagnostics.spokeFor, isNotNull);
 
-      // Сторож: ни слова за всё окно.
+      // Сторож: ни слова за всю запись.
       final mic2 = _DrivenRecognizer();
       SpeechTurn(mic2, config: config, diagnostics: diagnostics)
           .listen(expected: const [], localeId: 'en_US');
       fake.flushMicrotasks();
+      expect(diagnostics.finalTranscript, '', reason: 'новый ход не показывает прошлый финал');
       fake.elapse(const Duration(seconds: 16));
       expect(diagnostics.phase, SpeechPhase.closedByTimeout);
 

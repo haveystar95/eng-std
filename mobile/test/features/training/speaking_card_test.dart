@@ -7,6 +7,8 @@ import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/ui/mic_button.dart';
+
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/practice/learning_ladder.dart';
@@ -226,7 +228,10 @@ void main() {
 
   // The record button is a Semantics-labelled circle; find it by its label rather than by icon so
   // the test does not depend on which icon pack is in use.
-  Finder recordButton() => find.bySemanticsLabel(RegExp('Сказать|Готово'));
+  // ОДНА КНОПКА НА ВСЕ КАРТОЧКИ ГОВОРЕНИЯ (наряд SPEECH-2, Ч.1.3). По ТИПУ, а не по подписи:
+  // подпись меняется вместе с состоянием («Твоя очередь» → «Пишу…»), и она же стоит текстом под
+  // кружком — поиск по строке находил бы две вещи сразу.
+  Finder recordButton() => find.byType(MicButton);
 
   // `_PromptPhoto` is private to session_exercise.dart, but runtimeType.toString() ignores library
   // privacy — the standard way to count instances of a private widget from an external test file.
@@ -252,12 +257,15 @@ void main() {
     return null;
   }
 
-  /// Tap the microphone and let ONE turn of the speech engine settle: a matching answer settles at
-  /// once, anything else waits out the engine's own silence after the last word (DAY-FIX-3, Ч.1.3).
+  /// Нажать микрофон и дать записи закрыться тишиной.
+  ///
+  /// СЕМЬ СЕКУНД, А НЕ ТРИ (наряд SPEECH-2, Ч.2.1–Ч.2.2): ход больше не закрывается совпадением с
+  /// ответом, а тишина не закрывает запись раньше пятой секунды от нажатия. Иначе говоря, тест,
+  /// которому хватало трёх, проверял закрытие ПО КЛЮЧУ — ровно тот дефект, который наряд чинит.
   Future<void> record(WidgetTester tester) async {
     await tester.tap(recordButton().first);
     await tester.pump();
-    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(seconds: 7));
     await tester.pumpAndSettle();
   }
 
@@ -333,8 +341,11 @@ void main() {
 
       // The answer AND its accepted variants: a learner who says «booking» said a correct answer,
       // so the engine should have been told it might hear that too.
-      expect(recognizer.expectedPerCall.single, containsAll(['reservation', 'booking']));
-      expect(recognizer.locales.single, 'en_US');
+      // .first, А НЕ .single (наряд SPEECH-2, Ч.2.1): запись больше не закрывается на узнанном
+      // ответе, поэтому плагин переоткрывается, пока не набежит тишина. Подсказка на всех вызовах
+      // одна и та же — проверять её осмысленно на первом.
+      expect(recognizer.expectedPerCall.first, containsAll(['reservation', 'booking']));
+      expect(recognizer.locales.first, 'en_US');
     });
 
     testWidgets('a recognised WRONG word is a verdict on the first try, not a retry', (
@@ -577,11 +588,7 @@ void main() {
         await record(tester);
 
         expect(recognizer.pauseForsPerCall.first, config.silenceAfterSpeech, reason: card.answer);
-        expect(
-          recognizer.timeoutsPerCall.first,
-          config.maxSpeech + config.silenceBeforeSkip,
-          reason: card.answer,
-        );
+        expect(recognizer.timeoutsPerCall.first, config.effectiveMaxRecording, reason: card.answer);
       }
     });
   });
@@ -823,7 +830,8 @@ void main() {
 
       await record(tester);
 
-      final sent = recognizer.contextualStringsPerCall.single;
+      // .first — см. «hands the recogniser the words it is hoping for».
+      final sent = recognizer.contextualStringsPerCall.first;
       expect(sent, containsAll(['reservation']));
       // acceptedVariants ('booking') is the taskHint's job (expectedPerCall), not this list's — the
       // work order asks only for the term itself and its words here.
@@ -851,7 +859,8 @@ void main() {
 
       await record(tester);
 
-      final sent = recognizer.contextualStringsPerCall.single;
+      // .first — см. «hands the recogniser the words it is hoping for».
+      final sent = recognizer.contextualStringsPerCall.first;
       expect(
         sent,
         containsAll(['Could', 'you', 'take', 'a', 'photo', 'of', 'us?', 'take a photo']),
@@ -873,9 +882,34 @@ void main() {
 
       await record(tester);
 
-      final sent = recognizer.contextualStringsPerCall.single;
+      // .first — см. «hands the recogniser the words it is hoping for».
+      final sent = recognizer.contextualStringsPerCall.first;
       expect(sent, containsAll(['Could', 'you', 'take', 'a', 'photo', 'of', 'us?']));
       expect(sent, isNotEmpty);
+    });
+  });
+
+  // ПРАВИЛО: наряд SPEECH-2, Ч.3.5 — вердикт человеку словами, и слов три.
+  // ЛОВИТ: «Не то» над чтением, из которого не хватило одного слова. Две ступени вместо трёх — это
+  // выбор между «ты прав» и «ты не прав» там, где правда посередине, и человек, услышавший «Не то»
+  // на пропущенном предлоге, перестаёт говорить вслух.
+  group('вердикт речи говорит тремя словами (SPEECH-2, Ч.3.5)', () {
+    testWidgets('верно / почти с перечнем пропущенных / не то', (tester) async {
+      for (final (heard, expected) in [
+        ('Could you take a photo of us?', 'Верно'),
+        // Четыре слова из шести — ниже порога чтения (0.9) и выше пола «почти» (0.5).
+        ('could you take photo', 'Почти — не хватило: of, us'),
+        ('something else entirely', 'Не то'),
+      ]) {
+        await tester.pumpWidget(const SizedBox.shrink());
+        final recognizer = _FakeRecognizer([SpeechAttempt.heard(heard)]);
+        await tester.pumpWidget(host(exampleCard(), recognizer));
+        await tester.pumpAndSettle();
+
+        await record(tester);
+
+        expect(find.text(expected), findsOneWidget, reason: heard);
+      }
     });
   });
 
@@ -931,24 +965,31 @@ void main() {
       expect(answers.single.verdict, LocalCheck.wrong);
     });
 
-    testWidgets('the key and hardly anything else is right', (tester) async {
+    // ПРАВИЛО: наряд SPEECH-2, Ч.3.2 — ключ обязателен И покрытие остальных слов реплики ≥ 0.6.
+    // ЛОВИТ: возврат к «ключ есть — верно». Этот тест раньше УТВЕРЖДАЛ обратное («the key and
+    // hardly anything else is right») и был прав для своего наряда: тогда чинили карточку, которая
+    // требовала все пятнадцать слов. Но 08.09 та же поблажка показала свою вторую половину —
+    // движок закрывался на первом узнанном ключевом слове и ставил «верно» над фразой, которую
+    // никто не дослушал. Тренажёр, который учит говорить фразами, не может засчитывать слово.
+    testWidgets('the key and hardly anything else is NOT the reply', (tester) async {
       final recognizer = _FakeRecognizer([const SpeechAttempt.heard('I want a place to rent')]);
       await tester.pumpWidget(host(keyedLine(), recognizer));
       await tester.pumpAndSettle();
 
       await record(tester);
 
-      expect(answers.single.verdict, LocalCheck.correct);
+      expect(answers.single.verdict, LocalCheck.wrong);
       // The RAW transcript still goes up untouched — the server is the grader.
       expect(answers.single.response, 'I want a place to rent');
     });
 
-    testWidgets('the key said and the frame dropped is RIGHT — the frame was on the screen', (
-      tester,
-    ) async {
-      // The owner's own reading, in the direction that used to fail: graded against all fifteen
-      // words, saying the thing the card teaches and skipping the scaffolding scored under 70%.
-      final recognizer = _FakeRecognizer([const SpeechAttempt.heard("I'm looking a place to rent")]);
+    // ПРАВИЛО: Ч.3.2 — реплика сказана, когда сказан ключ И с ним хватает остального.
+    // ЛОВИТ: ужесточение до «слово в слово». Артикль, съеденный распознавателем, и порядок слов
+    // не считаются — иначе исправное чтение получало бы «Не то» за дикцию микрофона.
+    testWidgets('the key inside the reply, said with the reply, is right', (tester) async {
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard("Yes I'm looking for place to rent for long term living"),
+      ]);
       await tester.pumpWidget(host(keyedLine(), recognizer));
       await tester.pumpAndSettle();
 

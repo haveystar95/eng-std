@@ -122,27 +122,30 @@ void main() {
     await tester.pumpWidget(host(speakingCard(), engine));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.bySemanticsLabel(RegExp('Сказать|Готово')).first);
+    await tester.tap(find.byType(MicButton).first);
     await tester.pump();
 
     // While it listens the card is honest: «Не помню» is a claim about memory, and a microphone is
     // not entitled to make it on the learner's behalf. This is the state that used to be permanent.
     expect(engine.calls, 1);
-    expect(find.text('Слушаю…'), findsOneWidget);
+    // «Пишу…» — подпись кнопки (наряд SPEECH-2, Ч.1.1). Отдельной строки «Слушаю…» под кружком
+    // больше нет: состояние называет сама кнопка, и двух подписей об одном не бывает.
+    expect(find.text('Пишу — скажи и нажми «Готово»'), findsOneWidget);
     expect(giveUpEnabled(tester), isFalse);
     expect(find.text('Пропустить'), findsNothing);
 
     // Fourteen seconds in, nothing has changed: the grace period is a real one, not an instant
     // give-up that would cut a slow audio session off before it came up.
     await tester.pump(const Duration(seconds: 14));
-    expect(find.text('Слушаю…'), findsOneWidget);
+    expect(find.text('Пишу — скажи и нажми «Готово»'), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 2));
 
-    // Fifteen seconds with nothing back at all is the engine's own watchdog (DAY-FIX-3, Ч.1.3):
-    // silence from the opening of the microphone, and the card says so in the words it has for a
+    // Fifteen seconds with nothing back at all is the engine's own watchdog: since SPEECH-2 (Ч.2.1)
+    // it measures the WHOLE recording from the tap, and the card says so in the words it has for a
     // microphone that heard nothing. Both exits are live.
-    expect(find.text('Слушаю…'), findsNothing);
+    expect(find.text('Пишу — скажи и нажми «Готово»'), findsNothing);
+    expect(find.text('Твоя очередь — нажми и говори'), findsOneWidget, reason: 'кнопка снова зовёт');
     expect(find.textContaining('Не расслышал'), findsOneWidget);
     expect(find.text('Пропустить'), findsOneWidget);
     expect(giveUpEnabled(tester), isTrue);
@@ -160,7 +163,7 @@ void main() {
     await tester.pumpWidget(host(speakingCard(), engine));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.bySemanticsLabel(RegExp('Сказать|Готово')).first);
+    await tester.tap(find.byType(MicButton).first);
     await tester.pump(const Duration(seconds: 16));
 
     await tester.tap(find.text('Пропустить'));
@@ -180,7 +183,7 @@ void main() {
     await tester.pumpWidget(host(speakingCard(), engine));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.bySemanticsLabel(RegExp('Сказать|Готово')).first);
+    await tester.tap(find.byType(MicButton).first);
     await tester.pump(const Duration(seconds: 16));
 
     await tester.tap(find.text('Не помню'));
