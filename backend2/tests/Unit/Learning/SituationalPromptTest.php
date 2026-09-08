@@ -6,6 +6,7 @@ use App\Modules\Learning\Domain\Service\SituationalPrompt;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\SituationalCandidate;
 use App\Modules\Learning\Domain\ValueObject\SituationalSituation;
+use App\Modules\Learning\Domain\ValueObject\SituationalTurn;
 
 beforeEach(fn () => $this->prompt = new SituationalPrompt());
 
@@ -45,6 +46,91 @@ it('gives a speak card the scene’s first sentence and the role line that asks 
         ->and($situation?->roleLine)->toBe('What seems to be the problem?')
         ->and($situation?->roleLineTermId)->toBe('01A')
         ->and($situation?->task)->toBeNull();
+});
+
+// ПРАВИЛО: пару выбирает ЦЕПОЧКА разговора (канон §9), а не умение.
+// ЛОВИТ: живой дефект с телефона владельца 08.09. У дня 3 его плана ДВЕ реплики роли на умение
+// `s3.2` — «What were you personally responsible for?» и «Do you have any questions for me?». Пара
+// искалась по `skill_ref` с тай-брейком по наименьшему id, выиграла первая, и человеку показали
+// «Тех лид хочет понять, что именно ты делал» над сборкой ВОПРОСА «How is ownership split across
+// the team?». Цепочка дня при этом говорила однозначно, кто с кем стоит.
+it('pairs a move with the line said right before it, not with another line of the same ability', function () {
+    // Полторы пары дня 3: два обмена одного умения `s3.2`, реплики роли в порядке цепочки.
+    $day = [
+        candidate('01AAA', 'hear', 's3.2', 'What were you personally responsible for?'),
+        candidate('01BBB', 'say', 's3.2', 'I handled the backend integration.'),
+        candidate('01CCC', 'hear', 's3.2', 'Do you have any questions for me?'),
+        candidate('01DDD', 'ask', 's3.2', 'How is ownership split across the team?'),
+    ];
+    $chain = [
+        new SituationalTurn(SituationalTurn::SIDE_ROLE, '01AAA'),
+        new SituationalTurn(SituationalTurn::SIDE_YOU, '01BBB'),
+        new SituationalTurn(SituationalTurn::SIDE_ROLE, '01CCC'),
+        new SituationalTurn(SituationalTurn::SIDE_YOU, '01DDD'),
+    ];
+
+    $situation = $this->prompt->for(
+        ExerciseMode::SituationalAsk,
+        $day[3],
+        $day,
+        ['s3.2' => 'уточнить, как устроена команда'],
+        SCENE_INTRO,
+        SCENE_TITLE,
+        $chain,
+    );
+
+    expect($situation?->source)->toBe(SituationalSituation::SOURCE_ROLE_LINE)
+        ->and($situation?->roleLine)->toBe('Do you have any questions for me?')
+        ->and($situation?->roleLineTermId)->toBe('01CCC');
+
+    // …и первый ход того же умения получает СВОЮ реплику, а не ту же самую.
+    $first = $this->prompt->for(
+        ExerciseMode::SituationalSay,
+        $day[1],
+        $day,
+        ['s3.2' => 'уточнить, как устроена команда'],
+        SCENE_INTRO,
+        SCENE_TITLE,
+        $chain,
+    );
+
+    expect($first?->roleLine)->toBe('What were you personally responsible for?');
+});
+
+// ПРАВИЛО: цепочка бьёт умение, но день без цепочки живёт по-старому (канон §9, обратная
+// совместимость).
+// ЛОВИТ: планы, написанные до `plan_day.dialogue`. Их карточки остались бы вовсе без ситуации, и
+// экран показал бы задачу умения там, где раньше стояла реплика.
+it('keeps the old pairing for a day written before the chain existed', function () {
+    $situation = $this->prompt->for(
+        ExerciseMode::SituationalSay,
+        candidate('01B', 'say', 's1.1', 'My child has a fever.'),
+        scene(),
+        ['s1.1' => 'рассказать, что болит'],
+        SCENE_INTRO,
+        SCENE_TITLE,
+        [],
+    );
+
+    expect($situation?->source)->toBe(SituationalSituation::SOURCE_ROLE_LINE)
+        ->and($situation?->roleLine)->toBe('What seems to be the problem?');
+});
+
+// ПРАВИЛО: ход, которого в цепочке нет, падает на запасной путь, а не остаётся без ситуации.
+// ЛОВИТ: карточку ЧУЖОГО дня, выданную в шве этого: её цепочка — своя, и в цепочке текущего дня
+// её хода нет.
+it('falls back when this move is not in the chain at all', function () {
+    $situation = $this->prompt->for(
+        ExerciseMode::SituationalSay,
+        candidate('01B', 'say', 's1.1', 'My child has a fever.'),
+        scene(),
+        ['s1.1' => 'рассказать, что болит'],
+        SCENE_INTRO,
+        SCENE_TITLE,
+        [new SituationalTurn(SituationalTurn::SIDE_ROLE, '01ZZZ')],
+    );
+
+    expect($situation?->roleLine)->toBe('What seems to be the problem?');
 });
 
 it('falls back to the ability when no role line of the day serves it', function () {

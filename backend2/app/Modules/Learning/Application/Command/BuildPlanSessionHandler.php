@@ -56,6 +56,7 @@ use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStage;
 use App\Modules\Learning\Domain\ValueObject\PlanTurnLevel;
 use App\Modules\Learning\Domain\ValueObject\SituationalCandidate;
+use App\Modules\Learning\Domain\ValueObject\SituationalTurn;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
@@ -479,6 +480,31 @@ final readonly class BuildPlanSessionHandler
     }
 
     /**
+     * Цепочка каждого дня, сплющенная до того, что нужно сборщику ситуации: сторона и id.
+     *
+     * По ДНЯМ, как и сцены, и по той же причине: карточка ступени B — это карточка ЧУЖОГО дня,
+     * выданная в шве этого, и пара у неё своя.
+     *
+     * @param  list<PlanDialogueView>  $chains
+     * @return array<int, list<SituationalTurn>>
+     */
+    private static function chainTurnsOf(array $chains): array
+    {
+        $out = [];
+        foreach ($chains as $chain) {
+            $out[$chain->dayIndex] = array_map(
+                static fn (PlanDialogueTurnView $turn): SituationalTurn => new SituationalTurn(
+                    $turn->turn,
+                    $turn->termId,
+                ),
+                $chain->turns,
+            );
+        }
+
+        return $out;
+    }
+
+    /**
      * КАНДИДАТЫ В ВАРИАНТЫ ХОДА [$termId], или null — эта карточка вариантов-реплик не получает.
      *
      * Null для всего, что не стоит на полках say/ask: слово, связка, число и реплика собеседника
@@ -679,6 +705,11 @@ final readonly class BuildPlanSessionHandler
         // of an EARLIER day, dealt in the seam of this one, and its situation is its own scene's.
         $scenes = $this->scenesOf($progress);
 
+        // …И ЦЕПОЧКА КАЖДОГО ДНЯ, сплющенная тем же движением: по ней сборщик ситуации находит
+        // реплику, стоящую ПЕРЕД этим ходом, вместо того чтобы гадать по умению
+        // ({@see SituationalPrompt}).
+        $chainTurns = self::chainTurnsOf($chains);
+
         // THE OPTION POOL IS THE WHOLE PLAN, not today's folder.
         $poolIds = $this->planPoolIds($plan);
 
@@ -772,6 +803,7 @@ final readonly class BuildPlanSessionHandler
                 $scene['skills'],
                 $scene['intro'],
                 $scene['title'],
+                $chainTurns[$spec['day'] === null ? -1 : (int) $spec['day']] ?? [],
             );
 
             $tasks[] = new PlanSessionTaskView(

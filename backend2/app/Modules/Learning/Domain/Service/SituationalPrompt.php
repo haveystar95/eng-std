@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Domain\Service;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\SituationalCandidate;
 use App\Modules\Learning\Domain\ValueObject\SituationalSituation;
+use App\Modules\Learning\Domain\ValueObject\SituationalTurn;
 
 /**
  * WHERE THE SITUATION COMES FROM — the rule, in one pure function, with no model call behind it.
@@ -15,10 +16,11 @@ use App\Modules\Learning\Domain\ValueObject\SituationalSituation;
  * ALREADY holds — its вводка, its abilities, its own role lines — and buys nothing. Two paths, and
  * the owner fixed both (SIT-1):
  *
- *   **the paired role line.** If this day has a «Тебе скажут» card serving the SAME ability
- *   (`skill_ref`) as the card being trained, the situation is the first sentence of the scene's
- *   вводка plus that line, on the language being learned, played aloud — кадр D-04 exactly. That is
- *   the honest shape of the moment: somebody said something to you, now answer it.
+ *   **the paired role line.** The situation is the first sentence of the scene's вводка plus the
+ *   line the interlocutor says right before this move, on the language being learned, played
+ *   aloud — кадр D-04 exactly. That is the honest shape of the moment: somebody said something to
+ *   you, now answer it. Which line that is answers the DIALOGUE CHAIN of the day (канон §9), and
+ *   only a day written before the chain existed falls back to matching on the ability (`skill_ref`).
  *
  *   **the ability.** No such role line — a scene whose «Ты спросишь» serves an ability nobody asks
  *   about, a day written before `skill_ref` was checked — and the situation is the same first
@@ -33,14 +35,25 @@ use App\Modules\Learning\Domain\ValueObject\SituationalSituation;
  * only mechanical way to turn a translation into a situation is to print the translation, and that
  * card is a translation exercise wearing a scene's clothes.
  *
- * ## And why the pairing does not move between sittings
+ * ## Почему пару выбирает ЦЕПОЧКА, а не умение
  *
- * A day may hold two role lines for one ability, and the learner must not be shown a different one
- * every time they come back to the same card — a rehearsal that changes its own premise is not a
- * rehearsal. The tie is broken by TERM ID: ULIDs are written in the order the day composed its
- * shelves, so «the first one on the shelf» and «the smallest id» are the same card, and that card
- * stays the same across sittings, across a reinstall and across a rebuilt session — with nothing
- * stored anywhere to be kept in step.
+ * У дня бывает ДВЕ реплики роли на одно умение, и по `skill_ref` их не различить. Так и вышло на
+ * телефоне владельца 08.09: карточка `ask` «How is ownership split across the team?» (умение s3.2)
+ * получила в ситуацию «What were you personally responsible for?» — вторую реплику того же умения,
+ * выигравшую тай-брейк по id, — и человеку предложили собрать ВОПРОС в ответ на вопрос. Цепочка
+ * дня при этом говорила однозначно: перед этим ходом стоит «Do you have any questions for me?».
+ *
+ * Тай-брейк по id был не ошибкой, а честной попыткой выбрать хоть что-то, пока выбирать было
+ * нечем: цепочки (`plan_day.dialogue`, P2 v0.5) тогда ещё не было. Теперь она есть и отвечает на
+ * этот вопрос точно, поэтому гадание уходит вниз — в запасной путь для дней, написанных раньше.
+ *
+ * ## И почему пара не ездит между присестами
+ *
+ * Человек не должен видеть разную посылку у одной и той же карточки: репетиция, меняющая
+ * собственную предпосылку, — не репетиция. Цепочка это держит по построению (она у дня одна и
+ * записана раз), а запасной путь — тем же тай-брейком по TERM ID, что и раньше: ULID'ы пишутся в
+ * порядке, в котором день собирал полки, так что «первая на полке» и «наименьший id» — одна и та
+ * же карточка, и ничего хранить для этого не нужно.
  *
  * Pure, in Domain, and it names no Vocabulary type: the caller flattens the day into
  * {@see SituationalCandidate}s.
@@ -59,6 +72,8 @@ final class SituationalPrompt
      *         on the support language
      * @param  string|null  $sceneIntro  the scene's вводка, support language, 2–3 sentences
      * @param  string|null  $sceneTitle  the scene's name — what a hear card announces instead
+     * @param  list<SituationalTurn>  $chain  цепочка разговора ЭТОГО дня, в порядке, в каком она
+     *         звучит. Пустая — день написан до цепочки, и пара ищется по умению
      */
     public function for(
         ExerciseMode $mode,
@@ -67,6 +82,7 @@ final class SituationalPrompt
         array $skillOutcomes,
         ?string $sceneIntro,
         ?string $sceneTitle,
+        array $chain = [],
     ): ?SituationalSituation {
         if (! $mode->isSituational()) {
             return null;
@@ -84,7 +100,7 @@ final class SituationalPrompt
         }
 
         $context = self::firstSentence($sceneIntro);
-        $pair = $this->pairedRoleLine($card, $dayCards);
+        $pair = $this->pairedRoleLine($card, $dayCards, $chain);
 
         if ($pair !== null) {
             return new SituationalSituation(
@@ -103,9 +119,66 @@ final class SituationalPrompt
     }
 
     /**
-     * The day's «Тебе скажут» card that serves the SAME ability as this one — the smallest id among
-     * them, which is the first one on the shelf. See the class docblock for why the tie is broken
-     * that way and not by the order the caller happened to build the list in.
+     * Реплика собеседника, стоящая ПЕРЕД этим ходом. Сначала по цепочке, потом — по умению.
+     *
+     * @param  list<SituationalCandidate>  $dayCards
+     * @param  list<SituationalTurn>  $chain
+     */
+    private function pairedRoleLine(
+        SituationalCandidate $card,
+        array $dayCards,
+        array $chain,
+    ): ?SituationalCandidate {
+        return $this->fromChain($card, $dayCards, $chain) ?? $this->fromSkill($card, $dayCards);
+    }
+
+    /**
+     * ЧТО СКАЗАЛИ ПРЯМО ПЕРЕД ЭТИМ ХОДОМ — по цепочке дня, и это точный ответ, а не догадка.
+     *
+     * Ближайшая реплика роли ВЫШЕ по цепочке: обычно она стоит вплотную, но цепочка не обязана
+     * идеально чередоваться (гейт `day.dialogue_not_alternating` фатален для НОВЫХ дней, а старые
+     * живут), поэтому идём вверх, пока не встретим сторону роли.
+     *
+     * Тип обмена (`pair`: `answer` | `ask`) здесь не спрашивается намеренно: ближайшая реплика
+     * роли выше по цепочке И ЕСТЬ пара, чем бы этот обмен ни был, — а сверять две вещи там, где
+     * достаточно одной, значит завести второй способ ошибиться.
+     *
+     * Null, когда цепочки нет вовсе, когда этого хода в ней нет (карточка из другого присеста,
+     * день старой сборки) или когда реплики роли выше не оказалось.
+     *
+     * @param  list<SituationalCandidate>  $dayCards
+     * @param  list<SituationalTurn>  $chain
+     */
+    private function fromChain(
+        SituationalCandidate $card,
+        array $dayCards,
+        array $chain,
+    ): ?SituationalCandidate {
+        $at = null;
+        foreach ($chain as $i => $turn) {
+            if ($turn->side === SituationalTurn::SIDE_YOU && $turn->termId === $card->termId) {
+                $at = $i;
+                break;
+            }
+        }
+        if ($at === null) {
+            return null;
+        }
+
+        for ($i = $at - 1; $i >= 0; $i--) {
+            if ($chain[$i]->side !== SituationalTurn::SIDE_ROLE) {
+                continue;
+            }
+
+            return self::cardById($chain[$i]->termId, $dayCards);
+        }
+
+        return null;
+    }
+
+    /**
+     * ЗАПАСНОЙ ПУТЬ — день, написанный до цепочки: «Тебе скажут» того же умения, наименьший id
+     * (первая на полке). См. докблок класса о том, почему это гадание и почему оно осталось внизу.
      *
      * A card with no `skill_ref` has no pair by definition: `null === null` would otherwise match
      * every unlabelled role line of a day written before the gate existed, which is a pairing made
@@ -113,7 +186,7 @@ final class SituationalPrompt
      *
      * @param  list<SituationalCandidate>  $dayCards
      */
-    private function pairedRoleLine(SituationalCandidate $card, array $dayCards): ?SituationalCandidate
+    private function fromSkill(SituationalCandidate $card, array $dayCards): ?SituationalCandidate
     {
         $skillRef = self::text($card->skillRef);
         if ($skillRef === null) {
@@ -133,6 +206,23 @@ final class SituationalPrompt
         }
 
         return $best;
+    }
+
+    /**
+     * Карточка дня по id — с непустым текстом: реплика, которой нечего сказать, ситуацией не
+     * становится (её место займёт запасной путь, а не пустой пузырь).
+     *
+     * @param  list<SituationalCandidate>  $dayCards
+     */
+    private static function cardById(string $termId, array $dayCards): ?SituationalCandidate
+    {
+        foreach ($dayCards as $candidate) {
+            if ($candidate->termId === $termId && self::text($candidate->text) !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**
