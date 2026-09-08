@@ -35,7 +35,9 @@ import 'package:eng_std/ui/ui.dart';
 import '../../data/models.dart' show PlanDialogue, PlanDialogueTurn;
 import '../../data/providers.dart' show speechDiagnosticsProvider, speechRecognizerProvider;
 import '../../data/speech/speech_diagnostics.dart';
+import '../../data/speech/speech_grading_config.dart';
 import '../../data/speech/speech_turn.dart';
+import '../training/session/spoken_line.dart';
 import 'plan_ui.dart';
 
 /// ONE SCENE'S CONVERSATION, around one card of it.
@@ -52,6 +54,7 @@ class PlanDialogueShell extends StatefulWidget {
     required this.card,
     required this.onSpeak,
     required this.speechLocaleId,
+    this.speech = SpeechGradingConfig.empty,
     this.taktQuestion,
     this.voiceReady = true,
     this.rescue = const [],
@@ -97,6 +100,9 @@ class PlanDialogueShell extends StatefulWidget {
   /// строкой — на iOS это `SFSpeechRecognizer(locale: Locale(identifier: ""))`, то есть nil, то есть
   /// `noRecognizerError` на каждый ход: микрофон не работал там вообще никогда, и молча.
   final String speechLocaleId;
+
+  /// ЧЕМ СУДИТЬ РЕЧЬ на своём ходу — пороги и таблица аббревиатур с сервера (наряд SPEECH-2).
+  final SpeechGradingConfig speech;
 
   /// СПАСАТЕЛЕМ ВОСПОЛЬЗОВАЛИСЬ на текущем ходу (наряд SCENE-RUN, Ч.2.5).
   ///
@@ -357,6 +363,7 @@ class _PlanDialogueShellState extends State<PlanDialogueShell> {
             speechLocaleId: widget.speechLocaleId,
             onSpeak: widget.onSpeak,
             onDone: () => widget.onSpokeUntasked!(untaken.termId),
+            speech: widget.speech,
           )
         else ...[
           if (live != null) ...[
@@ -801,15 +808,20 @@ class _BubbleAction extends StatelessWidget {
 /// ## МИКРОФОН ВМЕСТО ЧЕСТНОГО СЛОВА (наряд SCENE-RUN, Ч.4)
 ///
 /// Кнопка «Сказал вслух» была заглушкой ровно в одном смысле: она спрашивала человека, сделал ли
-/// он то, чего экран не видел. Теперь экран слушает — и всё равно НИЧЕГО НЕ ОЦЕНИВАЕТ: пузырь
-/// ставит сам ФАКТ речи, а не её правильность. Разбор произношения здесь по-прежнему не обещан и
-/// не делается; в append-only журнал не уходит ни строки, и лестница не двигается.
+/// он то, чего экран не видел. Теперь экран слушает.
+///
+/// ## …И ГОВОРИТ, ЧТО ВЫШЛО (наряд SPEECH-2, Ч.3.5)
+///
+/// Ход по-прежнему НИЧЕГО НЕ ПИШЕТ: ни ревью, ни показа, ни лестницы — пузырь ставит сам ФАКТ
+/// речи. Но молчать о том, что услышано, он перестал: реплика стоит перед глазами, и «прочитал ли
+/// я это» — вопрос с ответом. Вердикт трёхступенчатый («верно» / «почти — не хватило: …» /
+/// «не то») и судится тем же {@see SpokenLine}, что и остальные две карточки с микрофоном.
 ///
 /// Тишина — не отказ: первая пустая попытка просит повторить, вторая ставит пузырь всё равно.
 /// Микрофон, который не расслышал, не имеет права остановить разговор.
 ///
-/// Без разрешения на микрофон остаётся прежняя текстовая кнопка — и тап по микрофону спрашивает
-/// разрешение: экран, который просто прячет кнопку, выглядит сломанным.
+/// Разрешение спрашивается ПЕРВЫМ ТАПОМ (Ч.1.4), не при открытии карточки; без него остаётся
+/// прежняя текстовая кнопка — ход всё равно не оценивается в журнале.
 class PlanDialogueSayAloud extends ConsumerStatefulWidget {
   const PlanDialogueSayAloud({
     super.key,
@@ -817,9 +829,13 @@ class PlanDialogueSayAloud extends ConsumerStatefulWidget {
     required this.speechLocaleId,
     required this.onSpeak,
     required this.onDone,
+    this.speech = SpeechGradingConfig.empty,
   });
 
   final PlanDialogueTurn turn;
+
+  /// ЧЕМ СУДИТЬ РЕЧЬ — пороги и таблица аббревиатур с сервера (наряд SPEECH-2, Ч.3.3 / Ч.4.2).
+  final SpeechGradingConfig speech;
 
   /// Язык распознавания — {@see PlanDialogueShell.speechLocaleId}.
   final String speechLocaleId;
@@ -842,6 +858,14 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
   int _attempts = 0;
   String _heard = '';
 
+  /// ЧТО ВЫШЛО — «верно» / «почти — не хватило: …» / «не то» (наряд SPEECH-2, Ч.3.5). Null, пока
+  /// микрофон ничего не расслышал. В журнал по-прежнему не уходит ни строки.
+  SpokenVerdict? _verdict;
+
+  /// В КАКОМ СОСТОЯНИИ КНОПКА (наряд SPEECH-2, Ч.1.1). «Твоя очередь» с самого начала: реплика
+  /// собеседника к этому моменту уже отзвучала — свой ход человеку отдают именно здесь.
+  MicState get _micState => _listening ? MicState.recording : MicState.yourTurn;
+
   /// ТОТ ЖЕ ДВИЖОК, ЧТО У ПРОГОНА И У ГОВОРЕНИЯ СЛОВ (наряд DAY-FIX-3, Ч.1): склейка, тишина после
   /// речи, потолок речи, сторож от открытия. Ход не оценивается, поэтому ни ключа, ни эхо-замка
   /// ему не дают — только подсказку распознавателю.
@@ -857,6 +881,9 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
   @override
   void initState() {
     super.initState();
+    // РАЗРЕШЕНИЕ НЕ СПРАШИВАЕТСЯ ПРИ ОТКРЫТИИ (наряд SPEECH-2, Ч.1.4) — только состояние, и только
+    // читающим запросом: он нужен, чтобы показать строку про Настройки тому, у кого микрофон
+    // выключен там. Само разрешение просит первый тап ({@see _listen}).
     unawaited(_askPermission());
   }
 
@@ -880,6 +907,12 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
     if (mounted) setState(() => _probe = probe);
   }
 
+  /// «Готово»: остановить запись руками и отдать услышанное (наряд SPEECH-2, Ч.1.1).
+  Future<void> _stop() async {
+    if (!_listening) return;
+    await _turn?.stop();
+  }
+
   Future<void> _listen() async {
     if (_listening) return;
     final recognizer = ref.read(speechRecognizerProvider);
@@ -899,6 +932,7 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
     setState(() {
       _listening = true;
       _heard = '';
+      _verdict = null;
     });
 
     final turn = SpeechTurn(recognizer, diagnostics: diagnostics);
@@ -933,8 +967,29 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
     // Разрешение могло отозваться между ходами — строка про Настройки должна успеть появиться.
     if (result.outcome == SpeechTurnOutcome.unavailable) unawaited(_refreshProbe());
 
-    // СКАЗАНО — это непустой транскрипт, и только он. Вторая пустая попытка тоже ставит пузырь:
-    // микрофон, который не расслышал, не имеет права держать человека в этом ходу.
+    // ВЕРДИКТ — РЕПЛИКА СТОИТ ПЕРЕД ГЛАЗАМИ, значит порог чтения (наряд SPEECH-2, Ч.3.1). Тем же
+    // судьёй, что и остальные две карточки: сказать здесь «верно» по одному правилу, а на прогоне
+    // по другому — значит научить человека двум разным «достаточно».
+    if (result.isHeard) {
+      final verdict = SpokenLine.judge(
+        transcript: result.transcript,
+        line: widget.turn.text,
+        printed: true,
+        config: widget.speech,
+      );
+      diagnostics.verdictIs(
+        normalized: verdict.normalized,
+        coverage: verdict.coverage,
+        threshold: verdict.threshold,
+        credit: verdict.credit.name,
+      );
+      setState(() => _verdict = verdict);
+    }
+
+    // СКАЗАНО — это непустой транскрипт, и только он. Вердикт разговор НЕ ОСТАНАВЛИВАЕТ: он
+    // ничего не пишет и ни к чему не обязывает, а ход, запертый до «верно», превратил бы диалог в
+    // экзамен по дикции. Вторая пустая попытка тоже ставит пузырь: микрофон, который не
+    // расслышал, не имеет права держать человека в этом ходу.
     if (result.isHeard || _attempts >= _maxAttempts) {
       widget.onDone();
     }
@@ -1019,6 +1074,27 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
           ),
           const SizedBox(height: AppSpacing.s12),
         ],
+        // ВЕРДИКТ СЛОВАМИ (наряд SPEECH-2, Ч.3.5). Не в журнал — на экран: «я это сказал?» имеет
+        // ответ, и «Не то» на пропущенном артикле им не является.
+        if (_verdict case final verdict?) ...[
+          Text(
+            switch (verdict.credit) {
+              SpokenCredit.correct => l.sessionSpeakVerdictCorrect,
+              SpokenCredit.almost => l.sessionSpeakVerdictAlmost(verdict.missing.join(', ')),
+              SpokenCredit.wrong => l.sessionSpeakVerdictWrong,
+            },
+            style: AppText.translation.copyWith(
+              fontSize: 14,
+              height: 1.5,
+              color: switch (verdict.credit) {
+                SpokenCredit.correct => AppColors.verdictKnown,
+                SpokenCredit.almost => AppColors.verdictUnsure,
+                SpokenCredit.wrong => AppColors.destructiveText,
+              },
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+        ],
         // БЕЗ РАЗРЕШЕНИЯ — прежняя текстовая кнопка. Она не хуже: ход всё равно не оценивается,
         // и человек, который сказал реплику вслух, сказал её вслух.
         if (_permitted == false)
@@ -1031,10 +1107,15 @@ class _PlanDialogueSayAloudState extends ConsumerState<PlanDialogueSayAloud> {
             },
           )
         else
-          PrimaryButton(
-            label: _listening ? l.sessionSpeakStop : l.planDialogueSayIt,
-            minHeight: 52,
-            onPressed: _listening ? null : () => unawaited(_listen()),
+          // ТА ЖЕ КНОПКА, ЧТО НА ДВУХ ДРУГИХ КАРТОЧКАХ ГОВОРЕНИЯ (Ч.1.3): «твоя очередь» → тап →
+          // «пишу» → тап «Готово». Прежняя `PrimaryButton` со сменой подписи выглядела как
+          // отправка формы, а не как микрофон, и её второе нажатие ничего не делало.
+          Center(
+            child: MicButton(
+              state: _micState,
+              onTap: () => unawaited(_listening ? _stop() : _listen()),
+              caption: _listening ? l.sessionSpeakRecording : l.planDialogueSayIt,
+            ),
           ),
       ],
     );

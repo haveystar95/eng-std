@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'practice/learning_ladder.dart';
+import 'speech/speech_grading_config.dart';
 
 /// Grade sent to the SM-2 scheduler on backend2 (`again|hard|good|easy`).
 enum Rating {
@@ -680,11 +681,20 @@ class StudySession {
   /// cycle, and a cycle for a field one screen reads is not worth the import graph.
   final PlanSessionEnvelope? plan;
 
+  /// ЧЕМ СУДИТЬ РЕЧЬ — пороги и таблица аббревиатур, приехавшие с сервера (наряд SPEECH-2,
+  /// Ч.3.3 / Ч.4.2). Своих чисел у карточки нет: экран и сервер судят одной функцией по одним
+  /// порогам, и вторая копия таблицы разъехалась бы молча.
+  ///
+  /// [SpeechGradingConfig.empty] — сессия, собранная на устройстве (свободная практика офлайн) или
+  /// пейлоад сервера, который блока ещё не знает. Дефолты в конфиге совпадают с серверными.
+  final SpeechGradingConfig speech;
+
   const StudySession({
     required this.sessionId,
     required this.cards,
     this.builtLocally = false,
     this.plan,
+    this.speech = SpeechGradingConfig.empty,
   });
 }
 

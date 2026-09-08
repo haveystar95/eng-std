@@ -10,6 +10,7 @@ import 'exposure_sync.dart';
 import 'models.dart';
 import 'plan_models.dart';
 import 'review_queue.dart';
+import 'speech/speech_grading_config.dart';
 import 'token_store.dart';
 import 'triage_queue.dart';
 
@@ -470,6 +471,9 @@ class ApiClient {
       cards: (d['cards'] as List? ?? const [])
           .map((e) => SessionCard.fromJson(e as Map<String, dynamic>))
           .toList(),
+      // ЧЕМ СУДИТЬ РЕЧЬ — с сервера (наряд SPEECH-2). Нет блока — судим дефолтами, совпадающими
+      // с серверным конфигом: это старый пейлоад, а не разрешение придумать свои числа.
+      speech: SpeechGradingConfig.fromJson(d['speech'] as Map<String, dynamic>?),
     );
   }
 

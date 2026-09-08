@@ -1194,6 +1194,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Skipping costs nothing — the word will come back in its own time.';
 
   @override
+  String get sessionSpeakYourTurn => 'Your turn — tap and speak';
+
+  @override
+  String get sessionSpeakWaitForRole => 'They\'re still speaking';
+
+  @override
+  String get sessionSpeakRecording => 'Recording — say it, then tap Done';
+
+  @override
+  String get sessionSpeakVerdictCorrect => 'Right';
+
+  @override
+  String sessionSpeakVerdictAlmost(String words) {
+    return 'Almost — missing: $words';
+  }
+
+  @override
+  String get sessionSpeakVerdictWrong => 'Not that';
+
+  @override
   String get sessionSpeakHint =>
       'We\'re checking that you remembered the word, not how you pronounce it.';
 

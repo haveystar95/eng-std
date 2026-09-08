@@ -85,7 +85,7 @@ final readonly class SpokenLine
             return new SpokenVerdict(
                 SpokenCredit::Wrong,
                 coverage: $this->coverage->ratio($heard, $target),
-                missing: $this->coverage->missing($heard, $this->stripArticleWords($line)),
+                missing: $this->forReading($this->coverage->missing($heard, $this->stripArticleWords($line))),
                 threshold: 'key_and_rest',
                 normalized: $heard,
             );
@@ -145,7 +145,7 @@ final readonly class SpokenLine
         bool $forgiveFiller,
     ): SpokenVerdict {
         $ratio = $this->coverage->ratio($heard, $target);
-        $missing = $this->coverage->missing($heard, $displayed);
+        $missing = $this->forReading($this->coverage->missing($heard, $displayed));
 
         // ОДНО ПРОПУЩЕННОЕ СЛОВО-СВЯЗКА ПРОЩАЕТСЯ (Ч.3.1). Артикли уже сняты с обеих сторон, а
         // предлог или союз распознаватель ест по той же причине — он безударный. Поблажка стоит
@@ -247,6 +247,22 @@ final readonly class SpokenLine
      * читает («don't», «long-term»), уходят только a/an/the. Это то, из чего строится список
      * «не хватило», и он обязан говорить теми же словами, что стоят на карточке.
      */
+    /**
+     * Слово для чтения человеком: без хвостовой пунктуации предложения. Список печатается через
+     * запятую, и точка внутри такого перечисления читается как конец строки. Апостроф и дефис
+     * остаются — они внутри слова. Зеркало клиентского `_forReading`.
+     *
+     * @param  list<string>  $words
+     * @return list<string>
+     */
+    private function forReading(array $words): array
+    {
+        return array_map(
+            static fn (string $w): string => (string) preg_replace('/[.,!?;:»"\']+$/u', '', $w),
+            $words,
+        );
+    }
+
     private function stripArticleWords(string $displayed): string
     {
         $words = preg_split('/\s+/u', trim($displayed)) ?: [];

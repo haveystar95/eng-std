@@ -13,10 +13,12 @@ import '../../../data/local/cached_image_provider.dart';
 import '../../../data/models.dart';
 import '../../../data/providers.dart';
 import '../../../data/speech/speech_diagnostics.dart';
+import '../../../data/speech/speech_grading_config.dart';
 import '../../../data/speech/speech_recognizer.dart';
 import '../../../data/speech/speech_turn.dart';
 import 'session_exercise.dart';
 import 'session_grading.dart';
+import 'spoken_line.dart';
 
 /// The zeroth rung of the acquisition ladder: the word is SHOWN, not asked (кадр 16b).
 ///
@@ -41,6 +43,7 @@ class SessionIntroCard extends ConsumerStatefulWidget {
     this.autoPronounce = true,
     this.showExample = true,
     required this.speechLocaleId,
+    this.speech = SpeechGradingConfig.empty,
     this.isCurrent = _alwaysCurrent,
   });
 
@@ -70,6 +73,11 @@ class SessionIntroCard extends ConsumerStatefulWidget {
   /// the mixed-session bug this card's TTS side had (MIX-1b).
   final String speechLocaleId;
 
+  /// ЧЕМ СУДИТЬ РЕЧЬ — пороги и таблица аббревиатур с сервера (наряд SPEECH-2, Ч.3.3 / Ч.4.2).
+  /// Эхо теперь не только слушает, но и ГОВОРИТ, что вышло, — и говорит это тем же судьёй, что и
+  /// все остальные карточки говорения.
+  final SpeechGradingConfig speech;
+
   /// Still the on-screen card? A fast «Понятно» must cancel a deferred pronounce rather than fire
   /// it over the next card — the same rule the exercise card follows (F20).
   final bool Function() isCurrent;
@@ -78,8 +86,11 @@ class SessionIntroCard extends ConsumerStatefulWidget {
   ConsumerState<SessionIntroCard> createState() => _SessionIntroCardState();
 }
 
-/// How the optional echo on an intro card is going. There is no verdict here on purpose — see
-/// [_EchoRow] — so «heard» and «again» are the only two things it can ever say.
+/// В КАКОМ СОСТОЯНИИ ЭХО ЗНАКОМСТВА.
+///
+/// `heard` больше не значит «микрофон сработал»: с наряда SPEECH-2 (Ч.3.1, Ч.6) эхо ГОВОРИТ, что
+/// вышло, — «верно», «почти — не хватило: …», «не то». Оно по-прежнему НИЧЕГО НЕ ПИШЕТ: ни ревью,
+/// ни показа, ни лестницы; вердикт здесь — ответ на вопрос «я это сказал?», а не оценка.
 enum _Echo { idle, listening, heard, again }
 
 class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
@@ -88,6 +99,17 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   /// The echo's state. Starts [idle] and, if the learner never taps, stays there forever: the echo
   /// is entirely optional and the intro's «Понятно →» is reachable without it.
   _Echo _echo = _Echo.idle;
+
+  /// ВЕРДИКТ ПОСЛЕДНЕЙ ПОПЫТКИ — «верно» / «почти — не хватило: …» / «не то» (наряд SPEECH-2,
+  /// Ч.3.1, Ч.3.5). Null, пока попытки не было.
+  ///
+  /// Что здесь ИЗМЕНИЛОСЬ и почему. До наряда эхо говорило «Услышал тебя» и никогда — «неверно»:
+  /// «сказать человеку, что его первая попытка нового слова неправильна, — самый быстрый способ
+  /// отучить его говорить вслух». Наряд просит вердикт на всех трёх карточках с микрофоном, и он
+  /// здесь есть — но остаётся ТРЁХСТУПЕНЧАТЫМ и мягким («почти» с перечнем пропущенных слов), и
+  /// по-прежнему НЕ ПИШЕТСЯ никуда. Строгость даёт порог чтения с экрана: фраза стоит перед
+  /// глазами, и «прочитал» — вопрос с ответом, а не суждение о памяти.
+  SpokenVerdict? _verdict;
 
   /// What the recogniser transcribed on the last attempt, printed back under the button.
   ///
@@ -115,33 +137,6 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   /// движку не дают (`isAnswer` не передан), потому что здесь нечего засчитывать.
   SpeechTurn? _turn;
 
-  /// Set once an async, non-prompting OS permission check (below) confirms it — or once the learner
-  /// taps the microphone invitation and the OS says yes — a brand-new word's
-  /// intro card is very often the FIRST speech-touching card in a fresh app run, and its echo is
-  /// never the thing that calls [SpeechRecognizer.prepare] (see [_speechReady]'s doc), so
-  /// [SpeechRecognizer.isReady] alone stayed false there even with the mic already permitted from a
-  /// past run or iOS Settings (QA-21).
-  bool _osPermitted = false;
-
-  /// Is the recogniser already permitted? The echo BUTTON is hidden until it is — an intro card
-  /// still never raises a microphone prompt on its own, and what stands in its place is an
-  /// invitation ([_EchoInvite]) rather than nothing at all.
-  ///
-  /// Nothing at all was the state until 24.08, and it made the echo undiscoverable in practice. The
-  /// permission is granted on the first SPEAKING card, which lives high on the ladder, so a word
-  /// just met is nowhere near it; and a device build off a free personal team is reinstalled about
-  /// weekly, and a reinstall resets the iOS speech and microphone authorisation. The echo was
-  /// therefore invisible on almost every build, and a learner who had not reached the speaking rung
-  /// had no way of ever learning it existed. A dimmed microphone that asks ON A TAP keeps the rule
-  /// the old behaviour was protecting — the card requires nothing — while giving the feature a door.
-  ///
-  /// [SpeechRecognizer.isReady] alone answers "has *this process* already prepared" — true once
-  /// some OTHER card has called [SpeechRecognizer.prepare], but false for as long as this intro
-  /// card is the first thing in the run to ask, even when the OS would say yes right now.
-  /// [_osPermitted] (started in [initState], never prompts — see its own doc) covers exactly that
-  /// gap without this card ever being the one that calls [SpeechRecognizer.prepare] itself.
-  bool get _speechReady => _recognizer.isReady || _osPermitted;
-
   @override
   void initState() {
     super.initState();
@@ -152,35 +147,9 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
         if (mounted && widget.isCurrent()) widget.onSpeak(widget.card.answerText);
       });
     }
-    // Skip the round trip when [SpeechRecognizer.isReady] already answers yes (the common case once
-    // any card has prepared this run). [SpeechRecognizer.hasPermission] itself never prompts — see
-    // its doc — so this cannot be the thing that raises iOS's permission dialog.
-    if (!_recognizer.isReady) {
-      unawaited(
-        _recognizer.hasPermission.then((granted) {
-          if (mounted && granted) setState(() => _osPermitted = true);
-        }),
-      );
-    }
-  }
-
-  /// The permission prompt is up. The invitation goes inert rather than queueing a second prompt.
-  bool _asking = false;
-
-  /// The ONE place in this card that may prompt, and it is reached only by a deliberate tap on the
-  /// microphone. [SpeechRecognizer.prepare] is what raises the two iOS dialogs; a refusal comes back
-  /// as false and the invitation simply stays, because a refused microphone is an ordinary state of
-  /// this card and not an error to report.
-  Future<void> _askForMicrophone() async {
-    if (_asking) return;
-    AppHaptics.light();
-    setState(() => _asking = true);
-    final granted = await _recognizer.prepare();
-    if (!mounted) return;
-    setState(() {
-      _asking = false;
-      _osPermitted = granted;
-    });
+    // НИЧЕГО НЕ СПРАШИВАЕМ НА ОТКРЫТИИ (наряд SPEECH-2, Ч.1.4). До наряда карточка тихо ходила в
+    // ОС за статусом, чтобы решить, показывать ли кнопку или приглашение вместо неё; теперь кнопка
+    // стоит всегда, а разрешение спрашивает первый тап. Один вопрос вместо двух состояний.
   }
 
   @override
@@ -213,10 +182,20 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
 
       return;
     }
+    // РАЗРЕШЕНИЕ СПРАШИВАЕТСЯ ПРИ ПЕРВОМ ТАПЕ (наряд SPEECH-2, Ч.1.4), а не при открытии карточки
+    // и не заранее: карточка знакомства по-прежнему НИЧЕГО не требует, но и не прячет кнопку за
+    // приглашением, которое человеку приходилось разгадывать.
     AppHaptics.light();
+    if (!await _recognizer.prepare()) {
+      if (mounted) setState(() => _echo = _Echo.again);
+
+      return;
+    }
+    if (!mounted) return;
     setState(() {
       _echo = _Echo.listening;
       _heard = '';
+      _verdict = null;
     });
 
     final term = widget.card.answerText;
@@ -248,12 +227,29 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
     }
 
     if (!mounted) return;
-    // «Услышал тебя» means exactly that — the microphone worked. It is deliberately NOT a check
-    // against the word: telling someone their first attempt at a new word was wrong is the fastest
-    // way to make them stop trying it out loud.
+    // ФРАЗА СТОИТ ПЕРЕД ГЛАЗАМИ — значит, судится порогом чтения (наряд SPEECH-2, Ч.3.1), и
+    // судится тем же {@see SpokenLine}, что и все остальные карточки говорения. Ключа у слова нет
+    // и не нужно: задача — сказать это.
+    final verdict = attempt.isHeard
+        ? SpokenLine.judge(
+            transcript: attempt.transcript,
+            line: term,
+            printed: true,
+            config: widget.speech,
+          )
+        : null;
+    if (verdict != null) {
+      _diagnostics.verdictIs(
+        normalized: verdict.normalized,
+        coverage: verdict.coverage,
+        threshold: verdict.threshold,
+        credit: verdict.credit.name,
+      );
+    }
     setState(() {
       _echo = attempt.isHeard ? _Echo.heard : _Echo.again;
       _heard = attempt.isHeard ? attempt.transcript.trim() : '';
+      _verdict = verdict;
     });
   }
 
@@ -338,13 +334,12 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
                   style: AppTextExercise.introAlso,
                 ),
               ],
-              // The echo, or the door to it. The card still asks for nothing: an unpermitted
-              // microphone is a dimmed glyph that does nothing until it is pressed.
+              // ЭХО — ТА ЖЕ КНОПКА, ЧТО НА ДВУХ ДРУГИХ КАРТОЧКАХ ГОВОРЕНИЯ (наряд SPEECH-2,
+              // Ч.1.3). Карточка по-прежнему НИЧЕГО не требует: она зовёт, а не заставляет, и
+              // разрешение спрашивается первым тапом (Ч.1.4) — приглашения, которое человеку
+              // приходилось разгадывать, больше нет.
               const SizedBox(height: AppSpacing.s16),
-              if (_speechReady)
-                _EchoRow(state: _echo, heard: _heard, onTap: _echoBack)
-              else
-                _EchoInvite(onTap: _asking ? null : _askForMicrophone),
+              _EchoRow(state: _echo, heard: _heard, verdict: _verdict, onTap: _echoBack),
               // The badge closes the card rather than opening it (кадр 16b): it is a footnote about
               // what KIND of card this is, and at the top it was the first thing read — a label
               // where the word itself should have met the reader. It stays the last line even with
@@ -359,64 +354,30 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   }
 }
 
-/// The microphone before there is a microphone — the echo's door on a card that has not been given
-/// the permission yet.
+/// «ПОВТОРИ ВСЛУХ» — та же кнопка микрофона, что на двух других карточках говорения (наряд
+/// SPEECH-2, Ч.1.3), плюс одна строка реакции.
 ///
-/// A GLYPH AND NOTHING ELSE, deliberately. The intro card's contract is that it asks for nothing,
-/// and a labelled button reading «Разрешить микрофон» would be the card asking; a dimmed mic sitting
-/// where the echo will sit is an offer that can be walked past without reading it. It carries the
-/// echo's own name in its semantics, because to a screen reader «what is this» has to have an
-/// answer, and the answer is «the thing that lets you say the word back».
-///
-/// Nothing happens until it is pressed. The press is the whole design: it is what makes the
-/// permission a decision the learner takes rather than a dialog the app throws at them.
-class _EchoInvite extends StatelessWidget {
-  const _EchoInvite({required this.onTap});
-
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Semantics(
-        button: true,
-        label: l.sessionEchoEnable,
-        child: InkResponse(
-          onTap: onTap,
-          radius: 26,
-          child: Container(
-            width: AppSpacing.minTap,
-            height: AppSpacing.minTap,
-            alignment: Alignment.center,
-            child: Icon(
-              LucideIcons.mic,
-              size: 20,
-              // Tertiary, like every other thing on this card that is available and not asked for.
-              color: onTap == null ? AppColors.track : AppColors.tertiary,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// «Повторить вслух» plus its one-line reaction.
-///
-/// Quiet by construction — a [QuietButton] and a grey line, no colour, no icon, no verdict. The
-/// intro card has nothing on it that is a judgement, and the moment this row got a green tick it
-/// would become one. «Услышал тебя» is a statement about the microphone; «Попробуй ещё» is an
-/// invitation, not a fail.
+/// Что здесь ИЗМЕНИЛОСЬ. До наряда это был тихий [QuietButton] с серой строкой и без вердикта: «в
+/// карточке знакомства нет ничего, что было бы суждением, и зелёная галочка сделала бы её
+/// суждением». Наряд просит вердикт на всех трёх карточках с микрофоном (Ч.3.5, Ч.6), и он здесь
+/// есть — трёхступенчатый и с перечнем пропущенных слов, а не «неверно». Что НЕ изменилось: ход
+/// по-прежнему не пишет ни ревью, ни показа, ни лестницы; «Понятно →» доступно и без него.
 class _EchoRow extends StatefulWidget {
-  const _EchoRow({required this.state, required this.heard, required this.onTap});
+  const _EchoRow({
+    required this.state,
+    required this.heard,
+    required this.verdict,
+    required this.onTap,
+  });
 
   final _Echo state;
 
   /// The transcript to print back, or '' when there is none (idle, or nothing was made out).
   final String heard;
+
+  /// ЧТО ВЫШЛО — «верно» / «почти — не хватило: …» / «не то» (наряд SPEECH-2, Ч.3.5). Null, пока
+  /// попытки не было или пока микрофон ничего не расслышал.
+  final SpokenVerdict? verdict;
 
   final VoidCallback onTap;
 
@@ -424,88 +385,62 @@ class _EchoRow extends StatefulWidget {
   State<_EchoRow> createState() => _EchoRowState();
 }
 
-class _EchoRowState extends State<_EchoRow> with SingleTickerProviderStateMixin {
-  /// The «I am recording» sign. A tap used to change nothing at all on screen (QA-21) — the button
-  /// simply went disabled — so there was no way to tell a live microphone from a dead one, and no
-  /// way to guess when to stop talking. The same slow breath the speaking card's record circle
-  /// uses, so the two read as one behaviour.
-  /// Built in [initState], NOT as a `late final` field: this row only touches the controller while
-  /// listening, so on the common path (the echo is optional and usually never tapped) a lazy field
-  /// would be constructed for the first time inside [dispose] — and an AnimationController reads
-  /// TickerMode off the tree it is already leaving, which throws.
-  late final AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: AppMotion.listenPulse,
-      lowerBound: 0.55,
-      upperBound: 1.0,
-    );
-  }
-
-  @override
-  void didUpdateWidget(_EchoRow old) {
-    super.didUpdateWidget(old);
-    if (widget.state == old.state) return;
-    if (widget.state == _Echo.listening && !MediaQuery.of(context).disableAnimations) {
-      _pulse.repeat(reverse: true);
-    } else {
-      _pulse.stop();
-      _pulse.value = 1.0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
+class _EchoRowState extends State<_EchoRow> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final listening = widget.state == _Echo.listening;
     final heard = widget.heard.trim();
 
-    // What the row says under the button. While listening it is the live partial, if there is one
-    // yet — seeing your own words appear is the clearest possible «yes, it hears you».
+    // Что строка говорит под кнопкой. Пока пишет — живой частичный текст, если он уже есть: увидеть
+    // свои слова на экране это самое ясное «да, тебя слышат».
     final note = switch (widget.state) {
       _Echo.idle => null,
       _Echo.listening => heard.isEmpty ? l.sessionSpeakListening : l.sessionSpeakHeard(heard),
-      // Печатаем РАСПОЗНАННОЕ, not a bare «Услышал тебя»: the point of the echo is the mouth, and
-      // the learner can only tell how it went by reading what came out. Still not a verdict — the
-      // text is shown, never marked.
+      // Печатаем РАСПОЗНАННОЕ: смысл эха во рту, и как оно вышло, человек понимает, читая, что
+      // получилось. Вердикт стоит отдельной строкой ниже.
       _Echo.heard => heard.isEmpty ? l.sessionEchoHeard : l.sessionSpeakHeard(heard),
       _Echo.again => l.sessionEchoAgain,
     };
 
+    final verdict = widget.verdict;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            // Never disabled, unlike before: while listening the tap becomes «стоп», which is the
-            // other half of making the recording's end knowable.
-            QuietButton(
-              label: listening ? l.sessionSpeakStop : l.sessionEchoTry,
-              icon: listening ? LucideIcons.square : LucideIcons.mic,
-              onPressed: widget.onTap,
-            ),
-            if (listening) ...[
-              const SizedBox(width: AppSpacing.s8),
-              FadeTransition(
-                opacity: _pulse,
-                child: const Icon(LucideIcons.mic, size: 16, color: AppColors.ink),
-              ),
-            ],
-          ],
+        Center(
+          child: MicButton(
+            state: switch (widget.state) {
+              _Echo.listening => MicState.recording,
+              _ => MicState.yourTurn,
+            },
+            onTap: widget.onTap,
+            caption: switch (widget.state) {
+              _Echo.listening => l.sessionSpeakRecording,
+              _ => l.sessionEchoTry,
+            },
+          ),
         ),
         if (note != null) ...[
+          const SizedBox(height: AppSpacing.s8),
+          Text(note, textAlign: TextAlign.center, style: AppTextExercise.taskInstruction),
+        ],
+        if (verdict != null) ...[
           const SizedBox(height: AppSpacing.s4),
-          Text(note, style: AppTextExercise.taskInstruction),
+          Text(
+            switch (verdict.credit) {
+              SpokenCredit.correct => l.sessionSpeakVerdictCorrect,
+              SpokenCredit.almost => l.sessionSpeakVerdictAlmost(verdict.missing.join(', ')),
+              SpokenCredit.wrong => l.sessionSpeakVerdictWrong,
+            },
+            textAlign: TextAlign.center,
+            style: AppTextExercise.taskInstruction.copyWith(
+              color: switch (verdict.credit) {
+                SpokenCredit.correct => AppColors.verdictKnown,
+                SpokenCredit.almost => AppColors.verdictUnsure,
+                SpokenCredit.wrong => AppColors.destructiveText,
+              },
+            ),
+          ),
         ],
       ],
     );

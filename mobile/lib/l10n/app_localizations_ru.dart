@@ -1217,6 +1217,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionSpeakSkipHint => 'Пропуск ничего не испортит: слово вернётся своим чередом.';
 
   @override
+  String get sessionSpeakYourTurn => 'Твоя очередь — нажми и говори';
+
+  @override
+  String get sessionSpeakWaitForRole => 'Собеседник говорит';
+
+  @override
+  String get sessionSpeakRecording => 'Пишу — скажи и нажми «Готово»';
+
+  @override
+  String get sessionSpeakVerdictCorrect => 'Верно';
+
+  @override
+  String sessionSpeakVerdictAlmost(String words) {
+    return 'Почти — не хватило: $words';
+  }
+
+  @override
+  String get sessionSpeakVerdictWrong => 'Не то';
+
+  @override
   String get sessionSpeakHint => 'Проверяем, вспомнил ли ты слово, а не произношение.';
 
   @override

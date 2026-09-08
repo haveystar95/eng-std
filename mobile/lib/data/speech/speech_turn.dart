@@ -5,22 +5,25 @@ import 'package:flutter/foundation.dart';
 import 'speech_diagnostics.dart';
 import 'speech_recognizer.dart';
 
-/// ЧИСЛА ОДНОГО ХОДА ГОЛОСОМ — наряд DAY-FIX-3, Ч.1.3. Конфиг, не литералы в карточке: первый раз,
-/// когда одно из них окажется неверным, оно должно сдвинуться в одном месте.
+/// ЧИСЛА ОДНОГО ХОДА ГОЛОСОМ — наряды DAY-FIX-3 (Ч.1.3) и SPEECH-2 (Ч.2). Конфиг, не литералы в
+/// карточке: первый раз, когда одно из них окажется неверным, оно должно сдвинуться в одном месте.
 ///
-///   [silenceAfterSpeech]   тишина ПОСЛЕ последнего слова, которая закрывает попытку;
-///   [maxSpeech]            сколько речи от ПЕРВОГО слова попытка вмещает — дальше она закрыта тем,
-///                          что есть;
-///   [silenceBeforeSkip]    сторож: столько тишины ОТ ОТКРЫТИЯ микрофона, если человек так и не
-///                          начал говорить, — исход [SpeechTurnOutcome.silent];
+///   [silenceAfterSpeech]   тишина ПОСЛЕ последнего слова, которая закрывает запись;
+///   [maxRecording]         сторож ОБЩЕЙ ДЛИНЫ ЗАПИСИ — от тапа до закрытия. Пол 15 с
+///                          ([minMaxRecording]); серверный `listen_seconds` может его поднять и не
+///                          может опустить;
 ///   [echoCoverage]         доля слов реплики роли в склейке, при которой склейка — эхо динамика,
 ///                          а не ответ человека.
+///
+/// ЧЕГО ЗДЕСЬ БОЛЬШЕ НЕТ. `silenceBeforeSkip` («сторож ожидания первого слова») ушёл вместе с
+/// автооткрытием микрофона: запись начинается по НАЖАТИЮ (Ч.1.1), и человек, который её начал, уже
+/// решил говорить — отдельного окна «он ещё думает» больше не существует. Что от него осталось —
+/// [minWaitBeforeSilence], пол, ниже которого тишина не закрывает запись вовсе.
 @immutable
 class SpeechTurnConfig {
   const SpeechTurnConfig({
     this.silenceAfterSpeech = const Duration(seconds: 2),
-    this.maxSpeech = const Duration(seconds: 15),
-    this.silenceBeforeSkip = const Duration(seconds: 15),
+    this.maxRecording = const Duration(seconds: 15),
     this.echoCoverage = 0.7,
     this.reopenGap = const Duration(milliseconds: 120),
     this.deadChannelWindow = const Duration(seconds: 1),
@@ -28,26 +31,27 @@ class SpeechTurnConfig {
   });
 
   final Duration silenceAfterSpeech;
-  final Duration maxSpeech;
-  final Duration silenceBeforeSkip;
+  final Duration maxRecording;
   final double echoCoverage;
 
-  /// ПОЛ ОЖИДАНИЯ ПЕРВОГО СЛОВА (наряд DAY-GATE-1, Ч.0.2).
+  /// ПОЛ СТОРОЖА ЗАПИСИ (наряд SPEECH-2, Ч.2.1).
   ///
-  /// [silenceBeforeSkip] приезжает с сервера (`listen_seconds`), и это правильно: сколько человек
-  /// думает над репликой — суждение продукта. Но окно, в котором человек ещё НЕ НАЧАЛ говорить,
-  /// имеет физический низ: между «микрофон открылся» и первым звуком лежит вдох, взгляд на
-  /// подсказку и решение, а сторож, сработавший раньше, делает ход за человека пустым ответом
-  /// (в прогоне — `again` в append-only журнал). Один неверный конфиг на сервере не должен уметь
-  /// превратить прогон в конвейер промахов, поэтому пол стоит здесь, в движке, а не в вызывающем.
-  ///
-  /// Потолок речи ([maxSpeech]) пола не имеет и иметь не должен: он считается ОТ ПЕРВОГО СЛОВА,
-  /// то есть человек к этому моменту уже говорит.
-  static const minSilenceBeforeSkip = Duration(seconds: 5);
+  /// [maxRecording] приезжает с сервера (`listen_seconds`), и это правильно: сколько человек
+  /// говорит — суждение продукта. Но у записи есть физический низ: реплика сцены — это фраза,
+  /// а не слово, и запись, закрытая раньше пятнадцати секунд, режет её на полуслове. Один
+  /// неверный конфиг не должен уметь этого сделать, поэтому пол стоит здесь, в движке, а не в
+  /// вызывающем — и второй раз на сервере, где число собирается.
+  static const minMaxRecording = Duration(seconds: 15);
 
-  /// Сколько ход реально ждёт первого слова — см. [minSilenceBeforeSkip].
-  Duration get effectiveSilenceBeforeSkip =>
-      silenceBeforeSkip < minSilenceBeforeSkip ? minSilenceBeforeSkip : silenceBeforeSkip;
+  /// ДО ПЕРВОГО ЗВУКА ЗАПИСЬ ЖИВЁТ НЕ МЕНЬШЕ ПЯТИ СЕКУНД (Ч.2.2).
+  ///
+  /// Между «нажал» и первым словом лежит вдох, взгляд на подсказку и решение. Тишина, закрывшая
+  /// запись раньше, отдаёт на зачёт пустоту — то есть делает ход за человека.
+  static const minWaitBeforeSilence = Duration(seconds: 5);
+
+  /// Сколько запись реально живёт — см. [minMaxRecording].
+  Duration get effectiveMaxRecording =>
+      maxRecording < minMaxRecording ? minMaxRecording : maxRecording;
 
   /// Пауза между закрытием плагина и его переоткрытием. Не про человека — про очередь событий:
   /// плагин, ответивший мгновенно, без неё крутил бы цикл, не давая таймерам попытки сработать.
@@ -63,16 +67,14 @@ class SpeechTurnConfig {
 
   SpeechTurnConfig copyWith({
     Duration? silenceAfterSpeech,
-    Duration? maxSpeech,
-    Duration? silenceBeforeSkip,
+    Duration? maxRecording,
     double? echoCoverage,
     Duration? reopenGap,
     Duration? deadChannelWindow,
     int? deadChannelStrikes,
   }) => SpeechTurnConfig(
     silenceAfterSpeech: silenceAfterSpeech ?? this.silenceAfterSpeech,
-    maxSpeech: maxSpeech ?? this.maxSpeech,
-    silenceBeforeSkip: silenceBeforeSkip ?? this.silenceBeforeSkip,
+    maxRecording: maxRecording ?? this.maxRecording,
     echoCoverage: echoCoverage ?? this.echoCoverage,
     reopenGap: reopenGap ?? this.reopenGap,
     deadChannelWindow: deadChannelWindow ?? this.deadChannelWindow,
@@ -82,16 +84,16 @@ class SpeechTurnConfig {
 
 /// Чем кончился ОДИН ХОД — полная попытка, а не один `finalResult` плагина.
 enum SpeechTurnOutcome {
-  /// Полная попытка: человек договорил (тишина после последнего слова, потолок речи, «Готово» или
-  /// ключ узнан по дороге). [SpeechTurnResult.transcript] — вся склейка. Что в ней — судит карточка:
-  /// мимо ключа — это честная ошибка, а не поломка канала.
+  /// Полная попытка: человек договорил (тишина после последнего слова, сторож записи или тап
+  /// «Готово»). [SpeechTurnResult.transcript] — ВСЯ склейка, а не первый частичный результат
+  /// (Ч.2.3). Что в ней — судит карточка: мимо ответа — это честная ошибка, а не поломка канала.
   heard,
 
   /// Обрыв: канал упал ПОСЛЕ того, как человек начал говорить. Не ответ и не ошибка —
   /// «Не расслышали до конца — скажи ещё раз», журнал не пишется, вторая попытка (Ч.1.4).
   incomplete,
 
-  /// Сторож: [SpeechTurnConfig.silenceBeforeSkip] тишины от открытия, человек не начал говорить.
+  /// Ни одного слова за всю запись: сторож [SpeechTurnConfig.maxRecording] закрыл её пустой.
   /// Выход — «Пропустить» (в прогоне его нажимает сам сторож).
   silent,
 
@@ -123,23 +125,29 @@ class SpeechTurnResult {
 /// Плагин распознавания закрывает попытку на первом же `finalResult`, а iOS ставит его на любой
 /// запинке короче трёх секунд — так «My… back hurts» приходило как «My» и писалось ошибкой
 /// (диагностика 06.09, п. 2). Движок стоит НАД плагином: результаты копятся в склейку, микрофон
-/// переоткрывается, а закрывает попытку не плагин, а ПРАВИЛО:
+/// переоткрывается, а закрывает запись не плагин, а ПРАВИЛО — и правил ровно четыре
+/// (наряд SPEECH-2, Ч.2.1):
 ///
-///   * тишина [SpeechTurnConfig.silenceAfterSpeech] после последнего слова — договорил;
-///   * [SpeechTurnConfig.maxSpeech] речи от первого слова — хватит;
-///   * ключ узнан по дороге — договорил, ждать тишину незачем;
-///   * «Готово» ([stop]) — договорил тем, что есть.
+///   * тишина [SpeechTurnConfig.silenceAfterSpeech] ПОСЛЕ начала речи — договорил;
+///   * тап «Готово» ([stop]) — договорил тем, что есть;
+///   * сторож общей длины записи [SpeechTurnConfig.maxRecording] — хватит;
+///   * ошибка канала.
 ///
-/// Сторож [SpeechTurnConfig.silenceBeforeSkip] считает от ОТКРЫТИЯ микрофона, а не от появления
-/// карточки (п. 3 диагностики), и только пока человек не начал говорить.
+/// ЧЕГО СРЕДИ НИХ НЕТ И БОЛЬШЕ НЕ БУДЕТ: закрытия ПО СОВПАДЕНИЮ. До этого наряда движок брал
+/// снаружи предикат «в склейке узнан ключ» и закрывал попытку, как только тот срабатывал. На
+/// телефоне 08.09 это выглядело так: человек говорит длинную реплику, на первом узнанном ключевом
+/// слове микрофон закрывается и карточка ставит «верно». Фразу никто не дослушал и не оценил —
+/// а тренажёр, который учит говорить фразами, засчитал слово. Зачёт теперь считает
+/// [SpeechTurnResult.transcript] ЦЕЛИКОМ, и считает его карточка, после закрытия.
 ///
-/// ЭХО-ЗАМОК (Ч.1.5): микрофон, открытый рядом с динамиком, слышит реплику собеседника. Склейка,
-/// в которой узнана реплика роли (по [echoOf]) и не узнан ни один ключ, — не ответ: она
-/// выбрасывается, микрофон переоткрывается, попытка продолжается с чистого листа.
+/// ЭХО-ЗАМОК (DAY-FIX-3, Ч.1.5): микрофон, открытый рядом с динамиком, слышит реплику собеседника.
+/// Склейка, в которой узнана реплика роли (по [echoOf]), — не ответ: она выбрасывается, микрофон
+/// переоткрывается, запись продолжается с чистого листа. Это НЕ закрытие по совпадению: эхо не
+/// заканчивает ход, а выбрасывает чужой голос из склейки.
 ///
-/// Движок ничего не знает о том, что такое правильный ответ: [isAnswer] и [echoOf] приходят
-/// снаружи, и это то, что держит его вне слоя тренажёров. Таймеры — обычные [Timer], поэтому
-/// виджет-тест гоняет его `pump(Duration)`, а юнит-тест — `fakeAsync`.
+/// Движок ничего не знает о том, что такое правильный ответ: [echoOf] приходит снаружи, и это то,
+/// что держит его вне слоя тренажёров. Таймеры — обычные [Timer], поэтому виджет-тест гоняет его
+/// `pump(Duration)`, а юнит-тест — `fakeAsync`.
 class SpeechTurn {
   SpeechTurn(
     this._recognizer, {
@@ -164,14 +172,15 @@ class SpeechTurn {
   DateTime? _firstWordAt;
   int _echoes = 0;
   Timer? _silenceTimer;
-  Timer? _maxSpeechTimer;
-  Timer? _skipTimer;
+  Timer? _recordingTimer;
+
+  /// Когда микрофон открылся — от него меряется сторож записи и пол [minWaitBeforeSilence].
+  DateTime? _openedAt;
 
   /// Ручки текущего хода — их же дёргает [injectTranscript], чтобы подстановка шла ТОЙ ЖЕ дорогой,
   /// что и живой частичный результат, а не соседней.
   ValueChanged<String>? _onPartial;
   VoidCallback? _onSpeechStarted;
-  bool Function(String)? _isAnswer;
   bool _closing = false;
   bool _manualStop = false;
 
@@ -180,16 +189,15 @@ class SpeechTurn {
   /// Всё, что услышано на этот момент — склейка плюс текущий кусок.
   String get transcript => [..._chunks, if (_partial.trim().isNotEmpty) _partial.trim()].join(' ').trim();
 
-  /// Один ход. Возвращается ОДИН раз, когда попытка закрыта по правилу — см. класс.
+  /// Один ход. Возвращается ОДИН раз, когда запись закрыта по правилу — см. класс.
   ///
-  /// [expected] и [contextualStrings] едут в плагин подсказкой; [isAnswer] — «в склейке узнан
-  /// ключ» (любой из speaking_keys, Ч.1.6); [echoOf] — «в склейке узнана реплика роли»
-  /// (покрытие ≥ [SpeechTurnConfig.echoCoverage] считает вызывающий, движок только спрашивает).
+  /// [expected] и [contextualStrings] едут в плагин подсказкой; [echoOf] — «в склейке узнана
+  /// реплика роли» (покрытие ≥ [SpeechTurnConfig.echoCoverage] считает вызывающий, движок только
+  /// спрашивает).
   Future<SpeechTurnResult> listen({
     required List<String> expected,
     required String localeId,
     List<String> contextualStrings = const [],
-    bool Function(String transcript)? isAnswer,
     bool Function(String transcript)? echoOf,
     ValueChanged<String>? onPartial,
     VoidCallback? onSpeechStarted,
@@ -200,15 +208,15 @@ class SpeechTurn {
     _chunks.clear();
     _partial = '';
     _firstWordAt = null;
+    _openedAt = _now();
     _echoes = 0;
     _closing = false;
     _manualStop = false;
     _onPartial = onPartial;
     _onSpeechStarted = onSpeechStarted;
-    _isAnswer = isAnswer;
     diagnostics?.turnStarted();
 
-    _armSkip();
+    _armRecordingCap();
 
     // ЦИКЛ КРУТИТСЯ В СТОРОНЕ ОТ ХОДА, и это значит, что его исключение НЕ доходит до того, кто
     // ждёт исход (наряд DAY-GATE-1, Ч.0.2, находка F4): плагин, бросивший `PlatformException`,
@@ -219,7 +227,6 @@ class SpeechTurn {
         expected: expected,
         localeId: localeId,
         contextualStrings: contextualStrings,
-        isAnswer: isAnswer,
         echoOf: echoOf,
         onPartial: onPartial,
         onSpeechStarted: onSpeechStarted,
@@ -241,7 +248,6 @@ class SpeechTurn {
     required List<String> expected,
     required String localeId,
     required List<String> contextualStrings,
-    required bool Function(String)? isAnswer,
     required bool Function(String)? echoOf,
     required ValueChanged<String>? onPartial,
     required VoidCallback? onSpeechStarted,
@@ -260,9 +266,9 @@ class SpeechTurn {
       final attempt = await _recognizer.listenOnce(
         expected: expected,
         localeId: localeId,
-        // Окно плагина — не правило, а потолок: попытку закрывает движок. Плагину отдаётся
-        // столько, сколько попытка вообще может длиться, и его же пауза после речи.
-        timeout: config.maxSpeech + config.silenceBeforeSkip,
+        // Окно плагина — не правило, а потолок: запись закрывает движок. Плагину отдаётся столько,
+        // сколько запись вообще может длиться, и его же пауза после речи.
+        timeout: config.effectiveMaxRecording,
         pauseFor: config.silenceAfterSpeech,
         contextualStrings: contextualStrings,
         onPartial: (text) {
@@ -274,19 +280,15 @@ class SpeechTurn {
           if (!changed) return;
           if (_firstWordAt == null) {
             _firstWordAt = _now();
-            _skipTimer?.cancel();
-            _armMaxSpeech();
             diagnostics?.phaseIs(SpeechPhase.listening);
             onSpeechStarted?.call();
           }
           _armSilence();
           diagnostics?.partial(transcript);
+          // ЧАСТИЧНЫЙ РЕЗУЛЬТАТ — ТОЛЬКО НА ЭКРАН И В ЖУРНАЛ (Ч.2.3). На зачёт уходит финальная
+          // склейка, и уходит она из [_settle], после закрытия записи. Ничего, что решает исход
+          // хода, здесь произойти не может — в этом и был дефект, который наряд чинит.
           onPartial?.call(transcript);
-          // КЛЮЧ УЗНАН ПО ДОРОГЕ — договорил. Ждать две секунды тишины после ответа, который уже
-          // прозвучал, значит держать человека у микрофона ради ничего.
-          if (isAnswer != null && isAnswer(transcript)) {
-            _settle(SpeechTurnOutcome.heard, phase: SpeechPhase.closedByAnswer);
-          }
         },
       );
       if (turn.isCompleted || _closing) return;
@@ -303,19 +305,15 @@ class SpeechTurn {
             _firstWordAt ??= _now();
           }
           final joined = transcript;
-          if (isAnswer != null && joined.isNotEmpty && isAnswer(joined)) {
-            _settle(SpeechTurnOutcome.heard, phase: SpeechPhase.closedByAnswer);
-
-            return;
-          }
-          // ЭХО: реплика собеседника узнана, ключ — нет. Склейка вон, микрофон переоткрыт.
+          // ЭХО: в склейке узнана реплика собеседника. Склейка вон, микрофон переоткрыт — но
+          // ЗАПИСЬ ПРОДОЛЖАЕТСЯ, и её сторож продолжает идти от того же тапа: эхо не добавляет
+          // человеку времени и не отнимает его.
           if (echoOf != null && joined.isNotEmpty && echoOf(joined)) {
             _echoes++;
             _chunks.clear();
             _firstWordAt = null;
             _silenceTimer?.cancel();
-            _maxSpeechTimer?.cancel();
-            _armSkip();
+            _silenceTimer = null;
             // «Слушаю…» БЕЗ ТЕКСТА выглядит одинаково у мёртвого микрофона и у исправного, который
             // честно выбросил эхо динамика. Журнал — единственное, что их различает.
             diagnostics?.echoDropped();
@@ -327,7 +325,7 @@ class SpeechTurn {
           // последнего слова ещё не набежала — переоткрываем и слушаем дальше. Таймер тишины
           // уже идёт с последнего слова и закроет попытку сам.
           if (_manualStop) {
-            _settle(SpeechTurnOutcome.heard, phase: SpeechPhase.closedBySilence);
+            _settle(SpeechTurnOutcome.heard, phase: SpeechPhase.closedByTap);
 
             return;
           }
@@ -343,7 +341,7 @@ class SpeechTurn {
           if (_manualStop) {
             _settle(
               transcript.isEmpty ? SpeechTurnOutcome.silent : SpeechTurnOutcome.heard,
-              phase: SpeechPhase.closedBySilence,
+              phase: SpeechPhase.closedByTap,
             );
 
             return;
@@ -379,9 +377,15 @@ class SpeechTurn {
     }
   }
 
+  /// ТИШИНА ПОСЛЕ РЕЧИ — и не раньше [SpeechTurnConfig.minWaitBeforeSilence] от начала записи
+  /// (Ч.2.2). Пол здесь, а не в вызывающем: человек, сказавший первое слово на второй секунде,
+  /// имеет право на паузу, и запись, закрытая на четвёртой, отдаёт на зачёт полфразы.
   void _armSilence() {
     _silenceTimer?.cancel();
-    _silenceTimer = Timer(config.silenceAfterSpeech, () {
+    final since = _openedAt == null ? Duration.zero : _now().difference(_openedAt!);
+    final floor = SpeechTurnConfig.minWaitBeforeSilence - since;
+    final wait = config.silenceAfterSpeech > floor ? config.silenceAfterSpeech : floor;
+    _silenceTimer = Timer(wait, () {
       if (!isListening) return;
       _settle(
         transcript.isEmpty ? SpeechTurnOutcome.silent : SpeechTurnOutcome.heard,
@@ -390,9 +394,12 @@ class SpeechTurn {
     });
   }
 
-  void _armMaxSpeech() {
-    _maxSpeechTimer?.cancel();
-    _maxSpeechTimer = Timer(config.maxSpeech, () {
+  /// СТОРОЖ ОБЩЕЙ ДЛИНЫ ЗАПИСИ — от тапа, не от первого слова (Ч.2.1). Один на всю запись: эхо
+  /// динамика, запинка и переоткрытие плагина его не двигают, иначе «сколько это может длиться»
+  /// перестало бы иметь ответ.
+  void _armRecordingCap() {
+    _recordingTimer?.cancel();
+    _recordingTimer = Timer(config.effectiveMaxRecording, () {
       if (!isListening) return;
       _settle(
         transcript.isEmpty ? SpeechTurnOutcome.silent : SpeechTurnOutcome.heard,
@@ -401,23 +408,17 @@ class SpeechTurn {
     });
   }
 
-  void _armSkip() {
-    _skipTimer?.cancel();
-    // ПОЛ — см. [SpeechTurnConfig.minSilenceBeforeSkip]: до первого слова ход ждёт не меньше пяти
-    // секунд, каким бы маленьким ни приехал `listen_seconds`.
-    _skipTimer = Timer(config.effectiveSilenceBeforeSkip, () {
-      if (!isListening || _firstWordAt != null) return;
-      _settle(SpeechTurnOutcome.silent, phase: SpeechPhase.closedByTimeout);
-    });
-  }
-
   /// ПОДСТАВИТЬ РАСПОЗНАННЫЙ ТЕКСТ В ОТКРЫТЫЙ ХОД — дев-дверь QA (наряд DAY-GATE-1, доработка Ч.3).
   ///
   /// Ведёт себя РОВНО как плагин, отдавший этот текст: обычная дорога частичного результата — первое
-  /// слово, таймеры, проверка ключа, журнал. Именно поэтому она здесь, а не в карточке: подстановка,
-  /// сделанная мимо движка, проверяет карточку и НЕ проверяет ничего из того, что чинилось в Ч.0 —
-  /// склейку, сторож, эхо-замок, стадии. На симуляторе микрофона нет, и без этой двери пять починок
-  /// остаются теорией.
+  /// слово, таймеры, журнал. Именно поэтому она здесь, а не в карточке: подстановка, сделанная мимо
+  /// движка, проверяет карточку и НЕ проверяет ничего из того, что чинилось в Ч.0 — склейку,
+  /// сторож, эхо-замок, стадии. На симуляторе микрофона нет, и без этой двери починки остаются
+  /// теорией.
+  ///
+  /// И ТЕПЕРЬ ОНА ХОД НЕ ЗАКРЫВАЕТ (наряд SPEECH-2, Ч.2.1): как и живая речь, подставленный текст
+  /// ждёт тишины, тапа или сторожа. Подстановка, закрывавшая ход совпадением, проверяла путь,
+  /// которого больше нет.
   ///
   /// Возвращает false, когда хода нет: тогда вызывающий подставляет ответ по-старому, напрямую.
   /// Ничего не ослабляет — ни разрешений, ни окон: это тот же путь, по которому едет живая речь.
@@ -430,24 +431,17 @@ class SpeechTurn {
     _partial = trimmed;
     if (_firstWordAt == null) {
       _firstWordAt = _now();
-      _skipTimer?.cancel();
-      _armMaxSpeech();
       diagnostics?.phaseIs(SpeechPhase.listening);
       _onSpeechStarted?.call();
     }
     _armSilence();
     diagnostics?.partial(transcript);
     _onPartial?.call(transcript);
-    // Ключ узнан по дороге — договорил, ровно как с живым голосом. Не узнан — попытку закроет
-    // тишина, и это тоже настоящий путь.
-    if (_isAnswer != null && _isAnswer!(transcript)) {
-      _settle(SpeechTurnOutcome.heard, phase: SpeechPhase.closedByAnswer);
-    }
 
     return true;
   }
 
-  /// «Готово»: закрыть попытку тем, что есть. Плагин отдаст свой последний кусок, и он войдёт в
+  /// «Готово»: закрыть запись тем, что есть. Плагин отдаст свой последний кусок, и он войдёт в
   /// склейку — поэтому не [_settle] сразу, а метка и `stop()`.
   Future<void> stop() async {
     if (!isListening) return;
@@ -458,7 +452,7 @@ class SpeechTurn {
     if (isListening) {
       _settle(
         transcript.isEmpty ? SpeechTurnOutcome.silent : SpeechTurnOutcome.heard,
-        phase: SpeechPhase.closedBySilence,
+        phase: SpeechPhase.closedByTap,
       );
     }
   }
@@ -483,6 +477,10 @@ class SpeechTurn {
     _closing = true;
     _cancelTimers();
     final text = transcript;
+    diagnostics?.turnClosed(
+      spokeFor: _firstWordAt == null ? null : _now().difference(_firstWordAt!),
+      transcript: text,
+    );
     turn.complete(SpeechTurnResult(
       outcome,
       transcript: text,
@@ -495,10 +493,8 @@ class SpeechTurn {
 
   void _cancelTimers() {
     _silenceTimer?.cancel();
-    _maxSpeechTimer?.cancel();
-    _skipTimer?.cancel();
+    _recordingTimer?.cancel();
     _silenceTimer = null;
-    _maxSpeechTimer = null;
-    _skipTimer = null;
+    _recordingTimer = null;
   }
 }

@@ -16,28 +16,32 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-/// СТАДИЯ ХОДА — ровно те шесть слов, которых не хватало на устройстве (наряд, Ч.0.1).
+/// СТАДИЯ ХОДА — слова, которых не хватало на устройстве (DAY-GATE-1 Ч.0.1, SPEECH-2 Ч.5).
 enum SpeechPhase {
   /// Ничего не происходит: карточка не говорения, или ход уже отдан.
   idle,
 
-  /// Ждём, пока договорит собеседник — прогон открывает микрофон ПОСЛЕ реплики роли.
+  /// Ждём, пока договорит собеседник, — кнопка микрофона ещё не позвала.
   waitingForRole,
+
+  /// ТВОЯ ОЧЕРЕДЬ: реплика роли договорена, кнопка зовёт, ЗАПИСЬ НЕ ИДЁТ (наряд SPEECH-2, Ч.1.1).
+  /// Состояние без таймаута — человек думает столько, сколько ему нужно.
+  yourTurn,
 
   /// Микрофон просят открыть: разрешения, движок, аудиосессия. Тут же живут отказы.
   opening,
 
-  /// Открыт и слушает.
+  /// Открыт и ПИШЕТ.
   listening,
 
   /// Закрылся тишиной после речи — человек договорил.
   closedBySilence,
 
-  /// Закрылся сторожем: тишина от открытия, человек так и не начал.
-  closedByTimeout,
+  /// Закрылся тапом «Готово» — человек остановил запись руками.
+  closedByTap,
 
-  /// Закрылся тем, что ключ узнан по дороге.
-  closedByAnswer,
+  /// Закрылся сторожем общей длины записи.
+  closedByTimeout,
 
   /// Канал не поднялся или упал. [SpeechDiagnostics.lastErrorCode] называет чем.
   failed,
@@ -171,6 +175,31 @@ class SpeechDiagnostics extends ChangeNotifier {
 
   SpeechProbe? get probe => _probe;
 
+  /// Сколько ДЛИЛАСЬ РЕЧЬ — от первого слова до закрытия записи. Null: слов не было (или ход ещё
+  /// открыт). Наряд SPEECH-2, Ч.5: это половина ответа на «почему запись закрылась» — вторая
+  /// половина в [phase].
+  Duration? get spokeFor => _spokeFor;
+  Duration? _spokeFor;
+
+  /// ФИНАЛЬНАЯ склейка, ушедшая на зачёт. Отличается от [lastPartial] ровно тем, чем финал
+  /// отличается от частичного, — и именно это различие наряд и восстанавливает (Ч.2.3).
+  String get finalTranscript => _finalTranscript;
+  String _finalTranscript = '';
+
+  /// Она же после таблицы нормализации аббревиатур — то, что грейдер на самом деле сравнивал.
+  /// Пусто, пока вердикта нет.
+  String get normalizedTranscript => _normalizedTranscript;
+  String _normalizedTranscript = '';
+
+  /// Покрытие цели, 0…1. Null — вердикта ещё нет.
+  double? get coverage => _coverage;
+  double? _coverage;
+
+  /// Какой порог применён: `read_aloud` | `key_and_rest` | `whole_line`, со значением. Пусто, пока
+  /// вердикта нет.
+  String get thresholdApplied => _thresholdApplied;
+  String _thresholdApplied = '';
+
   /// Журнал, старое сверху. Копия — читателю нечего менять.
   List<String> get log => List.unmodifiable(_log);
 
@@ -221,7 +250,42 @@ class SpeechDiagnostics extends ChangeNotifier {
     _lastErrorCode = null;
     _lastPartial = '';
     _echoes = 0;
+    _spokeFor = null;
+    _finalTranscript = '';
+    _normalizedTranscript = '';
+    _coverage = null;
+    _thresholdApplied = '';
     phaseIs(SpeechPhase.opening);
+  }
+
+  /// ЗАПИСЬ ЗАКРЫТА: сколько человек говорил и что ушло на зачёт. Пишет движок, из одного места —
+  /// [SpeechTurn] закрывается ровно в одном.
+  void turnClosed({Duration? spokeFor, String transcript = ''}) {
+    _spokeFor = spokeFor;
+    _finalTranscript = transcript;
+    note(
+      'final: "${transcript.isEmpty ? '-' : transcript}"'
+      '${spokeFor == null ? '' : ' · spoke ${(spokeFor.inMilliseconds / 1000).toStringAsFixed(1)}s'}',
+    );
+    _changed();
+  }
+
+  /// ВЕРДИКТ КАРТОЧКИ — чем судили и что вышло. Пишет тот, кто судит; читает служебная строка.
+  /// Здесь, а не в карточке, по той же причине, что и всё остальное в этом классе: состояние
+  /// канала и вердикт по нему — один рассказ, и «жалоба» прикладывает его целиком.
+  void verdictIs({
+    required String normalized,
+    required double coverage,
+    required String threshold,
+    required String credit,
+  }) {
+    _normalizedTranscript = normalized;
+    _coverage = coverage;
+    _thresholdApplied = threshold;
+    // Журнал служебный и английский, как и весь остальной ({@see QaSpeechView}): он читается по
+    // кодам и уезжает в «жалобу» как есть.
+    note('verdict: $credit · $threshold · coverage ${(coverage * 100).round()}%');
+    _changed();
   }
 
   void partial(String text) {

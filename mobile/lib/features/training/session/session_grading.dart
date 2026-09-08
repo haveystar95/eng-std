@@ -393,6 +393,15 @@ abstract final class SessionGrader {
           .where((a) => a.trim().isNotEmpty)
           .any((a) => covers(response, a, ignoreArticles: ignoreArticles));
 
+  /// ОДНА КАНОНИЗАЦИЯ НА ВСЕХ, КТО СРАВНИВАЕТ СЛОВА — нижний регистр, раскрытые сокращения, знаки
+  /// в пробел, пробелы схлопнуты, артикль на месте (он тут такое же слово, как любое другое).
+  /// Зеркало серверного `LexicalNormalizer::canonicalize()`.
+  ///
+  /// Публично ради {@see SpokenLine}, который канонизирует ключи и таблицу аббревиатур: вторая
+  /// канонизация рядом с этой разъехалась бы на первом же апострофе, а «одно определение того,
+  /// что такое одно и то же слово» — ровно то, ради чего этот класс и существует.
+  static String canonical(String value) => _words(value).join(' ');
+
   /// The comparable words of a string — canonicalised WITHOUT dropping the leading article, which
   /// here is just another word the recogniser may or may not have caught. [ignoreArticles] (see
   /// [check]) removes every article instead, on both sides.

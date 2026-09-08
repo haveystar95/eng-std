@@ -14,6 +14,7 @@ export 'floating_context_menu.dart';
 export 'floating_tab_bar.dart';
 export 'ink_segments.dart';
 export 'ladder_dots.dart';
+export 'mic_button.dart';
 export 'mini_flag.dart';
 export 'pair_badge.dart';
 export 'paper_card.dart';

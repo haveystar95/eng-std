@@ -1420,6 +1420,8 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                 onSpeak: (text) =>
                     unawaited(_pronouncer.speakText(text, targetLang: _sessionLang)),
                 onDone: () => setState(() => _spokenUntasked.add(pending.first.termId)),
+                // Свой ход тоже судится — теми же порогами, что и всё остальное (SPEECH-2).
+                speech: widget.session.speech,
               ),
             ),
           );
@@ -1586,6 +1588,8 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             photoUrl: _photoUrl[_pos],
             photoResolved: _photoUrl.containsKey(_pos),
             speechLocaleId: sttLocaleFor(cardLang),
+            // Эхо теперь судит сказанное — теми же порогами, что и все (наряд SPEECH-2).
+            speech: widget.session.speech,
             isCurrent: () => mounted && _pos == builtAt,
           )
         : SessionExerciseCard(
@@ -1631,6 +1635,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             // сервер сказал, что этот ход отдан голосом, и вместе с этим прислал секунды, из
             // которых прогон состоит. Null у всего остального, включая обычное говорение фразы.
             sceneRun: _isSceneRunTurn(_playing) ? plan?.sceneRunKnobs : null,
+            // ЧЕМ СУДИТЬ РЕЧЬ — пороги и таблица аббревиатур с сервера (наряд SPEECH-2). Едет с
+            // сессией, а не лежит в карточке: экран и сервер обязаны судить одними числами.
+            speech: widget.session.speech,
             // МИКРОФОН ЖДЁТ ДИНАМИК, и знает, чью реплику он мог бы услышать эхом (наряд
             // DAY-FIX-3, Ч.1.1 и Ч.1.5): оба факта — сессии, карточка их только читает.
             roleSpeaking: _roleSpeaking,
@@ -1722,6 +1729,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                           dialogue: _dialogueHere!,
                           turnIndex: _turnIndexAt(_pos),
                           speechLocaleId: sttLocaleFor(_sessionLang),
+                          speech: widget.session.speech,
                           // «ОЗВУЧКА ГОТОВА» — про ту строку, которая сейчас зазвучит, чья бы
                           // карточка ни стояла впереди: у своего хода это реплика перед ним, у
                           // такта понимания — она же и есть карточка (наряд Ч.1.3).

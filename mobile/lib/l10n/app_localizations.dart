@@ -2019,6 +2019,42 @@ abstract class AppLocalizations {
   /// **'Пропуск ничего не испортит: слово вернётся своим чередом.'**
   String get sessionSpeakSkipHint;
 
+  /// Подпись под кнопкой микрофона, когда собеседник договорил, а запись ещё не идёт (SPEECH-2, Ч.1.1). Состояние без таймаута.
+  ///
+  /// In ru, this message translates to:
+  /// **'Твоя очередь — нажми и говори'**
+  String get sessionSpeakYourTurn;
+
+  /// Подпись под кнопкой микрофона, пока звучит реплика роли: кнопка ещё не зовёт и не нажимается.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседник говорит'**
+  String get sessionSpeakWaitForRole;
+
+  /// Подпись под кнопкой микрофона во время записи (SPEECH-2, Ч.1.1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Пишу — скажи и нажми «Готово»'**
+  String get sessionSpeakRecording;
+
+  /// Вердикт сказанной реплики: сказано достаточно (SPEECH-2, Ч.3.5).
+  ///
+  /// In ru, this message translates to:
+  /// **'Верно'**
+  String get sessionSpeakVerdictCorrect;
+
+  /// Вердикт сказанной реплики: реплика узнана, но часть слов не прозвучала. Не зачёт (SPEECH-2, Ч.3.5).
+  ///
+  /// In ru, this message translates to:
+  /// **'Почти — не хватило: {words}'**
+  String sessionSpeakVerdictAlmost(String words);
+
+  /// Вердикт сказанной реплики: сказано не это (SPEECH-2, Ч.3.5).
+  ///
+  /// In ru, this message translates to:
+  /// **'Не то'**
+  String get sessionSpeakVerdictWrong;
+
   /// Рамка тренажёра говорения: это не оценка акцента (показывается на карточке).
   ///
   /// In ru, this message translates to:

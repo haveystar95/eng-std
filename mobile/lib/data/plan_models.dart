@@ -10,6 +10,7 @@
 library;
 
 import 'line_audio.dart';
+import 'speech/speech_grading_config.dart';
 import 'models.dart'
     show
         PlanDayStateWire,
@@ -1174,6 +1175,7 @@ class PlanSession implements PlanSessionEnvelope {
     this.dialogues = const [],
     this.lineAudio = const [],
     this.sceneRun = const SceneRunKnobs(),
+    this.speech = SpeechGradingConfig.empty,
     this.raw = const {},
     this.dayState = PlanDayStateWire.inProgress,
     this.minutesLeft = 0,
@@ -1249,6 +1251,10 @@ class PlanSession implements PlanSessionEnvelope {
   /// СЕКУНДЫ ПРОГОНА СЦЕНЫ, как их назвал сервер (наряд SCENE-RUN, Ч.2).
   final SceneRunKnobs sceneRun;
 
+  /// ЧЕМ СУДИТЬ РЕЧЬ — пороги и таблица аббревиатур с сервера (наряд SPEECH-2, Ч.3.3 / Ч.4.2).
+  /// Тот же блок, что на учебной сессии, и по той же причине: своих чисел у экрана нет.
+  final SpeechGradingConfig speech;
+
   @override
   SceneRunKnobs get sceneRunKnobs => sceneRun;
 
@@ -1275,6 +1281,7 @@ class PlanSession implements PlanSessionEnvelope {
     sessionId: sessionId,
     cards: tasks.map((t) => t.card).toList(growable: false),
     plan: this,
+    speech: speech,
   );
 
   @override
@@ -1362,6 +1369,7 @@ class PlanSession implements PlanSessionEnvelope {
         .where((e) => e.text.isNotEmpty && e.url.isNotEmpty)
         .toList(growable: false),
     sceneRun: SceneRunKnobs.fromJson(j['scene_run'] as Map<String, dynamic>?),
+    speech: SpeechGradingConfig.fromJson(j['speech'] as Map<String, dynamic>?),
     raw: j,
     dayState: (j['day_state'] as String?) ?? PlanDayStateWire.inProgress,
     minutesLeft: (j['minutes_left'] as num?)?.toInt() ?? 0,
