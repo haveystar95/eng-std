@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
 
-use App\Modules\Shared\Domain\Service\DistractorFamily;
 use App\Modules\Shared\Domain\Service\DistractorLength;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -17,21 +16,16 @@ final class EloquentDistractorReader implements DistractorReader
 {
     public function __construct(private readonly DistractorLength $length) {}
 
-    public function forTarget(UserId $userId, TermId $targetId, array $poolTermIds, int $count, bool $poolOnly = false): array
+    public function forTarget(UserId $userId, TermId $targetId, array $poolTermIds, int $count): array
     {
         if ($count < 1) {
             return [];
         }
 
-        $target = DB::table('terms')->where('id', $targetId->value)->first(['id', 'lang', 'cefr', 'kind', 'text']);
+        $target = DB::table('terms')->where('id', $targetId->value)->first(['id', 'lang', 'cefr', 'text']);
         if ($target === null) {
             return [];
         }
-
-        $family = DistractorFamily::of(
-            $target->kind === null ? null : (string) $target->kind,
-            (string) $target->text,
-        );
 
         $targetTranslations = $this->translationsByTerm([$targetId->value])[$targetId->value] ?? [];
         // THE SYNONYM BAN (SYN-1 Ч.2 п. 3). A near-synonym of the term is a SECOND CORRECT ANSWER on
@@ -63,8 +57,7 @@ final class EloquentDistractorReader implements DistractorReader
         // term IS the studied side of its pair, so this one comparison is the whole pair gate here:
         // the options are term TEXTS, and a card of pair ru→en may show English and nothing else.
         $poolIds = array_values(array_filter($poolTermIds, static fn (string $id): bool => $id !== $targetId->value));
-        $targetKind = $target->kind === null ? null : (string) $target->kind;
-        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, $family, $targetKind, (string) $target->text);
+        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, (string) $target->text);
 
         // 2. TOP UP FROM THE CATALOGUE AS A WHOLE — every term the app has, in this language, of
         //    this shape, MINUS the words people typed in themselves.
@@ -72,11 +65,7 @@ final class EloquentDistractorReader implements DistractorReader
         // The previous rule filtered by the SHELF a term stands on: the learner's own collections,
         // the ones they subscribe to, and the published catalogue. It was written against a real
         // leak (somebody else's private phrase offered as a wrong answer) and it was the wrong
-        // instrument for it, in both directions at once. Too narrow, because a plan day's collection
-        // is a private folder OWNED BY THE LEARNER — so every plan they had ever run was a legal
-        // source of options for the one they were doing, which is half of how «паспорт» came to
-        // stand in a lesson about renting a flat. Too wide, because «my shelf» says nothing about
-        // whether the text on it is personal.
+        // instrument for it: «my shelf» says nothing about whether the text on it is personal.
         //
         // What actually separates a fair filler from somebody's private sentence is not the folder,
         // it is WHO WROTE THE WORD. Generated and curated material is catalogue: it belongs to the
@@ -86,15 +75,9 @@ final class EloquentDistractorReader implements DistractorReader
         // `terms.source` records exactly that distinction at the moment of import and is the only
         // ownership fact this table has ({@see \App\Modules\Vocabulary\Domain\ValueObject\TermSource}).
         //
-        // ONE RULE FOR BOTH SESSIONS. A plan's lesson and the ordinary queue read the same pool: the
-        // question «may this word be a wrong answer here» has one answer, and giving it two was how
-        // the two paths drifted. What still separates a plan card from an ordinary one is the pool
-        // it PREFERS (step 1: the plan's own words, all its days) and how many options it insists on
-        // — not who is allowed to fill the gap.
-        //
         // Nothing but the TEXT leaves this method, so an option carries no owner, no collection and
         // no trace of where it was found.
-        if (count($picked) < $count && ! $poolOnly) {
+        if (count($picked) < $count) {
             $exclude = array_values(array_unique([$targetId->value, ...$poolTermIds]));
             $rows = DB::table('terms')
                 ->where('lang', (string) $target->lang)
@@ -115,15 +98,6 @@ final class EloquentDistractorReader implements DistractorReader
                             ->whereNull('c.deleted_at')
                             ->whereNull('ci.deleted_at');
                     }))
-                // THE SHAPE GATE, in SQL. `appendCandidates()` applies the real rule
-                // ({@see DistractorFamily}) and would apply it to whatever this limit happened to
-                // return — so without the coarse half here, a capped read over the whole table can
-                // come back holding nothing of the target's kind and starve a card that had options.
-                // The fine half — a question among questions inside `line` — stays in PHP, because
-                // it reads the text.
-                ->where(static fn (Builder $q): Builder => $targetKind === null
-                    ? $q->whereNull('kind')
-                    : $q->where('kind', $targetKind))
                 ->limit(max($count * 8, 24))
                 ->get(['id', 'cefr']);
 
@@ -133,7 +107,7 @@ final class EloquentDistractorReader implements DistractorReader
                 static fn (object $row): string => (string) $row->id,
                 $rows->sortBy(static fn (object $row): int => $row->cefr === $target->cefr ? 0 : 1)->values()->all(),
             ));
-            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, $family, $targetKind, (string) $target->text);
+            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang, (string) $target->text);
         }
 
         return array_slice($picked, 0, $count);
@@ -148,25 +122,18 @@ final class EloquentDistractorReader implements DistractorReader
      *         another name — its synonyms, and the terms that name IT as one of theirs
      * @param  string  $lang  the card's own language: a candidate written in another one is not a
      *         wrong answer, it is a different card, and the loop below never sees it
-     * @param  string  $family  {@see DistractorFamily} — kind for kind, and inside a spoken turn,
-     *         form for form. Nothing outside the family is ever taken; a short card is the answer.
-     * @param  string|null  $targetKind  the TARGET's kind, for the length band — a `line` is banded
-     *         by words and everything else by characters ({@see DistractorLength})
-     * @param  string  $targetText  what the band is measured against
+     * @param  string  $targetText  what the length band is measured against
      */
-    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations, array $banned, string $lang, string $family, ?string $targetKind, string $targetText): void
+    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations, array $banned, string $lang, string $targetText): void
     {
         if ($candidateIds === [] || count($picked) >= $count) {
             return;
         }
 
-        /** @var array<string, array{text: string, kind: string|null}> $rows */
-        $rows = [];
-        foreach (DB::table('terms')->whereIn('id', $candidateIds)->where('lang', $lang)->get(['id', 'text', 'kind']) as $row) {
-            $rows[(string) $row->id] = [
-                'text' => (string) $row->text,
-                'kind' => $row->kind === null ? null : (string) $row->kind,
-            ];
+        /** @var array<string, string> $texts */
+        $texts = [];
+        foreach (DB::table('terms')->whereIn('id', $candidateIds)->where('lang', $lang)->get(['id', 'text']) as $row) {
+            $texts[(string) $row->id] = (string) $row->text;
         }
         $translations = $this->translationsByTerm($candidateIds);
 
@@ -174,22 +141,13 @@ final class EloquentDistractorReader implements DistractorReader
             if (count($picked) >= $count) {
                 return;
             }
-            $row = $rows[$id] ?? null;
-            if ($row === null) {
+            $text = $texts[$id] ?? null;
+            if ($text === null) {
                 continue;
             }
-            $text = $row['text'];
-            // THE SHAPE GATE. Asked to recognise «passport», the learner was offered «Hello. Do you
-            // have a reservation?» — a whole spoken turn as a wrong answer for one noun. It is not
-            // a wrong answer, it is a different kind of question, and it makes the right one
-            // obvious by length alone. Since Д-2 the same is true one level finer: a question among
-            // statements is answerable without reading a word of it. {@see familyOf()}
-            if (DistractorFamily::of($row['kind'], $text) !== $family) {
-                continue;
-            }
-            // THE LENGTH BAND. Same shape is not enough: `key` offered `accommodation` is answered
-            // by picking the short one without reading it. {@see DistractorLength}
-            if (! $this->length->fits($targetKind, $targetText, $text)) {
+            // THE LENGTH BAND: `key` offered `accommodation` is answered by picking the short one
+            // without reading it. {@see DistractorLength}
+            if (! $this->length->fits($targetText, $text)) {
                 continue;
             }
             $textKey = mb_strtolower(trim($text));
@@ -214,16 +172,6 @@ final class EloquentDistractorReader implements DistractorReader
         }
     }
 
-    /**
-     * The shelves a filler option may be taken off: the learner's own, the ones they subscribe to,
-     * and the public catalogue.
-     *
-     * The first two are the access rule Collections applies everywhere
-     * ({@see \App\Modules\Collections\Infrastructure\Eloquent\EloquentUserCollectionTermsReader}).
-     * The third is the addition this reader needs and that one does not: a distractor may come from
-     * a catalogue collection the learner has never opened, because a published shelf is not
-     * anybody's content.
-     */
     /**
      * @param  array<string, true>  $a
      * @param  array<string, true>  $b

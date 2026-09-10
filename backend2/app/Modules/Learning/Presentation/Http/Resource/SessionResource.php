@@ -48,21 +48,6 @@ final class SessionResource extends JsonResource
                 // card is answered by TAPPING, so the client uploads the tapped id and `answer`
                 // above is this card's own term id.
                 'option_ids' => $card->optionIds,
-                // ADDITIVE. The piece a SPOKEN line is graded on — the word in the frame's hole.
-                // Null on every other trainer, on a spoken word, and on a line the day left no
-                // piece of, and null there MEANS «say the whole line»: the card says so and the
-                // server grades so. Sent because the device shows its verdict before the batch
-                // leaves, and a device grading fifteen words while the server grades three is a
-                // «Верно» the log then contradicts.
-                'speaking_key' => $card->speakingKey,
-                // ADDITIVE (GEN-1). Simpler forms of the same reply that also count when spoken.
-                // Empty on every card that is not a plan line of v0.7 or later. Graded by the
-                // server only once the client reads them (see SessionCardView).
-                'speaking_keys' => $card->speakingKeys,
-                // ADDITIVE (SPEECH-2, Ч.4.3). Как аббревиатура читается вслух. Всегда null сегодня:
-                // заполняет её генерация пар, и это отдельный наряд — поле стоит здесь, чтобы
-                // клиент был готов раньше, чем данные приедут.
-                'say_as' => $card->sayAs,
             ], $this->resource->cards),
             // ПОРОГИ ЗАЧЁТА РЕЧИ И ТАБЛИЦА АББРЕВИАТУР — одни на экран и на сервер (SPEECH-2,
             // Ч.3.3/Ч.4.2). Второго словаря на клиенте нет: две таблицы разъезжаются, и первым

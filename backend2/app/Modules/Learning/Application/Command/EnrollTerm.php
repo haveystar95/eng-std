@@ -23,7 +23,7 @@ final readonly class EnrollTerm
         /**
          * WHY. Defaults to «the learner tapped it», which is what every caller but one means.
          * A plan day passes `plan:<ulid>` and that is what makes the word strict — see
-         * {@see \App\Modules\Learning\Domain\Service\EnrollmentPolicy}.
+         * {@see \App\Modules\Learning\Domain\ValueObject\EnrollmentSources}.
          */
         public string $source = EnrollmentSources::MANUAL,
     ) {}

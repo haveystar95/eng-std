@@ -52,18 +52,7 @@ final class ModePassport
             // itself the exercise, and a pair that has not yet been through the recognition rungs
             // is being asked to parse an unknown definition to find an unknown word. Graduated,
             // beside the other trainers that assume the pair is stable.
-            ExerciseMode::DescriptionMatch,
-            // THE SITUATIONAL CARDS. `situational_hear` is recognition — it plays a line and offers
-            // meanings — so its floor is the same as multiple_choice's: the pair has been met once.
-            // The two speak shelves are stage B of a scene, which follows a stage A that ended in
-            // the learner saying the line out loud, so they stand with the trainers that assume a
-            // stable pair. Neither floor is reachable from the admin screen today — these three have
-            // no row in the GLOBAL registry, by design: a situation belongs to a scene, and an
-            // ordinary session has none to state (наряд SIT-1). The floor is stated anyway, because
-            // a trainer with no floor is a trainer nobody can ever open safely.
-            ExerciseMode::SituationalSay,
-            ExerciseMode::SituationalAsk => Acquisition::Graduated,
-            ExerciseMode::SituationalHear => Acquisition::Learning,
+            ExerciseMode::DescriptionMatch => Acquisition::Graduated,
         };
     }
 
@@ -145,9 +134,6 @@ final class ModePassport
             ExerciseMode::Typing,
             ExerciseMode::Listening,
             ExerciseMode::Dictation => "{$mode->value} — тренажёр для выпущенных слов; до выпуска слову нечего показывать в этом формате.",
-            ExerciseMode::SituationalHear => 'situational_hear проигрывает реплику и предлагает смыслы — до первого предъявления сравнивать нечего.',
-            ExerciseMode::SituationalSay,
-            ExerciseMode::SituationalAsk => "{$mode->value} — ступень B сцены: до выпуска реплика ещё не сказана ни разу, выбирать нечего.",
         };
     }
 

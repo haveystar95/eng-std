@@ -55,17 +55,6 @@ final class InMemoryDueTermsReader implements DueTermsReader
         return array_slice($rows, 0, $limit);
     }
 
-    /**
-     * A plan's own seam. Nothing in memory knows which plan enrolled which pair — `enrollment_sources`
-     * is a column, not a field of the view — so this double answers «nothing», which is what every
-     * caller of it means: the unit tests here build ORDINARY sessions, and a plan session is
-     * exercised end to end against the real reader ({@see \Tests\Feature\Learning\PlanSessionScopeTest}).
-     */
-    public function selectableForPlan(UserId $userId, string $planId, DateTimeImmutable $now, int $limit): array
-    {
-        return [];
-    }
-
     public function introductionsInPool(UserId $userId, DateTimeImmutable $now, ?array $termIds, int $limit): array
     {
         $this->introLimits[] = $limit;

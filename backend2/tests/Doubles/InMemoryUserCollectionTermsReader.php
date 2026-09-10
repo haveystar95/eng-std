@@ -12,12 +12,10 @@ final class InMemoryUserCollectionTermsReader implements UserCollectionTermsRead
     /**
      * @param list<string> $termIds
      * @param array<string, list<string>> $byCollection
-     * @param array<string, array<string, \DateTimeImmutable>> $joinedAt collection id => term id => moment
      */
     public function __construct(
         private readonly array $termIds = [],
         private readonly array $byCollection = [],
-        private readonly array $joinedAt = [],
     ) {}
 
     public function termIdsForUser(UserId $userId, int $limit): array
@@ -33,10 +31,5 @@ final class InMemoryUserCollectionTermsReader implements UserCollectionTermsRead
     public function termIdsByCollection(UserId $userId): array
     {
         return $this->byCollection;
-    }
-
-    public function joinedAtForCollection(UserId $userId, string $collectionId, int $limit): array
-    {
-        return $this->joinedAt[$collectionId] ?? [];
     }
 }

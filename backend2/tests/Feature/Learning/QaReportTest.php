@@ -61,7 +61,7 @@ it('writes the snapshot and its screenshot side by side', function () {
     $report = [
         'client' => ['build_sha' => 'abc1234', 'build_at' => '2026-09-07 21:55'],
         'server' => ['commit' => 'def5678'],
-        'context' => ['plan_id' => '01PLAN', 'day_index' => 2, 'stage' => 'rehearsal'],
+        'context' => ['screen' => 'session', 'card' => 2, 'stage' => 'words'],
         'speech' => ['phase' => 'listening', 'log' => ['21:55:01.001  opening']],
     ];
 
@@ -89,8 +89,8 @@ it('writes the snapshot and its screenshot side by side', function () {
     expect($written['id'])->toBe($id)
         // Кто прислал — от сервера, а не из тела: тело пишет клиент.
         ->and($written['user_id'])->toBe($user->id)
-        ->and($written['context']['plan_id'])->toBe('01PLAN')
-        ->and($written['context']['stage'])->toBe('rehearsal')
+        ->and($written['context']['screen'])->toBe('session')
+        ->and($written['context']['stage'])->toBe('words')
         ->and($written['speech']['log'])->toBe(['21:55:01.001  opening'])
         // Опись НАЗЫВАЕТ снимок: опись, ссылающаяся на файл, которого нет, хуже отсутствующей.
         ->and($written['screenshot'])->toBe(basename($pngs[0]));

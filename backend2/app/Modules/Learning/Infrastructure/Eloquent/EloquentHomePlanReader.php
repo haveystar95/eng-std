@@ -100,9 +100,6 @@ final class EloquentHomePlanReader implements HomePlanReader
 
         return DB::table(self::PROGRESS)
             ->where('user_id', $userId->value)
-            // The plan's words are the plan's — same predicate the session uses, so «Повторение 16»
-            // and the session it opens cannot describe two different days ({@see PlanHeldTerms}).
-            ->whereRaw(PlanHeldTerms::NOT_HELD)
             ->where(static function (BuilderContract $q) use ($bound): void {
                 $q->where(static function (BuilderContract $q) use ($bound): void {
                     $q->whereNotNull('enrolled_at')
@@ -391,22 +388,12 @@ final class EloquentHomePlanReader implements HomePlanReader
         return $latest;
     }
 
-    /**
-     * One learner's pool: enrolled pairs, the population every «в работе» number is about — MINUS
-     * the words a running plan is standing on.
-     *
-     * The subtraction is the same rule the session follows ({@see PlanHeldTerms}) and it belongs
-     * here for the same reason: кадр 08 puts the plan card above the «сегодня» plate as two
-     * different piles of work, and a plan word counted in both is the screen telling the learner to
-     * do it twice. «В работе», «Завтра выпадет N» and «Следующий повтор» are all about the ordinary
-     * queue; the plan's own numbers are on the plan's own card.
-     */
+    /** One learner's pool: enrolled pairs, the population every «в работе» number is about. */
     private function pool(UserId $userId): Builder
     {
         return DB::table(self::PROGRESS)
             ->where('user_id', $userId->value)
-            ->whereNotNull('enrolled_at')
-            ->whereRaw(PlanHeldTerms::NOT_HELD);
+            ->whereNotNull('enrolled_at');
     }
 
     /**

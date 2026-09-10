@@ -11,21 +11,15 @@ use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ChipShuffler;
 use App\Modules\Learning\Domain\Service\DistractorSpanFilter;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
-use App\Modules\Learning\Domain\Service\PlanChoiceFloor;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\Service\ModePassport;
-use App\Modules\Learning\Domain\Service\PlanAssemblyBlocks;
-use App\Modules\Learning\Domain\Service\PlanStageLadder;
-use App\Modules\Learning\Domain\Service\RoleLineModes;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\ModeAdmission;
 use App\Modules\Learning\Domain\ValueObject\OptionsPolicy;
-use App\Modules\Learning\Domain\ValueObject\PlanTurnLevel;
 use App\Modules\Learning\Domain\ValueObject\TermPlayability;
-use App\Modules\Shared\Domain\Service\DistractorFamily;
 use App\Modules\Shared\Domain\Service\DistractorLength;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Dto\TermContentView;
@@ -58,6 +52,12 @@ final readonly class StudyCardAssembler
     private const MIN_OPTIONS = 2;
 
     /**
+     * The fewest options a RECOGNITION card may be dealt from the session's own neighbours before it
+     * falls through to the catalogue-backed multiple_choice (Д-36): «reach farther, never deal fewer».
+     */
+    private const RECOGNITION_MIN_OPTIONS = 3;
+
+    /**
      * `pick_correct` shows three sentences: the example plus two wrong ones. Three rather than
      * multiple_choice's four because each option is a whole sentence to read — a fourth turns the card
      * into a reading comprehension test.
@@ -76,12 +76,6 @@ final readonly class StudyCardAssembler
         private Randomizer $rng,
         private DistractorLength $length = new DistractorLength(),
         private DistractorSpanFilter $spans = new DistractorSpanFilter(),
-        /**
-         * How far a PLAN's choice card may shrink before it is dropped. Read here and in
-         * {@see PlanStandings} from the same class, because the checklist must never owe a card
-         * this method cannot build.
-         */
-        private PlanChoiceFloor $choiceFloor = new PlanChoiceFloor(),
     ) {}
 
     /**
@@ -100,20 +94,6 @@ final readonly class StudyCardAssembler
      *                              not name it, and the far options are then refused rather than
      *                              guessed — the card falls through to ordinary multiple_choice,
      *                              whose own pool is filtered by language one level down.
-     * @param  list<string>|null  $answerPoolIds  ВАРИАНТЫ ТВОЕГО ХОДА, если этот вопрос уже решён
-     *                              снаружи — реплики плана, которые человек мог бы сказать вместо
-     *                              этой, отобранные по полке и по умению
-     *                              ({@see \App\Modules\Learning\Domain\Service\PlanAnswerOptions}).
-     *                              Передаёт его только план, и только на `situational_say` /
-     *                              `situational_ask`: там «из чего вообще бывают варианты» — это
-     *                              суждение, а не предпочтение, и добор из каталога поверх него
-     *                              вернул бы фразу не из этого разговора. Null — обычная раздача.
-     * @param  PlanTurnLevel|null  $turnLevel  СТРОГОСТЬ ХОДА, если это ход человека в диалоге плана
-     *                              ({@see PlanTurnLevel}). `assemble` заменяет варианты блоками
-     *                              ({@see \App\Modules\Learning\Domain\Service\PlanAssemblyBlocks});
-     *                              null и `choose` — прежняя карточка выбора.
-     * @param  bool  $ownBlocksOnly  ЗНАКОМСТВО, А НЕ РАЗГОВОР: на сборке ступени A лежат только слова
-     *                              САМОЙ реплики, без чужих блоков (наряд DAY-GATE-1, Ч.1.5).
      */
     public function assemble(
         UserId $user,
@@ -128,27 +108,8 @@ final readonly class StudyCardAssembler
         array $neighbours = [],
         ?ExerciseMode $modeOverride = null,
         ?string $supportLang = null,
-        ?int $optionCount = null,
-        ?array $answerPoolIds = null,
-        ?PlanTurnLevel $turnLevel = null,
-        bool $ownBlocksOnly = false,
     ): ?SessionCardView {
-        // How many options a choice card is dealt, the right one included. A NUMBER rather than the
-        // constant, because a plan deals its level's number ({@see PlanKnobs}: three for a learner
-        // with no target language at all, four from `conversational` up). Nothing about the card's
-        // shape moves — the wire has always carried a list, and `pick_correct` has always dealt
-        // three of them — so this is a knob the trainer already understood, not a contract change.
-        // Null is «the product default», which is every caller but the plan.
-        //
-        // It is also the one thing that says «this card belongs to a plan»: no other caller passes
-        // the number, and the plan is the one that wants a whole card or none of it (see the plan
-        // floor below).
-        $isPlanCard = $optionCount !== null;
-        $optionCount = max(2, $optionCount ?? self::OPTION_COUNT);
-        // WHAT THE LEVEL WANTS vs WHAT MUST BE FURNISHED. The first is the number above; this is the
-        // floor under it, and since Д-36 the SAME floor governs the closeness belt on both sides
-        // ({@see PlanChoiceFloor}, {@see recognitionCard()}).
-        $choiceFloor = $this->choiceFloor->forPreferred($optionCount);
+        $optionCount = self::OPTION_COUNT;
         $progress = TermProgress::reconstitute(
             $user, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
             $view->intervalDays, $view->dueAt, $view->reps, 0, null,
@@ -174,30 +135,6 @@ final readonly class StudyCardAssembler
             return null;
         }
         $enabled = $languageModes;
-
-        // THE INTERLOCUTOR'S OWN LINE IS UNDERSTOOD, NEVER PRODUCED ({@see RoleLineModes}).
-        //
-        // The plan's checklist already keeps a production step off a role card, which is the half
-        // that matters — an owed step nobody can answer is a stage that never closes. This is the
-        // other half, and it exists because the checklist is not the only way a mode reaches a card:
-        // a day opened out of turn is a SOFT run that picks its trainer off the ordinary ladder and
-        // never looks at a checklist at all. That is where the live run's dictation on «Does your
-        // child have a fever?» came from (Д-33) — the learner was asked to write down the doctor's
-        // question from hearing it.
-        //
-        // Narrowed rather than refused: the selector then picks a recognition trainer and the card
-        // is still dealt. A refusal here would silently shorten the sitting instead.
-        if ($content->speaker === RoleLineModes::SPEAKER_ROLE) {
-            $enabled = $enabled->without(RoleLineModes::produces(...));
-            if ($enabled === null) {
-                $this->fallbacks->noApplicableMode($user, $view->termId, []);
-
-                return null;
-            }
-            if ($modeOverride !== null && RoleLineModes::produces($modeOverride)) {
-                $modeOverride = null;
-            }
-        }
 
         $answer = $content->text;
         // Span-distinct, because that is what a card can actually use — see spanDistinct().
@@ -232,20 +169,13 @@ final readonly class StudyCardAssembler
         if ($mode === ExerciseMode::Intro) {
             return $this->introCard($view, $content);
         }
-        if ($mode->isSituational()) {
-            return $this->situationalCard(
-                $user, $view, $content, $mode, $poolTermIds, $neighbours,
-                $cardIndex, $supportLang, $optionCount, $choiceFloor, $step, $answerPoolIds,
-                $turnLevel, $ownBlocksOnly,
-            );
-        }
         // Where the wrong options come from is POLICY, read from the matrix, not inferred from the
         // rung: `distant` (the session's own neighbours) is what makes a first meeting winnable,
         // and it is stored per mode so it can be moved without a deploy.
         if (LearningLadder::isRecognitionStep($step)
             && $mode === ExerciseMode::MultipleChoice
             && $admission->optionsPolicyFor($mode, $view->acquisition) === OptionsPolicy::Distant) {
-            $card = $this->recognitionCard($user, $view, $content, (int) $step, $neighbours, $cardIndex, $supportLang, $optionCount, $choiceFloor);
+            $card = $this->recognitionCard($user, $view, $content, (int) $step, $neighbours, $cardIndex, $supportLang);
             if ($card !== null) {
                 return $card;
             }
@@ -360,48 +290,6 @@ final readonly class StudyCardAssembler
             $prompt = null;
         }
 
-        // THE CHOICE FLOOR IS THREE, AND IT IS THE SAME NUMBER ON BOTH SIDES (Д-2, Д-3, Д-36).
-        //
-        // A plan's pool is its own day — fourteen cards whose kinds are known before anything is
-        // dealt — so «not enough options» there is not a gap in the catalogue, it is this day not
-        // holding enough cards of this shape, which two connectors in fourteen is the ordinary case
-        // of. Before Д-2 the shortfall was made up from whatever was nearest, and the live run
-        // photographed both ends of it: a question among three statements, a connector among single
-        // words. Either is answerable without reading the options.
-        //
-        // The ORDINARY session does NOT stop here, and the boundary is drawn on purpose (Д-36, the
-        // owner's ruling of 02.09). Its floor of three lives one step earlier, in the CLOSENESS BELT
-        // — {@see recognitionCard()}, whose options are the session's own neighbours: short of
-        // three there, the card falls through to the branch above and is filled from the whole
-        // catalogue through {@see DistractorReader}, family and length band still applied. That is
-        // «reach farther, never deal fewer», and it is the whole of Д-36: `cold` was offered one
-        // wrong answer because a running plan holds its own words out of the ordinary queue, and the
-        // catalogue behind that queue could furnish four.
-        //
-        // What stays below, at {@see MIN_OPTIONS}, is QA-15's own ruling for the case where even the
-        // catalogue has nothing: two options rather than no card at all, so a fresh account with a
-        // two-word deck keeps training. This gate is therefore the PLAN's — `$optionCount` is only
-        // ever passed by a plan session.
-        //
-        // Only the two modes that ASK for options this way: `pick_correct` deals three sentences by
-        // its own rule ({@see PICK_CORRECT_WRONG_OPTIONS}) and a floor of four would refuse it for
-        // obeying it.
-        if ($isPlanCard
-            && ($mode === ExerciseMode::MultipleChoice || $mode === ExerciseMode::DescriptionMatch)
-            && count((array) $options) < $choiceFloor) {
-            $this->fallbacks->distractorStarved(
-                $user,
-                $view->termId,
-                $mode->value,
-                // The number that was actually REQUIRED, which is the floor and not the level's
-                // preference: «wanted 4, got 3» would be logged for a card that was dealt.
-                $choiceFloor,
-                count((array) $options),
-            );
-
-            return null;
-        }
-
         // THE OPTION FLOOR (QA-15), deliberately here — after every fallback branch above, not
         // inside one of them.
         //
@@ -449,11 +337,6 @@ final readonly class StudyCardAssembler
             // learner heard as `purpose`, which the server then grades `again`.
             synonyms: ! $asksExample && $mode->acceptsSynonyms() ? $content->synonyms : [],
             ladderStep: $step,
-            // WHAT A SPOKEN LINE IS JUDGED ON. Sent on the speaking card alone — the trainer that
-            // reads it — and only where the day left one; the client then underlines the piece
-            // instead of every word the recogniser missed, and says which piece it wants.
-            speakingKey: $mode === ExerciseMode::Speaking ? $content->speakingKey : null,
-            speakingKeys: $mode === ExerciseMode::Speaking ? $content->speakingKeys : [],
         );
     }
 
@@ -630,259 +513,6 @@ final readonly class StudyCardAssembler
     }
 
     /**
-     * THE SITUATIONAL CARD (наряд SIT-1) — one mechanic, three shelves.
-     *
-     * What the learner sees ABOVE the options — the position, the role's line, the ability — is not
-     * built here at all: it rides on the plan's own envelope
-     * ({@see \App\Modules\Learning\Domain\Service\SituationalPrompt}), because it is a fact
-     * about the DAY and this method only ever sees one card. What is built here is the choice.
-     *
-     * ## «Тебе скажут»: the forward-recognition card with the text taken away
-     *
-     * Options are MEANINGS on the support language, so the correct one is a translation and the card
-     * is graded by identity — which is the forward card exactly, and is therefore the forward card
-     * literally ({@see recognitionCard()}). The line itself rides in `prompt`: the device needs it
-     * to SPEAK it, and the client is what keeps it hidden until «Показать текст». Withholding it
-     * would withhold the audio, which is the whole card.
-     *
-     * The floor drops to {@see MIN_OPTIONS} before this card is refused, and that is the one place
-     * this наряд parts with Д-36's «reach farther, never deal fewer». Reaching farther has nowhere
-     * to reach: a wrong MEANING for this moment has to be another meaning from THIS conversation,
-     * and the catalogue's answer would be a sentence out of some other day — an option the learner
-     * discards without understanding either. Below two there is no card, and QA-15 already fixed
-     * that as the floor under every card in the app.
-     *
-     * ## «Ты ответишь» / «Ты спросишь»: an ordinary choice with the prompt removed
-     *
-     * The options are lines the learner could say, out of the same distractor reader every other
-     * choice card uses, and the answer is this card's own text. `prompt` is deliberately NULL: the
-     * card's question is the situation, and putting the reply's translation there would turn stage B
-     * back into the translation exercise the canon replaced (§4, §13).
-     *
-     * WHICH lines those are is not this method's judgement when the plan has made it already:
-     * [$answerPoolIds] is the scene's own say/ask shelves, minus everything that answers the same
-     * question ({@see \App\Modules\Learning\Domain\Service\PlanAnswerOptions}), and it is taken
-     * as the whole set rather than as a preference.
-     *
-     * @param  list<string>  $poolTermIds
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
-     * @param  list<string>|null  $answerPoolIds  {@see assemble()}
-     */
-    private function situationalCard(
-        UserId $user,
-        DueTermView $view,
-        TermContentView $content,
-        ExerciseMode $mode,
-        array $poolTermIds,
-        array $neighbours,
-        int $cardIndex,
-        ?string $supportLang,
-        int $optionCount,
-        int $choiceFloor,
-        ?int $step,
-        ?array $answerPoolIds = null,
-        ?PlanTurnLevel $turnLevel = null,
-        bool $ownBlocksOnly = false,
-    ): ?SessionCardView {
-        if ($mode === ExerciseMode::SituationalHear) {
-            // ИЗ ЧЕГО БЫВАЮТ ВАРИАНТЫ ТАКТА «ЧТО ТЕБЕ СКАЗАЛИ?» (наряд DAY-FIX-3, Ч.2.2). When
-            // the plan has named the pool — role lines of ANOTHER function, no paraphrase of the
-            // right one or of each other, own scene first ({@see \App\Modules\Learning\Domain\Service\PlanHearOptions})
-            // — it is the whole list of legitimate wrong meanings, in that order. The neighbours
-            // are narrowed to it before any shape or length gate: a meaning from outside it is a
-            // coin toss written into an append-only log, which is what the live run photographed
-            // («Anything else?» beside «Do you have any questions?»).
-            $pools = [$neighbours];
-            if ($answerPoolIds !== null) {
-                $byId = [];
-                foreach ($neighbours as $neighbour) {
-                    $byId[$neighbour['term_id']] = $neighbour;
-                }
-                $narrowed = [];
-                foreach ($answerPoolIds as $id) {
-                    if (isset($byId[$id])) {
-                        $narrowed[] = $byId[$id];
-                    }
-                }
-                if (isset($byId[$view->termId->value])) {
-                    $narrowed[] = $byId[$view->termId->value];
-                }
-                // THE NARROWED POOL FIRST, THE OLD NEIGHBOURS BEHIND IT. A scene whose role lines
-                // all serve one function (a fixture, a thin day) leaves the rule with nothing to
-                // offer, and a такт-1 card that is refused is a stage B that never closes and a day
-                // that never passes — the checklist owes this step ({@see PlanStandings}) and
-                // cannot see the function rule. Falling back is what keeps the rule a preference
-                // the day cannot starve on.
-                $pools = [$narrowed, $neighbours];
-            }
-            // THE LENGTH BAND GIVES WAY BEFORE THE CARD DOES (наряд DAY-FIX-2): the interlocutor's
-            // line has to be understood, and a scene's five questions are rarely of one length —
-            // «Is it getting worse?» beside «How long have you had this pain?» left the live run
-            // without its такт 1, the line without its stage B, and the day without its «пройден».
-            // Among the plan's own questions a longer wrong answer is still a wrong answer.
-            foreach ($pools as $pool) {
-                foreach ([[$choiceFloor, false], [self::MIN_OPTIONS, false], [$choiceFloor, true], [self::MIN_OPTIONS, true]] as [$floor, $anyLength]) {
-                    $card = $this->recognitionCard(
-                        $user, $view, $content,
-                        LearningLadder::STEP_RECOGNITION_FORWARD,
-                        $pool, $cardIndex, $supportLang, $optionCount, $floor,
-                        as: $mode,
-                        reportedStep: $step,
-                        anyLength: $anyLength,
-                    );
-                    if ($card !== null) {
-                        return $card;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        // B+ · СБОРКА: вариантов нет, есть блоки (наряд SCENE-RUN, Ч.1.2).
-        //
-        // Раньше выбора по конструкции: у сборки нет пола вариантов, потому что у неё нет вариантов,
-        // и голодная полка отбить её не может. Это не послабление — это единственная форма, в
-        // которой третье касание ступени B закрывается у всех, а не только у тех, кому хватило
-        // соседей.
-        //
-        // «ТЫ СПРОСИШЬ» — НИКОГДА НЕ ВЫБОР (наряд DAY-FIX-2, Ч.1.4). Замок стоит и здесь, а не только
-        // в планировщике: карточка — последнее место, где вопрос мог бы стать выбором из четырёх
-        // одинаково уместных, и сборщик обязан отказать, кто бы его ни попросил.
-        if ($turnLevel === PlanTurnLevel::Assemble || $mode === ExerciseMode::SituationalAsk) {
-            return $this->assemblyCard($view, $content, $mode, $neighbours, $step, $ownBlocksOnly);
-        }
-
-        // ИЗ ЧЕГО БЫВАЮТ ВАРИАНТЫ ТВОЕГО ХОДА — наряд DAY-2-FIX, Ч.1.5.
-        //
-        // Когда план назвал пул сам, он и есть весь список законных вариантов: реплики плана с
-        // полок say/ask, служащие ДРУГОМУ умению сцены. Каталог поверх него не добирается — вариант
-        // вне плана это фраза не из этого разговора, и добор превратил бы отобранный список обратно
-        // в мешок. Меньше вариантов — правильный ответ, когда план их не дал; ниже пола карточка
-        // отбивается, как отбивалась всегда.
-        $distractors = $this->distractors->forTarget(
-            $user,
-            $view->termId,
-            $answerPoolIds ?? $poolTermIds,
-            $optionCount - 1,
-            poolOnly: $answerPoolIds !== null,
-        );
-        /** @var list<string> $options */
-        $options = $this->rng->shuffleArray([$content->text, ...$distractors]);
-
-        // The same floor, and the same refusal, as an ordinary plan choice card: a reply offered
-        // beside one wrong line is a coin toss written into an append-only log.
-        if (count($options) < $choiceFloor) {
-            $this->fallbacks->distractorStarved($user, $view->termId, $mode->value, $choiceFloor, count($options));
-
-            // A PLAN'S TURN FALLS BACK TO ASSEMBLY, NOT OUT (наряд DAY-FIX-2, Ч.1.7): the pool a plan
-            // names shrinks by what the conversation has already said and by the lines of the same
-            // skill, so the third and fourth reply of a scene legitimately run out of wrong answers.
-            // The turn is still the learner's — they build the line from blocks instead of choosing
-            // it. Dropping the card left day 1 without those replies and the day could never pass
-            // (the live run of 05.09 found it: no review for any «say» line after a full walk).
-            if ($answerPoolIds !== null) {
-                return $this->assemblyCard($view, $content, $mode, $neighbours, $step, $ownBlocksOnly);
-            }
-
-            return null;
-        }
-
-        return new SessionCardView(
-            termId: $view->termId->value,
-            exerciseMode: $mode->value,
-            type: $content->type,
-            // NO PROMPT. The situation is the question and it lives on the plan envelope; a
-            // translation here would answer the card.
-            prompt: null,
-            answer: $content->text,
-            transcription: $content->transcription,
-            example: $content->example,
-            exampleTranslation: $content->exampleTranslation,
-            options: $options,
-            chips: null,
-            acceptedVariants: $content->acceptedVariants,
-            // Tapped among lines this server dealt, so a synonym can never arrive
-            // ({@see ExerciseMode::acceptsSynonyms()}).
-            synonyms: [],
-            ladderStep: $step,
-            // WHAT THE LEARNER SAYS AFTER THE TAP — говорение по ключу, the same key the speaking
-            // card would have used. Nothing is graded on it and nothing is uploaded; it rides here
-            // so the device underlines the piece the day cared about instead of the whole line.
-            speakingKey: $content->speakingKey,
-            speakingKeys: $content->speakingKeys,
-        );
-    }
-
-    /**
-     * B+ · СБОРКА — та же ситуационная карточка, у которой вместо вариантов лежат блоки.
-     *
-     * Тренажёр тот же (`situational_say` / `situational_ask`), ответ тот же — текст реплики, —
-     * поэтому и оценка та же: ключ пары, сравнение по тексту, без прощения опечаток
-     * ({@see ExerciseMode::forgivesTypos()}). Сервер не узнаёт о сборке ничего нового; он просто
-     * кладёт на карточку `chips` вместо `options`, и append-only журнал получает ровно один ответ,
-     * как и на выборе.
-     *
-     * Блоки перемешаны здесь, а не на клиенте: порядок, который придумывает телефон, был бы вторым
-     * источником правды о трудности карточки, и два устройства одного человека дали бы разную.
-     *
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
-     */
-    private function assemblyCard(
-        DueTermView $view,
-        TermContentView $content,
-        ExerciseMode $mode,
-        array $neighbours,
-        ?int $step,
-        bool $ownBlocksOnly = false,
-    ): SessionCardView {
-        $own = PlanAssemblyBlocks::own($content->text);
-
-        // Чужие блоки — только слова и связки ЭТОГО плана. Реплики (`line`) и карточки без вида
-        // отсеиваются здесь, потому что «блок» это по определению кусок фразы, а не фраза.
-        $pool = [];
-        foreach ($neighbours as $neighbour) {
-            if ($neighbour['term_id'] === $view->termId->value) {
-                continue;
-            }
-            if (! in_array($neighbour['kind'] ?? null, [PlanStageLadder::KIND_WORD, PlanStageLadder::KIND_CHUNK], true)) {
-                continue;
-            }
-            $pool[] = $neighbour['text'];
-        }
-
-        /** @var list<string> $chips */
-        $chips = $this->rng->shuffleArray([
-            ...$own,
-            // ЗНАКОМСТВО — БЕЗ ЧУЖИХ БЛОКОВ (наряд DAY-GATE-1, Ч.1.5). На сборке ступени A человек
-            // видит реплику ВПЕРВЫЕ: чужие плитки там не выбор, а помеха — они спрашивают «какие из
-            // этих слов вообще из твоей фразы», когда сама фраза ещё не прочитана. В разговоре
-            // (ступень B и выше, шов, разогрев) лишние блоки остаются: там реплика уже знакома, и
-            // отличить её слова от соседних — это и есть задача.
-            ...($ownBlocksOnly ? [] : PlanAssemblyBlocks::decoys($own, $pool, $this->length)),
-        ]);
-
-        return new SessionCardView(
-            termId: $view->termId->value,
-            exerciseMode: $mode->value,
-            type: $content->type,
-            // Вопрос всё тот же — положение на языке поддержки, и оно едет на конверте задачи.
-            prompt: null,
-            answer: $content->text,
-            transcription: $content->transcription,
-            example: $content->example,
-            exampleTranslation: $content->exampleTranslation,
-            options: null,
-            chips: $chips,
-            acceptedVariants: $content->acceptedVariants,
-            synonyms: [],
-            ladderStep: $step,
-            speakingKey: $content->speakingKey,
-            speakingKeys: $content->speakingKeys,
-        );
-    }
-
-    /**
      * Rungs 1–2: four options, all of them the session's own neighbours, deliberately far.
      *
      *  * rung 1, `term → translation` — the prompt is the TERM and the options are translations.
@@ -926,10 +556,6 @@ final readonly class StudyCardAssembler
      * @param  list<array{term_id: string, text: string, translation: string|null, type: string, kind?: string|null, lang: string, support: string, collections?: list<string>}>  $neighbours
      * @param  string|null  $supportLang  the asking half of this card's pair; null = unknown, and an
      *                                    unverifiable pair is treated as a failed one
-     * @param  int|null  $optionCount  how many options this card is dealt, the right one included —
-     *                                 the plan's level knob, null for the product default
-     * @param  int|null  $choiceFloor  the fewest this card may be dealt before it falls through to
-     *                                 the catalogue-backed card {@see PlanChoiceFloor}
      */
     private function recognitionCard(
         UserId $user,
@@ -939,17 +565,11 @@ final readonly class StudyCardAssembler
         array $neighbours,
         int $cardIndex,
         ?string $supportLang = null,
-        ?int $optionCount = null,
-        ?int $choiceFloor = null,
-        ?ExerciseMode $as = null,
-        ?int $reportedStep = null,
-        bool $anyLength = false,
     ): ?SessionCardView {
         if ($supportLang === null) {
             return null;
         }
-        $optionCount = max(2, $optionCount ?? self::OPTION_COUNT);
-        $choiceFloor ??= $this->choiceFloor->forPreferred($optionCount);
+        $optionCount = self::OPTION_COUNT;
         $forward = $step === LearningLadder::STEP_RECOGNITION_FORWARD;
 
         $own = $forward ? $content->translation : $content->text;
@@ -989,15 +609,9 @@ final readonly class StudyCardAssembler
             if ($text === null || trim($text) === '' || $this->sameOption($text, $own)) {
                 continue;
             }
-            // …and the same FAMILY, which `type` cannot express: a question and a statement are both
-            // `phrase`, and the live run put the one question of a card among three statements
-            // (Д-2). The same rule the distractor reader applies, from the same place, so the two
-            // paths into a choice card cannot drift apart ({@see DistractorFamily}).
-            // Same shape AND the same length band as every other option path — the far options are
-            // the session's own neighbours, which makes them fair, not exempt.
-            if (DistractorFamily::of($neighbour['kind'] ?? null, $text)
-                !== DistractorFamily::of($content->kind, $own)
-                || (! $anyLength && ! $this->length->fits($content->kind, $own, $text))) {
+            // …and the same LENGTH BAND as every other option path — the far options are the
+            // session's own neighbours, which makes them fair, not exempt ({@see DistractorLength}).
+            if (! $this->length->fits($own, $text)) {
                 continue;
             }
             $pool[] = ['term_id' => $neighbour['term_id'], 'text' => $text];
@@ -1006,24 +620,18 @@ final readonly class StudyCardAssembler
             }
         }
 
-        // THE FLOOR IS THREE, ON BOTH SIDES (Д-36).
-        //
-        // This is the card's OWN belt of options — the session's neighbours, close by construction.
-        // When the belt cannot fill it, the answer is not a narrower card: the live run photographed
-        // «cold» offered a single wrong option, a coin toss with a correct answer written into an
-        // append-only log (`193`, `197`). The cause was the plan holding its own words out of the
-        // ordinary session, which is right — the remedy is to reach FARTHER, not to shrink.
-        //
-        // Reaching farther is what falling through does: ordinary multiple_choice asks
-        // {@see DistractorReader}, which tops up from the whole catalogue with the family and the
-        // length band still applied, and drops the card only when even that cannot reach three.
-        // Reported here rather than there, because THIS is the moment the near belt ran out.
-        if (count($pool) < $choiceFloor - 1) {
+        // THE FLOOR IS THREE (Д-36). This is the card's OWN belt of options — the session's
+        // neighbours, close by construction. When the belt cannot fill it, the answer is not a
+        // narrower card but a farther reach: falling through to ordinary multiple_choice asks
+        // {@see DistractorReader}, which tops up from the whole catalogue with the length band still
+        // applied, and drops the card only when even that cannot reach three. Reported here rather
+        // than there, because THIS is the moment the near belt ran out.
+        if (count($pool) < self::RECOGNITION_MIN_OPTIONS - 1) {
             $this->fallbacks->distractorStarved(
                 $user,
                 $view->termId,
                 ExerciseMode::MultipleChoice->value,
-                $choiceFloor,
+                self::RECOGNITION_MIN_OPTIONS,
                 count($pool) + 1,
             );
 
@@ -1040,12 +648,7 @@ final readonly class StudyCardAssembler
 
         return new SessionCardView(
             termId: $view->termId->value,
-            // The SAME CARD under another name. `situational_hear` is this card's forward direction
-            // with the line played instead of printed: same options, same identity grading, same
-            // refusal when the belt runs out. Building it here rather than beside it is what keeps
-            // the two from drifting — and what makes «no translation ever in a text key» one fact
-            // rather than two promises.
-            exerciseMode: ($as ?? ExerciseMode::MultipleChoice)->value,
+            exerciseMode: ExerciseMode::MultipleChoice->value,
             type: $content->type,
             prompt: $forward ? $content->text : $content->translation,
             // Forward: the id IS the answer (identity grading). Reverse: the term's text, checked
@@ -1062,11 +665,7 @@ final readonly class StudyCardAssembler
             // answer is a right answer. The forward card is graded by option id and has no text key
             // at all — see optionIds.
             synonyms: $forward ? [] : $content->synonyms,
-            // The rung this card was DEALT at, which for a plan's situational card is the plan's own
-            // and not rung 1 — the hear card is graded by id because of its MODE
-            // ({@see ExerciseMode::gradesByOptionId()}), never because of a rung, and claiming rung 1
-            // for a graduated pair would have the answer dropped as a stale ladder answer.
-            ladderStep: $reportedStep ?? $step,
+            ladderStep: $step,
             optionIds: $forward
                 ? array_map(static fn (array $o): string => $o['term_id'], $optionPairs)
                 : null,

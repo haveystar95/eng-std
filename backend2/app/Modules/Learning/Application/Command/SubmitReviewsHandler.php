@@ -70,12 +70,6 @@ final readonly class SubmitReviewsHandler
         private LearnerProfileReader $profile,
         private TransactionManager $tx,
         private Clock $clock,
-        /**
-         * Whether the simpler forms of a spoken line (`speaking_keys`) count as correct — the
-         * `learning.plan.speaking_keys_graded` toggle, given by the provider. Off until the phone
-         * judges by the same list (наряд GEN-1; see the config note).
-         */
-        private bool $speakingKeysGraded = false,
     ) {}
 
     public function __invoke(SubmitReviews $command): ReviewBatchResult
@@ -235,17 +229,9 @@ final readonly class SubmitReviewsHandler
      */
     private function expectedFor(ReviewInput $input, TermAnswerKeyView $key, array $states): ExpectedAnswer
     {
-        // GRADED BY THE TAPPED OPTION'S ID, on two paths that are the same card seen twice.
-        //
-        // The forward-recognition rung is one, and it is guarded by three agreeing facts because the
-        // RUNG is a claim the client makes. `situational_hear` is the other, and it needs no such
-        // guard: it is graded by id because of what the MODE is — a line played aloud with meanings
-        // to tap — and a mode is not something a stale batch can drift into. Reading it off the rung
-        // instead would be worse than redundant: the hear card is dealt at stage B of a scene, where
-        // the pair is usually graduated, and a rung-1 claim from a graduated pair is dropped as a
-        // stale ladder answer ({@see isStaleLadderAnswer()}) — every second touch of the понимаю
-        // tier would have vanished from the log.
-        if ($this->isForwardRecognition($input, $states) || $input->exerciseMode->gradesByOptionId()) {
+        // GRADED BY THE TAPPED OPTION'S ID: the forward-recognition rung, guarded by three agreeing
+        // facts because the RUNG is a claim the client makes.
+        if ($this->isForwardRecognition($input, $states)) {
             return new ExpectedAnswer([$input->termId->value]);
         }
 
@@ -253,41 +239,6 @@ final readonly class SubmitReviewsHandler
             && $key->example !== null
             && trim($key->example) !== '') {
             return new ExpectedAnswer([$key->example], isPhrase: true, policy: $this->policyForExample($input));
-        }
-
-        // A SPOKEN LINE IS JUDGED ON ITS KEY *AND ON THE REST OF ITSELF* (наряд SPEECH-2, Ч.3.2).
-        //
-        // The card is «say the reply that uses <this word>», and what it teaches is the word — so
-        // the key is required, and grading by coverage of the WHOLE sentence marked a correct
-        // reading wrong three sittings running (owner, 01.09). But the key ALONE was the other
-        // mistake, and a bigger one: on 08.09 the engine closed the microphone on the first
-        // recognised key word and wrote «верно» over a reply nobody had finished saying. A trainer
-        // that teaches phrases must not accept a word.
-        //
-        // So: the key must be there, and enough of what is left of the reply with it. «Сказал
-        // проще» stays legal — about the phrase, not about one word. A line with no key falls
-        // through to the branch below and is asked for entire (фикс DAY-GATE-1), which is what it
-        // always was.
-        if ($input->exerciseMode === ExerciseMode::Speaking
-            && $key->speakingKey !== null
-            && trim($key->speakingKey) !== '') {
-            // THE SIMPLER FORMS COUNT TOO (наряд GEN-1, канон Y4) — «two years» for «I have two years
-            // of commercial experience» — but only behind the toggle: the phone judges by the one
-            // `speaking_key` today, and a server that accepts what the phone refuses prints «Не
-            // то» over a reading the log then counts as correct. The toggle flips with the client.
-            $accepted = $this->speakingKeysGraded
-                ? [$key->speakingKey, ...$key->speakingKeys]
-                : [$key->speakingKey];
-
-            return new ExpectedAnswer(
-                $accepted,
-                isPhrase: true,
-                policy: MatchPolicy::KeyAndRest,
-                // ВСЯ РЕПЛИКА — вторая половина зачёта. Это собственная форма термина
-                // (`accepted[0]`), то есть ровно та строка, которую карточка показывала или
-                // просила сказать.
-                line: $key->accepted[0] ?? $key->speakingKey,
-            );
         }
 
         // WORD-LEVEL. The key is the term's own forms, plus its near-synonyms where the card asked

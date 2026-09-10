@@ -63,7 +63,7 @@ it('ships switched off — a fresh install never deals it', function () {
 
     // One row per (scope, mode) since the admission matrix moved into this table: the trainer HAS a
     // row — it has to, the matrix lives there — and that row is switched off.
-    $row = DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->where('mode', 'dictation')->first();
+    $row = DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'dictation')->first();
     expect($row)->not->toBeNull()->and((bool) $row->enabled)->toBeFalse();
 });
 
@@ -72,7 +72,7 @@ it('ships the intro switched off too — a new trainer is a data change, not a d
     // a never-seen pair simply starts at recognition, which is where it started before the ladder.
     expect(config('learning.enabled_modes'))->not->toContain('intro');
 
-    $row = DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->where('mode', 'intro')->first();
+    $row = DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'intro')->first();
     expect($row)->not->toBeNull()
         ->and((bool) $row->enabled)->toBeFalse()
         ->and((string) $row->min_acquisition)->toBe('new');

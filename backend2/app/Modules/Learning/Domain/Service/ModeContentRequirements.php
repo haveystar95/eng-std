@@ -94,15 +94,7 @@ final readonly class ModeContentRequirements
             // fact about the session. Its own CONTENT question — «does this term have a
             // description» — is answered separately and first (see verdict()), because unlike
             // multiple_choice this mode genuinely can be blocked by the term.
-            //
-            // The three SITUATIONAL cards deal options out of the pool as well — the day's own
-            // lines for the two speak shelves, the day's own meanings for `hear`. The SITUATION
-            // itself is assembled from the day and not from the term, so there is no content
-            // question to answer first: this is the pure pool-dependent case, exactly like
-            // multiple_choice.
-            ExerciseMode::MultipleChoice, ExerciseMode::DescriptionMatch,
-            ExerciseMode::SituationalHear, ExerciseMode::SituationalSay,
-            ExerciseMode::SituationalAsk => true,
+            ExerciseMode::MultipleChoice, ExerciseMode::DescriptionMatch => true,
             // pick_correct also shows wrong options, but they are this term's OWN distractors —
             // written by the станок against this term's own example. That is a content question.
             ExerciseMode::PickCorrect,
@@ -185,9 +177,7 @@ final readonly class ModeContentRequirements
             // than a placeholder: a gap invented for a mode that has none would be printed on a
             // screen and sent to the станок.
             ExerciseMode::Typing, ExerciseMode::Listening, ExerciseMode::Speaking,
-            ExerciseMode::Intro, ExerciseMode::MultipleChoice,
-            ExerciseMode::SituationalHear, ExerciseMode::SituationalSay,
-            ExerciseMode::SituationalAsk => throw new LogicException(
+            ExerciseMode::Intro, ExerciseMode::MultipleChoice => throw new LogicException(
                 "{$mode->value} подходит любому термину — у него не может быть контентного отказа.",
             ),
         };
@@ -231,9 +221,6 @@ final readonly class ModeContentRequirements
             // Unreachable: a supported pool-dependent mode is reported as pool-dependent, not ok.
             // Stated anyway so adding a mode cannot skip the question.
             ExerciseMode::DescriptionMatch => 'описание есть, но опции берутся из пула.',
-            ExerciseMode::SituationalHear,
-            ExerciseMode::SituationalSay,
-            ExerciseMode::SituationalAsk => 'ситуацию собирает сервер из дня, а варианты берутся из пула — контент термина здесь ничего не решает.',
         };
     }
 }

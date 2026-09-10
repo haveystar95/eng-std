@@ -12,9 +12,8 @@ use Illuminate\Support\Facades\DB;
  *
  * ## What this fixes, and what it deliberately does not
  *
- * The наряд that asked for this expected an EMPTY matrix. It is not empty: the migrations write all
- * 51 rows, and `scope = plan` is byte-for-byte the same in the owner's database as on a database
- * created this morning. The whole difference is five GLOBAL rows — `intro`, `speaking`, `dictation`,
+ * The наряд that asked for this expected an EMPTY matrix. It is not empty: the migrations write
+ * every row. The whole difference is five GLOBAL rows — `intro`, `speaking`, `dictation`,
  * `pick_correct`, `description_match` — which every migration ships DISABLED on purpose. That is
  * the release rule, stated out loud in `2026_08_18_090000_add_speaking_to_mode_settings.php` and in
  * the project guide: a new trainer goes out dark and is switched on себе → бете → всем from the
@@ -29,12 +28,11 @@ use Illuminate\Support\Facades\DB;
  * So this seeder carries the ROLLOUT and nothing else. It writes `enabled` and `position` and does
  * not touch a single gate: `min_acquisition`, `min_learning_step`, `min_successful_reviews` and
  * `options_policy` are already identical in both databases, and a seeder that restated them would
- * be a second place to change them. `scope = plan` is not here for the same reason — the migration
- * writes exactly the owner's values, and two writers for one row is how they drift.
+ * be a second place to change them.
  *
  * ## Idempotent, and it never overrides a person
  *
- * Matched on `(user_id IS NULL, scope = 'global', mode)`, which is the shipped row — a learner's
+ * Matched on `(user_id IS NULL, mode)`, which is the shipped row — a learner's
  * OWN override (`user_id` set) is untouched, and running this twice changes nothing the second
  * time. A mode that has no row at all is left alone rather than invented: the migrations own which
  * modes exist, and a seeder that could add one would be able to resurrect a mode a migration
@@ -45,9 +43,8 @@ class LearningModeSettingsSeeder extends Seeder
     /**
      * The owner's live rollout — `mode => [enabled, position]`.
      *
-     * Read out of `wordtrainer` on 01.09.2026. The order IS the product: `intro` last in this list
-     * and first in a plan's checklist are not in conflict, because `position` here is the ordinary
-     * session's rotation and the plan reads its own `scope = plan` order.
+     * Read out of `wordtrainer` on 01.09.2026. The order IS the product: `position` is the ordinary
+     * session's rotation.
      */
     private const ROLLOUT = [
         'multiple_choice' => [true, 0],
@@ -68,7 +65,6 @@ class LearningModeSettingsSeeder extends Seeder
         foreach (self::ROLLOUT as $mode => [$enabled, $position]) {
             DB::table('learning_mode_settings')
                 ->whereNull('user_id')
-                ->where('scope', 'global')
                 ->where('mode', $mode)
                 // Nothing to say about a row that already says it. A no-op that still stamped
                 // `updated_at` would make «when did this trainer go out» read as «the last time

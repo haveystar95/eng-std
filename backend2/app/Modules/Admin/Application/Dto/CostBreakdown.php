@@ -9,10 +9,11 @@ namespace App\Modules\Admin\Application\Dto;
  * (collection generation, learning plan, realtime practice, term enrichment, example regeneration)
  * over a window.
  *
- * `generation` and `plan` come out of the SAME table (`generation_requests`, split by `purpose`)
- * and are reported apart on purpose: they are different products with different budgets, and a
- * single line that quietly contained both would be the mislabel this split was made to avoid. The
- * total contains both, because money is money.
+ * `generation` and `plan` are reported apart on purpose: they are different products with
+ * different budgets, and a single line that quietly contained both would be the mislabel this
+ * split was made to avoid. The plan's number is the sum of the plan call (`plans.cost_usd_plan`)
+ * and every lesson call (`plan_scenes.cost_usd_lesson`). The total contains both, because money
+ * is money.
  */
 final readonly class CostBreakdown
 {

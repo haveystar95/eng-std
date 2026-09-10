@@ -12,21 +12,19 @@ namespace App\Modules\Learning\Domain\ValueObject;
  * away the plan's reason and leave the learner's, and a single `source` column would have to pick
  * one of the two and be wrong about the other.
  *
- * Three shapes, and only three:
+ * Two shapes, and only two:
  *
  *   manual        a tap — «Учить это слово», or a word saved out of search
  *   triage        a swipe said «не знаю» / «не уверен»
- *   plan:<ULID>   day N of that plan introduced it, and the plan is holding it
  *
  * Order is preserved and duplicates are not: the list is a SET with a stable reading order, so
- * `["manual","plan:01J…"]` and `["plan:01J…","manual"]` are the same fact stored two ways, and
- * this type makes sure only the first spelling ever gets written.
+ * `["manual","triage"]` and `["triage","manual"]` are the same fact stored two ways, and this type
+ * makes sure only the first spelling ever gets written.
  */
 final readonly class EnrollmentSources
 {
     public const MANUAL = 'manual';
     public const TRIAGE = 'triage';
-    private const PLAN_PREFIX = 'plan:';
 
     /** @param list<string> $sources */
     private function __construct(public array $sources) {}
@@ -63,11 +61,6 @@ final readonly class EnrollmentSources
         return new self($out);
     }
 
-    public static function forPlan(string $planId): string
-    {
-        return self::PLAN_PREFIX . $planId;
-    }
-
     public function with(string $source): self
     {
         return in_array($source, $this->sources, true)
@@ -86,23 +79,6 @@ final readonly class EnrollmentSources
     public function has(string $source): bool
     {
         return in_array($source, $this->sources, true);
-    }
-
-    /**
-     * The plan ids holding this pair, in the order they claimed it.
-     *
-     * @return list<string>
-     */
-    public function planIds(): array
-    {
-        $out = [];
-        foreach ($this->sources as $source) {
-            if (str_starts_with($source, self::PLAN_PREFIX)) {
-                $out[] = substr($source, strlen(self::PLAN_PREFIX));
-            }
-        }
-
-        return $out;
     }
 
     public function isEmpty(): bool

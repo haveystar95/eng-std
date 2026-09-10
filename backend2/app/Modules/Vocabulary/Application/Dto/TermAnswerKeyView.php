@@ -37,22 +37,5 @@ final readonly class TermAnswerKeyView
         public bool $isPhrase,
         public ?string $example = null,
         public array $synonyms = [],
-        /**
-         * WHAT A SPOKEN CARD FOR THIS LINE IS JUDGED ON — the piece the day teaches, not the whole
-         * sentence around it ({@see \App\Modules\Generation\Domain\Service\PlanSpeakingKey}).
-         *
-         * Still target-language text the term itself owns: the filler is a card of the same day,
-         * copied character for character. NULL on everything that is not a plan line and on a line
-         * with no piece to pick out, and the grader then asks for the line entire, as it always did.
-         */
-        public ?string $speakingKey = null,
-        /**
-         * WHAT ELSE COUNTS WHEN THE LINE IS SPOKEN — 1–2 simpler forms of the same reply the day
-         * wrote beside the key (наряд GEN-1, P2 v0.7). Target-language text the term itself owns,
-         * like the key; empty on everything else and on every line written before v0.7.
-         *
-         * @var list<string>
-         */
-        public array $speakingKeys = [],
     ) {}
 }

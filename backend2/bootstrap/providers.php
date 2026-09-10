@@ -7,6 +7,7 @@ return [
     App\Modules\Identity\Infrastructure\Provider\IdentityServiceProvider::class,
     App\Modules\Learning\Infrastructure\Provider\LearningServiceProvider::class,
     App\Modules\Observability\Infrastructure\Provider\ObservabilityServiceProvider::class,
+    App\Modules\Plan\Infrastructure\Provider\PlanServiceProvider::class,
     App\Modules\Shared\Infrastructure\Provider\SharedServiceProvider::class,
     App\Modules\Vocabulary\Infrastructure\Provider\VocabularyServiceProvider::class,
     App\Providers\AppServiceProvider::class,

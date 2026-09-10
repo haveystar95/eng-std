@@ -290,9 +290,8 @@ final class TermProgress
         $sources = $this->enrollmentSources();
 
         // ALREADY in the pool: the moment stands, and so does every reason already on the row —
-        // but a NEW reason is added. That combination is the whole point of the list. A word the
-        // learner saved by hand in June and that a plan needs in August is held by both, and when
-        // the plan ends the learner's own reason has to still be there.
+        // but a NEW reason is added. A word saved by hand and later swiped in triage is held by
+        // both reasons, and neither erases the other.
         if ($this->enrolledAt !== null) {
             $withSource = $sources->with($source);
 
@@ -300,22 +299,6 @@ final class TermProgress
         }
 
         return $this->withEnrolment($now, $sources->with($source));
-    }
-
-    /**
-     * A plan let go of this pair — it finished, or the learner abandoned it.
-     *
-     * The reason comes off; the ENROLMENT does not. The learner spent days on this word and it
-     * carries a rung, a schedule and a history, so a plan ending is not a reason to stop studying
-     * it — it is a reason to stop refusing to let them. A pair left with no reason at all is a
-     * normal, ordinary pool word.
-     */
-    public function releasePlan(string $planId): self
-    {
-        $sources = $this->enrollmentSources();
-        $after = $sources->without(EnrollmentSources::forPlan($planId));
-
-        return $after->sources === $sources->sources ? $this : $this->withEnrolment($this->enrolledAt, $after);
     }
 
     /**

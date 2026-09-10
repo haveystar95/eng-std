@@ -5,20 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Vocabulary\Infrastructure\Provider;
 
 use App\Modules\Vocabulary\Application\Port\AuthoredTermAnonymizer;
-use App\Modules\Vocabulary\Application\Port\TermAudioStore;
-use App\Modules\Vocabulary\Application\Port\TermAudioWriter;
-use App\Modules\Vocabulary\Application\Query\SpeakableLineReader;
-use App\Modules\Vocabulary\Application\Query\TermAudioReader;
-use App\Modules\Vocabulary\Infrastructure\Adapter\FilesystemTermAudioStore;
-use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentSpeakableLineReader;
-use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermAudioReader;
-use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermAudioWriter;
 use App\Modules\Vocabulary\Application\Port\TermEnrichmentWriter;
 use App\Modules\Vocabulary\Application\Port\TermReviewWriter;
 use App\Modules\Vocabulary\Application\Port\TermCoreWriter;
 use App\Modules\Vocabulary\Application\Port\TermExampleWriter;
 use App\Modules\Vocabulary\Application\Query\StaleCoreReader;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
+use App\Modules\Vocabulary\Application\Query\NativeDistractorReader;
 use App\Modules\Vocabulary\Application\Query\EnrichableTermReader;
 use App\Modules\Vocabulary\Application\Query\TermReadingTargetReader;
 use App\Modules\Vocabulary\Application\Query\DistractorAuditReader;
@@ -39,6 +32,7 @@ use App\Modules\Vocabulary\Application\Port\TranslationLabelWriter;
 use App\Modules\Vocabulary\Domain\Repository\TermRepository;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentAuthoredTermAnonymizer;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentNativeDistractorReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentEnrichableTermReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermReadingTargetReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorAuditReader;
@@ -63,12 +57,6 @@ use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermLanguageAuditRead
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTranslationKeyReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermRepository;
 use App\Modules\Vocabulary\Application\Port\TermDescriptionWriter;
-use App\Modules\Vocabulary\Application\Port\TermExampleScopeWriter;
-use App\Modules\Vocabulary\Application\Port\TermPlanFactsWriter;
-use App\Modules\Vocabulary\Application\Query\KnownTermsReader;
-use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentKnownTermsReader;
-use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermExampleScopeWriter;
-use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermPlanFactsWriter;
 use App\Modules\Vocabulary\Application\Port\TermTransliterationWriter;
 use App\Modules\Vocabulary\Application\Query\ExactTermTranslationReader;
 use App\Modules\Vocabulary\Application\Query\TermSearchReader;
@@ -109,6 +97,8 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(TermDifficultyReader::class, EloquentTermDifficultyReader::class);
         $this->app->bind(TermAnswerKeyReader::class, EloquentTermAnswerKeyReader::class);
         $this->app->bind(DistractorReader::class, EloquentDistractorReader::class);
+        // The native side of the same question, for the plan's Beginner choice card.
+        $this->app->bind(NativeDistractorReader::class, EloquentNativeDistractorReader::class);
         $this->app->bind(PendingTermImageReader::class, EloquentPendingTermImageReader::class);
         $this->app->bind(AuthoredTermAnonymizer::class, EloquentAuthoredTermAnonymizer::class);
         $this->app->bind(EnrichableTermReader::class, EloquentEnrichableTermReader::class);
@@ -125,21 +115,6 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(TermEnrichmentExportReader::class, EloquentTermEnrichmentExportReader::class);
         // The other direction: a human removing a bad row or correcting a wording.
         $this->app->bind(TermReviewWriter::class, EloquentTermReviewWriter::class);
-
-        // The learning plan's three: the two facts a day learns about a term (`is_line`,
-        // `difficulty_score`), the day-scoped example, and the read that tells a later day what
-        // an earlier one already taught.
-        $this->app->bind(TermPlanFactsWriter::class, EloquentTermPlanFactsWriter::class);
-        $this->app->bind(TermExampleScopeWriter::class, EloquentTermExampleScopeWriter::class);
-        $this->app->bind(KnownTermsReader::class, EloquentKnownTermsReader::class);
-
-        // ОЗВУЧКА РЕПЛИК (наряд TTS-1). Vocabulary владеет и строкой, и файлом: озвучка — свойство
-        // ТЕКСТА термина, а не плана и не пользователя, поэтому кэш общий по построению. Покупает
-        // звук Generation и приносит его сюда командой.
-        $this->app->bind(TermAudioReader::class, EloquentTermAudioReader::class);
-        $this->app->bind(TermAudioWriter::class, EloquentTermAudioWriter::class);
-        $this->app->bind(TermAudioStore::class, FilesystemTermAudioStore::class);
-        $this->app->bind(SpeakableLineReader::class, EloquentSpeakableLineReader::class);
     }
 
     public function boot(): void

@@ -97,9 +97,7 @@ it('rewrites the same rows instead of accumulating them', function () {
     setGlobal([ExerciseMode::Typing]);
     setGlobal([ExerciseMode::Cloze]);
 
-    // Global scope only: the same table also holds the plan's own per-level rows, which are not a
-    // scope in this sense — no learner overrides them and no rotation reads them.
-    expect(DB::table('learning_mode_settings')->where('scope', 'global')->count())->toBe($perScope * 2) // one scope global, one override
+    expect(DB::table('learning_mode_settings')->count())->toBe($perScope * 2) // one scope global, one override
         ->and(wireModes(modes()->forUser($id)))->toBe(['listening']);
 });
 
@@ -130,11 +128,9 @@ it('erases a user override with the account', function () {
     DB::table('users')->where('id', $user->id)->delete();
 
     expect(DB::table('learning_mode_settings')->where('user_id', $user->id)->count())->toBe(0)
-        // One global row per trainer of the ORDINARY session. The situational three are plan-only —
-        // they have no global row at all, because a global row IS an admission rule and there is no
-        // scene in an ordinary session for their card to be about (наряд SIT-1).
-        ->and(DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->count())
-        ->toBe(count(array_filter(ExerciseMode::cases(), static fn (ExerciseMode $m): bool => ! $m->isSituational())));
+        // One global row per trainer.
+        ->and(DB::table('learning_mode_settings')->whereNull('user_id')->count())
+        ->toBe(count(ExerciseMode::cases()));
 });
 
 // ── the admission matrix, now stored beside the toggles ──────────────────────

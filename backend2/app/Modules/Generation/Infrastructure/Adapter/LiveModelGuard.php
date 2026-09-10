@@ -13,8 +13,8 @@ namespace App\Modules\Generation\Infrastructure\Adapter;
  * Every port in this module already has a `driver === 'fake'` branch, and `tests/Pest.php` binds
  * fakes over the ports a stray door could reach. Both of those are OPT-OUT protections: they work
  * until something quietly steps around them. In PLAN-1b, something did — two test files bound their
- * fake under `Generation\Application\Port\PlanOutlinePort`, a class name that does not exist (the
- * port lives in `Learning`). The container accepts any string as a key, so the binding registered
+ * fake under a Generation-shaped name of a port that lived in another module, a class name that
+ * did not exist. The container accepts any string as a key, so the binding registered
  * fine, resolved nothing, and the real adapter stayed in place. Roughly 39 `gpt-5.4` calls went to
  * OpenAI from the test suite, the ledger rows were written into the test database and rolled back
  * with it, and the only symptom was that a test took seven seconds

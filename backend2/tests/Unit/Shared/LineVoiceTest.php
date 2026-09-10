@@ -8,7 +8,7 @@ use App\Modules\Shared\Domain\ValueObject\LineVoice;
 it('names the voice and the pace as two separate keys', function () {
     $voice = new LineVoice('openai', 'gpt-4o-mini-tts', 'coral', 0.9);
 
-    // Голос — «кто говорит», вариант — «как». Оба стоят в уникальном ключе `term_audios`, и
+    // Голос — «кто говорит», вариант — «как». Оба стоят в уникальном ключе `plan_line_audios`, и
     // разделены они потому, что серверный файл нельзя ускорить на клиенте: смена темпа обязана
     // дать ДРУГОЙ файл, а не переиграть тот же быстрее.
     expect($voice->key())->toBe('openai:gpt-4o-mini-tts:coral')

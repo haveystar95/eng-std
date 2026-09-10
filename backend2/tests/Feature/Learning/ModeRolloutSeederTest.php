@@ -18,26 +18,19 @@ uses(RefreshDatabase::class);
  * of four steps to two, and a plan on a fresh account was 27 tasks where the design says 56
  * (`docs/research/e2e-sim-1.md`, Д-14, Д-15). Nothing on any screen said so.
  */
-beforeEach(fn () => fakePlanModel());
-
 it('ships the matrix DARK, which is the migration doing its job', function () {
     // Stated as an assertion rather than assumed, because the seeder below is only correct while
     // this is true: if a migration ever starts shipping these on, the seeder is dead weight.
     $dark = DB::table('learning_mode_settings')
-        ->whereNull('user_id')->where('scope', 'global')->where('enabled', false)
+        ->whereNull('user_id')->where('enabled', false)
         ->pluck('mode')->sort()->values()->all();
 
     expect($dark)->toBe(['description_match', 'dictation', 'intro', 'pick_correct', 'speaking']);
-
-    // …and the PLAN matrix has always wanted them. The intersection is where they died.
-    expect(DB::table('learning_mode_settings')
-        ->where('scope', 'plan')->where('level', 'basic')->whereIn('mode', ['intro', 'speaking'])
-        ->pluck('enabled')->all())->toBe([true, true]);
 });
 
 it('turns on what the owner has already rolled out, and leaves the gates alone', function () {
     $gates = static fn (): array => DB::table('learning_mode_settings')
-        ->whereNull('user_id')->where('scope', 'global')
+        ->whereNull('user_id')
         ->orderBy('mode')
         ->get(['mode', 'min_acquisition', 'min_learning_step', 'min_successful_reviews', 'options_policy'])
         ->map(static fn (object $row): array => (array) $row)
@@ -51,7 +44,7 @@ it('turns on what the owner has already rolled out, and leaves the gates alone',
     // opinion about when a trainer is allowed to appear.
     expect($gates())->toBe($before)
         ->and(DB::table('learning_mode_settings')
-            ->whereNull('user_id')->where('scope', 'global')->where('enabled', false)->count())->toBe(0);
+            ->whereNull('user_id')->where('enabled', false)->count())->toBe(0);
 });
 
 it('runs twice with the same result, and the second run writes nothing at all', function () {
@@ -75,7 +68,6 @@ it('never touches a learner’s own override', function () {
     $mine = DB::table('learning_mode_settings')->insertGetId([
         'id' => (string) \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
         'user_id' => $user->id,
-        'scope' => 'global',
         'mode' => 'speaking',
         'enabled' => false,
         'position' => 3,
@@ -92,26 +84,4 @@ it('never touches a learner’s own override', function () {
     expect(DB::table('learning_mode_settings')
         ->where('user_id', $user->id)->where('mode', 'speaking')->value('enabled'))->toBeFalse()
         ->and($mine)->not->toBeNull();
-});
-
-it('gives a plan on a SEEDED database the intro card first (Д-15)', function () {
-    $this->seed(LearningModeSettingsSeeder::class);
-
-    [, $token, $planId] = startedPlan($this);
-    $session = planSession($this, $token, $planId);
-
-    $first = $session['tasks'][0]['card']['term_id'];
-    $chain = [];
-    foreach ($session['tasks'] as $task) {
-        if ($task['card']['term_id'] === $first) {
-            $chain[] = $task['card']['exercise_mode'];
-        }
-    }
-
-    // Met — and, since DAY-FIX-2, nothing more on the first day (one touch per stage); the point is
-    // that the intro is dealt at all on a fresh account, which is what the seeder used to lose.
-    expect($chain[0])->toBe('intro');
-    foreach ($chain as $mode) {
-        expect($mode)->not->toBeIn(['typing', 'dictation', 'cloze', 'listening']);
-    }
 });

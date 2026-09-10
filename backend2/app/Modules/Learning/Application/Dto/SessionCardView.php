@@ -68,43 +68,5 @@ final readonly class SessionCardView
          * ({@see \App\Modules\Vocabulary\Application\Dto\TermContentView::$transliterationHint}).
          */
         public ?string $transliteration = null,
-        /**
-         * WHAT THE SPOKEN CARD ACTUALLY ASKS FOR — the piece of the line, not the line.
-         *
-         * Present on a `speaking` card whose term is a plan line with a key
-         * ({@see \App\Modules\Generation\Domain\Service\PlanSpeakingKey}), null everywhere
-         * else, including on a spoken WORD, where the term is already the whole ask.
-         *
-         * It rides on the CARD rather than on the plan task because the server grades by it on
-         * every path a spoken line can be dealt on — a plan sitting, a day opened out of turn, free
-         * practice — and a client that did not know it on one of those would show a verdict the
-         * server contradicts. Null means «the whole line», and the card says so.
-         */
-        public ?string $speakingKey = null,
-        /**
-         * WHAT ELSE COUNTS WHEN THE LINE IS SPOKEN — 1–2 simpler forms beside `speakingKey`
-         * (наряд GEN-1, канон Y4). ADDITIVE and, until the client reads it, INFORMATIONAL: the
-         * server grades by them only behind `learning.plan.speaking_keys_graded`, which stays off
-         * until the phone accepts the same list — a server looser than the phone would print «Не то»
-         * over a reading the log then counts as correct, and that is the one direction the
-         * contract forbids ({@see \App\Modules\Learning\Application\Command\SubmitReviewsHandler}).
-         *
-         * @var list<string>
-         */
-        public array $speakingKeys = [],
-        /**
-         * КАК ЭТО ЧИТАЕТСЯ ВСЛУХ — для аббревиатур (наряд SPEECH-2, Ч.4.3).
-         *
-         * «SQL» на экране и «эс-кью-эль» в ухе — это одна карточка, и синтезатору нужна вторая
-         * форма, а не первая. Поле заводится ПУСТЫМ и остаётся пустым весь этот наряд: заполнять
-         * его — работа генерации (промпт пар), которую здесь трогать нельзя, и строка про это
-         * стоит в ROADMAP. Пустое поле в контракте — не заглушка: клиент, который уже умеет его
-         * читать, начнёт произносить аббревиатуры правильно в тот день, когда пары его напишут, а
-         * не выкатом позже.
-         *
-         * ЧИТАТЬ ЕГО ГРЕЙДЕРУ НЕЧЕГО: узнанное «эс-кью-эль» приводит к канону таблица нормализации
-         * ({@see \App\Modules\Learning\Domain\Service\SpeechNormalization}), а это — про озвучку.
-         */
-        public ?string $sayAs = null,
     ) {}
 }

@@ -14,7 +14,7 @@ use InvalidArgumentException;
  * голоса». Три модуля, одно понятие — значит Shared, иначе у каждого будет своя строка формата
  * «openai/coral» и они разойдутся ровно на том дне, когда голос сменят.
  *
- * ## Ключ и вариант — две разные вещи, и обе в уникальном индексе `term_audios`
+ * ## Ключ и вариант — две разные вещи, и обе в уникальном индексе `plan_line_audios`
  *
  * - {@see key()} — «кто говорит»: `openai:gpt-4o-mini-tts:coral`.
  * - {@see variant()} — «как говорит»: темп, `p90` для speed = 0.9.
@@ -56,14 +56,14 @@ final readonly class LineVoice
         );
     }
 
-    /** «Кто говорит», as stored in `term_audios.voice`. */
+    /** «Кто говорит», as stored in `plan_line_audios.voice`. */
     public function key(): string
     {
         return "{$this->provider}:{$this->model}:{$this->voice}";
     }
 
     /**
-     * «Как говорит», as stored in `term_audios.variant`. Integer percent so the value is a stable
+     * «Как говорит», as stored in `plan_line_audios.variant`. Integer percent so the value is a stable
      * short string: 0.9 → `p90`, and never `p90.00000000001`.
      */
     public function variant(): string

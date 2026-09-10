@@ -1701,118 +1701,13 @@ paths:
         '404': { description: Not a term id }
 
   /plans:
-    post:
-      tags: [Plans]
-      summary: Create a plan as a DRAFT
-      description: >-
-        A LEARNING PLAN is not a collection. It is a dated mechanism: one goal, one event date, and
-        a number of days the SERVER computes from the two. A collection is a bag of useful words
-        with no opinion about time; every field here is about the deadline.
-
-        A draft costs NOTHING — no model call, no day, no word held. That is what makes the
-        three-step flow honest: create → outline (P1 + the scheduler) → adjust (the scheduler
-        again, free) → start. The learner reads the skeleton before they commit to it, and
-        adjusting it does not spend money.
-
-        The SUPPORT language is not a field. It is read from the account at every point of use;
-        one learner has one native language and a frozen copy on a plan would be a second answer
-        to a question that already has one.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [goal_text, target_lang, level, event_date]
-              properties:
-                goal_text:
-                  type: string
-                  minLength: 5
-                  maxLength: 500
-                  description: >-
-                    What the learner has to be able to do, in their own words, in their own
-                    language. «Иду к врачу, болит спина, надо объяснить и понять назначение.»
-                target_lang: { type: string, minLength: 2, maxLength: 5 }
-                level:
-                  type: string
-                  enum: [zero, basic, conversational, fluent]
-                  description: >-
-                    Deliberately not CEFR. A plan asks «what can you say out loud in this
-                    situation», which is a different question from B1. The level moves the
-                    DIFFICULTY, never the topic: a zero learner going to the doctor still goes to
-                    the doctor.
-                event_date:
-                  type: string
-                  format: date
-                  nullable: true
-                  description: >-
-                    The day it happens. Today is legal (a one-day plan); the past is not; NULL is
-                    «Без даты» (кадр V4·04б) — a whole shape of plan rather than a distant date.
-                    Nothing about an undated plan is compressed toward a deadline, `days_to_event`
-                    is null, `deadline_tight` is false, the days carry no `scheduled_on` and open
-                    one after another, and the rehearsal is «в конце».
-
-                    The key is REQUIRED and may be null: a client that simply forgot the date gets
-                    a 422 rather than an undated plan, because «без даты» is a choice the learner
-                    makes and must never be something an app does by omission.
-                listening:
-                  type: array
-                  maxItems: 3
-                  description: >-
-                    What the learner tapped on the optional listening step (кадры V4·03…03г), line
-                    by line. Absent or empty = the step was skipped or never offered, which is not
-                    the same fact as «прошёл и ничего не понял».
-
-                    The VERDICT is not on the wire. «Упор на понимание» / «упор на говорение» is
-                    derived on the server from these rows — all understood → speaking, anything
-                    else (mixed included) → understanding — so a client cannot send a balance that
-                    disagrees with the answers under it. It reaches P1 as `{{diagnostics}}` and P2
-                    as `{{balance}}`.
-                  items:
-                    type: object
-                    required: [text, understood]
-                    properties:
-                      text: { type: string, maxLength: 300 }
-                      translation: { type: string, maxLength: 300, nullable: true }
-                      place: { type: string, maxLength: 120, nullable: true }
-                      understood:
-                        type: boolean
-                        description: «Понял» = true, «Не совсем» = false. There is no right answer.
-                minutes_per_day:
-                  type: integer
-                  minimum: 5
-                  maximum: 120
-                  default: 20
-                  description: >-
-                    Decides the day's term budget through the capacity table (10 → 5, 20 → 9,
-                    40 → 16, interpolated between). The same table the prompt is told about.
-      responses:
-        '201': { $ref: '#/components/responses/Plan' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '422':
-          description: >-
-            Invalid input, or `event_date_in_past` — the event has already happened. A refusal
-            rather than a clamp to today: the whole plan is arithmetic over this date, so getting
-            it wrong has to stop the arithmetic instead of being absorbed by it.
-          content:
-            application/problem+json:
-              schema: { $ref: '#/components/schemas/Problem' }
-
     get:
       tags: [Plans]
-      summary: Every plan this learner has run, newest first
-      description: >-
-        SUMMARIES, not whole plans: the План tab shows the finished preparation at the top and an
-        archive of the ones before it, and each row says three words. A full read runs the per-day
-        progress computation, which is a collection read, a content read and a review-log read per
-        day — for a list, that is the wrong price.
-
-        Drafts are excluded. A draft is a plan somebody started describing and walked away from,
-        and an archive of those is a list of abandoned sentences rather than of preparations that
-        happened.
+      summary: The learner's plans — the live one first, then the rest, newest first
+      description: Deleted plans are not listed. The menu's «Новый план» reads this.
       responses:
         '200':
-          description: OK
+          description: Plan rows
           content:
             application/json:
               schema:
@@ -1822,170 +1717,77 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/PlanSummary' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-
-  /plans/listen-warmup:
     post:
       tags: [Plans]
-      summary: Lines of the situation to listen to, and continuations of the goal
+      summary: Create a plan and start building it
       description: >-
-        ONE endpoint, TWO moments of the entry, and `target_lang` is what tells them apart.
-
-        WITHOUT `target_lang` — the goal step (кадр V4·01в), fired on a typing pause while the goal
-        is still too short. The learner has not reached the language question yet, so the answer is
-        `continuations` only and `lines` comes back empty. That is what «Дописать за тебя» offers:
-        two ways to carry their own sentence further. It replaced static suggestions, which lived on
-        somebody else's topic — a goal about an IT interview was offered a hint about a sore back.
-
-        WITH `target_lang` — «Хочешь, настрою точнее?» (кадры V4·03…03г), fired in the background
-        right after the level is chosen. Both halves come back.
-
-        Asked BEFORE any plan exists, so it carries no plan id and creates nothing; its ledger row
-        holds `plan_id = null`, honestly — there is nothing yet to name.
-
-        ALWAYS 200, and an EMPTY half is a legitimate answer meaning «этого блока нет»: both things
-        it feeds are optional, so a vendor outage, a malformed answer or an empty list all resolve
-        the same way — the block is not shown and nothing apologises for it. There is no retry and
-        no error screen; the failure is in the log and in the spend ledger.
-
-        It SPENDS MONEY (one `gpt-5.4` call, ≈ $0.002 for continuations alone, ≈ $0.004 for the full
-        answer), which is why it is a POST and why nothing polls it. The client debounces the typing
-        pause and caches by the goal text, so the same sentence is never paid for twice.
-
-        What the learner taps on the listening step is kept on the device and rides back with
-        `POST /plans` as `listening`.
+        THE ENTRY (docs/plan-v2.md §4, §7). A goal in the learner's own words, the language being
+        learned, the level, one to ten days and — optionally — the event's date. The server lays out
+        the calendar (§7: every third day a review, the last day the rehearsal), shortens
+        `days_total` to the days left before the event if the date is nearer than the days asked
+        for, and asks the model for exactly as many scenes as the calendar has scene days. Nothing
+        waits on the model: the answer is 202 with the build status, and the client polls
+        `GET /plans/{id}/build`. When the plan is built, day one's lesson is written right away —
+        before «Начать».
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [goal_text, level]
+              required: [goal_text, target_lang, level, days_total]
               properties:
-                goal_text: { type: string, minLength: 5, maxLength: 500 }
-                target_lang:
-                  type: string
-                  minLength: 2
-                  maxLength: 5
-                  nullable: true
-                  description: >-
-                    OPTIONAL, and its absence is a question rather than an omission: without it the
-                    call is the goal step asking for continuations alone. Present-but-unsupported is
-                    still a 422.
-                level: { type: string, enum: [zero, basic, conversational, fluent] }
+                goal_text: { type: string, minLength: 1, maxLength: 1000 }
+                target_lang: { type: string, pattern: '^[a-z]{2,5}$' }
+                level: { type: string, enum: [beginner, intermediate] }
+                days_total: { type: integer, minimum: 1, maximum: 10 }
+                event_date: { type: [string, 'null'], format: date, description: 'YYYY-MM-DD in the learner''s own calendar; null or absent = no date' }
+      responses:
+        '202': { $ref: '#/components/responses/PlanBuild' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /plans/current:
+    get:
+      tags: [Plans]
+      summary: The live plan for the tab, or null
+      description: The active or overdue plan, whole. `data` is null when the learner has no live plan.
       responses:
         '200':
-          description: >-
-            OK. Either half may be empty; an empty one means that block is not shown. A call made
-            without `target_lang` always answers with an empty `lines`.
+          description: The live plan or null
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data:
-                    type: object
-                    required: [lines, continuations]
-                    properties:
-                      lines:
-                        type: array
-                        maxItems: 3
-                        items:
-                          type: object
-                          properties:
-                            text:
-                              type: string
-                              description: The line, in the studied language. Spoken by the TTS.
-                            translation:
-                              type: string
-                              description: Shown only behind «Показать текст».
-                            place:
-                              type: string
-                              description: >-
-                                2–4 words naming where it sounds — «на стойке», «по телефону». The
-                                надзаголовок over the play button. Prose from the model, rendered
-                                and never matched.
-                      continuations:
-                        type: array
-                        maxItems: 2
-                        description: >-
-                          «Дописать за тебя» — the learner's own goal carried a little further, in
-                          the support language. Tapping one appends it to what they typed.
-                        items: { type: string }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '422': { $ref: '#/components/responses/ValidationError' }
-
-  /plans/active:
-    get:
-      tags: [Plans]
-      summary: The plan the learner is currently on
-      description: >-
-        The one plan in a HOLDING state — `active`, or `paused` if there is no active one. 204 when
-        there is none. One active plan per learner: a plan takes over the day and holds words in
-        the pool, and two of them fight over both.
-      responses:
-        '200': { $ref: '#/components/responses/Plan' }
-        '204': { description: No plan is running }
+                    oneOf:
+                      - $ref: '#/components/schemas/Plan'
+                      - type: 'null'
         '401': { $ref: '#/components/responses/Unauthorized' }
 
-  /plans/{planId}:
+  /plans/versions:
     get:
       tags: [Plans]
-      summary: One plan, whole
-      description: >-
-        Structure, days, the server's arithmetic and readiness, in one read. A plan belonging to
-        another learner answers 404 and not 403 — whether a given ULID exists is not something a
-        stranger gets to find out.
-      parameters:
-        - $ref: '#/components/parameters/PlanId'
-      responses:
-        '200': { $ref: '#/components/responses/Plan' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such plan for this learner }
-
-  /plans/{planId}/days/{dayIndex}:
-    get:
-      tags: [Plans]
-      summary: One day of a plan, with its register
-      description: >-
-        The day, plus the plan's binding lists beside it (`entities`, `constraints`, `goal_terms`)
-        — a client rendering one day needs them, and a second request for the plan to get them
-        would be a round trip for data the server already had in hand.
-
-        `terms` is the day's REGISTER: its own phrases and words first, then everything still in
-        flight from earlier days (`from_day_index` smaller than this day's), each with the STAGE it
-        stands on. The stage is why this cannot be a collection id the client resolves against its
-        own mirror: a stage is stored nowhere. It is a pure function of the review log, computed on
-        every read, and the device's mirror holds answers rather than stages.
-      parameters:
-        - $ref: '#/components/parameters/PlanId'
-        - name: dayIndex
-          in: path
-          required: true
-          schema: { type: integer, minimum: 1 }
+      summary: Which server build and which prompt files are answering
       responses:
         '200':
-          description: OK
+          description: Versions
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  data: { $ref: '#/components/schemas/PlanDay' }
+                  data: { $ref: '#/components/schemas/PlanVersions' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such day }
 
-  /audio/lines/{audioId}:
+  /plans/audio/{audioId}:
     get:
       tags: [Plans]
-      summary: The server's recording of one line
+      summary: The partner's line as an audio file
       description: >-
-        The audio a line is played with (наряд TTS-1). Addresses come from `audio_url` on a plan
-        day's terms and on a sitting's dialogue turns — a client never builds one itself.
-
-        The body is `audio/mpeg` (or `audio/wav`, when the language pack's voice is a vendor that
-        returns raw PCM). Content at an address never changes: the id identifies (line, voice, pace),
-        so a new voice is a new address rather than new bytes at the old one. That is why the answer
-        is `immutable` and why a downloaded file may be cached for as long as the device likes.
+        The id a card's `audio_id` (and a dialogue exchange's `audio_id`) names. `audio/mpeg`
+        normally, `audio/wav` when the build had no encoder. Immutable — cache it forever.
       parameters:
         - name: audioId
           in: path
@@ -1993,401 +1795,120 @@ paths:
           schema: { type: string, minLength: 26, maxLength: 26 }
       responses:
         '200':
-          description: The audio file
+          description: The audio bytes
           content:
-            audio/mpeg:
-              schema: { type: string, format: binary }
+            audio/mpeg: { schema: { type: string, format: binary } }
+            audio/wav: { schema: { type: string, format: binary } }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: 'No such recording, or its file is gone' }
+        '404': { description: No such line }
 
-  /plans/{planId}/days/{dayIndex}/rebuild:
-    post:
-      tags: [Plans]
-      summary: One more attempt for a day that burned
-      description: >-
-        «Собрать заново». A day gets two paid calls and is then `failed`, and until this existed the
-        only move left on the screen was «Собрать план заново» — which throws away every day already
-        walked and buys a new skeleton.
-
-        Gives the day ONE attempt back and queues it. A day that is not `failed` is not touched:
-        the response is whatever status it already has, so a second tap costs nothing. Never
-        automatic and never polled — this endpoint spends money, which is why it is not a flag on
-        `…/generate`.
-      parameters:
-        - $ref: '#/components/parameters/PlanId'
-        - name: dayIndex
-          in: path
-          required: true
-          schema: { type: integer, minimum: 1 }
-      responses:
-        '200':
-          description: The day's status after the call
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      day_index: { type: integer }
-                      status: { type: string, enum: [pending, generating, ready, failed, done] }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: 'No such day, or the final day — it writes no material' }
-
-  /plans/{planId}/rehearsal:
-    post:
-      tags: [Plans]
-      summary: The three minutes before the event
-      description: >-
-        Every PHRASE the plan taught, in day order, each with the line the interlocutor says before
-        it (`role.opening_lines[0]` of that day — the only place in the outline that holds real
-        utterances by the other side).
-
-        Words are deliberately absent. The screen this feeds is three minutes long, and what three
-        minutes buy is hearing yourself say the sentences, not being tested on the vocabulary inside
-        them.
-
-        A POST because it is an ACT the learner performs and because it costs a content read per
-        day — not a resource anybody should be free to poll. It WRITES NOTHING: a rehearsal
-        schedules nothing and closes no stage.
-      parameters:
-        - $ref: '#/components/parameters/PlanId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data: { $ref: '#/components/schemas/PlanRehearsal' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such plan for this learner }
-
-  /plans/{planId}/session:
-    post:
-      tags: [Plans]
-      summary: Today's sitting of this plan
-      description: >-
-        THE DAY, ASSEMBLED. A self-contained package like `POST /study/sessions`, plus the plan's own
-        envelope around every card: which stage this is, where in the stage, which day the card came
-        from, what part of the sitting it belongs to and how strict the learner's own turn is.
-
-        Two shapes on purpose. Without a day index the server answers with the day the learner is
-        actually ON — the focus is the server's to know, so it must be askable without recomputing it
-        on the device. With one, the client names the day it is showing.
-
-        The CONVERSATIONS come whole (`dialogues`), and they are longer than the task list: the
-        screen plays the scene from its first line and hands the learner a move only where a task
-        with the same `term_id` exists.
-      parameters:
-        - $ref: '#/components/parameters/PlanId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data: { $ref: '#/components/schemas/PlanSession' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such plan or day for this learner }
-        '409':
-          description: >-
-            `plan_day_locked` — день ещё закрыт, пока не пройден предыдущий (наряд DAY-GATE-1,
-            решение 293); `meta.blocked_by_day` называет номер того, который держит, и клиент говорит
-            об этом своими словами. Тот же код — на этап, названный не по очереди (`meta.stage`).
-
-            `plan_sitting_empty` — собирать нечего (решение 295). На НЕ пройденном этапе такого быть
-            не может по построению: этап текущий ровно тогда, когда он что-то должен. Остаётся один
-            законный случай — спек есть, а карточку сборщик построить не смог, — и о нём сервер
-            говорит кодом, а не пустой лентой: живой прогон 07.09 оставил одну сессию из единственной
-            интро-карточки и шесть пустых незакрытых подряд.
-
-  /plans/{planId}/days/{dayIndex}/session:
-    post:
-      tags: [Plans]
-      summary: The sitting of one named day
-      description: 'The same package as `POST /plans/{planId}/session`, for the day the client names.'
-      parameters:
-        - $ref: '#/components/parameters/PlanId'
-        - name: dayIndex
-          in: path
-          required: true
-          schema: { type: integer }
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                stage:
-                  type: string
-                  enum: [retrain]
-                  description: >-
-                    КАКОЙ ЭТАП СОБРАТЬ. Без поля сервер собирает ТЕКУЩИЙ — это и есть «Продолжить».
-                    Клиент называет этап ровно в одном случае: `retrain` («Повторить ошибки»),
-                    единственная дверь не по порядку и единственное исключение из показа раз в день
-                    — один дополнительный показ промахнувшейся сегодня реплики (решение 295).
-                    Запертый этап отбивается 409, а не подменяется текущим молча.
-                session_id:
-                  type: string
-                  description: 'ULID, если посадку начинает клиент.'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data: { $ref: '#/components/schemas/PlanSession' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such plan or day for this learner }
-        '409':
-          description: >-
-            `plan_day_locked` — день ещё закрыт, пока не пройден предыдущий (наряд DAY-GATE-1,
-            решение 293); `meta.blocked_by_day` называет номер того, который держит, и клиент говорит
-            об этом своими словами. Тот же код — на этап, названный не по очереди (`meta.stage`).
-
-            `plan_sitting_empty` — собирать нечего (решение 295). На НЕ пройденном этапе такого быть
-            не может по построению: этап текущий ровно тогда, когда он что-то должен. Остаётся один
-            законный случай — спек есть, а карточку сборщик построить не смог, — и о нём сервер
-            говорит кодом, а не пустой лентой: живой прогон 07.09 оставил одну сессию из единственной
-            интро-карточки и шесть пустых незакрытых подряд.
-
-  /plans/{planId}/scene-runs:
-    post:
-      tags: [Plans]
-      summary: A finished run of one scene — stage C, spoken
-      description: >-
-        THE LAST RUNG OF THE LADDER, reported once per finished run (наряд SCENE-RUN, Ч.2).
-
-        The client sends WHAT HAPPENED on each turn and no computed number at all. «Прошёл сам 2 из
-        4 · сразу 1» is what the learner is shown and what the scene's maturity is later read from,
-        and a number counted on the phone would be a second source of truth about what they achieved
-        — the first one that could disagree with the plan screen.
-
-        The ANSWERS of the run are not here: each turn has already travelled through
-        `POST /reviews/batch` as an ordinary review — said is `speaking`/good, skipped is
-        `speaking`/again, the same semantics as speaking a phrase. Sending them again would put one
-        answer into an append-only log twice.
-
-        Two rows are written, and they say different things: the run itself is an EVENT and is never
-        edited, while the (plan, term) pair keeps the BEST result — one run in which the learner was
-        tired does not take away a line they have already said aloud.
-      parameters:
-        - $ref: '#/components/parameters/PlanId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                scene_index:
-                  type: integer
-                  description: 'The scene that was run — the index of the day that introduced it.'
-                day_index:
-                  type: integer
-                  description: >-
-                    The day the run HAPPENED on. The same number as `scene_index` on an ordinary
-                    day and a different one on the last, where every scene is run in a row.
-                turns:
-                  type: array
-                  minItems: 1
-                  maxItems: 40
-                  items:
-                    type: object
-                    properties:
-                      term_id: { type: string }
-                      outcome:
-                        type: string
-                        enum: [said, said_fast, skipped, rescued]
-                        description: >-
-                          `said` — the line's key sounded in the learner's own voice; `said_fast` —
-                          and it sounded straight away (`plan.scene_run.fast_seconds`); `skipped` —
-                          «Пропустить», by hand or by the watchdog; `rescued` — the turn was made
-                          with a rescue phrase, which is not a mistake (канон §8) and not «сам».
-                    required: [term_id, outcome]
-              required: [scene_index, day_index, turns]
-      responses:
-        '201':
-          description: The run, as the server counted it
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      scene_index: { type: integer }
-                      day_index: { type: integer }
-                      total: { type: integer }
-                      said: { type: integer }
-                      said_fast: { type: integer }
-                      skipped: { type: integer }
-                      rescued: { type: integer }
-                    required: [scene_index, day_index, total, said, said_fast, skipped, rescued]
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such plan for this learner }
-        '422': { $ref: '#/components/responses/ValidationError' }
-
-  /qa/plan-clock:
+  /plans/{id}:
     get:
       tags: [Plans]
-      summary: 'QA (non-prod): how many days the account''s «today» is shifted by'
-      description: >-
-        THE DEV DOOR FOR CHANGING DAYS (наряд DAY-FIX-2). A plan's ladder is measured in days, and
-        a live run of «день 1 → день 2 → финал» cannot be walked in an afternoon without moving the
-        clock. This moves the CLOCK of one QA account by N days — kept beside the account, never
-        written into a table — behind the SAME door as the password-less sign-in and the transcript
-        substitution: `is_qa` AND a non-production environment with the flag on. Everybody else
-        gets a 404, exactly as for a stranger's plan id.
-
-        While a shift is set, every request of the account sees «today» N days ahead, and the
-        dates the client stamps on reviews and exposures are shifted the same way on the way in —
-        so the phone and the server live in one calendar.
-      responses:
-        '200':
-          description: The current shift
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      days: { type: integer }
-                    required: [days]
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: The door is shut for this account }
-    post:
-      tags: [Plans]
-      summary: 'QA (non-prod): shift the account''s «today» by N days (0 clears it)'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                days: { type: integer, minimum: -60, maximum: 60 }
-              required: [days]
-      responses:
-        '200':
-          description: The shift as stored
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      days: { type: integer }
-                    required: [days]
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: The door is shut for this account }
-        '422': { $ref: '#/components/responses/ValidationError' }
-
-  /plans/{planId}/feedback:
-    post:
-      tags: [Plans]
-      summary: «Как прошло?» — and the plan closes
-      description: >-
-        Which of the plan's checkpoints the learner actually used at the event, by POSITION in
-        `can_already`. It is the one fact about a plan that cannot be derived from anything else:
-        it happened in a room the app was not in.
-
-        It also COMPLETES the plan, and the two are one call on purpose — a plan whose event is
-        over and which is still running goes on holding its words out of the ordinary day, for an
-        appointment that has already happened. Completing releases them, which is «18 слов ушли в
-        общее повторение».
-
-        Idempotent: a second tap on the notification, or an offline retry, replaces the report and
-        leaves the already-completed plan alone.
-      parameters:
-        - $ref: '#/components/parameters/PlanId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [checkpoints]
-              properties:
-                checkpoints:
-                  type: array
-                  items: { type: integer, minimum: 0, maximum: 99 }
-                  description: >-
-                    Positions in `can_already`. An EMPTY array is a legitimate answer («ничего не
-                    пригодилось») and is stored as such — the column is nullable so that «asked and
-                    used nothing» stays tellable from «never asked».
-      responses:
-        '200': { $ref: '#/components/responses/Plan' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such plan for this learner }
-        '422':
-          description: Invalid input
-          content:
-            application/problem+json:
-              schema: { $ref: '#/components/schemas/Problem' }
-
-  /plans/{planId}/outline:
-    post:
-      tags: [Plans]
-      summary: Build the skeleton (P1 + the scheduler)
-      description: >-
-        Asks the model what the goal is MADE OF — its parts, the person on the other side of each
-        conversation, what has to be heard for each promise to count — and then lays those days on
-        the calendar itself. The model is TOLD how many days there are; it is never asked to work
-        them out, because a model asked «how many days until the 12th» answers plausibly, and
-        plausible is the one thing a deadline cannot use.
-
-        Synchronous, unlike collection generation: this is the screen the learner is waiting on
-        before they commit, and «мы вам сообщим» on the first screen of a feature is how the
-        feature does not get used. About ten seconds.
-
-        Re-running REBUILDS the skeleton — which is why it is a POST. Allowed on a draft only.
+      summary: The plan, whole — preview and tab alike
       parameters:
         - $ref: '#/components/parameters/PlanId'
       responses:
         '200': { $ref: '#/components/responses/Plan' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such plan for this learner }
-        '409':
-          description: >-
-            `invalid_plan_transition` — the plan is not a draft. Re-outlining a running plan would
-            swap the material under a learner who is halfway through it.
-          content:
-            application/problem+json:
-              schema: { $ref: '#/components/schemas/Problem' }
-        '502':
-          description: >-
-            `plan_outline_refused` — the vendor failed, or its answer did not survive the
-            validator. `meta.violations` names what was wrong. Nothing is broken here; the right
-            button is «попробовать ещё раз».
-          content:
-            application/problem+json:
-              schema: { $ref: '#/components/schemas/Problem' }
+    delete:
+      tags: [Plans]
+      summary: Delete the plan (menu «Удалить»)
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '204': { description: Deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
 
+  /plans/{id}/build:
+    get:
+      tags: [Plans]
+      summary: Poll the plan build
+      description: >-
+        `status` is `building` while the model is asked, then `ready`, `unclear` (the goal names
+        no situation — a legitimate answer, with `unclear_reason`) or `failed` (the model refused
+        twice, or the vendor was unreachable, or the build never came back within the stale
+        window). `unclear` and `failed` may be retried with `POST /plans/{id}/build/retry`.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200': { $ref: '#/components/responses/PlanBuild' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+
+  /plans/{id}/build/retry:
+    post:
+      tags: [Plans]
+      summary: Ask the model again after an unclear or failed build
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '202': { $ref: '#/components/responses/PlanBuild' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+        '409': { description: 'The plan is not in a retryable state (`plan_state`)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+
+  /plans/{id}/scenes/{sceneId}:
+    delete:
+      tags: [Plans]
+      summary: Remove a scene in the preview
+      description: >-
+        Allowed on a `ready` plan only. The scene's day becomes a review day; the plan keeps its
+        length. The core scene (priority 1) cannot be removed — 409 `plan_core_scene`.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - name: sceneId
+          in: path
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan or scene }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /plans/{id}/scenes/{sceneId}/lesson/retry:
+    post:
+      tags: [Plans]
+      summary: Ask the model for a failed lesson again
+      description: The learner's explicit retry of a scene whose `lesson_status` is `failed` (or stuck in `building` past the stale window).
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - name: sceneId
+          in: path
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+      responses:
+        '202': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan or scene }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /plans/{id}/start:
+    post:
+      tags: [Plans]
+      summary: «Начать» — the plan goes live, day one opens today
+      description: One live plan per learner — 409 `plan_already_active` names the one that holds the place. Only a `ready` plan starts (409 `plan_state`).
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /plans/{id}/schedule:
     patch:
       tags: [Plans]
-      summary: Adjust the plan — fewer minutes, another date, one day fewer
+      summary: «Перенести дату» / a different number of days
       description: >-
-        The scheduler runs again over the SAME model answer. NO model call, so adjusting is free
-        and can be done as often as the learner likes. That is the whole reason the model's answer
-        and the server's arithmetic are stored apart.
-
-        At least one field must be present. `drop_day_index` removes one day's abilities and
-        re-packs the rest around the hole; the stored skeleton moves with it, so the next
-        adjustment does not bring the day back.
+        Either half may be sent alone. `event_date: null` clears the date; a missing key leaves it.
+        A shorter plan drops scenes by the rule (variants first, then the highest priority number,
+        never the core); a longer plan asks the model for the missing scenes with the existing ones
+        as context — the new scene days show `lesson_status: pending` until the extension answers.
+        Days already opened or closed are never cut (409 `plan_too_short`).
       parameters:
         - $ref: '#/components/parameters/PlanId'
       requestBody:
@@ -2396,96 +1917,168 @@ paths:
           application/json:
             schema:
               type: object
-              minProperties: 1
               properties:
-                minutes_per_day: { type: integer, minimum: 5, maximum: 120 }
-                event_date: { type: string, format: date, nullable: true, description: NULL = «Без даты» — see POST /plans. }
-                drop_day_index: { type: integer, minimum: 1 }
+                event_date: { type: [string, 'null'], format: date }
+                days_total: { type: integer, minimum: 1, maximum: 10 }
       responses:
         '200': { $ref: '#/components/responses/Plan' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such plan for this learner }
-        '422': { description: 'Nothing to change, or the last teaching day was dropped' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
-  /plans/{planId}/start:
+  /plans/{id}/finish:
     post:
       tags: [Plans]
-      summary: Commit to the plan
-      description: >-
-        The moment it stops being a document. Day 1 goes into the queue; its words are enrolled
-        strictly when it is ready, and cannot be removed while the plan runs.
-
-        ONE day is queued, never a fan-out: day 2 is written with day 1's terms in its KNOWN block
-        and cannot exist before them, a fan-out would spend the whole plan's money before the
-        learner has looked at one day, and a plan whose day 1 came back broken should stop rather
-        than produce four more broken days.
+      summary: «Завершить» — close a live (or overdue) plan
       parameters:
         - $ref: '#/components/parameters/PlanId'
       responses:
         '200': { $ref: '#/components/responses/Plan' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such plan for this learner }
-        '409':
-          description: >-
-            `plan_already_active` (another plan is running — `meta.active_plan_id` names it) or
-            `invalid_plan_transition` (this one cannot be started from where it is).
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /plans/{id}/days/{number}:
+    get:
+      tags: [Plans]
+      summary: «Кабинет дня» — header, goals, stages with progress, statistics, program
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanDayNumber'
+      responses:
+        '200': { $ref: '#/components/responses/PlanDayRoom' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan or day }
+
+  /plans/{id}/days/{number}/open:
+    post:
+      tags: [Plans]
+      summary: «Открыть» / «Продолжить» — the day's full card list
+      description: >-
+        The first call deals the cards (the composition is fixed before the day starts, docs/plan-v2.md §6);
+        every call returns the whole list with each card's state, so a client that reconnects holds
+        the day. Opening day N queues the lesson of the next scene day. 409 `plan_day_locked` while
+        the previous day is not closed (`meta.blocked_by_day`) or the calendar has not turned
+        (`meta.opens_on`); 409 `plan_lesson_not_ready` while the scene's lesson is building or
+        failed (`meta.lesson_status`).
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanDayNumber'
+      responses:
+        '200': { $ref: '#/components/responses/PlanDayCards' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan or day }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /plans/{id}/days/{number}/cards:
+    get:
+      tags: [Plans]
+      summary: The day's cards as they stand
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanDayNumber'
+      responses:
+        '200': { $ref: '#/components/responses/PlanDayCards' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan or day }
+
+  /plans/{id}/days/{number}/cards/{cardId}/answer:
+    post:
+      tags: [Plans]
+      summary: Record the answer to one card
+      description: >-
+        The client grades (the payload carries everything needed) and reports the verdict. A first
+        `failed` on a unit deals the same card again at the end of its stage — it comes back as
+        `requeued`, with a new id and position; a second `failed` stays and marks the unit to return
+        on the next content day (`returns: true`). `skipped` is a spoken card given up on after two
+        attempts: neither consequence. A card answered once is refused again (409 `plan_card_answered`).
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanDayNumber'
+        - name: cardId
+          in: path
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [result, attempts]
+              properties:
+                result: { type: string, enum: [passed, hinted, failed, skipped] }
+                attempts: { type: integer, minimum: 1, maximum: 20 }
+      responses:
+        '200':
+          description: The answered card and the requeued one, if any
           content:
-            application/problem+json:
-              schema: { $ref: '#/components/schemas/Problem' }
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PlanAnswerOutcome' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'No such plan, day or card' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
-  /plans/{planId}/pause:
+  /plans/{id}/days/{number}/stages/{stage}/close:
     post:
       tags: [Plans]
-      summary: Put the plan down
-      description: >-
-        Generates nothing and KEEPS holding its words. Pause means «я вернусь», and coming back to
-        a plan whose words were let go one at a time is coming back to a different plan.
+      summary: «Этап пройден» — verified, not trusted
+      description: Refused with 409 `plan_stage_incomplete` (`meta.remaining`) while a card of the stage is unanswered. Returns the room.
       parameters:
         - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanDayNumber'
+        - name: stage
+          in: path
+          required: true
+          schema: { type: string, enum: [words, phrases, dialogue, listen, speak] }
       responses:
-        '200': { $ref: '#/components/responses/Plan' }
+        '200': { $ref: '#/components/responses/PlanDayRoom' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such plan for this learner }
-        '409': { description: The plan is not running }
+        '404': { description: 'No such plan, day or stage' }
+        '409': { $ref: '#/components/responses/Problem' }
 
-  /plans/{planId}/abandon:
+  /plans/{id}/days/{number}/close:
     post:
       tags: [Plans]
-      summary: Give up on the plan
+      summary: «День пройден» — metrics written, words filed, tomorrow unlocked
       description: >-
-        Terminal, and it RELEASES the hold: the plan's reason comes off every pair it claimed and
-        the words stay in the pool as ordinary words, with their rung, their schedule and their
-        history intact. Releasing is not unenrolling — the learner spent days on these words, and
-        what changes is that they may now remove them.
+        Every card must be answered (409 `plan_stage_incomplete` otherwise). The day's words and
+        phrases go into the plan's collection (`Plan.collection_id`, origin `plan`, hidden from
+        «Мои коллекции»); the next day opens no earlier than the next calendar day in the learner's
+        zone; the next scene day's lesson is queued if it is not there yet. Returns the room with
+        `metrics` filled.
       parameters:
         - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanDayNumber'
       responses:
-        '200': { $ref: '#/components/responses/Plan' }
+        '200': { $ref: '#/components/responses/PlanDayRoom' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such plan for this learner }
-        '409': { description: The plan has already ended }
+        '404': { description: No such plan or day }
+        '409': { $ref: '#/components/responses/Problem' }
 
-  /plans/{planId}/complete:
-    post:
+  /plans/{id}/days/{number}/sheet:
+    get:
       tags: [Plans]
-      summary: «Подготовка завершена» — the plan run to its end
-      description: >-
-        Terminal, and the same ARCHIVE `abandon` performs: the plan's reason comes off every pair it
-        claimed, and a pair with no other reason left leaves the pool with it. Everything is kept —
-        the days, the cards, the whole review log — and what the learner wants out of it they add
-        back to «Учить» themselves.
-
-
-        The morning-of counterpart to `feedback`, which closes the plan the evening AFTER the event.
-        Without it a learner who walked the final day's rehearsal had nowhere to say the plan was
-        finished, and the final day could not be passed from the app at all (Д-27).
+      summary: «Шит» — the day's words and phrases as a list
       parameters:
         - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanDayNumber'
       responses:
-        '200': { $ref: '#/components/responses/Plan' }
+        '200':
+          description: The sheet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PlanSheet' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such plan for this learner }
-        '409': { description: The plan has already ended — the client reads this as «already done» }
+        '404': { description: No such plan or day }
 
   /sync/cursor:
     get:
@@ -2859,10 +2452,15 @@ components:
       required: true
       schema: { type: string, minLength: 26, maxLength: 26 }
     PlanId:
-      name: planId
+      name: id
       in: path
       required: true
       schema: { type: string, minLength: 26, maxLength: 26 }
+    PlanDayNumber:
+      name: number
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1, maximum: 10 }
 
   responses:
     Unauthorized:
@@ -2900,6 +2498,30 @@ components:
             type: object
             properties:
               data: { $ref: '#/components/schemas/Plan' }
+    PlanBuild:
+      description: The build status
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { $ref: '#/components/schemas/PlanBuild' }
+    PlanDayRoom:
+      description: The day's room
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { $ref: '#/components/schemas/PlanDayRoom' }
+    PlanDayCards:
+      description: The day's cards
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { $ref: '#/components/schemas/PlanDayCards' }
     ValidationError:
       description: Input validation failed (Laravel shape)
       content:
@@ -2915,463 +2537,339 @@ components:
                   items: { type: string }
 
   schemas:
-    Plan:
+    PlanVersions:
       type: object
-      description: >-
-        A learning plan: one goal, one event date, and the days the SERVER computed between them.
-      required: [id, status, title, goal_text, support_lang, target_lang, level, event_date, minutes_per_day, days]
+      description: Which server build and which prompt files are answering — stamped on every plan and lesson.
+      required: [build, prompt_plan, prompt_lesson]
+      properties:
+        build: { type: string, description: 'The server build (commit), `unknown` when not stamped' }
+        prompt_plan: { type: string, description: 'The plan builder prompt file''s version, e.g. `plan-builder-v2`' }
+        prompt_lesson: { type: string, description: 'The lesson prompt file''s version, e.g. `lesson-v3`' }
+
+    PlanBuild:
+      type: object
+      description: What the client polls after creating a plan.
+      required: [id, status, scenes_count, versions]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
-        status:
-          type: string
-          enum: [draft, active, paused, completed, abandoned]
-          description: >-
-            `active` and `paused` both HOLD the plan's words in the pool. `completed` and
-            `abandoned` release them; the words stay, only the plan's claim on them goes.
-        title: { type: string }
-        goal_text:
-          type: string
-          description: What the learner typed, verbatim.
-        goal_restated:
-          type: [string, 'null']
-          description: >-
-            The same goal as the model read it back, in one sentence. Stored beside the original
-            rather than instead of it, because «я такого не просил» is only answerable with both.
-        support_lang:
-          type: string
-          description: >-
-            The learner's own language, AS THIS PLAN IS WRITTEN IN IT. Carried by the plan rather
-            than read from the account at use time: a plan runs for days, and its skeleton, its
-            keys and its grading are all in this language. It follows the account while the plan is
-            a draft and is FROZEN when the plan starts, so changing the account language mid-plan
-            cannot make day 4 arrive in a different language from days 1–3.
-        target_lang: { type: string }
-        level: { type: string, enum: [zero, basic, conversational, fluent] }
-        event_date: { type: string, format: date, nullable: true, description: NULL = «Без даты» — see POST /plans. }
-        minutes_per_day: { type: integer }
-        started_at: { type: [string, 'null'], format: date-time }
-        completed_at: { type: [string, 'null'], format: date-time }
-        readiness:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: >-
-            How ready the learner is, 0…1 — the share of SCENES they say themselves and say
-            straight away (канон §4, «C + скорость»; наряд SCENE-RUN, Ч.3). The unit of count is a
-            scene rather than a card, and that is the canon too: a conversation cannot be half
-            passed. The denominator is the scenes the plan set out to teach, not the ones already
-            written, so a new day never makes readiness fall (Д-31). NOT drawn as a percentage on
-            any plan screen — those speak in words; this is for the API and the admin panel.
-        stage_census:
-          type: object
-          description: >-
-            HOW MANY CARDS THE PLAN HAS WRITTEN, AND HOW MANY HAVE CLOSED STAGE A — the plain count
-            beside `readiness`, and what the plan card shows until the canonical formula arrives
-            with P2-v0.4/SIT-1. Readiness counts the cards that reached their LAST stage (a line
-            after B, a word after C), so a day that closes stage A moves its cards ONTO stage B and
-            the percentage honestly stays at zero for the first days of a plan. Computed from the
-            same standings as `readiness`, so the two can never tell different stories.
-          properties:
-            total: { type: integer, description: 'cards of the days that have been written' }
-            stage_a_closed:
-              type: integer
-              description: >-
-                Of those, how many are past stage A or standing on it with every trainer ticked.
-                The second half matters on the day itself: the stage closes in the sitting and the
-                card only LEAVES A after the night.
-          required: [total, stage_a_closed]
-        scenes:
-          type: array
-          description: >-
-            THE MATURITY OF EVERY SCENE, in three words, and the result of its last run (наряд
-            SCENE-RUN, Ч.3). The plan screen prints the word; the number lives in `readiness`.
-          items:
-            type: object
-            properties:
-              day_index: { type: integer, description: 'the day that introduced this scene' }
-              maturity:
-                type: string
-                enum: [met, applying, speaking]
-                description: >-
-                  «Познакомился → применяю → говорю сам» (`docs/plan-dialogue.md` §2). `speaking`
-                  means every turn of the scene has sounded in the learner's own voice during a
-                  run; a skipped turn and one made by a rescue phrase both leave the scene where it
-                  was. Read as an OPEN set — an unknown code should degrade to `met`.
-              ready:
-                type: boolean
-                description: >-
-                  «C + скорость»: the scene is `speaking` AND enough of its turns came straight
-                  away (`config/learning.php → plan.scene_run.ready_fast_share`). A scene said
-                  slowly is honest maturity and not yet readiness.
-              run:
-                type: [object, 'null']
-                description: >-
-                  The LAST run of this scene, or null if it has never been run. The last one and
-                  not the best one: this line describes a run the learner just finished, while
-                  «best ever» lives on the (plan, term) pair.
-                properties:
-                  total: { type: integer }
-                  said: { type: integer, description: 'turns the learner said in their own voice' }
-                  said_fast: { type: integer, description: 'of those, how many came straight away' }
-                  skipped: { type: integer }
-                  rescued: { type: integer, description: 'made with a rescue phrase — not a mistake, not «сам»' }
-                required: [total, said, said_fast, skipped, rescued]
-            required: [day_index, maturity, ready]
-        entities:
-          type: array
-          description: >-
-            The beings and objects the goal is about, with their gender and number. Binding on
-            every day: «везу кота» is masculine singular, and a day full of «кошка» is a plan about
-            somebody else's animal.
-          items:
-            type: object
-            properties:
-              name: { type: string }
-              gender: { type: string }
-              number: { type: string }
-              note: { type: string }
-        constraints:
-          type: array
-          items: { type: string }
-          description: >-
-            The qualifiers that change the job — «удалённо», «английская команда», «сегодня». Each
-            one is the subject of at least one day's promise.
-        goal_terms:
-          type: array
-          items: { type: string }
-          description: >-
-            Latin-alphabet names the learner typed themselves (`PHP`, `API`, `Laravel`). Verbatim
-            in BOTH languages everywhere; never translated, never a card of their own. The ONE
-            field where they change form is the reading hint, where they are written as they are
-            spoken (`API` → «эй-пи-ай») — that field exists for a learner who cannot read the Latin
-            letters yet, so leaving them untouched there would defeat it.
-        computed:
-          type: [object, 'null']
-          additionalProperties: true
-          description: >-
-            The server's arithmetic, verbatim — `need`, `capacity`, `max_days`, `intro_days`,
-            `rest_days`, `fits`, `spacing`, `final_same_day`, `dropped_skills`, `days`. Nothing is
-            cut silently, so `fits: false` with a populated `dropped_skills` is what the «срок мал»
-            card is built from.
-        days:
-          type: array
-          items: { $ref: '#/components/schemas/PlanDay' }
-    PlanDayStage:
-      type: object
-      description: >-
-        ОДИН ЭТАП ДНЯ И ЕГО СОСТОЯНИЕ (наряд DAY-GATE-1, решение 291). «Этап пройден» значит ПРОЙДЕН
-        НАСКВОЗЬ: все его карточки показаны и отвечены — верно или нет. Лестница пары (A/B/C) и
-        прохождение дня разные вещи, и реплика, сказанная неверно, день не держит: она вернётся
-        завтра разогревом и швом, а сегодня её можно взять ещё раз через `retrain`.
-      required: [stage, state, opens_after]
-      properties:
-        stage:
-          type: string
-          enum: [material, conversation, rehearsal, retrain]
-          description: >-
-            `material` — «Слова и фразы» (разогрев, слова, связки, знакомство с репликами);
-            `conversation` — «Разговор» (ступень B реплик сцены, своей и шва); `rehearsal` — «Скажи
-            сам» (прогон сцены голосом); `retrain` — «Повторить ошибки», НЕОБЯЗАТЕЛЬНЫЙ: день не
-            держит, «пройден» от него не зависит, и в списке его нет, когда повторять нечего.
-        state:
-          type: string
-          enum: [done, current, locked]
-          description: >-
-            «пройдено» / «сейчас» / «после <предыдущего>». `current` ровно один на день, пока день не
-            пройден; `retrain` приходит с `current`, когда есть что повторять.
-        opens_after:
-          type: string
-          nullable: true
-          enum: [material, conversation, null]
-          description: >-
-            Этап, после которого этот открывается, — чтобы экран сказал «после разговора», а не
-            «закрыт». Едет всегда, а не только у запертого: «после чего» это свойство этапа. Null у
-            `material` и у `retrain`.
-    PlanDay:
-      type: object
-      description: >-
-        One day. An `intro` day teaches and OWNS an ordinary collection — which is why every
-        trainer and every exercise mode work on it without knowing plans exist. The `final` day
-        introduces nothing and owns no collection.
-      required: [id, index, kind, title, status]
-      properties:
-        id: { type: string, minLength: 26, maxLength: 26 }
-        index: { type: integer, minimum: 1 }
-        kind: { type: string, enum: [intro, final] }
-        title: { type: string }
-        intro:
-          type: [string, 'null']
-          description: >-
-            The SCENE in two or three sentences, in the language the learner already speaks: where
-            they are, who is opposite them, what is at stake. Since v0.4 a day is one whole scene,
-            and this is the only text of it written to be READ rather than played — the day screen
-            prints it above the register, and the preview prints it under the day's title. Null on
-            the final day and on any day of a plan built before v0.4.
-        scheduled_on: { type: [string, 'null'], format: date }
-        collection_id:
-          type: [string, 'null']
-          description: Null on the final day, and until an intro day is `ready`.
-        status:
-          type: string
-          enum: [pending, generating, ready, failed, done]
-          description: >-
-            `pending` — nothing has claimed this day yet (it may or may not be queued);
-            `generating` — a worker holds it right now, which is the only thing that writes this
-            value; `ready` — the material exists; `failed` — both day calls are spent; `done` — the
-            learner walked it. A client must not say «собирается» over a `pending` day: the live run
-            labelled two untouched days that way and neither was being built (Д-20).
-        generation_attempts:
-          type: integer
-          description: >-
-            DAY calls (P2), not failures, and the cap is two. A day that failed the validator twice
-            is a thing a person looks at — retrying it silently is how a broken prompt spends a
-            plan's whole budget on one day. Repair calls are counted separately and do not spend an
-            attempt (Д-18).
+        status: { type: string, enum: [building, unclear, failed, ready, active, finished, overdue] }
+        unclear_reason: { type: [string, 'null'], description: 'The model''s one sentence (English, for the log) when the goal is not a situation' }
         fail_reason: { type: [string, 'null'] }
-        fail_code:
-          type: [string, 'null']
-          description: >-
-            The first fatal violation's CODE — `day.example_is_a_term`, `outline.target_language`
-            and the rest. Null unless `status` is `failed`. The client switches on this and words
-            the reason itself; `fail_reason` is Russian prose for the server's own logs and screens,
-            and is never the source of what the app displays. Codes the client does not know get a
-            neutral «не удалось собрать день» rather than a guess — the live run showed a day that
-            had failed on `day.example_is_a_term` telling the owner the model had answered in the
-            wrong language (Д-19). `day.generation_timed_out` (GEN-1) — the worker went silent twice
-            for longer than `learning.plan.generation_stale_minutes`; both attempts are spent and
-            «Собрать заново» is the only way on.
-        term_budget: { type: integer }
-        day_state:
-          type: string
-          enum: [not_started, in_progress, material_done, done]
-          description: >-
-            ONE WORD ABOUT THE DAY (наряд DAY-FIX-2, Ч.3; DAY-FIX-3, Ч.4.3) — «не начат» / «идёт» /
-            «материал пройден» / «пройден». Computed by the server and by nothing else: the plan
-            tab, the day screen and the sitting header all read this field, and none of them keeps
-            a counter of its own. Distinct from `status`, which is about GENERATION; a `ready` day
-            may be untouched or half-walked. `material_done` — the first sitting («Материал»:
-            warm-up, words, introductions and their exercises) has nothing left to deal and the
-            conversation is still ahead; the button reads «К разговору». `done` is true from the
-            moment every card of the scene has closed its first rung and been spoken once, which
-            can be seconds before `status` says so.
-        minutes_left:
-          type: integer
-          description: >-
-            «около N минут» — cards the day still deals × `plan.budget.card_seconds`, rounded up to
-            a whole minute. The cards are the SAME sitting `POST …/session` would deal, planned by
-            the same code. Zero once the day is done.
-        material_minutes:
-          type: integer
-          description: >-
-            THE FIRST SITTING PRICED APART (наряд DAY-FIX-3, Ч.5.1): «Материал» — the cards the
-            learner meets and exercises — × `card_seconds`, rounded up. Zero once that sitting is
-            walked. The day screen prints «материал около 12 минут · разговор около 6».
-        conversation_minutes:
-          type: integer
-          description: >-
-            THE SECOND SITTING: «Разговор» — the scene's dialogue, the seam's lines by assembly,
-            the прогон — priced the same way. What the plan tab shows beside «материал пройден».
-        stages:
-          type: array
-          items: { $ref: '#/components/schemas/PlanDayStage' }
-          description: >-
-            ЭТАПЫ ДНЯ (наряд DAY-GATE-1, решение 291) — «Слова и фразы» → «Разговор» → «Скажи сам»,
-            в этом порядке, и `retrain` («Повторить ошибки») последней строкой, только когда есть что
-            повторять. Экран дня рисует по ним список и ставит «Продолжить» на `current`; вкладка
-            «План» читает отсюда же. Кодами, без подписей и без чисел: подписи клиентские, в двух
-            языках, а чисел «N из M» на экранах плана не бывает.
-        locked_by_day_index:
-          type: integer
-          nullable: true
-          description: >-
-            НОМЕР ДНЯ, КОТОРЫЙ ДЕРЖИТ ЭТОТ ЗАКРЫТЫМ, или null (наряд DAY-GATE-1, решение 293). День
-            N+1 открывается, только когда день N пройден. Запрос его сессии отбивается 409
-            `plan_day_locked` — замок стоит на сервере, а не только на экране.
-        outcome:
-          type: array
-          items: { type: string }
-          description: >-
-            «Ты сможешь: …» — what the learner will be able to DO out loud.
-        checkpoints:
-          type: array
-          items: { type: string }
-          description: >-
-            What has to be HEARD for the day's promises to count. On the final day, every
-            checkpoint of the whole plan in day order, assembled by the server.
-        topics:
-          type: array
-          items: { type: string }
-        role:
-          type: [object, 'null']
-          additionalProperties: true
-          description: >-
-            The one person on the other side of the day's conversation, with the lines they open
-            with. Null for a day that genuinely has nobody to talk to.
-        terms:
-          type: array
-          description: >-
-            The day's REGISTER, present on `GET /plans/{planId}/days/{dayIndex}` and absent from
-            the day rows inside a whole plan (the plan payload would then carry the ladder for
-            every day of every read).
-          items: { $ref: '#/components/schemas/PlanDayTerm' }
-
-    PlanDayTerm:
-      type: object
-      description: >-
-        One word or phrase of a day, with the stage it stands on. Stored nowhere: the stage is a
-        pure function of the review log ({@see PlanStageLadder}) and is computed on every read.
-      required: [id, text, type, stage, from_day_index]
-      properties:
-        id: { type: string, minLength: 26, maxLength: 26 }
-        text: { type: string }
-        translation: { type: [string, 'null'] }
-        type: { type: string, enum: [word, phrase, idiom, phrasal_verb] }
-        kind:
-          type: [string, 'null']
-          enum: [line, word, chunk, number, null]
-          description: >-
-            What the expression DOES in this day, beside `type`, which says what it IS. Null on a
-            term that never came from a plan day of v0.2 or later. The screen sets a spoken LINE
-            apart from a substitution and used to guess that from `type` — a guess that stops
-            working the moment a connector appears, since «deal with» is two words and a
-            substitution. `number` is a time, a price or a dose the learner must catch by ear; it is
-            stored with the day and dealt by nothing yet (its trainer is NUM-1).
-        shelf:
-          type: [string, 'null']
-          enum: [hear, say, ask, words, chunks, numbers, rescue, null]
-          description: >-
-            WHICH SHELF OF THE SCENE it came off — since v0.4 a day is not a bag of three arrays but
-            a scene with named shelves, and the shelf is what the section captions on the day screen
-            («Тебе скажут», «Ты ответишь», «Ты спросишь», «Слова и связки») are drawn from. `rescue`
-            is the survival kit: five phrases the SERVER writes into day 1 of every plan, which
-            belong to the plan rather than to this scene. Null on a term from a pre-v0.4 day.
-        next_step:
-          type: [string, 'null']
-          enum: [meet, translate, tiles, recognize, hear, choose, assemble, say, null]
-          description: >-
-            WHAT THE LEARNER WILL DO with this row next (наряд DAY-FIX-2, Ч.4.2; DAY-FIX-3, Ч.5.1)
-            — the code the day screen turns into «познакомишься» / «переведёшь» / «соберёшь из
-            плиток» / «узнаешь» / «услышишь и разберёшь» / «выберешь ответ» / «соберёшь из блоков» /
-            «скажешь голосом». `translate` and `tiles` are the exercises that close a word's and a
-            connector's introduction the day they are met (Ч.3.1). Computed from the row's standing
-            and the turn level the sitting would deal it at, so the caption and the card cannot
-            disagree. Null when the row owes nothing today.
-        then_step:
-          type: [string, 'null']
-          enum: [translate, tiles, hear, choose, assemble, null]
-          description: >-
-            THE STEP THAT FOLLOWS IN THE SAME SITTING, or null — the first of `then_steps`, kept
-            for a client that reads one word.
-        then_steps:
-          type: array
-          items:
-            type: string
-            enum: [translate, tiles, hear, choose, assemble]
-          description: >-
-            EVERYTHING THAT FOLLOWS THE NEXT STEP IN THE SAME SITTING, in order (наряд DAY-FIX-3,
-            Ч.5.1): a word — `[translate]`; a connector — `[tiles]`; «Ты ответишь» — `[assemble,
-            choose]` (built from blocks among the introductions, then chosen in the conversation,
-            DECISIONS п. 266); «Ты спросишь» — `[assemble]`; «Тебе скажут» — `[hear]`. Empty for
-            the seam and for a row whose introduction is behind it.
-        mark:
-          type: [string, 'null']
-          enum: [met, applying, said_self, null]
-          description: >-
-            THE ROW'S MARK once the day has been walked (Ч.4.3; DAY-FIX-3, Ч.5.2): `met` — the
-            introduction acknowledged, its exercise still ahead; `applying` — the introduction
-            closed by its exercise, or any later stage; `said_self` — sounded in the learner's own
-            voice in a scene run. Words or a sign, never numbers.
-        topical:
-          type: boolean
-          description: >-
-            «ПО ТЕМЕ» (наряд DAY-FIX-3, Ч.2.1 / Ч.5.4): a topical word of the situation that stands
-            in none of the scene's lines — «рецепт», «страховка» at the doctor's (P2 v0.8). Trained
-            as a word, never in the dialogue; the day screen captions it so the learner knows why it
-            does not sound in the conversation. False on every other row and on days written before
-            v0.8.
-        tier:
-          type: [string, 'null']
-          enum: [speak, understand, null]
-          description: >-
-            How far the card is taken, DERIVED BY THE SERVER from the shelf and stored beside it —
-            the client never computes it. `speak` walks the full ladder; `understand` gets two
-            recognition touches, no stage C and no production, because a line the interlocutor says
-            has to be caught, not performed. A client that does not know this field must still not
-            break: the exercise modes it receives are already the right ones.
-        speaker:
-          type: [string, 'null']
-          enum: [learner, role, null]
-          description: >-
-            WHOSE line it is. `role` is the interlocutor's turn — the day carries it so the learner
-            will understand it when it is said to them, and it is the one card of a plan they are
-            never asked to produce. The screen must mark it: the live run listed the doctor's
-            question among the learner's own phrases with nothing to tell them apart (Д-8). Null on
-            anything that is not a plan line, which is not the same as `learner`.
-        stage: { type: string, enum: [a, b, c] }
-        stage_complete: { type: boolean }
-        finished:
-          type: boolean
-          description: >-
-            The LAST stage for this card is behind it — C for a single word, B for everything else,
-            and B for anything at the `understand` tier, which has no stage C at all. A carried term
-            that is finished is not listed.
-        from_day_index:
-          type: integer
-          description: >-
-            The day that INTRODUCED it. Equal to the day being read for its own words, smaller for
-            one carried in — which is what «B · со дня 1» is drawn from.
-        audio_url:
-          type: [string, 'null']
-          description: >-
-            THE SERVER'S OWN RECORDING of this line, or null — «нет файла, читай системным голосом».
-            Present for the shelves the language pack voices (`hear` and `rescue` today); words and
-            connectors keep the phone's own synthesiser on purpose. Null is the same answer for
-            «the pipe is off», «this language has no voice in the pack» and «the audio has not
-            caught up with the day yet»: there is nothing for the client to do differently, and
-            telling the three apart is the log's job. The address is unique to (line, voice, pace),
-            so a change of voice in the pack is a change of URL — an old file can never be played
-            for a new voice.
-
-    PlanRehearsal:
-      type: object
-      description: The plan's phrases, for the morning of the event (кадр 1c · 15).
-      required: [plan_id, title, lines]
-      properties:
-        plan_id: { type: string, minLength: 26, maxLength: 26 }
-        title: { type: string }
-        lines:
-          type: array
-          items:
-            type: object
-            required: [id, text, day_index]
-            properties:
-              id: { type: string, minLength: 26, maxLength: 26 }
-              text:
-                type: string
-                description: The sentence itself, in the language being studied.
-              translation: { type: [string, 'null'] }
-              cue:
-                type: [string, 'null']
-                description: >-
-                  What the interlocutor says — «How long has it been like this?». Null when the day
-                  had no role: a day of filling in forms has nobody to answer, and inventing a
-                  prompt for it would be putting words in a mouth that is not there.
-              role: { type: [string, 'null'], description: Who says the cue }
-              day_index: { type: integer, minimum: 1 }
+        scenes_count: { type: integer }
+        cost_usd: { type: [string, 'null'], description: 'USD, six decimals — the sum of every attempt of the plan call' }
+        latency_ms: { type: [integer, 'null'] }
+        attempts: { type: [integer, 'null'], description: '1 or 2 — the model is retried once on a refused answer' }
+        versions: { $ref: '#/components/schemas/PlanVersions' }
 
     PlanSummary:
       type: object
-      description: A plan as an archive row — «Аренда квартиры · июль · 4 дня».
-      required: [id, status, title, event_date, day_count]
+      description: A plan as a row of the list.
+      required: [id, status, goal_text, days_total, created_at]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
-        status: { type: string, enum: [active, paused, completed, abandoned] }
-        title: { type: string }
-        target_lang: { type: string }
-        event_date: { type: string, format: date, nullable: true, description: NULL = «Без даты» — see POST /plans. }
-        day_count: { type: integer }
+        status: { type: string, enum: [building, unclear, failed, ready, active, finished, overdue] }
+        title_native: { type: [string, 'null'] }
+        goal_text: { type: string }
+        event_date: { type: [string, 'null'], format: date }
+        days_total: { type: integer }
+        collection_id: { type: [string, 'null'] }
         started_at: { type: [string, 'null'], format: date-time }
-        completed_at: { type: [string, 'null'], format: date-time }
+        finished_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+
+    PlanImage:
+      type: object
+      description: A stock photo with the credit its licence asks for.
+      required: [url]
+      properties:
+        url: { type: string }
+        author: { type: [string, 'null'] }
+        author_url: { type: [string, 'null'] }
+
+    PlanDaySlot:
+      type: object
+      description: >-
+        WHEN a day sits in the learner's calendar. `label_native` is the ready word («сегодня»,
+        «завтра») for the two slots that have one; for `date` the client formats `date` itself;
+        `past` is the day it was closed.
+      required: [code]
+      properties:
+        code: { type: string, enum: [today, tomorrow, date, past, unscheduled] }
+        date: { type: [string, 'null'], format: date }
+        label_native: { type: [string, 'null'] }
+
+    PlanDayRoute:
+      type: object
+      description: One day on the route. `status` is EFFECTIVE for today — a locked day whose date has come and whose predecessor is closed reads `open`.
+      required: [id, number, type, status, slot, cards_total, cards_done, minutes_spent]
+      properties:
+        id: { type: string, minLength: 26, maxLength: 26 }
+        number: { type: integer, minimum: 1, maximum: 10 }
+        type: { type: string, enum: [scene, review, rehearsal] }
+        status: { type: string, enum: [locked, open, in_progress, closed] }
+        scene_id: { type: [string, 'null'] }
+        title_native: { type: [string, 'null'], description: '≤ 18 characters by the prompt''s rule; the client ellipsises a longer one' }
+        title_target: { type: [string, 'null'] }
+        teaches_native: { type: [string, 'null'], description: '≤ 34 characters by the prompt''s rule' }
+        lesson_status: { type: [string, 'null'], enum: [pending, building, ready, failed, null] }
+        opens_on: { type: [string, 'null'], format: date }
+        slot: { $ref: '#/components/schemas/PlanDaySlot' }
+        cards_total: { type: integer }
+        cards_done: { type: integer }
+        minutes_spent: { type: integer }
+        opened_at: { type: [string, 'null'], format: date-time }
+        closed_at: { type: [string, 'null'], format: date-time }
+
+    PlanScene:
+      type: object
+      required: [id, order, kind, priority, title_native, title_target, teaches_native, goals_native, lesson_status]
+      properties:
+        id: { type: string, minLength: 26, maxLength: 26 }
+        order: { type: integer }
+        kind: { type: string, enum: [situation, variant] }
+        priority: { type: integer, description: '1 is the core — the one scene that is never dropped' }
+        title_native: { type: string }
+        title_target: { type: string }
+        teaches_native: { type: string }
+        goals_native: { type: array, items: { type: string }, description: '3–4 goals, each ≤ 30 characters by the prompt''s rule' }
+        learner_role_target: { type: string }
+        learner_role_native: { type: string }
+        partner_role_target: { type: string }
+        partner_role_native: { type: string }
+        image:
+          oneOf:
+            - $ref: '#/components/schemas/PlanImage'
+            - type: 'null'
+        lesson_status: { type: string, enum: [pending, building, ready, failed] }
+        lesson_fail_reason: { type: [string, 'null'] }
+        day_number: { type: [integer, 'null'], description: 'Which day the scene stands on; null for a scene not (yet) on the route' }
+        cost_usd: { type: [string, 'null'] }
+        latency_ms: { type: [integer, 'null'] }
+        prompt_version: { type: [string, 'null'] }
+
+    PlanRescuePhrase:
+      type: object
+      required: [text_target, text_native, pronunciation_native]
+      properties:
+        text_target: { type: string }
+        text_native: { type: string }
+        pronunciation_native: { type: string }
+
+    Plan:
+      type: object
+      description: >-
+        The plan, whole — tab and preview alike (docs/plan-v2.md). Every event-inflecting string
+        arrives ready: `until_phrase` («До приёма · 5 дней»), `overdue_native` («Приём был вчера»),
+        `route_summary` («5 дней · 3 ситуации, 1 повторение, репетиция»), the day slots. Dates and
+        numbers are raw; the client formats them.
+      required: [id, status, goal_text, target_lang, native_lang, level, days_total, days_requested, route_summary, days, scenes, rescue_kit, cost_usd, versions, created_at]
+      properties:
+        id: { type: string, minLength: 26, maxLength: 26 }
+        status: { type: string, enum: [building, unclear, failed, ready, active, finished, overdue], description: '`overdue` is derived — an active plan whose event date has passed' }
+        goal_text: { type: string }
+        target_lang: { type: string }
+        native_lang: { type: string }
+        level: { type: string, enum: [beginner, intermediate] }
+        days_total: { type: integer, minimum: 1, maximum: 10 }
+        days_requested: { type: integer, description: 'What the learner asked for; larger than `days_total` when the date shortened the plan' }
+        days_shortened_from: { type: [integer, 'null'], description: 'Non-null when the event date shortened the plan — the client shows the line' }
+        event_date: { type: [string, 'null'], format: date }
+        days_left: { type: [integer, 'null'], description: 'Calendar days until the event; negative once it has passed; null without a date' }
+        title_native: { type: [string, 'null'] }
+        title_target: { type: [string, 'null'] }
+        event_native: { type: [string, 'null'] }
+        until_phrase: { type: [string, 'null'], description: 'The countdown header, ready — null without a date or once the event has passed' }
+        overdue_native: { type: [string, 'null'], description: 'The prompt''s own sentence, present only while the plan is overdue' }
+        route_summary: { type: string }
+        learner_role_target: { type: [string, 'null'] }
+        learner_role_native: { type: [string, 'null'] }
+        cover_image:
+          oneOf:
+            - $ref: '#/components/schemas/PlanImage'
+            - type: 'null'
+        collection_id: { type: [string, 'null'], description: 'The plan''s collection once a day has been closed (origin `plan`)' }
+        unclear_reason: { type: [string, 'null'] }
+        fail_reason: { type: [string, 'null'] }
+        current_day:
+          oneOf:
+            - $ref: '#/components/schemas/PlanDayRoute'
+            - type: 'null'
+          description: The first day that is not closed; null when every day is closed
+        days:
+          type: array
+          items: { $ref: '#/components/schemas/PlanDayRoute' }
+        scenes:
+          type: array
+          items: { $ref: '#/components/schemas/PlanScene' }
+        rescue_kit:
+          type: array
+          description: The language pack's five rescue phrases — a static list, the same in every plan of the pair
+          items: { $ref: '#/components/schemas/PlanRescuePhrase' }
+        cost_usd: { type: string, description: 'The plan call plus every lesson call, USD six decimals' }
+        versions: { $ref: '#/components/schemas/PlanVersions' }
+        started_at: { type: [string, 'null'], format: date-time }
+        finished_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+
+    PlanStageProgress:
+      type: object
+      required: [stage, total, done, state]
+      properties:
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+        total: { type: integer }
+        done: { type: integer }
+        state: { type: string, enum: [locked, current, done, absent], description: 'The first stage with an unanswered card is `current`; a stage with no cards is `absent`' }
+
+    PlanProgramUnit:
+      type: object
+      description: One unit of the day's program — a word, a phrase or an exchange — and where it stands.
+      required: [unit_kind, unit_ref, scene_id, source, cards_total, cards_done, state]
+      properties:
+        unit_kind: { type: string, enum: [word, phrase, exchange] }
+        unit_ref: { type: string, description: '`v3`, `p1`, `x4` — the lesson''s own ids' }
+        scene_id: { type: string }
+        text_target: { type: [string, 'null'] }
+        text_native: { type: [string, 'null'] }
+        source: { type: string, enum: [today, returned] }
+        cards_total: { type: integer }
+        cards_done: { type: integer }
+        state: { type: string, enum: [pending, passed, failed] }
+
+    PlanDayMetrics:
+      type: object
+      required: [cards_total, cards_done, minutes_spent]
+      properties:
+        cards_total: { type: integer }
+        cards_done: { type: integer }
+        minutes_spent: { type: integer, description: 'From answer timestamps; pauses over ten minutes not counted' }
+        first_try_share: { type: [number, 'null'], description: '«верно с первого раза» over graded cards, 0..1' }
+        hardest_unit_kind: { type: [string, 'null'], enum: [word, phrase, exchange, null] }
+        hardest_unit_ref: { type: [string, 'null'] }
+        hardest_unit_text: { type: [string, 'null'] }
+
+    PlanDayRoom:
+      type: object
+      description: «Кабинет дня».
+      required: [plan_id, day, goals_native, stages, program, sheet_available]
+      properties:
+        plan_id: { type: string }
+        day: { $ref: '#/components/schemas/PlanDayRoute' }
+        scene:
+          oneOf:
+            - $ref: '#/components/schemas/PlanScene'
+            - type: 'null'
+        goals_native: { type: array, items: { type: string } }
+        stages:
+          type: array
+          items: { $ref: '#/components/schemas/PlanStageProgress' }
+        metrics:
+          oneOf:
+            - $ref: '#/components/schemas/PlanDayMetrics'
+            - type: 'null'
+          description: Filled once the day is closed
+        program:
+          type: array
+          items: { $ref: '#/components/schemas/PlanProgramUnit' }
+        sheet_available: { type: boolean }
+
+    PlanCard:
+      type: object
+      description: >-
+        One card of a day, with its payload resolved at read time (a term's `image`, a line's
+        `audio_id` — `GET /plans/audio/{audioId}`). The payload is everything the client needs to
+        show AND grade the card; it never points back at the model. Every payload carries
+        `scene_id`; exchange cards carry `exchange_step` and `partner` (the partner's line with
+        `text_target`, `text_native`, `role_*`) and `audio_id`; term cards carry `plan_term_id`,
+        `text_target`, `text_native`, `pronunciation_native`, `image`.
+
+        Per kind — words: `word_intro` (+ `definition_target`, `example_target`, `example_native`),
+        `word_say` (`expected`, `coverage` 1.0), `word_choose` (`mode` translation|definition,
+        `prompt`, `options[{text, correct}]` ×4), `word_cloze` (`sentence_target` with `___`,
+        `sentence_native`, `answer`, `options`); phrases: `phrase_intro` (`speaking_key`,
+        `example_*`), `phrase_repeat` (`expected`, `coverage` 0.9), `phrase_assemble`
+        (`prompt_native`, `answer`, `tiles` — the phrase's words shuffled plus one extra word of the
+        day); dialogue: `dialogue_read` (`translations_collapsed`, `exchanges[{step, initiator,
+        messages[], audio_id}]`); listen: `listen_question` (`language` native|target, `question`,
+        `options[{text, correct}]` ×3, `explanation_native`), `listen_assemble` (`answer`,
+        `text_native`, `tiles`), `answer_choose` (`options[{text_target, text_native, correct}]`
+        ×3), `answer_assemble` (`prompt_native`, `answer`, `tiles`); speak: `speak` (`task_native`,
+        `expected`, `speaking_key`, `variants`, `coverage` 0.7, `hints{key, text}` — pass by the
+        key or ≥ 70 % of the words of the line or any variant; hint 1 the key, hint 2 the text →
+        result `hinted`).
+      required: [id, stage, position, kind, source, unit_kind, unit_ref, payload, attempts, returns]
+      properties:
+        id: { type: string, minLength: 26, maxLength: 26 }
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+        position: { type: integer, minimum: 1, description: 'Within the stage; a requeued card takes the next position' }
+        kind: { type: string, enum: [word_intro, word_say, word_choose, word_cloze, phrase_intro, phrase_repeat, phrase_assemble, dialogue_read, listen_question, listen_assemble, answer_choose, answer_assemble, speak] }
+        source: { type: string, enum: [today, returned] }
+        source_day_id: { type: [string, 'null'], description: 'For a returned card: the day it failed twice on' }
+        unit_kind: { type: string, enum: [word, phrase, exchange] }
+        unit_ref: { type: string }
+        payload: { type: object, additionalProperties: true }
+        retry_of: { type: [string, 'null'], description: 'The card this one re-deals after a first failure' }
+        result: { type: [string, 'null'], enum: [passed, hinted, failed, skipped, null] }
+        attempts: { type: integer }
+        answered_at: { type: [string, 'null'], format: date-time }
+        returns: { type: boolean, description: 'Failed twice — the unit returns on the next content day' }
+
+    PlanDayCards:
+      type: object
+      required: [plan_id, day_id, number, status, cards]
+      properties:
+        plan_id: { type: string }
+        day_id: { type: string }
+        number: { type: integer }
+        status: { type: string, enum: [locked, open, in_progress, closed] }
+        cards:
+          type: array
+          description: In walking order — stage by stage, position by position
+          items: { $ref: '#/components/schemas/PlanCard' }
+
+    PlanAnswerOutcome:
+      type: object
+      required: [card]
+      properties:
+        card: { $ref: '#/components/schemas/PlanCard' }
+        requeued:
+          oneOf:
+            - $ref: '#/components/schemas/PlanCard'
+            - type: 'null'
+          description: The same card dealt again at the end of its stage after a FIRST failure; null otherwise
+
+    PlanTerm:
+      type: object
+      required: [id, scene_id, kind, ref, text_target, text_native, simplified_variants]
+      properties:
+        id: { type: string }
+        scene_id: { type: string }
+        kind: { type: string, enum: [word, chunk, phrase] }
+        ref: { type: string }
+        text_target: { type: string }
+        text_native: { type: string }
+        pronunciation_native: { type: [string, 'null'] }
+        definition_target: { type: [string, 'null'] }
+        example_target: { type: [string, 'null'] }
+        example_native: { type: [string, 'null'] }
+        speaking_key: { type: [string, 'null'] }
+        simplified_variants: { type: array, items: { type: string } }
+        image:
+          oneOf:
+            - $ref: '#/components/schemas/PlanImage'
+            - type: 'null'
+
+    PlanSheet:
+      type: object
+      required: [plan_id, number, words, phrases]
+      properties:
+        plan_id: { type: string }
+        number: { type: integer }
+        words:
+          type: array
+          items: { $ref: '#/components/schemas/PlanTerm' }
+        phrases:
+          type: array
+          items: { $ref: '#/components/schemas/PlanTerm' }
 
     Problem:
       type: object
@@ -3682,219 +3180,6 @@ components:
               type: object
               additionalProperties: { type: string }
 
-    PlanSession:
-      type: object
-      description: >-
-        One sitting of a plan day: the cards, the conversations they are played inside, and the
-        numbers the screen needs to draw itself honestly.
-      properties:
-        session_id: { type: string }
-        plan_id: { type: string }
-        day_index: { type: integer }
-        strict:
-          type: boolean
-          description: >-
-            FALSE only on the final day, whose sitting grades nothing and closes no stage: the plan
-            must not be able to go backwards on its last morning.
-        focus_day_index: { type: integer, description: 'the day the plan is actually on' }
-        knobs: { type: object, description: "the level's six knobs, as this sitting ran on them" }
-        day_task_count:
-          type: integer
-          description: >-
-            How many of the tasks are the DAY's own — what «N из N» counts. The warm-up and the seam
-            («Повторение · из прошлых дней») are outside it.
-        sittings:
-          type: array
-          items: { type: integer }
-          description: >-
-            ПРИСЕСТЫ: the task counts of each sitting, adding up to the number of tasks. Since
-            наряд DAY-FIX-3 (Ч.4) a day is «Материал» (at most 45 cards) and then «Разговор» (at
-            most 25) — `[material, conversation]`, either absent when empty, never more than two.
-            Named in `sitting_plan`.
-        sitting_plan:
-          type: array
-          items:
-            type: object
-            required: [kind, cards]
-            properties:
-              kind: { type: string, enum: [material, conversation] }
-              cards: { type: integer }
-          description: >-
-            THE SAME SITTINGS, NAMED (наряд DAY-FIX-3, Ч.4): `material` — the warm-up, the words
-            and connectors, the introductions and the exercises that close them; `conversation` —
-            the scene's dialogue, the seam's lines by assembly, the прогон. The client draws the
-            break screen («Материал пройден · К разговору») and the resume point («К разговору»
-            opens the conversation sitting) off this list.
-        material_minutes:
-          type: integer
-          description: 'The same number as `PlanDay.material_minutes` for this day.'
-        conversation_minutes:
-          type: integer
-          description: 'The same number as `PlanDay.conversation_minutes` for this day.'
-        day_state:
-          type: string
-          enum: [not_started, in_progress, material_done, done]
-          description: >-
-            THE SAME WORD the plan payload carries for this day (`PlanDay.day_state`), computed by
-            the same census over the same planned sitting — the sitting header reads it from here
-            and keeps no counter of its own (наряд DAY-FIX-2, Ч.3).
-        minutes_left:
-          type: integer
-          description: 'The same number as `PlanDay.minutes_left` for this day.'
-        stage:
-          type: string
-          nullable: true
-          enum: [material, conversation, rehearsal, retrain, null]
-          description: >-
-            КАКОЙ ЭТАП ДНЯ ЭТА ПОСАДКА (наряд DAY-GATE-1, решение 295). Сессия собирается ТОЛЬКО из
-            текущего этапа — «Продолжить» ведёт в него, — а разогрев остаётся в любой: он ритуал дня,
-            а не этапа. Клиент называет этап в запросе (`stage` в теле) ровно в одном случае —
-            `retrain`, единственная дверь не по порядку. Null у дня-прогона перед событием: он не
-            день и этапов не имеет.
-        day_stages:
-          type: array
-          items: { $ref: '#/components/schemas/PlanDayStage' }
-          description: >-
-            ВСЕ ЭТАПЫ ЭТОГО ДНЯ — тот же список, что на `PlanDay.stages`, чтобы экран мог показать
-            «где я» не перечитывая план посреди занятия.
-        scene_run:
-          type: object
-          description: >-
-            THE SECONDS OF A SCENE RUN (наряд SCENE-RUN, Ч.2). On the wire rather than in the app's
-            own code: how long a person thinks is a product judgement, and it has to move without a
-            release. `config/learning.php → plan.scene_run`.
-          properties:
-            fast_seconds:
-              type: integer
-              description: 'from the microphone opening to the line''s key, for the turn to count as «сразу»'
-            listen_seconds:
-              type: integer
-              description: >-
-                THE RECORDING WATCHDOG, in seconds of the WHOLE recording (наряд SPEECH-2, Ч.2.1) —
-                not, as before, of the wait for the first word. Never below 15: a recording cut
-                sooner cuts a long reply mid-word, and the floor is enforced on both sides (here and
-                in the phone's own engine) so one config away from home cannot do it.
-            skip_after_seconds: { type: integer, description: 'when «Пропустить» appears — before it is needed' }
-            turn_seconds: { type: integer, description: 'what one turn costs in the day''s minutes' }
-        speech:
-          $ref: '#/components/schemas/SpeechContract'
-          required: [fast_seconds, listen_seconds, skip_after_seconds, turn_seconds]
-        dialogues:
-          type: array
-          description: 'One per scene this sitting reaches, whole, in the order the scene is spoken.'
-          items:
-            type: object
-            properties:
-              day_index: { type: integer }
-              scene_title: { type: [string, 'null'] }
-              scene_intro: { type: [string, 'null'], description: 'the вводка, on the support language' }
-              run_ready:
-                type: boolean
-                description: >-
-                  The scene has matured enough to be RUN — every turn of the learner's has passed
-                  stage B at least once. Always true for a scene whose run was actually dealt on an
-                  ordinary day; it becomes interesting on the LAST day, where every scene is run
-                  including the ones the ladder never reached, and the summary marks those rather
-                  than pretending they were like the others.
-              turns:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    turn: { type: string, enum: [role, you] }
-                    term_id: { type: string }
-                    text: { type: string }
-                    translation: { type: [string, 'null'] }
-                    shelf: { type: [string, 'null'] }
-                    audio_url:
-                      type: [string, 'null']
-                      description: 'null = no server file; read it with the phone''s own voice'
-                    level:
-                      type: [string, 'null']
-                      enum: [choose, assemble, say, null]
-                      description: >-
-                        HOW STRICT this turn of the learner's is (наряд SCENE-RUN). Rides on the
-                        chain and not only on the task, because the chain is longer than the task
-                        list and the feed is drawn ahead. Null on the interlocutor's line. Since
-                        DAY-FIX-2 an `ask` turn is never `choose`, and a turn dealt from a day
-                        behind the one being studied is always `assemble`.
-                    pair:
-                      type: [string, 'null']
-                      enum: [answer, ask, null]
-                      description: >-
-                        THE TYPE OF THE EXCHANGE this turn belongs to (P2 v0.6, наряд DAY-FIX-2):
-                        `answer` — the other person asked or stated and the learner answers; `ask`
-                        — the other person INVITED a question and the learner asks one. On BOTH
-                        turns of the pair. Null on a chain written before pairs existed.
-                  required: [turn, term_id, text]
-        line_audio:
-          type: array
-          description: >-
-            Everything this sitting can play from a file, as «text → address» pairs, so the phone
-            downloads the whole day on entry rather than card by card. An empty list is a legitimate
-            answer and means «read it with the phone's own voice».
-          items:
-            type: object
-            properties:
-              term_id: { type: string }
-              text: { type: string }
-              url: { type: [string, 'null'] }
-        tasks:
-          type: array
-          items:
-            type: object
-            properties:
-              stage: { type: [string, 'null'], enum: [a, b, c, null] }
-              section:
-                type: string
-                enum: [warmup, day, review]
-                description: 'ARITHMETIC: which side of the seam, and therefore whether it counts towards the day.'
-              section_code:
-                type: string
-                enum: [warmup, words, dialogue_intro, dialogue, numbers, scene_run, rehearsal, review, day]
-                description: >-
-                  WHAT THE LEARNER IS DOING, as a code they see a caption for. `shelf` cannot stand
-                  in for it: meeting a reply and speaking it in the conversation are two parts of
-                  the sitting and both are `say`. Read as an OPEN set.
-              turn_level:
-                type: [string, 'null']
-                enum: [choose, assemble, say, null]
-                description: >-
-                  HOW STRICT this turn is — three levels of ONE trainer, never three trainers
-                  (наряд SCENE-RUN). `choose` offers lines of the plan; `assemble` replaces them
-                  with blocks (`card.chips`, no `card.options`) and is what a line comes back as once its
-                  choice has been closed; `say` takes everything away and
-                  leaves the support-language hint and the microphone. Null on anything that is not
-                  a turn of the learner's.
-              intent:
-                type: [string, 'null']
-                description: >-
-                  ЧТО ИМЕННО НАДО СКАЗАТЬ, на языке поддержки — перевод целевой реплики, и ТОЛЬКО на
-                  карточке СБОРКИ (наряд DAY-GATE-1, решение 297). Экран печатает его с префиксом
-                  «Скажи:»; префикс клиентский, строка серверная. Null на карточке ВЫБОРА: там
-                  перевод назвал бы правильный вариант и вернул ситуацию в перевод (канон §4, §13).
-                  На сборке вариантов нет, ответ строится по порядку слов — перевод здесь не ответ,
-                  а задание, и без него задание не сформулировано.
-              origin: { type: [object, 'null'] }
-              ordinal: { type: integer }
-              of_steps: { type: integer }
-              from_day_index: { type: [integer, 'null'] }
-              softened: { type: boolean }
-              source: { type: string }
-              speaking_form: { type: [string, 'null'] }
-              cloze_source: { type: [string, 'null'] }
-              speaker: { type: [string, 'null'], enum: [role, learner, null] }
-              kind: { type: [string, 'null'], enum: [word, chunk, line, number, null] }
-              shelf: { type: [string, 'null'] }
-              tier: { type: [string, 'null'], enum: [speak, understand, null] }
-              situation: { type: [object, 'null'] }
-              speaks_after_choice: { type: boolean }
-              knobs_applied: { type: array, items: { type: string } }
-              knobs_ignored: { type: array, items: { type: string } }
-              card: { $ref: '#/components/schemas/SessionCard' }
-            required: [section, section_code, card]
-      required: [session_id, plan_id, day_index, strict, tasks]
-
     SessionCard:
       type: object
       properties:
@@ -3934,40 +3219,6 @@ components:
             hint at all. Beside `transcription` and never instead of it: that one is IPA, one per
             term in a notation the learner has to have been taught; this one is per language pair,
             in an alphabet they already read.
-        speaking_key:
-          type: string
-          nullable: true
-          description: >
-            ADDITIVE. On a `speaking` card whose term is a plan LINE: the piece of the line the card
-            is actually about — the word standing in the frame's hole («long-term living in a new
-            country» inside «Yes, I'm looking for a place to rent for ___»). The server grades the
-            transcript for THIS string and not for the whole sentence, so the client must underline
-            and judge the same one. NULL on every other mode, on a spoken word, and on a line the
-            day left no piece of — and null there MEANS «say the whole line», which is what the card
-            should say out loud.
-        speaking_keys:
-          type: array
-          items: { type: string }
-          description: >
-            ADDITIVE (GEN-1). Beside `speaking_key`: one or two SHORTER or SIMPLER forms of the same
-            reply that also count as correct when spoken («two years» for «I have two years of
-            commercial experience»). Empty on every card that is not a plan line written on P2 v0.7
-            or later. The server grades by them only once the client judges by the same list
-            (`learning.plan.speaking_keys_graded`), so a client that ignores the field is never
-            stricter than the server. From SPEECH-2 the key is no longer enough on its own: the
-            server asks for the key AND enough of the rest of the reply (Ч.3.2). A form that is a
-            RE-PHRASING of the whole reply rather than a fragment of it still counts alone — that is
-            what it is.
-        say_as:
-          type: string
-          nullable: true
-          description: >
-            ADDITIVE (SPEECH-2, Ч.4.3). How an abbreviation on this card READS ALOUD («эс-кью-эль»
-            for SQL) — for the synthesiser, not for the grader: a spelled-out abbreviation coming
-            back from the recogniser is folded onto its canonical form by the normalisation table in
-            the session's `speech` block. ALWAYS NULL today: filling it is the pair generation's
-            job and a наряд of its own; the field ships now so a client that already reads it starts
-            pronouncing abbreviations correctly the day the data arrives, not a release later.
         example: { type: string, nullable: true }
         example_translation: { type: string, nullable: true }
         options:

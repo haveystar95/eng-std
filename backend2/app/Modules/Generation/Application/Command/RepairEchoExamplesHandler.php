@@ -12,7 +12,6 @@ use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
 use App\Modules\Generation\Application\Port\RecordsExampleRegeneration;
 use App\Modules\Generation\Application\Service\DraftValidator;
 use App\Modules\Generation\Application\Service\ExampleReplacement;
-use App\Modules\Generation\Domain\Service\ExampleAdmission;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\ModelCost;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
@@ -70,16 +69,6 @@ final readonly class RepairEchoExamplesHandler
             if ($ctx === null) {
                 continue;
             }
-            // A CARD THAT MAY NOT HAVE AN EXAMPLE IS NOT A CARD MISSING ONE
-            // ({@see ExampleAdmission}). This loop's test for «broken» is «no example at all», and
-            // a line legitimately has none — so every line of every plan day looked like a repair
-            // job and bought itself a sentence. Thirteen of them on the owner's live day 1 (02.09),
-            // one model call each, and the sentence they bought wrapped the day's own line in a
-            // second one.
-            if (! ExampleAdmission::allows($ctx->kind)) {
-                continue;
-            }
-
             $example = $ctx->currentExample;
             if ($example !== null && trim($example) !== '' && ! DraftValidator::isEcho($example, $ctx->text)) {
                 continue;

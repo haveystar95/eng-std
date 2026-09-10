@@ -61,6 +61,15 @@ deptrac:
     - name: ObservabilityInfrastructure
       collectors: [{ type: classLike, value: 'App\\Modules\\Observability\\Infrastructure\\.*' }]
 
+    - name: PlanDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Plan\\Domain\\.*' }]
+    - name: PlanApplication
+      collectors: [{ type: classLike, value: 'App\\Modules\\Plan\\Application\\.*' }]
+    - name: PlanInfrastructure
+      collectors: [{ type: classLike, value: 'App\\Modules\\Plan\\Infrastructure\\.*' }]
+    - name: PlanPresentation
+      collectors: [{ type: classLike, value: 'App\\Modules\\Plan\\Presentation\\.*' }]
+
     - name: AdminDomain
       collectors: [{ type: classLike, value: 'App\\Modules\\Admin\\Domain\\.*' }]
     - name: AdminApplication
@@ -85,6 +94,7 @@ deptrac:
     CollectionsDomain: [SharedDomain]
     LearningDomain: [SharedDomain]
     GenerationDomain: [SharedDomain]
+    PlanDomain: [SharedDomain]
 
     # Application depends on its own Domain, Shared, and other modules' Application only.
     IdentityApplication: [IdentityDomain, SharedDomain]
@@ -99,6 +109,12 @@ deptrac:
     # Generation, so this edge adds no cycle.
     GenerationApplication:
       [GenerationDomain, SharedDomain, VocabularyApplication, CollectionsApplication, IdentityApplication, LearningApplication]
+    # The learning plan (docs/plan-v2.md). It writes its words into a collection (Vocabulary +
+    # Collections), reads the learner's timezone and native language (Identity), and asks the model
+    # through its own ports — which Plan's Infrastructure fulfils over Generation's vendor seam.
+    # Nothing depends back on Plan except Admin (a projection) and Identity's account eraser.
+    PlanApplication:
+      [PlanDomain, SharedDomain, VocabularyApplication, CollectionsApplication, IdentityApplication]
 
     # Infrastructure may use the framework and its own module's inner layers.
     SharedInfra: [SharedDomain, Framework]
@@ -107,7 +123,7 @@ deptrac:
     # with Collections/Generation Application → Identity Application.
     IdentityInfrastructure:
       [IdentityApplication, IdentityDomain, SharedDomain, SharedInfra, Framework,
-       CollectionsApplication, LearningApplication, GenerationApplication, VocabularyApplication, ObservabilityApplication]
+       CollectionsApplication, LearningApplication, GenerationApplication, VocabularyApplication, ObservabilityApplication, PlanApplication]
     VocabularyInfrastructure: [VocabularyApplication, VocabularyDomain, SharedDomain, SharedInfra, Framework]
     CollectionsInfrastructure: [CollectionsApplication, CollectionsDomain, SharedDomain, SharedInfra, Framework]
     LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework, IdentityApplication]
@@ -115,14 +131,16 @@ deptrac:
     # It also labels its own outbound calls (OutboundCallContext) so the request log can say WHY
     # money was spent and on which collection — the label has to be applied where the vendor call
     # is made, which is here. Deliberate edge, same shape as IdentityInfrastructure's.
-    #
-    # LearningApplication joins that list for the LEARNING PLAN and for the same reason: Learning
-    # declares two ports it cannot implement — «ask the model for a plan skeleton» (PlanOutlinePort)
-    # and «queue a day» (DispatchesPlanDay) — because both are about talking to a vendor, and none
-    # of prompt files, cost tables or the request log belongs in a module about scheduling.
-    # Generation fulfils them, and the binding is here. Adds no cycle: GenerationApplication already
-    # depends on LearningApplication, and Learning never depends on Generation.
-    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework, VocabularyApplication, ObservabilityApplication, LearningApplication]
+    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework, VocabularyApplication, ObservabilityApplication]
+    # Plan's Infrastructure is where the vendor seams are crossed: the model, the photo search and
+    # the voice all come from Generation's Application ports; the timezone from Identity's; the
+    # jobs label their outbound calls (Observability) so «сколько стоил план» is one filter.
+    # GenerationDomain is on the list for ONE reason: the catalogue port names its vendor by
+    # Generation's `ProviderId` and its prompt by `PromptShape` — the port's own vocabulary, which a
+    # caller of the port has to speak. No other Generation Domain class is read here.
+    PlanInfrastructure:
+      [PlanApplication, PlanDomain, SharedDomain, SharedInfra, Framework,
+       GenerationApplication, GenerationDomain, IdentityApplication, VocabularyApplication, CollectionsApplication, ObservabilityApplication]
 
     # Observability: a thin, cross-cutting technical module (no Presentation layer).
     ObservabilityDomain: [SharedDomain]
@@ -144,7 +162,7 @@ deptrac:
     # станок is bumped, and silently. Admin → Generation adds no cycle: Generation never reads Admin.
     AdminDomain: [SharedDomain]
     AdminApplication:
-      [AdminDomain, SharedDomain, IdentityApplication, LearningApplication, VocabularyApplication, CollectionsApplication, GenerationApplication]
+      [AdminDomain, SharedDomain, IdentityApplication, LearningApplication, VocabularyApplication, CollectionsApplication, GenerationApplication, PlanApplication]
     AdminInfrastructure: [AdminApplication, AdminDomain, SharedDomain, SharedInfra, Framework]
     # Presentation reads the impact ports (Vocabulary/Collections Application) to state the blast
     # radius of a delete before it happens — a cross-module read through Application, like /me's.
@@ -157,6 +175,7 @@ deptrac:
     IdentityPresentation: [IdentityApplication, IdentityDomain, SharedDomain, GenerationApplication, Framework]
     CollectionsPresentation: [CollectionsApplication, CollectionsDomain, SharedDomain, Framework]
     LearningPresentation: [LearningApplication, LearningDomain, SharedDomain, Framework]
+    PlanPresentation: [PlanApplication, PlanDomain, SharedDomain, Framework]
     VocabularyPresentation: [VocabularyApplication, VocabularyDomain, SharedDomain, Framework]
     # SharedInfra here is the EXPORT HEADER and nothing else (Shared\Infrastructure\Support): every
     # file we hand a human for proof-reading has to date itself, and a rule that must be re-typed per

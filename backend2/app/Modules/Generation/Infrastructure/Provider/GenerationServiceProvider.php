@@ -19,21 +19,13 @@ use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
 use App\Modules\Generation\Application\Port\GenerationAccountEraser;
 use App\Modules\Generation\Application\Port\GenerationQuota;
-use App\Modules\Generation\Application\Port\DispatchesLineSpeech;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
-use App\Modules\Generation\Application\Port\LineSpeechReporter;
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
-use App\Modules\Generation\Application\Command\SpeakCollectionLinesHandler;
-use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
 use App\Modules\Generation\Application\Port\SpeechEncoder;
 use App\Modules\Generation\Infrastructure\Adapter\GeminiSpeechSynthesizer;
 use App\Modules\Generation\Infrastructure\Adapter\LameSpeechEncoder;
-use App\Modules\Generation\Infrastructure\Adapter\LoggingLineSpeechReporter;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiSpeechSynthesizer;
-use App\Modules\Generation\Infrastructure\Adapter\QueuedLineSpeechDispatcher;
-use App\Modules\Generation\Infrastructure\Adapter\QueuedLineSpeechOrders;
-use App\Modules\Learning\Application\Port\OrdersLineSpeech;
 use App\Modules\Generation\Application\Port\LoggedResponseReader;
 use App\Modules\Generation\Application\Port\ObservedTokenAverages;
 use App\Modules\Generation\Application\Port\DialogSummarizerPort;
@@ -96,27 +88,7 @@ use App\Modules\Generation\Infrastructure\Adapter\OpenAiTranslationRepairer;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiExampleRegenerator;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiTermEnricher;
-use App\Modules\Generation\Application\Port\PlanDefectReporter;
-use App\Modules\Generation\Application\Port\PlanPromptSource;
-use App\Modules\Generation\Application\Port\RecordsPlanSpend;
-use App\Modules\Generation\Application\Port\RescueKitSource;
-use App\Modules\Generation\Application\Service\PlanDayComposer;
-use App\Modules\Generation\Application\Service\PlanDayRepairer;
-use App\Modules\Generation\Application\Service\PlanPairCourt;
-use App\Modules\Generation\Application\Port\ListenWarmupReporter;
-use App\Modules\Generation\Application\Service\PlanListenService;
-use App\Modules\Generation\Application\Service\PlanOutlineService;
-use App\Modules\Generation\Infrastructure\Adapter\ConfigRescueKit;
-use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedEnrichmentDispatcher;
-use App\Modules\Generation\Infrastructure\Adapter\QueuedPlanDayDispatcher;
-use App\Modules\Generation\Infrastructure\Eloquent\EloquentPlanSpendLedger;
-use App\Modules\Generation\Infrastructure\Adapter\LoggingListenWarmupReporter;
-use App\Modules\Generation\Infrastructure\Adapter\LoggingPlanDefectReporter;
-use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
-use App\Modules\Learning\Application\Port\DispatchesPlanDay;
-use App\Modules\Learning\Application\Port\ListenWarmupPort;
-use App\Modules\Learning\Application\Port\PlanOutlinePort;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedGenerationDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedExampleRepairDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedImageAttachmentDispatcher;
@@ -143,8 +115,8 @@ use App\Modules\Generation\Infrastructure\Prompt\PromptLibrary;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Vocabulary\Application\Port\DispatchesTermEnrichment;
 use Illuminate\Support\Facades\Route;
-use RuntimeException;
 use Illuminate\Support\ServiceProvider;
+use RuntimeException;
 
 final class GenerationServiceProvider extends ServiceProvider
 {
@@ -155,89 +127,6 @@ final class GenerationServiceProvider extends ServiceProvider
         // runtime fact about keys, which the catalogue reports rather than a driver switch decides.
         $this->app->bind(ContentModelCatalog::class, ConfiguredContentModelCatalog::class);
 
-        // ---- learning plans ------------------------------------------------------------------
-        // Both plan calls run on the CORE model and the CORE provider — the same ones the card's
-        // core runs on, and for the same reason the A/B chose it (bakeoff-v11-ab, К2): a plan is
-        // written once and read for the whole life of the plan. There is no separate knob, so
-        // moving the core moves the plan with it, which is the behaviour that keeps the two from
-        // silently diverging in quality.
-        $this->app->bind(PlanPromptSource::class, PlanPromptLibrary::class);
-        $this->app->bind(DispatchesPlanDay::class, QueuedPlanDayDispatcher::class);
-        // The plan's LEDGER. Bound unconditionally — there is no `fake` variant and there will not
-        // be one: a test that could quietly skip the accounting is a test that would have passed
-        // through the bug this ledger exists because of.
-        $this->app->bind(RecordsPlanSpend::class, EloquentPlanSpendLedger::class);
-
-        $this->app->bind(PlanOutlinePort::class, function (): PlanOutlinePort {
-            return new PlanOutlineService(
-                model: $this->planModel(),
-                prompts: $this->app->make(PlanPromptSource::class),
-                ledger: $this->app->make(RecordsPlanSpend::class),
-                defects: $this->app->make(PlanDefectReporter::class),
-            );
-        });
-
-        // P-Listen — the same model as the skeleton, because it answers the same question about
-        // the same goal one screen earlier. No defect reporter: the step has no counters, and its
-        // only failure mode is «шаг не предложили», which is a log line.
-        $this->app->bind(ListenWarmupReporter::class, LoggingListenWarmupReporter::class);
-
-        $this->app->bind(ListenWarmupPort::class, function (): ListenWarmupPort {
-            return new PlanListenService(
-                model: $this->planModel(),
-                prompts: $this->app->make(PlanPromptSource::class),
-                ledger: $this->app->make(RecordsPlanSpend::class),
-                reporter: $this->app->make(ListenWarmupReporter::class),
-            );
-        });
-
-        // The one defect of a plan day that is repaired instead of refused has to be visible.
-        $this->app->bind(PlanDefectReporter::class, LoggingPlanDefectReporter::class);
-
-        // P2R runs on the SAME model as the day it repairs. Not a knob: a repaired card is judged
-        // by the gates the day was judged by and sits beside cards the day model wrote, so a
-        // cheaper model here would show up as one card of fourteen written differently from the
-        // rest, which is precisely the defect the repair exists to remove.
-        $this->app->bind(PlanDayRepairer::class, function (): PlanDayRepairer {
-            return new PlanDayRepairer(
-                model: $this->planModel(),
-                prompts: $this->app->make(PlanPromptSource::class),
-                ledger: $this->app->make(RecordsPlanSpend::class),
-            );
-        });
-
-        // THE LANGUAGE PACK'S FIVE PHRASES (канон §5) — read, never generated. Config and not a
-        // constant for the reason every content judgement here is: it will move, and moving it must
-        // not be a deploy of the Domain.
-        $this->app->bind(RescueKitSource::class, function (): RescueKitSource {
-            $pack = config('generation.plan.rescue_kit');
-
-            return new ConfigRescueKit(is_array($pack) ? $pack : []);
-        });
-
-        // СУД НАД ПАРАМИ (P2 v0.6) — на том же адаптере, что и день: судья и переписчик судят
-        // реплики, которые модель дня написала, и второй вендор здесь был бы вторым вкусом.
-        $this->app->bind(PlanPairCourt::class, function (): PlanPairCourt {
-            return new PlanPairCourt(
-                model: $this->planModel(),
-                prompts: $this->app->make(PlanPromptSource::class),
-                ledger: $this->app->make(RecordsPlanSpend::class),
-                defects: $this->app->make(PlanDefectReporter::class),
-            );
-        });
-
-        $this->app->bind(PlanDayComposer::class, function (): PlanDayComposer {
-            return new PlanDayComposer(
-                model: $this->planModel(),
-                prompts: $this->app->make(PlanPromptSource::class),
-                ledger: $this->app->make(RecordsPlanSpend::class),
-                defects: $this->app->make(PlanDefectReporter::class),
-                repairer: $this->app->make(PlanDayRepairer::class),
-                validator: $this->planDayValidator(),
-                rescueKit: $this->app->make(RescueKitSource::class),
-                court: $this->app->make(PlanPairCourt::class),
-            );
-        });
         // The admin sandbox's own registry. A SECOND catalogue beside the one above, not a widening
         // of it: this one hands out adapters that send no system prompt and demand no schema, which
         // is exactly what nothing on the production path may ever get.
@@ -262,20 +151,7 @@ final class GenerationServiceProvider extends ServiceProvider
         $this->app->bind(DispatchesGeneration::class, QueuedGenerationDispatcher::class);
         $this->app->bind(DispatchesImageAttachment::class, QueuedImageAttachmentDispatcher::class);
 
-        // ---- ОЗВУЧКА РЕПЛИК (наряд TTS-1) ----------------------------------------------------
-        // Тумблер трубы сидит в ДИСПЕТЧЕРЕ: выключено — джоба не ставится, и ни один байт не
-        // уходит вендору. «Выключено» значит «никто никуда не ходил», а не «сходили и передумали».
-        $this->app->bind(DispatchesLineSpeech::class, fn (): DispatchesLineSpeech => new QueuedLineSpeechDispatcher(
-            (bool) config('generation.speech.enabled', false),
-        ));
-        // …и тот же диспетчер, отданный ПОСАДКЕ: она видит недостачу первой, потому что ищет
-        // адреса файлов ровно перед тем, как человек их услышит (наряд DAY-2-FIX, доп. про
-        // «Готовим озвучку» навсегда). Порт живёт в Learning, адаптер здесь — Learning не зависит
-        // от Generation, и deptrac это держит.
-        $this->app->bind(OrdersLineSpeech::class, fn (): OrdersLineSpeech => new QueuedLineSpeechOrders(
-            $this->app->make(DispatchesLineSpeech::class),
-        ));
-        $this->app->bind(LineSpeechReporter::class, LoggingLineSpeechReporter::class);
+        // ---- ОЗВУЧКА (речь вендора → mp3) --------------------------------------------------
         // Кодировщик озвучки: PCM вендора → mp3. Битрейт — конфиг, потому что это решение «по уху».
         $this->app->bind(SpeechEncoder::class, fn (): SpeechEncoder => new LameSpeechEncoder(
             bitrateKbps: (int) config('generation.speech.mp3_bitrate', 64),
@@ -609,16 +485,6 @@ final class GenerationServiceProvider extends ServiceProvider
                 );
         });
 
-        // Полки, которые озвучиваются, — конфиг, а не константа обработчика. Контекстная привязка
-        // по имени параметра, а не ручная сборка обработчика: собрать его руками значило бы, что
-        // Infrastructure Generation'а знает классы Collections, чего ей нельзя (deptrac).
-        $this->app->when(SpeakCollectionLinesHandler::class)
-            ->needs('$shelves')
-            ->give(static fn (): array => array_values(array_filter(array_map(
-                'strval',
-                (array) config('generation.speech.shelves', ['hear', 'rescue']),
-            ))));
-
         $this->app->bind(ImageSearchPort::class, function (): ImageSearchPort {
             if (config('services.generation.image_driver') === 'fake') {
                 return new FakePexelsImageSearch((string) config('services.pexels.fake_mode', 'found'));
@@ -717,124 +583,5 @@ final class GenerationServiceProvider extends ServiceProvider
         if (is_file($routes)) {
             Route::middleware('api')->prefix('api/v1')->group($routes);
         }
-    }
-
-    /**
-     * The model both plan prompts run on.
-     *
-     * `fake` honours the same switch every other adapter honours, so a test suite never reaches a
-     * vendor — and the failure it produces if the key is missing names the env var, because «план
-     * не собрался» with no reason is the least useful error this feature can produce.
-     */
-    /**
-     * The day's gate, holding the one list it is not allowed to own: what a repair move sounds
-     * like, per target language. The rule («every day has one») is Domain; the phrases are content,
-     * and content that will be wrong belongs in config — see `config/generation.php`.
-     *
-     * A language mapped to an EMPTY list is carried through as an empty list, not replaced by the
-     * default: «German's list is not written yet» is a deliberate state and switches the check off
-     * for German.
-     */
-    private function planDayValidator(): \App\Modules\Generation\Domain\Service\PlanDayValidator
-    {
-        $configured = config('generation.plan.day.repair_markers');
-        $presence = $this->translationKeyPresence();
-        $basics = $this->basicVocabulary();
-
-        if (! is_array($configured)) {
-            return new \App\Modules\Generation\Domain\Service\PlanDayValidator(
-                keyPresence: $presence,
-                basics: $basics,
-            );
-        }
-
-        $markers = [];
-        foreach ($configured as $lang => $phrases) {
-            if (! is_string($lang) || ! is_array($phrases)) {
-                continue;
-            }
-            $markers[mb_strtolower($lang)] = array_values(array_filter(
-                $phrases,
-                static fn (mixed $p): bool => is_string($p) && trim($p) !== '',
-            ));
-        }
-
-        return new \App\Modules\Generation\Domain\Service\PlanDayValidator(
-            repairMarkers: $markers,
-            keyPresence: $presence,
-            basics: $basics,
-        );
-    }
-
-    /**
-     * The stop-list of basic vocabulary, overridden from config when there is an override.
-     *
-     * Same shape as the repair phrases and for the same reason: a list of words is a product
-     * judgement, it will be wrong, and being wrong about it must not be a deploy of the Domain. An
-     * EMPTY config leaves the shipped list alone rather than switching the gate off — «нечего
-     * переопределять» и «этого языка не судить» это два разных факта, and the second one is said by
-     * a language having no list at all.
-     */
-    private function basicVocabulary(): \App\Modules\Generation\Domain\Service\BasicVocabulary
-    {
-        $configured = config('generation.plan.day.basic_stop_list');
-        if (! is_array($configured) || $configured === []) {
-            return new \App\Modules\Generation\Domain\Service\BasicVocabulary();
-        }
-
-        $lists = [];
-        foreach ($configured as $lang => $words) {
-            if (! is_string($lang) || ! is_array($words)) {
-                continue;
-            }
-            $lists[mb_strtolower($lang)] = array_values(array_filter(
-                $words,
-                static fn (mixed $w): bool => is_string($w) && trim($w) !== '',
-            ));
-        }
-
-        return new \App\Modules\Generation\Domain\Service\BasicVocabulary($lists);
-    }
-
-    /**
-     * The stem lengths the translation gate compares by — a judgement about a language, so config,
-     * for the same reason the repair phrases are. A language absent from the map is not judged.
-     */
-    private function translationKeyPresence(): \App\Modules\Generation\Domain\Service\TranslationKeyPresence
-    {
-        $configured = config('generation.plan.day.translation_stems');
-        if (! is_array($configured)) {
-            return new \App\Modules\Generation\Domain\Service\TranslationKeyPresence();
-        }
-
-        $stems = [];
-        foreach ($configured as $lang => $length) {
-            if (is_string($lang) && is_int($length) && $length > 0) {
-                $stems[mb_strtolower($lang)] = $length;
-            }
-        }
-
-        return new \App\Modules\Generation\Domain\Service\TranslationKeyPresence($stems);
-    }
-
-    private function planModel(): \App\Modules\Generation\Application\Port\ContentModelPort
-    {
-        if (config('services.generation.driver') === 'fake') {
-            return new FakePlanContentModel();
-        }
-
-        $stack = $this->app->make(GenerationStackConfig::class);
-
-        // `plan` — the purpose the request log stamps on both P1 and P2, so «сколько стоил план»
-        // is a question the cost screens can answer without being told which rows to add up.
-        $model = $this->app->make(ContentModelCatalog::class)->get($stack->coreProvider, $stack->coreModel, 'plan');
-        if ($model === null) {
-            throw new RuntimeException(
-                "Планы настроены на провайдера «{$stack->coreProvider->value}», у которого нет ключа. "
-                . 'Поставьте ключ или смените GENERATION_CORE_PROVIDER.'
-            );
-        }
-
-        return $model;
     }
 }

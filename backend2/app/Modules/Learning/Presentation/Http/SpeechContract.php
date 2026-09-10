@@ -24,7 +24,7 @@ final class SpeechContract
     public static function block(): array
     {
         return [
-            'thresholds' => SpeechGradingRules::fromConfig((array) config('learning.plan.speech', []))->toArray(),
+            'thresholds' => SpeechGradingRules::fromConfig((array) config('learning.speech', []))->toArray(),
             'normalization' => SpeechNormalization::forWire(),
         ];
     }

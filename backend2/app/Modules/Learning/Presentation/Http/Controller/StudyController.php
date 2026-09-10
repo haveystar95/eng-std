@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Presentation\Http\Controller;
 
-use App\Modules\Learning\Application\Command\BuildPlanSession;
-use App\Modules\Learning\Application\Command\BuildPlanSessionHandler;
 use App\Modules\Learning\Application\Command\BuildStudySession;
 use App\Modules\Learning\Application\Command\BuildStudySessionHandler;
 use App\Modules\Learning\Application\Command\CompleteStudySession;
 use App\Modules\Learning\Application\Command\CompleteStudySessionHandler;
 use App\Modules\Learning\Application\Query\GetCollectionsProgress;
 use App\Modules\Learning\Application\Query\GetCollectionsProgressHandler;
-use App\Modules\Learning\Application\Query\GetPlan;
-use App\Modules\Learning\Application\Query\GetPlanHandler;
 use App\Modules\Learning\Application\Query\GetProgressByLanguage;
 use App\Modules\Learning\Application\Query\GetProgressByLanguageHandler;
 use App\Modules\Learning\Application\Query\GetUserStats;
@@ -23,7 +19,6 @@ use App\Modules\Learning\Presentation\Http\Request\BuildSessionRequest;
 use App\Modules\Learning\Presentation\Http\Request\CompleteSessionRequest;
 use App\Modules\Learning\Presentation\Http\Resource\CollectionProgressResource;
 use App\Modules\Learning\Presentation\Http\Resource\LanguageProgressResource;
-use App\Modules\Learning\Presentation\Http\Resource\PlanSessionResource;
 use App\Modules\Learning\Presentation\Http\Resource\SessionResource;
 use App\Modules\Learning\Presentation\Http\Resource\StatsResource;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -41,33 +36,12 @@ final class StudyController
         private readonly GetUserStatsHandler $userStats,
         private readonly GetCollectionsProgressHandler $collectionsProgress,
         private readonly GetProgressByLanguageHandler $progressByLanguage,
-        private readonly BuildPlanSessionHandler $buildPlanSession,
-        private readonly GetPlanHandler $activePlan,
     ) {}
 
-    public function session(BuildSessionRequest $request): SessionResource|JsonResponse
+    public function session(BuildSessionRequest $request): SessionResource
     {
         $collectionId = $request->string('collection_id')->toString();
         $sessionId = $request->string('session_id')->toString();
-
-        // `scope=plan` — the same button, a different mechanism. The client asks for «today» and the
-        // server decides whether today is a plan day; without this the device would have to hold its
-        // own copy of «is a plan running and which day am I on», which is exactly the state the
-        // server computes and the device must not second-guess.
-        if ($request->string('scope')->toString() === 'plan') {
-            $plan = ($this->activePlan)(new GetPlan($this->actorId($request)));
-            if ($plan !== null) {
-                $session = ($this->buildPlanSession)(new BuildPlanSession(
-                    actorId: $this->actorId($request),
-                    planId: $plan->id,
-                    sessionId: $sessionId !== '' ? StudySessionId::fromString($sessionId) : null,
-                ));
-
-                return new JsonResponse(['data' => (new PlanSessionResource($session))->toArray($request)]);
-            }
-            // No plan running. NOT an error: «занимайся» with no plan is the ordinary session, and
-            // 404 here would make the client special-case a state it has no way to predict.
-        }
 
         $session = ($this->buildSession)(new BuildStudySession(
             actorId: $this->actorId($request),

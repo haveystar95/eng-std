@@ -44,10 +44,14 @@ return new class extends Migration
         // and the plan days are the few.
         DB::statement('CREATE INDEX collections_origin_idx ON collections (origin) WHERE origin IS NOT NULL');
 
-        DB::statement(
-            "UPDATE collections SET origin = 'plan' WHERE id IN "
-            . '(SELECT collection_id FROM learning_plan_days WHERE collection_id IS NOT NULL)'
-        );
+        // The v1 plan tables are gone since PLAN-GEN (2026-09-10); a fresh database never has them,
+        // and the backfill was history the day it ran.
+        if (Schema::hasTable('learning_plan_days')) {
+            DB::statement(
+                "UPDATE collections SET origin = 'plan' WHERE id IN "
+                . '(SELECT collection_id FROM learning_plan_days WHERE collection_id IS NOT NULL)'
+            );
+        }
     }
 
     public function down(): void

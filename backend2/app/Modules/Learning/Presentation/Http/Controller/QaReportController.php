@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Presentation\Http\Controller;
 
-use App\Modules\Learning\Application\Port\QaPlanClock;
+use App\Modules\Learning\Application\Port\QaToolsDoor;
 use App\Modules\Learning\Application\Port\QaReportStore;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Http\JsonResponse;
@@ -15,8 +15,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 /**
  * `POST /qa/report` — «жалоба» одним тапом с телефона (наряд DAY-GATE-1, Ч.0.5).
  *
- * За той же дверью, что и сдвиг часов плана: `is_qa` И среда не production, и решает это СЕРВЕР
- * ({@see QaPlanClock::isOpenFor()}) — второе правило про ту же дверь однажды разошлось бы с первым.
+ * За той же дверью, что и вход без пароля: `is_qa` И среда не production, и решает это СЕРВЕР
+ * ({@see QaToolsDoor::isOpenFor()}) — второе правило про ту же дверь однажды разошлось бы с первым.
  * Закрытой двери отвечаем 404, а не 403: существует ли инструмент — не то, что обычный аккаунт
  * узнаёт.
  *
@@ -33,7 +33,7 @@ final class QaReportController
     private const MAX_REPORT_BYTES = 262144;
 
     public function __construct(
-        private readonly QaPlanClock $door,
+        private readonly QaToolsDoor $door,
         private readonly QaReportStore $store,
     ) {}
 

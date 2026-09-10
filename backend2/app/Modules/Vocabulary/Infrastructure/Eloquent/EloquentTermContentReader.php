@@ -17,7 +17,7 @@ final class EloquentTermContentReader implements TermContentReader
         private readonly ExampleTranslationPick $examplePick = new ExampleTranslationPick(),
     ) {}
 
-    public function byIds(array $termIds, SupportLanguages $langs, ?string $scopeCollectionId = null): array
+    public function byIds(array $termIds, SupportLanguages $langs): array
     {
         if ($termIds === []) {
             return [];
@@ -53,27 +53,9 @@ final class EloquentTermContentReader implements TermContentReader
         // server built. `id` is a ULID, so ordering by it pins the term's FIRST example and keeps
         // the same one for good. Same order as EloquentExampleRegenContextReader, so "New example"
         // replaces the example the user is actually looking at.
-        //
-        // …with ONE thing ranked above «first»: an example written for the collection this batch is
-        // being read through. A plan day writes its terms a sentence in that day's own situation
-        // (`term_examples.scope_collection_id`), and a word re-met in yesterday's context teaches
-        // nothing — so inside the day's collection that sentence wins. The ranking also protects the
-        // ordinary session in the other direction: an example belonging to SOME OTHER collection
-        // sorts last, so a plan day's sentence cannot leak into a session that is not that day's.
         $examples = [];
-        $rank = [];
         foreach (DB::table('term_examples')->whereIn('term_id', $ids)->orderBy('id')->get() as $row) {
-            $scope = $row->scope_collection_id === null ? null : (string) $row->scope_collection_id;
-            $termId = (string) $row->term_id;
-            $candidate = match (true) {
-                $scopeCollectionId !== null && $scope === $scopeCollectionId => 0,   // this day's own
-                $scope === null => 1,                                               // the general one
-                default => 2,                                                       // somebody else's
-            };
-            if (! isset($examples[$termId]) || $candidate < $rank[$termId]) {
-                $examples[$termId] = $row;
-                $rank[$termId] = $candidate;
-            }
+            $examples[(string) $row->term_id] ??= $row;
         }
 
         // The device grades typed answers offline against {text ∪ variants}, so the variants travel
@@ -174,17 +156,6 @@ final class EloquentTermContentReader implements TermContentReader
                 // told they are wrong by a card that simply pinned «цель».
                 translations: $allTranslations[$id] ?? [],
                 transliterationHint: $transliterations[$id] ?? null,
-                // The two facts a plan day wrote onto the term. Null on everything else, and the
-                // plan ladder is the only reader.
-                kind: $term->kind !== null ? (string) $term->kind : null,
-                frame: $term->frame !== null ? (string) $term->frame : null,
-                speaker: $term->speaker !== null ? (string) $term->speaker : null,
-                speakingKey: $term->speaking_key !== null ? (string) $term->speaking_key : null,
-                speakingKeys: self::speakingKeysOf($term->speaking_keys ?? null),
-                shelf: $term->shelf !== null ? (string) $term->shelf : null,
-                tier: $term->tier !== null ? (string) $term->tier : null,
-                skillRef: $term->skill_ref !== null ? (string) $term->skill_ref : null,
-                topical: (bool) ($term->topical ?? false),
             );
         }
 
@@ -219,28 +190,6 @@ final class EloquentTermContentReader implements TermContentReader
             foreach (DB::table('term_translations')->whereIn('term_id', $groupIds)->where('lang', $lang)
                 ->orderByDesc('is_primary')->orderBy('id')->get(['term_id', 'text']) as $row) {
                 $out[(string) $row->term_id][] = (string) $row->text;
-            }
-        }
-
-        return $out;
-    }
-
-    /**
-     * `terms.speaking_keys` as a list of non-empty strings — a JSON list on the row, or null.
-     *
-     * @return list<string>
-     */
-    private static function speakingKeysOf(mixed $raw): array
-    {
-        $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
-        if (! is_array($decoded)) {
-            return [];
-        }
-
-        $out = [];
-        foreach ($decoded as $value) {
-            if (is_string($value) && trim($value) !== '') {
-                $out[] = trim($value);
             }
         }
 

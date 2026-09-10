@@ -25,10 +25,13 @@ Paradigm: **modular monolith + pragmatic DDD + CQRS-lite**.
 app/Modules/
 ├── Shared/        Kernel: ValueObjects, DomainEvent, Clock, Result, IDs
 ├── Identity/      users, tokens, devices, settings
-├── Vocabulary/    Term (word | phrase), translations, examples, audio
+├── Vocabulary/    Term (word | phrase), translations, examples
 ├── Collections/   collections (system / shared / custom), items, subscriptions
 ├── Learning/      progress, scheduling (SRS), study sessions, reviews, stats
-└── Generation/    AI collection generation: requests, prompts, quotas, cost
+├── Generation/    AI collection generation: requests, prompts, quotas, cost
+├── Plan/          the learning plan: two prompts, code checks, dealt days (docs/plan-v2.md)
+├── Observability/ API request/response log
+└── Admin/         back-office read surface
 ```
 
 Each module has the same four layers:
@@ -46,7 +49,7 @@ Domain → nothing. Application → Domain. Infrastructure/Presentation → Appl
 Cross-module: **only** through the other module's `Application` layer (a Query/Command) or via domain events. Never touch another module's Eloquent model or table directly.
 
 **Pragmatism, deliberately:** full DDD everywhere is overkill for this app.
-- Rich domain models (pure PHP + mapper): `Learning`, `Vocabulary`, `Collections` — that's where the rules live.
+- Rich domain models (pure PHP + mapper): `Learning`, `Vocabulary`, `Collections`, `Plan` — that's where the rules live.
 - Laravel-native (Eloquent + Actions): `Identity` — Sanctum's `User` stays an Eloquent model, no ceremony.
 - The rule is: **logic-heavy context → rich model; CRUD context → thin.** Documented per module in its own README.
 

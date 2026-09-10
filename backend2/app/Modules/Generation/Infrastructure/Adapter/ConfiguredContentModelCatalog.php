@@ -94,13 +94,14 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         return $out;
     }
 
-    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null): ?ContentModelPort
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null): ?ContentModelPort
     {
         $row = $this->config[$provider->value];
         $key = trim($row['key']);
         if ($key === '') {
             return null;
         }
+        $timeout = $timeoutSeconds !== null && $timeoutSeconds > 0 ? $timeoutSeconds : $this->timeoutSeconds;
 
         // THE gate, at the one place a content model is constructed. Everything that reaches a
         // vendor through `ContentModelPort` — the core generator, the станок, the bake-off, both
@@ -122,7 +123,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 apiKey: $key,
                 model: $model,
                 baseUrl: $row['base'],
-                timeoutSeconds: $this->timeoutSeconds,
+                timeoutSeconds: $timeout,
                 purpose: $purpose,
             ),
             ProviderId::Anthropic => new AnthropicContentModel(
@@ -130,7 +131,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 apiKey: $key,
                 model: $model,
                 baseUrl: $row['base'],
-                timeoutSeconds: $this->timeoutSeconds,
+                timeoutSeconds: $timeout,
                 purpose: $purpose,
             ),
             // OpenAI and xAI speak the same wire format — see OpenAiCompatibleContentModel.
@@ -140,7 +141,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 apiKey: $key,
                 model: $model,
                 baseUrl: $row['base'],
-                timeoutSeconds: $this->timeoutSeconds,
+                timeoutSeconds: $timeout,
                 purpose: $purpose,
             ),
         };

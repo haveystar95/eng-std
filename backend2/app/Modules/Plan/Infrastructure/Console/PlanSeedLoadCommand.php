@@ -1,0 +1,136 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Plan\Infrastructure\Console;
+
+use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Service\PlanCalendar;
+use App\Modules\Plan\Domain\ValueObject\DayType;
+use App\Modules\Plan\Domain\ValueObject\PlanLevel;
+use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
+use App\Modules\Shared\Domain\ValueObject\Ulid;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * A LOAD OF PLANS FOR EXPLAIN: N plans of six days for one learner, every scene with a lesson row,
+ * every day dealt with about 67 cards — the shape of a real plan, without a model call. The
+ * numbers the наряд asks for (≥50 plans, 300 days, 20 000 cards) are the defaults.
+ *
+ * Refused on the main database: this is a measuring rig, not content.
+ */
+final class PlanSeedLoadCommand extends Command
+{
+    protected $signature = 'plan:seed-load {user : owner user id} {--plans=50} {--cards-per-day=67}';
+
+    protected $description = 'Seed a synthetic plan load (plans, days, scenes, cards, terms) for query analysis';
+
+    private const KINDS = [
+        'words' => ['word_intro', 'word_say', 'word_choose', 'word_cloze'],
+        'phrases' => ['phrase_intro', 'phrase_repeat', 'phrase_assemble'],
+        'dialogue' => ['dialogue_read'],
+        'listen' => ['listen_question', 'answer_choose'],
+        'speak' => ['speak'],
+    ];
+
+    public function handle(): int
+    {
+        $database = (string) config('database.connections.'.config('database.default').'.database');
+        if ($database === 'wordtrainer') {
+            $this->error('Refusing on the main database.');
+
+            return self::FAILURE;
+        }
+        $userId = is_string($this->argument('user')) ? $this->argument('user') : '';
+        $plans = max(1, (int) $this->option('plans'));
+        $perDay = max(5, (int) $this->option('cards-per-day'));
+        $now = now();
+        $daysTotal = 6;
+        $created = ['plans' => 0, 'days' => 0, 'cards' => 0, 'terms' => 0];
+        // A real lesson shape: the mapper re-parses every stored lesson, and a stub would be a 500.
+        $lessonJson = json_encode(FakePlanModel::lessonPayload(new LessonRequest('Сцена', 'x', 'English', 'Russian', PlanLevel::Beginner, 6, 8, 8)), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+
+        // One live plan per learner is a unique index; the seed's first plan is the live one only
+        // when the learner has none.
+        $hasActive = DB::table('plans')->where('user_id', $userId)->where('status', 'active')->exists();
+        for ($p = 0; $p < $plans; $p++) {
+            $planId = Ulid::generate();
+            $status = $p === 0 && ! $hasActive ? 'active' : ($p % 5 === 0 ? 'finished' : 'ready');
+            DB::table('plans')->insert([
+                'id' => $planId, 'user_id' => $userId, 'goal_text' => "load plan {$p}", 'target_lang' => 'en',
+                'native_lang' => 'ru', 'level' => 'beginner', 'days_total' => $daysTotal, 'days_requested' => $daysTotal,
+                'status' => $status, 'title_native' => "План {$p}", 'title_target' => "Plan {$p}",
+                'event_native' => 'Приём', 'until_phrase_native' => 'До приёма', 'overdue_native' => 'Приём был вчера',
+                'prompt_version_plan' => 'plan-builder-v2', 'build_version' => 'seed', 'model_plan' => 'seed',
+                'cost_usd_plan' => '0.010000', 'checks_json' => '[]', 'started_at' => $now, 'created_at' => $now, 'updated_at' => $now,
+            ]);
+            $created['plans']++;
+
+            $sceneIds = [];
+            $layout = PlanCalendar::layout($daysTotal);
+            $order = 0;
+            foreach ($layout as $index => $type) {
+                $dayId = Ulid::generate();
+                $sceneId = null;
+                if ($type === DayType::Scene) {
+                    $order++;
+                    $sceneId = Ulid::generate();
+                    $sceneIds[] = $sceneId;
+                    DB::table('plan_scenes')->insert([
+                        'id' => $sceneId, 'plan_id' => $planId, 'user_id' => $userId, 'order' => $order, 'kind' => 'situation',
+                        'priority' => $order, 'title_native' => "Сцена {$order}", 'title_target' => "Scene {$order}",
+                        'teaches_native' => 'описать боль', 'goals_native' => '["a","b","c"]', 'learner_role_target' => 'Parent',
+                        'learner_role_native' => 'Родитель', 'partner_role_target' => 'Doctor', 'partner_role_native' => 'Врач',
+                        'topic_description' => 'Situation: x. Learner: y. Partner: z. Learner must be able to: a. Partner will: b. Not in this scene: c.',
+                        'image_prompt' => 'clinic', 'lesson_json' => $lessonJson, 'lesson_status' => 'ready',
+                        'prompt_version_lesson' => 'lesson-v3', 'build_version' => 'seed', 'model_lesson' => 'seed',
+                        'cost_usd_lesson' => '0.050000', 'checks_json' => '[]', 'generated_at' => $now, 'created_at' => $now, 'updated_at' => $now,
+                    ]);
+                    $terms = [];
+                    for ($t = 0; $t < 14; $t++) {
+                        $terms[] = [
+                            'id' => Ulid::generate(), 'scene_id' => $sceneId, 'user_id' => $userId,
+                            'kind' => $t < 8 ? 'word' : 'phrase', 'ref' => ($t < 8 ? 'v' : 'p').($t < 8 ? $t + 1 : $t - 7),
+                            'position' => $t, 'text_target' => "term {$t}", 'text_native' => "термин {$t}",
+                            'simplified_variants' => '[]', 'created_at' => $now, 'updated_at' => $now,
+                        ];
+                    }
+                    DB::table('plan_terms')->insert($terms);
+                    $created['terms'] += count($terms);
+                }
+                $dayStatus = $index === 0 ? 'closed' : ($index === 1 ? 'in_progress' : 'locked');
+                DB::table('plan_days')->insert([
+                    'id' => $dayId, 'plan_id' => $planId, 'user_id' => $userId, 'number' => $index + 1, 'type' => $type->value,
+                    'scene_id' => $sceneId, 'status' => $dayStatus, 'opens_on' => $now->copy()->addDays($index)->toDateString(),
+                    'cards_total' => $perDay, 'cards_done' => $index === 0 ? $perDay : 0, 'created_at' => $now, 'updated_at' => $now,
+                ]);
+                $created['days']++;
+
+                $cards = [];
+                $position = [];
+                for ($c = 0; $c < $perDay; $c++) {
+                    $stage = array_keys(self::KINDS)[$c % 5];
+                    $kind = self::KINDS[$stage][$c % count(self::KINDS[$stage])];
+                    $position[$stage] = ($position[$stage] ?? 0) + 1;
+                    $answered = $index === 0;
+                    $cards[] = [
+                        'id' => Ulid::generate(), 'day_id' => $dayId, 'user_id' => $userId, 'stage' => $stage,
+                        'position' => $position[$stage], 'kind' => $kind,
+                        'payload' => json_encode(['scene_id' => $sceneId ?? $sceneIds[0] ?? '', 'text_target' => "card {$c}"], JSON_THROW_ON_ERROR),
+                        'source' => 'today', 'unit_kind' => $stage === 'words' ? 'word' : ($stage === 'phrases' ? 'phrase' : 'exchange'),
+                        'unit_ref' => 'u'.($c % 8), 'result' => $answered ? ($c % 9 === 0 ? 'failed' : 'passed') : null,
+                        'attempts' => $answered ? 1 : 0, 'answered_at' => $answered ? $now : null,
+                        'returns' => $answered && $c % 9 === 0, 'created_at' => $now, 'updated_at' => $now,
+                    ];
+                }
+                DB::table('day_cards')->insert($cards);
+                $created['cards'] += count($cards);
+            }
+        }
+
+        $this->info(sprintf('Seeded %d plans, %d days, %d cards, %d terms for user %s.', $created['plans'], $created['days'], $created['cards'], $created['terms'], $userId));
+
+        return self::SUCCESS;
+    }
+}

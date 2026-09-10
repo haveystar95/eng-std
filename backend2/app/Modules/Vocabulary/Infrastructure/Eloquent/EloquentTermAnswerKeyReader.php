@@ -43,7 +43,7 @@ final class EloquentTermAnswerKeyReader implements TermAnswerKeyReader
         }
 
         $out = [];
-        foreach (DB::table('terms')->whereIn('id', $ids)->get(['id', 'text', 'type', 'speaking_key', 'speaking_keys']) as $row) {
+        foreach (DB::table('terms')->whereIn('id', $ids)->get(['id', 'text', 'type']) as $row) {
             $id = (string) $row->id;
             $out[$id] = new TermAnswerKeyView(
                 termId: $id,
@@ -51,31 +51,7 @@ final class EloquentTermAnswerKeyReader implements TermAnswerKeyReader
                 isPhrase: TermType::from((string) $row->type)->isPhraseLike(),
                 example: $examples[$id] ?? null,
                 synonyms: $synonyms[$id] ?? [],
-                speakingKey: $row->speaking_key !== null ? (string) $row->speaking_key : null,
-                speakingKeys: self::stringList($row->speaking_keys),
             );
-        }
-
-        return $out;
-    }
-
-    /**
-     * The `speaking_keys` column as a list of non-empty strings — a JSON list, or null.
-     *
-     * @return list<string>
-     */
-    private static function stringList(mixed $raw): array
-    {
-        $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
-        if (! is_array($decoded)) {
-            return [];
-        }
-
-        $out = [];
-        foreach ($decoded as $value) {
-            if (is_string($value) && trim($value) !== '') {
-                $out[] = trim($value);
-            }
         }
 
         return $out;

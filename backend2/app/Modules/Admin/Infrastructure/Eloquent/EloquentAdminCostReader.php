@@ -25,11 +25,10 @@ final class EloquentAdminCostReader implements AdminCostReader
 
     public function breakdownSince(?DateTimeImmutable $since): CostBreakdown
     {
-        // One table, two products, two lines. Splitting here rather than filtering somewhere
-        // upstream is what keeps the TOTAL whole: every row of the ledger lands in exactly one of
-        // the two, so no spend can fall between them.
         $generation = $this->sumCost('generation_requests', $since, 'generation');
-        $plan = $this->sumCost('generation_requests', $since, 'plan');
+        // The plan's spend is stamped on the plan and on each scene's lesson — its own two ledgers,
+        // one per model call (`docs/plan-v2.md` §3), not a purpose on the generation table.
+        $plan = $this->planCost($since);
         $practice = $this->sumCost('practice_dialogs', $since);
         $enrichment = $this->sumCost('term_enrichments', $since);
         $exampleRegen = $this->sumCost('example_regenerations', $since);
@@ -47,7 +46,7 @@ final class EloquentAdminCostReader implements AdminCostReader
     public function userBreakdownSince(string $userId, ?DateTimeImmutable $since): UserCostBreakdown
     {
         $generation = $this->category('generation_requests', $userId, $since, 'generation');
-        $plan = $this->category('generation_requests', $userId, $since, 'plan');
+        $plan = $this->planCategory($userId, $since);
         $practice = $this->category('practice_dialogs', $userId, $since);
         $exampleRegen = $this->category('example_regenerations', $userId, $since);
 
@@ -115,6 +114,7 @@ final class EloquentAdminCostReader implements AdminCostReader
 
         $parts = [
             $this->ledgerPurpose('generation', $window(DB::table('generation_requests'))),
+            new PurposeCost('plan', 0, 0, $this->planCost($since), $this->planCalls($since)),
             $this->ledgerPurpose('realtime', $window(DB::table('practice_dialogs'))),
             $this->ledgerPurpose('enrichment', $window(DB::table('term_enrichments'))),
             $this->ledgerPurpose('example_regen', $window(DB::table('example_regenerations'))),
@@ -208,6 +208,48 @@ final class EloquentAdminCostReader implements AdminCostReader
         }
 
         return new PurposeCost($purpose, $tokensIn, $tokensOut, round($cost, 6), $rows->count());
+    }
+
+    /** The plan's two ledgers: the plan call on `plans`, the lesson call on `plan_scenes`. */
+    private function planCost(?DateTimeImmutable $since, ?string $userId = null): float
+    {
+        $plans = DB::table('plans')
+            ->when($since !== null, fn (Builder $q): Builder => $q->where('created_at', '>=', $since))
+            ->when($userId !== null, fn (Builder $q): Builder => $q->where('user_id', $userId))
+            ->sum('cost_usd_plan');
+        $lessons = DB::table('plan_scenes')
+            ->when($since !== null, fn (Builder $q): Builder => $q->where('generated_at', '>=', $since))
+            ->when($userId !== null, fn (Builder $q): Builder => $q->where('user_id', $userId))
+            ->sum('cost_usd_lesson');
+
+        return round((float) $plans + (float) $lessons, 6);
+    }
+
+    /** One call per built plan, one per written lesson — refused attempts are inside those costs. */
+    private function planCalls(?DateTimeImmutable $since, ?string $userId = null): int
+    {
+        $plans = DB::table('plans')
+            ->whereNotNull('cost_usd_plan')
+            ->when($since !== null, fn (Builder $q): Builder => $q->where('created_at', '>=', $since))
+            ->when($userId !== null, fn (Builder $q): Builder => $q->where('user_id', $userId))
+            ->count();
+        $lessons = DB::table('plan_scenes')
+            ->whereNotNull('cost_usd_lesson')
+            ->when($since !== null, fn (Builder $q): Builder => $q->where('generated_at', '>=', $since))
+            ->when($userId !== null, fn (Builder $q): Builder => $q->where('user_id', $userId))
+            ->count();
+
+        return $plans + $lessons;
+    }
+
+    private function planCategory(string $userId, ?DateTimeImmutable $since): CostCategory
+    {
+        return new CostCategory(
+            tokensIn: 0,
+            tokensOut: 0,
+            costUsd: $this->planCost($since, $userId),
+            count: $this->planCalls($since, $userId),
+        );
     }
 
     /** @param string|null $purpose narrows a shared ledger to one product; null sums the table. */

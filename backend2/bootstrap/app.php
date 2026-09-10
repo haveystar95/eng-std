@@ -22,8 +22,8 @@ use App\Modules\Generation\Presentation\Console\RecoverLostTermsCommand;
 use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
-use App\Modules\Learning\Presentation\Console\ArchivePlanTermsCommand;
-use App\Modules\Learning\Presentation\Console\ReconcilePlanDayCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanSeedLoadCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanShiftDayCommand;
 use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
 use App\Modules\Vocabulary\Presentation\Console\RelabelRepairedTranslationsCommand;
 use App\Modules\Shared\Domain\Exception\ProblemDetails;
@@ -58,9 +58,9 @@ return Application::configure(basePath: dirname(__DIR__))
         SmokePracticeDialogCommand::class,
         ExpireStaleDialogsCommand::class,
         GrantPremiumCommand::class,
+        PlanShiftDayCommand::class,
+        PlanSeedLoadCommand::class,
         VerificationStatsCommand::class,
-        ArchivePlanTermsCommand::class,
-        ReconcilePlanDayCommand::class,
         StorePublishCommand::class,
         BatchAgeProgressCommand::class,
         // The QA bench: forced-time, reset and the budget read. All three refuse in production;

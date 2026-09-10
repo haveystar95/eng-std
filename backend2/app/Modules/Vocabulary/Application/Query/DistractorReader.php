@@ -21,9 +21,6 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
  * theirs and never becomes anybody else's option. Nothing but the TEXT ever leaves this reader, so
  * an option says nothing about where it came from or whose it was.
  *
- * ONE RULE FOR EVERY SESSION. A plan's lesson and the ordinary queue differ in which pool they
- * PREFER and in how many options they insist on; they do not differ in who may fill the gap.
- *
  * EVERY option is in the TARGET'S OWN LANGUAGE, from both sources. That is the pair gate for this
  * kind of card: the options are term texts, so the studied side of the pair is the whole of what
  * shows, and a pool session legitimately mixes pairs — «привет» offered `hello`, `hola` and `ciao`
@@ -34,16 +31,7 @@ interface DistractorReader
     /**
      * @param  UserId  $userId  the learner the card is for — see the class docblock
      * @param  list<string>  $poolTermIds
-     * @param  bool  $poolOnly  DO NOT TOP UP FROM THE CATALOGUE — the pool handed in is the whole
-     *         set of legal options, and fewer of them is the right answer when it runs out.
-     *
-     *         One caller asks for it, and it is the one whose pool is a JUDGEMENT rather than a
-     *         preference: the options of a turn in a scene's conversation are the lines of that plan
-     *         the learner could actually say next ({@see
-     *         \App\Modules\Learning\Domain\Service\PlanAnswerOptions}). A catalogue sentence topped
-     *         up beside them is not a weaker option, it is a line from a different conversation —
-     *         and «в абракадабру не падать» is the whole point of the rule that built the pool.
      * @return list<string>  up to $count distractor texts
      */
-    public function forTarget(UserId $userId, TermId $targetId, array $poolTermIds, int $count, bool $poolOnly = false): array;
+    public function forTarget(UserId $userId, TermId $targetId, array $poolTermIds, int $count): array;
 }

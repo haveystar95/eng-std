@@ -38,7 +38,7 @@ uses(RefreshDatabase::class);
 /** Switch every trainer on globally — what the owner does from «Тренажёры» in the admin panel. */
 function cornerEnableEveryTrainer(): void
 {
-    DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->update(['enabled' => true]);
+    DB::table('learning_mode_settings')->whereNull('user_id')->update(['enabled' => true]);
 }
 
 /**

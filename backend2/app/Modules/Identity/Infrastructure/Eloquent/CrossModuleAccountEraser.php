@@ -9,6 +9,7 @@ use App\Modules\Generation\Application\Port\GenerationAccountEraser;
 use App\Modules\Identity\Application\Port\AccountEraser;
 use App\Modules\Learning\Application\Port\LearningAccountEraser;
 use App\Modules\Observability\Application\Port\RequestLogAnonymizer;
+use App\Modules\Plan\Application\Port\PlanAccountEraser;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Port\AuthoredTermAnonymizer;
@@ -27,6 +28,7 @@ final readonly class CrossModuleAccountEraser implements AccountEraser
         private CollectionsAccountEraser $collections,
         private LearningAccountEraser $learning,
         private GenerationAccountEraser $generations,
+        private PlanAccountEraser $plans,
         private AuthoredTermAnonymizer $authoredTerms,
         private RequestLogAnonymizer $logs,
     ) {}
@@ -34,6 +36,8 @@ final readonly class CrossModuleAccountEraser implements AccountEraser
     public function eraseFor(UserId $userId): void
     {
         $this->tx->run(function () use ($userId): void {
+            // Plans first: their collection is one of the learner's and goes with the rest below.
+            $this->plans->eraseFor($userId);
             $this->collections->eraseFor($userId);
             $this->learning->eraseFor($userId);
             $this->generations->eraseFor($userId);

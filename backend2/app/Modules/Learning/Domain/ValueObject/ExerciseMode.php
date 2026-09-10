@@ -79,45 +79,6 @@ enum ExerciseMode: string
     case Intro = 'intro';
 
     /**
-     * THE SITUATIONAL CARD — one mechanic, three shelves, and the whole of stage B for a scene.
-     *
-     * Канон §4: «B — выбрал ответ в ситуации: подсказка — ситуация на языке поддержки, не слово.»
-     * Every trainer above this one asks a question about a WORD — what it means, how it is spelled,
-     * what it sounds like. This one asks a question about a MOMENT: «Хозяин спросил про залог.
-     * Скажи, что тебя устраивает» — and the options are things a person could say next. That is the
-     * difference between knowing a phrase and being able to reach for it, which is the one thing the
-     * plan exists to buy ({@see \App\Modules\Learning\Domain\Service\SituationalPrompt}).
-     *
-     * The three cases below are ONE mechanic — situation on the support language, options on the
-     * language being learned or on the support one, a tap — split by the shelf they serve, because
-     * the shelf is what decides the tier, the rung and what happens after the tap. Splitting by
-     * shelf rather than carrying a shelf field on one mode is what lets the owner switch «Ты
-     * спросишь» on without «Ты ответишь», which is how every trainer before them shipped.
-     *
-     * `situational_hear` — «Что скажут». The interlocutor's line is PLAYED (no text until the
-     * learner asks for it) and the options are three or four MEANINGS in the support language. It is
-     * the second touch of the понимаю tier ({@see PlanStageLadder::KIND_UNDERSTAND}), the first
-     * being the recognition of the day it was met. Its correct option is a translation, so — like
-     * the forward-recognition card and for the identical reason — it is graded by IDENTITY and never
-     * by text ({@see gradesByOptionId()}); no translation ever enters an answer key.
-     */
-    case SituationalHear = 'situational_hear';
-
-    /**
-     * «Ты ответишь» — the situation, then the learner's own possible replies, then the tap, then
-     * saying the chosen one out loud.
-     *
-     * The SPEAKING half writes nothing. One card is one answer in an append-only log, and the
-     * answer this card asks for is the CHOICE (owner's ruling, наряд SIT-1): the utterance that
-     * follows is reinforcement — говорение по ключу — and grading it would put two rows and two
-     * checklist steps where the canon puts one stage.
-     */
-    case SituationalSay = 'situational_say';
-
-    /** «Ты спросишь» — the same mechanic for the questions that buy time and detail. */
-    case SituationalAsk = 'situational_ask';
-
-    /**
      * Does this mode produce an answer to grade at all?
      *
      * Everything downstream of an answer — the grader, the latency median, the scheduler, the
@@ -154,14 +115,8 @@ enum ExerciseMode: string
             // `description_match` is a four-way tap like multiple_choice, and caps for exactly the
             // same reason: the learner recognised a word among four, which is not evidence that
             // they could produce it.
-            //
-            // The three situational cards are taps, like every other choice card here — the learner
-            // recognised the right move among three or four, which is not evidence they could have
-            // produced it cold. The spoken half of `situational_say`/`situational_ask` does not
-            // change that: it is not graded at all.
             self::MultipleChoice, self::WordBank, self::Cloze, self::Scramble, self::PickCorrect,
-            self::Speaking, self::DescriptionMatch,
-            self::SituationalHear, self::SituationalSay, self::SituationalAsk => Grade::Good,
+            self::Speaking, self::DescriptionMatch => Grade::Good,
         };
     }
 
@@ -202,11 +157,8 @@ enum ExerciseMode: string
             self::Speaking => $ladderStep !== null && $ladderStep >= LearningLadder::STEP_DICTATION,
             // The description IS the question, and the answer is the TERM — the example is not on
             // this card at all.
-            // The situational card's answer is the card's own term — the line the learner tapped
-            // (or, on `situational_hear`, its id). The example is not on the card at all.
             self::MultipleChoice, self::WordBank, self::Typing, self::Listening, self::Cloze,
-            self::DescriptionMatch,
-            self::SituationalHear, self::SituationalSay, self::SituationalAsk => false,
+            self::DescriptionMatch => false,
         };
     }
 
@@ -249,11 +201,6 @@ enum ExerciseMode: string
             // that sentence. Stated rather than left to gradesAgainstExample() so the two cannot
             // drift apart silently.
             self::Scramble, self::Dictation, self::PickCorrect => false,
-            // TAPPED, and tapped among options THIS SERVER DEALT. A synonym cannot arrive on a card
-            // whose every answer is one of ours, so admitting one would widen the key for nothing —
-            // and on `situational_hear` there is no text key to widen at all
-            // ({@see gradesByOptionId()}).
-            self::SituationalHear, self::SituationalSay, self::SituationalAsk => false,
             self::Intro => throw new \LogicException('intro accepts no answer, so nothing is accepted.'),
         };
     }
@@ -304,51 +251,6 @@ enum ExerciseMode: string
      * So: only the typed modes forgive. For word_bank and scramble the learner can only place tiles
      * we dealt, so the path was unreachable anyway — stating it here keeps it that way.
      */
-    /**
-     * IS THIS CARD GRADED BY THE ID OF THE TAPPED OPTION rather than by its text?
-     *
-     * True for exactly one trainer, and for the reason the forward-recognition card is graded that
-     * way: its correct option is a TRANSLATION. `situational_hear` plays the interlocutor's line and
-     * offers three or four meanings in the learner's own language, so grading it as text would put a
-     * translation into an answer key — the one thing the key rule forbids outright. The client
-     * uploads the tapped option's term id and the server compares ids.
-     *
-     * Kept as a predicate on the MODE rather than as a rung, deliberately. The forward-recognition
-     * path is recognised by `ladder_step === 1` and that rung carries a second meaning — «this pair
-     * is still on the ladder» — which a scene card at stage B is not: reading identity grading off
-     * the rung would have every hear card of a graduated pair dropped as a stale ladder answer
-     * ({@see \App\Modules\Learning\Application\Command\SubmitReviewsHandler::isStaleLadderAnswer()}).
-     */
-    public function gradesByOptionId(): bool
-    {
-        return $this === self::SituationalHear;
-    }
-
-    /**
-     * The three cards of the situational mechanic — one question about a moment, asked on three
-     * shelves. Read where the difference between them does not matter: the card's shape, the seam
-     * caption, the report.
-     */
-    public function isSituational(): bool
-    {
-        return $this === self::SituationalHear
-            || $this === self::SituationalSay
-            || $this === self::SituationalAsk;
-    }
-
-    /**
-     * Does the learner SAY the option they tapped, right after tapping it?
-     *
-     * True on the two speak shelves and false on `hear`, which is the tier that is never produced.
-     * The utterance is reinforcement — говорение по ключу, exactly the key the speaking card would
-     * have used — and it is not graded and not uploaded, so this changes what the CLIENT draws and
-     * nothing about the review log.
-     */
-    public function speaksAfterChoice(): bool
-    {
-        return $this === self::SituationalSay || $this === self::SituationalAsk;
-    }
-
     public function forgivesTypos(): bool
     {
         return match ($this) {
@@ -361,9 +263,7 @@ enum ExerciseMode: string
             self::MultipleChoice, self::WordBank, self::Scramble, self::PickCorrect, self::Speaking,
             // Tapped, so there is no typing to forgive — and the four options are whole different
             // words, never one character apart.
-            self::DescriptionMatch,
-            // Tapped too: the learner commits one of the lines the card put on screen.
-            self::SituationalHear, self::SituationalSay, self::SituationalAsk => false,
+            self::DescriptionMatch => false,
             self::Intro => throw new \LogicException('intro accepts no answer, so there is no typo to forgive.'),
         };
     }

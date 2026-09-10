@@ -11,6 +11,7 @@ use App\Modules\Admin\Presentation\Http\Controller\ExerciseModeController;
 use App\Modules\Admin\Presentation\Http\Controller\GenerationController;
 use App\Modules\Admin\Presentation\Http\Controller\LadderController;
 use App\Modules\Admin\Presentation\Http\Controller\ModeSettingsController;
+use App\Modules\Admin\Presentation\Http\Controller\PlanChecksController;
 use App\Modules\Admin\Presentation\Http\Controller\PlaygroundController;
 use App\Modules\Admin\Presentation\Http\Controller\PracticeDialogController;
 use App\Modules\Admin\Presentation\Http\Controller\RequestLogController;
@@ -73,6 +74,10 @@ Route::middleware('auth:admin')->group(function (): void {
     Route::delete('/collections/{id}', [CollectionController::class, 'destroy']);
 
     Route::get('/costs', [CostController::class, 'summary']);
+
+    // The plan's checks (docs/plan-v2.md §5): how often each fired, per prompt version. Read-only;
+    // a mode is switched in config/plan.php, never from the panel.
+    Route::get('/plans/checks', [PlanChecksController::class, 'index']);
 
     // «Здоровье контента» — what the dictionary is stocked with and which trainers that stock can
     // build. Read-only by design: there is deliberately no route that STARTS the enrichment run,

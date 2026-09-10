@@ -187,15 +187,9 @@ final readonly class Sm2Scheduler implements Scheduler
             // forgetting this line does not throw — it quietly un-enrols every word the moment its
             // first real answer is scheduled, and the learner watches their queue empty itself.
             enrolledAt: $p->enrolledAt(),
-            // AND WHY IT IS IN THE POOL, which is the same fact's other half and was missing here.
-            // The default is «no reasons», so the omission did not throw either: it dropped
-            // `plan:<ULID>` from every word the moment the learner FIRST ANSWERED it. The hold that
-            // keeps a running plan's words out of the ordinary day ({@see
-            // \App\Modules\Learning\Infrastructure\Eloquent\PlanHeldTerms}) reads exactly that
-            // source, so a plan lost its grip on a word by teaching it — the word rejoined «Повторить
-            // N», was dealt again by the ordinary session, and came back into the plan's own lesson
-            // through the queue instead of through the plan. Every screen was consistent with itself
-            // and none of them was right.
+            // AND WHY IT IS IN THE POOL, which is the same fact's other half. The default is «no
+            // reasons», so forgetting this line would not throw either: it would drop every reason
+            // the moment the learner FIRST ANSWERED the word.
             enrollmentSources: $p->enrollmentSources(),
         );
     }

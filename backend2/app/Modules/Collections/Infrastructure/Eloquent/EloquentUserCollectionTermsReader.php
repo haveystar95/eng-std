@@ -54,35 +54,6 @@ final class EloquentUserCollectionTermsReader implements UserCollectionTermsRead
         return array_values(array_unique(array_map(static fn ($id): string => (string) $id, $rows->all())));
     }
 
-    public function joinedAtForCollection(UserId $userId, string $collectionId, int $limit): array
-    {
-        $rows = $this->accessible(
-            DB::table('collection_items as ci')->join('collections as c', 'c.id', '=', 'ci.collection_id'),
-            $userId,
-        )
-            ->where('c.id', $collectionId)
-            ->whereNull('c.deleted_at')
-            ->whereNull('ci.deleted_at')
-            ->whereNotNull('ci.created_at')
-            ->orderBy('ci.position')
-            ->limit($limit)
-            ->get(['ci.term_id', 'ci.created_at']);
-
-        $out = [];
-        foreach ($rows as $row) {
-            // Earliest wins: the unique index makes a second live row impossible, but a term that
-            // somehow has two is one that joined once and was re-added, and the ladder must count
-            // from the first meeting.
-            $termId = (string) $row->term_id;
-            $at = new \DateTimeImmutable((string) $row->created_at);
-            if (! isset($out[$termId]) || $at < $out[$termId]) {
-                $out[$termId] = $at;
-            }
-        }
-
-        return $out;
-    }
-
     public function termIdsByCollection(UserId $userId): array
     {
         $rows = $this->accessible(

@@ -23,13 +23,11 @@ final class SharedServiceProvider extends ServiceProvider
         // the Domain never reads them itself — it is handed them here, once, for everyone who asks.
         $this->app->singleton(DistractorLength::class, static fn (): DistractorLength => new DistractorLength(
             charTolerance: (float) config('learning.distractor_length.char_tolerance', DistractorLength::DEFAULT_CHAR_TOLERANCE),
-            wordTolerance: (float) config('learning.distractor_length.word_tolerance', DistractorLength::DEFAULT_WORD_TOLERANCE),
         ));
 
-        // Голос языкового пакета (наряд TTS-1), по той же причине и в той же форме: какой голос
-        // читает реплики — продуктовое решение, и Domain получает таблицу, а не читает конфиг.
-        // ОДНА строка на всё приложение: станок покупает за этот ключ, сборка посадки за него же
-        // ищет; два места, читающие конфиг порознь, — это два ключа, которые однажды разойдутся.
+        // Голос языкового пакета, по той же причине и в той же форме: какой голос читает реплики
+        // — продуктовое решение, и Domain получает таблицу, а не читает конфиг. ОДНА строка на всё
+        // приложение: озвучка плана покупает за этот ключ и за него же ищет готовые файлы.
         $this->app->singleton(VoiceCatalog::class, static fn (): VoiceCatalog => new VoiceCatalog(
             (array) config('generation.speech.voices', []),
         ));

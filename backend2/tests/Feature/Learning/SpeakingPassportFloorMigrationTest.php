@@ -22,7 +22,7 @@ it('corrects a speaking row below the passport floor and restores it on rollback
     // it would on a database that had never seen this migration before.
     $migration->down();
 
-    DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->where('mode', 'speaking')->update([
+    DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'speaking')->update([
         'min_acquisition' => 'learning',
         'min_learning_step' => 1,
         'min_successful_reviews' => null,
@@ -30,14 +30,14 @@ it('corrects a speaking row below the passport floor and restores it on rollback
 
     $migration->up();
 
-    $fixed = DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->where('mode', 'speaking')->first();
+    $fixed = DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'speaking')->first();
     expect($fixed->min_acquisition)->toBe('graduated')
         ->and($fixed->min_learning_step)->toBeNull()
         ->and($fixed->min_successful_reviews)->toBeNull();
 
     $migration->down();
 
-    $restored = DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->where('mode', 'speaking')->first();
+    $restored = DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'speaking')->first();
     expect($restored->min_acquisition)->toBe('learning')
         ->and($restored->min_learning_step)->toBe(1)
         ->and($restored->min_successful_reviews)->toBeNull();
@@ -50,12 +50,12 @@ it('leaves a speaking row already at or above the floor untouched', function () 
     $migration = require $path;
     $migration->down();
 
-    $before = DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->where('mode', 'speaking')->first();
+    $before = DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'speaking')->first();
     expect($before->min_acquisition)->toBe('graduated'); // shipped default, untouched by prior test
 
     $migration->up();
 
-    $after = DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->where('mode', 'speaking')->first();
+    $after = DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'speaking')->first();
     expect($after->min_acquisition)->toBe('graduated')
         ->and($after->updated_at)->toEqual($before->updated_at);
 

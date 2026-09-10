@@ -11,14 +11,15 @@ use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\LiveModelGuard;
 use App\Modules\Generation\Infrastructure\Adapter\LiveModelRefusedInTests;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCompatibleContentModel;
-use App\Modules\Learning\Application\Port\PlanOutlinePort;
+use App\Modules\Plan\Application\Port\PlanModelPort;
 
 /**
  * THE GATE — no live vendor adapter is built under `APP_ENV=testing`.
  *
  * This file is the receipt for an incident, not a hypothetical. In PLAN-1b two test files bound
- * their fake under `Generation\Application\Port\PlanOutlinePort` — a class that does not exist,
- * because the port lives in `Learning`. The container took the string, the binding resolved nothing,
+ * their fake under `Generation\Application\Port\PlanOutlinePort` — a class that did not exist,
+ * because the port lived in `Learning` (today the plan's model port is `Plan\Application\Port\PlanModelPort`).
+ * The container took the string, the binding resolved nothing,
  * the real adapter stayed in place, and ≈39 `gpt-5.4` calls left the suite. The only symptom was a
  * seven-second test.
  *
@@ -91,11 +92,10 @@ it('keeps the whole suite on the fake driver by default', function () {
 // ── the binding that resolved nothing ─────────────────────────────────────────────────────────
 
 it('proves a fake is actually installed by RESOLVING it back, not by binding it', function () {
-    // THE incident, reproduced. The port lives in Learning; this is the Generation-shaped name the
-    // two test files reached for. The container accepts it as a key and stores the instance —
-    // binding «succeeds» — but nothing in the app asks for that key, so the real adapter is what
-    // gets used.
-    $wrongKey = 'App\Modules\Generation\Application\Port\PlanOutlinePort';
+    // THE incident, reproduced. The port lives in Plan; this is the Generation-shaped name a test
+    // might reach for. The container accepts it as a key and stores the instance — binding
+    // «succeeds» — but nothing in the app asks for that key, so the real adapter is what gets used.
+    $wrongKey = 'App\Modules\Generation\Application\Port\PlanModelPort';
     $fake = new FakeCollectionGenerator();
     app()->instance($wrongKey, $fake);
 
@@ -105,8 +105,8 @@ it('proves a fake is actually installed by RESOLVING it back, not by binding it'
     expect(class_exists($wrongKey))->toBeFalse()
         ->and(interface_exists($wrongKey))->toBeFalse()
         // The real port is untouched: whatever the wrong key holds, the app still resolves this one.
-        ->and(app()->bound(PlanOutlinePort::class))->toBeTrue()
-        ->and(app(PlanOutlinePort::class))->not->toBe($fake);
+        ->and(app()->bound(PlanModelPort::class))->toBeTrue()
+        ->and(app(PlanModelPort::class))->not->toBe($fake);
 });
 
 it('resolves the fake back when the port name is the real one', function () {

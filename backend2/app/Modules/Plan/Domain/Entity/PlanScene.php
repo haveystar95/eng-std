@@ -1,0 +1,279 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Plan\Domain\Entity;
+
+use App\Modules\Plan\Domain\Blueprint\SceneBrief;
+use App\Modules\Plan\Domain\Lesson\Lesson;
+use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\LessonStatus;
+use App\Modules\Plan\Domain\ValueObject\ModelCall;
+use App\Modules\Plan\Domain\ValueObject\PlanId;
+use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
+use App\Modules\Plan\Domain\ValueObject\SceneKind;
+use DateTimeImmutable;
+
+/**
+ * One scene of the plan: the brief the plan builder wrote, and — once the lesson generator has
+ * answered — the lesson itself with the cost and version it was written at.
+ */
+final class PlanScene
+{
+    /**
+     * @param  list<string>  $goalsNative
+     * @param  list<array{check: string, mode: string, action: string, detail: string}>  $findings
+     */
+    private function __construct(
+        private readonly PlanSceneId $id,
+        private readonly PlanId $planId,
+        private readonly int $order,
+        private readonly SceneKind $kind,
+        private readonly int $priority,
+        private readonly string $titleNative,
+        private readonly string $titleTarget,
+        private readonly string $teachesNative,
+        private readonly array $goalsNative,
+        private readonly string $learnerRoleTarget,
+        private readonly string $learnerRoleNative,
+        private readonly string $partnerRoleTarget,
+        private readonly string $partnerRoleNative,
+        private readonly string $topicDescription,
+        private readonly string $imagePrompt,
+        private ?Image $image,
+        private ?Lesson $lesson,
+        private LessonStatus $lessonStatus,
+        private ?ModelCall $lessonCall,
+        private array $findings,
+        private ?string $failReason,
+        private ?DateTimeImmutable $buildStartedAt,
+        private ?DateTimeImmutable $generatedAt,
+    ) {}
+
+    public static function fromBrief(PlanSceneId $id, PlanId $planId, SceneBrief $brief): self
+    {
+        return new self(
+            $id, $planId, $brief->order, $brief->kind, $brief->priority, $brief->titleNative, $brief->titleTarget,
+            $brief->teachesNative, $brief->goalsNative, $brief->learnerRoleTarget, $brief->learnerRoleNative,
+            $brief->partnerRoleTarget, $brief->partnerRoleNative, $brief->topicDescription, $brief->imagePrompt,
+            null, null, LessonStatus::Pending, null, [], null, null, null,
+        );
+    }
+
+    /**
+     * @param  list<string>  $goalsNative
+     * @param  list<array{check: string, mode: string, action: string, detail: string}>  $findings
+     */
+    public static function reconstitute(
+        PlanSceneId $id,
+        PlanId $planId,
+        int $order,
+        SceneKind $kind,
+        int $priority,
+        string $titleNative,
+        string $titleTarget,
+        string $teachesNative,
+        array $goalsNative,
+        string $learnerRoleTarget,
+        string $learnerRoleNative,
+        string $partnerRoleTarget,
+        string $partnerRoleNative,
+        string $topicDescription,
+        string $imagePrompt,
+        ?Image $image,
+        ?Lesson $lesson,
+        LessonStatus $lessonStatus,
+        ?ModelCall $lessonCall,
+        array $findings,
+        ?string $failReason,
+        ?DateTimeImmutable $buildStartedAt,
+        ?DateTimeImmutable $generatedAt,
+    ): self {
+        return new self(
+            $id, $planId, $order, $kind, $priority, $titleNative, $titleTarget, $teachesNative, $goalsNative,
+            $learnerRoleTarget, $learnerRoleNative, $partnerRoleTarget, $partnerRoleNative, $topicDescription,
+            $imagePrompt, $image, $lesson, $lessonStatus, $lessonCall, $findings, $failReason, $buildStartedAt, $generatedAt,
+        );
+    }
+
+    /** The lesson call is claimed: a second dispatch of the same scene finds it building and stops. */
+    public function startLessonBuild(DateTimeImmutable $now): void
+    {
+        $this->lessonStatus = LessonStatus::Building;
+        $this->buildStartedAt = $now;
+        $this->failReason = null;
+    }
+
+    /** @param list<array{check: string, mode: string, action: string, detail: string}> $findings */
+    public function acceptLesson(Lesson $lesson, ModelCall $call, array $findings, DateTimeImmutable $now): void
+    {
+        $this->lesson = $lesson;
+        $this->lessonStatus = LessonStatus::Ready;
+        $this->lessonCall = $call;
+        $this->findings = $findings;
+        $this->failReason = null;
+        $this->generatedAt = $now;
+    }
+
+    /** @param list<array{check: string, mode: string, action: string, detail: string}> $findings */
+    public function failLesson(string $reason, ?ModelCall $call, array $findings): void
+    {
+        $this->lessonStatus = LessonStatus::Failed;
+        $this->failReason = $reason;
+        $this->lessonCall = $call;
+        $this->findings = $findings;
+    }
+
+    /** «Не собрался — попробовать ещё раз»: back to pending so a dispatch is legal again. */
+    public function resetLesson(): void
+    {
+        $this->lessonStatus = LessonStatus::Pending;
+        $this->failReason = null;
+        $this->buildStartedAt = null;
+    }
+
+    public function attachImage(Image $image): void
+    {
+        $this->image ??= $image;
+    }
+
+    public function needsLesson(): bool
+    {
+        return $this->lessonStatus === LessonStatus::Pending || $this->lessonStatus === LessonStatus::Failed;
+    }
+
+    public function isReady(): bool
+    {
+        return $this->lessonStatus === LessonStatus::Ready && $this->lesson !== null;
+    }
+
+    /** A build that started and never finished within `$staleAfterSeconds` counts as dead. */
+    public function isBuildStale(DateTimeImmutable $now, int $staleAfterSeconds): bool
+    {
+        return $this->lessonStatus === LessonStatus::Building
+            && $this->buildStartedAt !== null
+            && $now->getTimestamp() - $this->buildStartedAt->getTimestamp() > $staleAfterSeconds;
+    }
+
+    public function id(): PlanSceneId
+    {
+        return $this->id;
+    }
+
+    public function planId(): PlanId
+    {
+        return $this->planId;
+    }
+
+    public function order(): int
+    {
+        return $this->order;
+    }
+
+    public function kind(): SceneKind
+    {
+        return $this->kind;
+    }
+
+    public function priority(): int
+    {
+        return $this->priority;
+    }
+
+    public function isCore(): bool
+    {
+        return $this->priority === 1;
+    }
+
+    public function titleNative(): string
+    {
+        return $this->titleNative;
+    }
+
+    public function titleTarget(): string
+    {
+        return $this->titleTarget;
+    }
+
+    public function teachesNative(): string
+    {
+        return $this->teachesNative;
+    }
+
+    /** @return list<string> */
+    public function goalsNative(): array
+    {
+        return $this->goalsNative;
+    }
+
+    public function learnerRoleTarget(): string
+    {
+        return $this->learnerRoleTarget;
+    }
+
+    public function learnerRoleNative(): string
+    {
+        return $this->learnerRoleNative;
+    }
+
+    public function partnerRoleTarget(): string
+    {
+        return $this->partnerRoleTarget;
+    }
+
+    public function partnerRoleNative(): string
+    {
+        return $this->partnerRoleNative;
+    }
+
+    public function topicDescription(): string
+    {
+        return $this->topicDescription;
+    }
+
+    public function imagePrompt(): string
+    {
+        return $this->imagePrompt;
+    }
+
+    public function image(): ?Image
+    {
+        return $this->image;
+    }
+
+    public function lesson(): ?Lesson
+    {
+        return $this->lesson;
+    }
+
+    public function lessonStatus(): LessonStatus
+    {
+        return $this->lessonStatus;
+    }
+
+    public function lessonCall(): ?ModelCall
+    {
+        return $this->lessonCall;
+    }
+
+    /** @return list<array{check: string, mode: string, action: string, detail: string}> */
+    public function findings(): array
+    {
+        return $this->findings;
+    }
+
+    public function failReason(): ?string
+    {
+        return $this->failReason;
+    }
+
+    public function buildStartedAt(): ?DateTimeImmutable
+    {
+        return $this->buildStartedAt;
+    }
+
+    public function generatedAt(): ?DateTimeImmutable
+    {
+        return $this->generatedAt;
+    }
+}

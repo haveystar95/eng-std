@@ -9,7 +9,7 @@ namespace App\Modules\Learning\Domain\ValueObject;
  *
  * Это продуктовые суждения о том, сколько реплики человек обязан сказать, и первый раз, когда одно
  * из них окажется неверным, оно должно сдвинуться без выката приложения. Живут в
- * `config/learning.php → plan.speech`, едут телефону в контракте сессии и читаются ОБЕИМИ
+ * `config/learning.php → speech`, едут телефону в контракте сессии и читаются ОБЕИМИ
  * сторонами: экран и сервер судят одной функцией по одним числам (Ч.3.4).
  *
  *   $readAloud       фраза НА ЭКРАНЕ («Повтори вслух», чтение примера): доля слов цели, которую надо
@@ -36,7 +36,7 @@ final readonly class SpeechGradingRules
         public int $fillerAllowance = 1,
     ) {}
 
-    /** @param array<string, mixed> $config `config('learning.plan.speech')` */
+    /** @param array<string, mixed> $config `config('learning.speech')` */
     public static function fromConfig(array $config): self
     {
         return new self(

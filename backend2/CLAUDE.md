@@ -25,11 +25,12 @@ Then, depending on the task:
 |---|---|
 | `Shared` | kernel: ValueObjects, `DomainEvent`, `Clock`, ULID generation, `Result` |
 | `Identity` | users, auth tokens, devices, user settings |
-| `Vocabulary` | terms (word or phrase), translations, examples, audio, dedup |
+| `Vocabulary` | terms (word or phrase), translations, examples, dedup |
 | `Collections` | collections (system/shared/custom), items, subscriptions, forks |
 | `Learning` | progress, SRS scheduling, sessions, reviews, statistics |
 | `Generation` | AI collection generation: requests, prompts, quotas, cost |
 | `Observability` | API request/response log — inbound requests + outbound (external) calls, with secret redaction |
+| `Plan` | the learning plan: plans, scenes (the model's briefs and lessons), the calendar of days, dealt cards, plan terms, partner-line audio, check counters. Two frozen prompt files, code-only checks, deterministic day assembly — canon `docs/plan-v2.md`, contract `docs/plan-api.md` |
 | `Admin` | back-office panel API (`/admin/api/*`): separate admin auth, read-only projections across all data, the day-plan simulator, and the tier mutation with an audit log. Reads other modules as reporting projections; owns only `admins` + `admin_audit_log` |
 
 Details per module: `app/Modules/<Context>/README.md`. Boundaries: `deptrac.yaml`.
@@ -98,7 +99,7 @@ memory, and a gate you cannot see is worse than no gate.
 
 ## Non-negotiables (short version)
 
-- `app/Modules/{Shared,Identity,Vocabulary,Collections,Learning,Generation,Observability}`, four layers each (Shared and Observability are thin — they omit layers they don't need).
+- `app/Modules/{Shared,Identity,Vocabulary,Collections,Learning,Generation,Plan,Observability,Admin}`, four layers each (Shared and Observability are thin — they omit layers they don't need).
 - `Domain/` imports nothing from Laravel. Cross-module calls go through `Application` only.
 - Commands mutate and return ids; Queries read and return DTOs. Controllers translate, nothing more.
 - ULIDs everywhere; clients may generate ids for reviews and custom collections.

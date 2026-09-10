@@ -22,17 +22,9 @@ interface TermExposureRepository
      * ## Why the row MOVES, and what that fixed
      *
      * It used to be an ignored insert that kept the first `shown_at` for ever («the moment the
-     * learner actually met the word»). That reading was written before a plan's ladder was scoped
-     * to the plan: a plan counts only what happened AFTER the card joined it
-     * ({@see \App\Modules\Learning\Application\Port\PlanStandingsReader::introducedAmong()}), so a
-     * word met in an earlier plan carried an exposure dated before this plan existed, every intro
-     * this plan showed was dropped on the way in, and the step never closed.
-     *
-     * Measured, on the owner's live day 1 (02.09, plan `01M1HZF4…`): the card «available» joined
-     * the day at 21:14:05 with an exposure of 2026-09-01 11:19 behind it. The client uploaded a
-     * fresh exposure for it SIX times — 21:50, 21:55, 21:57, 21:59, 22:01, 22:03 — the server
-     * ignored all six, and the learner was introduced to the same word in six sittings running
-     * while the day it belongs to could not close.
+     * learner actually met the word»). A reader that asks «when was this word LAST shown» — a
+     * re-introduction after a long pause — got a date months old and dropped every fresh intro
+     * on the way in (measured on the owner's device, 02.09: six uploaded exposures ignored).
      *
      * So: shown is RECORDED. Only forward — a showing older than the one on file (a replayed
      * offline batch, a device clock behind) leaves the row alone, which keeps the write idempotent

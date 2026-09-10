@@ -139,17 +139,8 @@ final readonly class TermPlayability
             // reason to make the whole trainer unavailable. This is deliberately NOT gated on the
             // example: gating here would silently drop speaking from every exampleless term at
             // every rung, including the early one where the example was never wanted.
-            //
-            // The three SITUATIONAL cards fit every term for the same reason multiple_choice does:
-            // what they ask for is the card's own line, and the SITUATION above it is assembled by
-            // the server out of the day ({@see \App\Modules\Learning\Domain\Service\SituationalPrompt}),
-            // never out of this term's content. Whether their options assemble is a fact about the
-            // POOL, which is the session's question and not this class's — same split as
-            // multiple_choice ({@see \App\Modules\Learning\Domain\Service\ModeContentRequirements::isPoolDependent()}).
             ExerciseMode::MultipleChoice, ExerciseMode::Typing, ExerciseMode::Listening,
-            ExerciseMode::Speaking, ExerciseMode::Intro,
-            ExerciseMode::SituationalHear, ExerciseMode::SituationalSay,
-            ExerciseMode::SituationalAsk => true,
+            ExerciseMode::Speaking, ExerciseMode::Intro => true,
         };
     }
 

@@ -34,24 +34,5 @@ it('sends the thresholds and the abbreviation table with a study session', funct
         ])
         // Числа с провода — те же, что судит грейдер: один источник, `config/learning.php`.
         ->and($body['speech']['thresholds']['read_aloud_coverage'])
-        ->toBe((float) config('learning.plan.speech.read_aloud_coverage'));
-});
-
-// ПРАВИЛО: Ч.4.3 — поле произношения аббревиатур есть в контракте карточки и пусто.
-// ЛОВИТ: поле, забытое до наряда по парам. Клиент, который его уже читает, начнёт произносить
-// аббревиатуры правильно в день, когда генерация их напишет, — а не выкатом позже.
-it('carries an empty say_as on every card', function () {
-    [$user, $token] = learner();
-    [$collectionId] = seedCollectionWith($user, 'bank account', 'банковский счёт');
-
-    $cards = $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/study/sessions', ['collection_id' => $collectionId, 'practice' => true])
-        ->assertOk()
-        ->json('data.cards');
-
-    expect($cards)->not->toBeEmpty();
-    foreach ($cards as $card) {
-        expect($card)->toHaveKey('say_as')
-            ->and($card['say_as'])->toBeNull();
-    }
+        ->toBe((float) config('learning.speech.read_aloud_coverage'));
 });

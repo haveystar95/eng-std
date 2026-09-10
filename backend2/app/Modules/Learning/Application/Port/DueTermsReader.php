@@ -52,42 +52,6 @@ interface DueTermsReader
     public function selectableInPool(UserId $userId, DateTimeImmutable $now, ?array $termIds, int $limit): array;
 
     /**
-     * The same population, narrowed to the pairs ONE PLAN put in the pool.
-     *
-     * NO LONGER THE SEAM, and nothing in the app calls it since E2E-SIM-2 С-2. A plan's «Повторение»
-     * is chosen by the PLAN's ladder — stage A closed plus a night — and `due_at` is the repetition
-     * planner's answer to a different question. The two agreed while a plan's intervals were short
-     * and parted company on the second night of every plan: measured, day 1's whole scene stood on
-     * stage B owing a card, with `due_at` three months out, and the sitting came back without any of
-     * it. The plan session reads rows by term id now ({@see allInScope()}).
-     *
-     * Kept because the question it answers is still a real one — «which of this plan's words has the
-     * scheduler made due» is what an archive sweep or a report would ask — and re-deriving the
-     * `enrollment_sources` predicate later would be worse than keeping it written down. It is not a
-     * selection rule for a plan sitting, and wiring it back into one would restore the defect.
-     *
-     * A separate method and not a scope on {@see selectableInPool()}, because the two differ by the
-     * one predicate that must never be optional: `selectableInPool()` EXCLUDES everything a running
-     * plan is holding, and this reads nothing else. A plan's lesson is built from the words that plan
-     * enrolled — day N's own cards, plus the earlier days' cards the planner has made due again — and
-     * a `$termIds` scope could not express that, because «the terms this plan enrolled» is a fact
-     * about the progress row's `enrollment_sources`, not a list the caller holds.
-     *
-     * It is also why the seam cannot be assembled out of the ordinary due list at all: that list is
-     * defined as «everything NO running plan is standing on». Before PLAN-FIX-3 the plan's own words
-     * reached it anyway — the scheduler dropped the `plan:` source on a word's first answer — and the
-     * seam was quietly being filled from the learner's whole queue.
-     *
-     * WHAT IS DELIBERATELY ABSENT: the `known`-verification branch. A «знаю» claim coming due is the
-     * system auditing a statement, and it belongs to the ordinary day, not to a plan's lesson.
-     *
-     * Same ordering as the pool read: `due_at NULLS FIRST`, then oldest first.
-     *
-     * @return list<DueTermView>
-     */
-    public function selectableForPlan(UserId $userId, string $planId, DateTimeImmutable $now, int $limit): array;
-
-    /**
      * Pool pairs standing at RUNG 0 — enrolled, never shown. Each one is a first meeting and is
      * charged to the day's new-term quota, which is why the caller passes that quota as `$limit`.
      *

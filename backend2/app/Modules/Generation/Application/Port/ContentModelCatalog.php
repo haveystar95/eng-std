@@ -42,6 +42,10 @@ interface ContentModelCatalog
      *        means. It is a parameter and not a constant because one adapter now serves two
      *        products with two budgets, and a cost screen that could not tell them apart would be
      *        the same hole the `term_reading` whitelist migration was written to close.
+     * @param  int|null  $timeoutSeconds  a per-call rope of this caller's own, instead of the shared
+     *        `model_timeout`. The learning plan promises its client an answer within 90 seconds
+     *        and must fail at ITS limit, not sit on a 180-second one that the comparison stack
+     *        needs for a reasoning model. Null keeps the shared value.
      */
-    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null): ?ContentModelPort;
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null): ?ContentModelPort;
 }

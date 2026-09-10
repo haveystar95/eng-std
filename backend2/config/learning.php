@@ -21,143 +21,38 @@ return [
     // recognition — exactly what happened before the ladder existed.
     'enabled_modes' => ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble'],
 
-    // HOW LONG A WRONG ANSWER MAY BE, relative to the target. The shape rule (DistractorFamily)
-    // says a word stands beside a word; inside one shape, length still gives the answer away —
-    // `key` offered `accommodation`, `neighbourhood`, `responsibility` is answered by picking the
-    // short one without reading it. It got worse the day the option pool became the whole catalogue.
-    //
-    // Two measures because a phrase is not a long word: single lexical items are compared by
-    // CHARACTERS, a spoken line by WORDS. Configuration and not constants — this is a product
-    // judgement about how hard a card should be, and the first time one of them is wrong it should
-    // move without a deploy. The rule itself lives in Shared\Domain\Service\DistractorLength and
-    // is read by everyone who builds or predicts a choice card.
+    // HOW LONG A WRONG ANSWER MAY BE, relative to the target: `key` offered `accommodation`,
+    // `neighbourhood`, `responsibility` is answered by picking the short one without reading it.
+    // Configuration and not a constant — a product judgement about how hard a card should be, and
+    // the first time it is wrong it should move without a deploy. The rule itself lives in
+    // Shared\Domain\Service\DistractorLength and is read by everyone who builds a choice card.
     'distractor_length' => [
-        'char_tolerance' => 0.5,   // word / chunk / «no kind» — ±50 % of the target's characters
-        'word_tolerance' => 0.4,   // line — ±40 % of the target's word count
+        'char_tolerance' => 0.5,   // ±50 % of the target's characters
     ],
 
-    // A PLAN'S CHOICE CARD: what the level WANTS, and how far it may shrink before it is dropped.
-    //
-    // The level's number is a preference (`PlanKnobs::$mcOptions` — three at zero/basic, four from
-    // conversational up). This is the floor under it. They used to be the same number, and on the
-    // owner's live day 1 that cost eleven cards of fourteen their recognition step: four options
-    // wanted, the length band narrow by design, and a day of fourteen cards simply does not hold
-    // four same-shape same-length terms for most of them. Stage A collapsed to «met it → said it».
-    //
-    // Three is a card — one right answer and two wrong ones, which is exactly what a `zero` learner
-    // has always been dealt. Below three it is a coin toss, and the card still falls out whole.
-    //
-    // Configuration and not a constant, like the band above: a product judgement about how hard a
-    // card should be. The rule itself lives in Learning\Domain\Service\PlanChoiceFloor and is read
-    // by BOTH the checklist (what a card is owed) and the assembler (what can be built), because a
-    // step that is owed and cannot be dealt is a stage that never closes.
-    'plan' => [
-        'mc_min_options' => 3,
+    // ЗАЧЁТ РЕЧИ — ПОРОГИ (наряд SPEECH-2, Ч.3.3). Продуктовые суждения о том, сколько реплики
+    // человек обязан сказать, поэтому конфиг: первый раз, когда одно из них окажется неверным,
+    // оно должно сдвинуться без выката приложения. ЭТИ ЖЕ числа едут телефону в контракте
+    // сессии — экран и сервер судят одной функцией по одним порогам
+    // ({@see \App\Modules\Learning\Domain\Service\SpokenLine}).
+    'speech' => [
+        // Фраза НА ЭКРАНЕ («Повтори вслух», чтение примера): текст перед глазами, и бар высокий.
+        'read_aloud_coverage' => (float) env('SPEECH_READ_ALOUD_COVERAGE', 0.9),
 
-        // ЗАСЧИТЫВАТЬ ЛИ УПРОЩЁННЫЕ ФОРМЫ ОТВЕТА НА ГОВОРЕНИИ (наряд GEN-1, канон Y4).
-        //
-        // P2 v0.7 пишет к каждой реплике `speaking_keys[]` — 1–2 более простых формы того же
-        // ответа. Сервер хранит их и отдаёт клиенту полем `speaking_keys`, и ГРЕЙДЕР засчитывает
-        // любую из них. ВКЛЮЧЁН с наряда DAY-FIX-3 (Ч.1.6): клиент судит говорение по тому же
-        // списку (`SessionCard.spokenTargets`), и инвариант «проверка на телефоне никогда не
-        // строже серверной» держится тем, что обе стороны читают ОДНО поле карточки. Тумблер
-        // остался на случай отката клиента; выключенный — сервер судит по одному `speaking_key`,
-        // то есть СТРОЖЕ телефона, и это единственное направление, в которое ручку двигать нельзя
-        // без правки клиента. Замок — `PlanGen1CanonTest` («грейдер по умолчанию не строже
-        // клиента»).
-        'speaking_keys_graded' => (bool) env('PLAN_SPEAKING_KEYS_GRADED', true),
+        // Текста НЕТ («Скажи сам»): ключ обязателен, и с ним — столько ОСТАЛЬНЫХ слов реплики.
+        // «Сказал проще» законно про фразу, а не про одно слово.
+        'recall_rest_coverage' => (float) env('SPEECH_RECALL_REST_COVERAGE', 0.6),
 
-        // ЗАЧЁТ РЕЧИ — ПОРОГИ (наряд SPEECH-2, Ч.3.3). Продуктовые суждения о том, сколько реплики
-        // человек обязан сказать, поэтому конфиг: первый раз, когда одно из них окажется неверным,
-        // оно должно сдвинуться без выката приложения. ЭТИ ЖЕ числа едут телефону в контракте
-        // сессии — экран и сервер судят одной функцией по одним порогам
-        // ({@see \App\Modules\Learning\Domain\Service\SpokenLine}).
-        'speech' => [
-            // Фраза НА ЭКРАНЕ («Повтори вслух», чтение примера): текст перед глазами, и бар высокий.
-            'read_aloud_coverage' => (float) env('SPEECH_READ_ALOUD_COVERAGE', 0.9),
+        // Реплика БЕЗ КЛЮЧА судится целиком — тем же порогом, что и всегда.
+        'whole_line_coverage' => (float) env('SPEECH_WHOLE_LINE_COVERAGE', 0.7),
 
-            // Текста НЕТ («Скажи сам», свой ход в разговоре): ключ обязателен, и с ним — столько
-            // ОСТАЛЬНЫХ слов реплики. «Сказал проще» законно про фразу, а не про одно слово.
-            'recall_rest_coverage' => (float) env('SPEECH_RECALL_REST_COVERAGE', 0.6),
+        // Ниже этой доли «почти» превращается в «не то»: список «не хватило», в котором лежит
+        // вся реплика, ничего человеку не объясняет.
+        'almost_floor' => (float) env('SPEECH_ALMOST_FLOOR', 0.5),
 
-            // Реплика БЕЗ КЛЮЧА судится целиком — тем же порогом, что и всегда (фикс DAY-GATE-1).
-            'whole_line_coverage' => (float) env('SPEECH_WHOLE_LINE_COVERAGE', 0.7),
-
-            // Ниже этой доли «почти» превращается в «не то»: список «не хватило», в котором лежит
-            // вся реплика, ничего человеку не объясняет.
-            'almost_floor' => (float) env('SPEECH_ALMOST_FLOOR', 0.5),
-
-            // Сколько безударных слов-связок прощается сверх порога при чтении с экрана. Артикли
-            // не считаются вовсе и в это число не входят.
-            'filler_allowance' => (int) env('SPEECH_FILLER_ALLOWANCE', 1),
-        ],
-
-        // СКОЛЬКО МИНУТ ДЕНЬ МОЖЕТ ВИСЕТЬ В `generating`, ПРЕЖДЕ ЧЕМ ВОРКЕР СЧИТАЕТСЯ МЁРТВЫМ
-        // (вердикт владельца по GEN-1). Джоба дня живёт до 420 с (два вызова модели по 180 с плюс
-        // запись), так что десять минут — это «точно не идёт». Просроченный день перезахватывается
-        // при следующем опросе или чтении плана: первый раз — снова в очередь, второй — `failed`
-        // с причиной (`PlanDay::reclaimStale()`).
-        'generation_stale_minutes' => (int) env('PLAN_GENERATION_STALE_MINUTES', 10),
-
-        // БЮДЖЕТ ДНЯ ПЛАНА — решение владельца 05.09 (наряд DAY-FIX-2, Ч.2). Числа продуктовые,
-        // поэтому конфиг: первый раз, когда одно из них окажется неверным, оно должно сдвинуться
-        // без выката. Читает {@see \App\Modules\Learning\Application\Service\PlanSittingPlanner}.
-        'budget' => [
-            // ДВА ПРИСЕСТА, ДВА ПОТОЛКА (наряд DAY-FIX-3, Ч.4; владелец принял день ≈ 70 карточек,
-            // ~18 минут). «Материал» — разогрев, слова и связки, знакомство с репликами и их
-            // упражнения; «Разговор» — диалог сцены, реплики шва, прогон. Что не влезает, режется с
-            // хвоста: у материала — шов, промахи, потом тематические слова; у разговора — шов,
-            // потом прогон самой старой сцены целиком.
-            'material_max_cards' => 45,
-            'conversation_max_cards' => 25,
-            // Из скольких вариантов слово выбирает перевод в день знакомства (Ч.3.1). Ручка уровня
-            // (`mc_options`) правит всем остальным выбором.
-            'word_choice_options' => 4,
-            // Секция «Слова и связки» за посадку, КАРТОЧКАМИ: свои слова дня первыми, слова из
-            // дней позади — пока влезают. Остальное ждёт следующего дня. С наряда DAY-FIX-3 у
-            // слова два касания в день знакомства и до десяти тематических слов на день, так что
-            // прежние 12 держали бы шов слов закрытым навсегда; секцию теперь держит потолок
-            // материала, а эта ручка — верхняя граница на случай, если он поднимется.
-            'words_section_cards' => 40,
-            // Спасателей в разогреве — не больше стольких карточек.
-            'rescue_warmup_cards' => 5,
-            // Секунд на карточку — то, из чего считаются минуты дня на экранах (Ч.3): карточек ×
-            // секунд, до целой минуты вверх. Замер живого дня 1 владельца: 60 ответов за 962 с.
-            'card_seconds' => 16,
-        ],
-
-        // ПРОГОН СЦЕНЫ — ступень C: реплики на экране нет, есть подсказка и микрофон
-        // (наряд SCENE-RUN, Ч.2). Все четыре числа — продуктовые суждения, поэтому конфиг, а не
-        // константы в коде экрана: первый раз, когда одно из них окажется неверным, оно должно
-        // сдвинуться без выката.
-        // ЧЕРЕЗ ENV, а не литералами: три из четырёх чисел приходится двигать на стенде — сторож,
-        // рассчитанный на живого человека, обрывает ход быстрее, чем автоматизация успевает по нему
-        // кликнуть, и QA-прогон ступени C иначе не снять. Дефолты — продуктовые.
-        'scene_run' => [
-            // «СРАЗУ» — сколько секунд от начала прослушивания до ключа реплики считается ответом
-            // без раздумья. Канон §4: «готовность единицы = C + скорость: успех, где ответ начат за
-            // ≤ 3 секунды». Медленный успех остаётся успехом и в готовность не идёт.
-            'fast_seconds' => (int) env('SCENE_RUN_FAST_SECONDS', 3),
-
-            // СТОРОЖ: столько экран слушает, прежде чем сделать ход за человека. Тот же порог, что
-            // у говорения фраз, и по той же причине — дольше пятнадцати секунд человек не
-            // вспоминает, он мучается.
-            'listen_seconds' => (int) env('SCENE_RUN_LISTEN_SECONDS', 15),
-
-            // …и через столько секунд молчания появляется «Пропустить». Раньше сторожа, потому что
-            // выход должен быть виден до того, как он понадобится.
-            'skip_after_seconds' => (int) env('SCENE_RUN_SKIP_AFTER_SECONDS', 5),
-
-            // ЦЕНА ОДНОГО ХОДА В МИНУТАХ ДНЯ. Присест считается карточками по 16 с
-            // ({@see \App\Modules\Learning\Application\Command\BuildPlanSessionHandler}), а ход
-            // прогона дороже: человек слушает реплику собеседника, вспоминает свою и говорит её.
-            'turn_seconds' => 20,
-
-            // ДОЛЯ «СРАЗУ», при которой сцена считается ГОТОВОЙ (наряд SCENE-RUN, Ч.3.2). Сцена, в
-            // которой всё сказано самим, но медленно, — это «говоришь сам» и ещё не «готов»:
-            // на стойке отвечают за три секунды, а не за двенадцать.
-            'ready_fast_share' => 0.7,
-        ],
+        // Сколько безударных слов-связок прощается сверх порога при чтении с экрана. Артикли
+        // не считаются вовсе и в это число не входят.
+        'filler_allowance' => (int) env('SPEECH_FILLER_ALLOWANCE', 1),
     ],
 
     // The ADMISSION MATRIX — which rung of the acquisition ladder opens which trainer — is NOT
