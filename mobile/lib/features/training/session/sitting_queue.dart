@@ -40,26 +40,6 @@ class SittingQueue {
     return SittingQueue._(order, ends, <int>{});
   }
 
-  /// A sitting picked back up where it was left — see `PlanSittingStore`.
-  ///
-  /// Returns null when the stored order does not fit the session in hand: an index past the end of
-  /// the cards would open a sitting on a card that is not there, and starting the day over is a far
-  /// smaller loss than that.
-  static SittingQueue? resume({
-    required int cards,
-    required List<int> order,
-    required List<int> ends,
-    required List<int> requeued,
-  }) {
-    if (order.isEmpty || order.any((i) => i < 0 || i >= cards)) return null;
-    if (ends.isEmpty || ends.last != order.length) return null;
-    for (var i = 1; i < ends.length; i++) {
-      if (ends[i] <= ends[i - 1]) return null;
-    }
-
-    return SittingQueue._(List<int>.of(order), List<int>.of(ends), requeued.toSet());
-  }
-
   final List<int> _order;
   final List<int> _ends;
   final Set<int> _requeued;

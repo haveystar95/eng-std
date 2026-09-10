@@ -1,12 +1,12 @@
-/// СЛОВАРЬ ПОДПИСЕЙ ПЛАНА — наряд DAY-FIX-2, Ч.6.
+/// СЛОВАРЬ ПОДПИСЕЙ ПЛАНА — наряд PLAN-UI (§5): «ни одной строки в коде, ни одной строки в файле
+/// без экрана».
 ///
 /// Каждая строка на экранах плана берётся из ARB, и каждый ключ ARB с префиксом `plan*` стоит в
-/// `docs/plan-ui-glossary.md` («ключ → русская подпись → где стоит»). Ключ, которого в словаре нет,
-/// — подпись, которую никто не согласовал: живой прогон 05.09 нашёл на трёх экранах три разных
-/// слова об одном дне ровно потому, что словаря не было.
+/// `docs/plan-ui-glossary.md` («ключ → русская подпись → где стоит»). Ключ, которого в словаре
+/// нет, — подпись, которую никто не согласовал с кадром.
 ///
 /// Проверка — на ИМЕНАХ ключей, а не на текстах: текст правится в ARB и подтягивается в словарь
-/// скриптом; имя — контракт между экраном и словарём.
+/// скриптом (`docs/plan-ui-glossary.md` — как обновлять); имя — контракт между экраном и словарём.
 library;
 
 import 'dart:convert';
@@ -39,30 +39,20 @@ void main() {
     expect(missing, isEmpty, reason: 'нет в app_en.arb:\n${missing.join('\n')}');
   });
 
-  test('на экранах плана нет «N из M» и счётчиков вида {done}/{total}', () {
+  test('ни одной строки plan* без экрана: каждый ключ читается из кода', () {
     final arb = jsonDecode(File('lib/l10n/app_ru.arb').readAsStringSync()) as Map<String, dynamic>;
-    final counters = RegExp(r'\{[a-z]+\} из \{[a-z]+\}|\{[a-z]+\}/\{[a-z]+\}');
+    final sources = Directory('lib')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.dart') && !f.path.contains('/l10n/'))
+        .map((f) => f.readAsStringSync())
+        .join('\n');
 
-    final offenders = <String>[
-      for (final entry in arb.entries)
-        if (!entry.key.startsWith('@') &&
-            entry.key.startsWith('plan') &&
-            entry.value is String &&
-            counters.hasMatch(entry.value as String) &&
-            !_countersStillAllowed.contains(entry.key))
-          '${entry.key}: ${entry.value}',
+    final unused = <String>[
+      for (final key in arb.keys)
+        if (!key.startsWith('@') && key.startsWith('plan') && !sources.contains('.$key')) key,
     ];
 
-    expect(offenders, isEmpty, reason: 'счётчики на экранах плана:\n${offenders.join('\n')}');
+    expect(unused, isEmpty, reason: 'строки без экрана:\n${unused.join('\n')}');
   });
 }
-
-/// Счётчики ВНЕ экранов дня, диалога и итога — расписание и вход в план, где «День 2 из 4» и «На
-/// событии сказал 3 из 5» остаются по кадрам (наряд DAY-FIX-2 их не трогает).
-const _countersStillAllowed = {
-  'planDayOfTotal',
-  'planDayOfPlan',
-  'planDaysHeader',
-  'planCanAlready',
-  'planFinishedAtEvent',
-};

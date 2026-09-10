@@ -78,33 +78,4 @@ void main() {
       expect(q.order.last, 4);
     });
   });
-
-  group('a sitting picked back up', () {
-    test('resumes the order it was left in, tail and boundaries and all', () {
-      final left = SittingQueue.of(cards: 9, sittings: const [3, 3, 3])..requeue(1);
-
-      final resumed = SittingQueue.resume(
-        cards: 9,
-        order: left.order,
-        ends: left.ends,
-        requeued: left.requeued,
-      );
-
-      expect(resumed, isNotNull);
-      expect(resumed!.order, left.order);
-      expect(resumed.ends, left.ends);
-      // …including which cards have already spent their one repeat, or a resumed sitting would hand
-      // every card a second chance it had already used.
-      expect(resumed.requeue(resumed.order.indexOf(1)), isFalse);
-    });
-
-    test('refuses an order that does not fit the session in hand', () {
-      // Starting the day over is a far smaller loss than opening a sitting on a card that is not
-      // there.
-      expect(SittingQueue.resume(cards: 3, order: const [0, 1, 9], ends: const [3], requeued: const []), isNull);
-      expect(SittingQueue.resume(cards: 3, order: const [], ends: const [], requeued: const []), isNull);
-      expect(SittingQueue.resume(cards: 3, order: const [0, 1, 2], ends: const [2], requeued: const []), isNull);
-      expect(SittingQueue.resume(cards: 3, order: const [0, 1, 2], ends: const [2, 2, 3], requeued: const []), isNull);
-    });
-  });
 }

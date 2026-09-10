@@ -22,7 +22,8 @@ import '../collections/store_view.dart' show showStorePreview;
 import '../daily/word_challenge.dart';
 import '../daily/word_challenge_card.dart';
 import '../home/streak.dart';
-import '../plan/home_plan_card.dart';
+import '../profile/profile_avatar.dart';
+import '../progress/progress_screen.dart';
 import '../search/search_button.dart';
 import 'session_screen.dart';
 import 'triage_screen.dart';
@@ -51,11 +52,6 @@ import 'triage_screen.dart';
 /// Pinned by `test/features/home/home_plan_blocks_test.dart`.
 abstract final class HomeBlockKeys {
   static const header = Key('home-header');
-
-  /// The active plan, or the invitation to make one (кадры 08 / 09). ONE key for both, because the
-  /// rule the guard has to protect is about the SLOT: something plan-shaped is always in it once the
-  /// day is known, and it is always above the session tile.
-  static const plan = Key('home-plan-slot');
 
   static const session = Key('home-session-card');
   static const done = Key('home-done-card');
@@ -296,12 +292,6 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     return [
       _DayHeader(key: HomeBlockKeys.header, streak: streak),
       gap,
-      // THE PLAN COMES FIRST — кадр 08. Above the day's tile and made of different material, because
-      // they are two different piles of work: the plan is dated and finite, the day below it is the
-      // ordinary queue. The server keeps them apart too — a plan's words are not in the tile's
-      // counts while the plan runs — so the two blocks never describe the same word twice.
-      const HomePlanSlot(key: HomeBlockKeys.plan),
-      gap,
       if (plan.state == HomeStateKind.plan)
         _SessionCard(key: HomeBlockKeys.session, session: session, onStart: () => _startDay(plan))
       else if (evening)
@@ -333,7 +323,9 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
         // different shapes, so they read as two different facts. Three numbers the learner checks
         // every day are one block, and a block that changes shape by time of day is a block they
         // have to re-find.
-        _StatsTile(key: HomeBlockKeys.stats, cells: stats, onTap: _openMyWords),
+        // ТАП ПО ПЛИТЕ — НА ЭКРАН «ПРОГРЕСС» (4к-1): таба у прогресса больше нет, и плита
+        // статистики — единственная дверь к нему.
+        _StatsTile(key: HomeBlockKeys.stats, cells: stats, onTap: _openProgress),
       ],
       if (challenge != null) ...[gap, _challengeCard(challenge)],
       if (plan.edgeTomorrow != null) ...[
@@ -420,6 +412,10 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     },
   );
 
+  void _openProgress() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProgressScreen()));
+  }
+
   void _openMyWords() {
     AppHaptics.light();
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyWordsScreen()));
@@ -504,6 +500,9 @@ class _DayHeader extends StatelessWidget {
         // when the plan took the centre slot; it did not leave the product.
         const SizedBox(width: 4),
         const SearchIconButton(size: 18),
+        // ПРОФИЛЬ — кружок-аватар в шапке (4к-1): таба у профиля нет.
+        const SizedBox(width: 4),
+        const ProfileAvatarButton(),
       ],
     );
   }

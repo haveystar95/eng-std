@@ -1,399 +1,527 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
-import 'package:eng_std/l10n/app_localizations.dart';
 
-import '../../data/api_client.dart';
-import '../../data/plan_models.dart';
-import '../../data/providers.dart';
-import 'build_stamp.dart';
+import '../../data/plan/plan_models.dart';
+import '../collections/collection_detail_screen.dart';
+import '../profile/profile_avatar.dart';
 import 'entry/plan_entry_screen.dart';
-import 'plan_screen.dart';
-import 'plan_ui.dart';
+import 'plan_day_plate_view.dart';
+import 'plan_day_stub_screen.dart';
+import 'plan_providers.dart';
+import 'plan_route.dart';
+import 'plan_sheets.dart';
+import 'plan_tab_parts.dart';
 
-/// THE «ПЛАН» TAB — three faces, and which one is shown is a fact about the account, not a mode.
+/// ТАБ «ПЛАН» — кадры 21-1 … 21-14 и 22-5a/b/c (наряд PLAN-UI).
 ///
-///  * NO PLAN (кадр 1c · 10) — the difference between a collection and a plan, in three lines. No
-///    illustration and no «выучи язык за неделю»: the tab has to explain a concept, and the honest
-///    way to do that is to say what it is for.
-///  * A PLAN RUNNING — {@link PlanScreen}, embedded rather than pushed, so the tab bar stays.
-///  * A PLAN FINISHED (кадр 1c · 11) — «подготовка завершена» does not disappear: the outcome, what
-///    happened to the words, and the archive of everything before it.
-class PlanTabScreen extends ConsumerWidget {
+/// One screen, every state of it named by the SERVER's answer and drawn from it: no plan (21-1),
+/// the plate of the day (21-2, 21-3), the closed day (21-4), the plan run to its end (21-7), the
+/// event that passed (21-14), day one still being written (22-5a) or failed (22-5c). The route
+/// under the plate, the rescue kit, the finished plans — the same blocks in every state that has
+/// them. Ground #EFEBE3, fields 20, plate → route 28, between sections 32 (записка).
+///
+/// The tab reads the network on every entry and keeps the last answer for the offline read (§6);
+/// nothing here computes days, slots or the countdown — see `PlanTabController`.
+class PlanTabScreen extends ConsumerStatefulWidget {
   const PlanTabScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context);
-    final active = ref.watch(activePlanProvider);
+  ConsumerState<PlanTabScreen> createState() => _PlanTabScreenState();
+}
+
+class _PlanTabScreenState extends ConsumerState<PlanTabScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // The provider loads itself on first watch; a later visit re-reads silently.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(ref.read(planTabProvider.notifier).refresh());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(planTabProvider);
+    final bottomInset =
+        AppTabBarMetrics.height +
+        AppTabBarMetrics.bottomInset +
+        MediaQuery.viewPaddingOf(context).bottom +
+        AppSpacing.s16;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s16, AppSpacing.screenH, 0),
-              child: SizedBox(
-                height: AppSpacing.minTap,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(l.tabPlan, style: AppText.collectionNameScreen.copyWith(fontSize: 22)),
+      child: ColoredBox(
+        color: AppColors.ground,
+        child: SafeArea(
+          bottom: false,
+          child: state.when(
+            loading: () => _Page(bottomInset: bottomInset, children: const []),
+            error: (e, _) => _Page(
+              bottomInset: bottomInset,
+              children: [
+                PlanLoadFailedCard(
+                  onRetry: () => ref.read(planTabProvider.notifier).refresh(silent: false),
                 ),
-              ),
-            ),
-            Expanded(
-              child: active.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator(color: AppColors.ink)),
-                error: (e, _) => PlanNotice(
-                  text: isOffline(e) ? l.planErrorOffline : l.planErrorLoadFailed,
-                  actionLabel: l.generationRetry,
-                  onAction: () => ref.invalidate(activePlanProvider),
-                ),
-                data: (plan) => plan == null
-                    ? const _NoActivePlan()
-                    : PlanScreen(planId: plan.id, embedded: true),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// No plan is RUNNING — which is two different screens, and the archive tells them apart.
-///
-/// A learner who has never made one gets the explanation (кадр 10); one who has just finished one
-/// gets their result and their archive (кадр 11). Deciding it here rather than in two callers is
-/// what keeps «Составить план» in one place at the bottom of both.
-class _NoActivePlan extends ConsumerWidget {
-  const _NoActivePlan();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final archive = ref.watch(planArchiveProvider);
-
-    return archive.when(
-      // The archive is a nicety, not a gate: while it is loading or if it fails, the tab still says
-      // what a plan is and still offers to make one.
-      loading: () => const _EmptyPlanTab(),
-      error: (_, _) => const _EmptyPlanTab(),
-      data: (plans) => plans.isEmpty ? const _EmptyPlanTab() : _FinishedPlanTab(plans: plans),
-    );
-  }
-}
-
-/// «Подготовиться к чему-то конкретному» — кадр 1c · 10.
-class _EmptyPlanTab extends ConsumerWidget {
-  const _EmptyPlanTab();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context);
-
-    return ListView(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.screenHWide,
-        AppSpacing.s26,
-        AppSpacing.screenHWide,
-        _bottomInset(context),
-      ),
-      children: [
-        Text(l.planEmptyTitle, style: AppText.collectionNameScreen.copyWith(height: 1.2)),
-        const SizedBox(height: AppSpacing.s12),
-        Text(
-          l.planEmptyBody,
-          style: AppText.translation.copyWith(
-            fontSize: 14.5,
-            height: 1.65,
-            color: AppColors.inkBody,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.s26),
-        for (final (i, line) in [l.planEmptyStep1, l.planEmptyStep2, l.planEmptyStep3].indexed)
-          _NumberedLine(index: i + 1, text: line, last: i == 2),
-        const SizedBox(height: AppSpacing.s26),
-        PrimaryButton(
-          label: l.planEmptyCta,
-          minHeight: 52,
-          onPressed: () => openPlanBuilder(context, ref),
-        ),
-        // Строка версии стоит и здесь: план ещё не составлен, а вопрос «ту ли сборку я смотрю»
-        // задают в том числе про экран, на котором ничего не происходит (Ч.0.4).
-        const BuildStampLine(),
-      ],
-    );
-  }
-}
-
-/// «Подготовка завершена» + «18 слов ушли в общее повторение» + «Архив» — кадр 1c · 11.
-class _FinishedPlanTab extends ConsumerWidget {
-  const _FinishedPlanTab({required this.plans});
-  final List<PlanSummary> plans;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context);
-    final latest = plans.first;
-    final archive = plans.skip(1).toList();
-    // The whole plan, for the abilities it taught — one read, for the one plan the learner is
-    // actually looking at. The archive rows stay summaries.
-    final full = ref.watch(planProvider(latest.id)).value;
-
-    return ListView(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.screenH,
-        AppSpacing.s12,
-        AppSpacing.screenH,
-        _bottomInset(context),
-      ),
-      children: [
-        Container(
-          padding: const EdgeInsets.only(top: AppSpacing.s16),
-          decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: AppColors.brassFrame)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              PlanLabel(l.planFinishedBadge),
-              const SizedBox(height: AppSpacing.s8),
-              Text(
-                latest.title,
-                style: AppText.displayTerm.copyWith(fontSize: 28, height: 1.18),
-              ),
-              const SizedBox(height: AppSpacing.s8),
-              Text(
-                [
-                  // «На событии сказал 5 из 6» — the learner's own report, and the only sentence
-                  // here that is about what happened rather than about what was prepared. Absent
-                  // until they answer, because an unanswered question is not «0 из 6».
-                  if (full != null && full.hasEventFeedback)
-                    l.planFinishedAtEvent(full.eventFeedbackHits, full.canAlready.length),
-                  l.planFinishedSummary(
-                    latest.dayCount,
-                    planDateOrNone(context, latest.eventDate),
-                  ),
-                ].join(' '),
-                style: AppText.translation.copyWith(
-                  fontSize: 14,
-                  height: 1.55,
-                  color: AppColors.inkBody,
-                ),
-              ),
-              if (full != null && full.canAlready.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.s12),
-                for (final (i, checkpoint) in full.canAlready.indexed)
-                  PlanAbilityRow(
-                    text: checkpoint.text,
-                    // On a FINISHED plan the tick means «пригодилось на событии» — the learner's
-                    // own answer, which is the only thing that could be true about a day the app
-                    // was not there for. `hit` (conversation-confirmed) is the live plan's question.
-                    hit: full.usedAtEvent(i),
-                    divider: false,
-                  ),
               ],
-            ],
+            ),
+            data: (s) => PlanTabBody(state: s, bottomInset: bottomInset),
           ),
         ),
-        const SizedBox(height: AppSpacing.s22),
-        // What happened to the WORDS — the sentence the whole exclusion rule exists for: while the
-        // plan ran, its words were the plan's; now they are the learner's ordinary queue.
-        PaperCard(
-          radius: 16,
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l.planWordsReleasedTitle,
-                style: AppText.collectionNameCard.copyWith(fontSize: 19, height: 1.3),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                l.planWordsReleasedBody,
-                style: AppText.translation.copyWith(
-                  fontSize: 13.5,
-                  height: 1.55,
-                  color: AppColors.secondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (archive.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.s26),
-          PlanLabel(l.planArchive, color: AppColors.tertiary, fontSize: 11.5),
-          const SizedBox(height: AppSpacing.s8),
-          for (final plan in archive) _ArchiveRow(plan: plan),
-        ],
-        const SizedBox(height: AppSpacing.s26),
-        PrimaryButton(
-          label: l.planFinishedNewPlan,
-          minHeight: 52,
-          onPressed: () => openPlanBuilder(context, ref),
-        ),
-        const BuildStampLine(),
-      ],
+      ),
     );
   }
 }
 
-class _ArchiveRow extends StatelessWidget {
-  const _ArchiveRow({required this.plan});
-  final PlanSummary plan;
+/// The tab's page: the title row with the avatar, then the blocks, under the tab bar's inset.
+class _Page extends StatelessWidget {
+  const _Page({required this.children, required this.bottomInset, this.leading});
+
+  final List<Widget> children;
+  final double bottomInset;
+
+  /// A back chevron in place of nothing — the reading mode of a finished plan is pushed.
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
 
-    return InkWell(
-      onTap: () {
-        AppHaptics.light();
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => PlanScreen(planId: plan.id)),
-        );
-      },
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 60),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
+    return ListView(
+      padding: EdgeInsets.fromLTRB(20, AppSpacing.s8, 20, bottomInset),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Row(
+            children: [
+              ?leading,
+              Expanded(child: Text(l.planTitle, style: AppText.screenTitle)),
+              const ProfileAvatarButton(),
+            ],
+          ),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(plan.title, style: AppText.collectionNameCard.copyWith(fontSize: 18)),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${planDateOrNone(context, plan.eventDate)} · ${l.planDaysCount(plan.dayCount)}',
-                    style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.tertiary),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(LucideIcons.chevronRight, size: 16, color: AppColors.tertiary),
+        ...children,
+      ],
+    );
+  }
+}
+
+/// THE BODY, by state. Public so the reading mode of a finished plan can draw the same thing.
+class PlanTabBody extends ConsumerStatefulWidget {
+  const PlanTabBody({
+    super.key,
+    required this.state,
+    required this.bottomInset,
+    this.readOnly = false,
+    this.leading,
+  });
+
+  final PlanTabState state;
+  final double bottomInset;
+
+  /// A finished plan opened from the list (кадр 21-7, режим чтения): no menu, no hints, no kit,
+  /// «Открыть коллекцию» instead of «Собрать новый план».
+  final bool readOnly;
+  final Widget? leading;
+
+  @override
+  ConsumerState<PlanTabBody> createState() => _PlanTabBodyState();
+}
+
+class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
+  /// The first-time hints stay until the FIRST ACTION on the tab — a tap on the plate, the menu,
+  /// the kit — and then go for good.
+  bool _acted = false;
+
+  PlanTabState get s => widget.state;
+  Plan? get plan => s.plan;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final p = plan;
+    const gap = SizedBox(height: 32);
+
+    if (p == null) {
+      return _Page(
+        bottomInset: widget.bottomInset,
+        leading: widget.leading,
+        children: [
+          if (s.offline) ...[const SizedBox(height: 6), _OfflineLine(l.planTabOffline)],
+          const SizedBox(height: 26),
+          _EmptyState(onStart: _openEntry),
+          gap,
+          PlanFinishedList(rows: s.finished, onOpen: _openFinished),
+        ],
+      );
+    }
+
+    final hints = ref.watch(planHintsProvider).value;
+    final focus = s.focusDay;
+    final showsDone = p.allDaysClosed && p.status.isLive || (widget.readOnly && p.status == PlanStatus.finished);
+    final overdue = p.status == PlanStatus.overdue;
+    final firstPlan = !widget.readOnly && hints != null && !hints.tabShown && !_acted;
+    final showTabHints = firstPlan && focus != null && !focus.isClosed && !focus.lessonBuilding && !overdue && !showsDone;
+    final showCloseHint = !widget.readOnly && hints != null && !hints.closeShown && !_acted && s.showsClosedDay;
+    final dayLabel = focus?.number ?? p.daysTotal;
+
+    return _Page(
+      bottomInset: widget.bottomInset,
+      leading: widget.leading,
+      children: [
+        const SizedBox(height: 12),
+        PlanGoalRow(goal: p.goalText, onMenu: widget.readOnly ? (_) {} : _openMenu),
+        const SizedBox(height: 14),
+        PlanProgressLine(day: dayLabel, total: p.daysTotal, closed: p.closedDays),
+        if (s.offline) ...[const SizedBox(height: 8), _OfflineLine(l.planTabOffline)],
+        const SizedBox(height: 14),
+        // THE PLATE — or the card that stands in its place.
+        if (showsDone)
+          PlanDoneCard(
+            plan: p,
+            readOnly: widget.readOnly,
+            onNewPlan: _newPlanAfterDone,
+            onOpenCollection: p.collectionId == null ? null : _openCollection,
+          )
+        else if (overdue)
+          PlanOverdueCard(plan: p, onFinish: _finish, onReschedule: _changeDate)
+        else if (focus != null && focus.lessonFailed)
+          PlanDayFailedCard(day: focus, onRetry: () => _retryLesson(focus))
+        else if (focus != null)
+          PlanDayPlateView(plan: p, day: focus, room: s.room, onOpen: () => _openDay(focus)),
+        if (showTabHints) ...[
+          const SizedBox(height: 14),
+          PlanHintLine(text: l.planHintFirstStart, visible: true),
+        ],
+        if (showCloseHint) ...[
+          const SizedBox(height: 14),
+          PlanHintLine(text: l.planHintFirstReturn, visible: true),
+        ],
+        const SizedBox(height: 28),
+        // THE ROUTE, under its countdown when the plan has a date.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (p.untilPhrase != null && p.untilPhrase!.isNotEmpty) PlanRouteHeader(phrase: p.untilPhrase!),
+              if (showTabHints)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 6, 0, 4),
+                  child: PlanHintLine(text: l.planHintFirstRoute, visible: true),
+                ),
+              PlanRoute(plan: p),
+            ],
+          ),
+        ),
+        if (!widget.readOnly && p.rescueKit.isNotEmpty) ...[
+          gap,
+          PlanRescueKitCard(phrases: p.rescueKit),
+          if (showTabHints) ...[
+            const SizedBox(height: 10),
+            PlanHintLine(text: l.planHintFirstKit, visible: true),
           ],
-        ),
+        ],
+        if (!widget.readOnly) ...[
+          gap,
+          PlanFinishedList(rows: s.finished, onOpen: _openFinished),
+        ],
+      ],
+    );
+  }
+
+  // ── actions ─────────────────────────────────────────────────────────────────────────────────
+
+  /// The first action on the tab retires the first-time hints (кадр 21-2c: «гаснет после первого
+  /// действия»), and the first closing's hint after the first action on a closed day (21-4c).
+  void _act() {
+    if (_acted) return;
+    setState(() => _acted = true);
+    final hints = ref.read(planHintsProvider).value;
+    if (hints == null) return;
+    if (!hints.tabShown) unawaited(ref.read(planHintsProvider.notifier).markTabShown());
+    if (!hints.closeShown && s.showsClosedDay) {
+      unawaited(ref.read(planHintsProvider.notifier).markCloseShown());
+    }
+  }
+
+  void _openDay(PlanDayRoute day) {
+    _act();
+    final p = plan;
+    if (p == null) return;
+    AppHaptics.light();
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PlanDayStubScreen(plan: p, day: day)),
+    );
+  }
+
+  Future<void> _openEntry() async {
+    AppHaptics.light();
+    final started = await openPlanEntry(context);
+    if (!mounted || started == null) return;
+    // «Начать» → таб: the plan is adopted by the entry itself; the sheet «Как устроен план» comes
+    // 320 ms after the tab (спека 22-4b), once, for the first plan. The FIRST plan is exactly
+    // when nothing has watched the hints yet — so the flags are awaited, not peeked at.
+    final hints = await ref.read(planHintsProvider.future);
+    if (!mounted) return;
+    if (!hints.howShown) {
+      await Future<void>.delayed(const Duration(milliseconds: 320));
+      if (!mounted) return;
+      unawaited(ref.read(planHintsProvider.notifier).markHowShown());
+      await showPlanHowSheet(context);
+    }
+  }
+
+  void _openMenu(BuildContext anchor) {
+    final l = AppLocalizations.of(context);
+    final p = plan;
+    if (p == null) return;
+    _act();
+    unawaited(
+      showFloatingContextMenu(
+        context: context,
+        anchorContext: anchor,
+        barrierLabel: l.commonCloseMenu,
+        actions: [
+          ContextMenuAction(icon: LucideIcons.calendar, label: l.planMenuDate, onSelected: _changeDate),
+          ContextMenuAction(icon: LucideIcons.plus, label: l.planMenuNew, onSelected: _newPlan),
+          if (p.collectionId != null)
+            ContextMenuAction(
+              icon: LucideIcons.folderOpen,
+              label: l.planMenuCollection,
+              onSelected: _openCollection,
+            ),
+          ContextMenuAction(
+            icon: LucideIcons.trash2,
+            label: l.planMenuDelete,
+            destructive: true,
+            onSelected: _delete,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _changeDate() async {
+    final p = plan;
+    if (p == null) return;
+    final choice = await showPlanDateSheet(context, p);
+    if (choice == null || !mounted) return;
+    final controller = ref.read(planTabProvider.notifier);
+    try {
+      switch (choice) {
+        case PlanDateKeep():
+          return;
+        case PlanDateClear():
+          await controller.reschedule(p.id, changeDate: true);
+        case PlanDateSet(:final date):
+          await controller.reschedule(
+            p.id,
+            changeDate: true,
+            eventDate: '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+          );
+      }
+    } catch (_) {
+      // A refused move (409 `plan_too_short`, no network) leaves the plan as it was — the sheet
+      // closed on «Применить» and the tab still shows the truth. No toast (§6).
+      AppHaptics.warning();
+    }
+  }
+
+  Future<void> _newPlan() async {
+    final p = plan;
+    if (p == null) return;
+    final go = await showPlanNewSheet(context, p);
+    if (!go || !mounted) return;
+    await _finishThenEntry(p);
+  }
+
+  /// «Собрать новый план» on the finished card (21-7): the plan is done — close it and go.
+  Future<void> _newPlanAfterDone() async {
+    final p = plan;
+    if (p == null) return;
+    await _finishThenEntry(p);
+  }
+
+  Future<void> _finishThenEntry(Plan p) async {
+    try {
+      await ref.read(planTabProvider.notifier).finish(p.id);
+    } catch (_) {
+      AppHaptics.warning();
+
+      return;
+    }
+    if (mounted) await _openEntry();
+  }
+
+  Future<void> _finish() async {
+    final p = plan;
+    if (p == null) return;
+    try {
+      await ref.read(planTabProvider.notifier).finish(p.id);
+    } catch (_) {
+      AppHaptics.warning();
+    }
+  }
+
+  Future<void> _delete() async {
+    final p = plan;
+    if (p == null) return;
+    final ok = await showPlanDeleteAlert(context, p);
+    if (!ok || !mounted) return;
+    try {
+      await ref.read(planTabProvider.notifier).delete(p.id);
+    } catch (_) {
+      AppHaptics.warning();
+    }
+  }
+
+  Future<void> _retryLesson(PlanDayRoute day) async {
+    final p = plan;
+    final sceneId = day.sceneId;
+    if (p == null || sceneId == null) return;
+    try {
+      await ref.read(planTabProvider.notifier).retryLesson(p.id, sceneId);
+    } catch (_) {
+      AppHaptics.warning();
+    }
+  }
+
+  void _openCollection() {
+    final p = plan;
+    final id = p?.collectionId;
+    if (p == null || id == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => CollectionDetailScreen(collectionId: id, title: p.displayTitle)),
+    );
+  }
+
+  void _openFinished(PlanRow row) {
+    AppHaptics.light();
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PlanFinishedScreen(planId: row.id)),
+    );
+  }
+}
+
+/// «К чему готовишься?» — the tab without a plan (кадр 21-1). No brass: there is nothing to mark.
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.onStart});
+
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l.planEmptyTitle,
+            style: const TextStyle(
+              fontFamily: AppFonts.literata,
+              fontSize: 30,
+              fontWeight: FontWeight.w500,
+              letterSpacing: -0.6,
+              height: 1.1,
+              color: AppColors.ink,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l.planEmptyBody,
+            style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, height: 1.5, color: AppColors.secondary),
+          ),
+          const SizedBox(height: 22),
+          PlanInkButton(label: l.planEmptyCta, onTap: onStart),
+          const SizedBox(height: 10),
+          Text(
+            l.planEmptyNote,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 14, color: AppColors.tertiary),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _NumberedLine extends StatelessWidget {
-  const _NumberedLine({required this.index, required this.text, required this.last});
-  final int index;
+/// «нет сети» — the quiet line over a cached state (§6).
+class _OfflineLine extends StatelessWidget {
+  const _OfflineLine(this.text);
+
   final String text;
-  final bool last;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 14),
-    decoration: BoxDecoration(
-      border: Border(
-        top: const BorderSide(color: AppColors.dividerFaint),
-        bottom: last ? const BorderSide(color: AppColors.dividerFaint) : BorderSide.none,
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 2),
+    child: Text(
+      text,
+      style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 14, color: AppColors.tertiary),
+    ),
+  );
+}
+
+/// A finished plan from the list — the same body in its reading mode (кадр 21-7, «Открыть
+/// коллекцию»), pushed over the tab with a back chevron.
+class PlanFinishedScreen extends ConsumerWidget {
+  const PlanFinishedScreen({super.key, required this.planId});
+
+  final String planId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final plan = ref.watch(finishedPlanProvider(planId));
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s26;
+    final back = Semantics(
+      button: true,
+      label: l.commonBack,
+      child: InkResponse(
+        radius: 22,
+        onTap: () => Navigator.of(context).maybePop(),
+        child: const SizedBox(
+          width: AppSpacing.minTap,
+          height: AppSpacing.minTap,
+          child: Icon(LucideIcons.chevronLeft, size: 22, color: AppColors.secondary),
+        ),
       ),
-    ),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 3),
-          child: Text(
-            '0$index',
-            style: AppText.translation.copyWith(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.6,
-              color: AppColors.brassInk,
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: AppColors.ground,
+        body: SafeArea(
+          bottom: false,
+          child: plan.when(
+            loading: () => _Page(bottomInset: bottomInset, leading: back, children: const []),
+            error: (_, _) => _Page(
+              bottomInset: bottomInset,
+              leading: back,
+              children: [
+                PlanLoadFailedCard(onRetry: () => ref.invalidate(finishedPlanProvider(planId))),
+              ],
+            ),
+            data: (p) => PlanTabBody(
+              state: PlanTabState(plan: p, finished: const []),
+              bottomInset: bottomInset,
+              readOnly: true,
+              leading: back,
             ),
           ),
         ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Text(
-            text,
-            style: AppText.translation.copyWith(
-              fontSize: 14.5,
-              height: 1.5,
-              color: AppColors.inkBody,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-double _bottomInset(BuildContext context) =>
-    AppTabBarMetrics.height +
-    AppTabBarMetrics.bottomInset +
-    MediaQuery.viewPaddingOf(context).bottom +
-    AppSpacing.s8;
-
-/// «Отказаться от плана» — THE ONE WAY OUT, and the only one there is.
-///
-/// The server allows a learner ONE running plan, so without this the only exit from a plan is its
-/// own event: answer «Как прошло?» on the day, or wait. That is a trap, and it is why this control
-/// exists even though no frame of «Фаза 4» draws it. It is drawn in the app's established shape for
-/// a destructive act rather than an invented one — terracotta text, no fill, a centre alert that
-/// says what happens (rule 20, the same as «Удалить аккаунт» and a collection's delete).
-///
-/// ABANDON and not pause: a pause keeps the hold on the pool («я вернусь»), and a learner asking to
-/// get out of a plan is not asking to keep it. Pause has its own meaning and would need its own
-/// frame to earn a second control here.
-///
-/// One function for both entrances — the plan screen and a day that has run out of build attempts —
-/// so they cannot come to differ in what they confirm, what they call, or what they re-read after.
-/// Returns true when the plan was actually given up.
-Future<bool> abandonPlan(BuildContext context, WidgetRef ref, String planId) async {
-  final l = AppLocalizations.of(context);
-  AppHaptics.light();
-
-  final ok = await showCenterAlert(
-    context: context,
-    title: l.planAbandonTitle,
-    message: l.planAbandonBody,
-    confirmLabel: l.planAbandonConfirm,
-    cancelLabel: l.commonCancel,
-  );
-  if (ok != true || !context.mounted) return false;
-
-  try {
-    await ref.read(apiClientProvider).abandonPlan(planId);
-  } catch (_) {
-    // Offline, or a plan that is already gone. Either way the screens re-read below and say what is
-    // actually true; an error here would be a second sentence about the same fact.
+      ),
+    );
   }
-  ref.invalidate(activePlanProvider);
-  ref.invalidate(planArchiveProvider);
-  // The plan's words are back in the ordinary day — the home screen's tile has just changed.
-  ref.read(syncServiceProvider).sync();
-
-  return true;
-}
-
-/// «Составить план» — THE ONE DOOR, opened from three places (the empty tab, the finished tab, and
-/// the home invitation), so the three cannot come to differ in what they open or in what they
-/// invalidate when the learner comes back.
-Future<void> openPlanBuilder(BuildContext context, WidgetRef ref, {String? goal}) async {
-  AppHaptics.light();
-  await Navigator.of(context).push(
-    MaterialPageRoute(builder: (_) => PlanEntryScreen(initialGoal: goal)),
-  );
-  // They may have started one. Both the tab and the home card read the same provider.
-  ref.invalidate(activePlanProvider);
-  ref.invalidate(planArchiveProvider);
 }

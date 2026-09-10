@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
@@ -19,7 +20,7 @@ import '../../data/locale_controller.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
-import '../plan/build_stamp.dart';
+import 'build_stamp.dart';
 import 'perf_log_screen.dart';
 import 'qa_speech_view.dart';
 import 'voice_bakeoff_screen.dart';
@@ -27,8 +28,14 @@ import '../../data/local/cached_image_provider.dart';
 
 /// Профиль (кадры 11a / 13a). Sections: обучение · приложение · подписка · аккаунт. Reads local
 /// where it can (settings, stats); the learning rows edit the server profile. Paper/ink.
+///
+/// PUSHED from the avatar in a tab's header (токен-лист 4к-1) — there is no profile tab — so
+/// [pushed] draws the back chevron and its own scaffold. The version line (client hash · server
+/// hash) stands at the bottom ALWAYS, not behind the dev door: acceptance starts from it.
 class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, this.pushed = false});
+
+  final bool pushed;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,15 +47,13 @@ class ProfileScreen extends ConsumerWidget {
     if (user == null) return const SizedBox.shrink();
     final profile = user.profile;
 
-    final bottomInset =
-        AppTabBarMetrics.height +
-        AppTabBarMetrics.bottomInset +
-        MediaQuery.viewPaddingOf(context).bottom +
-        AppSpacing.s8;
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s16;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
-      child: SafeArea(
+      child: Scaffold(
+        backgroundColor: AppColors.paper,
+        body: SafeArea(
         bottom: false,
         child: ListView(
           padding: EdgeInsets.fromLTRB(
@@ -58,7 +63,25 @@ class ProfileScreen extends ConsumerWidget {
             bottomInset,
           ),
           children: [
-            Text(l.profileTitle, style: AppText.screenTitle),
+            Row(
+              children: [
+                if (pushed)
+                  Semantics(
+                    button: true,
+                    label: l.commonBack,
+                    child: InkResponse(
+                      radius: 22,
+                      onTap: () => Navigator.of(context).maybePop(),
+                      child: const SizedBox(
+                        width: AppSpacing.minTap,
+                        height: AppSpacing.minTap,
+                        child: Icon(LucideIcons.chevronLeft, size: 22, color: AppColors.secondary),
+                      ),
+                    ),
+                  ),
+                Expanded(child: Text(l.profileTitle, style: AppText.screenTitle)),
+              ],
+            ),
             const SizedBox(height: 18),
             _Header(user: user),
 
@@ -123,6 +146,14 @@ class ProfileScreen extends ConsumerWidget {
               value: settings.autoPronounce,
               onChanged: (v) => ref.read(appSettingsProvider.notifier).setAutoPronounce(v),
             ),
+            // «ЗВУКИ» — четыре события плана и тренажёров (токен-лист 4к-3), по умолчанию включены.
+            // Беззвучный режим телефона стоит выше выключателя; хаптика остаётся при любом (4е).
+            _SwitchRow(
+              label: l.profileRowSounds,
+              hint: l.profileSoundsHint,
+              value: settings.soundsEnabled,
+              onChanged: (v) => ref.read(appSettingsProvider.notifier).setSoundsEnabled(v),
+            ),
             // «Подсказка произношения». The switch shows the EFFECTIVE value — the stored decision
             // if there is one, otherwise the one the learner's own alphabet implies — so it never
             // reads «off» while the hint is on screen.
@@ -150,8 +181,12 @@ class ProfileScreen extends ConsumerWidget {
               last: true,
               onTap: () => _confirmDelete(context, ref),
             ),
+            // ВЕРСИЯ СБОРКИ — хеш клиента и хеш сервера из `/api/v1/health` — стоит здесь ВСЕГДА
+            // (наряд PLAN-UI, §1): без неё приёмка не начинается.
+            const BuildStampLine(),
           ],
         ),
+      ),
       ),
     );
   }
@@ -674,10 +709,6 @@ class _DevFlags extends ConsumerWidget {
           onTap: () => Navigator.of(context)
               .push(MaterialPageRoute(builder: (_) => const VoiceBakeoffScreen())),
         ),
-        // «СЕГОДНЯ» ПЛАНА, СДВИНУТОЕ (наряд DAY-FIX-2, Ч.7). За той же дверью, что QA-вход и
-        // подстановка транскрипта: аккаунт `is_qa` И среда не production — сервер отвечает 404,
-        // когда дверь закрыта, и клиент своей проверки не держит ({@see AppUser.qaTools}).
-        if (qa) const _QaPlanClockRow(),
         // МИКРОФОН, ЖИВЬЁМ (наряд DAY-GATE-1, Ч.0.1). За той же дверью и по той же причине, что
         // строки выше: строка показывает статусы разрешений и внутренности движка, и боевому
         // аккаунту в релизе она не показывается.
@@ -735,88 +766,6 @@ class _QaSpeechRow extends ConsumerWidget {
       child: QaSpeechView(
         diagnostics: ref.watch(speechDiagnosticsProvider),
         localeId: sttLocaleFor(lang),
-      ),
-    );
-  }
-}
-
-/// Сдвиг «сегодня» плана на QA-аккаунте: «+1 день» и «сбросить», текущий сдвиг словом.
-///
-/// Кэшируется на сервере, не в таблице — сдвигает и серверное «сегодня», и штампы ответов с
-/// телефона, чтобы пройти дни 1 → 2 → финал на симуляторе, не дожидаясь полуночи.
-class _QaPlanClockRow extends ConsumerStatefulWidget {
-  const _QaPlanClockRow();
-
-  @override
-  ConsumerState<_QaPlanClockRow> createState() => _QaPlanClockRowState();
-}
-
-class _QaPlanClockRowState extends ConsumerState<_QaPlanClockRow> {
-  int? _days;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_load());
-  }
-
-  Future<void> _load() async {
-    try {
-      final days = await ref.read(apiClientProvider).qaPlanClock();
-      if (mounted) setState(() => _days = days);
-    } catch (_) {
-      // Дверь закрыта или сети нет — строка молчит о сдвиге, кнопки остаются.
-    }
-  }
-
-  Future<void> _set(int days) async {
-    AppHaptics.light();
-    try {
-      final now = await ref.read(apiClientProvider).setQaPlanClock(days);
-      if (!mounted) return;
-      setState(() => _days = now);
-      // План читается живьём — после сдвига все его поверхности перечитываются.
-      ref.invalidate(activePlanProvider);
-    } catch (_) {
-      // Как и выше: не наш сценарий, если дверь закрыта.
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-
-    return _RowShell(
-      last: true,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.devQaClockTitle,
-                  style: const TextStyle(
-                    fontFamily: AppFonts.inter,
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.ink,
-                  ),
-                ),
-                if (_days case final d?) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    l.devQaClockShift(d),
-                    style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          QuietButton(label: l.devQaClockReset, onPressed: () => _set(0)),
-          const SizedBox(width: 6),
-          QuietButton(label: l.devQaClockPlus, onPressed: () => _set((_days ?? 0) + 1)),
-        ],
       ),
     );
   }

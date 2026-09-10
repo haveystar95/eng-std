@@ -22,6 +22,9 @@ import 'haptics.dart';
 /// phone plays nothing and the haptic still fires, which is exactly the wanted behaviour, so
 /// nothing here checks the switch itself.
 abstract final class AppFeedback {
+  /// «Звуки» в профиле (4к-3). Flipped by the settings controller; the haptic never depends on it.
+  static bool soundsEnabled = true;
+
   /// Handled in `ios/Runner/AppDelegate.swift`. Android has no handler and would throw
   /// [MissingPluginException]; that is caught below rather than guarded by a platform check,
   /// because the app is iOS-only and the failure mode that matters is «a sound must never take an
@@ -57,6 +60,7 @@ abstract final class AppFeedback {
   /// to play is not something the learner can act on — so the failure is swallowed here rather
   /// than surfaced anywhere.
   static void _play(String sound) {
+    if (!soundsEnabled) return;
     channel.invokeMethod<void>('play', {'sound': sound}).catchError((Object e) {
       debugPrint('[feedback] $sound did not play: $e');
     });

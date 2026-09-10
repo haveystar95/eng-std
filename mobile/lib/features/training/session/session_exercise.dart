@@ -1144,7 +1144,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           if (widget.sayIntent case final intent? when intent.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s12),
             Text(
-              l.planSayIntent(intent),
+              l.sessionSayIntent(intent),
               style: AppText.stepTitle.copyWith(fontSize: 16, height: 1.4),
             ),
           ],
@@ -1481,7 +1481,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     // В ПРОГОНЕ КЛЮЧ НЕ ПОКАЗЫВАЮТ. Ключ написан на изучаемом языке, а прогон — это «скажи сам, без
     // текста»: строка «главное — a fever» отдала бы половину реплики и превратила ступень C в
     // чтение вслух. Что делать, говорит подсказка на языке поддержки над микрофоном.
-    if (_isSceneRun) return l.planSceneRunHint;
+    if (_isSceneRun) return l.sessionSceneRunHint;
 
     final key = _card.spokenTarget;
     if (key != null) return l.sessionSpeakHintKey(key);

@@ -8,7 +8,7 @@ import '../features/search/search_pair.dart' show SearchLanguages;
 import 'config.dart';
 import 'exposure_sync.dart';
 import 'models.dart';
-import 'plan_models.dart';
+import 'plan/plan_models.dart';
 import 'review_queue.dart';
 import 'speech/speech_grading_config.dart';
 import 'token_store.dart';
@@ -507,238 +507,124 @@ class ApiClient {
     return (plan: HomePlan.fromJson(raw), raw: raw);
   }
 
-  // ---- Learning plans (PLAN-1c) --------------------------------------------
+  // ---- The plan (наряд PLAN-UI, `docs/plan-api.md`) --------------------------------------------
   //
-  // The plan is the ONE surface here that is not read out of the local mirror. Its two headline
-  // numbers — готовность and the focus day — are derived server-side from the review log on every
-  // read, so a cached copy would be a second, slower opinion about where the learner is. The screens
-  // therefore call these directly and say «нет сети» when there is none.
+  // Read live and cached whole: the tab keeps the last `GET /plans/current` in the local DB for the
+  // offline read, and every write here answers with the plan it changed so the tab can redraw from
+  // the answer instead of asking again.
 
-  /// The plan the learner is on, or null when there is none (the server answers 204).
-  Future<LearningPlan?> activePlan() async {
-    final r = await _dio.get('/plans/active');
-    if (r.statusCode == 204 || r.data == null) return null;
+  /// The live plan for the tab, or null when the learner has none. Returned with the RAW map so the
+  /// tab can cache it verbatim ({@see PlanStore}).
+  Future<({Plan plan, Map<String, dynamic> raw})?> currentPlan() async {
+    final r = await _dio.get('/plans/current');
+    final raw = _data(r);
+    if (raw is! Map<String, dynamic>) return null;
 
-    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+    return (plan: Plan.fromJson(raw), raw: raw);
   }
 
-  /// Every plan the learner has run, newest first — the finished one and the archive.
-  Future<List<PlanSummary>> plans() async {
+  /// Every plan the learner has run — the live one first, then the rest, newest first.
+  Future<List<PlanRow>> plans() async {
     final r = await _dio.get('/plans');
-    return (_data(r) as List)
-        .map((e) => PlanSummary.fromJson(e as Map<String, dynamic>))
-        .toList(growable: false);
+
+    return [
+      for (final e in (_data(r) as List)) PlanRow.fromJson(e as Map<String, dynamic>),
+    ];
   }
 
-  Future<LearningPlan> plan(String planId) async {
+  Future<Plan> plan(String planId) async {
     final r = await _dio.get('/plans/$planId');
-    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+
+    return Plan.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// A DRAFT. Free — no model call, no day, no word held. The support language is not sent: it is
-  /// the account's own (ONB-1) and the server reads it off the profile.
-  Future<LearningPlan> createPlan({
+  /// `POST /plans` — 202 with the build status; the client polls [planBuild].
+  Future<PlanBuild> createPlan({
     required String goalText,
     required String targetLang,
-    required String level,
-    required String? eventDate,
-    required int minutesPerDay,
-    List<ListenAnswer> listening = const [],
+    required PlanLevel level,
+    required int daysTotal,
+    String? eventDate,
   }) async {
     final r = await _dio.post(
       '/plans',
       data: {
         'goal_text': goalText,
         'target_lang': targetLang,
-        'level': level,
-        // ALWAYS SENT, and null is «Без даты» (кадр V4·04б). The server refuses a create with the
-        // key missing on purpose — an app that simply forgot the date must not produce an undated
-        // plan — so this is a plain assignment and never a `?:` conditional key.
+        'level': level.wire,
+        'days_total': daysTotal,
+        // ALWAYS SENT: null is «без даты», and an absent key would be an app that forgot to ask.
         'event_date': eventDate,
-        'minutes_per_day': minutesPerDay,
-        // What the learner tapped on the listening step, line by line. The VERDICT is not sent: the
-        // server derives «упор на понимание / на говорение» from these rows, so the balance the
-        // plan is built on cannot disagree with the answers the learner gave.
-        if (listening.isNotEmpty)
-          'listening': listening.map((a) => a.toJson()).toList(growable: false),
       },
     );
-    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+
+    return PlanBuild.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// The entry's two optional blocks, from one call — «Дописать за тебя» and «Послушать».
-  ///
-  /// WITHOUT [targetLang] it is the goal step (кадр V4·01в), fired on a typing pause: the language
-  /// has not been chosen, and the answer is the two continuations alone. WITH it, right after the
-  /// level is chosen, the answer holds the three lines too (кадр V4·03).
-  ///
-  /// Called BEFORE any plan exists. An EMPTY answer is legitimate and means the block is not shown:
-  /// the server answers 200 with nothing when it could not be written, and this client turns a
-  /// network failure into the same emptiness for the same reason — both blocks are optional, and a
-  /// person who never asked for one must not be shown an error about it.
-  ///
-  /// It waits on a model, so it states its own timeout like [buildPlanOutline] does.
-  Future<ListenWarmup> listenWarmup({
-    required String goalText,
-    String targetLang = '',
-    required String level,
-  }) async {
-    try {
-      final r = await _dio.post(
-        '/plans/listen-warmup',
-        data: {
-          'goal_text': goalText,
-          // OMITTED, not sent empty: on the goal step the language has not been chosen, and the
-          // absence of the key is what asks for the continuations alone.
-          if (targetLang.isNotEmpty) 'target_lang': targetLang,
-          'level': level,
-        },
-        options: Options(receiveTimeout: const Duration(minutes: 2)),
-      );
+  Future<PlanBuild> planBuild(String planId) async {
+    final r = await _dio.get('/plans/$planId/build');
 
-      return ListenWarmup.fromJson(_data(r) as Map<String, dynamic>);
-    } catch (_) {
-      return const ListenWarmup();
-    }
+    return PlanBuild.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// P1 + the scheduler: the SKELETON the learner reads before committing. One model call, and
-  /// re-running it rebuilds the skeleton — which is why it is a POST.
-  ///
-  /// THE ONE CALL IN THIS CLIENT THAT WAITS ON A MODEL IN-BAND. Everything else that costs a model
-  /// call is queued and polled; this one answers with the outline itself, because the learner is
-  /// looking at a spinner and the next screen IS the answer. The default 40-second receive timeout
-  /// is a limit for ordinary endpoints and far too short for a live `gpt-5.4` completion, so this
-  /// one states its own.
-  Future<LearningPlan> buildPlanOutline(String planId) async {
-    final r = await _dio.post(
-      '/plans/$planId/outline',
-      options: Options(receiveTimeout: const Duration(minutes: 3)),
-    );
-    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  /// «Ещё раз» after an unclear or failed build; 409 `plan_state` when the plan is not retryable.
+  Future<PlanBuild> retryPlanBuild(String planId) async {
+    final r = await _dio.post('/plans/$planId/build/retry');
+
+    return PlanBuild.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// «Добавить 20 минут в день» / «Убрать день» / a new date — the adjustment step, which costs
-  /// nothing because the scheduler is a pure function of the outline the model already produced.
-  Future<LearningPlan> reschedulePlan(
-    String planId, {
-    int? minutesPerDay,
-    String? eventDate,
-    int? dropDayIndex,
-  }) async {
-    final r = await _dio.patch(
-      '/plans/$planId/outline',
-      data: {
-        'minutes_per_day': ?minutesPerDay,
-        'event_date': ?eventDate,
-        'drop_day_index': ?dropDayIndex,
-      },
-    );
-    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  /// Swipe a scene away in the preview: the day becomes a review day. 409 `plan_core_scene`.
+  Future<Plan> removePlanScene(String planId, String sceneId) async {
+    final r = await _dio.delete('/plans/$planId/scenes/$sceneId');
+
+    return Plan.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// THE COMMITMENT: days start generating and words start being held.
-  Future<LearningPlan> startPlan(String planId) async {
+  /// «Повторить» on a day whose lesson failed (кадр 22-5c).
+  Future<Plan> retryPlanLesson(String planId, String sceneId) async {
+    final r = await _dio.post('/plans/$planId/scenes/$sceneId/lesson/retry');
+
+    return Plan.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// «Начать» — the plan goes live, day one opens today. 409 `plan_already_active` / `plan_state`.
+  Future<Plan> startPlan(String planId) async {
     final r = await _dio.post('/plans/$planId/start');
-    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+
+    return Plan.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  Future<LearningPlan> pausePlan(String planId) async {
-    final r = await _dio.post('/plans/$planId/pause');
-    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  /// «Изменить дату»: [eventDate] null CLEARS the date; the key is sent only when [changeDate].
+  Future<Plan> reschedulePlan(String planId, {bool changeDate = false, String? eventDate, int? daysTotal}) async {
+    final r = await _dio.patch(
+      '/plans/$planId/schedule',
+      data: {if (changeDate) 'event_date': eventDate, 'days_total': ?daysTotal},
+    );
+
+    return Plan.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  Future<LearningPlan> abandonPlan(String planId) async {
-    final r = await _dio.post('/plans/$planId/abandon');
-    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  /// «Завершить план» — close a live or overdue plan.
+  Future<Plan> finishPlan(String planId) async {
+    final r = await _dio.post('/plans/$planId/finish');
+
+    return Plan.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// «ПОДГОТОВКА ЗАВЕРШЕНА» — the plan run to its end (Д-27).
-  ///
-  /// Called when the final day's rehearsal is finished. A 409 means the plan is ALREADY ended — a
-  /// second tap, or a retry after the response was lost — and that is a success from here: the run
-  /// this reports really did happen, and the state it asks for is the state the server is in.
-  Future<LearningPlan> completePlan(String planId) async {
-    try {
-      final r = await _dio.post('/plans/$planId/complete');
-      return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
-    } on DioException catch (e) {
-      if (e.response?.statusCode != 409) rethrow;
-      return plan(planId);
-    }
+  Future<void> deletePlan(String planId) => _dio.delete('/plans/$planId');
+
+  /// «Кабинет дня» — the tab reads it for the plate's stages; DAY-UI reads the rest.
+  Future<PlanDayRoom> planDayRoom(String planId, int number) async {
+    final r = await _dio.get('/plans/$planId/days/$number');
+
+    return PlanDayRoom.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// One day with its terms and their stages.
-  Future<PlanDayDetail> planDay(String planId, int dayIndex) async {
-    final r = await _dio.get('/plans/$planId/days/$dayIndex');
-    return PlanDayDetail.fromJson(_data(r) as Map<String, dynamic>);
-  }
+  Future<PlanVersions> planVersions() async {
+    final r = await _dio.get('/plans/versions');
 
-  /// «Собери мне день n» — idempotent and safe to poll: it answers with the day's own status, so
-  /// the «собираю день n» screen calls it to start the work and calls it again to learn whether it
-  /// finished. A 409 `plan_day_capped` means the plan's own spending ceiling says «не сейчас».
-  Future<PlanDayStatus> generatePlanDay(String planId, int dayIndex) async {
-    final r = await _dio.post('/plans/$planId/days/$dayIndex/generate');
-    return PlanDayStatus.fromWire((_data(r) as Map<String, dynamic>)['status'] as String?);
-  }
-
-  /// «Собрать заново» — one more attempt for a day that burned.
-  ///
-  /// A separate endpoint from [generatePlanDay] because that one is POLLED: a screen asking «is it
-  /// ready yet» every second must never be able to buy a model call. This one is a button, it
-  /// spends money, and it is pressed once. A day that is not `failed` is answered with the status
-  /// it already has, so a double tap costs nothing.
-  Future<PlanDayStatus> rebuildPlanDay(String planId, int dayIndex) async {
-    final r = await _dio.post('/plans/$planId/days/$dayIndex/rebuild');
-    return PlanDayStatus.fromWire((_data(r) as Map<String, dynamic>)['status'] as String?);
-  }
-
-  /// The session of ONE day. [dayIndex] null asks for the day the learner is ON — the server owns
-  /// the focus, so it must be possible to ask for it without recomputing it on the device.
-  Future<PlanSession> buildPlanSession({
-    required String planId,
-    required String sessionId,
-    int? dayIndex,
-    String? stage,
-  }) async {
-    final path = dayIndex == null
-        ? '/plans/$planId/session'
-        : '/plans/$planId/days/$dayIndex/session';
-    // БЕЗ `stage` СЕРВЕР СОБИРАЕТ ТЕКУЩИЙ ЭТАП — это и есть «Продолжить» (наряд DAY-GATE-1, Ч.1).
-    // Единственный случай, когда этап называет клиент, — «Повторить ошибки»: он необязателен, дня
-    // не держит, и попросить его может только человек. Запертый этап отбивается 409, а не
-    // подменяется молча, поэтому угадывать здесь нечего.
-    final r = await _dio.post(path, data: {'session_id': sessionId, 'stage': ?stage});
-
-    return PlanSession.fromJson(_data(r) as Map<String, dynamic>);
-  }
-
-  /// The morning of the event: the plan's phrases and nothing else (кадр 15).
-  Future<PlanRehearsal> planRehearsal(String planId) async {
-    final r = await _dio.post('/plans/$planId/rehearsal');
-    return PlanRehearsal.fromJson(_data(r) as Map<String, dynamic>);
-  }
-
-  /// ПРОГОН СЦЕНЫ ЗАВЕРШЁН — ходы с исходами, и ни одного посчитанного числа (наряд SCENE-RUN).
-  ///
-  /// «Прошёл сам 2 из 4 · сразу 1» считает сервер: это то, что человеку показывают и что потом
-  /// читает зрелость сцены, и число, посчитанное на телефоне, было бы вторым источником правды о
-  /// том, чего он добился.
-  ///
-  /// Ответы каждого хода уже уехали обычной очередью ревью — сказал это `speaking/good`, пропустил
-  /// `speaking/again`. Здесь их нет: append-only журнал не должен получить один ответ дважды.
-  /// ДЕВ-ДВЕРЬ СМЕНЫ ДНЕЙ (наряд DAY-FIX-2): сдвинуть «сегодня» QA-аккаунта на [days] дней.
-  ///
-  /// Дверь стережёт сервер — та же, что у входа без пароля и подстановки транскрипта: всем, кому
-  /// она закрыта, это 404. Клиент своей проверки не держит ({@see AppUser.qaTools}).
-  Future<int> setQaPlanClock(int days) async {
-    final r = await _dio.post('/qa/plan-clock', data: {'days': days});
-    return ((_data(r) as Map<String, dynamic>)['days'] as num?)?.toInt() ?? 0;
-  }
-
-  Future<int> qaPlanClock() async {
-    final r = await _dio.get('/qa/plan-clock');
-    return ((_data(r) as Map<String, dynamic>)['days'] as num?)?.toInt() ?? 0;
+    return PlanVersions.fromJson(_data(r) as Map<String, dynamic>?);
   }
 
   /// КАКАЯ СБОРКА СЕРВЕРА ОТВЕЧАЕТ — короткий SHA (наряд DAY-GATE-1, Ч.0.4).
@@ -766,34 +652,6 @@ class ApiClient {
     });
     final r = await _dio.post('/qa/report', data: form);
     return ((_data(r) as Map<String, dynamic>)['id'] as String?) ?? '';
-  }
-
-  Future<void> recordSceneRun({
-    required String planId,
-    required int sceneIndex,
-    required int dayIndex,
-    required List<({String termId, String outcome})> turns,
-  }) async {
-    await _dio.post(
-      '/plans/$planId/scene-runs',
-      data: {
-        'scene_index': sceneIndex,
-        'day_index': dayIndex,
-        'turns': [
-          for (final turn in turns) {'term_id': turn.termId, 'outcome': turn.outcome},
-        ],
-      },
-    );
-  }
-
-  /// «Как прошло?» — the checkpoints the learner ticked by hand after the event.
-  ///
-  /// It CLOSES the plan, which is why it answers with the whole plan rather than with a receipt:
-  /// the screen that called it is about to become the finished-plan screen, and the completed plan
-  /// is what that screen is drawn from.
-  Future<LearningPlan> submitPlanFeedback(String planId, List<int> hitIndexes) async {
-    final r = await _dio.post('/plans/$planId/feedback', data: {'checkpoints': hitIndexes});
-    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
   }
 
   /// Upload a batch of graded answers (idempotent by each review's client ULID).

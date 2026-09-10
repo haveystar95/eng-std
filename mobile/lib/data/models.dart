@@ -309,7 +309,7 @@ enum ExerciseMode {
   /// спросил про залог. Скажи, что тебя устраивает» — the position on the learner's own language,
   /// the options on the one being learned, a tap. The situation itself is not on the card: it is
   /// assembled by the server out of the DAY and rides on the plan's envelope
-  /// ([PlanSessionEnvelope.situationAt]), because only the day holds the scene it comes from.
+  /// (the plan session's envelope, now gone), because only the day holds the scene it comes from.
   ///
   /// They are dealt in a PLAN SESSION and nowhere else — an ordinary session has no scene, so there
   /// is nothing honest for them to ask there. A build that meets one outside a plan draws it as an
@@ -366,7 +366,7 @@ enum ExerciseMode {
   /// The two speak shelves, never [situationalHear] — the понимаю tier is never produced. What
   /// follows the tap is говорение по ключу and it writes nothing, so this changes what is DRAWN and
   /// nothing about the review queue. The server says it per task
-  /// ([PlanSessionEnvelope.speaksAfterChoiceAt]); this is the same fact read off the mode, for a
+  /// (the plan session's envelope, now gone); this is the same fact read off the mode, for a
   /// card met outside a plan envelope.
   bool get speaksAfterChoice => this == situationalSay || this == situationalAsk;
 
@@ -667,19 +667,6 @@ class StudySession {
   /// arrive; nothing else about the session behaves differently.
   final bool builtLocally;
 
-  /// THE PLAN'S ENVELOPE, one entry per card and in the same order — or null for every ordinary
-  /// session, which is most of them.
-  ///
-  /// A plan session is the SAME session: the same cards, the same exercise widgets, the same
-  /// grading. «Механика тренажёров не меняется» is the rule, so the plan is not a second session
-  /// screen — it is three extra sentences this list supplies (which stage, where in it, which day
-  /// the word came from) and a brass badge in the header. Keeping it beside the cards rather than
-  /// inside them is what stops those three sentences leaking into every ordinary card.
-  ///
-  /// The type is deliberately `List<Object>`-free: it holds `PlanSessionTask` from
-  /// `plan_models.dart`, which imports THIS file for [SessionCard]. Naming it here would be a
-  /// cycle, and a cycle for a field one screen reads is not worth the import graph.
-  final PlanSessionEnvelope? plan;
 
   /// ЧЕМ СУДИТЬ РЕЧЬ — пороги и таблица аббревиатур, приехавшие с сервера (наряд SPEECH-2,
   /// Ч.3.3 / Ч.4.2). Своих чисел у карточки нет: экран и сервер судят одной функцией по одним
@@ -693,7 +680,6 @@ class StudySession {
     required this.sessionId,
     required this.cards,
     this.builtLocally = false,
-    this.plan,
     this.speech = SpeechGradingConfig.empty,
   });
 }
@@ -766,190 +752,6 @@ class PlanSituation {
   };
 }
 
-/// What a study session is when it belongs to a plan — see [StudySession.plan].
-///
-/// An interface rather than the concrete `PlanSession`: the plan models import this file for
-/// [SessionCard], so naming them here would close an import cycle. The session screen upcasts.
-abstract interface class PlanSessionEnvelope {
-  String get planId;
-  int get dayIndex;
-
-  /// FALSE means the sitting grades nothing — today only the final day's run-through. A day opened
-  /// AHEAD of the focus is strict like any other (E2E-SIM-2, С-1); it used to be the soft run that
-  /// schedules nothing and closes no
-  /// stage. The screen says so; the SERVER is what enforces it.
-  bool get strict;
-
-  /// The stage letter for the card at [i] («A» / «B» / «C»), or null when there is none.
-  String? stageLetterAt(int i);
-
-  /// «3 из 4» inside the stage — the position and the length, or null.
-  ({int ordinal, int of})? stepAt(int i);
-
-  /// The day the card's word was introduced on, when that is EARLIER than the day being studied.
-  /// Null for the day's own words, so the «слово со дня K» line is drawn only when it says something.
-  int? carriedFromAt(int i);
-
-  /// Is the card at [i] TODAY's own material, rather than the revision of an earlier day?
-  ///
-  /// A plan session deals its day and then revises the words its EARLIER days introduced. Both are
-  /// worth playing and only the first is the DAY: counting them together is how a day of fourteen
-  /// cards was announced as «День 1 пройден · 21 фраза и слово».
-  ///
-  /// (It used to mean «not the top-up from the learner's ordinary queue». There is no top-up: since
-  /// PLAN-FIX-3 a plan's sitting holds that plan's own cards and nothing else, so the only thing
-  /// left to tell apart is today's day from the days before it.)
-  ///
-  /// The server says it per task (`section`); this asks it per card, because the screen holds cards.
-  bool isDayTaskAt(int i);
-
-  /// How many of the session's cards are the day's own — what «N из M» and the day summary count.
-  ///
-  /// A COUNT, not an index. It happens to be where the seam falls while the day is dealt first, and
-  /// the screen deliberately does not rely on that: the seam is drawn at the first card that is not
-  /// the day's ([isDayTaskAt]).
-  int get dayTaskCount;
-
-  /// Where the card at [i] came from, when that is somewhere other than this plan — or null.
-  ///
-  /// Always null today, and kept on the wire on purpose. It used to carry «Из плана: Отпуск в
-  /// Италии» / «Из коллекции: Аэропорт» over a card the top-up had brought in; with the top-up gone
-  /// every card of a plan sitting is that plan's own, and naming the plan the learner is IN over a
-  /// card of its earlier day is the sentence that read as a lie on the owner's screen (01.09). The
-  /// field survives so a client need not change the day a foreign card is ever dealt again.
-  ({String kind, String title})? originAt(int i);
-
-  /// `line | word | chunk` — what the card at [i] DOES in its day, or null outside a plan day.
-  ///
-  /// The end-of-day count is drawn from this and from nothing else. It used to be inferred from the
-  /// card's text — «more than one word means a phrase» — which announced «3 слова · 11 фраз» over a
-  /// day of 4 word + 2 chunk + 8 line and labelled the connector «five» a phrase (Д-5).
-  String? kindAt(int i);
-
-  /// `learner | role` — whose line the card at [i] is, or null when it is not a plan line.
-  ///
-  /// A `role` line is the interlocutor's turn. The card must say so: the learner is never asked to
-  /// produce it, and one that looked like every other card had them rehearsing the doctor's
-  /// question (Д-8).
-  String? speakerAt(int i);
-
-  /// WHICH SHELF OF THE SCENE the card at [i] came off — `hear` | `say` | `ask` | `words` |
-  /// `chunks` | `numbers` | `rescue`, or null outside a plan day (and on any day written before
-  /// the shelves existed).
-  ///
-  /// The session draws a caption wherever this changes, which is the only thing that tells «Ты
-  /// ответишь» from «Ты спросишь»: both are `line`, so [kindAt] cannot stand in for it. The wording
-  /// is the client's, in two languages, for the same reason [originAt]'s is.
-  String? shelfAt(int i);
-
-  /// The card at [i] is part of the day's WARM-UP — the plan's five rescue phrases, dealt before
-  /// every day (канон §5).
-  ///
-  /// A third answer beside [isDayTaskAt], not a shade of it: the warm-up is neither today's lesson
-  /// nor a revision of an earlier day, it is the same five cards on day 1 and on day 9, and the
-  /// day's «N из N» must not move because the kit came back.
-  bool isWarmupAt(int i);
-
-  /// ПРИСЕСТЫ — the task counts of each sitting, in order, adding up to the number of cards.
-  ///
-  /// The learner's chosen minutes are the length of ONE sitting, not a limit on the day: the whole
-  /// day is dealt and this says where it is honest to stop, always on a section boundary. Empty on a
-  /// payload from a server that predates it — and then the day is played as one long session, which
-  /// is what it was.
-  List<int> get sittings;
-
-  /// The POSITION the card at [i] puts the learner in — on a situational card, null on every other.
-  PlanSituation? situationAt(int i);
-
-
-  /// The card at [i] is one the learner is only ever asked to RECOGNISE — never to produce.
-  ///
-  /// Two things say it and either is enough: the server's `tier: understand` (the «понимаю» ladder
-  /// — «Тебе скажут» and the scene's numbers, канон §3) and the older `speaker: role`. The server
-  /// refuses to deal a production trainer for such a card; this is what stops the CLIENT labelling
-  /// one as something to say, which is Д-8 seen from the other side.
-  bool isRecognitionOnlyAt(int i);
-
-  /// WHAT THE LEARNER IS DOING with the card at [i] — the part of the sitting, as a CODE.
-  ///
-  /// `warmup` · `words` · `dialogue_intro` · `dialogue` · `numbers` · `rehearsal` · `review` ·
-  /// `day` (наряд DAY-2). The wording is the client's, in two languages, exactly as for [originAt]
-  /// and [speakerAt]; what the server owns is which part this is.
-  ///
-  /// It exists because [shelfAt] cannot answer it: meeting a reply and speaking it in the
-  /// conversation are two parts of the sitting and both are `say`. A code this build has never
-  /// heard of gets no caption rather than a guessed one.
-  ///
-  /// Null on a payload from a server that predates the field — and then the shelf decides, exactly
-  /// as it did before.
-  String? sectionCodeAt(int i);
-
-  /// СТРОГОСТЬ ХОДА, которым дана карточка [i] — `choose` | `assemble` | `say`, или null.
-  ///
-  /// Отдельно от режима: тренажёр на всех трёх уровнях один, а рисуется он вариантами, блоками или
-  /// микрофоном (наряд SCENE-RUN). Null у всего, что не является ходом человека в разговоре, и на
-  /// пейлоаде сервера, который поля не знает.
-  String? turnLevelAt(int i);
-
-  /// «СКАЖИ: …» ДЛЯ КАРТОЧКИ [i] — что именно надо сказать, на языке поддержки (наряд DAY-GATE-1,
-  /// Ч.2.4). Только на сборке; null на карточке выбора, где перевод назвал бы правильный вариант.
-  String? intentAt(int i);
-
-  /// ОДНО СЛОВО О ДНЕ — `not_started` | `in_progress` | `material_done` | `done` — как его
-  /// посчитал СЕРВЕР (наряд DAY-FIX-2, Ч.3). Шапка присеста читает его отсюда и ничего не считает
-  /// сама: тот же счёт, что на вкладке «План» и на экране дня. Пейлоад сервера, который поля не
-  /// знает, читается как «идёт» — посадка открыта, значит день идёт.
-  String get dayState => PlanDayStateWire.inProgress;
-
-  /// «около N минут» — тем же счётом, что на вкладке «План». Ноль на пейлоаде без поля.
-  int get minutesLeft => 0;
-
-  /// МИНУТЫ ДВУХ ПРИСЕСТОВ врозь — «Материал» и «Разговор» (наряд DAY-FIX-3, Ч.4). Ноль без поля.
-  int get materialMinutes => 0;
-
-  int get conversationMinutes => 0;
-
-  /// ПРИСЕСТЫ, НАЗВАННЫЕ — тот же счёт, что [sittings], с именем у каждого: `material` /
-  /// `conversation`. Пусто на пейлоаде сервера, который поля не знает, — и тогда экран между
-  /// присестами говорит то, что говорил всегда.
-  List<({String kind, int cards})> get sittingPlan => const [];
-
-  /// THE CONVERSATIONS this sitting plays — one per scene it reaches, whole and in order.
-  ///
-  /// Empty on the day a scene is introduced (its dialogue opens tomorrow — канон §10), on the final
-  /// day's run-through, and on a payload from a server that predates the field.
-  List<PlanDialogue> get dialogues;
-
-  /// ОЗВУЧКА, КОТОРУЮ ЭТА ПОСАДКА МОЖЕТ СЫГРАТЬ ФАЙЛОМ — пары «текст → адрес» (наряд TTS-1).
-  ///
-  /// Пусто — законный ответ, и он значит «читай системным голосом»: труба выключена, у языка нет
-  /// голоса в пакете, файлы ещё не догнали день, или сервер этого поля не знает.
-  List<({String text, String url})> get lineAudio => const [];
-
-  /// СЕКУНДЫ ПРОГОНА СЦЕНЫ, как их назвал сервер — {@see SceneRunKnobs}.
-  SceneRunKnobs get sceneRunKnobs => const SceneRunKnobs();
-}
-
-/// ЧЕТЫРЕ СЛОВА О ДНЕ, как они едут по проводу (наряд DAY-FIX-2, Ч.3; DAY-FIX-3, Ч.4). Открытый
-/// набор: код, которого эта сборка не знает, читается как «идёт» — честнее, чем гадать «пройден».
-abstract final class PlanDayStateWire {
-  static const notStarted = 'not_started';
-  static const inProgress = 'in_progress';
-
-  /// Присест «Материал» пройден, впереди «Разговор» — кнопка говорит «К разговору».
-  static const materialDone = 'material_done';
-  static const done = 'done';
-}
-
-/// ДВА ПРИСЕСТА ДНЯ, как их называет сервер (`sitting_plan[].kind`, наряд DAY-FIX-3, Ч.4).
-abstract final class PlanSittingKind {
-  /// Разогрев, слова и связки, знакомство с репликами и их упражнения.
-  static const material = 'material';
-
-  /// Диалог сцены, реплики шва, прогон.
-  static const conversation = 'conversation';
-}
-
 /// СЕКУНДЫ ПРОГОНА СЦЕНЫ — ступень C, как её отмеряет сервер (наряд SCENE-RUN, Ч.2).
 ///
 /// Четыре числа, и все четыре продуктовые суждения о том, сколько человек думает: поэтому они
@@ -984,119 +786,6 @@ class SceneRunKnobs {
     listenSeconds: (j?['listen_seconds'] as num?)?.toInt() ?? 15,
     skipAfterSeconds: (j?['skip_after_seconds'] as num?)?.toInt() ?? 5,
     turnSeconds: (j?['turn_seconds'] as num?)?.toInt() ?? 20,
-  );
-}
-
-/// ONE SCENE'S CONVERSATION — the dialogue screen's whole input beside the sitting's own tasks.
-///
-/// The chain is the WHOLE scene, not the part of it that is owed today: the screen plays it from
-/// the first line, and hands the learner a move only on a turn whose card is in the sitting. That
-/// is the difference between a conversation and a stack of cards, and it is why the turns
-/// outnumber the tasks.
-class PlanDialogue {
-  const PlanDialogue({
-    required this.dayIndex,
-    required this.turns,
-    this.sceneTitle,
-    this.sceneIntro,
-    this.runReady = true,
-  });
-
-  /// Which day of the plan this scene is — «Сцена 2» is drawn from the plan, this is the address.
-  final int dayIndex;
-
-  /// «Рассказ о прошлом опыте».
-  final String? sceneTitle;
-
-  /// The вводка, on the language of support — what кадр DL·01 prints before the first line.
-  final String? sceneIntro;
-
-  final List<PlanDialogueTurn> turns;
-
-  /// ДОЗРЕЛА ЛИ СЦЕНА ДО ПРОГОНА — каждый её ход прошёл ступень B хотя бы одним верным выбором.
-  ///
-  /// В обычный день у сцены, чей прогон вообще собрали, это всегда true. Значение появляется на
-  /// ПОСЛЕДНЕМ дне, где прогоняются все сцены подряд, включая те, до которых лестница не дошла
-  /// (наряд SCENE-RUN, Ч.2.8): итог такую сцену помечает, а не делает вид, что она была как
-  /// остальные.
-  final bool runReady;
-
-  /// How many EXCHANGES this conversation is — «4 обмена» on кадр DL·01.
-  ///
-  /// An exchange OPENS when the other person speaks, so it is counted by the ROLE turns and not by
-  /// halving the chain: «3,5 обмена» is not a thing to print. A chain with no role turns at all —
-  /// which the gates refuse and an old day could still produce — falls back to the learner's, so
-  /// the number is never zero over a conversation that exists.
-  int get exchanges {
-    final role = turns.where((t) => t.isRole).length;
-
-    return role > 0 ? role : turns.length;
-  }
-
-  static PlanDialogue? fromJson(Map<String, dynamic>? j) {
-    if (j == null) return null;
-    final turns = ((j['turns'] as List?) ?? const [])
-        .whereType<Map<String, dynamic>>()
-        .map(PlanDialogueTurn.fromJson)
-        .toList(growable: false);
-    if (turns.isEmpty) return null;
-
-    return PlanDialogue(
-      dayIndex: (j['day_index'] as num?)?.toInt() ?? 0,
-      sceneTitle: (j['scene_title'] as String?)?.trim(),
-      sceneIntro: (j['scene_intro'] as String?)?.trim(),
-      turns: turns,
-      runReady: (j['run_ready'] as bool?) ?? true,
-    );
-  }
-}
-
-/// One turn of a scene's conversation — see [PlanDialogue].
-class PlanDialogueTurn {
-  const PlanDialogueTurn({
-    required this.turn,
-    required this.termId,
-    required this.text,
-    this.translation,
-    this.shelf,
-    this.audioUrl,
-    this.level,
-    this.pair,
-  });
-
-  /// ТИП ОБМЕНА, к которому ход принадлежит — `answer` (спросили — ты ответил) или `ask`
-  /// (пригласили спросить — ты спросил), на ОБОИХ ходах пары (P2 v0.6, наряд DAY-FIX-2). Null на
-  /// цепочке, написанной до пар; полка тогда по-прежнему различает ответ и вопрос.
-  final String? pair;
-
-  /// `role` — the other person speaks; `you` — the learner's move.
-  final String turn;
-  final String termId;
-  final String text;
-  final String? translation;
-  final String? shelf;
-
-  /// СЕРВЕРНАЯ ОЗВУЧКА этой реплики, или null — «файла нет, читай системным голосом» (наряд TTS-1).
-  final String? audioUrl;
-
-  /// СТРОГОСТЬ СВОЕГО ХОДА — `choose` | `assemble` | `say`, null у реплики собеседника.
-  ///
-  /// Едет на цепочке, а не только на задаче (наряд SCENE-RUN, Ч.1): ходов больше, чем задач, и
-  /// лента рисуется вперёд — ход, до которого лестница сегодня не дошла, должен выглядеть тем, чем
-  /// он станет.
-  final String? level;
-
-  bool get isRole => turn == 'role';
-
-  factory PlanDialogueTurn.fromJson(Map<String, dynamic> j) => PlanDialogueTurn(
-    turn: (j['turn'] as String?) ?? 'role',
-    termId: (j['term_id'] as String?) ?? '',
-    text: (j['text'] as String?) ?? '',
-    translation: (j['translation'] as String?),
-    shelf: j['shelf'] as String?,
-    audioUrl: j['audio_url'] as String?,
-    level: j['level'] as String?,
-    pair: j['pair'] as String?,
   );
 }
 

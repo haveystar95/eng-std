@@ -12,11 +12,13 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/local/sync_service.dart';
 import '../../data/providers.dart';
 import '../collections/collections_screen.dart';
-import '../plan/plan_notification_host.dart';
+import '../plan/plan_ready_notification_host.dart';
 import '../plan/plan_tab_screen.dart';
-import '../profile/profile_screen.dart';
-import '../progress/progress_screen.dart';
 import '../training/training_home_screen.dart';
+
+/// Индексы табов — по списку в [_HomeScreenState.build]; названы, чтобы вызовы не считали.
+const int kPlanTabIndex = 1;
+const int kCollectionsTabIndex = 2;
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -87,7 +89,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   /// scroll position and a second store request.
   void _openStore() {
     ref.read(collectionsSegmentProvider).value = kCollectionsSegmentStore;
-    _select(1);
+    _select(kCollectionsTabIndex);
   }
 
   void _select(int i) {
@@ -112,37 +114,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    // ПЛАН IS THE CENTRE, and search has left the bar entirely (PLAN-1c, Ч.2).
-    //
-    // A tab bar is a list of PLACES, and search was never one: it is an act you perform on the
-    // screen you are already on, which is why it now lives as a magnifier in the headers of Главная
-    // and Коллекции and opens the same screen it always did. What took its place is the one thing
-    // in the product that IS a place and had none — the plan.
-    //
-    // It sits in the middle rather than at the end because that is the position the eye and the
-    // thumb both find without counting, and because кадры 08–11 draw it there. Indices are read
-    // from this list rather than written as literals anywhere, so moving a tab is one edit.
+    // ТРИ ТАБА — Сегодня · План · Коллекции (токен-лист 4к-1): «План» центральный. Профиль —
+    // кружок-аватар в шапке каждого таба, прогресс — плита статистики на «Сегодня»; табов у них
+    // нет. Индексы читаются из этого списка, а не пишутся литералами: переставить таб — одна правка.
     final pages = [
       TrainingHomeScreen(onOpenStore: _openStore),
-      const CollectionsScreen(),
       const PlanTabScreen(),
-      const ProgressScreen(),
-      const ProfileScreen(),
+      const CollectionsScreen(),
     ];
     final items = [
       FloatingTabItem(icon: LucideIcons.house, label: l.tabHome),
+      FloatingTabItem(icon: LucideIcons.calendarCheck, label: l.tabPlan),
       FloatingTabItem(icon: LucideIcons.layoutGrid, label: l.tabCollections),
-      FloatingTabItem(icon: LucideIcons.calendarCheck, label: l.tabPlan, accent: true),
-      FloatingTabItem(icon: LucideIcons.barChart3, label: l.tabProgress),
-      FloatingTabItem(icon: LucideIcons.user, label: l.tabProfile),
     ];
 
     return Scaffold(
       extendBody: true,
       backgroundColor: AppColors.paper,
-      // The plan's reminders are written HERE, inside the shell — they need the localisations for
-      // their text and a Navigator for the screens a tap opens. It draws nothing.
-      body: PlanNotificationHost(
+      // «План готов» — уведомление и его тап живут ЗДЕСЬ, в оболочке: тап переключает таб, и
+      // переключатель табов есть только у неё. Виджет ничего не рисует.
+      body: PlanReadyNotificationHost(
+        onOpenPlan: () => _select(kPlanTabIndex),
         child: Stack(
           children: [
             _ShellBody(child: IndexedStack(index: _index, children: pages)),

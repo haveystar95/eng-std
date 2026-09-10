@@ -17,7 +17,7 @@ theme); the «Слова» paper/ink design lives in `lib/theme/` (tokens) + `li
 
 - `theme/` — paper/ink design tokens (colors, typography, geometry, motion, haptics, shadows) + `buildAppTheme()`. `ui/` — base components (PaperCard, buttons, chips, InkSegments, FloatingTabBar, CenterAlert, …).
 - `data/` — `models.dart`, `api_client.dart` (Dio + bearer token), `auth_repository.dart` (Google/Apple → backend token exchange, throws an `AuthError` code the login screen localizes), `config.dart` (API_BASE_URL + GOOGLE_IOS_CLIENT_ID via `--dart-define`), `languages.dart` (CEFR + TTS locale + endonym re-export), `pronouncer.dart` (system TTS), `token_store.dart`, `providers.dart`, the offline pipelines (`review_sync`, `triage_sync`, `pool_sync`, `seq_counter`, `local/app_database.dart` drift mirror).
-- `features/` — `auth/`, `home/` (the tab shell + the daily-goal counter the session summary reads), `training/` (`training_home_screen.dart` = «Главная», кадры 17a–17d, `triage_screen.dart`, `session_screen.dart` + `session/` = the exercise session, A3.8), `collections/` (incl. `my_words_screen.dart` = «Мои слова», the pool), `progress/`, `onboarding/`, `profile/`.
+- `features/` — `auth/`, `home/` (the tab shell — three tabs, Сегодня · План · Коллекции), `training/` (`training_home_screen.dart` = «Сегодня», кадры 19-1…19-4, `triage_screen.dart`, `session_screen.dart` + `session/` = the exercise session, A3.8), `plan/` (таб «План» + `entry/` — вход в план, наряд PLAN-UI; см. раздел «План»), `collections/` (incl. `my_words_screen.dart` = «Мои слова», the pool), `progress/` (pushed from the stats plate), `onboarding/`, `profile/` (pushed from the avatar; `build_stamp.dart` — the version line).
 - `l10n/` — `app_ru.arb` (source of truth) + `app_en.arb` (complete); both `ru` and `en` are in `kSupportedLocales`. All UI copy routes through `AppLocalizations` (guarded by `test/l10n/no_cyrillic_outside_l10n_test.dart`, allowlist now **empty**).
 - `tool/preview.dart` — design preview harness with mock data: `flutter run -d chrome --target tool/preview.dart` (no backend/login needed). Lives outside `lib/` so its sample Russian data is exempt from the cyrillic guard.
 
@@ -97,64 +97,49 @@ part of that answer. It reads ONE payload — `GET /home-plan`, cached into `syn
   (`collections_strip.dart`) which duplicated the Collections tab, and `computeHomeCta` — the home
   no longer picks one verb for the day, it states the day's composition.
 
-## Вход в план — «Вход v4» (наряд ENTRY-2)
+## План — таб «План» и вход в план (наряд PLAN-UI, кадры 21-x / 22-x)
 
-`features/plan/entry/` — по одному вопросу на экран, лента прошлых ответов с «Изм.» сверху.
-Направление Б (три шага одной карточкой, `plan_builder_screen.dart`) **удалено**, не спрятано за
-флагом: два входа в одну и ту же вещь — это два места, где чинить один баг.
+Новый план (PLAN-GEN, `../backend2/docs/plan-v2.md`, контракт `../backend2/docs/plan-api.md`).
+Клиент — `features/plan/` + `data/plan/`; старый план (Вход v4, День v1, Диалог v1, Главная v2,
+полки, лестница A/B/C, умения, разогрев, спасатели как сущности, `plan_models.dart`,
+`plan_sitting_store.dart`, три напоминания) **удалён целиком**, без папок «legacy» и без флагов.
+Карта «экран → код → кадры → статус» — `../backend2/docs/design/design-map.md`; наряд, который
+правит экран плана, обязан обновить его строку там.
 
-Одно правило серии расходится с остальным приложением и расходится сознательно: **главное действие
-входа — терракотовое** (`EntryCta` в `entry/entry_ui.dart`), а не чернильное, как везде ещё
-(`PrimaryButton`). Так говорит и токен-лист (правило 23: «главное действие экрана остаётся
-терракотовым даже внутри плана»), и каждый кадр серии. Флага на общей кнопке нет специально: он
-разнёс бы это решение на всё приложение, чего токен-лист не говорит. Терракота живёт во входе и в
-превью плана; экран дня и дальше — DAY-2, там ничего не трогалось.
-
-Шаг слуха необязателен на обеих сторонах: сервер отвечает пустым списком, когда разогрев не
-написался, и тогда шаг **молча не предлагается** — ни ошибки, ни повтора, ни строки о том, что
-что-то не вышло. Точки прогресса при этом остаются четырьмя: дорога не стала короче оттого, что
-одна остановка закрыта.
-
-**«Дописать за тебя» — живое, а не зашитое** (решение владельца 03.09). Продолжения цели приходят
-от `P-Listen v1.1` тем же вызовом, что и реплики: по паузе набора 900 мс, без `target_lang` (на
-шаге цели язык ещё не выбран), с кэшем по тексту цели, чтобы одна и та же фраза не покупалась
-дважды. Пусто — блок молча не показывается, тот же контракт. Статика осталась ровно там, где она
-честна: «Так тоже подходит» на ПУСТОМ поле — это примеры цели, а не продолжения чужой мысли.
-
-Продолжение, которое НАЧИНАЕТСЯ с уже набранной цели, заменяет поле, а не дописывается к нему:
-промпт просит не пересказывать написанное, живой прогон поймал нарушение на половине целей, и без
-защиты человек увидел бы свою фразу дважды.
-
-## День плана и диалог сцены — «День v1» и «Диалог v1» (наряд DAY-2)
-
-`features/plan/plan_dialogue.dart` — оболочка разговора; сами тренажёры не тронуты и это весь
-замысел: такт 1 это `situational_hear`, такт 2 — `situational_say` / `situational_ask`, и оболочка
-их оборачивает, а не переписывает.
-
-- **Материал называется СЦЕНОЙ.** Слово «день» осталось у расписания («День 2 из 6») и у
-  сегодняшней посадки (итог). Ни «ступени B», ни «stage», ни названий полок как служебных слов на
-  экранах нет.
-- **Секции посадки читаются по коду сервера** (`section_code`: `warmup` · `words` ·
-  `dialogue_intro` · `dialogue` · `numbers` · `rehearsal` · `review`), НЕ по полке. Полка не
-  различает знакомство с репликой и разговор, в котором её говорят: у обоих `say`.
-- **Полоса — две группы, «Разогрев» и «Сцена»**, и подпись группы считает ровно те деления, которые
-  рисует. Подпись несёт текущую секцию: «Сцена 11/22 · Диалог сцены · сцена 1».
-- **Цепочка приходит целой** (`dialogues[]` на пейлоаде посадки): ходов больше, чем задач, — экран
-  играет разговор с первой реплики и отдаёт ход там, где есть задача с тем же `term_id`.
-- **Внутри диалога карточка не рисует своё «положение»**: сервер шлёт `situation: null`, потому что
-  реплику подаёт пузырь. Иначе экран прячет текст и печатает его в том же кадре (живой дефект Д-1,
-  `../docs/research/day-2.md`).
-
-Прогон и находки — `../docs/research/day-2.md`, скрины `../docs/research/day-2/`.
+- **Сервер называет состояние, клиент рисует.** `GET /plans/current` → `Plan` или `null`; каждый
+  день несёт эффективный `status` и `slot` (`today` / `tomorrow` / `date` / `past`, готовая
+  подпись у первых двух); `until_phrase`, `overdue_native`, `route_summary` приходят готовыми.
+  Клиент считает только формат дат и чисел (`plan_format.dart`) и два правила входа — сокращение
+  плана датой (22-3b) и «короткая цель» (22-1c). Ни дней, ни слотов, ни склонений.
+- **Таб читает сеть на каждом входе и держит последний ответ в `sync_meta`** (`PlanStore`):
+  офлайн — прошлое состояние с тихой строкой «нет сети»; на входе без сети сборку начать нельзя.
+  Пока `lesson_status = building` у дня 1, `PlanTabController` опрашивает план раз в 3 с; день
+  сервер пишет сам, клиент ничего не дёргает.
+- **Плита дня — `lib/ui/day_plate.dart` (4н), один компонент на таб и кабинет** (здесь — свёрнутый
+  размер; DAY-UI добавит шапку тем же виджетом). Строки этапов — из `GET /plans/{id}/days/{n}`
+  (`stages[]`), «Вернутся в день N» — из `program[].state = failed`. Кабинет дня до DAY-UI — заглушка
+  `plan_day_stub_screen.dart` с версией контракта; удаляется в DAY-UI.
+- **Что контракт не отдаёт — не рисуется и названо в отчёте**: «≈ N минут» и «N с подсказкой» на
+  плите, «фраз и слов в работе» (21-7, 21-14), строка расчёта дней под чипами (22-3a), блок
+  «Маршрут · было → станет» в листе даты (21-10), плашка пропущенных дней (21-13).
+- **Строки** — `plan*` в `app_ru.arb`/`app_en.arb`, словарь `../docs/plan-ui-glossary.md`
+  (регенерация `python3 docs/plan-ui-glossary.py`); гарды: каждый ключ в словаре, каждый ключ
+  читается из кода, ни одного слова не из словаря 4к-4 (`test/l10n/no_internal_words_in_plan_test.dart`).
+- **Навигация — три таба (4к-1)**: Сегодня · План · Коллекции. Профиль — кружок-аватар в шапке
+  (`profile/profile_avatar.dart`), толкается поверх таба; прогресс — плита статистики на «Сегодня».
+  Строка версии (клиент · сервер из `/api/v1/health`) стоит внизу профиля всегда.
+- **Уведомление одно — «План готов»** (`data/plan/plan_ready_notification.dart`), событийное:
+  только если приложение было свёрнуто, пока собирался день 1; тап → таб «План».
 
 ## Озвучка реплик — «своим файлом, а не системным голосом» (наряд TTS-1)
 
 `lib/data/line_audio.dart` + одна ветка в `lib/data/pronouncer.dart`, и это всё.
 
 - **Ключ кэша — ТЕКСТ реплики, а не карточка.** Голос вызывается текстом (`speakText`), понятия
-  «карточка» у него нет и не должно быть: одну и ту же реплику произносят пузырь диалога, кнопка
-  повтора, панель спасателей, шпаргалка, разогрев и интро-карточка. Кэш, ключуемый текстом,
-  обслуживает все шесть одной строкой и без проброса `term_id` через виджеты.
+  «карточка» у него нет и не должно быть. Оболочка диалога старого плана, которая этим
+  пользовалась, удалена нарядом PLAN-UI; инфраструктура (`line_audio.dart`, ветка в
+  `pronouncer.dart`, нативный плеер) остаётся для карточек нового дня (`audio_id` → `GET
+  /plans/audio/{id}`, наряд DAY-UI).
 - **Что озвучивается сервером:** полки `hear` и `rescue` (набор решает СЕРВЕР, `SPEECH_SHELVES`).
   Слова, связки, поиск, коллекции, шаг слуха на входе — как были, системный синтез.
 - **«Готовим озвучку» (кадр DL·08) — факт про ЭТУ реплику, а не про движок**: `voiceReady` =
@@ -166,9 +151,8 @@ part of that answer. It reads ONE payload — `GET /home-plan`, cached into `syn
 - **Плеер — нативный `AVAudioPlayer`** в канале `com.denis.engstd/line_audio` (AppDelegate), без
   пакета: он играет в ТУ ЖЕ аудиосессию, которую держит синтезатор, и делить им нечего. Пакет-плеер
   поднял бы вторую сессию со своей деактивацией — ровно то, что стоило ~600 мс на слово в F20.
-- **Докачка — на входе в день, вся посадка одним залпом** (`line_audio[]` на пейлоаде): реплики
-  ВТОРОГО присеста готовы к его началу, а спасателей сегодня может не быть ни на одной карточке.
-  Скачанное живёт между запусками (манифест на диске), поэтому повторный вход не ходит в сеть.
+- **Скачанное живёт между запусками** (манифест на диске), поэтому повторный вход не ходит в
+  сеть. Кто и когда докачивает файлы нового дня — решит DAY-UI.
 - **Смена голоса — другой URL**, поэтому старый файл перестаёт считаться этой репликой сам.
 - **Тихий фолбэк виден в дев-сборке.** Труба падает молча (нет файла — читает телефон), и поэтому
   сломанная труба неотличима от выключенной: живьём сервер отдавал `http://`, iOS резал запрос по
@@ -178,7 +162,6 @@ part of that answer. It reads ONE payload — `GET /home-plan`, cached into `syn
 - **Дев-экран «Голоса реплик»** — Профиль → «Разработка». Образцы из `assets/tts_samples/`
   (наряд Ч.0.3) плюс системный ряд, который играется ВЖИВУЮ голосом этого телефона: enhanced-голос
   ставится в Настройках iOS, и записанный файл отвечал бы про чужое устройство.
-  Харнесс без логина: `tool/voice_preview.dart` (там же — «Готовим озвучку» рядом с готовой репликой).
 
 Замер, кандидаты, цены и фаворит — `../docs/research/tts-1.md`.
 
@@ -188,19 +171,19 @@ part of that answer. It reads ONE payload — `GET /home-plan`, cached into `syn
 gradients, no emoji decoration, **no dark theme** (the old dark UI died with `lib/core/`). Tokens
 live in `lib/theme/`, components in `lib/ui/`.
 
-**The source of truth for the theme is
-`../backend2/docs/design/design/Слова - Токен-лист.dc.html`** — the LIVE list, in the design canvas
-folder. `../backend2/docs/design/tokens.html` is the older export of the same thing and lags behind;
-at the HOME-2 close it was four days stale and knew neither the brass token nor the rows for the home
-screen's blocks, and a whole pass of type sizes was set from it wrongly before anyone noticed. Read
-the live one, and when they disagree the live one wins.
+**The source of truth for the theme is `../backend2/docs/design/tokens.dc.html`** — the token list
+(разделы 1–5, 4к–4о for the plan), exported from the design canvas. The frames live beside it:
+`plan.dc.html` (канвас «План»: таб 21-x, вход 22-x, день 23-x) and `base.dc.html` («База», only
+the frames its table of contents names). A frame is a block with an `id` («21-2»); values are read
+off its styles, the captions under it are the specs of decisions and motion.
 
 Where the token list and a screen FRAME disagree, the token list wins — but read the frame first
 anyway: it is the only place the composition and the order of blocks are stated, and a prose
 retelling of it (mine included) is not a substitute.
 
-The design canvas folder is **untracked**, so the live list does not travel with a clone. If it is
-missing, ask the owner for it rather than falling back to `tokens.html`.
+Priority when they disagree: the token list (including 4о) over the caption, the caption over the
+picture. Only the frames a наряд names by number — and the ones in «База»'s table of contents —
+are specification.
 
 The palette is deliberately close-valued, which has a QA consequence worth knowing: a fill can be
 present in the code and invisible in a screenshot. «Выглядит пустым» is not a finding until it has
@@ -277,18 +260,18 @@ on the training home (now shows word counts), and AI open-answer check.
 
 `flutter analyze` must be clean. `flutter test` runs the widget + unit tests.
 
-For visual checks there are three harnesses under `tool/` (all outside `lib/`, so their Russian
-sample copy is exempt from the cyrillic guard):
+For visual checks there are harnesses under `tool/` (all outside `lib/`, so their Russian sample
+copy is exempt from the cyrillic guard):
 
 - `tool/preview.dart` — the app's own screens with mock providers.
 - `tool/ladder_preview.dart` — the acquisition-ladder surfaces (кадры 16b/16d/16e): the intro card,
   the word row's five dots, the expanded word card.
-- `tool/entry_preview.dart` — ВХОД В ПЛАН, серия «Вход v4» целиком (кадры V4·01…06б), без сервера и
-  без логина. Данные в `tool/entry_preview_data.dart` — живые ответы модели из наряда ENTRY-2
-  (`../backend2/docs/research/entry-2-run.md`), а не выдумка, поэтому харнесс показывает то, что
-  человек действительно увидит. Им же снят скрин-путь в `docs/shots/entry2/`.
 
-All three run on the **iOS simulator** (runtimes 26.5 and 27.0 ARE installed — the old note claiming
+The plan has no mock harness: its screens are checked against the local server on the simulator
+(`--dart-define=API_BASE_URL=http://localhost:8001 --dart-define=DEV_LOGIN_EMAIL=qa-<slug>@wt.test`,
+a debug build), which is what the acceptance of PLAN-UI ran.
+
+They run on the **iOS simulator** (runtimes 26.5 and 27.0 ARE installed — the old note claiming
 otherwise was stale), or in Chrome:
 
 ```bash

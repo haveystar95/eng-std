@@ -9,6 +9,8 @@ export 'app_bottom_sheet.dart';
 export 'buttons.dart';
 export 'center_alert.dart';
 export 'chip.dart';
+export 'choice_card.dart';
+export 'day_plate.dart';
 export 'dotted_border_box.dart';
 export 'floating_context_menu.dart';
 export 'floating_tab_bar.dart';

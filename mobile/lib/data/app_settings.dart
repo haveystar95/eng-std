@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:eng_std/theme/feedback.dart';
+
 import 'providers.dart';
 
 /// Languages whose readers already read Cyrillic, and for whom a Cyrillic reading hint under a
@@ -23,6 +25,7 @@ class AppSettings {
     required this.reminderTime,
     required this.autoPronounce,
     this.transliteration,
+    this.soundsEnabled = true,
   });
 
   final bool remindersEnabled;
@@ -41,6 +44,11 @@ class AppSettings {
   /// decision, which outlives any later change to that default.
   final bool? transliteration;
 
+  /// «Звуки» (токен-лист 4к-3) — the four sounds of the trainers and the plan: верно · неверно ·
+  /// этап закрыт · день закрыт. On by default; the phone's silent switch still wins (правило 4е —
+  /// хаптика остаётся).
+  final bool soundsEnabled;
+
   static const defaults = AppSettings(
     remindersEnabled: false,
     reminderTime: '20:00',
@@ -52,11 +60,13 @@ class AppSettings {
     String? reminderTime,
     bool? autoPronounce,
     bool? transliteration,
+    bool? soundsEnabled,
   }) => AppSettings(
     remindersEnabled: remindersEnabled ?? this.remindersEnabled,
     reminderTime: reminderTime ?? this.reminderTime,
     autoPronounce: autoPronounce ?? this.autoPronounce,
     transliteration: transliteration ?? this.transliteration,
+    soundsEnabled: soundsEnabled ?? this.soundsEnabled,
   );
 }
 
@@ -65,13 +75,14 @@ abstract final class _Keys {
   static const reminderTime = 'reminder_time';
   static const autoPronounce = 'autopronounce';
   static const transliteration = 'transliteration';
+  static const sounds = 'sounds_enabled';
 }
 
 class AppSettingsController extends AsyncNotifier<AppSettings> {
   @override
   Future<AppSettings> build() async {
     final db = ref.read(appDatabaseProvider);
-    return AppSettings(
+    final settings = AppSettings(
       remindersEnabled: (await db.getMeta(_Keys.remindersEnabled)) == '1',
       reminderTime: (await db.getMeta(_Keys.reminderTime)) ?? AppSettings.defaults.reminderTime,
       autoPronounce: (await db.getMeta(_Keys.autoPronounce)) != '0', // default on
@@ -81,7 +92,17 @@ class AppSettingsController extends AsyncNotifier<AppSettings> {
         '0' => false,
         _ => null,
       },
+      soundsEnabled: (await db.getMeta(_Keys.sounds)) != '0', // default on
     );
+    AppFeedback.soundsEnabled = settings.soundsEnabled;
+
+    return settings;
+  }
+
+  Future<void> setSoundsEnabled(bool on) async {
+    AppFeedback.soundsEnabled = on;
+    await ref.read(appDatabaseProvider).setMeta(_Keys.sounds, on ? '1' : '0');
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(soundsEnabled: on));
   }
 
   Future<void> setRemindersEnabled(bool on) async {
@@ -127,3 +148,8 @@ final transliterationEnabledProvider = Provider<bool>((ref) {
     ref.watch(authControllerProvider).value?.profile?.nativeLanguage,
   );
 });
+
+/// Do the trainers PLAY their sounds on this device — the profile's «Звуки» switch (4к-3).
+final soundsEnabledProvider = Provider<bool>(
+  (ref) => ref.watch(appSettingsProvider).value?.soundsEnabled ?? true,
+);

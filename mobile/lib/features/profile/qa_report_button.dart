@@ -11,7 +11,7 @@ import 'package:eng_std/theme/theme.dart';
 
 import '../../data/providers.dart';
 import '../../data/qa_report.dart';
-import '../plan/build_stamp.dart';
+import 'build_stamp.dart';
 
 /// «ЖАЛОБА» ОДНИМ ТАПОМ, С ЛЮБОГО ЭКРАНА — наряд DAY-GATE-1, Ч.0.5.
 ///

@@ -1,6 +1,5 @@
 {
   "@@locale": "ru",
-
   "triageCounter": "{current} из {total}",
   "@triageCounter": {
     "description": "Счётчик карточек в шапке триажа (кадр 2.2, «3 из 10»).",
@@ -9,174 +8,128 @@
       "total": { "type": "int" }
     }
   },
-
   "triageSwipeHint": "Свайпай или жми кнопки · тап — перевернуть",
   "@triageSwipeHint": {
     "description": "Обучающая подсказка на лице первых карточек первой сессии (кадр 2.2 / 3a)."
   },
-
   "triageVerdictUnknown": "Не знаю",
   "@triageVerdictUnknown": { "description": "Кнопка/вердикт: свайп влево." },
-
   "triageVerdictUnsure": "Не уверен",
   "@triageVerdictUnsure": { "description": "Кнопка/вердикт: свайп вверх." },
-
   "triageVerdictKnown": "Знаю",
   "@triageVerdictKnown": { "description": "Кнопка/вердикт: свайп вправо." },
-
   "triageUndo": "Вернуть слово",
   "@triageUndo": { "description": "Третичная кнопка отмены последнего вердикта (кадр 2.2). Прежнее «Отменить последний» — прилагательное без существительного (QA-OBS-25)." },
-
   "triageTermTypeWord": "слово",
   "@triageTermTypeWord": { "description": "Бейдж типа термина на обороте карточки." },
-
   "triageTermTypePhrase": "фраза",
   "@triageTermTypePhrase": { "description": "Бейдж типа термина (фраза; сюда же неизвестные типы)." },
-
   "triageTermTypeIdiom": "идиома",
   "@triageTermTypeIdiom": { "description": "Бейдж типа термина." },
-
   "triageTermTypePhrasalVerb": "фраз. глагол",
   "@triageTermTypePhrasalVerb": { "description": "Бейдж типа термина: фразовый глагол." },
-
   "triageAllDoneTitle": "Всё разобрано",
   "@triageAllDoneTitle": { "description": "Пустое состояние: на сервере не осталось новых терминов." },
-
   "triageAllDoneBody": "В этом наборе не осталось новых слов для разбора.",
   "@triageAllDoneBody": { "description": "Пояснение к «Всё разобрано»." },
-
   "triageMoreLaterTitle": "На сейчас всё",
   "@triageMoreLaterTitle": { "description": "Пустое состояние: страница пуста, но на сервере ещё есть." },
-
   "triageMoreLaterBody": "Ещё {count} после синхронизации — зайдите снова, когда будет сеть.",
   "@triageMoreLaterBody": {
     "description": "Пояснение к «На сейчас всё».",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "triageDone": "Готово",
   "@triageDone": { "description": "Кнопка выхода из триажа." },
-
   "triageSummaryBatchTitle": "Пачка разобрана",
   "@triageSummaryBatchTitle": { "description": "Итог: разобрана страница, но на сервере ещё осталось." },
-
   "triageSummaryDoneTitle": "Разбор завершён",
   "@triageSummaryDoneTitle": { "description": "Итог: на сервере ничего не осталось." },
-
   "triageTallyKnown": "Знаю",
   "@triageTallyKnown": { "description": "Итог сессии: лейбл счётчика «Знаю». Три подписи повторяют три вердикта карточки одной формой — 1 л. ед. ч. (QA-OBS-26)." },
-
   "triageTallyLearning": "Учу",
   "@triageTallyLearning": { "description": "Итог сессии: лейбл счётчика «Не знаю» — слово ушло в изучение." },
-
   "triageTallyUnsure": "Не уверен",
   "@triageTallyUnsure": { "description": "Итог сессии: лейбл счётчика «Не уверен»." },
-
   "triageRemainingAfterSync": "{count, plural, one{Ещё {count} слово после синхронизации} few{Ещё {count} слова после синхронизации} many{Ещё {count} слов после синхронизации} other{Ещё {count} слов после синхронизации}}",
   "@triageRemainingAfterSync": {
     "description": "Итог сессии: сколько терминов ещё придёт после синхронизации (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "triageLoadError": "Не удалось загрузить: {error}",
   "@triageLoadError": {
     "description": "Ошибка загрузки колоды триажа.",
     "placeholders": { "error": { "type": "String" } }
   },
-
   "homeGeneratePlaceholder": "Например: визит к врачу",
   "@homeGeneratePlaceholder": { "description": "Плейсхолдер поля темы на карточке генерации." },
-
   "homeGenerateChipDoctor": "У врача",
   "@homeGenerateChipDoctor": { "description": "Чип-пример темы." },
-
   "homeGenerateChipRent": "Аренда",
   "@homeGenerateChipRent": { "description": "Чип-пример темы." },
-
   "homeGenerateChipInterview": "Собеседование",
   "@homeGenerateChipInterview": { "description": "Чип-пример темы." },
-
   "homeCollectionProgress": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
   "@homeCollectionProgress": {
     "description": "Прогресс коллекции на карточке ленты, «18 из 24 слов» (ICU plural). Предлог «из» требует родительного падежа, поэтому формы здесь НЕ счётные: 1 → «из 1 слова», 2 → «из 2 слов», 5 → «из 5 слов» (QA-OBS-5).",
     "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
   },
-
-  "tabHome": "Главная",
+  "tabHome": "Сегодня",
   "@tabHome": { "description": "Таб-бар: главная." },
-
   "tabCollections": "Коллекции",
   "@tabCollections": { "description": "Таб-бар: коллекции." },
-
-  "tabProfile": "Профиль",
-  "@tabProfile": { "description": "Таб-бар: профиль." },
-
   "homeSessionTitle": "Занятие",
   "@homeSessionTitle": { "description": "Заголовок экрана сессии, запущенной с главной (повторение / свободная тренировка)." },
-
   "collectionWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@collectionWordsCount": {
     "description": "Количество слов в коллекции, «24 слова» (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "collectionDueSuffix": "{count} к повторению сегодня",
   "@collectionDueSuffix": {
     "description": "Хвост подзаголовка коллекции про due-слова.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "collectionDensityMastered": "Освоено {count}",
   "@collectionDensityMastered": {
     "description": "Легенда плотности, СЛОВАРЬ СТАТУСОВ (Ч.4): слово прошло все ступени. Было «Подтверждено».",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "collectionDensityInWork": "В работе {count}",
   "@collectionDensityInWork": {
     "description": "Легенда плотности: слово в очереди тренажёра. Было «Знакомое». Фраза «В работе» в этой легенде раньше стояла на ТРЕТЬЕМ сегменте и значила «ещё не тронуто» — одно словосочетание с двумя противоположными значениями на соседних экранах.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "collectionDensityToSort": "Разобрать {count}",
   "@collectionDensityToSort": {
     "description": "Легенда плотности: слово на полке, ждёт решения. Было «В работе».",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "collectionTriageButton": "Разобрать {count}",
   "@collectionTriageButton": {
     "description": "Главная кнопка коллекции: есть неразобранные слова.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "collectionTriageSubtitle": "Новые слова этой коллекции",
   "@collectionTriageSubtitle": { "description": "Подстрока кнопки «Разобрать»." },
-
   "collectionLearnButton": "Учить {count}",
   "@collectionLearnButton": {
     "description": "Кнопка коллекции: выучить новые отриаженные «не знаю» слова.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "collectionLearnSubtitle": "Новые слова — выучить",
   "@collectionLearnSubtitle": { "description": "Подстрока кнопки «Учить»." },
-
   "collectionReviewButton": "Повторить {count}",
   "@collectionReviewButton": {
     "description": "Главная кнопка коллекции: подошёл срок повторения.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "collectionReviewSubtitle": "Срок повторения подошёл",
   "@collectionReviewSubtitle": { "description": "Подстрока кнопки «Повторить»." },
-
   "collectionPracticeButton": "Свободная тренировка",
   "@collectionPracticeButton": { "description": "Главная кнопка коллекции: долг закрыт, тихая контурная кнопка." },
-
   "collectionPracticeSubtitle": "Ничего не горит — можно просто позаниматься",
   "@collectionPracticeSubtitle": { "description": "Подстрока кнопки свободной тренировки." },
-
   "collectionWordsLabel": "Слова",
   "@collectionWordsLabel": { "description": "Лейбл секции списка слов." },
   "collectionReferenceBadge": "справочник",
@@ -188,73 +141,51 @@
   },
   "collectionReferenceHint": "Справочная коллекция: слова можно читать и слушать. Тренажёров для этого языка пока нет.",
   "@collectionReferenceHint": { "description": "Пояснение на экране справочной коллекции — почему нет кнопок тренировки." },
-
   "collectionAddWord": "Добавить слово",
   "@collectionAddWord": { "description": "Кнопка добавления слова в коллекцию." },
-
   "collectionEmptyTitle": "Слов пока нет",
   "@collectionEmptyTitle": { "description": "Пустая коллекция — заголовок." },
-
   "collectionEmptyBody": "Нажми «Добавить слово», чтобы добавить",
   "@collectionEmptyBody": { "description": "Пустая коллекция — пояснение." },
-
   "collectionTriageBannerTitle": "Разбери коллекцию",
   "@collectionTriageBannerTitle": { "description": "Баннер первого контакта на свежесгенерированной коллекции." },
-
   "collectionTriageBannerBody": "Отметь, что уже знаешь — остальное пойдёт в тренировку",
   "@collectionTriageBannerBody": { "description": "Пояснение баннера разбора." },
-
   "collectionTriageBannerStart": "Начать",
   "@collectionTriageBannerStart": { "description": "Кнопка запуска разбора из баннера." },
-
   "actionEdit": "Изменить",
   "@actionEdit": { "description": "Действие: изменить (свайп/меню строки слова)." },
-
   "actionDelete": "Удалить",
   "@actionDelete": { "description": "Действие: удалить (свайп/меню строки слова, подтверждение)." },
-
   "collectionDeleteWordTitle": "Удалить «{term}»?",
   "@collectionDeleteWordTitle": {
     "description": "Заголовок подтверждения удаления слова (кадр 5d).",
     "placeholders": { "term": { "type": "String" } }
   },
-
   "collectionDeleteWordMessage": "Слово останется в других коллекциях, прогресс сохранится.",
   "@collectionDeleteWordMessage": { "description": "Текст подтверждения удаления слова (кадр 5d)." },
-
   "wordSheetAddTitle": "Добавить слово",
   "@wordSheetAddTitle": { "description": "Заголовок шита добавления слова (кадр 5b)." },
-
   "wordSheetEditTitle": "Изменить слово",
   "@wordSheetEditTitle": { "description": "Заголовок шита редактирования слова (кадр 5c)." },
-
   "wordFieldTerm": "Термин",
   "@wordFieldTerm": { "description": "Лейбл поля термина." },
-
   "wordFieldTranslation": "Перевод",
   "@wordFieldTranslation": { "description": "Лейбл поля перевода." },
-
   "wordTermHint": "слово или фраза",
   "@wordTermHint": { "description": "Плейсхолдер поля термина." },
-
   "wordTranslationHintOptional": "необязательно — подберём сами",
   "@wordTranslationHintOptional": { "description": "Плейсхолдер необязательного перевода (кадр 5b)." },
-
   "wordSheetAddHelper": "Транскрипция, пример и фото подберутся автоматически.",
   "@wordSheetAddHelper": { "description": "Пояснение под полями при добавлении." },
-
   "wordSheetEditHelper": "Пример и фото останутся прежними, если не менять термин.",
   "@wordSheetEditHelper": { "description": "Пояснение под полями при редактировании." },
-
   "wordSheetAddButton": "Добавить в коллекцию",
   "@wordSheetAddButton": { "description": "Главная кнопка шита добавления." },
-
   "wordSheetSaveButton": "Сохранить",
   "@wordSheetSaveButton": { "description": "Главная кнопка шита редактирования." },
-
   "wordSheetDeleteLink": "Удалить из коллекции",
   "@wordSheetDeleteLink": { "description": "Деструктивная ссылка внизу шита редактирования (кадр 5c)." },
-
   "collectionMoveWord": "Перенести в…",
   "@collectionMoveWord": { "description": "Пункт меню слова: перенести в другую свою коллекцию." },
   "collectionMoveWordTitle": "Куда перенести",
@@ -269,7 +200,6 @@
   "@collectionDefaultUndeletable": { "description": "Почему у коллекции по умолчанию нет удаления.", "placeholders": { "title": { "type": "String" } } },
   "collectionMenuRename": "Переименовать",
   "@collectionMenuRename": { "description": "Пункт меню коллекции: переименовать." },
-
   "collectionMenuDelete": "Удалить коллекцию",
   "@collectionMenuDelete": { "description": "Пункт меню коллекции: удалить (деструктив)." },
   "collectionMenuRemoveFromMine": "Убрать из моих",
@@ -281,37 +211,28 @@
   },
   "collectionUnsubscribeMessage": "Набор пропадёт из «Моих». Слова и прогресс по ним сохранятся, набор снова можно добавить из стора.",
   "@collectionUnsubscribeMessage": { "description": "Текст подтверждения отписки от набора стора." },
-
   "collectionDeleteTitle": "Удалить «{title}»?",
   "@collectionDeleteTitle": {
     "description": "Заголовок подтверждения удаления коллекции.",
     "placeholders": { "title": { "type": "String" } }
   },
-
   "collectionDeleteMessage": "Коллекция удалится, слова останутся в тренировке. Убрать слово из тренировки можно только на его карточке.",
   "@collectionDeleteMessage": { "description": "Текст подтверждения удаления коллекции." },
-
   "commonCancel": "Отмена",
   "@commonCancel": { "description": "Кнопка отмены в подтверждениях." },
-
   "commonCloseMenu": "Закрыть меню",
   "@commonCloseMenu": { "description": "A11y-лейбл затемнения плавающего меню." },
-
   "approxWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@approxWords": {
     "description": "Размер набора, «15 слов» (ICU plural). «Примерно» убрано: генерация режется до запрошенного size (GenerationPipeline), недобор подписан отдельным бейджем (QA-OBS-9 / правка 1.7).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "collectionsTitle": "Коллекции",
   "@collectionsTitle": { "description": "Заголовок экрана вкладки коллекций (кадр 2.5)." },
-
   "collectionsEmptyTitle": "Пока нет коллекций",
   "@collectionsEmptyTitle": { "description": "Пустая вкладка коллекций — заголовок." },
-
   "collectionsEmptyBody": "Опиши ситуацию — и ИИ соберёт первый набор.",
   "@collectionsEmptyBody": { "description": "Пустая вкладка коллекций — пояснение." },
-
   "collectionsCreateManual": "Создать вручную",
   "@collectionsCreateManual": { "description": "Выбор на «плюсе» вкладки коллекций: пустая коллекция, слова добавляются руками (SLV-6)." },
   "collectionsCreateManualHint": "Пустая коллекция — слова добавишь сам",
@@ -320,19 +241,15 @@
   "@collectionsCreateGenerate": { "description": "Выбор на «плюсе» вкладки коллекций: экран генерации по теме (SLV-6)." },
   "collectionsCreateGenerateHint": "ИИ соберёт набор по описанию ситуации",
   "@collectionsCreateGenerateHint": { "description": "Пояснение к «Сгенерировать» в шите выбора." },
-
   "collectionsNewCollection": "Новая коллекция",
   "@collectionsNewCollection": { "description": "A11y-лейбл кнопки «+» создания коллекции (кадр 2.5)." },
-
   "collectionsTileMastered": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}} · освоено {mastered}",
   "@collectionsTileMastered": {
     "description": "Подзаголовок плитки коллекции, «24 слова · освоено 18» (ICU plural).",
     "placeholders": { "count": { "type": "int" }, "mastered": { "type": "int" } }
   },
-
   "generationGeneratingTitle": "Собираем коллекцию…",
   "@generationGeneratingTitle": { "description": "Заголовок карточки идущей генерации (кадр 2.5)." },
-
   "generationGeneratingMeta": "{topic} · {levels} · {size}",
   "@generationGeneratingMeta": {
     "description": "Мета-строка генерации: тема · уровни · размер («Аренда жилья · A2–B1 · ≈15 слов»).",
@@ -342,174 +259,125 @@
       "size": { "type": "String" }
     }
   },
-
   "generationGeneratingNote": "Подбираем слова и фотографии · обычно 20–30 секунд",
   "@generationGeneratingNote": { "description": "Пояснение под индикатором идущей генерации (кадр 2.5)." },
-
   "generationQueuedNote": "Отправим, как только появится сеть",
   "@generationQueuedNote": { "description": "Пояснение под карточкой генерации, ожидающей сеть (офлайн-очередь)." },
-
   "generationFailedTitle": "Не получилось",
   "@generationFailedTitle": { "description": "Заголовок карточки ошибки генерации (кадр 2.5)." },
-
   "generationFailedBody": "Сервис не ответил на запросе «{topic}». Генерация не потрачена.",
   "@generationFailedBody": {
     "description": "Текст ошибки генерации — квота не потрачена (кадр 2.5).",
     "placeholders": { "topic": { "type": "String" } }
   },
-
   "generationQuotaTitle": "Генерации на сегодня закончились",
   "@generationQuotaTitle": { "description": "Заголовок карточки генерации, отклонённой по дневному лимиту (429 generation_quota_exceeded)." },
-
   "generationQuotaBody": "Коллекцию «{topic}» не создали. Лимит обновится в {time} — тогда можно повторить.",
   "@generationQuotaBody": {
     "description": "Текст карточки дневного лимита, когда известно время сброса.",
     "placeholders": { "topic": { "type": "String" }, "time": { "type": "String" } }
   },
-
   "generationQuotaBodyNoTime": "Коллекцию «{topic}» не создали: дневной лимит генераций исчерпан.",
   "@generationQuotaBodyNoTime": {
     "description": "Текст карточки дневного лимита, когда время сброса неизвестно (офлайн).",
     "placeholders": { "topic": { "type": "String" } }
   },
-
   "generationQuotaPremium": "Открыть Premium",
   "@generationQuotaPremium": { "description": "Кнопка перехода на пейволл с карточки дневного лимита генераций." },
-
   "generationRetry": "Повторить",
   "@generationRetry": { "description": "Кнопка повтора генерации (кадр 2.5)." },
-
   "generationHide": "Скрыть",
   "@generationHide": { "description": "Убрать карточку ошибки генерации из списка (кадр 2.5)." },
-
   "generateEnqueueFailed": "Не удалось поставить генерацию в очередь: {error}",
   "@generateEnqueueFailed": {
     "description": "QA-23. Постановка генерации в очередь упала на ЛОКАЛЬНОМ хранилище — раньше это молча оставляло кнопку «Сгенерировать» серой навсегда.",
     "placeholders": { "error": { "type": "String" } }
   },
-
   "generationReadyLabel": "Готово",
   "@generationReadyLabel": { "description": "Метка готовой коллекции на карточке генерации." },
-
   "generationReadyLoading": "Готово — загружаю «{topic}»…",
   "@generationReadyLoading": {
     "description": "Коллекция сгенерирована, ждём синхронизации перед открытием.",
     "placeholders": { "topic": { "type": "String" } }
   },
-
   "generationUnderBadge": "{delivered} из {requested}",
   "@generationUnderBadge": {
     "description": "Контурный бейдж недобора, «13 из 15» (кадр 2.5).",
     "placeholders": { "delivered": { "type": "int" }, "requested": { "type": "int" } }
   },
-
   "generationReadyUnder": "Готова · собрано меньше",
   "@generationReadyUnder": { "description": "Строка состояния готовой коллекции с недобором (кадр 2.5)." },
-
   "generateScreenTitle": "Новая коллекция",
   "@generateScreenTitle": { "description": "Заголовок экрана создания коллекции (кадр 2.4)." },
-
   "generateSituationLabel": "Опиши ситуацию",
   "@generateSituationLabel": { "description": "Лейбл поля ситуации (кадр 2.4)." },
-
   "generateSituationHelper": "Чем конкретнее ситуация, тем точнее подборка. Например: «первый приём у врача, жалобы и запись на анализы».",
   "@generateSituationHelper": { "description": "Пояснение под полем ситуации (кадр 6a)." },
-
   "generatePlaceholder0": "Снимаю квартиру — разговор с агентом",
   "@generatePlaceholder0": { "description": "Плейсхолдер-ротация поля ситуации." },
-
   "generatePlaceholder1": "Первый приём у врача — жалобы и анализы",
   "@generatePlaceholder1": { "description": "Плейсхолдер-ротация поля ситуации." },
-
   "generatePlaceholder2": "Собеседование в IT — рассказ о проектах",
   "@generatePlaceholder2": { "description": "Плейсхолдер-ротация поля ситуации." },
-
   "generatePlaceholder3": "Открываю счёт в банке",
   "@generatePlaceholder3": { "description": "Плейсхолдер-ротация поля ситуации." },
-
   "generatePlaceholder4": "Заказываю еду в кафе",
   "@generatePlaceholder4": { "description": "Плейсхолдер-ротация поля ситуации." },
-
   "generateSizeLabel": "Размер",
   "@generateSizeLabel": { "description": "Лейбл выбора размера набора (кадр 2.4)." },
-
   "generateSizeSmall": "Маленькая",
   "@generateSizeSmall": { "description": "Размер набора: маленькая." },
-
   "generateSizeMedium": "Средняя",
   "@generateSizeMedium": { "description": "Размер набора: средняя." },
-
   "generateSizeLarge": "Большая",
   "@generateSizeLarge": { "description": "Размер набора: большая." },
-
   "generateLevelLabel": "Уровень",
   "@generateLevelLabel": { "description": "Лейбл выбора уровней (кадр 2.4)." },
-
   "generateLevelMulti": "можно несколько",
   "@generateLevelMulti": { "description": "Подсказка «можно несколько» у выбора уровней." },
-
   "generateLanguageLabel": "Язык изучения",
   "@generateLanguageLabel": { "description": "Лейбл выбора языка изучения (кадр 6b)." },
-
   "generateLanguageDefault": "по умолчанию",
   "@generateLanguageDefault": { "description": "Пометка «по умолчанию» у языка из профиля (кадр 6b)." },
-
   "generateQuotaRemaining": "{count, plural, one{Осталось {count} генерация сегодня} few{Осталось {count} генерации сегодня} many{Осталось {count} генераций сегодня} other{Осталось {count} генераций сегодня}}",
   "@generateQuotaRemaining": {
     "description": "Строка оставшейся квоты генераций (кадр 6a, ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "generateQuotaExhausted": "Генерации на сегодня закончились · обновятся в {time}",
   "@generateQuotaExhausted": {
     "description": "Строка исчерпанной квоты с локальным временем сброса (кадр 6b).",
     "placeholders": { "time": { "type": "String" } }
   },
-
   "generateSubmit": "Сгенерировать",
   "@generateSubmit": { "description": "Кнопка запуска генерации (кадр 2.4)." },
-
   "generatePremiumUpsell": "Нужно больше? Premium — до 20 в день",
   "@generatePremiumUpsell": { "description": "Строка перехода на Premium под неактивной кнопкой (кадр 15c)." },
-
   "generateManual": "Собрать коллекцию вручную",
   "@generateManual": { "description": "Ссылка на ручное создание коллекции (кадр 6b)." },
-
   "generateVoiceListening": "Слушаю · {time}",
   "@generateVoiceListening": {
     "description": "Индикатор идущей записи с таймером (кадр 6c).",
     "placeholders": { "time": { "type": "String" } }
   },
-
   "generateVoiceStop": "Стоп",
   "@generateVoiceStop": { "description": "Кнопка остановки голосового ввода (кадр 6c)." },
-
   "generateVoiceHelper": "Текст появляется в поле по мере распознавания — после остановки его можно править руками.",
   "@generateVoiceHelper": { "description": "Пояснение под полем при голосовом вводе (кадр 6c)." },
-
   "generateVoiceRecordingNote": "Говори — клавиатура вернётся, когда остановишь запись",
   "@generateVoiceRecordingNote": { "description": "Подсказка на месте клавиатуры во время записи (кадр 6c)." },
-
   "generateVoicePermissionDenied": "Нужен доступ к микрофону и распознаванию речи — включите в Настройках",
   "@generateVoicePermissionDenied": { "description": "Сообщение при отказе в разрешении на микрофон/распознавание." },
-
   "collectionSheetCreateTitle": "Новая коллекция",
   "@collectionSheetCreateTitle": { "description": "Заголовок шита создания коллекции вручную." },
-
   "collectionSheetEditTitle": "Изменить коллекцию",
   "@collectionSheetEditTitle": { "description": "Заголовок шита переименования коллекции." },
-
   "collectionNameLabel": "Название",
   "@collectionNameLabel": { "description": "Лейбл поля названия коллекции." },
-
   "collectionNameHint": "напр.: Путешествия",
   "@collectionNameHint": { "description": "Плейсхолдер поля названия коллекции." },
-
   "collectionSheetCreateButton": "Создать",
   "@collectionSheetCreateButton": { "description": "Кнопка создания коллекции." },
-
-  "tabSearch": "Поиск",
-  "@tabSearch": { "description": "Таб-бар: поиск слова (между Коллекциями и Прогрессом)." },
   "searchTitle": "Поиск слова",
   "@searchTitle": { "description": "Заголовок экрана поиска." },
   "searchFieldHint": "Найти слово",
@@ -584,7 +452,6 @@
   "@searchPairMismatchMessage": { "description": "Текст алерта на 422 term_language_mismatch. Языки названы эндонимами.", "placeholders": { "expected": { "type": "String" }, "actual": { "type": "String" } } },
   "searchPairMismatchCreate": "Создать коллекцию",
   "@searchPairMismatchCreate": { "description": "Кнопка алерта: создать коллекцию нужной пары и сохранить слово туда." },
-
   "wordCardExampleLabel": "Пример",
   "@wordCardExampleLabel": { "description": "Лейбл над примером на карточке слова (кадры 06/09)." },
   "wordCardAlso": "также: {words}",
@@ -621,24 +488,18 @@
   "@wordCardMenu": { "description": "Кнопка «…» поверх фото — подпись для VoiceOver." },
   "wordCardNoPhoto": "Без фото",
   "@wordCardNoPhoto": { "description": "Подпись на нейтральной подложке, когда у слова нет картинки." },
-  "tabProgress": "Прогресс",
-  "@tabProgress": { "description": "Таб-бар: прогресс (между Коллекциями и Профилем)." },
-
   "progressTitle": "Прогресс",
   "@progressTitle": { "description": "Заголовок экрана прогресса (кадр 2.6)." },
-
   "progressStreakDays": "{count, plural, one{{count} день подряд} few{{count} дня подряд} many{{count} дней подряд} other{{count} дня подряд}}",
   "@progressStreakDays": {
     "description": "Крупная антиква-строка стрика на экране прогресса.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "progressBestResult": "{count, plural, one{Лучший результат — {count} день} few{Лучший результат — {count} дня} many{Лучший результат — {count} дней} other{Лучший результат — {count} дня}}",
   "@progressBestResult": {
     "description": "Строка «Лучший результат» под стриком.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "progressDayMon": "Пн",
   "@progressDayMon": { "description": "Календарь-неделя: понедельник." },
   "progressDayTue": "Вт",
@@ -653,48 +514,36 @@
   "@progressDaySat": { "description": "Календарь-неделя: суббота." },
   "progressDaySun": "Вс",
   "@progressDaySun": { "description": "Календарь-неделя: воскресенье." },
-
   "progressLearnedTotal": "Выучено всего",
   "@progressLearnedTotal": { "description": "Лейбл счётчика: усвоено слов всего." },
-
   "progressThisWeek": "За неделю",
   "@progressThisWeek": { "description": "Лейбл счётчика: повторений за текущую неделю." },
-
   "progressToday": "Повторений сегодня",
   "@progressToday": { "description": "Лейбл счётчика: повторений сегодня." },
-
   "progressActivityMonth": "Активность за месяц",
   "@progressActivityMonth": { "description": "Лейбл графика активности за месяц." },
-
   "progressMonth": "{month, select, 1{январь} 2{февраль} 3{март} 4{апрель} 5{май} 6{июнь} 7{июль} 8{август} 9{сентябрь} 10{октябрь} 11{ноябрь} 12{декабрь} other{}}",
   "@progressMonth": {
     "description": "Название текущего месяца рядом с графиком активности.",
     "placeholders": { "month": { "type": "String" } }
   },
-
   "progressAllWords": "{count, plural, one{Все {count} слово} few{Все {count} слова} many{Все {count} слов} other{Все {count} слов}}",
   "@progressAllWords": {
     "description": "Лейбл глобальной полосы плотности.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeLimitReachedTitle": "Лимит новых на сегодня",
   "@homeLimitReachedTitle": { "description": "Неактивная карточка на главном, когда дневная квота новых слов исчерпана (F13)." },
-
   "homeLimitReachedHint": "Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.",
   "@homeLimitReachedHint": { "description": "Подсказка под «Лимит новых на сегодня» — свободная тренировка не тратит квоту." },
-
   "homeOfflineBanner": "Нет сети. Повторения идут как обычно — синхронизируем, когда связь вернётся.",
   "@homeOfflineBanner": { "description": "Тихий офлайн-баннер на главной (кадр 9c)." },
-
   "homeUnreachableTitle": "Сервер не отвечает",
   "@homeUnreachableTitle": { "description": "Заголовок карточки на главной, когда дня нет: сохранённого плана не осталось, а последний синк не прошёл (BUG-1)." },
   "homeUnreachableBody": "День загрузить не удалось. Потяни вниз, чтобы попробовать снова — всё сохранённое на месте.",
   "@homeUnreachableBody": { "description": "Пояснение под homeUnreachableTitle: выход — pull-to-refresh, данные не потеряны (BUG-1)." },
-
   "homeGenerateOfflineNote": "Генерация недоступна без сети. Тема сохранится и уйдёт в работу, когда связь вернётся.",
   "@homeGenerateOfflineNote": { "description": "Пояснение на пунктирной карточке генерации в офлайне (кадр 9c)." },
-
   "appWordmark": "Слова",
   "@appWordmark": { "description": "Словесный знак приложения на экране входа (бренд, не переводится)." },
   "authTagline": "Слова для реальных ситуаций — от банка до собеседования.",
@@ -711,7 +560,6 @@
   "@authOfflineHint": { "description": "Подсказка на экране входа в офлайне." },
   "authAppleUnavailable": "Вход через Apple пока недоступен.",
   "@authAppleUnavailable": { "description": "Ошибка, если Apple-вход не настроен (нет бэкенда/entitlement)." },
-
   "onbLangTitle": "Какой язык учим?",
   "@onbLangTitle": { "description": "Онбординг, шаг 1 — заголовок (кадр 10b)." },
   "onbLangSubtitle": "Можно поменять в профиле в любой момент.",
@@ -742,7 +590,6 @@
   "@onbNext": { "description": "Кнопка перехода к следующему шагу онбординга." },
   "onbStart": "Начать",
   "@onbStart": { "description": "Кнопка завершения онбординга." },
-
   "cefrHintA1": "начало",
   "@cefrHintA1": { "description": "Подпись уровня A1." },
   "cefrHintA2": "базовый",
@@ -755,7 +602,6 @@
   "@cefrHintC1": { "description": "Подпись уровня C1." },
   "cefrHintC2": "почти носитель",
   "@cefrHintC2": { "description": "Подпись уровня C2." },
-
   "profileTitle": "Профиль",
   "@profileTitle": { "description": "Заголовок экрана профиля (кадр 11a)." },
   "profileSectionLearning": "Обучение",
@@ -803,7 +649,6 @@
     "description": "Значение дневной цели, «N слов».",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "uiLangSystem": "Системный",
   "@uiLangSystem": { "description": "Язык интерфейса: системный." },
   "uiLangRussian": "Русский",
@@ -816,14 +661,12 @@
   "@profileLevelSheet": { "description": "Заголовок шита выбора уровня." },
   "profileGoalSheet": "Дневная цель",
   "@profileGoalSheet": { "description": "Заголовок шита выбора дневной цели." },
-
   "reminderSheetTitle": "Когда напомнить",
   "@reminderSheetTitle": { "description": "Заголовок шита выбора времени напоминания (кадр 13b)." },
   "reminderSheetSubtitle": "Лучше всего работает время, когда у тебя обычно есть пять свободных минут.",
   "@reminderSheetSubtitle": { "description": "Подзаголовок шита времени напоминания." },
   "commonSave": "Сохранить",
   "@commonSave": { "description": "Кнопка сохранения." },
-
   "deleteAccountTitle": "Удалить аккаунт?",
   "@deleteAccountTitle": { "description": "Заголовок подтверждения удаления аккаунта (кадр 11b)." },
   "deleteAccountBody": "Все данные и прогресс будут удалены безвозвратно: {words}, {streak} и все коллекции.",
@@ -843,7 +686,6 @@
   },
   "deleteAccountConfirm": "Удалить",
   "@deleteAccountConfirm": { "description": "Кнопка подтверждения удаления аккаунта." },
-
   "sessionPhaseIntro": "Знакомство",
   "@sessionPhaseIntro": { "description": "Лейбл фазы сессии в шапке (кадр 12a) — новый термин, выбор из четырёх." },
   "sessionPhaseAssemble": "Сборка",
@@ -852,7 +694,6 @@
   "@sessionPhaseReview": { "description": "Лейбл фазы сессии (кадры 12c–12i) — ввод/аудирование/пропуск." },
   "sessionPhasePractice": "Свободная тренировка",
   "@sessionPhasePractice": { "description": "Лейбл шапки в тренировочной сессии (кадр 12f)." },
-
   "sessionInstrChoose": "выбери {lang} эквивалент",
   "@sessionInstrChoose": { "description": "Инструкция под промптом, выбор из четырёх (кадр 12a). {lang} — прилагательное изучаемой стороны ЭТОЙ карточки («итальянский»), languageAdjectiveFor: пул смешивает пары, и зашитый «английский» описывал чужую карточку.", "placeholders": { "lang": { "type": "String" } } },
   "sessionInstrAssemble": "собери из слов",
@@ -883,7 +724,6 @@
   "@sessionClozeInsert": { "description": "Лейбл над примером с пропуском (кадр 12i)." },
   "sessionChipReturnHint": "Тап по слову в строке возвращает его вниз",
   "@sessionChipReturnHint": { "description": "Подсказка под строкой сборки (кадр 12b)." },
-
   "sessionHintFirstLetter": "Подсказка: первая буква",
   "@sessionHintFirstLetter": { "description": "Кнопка подсказки первой буквы в ввод/аудирование/пропуск (кадры 12c, 12h, 12i)." },
   "sessionDontRemember": "Не помню",
@@ -892,14 +732,12 @@
   "@sessionWrongKeyboard": { "description": "Тихая подсказка под полем ввода: ответ целиком набран алфавитом, которым язык карточки не пишется. Ничего не засчитано, попытка не потрачена — поэтому это подсказка, а не вердикт." },
   "sessionCheck": "Проверить",
   "@sessionCheck": { "description": "Кнопка проверки собранного ответа (word_bank) — сабмит, до фидбека." },
-
   "sessionIntroBadge": "новое слово",
   "@sessionIntroBadge": { "description": "Бейдж контуром на карточке знакомства — нулевая ступень лестницы (кадр 16b)." },
   "sessionIntroGot": "Понятно",
   "@sessionIntroGot": { "description": "Единственная кнопка карточки знакомства: ни вариантов, ни вердикта (кадр 16b). Без стрелки в тексте — стрелку рисует сама кнопка." },
   "sessionIntroAlso": "также:",
   "@sessionIntroAlso": { "description": "Префикс списка принятых вариантов на карточке знакомства (кадр 16b)." },
-
   "sessionInstrSpeakWord": "скажи слово вслух",
   "@sessionInstrSpeakWord": { "description": "Инструкция speaking, ранняя форма: по переводу и фото вспомнить термин и произнести его." },
   "sessionInstrSpeakExample": "прочитай предложение вслух",
@@ -971,7 +809,6 @@
     "description": "Вердикт говорения — что распознал микрофон, на обоих исходах (QA-20).",
     "placeholders": { "text": { "type": "String" } }
   },
-
   "sessionEchoTry": "Повторить вслух",
   "@sessionEchoTry": { "description": "Необязательная кнопка эха на карточке знакомства: послушал и повторил. Ничего не оценивается." },
   "sessionEchoHeard": "Услышал тебя",
@@ -988,7 +825,6 @@
   "@sessionInstrRecogniseTranslation": { "description": "Инструкция ступени 1: показан термин, выбрать перевод (кадр 16c-1)." },
   "sessionRecogniseJustMet": "вы только что познакомились с этим словом",
   "@sessionRecogniseJustMet": { "description": "Подпись на узнавании: слово встречалось в этой же сессии (кадр 16c-2)." },
-
   "ladderStep0": "знакомство",
   "@ladderStep0": { "description": "Подпись нулевой ступени лестницы в развёрнутой карточке слова (кадр 16e)." },
   "ladderStep1": "узнавание",
@@ -1031,7 +867,6 @@
   "@sessionNext": { "description": "Кнопка перехода к следующему заданию (кадры 12c, 12d)." },
   "sessionDone": "Готово",
   "@sessionDone": { "description": "Кнопка выхода с экрана итога сессии (кадр 12e)." },
-
   "sessionFeedbackCorrect": "Верно",
   "@sessionFeedbackCorrect": { "description": "Вердикт фидбека — верный ответ (кадр 12a/12j)." },
   "sessionFeedbackAlmost": "Почти:",
@@ -1040,7 +875,6 @@
   "@sessionFeedbackWrong": { "description": "Вердикт фидбека — ошибка на вводимом/собираемом ответе: правильная форма стоит ниже, в самом фидбеке (кадр 12d)." },
   "sessionFeedbackWrongAbove": "Не то — верный ответ отмечен выше",
   "@sessionFeedbackWrongAbove": { "description": "Вердикт фидбека — ошибка на карточке узнавания: верный вариант подсвечен ВЫШЕ в списке вариантов, а ниже лишь напоминание термина (QA-8)." },
-
   "sessionDueToday": "сегодня",
   "@sessionDueToday": { "description": "Относительный срок — сегодня (итог/фидбек)." },
   "sessionDueTomorrow": "завтра",
@@ -1055,7 +889,6 @@
     "description": "Строка фидбека с реальным серверным сроком показа (кадр 12d); {when} — относительный срок.",
     "placeholders": { "when": { "type": "String" } }
   },
-
   "sessionSummaryTitle": "Сессия закончена",
   "@sessionSummaryTitle": { "description": "Заголовок экрана итога (кадр 12e)." },
   "sessionStatReviewed": "{count, plural, one{Повторено} few{Повторено} many{Повторено} other{Повторено}}",
@@ -1102,10 +935,8 @@
   "@sessionNewExample": { "description": "Кнопка перегенерации примера в итоге (кадр 12e, B6)." },
   "sessionNewExampleExhausted": "Лимит примеров на сегодня исчерпан",
   "@sessionNewExampleExhausted": { "description": "Сообщение при 429 на «Новый пример» (квота исчерпана)." },
-
   "sessionPracticeBanner": "Свободная тренировка — прогресс не меняется",
   "@sessionPracticeBanner": { "description": "Тихая плашка сверху в тренировочной сессии (кадр 12f)." },
-
   "sessionExitTitle": "Прервать сессию?",
   "@sessionExitTitle": { "description": "Заголовок алерта выхода из сессии (кадр 12k)." },
   "sessionExitBody": "Отвеченные слова сохранятся — вернуться можно в любой момент.",
@@ -1123,20 +954,8 @@
   "sessionInstrSituationalSay": "выбери, что ответишь",
   "@sessionInstrSituationalSay": { "description": "Инструкция «Ты ответишь» на ситуационной карточке (SIT-1, канон §4)." },
   "sessionInstrAssembleTurn": "собери свой ответ из блоков",
-  "planSectionSceneRun": "Скажи сам",
-  "@planSectionSceneRun": { "description": "Подпись части посадки — ступень C: реплики нет, есть подсказка и микрофон (SCENE-RUN, Ч.2)." },
-  "planSceneRunHint": "скажи свою реплику — текста не будет",
-  "planSceneRunNext": "Сцена сказана голосом. Что не прозвучало — вернётся своим чередом.",
-  "@planSceneRunNext": { "description": "Строка под итогом прогона сцены: после ступени C сборки уже не будет (SCENE-RUN, Ч.2.7)." },
-  "planSceneRunSaidSelf": "Прошёл сам",
-  "@planSceneRunSaidSelf": { "description": "Итог прогона сцены: сколько ходов человек сказал своим голосом (кадр DL·10)." },
-  "planDialogueSayIt": "Сказать вслух",
-  "@planDialogueSayIt": { "description": "Кнопка микрофона на своём ходу диалога: экран слушает, но ничего не оценивает (SCENE-RUN, Ч.4)." },
-  "planDialogueNotHeard": "Не расслышали — попробуйте ещё раз.",
-  "@planDialogueNotHeard": { "description": "Первая пустая попытка микрофона на своём ходу диалога (SCENE-RUN, Ч.4)." },
-  "planSceneRunSaidFast": "Сразу",
-  "@planSceneRunSaidFast": { "description": "Итог прогона сцены: сколько ходов прозвучало без раздумья (канон §4, «C + скорость»)." },
-  "@planSceneRunHint": { "description": "Подсказка на ходу прогона сцены: реплики на экране нет, есть только перевод (SCENE-RUN, Ч.2)." },
+  "sessionSceneRunHint": "скажи свою реплику — текста не будет",
+  "@sessionSceneRunHint": { "description": "Подсказка на ходу прогона сцены: реплики на экране нет, есть только перевод (SCENE-RUN, Ч.2)." },
   "@sessionInstrAssembleTurn": { "description": "Инструкция уровня B+ — сборка ответа из блоков вместо выбора из вариантов (SCENE-RUN, Ч.1)." },
   "sessionInstrSituationalAsk": "выбери, что спросишь",
   "@sessionInstrSituationalAsk": { "description": "Инструкция «Ты спросишь» на ситуационной карточке (SIT-1, канон §4)." },
@@ -1148,13 +967,8 @@
   "@sessionSituationRevealText": { "description": "Кнопка под карточкой «Тебе скажут»: показывает реплику после ответа." },
   "sessionSituationTask": "Твоя задача — {outcome}.",
   "@sessionSituationTask": { "description": "Задача карточки, когда у дня нет парной реплики роли: умение сцены (канон §8).", "placeholders": { "outcome": { "type": "String" } } },
-  "planSittingContinue": "Продолжить",
-  "@planSittingContinue": { "description": "Главное действие экрана между присестами." },
-  "planSittingStop": "Хватит на сегодня",
-  "@planSittingStop": { "description": "Уйти между присестами — позиция сохраняется, день продолжится с этого места." },
   "sessionListenReplaySlow": "Замедленно",
   "@sessionListenReplaySlow": { "description": "Кнопка замедленного повтора озвучки в аудировании (кадры 12g–12h)." },
-
   "sessionEmpty": "Здесь пока нечего повторять",
   "@sessionEmpty": { "description": "Пустое состояние сессии — нет карточек." },
   "sessionDailyNewLimit": "Дневной лимит новых слов достигнут. Возвращайся завтра",
@@ -1164,7 +978,6 @@
     "description": "Ошибка загрузки сессии (сессии строятся на сервере, офлайн недоступны).",
     "placeholders": { "error": { "type": "String" } }
   },
-
   "authErrorOffline": "Нет подключения к интернету. Для входа нужна сеть.",
   "@authErrorOffline": { "description": "Ошибка входа: нет сети (кадр 10a)." },
   "authErrorGoogleUnsupported": "Вход через Google не поддерживается на этой платформе.",
@@ -1181,14 +994,12 @@
   "@authErrorApple": { "description": "Ошибка входа: Apple-вход недоступен (нет бэкенда/платной команды)." },
   "authErrorAppleToken": "Не удалось получить токен Apple.",
   "@authErrorAppleToken": { "description": "Ошибка входа: нет identity-токена от Apple." },
-
   "practiceDialogEntry": "Разговор · 3 мин",
   "@practiceDialogEntry": { "description": "Кнопка входа в голосовой разговор на экране коллекции (только Premium)." },
   "practiceDialogEntrySubtitle": "Голосовая практика с ИИ",
   "@practiceDialogEntrySubtitle": { "description": "Подстрока кнопки разговора." },
   "practiceDialogOfflineHint": "Нужен интернет",
   "@practiceDialogOfflineHint": { "description": "Подсказка на неактивной кнопке разговора в офлайне." },
-
   "practiceDialogPrestartTitle": "Разговор с ИИ",
   "@practiceDialogPrestartTitle": { "description": "Заголовок пре-стартового листа разговора." },
   "practiceDialogPrestartBody": "ИИ будет говорить с тобой на языке коллекции — {lang}. Отвечай вслух и старайся использовать эти слова.",
@@ -1200,7 +1011,6 @@
   "@practiceDialogPrestartWordsLabel": { "description": "Лейбл над полосой target_words на пре-старте." },
   "practiceDialogStart": "Начать разговор",
   "@practiceDialogStart": { "description": "Кнопка старта разговора на пре-стартовом листе." },
-
   "practiceDialogStateConnecting": "соединяемся…",
   "@practiceDialogStateConnecting": { "description": "Индикатор состояния: устанавливаем соединение." },
   "practiceDialogStateSpeaking": "говорит",
@@ -1212,7 +1022,6 @@
     "description": "Счётчик прозвучавших слов над полосой coverage.",
     "placeholders": { "used": { "type": "int" }, "total": { "type": "int" } }
   },
-
   "practiceDialogExitTitle": "Завершить разговор?",
   "@practiceDialogExitTitle": { "description": "Заголовок алерта выхода из разговора (крестик)." },
   "practiceDialogExitMessage": "Разговор закончится, и ты увидишь итог.",
@@ -1221,7 +1030,6 @@
   "@practiceDialogExitConfirm": { "description": "Кнопка подтверждения выхода из разговора." },
   "practiceDialogExitCancel": "Продолжить",
   "@practiceDialogExitCancel": { "description": "Кнопка отмены выхода — продолжить разговор." },
-
   "practiceDialogFinaleTitle": "Разговор окончен",
   "@practiceDialogFinaleTitle": { "description": "Заголовок карточки итога разговора (антиква)." },
   "practiceDialogFinaleWords": "Слов прозвучало: {used} из {total}",
@@ -1231,7 +1039,6 @@
   },
   "practiceDialogFinaleDone": "Готово",
   "@practiceDialogFinaleDone": { "description": "Кнопка закрытия итога разговора." },
-
   "practiceDialogErrorSubscription": "Разговоры доступны в Premium.",
   "@practiceDialogErrorSubscription": { "description": "Ошибка: разговор недоступен без Premium (403)." },
   "practiceDialogErrorRateLimited": "На сегодня разговоры закончились. Новые — после {time}.",
@@ -1247,7 +1054,6 @@
   "@practiceDialogErrorGeneric": { "description": "Общая ошибка старта разговора." },
   "practiceDialogClose": "Закрыть",
   "@practiceDialogClose": { "description": "Кнопка закрытия экрана разговора при ошибке." },
-
   "practiceDialogRepeat": "Пройти ещё раз",
   "@practiceDialogRepeat": { "description": "Кнопка запуска разговора, когда у коллекции уже есть результат прошлого." },
   "practiceDialogResultWords": "слов: {used} из {total}",
@@ -1255,7 +1061,6 @@
     "description": "Строка результата последнего разговора на экране коллекции.",
     "placeholders": { "used": { "type": "int" }, "total": { "type": "int" } }
   },
-
   "storeSegmentMine": "Мои",
   "@storeSegmentMine": { "description": "Сегмент таба «Коллекции»: свои коллекции (кадр 2.8)." },
   "storeSegmentReady": "Готовые",
@@ -1295,7 +1100,6 @@
   "@storePreviewAdded": { "description": "Тост после добавления бесплатного набора из стора." },
   "storeSubscribeError": "Не удалось добавить набор. Попробуйте ещё раз.",
   "@storeSubscribeError": { "description": "Ошибка подписки на набор стора." },
-
   "paywallClose": "Закрыть",
   "@paywallClose": { "description": "Кнопка-крестик закрытия пейволла (кадр 2.13)." },
   "paywallTitleQuota": "Больше коллекций за один вечер",
@@ -1357,7 +1161,6 @@
   "@paywallDevPurchased": { "description": "Тост после фейковой покупки в dev-режиме (StoreKit — отдельный блок)." },
   "paywallNeedsRealPremium": "Нужен настоящий Premium (StoreKit — отдельный блок)",
   "@paywallNeedsRealPremium": { "description": "Сообщение, когда сервер отклоняет подписку без реального premium." },
-
   "profileTryPremium": "Попробовать Premium",
   "@profileTryPremium": { "description": "Строка профиля (free): переход на пейволл (кадр 15a)." },
   "profileFreeTierReset": "3 генерации в день · сбрасываются в {time}",
@@ -1375,7 +1178,6 @@
   "@profileManageSubscription": { "description": "Строка профиля (premium): управление в App Store (кадр 15b)." },
   "profileRestorePurchases": "Восстановить покупки",
   "@profileRestorePurchases": { "description": "Строка профиля (premium): восстановление покупок (кадр 15b)." },
-
   "profileSectionDev": "Разработка",
   "@profileSectionDev": { "description": "Dev-секция профиля (только при DEV_MENU)." },
   "devFlagStore": "Стор коллекций",
@@ -1384,7 +1186,6 @@
   "@devFlagPaywall": { "description": "Dev-переключатель: пейволл и его входы." },
   "devFlagPremium": "Premium (dev)",
   "@devFlagPremium": { "description": "Dev-переключатель: фейковый premium." },
-
   "perfMonitorTitle": "Подвисания",
   "@perfMonitorTitle": { "description": "Заголовок dev-экрана монитора подвисаний и пункт в секции «Разработка» (QA-OBS-24). Коротко по делу: «Монитор производительности» не влезал в AppBar и печатался как «Монитор производи…» — поймано живым прогоном на симуляторе." },
   "perfMonitorToggle": "Записывать подвисания, кадры и тапы",
@@ -1427,7 +1228,6 @@
   "@poolUnenrollMessage": { "description": "Текст подтверждения: это пауза, а не удаление." },
   "poolUnenrollConfirm": "Убрать",
   "@poolUnenrollConfirm": { "description": "Подтверждающая кнопка паузы слова." },
-
   "myWordsTitle": "Мои слова",
   "@myWordsTitle": { "description": "Экран пула: все слова, которые пользователь взял в изучение." },
   "myWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
@@ -1455,1135 +1255,302 @@
   "@myWordsEmptyMessage": { "description": "Пустое состояние объясняет два способа зачисления в пул." },
   "myWordsNothingFound": "Ничего не нашлось",
   "@myWordsNothingFound": { "description": "Пустое состояние экрана «Мои слова» под активным поиском или фильтром." },
-
   "topicSessionAction": "Тренировка по теме",
   "@topicSessionAction": { "description": "Вход на главном экране: учебная сессия, суженная до одной коллекции-источника." },
   "topicSessionTitle": "Выбери тему",
   "@topicSessionTitle": { "description": "Заголовок шита выбора коллекции для тематической тренировки." },
-
   "homeStreakBadge": "Стрик {count}",
   "@homeStreakBadge": {
     "description": "Бейдж стрика в шапке главной (кадр 17a).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeSessionCardTitle": "Сессия на сегодня",
   "@homeSessionCardTitle": { "description": "Заголовок тёмной карточки дня (кадр 17a)." },
-
   "challengeLabel": "Слово-вызов",
   "@challengeLabel": { "description": "Лейбл карточки слова-вызова (кадр 19-4), брасовая мишень слева от него." },
-
   "challengeStreak": "{count, plural, one{угадано {count} подряд} few{угадано {count} подряд} many{угадано {count} подряд} other{угадано {count} подряд}}",
   "@challengeStreak": {
     "description": "Счётчик серии справа в шапке карточки (кадр 19-4). При нуле не рисуется — «угадано 0 подряд» не предложение.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "challengeStreakReset": "серия сброшена",
   "@challengeStreakReset": { "description": "То же место после неверного ответа (кадр 19-4в). Без красного и без слова «неверно»." },
-
   "challengePraise": "Знаешь!",
   "@challengePraise": { "description": "Похвала после верного ответа (кадр 19-4б) — одна и короткая, с галкой вместо эмодзи." },
-
   "challengeAnswer": "{term} — {translation}",
   "@challengeAnswer": {
     "description": "Раскрытый ответ (кадры 19-4б/в): термин и перевод через тире.",
     "placeholders": { "term": { "type": "String" }, "translation": { "type": "String" } }
   },
-
   "challengeExample": "{sentence} — {translation}",
   "@challengeExample": {
     "description": "Пример употребления с переводом (кадры 19-4б/в).",
     "placeholders": { "sentence": { "type": "String" }, "translation": { "type": "String" } }
   },
-
   "challengeMistake": "Вы выбрали «{chosen}» — это {term}",
   "@challengeMistake": {
     "description": "Разбор ошибки (кадр 19-4в): чем на самом деле является выбранный вариант. Рисуется только когда неверный вариант — перевод известного термина.",
     "placeholders": { "chosen": { "type": "String" }, "term": { "type": "String" } }
   },
-
   "challengeLearn": "Учить",
   "@challengeLearn": { "description": "Кнопка: слово уходит в очередь тем же путём, что «Учить это слово» (кадр 19-4)." },
-
   "challengeTomorrow": "Завтра новое",
   "@challengeTomorrow": { "description": "Кнопка: свернуть карточку до завтра (кадр 19-4)." },
-
   "challengeCollapsed": "Завтра новое слово",
   "@challengeCollapsed": { "description": "Свёрнутая карточка одной строкой (кадр 19-4г) — та же типографика, что у «Завтра выпадет N слов»." },
-
   "challengeLearning": "Слово в очереди",
   "@challengeLearning": { "description": "Состояние кнопки «Учить» после нажатия: акт совершён, слово зачислено." },
-
   "homeSessionBadge": "Сессия",
   "@homeSessionBadge": { "description": "Бейдж брасом справа сверху на тёмной плите (кадр 19-1). Короче прежнего «Сессия на сегодня»: заголовок ушёл, вместо него метка." },
-
   "homeSessionUnitWords": "{count, plural, one{слово} few{слова} many{слов} other{слова}}",
   "@homeSessionUnitWords": {
     "description": "Единица рядом с крупной цифрой на тёмной плите (кадр 19-1) — БЕЗ самого числа: цифра набрана антиквой в 60px, а слово рядом в 18px, и склеить их в одну строку нельзя.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeSessionRowRepeat": "Повторить",
   "@homeSessionRowRepeat": { "description": "Подпись прейскурантной строки состава (кадр 19-1), число справа отдельно." },
-
   "homeSessionRowNew": "Новых",
   "@homeSessionRowNew": { "description": "Подпись прейскурантной строки состава (кадр 19-1)." },
-
   "homeSessionRowTriage": "Разобрать",
   "@homeSessionRowTriage": { "description": "Подпись прейскурантной строки состава (кадр 19-1) — свайп-проход по неразобранным словам коллекций." },
-
   "homeSessionCardWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@homeSessionCardWords": {
     "description": "Размер сессии на тёмной карточке, «32 слова» (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeSessionCardMinutes": "{count, plural, one{≈ {count} минута} few{≈ {count} минуты} many{≈ {count} минут} other{≈ {count} минуты}}",
   "@homeSessionCardMinutes": {
     "description": "Оценка времени сессии, «≈ 9 минут» (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "sessionSizeCards": "~{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}",
   "@sessionSizeCards": {
     "description": "Вторая половина честной подписи сессии: сколько КАРТОЧЕК получится из обещанных слов. Тильда неспроста — состав дня может дойти до тренажёра слегка другим. Склеивается со счётом слов через « · » (см. sessionSizeLabel), одной строкой на главной и на кнопках коллекции (Ч.3).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeSessionPartRepeat": "{count, plural, one{{count} повторить} few{{count} повторить} many{{count} повторить} other{{count} повторить}}",
   "@homeSessionPartRepeat": {
     "description": "Состав сессии: повторения. Форма не склоняется — считается глагол, а не слова.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeSessionPartNew": "{count, plural, one{{count} новое} few{{count} новых} many{{count} новых} other{{count} новых}}",
   "@homeSessionPartNew": {
     "description": "Состав сессии: новые слова (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeSessionPartTriage": "{count, plural, one{{count} разобрать} few{{count} разобрать} many{{count} разобрать} other{{count} разобрать}}",
   "@homeSessionPartTriage": {
     "description": "Состав сессии: свайпы разбора.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeSessionStart": "Начать",
   "@homeSessionStart": { "description": "Кнопка тёмной карточки дня (кадр 17a)." },
-
   "homeInWorkTitle": "{count, plural, one{В работе — {count} слово} few{В работе — {count} слова} many{В работе — {count} слов} other{В работе — {count} слова}}",
   "@homeInWorkTitle": {
     "description": "Заголовок блока «В работе» — размер пула (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeInWorkWaiting": "{count, plural, one{{count} ждёт очереди} few{{count} ждут очереди} many{{count} ждут очереди} other{{count} ждут очереди}}",
   "@homeInWorkWaiting": {
     "description": "Сколько слов пула ещё ни разу не показывали (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeInWorkPace": "{days, plural, one{при {perDay} в день новым до очереди ~{days} день} few{при {perDay} в день новым до очереди ~{days} дня} many{при {perDay} в день новым до очереди ~{days} дней} other{при {perDay} в день новым до очереди ~{days} дня}}",
   "@homeInWorkPace": {
     "description": "Когда очередь дойдёт до последнего ждущего слова (ICU plural по дням).",
     "placeholders": { "perDay": { "type": "int" }, "days": { "type": "int" } }
   },
-
   "homeInWorkQueueStands": "{count, plural, one{возьмёте {count} сейчас — очередь двинется сегодня} few{возьмёте {count} сейчас — очередь двинется сегодня} many{возьмёте {count} сейчас — очередь двинется сегодня} other{возьмёте {count} сейчас — очередь двинется сегодня}}",
   "@homeInWorkQueueStands": {
     "description": "Строка «В работе» в состоянии Б (кадр 17d): квота дня цела, очередь стоит.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeEdgeTitle": "На грани забывания",
   "@homeEdgeTitle": { "description": "Заголовок секции слов с ближайшей датой повтора (кадр 17a)." },
-
   "homeEdgeTomorrow": "выпадет завтра",
   "@homeEdgeTomorrow": { "description": "Дата выпадения слова: завтра." },
-
   "homeEdgeInDays": "{count, plural, one{через {count} день} few{через {count} дня} many{через {count} дней} other{через {count} дня}}",
   "@homeEdgeInDays": {
     "description": "Дата выпадения слова, «через 2 дня» (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeHardestTitle": "Далось труднее всего",
   "@homeHardestTitle": { "description": "Заголовок вечерней секции ошибок сессии (кадр 17b)." },
-
   "homeHardestErrors": "{count, plural, one{{count} ошибка} few{{count} ошибки} many{{count} ошибок} other{{count} ошибки}}",
   "@homeHardestErrors": {
     "description": "Сколько раз слово ответили неверно в последней сессии (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeSectionCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@homeSectionCount": {
     "description": "Счётчик справа от заголовка секции, «2 слова» (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeDoneTitle": "Сегодня закрыто",
   "@homeDoneTitle": { "description": "Заголовок вечерней карточки (кадр 17b)." },
-
   "homeDoneOfWords": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
   "@homeDoneOfWords": {
     "description": "Итог дня в СЛОВАХ (кадр 19-2). Единица обязательна: «52 из 52» без неё — счёт карточек в форме счёта слов, и 52 не было числом слов ни у кого. Карточки и минуты идут подписью следом.",
     "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
   },
-
   "homeDoneCards": "{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}",
   "@homeDoneCards": {
     "description": "Вторая единица итога дня (кадр 19-2) — сколько карточек стоили эти слова.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeDoneMinutes": "{count, plural, one{{count} мин} few{{count} мин} many{{count} мин} other{{count} мин}}",
   "@homeDoneMinutes": {
     "description": "Третья единица итога дня (кадр 19-2). Сокращённо: это хвост строки, а не самостоятельное утверждение.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeChainProgress": "{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}",
   "@homeChainProgress": {
     "description": "Внутренний прогресс одного слова, когда день дошёл до него одного: «1 слово · карточка 2 из 3». Пока слово в цепочке — строка живёт; цепочка кончилась — слово ушло из плана, и строки нет.",
     "placeholders": { "position": { "type": "int" }, "total": { "type": "int" } }
   },
-
   "homeDoneOf": "{done} из {total}",
   "@homeDoneOf": {
     "description": "Прогресс дня: отвеченные карточки из запланированных, «32 из 32».",
     "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
   },
-
   "homeDoneDuration": "{minutes} мин {seconds} с",
   "@homeDoneDuration": {
     "description": "Сколько заняла сессия, «6 мин 40 с».",
     "placeholders": { "minutes": { "type": "int" }, "seconds": { "type": "int" } }
   },
-
   "homeDoneDurationSeconds": "{count, plural, one{{count} секунда} few{{count} секунды} many{{count} секунд} other{{count} секунды}}",
   "@homeDoneDurationSeconds": {
     "description": "Длительность сессии короче минуты (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeIdleTitle": "Всё повторено",
   "@homeIdleTitle": { "description": "Заголовок состояния Б: сессии нет, расписание впереди (кадр 17d)." },
-
   "homeIdleTakeNew": "Взять новые слова",
   "@homeIdleTakeNew": { "description": "Главная кнопка состояния Б (кадр 17d)." },
-
   "homeIdleQueueStalled": "Новые слова на сегодня не взяты — очередь стоит.",
   "@homeIdleQueueStalled": { "description": "Пояснение под «Всё повторено» (кадр 17d)." },
-
   "homeNextReviewLine": "{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}",
   "@homeNextReviewLine": {
     "description": "Когда и сколько ждёт следующий повтор (ICU plural).",
     "placeholders": { "when": { "type": "String" }, "count": { "type": "int" } }
   },
-
   "homeWhenTomorrow": "завтра",
   "@homeWhenTomorrow": { "description": "Подстановка «когда» для следующего повтора — завтра." },
-
   "homeExtraFromCollection": "{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}",
   "@homeExtraFromCollection": {
     "description": "Предложение добрать слова из недоразобранной коллекции (кадр 17b).",
     "placeholders": { "count": { "type": "int" }, "title": { "type": "String" } }
   },
-
   "homeExtraNew": "{count, plural, one{Можно взять {count} слово, которое уже ждёт очереди.} few{Можно взять {count} слова, которые уже ждут очереди.} many{Можно взять {count} слов, которые уже ждут очереди.} other{Можно взять {count} слова, которые уже ждут очереди.}}",
   "@homeExtraNew": {
     "description": "Предложение на закрытом дне (кадр 19-2): слова, УЖЕ взятые в очередь, которые сегодняшняя квота ещё позволяет раздать. Идут прежде свайп-прохода — эти уже выбраны, а разбор это предложение выбрать ещё.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeExtraButton": "{count, plural, one{Ещё {count} слово} few{Ещё {count} слова} many{Ещё {count} слов} other{Ещё {count} слова}}",
   "@homeExtraButton": {
     "description": "Кнопка «Ещё N слов» на вечерней карточке (кадр 17b).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeContinueLabel": "Продолжить",
   "@homeContinueLabel": { "description": "Лейбл карточки брошенной коллекции (кадр 17a)." },
-
   "homeContinueAbandoned": "{count, plural, one{брошено {count} день назад} few{брошено {count} дня назад} many{брошено {count} дней назад} other{брошено {count} дня назад}}",
   "@homeContinueAbandoned": {
     "description": "Давность последнего касания коллекции (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeGenerateRow": "Собрать коллекцию по теме",
   "@homeGenerateRow": { "description": "Строка входа в генерацию на главной (кадр 17a)." },
-
   "homeStoreLink": "{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}",
   "@homeStoreLink": {
     "description": "Тихая строка входа в магазин под генерацией (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeStatLearned": "Выучено",
   "@homeStatLearned": { "description": "Подпись первого числа плиты статистики (кадр 19-1). Значение приходит из /stats.learned." },
-
   "homeStatWeek": "За неделю",
   "@homeStatWeek": { "description": "Подпись второго числа плиты статистики (кадр 19-1) — слов, дошедших до «выучено» за семь дней." },
-
   "homeStatInWork": "В работе",
   "@homeStatInWork": { "description": "Подпись третьего числа плиты статистики (кадр 19-1) — размер пула." },
-
-
-
-
   "homeTomorrowRow": "{count, plural, one{Завтра выпадет {count} слово} few{Завтра выпадет {count} слова} many{Завтра выпадет {count} слов} other{Завтра выпадет {count} слова}}",
   "@homeTomorrowRow": {
     "description": "Строка «завтра» (кадры 19-1, 19-2), тап ведёт в «Мои слова». Заменила список «На грани забывания»: три слова с датами отвечали на вопрос, которого никто не задавал, а «сколько будет завтра» — на тот, который задают. Нуля не бывает: при нуле строки нет.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeAwardPromoted": "{count, plural, one{+{count} слово продвинулось} few{+{count} слова продвинулись} many{+{count} слов продвинулись} other{+{count} слова продвинулись}}",
   "@homeAwardPromoted": {
     "description": "Первая половина строки-награды (кадр 19-2). Со знаком плюс: это прибавление, а не счёт.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeAwardExample": "{term} дошло до «{rung}»",
   "@homeAwardExample": {
     "description": "Вторая половина строки-награды (кадр 19-2): слово, дошедшее дальше всех, и имя его новой ступени — из тех же ladderStep*, что и карточка слова.",
     "placeholders": { "term": { "type": "String" }, "rung": { "type": "String" } }
   },
-
   "homeGenerateCardTitle": "Сгенерировать набор",
   "@homeGenerateCardTitle": { "description": "Заголовок карточки генерации (кадры 19-1, 19-2, 19-3). Тап открывает экран генерации — поля на главной больше нет: форма на главной была зрительным центром экрана, чей центр — день." },
-
   "homeGenerateCardHint": "Опишите ситуацию — соберём набор под неё",
   "@homeGenerateCardHint": { "description": "Подзаголовок карточки генерации (кадры 19-1, 19-2, 19-3)." },
-
   "homeStoreShowcaseTitle": "Готовые наборы",
   "@homeStoreShowcaseTitle": { "description": "Заголовок витрины обложек (кадры 19-2, 19-3)." },
-
   "homeStoreShowcaseAll": "все {count}",
   "@homeStoreShowcaseAll": {
     "description": "Ссылка в конце витрины (кадры 19-2, 19-3) — стрелка рисуется иконкой.",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeFirstDayPromise": "5 минут в день — 20 слов в неделю",
   "@homeFirstDayPromise": { "description": "Строка-обещание в подвале первого дня (кадр 19-3). Единственная цифра на экране, где статистики ещё нет." },
-
   "homeGenerateChipVet": "Ветклиника",
   "@homeGenerateChipVet": { "description": "Чип-пример темы под карточкой генерации первого дня (кадр 19-3)." },
-
   "homeGenerateChipMoving": "Переезд",
   "@homeGenerateChipMoving": { "description": "Чип-пример темы под карточкой генерации первого дня (кадр 19-3)." },
-
   "homeFirstDayTitle": "Начнём с первого набора",
   "@homeFirstDayTitle": { "description": "Приветствие первого дня (кадр 17c)." },
-
   "homeFirstDayReadyTitle": "{count, plural, one{Взять готовый набор ({count} тема)} few{Взять готовый набор ({count} темы)} many{Взять готовый набор ({count} тем)} other{Взять готовый набор ({count} темы)}}",
   "@homeFirstDayReadyTitle": {
     "description": "Первая карточка первого дня (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeFirstDayReadyHint": "Слова уже отобраны, озвучены и размечены по уровню",
   "@homeFirstDayReadyHint": { "description": "Подпись карточки готовых наборов (кадр 17c)." },
-
   "homeFirstDayOwnTitle": "Собрать свою по описанию",
   "@homeFirstDayOwnTitle": { "description": "Вторая карточка первого дня (кадр 17c)." },
-
   "homeFirstDayOwnHint": "Опишите ситуацию — ИИ подберёт слова и фразы под неё",
   "@homeFirstDayOwnHint": { "description": "Подпись карточки генерации (кадр 17c)." },
-
   "homeSortOffer": "{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}",
   "@homeSortOffer": {
     "description": "Предложение свайп-прохода, когда день закрыт (кадры 17b/17d).",
     "placeholders": { "count": { "type": "int" }, "title": { "type": "String" } }
   },
-
   "homeTriageAction": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
   "@homeTriageAction": {
     "description": "Кнопка свайп-прохода в состоянии Б (кадр 17d).",
     "placeholders": { "count": { "type": "int" } }
   },
-
   "homeSortFirstTitle": "Пора разобрать слова",
   "@homeSortFirstTitle": { "description": "Заголовок вместо «Всё повторено», когда в работе ещё ничего нет." },
-
   "onbNativeTitle": "На каком языке показывать переводы?",
   "@onbNativeTitle": { "description": "Онбординг, шаг 1 (ONB-1) — родной язык. Спрашивается один раз за всё время." },
-
   "onbNativeSubtitle": "На нём будут переводы, объяснения и планы подготовки. Можно поменять в профиле.",
   "@onbNativeSubtitle": { "description": "Онбординг, шаг 1 — что покупает ответ." },
-
   "profileRowNativeLang": "Родной язык",
   "@profileRowNativeLang": { "description": "Строка профиля: родной язык (язык переводов)." },
-
   "profileNativeLangHint": "Существующие коллекции останутся как есть",
   "@profileNativeLangHint": { "description": "Подпись под строкой родного языка: смена языка не переписывает уже собранный материал." },
-
   "profileNativeLangConfirmTitle": "Переводы на «{language}»?",
   "@profileNativeLangConfirmTitle": {
     "description": "Заголовок подтверждения смены родного языка.",
     "placeholders": { "language": { "type": "String" } }
   },
-
   "profileNativeLangConfirmBody": "Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.",
   "@profileNativeLangConfirmBody": { "description": "Тело подтверждения смены родного языка." },
-
   "tabPlan": "План",
   "@tabPlan": { "description": "Таб-бар: план подготовки (центральная, акцентная вкладка)." },
-
   "searchOpen": "Поиск",
   "@searchOpen": { "description": "Лупа в шапке главной и коллекций — открывает экран поиска." },
-
   "commonBack": "Назад",
   "@commonBack": { "description": "Ярлык кнопки «назад» для скринридера — план и поиск." },
-
-  "planBuilderTitle": "Составить план",
-  "@planBuilderTitle": { "description": "Заголовок экрана входа в план (кадр Б-01)." },
-
-  "planBuilderSubtitle": "Три ответа — и ИИ соберёт дни подготовки из фраз, которые ты реально скажешь.",
-  "@planBuilderSubtitle": { "description": "Подзаголовок входа в план. «ИИ» произносится здесь один раз за весь поток." },
-
-  "planStepGoalQuestion": "К чему готовишься?",
-  "@planStepGoalQuestion": { "description": "Шаг 1 плана, раскрытый." },
-
-  "planStepGoalClosed": "Цель",
-  "@planStepGoalClosed": { "description": "Шаг 1 плана, ещё не отвеченный (закрытая строка)." },
-
-  "planStepLanguageQuestion": "Язык и уровень",
-  "@planStepLanguageQuestion": { "description": "Шаг 2 плана, раскрытый." },
-
-  "planStepLanguageClosed": "Язык и уровень",
-  "@planStepLanguageClosed": { "description": "Шаг 2 плана, закрытая строка." },
-
-  "planStepWhenQuestion": "Когда это случится?",
-  "@planStepWhenQuestion": { "description": "Шаг 3 плана, раскрытый." },
-
-  "planStepWhenClosed": "Когда и сколько",
-  "@planStepWhenClosed": { "description": "Шаг 3 плана, закрытая строка." },
-
-  "planStepEdit": "Изм.",
-  "@planStepEdit": { "description": "Ссылка «изменить» в свёрнутой строке шага (кадр Б-02)." },
-
-  "planGoalPlaceholder": "Например, приём у врача",
-  "@planGoalPlaceholder": { "description": "Плейсхолдер поля цели." },
-
-  "planGoalChipInterview": "Собеседование",
-  "@planGoalChipInterview": { "description": "Чип-пример цели." },
-  "planGoalChipDoctor": "Приём у врача",
-  "@planGoalChipDoctor": { "description": "Чип-пример цели." },
-  "planGoalChipRent": "Аренда квартиры",
-  "@planGoalChipRent": { "description": "Чип-пример цели." },
-  "planGoalChipTrip": "Поездка",
-  "@planGoalChipTrip": { "description": "Чип-пример цели." },
-  "planGoalChipVet": "Ветклиника",
-  "@planGoalChipVet": { "description": "Чип-пример цели." },
-  "planGoalChipSchool": "Школа ребёнка",
-  "@planGoalChipSchool": { "description": "Чип-пример цели." },
-
-  "planLevelLabel": "Как сейчас говоришь",
-  "@planLevelLabel": { "description": "Лейбл блока уровня — четыре человеческие формулировки вместо A1/B2." },
-
-  "planLevelZero": "С нуля",
-  "@planLevelZero": { "description": "Уровень плана `zero`." },
-  "planLevelBasic": "Понимаю простое",
-  "@planLevelBasic": { "description": "Уровень плана `basic`." },
-  "planLevelConversational": "Объясняюсь",
-  "@planLevelConversational": { "description": "Уровень плана `conversational`." },
-  "planLevelFluent": "Свободно",
-  "@planLevelFluent": { "description": "Уровень плана `fluent`." },
-
-  "planWhenToday": "Сегодня",
-  "@planWhenToday": { "description": "Кнопка даты события." },
-  "planWhenTomorrow": "Завтра",
-  "@planWhenTomorrow": { "description": "Кнопка даты события." },
-  "planWhenSheetTitle": "Когда это случится?",
-  "@planWhenSheetTitle": { "description": "Заголовок шита выбора даты." },
-
-  "planMinutesLabel": "Минут в день",
-  "@planMinutesLabel": { "description": "Лейбл блока минут (для «сегодня» блок не показывается)." },
-
-  "planMinutesPerDay": "{minutes} мин/день",
-  "@planMinutesPerDay": {
-    "description": "Служебная строка бюджета времени.",
-    "placeholders": { "minutes": { "type": "int" } }
-  },
-
-  "planBuilderSubmit": "Собрать план",
-  "@planBuilderSubmit": { "description": "Главная кнопка входа в план." },
-  "planBuilderWorking": "Собираю…",
-  "@planBuilderWorking": { "description": "Кнопка входа в план в состоянии ожидания." },
-
-  "planBuilderBusyLine": "Разбираю цель — обычно 15–30 секунд",
-  "@planBuilderBusyLine": { "description": "Пульсирующая строка под кнопкой, пока модель пишет каркас или день. Заменяет ориентир/плейсхолдер цены на время ожидания." },
-
-  "planBuilderHintToday": "Событие сегодня — соберём короткую подготовку на один заход.",
-  "@planBuilderHintToday": { "description": "Ориентир под кнопкой, когда событие сегодня." },
-
-  "planBuilderHintDays": "{days, plural, one{Ориентир: {days} день до события} few{Ориентир: {days} дня до события} many{Ориентир: {days} дней до события} other{Ориентир: {days} дня до события}} · {minutes} мин в день",
-  "@planBuilderHintDays": {
-    "description": "Ориентир под кнопкой «Собрать план». Объём материала считает сервер — здесь только календарь.",
-    "placeholders": { "days": { "type": "int" }, "minutes": { "type": "int" } }
-  },
-
-  "planErrorOffline": "Нет соединения. План собирается на сервере — попробуй, когда появится сеть.",
-  "@planErrorOffline": { "description": "Ошибка сети на экранах плана." },
-  "planErrorBuildFailed": "Не получилось собрать план. Попробуй ещё раз.",
-  "@planErrorBuildFailed": { "description": "Ошибка сборки каркаса плана." },
-  "planErrorStartFailed": "Не получилось начать план. Попробуй ещё раз.",
-  "@planErrorStartFailed": { "description": "Ошибка старта плана." },
-  "planErrorLoadFailed": "Не удалось загрузить план.",
-  "@planErrorLoadFailed": { "description": "Ошибка чтения плана." },
-
-  "planPreviewBadge": "Превью плана",
-  "@planPreviewBadge": { "description": "Латунная метка в шапке превью (кадр Б-04)." },
-
-  "planPrepDays": "{days, plural, one{Подготовка {days} день + финал} few{Подготовка {days} дня + финал} many{Подготовка {days} дней + финал} other{Подготовка {days} дня + финал}}",
-  "@planPrepDays": {
-    "description": "Строка структуры плана на тёмной плите.",
-    "placeholders": { "days": { "type": "int" } }
-  },
-
-  "planEventOn": "Событие {date}.",
-  "@planEventOn": {
-    "description": "Дата события на плите превью.",
-    "placeholders": { "date": { "type": "String" } }
-  },
-
-  "planApproxTerms": "~{count} фраз и слов.",
-  "@planApproxTerms": {
-    "description": "Ориентир объёма материала на плите превью.",
-    "placeholders": { "count": { "type": "int" } }
-  },
-
-  "planDayNumber": "День {index}",
-  "@planDayNumber": {
-    "description": "Латунная метка дня.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-
-  "planDayNoNewWords": "без новых слов",
-  "@planDayNoNewWords": { "description": "Подпись дня-прогона." },
-
-  "planWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
-  "@planWordsCount": {
-    "description": "Счётчик слов дня.",
-    "placeholders": { "count": { "type": "int" } }
-  },
-
-  "planPhrasesCount": "{count, plural, one{{count} фраза} few{{count} фразы} many{{count} фраз} other{{count} фразы}}",
-  "@planPhrasesCount": {
-    "description": "Счётчик фраз дня.",
-    "placeholders": { "count": { "type": "int" } }
-  },
-
-  "planChunksCount": "{count, plural, one{{count} связка} few{{count} связки} many{{count} связок} other{{count} связки}}",
-  "@planChunksCount": {
-    "description": "Счётчик связок дня — kind = chunk. Отдельно от слов и фраз: связка не одно слово и не реплика.",
-    "placeholders": { "count": { "type": "int" } }
-  },
-
-  "planDaysCount": "{count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дня}}",
-  "@planDaysCount": {
-    "description": "Длительность плана в архиве.",
-    "placeholders": { "count": { "type": "int" } }
-  },
-
-  "planPreviewDropDay": "Убрать день",
-  "@planPreviewDropDay": { "description": "Тихая ссылка на превью." },
-  "planPreviewRebuild": "Перестроить",
-  "@planPreviewRebuild": { "description": "Тихая ссылка на превью — пересобрать каркас." },
-  "planPreviewStart": "Начать",
-  "@planPreviewStart": { "description": "Главная кнопка превью — обязательство." },
-
-  "planPricePlaceholder": "[цена / условия — placeholder]",
-  "@planPricePlaceholder": { "description": "Заглушка под кнопкой «Начать». Paywall в этом наряде не трогается." },
-
-  "planDropDaySheet": "Какой день убрать?",
-  "@planDropDaySheet": { "description": "Заголовок шита выбора дня." },
-  "planDropLastDay": "Последний день подготовки убрать нельзя.",
-  "@planDropLastDay": { "description": "Отказ, когда в плане остался один день знакомства." },
-
-  "planTightTitle": "{days, plural, one{За {days} день по {minutes} минут закроем половину: вот эти умения.} few{За {days} дня по {minutes} минут закроем половину: вот эти умения.} many{За {days} дней по {minutes} минут закроем половину: вот эти умения.} other{За {days} дня по {minutes} минут закроем половину: вот эти умения.}}",
-  "@planTightTitle": {
-    "description": "Заголовок карточки «срок мал под цель» (кадр Б-05).",
-    "placeholders": { "days": { "type": "int" }, "minutes": { "type": "int" } }
-  },
-
-  "planTightAddMinutes": "Добавить {minutes} минут в день",
-  "@planTightAddMinutes": {
-    "description": "Рекомендованное действие на карточке «срок мал».",
-    "placeholders": { "minutes": { "type": "int" } }
-  },
-  "planTightKeep": "Оставить",
-  "@planTightKeep": { "description": "Отклонить рекомендацию «срок мал»." },
-
-  "planBuildingTitle": "Собираю день {index}",
-  "@planBuildingTitle": {
-    "description": "Заголовок экрана сборки дня (кадр Б-06).",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planBuildingBody": "Подбираю реплики события и слова, которые в них подставляются.",
-  "@planBuildingBody": { "description": "Пояснение на экране сборки." },
-  "planBuildingStep1": "Цель разобрана",
-  "@planBuildingStep1": { "description": "Шаг статуса сборки." },
-  "planBuildingStep2": "Реплики подобраны",
-  "@planBuildingStep2": { "description": "Шаг статуса сборки." },
-  "planBuildingStep3": "Слова и примеры",
-  "@planBuildingStep3": { "description": "Шаг статуса сборки." },
-  "planBuildingFailed": "День собирается дольше обычного. План уже создан — его можно открыть и вернуться к дню позже.",
-  "@planBuildingFailed": { "description": "Сборка не дошла до конца." },
-  "planBuildingOpenAnyway": "Открыть план",
-  "@planBuildingOpenAnyway": { "description": "Выход из зависшей сборки." },
-
-  "planActiveBadge": "Активный план",
-  "@planActiveBadge": { "description": "Латунная метка на тёмной плите плана (кадр 1c-01)." },
-
-  "planReadinessCaption": "готовность к событию",
-  "@planReadinessCaption": { "description": "Подпись к главному числу плана." },
-
-  "planEventInDays": "{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}",
-  "@planEventInDays": {
-    "description": "Служебная строка под шкалой готовности.",
-    "placeholders": { "days": { "type": "int" } }
-  },
-  "planEventToday": "Событие сегодня",
-  "@planEventToday": { "description": "Служебная строка под шкалой готовности." },
-  "planEventPassed": "Событие прошло",
-  "@planEventPassed": { "description": "Служебная строка под шкалой готовности." },
-
-  "planDayOfTotal": "День {index} из {total}",
-  "@planDayOfTotal": {
-    "description": "Служебная строка под шкалой готовности — на каком дне юзер.",
-    "placeholders": { "index": { "type": "int" }, "total": { "type": "int" } }
-  },
-
-  "planCanAlready": "Ты уже можешь · {hit} из {total}",
-  "@planCanAlready": {
-    "description": "Лейбл блока умений плана.",
-    "placeholders": { "hit": { "type": "int" }, "total": { "type": "int" } }
-  },
-
-  "planTrainThis": "Потренировать",
-  "@planTrainThis": { "description": "Ссылка на незакрытом умении — ведёт в день, который ему учит." },
-
-  "planDaysHeader": "Дни · {index} из {total}",
-  "@planDaysHeader": {
-    "description": "Лейбл блока дней плана.",
-    "placeholders": { "index": { "type": "int" }, "total": { "type": "int" } }
-  },
-
-  "planContinueDay": "Продолжить день {index}",
-  "@planContinueDay": {
-    "description": "Главная кнопка экрана плана.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-
-  "planDayPassed": "День {index} пройден",
-  "@planDayPassed": {
-    "description": "Подпись пройденного дня в списке.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planDayFinalHint": "Без новых слов · можно открыть раньше",
-  "@planDayFinalHint": { "description": "Подпись дня-прогона в списке." },
-  "planDayBuilding": "Собирается",
-  "@planDayBuilding": { "description": "Подпись дня в статусе `generating` — его прямо сейчас держит воркер. НЕ для `pending`: см. planDayQueued." },
-  "planSpeakerRoleShort": "он",
-  "@planSpeakerRoleShort": { "description": "Пометка роли в левом поле реплики на экране дня (кадр D-01): «он» — говорит собеседник. Курсив и эта метка вместе однозначно говорят, чья это речь." },
-  "planSpeakerRole": "Собеседник:",
-  "@planSpeakerRole": { "description": "Пометка реплики собеседника (speaker = role) — на экране дня и на карточке в сессии. Если каркас дня назвал роль, вместо этой строки показывается её имя. Лексика: в UI слово «фраза», не «реплика»." },
-
-  "planDayQueued": "В очереди",
-  "@planDayQueued": { "description": "Подпись дня в статусе `pending`: его ещё никто не взял. Раньше такие дни подписывались «Собирается», хотя попыток у них ноль (Д-20)." },
-  "planDayNotBuilt": "Не собрался",
-  "@planDayNotBuilt": { "description": "Подпись дня в статусе `failed`. Причина — на экране самого дня, по fail_code." },
-  "planDayOpenFailed": "Открыть день {index}",
-  "@planDayOpenFailed": {
-    "description": "Действие вместо «Продолжить день N», когда текущий день сгорел: продолжать нечего, но решение принимается на экране дня.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planDayOpenEarly": "можно открыть раньше",
-  "@planDayOpenEarly": { "description": "Подпись будущего дня — он открыт, но мягко." },
-
-  "planDayOfPlan": "День {index} из {total}",
-  "@planDayOfPlan": {
-    "description": "Латунная метка в шапке экрана дня.",
-    "placeholders": { "index": { "type": "int" }, "total": { "type": "int" } }
-  },
-
-  "planSayIntent": "Скажи: {intent}",
-  "@planSayIntent": { "description": "Строка-намерение над сборкой (DAY-GATE-1, Ч.2.4): что именно надо сказать, на языке поддержки. Строка серверная (`task.intent`), префикс клиентский.", "placeholders": { "intent": {"type": "String"} } },
-  "planRescueHint": "если не понял или не расслышал",
-  "@planRescueHint": { "description": "Подпись под «На всякий случай» (DAY-GATE-1, доработка Ч.2.7): прежнее имя «Спасатели» объясняло себя само, новое — нет." },
-  "planStageMaterial": "Слова и фразы",
-  "@planStageMaterial": { "description": "Этап дня `material` (DAY-GATE-1, Ч.2.1) — подпись клиентская, сервер везёт код." },
-  "planStageConversation": "Разговор",
-  "@planStageConversation": { "description": "Этап дня `conversation`." },
-  "planStageRehearsal": "Скажи сам",
-  "@planStageRehearsal": { "description": "Этап дня `rehearsal` — прогон сцены голосом." },
-  "planStageRetrain": "Повторить ошибки",
-  "@planStageRetrain": { "description": "Этап дня `retrain`: приходит, только когда есть что повторять; день не держит." },
-  "planStageStateDone": "пройдено",
-  "@planStageStateDone": { "description": "Состояние этапа `done` — словом, без чисел: «N из M» на экранах плана не бывает." },
-  "planStageStateCurrent": "сейчас",
-  "@planStageStateCurrent": { "description": "Состояние этапа `current` — ровно один среди обязательных." },
-  "planStageStateAfter": "после «{stage}»",
-  "@planStageStateAfter": { "description": "Состояние этапа `locked`: не «закрыт», а после какого этапа он откроется (поле `opens_after`).", "placeholders": { "stage": {"type": "String"} } },
-  "planStageOptional": "необязательно",
-  "@planStageOptional": { "description": "Подпись у «Повторить ошибки»: день от него не зависит." },
-  "planStageContinue": "Продолжить",
-  "@planStageContinue": { "description": "Единственная кнопка экрана дня — ведёт в текущий этап; какой это этап, решает сервер." },
-  "planStageRetrainStart": "Повторить ошибки",
-  "@planStageRetrainStart": { "description": "Отдельный вход в `retrain` — единственный случай, когда клиент называет этап." },
-  "planNextDayLeft": "до дня {index} — ещё {left}",
-  "@planNextDayLeft": { "description": "Что осталось пройти, чтобы встал следующий день (решение 294): перечисление незакрытых обязательных этапов.", "placeholders": { "index": {"type": "int"}, "left": {"type": "String"} } },
-  "planNextDayOpen": "день {index} открыт",
-  "@planNextDayOpen": { "description": "Все обязательные этапы дня закрыты — следующий день встал в очередь.", "placeholders": { "index": {"type": "int"} } },
-  "planDayLockedBy": "сначала закончи день {index}",
-  "@planDayLockedBy": { "description": "Замок дня по полю `locked_by_day_index` (Ч.2.2): выводить его самостоятельно нельзя." },
-  "planErrorDayLocked": "Этот день ещё закрыт: сначала закончи день {index}.",
-  "@planErrorDayLocked": { "description": "409 `plan_day_locked` словами (Ч.2.3) — не пустой экран и не «нечего повторять».", "placeholders": { "index": {"type": "String"} } },
-  "planErrorSittingEmpty": "Здесь сейчас нечего проходить — этот этап уже закрыт.",
-  "@planErrorSittingEmpty": { "description": "409 `plan_sitting_empty` словами (Ч.2.3)." },
-  "planDayCanDo": "Ты сможешь",
-  "@planDayCanDo": { "description": "Лейбл блока умений дня." },
-  "planDayPhrases": "Фразы дня",
-  "@planDayPhrases": { "description": "Лейбл блока фраз." },
-  "planDayWords": "Слова в этих фразах",
-  "@planDayWords": { "description": "Лейбл реестра слов." },
-
-  "planDaySoftNote": "Это день впереди текущего. Тренировка настоящая: реплики этого дня встречаешь впервые, ответы засчитываются.",
-  "@planDaySoftNote": { "description": "Строка над кнопкой для дня впереди фокуса: посадка строгая, как у любого дня (E2E-SIM-2, С-1)." },
-
-  "planDayTrain": "Тренировать",
-  "@planDayTrain": { "description": "Главная кнопка экрана дня." },
-
-  "planFromDay": "· со дня {index}",
-  "@planFromDay": {
-    "description": "Откуда пришло слово, рядом с буквой ступени.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-
-  "planConversationLabel": "Разговор",
-  "@planConversationLabel": { "description": "Лейбл блока разговора." },
-  "planConversationDefaultRole": "Собеседник",
-  "@planConversationDefaultRole": { "description": "Имя роли, когда сервер её не назвал." },
-  "planConversationLocked": "Откроется в следующем обновлении: разговор в роли и зачёт чек-пойнтов.",
-  "@planConversationLocked": { "description": "Честная подпись под запертым разговором (CONV-1)." },
-  "planConversationSoon": "Разговор в роли",
-  "@planConversationSoon": { "description": "Заголовок запертой плиты разговора в итоге дня." },
-
-  "planDayNotWritten": "Этот день ещё не собран. План пишет по одному дню — можно попросить собрать его сейчас.",
-  "@planDayNotWritten": { "description": "Состояние дня без материала." },
-  "planDayFailed": "День не собрался с первого раза. Можно попробовать ещё раз.",
-  "@planDayFailed": { "description": "Состояние дня после неудачной генерации." },
-  "planDayExhausted": "Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает слова и фразы не на том языке. План придётся собрать заново.",
-  "@planDayExhausted": { "description": "День исчерпал две попытки: `PlanDay::MAX_ATTEMPTS`. Кнопка «Собрать день» здесь не сработала бы никогда." },
-
-  "planDayExhaustedLead": "Этот день не собрался дважды подряд — сервер больше не будет пытаться. План придётся собрать заново.",
-  "@planDayExhaustedLead": { "description": "Первый абзац сгоревшего дня: что случилось и что теперь можно. Причину называет отдельная строка по fail_code." },
-
-  "planFailWhy": "Что пошло не так: {reason}",
-  "@planFailWhy": {
-    "description": "Обёртка вокруг причины поломки дня. Причина подставляется по fail_code с сервера.",
-    "placeholders": { "reason": { "type": "String" } }
-  },
-
-  "planFailExampleIsATerm": "пример к карточке повторял другую карточку этого дня, а не показывал слово в предложении",
-  "@planFailExampleIsATerm": { "description": "fail_code = card.example_is_a_term." },
-
-  "planFailExampleDuplicated": "два примера оказались одним предложением с подменённым словом",
-  "@planFailExampleDuplicated": { "description": "fail_code = card.example_skeleton_clone. Раньше — day.example_duplicated: то же самое, «один пример на несколько карточек», только теперь сервер видит его по скелету предложения." },
-
-  "planFailExampleWithoutTranslation": "к примеру не приехал перевод, и читать его было бы нечем",
-  "@planFailExampleWithoutTranslation": { "description": "fail_code = card.example_without_translation. Вторая половина Д-29: предложение на изучаемом языке без перевода рядом." },
-
-  "planFailNotTargetLanguage": "слова и фразы вернулись не на том языке",
-  "@planFailNotTargetLanguage": { "description": "fail_code = outline.target_language." },
-
-  "planFailKeyIsTheTerm": "перевод карточки повторял саму карточку — теми же буквами или другими",
-  "@planFailKeyIsTheTerm": { "description": "fail_code = card.translation_is_transliteration. Раньше — day.key_is_the_term; сервер теперь ловит и транслитерацию, поэтому во фразе названы оба случая." },
-
-  "planFailTermIsAName": "именем собственным нельзя занимать карточку — его не переводят",
-  "@planFailTermIsAName": { "description": "fail_code = card.term_is_a_name." },
-
-  "planFailSlotOutsideFrame": "пропуск для подстановки оказался не в той строке",
-  "@planFailSlotOutsideFrame": { "description": "fail_code = card.gap_outside_frame." },
-
-  "planFailGapMissing": "в реплике не оказалось пропуска, в который встаёт карточка",
-  "@planFailGapMissing": { "description": "fail_code = card.gap_missing." },
-
-  "planFailTranslationHasGap": "в переводе остался пропуск — читать такую подсказку нечем",
-  "@planFailTranslationHasGap": { "description": "fail_code = card.translation_has_gap." },
-
-  "planFailTranslationMissingKey": "в переводе реплики не нашлось самого слова, которому она учит",
-  "@planFailTranslationMissingKey": { "description": "fail_code = card.translation_missing_key." },
-
-  "planFailFillerNotCard": "в пропуск встало не то, чему учит карточка",
-  "@planFailFillerNotCard": { "description": "fail_code = card.filler_not_card." },
-
-  "planFailWordIsBasic": "карточкой стало слово из самого начального минимума",
-  "@planFailWordIsBasic": { "description": "fail_code = card.word_is_basic — стоп-список базового (канон §7)." },
-
-  "planFailKindSize": "карточка вышла за длину, отведённую её виду",
-  "@planFailKindSize": { "description": "fail_code = card.kind_size — слово длиннее трёх слов, связка вне 2–4, реплика вне 3–8 (канон §7)." },
-
-  "planFailSkillRefInvalid": "карточка не назвала умение сцены, ради которого она здесь",
-  "@planFailSkillRefInvalid": { "description": "fail_code = card.skill_ref_invalid (канон §8)." },
-
-  "planFailNumberValueMismatch": "число в реплике не сошлось с числом, по которому карточку проверяют",
-  "@planFailNumberValueMismatch": { "description": "fail_code = card.number_value_mismatch." },
-
-  "planFailShelfMissing": "в сцене не оказалось целой полки — того, что тебе скажут, что ты ответишь или из чего это собрано",
-  "@planFailShelfMissing": { "description": "fail_code = day.shelf_missing. Единственная дневная поломка v0.4: адреса у неё нет, поэтому день пересобирается целиком." },
-
-  "planFailTermRepeated": "карточка повторяла другую — этого дня, набора «на всякий случай» или прошлого дня",
-  "@planFailTermRepeated": { "description": "fail_code = card.clone. Раньше — plan.term_repeated («день повторил слово другого дня»); теперь сервер ловит все три вида повтора одним кодом." },
-
-  "planFailUnknown": "не удалось собрать день",
-  "@planFailUnknown": { "description": "fail_code неизвестен клиенту или его нет вовсе. Причину НЕ выдумываем." },
-  "planAbandonLink": "Отказаться от плана",
-  "@planAbandonLink": { "description": "Тихая деструктивная ссылка внизу экрана плана. В кадрах макета её нет: сервер держит один активный план на человека, и без неё юзер заперт в плане до конца события." },
-
-  "planDayRebuildDay": "Собрать заново",
-  "@planDayRebuildDay": { "description": "Одна дополнительная попытка ДЛЯ ЭТОГО дня на сгоревшем дне — до «Собрать план заново», которое выбрасывает пройденное." },
-  "planDayRebuildPlan": "Собрать план заново",
-  "@planDayRebuildPlan": { "description": "Единственное, что может помочь на исчерпанном дне." },
-  "planAbandonTitle": "Отказаться от этого плана?",
-  "@planAbandonTitle": { "description": "Подтверждение перед отказом от плана — с экрана плана и с несобираемого дня. Одна формулировка на оба входа: последствие одно." },
-  "planAbandonBody": "План уйдёт в архив, а его слова — в общее повторение. Собранные дни останутся обычными коллекциями.",
-  "@planAbandonBody": { "description": "Что произойдёт при отказе от плана." },
-  "planAbandonConfirm": "Отказаться",
-  "@planAbandonConfirm": { "description": "Кнопка подтверждения отказа." },
-
-  "planBuildingRefused": "Сервер отказался собирать этот день. Ждать дальше нечего — открой план: на экране дня написано, что именно случилось.",
-  "@planBuildingRefused": { "description": "Сервер ОТКАЗАЛ, а не задержался. Причину НЕ выдумываем: этот экран видит только код ответа, а честную причину по fail_code называет экран дня (Д-19)." },
-
-  "planDayBuildNow": "Собрать день",
-  "@planDayBuildNow": { "description": "Кнопка ручной сборки дня." },
-
-  "planDayDone": "День {index} пройден",
-  "@planDayDone": {
-    "description": "Заголовок итога дня (кадр 1c-04).",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planDaySittingDone": "Занятие пройдено",
-  "@planDaySittingDone": { "description": "Нейтральный заголовок итога, пока сервер не ответил, закрылся ли день. Утверждать «пройден» до ответа нельзя." },
-  "planDayNotClosed": "День {index} ещё не закрыт",
-  "@planDayNotClosed": {
-    "description": "Строгое сидение кончилось, но ступень A закрылась не у всех карточек — день остался в работе.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planDayNotClosedNote": "Часть карточек ответена неверно, и они остались недоученными. Открой день ещё раз: он раздаст только то, что осталось.",
-  "@planDayNotClosedNote": { "description": "Пояснение под заголовком незакрытого дня." },
-  "planDaySoftDone": "День {index} повторён",
-  "@planDaySoftDone": {
-    "description": "Заголовок итога мягкого прохода — ступени не закрывались.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planReviewRow": "Повторение",
-  "planReviewCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
-  "@planReviewCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
-  "planReviewSection": "Повторение · из прошлых дней",
-  "@planReviewSection": {
-    "description": "Шов в сессии плана: дальше идут карточки, введённые ПРОШЛЫМИ днями этого же плана. Раньше здесь стояло просто «Повторение», а под каждой карточкой — «Из плана: <название>»; после PLAN-FIX-3 в сессии плана не бывает чужих карточек, и название всегда было бы своим собственным."
-  },
-
-  "planWarmupSection": "Из прошлых дней",
-  "@planWarmupSection": { "description": "Шов в сессии плана: section = warmup — спасательный набор, пять фраз перед каждым днём (канон §5)." },
-
-  "planShelfHear": "Тебе скажут",
-  "@planShelfHear": { "description": "Шов в сессии плана: полка hear — реплики собеседника, только на понимание (канон §2)." },
-
-  "planShelfSay": "Ты ответишь",
-  "@planShelfSay": { "description": "Шов в сессии плана: полка say — короткие ответы, полная лестница до «сказал сам»." },
-
-  "planShelfAsk": "Ты спросишь",
-  "@planShelfAsk": { "description": "Шов в сессии плана: полка ask — уточняющие вопросы. Отдельная от say: обе полки — kind = line, и различает их только полка." },
-
-  "planShelfWords": "Слова и связки",
-  "@planShelfWords": { "description": "Шов в сессии плана: полки words и chunks под одной подписью — канон §2 считает их вместе («внизу — слова и связки»)." },
-
-  "planSectionDialogueIntro": "Знакомство с репликами",
-  "@planSectionDialogueIntro": { "description": "Секция посадки (DAY-2, код dialogue_intro): ступень A трёх полок сцены — реплики, которые сегодня встречают впервые. Раньше это были три подписи («Тебе скажут», «Ты ответишь», «Ты спросишь»); в день знакомства это одно, что происходит." },
-
-  "planSectionDialogue": "Диалог сцены",
-  "@planSectionDialogue": { "description": "Секция посадки (DAY-2, код dialogue): ступень B тех же полок, сыгранная одним разговором — экран-диалог." },
-
-  "planSectionNumbers": "Цифры на слух",
-  "@planSectionNumbers": { "description": "Секция посадки (код numbers, канон §6). Пока ни одна сессия их не раздаёт — подпись есть, чтобы было чем подписать, когда появится тренажёр." },
-
-  "planSectionRehearsal": "Скажи сам",
-  "@planSectionRehearsal": { "description": "Секция посадки (код rehearsal): прогон перед событием, финальный день." },
-
-  "planSectionOfScene": "{section} · сцена {index}",
-  "@planSectionOfScene": {
-    "description": "Подпись секции, которая принадлежит ПРОШЛОЙ сцене: «Диалог сцены · сцена 1». Номер нужен, потому что в одной посадке может быть разговор одной сцены и знакомство другой.",
-    "placeholders": { "section": { "type": "String" }, "index": { "type": "int" } }
-  },
-
-  "planWarmupWhy": "чтобы было чем ответить, если растеряешься",
-  "@planWarmupWhy": { "description": "Пояснение под подписью «Разогрев» на первой карточке разогрева: зачем спасатели (кадр D-01)." },
-
-
-
-  "planDialogueScene": "Сцена {index}",
-  "@planDialogueScene": {
-    "description": "Надзаголовок экрана-диалога (кадры DL-01…DL-10). Материал называется сценой; слово «день» на этих экранах не звучит.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planDialogueLabel": "Диалог",
-  "@planDialogueLabel": { "description": "Подпись блока на входе в диалог (кадр DL-01)." },
-  "planDialogueLead": "Собеседник говорит — вы отвечаете. Отвечать будете выбором из фраз плана, включая выученные в прошлых сценах.",
-  "@planDialogueLead": { "description": "Что произойдёт в диалоге (кадр DL-01)." },
-  "planDialogueRescueAtHand": "На всякий случай — под рукой",
-  "@planDialogueRescueAtHand": { "description": "Подпись второго блока на входе в диалог (кадр DL-01)." },
-  "planDialogueRescueLead": "Кнопка остаётся на экране весь диалог: можно попросить повторить или помедленнее.",
-  "@planDialogueRescueLead": { "description": "Пояснение к блоку спасателей на входе в диалог (кадр DL-01)." },
-  "planDialogueStart": "Начать диалог",
-  "@planDialogueStart": { "description": "Главное действие входа в диалог (кадр DL-01)." },
-  "planDialogueSound": "со звуком · наденьте наушники",
-  "@planDialogueSound": { "description": "Честное предупреждение под кнопкой: реплики звучат, а не написаны (кадр DL-01)." },
-
-  "planDialogueRoleSpeaks": "говорит собеседник · текст скрыт",
-  "@planDialogueRoleSpeaks": { "description": "Подпись под пузырём собеседника, пока текст не раскрыт (кадр DL-02)." },
-  "planDialogueReplay": "Ещё раз",
-  "@planDialogueReplay": { "description": "Повтор реплики собеседника голосом (кадр DL-02)." },
-  "planDialogueShowText": "Показать текст",
-  "@planDialogueShowText": { "description": "Раскрыть текст реплики внутри пузыря. Доступно всегда, но тише всего остального: это подсказка, а не шаг (кадр DL-02)." },
-  "planDialogueHideText": "Скрыть текст",
-  "@planDialogueHideText": { "description": "Свернуть текст реплики обратно (кадр DL-02б)." },
-  "planDialogueUnderstoodMark": "понял",
-  "@planDialogueUnderstoodMark": { "description": "Свёрнутая отметка пройденного такта «Понял?» в ленте (кадр DL-03)." },
-  "planDialogueSaidAloud": "сказано вслух",
-  "@planDialogueSaidAloud": { "description": "Отметка под своим ответом в ленте — факт, а не балл (кадр DL-05)." },
-  "planDialogueFamiliar": "знакомая реплика · разбор не нужен",
-  "@planDialogueFamiliar": { "description": "Подпись у зрелого обмена: реплика уже закрыла «понимаю», такта 1 нет (кадр DL-06)." },
-
-  "planDialogueVoicePreparing": "Готовим озвучку",
-  "@planDialogueVoicePreparing": { "description": "Состояние, пока голос не готов: реплика не подаётся, но и тишины нет (кадр DL-08)." },
-  "planDialogueVoicePreparingBody": "Реплика прозвучит, когда голос будет готов. Диалог начнётся с неё — тишины не будет.",
-  "@planDialogueVoicePreparingBody": { "description": "Пояснение под «Готовим озвучку». Никаких «осталось 5 секунд»: время неизвестно, поэтому не обещается (кадр DL-08)." },
-
-  "planDialogueRescue": "На всякий случай",
-  "@planDialogueRescue": { "description": "Постоянная кнопка на экране диалога (кадр DL-09)." },
-  "planDialogueRescuePhrases": "{count, plural, one{{count} фраза} few{{count} фразы} other{{count} фраз}}",
-  "@planDialogueRescuePhrases": {
-    "description": "Сколько спасательных фраз в наборе (кадр DL-09).",
-    "placeholders": { "count": { "type": "int" } }
-  },
-  "planDialogueRescueNote": "Это нормальный ход разговора, а не ошибка: носители просят повторить так же часто.",
-  "@planDialogueRescueNote": { "description": "Пояснение в панели спасателей: использование не штрафуется (кадр DL-09, канон §8)." },
-  "planDialogueRescueBack": "Вернуться к диалогу",
-  "@planDialogueRescueBack": { "description": "Закрыть панель спасателей (кадр DL-09)." },
-
-  "planDialogueDone": "диалог пройден",
-  "@planDialogueDone": { "description": "Надзаголовок финала диалога (кадр DL-10)." },
-  "planDialogueDoneLead": "Разговор целиком — ваши ответы стоят в ленте.",
-  "@planDialogueDoneLead": { "description": "Подпись под названием сцены на финале диалога (кадр DL-10)." },
-  "planDialogueResult": "Итог по сцене",
-  "@planDialogueResult": { "description": "Надзаголовок трёх фактов финала (кадр DL-10)." },
-  "planDialogueAnsweredSelf": "Отвечал сам",
-  "@planDialogueAnsweredSelf": { "description": "Первый факт финала диалога (кадр DL-10)." },
-  "planDialogueHeardOut": "Разобрал реплику на слух",
-  "@planDialogueHeardOut": { "description": "Второй факт финала диалога (кадр DL-10)." },
-  "planDialogueAskedRepeat": "Просил повторить",
-  "@planDialogueAskedRepeat": { "description": "Третий факт финала диалога. Стоит рядом с остальными без извинений: это часть разговора (кадр DL-10)." },
-  "planDialogueTimes": "{count, plural, one{{count} раз} few{{count} раза} other{{count} раз}}",
-  "@planDialogueTimes": {
-    "description": "Сколько раз просили повторить (кадр DL-10).",
-    "placeholders": { "count": { "type": "int" } }
-  },
-  "planDialogueNextAssembly": "Дальше — сборка: те же обмены, но ответ собираете из связок сцены сами.",
-  "@planDialogueNextAssembly": { "description": "Что будет после диалога — уровень B+ (кадр DL-10, канон §5)." },
-  "planDialogueBackToSession": "Вернуться к сессии",
-  "@planDialogueBackToSession": { "description": "Единственное действие финала диалога: ведёт обратно в посадку (кадр DL-10)." },
-
-  "planDialogueAskHeard": "Что тебе сейчас сказали?",
-  "@planDialogueAskHeard": { "description": "Шапка такта «Понял?» — крупный вопрос над русскими вариантами (кадр DL-02)." },
-  "planDialogueAskSay": "Что ты ответишь?",
-  "@planDialogueAskSay": { "description": "Шапка такта «Ответишь?» — крупный вопрос над вариантами на изучаемом языке (кадр DL-03)." },
-  "planDialogueAskAsk": "Что ты спросишь?",
-  "@planDialogueAskAsk": { "description": "Шапка такта «Ответишь?» для хода-вопроса (кадр DL-03, канон §4)." },
-  "planDialogueYourAnswer": "Ваш ответ",
-  "@planDialogueYourAnswer": { "description": "Надзаголовок своего хода без карточки — реплика полки «Ты ответишь» (кадр DL-04)." },
-  "planDialogueYourQuestion": "Ваш вопрос",
-  "@planDialogueYourQuestion": { "description": "То же для хода полки «Ты спросишь» (кадр DL-04)." },
-  "planDialogueListenHow": "Послушать, как это звучит",
-  "@planDialogueListenHow": { "description": "Тихое действие на шаге «Скажи вслух»: реплика звучит тем же голосом, что и разговор (кадр DL-04)." },
-  "planDialogueSayAloudNote": "Скажите реплику вслух — скажем, что услышали. В прогресс это не идёт.",
-  "@planDialogueSayAloudNote": { "description": "Подпись шага «Скажи вслух». С наряда SPEECH-2 ход ГОВОРИТ, что вышло (Ч.3.5), — прежняя строка «мы не оцениваем и не сравниваем» стала неправдой; но в журнал по-прежнему не уходит ни строки, и это второе предложение." },
-  "planDialogueSaidIt": "Сказал вслух",
-  "@planDialogueSaidIt": { "description": "Главное действие шага «Скажи вслух»: пузырь встаёт в ленту, разговор идёт дальше (кадр DL-04)." },
-  "planListTitle": "План подготовки",
-  "@planListTitle": { "description": "Надзаголовок списка дней плана (кадр D-07)." },
-  "planRowPassed": "пройден",
-  "@planRowPassed": { "description": "Статус строки дня — словом, не иконкой (кадр D-07)." },
-  "planRowBuilding": "собирается",
-  "@planRowBuilding": { "description": "День держит воркер прямо сейчас (кадр D-07)." },
-  "planRowNotBuilt": "не собрался",
-  "@planRowNotBuilt": { "description": "Сборка дня сорвалась; кнопка «Собрать заново» стоит в той же строке (кадр D-07, урок Д-20)." },
-  "planRowWaiting": "ждёт очереди",
-  "@planRowWaiting": { "description": "День ещё не наступил по расписанию (кадр D-07)." },
-  "planRowStartDay": "Начать день",
-  "@planRowStartDay": { "description": "Действие сегодняшнего дня, в его же строке (кадр D-07)." },
-  "planRowNotBuiltWhy": "Сорвалась сборка реплик. Займёт около минуты.",
-  "@planRowNotBuiltWhy": { "description": "Честная подпись под «Собрать заново»: что сорвалось и сколько это займёт (кадр D-07)." },
-  "planRowRehearsalWhen": "Накануне",
-  "@planRowRehearsalWhen": { "description": "Надзаголовок строки прогона вместо «День N · сцена N» (кадр D-07)." },
-  "planRowRehearsalLead": "Все сцены подряд, вслух",
-  "@planRowRehearsalLead": { "description": "Подстрока строки прогона (кадр D-07)." },
-  "planMaturityMeeting": "Знакомишься со словами и фразами",
-  "@planMaturityMeeting": { "description": "Зрелость плана словами — первое состояние (канон §2: познакомился → применяю → говорю сам). Заменило «ступень A · знакомство с материалом»." },
-  "planMaturityApplying": "Применяешь в разговоре",
-  "@planMaturityApplying": { "description": "Второе состояние зрелости плана." },
-  "planMaturitySpeaking": "Говоришь сам",
-  "@planMaturitySpeaking": { "description": "Третье состояние зрелости (канон §2). Наступает по переписи ступени C: каждый ход сцены прозвучал голосом в прогоне (SCENE-RUN, Ч.3)." },
-  "planEventAt": "событие {date}",
-  "@planEventAt": { "description": "Дата события в карточке цели (кадр D-07: «приём 14 марта»).", "placeholders": { "date": { "type": "String" } } },
-  "planDaysLeft": "{days, plural, one{осталось {days} день} few{осталось {days} дня} many{осталось {days} дней} other{осталось {days} дня}}",
-  "@planDaysLeft": { "description": "Обратный отсчёт в карточке цели (кадр D-07).", "placeholders": { "days": { "type": "int" } } },
-  "planRowDayScene": "День {day} · сцена {scene}",
-  "@planRowDayScene": { "description": "Надзаголовок строки дня. Номер сцены различает два дня, начинающихся одинаково (кадр D-07, урок Д-23).", "placeholders": { "day": { "type": "int" }, "scene": { "type": "int" } } },
-
-  "planDayRescueLead": "С них начинается день — чтобы было чем ответить, если растеряешься.",
-  "@planDayRescueLead": { "description": "Пояснение блока спасателей на экране дня (кадр D-01)." },
-  "planDayRoleOnlyUnderstand": "говорит собеседник · только понимать",
-  "@planDayRoleOnlyUnderstand": { "description": "Подпись полки «Тебе скажут» на экране дня: реплики роли — только на понимание (кадр D-01, канон §3)." },
-  "planSceneNamed": "Сцена: {title}",
-  "@planSceneNamed": {
-    "description": "Подзаголовок итога посадки (кадр D-06): итог отвечает на вопрос «справлюсь ли я в этой сцене», а не «сколько слов выучил».",
-    "placeholders": { "title": { "type": "String" } }
-  },
-  "planDayAlmost": "День {index} · почти",
-  "@planDayAlmost": {
-    "description": "Вердикт «день не закрыт» (кадр D-06б): заголовок называет остаток, а не притворяется, что день пройден.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planDayAlmostLead": "{count, plural, one{Осталось дотренировать {count} карточку} few{Осталось дотренировать {count} карточки} other{Осталось дотренировать {count} карточек}}",
-  "@planDayAlmostLead": {
-    "description": "Сколько карточек не дошло до ступени, на которой их можно сказать в разговоре (кадр D-06б).",
-    "placeholders": { "count": { "type": "int" } }
-  },
-  "planDayGotIt": "Далось",
-  "@planDayGotIt": { "description": "Первый блок итога посадки: карточки, отвеченные верно (кадр D-06)." },
-  "planDayMissed": "Не далось",
-  "@planDayMissed": { "description": "Второй блок итога: конкретные карточки с причиной, они же уходят в завтрашний разогрев (кадр D-06)." },
-  "planDayMissedNote": "Непослушные карточки вернутся в следующем дне.",
-  "@planDayMissedNote": { "description": "Что будет с тем, что не далось (кадр D-06, канон §5 «разогрев v2»)." },
-  "planDayTrainMore": "Дотренировать",
-  "@planDayTrainMore": { "description": "Действие вердикта «почти»: вернуться в день и закрыть остаток (кадр D-06б)." },
-  "planDayLeaveForTomorrow": "Оставить на завтра",
-  "@planDayLeaveForTomorrow": { "description": "Второй выбор вердикта «почти»: остаток придёт в разогреве, день останется открытым (кадр D-06б)." },
-  "planDayLeaveNote": "Если оставить — они придут в следующем дне, а этот останется открытым.",
-  "@planDayLeaveNote": { "description": "Что значит «оставить на завтра» — сказано до выбора, а не после (кадр D-06б)." },
-  "planLadderLegend": "Докуда дошли слова и фразы",
-  "@planLadderLegend": { "description": "Надзаголовок расшифровки A/B/C на итоге посадки (кадр D-06в)." },
-  "planLadderNoReadiness": "Готовность к сцене появится, когда сервер её посчитает. Пока — то, докуда дошли слова и фразы.",
-  "@planLadderNoReadiness": { "description": "Почему на итоге нет процента: его не считают, а не прячут (кадр D-06в). Пока процент не считается, его нет вообще." },
-  "planLadderA": "познакомился",
-  "@planLadderA": { "description": "Ступень A человеческим словом — расшифровка стоит рядом, а не в справке (кадр D-06в)." },
-  "planLadderB": "применяешь",
-  "@planLadderB": { "description": "Ступень B человеческим словом." },
-  "planLadderC": "говоришь сам",
-  "@planLadderC": { "description": "Ступень C человеческим словом." },
-  "planNext": "Дальше",
-  "@planNext": { "description": "Подпись строки перехода в итоге дня." },
-  "planNextDay": "День {index} — {title}",
-  "@planNextDay": {
-    "description": "Следующий день в итоге дня.",
-    "placeholders": { "index": { "type": "int" }, "title": { "type": "String" } }
-  },
-  "planDayBackToPlan": "К плану",
-  "@planDayBackToPlan": { "description": "Кнопка выхода из итога дня." },
-
-  "planSessionBadge": "План · день {index}",
-  "@planSessionBadge": {
-    "description": "Латунная метка в шапке плановой сессии (кадр 1c-03).",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planSessionCarried": "Слово «{term}» идёт со дня {index} — сегодня оно возвращается.",
-  "@planSessionCarried": {
-    "description": "Строка внизу карточки: откуда слово.",
-    "placeholders": {
-      "term": { "type": "String" },
-      "index": { "type": "int" }
-    }
-  },
-
-  "planEmptyTitle": "Подготовиться к чему-то конкретному",
-  "@planEmptyTitle": { "description": "Пустой таб «План» (кадр 1c-10)." },
-  "planEmptyBody": "Коллекции — про темы, которые хочется знать. План — про день, когда придётся говорить: приём, собеседование, подпись договора.",
-  "@planEmptyBody": { "description": "Разница коллекции и плана — тремя строками, без обещаний." },
-  "planEmptyStep1": "Говоришь цель и дату",
-  "@planEmptyStep1": { "description": "Пустой таб «План», строка 01." },
-  "planEmptyStep2": "Каждый день — фразы, которые реально скажешь, и слова из них",
-  "@planEmptyStep2": { "description": "Пустой таб «План», строка 02." },
-  "planEmptyStep3": "В конце — разговор в роли и вся ситуация вслух",
-  "@planEmptyStep3": { "description": "Пустой таб «План», строка 03." },
-  "planEmptyCta": "Составить план",
-  "@planEmptyCta": { "description": "Кнопка пустого таба." },
-
-  "planFinishedBadge": "Подготовка завершена",
-  "@planFinishedBadge": { "description": "Латунная метка завершённого плана (кадр 1c-11)." },
-  "planFinishedSummary": "{days, plural, one{За {days} день подготовки. Событие было {date}.} few{За {days} дня подготовки. Событие было {date}.} many{За {days} дней подготовки. Событие было {date}.} other{За {days} дня подготовки. Событие было {date}.}}",
-  "@planFinishedSummary": {
-    "description": "Итог завершённого плана.",
-    "placeholders": { "days": { "type": "int" }, "date": { "type": "String" } }
-  },
-  "planWordsReleasedTitle": "Слова плана остались в архиве",
-  "@planWordsReleasedTitle": { "description": "Карточка о судьбе слов после плана. Правда: архив, а не общее повторение (Д-30)." },
-  "planWordsReleasedBody": "Они никуда не делись — прогресс, расписание и вся история на месте. Сами в ежедневные занятия они не придут: чтобы вернуть слово в работу, открой его карточку и нажми «Учить это слово».",
-  "@planWordsReleasedBody": { "description": "Пояснение к судьбе слов: завершённый план — архив, слова в ежедневные занятия сами не приходят." },
-  "planRehearsalDoneTitle": "Подготовка завершена",
-  "@planRehearsalDoneTitle": { "description": "Итог прогона финального дня — план закрыт (Д-27)." },
-  "planRehearsalDoneBody": "Ты прошёл все слова и фразы плана. Он ушёл в архив: слова, прогресс и вся история сохранены.",
-  "@planRehearsalDoneBody": { "description": "Пояснение под итогом прогона." },
-  "planRehearsalDoneAction": "К плану",
-  "@planRehearsalDoneAction": { "description": "Кнопка с экрана итога прогона обратно к плану." },
-  "planCompleteAction": "Завершить план",
-  "@planCompleteAction": { "description": "Кнопка финального дня: закрыть план результатом, а не датой (E2E-SIM-2, С-10)." },
-  "planCompleteTitle": "Завершить план?",
-  "@planCompleteTitle": { "description": "Подтверждение завершения плана с экрана финального дня." },
-  "planCompleteBody": "План закроется, слова уйдут в архив. Вернуть их в «Учить» можно будет вручную.",
-  "@planCompleteBody": { "description": "Что произойдёт при завершении плана." },
-  "planCompleteConfirm": "Завершить",
-  "@planCompleteConfirm": { "description": "Подтверждающая кнопка завершения плана." },
-
-  "planRehearsalScenes": "Сцены плана",
-  "@planRehearsalScenes": { "description": "Надзаголовок списка сцен на экране прогона (кадр D-11)." },
-  "planRehearsalSceneUntrained": "не тренировали",
-  "@planRehearsalSceneUntrained": { "description": "Статус сцены, которую не начинали: в прогон она войдёт как есть (кадр D-11)." },
-  "planRehearsalScenePassed": "пройдена",
-  "@planRehearsalScenePassed": { "description": "Статус пройденной сцены на экране прогона." },
-  "planRehearsalSceneReady": "в работе",
-  "@planRehearsalSceneReady": { "description": "Статус сцены, материал которой есть, но день не закрыт." },
-  "planRehearsalUntrainedNote": "Войдёт как есть — реплики с подсказкой.",
-  "@planRehearsalUntrainedNote": { "description": "Нетренированная сцена признаётся вслух и не блокирует прогон (кадр D-11)." },
-  "planRehearsalAloudNote": "Вслух, без остановок. На всякий случай — под рукой.",
-  "@planRehearsalAloudNote": { "description": "Подпись над кнопкой прогона (кадр D-11)." },
-  "planRehearsalNoPercent": "Готовность по сценам появится, когда сервер её посчитает. Пока — статус каждой сцены.",
-  "@planRehearsalNoPercent": { "description": "Почему у сцен нет процентов: их не считают, а не прячут. Дизайн не считает готовность из ступеней (записка серии «День v1»)." },
-
-  "planDoneScenes": "Сцены пройдены",
-  "@planDoneScenes": { "description": "Первый факт экрана завершённого плана (кадр D-12)." },
-  "planDoneStageA": "Познакомились со словами и фразами",
-  "@planDoneStageA": { "description": "Третий факт экрана завершённого плана — единственное про ступени число, которое сервер знает." },
-  "planDoneArchiveNote": "Слова и реплики плана останутся в архиве — открыть можно с его карточки. Автоматических повторений не будет: план закончился вместе с событием.",
-  "@planDoneArchiveNote": { "description": "Что происходит с материалом после завершения (кадр D-12, канон §1: архив целиком)." },
-
-  "planRehearsalStart": "Начать",
-  "@planRehearsalStart": { "description": "Кнопка финального дня: он не собирается, он прогоняется по карточкам плана." },
-  "planRehearsalLead": "Финальный день ничего не добавляет — это всё, чему план научил, вслух. Пройди его перед событием.",
-  "@planRehearsalLead": { "description": "Первый абзац экрана финального дня вместо «день не собран»." },
-  "planArchive": "Архив",
-  "@planArchive": { "description": "Лейбл списка прошлых планов." },
-  "planFinishedNewPlan": "Составить новый",
-  "@planFinishedNewPlan": { "description": "Кнопка внизу завершённого плана — под результатом, а не поверх него." },
-
+  "sessionSayIntent": "Скажи: {intent}",
+  "@sessionSayIntent": { "description": "Строка-намерение над сборкой (DAY-GATE-1, Ч.2.4): что именно надо сказать, на языке поддержки. Строка серверная (`task.intent`), префикс клиентский.", "placeholders": { "intent": {"type": "String"} } },
   "homePlanCardBadge": "План · день {index} из {total}",
   "@homePlanCardBadge": {
     "description": "Латунная метка карточки плана на главной (кадр 08).",
@@ -2596,11 +1563,6 @@
   },
   "homePlanCardEventToday": "Событие сегодня",
   "@homePlanCardEventToday": { "description": "Правая метка карточки плана на главной." },
-  "homePlanCardReadiness": "готовности к событию · {hit} из {total}",
-  "@homePlanCardReadiness": {
-    "description": "Подпись рядом с процентом на карточке плана.",
-    "placeholders": { "hit": { "type": "int" }, "total": { "type": "int" } }
-  },
   "homePlanCardContinue": "Продолжить",
   "@homePlanCardContinue": { "description": "Кнопка карточки плана на главной." },
   "homePlanInviteTitle": "Есть дата и цель?",
@@ -2609,323 +1571,6 @@
   "@homePlanInviteBody": { "description": "Пояснение приглашения составить план." },
   "homePlanInviteCta": "Составить",
   "@homePlanInviteCta": { "description": "Кнопка приглашения составить план." },
-
-  "planNotifyChannelName": "План подготовки",
-  "@planNotifyChannelName": { "description": "Имя канала уведомлений (видно в системных настройках Android)." },
-  "planNotifyChannelBody": "Напоминания перед событием, к которому идёт подготовка",
-  "@planNotifyChannelBody": { "description": "Описание канала уведомлений." },
-
-  "planNotifyBeforeTitle": "{days, plural, one{До события {days} день. День {index} ждёт} few{До события {days} дня. День {index} ждёт} many{До события {days} дней. День {index} ждёт} other{До события {days} дня. День {index} ждёт}}",
-  "@planNotifyBeforeTitle": {
-    "description": "Уведомление накануне события (кадр 12). Причина — дата события, не серия дней.",
-    "placeholders": { "days": { "type": "int" }, "index": { "type": "int" } }
-  },
-  "planNotifyBeforeBody": "Готовность {percent}%. Сегодня — {title}.",
-  "@planNotifyBeforeBody": {
-    "description": "Тело уведомления накануне: готовность и чему учит сегодняшний день.",
-    "placeholders": { "percent": { "type": "int" }, "title": { "type": "String" } }
-  },
-
-  "planNotifyMorningTitle": "{count, plural, one{Сегодня событие. {count} фраза за 3 минуты} few{Сегодня событие. {count} фразы за 3 минуты} many{Сегодня событие. {count} фраз за 3 минуты} other{Сегодня событие. {count} фразы за 3 минуты}}",
-  "@planNotifyMorningTitle": {
-    "description": "Уведомление утром дня события (кадр 13) — ведёт в быструю репетицию.",
-    "placeholders": { "count": { "type": "int" } }
-  },
-  "planNotifyMorningBody": "Быстрая репетиция перед выходом — только то, что скажешь.",
-  "@planNotifyMorningBody": { "description": "Тело утреннего уведомления." },
-
-  "planNotifyEveningTitle": "Как прошло? Отметь, что сказал",
-  "@planNotifyEveningTitle": { "description": "Уведомление после события (кадр 14)." },
-  "planNotifyEveningBody": "Отметь умения, которые пригодились — план закроется этим.",
-  "@planNotifyEveningBody": { "description": "Тело вечернего уведомления." },
-
-  "planRehearsalBadge": "Репетиция · событие сегодня",
-  "@planRehearsalBadge": { "description": "Латунная метка экрана репетиции (кадр 15)." },
-  "planRehearsalSayIt": "Скажи вслух",
-  "@planRehearsalSayIt": { "description": "Лейбл над фразой репетиции." },
-  "planRehearsalHint": "Скажи фразу — или пролистай дальше, если она уже звучит сама.",
-  "@planRehearsalHint": { "description": "Подпись рядом с микрофоном: пропустить так же законно." },
-  "planRehearsalListening": "Слушаю…",
-  "@planRehearsalListening": { "description": "Подпись, пока микрофон слушает. Ничего не оценивается." },
-  "planRehearsalPlay": "Прочитать пример",
-  "@planRehearsalPlay": { "description": "Тихая кнопка: озвучить фразу." },
-  "planRehearsalCue": "{role} скажет: «{cue}»",
-  "@planRehearsalCue": {
-    "description": "Реплика собеседника, на которую отвечает фраза.",
-    "placeholders": { "role": { "type": "String" }, "cue": { "type": "String" } }
-  },
-  "planRehearsalOpen": "Быстрая репетиция",
-  "@planRehearsalOpen": { "description": "Кнопка на экране плана в день события — открыть репетицию." },
-
-  "planRehearsalDone": "Готово",
-  "@planRehearsalDone": { "description": "Последняя кнопка репетиции." },
-  "planRehearsalEmpty": "В этом плане пока нет фраз для репетиции.",
-  "@planRehearsalEmpty": { "description": "Пустая репетиция — дни ещё не собраны." },
-
-  "planFeedbackTitle": "Как прошло?",
-  "@planFeedbackTitle": { "description": "Заголовок экрана отметки чек-пойнтов." },
-  "planFeedbackBody": "{count, plural, one{Отметь умение, которое пригодилось на событии.} few{Отметь умения, которые пригодились на событии — из {count}.} many{Отметь умения, которые пригодились на событии — из {count}.} other{Отметь умения, которые пригодились на событии — из {count}.}}",
-  "@planFeedbackBody": {
-    "description": "Пояснение экрана отметки.",
-    "placeholders": { "count": { "type": "int" } }
-  },
-  "planFeedbackSubmit": "Сохранить и завершить",
-  "@planFeedbackSubmit": { "description": "Кнопка отправки отметок — она же закрывает план." },
-  "planFeedbackClosesPlan": "План завершится, а его слова уйдут в общее повторение.",
-  "@planFeedbackClosesPlan": { "description": "Что произойдёт после отправки." },
-
-  "planFinishedAtEvent": "На событии сказал {used} из {total}.",
-  "@planFinishedAtEvent": {
-    "description": "Итог завершённого плана по отметкам после события (кадр 11).",
-    "placeholders": { "used": { "type": "int" }, "total": { "type": "int" } }
-  },
-
-  "planNoDate": "Без даты",
-  "@planNoDate": { "description": "План без даты события — везде, где обычно стоит дата (кадры V4·04б, 06б)." },
-
-  "planEntryKicker": "План подготовки",
-  "@planEntryKicker": { "description": "Надзаголовок шагов входа (кадры V4·01…04б)." },
-  "planEntryGoalTitle": "К чему готовишься?",
-  "@planEntryGoalTitle": { "description": "Вопрос шага 1 (кадр V4·01)." },
-  "planEntryGoalSubtitleLong": "Расскажи своими словами: где будешь, с кем, что нужно сказать и понять. Подробности — это те самые фразы, которые пригодятся.",
-  "@planEntryGoalSubtitleLong": { "description": "Подзаголовок на пустом поле (кадр V4·01)." },
-  "planEntryGoalSubtitle": "Расскажи своими словами: где будешь, с кем, что нужно сказать и понять.",
-  "@planEntryGoalSubtitle": { "description": "Короткий подзаголовок, когда в поле уже что-то есть (кадр V4·01б)." },
-  "planEntryGoalPlaceholder": "Например: иду к врачу с ребёнком, надо объяснить симптомы и понять назначение",
-  "@planEntryGoalPlaceholder": { "description": "Подсказка в поле — написана как чужой ответ, а не как инструкция." },
-  "planEntryLinesHint": "можно 4–6 строк",
-  "@planEntryLinesHint": { "description": "Счётчик строк, пока цели не хватает." },
-  "planEntryEnough": "хватит для плана",
-  "@planEntryEnough": { "description": "Латунная замена счётчика, когда цели достаточно (кадр V4·01б)." },
-  "planEntryDetailed": "подробно — это хорошо",
-  "@planEntryDetailed": { "description": "Счётчик на длинной цели (кадр V4·01г)." },
-  "planEntryTooShort": "Пары слов мало. Добавь: к какому врачу, с кем идёшь, что нужно понять.",
-  "@planEntryTooShort": { "description": "Подсказка под короткой целью — без красного и без блокировки (кадр V4·01в)." },
-  "planEntryExamplesTitle": "Так тоже подходит",
-  "@planEntryExamplesTitle": { "description": "Надзаголовок примеров на пустом поле." },
-  "planEntryAdditionsTitle": "Можно добавить",
-  "@planEntryAdditionsTitle": { "description": "Надзаголовок дополнений, когда цели уже хватает." },
-  "planEntryFinishTitle": "Дописать за тебя",
-  "@planEntryFinishTitle": { "description": "Надзаголовок готовых продолжений под короткой целью." },
-  "planEntryExample1": "Иду к врачу, болит спина, надо объяснить и понять назначение",
-  "@planEntryExample1": { "description": "Пример цели 1 (кадр V4·01)." },
-  "planEntryExample2": "Онлайн-собеседование PHP-разработчика, удалённо, английская команда",
-  "@planEntryExample2": { "description": "Пример цели 2." },
-  "planEntryExample3": "Летим в отпуск с ребёнком, аэропорт, отель, аптека",
-  "@planEntryExample3": { "description": "Пример цели 3." },
-  "@planEntryAddition1": { "description": "Дополнение к цели 1 (кадр V4·01б)." },
-  "@planEntryAddition2": { "description": "Дополнение к цели 2." },
-  "@planEntryFinish1": { "description": "Готовое продолжение 1 (кадр V4·01в)." },
-  "@planEntryFinish2": { "description": "Готовое продолжение 2." },
-  "planEntryNext": "Дальше",
-  "@planEntryNext": { "description": "Кнопка перехода к следующему шагу входа." },
-  "planEntryDictate": "Продиктовать",
-  "@planEntryDictate": { "description": "Подпись кнопки диктовки внутри поля цели (для скринридера)." },
-
-  "planEntryLangTitle": "Какой язык учишь?",
-  "@planEntryLangTitle": { "description": "Вопрос шага 2 (кадр V4·02)." },
-  "planEntryTranslationsInto": "Переводы на {language}",
-  "@planEntryTranslationsInto": {
-    "description": "Родной язык не спрашиваем — только сообщаем (кадр V4·02).",
-    "placeholders": { "language": { "type": "String" } }
-  },
-  "planEntrySettingsLink": "изменить в настройках",
-  "@planEntrySettingsLink": { "description": "Ссылка рядом со строкой о языке переводов." },
-  "planEntryLevelTitle": "Как сейчас говоришь?",
-  "@planEntryLevelTitle": { "description": "Второй вопрос шага 2 (кадр V4·02)." },
-  "planLevelZeroHint": "Знаю отдельные слова, фразу не соберу",
-  "@planLevelZeroHint": { "description": "Человеческое описание уровня `zero`." },
-  "planLevelBasicHint": "Читаю переписку, но говорю с паузами",
-  "@planLevelBasicHint": { "description": "Человеческое описание уровня `basic`." },
-  "planLevelConversationalHint": "Договорюсь о бытовом, сложное — подбираю слова",
-  "@planLevelConversationalHint": { "description": "Человеческое описание уровня `conversational`." },
-  "planLevelFluentHint": "Говорю без подготовки, шлифую точность",
-  "@planLevelFluentHint": { "description": "Человеческое описание уровня `fluent`." },
-
-  "planListenKicker": "Необязательный шаг",
-  "@planListenKicker": { "description": "Надзаголовок шага слуха (кадр V4·03)." },
-  "planListenOfferTitle": "Хочешь, настрою точнее?",
-  "@planListenOfferTitle": { "description": "Заголовок предложения послушать." },
-  "planListenOfferBody": "Послушай три реплики из твоей ситуации — как они прозвучат на самом деле. Минута.",
-  "@planListenOfferBody": { "description": "Текст предложения послушать." },
-  "planListenListen": "Послушать",
-  "@planListenListen": { "description": "Кнопка согласия на шаг слуха." },
-  "planListenSkip": "Пропустить",
-  "@planListenSkip": { "description": "Кнопка пропуска шага слуха — того же веса, что и «Послушать»." },
-  "planListenReassure": "Это не тест. Ответы никто не увидит, план соберётся и без этого шага.",
-  "@planListenReassure": { "description": "Подпись под кнопками предложения." },
-  "planListenEnough": "Хватит",
-  "@planListenEnough": { "description": "Выход из шага слуха в любой момент (шапка плеера)." },
-  "planListenLine": "Реплика {index}",
-  "@planListenLine": {
-    "description": "Надзаголовок плеера, когда модель не назвала место.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planListenLineAt": "Реплика {index} · {place}",
-  "@planListenLineAt": {
-    "description": "Надзаголовок плеера с местом от модели (кадр V4·03б).",
-    "placeholders": { "index": { "type": "int" }, "place": { "type": "String" } }
-  },
-  "planListenReplayHint": "Слушай столько раз, сколько нужно.",
-  "@planListenReplayHint": { "description": "Подпись под волной в плеере." },
-  "planListenShowText": "Показать текст",
-  "@planListenShowText": { "description": "Ссылка, открывающая текст реплики и перевод." },
-  "planListenFeelLabel": "Как ощущается",
-  "@planListenFeelLabel": { "description": "Надзаголовок над двумя самооценками." },
-  "planListenGot": "Понял",
-  "@planListenGot": { "description": "Самооценка «понял» — не правильный ответ, просто ответ." },
-  "planListenNotQuite": "Не совсем",
-  "@planListenNotQuite": { "description": "Самооценка «не совсем»." },
-  "planListenNoRightAnswer": "Правильного ответа нет — это про то, что подобрать в план.",
-  "@planListenNoRightAnswer": { "description": "Подпись под самооценками." },
-  "planListenResultUnderstanding": "Понял: сделаю упор на понимание на слух",
-  "@planListenResultUnderstanding": { "description": "Итог слуха, если хоть одна реплика далась не полностью (кадр V4·03в)." },
-  "planListenResultUnderstandingBody": "Речь идёт быстрее, чем удобно. В плане будет больше прослушивания и меньше зубрёжки слов.",
-  "@planListenResultUnderstandingBody": { "description": "Подпись под итогом «упор на понимание»." },
-  "planListenResultSpeaking": "Понимаешь на слух уверенно: сделаю упор на говорение",
-  "@planListenResultSpeaking": { "description": "Итог слуха, если все три реплики поняты (кадр V4·03г)." },
-  "planListenResultSpeakingBody": "Реплики тебе даются — в плане будет больше твоих ответов вслух и меньше зубрёжки слов.",
-  "@planListenResultSpeakingBody": { "description": "Подпись под итогом «упор на говорение»." },
-  "planListenResultFootnote": "Настройку можно поменять в плане в любой день.",
-  "@planListenResultFootnote": { "description": "Строка в рамке под итогом слуха." },
-
-  "planEntryRibbonListenUnderstanding": "Слух · упор на понимание",
-  "@planEntryRibbonListenUnderstanding": { "description": "Строка ленты о пройденном шаге слуха (кадр V4·04)." },
-  "planEntryRibbonListenSpeaking": "Слух · упор на говорение",
-  "@planEntryRibbonListenSpeaking": { "description": "Строка ленты о пройденном шаге слуха." },
-  "planEntryRibbonListenSkipped": "Слух · шаг пропущен",
-  "@planEntryRibbonListenSkipped": { "description": "Строка ленты о пропущенном шаге слуха (кадр V4·04б)." },
-  "planEntryPass": "Пройти",
-  "@planEntryPass": { "description": "Приглашение пройти пропущенный шаг — без укора." },
-  "planEntryRibbonLangLevel": "{language} · {level}",
-  "@planEntryRibbonLangLevel": {
-    "description": "Строка ленты о языке и уровне.",
-    "placeholders": { "language": { "type": "String" }, "level": { "type": "String" } }
-  },
-
-  "planEntryWhenTitle": "Когда это случится?",
-  "@planEntryWhenTitle": { "description": "Вопрос шага даты (кадр V4·04)." },
-  "planEntryPickDate": "Выбрать дату",
-  "@planEntryPickDate": { "description": "Кнопка выбора даты, когда даты ещё нет (кадр V4·04б)." },
-  "planEntryHintDays": "{days, plural, one{Через {days} день · сервер разложит подготовку по этим дням} few{Через {days} дня · сервер разложит подготовку по этим дням} many{Через {days} дней · сервер разложит подготовку по этим дням} other{Через {days} дня · сервер разложит подготовку по этим дням}}",
-  "@planEntryHintDays": {
-    "description": "Строка-ориентир под датой.",
-    "placeholders": { "days": { "type": "int" } }
-  },
-  "planEntryHintToday": "Сегодня · вся подготовка уместится в один подход",
-  "@planEntryHintToday": { "description": "Строка-ориентир, когда событие сегодня." },
-  "planEntryHintNoDate": "Даты нет · идём в своём темпе, по одной сцене за подход",
-  "@planEntryHintNoDate": { "description": "Честная строка-ориентир без даты (решение владельца 03.09)." },
-  "planEntryMinutesTitle": "Сколько минут в день?",
-  "@planEntryMinutesTitle": { "description": "Второй вопрос шага даты." },
-  "planEntryMinutesUnit": "минут",
-  "@planEntryMinutesUnit": { "description": "Подпись под числом минут на карточке." },
-  "planEntryBuild": "Собрать план",
-  "@planEntryBuild": { "description": "Кнопка запуска сборки (кадры V4·04, 04б)." },
-
-  "planBuildKicker": "Собираю твой план",
-  "@planBuildKicker": { "description": "Надзаголовок экрана сборки (кадр V4·05)." },
-  "planBuildStep1": "Разбираю цель",
-  "@planBuildStep1": { "description": "Шаг сборки 1." },
-  "planBuildStep2": "Подбираю реплики",
-  "@planBuildStep2": { "description": "Шаг сборки 2." },
-  "planBuildStep3": "Собираю слова",
-  "@planBuildStep3": { "description": "Шаг сборки 3." },
-  "planBuildFootnote": "Реплики берём из живой речи, не из учебника. Это занимает несколько секунд.",
-  "@planBuildFootnote": { "description": "Строка под шагами сборки." },
-  "planBuildRetryKicker": "Сборка идёт",
-  "@planBuildRetryKicker": { "description": "Надзаголовок первой неудачи (кадр V4·05в)." },
-  "planBuildRetryBody": "Не получилось собрать с первого раза — пробую ещё.",
-  "@planBuildRetryBody": { "description": "Единственная изменившаяся строка при первой неудаче. Причин не называем." },
-  "planBuildRetryFootnote": "Ответы на месте. Вторая попытка идёт с того же шага.",
-  "@planBuildRetryFootnote": { "description": "Строка под шагами при первой неудаче." },
-  "planBuildOfflineKicker": "Сборка приостановлена",
-  "@planBuildOfflineKicker": { "description": "Надзаголовок при потере сети (кадр V4·05б)." },
-  "planBuildOfflineTitle": "Пропала связь на середине",
-  "@planBuildOfflineTitle": { "description": "Заголовок при потере сети." },
-  "planBuildOfflineBody": "Ответы сохранены — ничего вводить заново не придётся. Продолжим, как только сеть вернётся.",
-  "@planBuildOfflineBody": { "description": "Текст при потере сети." },
-  "planBuildRetryButton": "Попробовать снова",
-  "@planBuildRetryButton": { "description": "Кнопка повтора сборки при потере сети." },
-  "planBuildNotifyButton": "Сообщить, когда будет готов",
-  "@planBuildNotifyButton": { "description": "Вторая кнопка кадра V4·05б. Механики уведомления нет — кнопка честно неактивна." },
-  "planBuildNotifyUnavailable": "Уведомления ещё не подключены",
-  "@planBuildNotifyUnavailable": { "description": "Подпись под неактивной кнопкой уведомления — вместо выдуманной механики." },
-  "planBuildFailedKicker": "Не собралось",
-  "@planBuildFailedKicker": { "description": "Надзаголовок второй неудачи (кадр V4·05г)." },
-  "planBuildFailedTitle": "Не собралось. Твои ответы сохранены",
-  "@planBuildFailedTitle": { "description": "Заголовок второй неудачи." },
-  "planBuildFailedBody": "Ничего вводить заново не придётся. Можно вернуться к ответам и запустить сборку снова — или написать нам.",
-  "@planBuildFailedBody": { "description": "Текст второй неудачи." },
-  "planBuildBackToAnswers": "Вернуться к ответам",
-  "@planBuildBackToAnswers": { "description": "Главная кнопка второй неудачи." },
-  "planBuildWriteUs": "Написать нам",
-  "@planBuildWriteUs": { "description": "Вторая кнопка второй неудачи — открывает почту." },
-  "planBuildMailSubject": "Не собрался план",
-  "@planBuildMailSubject": { "description": "Тема письма в поддержку." },
-
-  "planPreviewKicker": "Твой план готов",
-  "@planPreviewKicker": { "description": "Надзаголовок превью (кадры V4·06, 06б)." },
-  "planPreviewSubtitle": "По твоим словам — {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}: {topics}.",
-  "@planPreviewSubtitle": {
-    "description": "Подзаголовок превью — ТЕМЫ, а не пересказ цели: число сцен и названия первых трёх с маленькой буквы. Цели в нём нет вовсе: заголовок экрана и есть цель, и повторять её строкой ниже — говорить одно и то же дважды (живой прогон 03.09). `goal_summary` от P1 остаётся в данных для модели и админки и на экран не едет.",
-    "placeholders": { "scenes": { "type": "int" }, "topics": { "type": "String" } }
-  },
-  "planPreviewSubtitleNoDate": "По твоим словам — {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}: {topics}. Даты нет, идём в своём темпе.",
-  "@planPreviewSubtitleNoDate": {
-    "description": "То же без даты (кадр V4·06б).",
-    "placeholders": { "scenes": { "type": "int" }, "topics": { "type": "String" } }
-  },
-  "planPreviewOrientation": "{days, plural, one{{days} ДЕНЬ ПОДГОТОВКИ} few{{days} ДНЯ ПОДГОТОВКИ} many{{days} ДНЕЙ ПОДГОТОВКИ} other{{days} ДНЯ ПОДГОТОВКИ}} · {minutes} МИНУТ В ДЕНЬ",
-  "@planPreviewOrientation": {
-    "description": "Моноширинная строка-ориентир превью с датой.",
-    "placeholders": { "days": { "type": "int" }, "minutes": { "type": "int" } }
-  },
-  "planPreviewOrientationNoDate": "{scenes, plural, one{{scenes} СЦЕНА} few{{scenes} СЦЕНЫ} many{{scenes} СЦЕН} other{{scenes} СЦЕНЫ}} · {minutes} МИНУТ В ДЕНЬ · ПО ОДНОЙ ЗА ПОДХОД",
-  "@planPreviewOrientationNoDate": {
-    "description": "Моноширинная строка-ориентир превью без даты.",
-    "placeholders": { "scenes": { "type": "int" }, "minutes": { "type": "int" } }
-  },
-  "planPreviewDaysTitle": "Твои дни",
-  "@planPreviewDaysTitle": { "description": "Надзаголовок лестницы сцен, когда дата есть." },
-  "planPreviewScenesTitle": "Твои сцены",
-  "@planPreviewScenesTitle": { "description": "Надзаголовок лестницы сцен без даты." },
-  "planPreviewDayLabel": "ДЕНЬ {index}",
-  "@planPreviewDayLabel": {
-    "description": "Метка карточки сцены, когда дата есть.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planPreviewSceneLabel": "СЦЕНА {index}",
-  "@planPreviewSceneLabel": {
-    "description": "Метка карточки сцены без даты.",
-    "placeholders": { "index": { "type": "int" } }
-  },
-  "planPreviewRescueBody": "Пять фраз на всякий случай — с первого дня, если не понял или не расслышал.",
-  "@planPreviewRescueBody": { "description": "Плашка спасательного набора в превью." },
-  "planPreviewRescueQuote": "«Помедленнее, пожалуйста» — и ещё четыре таких, с первого дня.",
-  "@planPreviewRescueQuote": { "description": "Живая фраза набора курсивом — обещание должно быть осязаемым." },
-  "planPreviewRehearsalEveLabel": "НАКАНУНЕ",
-  "@planPreviewRehearsalEveLabel": { "description": "Метка прогона, когда дата есть." },
-  "planPreviewRehearsalEndLabel": "В КОНЦЕ",
-  "@planPreviewRehearsalEndLabel": { "description": "Метка прогона без даты." },
-  "planPreviewRehearsalTitle": "Скажи сам перед событием",
-  "@planPreviewRehearsalTitle": { "description": "Название пунктирной карточки прогона." },
-  "planPreviewRehearsalEveBody": "{scenes, plural, one{Одна сцена} few{Все {scenes} сцены} many{Все {scenes} сцен} other{Все {scenes} сцены}} подряд, вслух, за один присест.",
-  "@planPreviewRehearsalEveBody": {
-    "description": "Текст прогона, когда дата есть.",
-    "placeholders": { "scenes": { "type": "int" } }
-  },
-  "planPreviewRehearsalEndBody": "Откроется, когда пройдёшь все сцены. Дату можно поставить в любой день.",
-  "@planPreviewRehearsalEndBody": { "description": "Текст прогона без даты." },
-  "planPreviewStartDay": "Начать первый день",
-  "@planPreviewStartDay": { "description": "Главная кнопка превью с датой." },
-  "planPreviewStartScene": "Начать первую сцену",
-  "@planPreviewStartScene": { "description": "Главная кнопка превью без даты." },
-  "planPreviewEditAnswers": "Изменить ответы",
-  "@planPreviewEditAnswers": { "description": "Вторая кнопка превью с датой." },
-  "planPreviewSetDate": "Поставить дату",
-  "@planPreviewSetDate": { "description": "Вторая кнопка превью без даты — единственное, чего плану не хватает." },
-
   "devVoicesTitle": "Голоса реплик",
   "@devVoicesTitle": { "description": "Dev-экран прослушки голосов (наряд TTS-1, Ч.2.4) и пункт в секции «Разработка»." },
   "devVoicesLead": "Одни и те же пять реплик qa-плана, прочитанные каждым кандидатом одним темпом. Слушайте на телефоне, а не в файлах: динамик и наушники решают больше, чем спектрограмма.",
@@ -2944,106 +1589,6 @@
   "@devVoicesFavourite": { "description": "Метка у голоса, который предложен как фаворит. Решение — за владельцем." },
   "devVoiceTrouble": "Озвучка: {silent} реплик системным голосом, {failed} не скачалось",
   "@devVoiceTrouble": { "description": "Дев-бейдж сломанной трубы озвучки (наряд TTS-1). Показывается только при DEV_MENU: тихий фолбэк на системный голос при живом audio_url — дефект, и в дев-сборке он должен быть виден.", "placeholders": { "silent": { "type": "int" }, "failed": { "type": "int" } } },
-
-
-  "planStateNotStarted": "не начат",
-  "@planStateNotStarted": { "description": "Слово состояния дня (DAY-FIX-2, Ч.3): серверное day_state = not_started. Вкладка «План», экран дня, шапка присеста, карточка на главной." },
-  "planStateInProgress": "идёт",
-  "@planStateInProgress": { "description": "Слово состояния дня: day_state = in_progress. Рядом — минуты (planStateMinutes)." },
-  "planStateDone": "пройден",
-  "@planStateDone": { "description": "Слово состояния дня: day_state = done. Единственное слово о пройденном дне на всех экранах плана." },
-  "planStateMaterialDone": "слова и фразы пройдены",
-  "@planStateMaterialDone": { "description": "Слово состояния дня (DAY-FIX-3, Ч.4.3): day_state = material_done — присест «Материал» пройден, впереди «Разговор». Рядом — planStateConversationAbout." },
-  "planStateMaterialAbout": "{minutes, plural, one{слова и фразы около {minutes} минуты} few{слова и фразы около {minutes} минут} many{слова и фразы около {minutes} минут} other{слова и фразы около {minutes} минуты}}",
-  "@planStateMaterialAbout": { "description": "Минуты присеста «Материал» (DAY-FIX-3, Ч.5.1): серверное material_minutes. Экран дня, рядом с planStateConversationAbout.", "placeholders": { "minutes": { "type": "int" } } },
-  "planStateConversationAbout": "{minutes, plural, one{разговор около {minutes} минуты} few{разговор около {minutes} минут} many{разговор около {minutes} минут} other{разговор около {minutes} минуты}}",
-  "@planStateConversationAbout": { "description": "Минуты присеста «Разговор» (DAY-FIX-3, Ч.4.3 / Ч.5.1): серверное conversation_minutes. Вкладка «План» и экран дня при «материал пройден»; экран дня рядом с planStateMaterialAbout.", "placeholders": { "minutes": { "type": "int" } } },
-  "planSittingToConversation": "К разговору",
-  "@planSittingToConversation": { "description": "Кнопка дня в состоянии material_done (DAY-FIX-3, Ч.4.3): вкладка «План», экран дня, итог материала между присестами." },
-  "planSittingLater": "Позже",
-  "@planSittingLater": { "description": "Вторая кнопка итога материала (DAY-FIX-3, Ч.4.4): выйти, разговор — следующим заходом; сервер уже помнит, что материал пройден." },
-  "planMaterialDoneTitle": "Слова и фразы пройдены",
-  "@planMaterialDoneTitle": { "description": "Заголовок итога материала между присестами (DAY-FIX-3, Ч.4.4)." },
-  "planMaterialDoneLead": "Слова, связки и реплики сцены разобраны. Дальше — разговор: услышишь собеседника и ответишь сам.",
-  "@planMaterialDoneLead": { "description": "Строка под planMaterialDoneTitle — что пройдено и что впереди, словами, без счётчиков." },
-  "planStateMinutes": "{minutes, plural, one{около {minutes} минуты} few{около {minutes} минут} many{около {minutes} минут} other{около {minutes} минуты}}",
-  "@planStateMinutes": { "description": "Минуты дня (DAY-FIX-2, Ч.3): серверное minutes_left, карточки × 16 с, округлённые до минуты. Единственная цифра на экранах плана.", "placeholders": { "minutes": { "type": "int" } } },
-  "planDayRepeat": "Пройти ещё раз",
-  "@planDayRepeat": { "description": "Кнопка пройденного дня (DAY-FIX-2, Ч.4.1): вкладка «План» и экран дня. Говорит то же, что слово «пройден»." },
-  "planShelfWordsOnly": "Слова",
-  "@planShelfWordsOnly": { "description": "Заголовок секции экрана дня (DAY-FIX-2, Ч.4.2): полка words." },
-  "planShelfChunks": "Связки",
-  "@planShelfChunks": { "description": "Заголовок секции экрана дня (DAY-FIX-2, Ч.4.2): полка chunks." },
-  "planDayStepLead": "сегодня — {step}",
-  "@planDayStepLead": { "description": "Строка под заголовком секции экрана дня (DAY-FIX-2, Ч.4.2): что с ней сегодня делать, словами из planStep*.", "placeholders": { "step": { "type": "String" } } },
-  "planStepMeet": "познакомишься",
-  "@planStepMeet": { "description": "Упражнение дня словом (next_step = meet): первая встреча, ступень A." },
-  "planStepTranslate": "переведёшь",
-  "@planStepTranslate": { "description": "Упражнение дня словом (next_step = translate, DAY-FIX-3, Ч.3.1): слово выбирает перевод из четырёх в день знакомства." },
-  "planStepTiles": "соберёшь из плиток",
-  "@planStepTiles": { "description": "Упражнение дня словом (next_step = tiles, DAY-FIX-3, Ч.3.1): связка собирается из плиток в день знакомства." },
-  "planStepRecognize": "узнаешь по переводу",
-  "@planStepRecognize": { "description": "Упражнение дня словом (next_step = recognize): выбор перевода слова или связки." },
-  "planStepHear": "услышишь и разберёшь на слух",
-  "@planStepHear": { "description": "Упражнение дня словом (next_step = hear): реплика собеседника, такт «что тебе сказали»." },
-  "planStepChoose": "выберешь ответ",
-  "@planStepChoose": { "description": "Упражнение дня словом (next_step = choose): своя реплика выбором из вариантов." },
-  "planStepAssemble": "соберёшь из блоков",
-  "@planStepAssemble": { "description": "Упражнение дня словом (next_step = assemble): своя реплика сборкой; вопрос — всегда так." },
-  "planStepSay": "скажешь голосом",
-  "@planStepSay": { "description": "Упражнение дня словом (next_step = say): своя реплика голосом, ступень C." },
-  "planMarkMet": "познакомился",
-  "@planMarkMet": { "description": "Отметка у строки экрана дня (DAY-FIX-3, Ч.5.2): интро пройдено, упражнение знакомства ещё впереди. Слово, не цифра." },
-  "planMarkApplying": "применяешь",
-  "@planMarkApplying": { "description": "Отметка у строки экрана дня (DAY-FIX-3, Ч.5.2): знакомство закрыто упражнением, строка в работе." },
-  "planMarkSaidSelf": "говоришь сам",
-  "@planMarkSaidSelf": { "description": "Отметка у строки экрана дня (DAY-FIX-2, Ч.4.3; DAY-FIX-3, Ч.5.2): реплика сказана голосом на прогоне." },
-  "planTermTopical": "по теме",
-  "@planTermTopical": { "description": "Подпись у тематического слова на экране дня (DAY-FIX-3, Ч.5.4): слово ситуации, которого нет в репликах сцены." },
-  "planDialogueRoleName": "собеседник",
-  "@planDialogueRoleName": { "description": "Подпись над ПЕРВЫМ пузырём роли в диалоге и в итоге сцены (DAY-FIX-2, Ч.5.3)." },
-  "planDialogueSceneWord": "Сцена",
-  "@planDialogueSceneWord": { "description": "Подпись правой группы полосы присеста, когда у секции нет имени (DAY-FIX-2, Ч.5.4)." },
-  "planDialogueTail": "Ещё в этой сцене",
-  "@planDialogueTail": { "description": "Заголовок хвостовой карточки сцены ПОСЛЕ разговора (DAY-FIX-2, Ч.5.5): реплика без пары в цепочке. Никогда не пузырь." },
-  "planDialogueAnsweredAll": "на все",
-  "@planDialogueAnsweredAll": { "description": "Итог сцены словами (DAY-FIX-2, Ч.5.6), строка «Отвечал сам»: все свои ходы — сам." },
-  "planDialogueAnsweredHinted": "{count, plural, one{{count} раз подсказали} few{{count} раза подсказали} other{{count} раз подсказали}}",
-  "@planDialogueAnsweredHinted": { "description": "Итог сцены словами, строка «Отвечал сам»: сколько раз подсказали. Не «N из M».", "placeholders": { "count": { "type": "int" } } },
-  "planDialogueHeardAll": "все реплики",
-  "@planDialogueHeardAll": { "description": "Итог сцены словами, строка «Разобрал реплику на слух»: все реплики собеседника разобраны." },
-  "planDialogueHeardHinted": "{count, plural, one{одну подсказали} few{{count} подсказали} other{{count} подсказали}}",
-  "@planDialogueHeardHinted": { "description": "Итог сцены словами, строка «Разобрал реплику на слух»: сколько подсказали.", "placeholders": { "count": { "type": "int" } } },
-  "planSceneRunSaidAll": "всю сцену",
-  "@planSceneRunSaidAll": { "description": "Итог прогона словами (DAY-FIX-2, Ч.5.6), строка «Прошёл сам»: каждая реплика сказана сама." },
-  "planSceneRunSaidSome": "{count, plural, one{кроме одной реплики} few{кроме {count} реплик} other{кроме {count} реплик}}",
-  "@planSceneRunSaidSome": { "description": "Итог прогона словами, строка «Прошёл сам»: сколько реплик не сказал сам.", "placeholders": { "count": { "type": "int" } } },
-  "planSceneRunFastAll": "все",
-  "@planSceneRunFastAll": { "description": "Итог прогона словами, строка «Сразу»: каждая реплика — до подсказки." },
-  "planSceneRunFastSome": "не все",
-  "@planSceneRunFastSome": { "description": "Итог прогона словами, строка «Сразу»: часть реплик — до подсказки." },
-  "planSceneRunFastNone": "пока нет",
-  "@planSceneRunFastNone": { "description": "Итог прогона словами, строка «Сразу»: ни одна реплика не сказана до подсказки." },
-  "planSittingRunNext": "Дальше — скажи сам",
-  "@planSittingRunNext": { "description": "Служебный экран перед вторым присестом (DAY-FIX-2, Ч.2.1): второй присест бывает только у прогона." },
-  "planSittingRunLead": "Скажешь реплики сцены голосом — текста на экране не будет.",
-  "@planSittingRunLead": { "description": "Строка под planSittingRunNext." },
-  "planDoneScenesAll": "все",
-  "@planDoneScenesAll": { "description": "Финал плана словами (DAY-FIX-2, Ч.5.6), строка «Сцены пройдены»." },
-  "planDoneScenesSome": "не все",
-  "@planDoneScenesSome": { "description": "Финал плана словами, строка «Сцены пройдены»." },
-  "planDoneMaterialAll": "со всем",
-  "@planDoneMaterialAll": { "description": "Финал плана словами, строка «Познакомились с материалом»." },
-  "planDoneMaterialSome": "не со всем",
-  "@planDoneMaterialSome": { "description": "Финал плана словами, строка «Познакомились с материалом»." },
-  "planSummaryMetToday": "сегодняшняя сцена",
-  "@planSummaryMetToday": { "description": "Итог дня словами (DAY-FIX-2, Ч.5.6), строка «познакомился»." },
-  "planSummaryAppliedAll": "все слова и фразы плана",
-  "@planSummaryAppliedAll": { "description": "Итог дня словами, строка «применяешь»: весь материал плана прошёл знакомство." },
-  "planSummaryAppliedSome": "часть слов и фраз плана",
-  "@planSummaryAppliedSome": { "description": "Итог дня словами, строка «применяешь»: не весь материал плана прошёл знакомство." },
-  "planHomeDayState": "День {index} · {state}",
-  "@planHomeDayState": { "description": "Карточка плана на главной (DAY-FIX-2, Ч.3): день фокуса и его слово состояния с минутами.", "placeholders": { "index": { "type": "int" }, "state": { "type": "String" } } },
   "devQaClockTitle": "QA · «сегодня» плана",
   "@devQaClockTitle": { "description": "Дев-меню (DAY-FIX-2, Ч.7): сдвиг «сегодня» плана на QA-аккаунте за dev-дверью." },
   "devQaClockShift": "{days, plural, =0{без сдвига} one{сдвиг: {days} день} few{сдвиг: {days} дня} other{сдвиг: {days} дней}}",
@@ -3051,5 +1596,282 @@
   "devQaClockPlus": "+1 день",
   "@devQaClockPlus": { "description": "Кнопка сдвига «сегодня» плана на день вперёд." },
   "devQaClockReset": "Сбросить",
-  "@devQaClockReset": { "description": "Кнопка сброса сдвига «сегодня» плана." }
+  "@devQaClockReset": { "description": "Кнопка сброса сдвига «сегодня» плана." },
+
+  "planTitle": "План",
+  "@planTitle": {"description": "Шапка таба «План» (plan.title)."},
+  "planEmptyTitle": "К чему готовишься?",
+  "@planEmptyTitle": {"description": "Кадр 21-1, Literata 30 (plan.empty.title)."},
+  "planEmptyBody": "План — подготовка к конкретной ситуации: врач, аренда, собеседование, поездка. Каждый день — одна сцена из неё, 20 минут. В конце — репетиция вслух.",
+  "@planEmptyBody": {"description": "Кадр 21-1 (plan.empty.body)."},
+  "planEmptyCta": "Собрать план",
+  "@planEmptyCta": {"description": "Кадр 21-1, кнопка (plan.empty.cta)."},
+  "planEmptyNote": "три вопроса, меньше минуты",
+  "@planEmptyNote": {"description": "Кадр 21-1 (plan.empty.note)."},
+  "planFinishedTitle": "Завершённые планы",
+  "@planFinishedTitle": {"description": "Кадры 21-1, 21-2b (plan.finished.title)."},
+  "planFinishedItemDate": "завершён {date}",
+  "@planFinishedItemDate": {"description": "Кадры 21-1, 21-2b; дата по локали (plan.finished.item.date).", "placeholders": {"date": {"type": "String"}}},
+  "planProgressDay": "День {n} из {total}",
+  "@planProgressDay": {"description": "Шапка таба (plan.progress.day).", "placeholders": {"n": {"type": "int"}, "total": {"type": "int"}}},
+  "planPlateLabel": "День {n}",
+  "@planPlateLabel": {"description": "Плита дня, лейбл латунью (plan.plate.label).", "placeholders": {"n": {"type": "int"}}},
+  "planCardsCount": "{n, plural, one{{n} карточка} few{{n} карточки} many{{n} карточек} other{{n} карточки}}",
+  "@planCardsCount": {"description": "Счётные формы карточек: 1 карточка / 2 карточки / 5 карточек (plan.plate.meta, plan.closed.meta, plan.closed.return).", "placeholders": {"n": {"type": "int"}}},
+  "planMinutesCount": "{n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}}",
+  "@planMinutesCount": {"description": "Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta).", "placeholders": {"n": {"type": "int"}}},
+  "planPlateStageWords": "Слова",
+  "@planPlateStageWords": {"description": "Плита дня, этап (plan.plate.stage.words)."},
+  "planPlateStagePhrases": "Фразы",
+  "@planPlateStagePhrases": {"description": "Плита дня, этап (plan.plate.stage.phrases)."},
+  "planPlateStageDialog": "Диалог",
+  "@planPlateStageDialog": {"description": "Плита дня, этап (plan.plate.stage.dialog)."},
+  "planPlateStageListen": "Слушаю и отвечаю",
+  "@planPlateStageListen": {"description": "Плита дня, этап (plan.plate.stage.listen)."},
+  "planPlateStageSpeak": "Говорю сам",
+  "@planPlateStageSpeak": {"description": "Плита дня, этап (plan.plate.stage.speak)."},
+  "planPlateStageCount": "{done} / {total}",
+  "@planPlateStageCount": {"description": "Плита дня, счётчик этапа (plan.plate.stage.count).", "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "planNewWordsCount": "{n, plural, one{{n} новое слово} few{{n} новых слова} many{{n} новых слов} other{{n} новых слова}}",
+  "@planNewWordsCount": {"description": "Формы «1 новое слово / 2 новых слова / 5 новых слов» (plan.plate.stage.sub.start).", "placeholders": {"n": {"type": "int"}}},
+  "planPlateStageSubStart": "начни отсюда · {words}",
+  "@planPlateStageSubStart": {"description": "Плита дня, вторая строка текущего этапа (plan.plate.stage.sub.start); words — planNewWordsCount.", "placeholders": {"words": {"type": "String"}}},
+  "planPlateStageSubUnfinished": "не закончен · {cards}",
+  "@planPlateStageSubUnfinished": {"description": "Плита дня, вторая строка брошенного этапа (plan.plate.stage.sub.unfinished); cards — planCardsCount. Оценки минут в контракте нет — часть «≈ N мин» не рисуется, как и вся строка plan.plate.meta «{n} карточек · ≈ {min} минут» (вопрос архитектору).", "placeholders": {"cards": {"type": "String"}}},
+  "planPlateCtaStart": "Начать",
+  "@planPlateCtaStart": {"description": "Плита дня, кнопка (plan.plate.cta.start)."},
+  "planPlateCtaContinue": "Продолжить",
+  "@planPlateCtaContinue": {"description": "Плита дня, кнопка (plan.plate.cta.continue)."},
+  "planClosedTitle": "День {n} закрыт",
+  "@planClosedTitle": {"description": "Кадр 21-4 (plan.closed.title).", "placeholders": {"n": {"type": "int"}}},
+  "planClosedMeta": "{title} · {cards} · {minutes}",
+  "@planClosedMeta": {"description": "Кадр 21-4 (plan.closed.meta); title — сервер, cards/minutes — planCardsCount / planMinutesCount.", "placeholders": {"title": {"type": "String"}, "cards": {"type": "String"}, "minutes": {"type": "String"}}},
+  "planClosedReturn": "{k, plural, one{Вернётся в день {n} · {k} карточка} few{Вернутся в день {n} · {k} карточки} many{Вернутся в день {n} · {k} карточек} other{Вернутся в день {n} · {k} карточки}}",
+  "@planClosedReturn": {"description": "Кадр 21-4, терракота (plan.closed.return): Вернётся 1 карточка / Вернутся 2 карточки / Вернутся 5 карточек.", "placeholders": {"n": {"type": "int"}, "k": {"type": "int"}}},
+  "planRouteDayRepeat": "День повторения",
+  "@planRouteDayRepeat": {"description": "Строка маршрута, tertiary (plan.route.day.repeat)."},
+  "planRouteDayRepeatSub": "слова и фразы дней {a}–{b}",
+  "@planRouteDayRepeatSub": {"description": "Строка маршрута (plan.route.day.repeat.sub).", "placeholders": {"a": {"type": "int"}, "b": {"type": "int"}}},
+  "planRouteDayRepeatSubOne": "слова и фразы дня {a}",
+  "@planRouteDayRepeatSubOne": {"description": "Строка маршрута, когда повторению предшествует один день ситуации (день 1 → повторение день 2).", "placeholders": {"a": {"type": "int"}}},
+  "planRouteDayRehearsal": "Репетиция",
+  "@planRouteDayRehearsal": {"description": "Строка маршрута, tertiary (plan.route.day.rehearsal)."},
+  "planRouteDayRehearsalSub": "весь маршрут вслух",
+  "@planRouteDayRehearsalSub": {"description": "Строка маршрута (plan.route.day.rehearsal.sub)."},
+  "planRouteEventTitle": "{event} · {date}",
+  "@planRouteEventTitle": {"description": "Пункт назначения: «Приём · 15 сентября» (plan.route.event.title, entry.preview.event.dated); event — сервер, дата по локали.", "placeholders": {"event": {"type": "String"}, "date": {"type": "String"}}},
+  "planKitLabel": "Спасательный набор",
+  "@planKitLabel": {"description": "Набор, лейбл (plan.kit.label)."},
+  "planKitSub": "{n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}}",
+  "@planKitSub": {"description": "Набор, подпись (plan.kit.sub): 1 фраза / 2 фразы / 5 фраз.", "placeholders": {"n": {"type": "int"}}},
+  "planKitAll": "все {n} →",
+  "@planKitAll": {"description": "Набор, ссылка (plan.kit.all).", "placeholders": {"n": {"type": "int"}}},
+  "planKitCollapse": "свернуть",
+  "@planKitCollapse": {"description": "Набор, раскрытый на все пять фраз: обратная ссылка на место «все {n} →». Строки в таблице нет — добавлена нарядом PLAN-UI, чтобы у раскрытия был выход."},
+  "planDoneTitle": "План пройден",
+  "@planDoneTitle": {"description": "Кадр 21-7 (plan.done.title)."},
+  "planDaysCount": "{n, plural, one{{n} день} few{{n} дня} many{{n} дней} other{{n} дня}}",
+  "@planDaysCount": {"description": "Счётные формы дней: 1 день / 2 дня / 5 дней (plan.done.meta, plan.overdue.meta, entry.preview.sub).", "placeholders": {"n": {"type": "int"}}},
+  "planDoneMeta": "{days}",
+  "@planDoneMeta": {"description": "Кадр 21-7 (plan.done.meta): «7 дней». Части «фраз и слов в работе» в контракте нет — не рисуются (вопрос архитектору).", "placeholders": {"days": {"type": "String"}}},
+  "planDoneCollection": "Слова и фразы плана остались в коллекции «{name}» — они будут приходить на повторение",
+  "@planDoneCollection": {"description": "Кадр 21-7 (plan.done.collection); name — сервер.", "placeholders": {"name": {"type": "String"}}},
+  "planDoneCta": "Собрать новый план",
+  "@planDoneCta": {"description": "Кадр 21-7 (plan.done.cta)."},
+  "planDoneCtaReadonly": "Открыть коллекцию",
+  "@planDoneCtaReadonly": {"description": "Кадр 21-7, режим чтения (plan.done.cta.readonly)."},
+  "planMenuDate": "Изменить дату",
+  "@planMenuDate": {"description": "Кадр 21-9 (plan.menu.date)."},
+  "planMenuNew": "Собрать новый план",
+  "@planMenuNew": {"description": "Кадр 21-9 (plan.menu.new)."},
+  "planMenuCollection": "Открыть коллекцию",
+  "@planMenuCollection": {"description": "Кадр 21-9 (plan.menu.collection)."},
+  "planMenuDelete": "Удалить план",
+  "@planMenuDelete": {"description": "Кадр 21-9, терракота (plan.menu.delete)."},
+  "planMenuLabel": "Меню плана",
+  "@planMenuLabel": {"description": "Подпись кнопки-меню в шапке таба для читалки экрана; кадра нет."},
+  "planDateTitle": "Когда {event}?",
+  "@planDateTitle": {"description": "Кадр 21-10 (plan.date.title). По таблице строку склоняет сервер; в контракте её нет — собрана из event_native (вопрос архитектору).", "placeholders": {"event": {"type": "String"}}},
+  "planDateTitleNoEvent": "Когда событие?",
+  "@planDateTitleNoEvent": {"description": "Кадр 21-10 у плана без даты и без названного события."},
+  "planDateOptionCurrent": "{date} · как сейчас",
+  "@planDateOptionCurrent": {"description": "Кадр 21-10 (plan.date.option.current); дата по локали.", "placeholders": {"date": {"type": "String"}}},
+  "planDateOptionOther": "Другая дата",
+  "@planDateOptionOther": {"description": "Кадры 21-10, 22-3b (plan.date.option.other, entry.date.option.other)."},
+  "planDateOptionOtherSub": "выбрать в календаре",
+  "@planDateOptionOtherSub": {"description": "Кадры 21-10, 22-3b (plan.date.option.other.sub, entry.date.option.other.sub)."},
+  "planDateCta": "Применить",
+  "@planDateCta": {"description": "Кадр 21-10 (plan.date.cta)."},
+  "planDateCancel": "Отменить",
+  "@planDateCancel": {"description": "Кадры 21-10, 21-12 (plan.date.cancel)."},
+  "planDateRemove": "Без даты",
+  "@planDateRemove": {"description": "Кадр 21-10, план с датой: снять дату (event_date: null). Строки в таблице нет — добавлена нарядом PLAN-UI по контракту PATCH /schedule."},
+  "planNewTitle": "Начать другой план?",
+  "@planNewTitle": {"description": "Кадр 21-11 (plan.new.title)."},
+  "planNewBody": "Этот план завершится на дне {n} из {total}. Всё, что уже в работе, останется в коллекции «{name}» и будет приходить на повторение",
+  "@planNewBody": {"description": "Кадр 21-11 (plan.new.body); name — сервер.", "placeholders": {"n": {"type": "int"}, "total": {"type": "int"}, "name": {"type": "String"}}},
+  "planNewCta": "Собрать новый",
+  "@planNewCta": {"description": "Кадр 21-11 (plan.new.cta)."},
+  "planNewKeep": "Оставить этот",
+  "@planNewKeep": {"description": "Кадр 21-11 (plan.new.keep)."},
+  "planDeleteTitle": "Удалить план?",
+  "@planDeleteTitle": {"description": "Кадр 21-12 (plan.delete.title)."},
+  "planDeleteBody": "План исчезнет из истории. Коллекция «{name}» и её слова останутся",
+  "@planDeleteBody": {"description": "Кадр 21-12 (plan.delete.body); name — сервер.", "placeholders": {"name": {"type": "String"}}},
+  "planDeleteBodyNoCollection": "План исчезнет из истории",
+  "@planDeleteBodyNoCollection": {"description": "Кадр 21-12 у плана, у которого коллекции ещё нет (ни один день не закрыт)."},
+  "planDeleteConfirm": "Удалить",
+  "@planDeleteConfirm": {"description": "Кадр 21-12, терракота (plan.delete.confirm)."},
+  "planOverdueMeta": "Пройдено {days} из {total}",
+  "@planOverdueMeta": {"description": "Кадр 21-14 (plan.overdue.meta): «Пройдено 4 дня из 7»; days — planDaysCount. Части «фраз и слов в работе» в контракте нет.", "placeholders": {"days": {"type": "String"}, "total": {"type": "int"}}},
+  "planOverdueFinish": "Завершить план",
+  "@planOverdueFinish": {"description": "Кадр 21-14 (plan.overdue.finish)."},
+  "planOverdueReschedule": "Перенести дату",
+  "@planOverdueReschedule": {"description": "Кадр 21-14 (plan.overdue.reschedule)."},
+  "planHintFirstStart": "Начни с этапа «Слова». Остальные откроются по порядку",
+  "@planHintFirstStart": {"description": "Кадр 21-2c (plan.hint.first.start)."},
+  "planHintFirstRoute": "Сегодняшний день открыт, следующий откроется завтра",
+  "@planHintFirstRoute": {"description": "Кадр 21-2c (plan.hint.first.route)."},
+  "planHintFirstKit": "Пять фраз на случай, если не понял или не успел. Пригодятся в любом разговоре",
+  "@planHintFirstKit": {"description": "Кадр 21-2c, под набором (plan.hint.first.kit)."},
+  "planHintFirstReturn": "Эти карточки придут в следующий день ещё раз — так они и запоминаются",
+  "@planHintFirstReturn": {"description": "Кадр 21-4c (plan.hint.first.return)."},
+  "planSheetTitle": "Как устроен план",
+  "@planSheetTitle": {"description": "Кадр 21-8 (plan.sheet.title)."},
+  "planSheetRowDays": "Каждый день — одна ситуация. Дни открываются по одному",
+  "@planSheetRowDays": {"description": "Кадр 21-8 (plan.sheet.row.days)."},
+  "planSheetRowStages": "Пять этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам. Следующий открывается, когда закрыт этот",
+  "@planSheetRowStages": {"description": "Кадр 21-8 (plan.sheet.row.stages)."},
+  "planSheetRowReturn": "То, что не получилось, вернётся в следующий день. Ничего не потеряется",
+  "@planSheetRowReturn": {"description": "Кадр 21-8 (plan.sheet.row.return)."},
+  "planSheetCta": "Понятно",
+  "@planSheetCta": {"description": "Кадр 21-8 (plan.sheet.cta)."},
+  "planTabOffline": "нет сети",
+  "@planTabOffline": {"description": "Тихая строка на табе, когда показано последнее известное состояние из кэша (наряд PLAN-UI, §6)."},
+  "planTabLoadFailedTitle": "Не получилось загрузить план",
+  "@planTabLoadFailedTitle": {"description": "Таб без кэша, когда сервер не ответил (§6: состояние с «Повторить»). Строки в таблице нет — добавлена нарядом PLAN-UI."},
+  "planTabRetry": "Повторить",
+  "@planTabRetry": {"description": "Кнопка «Повторить» на табе и на плите (entry.day.failed.retry)."},
+  "planDayStubTitle": "Кабинет дня",
+  "@planDayStubTitle": {"description": "Заглушка кабинета дня до наряда DAY-UI (удаляется в DAY-UI)."},
+  "planDayStubBody": "Экран дня появится в наряде DAY-UI. Контракт: {version}",
+  "@planDayStubBody": {"description": "Заглушка кабинета дня: версия контракта сервера (удаляется в DAY-UI).", "placeholders": {"version": {"type": "String"}}},
+  "planDayStubDay": "День {n} · {title}",
+  "@planDayStubDay": {"description": "Заглушка кабинета дня: какой день открыт (удаляется в DAY-UI).", "placeholders": {"n": {"type": "int"}, "title": {"type": "String"}}},
+  "planEntryNavTitle": "Новый план",
+  "@planEntryNavTitle": {"description": "Шапка входа (entry.nav.title)."},
+  "planEntryNavCancel": "Отмена",
+  "@planEntryNavCancel": {"description": "Шапка входа, tertiary (entry.nav.cancel)."},
+  "planEntryNext": "Далее",
+  "@planEntryNext": {"description": "Шапка входа, справа, 17/700 (entry.next)."},
+  "planEntryGoalTitle": "К чему готовишься?",
+  "@planEntryGoalTitle": {"description": "Кадр 22-1, Literata 30 (entry.goal.title)."},
+  "planEntryGoalHint": "ситуация · с кем говоришь · что важно",
+  "@planEntryGoalHint": {"description": "Кадр 22-1, над полем (entry.goal.hint)."},
+  "planEntryGoalPlaceholder": "Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике, боюсь не понять назначения",
+  "@planEntryGoalPlaceholder": {"description": "Кадр 22-1a, плейсхолдер-пример (entry.goal.placeholder)."},
+  "planEntryGoalChipDoctor": "Врач",
+  "@planEntryGoalChipDoctor": {"description": "Кадр 22-1, чип (entry.goal.chip.doctor)."},
+  "planEntryGoalChipRent": "Аренда",
+  "@planEntryGoalChipRent": {"description": "Кадр 22-1, чип (entry.goal.chip.rent)."},
+  "planEntryGoalChipInterview": "Собеседование",
+  "@planEntryGoalChipInterview": {"description": "Кадр 22-1, чип (entry.goal.chip.interview)."},
+  "planEntryGoalChipTrip": "Поездка",
+  "@planEntryGoalChipTrip": {"description": "Кадр 22-1, чип (entry.goal.chip.trip)."},
+  "planEntryGoalChipOther": "Другое",
+  "@planEntryGoalChipOther": {"description": "Кадр 22-1, чип (entry.goal.chip.other)."},
+  "planEntryGoalTemplateDoctor": "Иду к врачу. Проблема: … . Важно: понять назначения и спросить про …",
+  "@planEntryGoalTemplateDoctor": {"description": "Кадр 22-1b, заготовка по чипу «Врач» (entry.goal.template.doctor)."},
+  "planEntryGoalTemplateRent": "Снимаю квартиру. Смотрю жильё с … . Важно: спросить про … и понять условия",
+  "@planEntryGoalTemplateRent": {"description": "Заготовка по чипу «Аренда». В таблице текстов есть только заготовка «Врач» — эта добавлена нарядом PLAN-UI по её образцу (вопрос архитектору)."},
+  "planEntryGoalTemplateInterview": "Иду на собеседование на … . Важно: рассказать о себе и спросить про …",
+  "@planEntryGoalTemplateInterview": {"description": "Заготовка по чипу «Собеседование» — добавлена нарядом PLAN-UI по образцу «Врач»."},
+  "planEntryGoalTemplateTrip": "Еду в … с … . Важно: … и понять, куда идти",
+  "@planEntryGoalTemplateTrip": {"description": "Заготовка по чипу «Поездка» — добавлена нарядом PLAN-UI по образцу «Врач»."},
+  "planEntryGoalShort": "Добавь, с кем и что важно — план будет точнее",
+  "@planEntryGoalShort": {"description": "Кадр 22-1c, строка под коротким ответом (entry.goal.short)."},
+  "planEntryGoalDictate": "Надиктовать",
+  "@planEntryGoalDictate": {"description": "Микрофон в поле цели (22-1a): подпись для читалки экрана и кнопки остановки."},
+  "planEntryGoalDictateStop": "Стоп",
+  "@planEntryGoalDictateStop": {"description": "Микрофон в поле цели: остановить запись."},
+  "planEntryTapeGoal": "Цель",
+  "@planEntryTapeGoal": {"description": "Лента ответов (entry.tape.goal)."},
+  "planEntryTapeLanguage": "Язык",
+  "@planEntryTapeLanguage": {"description": "Лента ответов (entry.tape.language)."},
+  "planEntryTapeDays": "Дни",
+  "@planEntryTapeDays": {"description": "Лента ответов (entry.tape.days)."},
+  "planEntryTapeEdit": "Изм.",
+  "@planEntryTapeEdit": {"description": "Лента ответов, tertiary (entry.tape.edit)."},
+  "planEntryTapeLanguageValue": "{language} · {level}",
+  "@planEntryTapeLanguageValue": {"description": "Лента ответов: «Английский · Средний».", "placeholders": {"language": {"type": "String"}, "level": {"type": "String"}}},
+  "planEntryTapeDaysValue": "{n} · {event} {date}",
+  "@planEntryTapeDaysValue": {"description": "Лента ответов, 22-4 (entry.tape.days.value): «5 · приём 15 сентября»; event — сервер, дата по локали.", "placeholders": {"n": {"type": "int"}, "event": {"type": "String"}, "date": {"type": "String"}}},
+  "planEntryTapeDaysValueDated": "{n} · {date}",
+  "@planEntryTapeDaysValueDated": {"description": "Лента ответов до ответа сервера: событие ещё не названо, дата уже выбрана.", "placeholders": {"n": {"type": "int"}, "date": {"type": "String"}}},
+  "planEntryLanguageTitle": "Какой язык?",
+  "@planEntryLanguageTitle": {"description": "Кадр 22-2, Literata 30 (entry.language.title)."},
+  "planEntryLevelLabel": "Уровень",
+  "@planEntryLevelLabel": {"description": "Кадр 22-2 (entry.level.label)."},
+  "planEntryLevelBeginner": "Начинающий",
+  "@planEntryLevelBeginner": {"description": "Кадр 22-2 (entry.level.beginner)."},
+  "planEntryLevelBeginnerSub": "понимаю отдельные слова и простые фразы",
+  "@planEntryLevelBeginnerSub": {"description": "Кадр 22-2 (entry.level.beginner.sub)."},
+  "planEntryLevelIntermediate": "Средний",
+  "@planEntryLevelIntermediate": {"description": "Кадр 22-2 (entry.level.intermediate)."},
+  "planEntryLevelIntermediateSub": "объясняюсь, но не хватает слов",
+  "@planEntryLevelIntermediateSub": {"description": "Кадр 22-2 (entry.level.intermediate.sub)."},
+  "planEntryLevelFluentNote": "Для подготовки к ситуации среднего уровня достаточно",
+  "@planEntryLevelFluentNote": {"description": "Кадр 22-2, при предвыбранном «Средний» (entry.level.fluent.note)."},
+  "planEntryDaysTitle": "Сколько дней на подготовку?",
+  "@planEntryDaysTitle": {"description": "Кадр 22-3, Literata 30 (entry.days.title)."},
+  "planEntryDateToggle": "Знаю дату события",
+  "@planEntryDateToggle": {"description": "Кадр 22-3 (entry.date.toggle)."},
+  "planEntryDateNote": "Дата встанет в конец маршрута, напомним накануне",
+  "@planEntryDateNote": {"description": "Кадр 22-3 (entry.date.note)."},
+  "planEntryDateShorten": "{left, plural, one{До события {left} день — план сократится до {to}} few{До события {left} дня — план сократится до {to}} many{До события {left} дней — план сократится до {to}} other{До события {left} дня — план сократится до {to}}}",
+  "@planEntryDateShorten": {"description": "Кадр 22-3b, латунь (entry.date.shorten): 1 день / 2 дня / 5 дней.", "placeholders": {"left": {"type": "int"}, "to": {"type": "int"}}},
+  "planEntryPreviewTitle": "Маршрут",
+  "@planEntryPreviewTitle": {"description": "Кадр 22-4, Literata 30 (entry.preview.title)."},
+  "planEntryPreviewSub": "{days} · {language} · {level}",
+  "@planEntryPreviewSub": {"description": "Кадр 22-4 (entry.preview.sub); days — planDaysCount.", "placeholders": {"days": {"type": "String"}, "language": {"type": "String"}, "level": {"type": "String"}}},
+  "planEntryPreviewLoadingTitle": "Собираем маршрут",
+  "@planEntryPreviewLoadingTitle": {"description": "Кадр 22-4a, Literata 30 (entry.preview.loading.title)."},
+  "planEntryPreviewLoadingSub": "около 10 секунд",
+  "@planEntryPreviewLoadingSub": {"description": "Кадр 22-4a (entry.preview.loading.sub)."},
+  "planEntryPreviewRemove": "Убрать",
+  "@planEntryPreviewRemove": {"description": "Кадр 22-4b, свайп (entry.preview.remove)."},
+  "planEntryPreviewHint": "Не то? Убери день свайпом или измени цель",
+  "@planEntryPreviewHint": {"description": "Кадр 22-4b, в доке над «Начать» (entry.preview.hint)."},
+  "planEntryPreviewCta": "Начать",
+  "@planEntryPreviewCta": {"description": "Кадр 22-4 (entry.preview.cta)."},
+  "planEntryPreviewErrorTitle": "Не получилось собрать маршрут",
+  "@planEntryPreviewErrorTitle": {"description": "Кадр 22-4c (entry.preview.error.title)."},
+  "planEntryPreviewErrorSub": "Сервис не ответил. Цель и ответы сохранены — ничего вводить заново не нужно",
+  "@planEntryPreviewErrorSub": {"description": "Кадр 22-4c (entry.preview.error.sub)."},
+  "planEntryPreviewErrorRetry": "Ещё раз",
+  "@planEntryPreviewErrorRetry": {"description": "Кадр 22-4c (entry.preview.error.retry)."},
+  "planEntryPreviewErrorEdit": "Изменить цель",
+  "@planEntryPreviewErrorEdit": {"description": "Кадр 22-4c (entry.preview.error.edit)."},
+  "planEntryPreviewUnclearTitle": "Не понял, к чему готовишься",
+  "@planEntryPreviewUnclearTitle": {"description": "Кадр 22-4d (entry.preview.unclear.title)."},
+  "planEntryPreviewUnclearSub": "Опиши ситуацию словами: где, с кем, зачем",
+  "@planEntryPreviewUnclearSub": {"description": "Кадр 22-4d (entry.preview.unclear.sub)."},
+  "planEntryPreviewUnclearCta": "К цели",
+  "@planEntryPreviewUnclearCta": {"description": "Кадр 22-4d (entry.preview.unclear.cta)."},
+  "planEntryDayBuilding": "Собираем день {n} · около минуты",
+  "@planEntryDayBuilding": {"description": "Кадр 22-5a (entry.day.building).", "placeholders": {"n": {"type": "int"}}},
+  "planEntryDayFailedTitle": "День не собрался",
+  "@planEntryDayFailedTitle": {"description": "Кадр 22-5c (entry.day.failed.title)."},
+  "planEntryDayFailedSub": "Маршрут на месте. Попробуем ещё раз — это займёт около минуты",
+  "@planEntryDayFailedSub": {"description": "Кадр 22-5c (entry.day.failed.sub)."},
+  "planEntryPushTitle": "План готов",
+  "@planEntryPushTitle": {"description": "Кадр 22-6 (entry.push.title)."},
+  "planEntryPushBody": "День 1 · {dayTitle} — можно начинать",
+  "@planEntryPushBody": {"description": "Кадр 22-6 (entry.push.body); dayTitle — сервер.", "placeholders": {"dayTitle": {"type": "String"}}},
+  "planEntryOffline": "Без сети план не собрать",
+  "@planEntryOffline": {"description": "Вход офлайн (§6): нельзя начать сборку. Строки в таблице нет — добавлена нарядом PLAN-UI."},
+  "profileRowSounds": "Звуки",
+  "@profileRowSounds": {"description": "Строка профиля: выключатель звуков (токен-лист 4к-3)."},
+  "profileSoundsHint": "Верно · неверно · этап закрыт · день закрыт",
+  "@profileSoundsHint": {"description": "Подпись выключателя «Звуки» — четыре события 4к-3."}
 }
