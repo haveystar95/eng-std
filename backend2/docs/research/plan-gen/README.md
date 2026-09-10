@@ -1,5 +1,7 @@
 # Наряд PLAN-GEN — отчёт (2026-09-10)
 
+Коммит: `5b2809c1` (ворота хука пройдены).
+
 Бэкенд нового плана: два промта, проверки в коде, сборка дня, снос старого. Канон —
 `docs/plan-v2.md`, контракт — `docs/plan-api.md` + `openapi/openapi.yaml` (тег `Plans`), модуль —
 `app/Modules/Plan` (`README.md`). Живой прогон — `tools/live-run.php`, EXPLAIN — `tools/explain.php`.

@@ -7,7 +7,7 @@
 > Канон плана: **`docs/plan-v2.md`**; контракт: **`docs/plan-api.md`** + `openapi/openapi.yaml`
 > (тег `Plans`); модуль: `app/Modules/Plan/README.md`. Отчёт наряда — `docs/research/plan-gen/README.md`.
 
-Branch: `main`. Last updated: 2026-09-10 (наряд PLAN-GEN).
+Branch: `main`, коммит `5b2809c1`. Last updated: 2026-09-10 (наряд PLAN-GEN).
 
 ---
 
