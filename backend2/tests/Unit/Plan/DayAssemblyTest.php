@@ -186,6 +186,11 @@ dataset('tolerated lessons', [
 
         return $p;
     },
+    'a step number twice' => static function (array $p): array {
+        $p['dialogue'][3]['step'] = 3;
+
+        return $p;
+    },
     'one message in an exchange' => static function (array $p): array {
         $p['dialogue'][2]['messages'] = [$p['dialogue'][2]['messages'][0]];
 

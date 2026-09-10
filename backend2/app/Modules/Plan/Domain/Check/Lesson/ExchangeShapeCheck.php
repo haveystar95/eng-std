@@ -8,7 +8,7 @@ use App\Modules\Plan\Domain\Check\LessonCheck;
 use App\Modules\Plan\Domain\Check\LessonContext;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 
-/** Exactly two messages per exchange, and the first one is spoken by the initiator. */
+/** Exactly two messages per exchange, the first one spoken by the initiator, and no step number twice. */
 final class ExchangeShapeCheck implements LessonCheck
 {
     public function name(): string
@@ -24,7 +24,12 @@ final class ExchangeShapeCheck implements LessonCheck
     public function violations(Lesson $lesson, LessonContext $context): array
     {
         $out = [];
+        $steps = [];
         foreach ($lesson->exchanges as $exchange) {
+            if (isset($steps[$exchange->step])) {
+                $out[] = "exchange {$exchange->step}: step number repeated";
+            }
+            $steps[$exchange->step] = true;
             $count = count($exchange->messages);
             if ($count !== 2) {
                 $out[] = "exchange {$exchange->step}: {$count} messages instead of 2";

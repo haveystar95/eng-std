@@ -186,3 +186,28 @@ it('opens days one per calendar day: day two waits for tomorrow', function () {
     $plan->openDay(2, $today->modify('+1 day'), $now->modify('+1 day'));
     expect($plan->day(2)->status()->value)->toBe('in_progress');
 });
+
+it('appends extension scenes after the existing ones whatever the model numbered them', function () {
+    $plan = shrPlan(3);
+    shrBlueprint($plan);
+    $result = $plan->reschedule(null, 6, new DateTimeImmutable('2026-09-10'), static fn (): PlanDayId => PlanDayId::generate());
+    expect($result['scenes_to_add'])->toBe(2);
+
+    // The model answers the extension as if from scratch: orders 1..2 and a fresh core.
+    $request = new PlanRequest('врач', 'English', 'Russian', PlanLevel::Beginner, 2);
+    $more = (new BlueprintParser)->parse(FakePlanModel::planPayload($request))->scenes;
+    expect(array_map(static fn ($s): int => $s->order, $more))->toBe([1, 2])
+        ->and(array_map(static fn ($s): int => $s->priority, $more))->toContain(1);
+
+    $plan->appendScenes($more, new ModelCall('plan-builder-v2', 'test', 'fake', '0.010000', 1, 1), static fn (): PlanSceneId => PlanSceneId::generate());
+
+    $orders = array_map(static fn (PlanScene $s): int => $s->order(), $plan->scenes());
+    $priorities = array_map(static fn (PlanScene $s): int => $s->priority(), $plan->scenes());
+    expect($orders)->toBe([1, 2, 3, 4])
+        ->and(count(array_unique($priorities)))->toBe(4)
+        ->and(count(array_filter($plan->scenes(), static fn (PlanScene $s): bool => $s->isCore())))->toBe(1)
+        ->and(shrTitles($plan))->toBe(['scene:2', 'scene:1', 'review', 'scene:3', 'scene:4', 'rehearsal'])
+        // The plan call's cost is the sum of both calls, the attempts too.
+        ->and($plan->planCall()?->costUsd)->toBe('0.010000')
+        ->and($plan->planCall()?->attempts)->toBe(2);
+});

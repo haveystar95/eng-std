@@ -64,6 +64,15 @@ dataset('broken lessons', [
         },
         null,
     ],
+    'exchange_shape: a step number twice' => [
+        'exchange_shape',
+        static function (array $p): array {
+            $p['dialogue'][3]['step'] = 3;
+
+            return $p;
+        },
+        null,
+    ],
     'exchange_shape: first speaker is not the initiator' => [
         'exchange_shape',
         static function (array $p): array {

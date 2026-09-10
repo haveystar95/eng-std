@@ -35,6 +35,15 @@ final readonly class SceneBrief
         );
     }
 
+    public function withOrder(int $order): self
+    {
+        return new self(
+            $order, $this->kind, $this->priority, $this->titleNative, $this->titleTarget, $this->teachesNative,
+            $this->goalsNative, $this->learnerRoleTarget, $this->learnerRoleNative, $this->partnerRoleTarget,
+            $this->partnerRoleNative, $this->topicDescription, $this->imagePrompt,
+        );
+    }
+
     /** @param list<string> $goals */
     public function withGoals(array $goals): self
     {

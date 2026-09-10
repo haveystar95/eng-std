@@ -45,9 +45,13 @@ final readonly class SpeakSceneLinesHandler
 
         foreach ($lesson->exchanges as $exchange) {
             $partner = $exchange->partner();
-            if ($partner === null || isset($have[$scene->id()->value.':'.$exchange->step])) {
+            $key = $scene->id()->value.':'.$exchange->step;
+            // A repeated step (the model's slip, counted by `exchange_shape`) is one line in the
+            // store; buying the second would be paying for a file that cannot be kept.
+            if ($partner === null || isset($have[$key])) {
                 continue;
             }
+            $have[$key] = true;
             $audio = $this->speaker->speak($partner->textTarget, $lang);
             if ($audio === null) {
                 continue;

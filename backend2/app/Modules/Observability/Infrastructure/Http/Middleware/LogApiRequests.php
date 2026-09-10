@@ -86,7 +86,7 @@ final class LogApiRequests
                 requestBody: $requestBody === [] ? null : $requestBody,
                 responseBody: $this->decodeBody($content),
                 error: null,
-                occurredAt: new DateTimeImmutable(),
+                occurredAt: new DateTimeImmutable,
             ));
         } catch (Throwable) {
             // Never let logging surface an error to the client.
@@ -117,6 +117,12 @@ final class LogApiRequests
         $decoded = json_decode($content, true);
         if (is_array($decoded)) {
             return $this->redactor->redact($decoded);
+        }
+
+        // A file (the plan's line audio, an mp3) is not text: a slice of it is not valid UTF-8 and
+        // the jsonb column refuses the row — and with it the record that the call happened.
+        if (! mb_check_encoding($content, 'UTF-8')) {
+            return ['binary' => true, 'bytes' => strlen($content)];
         }
 
         return ['raw' => mb_substr($content, 0, self::MAX_RAW)];

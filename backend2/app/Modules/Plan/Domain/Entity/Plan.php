@@ -182,13 +182,27 @@ final class Plan
      * More scenes after an extension — appended after the existing ones and laid onto the scene
      * days that have none yet.
      *
+     * The model's own numbering is NOT trusted here: asked for two more scenes it may answer
+     * `order` 1, 2 and a fresh `priority` 1 (the live run of 10.09 did), and the plan already has
+     * both. The new scenes take the orders after the last existing one, in the order they came,
+     * and the priorities after the highest existing one — an extension never installs a second
+     * core. The `plan_shape` check has counted the model's numbering by then.
+     *
      * @param  list<SceneBrief>  $briefs
      * @param  callable(): PlanSceneId  $sceneIds
      */
     public function appendScenes(array $briefs, ModelCall $call, callable $sceneIds): void
     {
-        foreach ($briefs as $brief) {
-            $this->scenes[] = PlanScene::fromBrief($sceneIds(), $this->id, $brief);
+        $order = 0;
+        $priority = 0;
+        foreach ($this->scenes as $scene) {
+            $order = max($order, $scene->order());
+            $priority = max($priority, $scene->priority());
+        }
+        $sorted = $briefs;
+        usort($sorted, static fn (SceneBrief $a, SceneBrief $b): int => [$a->order, $a->priority] <=> [$b->order, $b->priority]);
+        foreach ($sorted as $brief) {
+            $this->scenes[] = PlanScene::fromBrief($sceneIds(), $this->id, $brief->withOrder(++$order)->withPriority(++$priority));
         }
         $this->planCall = $this->planCall === null ? $call : new ModelCall(
             $call->promptVersion, $call->buildVersion, $call->model,
