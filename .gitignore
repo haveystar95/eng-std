@@ -20,3 +20,7 @@
 **/.deptrac.cache
 **/.phpunit.result.cache
 **/.phpstan.cache
+
+# Снимки-расхождения golden-тестов (flutter test пишет их рядом с тестом) и кэш python-утилит
+**/test/**/failures/
+__pycache__/

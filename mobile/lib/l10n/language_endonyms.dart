@@ -24,9 +24,10 @@ library;
 /// [code] is the 2-letter code backend2 stores. [endonym] is the language's name in itself, and it
 /// is what the USER sees everywhere (rule: a picker that offers "Romanian" to a Romanian speaker is
 /// naming their language in someone else's). [nameRu]/[nameEn] name the language in the INTERFACE
-/// language — for surfaces written about a language rather than in it; the app has no such surface
-/// today and carries the columns so the three catalogues stay diffable. [flag] is the emoji shown
-/// in pickers; `MiniFlag` draws the same flags for the codes it has painters for.
+/// language — for surfaces written about a language rather than in it ([languageNameFor]; the plan's
+/// entry is one: «Английский · Средний» is a sentence ABOUT the pair, in the interface's own
+/// language). [flag] is the emoji shown in pickers; `MiniFlag` draws the same flags for the codes it
+/// has painters for.
 class Language {
   final String code;
   final String endonym;
@@ -55,6 +56,18 @@ const List<Language> kLanguages = [
 
 Language languageByCode(String code) =>
     kLanguages.firstWhere((l) => l.code == code, orElse: () => kLanguages.first);
+
+/// «Английский» / «English» — the language NAMED in the interface's language.
+///
+/// Everywhere the app writes IN a language it uses the endonym (a picker that offers «Romanian» to
+/// a Romanian speaker names their language in someone else's). The entry of the plan writes ABOUT
+/// the pair — «Английский · Средний» in the tape and under «Маршрут» — and the canvas's text table
+/// spells those rows in the interface language (`entry.language.name`, кадр 22-2).
+String languageNameFor(String code, String uiLanguage) {
+  final language = languageByCode(code);
+
+  return uiLanguage == 'ru' ? language.nameRu : language.nameEn;
+}
 
 /// THE NAME OF A LANGUAGE AS A CARD'S INSTRUCTION NEEDS IT — «выбери итальянский эквивалент».
 ///

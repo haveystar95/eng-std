@@ -18,6 +18,12 @@
 названа; **не перенесён** — кадра нет в коде вовсе; **нет кадра** — экран есть, кадра для него не
 рисовали.
 
+**Чем сверяется совпадение.** Состояния планового контура сняты golden-тестами из фикстур ответа
+сервера: снимки — `mobile/test/goldens/plan/`, тесты — `mobile/test/features/plan/plan_*_golden_test.dart`,
+фикстуры (живые ответы backend2) — `mobile/test/fixtures/plan/`. Строка «совпадает» без снимка —
+это слово, а не проверка; правя экран, обновляй снимок (`flutter test --update-goldens
+test/features/plan/`) и смотри на него. Живые снимки симулятора — `docs/research/plan-ui/shots/`.
+
 ## Навигация (токен-лист 4к-1)
 
 | экран | код | кадры | статус |
@@ -30,15 +36,15 @@
 
 | экран / состояние | код | кадры | статус |
 |---|---|---|---|
-| Плана нет | [plan/plan_tab_screen.dart](../../../mobile/lib/features/plan/plan_tab_screen.dart) `_EmptyState` + `PlanFinishedList` | 21-1 | совпадает |
-| План идёт, день не начат / брошен | `PlanTabBody` + [plan/plan_day_plate_view.dart](../../../mobile/lib/features/plan/plan_day_plate_view.dart) → [ui/day_plate.dart](../../../mobile/lib/ui/day_plate.dart) (4н, свёрнутый размер) | 21-2, 21-2b, 21-3 | **расходится по контракту**: на плите нет «≈ N минут» и «N с подсказкой» (`docs/plan-api.md` не отдаёт оценку минут и подсказки по этапам) — вопрос архитектору |
+| Плана нет | [plan/plan_tab_screen.dart](../../../mobile/lib/features/plan/plan_tab_screen.dart) `_EmptyState` + `PlanFinishedList` | 21-1 | совпадает (снимки `21-1-empty`, `21-1-empty-finished`, `21-1-load-failed`) |
+| План идёт, день не начат / брошен | `PlanTabBody` + [plan/plan_day_plate_view.dart](../../../mobile/lib/features/plan/plan_day_plate_view.dart) → [ui/day_plate.dart](../../../mobile/lib/ui/day_plate.dart) (4н, свёрнутый размер) | 21-2, 21-2b, 21-3 | **расходится по контракту**: на плите нет «≈ N минут» и «N с подсказкой» (`docs/plan-api.md` не отдаёт оценку минут и подсказки по этапам); у НЕОТКРЫТОГО дня плита стоит и без строк этапов — кабинет до `POST …/open` отдаёт все этапы `absent` (снимки `21-2-plate-fresh`, `21-2b-route-and-kit`, `21-3-abandoned`) — вопросы архитектору |
 | Подсказки первого раза | [plan/plan_tab_parts.dart](../../../mobile/lib/features/plan/plan_tab_parts.dart) `PlanHintLine`, флаги — [data/plan/plan_store.dart](../../../mobile/lib/data/plan/plan_store.dart) | 21-2c, 21-4c | совпадает: три на табе, одна при первом закрытии, без крестика, до первого действия |
-| День закрыт | `PlanDayPlateView` (closed) | 21-4 | совпадает: светлая карточка, галка 30, «Вернутся в день N · K карточки» из `program[].state = failed` |
+| День закрыт | `PlanDayPlateView` (closed) | 21-4 | совпадает: светлая карточка, галка 30, «Вернутся в день N · K карточки» из `program[].state = failed` (снимки `21-4-closed`, `21-4c-close-hint`). На маршруте после закрытия дня 1 сервер помечает «завтра» ДВА дня — 2 и 3 |
 | Маршрут целиком, масштаб 10 дней | [plan/plan_route.dart](../../../mobile/lib/features/plan/plan_route.dart) | 21-5, 21-6 | совпадает: узлы 22, строки 64, фото 48, слот с сервера (галка / сегодня / завтра / пусто), ink до узла «сегодня» |
 | План пройден | `PlanDoneCard` | 21-7 | **расходится по контракту**: «{p} фраз и {w} слов в работе» не отдаётся — строка «7 дней» без второй половины |
 | Лист «Как устроен план» | [plan/plan_sheets.dart](../../../mobile/lib/features/plan/plan_sheets.dart) `showPlanHowSheet` | 21-8 | совпадает; один раз после первого плана (флаг на клиенте) |
 | Меню плана | `PlanGoalRow` → `showFloatingContextMenu` (4в) | 21-9 | совпадает: дата / новый план / коллекция / удалить (терракота последним); «коллекция» — только когда `collection_id` есть |
-| Лист даты | `showPlanDateSheet` | 21-10 | **расходится по контракту**: блока «Маршрут · было 7 → станет 5» нет (нет пробного `PATCH /schedule`); заголовок «Когда приём?» собран из `event_native`; добавлен вариант «Без даты» |
+| Лист даты | `showPlanDateSheet` | 21-10 | **расходится по контракту**: блока «Маршрут · было 7 → станет 5» нет (нет пробного `PATCH /schedule`); заголовок «Когда приём?» собран из `event_native` (приводится к нижнему регистру — сервер отдаёт слово с заглавной); добавлен вариант «Без даты» (снимок `21-10-sheet-date`) |
 | Лист нового плана | `showPlanNewSheet` | 21-11 | совпадает; имя коллекции — `title_native` плана |
 | Алерт удаления | `showPlanDeleteAlert` (5f) | 21-12 | совпадает |
 | Пропущены дни | — | 21-13 | **не перенесён**: контракт не отдаёт ни факта пропуска, ни строки «маршрут пересобран» — вопрос архитектору |
@@ -54,7 +60,7 @@
 |---|---|---|---|
 | Каркас шагов: шапка «Отмена · Новый план · Далее», точки, лента «Изм.» | [plan/entry/entry_scaffold.dart](../../../mobile/lib/features/plan/entry/entry_scaffold.dart), [entry_tape.dart](../../../mobile/lib/features/plan/entry/entry_tape.dart), [plan_entry_screen.dart](../../../mobile/lib/features/plan/entry/plan_entry_screen.dart) | 22-1…22-4 | совпадает |
 | Цель | [entry_goal_step.dart](../../../mobile/lib/features/plan/entry/entry_goal_step.dart) | 22-1a, 22-1b, 22-1c | совпадает; заготовки для чипов «Аренда / Собеседование / Поездка» добавлены нарядом по образцу «Врач» (в таблице канваса есть только «Врач») |
-| Язык и уровень | [entry_language_step.dart](../../../mobile/lib/features/plan/entry/entry_language_step.dart) | 22-2 | совпадает: языки — `studyLanguagesFor` (английский, немецкий + язык аккаунта); «Средний» предвыбран при B1+ |
+| Язык и уровень | [entry_language_step.dart](../../../mobile/lib/features/plan/entry/entry_language_step.dart) | 22-2 | совпадает: языки — `studyLanguagesFor` (английский, немецкий + язык аккаунта), подписаны в языке интерфейса («Английский», `languageNameFor` — как в таблице канваса, а не эндонимом); «Средний» предвыбран при B1+ (снимок `22-2-language-level`) |
 | Дни | [entry_days_step.dart](../../../mobile/lib/features/plan/entry/entry_days_step.dart) | 22-3a, 22-3b | **расходится по контракту**: строки расчёта «5 дней · 3 ситуации, 1 повторение, репетиция» под чипами нет — сервер отдаёт `route_summary` только с готовым планом |
 | Превью: скелет → маршрут → не собрался → цель непонятна | [entry_preview_step.dart](../../../mobile/lib/features/plan/entry/entry_preview_step.dart) | 22-4a, 22-4b, 22-4c, 22-4d | совпадает; «около 10 секунд» — одна строка (другой для 7–9 сцен в контракте нет); свайп сцены → `DELETE /scenes/{id}` |
 

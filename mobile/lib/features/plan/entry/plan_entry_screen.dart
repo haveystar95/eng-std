@@ -371,7 +371,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
-    final languageName = languageByCode(_s.targetLang).endonym;
+    final languageName = languageNameFor(_s.targetLang, locale);
     final levelName = switch (_s.level) {
       PlanLevel.beginner => l.planEntryLevelBeginner,
       PlanLevel.intermediate => l.planEntryLevelIntermediate,

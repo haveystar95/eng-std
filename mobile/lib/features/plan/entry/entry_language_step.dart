@@ -37,6 +37,9 @@ class EntryLanguageStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // Чип называет язык в языке интерфейса — «Английский», как в таблице канваса
+    // (`entry.language.name`, кадр 22-2), а не эндонимом: это строка ПРО язык, а не на нём.
+    final ui = Localizations.localeOf(context).languageCode;
 
     return EntryContent(
       children: [
@@ -48,7 +51,7 @@ class EntryLanguageStep extends StatelessWidget {
           children: [
             for (final lang in languages)
               AppChip(
-                label: lang.endonym,
+                label: languageNameFor(lang.code, ui),
                 paper: true,
                 selected: lang.code == targetLang,
                 onTap: () => onLanguage(lang.code),

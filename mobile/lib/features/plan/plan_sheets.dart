@@ -123,7 +123,10 @@ class _DateSheetBodyState extends State<_DateSheetBody> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
-    final event = (widget.plan.eventNative ?? '').trim();
+    // «Когда приём?» — СТРОЧНАЯ внутри фразы. Сервер отдаёт `event_native` как отдельное слово
+    // («Приём»), с заглавной, и подставленное как есть оно даёт «Когда Приём?» (снимок 21-10).
+    // Лента входа приводит его к нижнему регистру ровно по той же причине.
+    final event = (widget.plan.eventNative ?? '').trim().toLowerCase();
     final keepSelected = _picked == null && !_clear;
     final changed = _picked != null || _clear;
 

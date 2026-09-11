@@ -128,6 +128,15 @@ part of that answer. It reads ONE payload — `GET /home-plan`, cached into `syn
 - **Навигация — три таба (4к-1)**: Сегодня · План · Коллекции. Профиль — кружок-аватар в шапке
   (`profile/profile_avatar.dart`), толкается поверх таба; прогресс — плита статистики на «Сегодня».
   Строка версии (клиент · сервер из `/api/v1/health`) стоит внизу профиля всегда.
+- **Состояния плана проверяются снимками, а не руками.** `test/features/plan/plan_*_golden_test.dart`
+  берут фикстуру ответа сервера (`test/fixtures/plan/`, снято с живого backend2), рисуют НАСТОЯЩИЙ
+  экран — таб с подменённым `planTabProvider`, вход, который тест ведёт теми же нажатиями, что и
+  человек — и сверяют с PNG в `test/goldens/plan/` (32 состояния: 21-x, 22-x, листы). Правишь экран
+  плана — перегенерируй и ПОСМОТРИ: `flutter test --update-goldens test/features/plan/`. Харнесс —
+  `test/support/plan_goldens.dart` (настоящие шрифты, заглушка сети вместо фото, выключенные
+  анимации, кадр 390 × 844 @2×). Время в снимок не попадает: всё, что склоняет событие и раздаёт
+  слоты дней, приходит с сервера строкой — единственный кадр, который считается от «сегодня»
+  (22-3b), снимается только живьём.
 - **Уведомление одно — «План готов»** (`data/plan/plan_ready_notification.dart`), событийное:
   только если приложение было свёрнуто, пока собирался день 1; тап → таб «План».
 
@@ -267,9 +276,12 @@ copy is exempt from the cyrillic guard):
 - `tool/ladder_preview.dart` — the acquisition-ladder surfaces (кадры 16b/16d/16e): the intro card,
   the word row's five dots, the expanded word card.
 
-The plan has no mock harness: its screens are checked against the local server on the simulator
+The plan has no mock harness and needs none: its states are pinned as goldens from server fixtures
+(see «Состояния плана проверяются снимками» above) — `flutter test test/features/plan/` is the
+check, and `--update-goldens` + a look at the PNG is the design review. What still needs the
+simulator is the one thing a fixture cannot answer — the sweep through a LIVE server
 (`--dart-define=API_BASE_URL=http://localhost:8001 --dart-define=DEV_LOGIN_EMAIL=qa-<slug>@wt.test`,
-a debug build), which is what the acceptance of PLAN-UI ran.
+a debug build): the plan really being built, notifications, permission prompts.
 
 They run on the **iOS simulator** (runtimes 26.5 and 27.0 ARE installed — the old note claiming
 otherwise was stale), or in Chrome:
