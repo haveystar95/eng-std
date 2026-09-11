@@ -266,17 +266,9 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
     AppHaptics.light();
     final started = await openPlanEntry(context);
     if (!mounted || started == null) return;
-    // «Начать» → таб: the plan is adopted by the entry itself; the sheet «Как устроен план» comes
-    // 320 ms after the tab (спека 22-4b), once, for the first plan. The FIRST plan is exactly
-    // when nothing has watched the hints yet — so the flags are awaited, not peeked at.
-    final hints = await ref.read(planHintsProvider.future);
-    if (!mounted) return;
-    if (!hints.howShown) {
-      await Future<void>.delayed(const Duration(milliseconds: 320));
-      if (!mounted) return;
-      unawaited(ref.read(planHintsProvider.notifier).markHowShown());
-      await showPlanHowSheet(context);
-    }
+    // «Начать» → таб: план принимает сам вход, а лист «Как устроен план» приходит следом — один
+    // раз, за первым планом (правило целиком — в [showPlanHowSheetOnce]).
+    await showPlanHowSheetOnce(context, ref);
   }
 
   void _openMenu(BuildContext anchor) {

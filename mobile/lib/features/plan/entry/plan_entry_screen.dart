@@ -14,7 +14,6 @@ import '../../../data/plan/plan_models.dart';
 import '../../../data/providers.dart';
 import '../plan_format.dart';
 import '../plan_providers.dart';
-import '../plan_ready_notification_host.dart';
 import 'entry_days_step.dart';
 import 'entry_goal_step.dart';
 import 'entry_language_step.dart';
@@ -256,9 +255,10 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     setState(() => _s = _s.copyWith(phase: EntryBuildPhase.starting));
     try {
       final plan = await ref.read(planTabProvider.notifier).start(id);
-      // The one notification the plan sends is «План готов» — asked for now, when the learner has
-      // just said there is a day they care about (кадр 22-6).
-      unawaited(ref.read(planReadyNotificationProvider).requestPermission());
+      // НИКАКИХ СИСТЕМНЫХ ОКОН НА «НАЧАТЬ». Раньше здесь просилось разрешение на уведомления, и
+      // системный алерт всплывал поверх таба ровно в тот момент, которого в кадрах 22-5a/22-6 нет:
+      // человек нажал «Начать», чтобы увидеть свой план, а увидел вопрос операционной системы.
+      // Разрешение просит явное действие — выключатель «Напоминания» в профиле, и только он.
       if (mounted) Navigator.of(context).pop(plan);
     } catch (_) {
       if (!mounted) return;

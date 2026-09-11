@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -7,6 +10,7 @@ import 'package:eng_std/ui/ui.dart';
 
 import '../../data/plan/plan_models.dart';
 import 'plan_format.dart';
+import 'plan_providers.dart';
 
 /// THE THREE SHEETS AND THE ALERT OF THE TAB — кадры 21-8, 21-10, 21-11, 21-12.
 ///
@@ -14,7 +18,31 @@ import 'plan_format.dart';
 /// the title in Inter 22/800 — the записка's open question («Спорное: заголовки листов оставлены
 /// Inter 22/800») is left as the frames draw it.
 
-/// «Как устроен план» (кадр 21-8) — once, after the first plan is created.
+/// «КАК УСТРОЕН ПЛАН» — ОДИН РАЗ ЗА ЖИЗНЬ АККАУНТА НА УСТРОЙСТВЕ (кадр 21-8, спека 22-4b).
+///
+/// Правило живёт здесь, а не на экране, по двум причинам. Флаг `howShown` приходится ЖДАТЬ
+/// (`planHintsProvider.future`), а не подглядывать: у пустого таба провайдер подсказок ещё никто не
+/// смотрел, его `value` — `null`, и «первый план» тогда не определялся вовсе (правка прошлой
+/// сессии, живьём не проверенная). А пауза перед листом — часть самого правила: лист приходит
+/// ПОСЛЕ того, как таб принял план, иначе он накрывает анимацию возврата.
+///
+/// Возвращает `true`, если лист показали, — это же и утверждает тест.
+Future<bool> showPlanHowSheetOnce(
+  BuildContext context,
+  WidgetRef ref, {
+  Duration delay = const Duration(milliseconds: 320),
+}) async {
+  final hints = await ref.read(planHintsProvider.future);
+  if (!context.mounted || hints.howShown) return false;
+  await Future<void>.delayed(delay);
+  if (!context.mounted) return false;
+  unawaited(ref.read(planHintsProvider.notifier).markHowShown());
+  await showPlanHowSheet(context);
+
+  return true;
+}
+
+/// «Как устроен план» (кадр 21-8) — the sheet itself; [showPlanHowSheetOnce] owns WHEN it comes.
 Future<void> showPlanHowSheet(BuildContext context) {
   final l = AppLocalizations.of(context);
 

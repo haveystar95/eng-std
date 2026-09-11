@@ -20,6 +20,7 @@ import '../../data/locale_controller.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
+import '../plan/plan_ready_notification_host.dart';
 import 'build_stamp.dart';
 import 'perf_log_screen.dart';
 import 'qa_speech_view.dart';
@@ -122,11 +123,19 @@ class ProfileScreen extends ConsumerWidget {
               value: _uiLangName(l, uiLang),
               onTap: () => _editUiLang(context, ref, uiLang),
             ),
+            // ЕДИНСТВЕННОЕ МЕСТО, ГДЕ СПРАШИВАЕТСЯ РАЗРЕШЕНИЕ НА УВЕДОМЛЕНИЯ (наряд PLAN-UI,
+            // доработка). Системное окно поднимает ЯВНОЕ действие человека — он включил
+            // напоминания, — а не «Начать» на входе в план: там оно всплывало поверх свежего
+            // плана в момент, которого нет ни в одном кадре. Выключение ничего не спрашивает:
+            // отозвать разрешение можно только в настройках телефона.
             _SwitchRow(
               label: l.profileRowReminders,
               hint: l.profileRemindersHint,
               value: settings.remindersEnabled,
-              onChanged: (v) => ref.read(appSettingsProvider.notifier).setRemindersEnabled(v),
+              onChanged: (v) {
+                unawaited(ref.read(appSettingsProvider.notifier).setRemindersEnabled(v));
+                if (v) unawaited(ref.read(planReadyNotificationProvider).requestPermission());
+              },
             ),
             // «Время» appears only while reminders are on (design 13a — the row slides in/out).
             AnimatedSize(
@@ -738,7 +747,11 @@ class _DevBuildRow extends ConsumerWidget {
           // Обычный `Text`, не `SelectableText`: выделяемый текст поднимает внутри себя ещё один
           // `Scrollable`, а этот экран — один длинный список, по которому тесты и пальцы скроллят.
           Text(
-            BuildStampLine.buildStampText(l, ref.watch(backendCommitProvider)),
+            BuildStampLine.buildStampText(
+              l,
+              ref.watch(backendCommitProvider),
+              client: ref.watch(clientBuildProvider),
+            ),
             style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.secondary),
           ),
           const SizedBox(height: 3),

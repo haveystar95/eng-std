@@ -75,11 +75,29 @@ Future<void> _loadFont(String family, List<String> files) async {
   await loader.load();
 }
 
-/// Экран приложения вокруг снимаемого виджета: тема, локаль, делегаты — как в `main.dart`.
+/// ОБОЛОЧКА ПРИЛОЖЕНИЯ ВОКРУГ СНИМАЕМОГО ВИДЖЕТА — тема, локаль, делегаты, как в `main.dart`.
 ///
-/// Две подмены обязательны на любом снимке: аккаунт (кружок-аватар в шапке читает имя) и подсказки
-/// первого раза (иначе провайдер полез бы в базу устройства). Снимку, которому нужна ещё одна,
-/// хватает вложенного `ProviderScope` вокруг [home] — riverpod наследует всё неподменённое.
+/// Без `ProviderScope`: подмены кладёт снимающий тест, ОДНИМ плоским списком. Вложенный scope для
+/// этого не годится — riverpod отдаёт подмену только тем, кто читает провайдер напрямую из
+/// поддерева, а провайдер, который лишь ЗАВИСИТ от подменённого (настройки профиля → база
+/// устройства), создаётся в корневом контейнере и берёт настоящий. Один экран профиля, полезший в
+/// `path_provider` посреди теста, — вся цена этого правила.
+Widget planGoldenShell(Widget home, {Locale locale = const Locale('ru')}) => MaterialApp(
+  debugShowCheckedModeBanner: false,
+  theme: buildAppTheme(),
+  locale: locale,
+  supportedLocales: const [Locale('ru'), Locale('en')],
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  home: MediaQuery(
+    // Анимации выключены — снимок не должен зависеть от кадра, на котором его сняли.
+    data: const MediaQueryData(disableAnimations: true),
+    child: home,
+  ),
+);
+
+/// Та же оболочка под двумя подменами, которые нужны почти каждому снимку плана: аккаунт (кружок-
+/// аватар в шапке читает имя) и подсказки первого раза (иначе провайдер полез бы в базу
+/// устройства). Снимку, которому нужны ещё подмены, нужен [planGoldenShell] и свой `ProviderScope`.
 Widget planGoldenApp(
   Widget home, {
   PlanHints hints = const PlanHints(tabShown: true, closeShown: true, howShown: true),
@@ -89,18 +107,7 @@ Widget planGoldenApp(
     authControllerProvider.overrideWith(() => _GoldenAuth()),
     planHintsProvider.overrideWith(() => _GoldenHints(hints)),
   ],
-  child: MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: buildAppTheme(),
-    locale: locale,
-    supportedLocales: const [Locale('ru'), Locale('en')],
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    home: MediaQuery(
-      // Анимации выключены — снимок не должен зависеть от кадра, на котором его сняли.
-      data: const MediaQueryData(disableAnimations: true),
-      child: home,
-    ),
-  ),
+  child: planGoldenShell(home, locale: locale),
 );
 
 /// Ставит окно под размер кадра, рисует [app] и сверяет с `test/goldens/<name>.png`.
