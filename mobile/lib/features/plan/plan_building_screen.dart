@@ -9,10 +9,10 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../data/plan/plan_providers.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
-import 'plan_day_screen.dart';
-import 'plan_screen.dart';
+import 'day/open_day.dart';
 import 'plan_ui.dart';
 
 /// «Собираю день N» — кадр Б-06.
@@ -30,9 +30,8 @@ import 'plan_ui.dart';
 ///   generating               → and «Реплики приёма подобраны»
 ///   ready / done             → all three, and the screen leaves
 ///
-/// It POLLS `POST /plans/{id}/days/{n}/generate`, which is idempotent and answers with the status —
-/// so the same call both starts the work and reports on it, and a retry after a dropped connection
-/// cannot start a second generation.
+/// Оно ОПРАШИВАЕТ `GET /plans/current` и читает `lesson_status` дня: урок собирает сервер сам,
+/// клиент ничего не запускает (контракт PLAN-GEN, стык DAY-UI).
 class PlanBuildingScreen extends ConsumerStatefulWidget {
   const PlanBuildingScreen({super.key, required this.plan, this.dayIndex});
 
@@ -85,9 +84,15 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
   Future<void> _tick() async {
     if (!mounted || _left) return;
     try {
-      final status = await ref
-          .read(apiClientProvider)
-          .generatePlanDay(widget.plan.id, _dayIndex);
+      // Урок дня собирает сервер сам (PLAN-GEN); здесь только читаем его состояние из плана.
+      final current = await ref.read(apiClientProvider).currentPlan();
+      final day = current?.days.where((d) => d.number == _dayIndex).firstOrNull ?? current?.currentDay;
+      final status = switch (day?.lessonStatus) {
+        'ready' => PlanDayStatus.ready,
+        'failed' => PlanDayStatus.failed,
+        'building' || 'generating' => PlanDayStatus.generating,
+        _ => PlanDayStatus.pending,
+      };
       if (!mounted) return;
       setState(() => _status = status);
 
@@ -148,20 +153,11 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
       if (!mounted) return;
       ref.invalidate(activePlanProvider);
       ref.invalidate(planProvider(widget.plan.id));
-      final asked = widget.dayIndex;
-      if (asked != null) {
-        // The day's own detail was cached while it had no material. Dropped here rather than on the
-        // day screen, because the screen about to be built reads it in its first frame.
-        ref.invalidate(planDayProvider((planId: widget.plan.id, dayIndex: asked)));
-      }
-
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => asked == null
-              ? PlanScreen(planId: widget.plan.id)
-              : PlanDayScreen(plan: widget.plan, dayIndex: asked),
-        ),
-      );
+      ref.invalidate(currentPlanProvider);
+      // Кабинет дня (DAY-UI): «Начать» без номера — текущий день плана, «Собрать день N» — тот день.
+      final navigator = Navigator.of(context);
+      navigator.pop();
+      unawaited(openDayRoom(context, ref, number: widget.dayIndex));
     });
   }
 

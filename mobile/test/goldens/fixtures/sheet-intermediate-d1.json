@@ -1,0 +1,248 @@
+{
+ "plan_id": "01M26KTYVVTXRN9T4AE4807BXV",
+ "number": 1,
+ "words": [
+  {
+   "id": "01M26KW1NHNPDS7T95WB24HS1J",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "word",
+   "ref": "v1",
+   "text_target": "available",
+   "text_native": "доступный для аренды",
+   "pronunciation_native": "эвэйлэбэл",
+   "definition_target": "ready to rent or move into",
+   "example_target": "Hello, is the flat still available?",
+   "example_native": "Здравствуйте, квартира всё ещё сдаётся?",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": null
+  },
+  {
+   "id": "01M26KW1NHT6Q4Y9CT0S8BFPRK",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "word",
+   "ref": "v2",
+   "text_target": "rent",
+   "text_native": "арендная плата",
+   "pronunciation_native": "рент",
+   "definition_target": "the money paid regularly to live in a property",
+   "example_target": "Great. Is the rent £1,200 a month?",
+   "example_native": "Отлично. Аренда — 1200 фунтов в месяц?",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/32045967/pexels-photo-32045967.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Jakub Zerdzicki",
+    "author_url": "https://www.pexels.com/@jakubzerdzicki"
+   }
+  },
+  {
+   "id": "01M26KW1NH74BBQMB54NSS1T04",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "word",
+   "ref": "v3",
+   "text_target": "included",
+   "text_native": "включённый",
+   "pronunciation_native": "инклудид",
+   "definition_target": "covered as part of the price",
+   "example_target": "Yes, £1,200 a month. Water is included, but gas and electricity are separate.",
+   "example_native": "Да, 1200 фунтов в месяц. Вода включена, но газ и электричество оплачиваются отдельно.",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": null
+  },
+  {
+   "id": "01M26KW1NHB1SYYZ6G0EW3RCBV",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "word",
+   "ref": "v4",
+   "text_target": "deposit",
+   "text_native": "депозит",
+   "pronunciation_native": "депозит",
+   "definition_target": "money paid before renting that may be returned later",
+   "example_target": "How much is the deposit?",
+   "example_native": "Сколько составляет депозит?",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/7841410/pexels-photo-7841410.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "RDNE Stock project",
+    "author_url": "https://www.pexels.com/@rdne"
+   }
+  },
+  {
+   "id": "01M26KW1NHQS0SYPZNZN6B1CBG",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "chunk",
+   "ref": "v5",
+   "text_target": "lease term",
+   "text_native": "срок аренды",
+   "pronunciation_native": "лис тёрм",
+   "definition_target": "the length of time a rental agreement lasts",
+   "example_target": "The deposit is five weeks' rent. The minimum lease term is twelve months.",
+   "example_native": "Депозит составляет пять недель аренды. Минимальный срок аренды — двенадцать месяцев.",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": null
+  },
+  {
+   "id": "01M26KW1NHFCA09B8JAAYYRSKW",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "word",
+   "ref": "v6",
+   "text_target": "viewing",
+   "text_native": "просмотр",
+   "pronunciation_native": "вьюинг",
+   "definition_target": "an arranged visit to see a property",
+   "example_target": "Would you like a viewing tomorrow at six, or Saturday at eleven?",
+   "example_native": "Вы бы хотели просмотр завтра в шесть или в субботу в одиннадцать?",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/8815825/pexels-photo-8815825.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Kampus Production",
+    "author_url": "https://www.pexels.com/@kampus"
+   }
+  },
+  {
+   "id": "01M26KW1NHG74KRDNPJHGJ1CWC",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "chunk",
+   "ref": "v7",
+   "text_target": "proof of income",
+   "text_native": "подтверждение дохода",
+   "pronunciation_native": "пруф ов инкам",
+   "definition_target": "documents that show how much money you earn",
+   "example_target": "Usually a passport, proof of income, and references from your employer or landlord.",
+   "example_native": "Обычно нужны паспорт, подтверждение дохода и рекомендации от работодателя или арендодателя.",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/6693654/pexels-photo-6693654.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Tima Miroshnichenko",
+    "author_url": "https://www.pexels.com/@tima-miroshnichenko"
+   }
+  },
+  {
+   "id": "01M26KW1NH0EC8FZYZZE7902BD",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "word",
+   "ref": "v8",
+   "text_target": "references",
+   "text_native": "рекомендации",
+   "pronunciation_native": "рэфэрэнсиз",
+   "definition_target": "statements from employers or landlords supporting your application",
+   "example_target": "Usually a passport, proof of income, and references from your employer or landlord.",
+   "example_native": "Обычно нужны паспорт, подтверждение дохода и рекомендации от работодателя или арендодателя.",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/9017622/pexels-photo-9017622.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Kevin  Malik",
+    "author_url": "https://www.pexels.com/@kevin-malik"
+   }
+  }
+ ],
+ "phrases": [
+  {
+   "id": "01M26KW1NHSPRS8M5MYJNEJNQG",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "phrase",
+   "ref": "p1",
+   "text_target": "Is the flat still available?",
+   "text_native": "Квартира всё ещё сдаётся?",
+   "pronunciation_native": "Из зэ флэт стил эвэйлэбэл?",
+   "definition_target": null,
+   "example_target": null,
+   "example_native": null,
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": null
+  },
+  {
+   "id": "01M26KW1NH00R442TRX0EQEYCJ",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "phrase",
+   "ref": "p2",
+   "text_target": "How much is the deposit?",
+   "text_native": "Сколько составляет депозит?",
+   "pronunciation_native": "Хау мач из зэ депозит?",
+   "definition_target": null,
+   "example_target": "How much is the deposit?",
+   "example_native": "Сколько составляет депозит?",
+   "speaking_key": "the deposit",
+   "simplified_variants": [
+    "What's the deposit?"
+   ],
+   "image": null
+  },
+  {
+   "id": "01M26KW1NH2SG6TYE7V412NHJ5",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "phrase",
+   "ref": "p3",
+   "text_target": "When would the flat be available?",
+   "text_native": "Когда квартира будет доступна для заезда?",
+   "pronunciation_native": "Уэн вуд зэ флэт би эвэйлэбэл?",
+   "definition_target": null,
+   "example_target": "When would the flat be available?",
+   "example_native": "Когда квартира будет доступна для заезда?",
+   "speaking_key": "flat be available",
+   "simplified_variants": [
+    "When is the flat available?"
+   ],
+   "image": null
+  },
+  {
+   "id": "01M26KW1NHFDD9RY90638ZNXHD",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "phrase",
+   "ref": "p4",
+   "text_target": "Saturday at eleven would suit me better.",
+   "text_native": "Суббота в одиннадцать мне подошла бы больше.",
+   "pronunciation_native": "Сэтэрдей эт илэвэн вуд сьют ми бэтэр.",
+   "definition_target": null,
+   "example_target": "Saturday at eleven would suit me better.",
+   "example_native": "Суббота в одиннадцать мне подошла бы больше.",
+   "speaking_key": "Saturday at eleven",
+   "simplified_variants": [
+    "Saturday at eleven is better."
+   ],
+   "image": null
+  },
+  {
+   "id": "01M26KW1NHASRC6CBQWRW5J7Q5",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "phrase",
+   "ref": "p5",
+   "text_target": "What documents would I need later?",
+   "text_native": "Какие документы мне потом понадобятся?",
+   "pronunciation_native": "Уот докьюмэнтс вуд ай нид лейтэр?",
+   "definition_target": null,
+   "example_target": "What documents would I need later?",
+   "example_native": "Какие документы мне потом понадобятся?",
+   "speaking_key": "What documents",
+   "simplified_variants": [
+    "Which documents would I need later?"
+   ],
+   "image": null
+  },
+  {
+   "id": "01M26KW1NHTMTNZCGJ5Z5BP8F0",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "kind": "phrase",
+   "ref": "p6",
+   "text_target": "Could you confirm the full address, please?",
+   "text_native": "Не могли бы вы подтвердить полный адрес?",
+   "pronunciation_native": "Куд ю кэнфёрм зэ фул эдрэс, плиз?",
+   "definition_target": null,
+   "example_target": "Could you confirm the full address, please?",
+   "example_native": "Не могли бы вы подтвердить полный адрес?",
+   "speaking_key": "full address",
+   "simplified_variants": [
+    "Could you confirm the address?"
+   ],
+   "image": null
+  }
+ ]
+}

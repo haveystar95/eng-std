@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/ui/ui.dart';
+
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
@@ -22,7 +24,8 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// `_WordChip` is private to the screen's own library, so it cannot be named by type here. Found by
 /// its runtime type instead of by its text on purpose: a placed chip's letter also appears in the
 /// assembly line, and `invoice` has two `i`s — finding by text would be ambiguous twice over.
-final _trayChip = find.byWidgetPredicate((w) => w.runtimeType.toString() == '_WordChip');
+/// Плитки ряда под подложкой (12b «Базы») — по ключу `tray-N`, не по тексту: буквы повторяются.
+final _trayChip = find.byWidgetPredicate((w) => w is WordTile && w.key is ValueKey<String> && (w.key! as ValueKey<String>).value.startsWith('tray-'));
 
 void main() {
   const termId = '01M00WHZFYJSYW76Z4B4BBASXC';
@@ -102,6 +105,7 @@ void main() {
     await tester.pumpWidget(host(wordBank()));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Не помню'));
     await tester.tap(find.text('Не помню'));
     await tester.pumpAndSettle();
 
@@ -116,6 +120,7 @@ void main() {
     await tester.pumpWidget(host(wordBank()));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Не помню'));
     await tester.tap(find.text('Не помню'));
     await tester.pumpAndSettle();
 
@@ -134,9 +139,10 @@ void main() {
     await tester.pumpWidget(host(wordBank()));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('собери из букв'), findsOneWidget);
+    // Лейбл блока задания (4м) набран капителью.
+    expect(find.textContaining('СОБЕРИ ИЗ БУКВ'), findsOneWidget);
     expect(find.text('Собери из букв ниже'), findsOneWidget);
-    expect(find.textContaining('собери из слов'), findsNothing);
+    expect(find.textContaining('СОБЕРИ ИЗ СЛОВ'), findsNothing);
   });
 
   testWidgets('the assembled letters commit as ONE WORD, not as spaced tokens', (tester) async {
@@ -151,10 +157,12 @@ void main() {
     // placed its letter also stands in the assembly line, so finding by text would be ambiguous
     // twice over. The fixture's chips are already in the answer's order.
     for (var i = 0; i < 'invoice'.length; i++) {
+      await tester.ensureVisible(_trayChip.at(i));
       await tester.tap(_trayChip.at(i));
       await tester.pumpAndSettle();
     }
 
+    await tester.ensureVisible(find.text('Проверить'));
     await tester.tap(find.text('Проверить'));
     await tester.pumpAndSettle();
 
@@ -179,10 +187,13 @@ void main() {
 
     // The tray is shuffled ('desk' first here), so the words are tapped in the order the ANSWER
     // wants them, found by their position in the tray.
+    await tester.ensureVisible(_trayChip.at(1));
     await tester.tap(_trayChip.at(1)); // front
     await tester.pumpAndSettle();
+    await tester.ensureVisible(_trayChip.at(0));
     await tester.tap(_trayChip.at(0)); // desk
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Проверить'));
     await tester.tap(find.text('Проверить'));
     await tester.pumpAndSettle();
 
@@ -204,7 +215,7 @@ void main() {
     await tester.pumpWidget(host(phrase));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('собери из слов'), findsOneWidget);
+    expect(find.textContaining('СОБЕРИ ИЗ СЛОВ'), findsOneWidget);
     expect(find.text('Собери из слов ниже'), findsOneWidget);
   });
 }

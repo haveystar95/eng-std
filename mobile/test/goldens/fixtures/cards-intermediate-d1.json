@@ -1,0 +1,2996 @@
+{
+ "plan_id": "01M26KTYVVTXRN9T4AE4807BXV",
+ "day_id": "01M26KTYVXZ7AGN96QGZGT1B00",
+ "number": 1,
+ "status": "in_progress",
+ "cards": [
+  {
+   "id": "01M26VGS6JP3143X5PERY1Y81Z",
+   "stage": "words",
+   "position": 1,
+   "kind": "word_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v1",
+   "payload": {
+    "kind": "word",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "доступный для аренды",
+    "text_target": "available",
+    "plan_term_id": "01M26KW1NHNPDS7T95WB24HS1J",
+    "example_native": "Здравствуйте, квартира всё ещё сдаётся?",
+    "example_target": "Hello, is the flat still available?",
+    "definition_target": "ready to rent or move into",
+    "pronunciation_native": "эвэйлэбэл",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J2X9NEMWPY6GS778X",
+   "stage": "words",
+   "position": 2,
+   "kind": "word_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v2",
+   "payload": {
+    "kind": "word",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "арендная плата",
+    "text_target": "rent",
+    "plan_term_id": "01M26KW1NHT6Q4Y9CT0S8BFPRK",
+    "example_native": "Отлично. Аренда — 1200 фунтов в месяц?",
+    "example_target": "Great. Is the rent £1,200 a month?",
+    "definition_target": "the money paid regularly to live in a property",
+    "pronunciation_native": "рент",
+    "image": {
+     "url": "https://images.pexels.com/photos/32045967/pexels-photo-32045967.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Jakub Zerdzicki",
+     "author_url": "https://www.pexels.com/@jakubzerdzicki"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JPMZG8HTAMQ0Z980B",
+   "stage": "words",
+   "position": 3,
+   "kind": "word_say",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v1",
+   "payload": {
+    "kind": "word",
+    "coverage": 1,
+    "expected": "available",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "доступный для аренды",
+    "text_target": "available",
+    "plan_term_id": "01M26KW1NHNPDS7T95WB24HS1J",
+    "pronunciation_native": "эвэйлэбэл",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JGP1TPY5Q7M3XFSJV",
+   "stage": "words",
+   "position": 4,
+   "kind": "word_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v3",
+   "payload": {
+    "kind": "word",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "включённый",
+    "text_target": "included",
+    "plan_term_id": "01M26KW1NH74BBQMB54NSS1T04",
+    "example_native": "Да, 1200 фунтов в месяц. Вода включена, но газ и электричество оплачиваются отдельно.",
+    "example_target": "Yes, £1,200 a month. Water is included, but gas and electricity are separate.",
+    "definition_target": "covered as part of the price",
+    "pronunciation_native": "инклудид",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J3XHS3K0V0EP0VMD5",
+   "stage": "words",
+   "position": 5,
+   "kind": "word_say",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v2",
+   "payload": {
+    "kind": "word",
+    "coverage": 1,
+    "expected": "rent",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "арендная плата",
+    "text_target": "rent",
+    "plan_term_id": "01M26KW1NHT6Q4Y9CT0S8BFPRK",
+    "pronunciation_native": "рент",
+    "image": {
+     "url": "https://images.pexels.com/photos/32045967/pexels-photo-32045967.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Jakub Zerdzicki",
+     "author_url": "https://www.pexels.com/@jakubzerdzicki"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JFV6PQ7QCC6WFBM4P",
+   "stage": "words",
+   "position": 6,
+   "kind": "word_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v1",
+   "payload": {
+    "kind": "word",
+    "mode": "definition",
+    "prompt": "ready to rent or move into",
+    "options": [
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": true
+     },
+     {
+      "text": "deposit",
+      "correct": false
+     },
+     {
+      "text": "included",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "доступный для аренды",
+    "text_target": "available",
+    "plan_term_id": "01M26KW1NHNPDS7T95WB24HS1J",
+    "pronunciation_native": "эвэйлэбэл",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J2YDW5X1EN0J6ARPT",
+   "stage": "words",
+   "position": 7,
+   "kind": "word_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v4",
+   "payload": {
+    "kind": "word",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "депозит",
+    "text_target": "deposit",
+    "plan_term_id": "01M26KW1NHB1SYYZ6G0EW3RCBV",
+    "example_native": "Сколько составляет депозит?",
+    "example_target": "How much is the deposit?",
+    "definition_target": "money paid before renting that may be returned later",
+    "pronunciation_native": "депозит",
+    "image": {
+     "url": "https://images.pexels.com/photos/7841410/pexels-photo-7841410.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "RDNE Stock project",
+     "author_url": "https://www.pexels.com/@rdne"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JY9A64F93J1KEX5BT",
+   "stage": "words",
+   "position": 8,
+   "kind": "word_say",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v3",
+   "payload": {
+    "kind": "word",
+    "coverage": 1,
+    "expected": "included",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "включённый",
+    "text_target": "included",
+    "plan_term_id": "01M26KW1NH74BBQMB54NSS1T04",
+    "pronunciation_native": "инклудид",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J7WSZ9AJZXPBGD5VD",
+   "stage": "words",
+   "position": 9,
+   "kind": "word_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v2",
+   "payload": {
+    "kind": "word",
+    "mode": "definition",
+    "prompt": "the money paid regularly to live in a property",
+    "options": [
+     {
+      "text": "rent",
+      "correct": true
+     },
+     {
+      "text": "available",
+      "correct": false
+     },
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "deposit",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "арендная плата",
+    "text_target": "rent",
+    "plan_term_id": "01M26KW1NHT6Q4Y9CT0S8BFPRK",
+    "pronunciation_native": "рент",
+    "image": {
+     "url": "https://images.pexels.com/photos/32045967/pexels-photo-32045967.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Jakub Zerdzicki",
+     "author_url": "https://www.pexels.com/@jakubzerdzicki"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J7QPDDMGDRQ93W382",
+   "stage": "words",
+   "position": 10,
+   "kind": "word_cloze",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v1",
+   "payload": {
+    "kind": "word",
+    "answer": "available",
+    "options": [
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "deposit",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": true
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "доступный для аренды",
+    "text_target": "available",
+    "plan_term_id": "01M26KW1NHNPDS7T95WB24HS1J",
+    "sentence_native": "Здравствуйте, квартира всё ещё сдаётся?",
+    "sentence_target": "Hello is the flat still ___",
+    "pronunciation_native": "эвэйлэбэл",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JX0KW27X2P5AA81YP",
+   "stage": "words",
+   "position": 11,
+   "kind": "word_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v5",
+   "payload": {
+    "kind": "chunk",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "срок аренды",
+    "text_target": "lease term",
+    "plan_term_id": "01M26KW1NHQS0SYPZNZN6B1CBG",
+    "example_native": "Депозит составляет пять недель аренды. Минимальный срок аренды — двенадцать месяцев.",
+    "example_target": "The deposit is five weeks' rent. The minimum lease term is twelve months.",
+    "definition_target": "the length of time a rental agreement lasts",
+    "pronunciation_native": "лис тёрм",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JCQZT3R3S0EEFTAWR",
+   "stage": "words",
+   "position": 12,
+   "kind": "word_say",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v4",
+   "payload": {
+    "kind": "word",
+    "coverage": 1,
+    "expected": "deposit",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "депозит",
+    "text_target": "deposit",
+    "plan_term_id": "01M26KW1NHB1SYYZ6G0EW3RCBV",
+    "pronunciation_native": "депозит",
+    "image": {
+     "url": "https://images.pexels.com/photos/7841410/pexels-photo-7841410.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "RDNE Stock project",
+     "author_url": "https://www.pexels.com/@rdne"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J6QXEKD3PK331114F",
+   "stage": "words",
+   "position": 13,
+   "kind": "word_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v3",
+   "payload": {
+    "kind": "word",
+    "mode": "definition",
+    "prompt": "covered as part of the price",
+    "options": [
+     {
+      "text": "included",
+      "correct": true
+     },
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "deposit",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "включённый",
+    "text_target": "included",
+    "plan_term_id": "01M26KW1NH74BBQMB54NSS1T04",
+    "pronunciation_native": "инклудид",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J8RAJND06ZFTBQ9C0",
+   "stage": "words",
+   "position": 14,
+   "kind": "word_cloze",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v2",
+   "payload": {
+    "kind": "word",
+    "answer": "rent",
+    "options": [
+     {
+      "text": "rent",
+      "correct": true
+     },
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": false
+     },
+     {
+      "text": "deposit",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "арендная плата",
+    "text_target": "rent",
+    "plan_term_id": "01M26KW1NHT6Q4Y9CT0S8BFPRK",
+    "sentence_native": "Отлично. Аренда — 1200 фунтов в месяц?",
+    "sentence_target": "Great Is the ___ 1 200 a month",
+    "pronunciation_native": "рент",
+    "image": {
+     "url": "https://images.pexels.com/photos/32045967/pexels-photo-32045967.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Jakub Zerdzicki",
+     "author_url": "https://www.pexels.com/@jakubzerdzicki"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JXTGX90WX1TM1MEMT",
+   "stage": "words",
+   "position": 15,
+   "kind": "word_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v6",
+   "payload": {
+    "kind": "word",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "просмотр",
+    "text_target": "viewing",
+    "plan_term_id": "01M26KW1NHFCA09B8JAAYYRSKW",
+    "example_native": "Вы бы хотели просмотр завтра в шесть или в субботу в одиннадцать?",
+    "example_target": "Would you like a viewing tomorrow at six, or Saturday at eleven?",
+    "definition_target": "an arranged visit to see a property",
+    "pronunciation_native": "вьюинг",
+    "image": {
+     "url": "https://images.pexels.com/photos/8815825/pexels-photo-8815825.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kampus Production",
+     "author_url": "https://www.pexels.com/@kampus"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JF2DD2FJ6PCEWPFG0",
+   "stage": "words",
+   "position": 16,
+   "kind": "word_say",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v5",
+   "payload": {
+    "kind": "chunk",
+    "coverage": 1,
+    "expected": "lease term",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "срок аренды",
+    "text_target": "lease term",
+    "plan_term_id": "01M26KW1NHQS0SYPZNZN6B1CBG",
+    "pronunciation_native": "лис тёрм",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JVF6K7JS58KCX4YTW",
+   "stage": "words",
+   "position": 17,
+   "kind": "word_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v4",
+   "payload": {
+    "kind": "word",
+    "mode": "definition",
+    "prompt": "money paid before renting that may be returned later",
+    "options": [
+     {
+      "text": "available",
+      "correct": false
+     },
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "deposit",
+      "correct": true
+     },
+     {
+      "text": "rent",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "депозит",
+    "text_target": "deposit",
+    "plan_term_id": "01M26KW1NHB1SYYZ6G0EW3RCBV",
+    "pronunciation_native": "депозит",
+    "image": {
+     "url": "https://images.pexels.com/photos/7841410/pexels-photo-7841410.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "RDNE Stock project",
+     "author_url": "https://www.pexels.com/@rdne"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JD37K8ECTPF43CMT8",
+   "stage": "words",
+   "position": 18,
+   "kind": "word_cloze",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v3",
+   "payload": {
+    "kind": "word",
+    "answer": "included",
+    "options": [
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": false
+     },
+     {
+      "text": "included",
+      "correct": true
+     },
+     {
+      "text": "deposit",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "включённый",
+    "text_target": "included",
+    "plan_term_id": "01M26KW1NH74BBQMB54NSS1T04",
+    "sentence_native": "Да, 1200 фунтов в месяц. Вода включена, но газ и электричество оплачиваются отдельно.",
+    "sentence_target": "Yes 1 200 a month Water is ___ but gas and electricity are separate",
+    "pronunciation_native": "инклудид",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JCF869DE3RXAZWR5V",
+   "stage": "words",
+   "position": 19,
+   "kind": "word_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v7",
+   "payload": {
+    "kind": "chunk",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "подтверждение дохода",
+    "text_target": "proof of income",
+    "plan_term_id": "01M26KW1NHG74KRDNPJHGJ1CWC",
+    "example_native": "Обычно нужны паспорт, подтверждение дохода и рекомендации от работодателя или арендодателя.",
+    "example_target": "Usually a passport, proof of income, and references from your employer or landlord.",
+    "definition_target": "documents that show how much money you earn",
+    "pronunciation_native": "пруф ов инкам",
+    "image": {
+     "url": "https://images.pexels.com/photos/6693654/pexels-photo-6693654.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Tima Miroshnichenko",
+     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J7MGFXR9GYT3XPMP4",
+   "stage": "words",
+   "position": 20,
+   "kind": "word_say",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v6",
+   "payload": {
+    "kind": "word",
+    "coverage": 1,
+    "expected": "viewing",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "просмотр",
+    "text_target": "viewing",
+    "plan_term_id": "01M26KW1NHFCA09B8JAAYYRSKW",
+    "pronunciation_native": "вьюинг",
+    "image": {
+     "url": "https://images.pexels.com/photos/8815825/pexels-photo-8815825.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kampus Production",
+     "author_url": "https://www.pexels.com/@kampus"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JEJE6K23YQS75YDHF",
+   "stage": "words",
+   "position": 21,
+   "kind": "word_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v5",
+   "payload": {
+    "kind": "chunk",
+    "mode": "definition",
+    "prompt": "the length of time a rental agreement lasts",
+    "options": [
+     {
+      "text": "available",
+      "correct": false
+     },
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "lease term",
+      "correct": true
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "срок аренды",
+    "text_target": "lease term",
+    "plan_term_id": "01M26KW1NHQS0SYPZNZN6B1CBG",
+    "pronunciation_native": "лис тёрм",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JC6130VS48M9HYTB6",
+   "stage": "words",
+   "position": 22,
+   "kind": "word_cloze",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v4",
+   "payload": {
+    "kind": "word",
+    "answer": "deposit",
+    "options": [
+     {
+      "text": "deposit",
+      "correct": true
+     },
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "депозит",
+    "text_target": "deposit",
+    "plan_term_id": "01M26KW1NHB1SYYZ6G0EW3RCBV",
+    "sentence_native": "Сколько составляет депозит?",
+    "sentence_target": "How much is the ___",
+    "pronunciation_native": "депозит",
+    "image": {
+     "url": "https://images.pexels.com/photos/7841410/pexels-photo-7841410.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "RDNE Stock project",
+     "author_url": "https://www.pexels.com/@rdne"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JFFG9SD56ZSPEDT33",
+   "stage": "words",
+   "position": 23,
+   "kind": "word_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v8",
+   "payload": {
+    "kind": "word",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "рекомендации",
+    "text_target": "references",
+    "plan_term_id": "01M26KW1NH0EC8FZYZZE7902BD",
+    "example_native": "Обычно нужны паспорт, подтверждение дохода и рекомендации от работодателя или арендодателя.",
+    "example_target": "Usually a passport, proof of income, and references from your employer or landlord.",
+    "definition_target": "statements from employers or landlords supporting your application",
+    "pronunciation_native": "рэфэрэнсиз",
+    "image": {
+     "url": "https://images.pexels.com/photos/9017622/pexels-photo-9017622.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kevin  Malik",
+     "author_url": "https://www.pexels.com/@kevin-malik"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J8YAZBPA3Y0AKR0HF",
+   "stage": "words",
+   "position": 24,
+   "kind": "word_say",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v7",
+   "payload": {
+    "kind": "chunk",
+    "coverage": 1,
+    "expected": "proof of income",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "подтверждение дохода",
+    "text_target": "proof of income",
+    "plan_term_id": "01M26KW1NHG74KRDNPJHGJ1CWC",
+    "pronunciation_native": "пруф ов инкам",
+    "image": {
+     "url": "https://images.pexels.com/photos/6693654/pexels-photo-6693654.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Tima Miroshnichenko",
+     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JJ3PJCW72R6DD12MB",
+   "stage": "words",
+   "position": 25,
+   "kind": "word_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v6",
+   "payload": {
+    "kind": "word",
+    "mode": "definition",
+    "prompt": "an arranged visit to see a property",
+    "options": [
+     {
+      "text": "viewing",
+      "correct": true
+     },
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "просмотр",
+    "text_target": "viewing",
+    "plan_term_id": "01M26KW1NHFCA09B8JAAYYRSKW",
+    "pronunciation_native": "вьюинг",
+    "image": {
+     "url": "https://images.pexels.com/photos/8815825/pexels-photo-8815825.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kampus Production",
+     "author_url": "https://www.pexels.com/@kampus"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J96HGJB1H5QTX7Z9R",
+   "stage": "words",
+   "position": 26,
+   "kind": "word_cloze",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v5",
+   "payload": {
+    "kind": "chunk",
+    "answer": "lease term",
+    "options": [
+     {
+      "text": "lease term",
+      "correct": true
+     },
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "срок аренды",
+    "text_target": "lease term",
+    "plan_term_id": "01M26KW1NHQS0SYPZNZN6B1CBG",
+    "sentence_native": "Депозит составляет пять недель аренды. Минимальный срок аренды — двенадцать месяцев.",
+    "sentence_target": "The deposit is five weeks' rent The minimum ___ is twelve months",
+    "pronunciation_native": "лис тёрм",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JB8ZPABANT7QX26Z3",
+   "stage": "words",
+   "position": 27,
+   "kind": "word_say",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v8",
+   "payload": {
+    "kind": "word",
+    "coverage": 1,
+    "expected": "references",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "рекомендации",
+    "text_target": "references",
+    "plan_term_id": "01M26KW1NH0EC8FZYZZE7902BD",
+    "pronunciation_native": "рэфэрэнсиз",
+    "image": {
+     "url": "https://images.pexels.com/photos/9017622/pexels-photo-9017622.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kevin  Malik",
+     "author_url": "https://www.pexels.com/@kevin-malik"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JR2331S9SGEVC1KEB",
+   "stage": "words",
+   "position": 28,
+   "kind": "word_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v7",
+   "payload": {
+    "kind": "chunk",
+    "mode": "definition",
+    "prompt": "documents that show how much money you earn",
+    "options": [
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": false
+     },
+     {
+      "text": "proof of income",
+      "correct": true
+     },
+     {
+      "text": "included",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "подтверждение дохода",
+    "text_target": "proof of income",
+    "plan_term_id": "01M26KW1NHG74KRDNPJHGJ1CWC",
+    "pronunciation_native": "пруф ов инкам",
+    "image": {
+     "url": "https://images.pexels.com/photos/6693654/pexels-photo-6693654.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Tima Miroshnichenko",
+     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JFBGGPCD7C8061KT3",
+   "stage": "words",
+   "position": 29,
+   "kind": "word_cloze",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v6",
+   "payload": {
+    "kind": "word",
+    "answer": "viewing",
+    "options": [
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "viewing",
+      "correct": true
+     },
+     {
+      "text": "available",
+      "correct": false
+     },
+     {
+      "text": "rent",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "просмотр",
+    "text_target": "viewing",
+    "plan_term_id": "01M26KW1NHFCA09B8JAAYYRSKW",
+    "sentence_native": "Вы бы хотели просмотр завтра в шесть или в субботу в одиннадцать?",
+    "sentence_target": "Would you like a ___ tomorrow at six or Saturday at eleven",
+    "pronunciation_native": "вьюинг",
+    "image": {
+     "url": "https://images.pexels.com/photos/8815825/pexels-photo-8815825.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kampus Production",
+     "author_url": "https://www.pexels.com/@kampus"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JVPE34H8C19TQ4K46",
+   "stage": "words",
+   "position": 30,
+   "kind": "word_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v8",
+   "payload": {
+    "kind": "word",
+    "mode": "definition",
+    "prompt": "statements from employers or landlords supporting your application",
+    "options": [
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": false
+     },
+     {
+      "text": "references",
+      "correct": true
+     },
+     {
+      "text": "included",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "рекомендации",
+    "text_target": "references",
+    "plan_term_id": "01M26KW1NH0EC8FZYZZE7902BD",
+    "pronunciation_native": "рэфэрэнсиз",
+    "image": {
+     "url": "https://images.pexels.com/photos/9017622/pexels-photo-9017622.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kevin  Malik",
+     "author_url": "https://www.pexels.com/@kevin-malik"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JDSJ3276ATQ8ETJ26",
+   "stage": "words",
+   "position": 31,
+   "kind": "word_cloze",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v7",
+   "payload": {
+    "kind": "chunk",
+    "answer": "proof of income",
+    "options": [
+     {
+      "text": "available",
+      "correct": false
+     },
+     {
+      "text": "proof of income",
+      "correct": true
+     },
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "rent",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "подтверждение дохода",
+    "text_target": "proof of income",
+    "plan_term_id": "01M26KW1NHG74KRDNPJHGJ1CWC",
+    "sentence_native": "Обычно нужны паспорт, подтверждение дохода и рекомендации от работодателя или арендодателя.",
+    "sentence_target": "Usually a passport ___ and references from your employer or landlord",
+    "pronunciation_native": "пруф ов инкам",
+    "image": {
+     "url": "https://images.pexels.com/photos/6693654/pexels-photo-6693654.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Tima Miroshnichenko",
+     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JACVHYR1C0KS4G8GW",
+   "stage": "words",
+   "position": 32,
+   "kind": "word_cloze",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v8",
+   "payload": {
+    "kind": "word",
+    "answer": "references",
+    "options": [
+     {
+      "text": "references",
+      "correct": true
+     },
+     {
+      "text": "included",
+      "correct": false
+     },
+     {
+      "text": "rent",
+      "correct": false
+     },
+     {
+      "text": "available",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "рекомендации",
+    "text_target": "references",
+    "plan_term_id": "01M26KW1NH0EC8FZYZZE7902BD",
+    "sentence_native": "Обычно нужны паспорт, подтверждение дохода и рекомендации от работодателя или арендодателя.",
+    "sentence_target": "Usually a passport proof of income and ___ from your employer or landlord",
+    "pronunciation_native": "рэфэрэнсиз",
+    "image": {
+     "url": "https://images.pexels.com/photos/9017622/pexels-photo-9017622.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kevin  Malik",
+     "author_url": "https://www.pexels.com/@kevin-malik"
+    }
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J67G6DB8GDQBAXAH1",
+   "stage": "phrases",
+   "position": 1,
+   "kind": "phrase_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p1",
+   "payload": {
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Квартира всё ещё сдаётся?",
+    "text_target": "Is the flat still available?",
+    "plan_term_id": "01M26KW1NHSPRS8M5MYJNEJNQG",
+    "speaking_key": null,
+    "example_native": null,
+    "example_target": null,
+    "pronunciation_native": "Из зэ флэт стил эвэйлэбэл?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JZM3DC0JK8MF190ZP",
+   "stage": "phrases",
+   "position": 2,
+   "kind": "phrase_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p2",
+   "payload": {
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Сколько составляет депозит?",
+    "text_target": "How much is the deposit?",
+    "plan_term_id": "01M26KW1NH00R442TRX0EQEYCJ",
+    "speaking_key": "the deposit",
+    "example_native": "Сколько составляет депозит?",
+    "example_target": "How much is the deposit?",
+    "pronunciation_native": "Хау мач из зэ депозит?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JQJF4F6QSXFZR6MYQ",
+   "stage": "phrases",
+   "position": 3,
+   "kind": "phrase_repeat",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p1",
+   "payload": {
+    "coverage": 0.9,
+    "expected": "Is the flat still available?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Квартира всё ещё сдаётся?",
+    "text_target": "Is the flat still available?",
+    "plan_term_id": "01M26KW1NHSPRS8M5MYJNEJNQG",
+    "pronunciation_native": "Из зэ флэт стил эвэйлэбэл?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JYVGSDW801FSRV4QA",
+   "stage": "phrases",
+   "position": 4,
+   "kind": "phrase_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p3",
+   "payload": {
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Когда квартира будет доступна для заезда?",
+    "text_target": "When would the flat be available?",
+    "plan_term_id": "01M26KW1NH2SG6TYE7V412NHJ5",
+    "speaking_key": "flat be available",
+    "example_native": "Когда квартира будет доступна для заезда?",
+    "example_target": "When would the flat be available?",
+    "pronunciation_native": "Уэн вуд зэ флэт би эвэйлэбэл?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JE74KG4B49PQHQ1RM",
+   "stage": "phrases",
+   "position": 5,
+   "kind": "phrase_repeat",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p2",
+   "payload": {
+    "coverage": 0.9,
+    "expected": "How much is the deposit?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Сколько составляет депозит?",
+    "text_target": "How much is the deposit?",
+    "plan_term_id": "01M26KW1NH00R442TRX0EQEYCJ",
+    "pronunciation_native": "Хау мач из зэ депозит?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JK2S3ZM22ZKTZ42C1",
+   "stage": "phrases",
+   "position": 6,
+   "kind": "phrase_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p1",
+   "payload": {
+    "tiles": [
+     "still",
+     "Is",
+     "the",
+     "flat",
+     "references",
+     "available"
+    ],
+    "answer": "Is the flat still available?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Квартира всё ещё сдаётся?",
+    "text_target": "Is the flat still available?",
+    "plan_term_id": "01M26KW1NHSPRS8M5MYJNEJNQG",
+    "prompt_native": "Квартира всё ещё сдаётся?",
+    "pronunciation_native": "Из зэ флэт стил эвэйлэбэл?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JZVMQ9MQWXAGWSEVY",
+   "stage": "phrases",
+   "position": 7,
+   "kind": "phrase_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p4",
+   "payload": {
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Суббота в одиннадцать мне подошла бы больше.",
+    "text_target": "Saturday at eleven would suit me better.",
+    "plan_term_id": "01M26KW1NHFDD9RY90638ZNXHD",
+    "speaking_key": "Saturday at eleven",
+    "example_native": "Суббота в одиннадцать мне подошла бы больше.",
+    "example_target": "Saturday at eleven would suit me better.",
+    "pronunciation_native": "Сэтэрдей эт илэвэн вуд сьют ми бэтэр.",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JDSMAR195X55BD6S4",
+   "stage": "phrases",
+   "position": 8,
+   "kind": "phrase_repeat",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p3",
+   "payload": {
+    "coverage": 0.9,
+    "expected": "When would the flat be available?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Когда квартира будет доступна для заезда?",
+    "text_target": "When would the flat be available?",
+    "plan_term_id": "01M26KW1NH2SG6TYE7V412NHJ5",
+    "pronunciation_native": "Уэн вуд зэ флэт би эвэйлэбэл?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JGY8Q7KB6AE6TM3RD",
+   "stage": "phrases",
+   "position": 9,
+   "kind": "phrase_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p2",
+   "payload": {
+    "tiles": [
+     "How",
+     "deposit",
+     "is",
+     "the",
+     "available",
+     "much"
+    ],
+    "answer": "How much is the deposit?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Сколько составляет депозит?",
+    "text_target": "How much is the deposit?",
+    "plan_term_id": "01M26KW1NH00R442TRX0EQEYCJ",
+    "prompt_native": "Сколько составляет депозит?",
+    "pronunciation_native": "Хау мач из зэ депозит?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J47PMST280ZX6BM67",
+   "stage": "phrases",
+   "position": 10,
+   "kind": "phrase_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p5",
+   "payload": {
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Какие документы мне потом понадобятся?",
+    "text_target": "What documents would I need later?",
+    "plan_term_id": "01M26KW1NHASRC6CBQWRW5J7Q5",
+    "speaking_key": "What documents",
+    "example_native": "Какие документы мне потом понадобятся?",
+    "example_target": "What documents would I need later?",
+    "pronunciation_native": "Уот докьюмэнтс вуд ай нид лейтэр?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JFF0P0AWE6E2DED69",
+   "stage": "phrases",
+   "position": 11,
+   "kind": "phrase_repeat",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p4",
+   "payload": {
+    "coverage": 0.9,
+    "expected": "Saturday at eleven would suit me better.",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Суббота в одиннадцать мне подошла бы больше.",
+    "text_target": "Saturday at eleven would suit me better.",
+    "plan_term_id": "01M26KW1NHFDD9RY90638ZNXHD",
+    "pronunciation_native": "Сэтэрдей эт илэвэн вуд сьют ми бэтэр.",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J74AXHCN48J3P9KRK",
+   "stage": "phrases",
+   "position": 12,
+   "kind": "phrase_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p3",
+   "payload": {
+    "tiles": [
+     "be",
+     "When",
+     "flat",
+     "available",
+     "included",
+     "the",
+     "would"
+    ],
+    "answer": "When would the flat be available?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Когда квартира будет доступна для заезда?",
+    "text_target": "When would the flat be available?",
+    "plan_term_id": "01M26KW1NH2SG6TYE7V412NHJ5",
+    "prompt_native": "Когда квартира будет доступна для заезда?",
+    "pronunciation_native": "Уэн вуд зэ флэт би эвэйлэбэл?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J6RRA5QCF9BHNQ6WM",
+   "stage": "phrases",
+   "position": 13,
+   "kind": "phrase_intro",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p6",
+   "payload": {
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Не могли бы вы подтвердить полный адрес?",
+    "text_target": "Could you confirm the full address, please?",
+    "plan_term_id": "01M26KW1NHTMTNZCGJ5Z5BP8F0",
+    "speaking_key": "full address",
+    "example_native": "Не могли бы вы подтвердить полный адрес?",
+    "example_target": "Could you confirm the full address, please?",
+    "pronunciation_native": "Куд ю кэнфёрм зэ фул эдрэс, плиз?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JWC5CNA1RHSQGYDS0",
+   "stage": "phrases",
+   "position": 14,
+   "kind": "phrase_repeat",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p5",
+   "payload": {
+    "coverage": 0.9,
+    "expected": "What documents would I need later?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Какие документы мне потом понадобятся?",
+    "text_target": "What documents would I need later?",
+    "plan_term_id": "01M26KW1NHASRC6CBQWRW5J7Q5",
+    "pronunciation_native": "Уот докьюмэнтс вуд ай нид лейтэр?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JSBBD674JYZR5HCGN",
+   "stage": "phrases",
+   "position": 15,
+   "kind": "phrase_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p4",
+   "payload": {
+    "tiles": [
+     "suit",
+     "would",
+     "at",
+     "me",
+     "better",
+     "available",
+     "eleven",
+     "Saturday"
+    ],
+    "answer": "Saturday at eleven would suit me better.",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Суббота в одиннадцать мне подошла бы больше.",
+    "text_target": "Saturday at eleven would suit me better.",
+    "plan_term_id": "01M26KW1NHFDD9RY90638ZNXHD",
+    "prompt_native": "Суббота в одиннадцать мне подошла бы больше.",
+    "pronunciation_native": "Сэтэрдей эт илэвэн вуд сьют ми бэтэр.",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J3NYWJPSMA4GF2NS2",
+   "stage": "phrases",
+   "position": 16,
+   "kind": "phrase_repeat",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p6",
+   "payload": {
+    "coverage": 0.9,
+    "expected": "Could you confirm the full address, please?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Не могли бы вы подтвердить полный адрес?",
+    "text_target": "Could you confirm the full address, please?",
+    "plan_term_id": "01M26KW1NHTMTNZCGJ5Z5BP8F0",
+    "pronunciation_native": "Куд ю кэнфёрм зэ фул эдрэс, плиз?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J0R3EWCJB6J7H4QXW",
+   "stage": "phrases",
+   "position": 17,
+   "kind": "phrase_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p5",
+   "payload": {
+    "tiles": [
+     "need",
+     "I",
+     "What",
+     "documents",
+     "would",
+     "included",
+     "later"
+    ],
+    "answer": "What documents would I need later?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Какие документы мне потом понадобятся?",
+    "text_target": "What documents would I need later?",
+    "plan_term_id": "01M26KW1NHASRC6CBQWRW5J7Q5",
+    "prompt_native": "Какие документы мне потом понадобятся?",
+    "pronunciation_native": "Уот докьюмэнтс вуд ай нид лейтэр?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JKVVNMQH489DRMZ97",
+   "stage": "phrases",
+   "position": 18,
+   "kind": "phrase_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "phrase",
+   "unit_ref": "p6",
+   "payload": {
+    "tiles": [
+     "confirm",
+     "you",
+     "please",
+     "the",
+     "Could",
+     "address",
+     "full",
+     "rent"
+    ],
+    "answer": "Could you confirm the full address, please?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "text_native": "Не могли бы вы подтвердить полный адрес?",
+    "text_target": "Could you confirm the full address, please?",
+    "plan_term_id": "01M26KW1NHTMTNZCGJ5Z5BP8F0",
+    "prompt_native": "Не могли бы вы подтвердить полный адрес?",
+    "pronunciation_native": "Куд ю кэнфёрм зэ фул эдрэс, плиз?",
+    "image": null
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JT73F72CCE6AR7HAW",
+   "stage": "dialogue",
+   "position": 1,
+   "kind": "dialogue_read",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x1",
+   "payload": {
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "exchanges": [
+     {
+      "step": 1,
+      "messages": [
+       {
+        "speaker": "B",
+        "role_native": "Арендатор",
+        "role_target": "Tenant",
+        "text_native": "Здравствуйте, квартира всё ещё сдаётся?",
+        "text_target": "Hello, is the flat still available?",
+        "speaking_key": "flat still available",
+        "pronunciation_native": "Хэлоу, из зэ флэт стил эвэйлэбэл?"
+       },
+       {
+        "speaker": "A",
+        "role_native": "Агент по недвижимости",
+        "role_target": "Estate agent",
+        "text_native": "Да. Она находится на Кинг-стрит.",
+        "text_target": "Yes, it is. It's on King Street.",
+        "speaking_key": null,
+        "pronunciation_native": null
+       }
+      ],
+      "initiator": "B",
+      "audio_id": "01M26KW79S2K8QQ2732XF207GP"
+     },
+     {
+      "step": 2,
+      "messages": [
+       {
+        "speaker": "B",
+        "role_native": "Арендатор",
+        "role_target": "Tenant",
+        "text_native": "Отлично. Аренда — 1200 фунтов в месяц?",
+        "text_target": "Great. Is the rent £1,200 a month?",
+        "speaking_key": "£1,200 a month",
+        "pronunciation_native": "Грейт. Из зэ рент твелв хандрид паундз э манс?"
+       },
+       {
+        "speaker": "A",
+        "role_native": "Агент по недвижимости",
+        "role_target": "Estate agent",
+        "text_native": "Да, 1200 фунтов в месяц. Вода включена, но газ и электричество оплачиваются отдельно.",
+        "text_target": "Yes, £1,200 a month. Water is included, but gas and electricity are separate.",
+        "speaking_key": null,
+        "pronunciation_native": null
+       }
+      ],
+      "initiator": "B",
+      "audio_id": "01M26KWD78KS7HACSVGWP2BZC9"
+     },
+     {
+      "step": 3,
+      "messages": [
+       {
+        "speaker": "B",
+        "role_native": "Арендатор",
+        "role_target": "Tenant",
+        "text_native": "Сколько составляет депозит?",
+        "text_target": "How much is the deposit?",
+        "speaking_key": "the deposit",
+        "pronunciation_native": "Хау мач из зэ депозит?"
+       },
+       {
+        "speaker": "A",
+        "role_native": "Агент по недвижимости",
+        "role_target": "Estate agent",
+        "text_native": "Депозит составляет пять недель аренды. Минимальный срок аренды — двенадцать месяцев.",
+        "text_target": "The deposit is five weeks' rent. The minimum lease term is twelve months.",
+        "speaking_key": null,
+        "pronunciation_native": null
+       }
+      ],
+      "initiator": "B",
+      "audio_id": "01M26KWJSVKDNSPTYBVCQV8E4D"
+     },
+     {
+      "step": 4,
+      "messages": [
+       {
+        "speaker": "B",
+        "role_native": "Арендатор",
+        "role_target": "Tenant",
+        "text_native": "Когда квартира будет доступна для заезда?",
+        "text_target": "When would the flat be available?",
+        "speaking_key": "flat be available",
+        "pronunciation_native": "Уэн вуд зэ флэт би эвэйлэбэл?"
+       },
+       {
+        "speaker": "A",
+        "role_native": "Агент по недвижимости",
+        "role_target": "Estate agent",
+        "text_native": "Она будет доступна с первого числа следующего месяца. Нынешний арендатор съезжает на этой неделе.",
+        "text_target": "It's available from the 1st of next month. The current tenant is moving out this week.",
+        "speaking_key": null,
+        "pronunciation_native": null
+       }
+      ],
+      "initiator": "B",
+      "audio_id": "01M26KWPYT7HZ2F7VW7873QV3C"
+     },
+     {
+      "step": 5,
+      "messages": [
+       {
+        "speaker": "A",
+        "role_native": "Агент по недвижимости",
+        "role_target": "Estate agent",
+        "text_native": "Вы бы хотели просмотр завтра в шесть или в субботу в одиннадцать?",
+        "text_target": "Would you like a viewing tomorrow at six, or Saturday at eleven?",
+        "speaking_key": null,
+        "pronunciation_native": null
+       },
+       {
+        "speaker": "B",
+        "role_native": "Арендатор",
+        "role_target": "Tenant",
+        "text_native": "Суббота в одиннадцать мне подошла бы больше.",
+        "text_target": "Saturday at eleven would suit me better.",
+        "speaking_key": "Saturday at eleven",
+        "pronunciation_native": "Сэтэрдей эт илэвэн вуд сьют ми бэтэр."
+       }
+      ],
+      "initiator": "A",
+      "audio_id": "01M26KWV6H3DNX5R84W5D8FES0"
+     },
+     {
+      "step": 6,
+      "messages": [
+       {
+        "speaker": "B",
+        "role_native": "Арендатор",
+        "role_target": "Tenant",
+        "text_native": "Какие документы мне потом понадобятся?",
+        "text_target": "What documents would I need later?",
+        "speaking_key": "What documents",
+        "pronunciation_native": "Уот докьюмэнтс вуд ай нид лейтэр?"
+       },
+       {
+        "speaker": "A",
+        "role_native": "Агент по недвижимости",
+        "role_target": "Estate agent",
+        "text_native": "Обычно нужны паспорт, подтверждение дохода и рекомендации от работодателя или арендодателя.",
+        "text_target": "Usually a passport, proof of income, and references from your employer or landlord.",
+        "speaking_key": null,
+        "pronunciation_native": null
+       }
+      ],
+      "initiator": "B",
+      "audio_id": "01M26KWZM86GC3QKN7SPKBPR4Q"
+     },
+     {
+      "step": 7,
+      "messages": [
+       {
+        "speaker": "A",
+        "role_native": "Агент по недвижимости",
+        "role_target": "Estate agent",
+        "text_native": "Могу я записать ваше полное имя и номер телефона для записи?",
+        "text_target": "Can I take your full name and phone number for the booking?",
+        "speaking_key": null,
+        "pronunciation_native": null
+       },
+       {
+        "speaker": "B",
+        "role_native": "Арендатор",
+        "role_target": "Tenant",
+        "text_native": "Конечно. Меня зовут Анна Петрова.",
+        "text_target": "Sure. My name is Anna Petrova.",
+        "speaking_key": "Anna Petrova",
+        "pronunciation_native": "Шур. Май нейм из Анна Петрова."
+       }
+      ],
+      "initiator": "A",
+      "audio_id": "01M26KX37ST1SH77BGF4WPDZ0X"
+     },
+     {
+      "step": 8,
+      "messages": [
+       {
+        "speaker": "B",
+        "role_native": "Арендатор",
+        "role_target": "Tenant",
+        "text_native": "Не могли бы вы подтвердить полный адрес?",
+        "text_target": "Could you confirm the full address, please?",
+        "speaking_key": "full address",
+        "pronunciation_native": "Куд ю кэнфёрм зэ фул эдрэс, плиз?"
+       },
+       {
+        "speaker": "A",
+        "role_native": "Агент по недвижимости",
+        "role_target": "Estate agent",
+        "text_native": "Да, это 18 Кинг-стрит, квартира 4B. Увидимся в субботу в одиннадцать.",
+        "text_target": "Yes, it's 18 King Street, flat 4B. I'll see you on Saturday at eleven.",
+        "speaking_key": null,
+        "pronunciation_native": null
+       }
+      ],
+      "initiator": "B",
+      "audio_id": "01M26KX7XPYD9VPRA82RV4851N"
+     }
+    ],
+    "translations_collapsed": true
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J21WB2G92TWDKCMS5",
+   "stage": "listen",
+   "position": 1,
+   "kind": "listen_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x1",
+   "payload": {
+    "tiles": [
+     "on",
+     "It's",
+     "Street",
+     "available",
+     "King",
+     "is",
+     "it",
+     "Yes"
+    ],
+    "answer": "Yes, it is. It's on King Street.",
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Да. Она находится на Кинг-стрит.",
+     "text_target": "Yes, it is. It's on King Street.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "text_native": "Да. Она находится на Кинг-стрит.",
+    "exchange_step": 1,
+    "audio_id": "01M26KW79S2K8QQ2732XF207GP"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JVY9J5PCSCM6DTFXD",
+   "stage": "listen",
+   "position": 2,
+   "kind": "answer_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x1",
+   "payload": {
+    "tiles": [
+     "still",
+     "proof",
+     "flat",
+     "Hello",
+     "is",
+     "the",
+     "available"
+    ],
+    "answer": "Hello, is the flat still available?",
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Да. Она находится на Кинг-стрит.",
+     "text_target": "Yes, it is. It's on King Street.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 1,
+    "prompt_native": "Здравствуйте, квартира всё ещё сдаётся?",
+    "audio_id": "01M26KW79S2K8QQ2732XF207GP"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J73W1X3RF8N34CHTE",
+   "stage": "listen",
+   "position": 3,
+   "kind": "listen_question",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x2",
+   "payload": {
+    "options": [
+     {
+      "text": "Water",
+      "correct": true
+     },
+     {
+      "text": "Gas",
+      "correct": false
+     },
+     {
+      "text": "Electricity",
+      "correct": false
+     }
+    ],
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Да, 1200 фунтов в месяц. Вода включена, но газ и электричество оплачиваются отдельно.",
+     "text_target": "Yes, £1,200 a month. Water is included, but gas and electricity are separate.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "language": "target",
+    "question": "Which bill is included in the rent?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 2,
+    "explanation_native": "Правильный ответ — Water, потому что агент говорит, что вода включена.",
+    "audio_id": "01M26KWD78KS7HACSVGWP2BZC9"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J8R406XV0GKPM3XV5",
+   "stage": "listen",
+   "position": 4,
+   "kind": "answer_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x2",
+   "payload": {
+    "tiles": [
+     "Great",
+     "Is",
+     "available",
+     "month",
+     "the",
+     "200",
+     "a",
+     "rent",
+     "1"
+    ],
+    "answer": "Great. Is the rent £1,200 a month?",
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Да, 1200 фунтов в месяц. Вода включена, но газ и электричество оплачиваются отдельно.",
+     "text_target": "Yes, £1,200 a month. Water is included, but gas and electricity are separate.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 2,
+    "prompt_native": "Отлично. Аренда — 1200 фунтов в месяц?",
+    "audio_id": "01M26KWD78KS7HACSVGWP2BZC9"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JTB7T50G7R15B6R1P",
+   "stage": "listen",
+   "position": 5,
+   "kind": "listen_question",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x3",
+   "payload": {
+    "options": [
+     {
+      "text": "Twelve months minimum",
+      "correct": true
+     },
+     {
+      "text": "One month minimum",
+      "correct": false
+     },
+     {
+      "text": "Six months minimum",
+      "correct": false
+     }
+    ],
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Депозит составляет пять недель аренды. Минимальный срок аренды — двенадцать месяцев.",
+     "text_target": "The deposit is five weeks' rent. The minimum lease term is twelve months.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "language": "target",
+    "question": "What lease term does the agent give?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 3,
+    "explanation_native": "Правильный ответ — Twelve months minimum, потому что агент говорит: “The minimum lease term is twelve months.”",
+    "audio_id": "01M26KWJSVKDNSPTYBVCQV8E4D"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JFSSWQXDC1F94CDCW",
+   "stage": "listen",
+   "position": 6,
+   "kind": "answer_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x3",
+   "payload": {
+    "tiles": [
+     "is",
+     "the",
+     "much",
+     "deposit",
+     "rent",
+     "How"
+    ],
+    "answer": "How much is the deposit?",
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Депозит составляет пять недель аренды. Минимальный срок аренды — двенадцать месяцев.",
+     "text_target": "The deposit is five weeks' rent. The minimum lease term is twelve months.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 3,
+    "prompt_native": "Сколько составляет депозит?",
+    "audio_id": "01M26KWJSVKDNSPTYBVCQV8E4D"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J3A479WW9WXCP8JAA",
+   "stage": "listen",
+   "position": 7,
+   "kind": "listen_question",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x4",
+   "payload": {
+    "options": [
+     {
+      "text": "From the 1st of next month",
+      "correct": true
+     },
+     {
+      "text": "Tomorrow morning",
+      "correct": false
+     },
+     {
+      "text": "At the end of this week",
+      "correct": false
+     }
+    ],
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Она будет доступна с первого числа следующего месяца. Нынешний арендатор съезжает на этой неделе.",
+     "text_target": "It's available from the 1st of next month. The current tenant is moving out this week.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "language": "target",
+    "question": "When can the new tenant move in?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 4,
+    "explanation_native": "Правильный ответ — From the 1st of next month, потому что агент это прямо говорит.",
+    "audio_id": "01M26KWPYT7HZ2F7VW7873QV3C"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J5EPXSKV60TETJ1BT",
+   "stage": "listen",
+   "position": 8,
+   "kind": "answer_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x4",
+   "payload": {
+    "tiles": [
+     "be",
+     "the",
+     "would",
+     "available",
+     "When",
+     "proof",
+     "flat"
+    ],
+    "answer": "When would the flat be available?",
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Она будет доступна с первого числа следующего месяца. Нынешний арендатор съезжает на этой неделе.",
+     "text_target": "It's available from the 1st of next month. The current tenant is moving out this week.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 4,
+    "prompt_native": "Когда квартира будет доступна для заезда?",
+    "audio_id": "01M26KWPYT7HZ2F7VW7873QV3C"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J12SVQETAB23VXWVB",
+   "stage": "listen",
+   "position": 9,
+   "kind": "listen_question",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x5",
+   "payload": {
+    "options": [
+     {
+      "text": "Tonight at seven",
+      "correct": false
+     },
+     {
+      "text": "Saturday at eleven",
+      "correct": false
+     },
+     {
+      "text": "Tomorrow at six",
+      "correct": true
+     }
+    ],
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Вы бы хотели просмотр завтра в шесть или в субботу в одиннадцать?",
+     "text_target": "Would you like a viewing tomorrow at six, or Saturday at eleven?",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "language": "target",
+    "question": "Which viewing time does the agent offer first?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "A",
+    "exchange_step": 5,
+    "explanation_native": "Правильный ответ — Tomorrow at six, потому что агент сначала предлагает это время.",
+    "audio_id": "01M26KWV6H3DNX5R84W5D8FES0"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JR1B5BPPJ8MYMNCZ9",
+   "stage": "listen",
+   "position": 10,
+   "kind": "answer_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x5",
+   "payload": {
+    "options": [
+     {
+      "correct": true,
+      "text_native": "Суббота в одиннадцать мне подошла бы больше.",
+      "text_target": "Saturday at eleven would suit me better."
+     },
+     {
+      "correct": false,
+      "text_native": "Отлично. Аренда — 1200 фунтов в месяц?",
+      "text_target": "Great. Is the rent £1,200 a month?"
+     },
+     {
+      "correct": false,
+      "text_native": "Здравствуйте, квартира всё ещё сдаётся?",
+      "text_target": "Hello, is the flat still available?"
+     }
+    ],
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Вы бы хотели просмотр завтра в шесть или в субботу в одиннадцать?",
+     "text_target": "Would you like a viewing tomorrow at six, or Saturday at eleven?",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "A",
+    "exchange_step": 5,
+    "audio_id": "01M26KWV6H3DNX5R84W5D8FES0"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JPBZJEHKDCS875VWJ",
+   "stage": "listen",
+   "position": 11,
+   "kind": "listen_question",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x6",
+   "payload": {
+    "options": [
+     {
+      "text": "A driving licence only",
+      "correct": false
+     },
+     {
+      "text": "A bank card",
+      "correct": false
+     },
+     {
+      "text": "A passport",
+      "correct": true
+     }
+    ],
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Обычно нужны паспорт, подтверждение дохода и рекомендации от работодателя или арендодателя.",
+     "text_target": "Usually a passport, proof of income, and references from your employer or landlord.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "language": "target",
+    "question": "Which document does the agent mention?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 6,
+    "explanation_native": "Правильный ответ — A passport, потому что агент перечисляет паспорт среди нужных документов.",
+    "audio_id": "01M26KWZM86GC3QKN7SPKBPR4Q"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JX8TSRYXC0NB0M67M",
+   "stage": "listen",
+   "position": 12,
+   "kind": "answer_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x6",
+   "payload": {
+    "tiles": [
+     "documents",
+     "I",
+     "later",
+     "need",
+     "would",
+     "available",
+     "What"
+    ],
+    "answer": "What documents would I need later?",
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Обычно нужны паспорт, подтверждение дохода и рекомендации от работодателя или арендодателя.",
+     "text_target": "Usually a passport, proof of income, and references from your employer or landlord.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 6,
+    "prompt_native": "Какие документы мне потом понадобятся?",
+    "audio_id": "01M26KWZM86GC3QKN7SPKBPR4Q"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JTD9B2DVGXW9W8CFS",
+   "stage": "listen",
+   "position": 13,
+   "kind": "listen_question",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x7",
+   "payload": {
+    "options": [
+     {
+      "text": "A phone number",
+      "correct": true
+     },
+     {
+      "text": "An email address",
+      "correct": false
+     },
+     {
+      "text": "A work address",
+      "correct": false
+     }
+    ],
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Могу я записать ваше полное имя и номер телефона для записи?",
+     "text_target": "Can I take your full name and phone number for the booking?",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "language": "target",
+    "question": "What information does the agent ask for besides the name?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "A",
+    "exchange_step": 7,
+    "explanation_native": "Правильный ответ — A phone number, потому что агент просит имя и номер телефона.",
+    "audio_id": "01M26KX37ST1SH77BGF4WPDZ0X"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JF7D2BH85CF84M5CJ",
+   "stage": "listen",
+   "position": 14,
+   "kind": "answer_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x7",
+   "payload": {
+    "options": [
+     {
+      "correct": false,
+      "text_native": "Суббота в одиннадцать мне подошла бы больше.",
+      "text_target": "Saturday at eleven would suit me better."
+     },
+     {
+      "correct": true,
+      "text_native": "Конечно. Меня зовут Анна Петрова.",
+      "text_target": "Sure. My name is Anna Petrova."
+     },
+     {
+      "correct": false,
+      "text_native": "Когда квартира будет доступна для заезда?",
+      "text_target": "When would the flat be available?"
+     }
+    ],
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Могу я записать ваше полное имя и номер телефона для записи?",
+     "text_target": "Can I take your full name and phone number for the booking?",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "A",
+    "exchange_step": 7,
+    "audio_id": "01M26KX37ST1SH77BGF4WPDZ0X"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J9D2EY6CJ8C8A28R2",
+   "stage": "listen",
+   "position": 15,
+   "kind": "listen_question",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x8",
+   "payload": {
+    "options": [
+     {
+      "text": "14 King Street, flat 2A",
+      "correct": false
+     },
+     {
+      "text": "18 King Street, flat 4B",
+      "correct": true
+     },
+     {
+      "text": "18 River Road, flat 4B",
+      "correct": false
+     }
+    ],
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Да, это 18 Кинг-стрит, квартира 4B. Увидимся в субботу в одиннадцать.",
+     "text_target": "Yes, it's 18 King Street, flat 4B. I'll see you on Saturday at eleven.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "language": "target",
+    "question": "What full address does the agent confirm?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 8,
+    "explanation_native": "Правильный ответ — 18 King Street, flat 4B, потому что агент называет именно этот адрес.",
+    "audio_id": "01M26KX7XPYD9VPRA82RV4851N"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JRD0A0QA18HQZ9GV0",
+   "stage": "listen",
+   "position": 16,
+   "kind": "answer_assemble",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x8",
+   "payload": {
+    "tiles": [
+     "full",
+     "confirm",
+     "please",
+     "address",
+     "you",
+     "included",
+     "the",
+     "Could"
+    ],
+    "answer": "Could you confirm the full address, please?",
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Да, это 18 Кинг-стрит, квартира 4B. Увидимся в субботу в одиннадцать.",
+     "text_target": "Yes, it's 18 King Street, flat 4B. I'll see you on Saturday at eleven.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "initiator": "B",
+    "exchange_step": 8,
+    "prompt_native": "Не могли бы вы подтвердить полный адрес?",
+    "audio_id": "01M26KX7XPYD9VPRA82RV4851N"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J3HWFRF875CRSNAM8",
+   "stage": "speak",
+   "position": 1,
+   "kind": "speak",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x1",
+   "payload": {
+    "hints": {
+     "key": "flat still available",
+     "text": "Hello, is the flat still available?"
+    },
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Да. Она находится на Кинг-стрит.",
+     "text_target": "Yes, it is. It's on King Street.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "coverage": 0.7,
+    "expected": "Hello, is the flat still available?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "variants": [
+     "Hi, is the flat available?"
+    ],
+    "initiator": "B",
+    "task_native": "Здравствуйте, квартира всё ещё сдаётся?",
+    "speaking_key": "flat still available",
+    "exchange_step": 1,
+    "audio_id": "01M26KW79S2K8QQ2732XF207GP"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JWGHPF1V76JQF9KSX",
+   "stage": "speak",
+   "position": 2,
+   "kind": "speak",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x2",
+   "payload": {
+    "hints": {
+     "key": "£1,200 a month",
+     "text": "Great. Is the rent £1,200 a month?"
+    },
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Да, 1200 фунтов в месяц. Вода включена, но газ и электричество оплачиваются отдельно.",
+     "text_target": "Yes, £1,200 a month. Water is included, but gas and electricity are separate.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "coverage": 0.7,
+    "expected": "Great. Is the rent £1,200 a month?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "variants": [
+     "Is the rent £1,200 monthly?"
+    ],
+    "initiator": "B",
+    "task_native": "Отлично. Аренда — 1200 фунтов в месяц?",
+    "speaking_key": "£1,200 a month",
+    "exchange_step": 2,
+    "audio_id": "01M26KWD78KS7HACSVGWP2BZC9"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6J5KNR59MPNC6VWYDG",
+   "stage": "speak",
+   "position": 3,
+   "kind": "speak",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x3",
+   "payload": {
+    "hints": {
+     "key": "the deposit",
+     "text": "How much is the deposit?"
+    },
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Депозит составляет пять недель аренды. Минимальный срок аренды — двенадцать месяцев.",
+     "text_target": "The deposit is five weeks' rent. The minimum lease term is twelve months.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "coverage": 0.7,
+    "expected": "How much is the deposit?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "variants": [
+     "What's the deposit?"
+    ],
+    "initiator": "B",
+    "task_native": "Сколько составляет депозит?",
+    "speaking_key": "the deposit",
+    "exchange_step": 3,
+    "audio_id": "01M26KWJSVKDNSPTYBVCQV8E4D"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JP6RYHD445SMNDMFZ",
+   "stage": "speak",
+   "position": 4,
+   "kind": "speak",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x4",
+   "payload": {
+    "hints": {
+     "key": "flat be available",
+     "text": "When would the flat be available?"
+    },
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Она будет доступна с первого числа следующего месяца. Нынешний арендатор съезжает на этой неделе.",
+     "text_target": "It's available from the 1st of next month. The current tenant is moving out this week.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "coverage": 0.7,
+    "expected": "When would the flat be available?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "variants": [
+     "When is the flat available?"
+    ],
+    "initiator": "B",
+    "task_native": "Когда квартира будет доступна для заезда?",
+    "speaking_key": "flat be available",
+    "exchange_step": 4,
+    "audio_id": "01M26KWPYT7HZ2F7VW7873QV3C"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JQP765WG8C35HADJE",
+   "stage": "speak",
+   "position": 5,
+   "kind": "speak",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x5",
+   "payload": {
+    "hints": {
+     "key": "Saturday at eleven",
+     "text": "Saturday at eleven would suit me better."
+    },
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Вы бы хотели просмотр завтра в шесть или в субботу в одиннадцать?",
+     "text_target": "Would you like a viewing tomorrow at six, or Saturday at eleven?",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "coverage": 0.7,
+    "expected": "Saturday at eleven would suit me better.",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "variants": [
+     "Saturday at eleven is better."
+    ],
+    "initiator": "A",
+    "task_native": "Суббота в одиннадцать мне подошла бы больше.",
+    "speaking_key": "Saturday at eleven",
+    "exchange_step": 5,
+    "audio_id": "01M26KWV6H3DNX5R84W5D8FES0"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JBM7V317KA2N2HK21",
+   "stage": "speak",
+   "position": 6,
+   "kind": "speak",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x6",
+   "payload": {
+    "hints": {
+     "key": "What documents",
+     "text": "What documents would I need later?"
+    },
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Обычно нужны паспорт, подтверждение дохода и рекомендации от работодателя или арендодателя.",
+     "text_target": "Usually a passport, proof of income, and references from your employer or landlord.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "coverage": 0.7,
+    "expected": "What documents would I need later?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "variants": [
+     "Which documents would I need later?"
+    ],
+    "initiator": "B",
+    "task_native": "Какие документы мне потом понадобятся?",
+    "speaking_key": "What documents",
+    "exchange_step": 6,
+    "audio_id": "01M26KWZM86GC3QKN7SPKBPR4Q"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JWXSRWNRSBH67DCCP",
+   "stage": "speak",
+   "position": 7,
+   "kind": "speak",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x7",
+   "payload": {
+    "hints": {
+     "key": "Anna Petrova",
+     "text": "Sure. My name is Anna Petrova."
+    },
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Могу я записать ваше полное имя и номер телефона для записи?",
+     "text_target": "Can I take your full name and phone number for the booking?",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "coverage": 0.7,
+    "expected": "Sure. My name is Anna Petrova.",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "variants": [
+     "Sure. I'm Anna Petrova."
+    ],
+    "initiator": "A",
+    "task_native": "Конечно. Меня зовут Анна Петрова.",
+    "speaking_key": "Anna Petrova",
+    "exchange_step": 7,
+    "audio_id": "01M26KX37ST1SH77BGF4WPDZ0X"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  },
+  {
+   "id": "01M26VGS6JBDGFV5P7YJ119JE3",
+   "stage": "speak",
+   "position": 8,
+   "kind": "speak",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "exchange",
+   "unit_ref": "x8",
+   "payload": {
+    "hints": {
+     "key": "full address",
+     "text": "Could you confirm the full address, please?"
+    },
+    "partner": {
+     "speaker": "A",
+     "role_native": "Агент по недвижимости",
+     "role_target": "Estate agent",
+     "text_native": "Да, это 18 Кинг-стрит, квартира 4B. Увидимся в субботу в одиннадцать.",
+     "text_target": "Yes, it's 18 King Street, flat 4B. I'll see you on Saturday at eleven.",
+     "speaking_key": null,
+     "pronunciation_native": null
+    },
+    "coverage": 0.7,
+    "expected": "Could you confirm the full address, please?",
+    "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+    "variants": [
+     "Could you confirm the address?"
+    ],
+    "initiator": "B",
+    "task_native": "Не могли бы вы подтвердить полный адрес?",
+    "speaking_key": "full address",
+    "exchange_step": 8,
+    "audio_id": "01M26KX7XPYD9VPRA82RV4851N"
+   },
+   "retry_of": null,
+   "result": null,
+   "attempts": 0,
+   "answered_at": null,
+   "returns": false
+  }
+ ]
+}

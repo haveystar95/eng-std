@@ -72,6 +72,36 @@ abstract final class AppMotion {
   static const nextTaskLeave = Duration(milliseconds: 180); // ease-in, −24
   static const nextTaskEnter = Duration(milliseconds: 220); // ease-out, +24
 
+
+  // ── §4о — день плана ──
+
+  /// Числа 26 на плите гаснут; кнопка уходит вниз.
+  static const plateNumbersFade = Duration(milliseconds: 120);
+  static const plateButtonLeave = Duration(milliseconds: 180);
+
+  /// Числа 56 набираются.
+  static const plateNumbersCount = Duration(milliseconds: 420);
+
+  /// Галка «день закрыт» — 220 с задержкой 120; маркеры «научишься» — 220 с задержкой 260.
+  static const plateCheck = Duration(milliseconds: 220);
+  static const plateCheckDelay = Duration(milliseconds: 120);
+  static const plateMarkersDelay = Duration(milliseconds: 260);
+
+  /// «Думаем» после записи — столбики гаснут, потом вердикт.
+  static const speechThinking = Duration(milliseconds: 300);
+
+  /// «Произнеси» после «Услышали» уходит сама.
+  static const spokenAutoLeave = Duration(milliseconds: 600);
+
+  /// Раскрытие перевода в пузыре собеседника (23-6b).
+  static const translationReveal = Duration(milliseconds: 200);
+
+  /// Сегмент шапки доливается в итоге этапа.
+  static const stageSegmentFill = Duration(milliseconds: 160);
+
+  /// Пульс кружка воспроизведения перед волной.
+  static const wavePulse = Duration(milliseconds: 240);
+
   /// Ни одна анимация не длиннее этого.
   static const maxDuration = Duration(milliseconds: 420);
 

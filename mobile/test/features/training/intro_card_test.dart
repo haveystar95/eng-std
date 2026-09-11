@@ -96,14 +96,15 @@ void main() {
       ),
     );
 
-    /// The bold runs of the example line, in order.
+    /// Подчёркнутые куски строки примера по порядку (16a «Базы»: слово в примере подчёркнуто
+    /// 2 px, не выделено жирным).
     List<String> boldRuns(WidgetTester tester, String example) {
       final rich = tester
           .widgetList<Text>(find.byType(Text))
           .firstWhere((t) => (t.textSpan?.toPlainText() ?? '') == example);
       final out = <String>[];
       rich.textSpan!.visitChildren((span) {
-        if (span is TextSpan && span.style?.fontWeight == FontWeight.w700) {
+        if (span is TextSpan && span.style?.decoration == TextDecoration.underline) {
           out.add(span.text ?? '');
         }
         return true;
@@ -131,7 +132,7 @@ void main() {
       expect(find.textContaining('I see, without utilities.'), findsWidgets);
     });
 
-    testWidgets('a sentence-like term is bolded inside its example', (tester) async {
+    testWidgets('a sentence-like term is underlined inside its example', (tester) async {
       const example = 'I have a fever and feel very weak.';
       await tester.pumpWidget(host(card(term: 'I have a fever.', example: example)));
       await tester.pump(const Duration(milliseconds: 400));
@@ -139,7 +140,7 @@ void main() {
       expect(boldRuns(tester, example), ['I have a fever']);
     });
 
-    testWidgets('the bolded run is the EXAMPLE own letters, not the term as stored', (
+    testWidgets('the underlined run is the EXAMPLE own letters, not the term as stored', (
       tester,
     ) async {
       // «Tell me about yourself» is stored capitalised, because that is how the phrase is written on
@@ -209,7 +210,7 @@ void main() {
       expect(find.text('[ай хэв э фивэ]'), findsNothing);
     });
 
-    testWidgets('the «новое слово» badge sits BELOW the term and the example', (tester) async {
+    testWidgets('the «новое слово» badge sits ABOVE the term (16a), the example below', (tester) async {
       const example = 'I have a fever and feel very weak.';
       await tester.pumpWidget(host(card(term: 'I have a fever.', example: example)));
       await tester.pump(const Duration(milliseconds: 400));
@@ -217,8 +218,8 @@ void main() {
       final badge = tester.getTopLeft(find.text('НОВОЕ СЛОВО')).dy;
       final term = tester.getTopLeft(find.text('I have a fever.')).dy;
       final line = tester.getTopLeft(find.text(example)).dy;
-      expect(term, lessThan(badge), reason: 'the word meets the reader first');
-      expect(line, lessThan(badge), reason: 'the badge is a footnote, not a heading');
+      expect(badge, lessThan(term), reason: 'бейдж над словом — 16a: экран, не карточка в карточке');
+      expect(term, lessThan(line), reason: 'пример стоит под словом и переводом');
     });
   });
 }

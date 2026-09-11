@@ -32,45 +32,17 @@
 
 | Слово | Ключ | Где стоит |
 |---|---|---|
-| На всякий случай | `planDialogueRescue` | экран дня (секция), кнопка в диалоге, панель, шов и левая группа полосы в посадке |
 | если не понял или не расслышал | `planRescueHint` | подпись под «На всякий случай» |
-| Слова | `planShelfWordsOnly` | экран дня (секция) |
-| Связки | `planShelfChunks` | экран дня (секция) |
-| Тебе скажут | `planShelfHear` | экран дня (секция), шов посадки |
-| Ты ответишь | `planShelfSay` | экран дня (секция), шов посадки |
-| Ты спросишь | `planShelfAsk` | экран дня (секция), шов посадки |
-| Диалог сцены | `planSectionDialogue` | шапка присеста, шапка диалога |
-| Скажи сам | `planSectionSceneRun` · `planSectionRehearsal` | шапка присеста, шов перед этапом |
-| Что тебе сказали? | `planDialogueAskHeard` | такт 1 диалога |
-| Что ответишь? | `planDialogueAskSay` | такт 2 диалога |
-| Что спросишь? | `planDialogueAskAsk` | такт 2 диалога (полка ask) |
-| собеседник | `planDialogueRoleName` | первый пузырь роли в диалоге и в итоге сцены |
-| сказано вслух | `planDialogueSaidAloud` | под СВОИМ пузырём, когда сказано голосом |
 | не начат | `planStateNotStarted` | вкладка «План», экран дня, шапка присеста, главная |
 | идёт | `planStateInProgress` | там же; рядом — минуты (`planStateMinutes`) |
 | слова и фразы пройдены | `planStateMaterialDone` | там же (day_state = material_done); рядом — `planStateConversationAbout` |
 | пройден | `planStateDone` | там же |
 | слова и фразы около N минут · разговор около N минут | `planStateMaterialAbout` · `planStateConversationAbout` | экран дня под названием сцены (оба присеста); вкладка «План» при «материал пройден» |
 | К разговору | `planSittingToConversation` | вкладка «План», экран дня (material_done), итог материала между присестами |
-| Позже | `planSittingLater` | итог материала между присестами |
-| Слова и фразы пройдены | `planMaterialDoneTitle` + `planMaterialDoneLead` | итог между присестами |
-| познакомишься · переведёшь / соберёшь из плиток / соберёшь из блоков / выберешь ответ / скажешь голосом | `planStepMeet` · `planStepTranslate` / `planStepTiles` / `planStepAssemble` / `planStepChoose` / `planStepSay` | экран дня, строка под секцией (`next_step` + `then_steps`) |
-| познакомился / применяешь / говоришь сам | `planMarkMet` / `planMarkApplying` / `planMarkSaidSelf` | экран дня, отметка у строки |
-| по теме | `planTermTopical` | экран дня, у тематического слова секции «Слова» |
-| познакомился | `planLadderA` | итог дня |
-| применяешь | `planLadderB` | итог дня |
-| говоришь сам | `planLadderC` | итог дня |
 | Начать день | `planRowStartDay` | вкладка «План», экран дня (day_state = not_started) |
 | Продолжить | `planSittingContinue` | вкладка «План», экран дня (in_progress), экран перед прогоном |
 | Пройти ещё раз | `planDayRepeat` | вкладка «План», экран дня (done) |
-| Ещё раз | `planDialogueReplay` | пузырь роли — единственный способ переслушать |
-| Скрыть текст | `planDialogueHideText` | пузырь роли |
 | Пропустить | `sessionSkip` | карточка в посадке |
-| Ещё в этой сцене | `planDialogueTail` | хвостовая карточка сцены после разговора |
-| Отвечал сам · на все / N раз подсказали | `planDialogueAnsweredSelf` + `planDialogueAnsweredAll` / `planDialogueAnsweredHinted` | итог сцены |
-| Разобрал реплику на слух · все реплики / N подсказали | `planDialogueHeardOut` + `planDialogueHeardAll` / `planDialogueHeardHinted` | итог сцены |
-| Прошёл сам · всю сцену / кроме N реплик | `planSceneRunSaidSelf` + `planSceneRunSaidAll` / `planSceneRunSaidSome` | итог прогона |
-| Сразу · все / не все / пока нет | `planSceneRunSaidFast` + `planSceneRunFastAll` / `planSceneRunFastSome` / `planSceneRunFastNone` | итог прогона |
 | около N минут | `planStateMinutes` | единственная цифра на экранах плана |
 
 ## Все ключи `plan*` (и дев-ключи наряда)
@@ -80,63 +52,21 @@
 
 | Ключ | Русская подпись | Где стоит |
 |---|---|---|
-| `planSectionSceneRun` | Скажи сам | посадка (шапка, швы, присест) |
-| `planSceneRunHint` | скажи свою реплику — текста не будет | карточка в посадке |
-| `planSceneRunNext` | Сцена сказана голосом. Что не прозвучало — вернётся своим чередом. | диалог сцены / итог сцены |
-| `planSceneRunSaidSelf` | Прошёл сам | диалог сцены / итог сцены |
-| `planDialogueSayIt` | Сказать вслух | диалог сцены / итог сцены |
-| `planDialogueNotHeard` | Не расслышали — попробуйте ещё раз. | диалог сцены / итог сцены |
-| `planSceneRunSaidFast` | Сразу | диалог сцены / итог сцены |
 | `planSittingContinue` | Продолжить | общие подписи плана; посадка (шапка, швы, присест) |
-| `planSittingStop` | Хватит на сегодня | посадка (шапка, швы, присест) |
-| `planBuilderTitle` | Составить план | — (не используется в lib/) |
-| `planBuilderSubtitle` | Три ответа — и ИИ соберёт дни подготовки из фраз, которые ты реально скажешь. | — (не используется в lib/) |
-| `planStepGoalQuestion` | К чему готовишься? | — (не используется в lib/) |
-| `planStepGoalClosed` | Цель | — (не используется в lib/) |
-| `planStepLanguageQuestion` | Язык и уровень | — (не используется в lib/) |
-| `planStepLanguageClosed` | Язык и уровень | — (не используется в lib/) |
-| `planStepWhenQuestion` | Когда это случится? | — (не используется в lib/) |
-| `planStepWhenClosed` | Когда и сколько | — (не используется в lib/) |
 | `planStepEdit` | Изм. | вход в план (V4) |
-| `planGoalPlaceholder` | Например, приём у врача | — (не используется в lib/) |
-| `planGoalChipInterview` | Собеседование | — (не используется в lib/) |
-| `planGoalChipDoctor` | Приём у врача | — (не используется в lib/) |
-| `planGoalChipRent` | Аренда квартиры | — (не используется в lib/) |
-| `planGoalChipTrip` | Поездка | — (не используется в lib/) |
-| `planGoalChipVet` | Ветклиника | — (не используется в lib/) |
-| `planGoalChipSchool` | Школа ребёнка | — (не используется в lib/) |
-| `planLevelLabel` | Как сейчас говоришь | — (не используется в lib/) |
 | `planLevelZero` | С нуля | вход в план (V4) |
 | `planLevelBasic` | Понимаю простое | вход в план (V4) |
 | `planLevelConversational` | Объясняюсь | вход в план (V4) |
 | `planLevelFluent` | Свободно | вход в план (V4) |
-| `planWhenToday` | Сегодня | — (не используется в lib/) |
-| `planWhenTomorrow` | Завтра | — (не используется в lib/) |
 | `planWhenSheetTitle` | Когда это случится? | вход в план (V4); превью плана |
-| `planMinutesLabel` | Минут в день | — (не используется в lib/) |
-| `planMinutesPerDay` | {minutes} мин/день | — (не используется в lib/) |
-| `planBuilderSubmit` | Собрать план | — (не используется в lib/) |
-| `planBuilderWorking` | Собираю… | «Как прошло?» |
 | `planBuilderBusyLine` | Разбираю цель — обычно 15–30 секунд | превью плана |
-| `planBuilderHintToday` | Событие сегодня — соберём короткую подготовку на один заход. | — (не используется в lib/) |
-| `planBuilderHintDays` | {days, plural, one{Ориентир: {days} день до события} few{Ориентир: {days} дня до события} many{Ориентир: {days} дней до события} other{Ориентир: {days} дня до события}} · {minutes} мин в день | — (не используется в lib/) |
 | `planErrorOffline` | Нет соединения. План собирается на сервере — попробуй, когда появится сеть. | экран дня; «Как прошло?»; превью плана; финал плана; быстрая репетиция; вкладка «План» (D·07); вкладка «План» (пусто/архив) |
 | `planErrorBuildFailed` | Не получилось собрать план. Попробуй ещё раз. | «Как прошло?»; превью плана |
 | `planErrorStartFailed` | Не получилось начать план. Попробуй ещё раз. | превью плана |
 | `planErrorLoadFailed` | Не удалось загрузить план. | экран дня; быстрая репетиция; вкладка «План» (D·07); вкладка «План» (пусто/архив) |
-| `planPreviewBadge` | Превью плана | — (не используется в lib/) |
-| `planPrepDays` | {days, plural, one{Подготовка {days} день + финал} few{Подготовка {days} дня + финал} many{Подготовка {days} дней + финал} other{Подготовка {days} дня + финал}} | — (не используется в lib/) |
-| `planEventOn` | Событие {date}. | — (не используется в lib/) |
-| `planApproxTerms` | ~{count} фраз и слов. | — (не используется в lib/) |
 | `planDayNumber` | День {index} | превью плана |
-| `planDayNoNewWords` | без новых слов | — (не используется в lib/) |
-| `planWordsCount` | {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}} | — (не используется в lib/) |
-| `planPhrasesCount` | {count, plural, one{{count} фраза} few{{count} фразы} many{{count} фраз} other{{count} фразы}} | — (не используется в lib/) |
-| `planChunksCount` | {count, plural, one{{count} связка} few{{count} связки} many{{count} связок} other{{count} связки}} | — (не используется в lib/) |
 | `planDaysCount` | {count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дня}} | вкладка «План» (D·07); вкладка «План» (пусто/архив) |
 | `planPreviewDropDay` | Убрать день | превью плана |
-| `planPreviewRebuild` | Перестроить | — (не используется в lib/) |
-| `planPreviewStart` | Начать | — (не используется в lib/) |
 | `planPricePlaceholder` | [цена / условия — placeholder] | превью плана |
 | `planDropDaySheet` | Какой день убрать? | превью плана |
 | `planDropLastDay` | Последний день подготовки убрать нельзя. | превью плана |
@@ -150,159 +80,18 @@
 | `planBuildingStep3` | Слова и примеры | сборка дня |
 | `planBuildingFailed` | День собирается дольше обычного. План уже создан — его можно открыть и вернуться к дню позже. | сборка дня |
 | `planBuildingOpenAnyway` | Открыть план | сборка дня |
-| `planActiveBadge` | Активный план | — (не используется в lib/) |
-| `planReadinessCaption` | готовность к событию | — (не используется в lib/) |
-| `planEventInDays` | {days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}} | — (не используется в lib/) |
-| `planEventToday` | Событие сегодня | вкладка «План» (D·07) |
-| `planEventPassed` | Событие прошло | вкладка «План» (D·07) |
 | `planDayOfTotal` | День {index} из {total} | — (не используется в lib/) |
 | `planCanAlready` | Ты уже можешь · {hit} из {total} | — (не используется в lib/) |
-| `planTrainThis` | Потренировать | — (не используется в lib/) |
 | `planDaysHeader` | Дни · {index} из {total} | — (не используется в lib/) |
-| `planContinueDay` | Продолжить день {index} | — (не используется в lib/) |
-| `planDayPassed` | День {index} пройден | — (не используется в lib/) |
-| `planDayFinalHint` | Без новых слов · можно открыть раньше | — (не используется в lib/) |
-| `planDayBuilding` | Собирается | — (не используется в lib/) |
-| `planSpeakerRoleShort` | он | экран дня |
-| `planSpeakerRole` | Собеседник: | посадка (шапка, швы, присест) |
-| `planDayQueued` | В очереди | — (не используется в lib/) |
-| `planDayNotBuilt` | Не собрался | — (не используется в lib/) |
-| `planDayOpenFailed` | Открыть день {index} | — (не используется в lib/) |
-| `planDayOpenEarly` | можно открыть раньше | — (не используется в lib/) |
 | `planDayOfPlan` | День {index} из {total} | экран дня |
-| `planDayCanDo` | Ты сможешь | — (не используется в lib/) |
-| `planDayPhrases` | Фразы дня | экран дня |
-| `planDayWords` | Слова в этих фразах | — (не используется в lib/) |
-| `planDaySoftNote` | Это день впереди текущего. Тренировка настоящая: реплики этого дня встречаешь впервые, ответы засчитываются. | экран дня |
-| `planDayTrain` | Тренировать | — (не используется в lib/) |
-| `planFromDay` | · со дня {index} | — (не используется в lib/) |
-| `planConversationLabel` | Разговор | — (не используется в lib/) |
-| `planConversationDefaultRole` | Собеседник | быстрая репетиция |
-| `planConversationLocked` | Откроется в следующем обновлении: разговор в роли и зачёт чек-пойнтов. | — (не используется в lib/) |
-| `planConversationSoon` | Разговор в роли | — (не используется в lib/) |
-| `planDayNotWritten` | Этот день ещё не собран. План пишет по одному дню — можно попросить собрать его сейчас. | экран дня |
-| `planDayFailed` | День не собрался с первого раза. Можно попробовать ещё раз. | экран дня |
-| `planDayExhausted` | Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает слова и фразы не на том языке. План придётся собрать заново. | — (не используется в lib/) |
-| `planDayExhaustedLead` | Этот день не собрался дважды подряд — сервер больше не будет пытаться. План придётся собрать заново. | экран дня |
-| `planFailWhy` | Что пошло не так: {reason} | экран дня |
-| `planFailExampleIsATerm` | пример к карточке повторял другую карточку этого дня, а не показывал слово в предложении | причина несобравшегося дня |
-| `planFailExampleDuplicated` | два примера оказались одним предложением с подменённым словом | причина несобравшегося дня |
-| `planFailExampleWithoutTranslation` | к примеру не приехал перевод, и читать его было бы нечем | причина несобравшегося дня |
-| `planFailNotTargetLanguage` | слова и фразы вернулись не на том языке | причина несобравшегося дня |
-| `planFailKeyIsTheTerm` | перевод карточки повторял саму карточку — теми же буквами или другими | причина несобравшегося дня |
-| `planFailTermIsAName` | именем собственным нельзя занимать карточку — его не переводят | причина несобравшегося дня |
-| `planFailSlotOutsideFrame` | пропуск для подстановки оказался не в той строке | причина несобравшегося дня |
-| `planFailGapMissing` | в реплике не оказалось пропуска, в который встаёт карточка | причина несобравшегося дня |
-| `planFailTranslationHasGap` | в переводе остался пропуск — читать такую подсказку нечем | причина несобравшегося дня |
-| `planFailTranslationMissingKey` | в переводе реплики не нашлось самого слова, которому она учит | причина несобравшегося дня |
-| `planFailFillerNotCard` | в пропуск встало не то, чему учит карточка | причина несобравшегося дня |
-| `planFailWordIsBasic` | карточкой стало слово из самого начального минимума | причина несобравшегося дня |
-| `planFailKindSize` | карточка вышла за длину, отведённую её виду | причина несобравшегося дня |
-| `planFailSkillRefInvalid` | карточка не назвала умение сцены, ради которого она здесь | причина несобравшегося дня |
-| `planFailNumberValueMismatch` | число в реплике не сошлось с числом, по которому карточку проверяют | причина несобравшегося дня |
-| `planFailShelfMissing` | в сцене не оказалось целой полки — того, что тебе скажут, что ты ответишь или из чего это собрано | причина несобравшегося дня |
-| `planFailTermRepeated` | карточка повторяла другую — этого дня, набора «на всякий случай» или прошлого дня | причина несобравшегося дня |
-| `planFailUnknown` | не удалось собрать день | причина несобравшегося дня |
-| `planAbandonLink` | Отказаться от плана | вкладка «План» (D·07) |
-| `planDayRebuildDay` | Собрать заново | экран дня; вкладка «План» (D·07) |
-| `planDayRebuildPlan` | Собрать план заново | экран дня |
 | `planAbandonTitle` | Отказаться от этого плана? | вкладка «План» (пусто/архив) |
 | `planAbandonBody` | План уйдёт в архив, а его слова — в общее повторение. Собранные дни останутся обычными коллекциями. | вкладка «План» (пусто/архив) |
 | `planAbandonConfirm` | Отказаться | вкладка «План» (пусто/архив) |
 | `planBuildingRefused` | Сервер отказался собирать этот день. Ждать дальше нечего — открой план: на экране дня написано, что именно случилось. | сборка дня |
-| `planDayBuildNow` | Собрать день | экран дня |
-| `planDayDone` | День {index} пройден | итог дня |
-| `planDaySittingDone` | Занятие пройдено | итог дня |
-| `planDayNotClosed` | День {index} ещё не закрыт | — (не используется в lib/) |
-| `planDayNotClosedNote` | Часть карточек ответена неверно, и они остались недоученными. Открой день ещё раз: он раздаст только то, что осталось. | итог дня |
-| `planDaySoftDone` | День {index} повторён | итог дня |
-| `planReviewRow` | Повторение | итог дня |
-| `planReviewCount` | {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}} | итог дня |
-| `planReviewSection` | Повторение · из прошлых дней | посадка (шапка, швы, присест) |
-| `planWarmupSection` | Из прошлых дней | посадка (шапка, швы, присест) — только над репликами прошлых дней; над набором стоит `planDialogueRescue` |
-| `planShelfHear` | Тебе скажут | экран дня; посадка (шапка, швы, присест) |
-| `planShelfSay` | Ты ответишь | экран дня; посадка (шапка, швы, присест) |
-| `planShelfAsk` | Ты спросишь | экран дня; посадка (шапка, швы, присест) |
-| `planShelfWords` | Слова и связки | посадка (шапка, швы, присест) |
-| `planSectionDialogueIntro` | Знакомство с репликами | посадка (шапка, швы, присест) |
-| `planSectionDialogue` | Диалог сцены | диалог сцены / итог сцены; посадка (шапка, швы, присест) |
-| `planSectionNumbers` | Цифры на слух | экран дня; посадка (шапка, швы, присест) |
-| `planSectionRehearsal` | Скажи сам | посадка (шапка, швы, присест) |
-| `planSectionOfScene` | {section} · сцена {index} | посадка (шапка, швы, присест) |
-| `planWarmupWhy` | чтобы было чем ответить, если растеряешься | посадка (шапка, швы, присест) |
-| `planDialogueScene` | Сцена {index} | экран дня; диалог сцены / итог сцены |
-| `planDialogueLabel` | Диалог | диалог сцены / итог сцены |
-| `planDialogueLead` | Собеседник говорит — вы отвечаете. Отвечать будете выбором из фраз плана, включая выученные в прошлых сценах. | диалог сцены / итог сцены |
-| `planDialogueRescueAtHand` | На всякий случай — под рукой | диалог сцены / итог сцены |
-| `planDialogueRescueLead` | Кнопка остаётся на экране весь диалог: можно попросить повторить или помедленнее. | диалог сцены / итог сцены |
-| `planDialogueStart` | Начать диалог | диалог сцены / итог сцены |
-| `planDialogueSound` | со звуком · наденьте наушники | диалог сцены / итог сцены |
-| `planDialogueRoleSpeaks` | говорит собеседник · текст скрыт | диалог сцены / итог сцены |
-| `planDialogueReplay` | Ещё раз | диалог сцены / итог сцены |
-| `planDialogueShowText` | Показать текст | диалог сцены / итог сцены |
-| `planDialogueHideText` | Скрыть текст | диалог сцены / итог сцены |
-| `planDialogueUnderstoodMark` | понял | — (не используется в lib/) |
-| `planDialogueSaidAloud` | сказано вслух | диалог сцены / итог сцены |
-| `planDialogueFamiliar` | знакомая реплика · разбор не нужен | диалог сцены / итог сцены |
-| `planDialogueVoicePreparing` | Готовим озвучку | диалог сцены / итог сцены |
-| `planDialogueVoicePreparingBody` | Реплика прозвучит, когда голос будет готов. Диалог начнётся с неё — тишины не будет. | диалог сцены / итог сцены |
-| `planDialogueRescue` | На всякий случай | экран дня; диалог сцены / итог сцены |
-| `planDialogueRescuePhrases` | {count, plural, one{{count} фраза} few{{count} фразы} other{{count} фраз}} | диалог сцены / итог сцены |
-| `planDialogueRescueNote` | Это нормальный ход разговора, а не ошибка: носители просят повторить так же часто. | диалог сцены / итог сцены |
-| `planDialogueRescueBack` | Вернуться к диалогу | диалог сцены / итог сцены |
-| `planDialogueDone` | диалог пройден | диалог сцены / итог сцены |
-| `planDialogueDoneLead` | Разговор целиком — ваши ответы стоят в ленте. | диалог сцены / итог сцены |
-| `planDialogueResult` | Итог по сцене | диалог сцены / итог сцены |
-| `planDialogueAnsweredSelf` | Отвечал сам | диалог сцены / итог сцены |
-| `planDialogueHeardOut` | Разобрал реплику на слух | диалог сцены / итог сцены |
-| `planDialogueAskedRepeat` | Просил повторить | диалог сцены / итог сцены |
-| `planDialogueTimes` | {count, plural, one{{count} раз} few{{count} раза} other{{count} раз}} | диалог сцены / итог сцены |
-| `planDialogueNextAssembly` | Дальше — сборка: те же обмены, но ответ собираете из связок сцены сами. | диалог сцены / итог сцены |
-| `planDialogueBackToSession` | Вернуться к сессии | диалог сцены / итог сцены |
-| `planDialogueAskHeard` | Что тебе сейчас сказали? | посадка (шапка, швы, присест) |
-| `planDialogueAskSay` | Что ты ответишь? | посадка (шапка, швы, присест) |
-| `planDialogueAskAsk` | Что ты спросишь? | посадка (шапка, швы, присест) |
-| `planDialogueYourAnswer` | Ваш ответ | диалог сцены / итог сцены |
-| `planDialogueYourQuestion` | Ваш вопрос | диалог сцены / итог сцены |
-| `planDialogueListenHow` | Послушать, как это звучит | диалог сцены / итог сцены |
-| `planDialogueSayAloudNote` | Закрепляем произношение. Мы не оцениваем и не сравниваем — скажите и идём дальше. | диалог сцены / итог сцены |
-| `planDialogueSaidIt` | Сказал вслух | диалог сцены / итог сцены |
-| `planListTitle` | План подготовки | вкладка «План» (D·07) |
-| `planRowPassed` | пройден | — (не используется в lib/) |
-| `planRowBuilding` | собирается | вкладка «План» (D·07) |
-| `planRowNotBuilt` | не собрался | вкладка «План» (D·07) |
-| `planRowWaiting` | ждёт очереди | вкладка «План» (D·07) |
 | `planRowStartDay` | Начать день | общие подписи плана |
-| `planRowNotBuiltWhy` | Сорвалась сборка реплик. Займёт около минуты. | вкладка «План» (D·07) |
-| `planRowRehearsalWhen` | Накануне | вкладка «План» (D·07) |
-| `planRowRehearsalLead` | Все сцены подряд, вслух | вкладка «План» (D·07) |
 | `planMaturityMeeting` | Знакомишься со словами и фразами | общие подписи плана |
 | `planMaturityApplying` | Применяешь в разговоре | общие подписи плана |
 | `planMaturitySpeaking` | Говоришь сам | общие подписи плана |
-| `planEventAt` | событие {date} | вкладка «План» (D·07) |
-| `planDaysLeft` | {days, plural, one{осталось {days} день} few{осталось {days} дня} many{осталось {days} дней} other{осталось {days} дня}} | вкладка «План» (D·07) |
-| `planRowDayScene` | День {day} · сцена {scene} | вкладка «План» (D·07) |
-| `planDayRescueLead` | С них начинается день — чтобы было чем ответить, если растеряешься. | — (не используется в lib/) |
-| `planDayRoleOnlyUnderstand` | говорит собеседник · только понимать | — (не используется в lib/) |
-| `planSceneNamed` | Сцена: {title} | итог дня |
-| `planDayAlmost` | День {index} · почти | итог дня |
-| `planDayAlmostLead` | {count, plural, one{Осталось дотренировать {count} карточку} few{Осталось дотренировать {count} карточки} other{Осталось дотренировать {count} карточек}} | итог дня |
-| `planDayGotIt` | Далось | итог дня |
-| `planDayMissed` | Не далось | итог дня |
-| `planDayMissedNote` | Непослушные карточки вернутся в следующем дне. | итог дня |
-| `planDayTrainMore` | Дотренировать | итог дня |
-| `planDayLeaveForTomorrow` | Оставить на завтра | итог дня |
-| `planDayLeaveNote` | Если оставить — они придут в следующем дне, а этот останется открытым. | итог дня |
-| `planLadderLegend` | Докуда дошли слова и фразы | итог дня |
-| `planLadderNoReadiness` | Готовность к сцене появится, когда сервер её посчитает. Пока — то, докуда дошли слова и фразы. | итог дня |
-| `planLadderA` | познакомился | итог дня |
-| `planLadderB` | применяешь | итог дня |
-| `planLadderC` | говоришь сам | итог дня |
-| `planNext` | Дальше | итог дня |
-| `planNextDay` | День {index} — {title} | итог дня |
-| `planDayBackToPlan` | К плану | итог дня |
-| `planSessionBadge` | План · день {index} | посадка (шапка, швы, присест) |
-| `planSessionCarried` | Слово «{term}» идёт со дня {index} — сегодня оно возвращается. | посадка (шапка, швы, присест) |
 | `planEmptyTitle` | Подготовиться к чему-то конкретному | вкладка «План» (пусто/архив) |
 | `planEmptyBody` | Коллекции — про темы, которые хочется знать. План — про день, когда придётся говорить: приём, собеседование, подпись договора. | вкладка «План» (пусто/архив) |
 | `planEmptyStep1` | Говоришь цель и дату | вкладка «План» (пусто/архив) |
@@ -313,25 +102,6 @@
 | `planFinishedSummary` | {days, plural, one{За {days} день подготовки. Событие было {date}.} few{За {days} дня подготовки. Событие было {date}.} many{За {days} дней подготовки. Событие было {date}.} other{За {days} дня подготовки. Событие было {date}.}} | вкладка «План» (пусто/архив) |
 | `planWordsReleasedTitle` | Слова плана остались в архиве | вкладка «План» (пусто/архив) |
 | `planWordsReleasedBody` | Они никуда не делись — прогресс, расписание и вся история на месте. Сами в ежедневные занятия они не придут: чтобы вернуть слово в работу, открой его карточку и нажми «Учить это слово». | вкладка «План» (пусто/архив) |
-| `planRehearsalDoneTitle` | Подготовка завершена | финал плана |
-| `planRehearsalDoneBody` | Ты прошёл все слова и фразы плана. Он ушёл в архив: слова, прогресс и вся история сохранены. | финал плана |
-| `planRehearsalDoneAction` | К плану | финал плана |
-| `planCompleteAction` | Завершить план | экран дня |
-| `planCompleteTitle` | Завершить план? | — (не используется в lib/) |
-| `planCompleteBody` | План закроется, слова уйдут в архив. Вернуть их в «Учить» можно будет вручную. | — (не используется в lib/) |
-| `planCompleteConfirm` | Завершить | — (не используется в lib/) |
-| `planRehearsalScenes` | Сцены плана | экран дня |
-| `planRehearsalSceneUntrained` | не тренировали | экран дня |
-| `planRehearsalScenePassed` | пройдена | экран дня |
-| `planRehearsalSceneReady` | в работе | экран дня |
-| `planRehearsalUntrainedNote` | Войдёт как есть — реплики с подсказкой. | экран дня |
-| `planRehearsalAloudNote` | Вслух, без остановок. На всякий случай — под рукой. | экран дня |
-| `planRehearsalNoPercent` | Готовность по сценам появится, когда сервер её посчитает. Пока — статус каждой сцены. | экран дня |
-| `planDoneScenes` | Сцены пройдены | финал плана |
-| `planDoneStageA` | Познакомились со словами и фразами | финал плана |
-| `planDoneArchiveNote` | Слова и реплики плана останутся в архиве — открыть можно с его карточки. Автоматических повторений не будет: план закончился вместе с событием. | финал плана |
-| `planRehearsalStart` | Начать | экран дня |
-| `planRehearsalLead` | Финальный день ничего не добавляет — это всё, чему план научил, вслух. Пройди его перед событием. | экран дня |
 | `planArchive` | Архив | вкладка «План» (пусто/архив) |
 | `planFinishedNewPlan` | Составить новый | вкладка «План» (пусто/архив) |
 | `planNotifyChannelName` | План подготовки | lib/features/plan/plan_notification_host.dart |
@@ -342,19 +112,6 @@
 | `planNotifyMorningBody` | Быстрая репетиция перед выходом — только то, что скажешь. | lib/features/plan/plan_notification_host.dart |
 | `planNotifyEveningTitle` | Как прошло? Отметь, что сказал | lib/features/plan/plan_notification_host.dart |
 | `planNotifyEveningBody` | Отметь умения, которые пригодились — план закроется этим. | lib/features/plan/plan_notification_host.dart |
-| `planRehearsalBadge` | Репетиция · событие сегодня | быстрая репетиция |
-| `planRehearsalSayIt` | Скажи вслух | быстрая репетиция |
-| `planRehearsalHint` | Скажи фразу — или пролистай дальше, если она уже звучит сама. | быстрая репетиция |
-| `planRehearsalListening` | Слушаю… | быстрая репетиция |
-| `planRehearsalPlay` | Прочитать пример | быстрая репетиция |
-| `planRehearsalCue` | {role} скажет: «{cue}» | быстрая репетиция |
-| `planRehearsalOpen` | Быстрая репетиция | вкладка «План» (D·07) |
-| `planRehearsalDone` | Готово | быстрая репетиция |
-| `planRehearsalEmpty` | В этом плане пока нет фраз для репетиции. | быстрая репетиция |
-| `planFeedbackTitle` | Как прошло? | «Как прошло?»; вкладка «План» (D·07) |
-| `planFeedbackBody` | {count, plural, one{Отметь умение, которое пригодилось на событии.} few{Отметь умения, которые пригодились на событии — из {count}.} many{Отметь умения, которые пригодились на событии — из {count}.} other{Отметь умения, которые пригодились на событии — из {count}.}} | «Как прошло?» |
-| `planFeedbackSubmit` | Сохранить и завершить | «Как прошло?» |
-| `planFeedbackClosesPlan` | План завершится, а его слова уйдут в общее повторение. | «Как прошло?» |
 | `planFinishedAtEvent` | На событии сказал {used} из {total}. | вкладка «План» (пусто/архив) |
 | `planNoDate` | Без даты | вход в план (V4); карточка плана на главной; общие подписи плана |
 | `planEntryKicker` | План подготовки | вход в план (V4) |
@@ -462,47 +219,8 @@
 | `planStateMaterialAbout` | {minutes, plural, one{слова и фразы около {minutes} минуты} few{слова и фразы около {minutes} минут} many{слова и фразы около {minutes} минут} other{слова и фразы около {minutes} минуты}} | общие подписи плана (экран дня) |
 | `planStateConversationAbout` | {minutes, plural, one{разговор около {minutes} минуты} few{разговор около {minutes} минут} many{разговор около {minutes} минут} other{разговор около {minutes} минуты}} | общие подписи плана (вкладка «План», экран дня) |
 | `planSittingToConversation` | К разговору | общие подписи плана; посадка (итог материала) |
-| `planSittingLater` | Позже | посадка (итог материала) |
-| `planMaterialDoneTitle` | Слова и фразы пройдены | посадка (итог материала) |
-| `planMaterialDoneLead` | Слова, связки и реплики сцены разобраны. Дальше — разговор: услышишь собеседника и ответишь сам. | посадка (итог материала) |
 | `planStateMinutes` | {minutes, plural, one{около {minutes} минуты} few{около {minutes} минут} many{около {minutes} минут} other{около {minutes} минуты}} | общие подписи плана |
 | `planDayRepeat` | Пройти ещё раз | общие подписи плана |
-| `planShelfWordsOnly` | Слова | экран дня |
-| `planShelfChunks` | Связки | экран дня |
-| `planDayStepLead` | сегодня — {step} | экран дня |
-| `planStepMeet` | познакомишься | экран дня |
-| `planStepTranslate` | переведёшь | экран дня |
-| `planStepTiles` | соберёшь из плиток | экран дня |
-| `planStepRecognize` | узнаешь по переводу | экран дня |
-| `planStepHear` | услышишь и разберёшь на слух | экран дня |
-| `planStepChoose` | выберешь ответ | экран дня |
-| `planStepAssemble` | соберёшь из блоков | экран дня |
-| `planStepSay` | скажешь голосом | экран дня |
-| `planMarkMet` | познакомился | экран дня |
-| `planMarkApplying` | применяешь | экран дня |
-| `planMarkSaidSelf` | говоришь сам | экран дня |
-| `planTermTopical` | по теме | экран дня |
-| `planDialogueRoleName` | собеседник | диалог сцены / итог сцены |
-| `planDialogueSceneWord` | Сцена | посадка (шапка, швы, присест) |
-| `planDialogueTail` | Ещё в этой сцене | посадка (шапка, швы, присест) |
-| `planDialogueAnsweredAll` | на все | диалог сцены / итог сцены |
-| `planDialogueAnsweredHinted` | {count, plural, one{{count} раз подсказали} few{{count} раза подсказали} other{{count} раз подсказали}} | диалог сцены / итог сцены |
-| `planDialogueHeardAll` | все реплики | диалог сцены / итог сцены |
-| `planDialogueHeardHinted` | {count, plural, one{одну подсказали} few{{count} подсказали} other{{count} подсказали}} | диалог сцены / итог сцены |
-| `planSceneRunSaidAll` | всю сцену | диалог сцены / итог сцены |
-| `planSceneRunSaidSome` | {count, plural, one{кроме одной реплики} few{кроме {count} реплик} other{кроме {count} реплик}} | диалог сцены / итог сцены |
-| `planSceneRunFastAll` | все | диалог сцены / итог сцены |
-| `planSceneRunFastSome` | не все | диалог сцены / итог сцены |
-| `planSceneRunFastNone` | пока нет | диалог сцены / итог сцены |
-| `planSittingRunNext` | Дальше — скажи сам | посадка (шапка, швы, присест) |
-| `planSittingRunLead` | Скажешь реплики сцены голосом — текста на экране не будет. | посадка (шапка, швы, присест) |
-| `planDoneScenesAll` | все | финал плана |
-| `planDoneScenesSome` | не все | финал плана |
-| `planDoneMaterialAll` | со всем | финал плана |
-| `planDoneMaterialSome` | не со всем | финал плана |
-| `planSummaryMetToday` | сегодняшняя сцена | итог дня |
-| `planSummaryAppliedAll` | все слова и фразы плана | итог дня |
-| `planSummaryAppliedSome` | часть слов и фраз плана | итог дня |
 | `planHomeDayState` | День {index} · {state} | карточка плана на главной |
 | `devQaClockTitle` | QA · «сегодня» плана | профиль → Разработка |
 | `devQaClockShift` | {days, plural, =0{без сдвига} one{сдвиг: {days} день} few{сдвиг: {days} дня} other{сдвиг: {days} дней}} | профиль → Разработка |
@@ -517,20 +235,12 @@
 
 | Ключ | Русская подпись | Где стоит |
 |---|---|---|
-| `planSayIntent` | Скажи: {intent} | карточка сборки (посадка) |
 | `planRescueHint` | если не понял или не расслышал | экран дня (секция «На всякий случай»), панель в диалоге |
-| `planStageMaterial` | Слова и фразы | экран дня (этапы) |
-| `planStageConversation` | Разговор | экран дня (этапы) |
-| `planStageRehearsal` | Скажи сам | экран дня (этапы) |
-| `planStageRetrain` | Повторить ошибки | экран дня (этапы) |
-| `planStageStateDone` | пройдено | экран дня (этапы) |
-| `planStageStateCurrent` | сейчас | экран дня (этапы) |
-| `planStageStateAfter` | после «{stage}» | экран дня (этапы) |
-| `planStageOptional` | необязательно | экран дня (этапы) |
-| `planStageContinue` | Продолжить | экран дня (кнопка) |
-| `planStageRetrainStart` | Повторить ошибки | экран дня (кнопка) |
-| `planNextDayLeft` | до дня {index} — ещё {left} | экран дня (строка до следующего дня) |
-| `planNextDayOpen` | день {index} открыт | экран дня (строка до следующего дня) |
-| `planDayLockedBy` | сначала закончи день {index} | вкладка «План» (строка запертого дня) |
-| `planErrorDayLocked` | Этот день ещё закрыт: сначала закончи день {index}. | посадка (отказ 409) |
-| `planErrorSittingEmpty` | Здесь сейчас нечего проходить — этот этап уже закрыт. | посадка (отказ 409) |
+
+## День плана — наряд DAY-UI (11.09.2026)
+
+Строки дня живут под префиксом `day*` (таблица `day.*` в канве «План», раздел «План · день»);
+гард словаря их не проверяет — источник правды по-прежнему `mobile/lib/l10n/app_ru.arb`. Задания
+карточек («Что он спросил», вопросы, переводы реплик) приходят с сервера и в ARB не дублируются.
+Экраны прежних серий (день v1, диалог v1, прогон, «Как прошло?») удалены вместе с их ключами —
+270 ключей `plan*`; список — `backend2/docs/research/day-ui/README.md`, §1.

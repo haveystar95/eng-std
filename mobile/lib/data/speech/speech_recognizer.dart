@@ -98,6 +98,7 @@ abstract class SpeechRecognizer {
     Duration pauseFor,
     List<String> contextualStrings,
     ValueChanged<String>? onPartial,
+    ValueChanged<double>? onLevel,
   });
 
   /// Stop an attempt early (the learner tapped «стоп»), settling on whatever has been heard.
@@ -177,6 +178,7 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
     Duration pauseFor = const Duration(seconds: 2),
     List<String> contextualStrings = const [],
     ValueChanged<String>? onPartial,
+    ValueChanged<double>? onLevel,
   }) async {
     // ПУСТАЯ ЛОКАЛЬ — НЕ «ЯЗЫК ПО УМОЛЧАНИЮ» (наряд DAY-GATE-1, Ч.0.2, находка F1).
     //
@@ -225,6 +227,9 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
         // QA-20's mishearings (`expected` above only picks the taskHint).
         contextualStrings: contextualStrings.isEmpty ? null : contextualStrings,
         onResult: (result) => _onResult(result, onPartial),
+        // УРОВЕНЬ ЗВУКА — для амплитуды под микрофоном (токен-лист 2б, кадр 23-3b). iOS отдаёт
+        // децибелы примерно от −2 до 10; в 0…1 их приводит вызывающий.
+        onSoundLevelChange: onLevel == null ? null : (level) => onLevel(level),
       ).timeout(_startTimeout);
     } catch (e) {
       // A refusal, a throw, or an engine that never came up at all — all three are the same answer

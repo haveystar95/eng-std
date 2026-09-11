@@ -8,6 +8,7 @@ import '../features/search/search_pair.dart' show SearchLanguages;
 import 'config.dart';
 import 'exposure_sync.dart';
 import 'models.dart';
+import 'plan/plan_contract.dart';
 import 'plan_models.dart';
 import 'review_queue.dart';
 import 'speech/speech_grading_config.dart';
@@ -668,65 +669,97 @@ class ApiClient {
     }
   }
 
-  /// One day with its terms and their stages.
-  Future<PlanDayDetail> planDay(String planId, int dayIndex) async {
-    final r = await _dio.get('/plans/$planId/days/$dayIndex');
-    return PlanDayDetail.fromJson(_data(r) as Map<String, dynamic>);
+  // ---- День плана (PLAN-GEN → DAY-UI) ------------------------------------
+  //
+  // Сервер отдаёт день целиком; клиент читает, показывает и присылает вердикт. Контракт —
+  // `docs/plan-api.md`; модели — `plan/plan_contract.dart`.
+
+  /// План, на котором стоит ученик, или null (`data: null`).
+  Future<Plan?> currentPlan() async {
+    final r = await _dio.get('/plans/current');
+    final data = (r.data as Map<String, dynamic>)['data'];
+    return data is Map<String, dynamic> ? Plan.fromJson(data) : null;
   }
 
-  /// «Собери мне день n» — idempotent and safe to poll: it answers with the day's own status, so
-  /// the «собираю день n» screen calls it to start the work and calls it again to learn whether it
-  /// finished. A 409 `plan_day_capped` means the plan's own spending ceiling says «не сейчас».
-  Future<PlanDayStatus> generatePlanDay(String planId, int dayIndex) async {
-    final r = await _dio.post('/plans/$planId/days/$dayIndex/generate');
-    return PlanDayStatus.fromWire((_data(r) as Map<String, dynamic>)['status'] as String?);
+  Future<Plan> planById(String planId) async {
+    final r = await _dio.get('/plans/$planId');
+    return Plan.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// «Собрать заново» — one more attempt for a day that burned.
-  ///
-  /// A separate endpoint from [generatePlanDay] because that one is POLLED: a screen asking «is it
-  /// ready yet» every second must never be able to buy a model call. This one is a button, it
-  /// spends money, and it is pressed once. A day that is not `failed` is answered with the status
-  /// it already has, so a double tap costs nothing.
-  Future<PlanDayStatus> rebuildPlanDay(String planId, int dayIndex) async {
-    final r = await _dio.post('/plans/$planId/days/$dayIndex/rebuild');
-    return PlanDayStatus.fromWire((_data(r) as Map<String, dynamic>)['status'] as String?);
+  /// Кабинет дня — `GET /plans/{id}/days/{n}`.
+  Future<DayRoom> dayRoom(String planId, int number) async {
+    final r = await _dio.get('/plans/$planId/days/$number');
+    return DayRoom.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// The session of ONE day. [dayIndex] null asks for the day the learner is ON — the server owns
-  /// the focus, so it must be possible to ask for it without recomputing it on the device.
-  Future<PlanSession> buildPlanSession({
-    required String planId,
-    required String sessionId,
-    int? dayIndex,
-    String? stage,
+  /// Открыть / продолжить день — ВЕСЬ список карточек с состоянием. 409 `plan_day_locked`,
+  /// `plan_lesson_not_ready` — читает вызывающий по коду ([problemCode]).
+  Future<DayCards> openDay(String planId, int number) async {
+    final r = await _dio.post('/plans/$planId/days/$number/open');
+    return DayCards.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  Future<DayCards> dayCards(String planId, int number) async {
+    final r = await _dio.get('/plans/$planId/days/$number/cards');
+    return DayCards.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// Вердикт по карточке. `requeued` — та же карточка в конце этапа после первой ошибки.
+  Future<DayAnswerOutcome> answerDayCard(
+    String planId,
+    int number,
+    String cardId, {
+    required DayCardResult result,
+    required int attempts,
   }) async {
-    final path = dayIndex == null
-        ? '/plans/$planId/session'
-        : '/plans/$planId/days/$dayIndex/session';
-    // БЕЗ `stage` СЕРВЕР СОБИРАЕТ ТЕКУЩИЙ ЭТАП — это и есть «Продолжить» (наряд DAY-GATE-1, Ч.1).
-    // Единственный случай, когда этап называет клиент, — «Повторить ошибки»: он необязателен, дня
-    // не держит, и попросить его может только человек. Запертый этап отбивается 409, а не
-    // подменяется молча, поэтому угадывать здесь нечего.
-    final r = await _dio.post(path, data: {'session_id': sessionId, 'stage': ?stage});
-
-    return PlanSession.fromJson(_data(r) as Map<String, dynamic>);
+    final r = await _dio.post(
+      '/plans/$planId/days/$number/cards/$cardId/answer',
+      data: {'result': result.wire, 'attempts': attempts},
+    );
+    return DayAnswerOutcome.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// The morning of the event: the plan's phrases and nothing else (кадр 15).
-  Future<PlanRehearsal> planRehearsal(String planId) async {
-    final r = await _dio.post('/plans/$planId/rehearsal');
-    return PlanRehearsal.fromJson(_data(r) as Map<String, dynamic>);
+  /// Этап пройден — кабинет с обновлёнными этапами. 409 `plan_stage_incomplete`.
+  Future<DayRoom> closeStage(String planId, int number, DayStage stage) async {
+    final r = await _dio.post('/plans/$planId/days/$number/stages/${stage.wire}/close');
+    return DayRoom.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// ПРОГОН СЦЕНЫ ЗАВЕРШЁН — ходы с исходами, и ни одного посчитанного числа (наряд SCENE-RUN).
-  ///
-  /// «Прошёл сам 2 из 4 · сразу 1» считает сервер: это то, что человеку показывают и что потом
-  /// читает зрелость сцены, и число, посчитанное на телефоне, было бы вторым источником правды о
-  /// том, чего он добился.
-  ///
-  /// Ответы каждого хода уже уехали обычной очередью ревью — сказал это `speaking/good`, пропустил
-  /// `speaking/again`. Здесь их нет: append-only журнал не должен получить один ответ дважды.
+  /// День пройден — кабинет с метриками.
+  Future<DayRoom> closeDay(String planId, int number) async {
+    final r = await _dio.post('/plans/$planId/days/$number/close');
+    return DayRoom.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// Урок сцены не собрался — собрать заново (после 409 `plan_lesson_not_ready` с `failed`).
+  Future<void> retryLesson(String planId, String sceneId) async {
+    await _dio.post('/plans/$planId/scenes/$sceneId/lesson/retry');
+  }
+
+  Future<DaySheet> daySheet(String planId, int number) async {
+    final r = await _dio.get('/plans/$planId/days/$number/sheet');
+    return DaySheet.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// Адрес файла озвучки реплики — `GET /plans/audio/{audioId}`; качает [LineAudioCache] с
+  /// токеном.
+  static String planAudioUrl(String audioId) => '${AppConfig.apiBaseUrl}/api/v1/plans/audio/$audioId';
+
+  /// Код RFC 7807 из ответа сервера, или null.
+  static String? problemCode(Object error) {
+    if (error is! DioException) return null;
+    final data = error.response?.data;
+    return data is Map ? data['code'] as String? : null;
+  }
+
+  /// `meta` из RFC 7807, или пусто.
+  static Map<String, dynamic> problemMeta(Object error) {
+    if (error is! DioException) return const {};
+    final data = error.response?.data;
+    final meta = data is Map ? data['meta'] : null;
+    return meta is Map ? meta.cast<String, dynamic>() : const {};
+  }
+
   /// ДЕВ-ДВЕРЬ СМЕНЫ ДНЕЙ (наряд DAY-FIX-2): сдвинуть «сегодня» QA-аккаунта на [days] дней.
   ///
   /// Дверь стережёт сервер — та же, что у входа без пароля и подстановки транскрипта: всем, кому
@@ -766,24 +799,6 @@ class ApiClient {
     });
     final r = await _dio.post('/qa/report', data: form);
     return ((_data(r) as Map<String, dynamic>)['id'] as String?) ?? '';
-  }
-
-  Future<void> recordSceneRun({
-    required String planId,
-    required int sceneIndex,
-    required int dayIndex,
-    required List<({String termId, String outcome})> turns,
-  }) async {
-    await _dio.post(
-      '/plans/$planId/scene-runs',
-      data: {
-        'scene_index': sceneIndex,
-        'day_index': dayIndex,
-        'turns': [
-          for (final turn in turns) {'term_id': turn.termId, 'outcome': turn.outcome},
-        ],
-      },
-    );
   }
 
   /// «Как прошло?» — the checkpoints the learner ticked by hand after the event.

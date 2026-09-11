@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:eng_std/theme/feedback.dart';
+
 import 'providers.dart';
 
 /// Languages whose readers already read Cyrillic, and for whom a Cyrillic reading hint under a
@@ -23,6 +25,7 @@ class AppSettings {
     required this.reminderTime,
     required this.autoPronounce,
     this.transliteration,
+    this.soundsEnabled = true,
   });
 
   final bool remindersEnabled;
@@ -41,6 +44,10 @@ class AppSettings {
   /// decision, which outlives any later change to that default.
   final bool? transliteration;
 
+  /// «Звуки» (токен-лист 4к-3): четыре события — верно · неверно · этап закрыт · день закрыт.
+  /// Выключатель гасит звук; хаптика остаётся. Беззвучный режим телефона уважается и без него.
+  final bool soundsEnabled;
+
   static const defaults = AppSettings(
     remindersEnabled: false,
     reminderTime: '20:00',
@@ -52,11 +59,13 @@ class AppSettings {
     String? reminderTime,
     bool? autoPronounce,
     bool? transliteration,
+    bool? soundsEnabled,
   }) => AppSettings(
     remindersEnabled: remindersEnabled ?? this.remindersEnabled,
     reminderTime: reminderTime ?? this.reminderTime,
     autoPronounce: autoPronounce ?? this.autoPronounce,
     transliteration: transliteration ?? this.transliteration,
+    soundsEnabled: soundsEnabled ?? this.soundsEnabled,
   );
 }
 
@@ -65,6 +74,7 @@ abstract final class _Keys {
   static const reminderTime = 'reminder_time';
   static const autoPronounce = 'autopronounce';
   static const transliteration = 'transliteration';
+  static const sounds = 'sounds';
 }
 
 class AppSettingsController extends AsyncNotifier<AppSettings> {
@@ -81,7 +91,13 @@ class AppSettingsController extends AsyncNotifier<AppSettings> {
         '0' => false,
         _ => null,
       },
+      soundsEnabled: (await db.getMeta(_Keys.sounds)) != '0', // default on
     );
+  }
+
+  Future<void> setSoundsEnabled(bool on) async {
+    await ref.read(appDatabaseProvider).setMeta(_Keys.sounds, on ? '1' : '0');
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(soundsEnabled: on));
   }
 
   Future<void> setRemindersEnabled(bool on) async {
@@ -110,6 +126,15 @@ class AppSettingsController extends AsyncNotifier<AppSettings> {
 final appSettingsProvider = AsyncNotifierProvider<AppSettingsController, AppSettings>(
   AppSettingsController.new,
 );
+
+/// ВЫКЛЮЧАТЕЛЬ ЗВУКОВ — один сервис [AppFeedback] читает его отсюда. Провайдер существует, чтобы
+/// его смотрел корень приложения: настройка выставляется в момент загрузки и при каждом тапе по
+/// тумблеру, и ни один экран не решает сам, звучать ему или нет.
+final soundsEnabledProvider = Provider<bool>((ref) {
+  final on = ref.watch(appSettingsProvider).value?.soundsEnabled ?? true;
+  AppFeedback.soundsEnabled = on;
+  return on;
+});
 
 /// Does this device SHOW the reading hint? The stored decision if there is one, otherwise the
 /// default the learner's own language implies.

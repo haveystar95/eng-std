@@ -1,4 +1,4 @@
-// Generates the two verdict sounds in `assets/sounds/` (QA-22).
+// Generates the four sounds of the day in `assets/sounds/` (QA-22 → токен-лист 4к-3, DAY-UI).
 //
 // REGENERATE WITH:
 //
@@ -10,18 +10,15 @@
 // not depend on a Dart toolchain being run before it can make a sound, and a reviewer must be able
 // to see that the committed bytes match the recipe.
 //
-// WHY GENERATED AT ALL, rather than two files someone downloaded: these are the only two audio
-// assets in the app, they are four lines of arithmetic each, and having the recipe in the repo
-// means the pitch, the length and the fade are all reviewable and tweakable in the same place —
-// «make the wrong tone a touch softer» is a number here, not a trip to a sample library and a
-// licence question.
+// THE FOUR (4к-3): «верно» — короткий мягкий тон вверх, 120 мс · «неверно» — низкий глухой,
+// 160 мс, без резкости, не «ошибка» · «этап закрыт» — две ноты вверх, 240 мс · «день закрыт» —
+// три ноты вверх, 300 мс. All quiet, soft attack, one key (E major pentatonic), no reverb,
+// synthesised without libraries. Nothing longer than 300 ms.
 //
 // WHY WAV: `AudioServicesCreateSystemSoundID` (the iOS API these are played through — see
-// `AppDelegate.swift`) accepts CAF, AIF and WAV. WAV is the one that is trivial to write by hand,
-// and at this length the size difference is nothing.
+// `AppDelegate.swift`) accepts CAF, AIF and WAV. WAV is the one that is trivial to write by hand.
 //
-// FORMAT: 44.1 kHz, 16-bit signed PCM, mono. System sounds are capped at 30 seconds by iOS; these
-// are under a third of a second.
+// FORMAT: 44.1 kHz, 16-bit signed PCM, mono.
 
 import 'dart:io';
 import 'dart:math' as math;
@@ -33,68 +30,69 @@ const int _sampleRate = 44100;
 /// speaker, and it leaves nothing for the 16-bit rounding — so everything is scaled to sit here.
 const double _peak = 0.72;
 
+// E major pentatonic, one key for the four sounds.
+const double _e5 = 659.25, _gs5 = 830.61, _b5 = 987.77, _a3 = 220.0;
+
 void main() {
   final dir = Directory('assets/sounds');
   dir.createSync(recursive: true);
 
-  File('${dir.path}/verdict_correct.wav').writeAsBytesSync(_wav(_correct()));
-  File('${dir.path}/verdict_wrong.wav').writeAsBytesSync(_wav(_wrong()));
-
-  stdout.writeln('wrote ${dir.path}/verdict_correct.wav');
-  stdout.writeln('wrote ${dir.path}/verdict_wrong.wav');
+  final files = {
+    'verdict_correct': _correct(),
+    'verdict_wrong': _wrong(),
+    'stage_closed': _stageClosed(),
+    'day_closed': _dayClosed(),
+  };
+  for (final entry in files.entries) {
+    File('${dir.path}/${entry.key}.wav').writeAsBytesSync(_wav(entry.value));
+    stdout.writeln('wrote ${dir.path}/${entry.key}.wav (${(entry.value.length * 1000 / _sampleRate).round()} ms)');
+  }
 }
 
-/// «Верно» — a warm rising major duplet: E5 → G#5, the interval that makes it read as major
-/// rather than merely as two beeps.
-///
-/// The two notes OVERLAP by a third of a note, so it lands as one gesture instead of as
-/// «beep. beep» — the second note begins while the first is still decaying, which is what a
-/// struck instrument does and what makes the pair feel like a chord rather than a sequence.
-///
-/// Warmth is the second harmonic at a quarter amplitude and nothing above it. A pure sine is
-/// thin and a bright harmonic stack is a game-show buzzer; one octave of colour is the whole
-/// difference, and it stays under the paper/ink brief's «деликатно».
-List<double> _correct() {
-  const noteMs = 110;
-  const overlapMs = 38;
-  final note1 = _tone(freq: 659.25, ms: noteMs, harmonic2: 0.25); // E5
-  final note2 = _tone(freq: 830.61, ms: noteMs, harmonic2: 0.25); // G#5 — a major third up
+/// «Верно» — one soft tone gliding UP a major third across 120 ms (E5 → G#5). Warmth is the
+/// second harmonic at a quarter amplitude and nothing above it.
+List<double> _correct() => _glide(from: _e5, to: _gs5, ms: 120, harmonic2: 0.25);
 
-  final offset = _samples(noteMs - overlapMs);
-  final out = List<double>.filled(offset + note2.length, 0);
-  for (var i = 0; i < note1.length; i++) {
-    out[i] += note1[i];
-  }
-  for (var i = 0; i < note2.length; i++) {
-    out[offset + i] += note2[i] * 0.92; // the answer note a hair under the question note
-  }
+/// «Неверно» — one low dull tone, A3, sliding a couple of semitones down across 160 ms. A falling
+/// pitch reads as «no» in a way a flat one does not, and it does the job loudness would otherwise
+/// have to do. Quieter than «верно»: the two must not feel like a matched pair of announcements.
+List<double> _wrong() {
+  final out = _glide(from: _a3, to: _a3 * math.pow(2, -2 / 12), ms: 160, harmonic2: 0.18);
+  return _normalize(out, scale: 0.78);
+}
 
+/// «Этап закрыт» — two notes up, 240 ms in all (E5 → B5), overlapping by a third of a note so it
+/// lands as one gesture.
+List<double> _stageClosed() => _sequence([_e5, _b5], noteMs: 140, overlapMs: 40);
+
+/// «День закрыт» — three notes up, 300 ms in all (E5 → G#5 → B5).
+List<double> _dayClosed() => _sequence([_e5, _gs5, _b5], noteMs: 120, overlapMs: 30);
+
+List<double> _sequence(List<double> notes, {required int noteMs, required int overlapMs}) {
+  final step = _samples(noteMs - overlapMs);
+  final total = step * (notes.length - 1) + _samples(noteMs);
+  final out = List<double>.filled(total, 0);
+  for (var n = 0; n < notes.length; n++) {
+    final tone = _tone(freq: notes[n], ms: noteMs, harmonic2: 0.25);
+    final gain = n == 0 ? 1.0 : 0.92; // the answering notes a hair under the first
+    for (var i = 0; i < tone.length; i++) {
+      out[n * step + i] += tone[i] * gain;
+    }
+  }
   return _normalize(out);
 }
 
-/// «Не то» — one soft low tone, A3, with a slight downward glide.
-///
-/// Deliberately NOT a buzzer and not a second, lower duplet: a wrong answer in this trainer is
-/// never a failure event, it is the ordinary other half of a review, and the sound has to be
-/// something a person can hear thirty times in a session without flinching. Low, quiet, one note,
-/// gone quickly.
-///
-/// The glide is a couple of semitones down across the tone — a falling pitch reads as «no» in a
-/// way a flat one does not, and it does the job that loudness would otherwise have to do.
-List<double> _wrong() {
-  const ms = 210;
+List<double> _glide({required double from, required double to, required int ms, double harmonic2 = 0}) {
   final n = _samples(ms);
   final out = List<double>.filled(n, 0);
   var phase = 0.0;
   for (var i = 0; i < n; i++) {
     final t = i / (n - 1);
-    final freq = 220.0 * math.pow(2, -2 / 12 * t); // A3, sliding ~2 semitones down
+    final freq = from * math.pow(to / from, t);
     phase += 2 * math.pi * freq / _sampleRate;
-    out[i] = (math.sin(phase) + 0.18 * math.sin(2 * phase)) * _envelope(t);
+    out[i] = (math.sin(phase) + harmonic2 * math.sin(2 * phase)) * _envelope(t);
   }
-
-  // Quieter than the accepted sound: the two must not feel like a matched pair of announcements.
-  return _normalize(out, scale: 0.78);
+  return _normalize(out);
 }
 
 /// One note: [freq] Hz for [ms], with an optional second harmonic at [harmonic2] amplitude, under
@@ -108,23 +106,19 @@ List<double> _tone({required double freq, required int ms, double harmonic2 = 0}
   });
 }
 
-/// The fade, over normalised position [t] in 0…1.
-///
-/// A raised-cosine attack (never an instant one — a waveform that starts at full amplitude IS a
-/// click, which is exactly the artefact these sounds exist to avoid) and an exponential decay,
-/// forced to exactly zero at both ends so no sample can be left hanging at the edge of the file.
+/// The fade, over normalised position [t] in 0…1: a raised-cosine attack (never an instant one —
+/// a waveform that starts at full amplitude IS a click) and an exponential decay, forced to exactly
+/// zero at both ends so no sample can be left hanging at the edge of the file.
 double _envelope(double t) {
-  const attack = 0.06;
+  const attack = 0.08;
   if (t <= 0 || t >= 1) return 0;
   final rise = t < attack ? 0.5 * (1 - math.cos(math.pi * t / attack)) : 1.0;
   final decay = math.exp(-3.2 * t);
-  // The last tenth is walked down to silence so the exponential's own tail cannot end on a step.
   final tail = t > 0.9 ? (1 - t) / 0.1 : 1.0;
   return rise * decay * tail;
 }
 
-/// Scale so the loudest sample sits at [_peak] × [scale]. Clipping is impossible by construction
-/// rather than by hope: the peak is measured, not assumed.
+/// Scale so the loudest sample sits at [_peak] × [scale]. Clipping is impossible by construction.
 List<double> _normalize(List<double> samples, {double scale = 1.0}) {
   var loudest = 0.0;
   for (final s in samples) {
@@ -138,12 +132,10 @@ List<double> _normalize(List<double> samples, {double scale = 1.0}) {
 
 int _samples(int ms) => (_sampleRate * ms / 1000).round();
 
-/// A 16-bit mono PCM WAV. Written by hand — the header is 44 bytes and pulling a package in for it
-/// would be the only dependency this script has.
+/// A 16-bit mono PCM WAV. Written by hand — the header is 44 bytes.
 Uint8List _wav(List<double> samples) {
   final data = ByteData(samples.length * 2);
   for (var i = 0; i < samples.length; i++) {
-    // Clamp before rounding: a value of exactly 1.0 would round to 32768, which does not fit.
     final v = (samples[i].clamp(-1.0, 1.0) * 32767).round();
     data.setInt16(i * 2, v, Endian.little);
   }
@@ -171,13 +163,13 @@ Uint8List _wav(List<double> samples) {
   u32(36 + pcm.length);
   ascii('WAVE');
   ascii('fmt ');
-  u32(16); // PCM chunk size
-  u16(1); // PCM, uncompressed
-  u16(1); // mono
+  u32(16);
+  u16(1);
+  u16(1);
   u32(_sampleRate);
-  u32(_sampleRate * 2); // byte rate = rate × channels × bytes-per-sample
-  u16(2); // block align
-  u16(16); // bits per sample
+  u32(_sampleRate * 2);
+  u16(2);
+  u16(16);
   ascii('data');
   u32(pcm.length);
 

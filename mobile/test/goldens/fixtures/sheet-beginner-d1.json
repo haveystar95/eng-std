@@ -1,0 +1,254 @@
+{
+ "plan_id": "01M26KPM34Z9C9B31GBRR4YZGA",
+ "number": 1,
+ "words": [
+  {
+   "id": "01M26KQXB92FNYKDJ8HSB006R0",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "word",
+   "ref": "v1",
+   "text_target": "appointment",
+   "text_native": "запись на прием",
+   "pronunciation_native": "эпойнтмент",
+   "definition_target": "a planned time to see a doctor",
+   "example_target": "I'd like to make an appointment.",
+   "example_native": "Я хотел(а) бы записаться на прием.",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/6809657/pexels-photo-6809657.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Pavel Danilyuk",
+    "author_url": "https://www.pexels.com/@pavel-danilyuk"
+   }
+  },
+  {
+   "id": "01M26KQXBBYSEACZNEWB8X5MRG",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "word",
+   "ref": "v2",
+   "text_target": "available",
+   "text_native": "свободный",
+   "pronunciation_native": "эвейлабл",
+   "definition_target": "free and possible to book",
+   "example_target": "Yes, we have 3 p.m. available on Friday.",
+   "example_native": "Да, у нас есть свободное время в пятницу в 15:00.",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": null
+  },
+  {
+   "id": "01M26KQXBB8Z5NE1SMGQ3D9E4J",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "chunk",
+   "ref": "v3",
+   "text_target": "back pain",
+   "text_native": "боль в спине",
+   "pronunciation_native": "бэк пейн",
+   "definition_target": "pain in the back",
+   "example_target": "I have back pain.",
+   "example_native": "У меня болит спина.",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/6129035/pexels-photo-6129035.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "RDNE Stock project",
+    "author_url": "https://www.pexels.com/@rdne"
+   }
+  },
+  {
+   "id": "01M26KQXBB8KZFV08CRNQ9SQMZ",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "word",
+   "ref": "v4",
+   "text_target": "visit",
+   "text_native": "визит",
+   "pronunciation_native": "визит",
+   "definition_target": "one time when you go to a clinic",
+   "example_target": "Of course. Is this your first visit here?",
+   "example_native": "Конечно. Это ваш первый визит к нам?",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/6809658/pexels-photo-6809658.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Pavel Danilyuk",
+    "author_url": "https://www.pexels.com/@pavel-danilyuk"
+   }
+  },
+  {
+   "id": "01M26KQXBBYZSK49XKS01NP46P",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "word",
+   "ref": "v5",
+   "text_target": "documents",
+   "text_native": "документы",
+   "pronunciation_native": "докьюментс",
+   "definition_target": "papers or cards you need to bring",
+   "example_target": "What documents do I need?",
+   "example_native": "Какие документы мне нужны?",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/7820374/pexels-photo-7820374.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Mikhail Nilov",
+    "author_url": "https://www.pexels.com/@mikhail-nilov"
+   }
+  },
+  {
+   "id": "01M26KQXBBJ290WWC7XXV152TF",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "word",
+   "ref": "v6",
+   "text_target": "passport",
+   "text_native": "паспорт",
+   "pronunciation_native": "паспорт",
+   "definition_target": "an official document with your identity information",
+   "example_target": "Please bring your passport and insurance card.",
+   "example_native": "Пожалуйста, принесите паспорт и страховую карту.",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/8061986/pexels-photo-8061986.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Borys Zaitsev",
+    "author_url": "https://www.pexels.com/@mrborys"
+   }
+  },
+  {
+   "id": "01M26KQXBBTKE1F1Q4H5827XNW",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "chunk",
+   "ref": "v7",
+   "text_target": "insurance card",
+   "text_native": "страховая карта",
+   "pronunciation_native": "иншурэнс кард",
+   "definition_target": "a card that shows your medical insurance",
+   "example_target": "Please bring your passport and insurance card.",
+   "example_native": "Пожалуйста, принесите паспорт и страховую карту.",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/8569643/pexels-photo-8569643.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Towfiqu barbhuiya",
+    "author_url": "https://www.pexels.com/@towfiqu-barbhuiya-3440682"
+   }
+  },
+  {
+   "id": "01M26KQXBBCR8NCXBWM50SPKSJ",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "word",
+   "ref": "v8",
+   "text_target": "register",
+   "text_native": "зарегистрироваться",
+   "pronunciation_native": "реджистер",
+   "definition_target": "to give your information before the appointment",
+   "example_target": "Do I need to register first?",
+   "example_native": "Мне нужно сначала зарегистрироваться?",
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": {
+    "url": "https://images.pexels.com/photos/7108318/pexels-photo-7108318.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Pavel Danilyuk",
+    "author_url": "https://www.pexels.com/@pavel-danilyuk"
+   }
+  }
+ ],
+ "phrases": [
+  {
+   "id": "01M26KQXBB74VD8XR4E3KN4NVN",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "phrase",
+   "ref": "p1",
+   "text_target": "I'd like to make an appointment.",
+   "text_native": "Я хотел(а) бы записаться на прием.",
+   "pronunciation_native": "Айд лайк ту мейк эн эпойнтмент.",
+   "definition_target": null,
+   "example_target": "I'd like to make an appointment.",
+   "example_native": "Я хотел(а) бы записаться на прием.",
+   "speaking_key": "make an appointment",
+   "simplified_variants": [
+    "I want an appointment."
+   ],
+   "image": null
+  },
+  {
+   "id": "01M26KQXBC3PVWM5H12H5S079W",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "phrase",
+   "ref": "p2",
+   "text_target": "I have back pain.",
+   "text_native": "У меня болит спина.",
+   "pronunciation_native": "Ай хэв бэк пейн.",
+   "definition_target": null,
+   "example_target": "I have back pain.",
+   "example_native": "У меня болит спина.",
+   "speaking_key": "back pain",
+   "simplified_variants": [],
+   "image": null
+  },
+  {
+   "id": "01M26KQXBCCB7RNVF34JWCGFZM",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "phrase",
+   "ref": "p3",
+   "text_target": "Do you have anything on Friday?",
+   "text_native": "У вас есть что-нибудь на пятницу?",
+   "pronunciation_native": "Ду ю хэв энисинг он Фрайдей?",
+   "definition_target": null,
+   "example_target": "Do you have anything on Friday?",
+   "example_native": "У вас есть что-нибудь на пятницу?",
+   "speaking_key": "on Friday",
+   "simplified_variants": [
+    "Any time on Friday?"
+   ],
+   "image": null
+  },
+  {
+   "id": "01M26KQXBC0D10HWEDSQSGRTBS",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "phrase",
+   "ref": "p4",
+   "text_target": "What documents do I need?",
+   "text_native": "Какие документы мне нужны?",
+   "pronunciation_native": "Уот докьюментс ду ай нид?",
+   "definition_target": null,
+   "example_target": "What documents do I need?",
+   "example_native": "Какие документы мне нужны?",
+   "speaking_key": "What documents",
+   "simplified_variants": [
+    "Which documents do I need?"
+   ],
+   "image": null
+  },
+  {
+   "id": "01M26KQXBCN1NP7W3F2ECAEVMT",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "phrase",
+   "ref": "p5",
+   "text_target": "Do I need to register first?",
+   "text_native": "Мне нужно сначала зарегистрироваться?",
+   "pronunciation_native": "Ду ай нид ту реджистер фёрст?",
+   "definition_target": null,
+   "example_target": "Do I need to register first?",
+   "example_native": "Мне нужно сначала зарегистрироваться?",
+   "speaking_key": "register first",
+   "simplified_variants": [
+    "Should I register first?"
+   ],
+   "image": null
+  },
+  {
+   "id": "01M26KQXBCAHH89VJQ6NW13X36",
+   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
+   "kind": "phrase",
+   "ref": "p6",
+   "text_target": "Friday at 3 p.m.",
+   "text_native": "В пятницу в 15:00.",
+   "pronunciation_native": "Фрайдей эт сри пи эм.",
+   "definition_target": null,
+   "example_target": null,
+   "example_native": null,
+   "speaking_key": null,
+   "simplified_variants": [],
+   "image": null
+  }
+ ]
+}

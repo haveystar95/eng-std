@@ -8,11 +8,13 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/api_client.dart';
+import '../../data/plan/plan_contract.dart';
+import '../../data/plan/plan_providers.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
 import 'build_stamp.dart';
+import 'day/open_day.dart';
 import 'entry/plan_entry_screen.dart';
-import 'plan_screen.dart';
 import 'plan_ui.dart';
 
 /// THE «ПЛАН» TAB — three faces, and which one is shown is a fact about the account, not a mode.
@@ -20,7 +22,8 @@ import 'plan_ui.dart';
 ///  * NO PLAN (кадр 1c · 10) — the difference between a collection and a plan, in three lines. No
 ///    illustration and no «выучи язык за неделю»: the tab has to explain a concept, and the honest
 ///    way to do that is to say what it is for.
-///  * A PLAN RUNNING — {@link PlanScreen}, embedded rather than pushed, so the tab bar stays.
+///  * A PLAN RUNNING — {@link _DayEntryStub}: одна дверь в кабинет дня (стык DAY-UI; сам таб по
+///    кадрам 21-x рисует наряд PLAN-UI).
 ///  * A PLAN FINISHED (кадр 1c · 11) — «подготовка завершена» does not disappear: the outcome, what
 ///    happened to the words, and the archive of everything before it.
 class PlanTabScreen extends ConsumerWidget {
@@ -29,7 +32,8 @@ class PlanTabScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final active = ref.watch(activePlanProvider);
+    // Текущий план — по новому контракту (`GET /plans/current`); старый `/plans/active` снесён.
+    final active = ref.watch(currentPlanProvider);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
@@ -55,16 +59,55 @@ class PlanTabScreen extends ConsumerWidget {
                 error: (e, _) => PlanNotice(
                   text: isOffline(e) ? l.planErrorOffline : l.planErrorLoadFailed,
                   actionLabel: l.generationRetry,
-                  onAction: () => ref.invalidate(activePlanProvider),
+                  onAction: () => ref.invalidate(currentPlanProvider),
                 ),
-                data: (plan) => plan == null
-                    ? const _NoActivePlan()
-                    : PlanScreen(planId: plan.id, embedded: true),
+                data: (plan) => plan == null ? const _NoActivePlan() : const _DayEntryStub(),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// ЗАГЛУШКА СТЫКА (DAY-UI): таб по кадрам 21-x рисует наряд PLAN-UI параллельно; здесь ровно одна
+/// дверь в кабинет текущего дня — тот же `openDayRoom`, что у ссылки `engstd://plan/…`.
+class _DayEntryStub extends ConsumerWidget {
+  const _DayEntryStub();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final plan = ref.watch(currentPlanProvider);
+
+    return plan.when(
+      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
+      error: (e, _) => PlanNotice(
+        text: isOffline(e) ? l.planErrorOffline : l.planErrorLoadFailed,
+        actionLabel: l.generationRetry,
+        onAction: () => ref.invalidate(currentPlanProvider),
+      ),
+      data: (p) {
+        if (p == null) return const _NoActivePlan();
+        final day = p.currentDay ?? p.days.firstOrNull;
+        final title = day?.titleNative ?? p.titleNative ?? p.goalText;
+        return ListView(
+          padding: EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s12, AppSpacing.screenH, _bottomInset(context)),
+          children: [
+            if (day != null) Text(l.dayLabel(day.number).toUpperCase(), style: AppTextDay.sectionLabel),
+            const SizedBox(height: 8),
+            Text(title, style: AppTextDay.entryTitle),
+            const SizedBox(height: AppSpacing.s22),
+            PrimaryButton(
+              label: day?.status == DayStatus.inProgress ? l.dayEntryResumeCta : l.dayCtaStart,
+              minHeight: 52,
+              onPressed: () => openDayRoom(context, ref, plan: p, number: day?.number),
+            ),
+            const BuildStampLine(),
+          ],
+        );
+      },
     );
   }
 }
@@ -256,12 +299,7 @@ class _ArchiveRow extends StatelessWidget {
     final l = AppLocalizations.of(context);
 
     return InkWell(
-      onTap: () {
-        AppHaptics.light();
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => PlanScreen(planId: plan.id)),
-        );
-      },
+      onTap: null,
       child: Container(
         constraints: const BoxConstraints(minHeight: 60),
         decoration: const BoxDecoration(

@@ -132,6 +132,68 @@ abstract final class AppColors {
   /// алерты). 5.4:1 на бумаге. Правило 20 — это не заливка.
   static const destructiveText = Color(0xFF9A4430);
 
+
+  // ── ПЛАН · ДЕНЬ (токен-лист 4к–4о, кадры 23-x) ───────────────────────────
+  //
+  // Одна краска сверх чернил на карточку: латунь лейбла собеседника, шалфей/охра/терракота
+  // вердикта и полосок, тёмная плита под числом, фото на знакомстве. Всё ниже — те же три
+  // вердикта и те же чернила в других плотностях; новых цветов план не заводит (4к-2).
+
+  /// Тонировка верного варианта — `rgba(78,107,82,.08)` (4л).
+  static const sageTint = Color.fromARGB(20, 78, 107, 82);
+
+  /// Шалфейная подложка под словом/ключом, который услышали — `rgba(78,107,82,.12)` (23-3c, 23-5).
+  static const sageWash = Color.fromARGB(31, 78, 107, 82);
+
+  /// Тонировка неверного варианта — `rgba(154,68,48,.06)` (4л).
+  static const terracottaTint = Color.fromARGB(15, 154, 68, 48);
+
+  /// Подложка блока задания — `rgba(46,38,32,.04)` (4м).
+  static const taskBlock = Color.fromARGB(10, _inkR, _inkG, _inkB);
+
+  /// Контур пустого маркера 22 и тихих столбиков амплитуды — `rgba(46,38,32,.22)` (4л).
+  static const markerOutline = Color.fromARGB(56, _inkR, _inkG, _inkB);
+
+  /// Контур кружка воспроизведения 44 — `rgba(46,38,32,.28)`; он же — тихая часть волны.
+  static const playOutline = Color.fromARGB(71, _inkR, _inkG, _inkB);
+
+  /// Подчёркивание слова в примере знакомства — `rgba(46,38,32,.55)` (16a, 23-1).
+  static const exampleUnderline = Color.fromARGB(140, _inkR, _inkG, _inkB);
+
+  /// Подложка пустого фото-слота — `#E3DCCF` (4и, 4н).
+  static const photoSlot = Color(0xFFE3DCCF);
+
+  /// Материал под размытым снимком шапки кабинета, пока фото не приехало — `#3A312A` (23-0a).
+  static const plateUnderPhoto = Color(0xFF3A312A);
+
+  /// Скрим над снимком шапки: `rgba(51,42,35,.88)` → `rgba(41,34,25,.95)` (4н).
+  static const scrimTop = Color.fromARGB(224, 51, 42, 35);
+  static const scrimBottom = Color.fromARGB(242, 41, 34, 25);
+
+  /// Бумага на плите в разных плотностях: подложка полоски `.14`, контур маркера «научишься»
+  /// `.35`, вторичные строки `.5 / .65 / .72 / .9`.
+  static const paperTrack = Color.fromARGB(36, 246, 243, 236);
+  static const paperMarkerOutline = Color.fromARGB(89, 246, 243, 236);
+  static const paper50 = Color.fromARGB(128, 246, 243, 236);
+  static const paper65 = Color.fromARGB(166, 246, 243, 236);
+  static const paper72 = Color.fromARGB(184, 246, 243, 236);
+  static const paper90 = Color.fromARGB(230, 246, 243, 236);
+
+  /// Бумажная подложка `.9` под маркером в углу фото карточки слова (4н).
+  static const paperUnderMarker = Color.fromARGB(230, 246, 243, 236);
+
+  /// Прозрачная бумага — верх градиента дока, из которого выходит кнопка.
+  static const paperClear = Color(0x00F6F3EC);
+
+  /// Подложка полоски этапа на бумаге — `rgba(46,38,32,.12)` (23-9, 23-14).
+  static const barTrack = Color.fromARGB(31, _inkR, _inkG, _inkB);
+
+  /// Тень микрофона 80 — `0 10 28 rgba(46,38,32,.22)`.
+  static const micShadow = Color.fromARGB(56, _inkR, _inkG, _inkB);
+
+  /// Хайрлайн на бумаге в примере знакомства — `rgba(46,38,32,.12)`.
+  static const hairlineSoft = Color.fromARGB(31, _inkR, _inkG, _inkB);
+
   // Подписи поверх заливок вердиктов.
   static const onVerdictUnknown = Color(0xFFFFFFFF);
   static const onVerdictUnsure = ink;

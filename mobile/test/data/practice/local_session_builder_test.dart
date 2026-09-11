@@ -192,12 +192,6 @@ void main() {
           expect(card.chips, isNull);
         case ExerciseMode.intro:
           fail('practice introduces nothing — an intro card must never be dealt here');
-        case ExerciseMode.situationalHear:
-        case ExerciseMode.situationalSay:
-        case ExerciseMode.situationalAsk:
-          // A situational card asks about a MOMENT, and the moment is a plan day's scene. Free
-          // practice has none, so one dealt here would be a card with no question above it.
-          fail('a situational card belongs to a plan day — free practice has no scene to situate it');
       }
     }
   });

@@ -2427,48 +2427,6 @@ abstract class AppLocalizations {
   /// **'собери свой ответ из блоков'**
   String get sessionInstrAssembleTurn;
 
-  /// Подпись части посадки — ступень C: реплики нет, есть подсказка и микрофон (SCENE-RUN, Ч.2).
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажи сам'**
-  String get planSectionSceneRun;
-
-  /// Подсказка на ходу прогона сцены: реплики на экране нет, есть только перевод (SCENE-RUN, Ч.2).
-  ///
-  /// In ru, this message translates to:
-  /// **'скажи свою реплику — текста не будет'**
-  String get planSceneRunHint;
-
-  /// Строка под итогом прогона сцены: после ступени C сборки уже не будет (SCENE-RUN, Ч.2.7).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сцена сказана голосом. Что не прозвучало — вернётся своим чередом.'**
-  String get planSceneRunNext;
-
-  /// Итог прогона сцены: сколько ходов человек сказал своим голосом (кадр DL·10).
-  ///
-  /// In ru, this message translates to:
-  /// **'Прошёл сам'**
-  String get planSceneRunSaidSelf;
-
-  /// Кнопка микрофона на своём ходу диалога: экран слушает, но ничего не оценивает (SCENE-RUN, Ч.4).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сказать вслух'**
-  String get planDialogueSayIt;
-
-  /// Первая пустая попытка микрофона на своём ходу диалога (SCENE-RUN, Ч.4).
-  ///
-  /// In ru, this message translates to:
-  /// **'Не расслышали — попробуйте ещё раз.'**
-  String get planDialogueNotHeard;
-
-  /// Итог прогона сцены: сколько ходов прозвучало без раздумья (канон §4, «C + скорость»).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сразу'**
-  String get planSceneRunSaidFast;
-
   /// Инструкция «Ты спросишь» на ситуационной карточке (SIT-1, канон §4).
   ///
   /// In ru, this message translates to:
@@ -2504,12 +2462,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Продолжить'**
   String get planSittingContinue;
-
-  /// Уйти между присестами — позиция сохраняется, день продолжится с этого места.
-  ///
-  /// In ru, this message translates to:
-  /// **'Хватит на сегодня'**
-  String get planSittingStop;
 
   /// Кнопка замедленного повтора озвучки в аудировании (кадры 12g–12h).
   ///
@@ -3753,107 +3705,11 @@ abstract class AppLocalizations {
   /// **'Назад'**
   String get commonBack;
 
-  /// Заголовок экрана входа в план (кадр Б-01).
-  ///
-  /// In ru, this message translates to:
-  /// **'Составить план'**
-  String get planBuilderTitle;
-
-  /// Подзаголовок входа в план. «ИИ» произносится здесь один раз за весь поток.
-  ///
-  /// In ru, this message translates to:
-  /// **'Три ответа — и ИИ соберёт дни подготовки из фраз, которые ты реально скажешь.'**
-  String get planBuilderSubtitle;
-
-  /// Шаг 1 плана, раскрытый.
-  ///
-  /// In ru, this message translates to:
-  /// **'К чему готовишься?'**
-  String get planStepGoalQuestion;
-
-  /// Шаг 1 плана, ещё не отвеченный (закрытая строка).
-  ///
-  /// In ru, this message translates to:
-  /// **'Цель'**
-  String get planStepGoalClosed;
-
-  /// Шаг 2 плана, раскрытый.
-  ///
-  /// In ru, this message translates to:
-  /// **'Язык и уровень'**
-  String get planStepLanguageQuestion;
-
-  /// Шаг 2 плана, закрытая строка.
-  ///
-  /// In ru, this message translates to:
-  /// **'Язык и уровень'**
-  String get planStepLanguageClosed;
-
-  /// Шаг 3 плана, раскрытый.
-  ///
-  /// In ru, this message translates to:
-  /// **'Когда это случится?'**
-  String get planStepWhenQuestion;
-
-  /// Шаг 3 плана, закрытая строка.
-  ///
-  /// In ru, this message translates to:
-  /// **'Когда и сколько'**
-  String get planStepWhenClosed;
-
   /// Ссылка «изменить» в свёрнутой строке шага (кадр Б-02).
   ///
   /// In ru, this message translates to:
   /// **'Изм.'**
   String get planStepEdit;
-
-  /// Плейсхолдер поля цели.
-  ///
-  /// In ru, this message translates to:
-  /// **'Например, приём у врача'**
-  String get planGoalPlaceholder;
-
-  /// Чип-пример цели.
-  ///
-  /// In ru, this message translates to:
-  /// **'Собеседование'**
-  String get planGoalChipInterview;
-
-  /// Чип-пример цели.
-  ///
-  /// In ru, this message translates to:
-  /// **'Приём у врача'**
-  String get planGoalChipDoctor;
-
-  /// Чип-пример цели.
-  ///
-  /// In ru, this message translates to:
-  /// **'Аренда квартиры'**
-  String get planGoalChipRent;
-
-  /// Чип-пример цели.
-  ///
-  /// In ru, this message translates to:
-  /// **'Поездка'**
-  String get planGoalChipTrip;
-
-  /// Чип-пример цели.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ветклиника'**
-  String get planGoalChipVet;
-
-  /// Чип-пример цели.
-  ///
-  /// In ru, this message translates to:
-  /// **'Школа ребёнка'**
-  String get planGoalChipSchool;
-
-  /// Лейбл блока уровня — четыре человеческие формулировки вместо A1/B2.
-  ///
-  /// In ru, this message translates to:
-  /// **'Как сейчас говоришь'**
-  String get planLevelLabel;
 
   /// Уровень плана `zero`.
   ///
@@ -3879,65 +3735,17 @@ abstract class AppLocalizations {
   /// **'Свободно'**
   String get planLevelFluent;
 
-  /// Кнопка даты события.
-  ///
-  /// In ru, this message translates to:
-  /// **'Сегодня'**
-  String get planWhenToday;
-
-  /// Кнопка даты события.
-  ///
-  /// In ru, this message translates to:
-  /// **'Завтра'**
-  String get planWhenTomorrow;
-
   /// Заголовок шита выбора даты.
   ///
   /// In ru, this message translates to:
   /// **'Когда это случится?'**
   String get planWhenSheetTitle;
 
-  /// Лейбл блока минут (для «сегодня» блок не показывается).
-  ///
-  /// In ru, this message translates to:
-  /// **'Минут в день'**
-  String get planMinutesLabel;
-
-  /// Служебная строка бюджета времени.
-  ///
-  /// In ru, this message translates to:
-  /// **'{minutes} мин/день'**
-  String planMinutesPerDay(int minutes);
-
-  /// Главная кнопка входа в план.
-  ///
-  /// In ru, this message translates to:
-  /// **'Собрать план'**
-  String get planBuilderSubmit;
-
-  /// Кнопка входа в план в состоянии ожидания.
-  ///
-  /// In ru, this message translates to:
-  /// **'Собираю…'**
-  String get planBuilderWorking;
-
   /// Пульсирующая строка под кнопкой, пока модель пишет каркас или день. Заменяет ориентир/плейсхолдер цены на время ожидания.
   ///
   /// In ru, this message translates to:
   /// **'Разбираю цель — обычно 15–30 секунд'**
   String get planBuilderBusyLine;
-
-  /// Ориентир под кнопкой, когда событие сегодня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Событие сегодня — соберём короткую подготовку на один заход.'**
-  String get planBuilderHintToday;
-
-  /// Ориентир под кнопкой «Собрать план». Объём материала считает сервер — здесь только календарь.
-  ///
-  /// In ru, this message translates to:
-  /// **'{days, plural, one{Ориентир: {days} день до события} few{Ориентир: {days} дня до события} many{Ориентир: {days} дней до события} other{Ориентир: {days} дня до события}} · {minutes} мин в день'**
-  String planBuilderHintDays(int days, int minutes);
 
   /// Ошибка сети на экранах плана.
   ///
@@ -3963,59 +3771,11 @@ abstract class AppLocalizations {
   /// **'Не удалось загрузить план.'**
   String get planErrorLoadFailed;
 
-  /// Латунная метка в шапке превью (кадр Б-04).
-  ///
-  /// In ru, this message translates to:
-  /// **'Превью плана'**
-  String get planPreviewBadge;
-
-  /// Строка структуры плана на тёмной плите.
-  ///
-  /// In ru, this message translates to:
-  /// **'{days, plural, one{Подготовка {days} день + финал} few{Подготовка {days} дня + финал} many{Подготовка {days} дней + финал} other{Подготовка {days} дня + финал}}'**
-  String planPrepDays(int days);
-
-  /// Дата события на плите превью.
-  ///
-  /// In ru, this message translates to:
-  /// **'Событие {date}.'**
-  String planEventOn(String date);
-
-  /// Ориентир объёма материала на плите превью.
-  ///
-  /// In ru, this message translates to:
-  /// **'~{count} фраз и слов.'**
-  String planApproxTerms(int count);
-
   /// Латунная метка дня.
   ///
   /// In ru, this message translates to:
   /// **'День {index}'**
   String planDayNumber(int index);
-
-  /// Подпись дня-прогона.
-  ///
-  /// In ru, this message translates to:
-  /// **'без новых слов'**
-  String get planDayNoNewWords;
-
-  /// Счётчик слов дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
-  String planWordsCount(int count);
-
-  /// Счётчик фраз дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} фраза} few{{count} фразы} many{{count} фраз} other{{count} фразы}}'**
-  String planPhrasesCount(int count);
-
-  /// Счётчик связок дня — kind = chunk. Отдельно от слов и фраз: связка не одно слово и не реплика.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} связка} few{{count} связки} many{{count} связок} other{{count} связки}}'**
-  String planChunksCount(int count);
 
   /// Длительность плана в архиве.
   ///
@@ -4028,18 +3788,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Убрать день'**
   String get planPreviewDropDay;
-
-  /// Тихая ссылка на превью — пересобрать каркас.
-  ///
-  /// In ru, this message translates to:
-  /// **'Перестроить'**
-  String get planPreviewRebuild;
-
-  /// Главная кнопка превью — обязательство.
-  ///
-  /// In ru, this message translates to:
-  /// **'Начать'**
-  String get planPreviewStart;
 
   /// Заглушка под кнопкой «Начать». Paywall в этом наряде не трогается.
   ///
@@ -4119,36 +3867,6 @@ abstract class AppLocalizations {
   /// **'Открыть план'**
   String get planBuildingOpenAnyway;
 
-  /// Латунная метка на тёмной плите плана (кадр 1c-01).
-  ///
-  /// In ru, this message translates to:
-  /// **'Активный план'**
-  String get planActiveBadge;
-
-  /// Подпись к главному числу плана.
-  ///
-  /// In ru, this message translates to:
-  /// **'готовность к событию'**
-  String get planReadinessCaption;
-
-  /// Служебная строка под шкалой готовности.
-  ///
-  /// In ru, this message translates to:
-  /// **'{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}'**
-  String planEventInDays(int days);
-
-  /// Служебная строка под шкалой готовности.
-  ///
-  /// In ru, this message translates to:
-  /// **'Событие сегодня'**
-  String get planEventToday;
-
-  /// Служебная строка под шкалой готовности.
-  ///
-  /// In ru, this message translates to:
-  /// **'Событие прошло'**
-  String get planEventPassed;
-
   /// Служебная строка под шкалой готовности — на каком дне юзер.
   ///
   /// In ru, this message translates to:
@@ -4161,77 +3879,11 @@ abstract class AppLocalizations {
   /// **'Ты уже можешь · {hit} из {total}'**
   String planCanAlready(int hit, int total);
 
-  /// Ссылка на незакрытом умении — ведёт в день, который ему учит.
-  ///
-  /// In ru, this message translates to:
-  /// **'Потренировать'**
-  String get planTrainThis;
-
   /// Лейбл блока дней плана.
   ///
   /// In ru, this message translates to:
   /// **'Дни · {index} из {total}'**
   String planDaysHeader(int index, int total);
-
-  /// Главная кнопка экрана плана.
-  ///
-  /// In ru, this message translates to:
-  /// **'Продолжить день {index}'**
-  String planContinueDay(int index);
-
-  /// Подпись пройденного дня в списке.
-  ///
-  /// In ru, this message translates to:
-  /// **'День {index} пройден'**
-  String planDayPassed(int index);
-
-  /// Подпись дня-прогона в списке.
-  ///
-  /// In ru, this message translates to:
-  /// **'Без новых слов · можно открыть раньше'**
-  String get planDayFinalHint;
-
-  /// Подпись дня в статусе `generating` — его прямо сейчас держит воркер. НЕ для `pending`: см. planDayQueued.
-  ///
-  /// In ru, this message translates to:
-  /// **'Собирается'**
-  String get planDayBuilding;
-
-  /// Пометка роли в левом поле реплики на экране дня (кадр D-01): «он» — говорит собеседник. Курсив и эта метка вместе однозначно говорят, чья это речь.
-  ///
-  /// In ru, this message translates to:
-  /// **'он'**
-  String get planSpeakerRoleShort;
-
-  /// Пометка реплики собеседника (speaker = role) — на экране дня и на карточке в сессии. Если каркас дня назвал роль, вместо этой строки показывается её имя. Лексика: в UI слово «фраза», не «реплика».
-  ///
-  /// In ru, this message translates to:
-  /// **'Собеседник:'**
-  String get planSpeakerRole;
-
-  /// Подпись дня в статусе `pending`: его ещё никто не взял. Раньше такие дни подписывались «Собирается», хотя попыток у них ноль (Д-20).
-  ///
-  /// In ru, this message translates to:
-  /// **'В очереди'**
-  String get planDayQueued;
-
-  /// Подпись дня в статусе `failed`. Причина — на экране самого дня, по fail_code.
-  ///
-  /// In ru, this message translates to:
-  /// **'Не собрался'**
-  String get planDayNotBuilt;
-
-  /// Действие вместо «Продолжить день N», когда текущий день сгорел: продолжать нечего, но решение принимается на экране дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Открыть день {index}'**
-  String planDayOpenFailed(int index);
-
-  /// Подпись будущего дня — он открыт, но мягко.
-  ///
-  /// In ru, this message translates to:
-  /// **'можно открыть раньше'**
-  String get planDayOpenEarly;
 
   /// Латунная метка в шапке экрана дня.
   ///
@@ -4239,323 +3891,11 @@ abstract class AppLocalizations {
   /// **'День {index} из {total}'**
   String planDayOfPlan(int index, int total);
 
-  /// Строка-намерение над сборкой (DAY-GATE-1, Ч.2.4): что именно надо сказать, на языке поддержки. Строка серверная (`task.intent`), префикс клиентский.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажи: {intent}'**
-  String planSayIntent(String intent);
-
   /// Подпись под «На всякий случай» (DAY-GATE-1, доработка Ч.2.7): прежнее имя «Спасатели» объясняло себя само, новое — нет.
   ///
   /// In ru, this message translates to:
   /// **'если не понял или не расслышал'**
   String get planRescueHint;
-
-  /// Этап дня `material` (DAY-GATE-1, Ч.2.1) — подпись клиентская, сервер везёт код.
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова и фразы'**
-  String get planStageMaterial;
-
-  /// Этап дня `conversation`.
-  ///
-  /// In ru, this message translates to:
-  /// **'Разговор'**
-  String get planStageConversation;
-
-  /// Этап дня `rehearsal` — прогон сцены голосом.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажи сам'**
-  String get planStageRehearsal;
-
-  /// Этап дня `retrain`: приходит, только когда есть что повторять; день не держит.
-  ///
-  /// In ru, this message translates to:
-  /// **'Повторить ошибки'**
-  String get planStageRetrain;
-
-  /// Состояние этапа `done` — словом, без чисел: «N из M» на экранах плана не бывает.
-  ///
-  /// In ru, this message translates to:
-  /// **'пройдено'**
-  String get planStageStateDone;
-
-  /// Состояние этапа `current` — ровно один среди обязательных.
-  ///
-  /// In ru, this message translates to:
-  /// **'сейчас'**
-  String get planStageStateCurrent;
-
-  /// Состояние этапа `locked`: не «закрыт», а после какого этапа он откроется (поле `opens_after`).
-  ///
-  /// In ru, this message translates to:
-  /// **'после «{stage}»'**
-  String planStageStateAfter(String stage);
-
-  /// Подпись у «Повторить ошибки»: день от него не зависит.
-  ///
-  /// In ru, this message translates to:
-  /// **'необязательно'**
-  String get planStageOptional;
-
-  /// Единственная кнопка экрана дня — ведёт в текущий этап; какой это этап, решает сервер.
-  ///
-  /// In ru, this message translates to:
-  /// **'Продолжить'**
-  String get planStageContinue;
-
-  /// Отдельный вход в `retrain` — единственный случай, когда клиент называет этап.
-  ///
-  /// In ru, this message translates to:
-  /// **'Повторить ошибки'**
-  String get planStageRetrainStart;
-
-  /// Что осталось пройти, чтобы встал следующий день (решение 294): перечисление незакрытых обязательных этапов.
-  ///
-  /// In ru, this message translates to:
-  /// **'до дня {index} — ещё {left}'**
-  String planNextDayLeft(int index, String left);
-
-  /// Все обязательные этапы дня закрыты — следующий день встал в очередь.
-  ///
-  /// In ru, this message translates to:
-  /// **'день {index} открыт'**
-  String planNextDayOpen(int index);
-
-  /// Замок дня по полю `locked_by_day_index` (Ч.2.2): выводить его самостоятельно нельзя.
-  ///
-  /// In ru, this message translates to:
-  /// **'сначала закончи день {index}'**
-  String planDayLockedBy(Object index);
-
-  /// 409 `plan_day_locked` словами (Ч.2.3) — не пустой экран и не «нечего повторять».
-  ///
-  /// In ru, this message translates to:
-  /// **'Этот день ещё закрыт: сначала закончи день {index}.'**
-  String planErrorDayLocked(String index);
-
-  /// 409 `plan_sitting_empty` словами (Ч.2.3).
-  ///
-  /// In ru, this message translates to:
-  /// **'Здесь сейчас нечего проходить — этот этап уже закрыт.'**
-  String get planErrorSittingEmpty;
-
-  /// Лейбл блока умений дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ты сможешь'**
-  String get planDayCanDo;
-
-  /// Лейбл блока фраз.
-  ///
-  /// In ru, this message translates to:
-  /// **'Фразы дня'**
-  String get planDayPhrases;
-
-  /// Лейбл реестра слов.
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова в этих фразах'**
-  String get planDayWords;
-
-  /// Строка над кнопкой для дня впереди фокуса: посадка строгая, как у любого дня (E2E-SIM-2, С-1).
-  ///
-  /// In ru, this message translates to:
-  /// **'Это день впереди текущего. Тренировка настоящая: реплики этого дня встречаешь впервые, ответы засчитываются.'**
-  String get planDaySoftNote;
-
-  /// Главная кнопка экрана дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Тренировать'**
-  String get planDayTrain;
-
-  /// Откуда пришло слово, рядом с буквой ступени.
-  ///
-  /// In ru, this message translates to:
-  /// **'· со дня {index}'**
-  String planFromDay(int index);
-
-  /// Лейбл блока разговора.
-  ///
-  /// In ru, this message translates to:
-  /// **'Разговор'**
-  String get planConversationLabel;
-
-  /// Имя роли, когда сервер её не назвал.
-  ///
-  /// In ru, this message translates to:
-  /// **'Собеседник'**
-  String get planConversationDefaultRole;
-
-  /// Честная подпись под запертым разговором (CONV-1).
-  ///
-  /// In ru, this message translates to:
-  /// **'Откроется в следующем обновлении: разговор в роли и зачёт чек-пойнтов.'**
-  String get planConversationLocked;
-
-  /// Заголовок запертой плиты разговора в итоге дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Разговор в роли'**
-  String get planConversationSoon;
-
-  /// Состояние дня без материала.
-  ///
-  /// In ru, this message translates to:
-  /// **'Этот день ещё не собран. План пишет по одному дню — можно попросить собрать его сейчас.'**
-  String get planDayNotWritten;
-
-  /// Состояние дня после неудачной генерации.
-  ///
-  /// In ru, this message translates to:
-  /// **'День не собрался с первого раза. Можно попробовать ещё раз.'**
-  String get planDayFailed;
-
-  /// День исчерпал две попытки: `PlanDay::MAX_ATTEMPTS`. Кнопка «Собрать день» здесь не сработала бы никогда.
-  ///
-  /// In ru, this message translates to:
-  /// **'Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает слова и фразы не на том языке. План придётся собрать заново.'**
-  String get planDayExhausted;
-
-  /// Первый абзац сгоревшего дня: что случилось и что теперь можно. Причину называет отдельная строка по fail_code.
-  ///
-  /// In ru, this message translates to:
-  /// **'Этот день не собрался дважды подряд — сервер больше не будет пытаться. План придётся собрать заново.'**
-  String get planDayExhaustedLead;
-
-  /// Обёртка вокруг причины поломки дня. Причина подставляется по fail_code с сервера.
-  ///
-  /// In ru, this message translates to:
-  /// **'Что пошло не так: {reason}'**
-  String planFailWhy(String reason);
-
-  /// fail_code = card.example_is_a_term.
-  ///
-  /// In ru, this message translates to:
-  /// **'пример к карточке повторял другую карточку этого дня, а не показывал слово в предложении'**
-  String get planFailExampleIsATerm;
-
-  /// fail_code = card.example_skeleton_clone. Раньше — day.example_duplicated: то же самое, «один пример на несколько карточек», только теперь сервер видит его по скелету предложения.
-  ///
-  /// In ru, this message translates to:
-  /// **'два примера оказались одним предложением с подменённым словом'**
-  String get planFailExampleDuplicated;
-
-  /// fail_code = card.example_without_translation. Вторая половина Д-29: предложение на изучаемом языке без перевода рядом.
-  ///
-  /// In ru, this message translates to:
-  /// **'к примеру не приехал перевод, и читать его было бы нечем'**
-  String get planFailExampleWithoutTranslation;
-
-  /// fail_code = outline.target_language.
-  ///
-  /// In ru, this message translates to:
-  /// **'слова и фразы вернулись не на том языке'**
-  String get planFailNotTargetLanguage;
-
-  /// fail_code = card.translation_is_transliteration. Раньше — day.key_is_the_term; сервер теперь ловит и транслитерацию, поэтому во фразе названы оба случая.
-  ///
-  /// In ru, this message translates to:
-  /// **'перевод карточки повторял саму карточку — теми же буквами или другими'**
-  String get planFailKeyIsTheTerm;
-
-  /// fail_code = card.term_is_a_name.
-  ///
-  /// In ru, this message translates to:
-  /// **'именем собственным нельзя занимать карточку — его не переводят'**
-  String get planFailTermIsAName;
-
-  /// fail_code = card.gap_outside_frame.
-  ///
-  /// In ru, this message translates to:
-  /// **'пропуск для подстановки оказался не в той строке'**
-  String get planFailSlotOutsideFrame;
-
-  /// fail_code = card.gap_missing.
-  ///
-  /// In ru, this message translates to:
-  /// **'в реплике не оказалось пропуска, в который встаёт карточка'**
-  String get planFailGapMissing;
-
-  /// fail_code = card.translation_has_gap.
-  ///
-  /// In ru, this message translates to:
-  /// **'в переводе остался пропуск — читать такую подсказку нечем'**
-  String get planFailTranslationHasGap;
-
-  /// fail_code = card.translation_missing_key.
-  ///
-  /// In ru, this message translates to:
-  /// **'в переводе реплики не нашлось самого слова, которому она учит'**
-  String get planFailTranslationMissingKey;
-
-  /// fail_code = card.filler_not_card.
-  ///
-  /// In ru, this message translates to:
-  /// **'в пропуск встало не то, чему учит карточка'**
-  String get planFailFillerNotCard;
-
-  /// fail_code = card.word_is_basic — стоп-список базового (канон §7).
-  ///
-  /// In ru, this message translates to:
-  /// **'карточкой стало слово из самого начального минимума'**
-  String get planFailWordIsBasic;
-
-  /// fail_code = card.kind_size — слово длиннее трёх слов, связка вне 2–4, реплика вне 3–8 (канон §7).
-  ///
-  /// In ru, this message translates to:
-  /// **'карточка вышла за длину, отведённую её виду'**
-  String get planFailKindSize;
-
-  /// fail_code = card.skill_ref_invalid (канон §8).
-  ///
-  /// In ru, this message translates to:
-  /// **'карточка не назвала умение сцены, ради которого она здесь'**
-  String get planFailSkillRefInvalid;
-
-  /// fail_code = card.number_value_mismatch.
-  ///
-  /// In ru, this message translates to:
-  /// **'число в реплике не сошлось с числом, по которому карточку проверяют'**
-  String get planFailNumberValueMismatch;
-
-  /// fail_code = day.shelf_missing. Единственная дневная поломка v0.4: адреса у неё нет, поэтому день пересобирается целиком.
-  ///
-  /// In ru, this message translates to:
-  /// **'в сцене не оказалось целой полки — того, что тебе скажут, что ты ответишь или из чего это собрано'**
-  String get planFailShelfMissing;
-
-  /// fail_code = card.clone. Раньше — plan.term_repeated («день повторил слово другого дня»); теперь сервер ловит все три вида повтора одним кодом.
-  ///
-  /// In ru, this message translates to:
-  /// **'карточка повторяла другую — этого дня, набора «на всякий случай» или прошлого дня'**
-  String get planFailTermRepeated;
-
-  /// fail_code неизвестен клиенту или его нет вовсе. Причину НЕ выдумываем.
-  ///
-  /// In ru, this message translates to:
-  /// **'не удалось собрать день'**
-  String get planFailUnknown;
-
-  /// Тихая деструктивная ссылка внизу экрана плана. В кадрах макета её нет: сервер держит один активный план на человека, и без неё юзер заперт в плане до конца события.
-  ///
-  /// In ru, this message translates to:
-  /// **'Отказаться от плана'**
-  String get planAbandonLink;
-
-  /// Одна дополнительная попытка ДЛЯ ЭТОГО дня на сгоревшем дне — до «Собрать план заново», которое выбрасывает пройденное.
-  ///
-  /// In ru, this message translates to:
-  /// **'Собрать заново'**
-  String get planDayRebuildDay;
-
-  /// Единственное, что может помочь на исчерпанном дне.
-  ///
-  /// In ru, this message translates to:
-  /// **'Собрать план заново'**
-  String get planDayRebuildPlan;
 
   /// Подтверждение перед отказом от плана — с экрана плана и с несобираемого дня. Одна формулировка на оба входа: последствие одно.
   ///
@@ -4581,401 +3921,11 @@ abstract class AppLocalizations {
   /// **'Сервер отказался собирать этот день. Ждать дальше нечего — открой план: на экране дня написано, что именно случилось.'**
   String get planBuildingRefused;
 
-  /// Кнопка ручной сборки дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Собрать день'**
-  String get planDayBuildNow;
-
-  /// Заголовок итога дня (кадр 1c-04).
-  ///
-  /// In ru, this message translates to:
-  /// **'День {index} пройден'**
-  String planDayDone(int index);
-
-  /// Нейтральный заголовок итога, пока сервер не ответил, закрылся ли день. Утверждать «пройден» до ответа нельзя.
-  ///
-  /// In ru, this message translates to:
-  /// **'Занятие пройдено'**
-  String get planDaySittingDone;
-
-  /// Строгое сидение кончилось, но ступень A закрылась не у всех карточек — день остался в работе.
-  ///
-  /// In ru, this message translates to:
-  /// **'День {index} ещё не закрыт'**
-  String planDayNotClosed(int index);
-
-  /// Пояснение под заголовком незакрытого дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Часть карточек ответена неверно, и они остались недоученными. Открой день ещё раз: он раздаст только то, что осталось.'**
-  String get planDayNotClosedNote;
-
-  /// Заголовок итога мягкого прохода — ступени не закрывались.
-  ///
-  /// In ru, this message translates to:
-  /// **'День {index} повторён'**
-  String planDaySoftDone(int index);
-
-  /// No description provided for @planReviewRow.
-  ///
-  /// In ru, this message translates to:
-  /// **'Повторение'**
-  String get planReviewRow;
-
-  /// No description provided for @planReviewCount.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
-  String planReviewCount(int count);
-
-  /// Шов в сессии плана: дальше идут карточки, введённые ПРОШЛЫМИ днями этого же плана. Раньше здесь стояло просто «Повторение», а под каждой карточкой — «Из плана: <название>»; после PLAN-FIX-3 в сессии плана не бывает чужих карточек, и название всегда было бы своим собственным.
-  ///
-  /// In ru, this message translates to:
-  /// **'Повторение · из прошлых дней'**
-  String get planReviewSection;
-
-  /// Шов в сессии плана: section = warmup — спасательный набор, пять фраз перед каждым днём (канон §5).
-  ///
-  /// In ru, this message translates to:
-  /// **'Из прошлых дней'**
-  String get planWarmupSection;
-
-  /// Шов в сессии плана: полка hear — реплики собеседника, только на понимание (канон §2).
-  ///
-  /// In ru, this message translates to:
-  /// **'Тебе скажут'**
-  String get planShelfHear;
-
-  /// Шов в сессии плана: полка say — короткие ответы, полная лестница до «сказал сам».
-  ///
-  /// In ru, this message translates to:
-  /// **'Ты ответишь'**
-  String get planShelfSay;
-
-  /// Шов в сессии плана: полка ask — уточняющие вопросы. Отдельная от say: обе полки — kind = line, и различает их только полка.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ты спросишь'**
-  String get planShelfAsk;
-
-  /// Шов в сессии плана: полки words и chunks под одной подписью — канон §2 считает их вместе («внизу — слова и связки»).
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова и связки'**
-  String get planShelfWords;
-
-  /// Секция посадки (DAY-2, код dialogue_intro): ступень A трёх полок сцены — реплики, которые сегодня встречают впервые. Раньше это были три подписи («Тебе скажут», «Ты ответишь», «Ты спросишь»); в день знакомства это одно, что происходит.
-  ///
-  /// In ru, this message translates to:
-  /// **'Знакомство с репликами'**
-  String get planSectionDialogueIntro;
-
-  /// Секция посадки (DAY-2, код dialogue): ступень B тех же полок, сыгранная одним разговором — экран-диалог.
-  ///
-  /// In ru, this message translates to:
-  /// **'Диалог сцены'**
-  String get planSectionDialogue;
-
-  /// Секция посадки (код numbers, канон §6). Пока ни одна сессия их не раздаёт — подпись есть, чтобы было чем подписать, когда появится тренажёр.
-  ///
-  /// In ru, this message translates to:
-  /// **'Цифры на слух'**
-  String get planSectionNumbers;
-
-  /// Секция посадки (код rehearsal): прогон перед событием, финальный день.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажи сам'**
-  String get planSectionRehearsal;
-
-  /// Подпись секции, которая принадлежит ПРОШЛОЙ сцене: «Диалог сцены · сцена 1». Номер нужен, потому что в одной посадке может быть разговор одной сцены и знакомство другой.
-  ///
-  /// In ru, this message translates to:
-  /// **'{section} · сцена {index}'**
-  String planSectionOfScene(String section, int index);
-
-  /// Пояснение под подписью «Разогрев» на первой карточке разогрева: зачем спасатели (кадр D-01).
-  ///
-  /// In ru, this message translates to:
-  /// **'чтобы было чем ответить, если растеряешься'**
-  String get planWarmupWhy;
-
-  /// Надзаголовок экрана-диалога (кадры DL-01…DL-10). Материал называется сценой; слово «день» на этих экранах не звучит.
-  ///
-  /// In ru, this message translates to:
-  /// **'Сцена {index}'**
-  String planDialogueScene(int index);
-
-  /// Подпись блока на входе в диалог (кадр DL-01).
-  ///
-  /// In ru, this message translates to:
-  /// **'Диалог'**
-  String get planDialogueLabel;
-
-  /// Что произойдёт в диалоге (кадр DL-01).
-  ///
-  /// In ru, this message translates to:
-  /// **'Собеседник говорит — вы отвечаете. Отвечать будете выбором из фраз плана, включая выученные в прошлых сценах.'**
-  String get planDialogueLead;
-
-  /// Подпись второго блока на входе в диалог (кадр DL-01).
-  ///
-  /// In ru, this message translates to:
-  /// **'На всякий случай — под рукой'**
-  String get planDialogueRescueAtHand;
-
-  /// Пояснение к блоку спасателей на входе в диалог (кадр DL-01).
-  ///
-  /// In ru, this message translates to:
-  /// **'Кнопка остаётся на экране весь диалог: можно попросить повторить или помедленнее.'**
-  String get planDialogueRescueLead;
-
-  /// Главное действие входа в диалог (кадр DL-01).
-  ///
-  /// In ru, this message translates to:
-  /// **'Начать диалог'**
-  String get planDialogueStart;
-
-  /// Честное предупреждение под кнопкой: реплики звучат, а не написаны (кадр DL-01).
-  ///
-  /// In ru, this message translates to:
-  /// **'со звуком · наденьте наушники'**
-  String get planDialogueSound;
-
-  /// Подпись под пузырём собеседника, пока текст не раскрыт (кадр DL-02).
-  ///
-  /// In ru, this message translates to:
-  /// **'говорит собеседник · текст скрыт'**
-  String get planDialogueRoleSpeaks;
-
-  /// Повтор реплики собеседника голосом (кадр DL-02).
-  ///
-  /// In ru, this message translates to:
-  /// **'Ещё раз'**
-  String get planDialogueReplay;
-
-  /// Раскрыть текст реплики внутри пузыря. Доступно всегда, но тише всего остального: это подсказка, а не шаг (кадр DL-02).
-  ///
-  /// In ru, this message translates to:
-  /// **'Показать текст'**
-  String get planDialogueShowText;
-
-  /// Свернуть текст реплики обратно (кадр DL-02б).
-  ///
-  /// In ru, this message translates to:
-  /// **'Скрыть текст'**
-  String get planDialogueHideText;
-
-  /// Свёрнутая отметка пройденного такта «Понял?» в ленте (кадр DL-03).
-  ///
-  /// In ru, this message translates to:
-  /// **'понял'**
-  String get planDialogueUnderstoodMark;
-
-  /// Отметка под своим ответом в ленте — факт, а не балл (кадр DL-05).
-  ///
-  /// In ru, this message translates to:
-  /// **'сказано вслух'**
-  String get planDialogueSaidAloud;
-
-  /// Подпись у зрелого обмена: реплика уже закрыла «понимаю», такта 1 нет (кадр DL-06).
-  ///
-  /// In ru, this message translates to:
-  /// **'знакомая реплика · разбор не нужен'**
-  String get planDialogueFamiliar;
-
-  /// Состояние, пока голос не готов: реплика не подаётся, но и тишины нет (кадр DL-08).
-  ///
-  /// In ru, this message translates to:
-  /// **'Готовим озвучку'**
-  String get planDialogueVoicePreparing;
-
-  /// Пояснение под «Готовим озвучку». Никаких «осталось 5 секунд»: время неизвестно, поэтому не обещается (кадр DL-08).
-  ///
-  /// In ru, this message translates to:
-  /// **'Реплика прозвучит, когда голос будет готов. Диалог начнётся с неё — тишины не будет.'**
-  String get planDialogueVoicePreparingBody;
-
-  /// Постоянная кнопка на экране диалога (кадр DL-09).
-  ///
-  /// In ru, this message translates to:
-  /// **'На всякий случай'**
-  String get planDialogueRescue;
-
-  /// Сколько спасательных фраз в наборе (кадр DL-09).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} фраза} few{{count} фразы} other{{count} фраз}}'**
-  String planDialogueRescuePhrases(int count);
-
-  /// Пояснение в панели спасателей: использование не штрафуется (кадр DL-09, канон §8).
-  ///
-  /// In ru, this message translates to:
-  /// **'Это нормальный ход разговора, а не ошибка: носители просят повторить так же часто.'**
-  String get planDialogueRescueNote;
-
-  /// Закрыть панель спасателей (кадр DL-09).
-  ///
-  /// In ru, this message translates to:
-  /// **'Вернуться к диалогу'**
-  String get planDialogueRescueBack;
-
-  /// Надзаголовок финала диалога (кадр DL-10).
-  ///
-  /// In ru, this message translates to:
-  /// **'диалог пройден'**
-  String get planDialogueDone;
-
-  /// Подпись под названием сцены на финале диалога (кадр DL-10).
-  ///
-  /// In ru, this message translates to:
-  /// **'Разговор целиком — ваши ответы стоят в ленте.'**
-  String get planDialogueDoneLead;
-
-  /// Надзаголовок трёх фактов финала (кадр DL-10).
-  ///
-  /// In ru, this message translates to:
-  /// **'Итог по сцене'**
-  String get planDialogueResult;
-
-  /// Первый факт финала диалога (кадр DL-10).
-  ///
-  /// In ru, this message translates to:
-  /// **'Отвечал сам'**
-  String get planDialogueAnsweredSelf;
-
-  /// Второй факт финала диалога (кадр DL-10).
-  ///
-  /// In ru, this message translates to:
-  /// **'Разобрал реплику на слух'**
-  String get planDialogueHeardOut;
-
-  /// Третий факт финала диалога. Стоит рядом с остальными без извинений: это часть разговора (кадр DL-10).
-  ///
-  /// In ru, this message translates to:
-  /// **'Просил повторить'**
-  String get planDialogueAskedRepeat;
-
-  /// Сколько раз просили повторить (кадр DL-10).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} раз} few{{count} раза} other{{count} раз}}'**
-  String planDialogueTimes(int count);
-
-  /// Что будет после диалога — уровень B+ (кадр DL-10, канон §5).
-  ///
-  /// In ru, this message translates to:
-  /// **'Дальше — сборка: те же обмены, но ответ собираете из связок сцены сами.'**
-  String get planDialogueNextAssembly;
-
-  /// Единственное действие финала диалога: ведёт обратно в посадку (кадр DL-10).
-  ///
-  /// In ru, this message translates to:
-  /// **'Вернуться к сессии'**
-  String get planDialogueBackToSession;
-
-  /// Шапка такта «Понял?» — крупный вопрос над русскими вариантами (кадр DL-02).
-  ///
-  /// In ru, this message translates to:
-  /// **'Что тебе сейчас сказали?'**
-  String get planDialogueAskHeard;
-
-  /// Шапка такта «Ответишь?» — крупный вопрос над вариантами на изучаемом языке (кадр DL-03).
-  ///
-  /// In ru, this message translates to:
-  /// **'Что ты ответишь?'**
-  String get planDialogueAskSay;
-
-  /// Шапка такта «Ответишь?» для хода-вопроса (кадр DL-03, канон §4).
-  ///
-  /// In ru, this message translates to:
-  /// **'Что ты спросишь?'**
-  String get planDialogueAskAsk;
-
-  /// Надзаголовок своего хода без карточки — реплика полки «Ты ответишь» (кадр DL-04).
-  ///
-  /// In ru, this message translates to:
-  /// **'Ваш ответ'**
-  String get planDialogueYourAnswer;
-
-  /// То же для хода полки «Ты спросишь» (кадр DL-04).
-  ///
-  /// In ru, this message translates to:
-  /// **'Ваш вопрос'**
-  String get planDialogueYourQuestion;
-
-  /// Тихое действие на шаге «Скажи вслух»: реплика звучит тем же голосом, что и разговор (кадр DL-04).
-  ///
-  /// In ru, this message translates to:
-  /// **'Послушать, как это звучит'**
-  String get planDialogueListenHow;
-
-  /// Подпись шага «Скажи вслух». С наряда SPEECH-2 ход ГОВОРИТ, что вышло (Ч.3.5), — прежняя строка «мы не оцениваем и не сравниваем» стала неправдой; но в журнал по-прежнему не уходит ни строки, и это второе предложение.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажите реплику вслух — скажем, что услышали. В прогресс это не идёт.'**
-  String get planDialogueSayAloudNote;
-
-  /// Главное действие шага «Скажи вслух»: пузырь встаёт в ленту, разговор идёт дальше (кадр DL-04).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сказал вслух'**
-  String get planDialogueSaidIt;
-
-  /// Надзаголовок списка дней плана (кадр D-07).
-  ///
-  /// In ru, this message translates to:
-  /// **'План подготовки'**
-  String get planListTitle;
-
-  /// Статус строки дня — словом, не иконкой (кадр D-07).
-  ///
-  /// In ru, this message translates to:
-  /// **'пройден'**
-  String get planRowPassed;
-
-  /// День держит воркер прямо сейчас (кадр D-07).
-  ///
-  /// In ru, this message translates to:
-  /// **'собирается'**
-  String get planRowBuilding;
-
-  /// Сборка дня сорвалась; кнопка «Собрать заново» стоит в той же строке (кадр D-07, урок Д-20).
-  ///
-  /// In ru, this message translates to:
-  /// **'не собрался'**
-  String get planRowNotBuilt;
-
-  /// День ещё не наступил по расписанию (кадр D-07).
-  ///
-  /// In ru, this message translates to:
-  /// **'ждёт очереди'**
-  String get planRowWaiting;
-
   /// Действие сегодняшнего дня, в его же строке (кадр D-07).
   ///
   /// In ru, this message translates to:
   /// **'Начать день'**
   String get planRowStartDay;
-
-  /// Честная подпись под «Собрать заново»: что сорвалось и сколько это займёт (кадр D-07).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сорвалась сборка реплик. Займёт около минуты.'**
-  String get planRowNotBuiltWhy;
-
-  /// Надзаголовок строки прогона вместо «День N · сцена N» (кадр D-07).
-  ///
-  /// In ru, this message translates to:
-  /// **'Накануне'**
-  String get planRowRehearsalWhen;
-
-  /// Подстрока строки прогона (кадр D-07).
-  ///
-  /// In ru, this message translates to:
-  /// **'Все сцены подряд, вслух'**
-  String get planRowRehearsalLead;
 
   /// Зрелость плана словами — первое состояние (канон §2: познакомился → применяю → говорю сам). Заменило «ступень A · знакомство с материалом».
   ///
@@ -4994,150 +3944,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Говоришь сам'**
   String get planMaturitySpeaking;
-
-  /// Дата события в карточке цели (кадр D-07: «приём 14 марта»).
-  ///
-  /// In ru, this message translates to:
-  /// **'событие {date}'**
-  String planEventAt(String date);
-
-  /// Обратный отсчёт в карточке цели (кадр D-07).
-  ///
-  /// In ru, this message translates to:
-  /// **'{days, plural, one{осталось {days} день} few{осталось {days} дня} many{осталось {days} дней} other{осталось {days} дня}}'**
-  String planDaysLeft(int days);
-
-  /// Надзаголовок строки дня. Номер сцены различает два дня, начинающихся одинаково (кадр D-07, урок Д-23).
-  ///
-  /// In ru, this message translates to:
-  /// **'День {day} · сцена {scene}'**
-  String planRowDayScene(int day, int scene);
-
-  /// Пояснение блока спасателей на экране дня (кадр D-01).
-  ///
-  /// In ru, this message translates to:
-  /// **'С них начинается день — чтобы было чем ответить, если растеряешься.'**
-  String get planDayRescueLead;
-
-  /// Подпись полки «Тебе скажут» на экране дня: реплики роли — только на понимание (кадр D-01, канон §3).
-  ///
-  /// In ru, this message translates to:
-  /// **'говорит собеседник · только понимать'**
-  String get planDayRoleOnlyUnderstand;
-
-  /// Подзаголовок итога посадки (кадр D-06): итог отвечает на вопрос «справлюсь ли я в этой сцене», а не «сколько слов выучил».
-  ///
-  /// In ru, this message translates to:
-  /// **'Сцена: {title}'**
-  String planSceneNamed(String title);
-
-  /// Вердикт «день не закрыт» (кадр D-06б): заголовок называет остаток, а не притворяется, что день пройден.
-  ///
-  /// In ru, this message translates to:
-  /// **'День {index} · почти'**
-  String planDayAlmost(int index);
-
-  /// Сколько карточек не дошло до ступени, на которой их можно сказать в разговоре (кадр D-06б).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{Осталось дотренировать {count} карточку} few{Осталось дотренировать {count} карточки} other{Осталось дотренировать {count} карточек}}'**
-  String planDayAlmostLead(int count);
-
-  /// Первый блок итога посадки: карточки, отвеченные верно (кадр D-06).
-  ///
-  /// In ru, this message translates to:
-  /// **'Далось'**
-  String get planDayGotIt;
-
-  /// Второй блок итога: конкретные карточки с причиной, они же уходят в завтрашний разогрев (кадр D-06).
-  ///
-  /// In ru, this message translates to:
-  /// **'Не далось'**
-  String get planDayMissed;
-
-  /// Что будет с тем, что не далось (кадр D-06, канон §5 «разогрев v2»).
-  ///
-  /// In ru, this message translates to:
-  /// **'Непослушные карточки вернутся в следующем дне.'**
-  String get planDayMissedNote;
-
-  /// Действие вердикта «почти»: вернуться в день и закрыть остаток (кадр D-06б).
-  ///
-  /// In ru, this message translates to:
-  /// **'Дотренировать'**
-  String get planDayTrainMore;
-
-  /// Второй выбор вердикта «почти»: остаток придёт в разогреве, день останется открытым (кадр D-06б).
-  ///
-  /// In ru, this message translates to:
-  /// **'Оставить на завтра'**
-  String get planDayLeaveForTomorrow;
-
-  /// Что значит «оставить на завтра» — сказано до выбора, а не после (кадр D-06б).
-  ///
-  /// In ru, this message translates to:
-  /// **'Если оставить — они придут в следующем дне, а этот останется открытым.'**
-  String get planDayLeaveNote;
-
-  /// Надзаголовок расшифровки A/B/C на итоге посадки (кадр D-06в).
-  ///
-  /// In ru, this message translates to:
-  /// **'Докуда дошли слова и фразы'**
-  String get planLadderLegend;
-
-  /// Почему на итоге нет процента: его не считают, а не прячут (кадр D-06в). Пока процент не считается, его нет вообще.
-  ///
-  /// In ru, this message translates to:
-  /// **'Готовность к сцене появится, когда сервер её посчитает. Пока — то, докуда дошли слова и фразы.'**
-  String get planLadderNoReadiness;
-
-  /// Ступень A человеческим словом — расшифровка стоит рядом, а не в справке (кадр D-06в).
-  ///
-  /// In ru, this message translates to:
-  /// **'познакомился'**
-  String get planLadderA;
-
-  /// Ступень B человеческим словом.
-  ///
-  /// In ru, this message translates to:
-  /// **'применяешь'**
-  String get planLadderB;
-
-  /// Ступень C человеческим словом.
-  ///
-  /// In ru, this message translates to:
-  /// **'говоришь сам'**
-  String get planLadderC;
-
-  /// Подпись строки перехода в итоге дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Дальше'**
-  String get planNext;
-
-  /// Следующий день в итоге дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'День {index} — {title}'**
-  String planNextDay(int index, String title);
-
-  /// Кнопка выхода из итога дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'К плану'**
-  String get planDayBackToPlan;
-
-  /// Латунная метка в шапке плановой сессии (кадр 1c-03).
-  ///
-  /// In ru, this message translates to:
-  /// **'План · день {index}'**
-  String planSessionBadge(int index);
-
-  /// Строка внизу карточки: откуда слово.
-  ///
-  /// In ru, this message translates to:
-  /// **'Слово «{term}» идёт со дня {index} — сегодня оно возвращается.'**
-  String planSessionCarried(String term, int index);
 
   /// Пустой таб «План» (кадр 1c-10).
   ///
@@ -5198,120 +4004,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Они никуда не делись — прогресс, расписание и вся история на месте. Сами в ежедневные занятия они не придут: чтобы вернуть слово в работу, открой его карточку и нажми «Учить это слово».'**
   String get planWordsReleasedBody;
-
-  /// Итог прогона финального дня — план закрыт (Д-27).
-  ///
-  /// In ru, this message translates to:
-  /// **'Подготовка завершена'**
-  String get planRehearsalDoneTitle;
-
-  /// Пояснение под итогом прогона.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ты прошёл все слова и фразы плана. Он ушёл в архив: слова, прогресс и вся история сохранены.'**
-  String get planRehearsalDoneBody;
-
-  /// Кнопка с экрана итога прогона обратно к плану.
-  ///
-  /// In ru, this message translates to:
-  /// **'К плану'**
-  String get planRehearsalDoneAction;
-
-  /// Кнопка финального дня: закрыть план результатом, а не датой (E2E-SIM-2, С-10).
-  ///
-  /// In ru, this message translates to:
-  /// **'Завершить план'**
-  String get planCompleteAction;
-
-  /// Подтверждение завершения плана с экрана финального дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Завершить план?'**
-  String get planCompleteTitle;
-
-  /// Что произойдёт при завершении плана.
-  ///
-  /// In ru, this message translates to:
-  /// **'План закроется, слова уйдут в архив. Вернуть их в «Учить» можно будет вручную.'**
-  String get planCompleteBody;
-
-  /// Подтверждающая кнопка завершения плана.
-  ///
-  /// In ru, this message translates to:
-  /// **'Завершить'**
-  String get planCompleteConfirm;
-
-  /// Надзаголовок списка сцен на экране прогона (кадр D-11).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сцены плана'**
-  String get planRehearsalScenes;
-
-  /// Статус сцены, которую не начинали: в прогон она войдёт как есть (кадр D-11).
-  ///
-  /// In ru, this message translates to:
-  /// **'не тренировали'**
-  String get planRehearsalSceneUntrained;
-
-  /// Статус пройденной сцены на экране прогона.
-  ///
-  /// In ru, this message translates to:
-  /// **'пройдена'**
-  String get planRehearsalScenePassed;
-
-  /// Статус сцены, материал которой есть, но день не закрыт.
-  ///
-  /// In ru, this message translates to:
-  /// **'в работе'**
-  String get planRehearsalSceneReady;
-
-  /// Нетренированная сцена признаётся вслух и не блокирует прогон (кадр D-11).
-  ///
-  /// In ru, this message translates to:
-  /// **'Войдёт как есть — реплики с подсказкой.'**
-  String get planRehearsalUntrainedNote;
-
-  /// Подпись над кнопкой прогона (кадр D-11).
-  ///
-  /// In ru, this message translates to:
-  /// **'Вслух, без остановок. На всякий случай — под рукой.'**
-  String get planRehearsalAloudNote;
-
-  /// Почему у сцен нет процентов: их не считают, а не прячут. Дизайн не считает готовность из ступеней (записка серии «День v1»).
-  ///
-  /// In ru, this message translates to:
-  /// **'Готовность по сценам появится, когда сервер её посчитает. Пока — статус каждой сцены.'**
-  String get planRehearsalNoPercent;
-
-  /// Первый факт экрана завершённого плана (кадр D-12).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сцены пройдены'**
-  String get planDoneScenes;
-
-  /// Третий факт экрана завершённого плана — единственное про ступени число, которое сервер знает.
-  ///
-  /// In ru, this message translates to:
-  /// **'Познакомились со словами и фразами'**
-  String get planDoneStageA;
-
-  /// Что происходит с материалом после завершения (кадр D-12, канон §1: архив целиком).
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова и реплики плана останутся в архиве — открыть можно с его карточки. Автоматических повторений не будет: план закончился вместе с событием.'**
-  String get planDoneArchiveNote;
-
-  /// Кнопка финального дня: он не собирается, он прогоняется по карточкам плана.
-  ///
-  /// In ru, this message translates to:
-  /// **'Начать'**
-  String get planRehearsalStart;
-
-  /// Первый абзац экрана финального дня вместо «день не собран».
-  ///
-  /// In ru, this message translates to:
-  /// **'Финальный день ничего не добавляет — это всё, чему план научил, вслух. Пройди его перед событием.'**
-  String get planRehearsalLead;
 
   /// Лейбл списка прошлых планов.
   ///
@@ -5420,84 +4112,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Отметь умения, которые пригодились — план закроется этим.'**
   String get planNotifyEveningBody;
-
-  /// Латунная метка экрана репетиции (кадр 15).
-  ///
-  /// In ru, this message translates to:
-  /// **'Репетиция · событие сегодня'**
-  String get planRehearsalBadge;
-
-  /// Лейбл над фразой репетиции.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажи вслух'**
-  String get planRehearsalSayIt;
-
-  /// Подпись рядом с микрофоном: пропустить так же законно.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажи фразу — или пролистай дальше, если она уже звучит сама.'**
-  String get planRehearsalHint;
-
-  /// Подпись, пока микрофон слушает. Ничего не оценивается.
-  ///
-  /// In ru, this message translates to:
-  /// **'Слушаю…'**
-  String get planRehearsalListening;
-
-  /// Тихая кнопка: озвучить фразу.
-  ///
-  /// In ru, this message translates to:
-  /// **'Прочитать пример'**
-  String get planRehearsalPlay;
-
-  /// Реплика собеседника, на которую отвечает фраза.
-  ///
-  /// In ru, this message translates to:
-  /// **'{role} скажет: «{cue}»'**
-  String planRehearsalCue(String role, String cue);
-
-  /// Кнопка на экране плана в день события — открыть репетицию.
-  ///
-  /// In ru, this message translates to:
-  /// **'Быстрая репетиция'**
-  String get planRehearsalOpen;
-
-  /// Последняя кнопка репетиции.
-  ///
-  /// In ru, this message translates to:
-  /// **'Готово'**
-  String get planRehearsalDone;
-
-  /// Пустая репетиция — дни ещё не собраны.
-  ///
-  /// In ru, this message translates to:
-  /// **'В этом плане пока нет фраз для репетиции.'**
-  String get planRehearsalEmpty;
-
-  /// Заголовок экрана отметки чек-пойнтов.
-  ///
-  /// In ru, this message translates to:
-  /// **'Как прошло?'**
-  String get planFeedbackTitle;
-
-  /// Пояснение экрана отметки.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{Отметь умение, которое пригодилось на событии.} few{Отметь умения, которые пригодились на событии — из {count}.} many{Отметь умения, которые пригодились на событии — из {count}.} other{Отметь умения, которые пригодились на событии — из {count}.}}'**
-  String planFeedbackBody(int count);
-
-  /// Кнопка отправки отметок — она же закрывает план.
-  ///
-  /// In ru, this message translates to:
-  /// **'Сохранить и завершить'**
-  String get planFeedbackSubmit;
-
-  /// Что произойдёт после отправки.
-  ///
-  /// In ru, this message translates to:
-  /// **'План завершится, а его слова уйдут в общее повторение.'**
-  String get planFeedbackClosesPlan;
 
   /// Итог завершённого плана по отметкам после события (кадр 11).
   ///
@@ -6195,24 +4809,6 @@ abstract class AppLocalizations {
   /// **'К разговору'**
   String get planSittingToConversation;
 
-  /// Вторая кнопка итога материала (DAY-FIX-3, Ч.4.4): выйти, разговор — следующим заходом; сервер уже помнит, что материал пройден.
-  ///
-  /// In ru, this message translates to:
-  /// **'Позже'**
-  String get planSittingLater;
-
-  /// Заголовок итога материала между присестами (DAY-FIX-3, Ч.4.4).
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова и фразы пройдены'**
-  String get planMaterialDoneTitle;
-
-  /// Строка под planMaterialDoneTitle — что пройдено и что впереди, словами, без счётчиков.
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова, связки и реплики сцены разобраны. Дальше — разговор: услышишь собеседника и ответишь сам.'**
-  String get planMaterialDoneLead;
-
   /// Минуты дня (DAY-FIX-2, Ч.3): серверное minutes_left, карточки × 16 с, округлённые до минуты. Единственная цифра на экранах плана.
   ///
   /// In ru, this message translates to:
@@ -6224,222 +4820,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Пройти ещё раз'**
   String get planDayRepeat;
-
-  /// Заголовок секции экрана дня (DAY-FIX-2, Ч.4.2): полка words.
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова'**
-  String get planShelfWordsOnly;
-
-  /// Заголовок секции экрана дня (DAY-FIX-2, Ч.4.2): полка chunks.
-  ///
-  /// In ru, this message translates to:
-  /// **'Связки'**
-  String get planShelfChunks;
-
-  /// Строка под заголовком секции экрана дня (DAY-FIX-2, Ч.4.2): что с ней сегодня делать, словами из planStep*.
-  ///
-  /// In ru, this message translates to:
-  /// **'сегодня — {step}'**
-  String planDayStepLead(String step);
-
-  /// Упражнение дня словом (next_step = meet): первая встреча, ступень A.
-  ///
-  /// In ru, this message translates to:
-  /// **'познакомишься'**
-  String get planStepMeet;
-
-  /// Упражнение дня словом (next_step = translate, DAY-FIX-3, Ч.3.1): слово выбирает перевод из четырёх в день знакомства.
-  ///
-  /// In ru, this message translates to:
-  /// **'переведёшь'**
-  String get planStepTranslate;
-
-  /// Упражнение дня словом (next_step = tiles, DAY-FIX-3, Ч.3.1): связка собирается из плиток в день знакомства.
-  ///
-  /// In ru, this message translates to:
-  /// **'соберёшь из плиток'**
-  String get planStepTiles;
-
-  /// Упражнение дня словом (next_step = recognize): выбор перевода слова или связки.
-  ///
-  /// In ru, this message translates to:
-  /// **'узнаешь по переводу'**
-  String get planStepRecognize;
-
-  /// Упражнение дня словом (next_step = hear): реплика собеседника, такт «что тебе сказали».
-  ///
-  /// In ru, this message translates to:
-  /// **'услышишь и разберёшь на слух'**
-  String get planStepHear;
-
-  /// Упражнение дня словом (next_step = choose): своя реплика выбором из вариантов.
-  ///
-  /// In ru, this message translates to:
-  /// **'выберешь ответ'**
-  String get planStepChoose;
-
-  /// Упражнение дня словом (next_step = assemble): своя реплика сборкой; вопрос — всегда так.
-  ///
-  /// In ru, this message translates to:
-  /// **'соберёшь из блоков'**
-  String get planStepAssemble;
-
-  /// Упражнение дня словом (next_step = say): своя реплика голосом, ступень C.
-  ///
-  /// In ru, this message translates to:
-  /// **'скажешь голосом'**
-  String get planStepSay;
-
-  /// Отметка у строки экрана дня (DAY-FIX-3, Ч.5.2): интро пройдено, упражнение знакомства ещё впереди. Слово, не цифра.
-  ///
-  /// In ru, this message translates to:
-  /// **'познакомился'**
-  String get planMarkMet;
-
-  /// Отметка у строки экрана дня (DAY-FIX-3, Ч.5.2): знакомство закрыто упражнением, строка в работе.
-  ///
-  /// In ru, this message translates to:
-  /// **'применяешь'**
-  String get planMarkApplying;
-
-  /// Отметка у строки экрана дня (DAY-FIX-2, Ч.4.3; DAY-FIX-3, Ч.5.2): реплика сказана голосом на прогоне.
-  ///
-  /// In ru, this message translates to:
-  /// **'говоришь сам'**
-  String get planMarkSaidSelf;
-
-  /// Подпись у тематического слова на экране дня (DAY-FIX-3, Ч.5.4): слово ситуации, которого нет в репликах сцены.
-  ///
-  /// In ru, this message translates to:
-  /// **'по теме'**
-  String get planTermTopical;
-
-  /// Подпись над ПЕРВЫМ пузырём роли в диалоге и в итоге сцены (DAY-FIX-2, Ч.5.3).
-  ///
-  /// In ru, this message translates to:
-  /// **'собеседник'**
-  String get planDialogueRoleName;
-
-  /// Подпись правой группы полосы присеста, когда у секции нет имени (DAY-FIX-2, Ч.5.4).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сцена'**
-  String get planDialogueSceneWord;
-
-  /// Заголовок хвостовой карточки сцены ПОСЛЕ разговора (DAY-FIX-2, Ч.5.5): реплика без пары в цепочке. Никогда не пузырь.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ещё в этой сцене'**
-  String get planDialogueTail;
-
-  /// Итог сцены словами (DAY-FIX-2, Ч.5.6), строка «Отвечал сам»: все свои ходы — сам.
-  ///
-  /// In ru, this message translates to:
-  /// **'на все'**
-  String get planDialogueAnsweredAll;
-
-  /// Итог сцены словами, строка «Отвечал сам»: сколько раз подсказали. Не «N из M».
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} раз подсказали} few{{count} раза подсказали} other{{count} раз подсказали}}'**
-  String planDialogueAnsweredHinted(int count);
-
-  /// Итог сцены словами, строка «Разобрал реплику на слух»: все реплики собеседника разобраны.
-  ///
-  /// In ru, this message translates to:
-  /// **'все реплики'**
-  String get planDialogueHeardAll;
-
-  /// Итог сцены словами, строка «Разобрал реплику на слух»: сколько подсказали.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{одну подсказали} few{{count} подсказали} other{{count} подсказали}}'**
-  String planDialogueHeardHinted(int count);
-
-  /// Итог прогона словами (DAY-FIX-2, Ч.5.6), строка «Прошёл сам»: каждая реплика сказана сама.
-  ///
-  /// In ru, this message translates to:
-  /// **'всю сцену'**
-  String get planSceneRunSaidAll;
-
-  /// Итог прогона словами, строка «Прошёл сам»: сколько реплик не сказал сам.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{кроме одной реплики} few{кроме {count} реплик} other{кроме {count} реплик}}'**
-  String planSceneRunSaidSome(int count);
-
-  /// Итог прогона словами, строка «Сразу»: каждая реплика — до подсказки.
-  ///
-  /// In ru, this message translates to:
-  /// **'все'**
-  String get planSceneRunFastAll;
-
-  /// Итог прогона словами, строка «Сразу»: часть реплик — до подсказки.
-  ///
-  /// In ru, this message translates to:
-  /// **'не все'**
-  String get planSceneRunFastSome;
-
-  /// Итог прогона словами, строка «Сразу»: ни одна реплика не сказана до подсказки.
-  ///
-  /// In ru, this message translates to:
-  /// **'пока нет'**
-  String get planSceneRunFastNone;
-
-  /// Служебный экран перед вторым присестом (DAY-FIX-2, Ч.2.1): второй присест бывает только у прогона.
-  ///
-  /// In ru, this message translates to:
-  /// **'Дальше — скажи сам'**
-  String get planSittingRunNext;
-
-  /// Строка под planSittingRunNext.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажешь реплики сцены голосом — текста на экране не будет.'**
-  String get planSittingRunLead;
-
-  /// Финал плана словами (DAY-FIX-2, Ч.5.6), строка «Сцены пройдены».
-  ///
-  /// In ru, this message translates to:
-  /// **'все'**
-  String get planDoneScenesAll;
-
-  /// Финал плана словами, строка «Сцены пройдены».
-  ///
-  /// In ru, this message translates to:
-  /// **'не все'**
-  String get planDoneScenesSome;
-
-  /// Финал плана словами, строка «Познакомились с материалом».
-  ///
-  /// In ru, this message translates to:
-  /// **'со всем'**
-  String get planDoneMaterialAll;
-
-  /// Финал плана словами, строка «Познакомились с материалом».
-  ///
-  /// In ru, this message translates to:
-  /// **'не со всем'**
-  String get planDoneMaterialSome;
-
-  /// Итог дня словами (DAY-FIX-2, Ч.5.6), строка «познакомился».
-  ///
-  /// In ru, this message translates to:
-  /// **'сегодняшняя сцена'**
-  String get planSummaryMetToday;
-
-  /// Итог дня словами, строка «применяешь»: весь материал плана прошёл знакомство.
-  ///
-  /// In ru, this message translates to:
-  /// **'все слова и фразы плана'**
-  String get planSummaryAppliedAll;
-
-  /// Итог дня словами, строка «применяешь»: не весь материал плана прошёл знакомство.
-  ///
-  /// In ru, this message translates to:
-  /// **'часть слов и фраз плана'**
-  String get planSummaryAppliedSome;
 
   /// Карточка плана на главной (DAY-FIX-2, Ч.3): день фокуса и его слово состояния с минутами.
   ///
@@ -6470,6 +4850,702 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Сбросить'**
   String get devQaClockReset;
+
+  /// Тумблер четырёх звуков дня (4к-3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Звуки'**
+  String get profileRowSounds;
+
+  /// No description provided for @profileSoundsHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Верно · неверно · этап закрыт · день закрыт'**
+  String get profileSoundsHint;
+
+  /// Латунный лейбл плиты дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n}'**
+  String dayLabel(int n);
+
+  /// No description provided for @dayCards.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} карточка} few{{n} карточки} other{{n} карточек}}'**
+  String dayCards(int n);
+
+  /// No description provided for @dayMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} минута} few{{n} минуты} other{{n} минут}}'**
+  String dayMinutes(int n);
+
+  /// No description provided for @dayApproxMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'≈ {n, plural, one{{n} минута} few{{n} минуты} other{{n} минут}}'**
+  String dayApproxMinutes(int n);
+
+  /// No description provided for @dayApproxMin.
+  ///
+  /// In ru, this message translates to:
+  /// **'≈ {n} мин'**
+  String dayApproxMin(int n);
+
+  /// No description provided for @dayLevelBeginner.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начинающий'**
+  String get dayLevelBeginner;
+
+  /// No description provided for @dayLevelIntermediate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Средний'**
+  String get dayLevelIntermediate;
+
+  /// No description provided for @dayGoalLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Научишься'**
+  String get dayGoalLabel;
+
+  /// No description provided for @dayStageWords.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова'**
+  String get dayStageWords;
+
+  /// No description provided for @dayStagePhrases.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фразы'**
+  String get dayStagePhrases;
+
+  /// No description provided for @dayStageDialogue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Диалог'**
+  String get dayStageDialogue;
+
+  /// No description provided for @dayStageListen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слушаю и отвечаю'**
+  String get dayStageListen;
+
+  /// No description provided for @dayStageSpeak.
+  ///
+  /// In ru, this message translates to:
+  /// **'Говорю сам'**
+  String get dayStageSpeak;
+
+  /// No description provided for @dayStageCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{done} / {total}'**
+  String dayStageCount(int done, int total);
+
+  /// No description provided for @dayNewWords.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} новое слово} few{{n} новых слова} other{{n} новых слов}}'**
+  String dayNewWords(int n);
+
+  /// No description provided for @dayStageSubStart.
+  ///
+  /// In ru, this message translates to:
+  /// **'начни отсюда · {what}'**
+  String dayStageSubStart(String what);
+
+  /// No description provided for @dayStageSubUnfinished.
+  ///
+  /// In ru, this message translates to:
+  /// **'не закончен · {cards} · {minutes}'**
+  String dayStageSubUnfinished(String cards, String minutes);
+
+  /// No description provided for @dayStageSubHinted.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n} с подсказкой'**
+  String dayStageSubHinted(int n);
+
+  /// No description provided for @dayCtaStart.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать'**
+  String get dayCtaStart;
+
+  /// No description provided for @dayCtaContinue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить · осталось {n}'**
+  String dayCtaContinue(int n);
+
+  /// No description provided for @dayCtaPlan.
+  ///
+  /// In ru, this message translates to:
+  /// **'К плану'**
+  String get dayCtaPlan;
+
+  /// No description provided for @dayClosedTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n} закрыт'**
+  String dayClosedTitle(int n);
+
+  /// No description provided for @dayNumCards.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{карточка} few{карточки} other{карточек}}'**
+  String dayNumCards(int n);
+
+  /// No description provided for @dayNumMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{минута} few{минуты} other{минут}}'**
+  String dayNumMinutes(int n);
+
+  /// No description provided for @dayNumFirstTry.
+  ///
+  /// In ru, this message translates to:
+  /// **'с первого раза'**
+  String get dayNumFirstTry;
+
+  /// No description provided for @daySectionWords.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова · {n}'**
+  String daySectionWords(int n);
+
+  /// No description provided for @daySectionPhrases.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фразы · {n}'**
+  String daySectionPhrases(int n);
+
+  /// No description provided for @daySectionTalk.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор · {n, plural, one{{n} обмен} few{{n} обмена} other{{n} обменов}}'**
+  String daySectionTalk(int n);
+
+  /// No description provided for @dayFromDay.
+  ///
+  /// In ru, this message translates to:
+  /// **'из дня {n}'**
+  String dayFromDay(int n);
+
+  /// No description provided for @dayWordsExtra.
+  ///
+  /// In ru, this message translates to:
+  /// **'+ {n} из дня {d}'**
+  String dayWordsExtra(int n, int d);
+
+  /// No description provided for @dayHardest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Далось труднее всего'**
+  String get dayHardest;
+
+  /// No description provided for @dayTries.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} попытка} few{{n} попытки} other{{n} попыток}}'**
+  String dayTries(int n);
+
+  /// No description provided for @dayInWork.
+  ///
+  /// In ru, this message translates to:
+  /// **'В работе'**
+  String get dayInWork;
+
+  /// No description provided for @dayWordsCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} слово} few{{n} слова} other{{n} слов}}'**
+  String dayWordsCount(int n);
+
+  /// No description provided for @dayPhrasesCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} фраза} few{{n} фразы} other{{n} фраз}}'**
+  String dayPhrasesCount(int n);
+
+  /// No description provided for @dayExchangesCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} обмен} few{{n} обмена} other{{n} обменов}}'**
+  String dayExchangesCount(int n);
+
+  /// No description provided for @dayWillReturn.
+  ///
+  /// In ru, this message translates to:
+  /// **'{k, plural, one{Вернётся в день {n} · {k} карточка} few{Вернутся в день {n} · {k} карточки} other{Вернутся в день {n} · {k} карточек}}'**
+  String dayWillReturn(int n, int k);
+
+  /// No description provided for @dayShellCounter.
+  ///
+  /// In ru, this message translates to:
+  /// **'{stage} · {done} из {total}'**
+  String dayShellCounter(String stage, int done, int total);
+
+  /// No description provided for @dayEntryLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этап {n} из 5'**
+  String dayEntryLabel(int n);
+
+  /// No description provided for @dayEntryLine.
+  ///
+  /// In ru, this message translates to:
+  /// **'{units} · {cards} · {minutes}'**
+  String dayEntryLine(String units, String cards, String minutes);
+
+  /// No description provided for @dayEntryWordsSteps.
+  ///
+  /// In ru, this message translates to:
+  /// **'познакомься · произнеси · выбери перевод · вставь в пример'**
+  String get dayEntryWordsSteps;
+
+  /// No description provided for @dayEntryPhrasesSteps.
+  ///
+  /// In ru, this message translates to:
+  /// **'познакомься · повтори вслух · собери'**
+  String get dayEntryPhrasesSteps;
+
+  /// No description provided for @dayEntryDialogueSteps.
+  ///
+  /// In ru, this message translates to:
+  /// **'прочитай и послушай весь разговор'**
+  String get dayEntryDialogueSteps;
+
+  /// No description provided for @dayEntryListenSteps.
+  ///
+  /// In ru, this message translates to:
+  /// **'послушай · выбери, что он спросил · ответь'**
+  String get dayEntryListenSteps;
+
+  /// No description provided for @dayEntrySpeakSteps.
+  ///
+  /// In ru, this message translates to:
+  /// **'скажи свою реплику в каждом обмене — текста не будет'**
+  String get dayEntrySpeakSteps;
+
+  /// No description provided for @dayEntryNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} новое} few{{n} новых} other{{n} новых}}'**
+  String dayEntryNew(int n);
+
+  /// No description provided for @dayEntryReturned.
+  ///
+  /// In ru, this message translates to:
+  /// **'{r, plural, one{{r} вернулось из дня {d}} few{{r} вернулись из дня {d}} other{{r} вернулись из дня {d}}}'**
+  String dayEntryReturned(int r, int d);
+
+  /// No description provided for @dayEntryResume.
+  ///
+  /// In ru, this message translates to:
+  /// **'продолжаем · осталось {n} из {total} · {minutes}'**
+  String dayEntryResume(int n, int total, String minutes);
+
+  /// No description provided for @dayEntryCta.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать'**
+  String get dayEntryCta;
+
+  /// No description provided for @dayEntryResumeCta.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить'**
+  String get dayEntryResumeCta;
+
+  /// No description provided for @dayIntroBadgeNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'новое слово'**
+  String get dayIntroBadgeNew;
+
+  /// No description provided for @dayIntroBadgeRepeat.
+  ///
+  /// In ru, this message translates to:
+  /// **'повторение'**
+  String get dayIntroBadgeRepeat;
+
+  /// No description provided for @dayIntroCta.
+  ///
+  /// In ru, this message translates to:
+  /// **'Понятно'**
+  String get dayIntroCta;
+
+  /// No description provided for @dayReturnedBadge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернулось из дня {n}'**
+  String dayReturnedBadge(int n);
+
+  /// No description provided for @dayPhraseBadgeNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'новая фраза'**
+  String get dayPhraseBadgeNew;
+
+  /// No description provided for @dayPhraseInTalk.
+  ///
+  /// In ru, this message translates to:
+  /// **'в разговоре'**
+  String get dayPhraseInTalk;
+
+  /// No description provided for @dayTaskPronounce.
+  ///
+  /// In ru, this message translates to:
+  /// **'Произнеси'**
+  String get dayTaskPronounce;
+
+  /// No description provided for @dayTaskRepeat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повтори вслух'**
+  String get dayTaskRepeat;
+
+  /// No description provided for @dayTaskAsked.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что он спросил'**
+  String get dayTaskAsked;
+
+  /// «Ответь по-английски» — наречие языка карточки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ответь {lang}'**
+  String dayTaskAnswer(String lang);
+
+  /// No description provided for @dayTaskSay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи {lang}'**
+  String dayTaskSay(String lang);
+
+  /// No description provided for @dayTaskAssemble.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собери, что он сказал'**
+  String get dayTaskAssemble;
+
+  /// No description provided for @dayTaskChoose.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбери перевод'**
+  String get dayTaskChoose;
+
+  /// No description provided for @dayTaskChooseWord.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбери слово'**
+  String get dayTaskChooseWord;
+
+  /// No description provided for @dayTaskCloze.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вставь слово'**
+  String get dayTaskCloze;
+
+  /// No description provided for @dayTaskAssemblePhrase.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собери {lang}'**
+  String dayTaskAssemblePhrase(String lang);
+
+  /// No description provided for @daySayMic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи вслух'**
+  String get daySayMic;
+
+  /// No description provided for @daySayListening.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слушаем…'**
+  String get daySayListening;
+
+  /// No description provided for @daySayThinking.
+  ///
+  /// In ru, this message translates to:
+  /// **'…'**
+  String get daySayThinking;
+
+  /// No description provided for @daySayHeard.
+  ///
+  /// In ru, this message translates to:
+  /// **'Услышали: {word}'**
+  String daySayHeard(String word);
+
+  /// No description provided for @daySayHeardShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Услышали'**
+  String get daySayHeardShort;
+
+  /// No description provided for @daySayRetry.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не расслышали. Ещё раз'**
+  String get daySayRetry;
+
+  /// No description provided for @daySaySkip.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пропустить'**
+  String get daySaySkip;
+
+  /// No description provided for @dayReturnDay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернётся в день {n}'**
+  String dayReturnDay(int n);
+
+  /// No description provided for @dayReturnStage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернётся в конце этапа'**
+  String get dayReturnStage;
+
+  /// No description provided for @dayNext.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дальше'**
+  String get dayNext;
+
+  /// No description provided for @dayDialogTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Весь разговор'**
+  String get dayDialogTitle;
+
+  /// No description provided for @dayDialogSub.
+  ///
+  /// In ru, this message translates to:
+  /// **'Прочитай и послушай — потом будешь отвечать сам'**
+  String get dayDialogSub;
+
+  /// No description provided for @dayDialogRoleYou.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ты'**
+  String get dayDialogRoleYou;
+
+  /// No description provided for @dayDialogTranslate.
+  ///
+  /// In ru, this message translates to:
+  /// **'перевод'**
+  String get dayDialogTranslate;
+
+  /// No description provided for @daySpeakerSays.
+  ///
+  /// In ru, this message translates to:
+  /// **'{role} говорит'**
+  String daySpeakerSays(String role);
+
+  /// No description provided for @daySpeakerAnswers.
+  ///
+  /// In ru, this message translates to:
+  /// **'{role} отвечает'**
+  String daySpeakerAnswers(String role);
+
+  /// No description provided for @daySpeakHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подсказка'**
+  String get daySpeakHint;
+
+  /// No description provided for @daySpeakHinted.
+  ///
+  /// In ru, this message translates to:
+  /// **'Засчитано с подсказкой · вернётся в день {n}'**
+  String daySpeakHinted(int n);
+
+  /// No description provided for @dayStageDoneWords.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова закрыты'**
+  String get dayStageDoneWords;
+
+  /// No description provided for @dayStageDonePhrases.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фразы закрыты'**
+  String get dayStageDonePhrases;
+
+  /// No description provided for @dayStageDoneDialogue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Диалог закрыт'**
+  String get dayStageDoneDialogue;
+
+  /// No description provided for @dayStageDoneListen.
+  ///
+  /// In ru, this message translates to:
+  /// **'«Слушаю и отвечаю» закрыт'**
+  String get dayStageDoneListen;
+
+  /// No description provided for @dayStageDoneSpeak.
+  ///
+  /// In ru, this message translates to:
+  /// **'«Говорю сам» закрыт'**
+  String get dayStageDoneSpeak;
+
+  /// No description provided for @dayStageDoneMeta.
+  ///
+  /// In ru, this message translates to:
+  /// **'{cards} · {minutes}'**
+  String dayStageDoneMeta(String cards, String minutes);
+
+  /// No description provided for @dayStageFactsInWork.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} слово в работе} few{{n} слова в работе} other{{n} слов в работе}}'**
+  String dayStageFactsInWork(int n);
+
+  /// No description provided for @dayStageFactsPhrasesInWork.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} фраза в работе} few{{n} фразы в работе} other{{n} фраз в работе}}'**
+  String dayStageFactsPhrasesInWork(int n);
+
+  /// No description provided for @dayStageFactsExchangesInWork.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} обмен в работе} few{{n} обмена в работе} other{{n} обменов в работе}}'**
+  String dayStageFactsExchangesInWork(int n);
+
+  /// No description provided for @dayStageFactsHinted.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n} с подсказкой'**
+  String dayStageFactsHinted(int n);
+
+  /// No description provided for @dayStageFactsReturn.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} вернётся} other{{n} вернутся}}'**
+  String dayStageFactsReturn(int n);
+
+  /// No description provided for @dayStageNext.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дальше: {stage} · {cards} · {minutes}'**
+  String dayStageNext(String stage, String cards, String minutes);
+
+  /// No description provided for @dayExitTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить позже?'**
+  String get dayExitTitle;
+
+  /// No description provided for @dayExitBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ты на этапе {stage} · {done} из {total}. Прогресс сохранится'**
+  String dayExitBody(String stage, int done, int total);
+
+  /// No description provided for @dayExitStay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Остаться'**
+  String get dayExitStay;
+
+  /// No description provided for @dayExitLeave.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выйти'**
+  String get dayExitLeave;
+
+  /// No description provided for @daySheetStatePassed.
+  ///
+  /// In ru, this message translates to:
+  /// **'сдал · день {n}'**
+  String daySheetStatePassed(int n);
+
+  /// No description provided for @daySheetStateHinted.
+  ///
+  /// In ru, this message translates to:
+  /// **'с подсказкой · день {n}'**
+  String daySheetStateHinted(int n);
+
+  /// No description provided for @daySheetStateReturns.
+  ///
+  /// In ru, this message translates to:
+  /// **'вернётся в день {n}'**
+  String daySheetStateReturns(int n);
+
+  /// No description provided for @daySheetInTalk.
+  ///
+  /// In ru, this message translates to:
+  /// **'В разговоре'**
+  String get daySheetInTalk;
+
+  /// No description provided for @daySheetRoleYou.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ты:'**
+  String get daySheetRoleYou;
+
+  /// No description provided for @dayNoVoice.
+  ///
+  /// In ru, this message translates to:
+  /// **'без озвучки — читает телефон'**
+  String get dayNoVoice;
+
+  /// No description provided for @dayLockedByDay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сначала закончи день {n}'**
+  String dayLockedByDay(int n);
+
+  /// No description provided for @dayLockedUntil.
+  ///
+  /// In ru, this message translates to:
+  /// **'Откроется {date}'**
+  String dayLockedUntil(String date);
+
+  /// No description provided for @dayLessonBuilding.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собираем день · около минуты'**
+  String get dayLessonBuilding;
+
+  /// No description provided for @dayLessonFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'День не собрался'**
+  String get dayLessonFailed;
+
+  /// No description provided for @dayLessonRetry.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторить'**
+  String get dayLessonRetry;
+
+  /// No description provided for @dayBack.
+  ///
+  /// In ru, this message translates to:
+  /// **'Назад'**
+  String get dayBack;
+
+  /// No description provided for @dayTabTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'План'**
+  String get dayTabTitle;
+
+  /// No description provided for @dayTabRoute.
+  ///
+  /// In ru, this message translates to:
+  /// **'Маршрут'**
+  String get dayTabRoute;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

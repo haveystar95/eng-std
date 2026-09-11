@@ -123,6 +123,15 @@ class ProfileScreen extends ConsumerWidget {
               value: settings.autoPronounce,
               onChanged: (v) => ref.read(appSettingsProvider.notifier).setAutoPronounce(v),
             ),
+            // «ЗВУКИ» (токен-лист 4к-3): четыре события дня — верно · неверно · этап закрыт ·
+            // день закрыт. Хаптика от тумблера не зависит; беззвучный режим телефона — тишина и без
+            // него.
+            _SwitchRow(
+              label: l.profileRowSounds,
+              hint: l.profileSoundsHint,
+              value: settings.soundsEnabled,
+              onChanged: (v) => ref.read(appSettingsProvider.notifier).setSoundsEnabled(v),
+            ),
             // «Подсказка произношения». The switch shows the EFFECTIVE value — the stored decision
             // if there is one, otherwise the one the learner's own alphabet implies — so it never
             // reads «off» while the hint is on screen.

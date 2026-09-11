@@ -114,7 +114,7 @@ void main() {
       // rather than a fact about a term. The server's fixture leaves them out on the same rule.
       final supported = [
         for (final mode in ExerciseMode.values)
-          if (mode.isGraded && !mode.isSituational && p.supports(mode)) mode.wire,
+          if (mode.isGraded && p.supports(mode)) mode.wire,
       ];
 
       expect(

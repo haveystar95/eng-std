@@ -37,6 +37,7 @@ class _DrivenRecognizer implements SpeechRecognizer {
     Duration pauseFor = const Duration(seconds: 2),
     List<String> contextualStrings = const [],
     ValueChanged<String>? onPartial,
+    ValueChanged<double>? onLevel,
   }) {
     opened++;
     pauseFors.add(pauseFor);

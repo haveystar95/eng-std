@@ -6,11 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/plan_models.dart';
+import '../../data/deep_links.dart';
 import '../../data/plan_notifications.dart';
 import '../../data/providers.dart';
-import 'plan_feedback_screen.dart';
-import 'plan_rehearsal_screen.dart';
-import 'plan_screen.dart';
+import 'day/open_day.dart';
 
 /// WHERE THE PLAN'S NOTIFICATIONS ARE WRITTEN AND WHERE A TAP ON ONE LANDS.
 ///
@@ -37,8 +36,10 @@ class _PlanNotificationHostState extends ConsumerState<PlanNotificationHost> {
   void initState() {
     super.initState();
     PlanNotifications.tapped.addListener(_openTapped);
+    DeepLinks.pending.addListener(_openLink);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      _openLink();
       // A notification tapped from a COLD start delivers its payload while the app is still
       // building its first frame, so the value may already be set by the time this listener is
       // attached.
@@ -55,6 +56,7 @@ class _PlanNotificationHostState extends ConsumerState<PlanNotificationHost> {
   @override
   void dispose() {
     PlanNotifications.tapped.removeListener(_openTapped);
+    DeepLinks.pending.removeListener(_openLink);
     super.dispose();
   }
 
@@ -118,34 +120,22 @@ class _PlanNotificationHostState extends ConsumerState<PlanNotificationHost> {
     final planId = payload.substring(separator + 1);
     if (planId.isEmpty) return;
 
-    final navigator = Navigator.of(context);
+    // Все три уведомления ведут в кабинет текущего дня ТОЙ ЖЕ ссылкой, что и внешний вход
+    // (DAY-UI): репетиция, «как прошло?» и экран плана прежней серии удалены.
     switch (kind) {
       case 'plan-rehearsal':
-        final plan = await _plan(planId);
-        if (plan == null || !mounted) return;
-        await navigator.push(
-          MaterialPageRoute(
-            builder: (_) => PlanRehearsalScreen(planId: plan.id, targetLang: plan.targetLang),
-          ),
-        );
       case 'plan-feedback':
-        final plan = await _plan(planId);
-        if (plan == null || !mounted) return;
-        await navigator.push(MaterialPageRoute(builder: (_) => PlanFeedbackScreen(plan: plan)));
       case 'plan':
-        await navigator.push(MaterialPageRoute(builder: (_) => PlanScreen(planId: planId)));
+        DeepLinks.pending.value = DayLink.current;
     }
   }
 
-  /// The plan the notification is about — read fresh, because it was scheduled days ago and the
-  /// screens it opens are built from what is true now.
-  Future<LearningPlan?> _plan(String planId) async {
-    try {
-      return await ref.read(planProvider(planId).future);
-    } catch (_) {
-      // Offline, or a plan that no longer exists. A notification that cannot open its screen is
-      // silently a no-op: the tab is one tap away and has the honest version of the story.
-      return null;
-    }
+  /// `engstd://plan/…` — снимается ПЕРВЫМ, чтобы слушатель, сработавший дважды, не открыл два
+  /// кабинета.
+  Future<void> _openLink() async {
+    final uri = DeepLinks.pending.value;
+    if (uri == null || !mounted) return;
+    DeepLinks.pending.value = null;
+    await openDayLink(context, ref, uri);
   }
 }

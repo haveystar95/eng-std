@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'theme/theme.dart';
+import 'data/app_settings.dart';
+import 'data/deep_links.dart';
 import 'data/locale_controller.dart';
 import 'data/providers.dart';
 import 'features/auth/login_screen.dart';
@@ -13,6 +17,7 @@ import 'l10n/app_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  unawaited(DeepLinks.init());
   // Paper is a light background, so the status-bar content is dark (rule: the
   // reskinned screens have no AppBar to set this). Dark screens with an AppBar
   // (old tabs) reassert their own light overlay; the collection cover overrides
@@ -71,6 +76,8 @@ class _AuthGate extends ConsumerWidget {
     // it is ready images load from the network as before — and subscribing would rebuild the whole
     // tree when a disk scan finishes.
     ref.read(imageDiskCacheProvider);
+    // «Звуки» из профиля — в единственный сервис звука и хаптики; ниже никто не решает сам.
+    ref.watch(soundsEnabledProvider);
     final auth = ref.watch(authControllerProvider);
 
     return auth.when(

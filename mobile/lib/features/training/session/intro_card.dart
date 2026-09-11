@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
@@ -277,79 +276,38 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
     final example = widget.showExample ? card.example : null;
     final variants = card.acceptedVariants;
     final showReading = ref.watch(transliterationEnabledProvider);
+    final photoUrl = widget.photoResolved ? (widget.photoUrl ?? '') : '';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        PaperCard(
-          clipContent: true,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Flexible(child: Text(card.answerText, style: AppTextExercise.introTerm)),
-                  const SizedBox(width: AppSpacing.s8),
-                  _SpeakButton(onTap: () => widget.onSpeak(card.answerText)),
-                ],
-              ),
-              if ((card.transcription ?? '').isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text('/${card.transcription}/', style: AppText.transcription),
-              ],
-              // ЧТЕНИЕ, в квадратных скобках и на ступень тише транскрипции — тот же набор, что на
-              // карточке слова и в результате поиска, потому что это одна и та же подсказка, а не
-              // новый элемент интро. Под тем же переключателем «Подсказка произношения»: читатель,
-              // выключивший её в словаре, не просил включить её в тренировке.
-              // Приходит только на интро (см. [SessionCard.transliteration]); на карточке, которая
-              // СПРАШИВАЕТ слово, это был бы напечатанный ответ.
-              if (showReading && (card.transliteration ?? '').isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text('[${card.transliteration}]', style: AppText.transliteration),
-              ],
-              const SizedBox(height: AppSpacing.s4),
-              Text(card.prompt ?? '', style: AppTextExercise.introTranslation),
-              if (example != null && example.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.s16),
-                _ExampleLine(example: example, term: card.answerText),
-                const SizedBox(height: AppSpacing.s12),
-                _PromptPhotoPlate(
-                  termId: card.termId,
-                  url: widget.photoUrl,
-                  resolved: widget.photoResolved,
-                ),
-              ] else ...[
-                const SizedBox(height: AppSpacing.s12),
-                _PromptPhotoPlate(
-                  termId: card.termId,
-                  url: widget.photoUrl,
-                  resolved: widget.photoResolved,
-                ),
-              ],
-              if (variants.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.s12),
-                Text(
-                  '${l.sessionIntroAlso} ${variants.join(' · ')}',
-                  style: AppTextExercise.introAlso,
-                ),
-              ],
-              // ЭХО — ТА ЖЕ КНОПКА, ЧТО НА ДВУХ ДРУГИХ КАРТОЧКАХ ГОВОРЕНИЯ (наряд SPEECH-2,
-              // Ч.1.3). Карточка по-прежнему НИЧЕГО не требует: она зовёт, а не заставляет, и
-              // разрешение спрашивается первым тапом (Ч.1.4) — приглашения, которое человеку
-              // приходилось разгадывать, больше нет.
-              const SizedBox(height: AppSpacing.s16),
-              _EchoRow(state: _echo, heard: _heard, verdict: _verdict, onTap: _echoBack),
-              // The badge closes the card rather than opening it (кадр 16b): it is a footnote about
-              // what KIND of card this is, and at the top it was the first thing read — a label
-              // where the word itself should have met the reader. It stays the last line even with
-              // the echo above it: the echo is something to DO, the badge only says what this is.
-              const SizedBox(height: AppSpacing.s16),
-              _IntroBadge(label: l.sessionIntroBadge),
-            ],
-          ),
-        ),
-      ],
+    // ЗНАКОМСТВО ВО ВЕСЬ ЭКРАН (кадр 16a по правке шага 10): фото на всю ширину 220, слово
+    // Literata 46 с воспроизведением 44, перевод, чтение, пример курсивом с подчёркнутым словом;
+    // «Понятно» — на доке экрана. Карточка в карточке съедала треть экрана и делала фото
+    // маленьким. Без фото — 16b: тот же макет без фото-полосы, только типографика.
+    InlineSpan? exampleSpan;
+    if (example != null && example.isNotEmpty) {
+      final needle = termSearchForm(card.answerText);
+      final at = spanPositionIn(example, needle);
+      exampleSpan = underlinedExample(example, at: at, length: needle.length);
+    }
+    final reading = [
+      if ((card.transcription ?? '').isNotEmpty) '/${card.transcription}/',
+      // ЧТЕНИЕ в квадратных скобках, под тем же переключателем «Подсказка произношения»: читатель,
+      // выключивший её в словаре, не просил включить её в тренировке.
+      if (showReading && (card.transliteration ?? '').isNotEmpty) '[${card.transliteration}]',
+    ].join('  ');
+
+    return IntroLayout(
+      photo: photoUrl.isEmpty ? null : CachedNetworkImage(photoUrl),
+      badge: _IntroBadge(label: l.sessionIntroBadge),
+      term: card.answerText,
+      translation: card.prompt ?? '',
+      reading: reading.isEmpty ? null : reading,
+      example: exampleSpan,
+      also: variants.isEmpty ? null : '${l.sessionIntroAlso} ${variants.join(' · ')}',
+      onSpeak: () => widget.onSpeak(card.answerText),
+      // ЭХО — ТА ЖЕ КНОПКА, ЧТО НА ДВУХ ДРУГИХ КАРТОЧКАХ ГОВОРЕНИЯ (наряд SPEECH-2, Ч.1.3).
+      // Карточка по-прежнему НИЧЕГО не требует: она зовёт, а не заставляет, и разрешение
+      // спрашивается первым тапом (Ч.1.4).
+      below: _EchoRow(state: _echo, heard: _heard, verdict: _verdict, onTap: _echoBack),
     );
   }
 }
@@ -464,90 +422,6 @@ class _IntroBadge extends StatelessWidget {
           border: Border.all(color: AppColors.hairline),
         ),
         child: Text(label.toUpperCase(), style: AppText.badge),
-      ),
-    );
-  }
-}
-
-/// The example sentence with the term itself set in bold inside it (кадр 16b). Bold rather than an
-/// underline: the underline in this design means «the broken fragment» on pick_correct, and one mark
-/// cannot mean both "look here, this is the word" and "look here, this is wrong".
-class _ExampleLine extends StatelessWidget {
-  const _ExampleLine({required this.example, required this.term});
-  final String example;
-  final String term;
-
-  @override
-  Widget build(BuildContext context) {
-    // The term's own trailing punctuation is not part of what to look for: «I have a fever.» is
-    // taught by «I have a fever and feel very weak.», where the full stop sits nowhere near it.
-    final needle = termSearchForm(term);
-    final at = spanPositionIn(example, needle);
-    if (at < 0) {
-      return Text(example, style: AppTextExercise.introExample);
-    }
-    return Text.rich(
-      TextSpan(
-        style: AppTextExercise.introExample,
-        children: [
-          TextSpan(text: example.substring(0, at)),
-          TextSpan(
-            text: example.substring(at, at + needle.length),
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          TextSpan(text: example.substring(at + needle.length)),
-        ],
-      ),
-    );
-  }
-}
-
-/// The term's photo under the example — it CONFIRMS the meaning the sentence just gave, which is
-/// why it sits below and not above. Absent photo simply collapses; nothing reserves space for it.
-class _PromptPhotoPlate extends StatelessWidget {
-  const _PromptPhotoPlate({required this.termId, required this.url, required this.resolved});
-  final String termId;
-  final String? url;
-  final bool resolved;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!resolved || url == null || url!.isEmpty) return const SizedBox.shrink();
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadii.thumb),
-      child: AspectRatio(
-        aspectRatio: 16 / 10,
-        child: Image(
-          image: CachedNetworkImage(url!),
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => const SizedBox.shrink(),
-        ),
-      ),
-    );
-  }
-}
-
-class _SpeakButton extends StatelessWidget {
-  const _SpeakButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      child: InkResponse(
-        onTap: onTap,
-        radius: 24,
-        child: Container(
-          width: 32,
-          height: 32,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.hairline),
-          ),
-          child: const Icon(LucideIcons.volume2, size: 15, color: AppColors.ink),
-        ),
       ),
     );
   }

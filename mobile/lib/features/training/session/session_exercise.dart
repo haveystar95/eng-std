@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -168,29 +167,10 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     this.photoUrl,
     this.photoResolved = false,
     this.showDue = true,
-    this.situation,
-    this.sayIntent,
-    this.inDialogue = false,
-    this.sceneRun,
     this.speech = SpeechGradingConfig.empty,
-    this.roleSpeaking,
-    this.roleLineText,
   });
 
   static bool _alwaysCurrent() => true;
-
-  /// ДИНАМИК ЕЩЁ ГОВОРИТ — реплика собеседника играет (наряд DAY-FIX-3, Ч.1.1).
-  ///
-  /// Пока `true`, микрофон прогона не открывается: открытый поверх голоса собеседника, он писал
-  /// начало его реплики в транскрипт человека (диагностика 06.09, п. 1). Ставит и снимает флаг
-  /// СЕССИЯ — она владеет голосом; карточка только ждёт. Null — звука нет, микрофон открывается
-  /// сразу после слайда.
-  final ValueListenable<bool>? roleSpeaking;
-
-  /// ТЕКСТ РЕПЛИКИ РОЛИ, которая только что прозвучала, — для эхо-замка (Ч.1.5). Склейка, в
-  /// которой узнана эта реплика и не узнан ключ, выбрасывается, а не пишется ошибкой. Null вне
-  /// разговора.
-  final String? roleLineText;
 
   final SessionCard card;
   final bool autoPronounce;
@@ -211,17 +191,6 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   /// autoplay, keyboard focus) check it so a fast «Дальше-Дальше» that leaves the card before the
   /// post-transition callback fires cancels the effect instead of firing it on the next card (F20).
   final bool Function() isCurrent;
-
-  /// ЭТО ХОД ПРОГОНА СЦЕНЫ — ступень C, и её секунды (наряд SCENE-RUN, Ч.2).
-  ///
-  /// Null у всего остального, включая обычную карточку говорения: прогон отличается от неё не
-  /// тренажёром, а тем, что с экрана убрали. На карточке остаётся подсказка на языке поддержки и
-  /// микрофон; ни ключа реплики, ни фотографии, ни самой реплики — иначе ступень C была бы чтением
-  /// вслух под другим именем.
-  ///
-  /// Секунды приходят с сервера ({@see SceneRunKnobs}), а не лежат константами здесь: сколько
-  /// человек думает — продуктовое суждение, и оно обязано двигаться без выката приложения.
-  final SceneRunKnobs? sceneRun;
 
   /// ЧЕМ СУДИТЬ РЕЧЬ — пороги и таблица аббревиатур, приехавшие с сервера (наряд SPEECH-2,
   /// Ч.3.3 / Ч.4.2). Своих чисел у карточки нет и быть не может: экран и сервер судят одной
@@ -251,34 +220,6 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   /// reason [speechLocaleId] is: a session mixes pairs by design (DECISIONS п. 128), so a constant
   /// here would judge an Italian answer by English's alphabet.
   final String answerLang;
-
-  /// THE POSITION a situational card puts the learner in — «Хозяин спросил про залог».
-  ///
-  /// It rides on the PLAN's envelope rather than on the card, because it is a fact about the day and
-  /// the card is the app's ordinary card ({@see PlanSessionEnvelope.situationAt}). Null on every
-  /// other trainer, and on a situational card met outside a plan — where the options alone are drawn
-  /// and the card degrades to the ordinary choice it is underneath.
-  final PlanSituation? situation;
-
-  /// ЧТО ИМЕННО НАДО СКАЗАТЬ, на языке поддержки — только на карточке СБОРКИ (наряд DAY-GATE-1,
-  /// Ч.2.4), и `null` везде ещё, включая карточку выбора: там перевод реплики назвал бы правильный
-  /// вариант, то есть карточка ответила бы на собственный вопрос.
-  ///
-  /// Строка серверная (`task.intent`), префикс «Скажи:» клиентский. Она отвечает на вопрос, который
-  /// сборка задаёт молча: блоки лежат на изучаемом языке, и без неё человек собирает фразу, не зная,
-  /// что он собирает.
-  final String? sayIntent;
-
-  /// ЭТА КАРТОЧКА ИГРАЕТСЯ РАЗГОВОРОМ — она стоит внутри оболочки диалога (серия «Диалог v1»).
-  ///
-  /// Меняется от этого ровно одно: карточка перестаёт подписывать САМА СЕБЯ. Такт над ней уже задал
-  /// крупный русский вопрос — «Что тебе сейчас сказали?», «Что ты ответишь?» — а реплику проигрывает
-  /// и повторяет пузырь. Своя серая строка «фраза · выбери, что ответишь» и своя кнопка
-  /// воспроизведения были бы вторым ответом на тот же вопрос, тише и мельче первого; живьём владелец
-  /// читал именно её и не понимал, какой из двух тактов перед ним (наряд DAY-2-FIX, Ч.1.1).
-  ///
-  /// Механика не меняется НИЧЕМ: те же варианты, та же оценка, та же лестница.
-  final bool inDialogue;
 
   /// Pronounce a target-language string via the shell's TTS (respects the auto-pronounce toggle
   /// at call sites; here it's an explicit speak). [slow] backs the listening «замедленно» replay.
@@ -323,30 +264,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   bool get _isDictation => _mode == ExerciseMode.dictation;
   bool get _isSpeaking => _mode == ExerciseMode.speaking;
 
-  /// «Тебе скажут» on the situational trainer: the line is PLAYED and the options are meanings.
-  bool get _isSituationalHear => _mode == ExerciseMode.situationalHear;
-
-  /// The two speak shelves — a position, replies to tap, and the chosen one said out loud.
-  bool get _isSituationalSpeak =>
-      _mode == ExerciseMode.situationalSay || _mode == ExerciseMode.situationalAsk;
-
-  /// ХОД ПРОГОНА СЦЕНЫ — ступень C: подсказка на языке поддержки и микрофон, больше ничего.
-  bool get _isSceneRun => widget.sceneRun != null && _isSpeaking;
-
   /// Когда открылся микрофон ЭТОЙ попытки — от него меряется «сразу» (канон §4, ≤ 3 с). С Ч.1.1
   /// микрофон открывается ПОСЛЕ реплики собеседника, поэтому «сразу» больше не включает её.
   DateTime? _listenStartedAt;
-
-  /// B+ · СБОРКА — тот же ход, но реплики целиком на экране больше нет (наряд SCENE-RUN, Ч.1).
-  ///
-  /// Читается по СОДЕРЖИМОМУ карточки, а не по новому режиму: сервер кладёт блоки вместо вариантов,
-  /// и это единственная разница. Уровень едет и отдельным полем (`turn_level`), но решает здесь
-  /// именно карточка — экран рисует то, что ему прислали, а не то, что он вывел из подписи; иначе
-  /// «уровень сборка» и «блоков нет» дали бы пустой экран вместо задания.
-  ///
-  /// Клавиатуры не появляется ни при каком уровне: канон §9 — ни один обязательный шаг не требует
-  /// системной клавиатуры изучаемого языка.
-  bool get _isAssembleTurn => _isSituationalSpeak && _chips.isNotEmpty;
 
   // ── speaking ───────────────────────────────────────────────────────────────
   // The channel state, kept apart from the answering state above on purpose: `_attempts` counts
@@ -406,12 +326,8 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// second half: once the budget is spent the escape hatch stays put instead of blinking away
   /// under the finger.
   bool get _canSkip =>
-      // В ПРОГОНЕ «ПРОПУСТИТЬ» ДОСТУПНО ВСЕГДА (наряд DAY-FIX-3, Ч.1.7): ход проходится голосом,
-      // спасателем или пропуском, и выход не должен появляться по таймеру — молчание это законный
-      // ход человека, который не вспомнил, а не поломка железа (SCENE-RUN, Ч.2.4).
-      _isSceneRun ||
-      (widget.onSkipped != null &&
-          (_channelFailure != null || _attempts >= SpokenAnswer.maxChannelAttempts));
+      widget.onSkipped != null &&
+      (_channelFailure != null || _attempts >= SpokenAnswer.maxChannelAttempts);
 
   /// The words the recogniser is listening for, and what the answer is graded against.
   ///
@@ -420,29 +336,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   List<String> get _spokenTargets => _card.spokenTargets.isNotEmpty
       ? _card.spokenTargets
       : (_card.asksForExample ? [_card.answer] : [_card.answer, ..._card.acceptedVariants]);
-
-  /// ЧИСЛА ЭТОГО ХОДА. Одни на все карточки говорения (Ч.1.3); прогон сцены приносит свой сторож
-  /// с сервера (`listen_seconds`), потому что сколько человек думает над репликой — суждение
-  /// продукта, которое двигают без выката.
-  SpeechTurnConfig get _turnConfig {
-    final knobs = widget.sceneRun;
-    const base = SpeechTurnConfig();
-
-    // `listen_seconds` ТЕПЕРЬ ОГРАНИЧИВАЕТ ВСЮ ЗАПИСЬ (наряд SPEECH-2, Ч.2.1), а не ожидание
-    // первого слова: ждать больше нечего — запись начинается по нажатию. Пол в 15 секунд стоит в
-    // самом движке ({@see SpeechTurnConfig.minMaxRecording}).
-    return knobs == null
-        ? base
-        : base.copyWith(maxRecording: Duration(seconds: knobs.listenSeconds));
-  }
-
-  /// «В СКЛЕЙКЕ УЗНАНА РЕПЛИКА РОЛИ» — эхо динамика (Ч.1.5): покрытие её слов ≥ порога конфига.
-  bool _isEcho(String transcript) {
-    final line = widget.roleLineText?.trim() ?? '';
-    if (line.isEmpty) return false;
-
-    return SessionGrader.coverageOf(transcript, line, ignoreArticles: true) >= _turnConfig.echoCoverage;
-  }
 
   /// Is this card's spoken answer judged by coverage rather than by equality (QA-22)? The one
   /// «длинность» rule, from the one place that defines it.
@@ -550,44 +443,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     // устройстве 08.09 он выглядел так: человек ещё не собрался, а его уже пишут, сторож тикает, и
     // первое, что слышит микрофон, — вдох. В тренажёре человек имеет право подумать, и отнимать
     // это право ради реализма — плохая сделка.
-    if (_isSpeaking) {
-      // Начальное состояние ставится ПОЛЕМ, а не `setState`: до первой сборки его ещё некому
-      // перерисовать. Дальше состояние двигает только [_setMicState].
-      final speaking = widget.roleSpeaking;
-      _micState = speaking != null && speaking.value ? MicState.waiting : MicState.yourTurn;
-      _waitForRoleThenInvite();
-    }
-  }
-
-  /// ПОЗВАТЬ, КОГДА ДИНАМИК ЗАМОЛЧИТ (Ч.1.1) — сразу, если он молчит уже.
-  ///
-  /// Кнопка не зовёт поверх чужой реплики: тап посреди неё записал бы динамик. Со страховкой —
-  /// голос, который не сказал, что кончил ([_roleWaitCap]), не имеет права держать ход запертым.
-  void _waitForRoleThenInvite() {
-    final speaking = widget.roleSpeaking;
-    if (speaking == null || !speaking.value) {
-      _invite();
-
-      return;
-    }
-    _setMicState(MicState.waiting, phase: SpeechPhase.waitingForRole);
-    void onQuiet() {
-      if (speaking.value) return;
-      speaking.removeListener(onQuiet);
-      _quietListener = null;
-      _roleWaitTimer?.cancel();
-      if (mounted && widget.isCurrent() && !_answered) _invite();
-    }
-
-    speaking.addListener(onQuiet);
-    _quietListener = onQuiet;
-    _roleWaitTimer?.cancel();
-    _roleWaitTimer = Timer(_roleWaitCap, () {
-      if (_quietListener == null) return;
-      speaking.removeListener(onQuiet);
-      _quietListener = null;
-      if (mounted && widget.isCurrent() && !_answered) _invite();
-    });
+    if (_isSpeaking) _invite();
   }
 
   /// «ТВОЯ ОЧЕРЕДЬ» — состояние БЕЗ ТАЙМАУТА (Ч.1.2). Ничего не заводится: ни сторож, ни микрофон.
@@ -599,12 +455,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     _micState = state;
     if (mounted) setState(() {});
   }
-
-  VoidCallback? _quietListener;
-  Timer? _roleWaitTimer;
-
-  /// Дольше этого реплика собеседника не звучит — потолок ожидания динамика.
-  static const _roleWaitCap = Duration(seconds: 15);
 
   /// ПОДСТАВИТЬ ТРАНСКРИПТ ВМЕСТО ГОЛОСА — дев-дверь QA (наряд SCENE-RUN, Ч.2.9).
   ///
@@ -624,7 +474,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// прогона секунд «сразу» нет, и подделывать нечего: подставляется только текст.
   void _substituteTranscript(String text, {required bool fast}) {
     if (_answered) return;
-    final knobs = widget.sceneRun;
 
     // ЧЕРЕЗ ДВИЖОК, А НЕ МИМО НЕГО (наряд DAY-GATE-1, доработка Ч.3). Текст въезжает в ход тем же
     // путём, каким въехал бы частичный результат плагина: склейка, первое слово, сторож,
@@ -636,9 +485,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     // подстановку закрывал УЗНАННЫЙ КЛЮЧ, и этой дороги больше нет; ждать вместо неё две секунды
     // тишины на каждой карточке значит превратить дев-дверь в секундомер.
     if (_turn case final turn? when _listeningNow) {
-      final delay = fast || knobs == null
-          ? Duration.zero
-          : Duration(seconds: knobs.fastSeconds + 1);
+      final delay = fast ? Duration.zero : const Duration(seconds: 4);
       _reopenTimer?.cancel();
       _reopenTimer = Timer(delay, () {
         if (!mounted || _answered || !_listeningNow) return;
@@ -680,8 +527,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     _speakTimer?.cancel();
     _settleTimer?.cancel();
     _reopenTimer?.cancel();
-    _roleWaitTimer?.cancel();
-    if (_quietListener case final listener?) widget.roleSpeaking?.removeListener(listener);
     if (_isCloze) _input.removeListener(_onClozeInput);
     // A card left mid-utterance must not leave the microphone open behind it — and must not have
     // its transcript arrive over the next card either. Cancel keeps nothing, which is right: an
@@ -975,7 +820,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       final contextualStrings = await _contextualStrings();
       if (!mounted || !_listeningNow) return;
 
-      final turn = SpeechTurn(recognizer, config: _turnConfig, diagnostics: _diagnostics);
+      final turn = SpeechTurn(recognizer, config: const SpeechTurnConfig(), diagnostics: _diagnostics);
       _turn = turn;
       // ОЧЕРЕДЬ ПОДСТАНОВКИ (дев-дверь QA): ход открыт, класть текст можно. Один кадр форы —
       // движок ещё не успел дойти до плагина, а `injectTranscript` требует живого хода.
@@ -990,7 +835,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         expected: _spokenTargets,
         localeId: widget.speechLocaleId,
         contextualStrings: contextualStrings,
-        echoOf: widget.roleLineText == null ? null : _isEcho,
         onPartial: (text) {
           if (mounted && _listeningNow) setState(() => _partial = text);
         },
@@ -1042,15 +886,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // расслышали», ловит ровно ту же неготовность, из-за которой обрыв и вышел.
 
       case SpeechTurnOutcome.silent:
-        if (_isSceneRun) {
-          // ХОД ДЕЛАЕТ СТОРОЖ, и делает его тем же, чем сделал бы человек: пустым ответом, который
-          // сервер оценивает как `again` (SCENE-RUN, Ч.2.4). Разговор идёт дальше, никто не
-          // застревает. Сторож при этом теперь считает ЗАПИСЬ, которую человек начал сам, — то
-          // есть ход за него делается только после того, как он его начал.
-          _giveUp();
-
-          return;
-        }
         setState(() {
           _attempts++;
           _partial = '';
@@ -1097,14 +932,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// показал.
   void _skipCard() {
     if (_answered) return;
-    if (_isSceneRun) {
-      _reopenTimer?.cancel();
-      unawaited(_turn?.cancel());
-      _listeningNow = false;
-      _giveUp();
-
-      return;
-    }
     _answered = true; // no second exit from this card
     widget.onSkipped?.call();
   }
@@ -1122,45 +949,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // though its options are whole sentences — that only changes how they read, not how they
         // are answered. Leaving it out was the device-batch bug: prompt and photo rendered, and
         // there was nothing on screen to tap.
-        if (!_isAssembleTurn &&
-            (_mode == ExerciseMode.multipleChoice ||
-                _mode == ExerciseMode.descriptionMatch ||
-                _mode.isSituational ||
-                _mode.isSentenceChoice ||
-                _isRecognitionListening)) ...[
+        if (_mode == ExerciseMode.multipleChoice ||
+            _mode == ExerciseMode.descriptionMatch ||
+            _mode.isSentenceChoice ||
+            _isRecognitionListening) ...[
           const SizedBox(height: AppSpacing.s12),
           _options(l),
         ],
-        // СТРОКА СБОРКИ У ХОДА — своим блоком, а не внутри карточки-вопроса.
-        //
-        // У word_bank и scramble она живёт в карточке-вопросе, потому что там эта карточка есть. В
-        // разговоре её нет вовсе: реплику подаёт пузырь, вопрос такта стоит над карточкой, и
-        // положения на экране не рисуется (наряд DAY-2-FIX, Ч.1.1). Без этой строки человек тапал
-        // бы блоки и не видел, что собрал.
-        if (_isAssembleTurn) ...[
-          // «СКАЖИ: …» — ЧТО ИМЕННО СОБИРАЮТ (наряд DAY-GATE-1, Ч.2.4). Блоки лежат на изучаемом
-          // языке, и без этой строки сборка — это складывание чужих слов наугад: живой прогон
-          // показал человека, который собрал грамматически верную фразу не о том.
-          if (widget.sayIntent case final intent? when intent.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.s12),
-            Text(
-              l.planSayIntent(intent),
-              style: AppText.stepTitle.copyWith(fontSize: 16, height: 1.4),
-            ),
-          ],
+        if (_mode.isAssembled) ...[
           const SizedBox(height: AppSpacing.s12),
-          PaperCard(
-            child: _AssemblyLine(
-              words: _placed.map((i) => _chips[i]).toList(),
-              answered: _answered,
-              correct: _verdict?.isAccepted ?? false,
-              mistakes: _mistakes(_placed.map((i) => _chips[i]).toList()),
-              onTapWord: (idx) => _unplaceChip(_placed[idx]),
-            ),
-          ),
-        ],
-        if (_mode.isAssembled || _isAssembleTurn) ...[
-          const SizedBox(height: AppSpacing.s16),
           _chipTray(l),
         ],
         if (!_answered && _isSpeaking) ...[
@@ -1177,23 +974,16 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // «я не помню это слово» sayable on a sentence and unsayable on a word: the only way out of
         // a word_bank card was to assemble something wrong on purpose, and a wrong answer and a
         // blank one are not the same statement about what the learner knows.
-        if (!_answered && (_mode.isAssembled || _isAssembleTurn)) ...[
+        if (!_answered && _mode.isAssembled) ...[
           const SizedBox(height: AppSpacing.s12),
           QuietButton(label: l.sessionDontRemember, onPressed: _giveUp),
         ],
-        if (!_answered && (_mode.isAssembled || _isAssembleTurn) && _placed.isNotEmpty) ...[
+        if (!_answered && _mode.isAssembled && _placed.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s12),
           // «Проверить», not «Дальше»: this submits the assembled phrase (grades it) — the
           // feedback block then shows the real «Дальше» that advances. Two distinct steps, two
           // distinct labels, so the first tap doesn't read as a no-op (device-batch F12).
           PrimaryButton(label: l.sessionCheck, onPressed: _submitAssembled),
-        ],
-        // «ПОКАЗАТЬ ТЕКСТ», and only after the answer (наряд Ч-2). Before it the card is the sound:
-        // printing the line would answer its own question, and «Ещё раз» / «Медленнее» are the
-        // escape a learner who did not catch it actually needs.
-        if (_answered && _isSituationalHear) ...[
-          const SizedBox(height: AppSpacing.s12),
-          _RevealedLine(text: _card.answerText, onSpeak: widget.onSpeak),
         ],
         if (_answered) ...[
           const SizedBox(height: AppSpacing.s12),
@@ -1223,8 +1013,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_isSpeaking) return _speakingPrompt(l);
     if (_isScramble) return _scramblePrompt(l);
     if (_mode.isSentenceChoice) return _pickCorrectPrompt(l);
-    if (_isSituationalHear) return _situationalHearPrompt(l);
-    if (_isSituationalSpeak) return _situationalSpeakPrompt(l);
     if (_mode == ExerciseMode.descriptionMatch) return _descriptionPrompt(l);
     if (_mode == ExerciseMode.wordBank) return _wordBankPrompt(l);
     if (_mode == ExerciseMode.typing) return _typingPrompt(l);
@@ -1270,17 +1058,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       _card.asksForExample ? l.sessionInstrSpeakExample : l.sessionInstrSpeakWord,
     ExerciseMode.listening =>
       _isRecognitionListening ? l.sessionInstrListenChoose : l.sessionInstrListenType(_adverb(l)),
-    // The three situational cards each name what is being chosen, because the options are three
-    // different things: a MEANING on «Тебе скажут», a reply on «Ты ответишь», a question on «Ты
-    // спросишь». One instruction for all three would describe none of them.
-    ExerciseMode.situationalHear => l.sessionInstrSituationalHear,
-    // …и на двух говорящих полках инструкция зависит от того, ЧТО лежит на экране: варианты или
-    // блоки (наряд SCENE-RUN, Ч.1). «Выбери, что ответишь» над рядом плиток описывает карточку, на
-    // которую человек не смотрит.
-    ExerciseMode.situationalSay =>
-      _isAssembleTurn ? l.sessionInstrAssembleTurn : l.sessionInstrSituationalSay,
-    ExerciseMode.situationalAsk =>
-      _isAssembleTurn ? l.sessionInstrAssembleTurn : l.sessionInstrSituationalAsk,
   };
 
   String _typeLabel(AppLocalizations l) => switch (_card.type) {
@@ -1311,9 +1088,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             resolved: widget.photoResolved,
             reveal: _settled,
           ),
-          Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
-          const SizedBox(height: AppSpacing.s4),
-          _instructionLine(l),
+          // УСЛОВИЕ — В БЛОКЕ ЗАДАНИЯ 4м (кадр 12a, шаг 11 плана): «ВЫБЕРИ ПЕРЕВОД» + слово, один
+          // на карточку, над зоной ответа. Глаз идёт сначала сюда.
+          TaskBlock(label: _instructionFor(l), text: _card.prompt ?? ''),
         ],
       ),
     );
@@ -1325,14 +1102,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   // reading task.
   Widget _pickCorrectPrompt(AppLocalizations l) {
     return PaperCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
-          const SizedBox(height: AppSpacing.s4),
-          _instructionLine(l, withType: false),
-        ],
-      ),
+      child: TaskBlock(label: _instructionFor(l), text: _card.prompt ?? ''),
     );
   }
 
@@ -1347,13 +1117,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   // like the example and the pick_correct options — not a Russian cue to glance at.
   Widget _descriptionPrompt(AppLocalizations l) {
     return PaperCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(_card.prompt ?? '', style: AppTextExercise.answerOption),
-          const SizedBox(height: AppSpacing.s8),
-          _instructionLine(l, withType: false),
-        ],
+      child: TaskBlock(
+        label: _instructionFor(l),
+        child: Text(_card.prompt ?? '', style: AppTextExercise.answerOption),
       ),
     );
   }
@@ -1374,26 +1140,52 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     );
   }
 
-  // word_bank — prompt + the assembly line inside the card (12b).
+  // word_bank — the task block, then the assembly board (кадр 12b по правке шага 11: условие в
+  // блоке задания 4м, плитки 44 на серой подложке, вердикт тонировкой и маркером — 4л).
   Widget _wordBankPrompt(AppLocalizations l) {
     return PaperCard(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
-          const SizedBox(height: AppSpacing.s4),
-          _instructionLine(l),
+          TaskBlock(label: _instructionFor(l), text: _card.prompt ?? ''),
+          const SizedBox(height: 5),
+          Text(_typeLabel(l), style: AppTextExercise.taskInstruction),
           const SizedBox(height: AppSpacing.s16),
-          _AssemblyLine(
-            words: _placed.map((i) => _chips[i]).toList(),
-            answered: _answered,
-            correct: _verdict?.isAccepted ?? false,
-            mistakes: _mistakes(_placed.map((i) => _chips[i]).toList()),
-            onTapWord: (idx) => _unplaceChip(_placed[idx]),
-            letters: _assemblesLetters,
-          ),
+          _board(l),
         ],
       ),
+    );
+  }
+
+  /// ПОДЛОЖКА СБОРКИ (4л) с собранными плитками; пустая — подсказка «нажимай на слова».
+  Widget _board(AppLocalizations l) {
+    final placed = _placed.map((i) => _chips[i]).toList();
+    final verdict = !_answered
+        ? AnswerOptionVerdict.none
+        : (_verdict?.isAccepted ?? false)
+        ? AnswerOptionVerdict.correct
+        : AnswerOptionVerdict.wrong;
+    final mistakes = _mistakes(placed);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AssemblyBoard(
+          placed: placed,
+          verdict: verdict,
+          shakeIndex: mistakes.isEmpty ? null : mistakes.first,
+          marked: mistakes,
+          onTapPlaced: _answered ? null : (idx) => _unplaceChip(_placed[idx]),
+        ),
+        if (placed.isEmpty && !_answered) ...[
+          const SizedBox(height: AppSpacing.s8),
+          Text(
+            _assemblesLetters ? l.sessionAssemblyEmptyHintLetters : l.sessionAssemblyEmptyHint,
+            style: AppTextExercise.taskInstruction,
+          ),
+        ],
+      ],
     );
   }
 
@@ -1401,22 +1193,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   // No photo and no term text: showing either would give away words of the sentence being built.
   Widget _scramblePrompt(AppLocalizations l) {
     return PaperCard(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // The prompt is the EXAMPLE's translation (the server swaps it in for this mode), so this
           // reads as «собери это по-английски» rather than as the term's own translation.
-          Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
-          const SizedBox(height: AppSpacing.s4),
-          _instructionLine(l, withType: false),
+          TaskBlock(label: _instructionFor(l), text: _card.prompt ?? ''),
           const SizedBox(height: AppSpacing.s16),
-          _AssemblyLine(
-            words: _placed.map((i) => _chips[i]).toList(),
-            answered: _answered,
-            correct: _verdict?.isAccepted ?? false,
-            mistakes: _mistakes(_placed.map((i) => _chips[i]).toList()),
-            onTapWord: (idx) => _unplaceChip(_placed[idx]),
-          ),
+          _board(l),
         ],
       ),
     );
@@ -1437,9 +1222,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ФОТОГРАФИИ В ПРОГОНЕ НЕТ: она подсказка к слову, а здесь вспоминают реплику, и
-          // картинка чужого слова рядом с ней — шум.
-          if (!asksExample && !_isSceneRun)
+          if (!asksExample)
             _PromptPhoto(
               termId: _card.termId,
               url: widget.photoUrl,
@@ -1455,14 +1238,8 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           ] else
             Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
           const SizedBox(height: AppSpacing.s4),
-          // В ПРОГОНЕ СЛУЖЕБНОЙ СТРОКИ НЕТ (наряд DAY-GATE-1, Ч.2.7). «фраза · скажи слово вслух»
-          // говорила там неправду дважды: реплику она называла словом, а тип материала — служебным
-          // словом, которое на экраны плана не выходит. Человеческая строка стоит ниже
-          // ([_speakHint] → «скажи свою реплику — текста не будет») и говорит то же самое один раз.
-          if (!_isSceneRun) ...[
-            _instructionLine(l, withType: !asksExample),
-            const SizedBox(height: AppSpacing.s4),
-          ],
+          _instructionLine(l, withType: !asksExample),
+          const SizedBox(height: AppSpacing.s4),
           // The frame, on the card and not only in a spec: this is recall, not pronunciation. It is
           // what makes a learner willing to speak at all.
           //
@@ -1478,11 +1255,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   /// What this spoken card is actually asking for, in one line. See [_speakingPrompt].
   String _speakHint(AppLocalizations l) {
-    // В ПРОГОНЕ КЛЮЧ НЕ ПОКАЗЫВАЮТ. Ключ написан на изучаемом языке, а прогон — это «скажи сам, без
-    // текста»: строка «главное — a fever» отдала бы половину реплики и превратила ступень C в
-    // чтение вслух. Что делать, говорит подсказка на языке поддержки над микрофоном.
-    if (_isSceneRun) return l.planSceneRunHint;
-
     final key = _card.spokenTarget;
     if (key != null) return l.sessionSpeakHintKey(key);
 
@@ -1589,28 +1361,34 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   // cloze — the example with a blank at the answer's position (12i/12j).
   Widget _clozePrompt(AppLocalizations l) {
     return PaperCard(
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.sessionClozeInsert.toUpperCase(), style: AppText.sectionLabel),
-          const SizedBox(height: AppSpacing.s12),
-          _ClozeSentence(
-            example: _card.example ?? _card.answerText,
-            answer: _card.answerText,
-            // The blank always holds the LEARNER'S OWN word — while typing, and after the verdict.
-            // It used to be swapped for the correct form on answering, which read as though they had
-            // typed the right thing and left nothing to compare the correction below against
-            // (QA-16). The correct form still appears, as its own card underneath.
-            filled: _answered
-                ? ((_response ?? '').trim().isEmpty ? null : _response!.trim())
-                : (_input.text.trim().isEmpty ? null : _input.text),
-            answered: _answered,
-            correct: _verdict?.isAccepted ?? false,
-            mistakes: _mistakes([(_response ?? '').trim()]),
+          // УСЛОВИЕ — В БЛОКЕ ЗАДАНИЯ 4м («ВСТАВЬ СЛОВО» + пример с пропуском), кадр 12i по правке
+          // шага 11. Пропуск ровно по ширине слова, предложение — курсивная антиква; перевод под
+          // ним серым — подсказка смысла, не ответа.
+          TaskBlock(
+            label: l.sessionClozeInsert,
+            child: ClozeSentence(
+              example: _card.example ?? _card.answerText,
+              answer: _card.answerText,
+              style: AppTextExercise.clozeExample.copyWith(fontSize: 21, height: 1.55, color: AppColors.ink),
+              // The blank always holds the LEARNER'S OWN word — while typing, and after the
+              // verdict. It used to be swapped for the correct form on answering, which read as
+              // though they had typed the right thing and left nothing to compare the correction
+              // below against (QA-16). The correct form still appears, as its own card underneath.
+              filled: _answered
+                  ? ((_response ?? '').trim().isEmpty ? null : _response!.trim())
+                  : (_input.text.trim().isEmpty ? null : _input.text),
+              answered: _answered,
+              correct: _verdict?.isAccepted ?? false,
+              mistakes: _mistakes([(_response ?? '').trim()]),
+            ),
           ),
           if (_card.exampleTranslation != null) ...[
-            const SizedBox(height: AppSpacing.s12),
-            Text(_card.exampleTranslation!, style: AppText.translation.copyWith(height: 1.4)),
+            const SizedBox(height: 14),
+            Text(_card.exampleTranslation!, style: AppText.translation.copyWith(fontSize: 13.5, height: 1.45)),
           ],
           if (!_answered)
             // The visible answer is the blank in the sentence above; this field is invisible and
@@ -1649,152 +1427,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             style: AppTextExercise.taskInstruction,
           ),
           if (typed && !_answered) ...[const SizedBox(height: AppSpacing.s16), _inputField()],
-        ],
-      ),
-    );
-  }
-
-  /// «ТЕБЕ СКАЖУТ» ON THE SITUATIONAL TRAINER (кадр D · 03) — the sound, and no text at all.
-  ///
-  /// The whole card is what is NOT on it: the line is played and never printed, because the question
-  /// is «что он спросил» and the answer is written on the card the moment the sentence is. What the
-  /// learner gets instead is the two things a person actually asks for when they miss something —
-  /// «Ещё раз» and «Медленнее» — and, once they have answered, the text
-  /// ([_RevealedLine]).
-  ///
-  /// Above it stands the SCENE, not the вводка: «сейчас услышите · У стойки регистратуры». The
-  /// вводка says what will happen, which on this card is the answer.
-  Widget _situationalHearPrompt(AppLocalizations l) {
-    final scene = widget.situation?.context?.trim() ?? '';
-
-    // В ЛЕНТЕ РАЗГОВОРА ПРОМПТА У ЭТОЙ КАРТОЧКИ НЕТ: пузырь над ней и есть промпт (кадр DL·02) —
-    // реплика звучит сама при появлении и повторяется той же кнопкой «Ещё раз», что и на всех
-    // остальных пузырях роли, а «Показать текст» раскрывает её внутри пузыря. Своя кнопка
-    // воспроизведения кеглем 112 рядом с пузырём была бы вторым плеером на одну реплику.
-    //
-    // Отличается это от ХВОСТА сцены (карточки вне цепочки) ровно положением: в ленте сервер шлёт
-    // `situation: null`, потому что момент подаёт пузырь; у хвоста положение есть, пузыря нет, и
-    // играть реплику нечем, кроме собственной кнопки.
-    if (widget.inDialogue && widget.situation == null) return const SizedBox.shrink();
-
-    return PaperCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (scene.isNotEmpty) ...[
-            Text(l.sessionSituationHearLabel.toUpperCase(), style: AppText.sectionLabel),
-            const SizedBox(height: AppSpacing.s8),
-            Text(scene, style: AppText.stepTitle.copyWith(fontSize: 19, height: 1.3)),
-            const SizedBox(height: AppSpacing.s22),
-          ],
-          Center(
-            child: _PlayCircle(
-              onTap: () => widget.onSpeak(_card.answerText),
-              label: l.sessionListenReplay,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.s12),
-          Center(
-            child: QuietButton(
-              label: l.sessionListenReplaySlow,
-              icon: LucideIcons.gauge,
-              onPressed: () => widget.onSpeak(_card.answerText, slow: true),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.s16),
-          Text(
-            _instructionFor(l),
-            textAlign: TextAlign.center,
-            style: AppTextExercise.taskInstruction,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// «ТЫ ОТВЕТИШЬ» / «ТЫ СПРОСИШЬ» (кадр D · 04) — the position, then the replies.
-  ///
-  /// The situation is always ABOVE the options and always on the learner's own language: the choice
-  /// is made from the moment, not from a gloss of the right answer (канон §13). Its second line is
-  /// either what was just SAID to them — the day's own role line, on the language being learned,
-  /// speakable — or, when this day has no role line for the ability this card serves, the ability
-  /// itself. Both are the server's; neither is ever a translation of the answer.
-  Widget _situationalSpeakPrompt(AppLocalizations l) {
-    final situation = widget.situation;
-    final context = situation?.context?.trim() ?? '';
-    final roleLine = situation?.roleLine?.trim() ?? '';
-    final task = situation?.task?.trim() ?? '';
-
-    // NO POSITION, NO HEADING, NO INSTRUCTION. Inside a conversation the shell owns the moment —
-    // the line sounds from the bubble above, the вводка stood on the dialogue's opening screen, and
-    // the такт asks its question in full size over the options (наряд DAY-2-FIX, Ч.1.1). What stood
-    // here was «выбери, что ответишь» in grey 12 pt: the only sentence on the screen telling the
-    // learner what to do, set smaller than everything around it and in the wrong language.
-    if (context.isEmpty && roleLine.isEmpty && task.isEmpty) {
-      // В разговоре — ничего: вопрос такта уже стоит над карточкой крупно, а у хвостовой карточки
-      // над ней стоит вводка «Ещё раз ответ этой сцены». Вне разговора — своя инструкция, потому
-      // что спросить больше некому и карточка деградирует до обычного выбора, а не до молчания.
-      if (widget.inDialogue) return const SizedBox.shrink();
-
-      return PaperCard(
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: Text(_instructionFor(l), style: AppTextExercise.taskInstruction),
-        ),
-      );
-    }
-
-    return PaperCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l.sessionSituationLabel.toUpperCase(), style: AppText.sectionLabel),
-          if (context.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.s8),
-            Text(context, style: AppText.stepTitle.copyWith(fontSize: 17, height: 1.45)),
-          ],
-          if (roleLine.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.s12),
-            // WHAT WAS JUST SAID TO THEM, in the language being learned — so the reply is an answer
-            // to something heard, not to a description of it. Tapping speaks it, like every other
-            // target-language line on a card.
-            InkWell(
-              onTap: () => widget.onSpeak(roleLine),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 3, right: AppSpacing.s8),
-                    child: Icon(LucideIcons.volume2, size: 15, color: AppColors.brassInk),
-                  ),
-                  Expanded(
-                    child: Text(
-                      roleLine,
-                      style: AppText.stepTitle.copyWith(
-                        fontSize: 16,
-                        height: 1.4,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          if (roleLine.isEmpty && task.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.s12),
-            Text(
-              l.sessionSituationTask(task),
-              style: AppText.translation.copyWith(fontSize: 15, height: 1.45),
-            ),
-          ],
-          // Служебной строки в разговоре нет и у карточки С ПОЛОЖЕНИЕМ: над хвостом стоит вводка
-          // «Ещё раз вопрос этой сцены», и «выбери, что спросишь» под ней — то же самое, тише и
-          // мельче (наряд DAY-2-FIX, Ч.1.6 — поймано живым прогоном).
-          if (!widget.inDialogue) ...[
-            const SizedBox(height: AppSpacing.s16),
-            Text(_instructionFor(l), style: AppTextExercise.taskInstruction),
-          ],
         ],
       ),
     );
@@ -1871,32 +1503,24 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     );
   }
 
+  /// ВАРИАНТЫ — единый компонент 4л (кадр 12a по правке шага 10): маркер 22 слева, вердикт
+  /// маркером и тонировкой без контура, остальные гаснут до .5. Верный после ошибки — маркер
+  /// шалфеем без тонировки. Язык варианта меняет только шрифт: перевод — Inter, термин — Literata.
   Widget _options(AppLocalizations l) {
     final opts = _card.options ?? const <String>[];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var i = 0; i < opts.length; i++) ...[
-          _SessionOption(
+          AnswerOption(
             text: opts[i],
-            answered: _answered,
-            // Marked by the SAME key _commit grades against, or the check would disagree with the
-            // verdict on the very card it explains: an identity card matches the option's term id,
-            // everything else the accepted set under the same typo policy. Getting that policy wrong
-            // is what once put a green check on "Could you takes a photo…" — one character off.
-            isAnswer: _card.isIdentityGraded
-                ? _card.optionIdAt(i) == _card.answer
-                : SessionGrader.check(
-                    opts[i],
-                    _card.answer,
-                    variants: _card.acceptedVariants,
-                    forgiveTypos: _mode.forgivesTypos,
-                  ).isAccepted,
-            isPicked: _picked == opts[i],
+            // На карточке «слово → перевод» варианты на языке поддержки; везде ещё — изучаемый.
+            target: !_card.isIdentityGraded,
+            verdict: _optionVerdict(opts[i], i),
             onTap: () => _pick(opts[i], i),
-            errorSpan: _card.feedbackFor(opts[i])?.errorSpan,
+            marked: _markedSpan(opts[i]),
           ),
-          if (i != opts.length - 1) const SizedBox(height: AppSpacing.s12),
+          if (i != opts.length - 1) const SizedBox(height: 10),
         ],
         if (_wrongPickCorrection(l) case final line?) ...[
           const SizedBox(height: AppSpacing.s12),
@@ -1904,6 +1528,34 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         ],
       ],
     );
+  }
+
+  /// Marked by the SAME key _commit grades against, or the check would disagree with the verdict
+  /// on the very card it explains: an identity card matches the option's term id, everything else
+  /// the accepted set under the same typo policy.
+  AnswerOptionVerdict _optionVerdict(String option, int index) {
+    if (!_answered) return AnswerOptionVerdict.none;
+    final isAnswer = _card.isIdentityGraded
+        ? _card.optionIdAt(index) == _card.answer
+        : SessionGrader.check(
+            option,
+            _card.answer,
+            variants: _card.acceptedVariants,
+            forgiveTypos: _mode.forgivesTypos,
+          ).isAccepted;
+    final picked = _picked == option;
+    if (picked && isAnswer) return AnswerOptionVerdict.correct;
+    if (picked) return AnswerOptionVerdict.wrong;
+    if (isAnswer) return AnswerOptionVerdict.correctQuiet;
+    return AnswerOptionVerdict.dimmed;
+  }
+
+  /// pick_correct: the broken fragment of a WRONG pick, underlined once the answer is committed.
+  ({int start, int length})? _markedSpan(String option) {
+    final span = _card.feedbackFor(option)?.errorSpan;
+    if (span == null || span.isEmpty) return null;
+    final at = spanPositionIn(option, span);
+    return at < 0 ? null : (start: at, length: span.length);
   }
 
   /// «должно быть: …» under a wrong pick_correct pick. Shown only after answering and only for a
@@ -1920,17 +1572,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            for (var i = 0; i < _chips.length; i++)
-              _WordChip(
-                text: _chips[i],
-                used: _placed.contains(i),
-                onTap: _answered ? null : () => _placeChip(i),
-              ),
-          ],
+        TileTray(
+          tiles: _chips,
+          used: _placed.toSet(),
+          onTap: _answered ? null : _placeChip,
         ),
         const SizedBox(height: AppSpacing.s16),
         Text(l.sessionChipReturnHint, style: AppTextExercise.taskInstruction),
@@ -1961,389 +1606,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   }
 }
 
-// ── option (multiple choice / listening recognition) ──────────────────────────
-
-class _SessionOption extends StatelessWidget {
-  const _SessionOption({
-    required this.text,
-    required this.answered,
-    required this.isAnswer,
-    required this.isPicked,
-    required this.onTap,
-    this.errorSpan,
-  });
-
-  final String text;
-  final bool answered;
-  final bool isAnswer;
-  final bool isPicked;
-  final VoidCallback onTap;
-
-  /// pick_correct: the broken fragment of THIS option, underlined once the answer is committed. Null
-  /// for every other mode and for the correct option.
-  final String? errorSpan;
-
-  @override
-  Widget build(BuildContext context) {
-    // Post-answer marking: the correct option draws a sage underline + check; a wrong pick a
-    // terracotta underline + cross. Untouched options stay plain.
-    final showCorrect = answered && isAnswer;
-    final showWrong = answered && isPicked && !isAnswer;
-    final markColor = showCorrect
-        ? AppColors.verdictKnown
-        : (showWrong ? AppColors.destructiveText : null);
-    final icon = showCorrect ? LucideIcons.check : (showWrong ? LucideIcons.x : null);
-
-    return PaperCard(
-      onTap: answered ? null : onTap,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(child: _label(showWrong)),
-              if (icon != null) Icon(icon, size: 17, color: markColor),
-            ],
-          ),
-          if (markColor != null) ...[
-            const SizedBox(height: 9),
-            _DrawnUnderline(color: markColor, draw: showCorrect),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// The option's text, with the broken fragment marked once a wrong pick is committed. This is the
-  /// point of pick_correct over multiple_choice: the learner sees WHERE the sentence went wrong
-  /// instead of just that it did. Falls back to plain text whenever the span cannot be located —
-  /// the server validates that it occurs in the sentence, so that is a belt-and-braces path.
-  Widget _label(bool showWrong) {
-    final span = errorSpan;
-    if (!showWrong || span == null || span.isEmpty) {
-      return Text(text, style: AppTextExercise.answerOption);
-    }
-
-    final at = spanPositionIn(text, span);
-    if (at < 0) return Text(text, style: AppTextExercise.answerOption);
-
-    return Text.rich(
-      TextSpan(
-        style: AppTextExercise.answerOption,
-        children: [
-          TextSpan(text: text.substring(0, at)),
-          TextSpan(
-            // Marked, not recoloured away: the wrong words stay readable, which is what makes the
-            // correction below make sense.
-            text: text.substring(at, at + span.length),
-            style: const TextStyle(
-              color: AppColors.destructiveText,
-              decoration: TextDecoration.underline,
-              decorationStyle: TextDecorationStyle.wavy,
-            ),
-          ),
-          TextSpan(text: text.substring(at + span.length)),
-        ],
-      ),
-    );
-  }
-}
-
-/// A 2-px verdict underline. The correct one draws left→right (220 ms ease-out, §4е); a wrong
-/// mark shows immediately full-width (it's not a reward). Reduce-motion → instant either way.
-class _DrawnUnderline extends StatelessWidget {
-  const _DrawnUnderline({required this.color, required this.draw});
-  final Color color;
-  final bool draw;
-
-  @override
-  Widget build(BuildContext context) {
-    final line = SizedBox(height: 2, child: ColoredBox(color: color));
-    if (!draw || MediaQuery.of(context).disableAnimations) {
-      return line;
-    }
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: AppMotion.answerCorrect,
-      curve: AppMotion.easeOut,
-      builder: (_, t, _) => Align(
-        alignment: Alignment.centerLeft,
-        child: FractionallySizedBox(widthFactor: t, child: line),
-      ),
-    );
-  }
-}
-
-// ── word-bank pieces ──────────────────────────────────────────────────────────
-
-class _WordChip extends StatelessWidget {
-  const _WordChip({required this.text, required this.used, required this.onTap});
-  final String text;
-  final bool used;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    // A placed chip leaves a faded copy behind (§4е); an available chip is raised paper.
-    if (used) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
-        decoration: BoxDecoration(
-          color: AppColors.faintInk,
-          borderRadius: BorderRadius.circular(AppRadii.field),
-        ),
-        child: Text(
-          text,
-          style: AppTextExercise.dictionaryChip.copyWith(color: AppColors.tertiary),
-        ),
-      );
-    }
-    return Material(
-      color: AppColors.surfaceRaised,
-      borderRadius: BorderRadius.circular(AppRadii.field),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.field),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadii.field),
-            boxShadow: AppShadows.card,
-          ),
-          child: Text(text, style: AppTextExercise.dictionaryChip),
-        ),
-      ),
-    );
-  }
-}
-
-class _AssemblyLine extends StatelessWidget {
-  const _AssemblyLine({
-    required this.words,
-    required this.answered,
-    required this.correct,
-    required this.onTapWord,
-    this.mistakes = const {},
-    this.letters = false,
-  });
-
-  final List<String> words;
-  final bool answered;
-  final bool correct;
-  final ValueChanged<int> onTapWord;
-
-  /// Are the chips LETTERS rather than words? word_bank deals letters for a single word
-  /// (BUGFIX-2 Ч.2б D2), and the empty line's hint has to name what is actually on screen.
-  final bool letters;
-
-  /// Indices of [words] that do not belong in the answer — marked once a WRONG verdict is in. The
-  /// line already kept the learner's own sentence; what it did not do was say WHERE it went wrong,
-  /// so a wrong answer was a terracotta rule under a sentence that looked fine (QA-16).
-  final Set<int> mistakes;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final underline = answered
-        ? (correct ? AppColors.verdictKnown : AppColors.destructiveText)
-        : AppColors.track;
-    return Container(
-      constraints: const BoxConstraints(minHeight: 42),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: underline, width: 1.5)),
-      ),
-      padding: const EdgeInsets.only(bottom: 7),
-      child: words.isEmpty
-          // Empty, the line is the whole affordance — so it has to be VISIBLE. A bare
-          // SizedBox(height:) is zero-wide, and the parent Column is start-aligned, so the
-          // container collapsed to nothing and the underline never drew: the card read as a blank
-          // box with no hint of where the words go. Stretch it across the card and name the
-          // gesture. The hint is dropped once answered — «Не помню» leaves the line empty, and a
-          // verdict-coloured line captioned "tap the words" would be instructions after the fact.
-          ? SizedBox(
-              width: double.infinity,
-              height: 30,
-              child: answered
-                  ? null
-                  : Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        letters ? l.sessionAssemblyEmptyHintLetters : l.sessionAssemblyEmptyHint,
-                        style: AppTextExercise.taskInstruction,
-                      ),
-                    ),
-            )
-          : Wrap(
-              // Letters are ONE WORD being built, so they stand shoulder to shoulder; words are a
-              // phrase and keep the gap that separates them. At the word spacing a letter line read
-              // as «d o l p h i n» — seven tokens rather than the word it is.
-              spacing: letters ? 1 : 9,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.end,
-              children: [
-                for (var i = 0; i < words.length; i++)
-                  GestureDetector(
-                    onTap: answered ? null : () => onTapWord(i),
-                    child: Text(
-                      words[i],
-                      style: mistakes.contains(i)
-                          // Marked, not recoloured away — the same wavy terracotta pick_correct
-                          // draws under a broken fragment, and for the same reason: the wrong word
-                          // stays readable, which is what makes the correction below mean anything.
-                          ? AppTextExercise.assemblyLine.copyWith(
-                              color: AppColors.destructiveText,
-                              decoration: TextDecoration.underline,
-                              decorationStyle: TextDecorationStyle.wavy,
-                              decorationColor: AppColors.destructiveText,
-                            )
-                          : AppTextExercise.assemblyLine,
-                    ),
-                  ),
-              ],
-            ),
-    );
-  }
-}
-
-// ── cloze ────────────────────────────────────────────────────────────────────
-
-class _ClozeSentence extends StatelessWidget {
-  const _ClozeSentence({
-    required this.example,
-    required this.answer,
-    required this.filled,
-    required this.answered,
-    required this.correct,
-    this.mistakes = const {},
-  });
-
-  final String example;
-  final String answer;
-
-  /// The word to show in the blank — the learner's OWN text throughout, live while they type and
-  /// still theirs after the verdict; null when they typed nothing («Не помню»). It used to become
-  /// the correct form on answering, which showed them an answer they had not given (QA-16).
-  final String? filled;
-  final bool answered;
-  final bool correct;
-
-  /// Indices of [filled]'s words that do not belong — marked when the verdict is wrong.
-  final Set<int> mistakes;
-
-  @override
-  Widget build(BuildContext context) {
-    // Split the example around the answer (case-insensitive), keeping the sentence in italic
-    // antiqua. If the answer isn't found, put the blank at the end so the card still plays.
-    final idx = example.toLowerCase().indexOf(answer.toLowerCase());
-    final before = idx >= 0 ? example.substring(0, idx) : '$example ';
-    final after = idx >= 0 ? example.substring(idx + answer.length) : '';
-
-    final InlineSpan blank;
-    if (filled == null) {
-      // Empty blank ≈ the word's width, with a caret so it reads as "type here" (12i).
-      blank = WidgetSpan(
-        alignment: PlaceholderAlignment.baseline,
-        baseline: TextBaseline.alphabetic,
-        child: Container(
-          width: 100,
-          height: 22,
-          alignment: Alignment.centerLeft,
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColors.tertiary, width: 1.5)),
-          ),
-          child: const SizedBox(width: 1.5, height: 20, child: ColoredBox(color: AppColors.ink)),
-        ),
-      );
-    } else {
-      // Answered → verdict-coloured underline; while typing → a plain ink underline (no verdict yet).
-      // A marked word carries the wavy terracotta instead, the same mark pick_correct puts under a
-      // broken fragment: the word stays readable and is plainly named as the thing that was wrong.
-      final marked = mistakes.isNotEmpty;
-      blank = TextSpan(
-        text: filled,
-        style: AppTextExercise.clozeExample.copyWith(
-          fontStyle: FontStyle.normal,
-          fontWeight: FontWeight.w500,
-          color: marked ? AppColors.destructiveText : AppColors.ink,
-          decoration: TextDecoration.underline,
-          decorationStyle: marked ? TextDecorationStyle.wavy : TextDecorationStyle.solid,
-          decorationColor: answered
-              ? (correct ? AppColors.verdictKnown : AppColors.destructiveText)
-              : AppColors.tertiary,
-          decorationThickness: answered && !marked ? 2 : 1.5,
-        ),
-      );
-    }
-
-    return Text.rich(
-      TextSpan(
-        style: AppTextExercise.clozeExample,
-        children: [
-          TextSpan(text: before),
-          blank,
-          TextSpan(text: after),
-        ],
-      ),
-    );
-  }
-}
-
 // ── listening play circle ─────────────────────────────────────────────────────
-
-/// «ПОКАЗАТЬ ТЕКСТ» — what was said, revealed once the meaning has been chosen.
-///
-/// After the answer and never before it: the hear card's question IS the sound, so printing the
-/// sentence early answers it. Speakable, because a learner who missed it wants to hear it again
-/// while reading it.
-class _RevealedLine extends StatefulWidget {
-  const _RevealedLine({required this.text, required this.onSpeak});
-
-  final String text;
-  final Future<void> Function(String text, {bool slow}) onSpeak;
-
-  @override
-  State<_RevealedLine> createState() => _RevealedLineState();
-}
-
-class _RevealedLineState extends State<_RevealedLine> {
-  bool _shown = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    if (!_shown) {
-      return Center(
-        child: QuietButton(
-          label: l.sessionSituationRevealText,
-          icon: LucideIcons.eye,
-          onPressed: () => setState(() => _shown = true),
-        ),
-      );
-    }
-
-    return PaperCard(
-      child: InkWell(
-        onTap: () => widget.onSpeak(widget.text),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 3, right: AppSpacing.s8),
-              child: Icon(LucideIcons.volume2, size: 15, color: AppColors.brassInk),
-            ),
-            Expanded(
-              child: Text(
-                widget.text,
-                style: AppText.stepTitle.copyWith(fontSize: 17, height: 1.4),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 /// ДЕВ-РЯД QA: подставить транскрипт вместо голоса — наряд SCENE-RUN, Ч.2.9.
 ///
@@ -2442,82 +1705,6 @@ class _PlayCircleState extends State<_PlayCircle> with SingleTickerProviderState
               boxShadow: AppShadows.anchor,
             ),
             child: const Icon(LucideIcons.volume2, color: AppColors.paper, size: 44),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── speaking record button ────────────────────────────────────────────────────
-
-/// The speaking card's one affordance: a big circle that starts listening, and while listening
-/// breathes so the learner can see the phone is awake.
-///
-/// Deliberately the same size and weight as the listening card's play circle — the two are a pair
-/// («here is the word», «now say it»), and giving them different shapes would suggest they are
-/// different kinds of task.
-class _RecordCircle extends StatefulWidget {
-  const _RecordCircle({required this.listening, required this.onTap, required this.label});
-
-  final bool listening;
-  final VoidCallback onTap;
-  final String label;
-
-  @override
-  State<_RecordCircle> createState() => _RecordCircleState();
-}
-
-class _RecordCircleState extends State<_RecordCircle> with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse = AnimationController(
-    vsync: this,
-    duration: AppMotion.listenPulse,
-    lowerBound: 1.0,
-    upperBound: 1.06,
-  );
-
-  @override
-  void didUpdateWidget(_RecordCircle old) {
-    super.didUpdateWidget(old);
-    if (widget.listening == old.listening) return;
-    if (widget.listening && !MediaQuery.of(context).disableAnimations) {
-      _pulse.repeat(reverse: true);
-    } else {
-      _pulse.stop();
-      _pulse.value = 1.0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Listening inverts the circle — outlined while idle, filled while it hears you. One glance
-    // answers the only question this card has ("is it recording?"), without a word of copy.
-    final filled = widget.listening;
-    return Semantics(
-      button: true,
-      label: widget.label,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: ScaleTransition(
-          scale: _pulse,
-          child: Container(
-            width: 112,
-            height: 112,
-            decoration: BoxDecoration(
-              color: filled ? AppColors.ink : AppColors.surfaceRaised,
-              shape: BoxShape.circle,
-              border: filled
-                  ? null
-                  : const Border.fromBorderSide(BorderSide(color: AppColors.ink, width: 1.5)),
-              boxShadow: filled ? AppShadows.anchor : AppShadows.card,
-            ),
-            child: Icon(LucideIcons.mic, color: filled ? AppColors.paper : AppColors.ink, size: 44),
           ),
         ),
       ),
@@ -2800,7 +1987,7 @@ class _FeedbackBlock extends ConsumerWidget {
 
       return Row(
         children: [
-          Icon(icon, size: 17, color: color),
+          _verdictMark(s.credit == SpokenCredit.wrong ? MarkerState.failed : s.credit == SpokenCredit.almost ? MarkerState.hinted : MarkerState.passed, icon),
           const SizedBox(width: 9),
           Flexible(
             child: Text(text, style: AppTextExercise.feedbackVerdict.copyWith(color: color)),
@@ -2822,7 +2009,7 @@ class _FeedbackBlock extends ConsumerWidget {
     };
     return Row(
       children: [
-        Icon(icon, size: 17, color: color),
+        _verdictMark(verdict == LocalCheck.wrong ? MarkerState.failed : MarkerState.passed, icon),
         const SizedBox(width: 9),
         Flexible(
           child: Text.rich(
@@ -2841,6 +2028,10 @@ class _FeedbackBlock extends ConsumerWidget {
     );
   }
 }
+
+/// ВЕРДИКТ НАД ФИДБЕКОМ — маркер 4л (кадр 12d по правке шага 10), а не голая иконка: тот же круг
+/// 22, что стоит в варианте выше и в списках плана. [icon] — Lucide-знак, который маркер и рисует.
+Widget _verdictMark(MarkerState state, IconData icon) => VerdictMarker(state: state);
 
 /// The real next-due, read reactively from the local progress mirror — it lands after the
 /// answer's upload + sync. The client never computes an interval; if the schedule isn't known

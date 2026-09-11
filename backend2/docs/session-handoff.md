@@ -7,9 +7,39 @@
 > Канон плана: **`docs/plan-v2.md`**; контракт: **`docs/plan-api.md`** + `openapi/openapi.yaml`
 > (тег `Plans`); модуль: `app/Modules/Plan/README.md`. Отчёт наряда — `docs/research/plan-gen/README.md`.
 
-Branch: `main`, коммит `5b2809c1`. Last updated: 2026-09-10 (наряд PLAN-GEN).
+Branch: `day-ui` (мобильный), коммит — см. `git log`; `main` — `b816951b`. Last updated: 2026-09-11 (наряд DAY-UI).
 
 ---
+
+## ПЕРВОЕ (мобильный, ветка `day-ui`): DAY-UI — кабинет дня и сессия по кадрам
+
+Наряд DAY-UI (11.09.2026) на ветке `day-ui` от `b816951b`, отчёт — `docs/research/day-ui/README.md`.
+Клиент переведён на контракт PLAN-GEN (`docs/plan-api.md`): `lib/data/plan/` (контракт, машина
+состояний `DaySession`, правила зачёта `DayRules`), кабинет дня `lib/features/plan/day/day_room_screen.dart`
+(23-0a…0e), сессия `day_session_screen.dart` + 13 карточек `day/cards/` (23-1…23-15), общие виджеты
+4л/4м/4н в `lib/ui/` (и у коллекций — «База» 16a/12a/12b/12i), звук+хаптика `theme/feedback.dart`
+с тумблером в профиле, 114 строк `day*`. Старые экраны дня/диалога/прогона, ситуативные режимы,
+`PlanHearOptions`, 270 ключей `plan*` удалены. Карта экранов `docs/design/design-map.md` переписана.
+
+Что надо знать:
+1. **Вход в кабинет — ссылка `engstd://plan/day/{dayId}`** (`lib/data/deep_links.dart`, `SceneDelegate` →
+   `AppDelegate.handleLink`, канал `com.denis.engstd/links`); уведомления и QA-прогон ходят ею. Таб «План» —
+   заглушка `_DayEntryStub`, домашняя карточка и сборка → `openDayRoom`; сам таб/вход рисует PLAN-UI
+   параллельно — при слиянии конфликты в `plan_tab_screen.dart`, `home_plan_card.dart`,
+   `plan_building_screen.dart`, `plan_notification_host.dart`, ARB, `docs/plan-ui-glossary.md`.
+2. **Состояния экранов — golden-тесты** `mobile/test/goldens/` (41 PNG, фикстуры ответов сервера в
+   `fixtures/`); перерисовать — `flutter test test/goldens --update-goldens`.
+3. Ворота: `flutter analyze` 0, `flutter test` 1270 passed. Живой прогон на симуляторе — только до
+   кабинета (автоматизация тапов делит XCTest-порт с сессией PLAN-UI); пять этапов живьём, день 2,
+   Intermediate живьём и звук на слух — **не проверены**, см. отчёт §6.
+4. Отклонения от кадров — все от контракта: до `POST …/open` у дня нет этапов/программы/обменов;
+   `metrics` только у закрытого дня; минут на день у сервера нет. Вопросы архитектору — отчёт §7.
+5. Стенд: QA-аккаунты `qa-dayui@wt.test` (план «врач», Beginner, `01M26KPM34Z9C9B31GBRR4YZGA`) и
+   `qa-dayui2@wt.test` (аренда, Intermediate, `01M26KTYVVTXRN9T4AE4807BXV`, день 1 открыт) на
+   `wordtrainer`; симулятор «DayUI iPhone 17» (`F97AD291-D6D8-467C-AF64-293863160DCD`).
+   Серверная находка: `POST …/start` во время `BuildLessonJob` затирается джобой (план обратно в
+   `ready`) — повторный `start` чинит.
+
 
 ## ПЕРВОЕ: PLAN-GEN — новый бэкенд плана, старая цепочка снесена
 

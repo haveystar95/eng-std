@@ -13,6 +13,17 @@
 				<string>com.googleusercontent.apps.1003468760314-lvn5ckoc6p8s6v5g44i396ma5j4797j0</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.denis.engstd.links</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<!-- Ссылки внутрь приложения: engstd://plan/day/{id} — кабинет дня (lib/data/deep_links.dart) -->
+				<string>engstd</string>
+			</array>
+		</dict>
 	</array>
 	<!-- The permission copy is LOCALIZED: the shown text comes from <lang>.lproj/InfoPlist.strings
 	     (en + ru), and these values are only the development-language fallback for a system whose

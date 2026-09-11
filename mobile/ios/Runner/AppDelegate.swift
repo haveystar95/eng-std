@@ -6,8 +6,8 @@ import UIKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, AVAudioPlayerDelegate {
-  /// The verdict sounds, registered with AudioServices once each and kept for the app's life
-  /// (QA-22). Keyed by the name Dart sends, so `AppFeedback` names a SOUND and never a file path.
+  /// The four sounds of the day — «верно», «неверно», «этап закрыт», «день закрыт» (токен-лист
+  /// 4к-3) — registered with AudioServices once each and kept for the app's life (QA-22, DAY-UI). Keyed by the name Dart sends, so `AppFeedback` names a SOUND and never a file path.
   ///
   /// Cached deliberately: `AudioServicesCreateSystemSoundID` reads and parses the file, and doing
   /// that on every answer would put file I/O on the main thread at the exact moment the card is
@@ -16,11 +16,55 @@ import UIKit
   /// nothing.
   private var soundIds: [String: SystemSoundID] = [:]
 
+  /// ССЫЛКИ `engstd://…` (наряд DAY-UI) — см. `lib/data/deep_links.dart`. Ссылка холодного старта
+  /// лежит здесь, пока Dart не спросит `initial`; тёплая уходит в канал сразу.
+  private var linksChannel: FlutterMethodChannel?
+  private var pendingLink: String?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    if let url = launchOptions?[.url] as? URL, url.scheme == "engstd" {
+      pendingLink = url.absoluteString
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  static var current: AppDelegate? { UIApplication.shared.delegate as? AppDelegate }
+
+  /// Ссылка `engstd://…` из сцены (`SceneDelegate`) или из старого пути `open url`.
+  /// Не наша схема — игнорируется; Dart ещё не поднял канал — ссылка ждёт `initial`.
+  @discardableResult
+  func handleLink(_ url: URL) -> Bool {
+    guard url.scheme == "engstd" else { return false }
+    if let channel = linksChannel {
+      channel.invokeMethod("open", arguments: url.absoluteString)
+    } else {
+      pendingLink = url.absoluteString
+    }
+    return true
+  }
+
+  override func application(
+    _ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+  ) -> Bool {
+    if handleLink(url) { return true }
+    return super.application(app, open: url, options: options)
+  }
+
+  private func registerLinksChannel(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "com.denis.engstd/links", binaryMessenger: messenger)
+    linksChannel = channel
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "initial" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      let link = self?.pendingLink
+      self?.pendingLink = nil
+      result(link)
+    }
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
@@ -30,6 +74,7 @@ import UIKit
     registerFeedbackSoundChannel(engineBridge.applicationRegistrar.messenger())
     registerLineAudioChannel(engineBridge.applicationRegistrar.messenger())
     registerSpeechProbeChannel(engineBridge.applicationRegistrar.messenger())
+    registerLinksChannel(engineBridge.applicationRegistrar.messenger())
   }
 
   /// ЧТО ОС ДУМАЕТ ПРО МИКРОФОН — наряд DAY-GATE-1, Ч.0.1. См. `lib/data/speech/speech_diagnostics.dart`.
@@ -228,7 +273,7 @@ import UIKit
     if let existing = soundIds[name] { return existing }
     // Only the two names this app actually ships — the channel argument comes from our own Dart,
     // but a lookup keyed by an arbitrary string is a file-path parameter in disguise.
-    guard ["verdict_correct", "verdict_wrong"].contains(name) else { return nil }
+    guard ["verdict_correct", "verdict_wrong", "stage_closed", "day_closed"].contains(name) else { return nil }
 
     let key = FlutterDartProject.lookupKey(forAsset: "assets/sounds/\(name).wav")
     guard let path = Bundle.main.path(forResource: key, ofType: nil) else { return nil }

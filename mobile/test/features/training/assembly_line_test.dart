@@ -66,12 +66,9 @@ void main() {
     chips: const ['myself', 'talk', 'about'],
   );
 
-  /// The 1.5-px rule the line draws itself with, and how wide it actually rendered.
-  Finder assemblyLine() => find.byWidgetPredicate((w) {
-    if (w is! Container) return false;
-    final d = w.decoration;
-    return d is BoxDecoration && d.border?.bottom.width == 1.5;
-  });
+  /// Подложка сборки (12b «Базы») — серая плита, на которую встают плитки; и как широко она
+  /// действительно отрисовалась.
+  Finder assemblyLine() => find.byType(AssemblyBoard);
 
   testWidgets('scramble opens with a full-width line and says where the words go', (tester) async {
     await tester.pumpWidget(host(scrambleCard()));
@@ -87,7 +84,7 @@ void main() {
       greaterThan(card.width * 0.8),
       reason: 'the empty line must span the card, or there is no visible drop zone',
     );
-    expect(line.height, greaterThanOrEqualTo(30));
+    expect(line.height, greaterThanOrEqualTo(44));
   });
 
   testWidgets('word_bank gets the same empty line — one widget, both modes', (tester) async {

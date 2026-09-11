@@ -6,7 +6,6 @@ import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/speech/speech_grading_config.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
-import 'package:eng_std/features/plan/plan_dialogue.dart';
 import 'package:eng_std/features/training/session/intro_card.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -23,8 +22,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// голоса. Здесь это делает [_ScriptedRecognizer]: переключатель наверху выбирает, что «услышит»
 /// микрофон, дальше всё идёт настоящей дорогой — движок, склейка, тишина, судья.
 ///
-/// РЕНДЕРЯТСЯ НАСТОЯЩИЕ ВИДЖЕТЫ ([SessionIntroCard], [PlanDialogueSayAloud],
-/// [SessionExerciseCard]) — не копии, иначе харнесс показывал бы сам себя.
+/// РЕНДЕРЯТСЯ НАСТОЯЩИЕ ВИДЖЕТЫ ([SessionIntroCard], [SessionExerciseCard]) — не копии, иначе харнесс показывал бы сам себя.
 ///
 ///     flutter run --debug -d <simulator-udid> --target tool/speech_preview.dart
 void main() {
@@ -73,6 +71,7 @@ class _ScriptedRecognizer implements SpeechRecognizer {
     Duration pauseFor = const Duration(seconds: 2),
     List<String> contextualStrings = const [],
     ValueChanged<String>? onPartial,
+    ValueChanged<double>? onLevel,
   }) async {
     if (_spoken) {
       await Future<void>.delayed(const Duration(seconds: 1));
@@ -110,7 +109,6 @@ const _speech = SpeechGradingConfig(
 );
 
 const _introTerm = 'reservation';
-const _dialogueLine = 'My background is in backend development.';
 const _runLine = 'I write SQL queries every day';
 
 class _SpeechPreviewApp extends StatefulWidget {
@@ -164,14 +162,13 @@ class _SpeechPreviewAppState extends State<_SpeechPreviewApp> {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultTabController(
-          length: 3,
+          length: 2,
           child: Builder(
             builder: (context) {
               final tabs = DefaultTabController.of(context);
               tabs.addListener(() {
                 final target = switch (tabs.index) {
                   0 => _introTerm,
-                  1 => _dialogueLine,
                   _ => _runLine,
                 };
                 if (target != _target) setState(() => _target = target);
@@ -185,7 +182,6 @@ class _SpeechPreviewAppState extends State<_SpeechPreviewApp> {
                     labelColor: AppColors.ink,
                     tabs: [
                       Tab(text: 'Повтори вслух'),
-                      Tab(text: 'Ход в диалоге'),
                       Tab(text: 'Скажи сам'),
                     ],
                   ),
@@ -212,7 +208,7 @@ class _SpeechPreviewAppState extends State<_SpeechPreviewApp> {
                   ),
                 ),
                 body: const TabBarView(
-                  children: [_IntroFrame(), _DialogueFrame(), _RunFrame()],
+                  children: [_IntroFrame(), _RunFrame()],
                 ),
               );
             },
@@ -249,27 +245,6 @@ class _IntroFrame extends StatelessWidget {
   );
 }
 
-class _DialogueFrame extends StatelessWidget {
-  const _DialogueFrame();
-
-  @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    padding: const EdgeInsets.all(AppSpacing.screenH),
-    child: PlanDialogueSayAloud(
-      turn: const PlanDialogueTurn(
-        turn: 'you',
-        termId: '01SAY',
-        text: _dialogueLine,
-        shelf: 'say',
-      ),
-      speechLocaleId: 'en_US',
-      speech: _speech,
-      onSpeak: (_) {},
-      onDone: () {},
-    ),
-  );
-}
-
 class _RunFrame extends StatelessWidget {
   const _RunFrame();
 
@@ -289,8 +264,6 @@ class _RunFrame extends StatelessWidget {
       answerLang: 'en',
       autoPronounce: false,
       showDue: false,
-      inDialogue: true,
-      sceneRun: const SceneRunKnobs(),
       speech: _speech,
       onAnswered: (_) {},
       onSpeak: (text, {bool slow = false}) async {},

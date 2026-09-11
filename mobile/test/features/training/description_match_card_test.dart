@@ -177,7 +177,7 @@ void main() {
       await tester.pumpWidget(host(card()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('выбери слово по описанию'), findsOneWidget);
+      expect(find.textContaining('ВЫБЕРИ СЛОВО ПО ОПИСАНИЮ'), findsOneWidget);
     });
 
     testWidgets('a correct tap is CORRECT and uploads the WORD', (tester) async {

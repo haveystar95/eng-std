@@ -1463,28 +1463,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionInstrAssembleTurn => 'put your reply together from the blocks';
 
   @override
-  String get planSectionSceneRun => 'Say it yourself';
-
-  @override
-  String get planSceneRunHint => 'say your line — there will be no text';
-
-  @override
-  String get planSceneRunNext =>
-      'The scene has been spoken. Whatever did not sound will come back in its turn.';
-
-  @override
-  String get planSceneRunSaidSelf => 'Said it yourself';
-
-  @override
-  String get planDialogueSayIt => 'Say it aloud';
-
-  @override
-  String get planDialogueNotHeard => 'We did not catch that — try again.';
-
-  @override
-  String get planSceneRunSaidFast => 'Straight away';
-
-  @override
   String get sessionInstrSituationalAsk => 'choose what you will ask';
 
   @override
@@ -1503,9 +1481,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSittingContinue => 'Continue';
-
-  @override
-  String get planSittingStop => 'That is enough for today';
 
   @override
   String get sessionListenReplaySlow => 'Slower';
@@ -2447,56 +2422,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonBack => 'Back';
 
   @override
-  String get planBuilderTitle => 'Make a plan';
-
-  @override
-  String get planBuilderSubtitle =>
-      'Three answers — and AI will build preparation days out of phrases you will actually say.';
-
-  @override
-  String get planStepGoalQuestion => 'What are you preparing for?';
-
-  @override
-  String get planStepGoalClosed => 'Goal';
-
-  @override
-  String get planStepLanguageQuestion => 'Language and level';
-
-  @override
-  String get planStepLanguageClosed => 'Language and level';
-
-  @override
-  String get planStepWhenQuestion => 'When will it happen?';
-
-  @override
-  String get planStepWhenClosed => 'When and how much';
-
-  @override
   String get planStepEdit => 'Edit';
-
-  @override
-  String get planGoalPlaceholder => 'For example, a doctor\'s appointment';
-
-  @override
-  String get planGoalChipInterview => 'Interview';
-
-  @override
-  String get planGoalChipDoctor => 'A doctor\'s appointment';
-
-  @override
-  String get planGoalChipRent => 'Renting a flat';
-
-  @override
-  String get planGoalChipTrip => 'Trip';
-
-  @override
-  String get planGoalChipVet => 'Vet';
-
-  @override
-  String get planGoalChipSchool => 'School';
-
-  @override
-  String get planLevelLabel => 'How you speak now';
 
   @override
   String get planLevelZero => 'From scratch';
@@ -2511,45 +2437,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planLevelFluent => 'Fluently';
 
   @override
-  String get planWhenToday => 'Today';
-
-  @override
-  String get planWhenTomorrow => 'Tomorrow';
-
-  @override
   String get planWhenSheetTitle => 'When will it happen?';
 
   @override
-  String get planMinutesLabel => 'Minutes a day';
-
-  @override
-  String planMinutesPerDay(int minutes) {
-    return '$minutes min/day';
-  }
-
-  @override
-  String get planBuilderSubmit => 'Build the plan';
-
-  @override
-  String get planBuilderWorking => 'Building…';
-
-  @override
   String get planBuilderBusyLine => 'Working through the goal — usually 15–30 seconds';
-
-  @override
-  String get planBuilderHintToday =>
-      'The event is today — we will build a short one-sitting preparation.';
-
-  @override
-  String planBuilderHintDays(int days, int minutes) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'Roughly: $days days until the event',
-      one: 'Roughly: $days day until the event',
-    );
-    return '$_temp0 · $minutes min a day';
-  }
 
   @override
   String get planErrorOffline =>
@@ -2565,68 +2456,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planErrorLoadFailed => 'The plan could not be loaded.';
 
   @override
-  String get planPreviewBadge => 'Plan preview';
-
-  @override
-  String planPrepDays(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: '$days days of preparation + the final day',
-      one: '$days day of preparation + the final day',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String planEventOn(String date) {
-    return 'Event on $date.';
-  }
-
-  @override
-  String planApproxTerms(int count) {
-    return '~$count phrases and words.';
-  }
-
-  @override
   String planDayNumber(int index) {
     return 'Day $index';
-  }
-
-  @override
-  String get planDayNoNewWords => 'no new words';
-
-  @override
-  String planWordsCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count words',
-      one: '$count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String planPhrasesCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count phrases',
-      one: '$count phrase',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String planChunksCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count connectors',
-      one: '$count connector',
-    );
-    return '$_temp0';
   }
 
   @override
@@ -2642,12 +2473,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planPreviewDropDay => 'Drop a day';
-
-  @override
-  String get planPreviewRebuild => 'Rebuild';
-
-  @override
-  String get planPreviewStart => 'Start';
 
   @override
   String get planPricePlaceholder => '[price / terms — placeholder]';
@@ -2702,29 +2527,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planBuildingOpenAnyway => 'Open the plan';
 
   @override
-  String get planActiveBadge => 'Active plan';
-
-  @override
-  String get planReadinessCaption => 'ready for the event';
-
-  @override
-  String planEventInDays(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'Event in $days days',
-      one: 'Event in $days day',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planEventToday => 'Event today';
-
-  @override
-  String get planEventPassed => 'The event has passed';
-
-  @override
   String planDayOfTotal(int index, int total) {
     return 'Day $index of $total';
   }
@@ -2735,48 +2537,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planTrainThis => 'Practise';
-
-  @override
   String planDaysHeader(int index, int total) {
     return 'Days · $index of $total';
   }
-
-  @override
-  String planContinueDay(int index) {
-    return 'Continue day $index';
-  }
-
-  @override
-  String planDayPassed(int index) {
-    return 'Day $index done';
-  }
-
-  @override
-  String get planDayFinalHint => 'No new words · can be opened early';
-
-  @override
-  String get planDayBuilding => 'Building';
-
-  @override
-  String get planSpeakerRoleShort => 'they';
-
-  @override
-  String get planSpeakerRole => 'Other person:';
-
-  @override
-  String get planDayQueued => 'Queued';
-
-  @override
-  String get planDayNotBuilt => 'Did not build';
-
-  @override
-  String planDayOpenFailed(int index) {
-    return 'Open day $index';
-  }
-
-  @override
-  String get planDayOpenEarly => 'can be opened early';
 
   @override
   String planDayOfPlan(int index, int total) {
@@ -2784,194 +2547,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String planSayIntent(String intent) {
-    return 'Say: $intent';
-  }
-
-  @override
   String get planRescueHint => 'for when you didn\'t understand or didn\'t catch it';
-
-  @override
-  String get planStageMaterial => 'Words and phrases';
-
-  @override
-  String get planStageConversation => 'Conversation';
-
-  @override
-  String get planStageRehearsal => 'Say it yourself';
-
-  @override
-  String get planStageRetrain => 'Redo mistakes';
-
-  @override
-  String get planStageStateDone => 'done';
-
-  @override
-  String get planStageStateCurrent => 'now';
-
-  @override
-  String planStageStateAfter(String stage) {
-    return 'after «$stage»';
-  }
-
-  @override
-  String get planStageOptional => 'optional';
-
-  @override
-  String get planStageContinue => 'Continue';
-
-  @override
-  String get planStageRetrainStart => 'Redo mistakes';
-
-  @override
-  String planNextDayLeft(int index, String left) {
-    return 'before day $index — still $left';
-  }
-
-  @override
-  String planNextDayOpen(int index) {
-    return 'day $index is open';
-  }
-
-  @override
-  String planDayLockedBy(Object index) {
-    return 'finish day $index first';
-  }
-
-  @override
-  String planErrorDayLocked(String index) {
-    return 'This day is still closed: finish day $index first.';
-  }
-
-  @override
-  String get planErrorSittingEmpty =>
-      'There is nothing to do here — this part of the day is already done.';
-
-  @override
-  String get planDayCanDo => 'You will be able to';
-
-  @override
-  String get planDayPhrases => 'Phrases of the day';
-
-  @override
-  String get planDayWords => 'Words in these phrases';
-
-  @override
-  String get planDaySoftNote =>
-      'This day is ahead of the current one. The session is the real thing: you are meeting its lines for the first time, and the answers count.';
-
-  @override
-  String get planDayTrain => 'Train';
-
-  @override
-  String planFromDay(int index) {
-    return '· from day $index';
-  }
-
-  @override
-  String get planConversationLabel => 'Conversation';
-
-  @override
-  String get planConversationDefaultRole => 'Your counterpart';
-
-  @override
-  String get planConversationLocked =>
-      'Coming in the next update: the role conversation and its checkpoints.';
-
-  @override
-  String get planConversationSoon => 'The role conversation';
-
-  @override
-  String get planDayNotWritten =>
-      'This day has not been built yet. The plan writes one day at a time — you can ask for it now.';
-
-  @override
-  String get planDayFailed => 'This day did not build the first time. You can try again.';
-
-  @override
-  String get planDayExhausted =>
-      'This day failed to build twice in a row, and the server will not try again. It happens when the model returns words and phrases in the wrong language. The plan has to be built again.';
-
-  @override
-  String get planDayExhaustedLead =>
-      'This day failed to build twice in a row, and the server will not try again. The plan has to be built again.';
-
-  @override
-  String planFailWhy(String reason) {
-    return 'What went wrong: $reason';
-  }
-
-  @override
-  String get planFailExampleIsATerm =>
-      'a card\'s example repeated another card of the day instead of showing the word in a sentence';
-
-  @override
-  String get planFailExampleDuplicated =>
-      'two examples turned out to be one sentence with the word swapped';
-
-  @override
-  String get planFailExampleWithoutTranslation =>
-      'an example arrived with no translation beside it, so there would be nothing to read it by';
-
-  @override
-  String get planFailNotTargetLanguage => 'the words and phrases came back in the wrong language';
-
-  @override
-  String get planFailKeyIsTheTerm =>
-      'a card\'s translation repeated the card itself — in the same letters or in another alphabet';
-
-  @override
-  String get planFailTermIsAName => 'a proper name cannot take a card — names are not translated';
-
-  @override
-  String get planFailSlotOutsideFrame => 'the gap for the substitution ended up in the wrong line';
-
-  @override
-  String get planFailGapMissing => 'the line had no gap for the card to stand in';
-
-  @override
-  String get planFailTranslationHasGap =>
-      'a gap was left in the translation — there is nothing to read there';
-
-  @override
-  String get planFailTranslationMissingKey =>
-      'the line\'s translation did not contain the very word it teaches';
-
-  @override
-  String get planFailFillerNotCard => 'what stood in the gap was not what the card teaches';
-
-  @override
-  String get planFailWordIsBasic => 'a word from the very first basics was made into a card';
-
-  @override
-  String get planFailKindSize => 'a card ran past the length its kind allows';
-
-  @override
-  String get planFailSkillRefInvalid => 'a card did not name the scene\'s ability it is here for';
-
-  @override
-  String get planFailNumberValueMismatch =>
-      'the number in the line and the number the card is graded on are not the same';
-
-  @override
-  String get planFailShelfMissing =>
-      'a whole shelf of the scene is missing — what you will hear, what you will answer, or what those lines are built from';
-
-  @override
-  String get planFailTermRepeated =>
-      'a card repeated another one — of this day, of the «just in case» set, or of an earlier day';
-
-  @override
-  String get planFailUnknown => 'the day could not be built';
-
-  @override
-  String get planAbandonLink => 'Give up on this plan';
-
-  @override
-  String get planDayRebuildDay => 'Build again';
-
-  @override
-  String get planDayRebuildPlan => 'Build the plan again';
 
   @override
   String get planAbandonTitle => 'Give up on this plan?';
@@ -2988,243 +2564,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The server refused to build this day. There is nothing left to wait for — open the plan: the day\'s own screen says what actually happened.';
 
   @override
-  String get planDayBuildNow => 'Build the day';
-
-  @override
-  String planDayDone(int index) {
-    return 'Day $index done';
-  }
-
-  @override
-  String get planDaySittingDone => 'Session done';
-
-  @override
-  String planDayNotClosed(int index) {
-    return 'Day $index is not closed yet';
-  }
-
-  @override
-  String get planDayNotClosedNote =>
-      'Some cards were answered wrong and are still unlearned. Open the day again: it will deal only what is left.';
-
-  @override
-  String planDaySoftDone(int index) {
-    return 'Day $index revisited';
-  }
-
-  @override
-  String get planReviewRow => 'Revision';
-
-  @override
-  String planReviewCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count words',
-      one: '$count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planReviewSection => 'Revision · from earlier days';
-
-  @override
-  String get planWarmupSection => 'From earlier days';
-
-  @override
-  String get planShelfHear => 'You will hear';
-
-  @override
-  String get planShelfSay => 'You will answer';
-
-  @override
-  String get planShelfAsk => 'You will ask';
-
-  @override
-  String get planShelfWords => 'Words and connectors';
-
-  @override
-  String get planSectionDialogueIntro => 'Meeting the lines';
-
-  @override
-  String get planSectionDialogue => 'The scene\'s dialogue';
-
-  @override
-  String get planSectionNumbers => 'Numbers by ear';
-
-  @override
-  String get planSectionRehearsal => 'Say it yourself';
-
-  @override
-  String planSectionOfScene(String section, int index) {
-    return '$section · scene $index';
-  }
-
-  @override
-  String get planWarmupWhy => 'so you have something to say when you get stuck';
-
-  @override
-  String planDialogueScene(int index) {
-    return 'Scene $index';
-  }
-
-  @override
-  String get planDialogueLabel => 'Dialogue';
-
-  @override
-  String get planDialogueLead =>
-      'They speak — you answer. You will answer by choosing from your plan\'s own lines, including the ones you learned in earlier scenes.';
-
-  @override
-  String get planDialogueRescueAtHand => 'Just in case — at hand';
-
-  @override
-  String get planDialogueRescueLead =>
-      'The button stays on screen for the whole dialogue: you can always ask them to repeat or slow down.';
-
-  @override
-  String get planDialogueStart => 'Start the dialogue';
-
-  @override
-  String get planDialogueSound => 'with sound · put your headphones on';
-
-  @override
-  String get planDialogueRoleSpeaks => 'they are speaking · text hidden';
-
-  @override
-  String get planDialogueReplay => 'Again';
-
-  @override
-  String get planDialogueShowText => 'Show the text';
-
-  @override
-  String get planDialogueHideText => 'Hide the text';
-
-  @override
-  String get planDialogueUnderstoodMark => 'got it';
-
-  @override
-  String get planDialogueSaidAloud => 'said aloud';
-
-  @override
-  String get planDialogueFamiliar => 'a familiar line · no need to work it out';
-
-  @override
-  String get planDialogueVoicePreparing => 'Getting the voice ready';
-
-  @override
-  String get planDialogueVoicePreparingBody =>
-      'The line will play once the voice is ready. The dialogue starts with it — there will be no silence.';
-
-  @override
-  String get planDialogueRescue => 'Just in case';
-
-  @override
-  String planDialogueRescuePhrases(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count phrases',
-      one: '$count phrase',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planDialogueRescueNote =>
-      'This is a normal move in a conversation, not a mistake: native speakers ask for a repeat just as often.';
-
-  @override
-  String get planDialogueRescueBack => 'Back to the dialogue';
-
-  @override
-  String get planDialogueDone => 'dialogue done';
-
-  @override
-  String get planDialogueDoneLead => 'The whole conversation — your answers are in the feed.';
-
-  @override
-  String get planDialogueResult => 'How the scene went';
-
-  @override
-  String get planDialogueAnsweredSelf => 'Answered on your own';
-
-  @override
-  String get planDialogueHeardOut => 'Worked the line out by ear';
-
-  @override
-  String get planDialogueAskedRepeat => 'Asked for a repeat';
-
-  @override
-  String planDialogueTimes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count times',
-      one: '$count time',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planDialogueNextAssembly =>
-      'Next comes assembly: the same exchanges, but you build the answer out of the scene\'s connectors yourself.';
-
-  @override
-  String get planDialogueBackToSession => 'Back to the session';
-
-  @override
-  String get planDialogueAskHeard => 'What did they just say?';
-
-  @override
-  String get planDialogueAskSay => 'What will you say?';
-
-  @override
-  String get planDialogueAskAsk => 'What will you ask?';
-
-  @override
-  String get planDialogueYourAnswer => 'Your reply';
-
-  @override
-  String get planDialogueYourQuestion => 'Your question';
-
-  @override
-  String get planDialogueListenHow => 'Hear how it sounds';
-
-  @override
-  String get planDialogueSayAloudNote =>
-      'Say the line out loud — we\'ll tell you what we heard. None of it counts toward your progress.';
-
-  @override
-  String get planDialogueSaidIt => 'Said it aloud';
-
-  @override
-  String get planListTitle => 'Your preparation';
-
-  @override
-  String get planRowPassed => 'done';
-
-  @override
-  String get planRowBuilding => 'being written';
-
-  @override
-  String get planRowNotBuilt => 'did not build';
-
-  @override
-  String get planRowWaiting => 'waiting its turn';
-
-  @override
   String get planRowStartDay => 'Start the day';
-
-  @override
-  String get planRowNotBuiltWhy => 'Writing the lines fell through. It takes about a minute.';
-
-  @override
-  String get planRowRehearsalWhen => 'The day before';
-
-  @override
-  String get planRowRehearsalLead => 'Every scene in a row, out loud';
 
   @override
   String get planMaturityMeeting => 'Meeting the words and phrases';
@@ -3234,111 +2574,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planMaturitySpeaking => 'You say it yourself';
-
-  @override
-  String planEventAt(String date) {
-    return 'event on $date';
-  }
-
-  @override
-  String planDaysLeft(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: '$days days left',
-      one: '$days day left',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String planRowDayScene(int day, int scene) {
-    return 'Day $day · scene $scene';
-  }
-
-  @override
-  String get planDayRescueLead =>
-      'The day starts with them — so you have something to say when you get stuck.';
-
-  @override
-  String get planDayRoleOnlyUnderstand => 'they speak · understanding only';
-
-  @override
-  String planSceneNamed(String title) {
-    return 'Scene: $title';
-  }
-
-  @override
-  String planDayAlmost(int index) {
-    return 'Day $index · almost';
-  }
-
-  @override
-  String planDayAlmostLead(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count cards left to finish',
-      one: '$count card left to finish',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planDayGotIt => 'Went well';
-
-  @override
-  String get planDayMissed => 'Did not go well';
-
-  @override
-  String get planDayMissedNote => 'The cards that went wrong come back in the next day.';
-
-  @override
-  String get planDayTrainMore => 'Finish them';
-
-  @override
-  String get planDayLeaveForTomorrow => 'Leave for tomorrow';
-
-  @override
-  String get planDayLeaveNote =>
-      'If you leave them, they come back in the next day and this day stays open.';
-
-  @override
-  String get planLadderLegend => 'How far the words and phrases have got';
-
-  @override
-  String get planLadderNoReadiness =>
-      'Readiness for the scene appears once the server computes it. For now — how far the words and phrases have got.';
-
-  @override
-  String get planLadderA => 'met it';
-
-  @override
-  String get planLadderB => 'using it';
-
-  @override
-  String get planLadderC => 'saying it yourself';
-
-  @override
-  String get planNext => 'Next';
-
-  @override
-  String planNextDay(int index, String title) {
-    return 'Day $index — $title';
-  }
-
-  @override
-  String get planDayBackToPlan => 'Back to the plan';
-
-  @override
-  String planSessionBadge(int index) {
-    return 'Plan · day $index';
-  }
-
-  @override
-  String planSessionCarried(String term, int index) {
-    return '«$term» comes from day $index — today it is back.';
-  }
 
   @override
   String get planEmptyTitle => 'Prepare for something specific';
@@ -3379,68 +2614,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get planWordsReleasedBody =>
       'Nothing was lost — the progress, the schedule and the whole history are still there. They will not come back into your daily sessions on their own: to take one back into study, open its card and tap “Learn this word”.';
-
-  @override
-  String get planRehearsalDoneTitle => 'Preparation complete';
-
-  @override
-  String get planRehearsalDoneBody =>
-      'You have been through all the plan\'s words and phrases. It has gone to the archive: the words, the progress and the whole history are kept.';
-
-  @override
-  String get planRehearsalDoneAction => 'Back to the plan';
-
-  @override
-  String get planCompleteAction => 'Finish the plan';
-
-  @override
-  String get planCompleteTitle => 'Finish the plan?';
-
-  @override
-  String get planCompleteBody =>
-      'The plan closes and its words go to the archive. You can add them back to «Учить» by hand.';
-
-  @override
-  String get planCompleteConfirm => 'Finish';
-
-  @override
-  String get planRehearsalScenes => 'The plan\'s scenes';
-
-  @override
-  String get planRehearsalSceneUntrained => 'not trained';
-
-  @override
-  String get planRehearsalScenePassed => 'passed';
-
-  @override
-  String get planRehearsalSceneReady => 'in progress';
-
-  @override
-  String get planRehearsalUntrainedNote => 'It goes in as it is — lines with a hint.';
-
-  @override
-  String get planRehearsalAloudNote => 'Out loud, no stopping. Just in case — at hand.';
-
-  @override
-  String get planRehearsalNoPercent =>
-      'Readiness per scene appears once the server computes it. For now — each scene\'s status.';
-
-  @override
-  String get planDoneScenes => 'Scenes passed';
-
-  @override
-  String get planDoneStageA => 'Met the words and phrases';
-
-  @override
-  String get planDoneArchiveNote =>
-      'The plan\'s words and lines stay in its archive — open it from the plan\'s card. There will be no automatic repeats: the plan ended with the event.';
-
-  @override
-  String get planRehearsalStart => 'Start';
-
-  @override
-  String get planRehearsalLead =>
-      'The final day adds nothing new — it is everything the plan taught, out loud. Walk it before the event.';
 
   @override
   String get planArchive => 'Archive';
@@ -3527,56 +2700,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planNotifyEveningBody => 'Tick the abilities that came up — that closes the plan.';
-
-  @override
-  String get planRehearsalBadge => 'Rehearsal · event today';
-
-  @override
-  String get planRehearsalSayIt => 'Say it out loud';
-
-  @override
-  String get planRehearsalHint => 'Say the phrase — or move on if it already comes by itself.';
-
-  @override
-  String get planRehearsalListening => 'Listening…';
-
-  @override
-  String get planRehearsalPlay => 'Play the example';
-
-  @override
-  String planRehearsalCue(String role, String cue) {
-    return '$role will say: «$cue»';
-  }
-
-  @override
-  String get planRehearsalOpen => 'Quick rehearsal';
-
-  @override
-  String get planRehearsalDone => 'Done';
-
-  @override
-  String get planRehearsalEmpty => 'This plan has no phrases to rehearse yet.';
-
-  @override
-  String get planFeedbackTitle => 'How did it go?';
-
-  @override
-  String planFeedbackBody(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Tick the abilities that came up at the event — out of $count.',
-      one: 'Tick the ability that came up at the event.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planFeedbackSubmit => 'Save and finish';
-
-  @override
-  String get planFeedbackClosesPlan =>
-      'The plan will close, and its words move into general review.';
 
   @override
   String planFinishedAtEvent(int used, int total) {
@@ -4031,16 +3154,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSittingToConversation => 'To the conversation';
 
   @override
-  String get planSittingLater => 'Later';
-
-  @override
-  String get planMaterialDoneTitle => 'Words and phrases done';
-
-  @override
-  String get planMaterialDoneLead =>
-      'The words, connectors and lines of the scene are behind you. Next — the conversation: you will hear the other side and answer yourself.';
-
-  @override
   String planStateMinutes(int minutes) {
     String _temp0 = intl.Intl.pluralLogic(
       minutes,
@@ -4053,141 +3166,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planDayRepeat => 'Walk it again';
-
-  @override
-  String get planShelfWordsOnly => 'Words';
-
-  @override
-  String get planShelfChunks => 'Chunks';
-
-  @override
-  String planDayStepLead(String step) {
-    return 'today — $step';
-  }
-
-  @override
-  String get planStepMeet => 'you will meet it';
-
-  @override
-  String get planStepTranslate => 'you will translate it';
-
-  @override
-  String get planStepTiles => 'you will assemble it from tiles';
-
-  @override
-  String get planStepRecognize => 'you will pick the translation';
-
-  @override
-  String get planStepHear => 'you will hear it and pick the meaning';
-
-  @override
-  String get planStepChoose => 'you will choose the answer';
-
-  @override
-  String get planStepAssemble => 'you will assemble it from blocks';
-
-  @override
-  String get planStepSay => 'you will say it aloud';
-
-  @override
-  String get planMarkMet => 'met';
-
-  @override
-  String get planMarkApplying => 'applying';
-
-  @override
-  String get planMarkSaidSelf => 'saying it yourself';
-
-  @override
-  String get planTermTopical => 'topical';
-
-  @override
-  String get planDialogueRoleName => 'the other person';
-
-  @override
-  String get planDialogueSceneWord => 'Scene';
-
-  @override
-  String get planDialogueTail => 'Also in this scene';
-
-  @override
-  String get planDialogueAnsweredAll => 'all of them';
-
-  @override
-  String planDialogueAnsweredHinted(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'hinted $count times',
-      one: 'hinted once',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planDialogueHeardAll => 'every line';
-
-  @override
-  String planDialogueHeardHinted(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count were hinted',
-      one: 'one was hinted',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planSceneRunSaidAll => 'the whole scene';
-
-  @override
-  String planSceneRunSaidSome(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'all but $count lines',
-      one: 'all but one line',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planSceneRunFastAll => 'all of them';
-
-  @override
-  String get planSceneRunFastSome => 'not all';
-
-  @override
-  String get planSceneRunFastNone => 'not yet';
-
-  @override
-  String get planSittingRunNext => 'Next — say it yourself';
-
-  @override
-  String get planSittingRunLead =>
-      'You will say the scene\'s lines aloud — there will be no text on the screen.';
-
-  @override
-  String get planDoneScenesAll => 'all';
-
-  @override
-  String get planDoneScenesSome => 'not all';
-
-  @override
-  String get planDoneMaterialAll => 'with all of it';
-
-  @override
-  String get planDoneMaterialSome => 'not with all of it';
-
-  @override
-  String get planSummaryMetToday => 'today\'s scene';
-
-  @override
-  String get planSummaryAppliedAll => 'all the plan\'s words and phrases';
-
-  @override
-  String get planSummaryAppliedSome => 'some of the plan\'s words and phrases';
 
   @override
   String planHomeDayState(int index, String state) {
@@ -4214,4 +3192,535 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devQaClockReset => 'Reset';
+
+  @override
+  String get profileRowSounds => 'Sounds';
+
+  @override
+  String get profileSoundsHint => 'Correct · wrong · stage closed · day closed';
+
+  @override
+  String dayLabel(int n) {
+    return 'Day $n';
+  }
+
+  @override
+  String dayCards(int n) {
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n cards', one: '$n card');
+    return '$_temp0';
+  }
+
+  @override
+  String dayMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n minutes',
+      one: '$n minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayApproxMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n minutes',
+      one: '$n minute',
+    );
+    return '≈ $_temp0';
+  }
+
+  @override
+  String dayApproxMin(int n) {
+    return '≈ $n min';
+  }
+
+  @override
+  String get dayLevelBeginner => 'Beginner';
+
+  @override
+  String get dayLevelIntermediate => 'Intermediate';
+
+  @override
+  String get dayGoalLabel => 'You will learn to';
+
+  @override
+  String get dayStageWords => 'Words';
+
+  @override
+  String get dayStagePhrases => 'Phrases';
+
+  @override
+  String get dayStageDialogue => 'Dialogue';
+
+  @override
+  String get dayStageListen => 'Listen and answer';
+
+  @override
+  String get dayStageSpeak => 'Speak myself';
+
+  @override
+  String dayStageCount(int done, int total) {
+    return '$done / $total';
+  }
+
+  @override
+  String dayNewWords(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n new words',
+      one: '$n new word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayStageSubStart(String what) {
+    return 'start here · $what';
+  }
+
+  @override
+  String dayStageSubUnfinished(String cards, String minutes) {
+    return 'unfinished · $cards · $minutes';
+  }
+
+  @override
+  String dayStageSubHinted(int n) {
+    return '$n with a hint';
+  }
+
+  @override
+  String get dayCtaStart => 'Start';
+
+  @override
+  String dayCtaContinue(int n) {
+    return 'Continue · $n left';
+  }
+
+  @override
+  String get dayCtaPlan => 'To the plan';
+
+  @override
+  String dayClosedTitle(int n) {
+    return 'Day $n closed';
+  }
+
+  @override
+  String dayNumCards(int n) {
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: 'cards', one: 'card');
+    return '$_temp0';
+  }
+
+  @override
+  String dayNumMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: 'minutes', one: 'minute');
+    return '$_temp0';
+  }
+
+  @override
+  String get dayNumFirstTry => 'first try';
+
+  @override
+  String daySectionWords(int n) {
+    return 'Words · $n';
+  }
+
+  @override
+  String daySectionPhrases(int n) {
+    return 'Phrases · $n';
+  }
+
+  @override
+  String daySectionTalk(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n exchanges',
+      one: '$n exchange',
+    );
+    return 'Conversation · $_temp0';
+  }
+
+  @override
+  String dayFromDay(int n) {
+    return 'from day $n';
+  }
+
+  @override
+  String dayWordsExtra(int n, int d) {
+    return '+ $n from day $d';
+  }
+
+  @override
+  String get dayHardest => 'Hardest of all';
+
+  @override
+  String dayTries(int n) {
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n tries', one: '$n try');
+    return '$_temp0';
+  }
+
+  @override
+  String get dayInWork => 'In progress';
+
+  @override
+  String dayWordsCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n words', one: '$n word');
+    return '$_temp0';
+  }
+
+  @override
+  String dayPhrasesCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n phrases',
+      one: '$n phrase',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayExchangesCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n exchanges',
+      one: '$n exchange',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayWillReturn(int n, int k) {
+    String _temp0 = intl.Intl.pluralLogic(
+      k,
+      locale: localeName,
+      other: 'Return on day $n · $k cards',
+      one: 'Returns on day $n · $k card',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayShellCounter(String stage, int done, int total) {
+    return '$stage · $done of $total';
+  }
+
+  @override
+  String dayEntryLabel(int n) {
+    return 'Stage $n of 5';
+  }
+
+  @override
+  String dayEntryLine(String units, String cards, String minutes) {
+    return '$units · $cards · $minutes';
+  }
+
+  @override
+  String get dayEntryWordsSteps =>
+      'meet it · say it · choose the translation · put it in the example';
+
+  @override
+  String get dayEntryPhrasesSteps => 'meet it · repeat aloud · assemble';
+
+  @override
+  String get dayEntryDialogueSteps => 'read and listen to the whole conversation';
+
+  @override
+  String get dayEntryListenSteps => 'listen · choose what was asked · answer';
+
+  @override
+  String get dayEntrySpeakSteps => 'say your line in each exchange — no text';
+
+  @override
+  String dayEntryNew(int n) {
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n new', one: '$n new');
+    return '$_temp0';
+  }
+
+  @override
+  String dayEntryReturned(int r, int d) {
+    String _temp0 = intl.Intl.pluralLogic(
+      r,
+      locale: localeName,
+      other: '$r returned from day $d',
+      one: '$r returned from day $d',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayEntryResume(int n, int total, String minutes) {
+    return 'continuing · $n of $total left · $minutes';
+  }
+
+  @override
+  String get dayEntryCta => 'Start';
+
+  @override
+  String get dayEntryResumeCta => 'Continue';
+
+  @override
+  String get dayIntroBadgeNew => 'new word';
+
+  @override
+  String get dayIntroBadgeRepeat => 'review';
+
+  @override
+  String get dayIntroCta => 'Got it';
+
+  @override
+  String dayReturnedBadge(int n) {
+    return 'Returned from day $n';
+  }
+
+  @override
+  String get dayPhraseBadgeNew => 'new phrase';
+
+  @override
+  String get dayPhraseInTalk => 'in the conversation';
+
+  @override
+  String get dayTaskPronounce => 'Say it';
+
+  @override
+  String get dayTaskRepeat => 'Repeat aloud';
+
+  @override
+  String get dayTaskAsked => 'What did they ask';
+
+  @override
+  String dayTaskAnswer(String lang) {
+    return 'Answer in $lang';
+  }
+
+  @override
+  String dayTaskSay(String lang) {
+    return 'Say it in $lang';
+  }
+
+  @override
+  String get dayTaskAssemble => 'Assemble what they said';
+
+  @override
+  String get dayTaskChoose => 'Choose the translation';
+
+  @override
+  String get dayTaskChooseWord => 'Choose the word';
+
+  @override
+  String get dayTaskCloze => 'Fill in the word';
+
+  @override
+  String dayTaskAssemblePhrase(String lang) {
+    return 'Assemble in $lang';
+  }
+
+  @override
+  String get daySayMic => 'Say it aloud';
+
+  @override
+  String get daySayListening => 'Listening…';
+
+  @override
+  String get daySayThinking => '…';
+
+  @override
+  String daySayHeard(String word) {
+    return 'Heard: $word';
+  }
+
+  @override
+  String get daySayHeardShort => 'Heard';
+
+  @override
+  String get daySayRetry => 'Didn\'t catch that. Once more';
+
+  @override
+  String get daySaySkip => 'Skip';
+
+  @override
+  String dayReturnDay(int n) {
+    return 'Returns on day $n';
+  }
+
+  @override
+  String get dayReturnStage => 'Returns at the end of the stage';
+
+  @override
+  String get dayNext => 'Next';
+
+  @override
+  String get dayDialogTitle => 'The whole conversation';
+
+  @override
+  String get dayDialogSub => 'Read and listen — then you will answer yourself';
+
+  @override
+  String get dayDialogRoleYou => 'You';
+
+  @override
+  String get dayDialogTranslate => 'translation';
+
+  @override
+  String daySpeakerSays(String role) {
+    return '$role says';
+  }
+
+  @override
+  String daySpeakerAnswers(String role) {
+    return '$role answers';
+  }
+
+  @override
+  String get daySpeakHint => 'Hint';
+
+  @override
+  String daySpeakHinted(int n) {
+    return 'Counted with a hint · returns on day $n';
+  }
+
+  @override
+  String get dayStageDoneWords => 'Words closed';
+
+  @override
+  String get dayStageDonePhrases => 'Phrases closed';
+
+  @override
+  String get dayStageDoneDialogue => 'Dialogue closed';
+
+  @override
+  String get dayStageDoneListen => '“Listen and answer” closed';
+
+  @override
+  String get dayStageDoneSpeak => '“Speak myself” closed';
+
+  @override
+  String dayStageDoneMeta(String cards, String minutes) {
+    return '$cards · $minutes';
+  }
+
+  @override
+  String dayStageFactsInWork(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n words in progress',
+      one: '$n word in progress',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayStageFactsPhrasesInWork(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n phrases in progress',
+      one: '$n phrase in progress',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayStageFactsExchangesInWork(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n exchanges in progress',
+      one: '$n exchange in progress',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayStageFactsHinted(int n) {
+    return '$n with a hint';
+  }
+
+  @override
+  String dayStageFactsReturn(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n return',
+      one: '$n returns',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayStageNext(String stage, String cards, String minutes) {
+    return 'Next: $stage · $cards · $minutes';
+  }
+
+  @override
+  String get dayExitTitle => 'Continue later?';
+
+  @override
+  String dayExitBody(String stage, int done, int total) {
+    return 'You are on $stage · $done of $total. Your progress is saved';
+  }
+
+  @override
+  String get dayExitStay => 'Stay';
+
+  @override
+  String get dayExitLeave => 'Leave';
+
+  @override
+  String daySheetStatePassed(int n) {
+    return 'passed · day $n';
+  }
+
+  @override
+  String daySheetStateHinted(int n) {
+    return 'with a hint · day $n';
+  }
+
+  @override
+  String daySheetStateReturns(int n) {
+    return 'returns on day $n';
+  }
+
+  @override
+  String get daySheetInTalk => 'In the conversation';
+
+  @override
+  String get daySheetRoleYou => 'You:';
+
+  @override
+  String get dayNoVoice => 'no recording — the phone reads it';
+
+  @override
+  String dayLockedByDay(int n) {
+    return 'Finish day $n first';
+  }
+
+  @override
+  String dayLockedUntil(String date) {
+    return 'Opens $date';
+  }
+
+  @override
+  String get dayLessonBuilding => 'Building the day · about a minute';
+
+  @override
+  String get dayLessonFailed => 'The day did not build';
+
+  @override
+  String get dayLessonRetry => 'Retry';
+
+  @override
+  String get dayBack => 'Back';
+
+  @override
+  String get dayTabTitle => 'Plan';
+
+  @override
+  String get dayTabRoute => 'Route';
 }

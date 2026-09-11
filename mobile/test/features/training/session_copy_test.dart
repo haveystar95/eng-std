@@ -85,16 +85,17 @@ void main() {
       await tester.pumpWidget(host(forwardCard()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('выбери перевод'), findsOneWidget);
-      expect(find.textContaining('выбери английский эквивалент'), findsNothing);
+      // Лейбл блока задания (4м) набран капителью.
+      expect(find.textContaining('ВЫБЕРИ ПЕРЕВОД'), findsOneWidget);
+      expect(find.textContaining('ВЫБЕРИ АНГЛИЙСКИЙ ЭКВИВАЛЕНТ'), findsNothing);
     });
 
     testWidgets('translation → term still asks for the English equivalent', (tester) async {
       await tester.pumpWidget(host(reverseCard()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('выбери английский эквивалент'), findsOneWidget);
-      expect(find.textContaining('выбери перевод'), findsNothing);
+      expect(find.textContaining('ВЫБЕРИ АНГЛИЙСКИЙ ЭКВИВАЛЕНТ'), findsOneWidget);
+      expect(find.textContaining('ВЫБЕРИ ПЕРЕВОД'), findsNothing);
     });
   });
 

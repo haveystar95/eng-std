@@ -7,7 +7,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
-import 'plan_day_screen.dart';
+import 'day/open_day.dart';
 import 'plan_tab_screen.dart';
 import 'plan_ui.dart';
 
@@ -144,12 +144,7 @@ class _PlanCard extends ConsumerWidget {
   /// Straight into the DAY, not into the tab. The card's own words are «Продолжить день 2», and a
   /// button that landed on a screen with another button on it would be one tap of nothing.
   Future<void> _open(BuildContext context, WidgetRef ref) async {
-    AppHaptics.light();
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PlanDayScreen(plan: plan, dayIndex: plan.focusDayIndex),
-      ),
-    );
+    await openDayRoom(context, ref);
     ref.invalidate(activePlanProvider);
   }
 }

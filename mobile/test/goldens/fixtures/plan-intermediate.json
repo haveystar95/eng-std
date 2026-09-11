@@ -1,0 +1,217 @@
+{
+ "id": "01M26KTYVVTXRN9T4AE4807BXV",
+ "status": "active",
+ "goal_text": "Снимаю квартиру: звонок агенту и просмотр жилья, важно обсудить условия и договор",
+ "target_lang": "en",
+ "native_lang": "ru",
+ "level": "intermediate",
+ "days_total": 3,
+ "days_requested": 3,
+ "days_shortened_from": null,
+ "event_date": null,
+ "days_left": null,
+ "title_native": "Съём квартиры",
+ "title_target": "Renting a flat",
+ "event_native": "Просмотр",
+ "until_phrase": null,
+ "overdue_native": null,
+ "route_summary": "3 дня · 2 ситуации, репетиция",
+ "learner_role_target": "Tenant",
+ "learner_role_native": "Арендатор",
+ "cover_image": {
+  "url": "https://images.pexels.com/photos/7937363/pexels-photo-7937363.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+  "author": "Pavel Danilyuk",
+  "author_url": "https://www.pexels.com/@pavel-danilyuk"
+ },
+ "collection_id": null,
+ "unclear_reason": null,
+ "fail_reason": null,
+ "current_day": {
+  "id": "01M26KTYVXZ7AGN96QGZGT1B00",
+  "number": 1,
+  "type": "scene",
+  "status": "in_progress",
+  "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+  "title_native": "Звонок агенту",
+  "title_target": "Call to the agent",
+  "teaches_native": "уточнить цену, адрес и условия",
+  "lesson_status": "ready",
+  "opens_on": "2026-09-11",
+  "slot": {
+   "code": "today",
+   "date": "2026-09-11",
+   "label_native": "сегодня"
+  },
+  "cards_total": 75,
+  "cards_done": 0,
+  "minutes_spent": 0,
+  "opened_at": "2026-09-10T23:47:46+00:00",
+  "closed_at": null
+ },
+ "days": [
+  {
+   "id": "01M26KTYVXZ7AGN96QGZGT1B00",
+   "number": 1,
+   "type": "scene",
+   "status": "in_progress",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "title_native": "Звонок агенту",
+   "title_target": "Call to the agent",
+   "teaches_native": "уточнить цену, адрес и условия",
+   "lesson_status": "ready",
+   "opens_on": "2026-09-11",
+   "slot": {
+    "code": "today",
+    "date": "2026-09-11",
+    "label_native": "сегодня"
+   },
+   "cards_total": 75,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": "2026-09-10T23:47:46+00:00",
+   "closed_at": null
+  },
+  {
+   "id": "01M26KTYVXZ8K9P5G1K3HHPSKP",
+   "number": 2,
+   "type": "scene",
+   "status": "locked",
+   "scene_id": "01M26KV8TNPJ1QAGPSJEGE8ESX",
+   "title_native": "Просмотр жилья",
+   "title_target": "Flat viewing",
+   "teaches_native": "обсудить условия и договор",
+   "lesson_status": "building",
+   "opens_on": null,
+   "slot": {
+    "code": "tomorrow",
+    "date": "2026-09-12",
+    "label_native": "завтра"
+   },
+   "cards_total": 0,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": null,
+   "closed_at": null
+  },
+  {
+   "id": "01M26KTYVXGCRJ3ZZS89AVP9Y8",
+   "number": 3,
+   "type": "rehearsal",
+   "status": "locked",
+   "scene_id": null,
+   "title_native": null,
+   "title_target": null,
+   "teaches_native": null,
+   "lesson_status": null,
+   "opens_on": null,
+   "slot": {
+    "code": "date",
+    "date": "2026-09-13",
+    "label_native": null
+   },
+   "cards_total": 0,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": null,
+   "closed_at": null
+  }
+ ],
+ "scenes": [
+  {
+   "id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "order": 1,
+   "kind": "situation",
+   "priority": 2,
+   "title_native": "Звонок агенту",
+   "title_target": "Call to the agent",
+   "teaches_native": "уточнить цену, адрес и условия",
+   "goals_native": [
+    "спросить про цену и адрес",
+    "уточнить срок и залог",
+    "договориться о просмотре",
+    "спросить про договор"
+   ],
+   "learner_role_target": "Tenant",
+   "learner_role_native": "Арендатор",
+   "partner_role_target": "Estate agent",
+   "partner_role_native": "Агент по аренде",
+   "image": {
+    "url": "https://images.pexels.com/photos/36713143/pexels-photo-36713143.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Vitaly Gariev",
+    "author_url": "https://www.pexels.com/@silverkblack"
+   },
+   "lesson_status": "ready",
+   "lesson_fail_reason": null,
+   "day_number": 1,
+   "cost_usd": "0.066388",
+   "latency_ms": 25349,
+   "prompt_version": "lesson-v3"
+  },
+  {
+   "id": "01M26KV8TNPJ1QAGPSJEGE8ESX",
+   "order": 2,
+   "kind": "situation",
+   "priority": 1,
+   "title_native": "Просмотр жилья",
+   "title_target": "Flat viewing",
+   "teaches_native": "обсудить условия и договор",
+   "goals_native": [
+    "осмотреть жильё и спросить",
+    "уточнить правила проживания",
+    "обсудить срок и оплату",
+    "задать вопросы о договоре"
+   ],
+   "learner_role_target": "Tenant",
+   "learner_role_native": "Арендатор",
+   "partner_role_target": "Estate agent",
+   "partner_role_native": "Агент по аренде",
+   "image": {
+    "url": "https://images.pexels.com/photos/7642155/pexels-photo-7642155.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Alena Darmel",
+    "author_url": "https://www.pexels.com/@a-darmel"
+   },
+   "lesson_status": "building",
+   "lesson_fail_reason": null,
+   "day_number": 2,
+   "cost_usd": null,
+   "latency_ms": null,
+   "prompt_version": null
+  }
+ ],
+ "rescue_kit": [
+  {
+   "text_target": "Could you speak more slowly, please?",
+   "text_native": "Помедленнее, пожалуйста.",
+   "pronunciation_native": "куд ю спик мор слоули плиз"
+  },
+  {
+   "text_target": "Could you write it down, please?",
+   "text_native": "Напишите, пожалуйста.",
+   "pronunciation_native": "куд ю райт ит даун плиз"
+  },
+  {
+   "text_target": "Could you repeat that, please?",
+   "text_native": "Повторите ещё раз, пожалуйста.",
+   "pronunciation_native": "куд ю рипит зэт плиз"
+  },
+  {
+   "text_target": "How much is it?",
+   "text_native": "Сколько это стоит?",
+   "pronunciation_native": "хау мач из ит"
+  },
+  {
+   "text_target": "One moment, let me check.",
+   "text_native": "Секунду, я проверю.",
+   "pronunciation_native": "уан моумент лет ми чек"
+  }
+ ],
+ "cost_usd": "0.085698",
+ "versions": {
+  "build": "b816951b",
+  "prompt_plan": "plan-builder-v2",
+  "prompt_lesson": "lesson-v3"
+ },
+ "started_at": "2026-09-10T21:34:36+00:00",
+ "finished_at": null,
+ "created_at": "2026-09-10T21:33:31+00:00"
+}

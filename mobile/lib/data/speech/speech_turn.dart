@@ -201,6 +201,7 @@ class SpeechTurn {
     bool Function(String transcript)? echoOf,
     ValueChanged<String>? onPartial,
     VoidCallback? onSpeechStarted,
+    ValueChanged<double>? onLevel,
   }) async {
     if (isListening) return _turn!.future;
     final turn = Completer<SpeechTurnResult>();
@@ -230,6 +231,7 @@ class SpeechTurn {
         echoOf: echoOf,
         onPartial: onPartial,
         onSpeechStarted: onSpeechStarted,
+        onLevel: onLevel,
       ).catchError((Object error) {
         _settle(
           // Транскрипт, который успел набраться, делает это обрывом на полуслове, а не отказом
@@ -251,6 +253,7 @@ class SpeechTurn {
     required bool Function(String)? echoOf,
     required ValueChanged<String>? onPartial,
     required VoidCallback? onSpeechStarted,
+    ValueChanged<double>? onLevel,
   }) async {
     final turn = _turn!;
     var reopening = false;
@@ -271,6 +274,7 @@ class SpeechTurn {
         timeout: config.effectiveMaxRecording,
         pauseFor: config.silenceAfterSpeech,
         contextualStrings: contextualStrings,
+        onLevel: onLevel,
         onPartial: (text) {
           if (turn.isCompleted || _closing) return;
           final trimmed = text.trim();
