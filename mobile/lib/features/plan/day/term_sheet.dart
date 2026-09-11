@@ -7,7 +7,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../../data/local/cached_image_provider.dart';
-import '../../../data/plan/plan_contract.dart';
+import '../../../data/plan/day_contract.dart';
 import '../../../data/pronouncer.dart';
 import 'cards/phrase_cards.dart' show phraseWithKey;
 import 'day_texts.dart';

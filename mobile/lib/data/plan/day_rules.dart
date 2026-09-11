@@ -11,7 +11,8 @@
 /// слов ожидаемого текста против сказанного.
 library;
 
-import 'plan_contract.dart';
+import 'plan_models.dart';
+import 'day_contract.dart';
 
 /// Что случилось с оценённой карточкой после одного хода.
 enum DayAttempt {
@@ -151,8 +152,8 @@ abstract final class DayRules {
 
   /// «Услышал → собери» — только Intermediate, только утверждения ≤ 10 слов. Клиент это НЕ решает
   /// (вид карточки отдаёт сервер); правило здесь — чтобы тест канона мог его назвать.
-  static bool listenAssembleAllowed({required PlanLevel2 level, required String partnerLine}) =>
-      level == PlanLevel2.intermediate &&
+  static bool listenAssembleAllowed({required PlanLevel level, required String partnerLine}) =>
+      level == PlanLevel.intermediate &&
       !partnerLine.trim().endsWith('?') &&
       tokens(partnerLine).length <= 10;
 

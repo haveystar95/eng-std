@@ -142,11 +142,6 @@ void main() {
           ),
           connectivityProvider.overrideWith((ref) => Stream.value(true)),
           wordChallengeProvider.overrideWith((ref) => Stream.value(challenge)),
-          // The plan slot (кадр 08/09) reads the NETWORK, unlike everything else on this screen —
-          // готовность and the focus day are derived server-side on every read. Overridden to «no
-          // plan» here so these tests keep asking about the day's own blocks; the slot's own two
-          // faces are covered in `test/features/plan/`.
-          activePlanProvider.overrideWith((ref) async => null),
         ],
         child: MaterialApp(
           supportedLocales: kSupportedLocales,

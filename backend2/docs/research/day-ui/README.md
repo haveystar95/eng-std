@@ -251,3 +251,47 @@ plural-формами и плейсхолдерами; задания с сер�
   — `POST /auth/dev`, `PUT /profile`, `POST /plans`, опрос `/build`, `POST …/start`, ожидание
   `lesson_status: ready`); кабинет — `xcrun simctl openurl <udid> "engstd://plan/day/<dayId>"`;
   день 2 — `docker compose exec app php artisan plan:shift-day <plan> --days=1`.
+
+## 9. Слияние с PLAN-UI (доработка, 11.09.2026)
+
+`git merge main` в `day-ui`: PLAN-UI переписал таб «План» (21-x), вход (22-x), модели плана и снёс
+остатки старого контура. 23 конфликта; ниже — каждый и чем решён. Правило было одно: по смыслу, а
+не «моя сторона».
+
+| конфликт | решение |
+|---|---|
+| `lib/data/plan_models.dart` (снесён у них, правлен у меня) | удалён: модели плана переехали в `lib/data/plan/plan_models.dart` |
+| `lib/data/plan/plan_contract.dart` × `lib/data/plan/plan_models.dart` — **два набора моделей одного контракта** | ОДИН набор: база — `plan_models.dart` PLAN-UI (план, маршрут, сцены, кабинет, сборка, версии, архив, открытые enum'ы с `unknown`); мой контракт ужат до дневной части и переименован в `day_contract.dart` (карточки, шит, вердикты) — он импортирует общие модели и не повторяет ни одного их поля. Что дню не хватало, добавлено в общий набор, а не продублировано: `PlanStage.wire/ordinal/known`, `PlanScene.learnerRoleNative/partnerRoleNative`, `PlanDayMetrics.hardestUnitKind/hardestUnitRef`, `PlanProgramUnit.sceneId`, `Plan.sceneById`; выборки дня (`words`/`phrases`/`exchanges`, `stageOf`, `cardsTotal`, `remaining`, `firstTryPercent`) — расширениями в `day_contract.dart` |
+| `api_client.dart` | плановые методы — их (`currentPlan` с raw для офлайн-кэша, `plan`, `plans`, `createPlan`, `planBuild`, `startPlan`, `reschedulePlan`, `finishPlan`, `deletePlan`, `planDayRoom`, `retryPlanLesson`, `planVersions`); мои дубли (`currentPlan`, `planById`, `dayRoom`, `retryLesson`) удалены, остались только карточки дня (`openDay`, `dayCards`, `answerDayCard`, `closeStage`, `closeDay`, `daySheet`, `planAudioUrl`) и QA-часы. `ApiClient.problemCode/problemMeta` сняты в пользу их top-level `problemCode`; для `catch (e)` добавлены `problemCodeOf` / `problemMetaOf` |
+| `lib/data/providers.dart` | их версия: старые `activePlanProvider`, `planArchiveProvider`, `planProvider`, `planNotificationsProvider` и `LearningPlan` удалены вместе с экранами |
+| мой `lib/data/plan/plan_providers.dart` × их `features/plan/plan_providers.dart` | мой переименован в `day_providers.dart` и ужат до дня (`dayRoomProvider`, `daySheetProvider`, `dayCardsProvider`); `currentPlanProvider` удалён — план берётся из `planTabProvider` |
+| `lib/ui/day_plate.dart` (add/add) | один файл, два размера компонента 4н: их `DayPlate` — карточка таба (кадры 21-2 … 21-4, под их 34 снимками), мой `DayRoomPlate` — шапка кабинета (23-0a … 23-0e). Почему два класса, а не `DayPlateSize.header`, как обещал их докблок, — написано в файле: в кадрах у них общий только материал, а строки этапов, обложка и подвал разные; обещание в докблоке исправлено. Общее вынесено: `StageBar` |
+| `plan_tab_screen.dart` | их целиком; моя заглушка `_DayEntryStub` удалена. `_openDay` открывает кабинет через `openDayRoom` |
+| `plan_day_stub_screen.dart` (их заглушка «до DAY-UI») | удалена вместе с тремя строками ARB — её место занял кабинет |
+| `home_plan_card.dart`, `plan_building_screen.dart`, `plan_notification_host.dart`, `tool/speech_preview.dart` (снесены у них, правлены у мной) | удалены: домашнюю карточку, ожидание сборки и уведомления PLAN-UI переписал под 21-x/22-x |
+| `session/sitting_queue.dart` + тест (снесён у меня, правлен у них) | восстановлены: очередь присеста — механика тренажёров коллекций (повтор ошибки в конце), а не плана; я снёс её вместе с плановой веткой по ошибке |
+| `session_screen.dart` | их версия (в ней `SittingQueue` и чистка плана); поверх вернул своё: знакомство 16a рисуется во всю ширину без полей экрана |
+| `session_exercise.dart`, `models.dart` | моя сторона: ветки прогона сцены и ситуативных карточек (`sayIntent`, `_isSceneRun`, `_isAssembleTurn`, `situational*`) удалены |
+| `app_settings.dart`, `profile_screen.dart`, `language_mode_support.dart` | их сторона (оба наряда независимо сделали «Звуки»): ключ хранения `sounds_enabled`, их формулировки; от моей версии оставлен сеттер, который гасит звук в `AppFeedback` |
+| `ui/ui.dart` | оба экспорта (`cloze_sentence`, `choice_card`) |
+| ARB × 2 | база — их набор; сверху мои 114 `day*`. Снесённые старые ключи не воскрешены; расхождения по значению (`planEmptyTitle`, `planEntryNext`, `tabHome`, …) — их, копирайт таба и входа принадлежит PLAN-UI. Итог: 869 ключей, ru и en совпадают ключ в ключ |
+| `design-map.md` | объединён: их шапка и разделы (навигация, таб 21-x, вход 22-x) + мои (общие виджеты, кабинет 23-0x, сессия 23-1…23-15, «База», звук, «удалено») |
+| `docs/plan-ui-glossary.md` | их таблица `plan*` целиком + мой раздел про `day*` |
+| канвы `plan/base/tokens.dc.html` | их закоммиченные версии (мои untracked копии побайтово те же — удалены) |
+
+**Что удалено при слиянии:** `plan_contract.dart` (слит в `plan_models.dart` + `day_contract.dart`),
+`plan_providers.dart` мой (→ `day_providers.dart`), `plan_day_stub_screen.dart` и его три строки
+ARB, моя заглушка таба `_DayEntryStub`, `home_plan_card.dart`, `plan_building_screen.dart`,
+`plan_notification_host.dart`, `tool/speech_preview.dart`, дубли «Звуков» и `problemCode/Meta`.
+
+**Найдено слиянием и починено:** шапка сессии рисовала ШЕСТЬ сегментов вместо пяти — у общего
+`PlanStage` есть `unknown`, а я шёл по `.values`; поймали golden'ы (`PlanStage.known`).
+
+**Ворота после слияния:** `flutter analyze` — 0; `flutter test` — **1327 passed, 0 failed** (41
+golden дня + 32 golden'а PLAN-UI, оба набора зелёные без перерисовки эталонов).
+
+**Уведомления плана** после слияния — `plan_ready_notification_host.dart` PLAN-UI («План готов»,
+кадр 22-6); ссылки `engstd://…` слушает он же — мой `plan_notification_host.dart` удалён, слушатель
+переехал туда одной функцией. Лист «Как устроен план», выключатель «Напоминания»
+и `clientBuildProvider` — PLAN-UI, не тронуты.
+

@@ -14,6 +14,7 @@ import '../../data/pronouncer.dart';
 import '../../data/api_client.dart';
 import '../../data/app_settings.dart';
 import '../../data/languages.dart';
+import '../../data/line_audio.dart';
 import '../../data/models.dart';
 import '../../data/perf_log.dart';
 import '../../data/practice/recognition_replay.dart';
@@ -23,6 +24,7 @@ import '../home/home_providers.dart';
 import 'session/intro_card.dart';
 import 'session/session_exercise.dart';
 import 'session/session_grading.dart';
+import 'session/sitting_queue.dart';
 import 'triage_swipe.dart';
 
 /// One exercise session (кадры 12a–12k): due then new cards from `/study/sessions`, one card per
@@ -100,6 +102,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      // В ПЛАНОВОЙ ПОСАДКЕ КЛАВИАТУРЫ НЕТ (наряд DAY-FIX-2, Ч.2.5), и замок стоит на СЕРВЕРЕ:
+      // ни один режим с набором в план не выдаётся (`BuildPlanSessionHandler::assembleTasks`,
+      // лестница без typed-шагов). Прогрев здесь остаётся и в плане: он не показывает клавиатуру
+      // (фокус на скрытом поле на один кадр), а его пропуск ломает выход «Пропустить» с карточки
+      // говорения — карточка перестраивается до перехода и падает на пустом вердикте
+      // (`plan_sitting_repairs_test`, С-4). Живой прогон 05.09 видел клавиатуру над СЛОВОМ — это
+      // была карточка набора, которой у плана больше нет, а не прогрев.
       _kbWarm.requestFocus();
       // Drop focus next frame — the keyboard engine stays warm after this, but nothing is shown.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -206,7 +215,6 @@ class _SessionShell extends ConsumerStatefulWidget {
   final String? targetLang;
 
   /// Start another practice session (used by the practice summary's «Ещё раз»).
-  ///
   final VoidCallback onAgain;
 
   @override
@@ -214,8 +222,13 @@ class _SessionShell extends ConsumerStatefulWidget {
 }
 
 class _SessionShellState extends ConsumerState<_SessionShell> {
-  /// The one voice of the session — see [Pronouncer].
+  /// The one voice of the sitting — see [Pronouncer]. Built with the line cache so a reply of the
+  /// scene is played from its own file and everything else keeps the system synthesiser
+  /// (наряд TTS-1, Ч.2.2).
   late final Pronouncer _pronouncer;
+
+  /// СЕРВЕРНАЯ ОЗВУЧКА РЕПЛИК этой посадки.
+  late final LineAudioCache _lineAudio;
   final _scroll = ScrollController();
   int _pos = 0;
   bool _finished = false;
@@ -225,21 +238,39 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
   List<SessionCard> get _cards => widget.session.cards;
 
+  /// THE RUNNING ORDER of this sitting — where the next card is, and where the breaks fall.
+  ///
+  /// Everything about it lives in [SittingQueue]: a card answered wrong comes back once at the end
+  /// of its own присест (Ч-5), and the boundaries the server cut move with that tail (Ч-6). Kept out
+  /// of this shell because it is arithmetic, and this shell is a screen with a speech engine and an
+  /// image cache in it.
+  late SittingQueue _queue;
+
+  /// ДИНАМИК ГОВОРИТ РЕПЛИКУ СОБЕСЕДНИКА. Пока `true`, карточка говорения не открывает микрофон.
+  /// Без разговора сцены (его оболочка ушла вместе со старым планом) сессия сама реплик не
+  /// произносит, и флаг остаётся опущенным; карточка читает его, как и раньше.
+  final _roleSpeaking = ValueNotifier<bool>(false);
+
+  /// The card index being played at the current position — the ORDER's, before the replay resolves
+  /// which rung of it to deal.
+  int get _slot => _queue.cardAt(_pos);
+
   /// A recognition slot is played at the pair's CURRENT rung, so a failed rung 1 is replayed rather
   /// than followed by rung 2 (QA-9). Resolved at DISPLAY time, which is the only moment that knows
   /// how the earlier cards went — the session itself was dealt before any of them were answered.
   late final RecognitionReplay _replay = RecognitionReplay(_cards, enabled: !widget.practice);
 
-  /// The index actually being played at the current position — [_pos] unless it is replaying a
+  /// The index actually being played at the current position — [_slot] unless it is replaying a
   /// rung the learner has not passed yet.
-  int get _playing => _replay.resolve(_pos);
+  int get _playing => _replay.resolve(_slot);
   SessionCard get _card => _cards[_playing];
 
   @override
   void initState() {
     super.initState();
     PerfLog.instance.screen = 'session'; // stall monitor: which screen a hitch belongs to
-    _pronouncer = Pronouncer(null, ref.read(lineAudioCacheProvider));
+    _lineAudio = ref.read(lineAudioCacheProvider);
+    _pronouncer = Pronouncer(null, _lineAudio);
     // Raise the iOS audio session and prime the synthesizer ONCE, behind the loading spinner —
     // never on the first listening card, whose whole content is the sound (F20-r).
     // The pairs are not resolved yet, so this primes the engine with the session's fallback; every
@@ -262,6 +293,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         QaContext(screen: 'session', sessionId: widget.session.sessionId),
       );
     });
+    _queue = SittingQueue.of(cards: _cards.length);
   }
 
   /// WHICH PAIR each card belongs to — «EN→RU» over the card, resolved from the local mirror.
@@ -286,11 +318,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final ids = _cards.map((c) => c.termId).toList(growable: false);
     final db = ref.read(appDatabaseProvider);
     final pairs = await db.pairByTerms(ids);
-    if (mounted) {
-      setState(() {
-        _pairs = pairs;
-      });
-    }
+    if (mounted) setState(() => _pairs = pairs);
   }
 
   /// The resolved photo url per card index. A present KEY means the lookup finished, which is what
@@ -335,6 +363,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // Hands the iOS audio session back (and un-ducks other audio) exactly once, here — not after
     // every spoken word, which is what froze the trainer for ~600 ms per utterance (F20-r).
     unawaited(_pronouncer.release());
+    _roleSpeaking.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -406,10 +435,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
   /// A speaking card the MICROPHONE lost — «Пропустить» after a few failed attempts.
   ///
-  /// It writes NOTHING outside a plan: no `_results` entry, so no tick or cross in the summary, and
-  /// the word comes back on its own schedule as if this card had never been dealt — the honest
-  /// reading of «the room was too noisy». The counter moves, so a card can never trap the learner.
-  ///
+  /// It writes NOTHING: no `_results` entry, so no tick or cross in the summary, and the word comes
+  /// back on its own schedule as if this card had never been dealt — the honest reading of «the room
+  /// was too noisy». The counter moves, so a card can never trap the learner.
   void _skipCard() {
     PerfLog.instance.tapHandled('skip');
     _prepareCard(_pos + 1);
@@ -464,7 +492,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // «Дальше» bar, a microphone skip, an intro's «Понятно» — because all of them funnel through
     // this one method, including the last card's jump to the summary.
     unawaited(_pronouncer.stop());
-    if (_pos + 1 >= _cards.length) {
+    if (_pos + 1 >= _queue.length) {
       _closeRun();
       setState(() => _finished = true);
     } else {
@@ -524,6 +552,8 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final l = AppLocalizations.of(context);
 
     if (_finished) {
+      // The run is closed in [_closeRun], when the last card is answered: ending a session is a fact
+      // about the session and not about which screen is drawn over it (Д-1, Д-28).
       return _SessionSummary(
         results: _results,
         practice: widget.practice,
@@ -535,7 +565,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       );
     }
 
-    final total = _cards.length;
+    // THE ORDER, not the deck: a card sent to the tail lengthens the sitting, and the counter has to
+    // say so or «5 из 27» would stay 27 while there are 28 cards left to play.
+    final total = _queue.length;
     final phaseLabel = widget.practice ? l.sessionPhasePractice : _phaseWord(l);
 
     final autoPronounce = ref.watch(appSettingsProvider).value?.autoPronounce ?? true;
@@ -570,6 +602,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         ? SessionIntroCard(
             key: ValueKey(_pos),
             card: _card,
+            showExample: true,
             autoPronounce: autoPronounce,
             onSpeak: speakCard,
             photoUrl: _photoUrl[_pos],
@@ -599,6 +632,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             // ЧЕМ СУДИТЬ РЕЧЬ — пороги и таблица аббревиатур с сервера (наряд SPEECH-2). Едет с
             // сессией, а не лежит в карточке: экран и сервер обязаны судить одними числами.
             speech: widget.session.speech,
+            // МИКРОФОН ЖДЁТ ДИНАМИК — факт сессии, карточка его только читает.
             // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's
             // deferred speak/focus is cancelled instead of firing on the next card.
             isCurrent: () => mounted && _pos == builtAt,
@@ -634,8 +668,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             Expanded(
               child: SingleChildScrollView(
                 controller: _scroll,
-                // ЗНАКОМСТВО — ВО ВЕСЬ ЭКРАН (кадр 16a): его фото идёт от края до края, поэтому
-                // поля экрана оно берёт на себя; все остальные карточки — с полями, как были.
+                // ЗНАКОМСТВО — ВО ВСЮ ШИРИНУ (правка 16a «Базы», наряд DAY-UI): фото 220 идёт от
+                // края до края, и горизонтальные поля экрана на нём были бы двумя белыми
+                // просветами. Свои поля карточка знакомства ставит сама.
                 padding: isIntro
                     ? const EdgeInsets.only(bottom: AppSpacing.s26)
                     : const EdgeInsets.fromLTRB(
@@ -770,14 +805,22 @@ class _SessionHeader extends StatelessWidget {
             // wrapped to two lines the moment the denominator went double-digit (QA-OBS-28). The
             // 44pt floor is still there to balance the × on the left when the counter is short.
             ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: AppSpacing.minTap),
-              child: Text(
-                l.triageCounter(current, total),
-                maxLines: 1,
-                softWrap: false,
-                textAlign: TextAlign.right,
-                style: AppTextExercise.sessionHeader,
+              // …И ПОТОЛОК ТОЖЕ (наряд DAY-GATE-1, доработка Ч.2.7). Слово о дне стало длиннее —
+              // «слова и фразы пройдены · разговор около 2 минут» вместо «материал пройден», — и
+              // строка, у которой был только минимум, вылезла за правый край живьём. Ширина
+              // ограничена долей экрана, а текст ужимается кеглем: обрезать слово о дне многоточием
+              // значило бы прятать ровно ту половину, ради которой оно тут стоит.
+              constraints: BoxConstraints(
+                minWidth: AppSpacing.minTap,
+                maxWidth: MediaQuery.sizeOf(context).width * 0.45,
               ),
+              child: Text(
+                      l.triageCounter(current, total),
+                      maxLines: 1,
+                      softWrap: false,
+                      textAlign: TextAlign.right,
+                      style: AppTextExercise.sessionHeader,
+                    ),
             ),
           ],
         ),

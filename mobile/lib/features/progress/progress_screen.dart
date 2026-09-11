@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
@@ -11,10 +12,13 @@ import '../home/streak.dart';
 import 'activity.dart';
 import 'progress_providers.dart';
 
-/// «Прогресс» (кадр 2.6). Everything reads the local DB — renders in airplane mode. Streak in
+/// «Прогресс» (кадр 2.6, 8a). Everything reads the local DB — renders in airplane mode. Streak in
 /// antiqua, week calendar of dots, tabular counters, a month activity chart of ink bars, and the
 /// global density bar. The activity chart, week dots and «за неделю»/«сегодня» all read the local
 /// `daily_activity` table, so the chart and the streak dots beside it always agree (правило 21).
+///
+/// PUSHED, not a tab (токен-лист 4к-1): the door is the statistics plate on «Сегодня», so the
+/// screen carries its own back chevron and scaffold.
 class ProgressScreen extends ConsumerWidget {
   const ProgressScreen({super.key});
 
@@ -34,15 +38,13 @@ class ProgressScreen extends ConsumerWidget {
     final weekCount = weekReviewCount(now, activity);
     final todayCount = todayReviewCount(now, activity);
 
-    final bottomInset =
-        AppTabBarMetrics.height +
-        AppTabBarMetrics.bottomInset +
-        MediaQuery.viewPaddingOf(context).bottom +
-        AppSpacing.s8;
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s26;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
-      child: SafeArea(
+      child: Scaffold(
+        backgroundColor: AppColors.paper,
+        body: SafeArea(
         bottom: false,
         child: ListView(
           padding: EdgeInsets.fromLTRB(
@@ -52,7 +54,24 @@ class ProgressScreen extends ConsumerWidget {
             bottomInset,
           ),
           children: [
-            Text(l.progressTitle, style: AppText.screenTitle),
+            Row(
+              children: [
+                Semantics(
+                  button: true,
+                  label: l.commonBack,
+                  child: InkResponse(
+                    radius: 22,
+                    onTap: () => Navigator.of(context).maybePop(),
+                    child: const SizedBox(
+                      width: AppSpacing.minTap,
+                      height: AppSpacing.minTap,
+                      child: Icon(LucideIcons.chevronLeft, size: 22, color: AppColors.secondary),
+                    ),
+                  ),
+                ),
+                Expanded(child: Text(l.progressTitle, style: AppText.screenTitle)),
+              ],
+            ),
             const SizedBox(height: AppSpacing.s26),
             _StreakBlock(streak: streak, best: best),
             const SizedBox(height: AppSpacing.s22),
@@ -65,6 +84,7 @@ class ProgressScreen extends ConsumerWidget {
             _DensityBar(density: density),
           ],
         ),
+      ),
       ),
     );
   }

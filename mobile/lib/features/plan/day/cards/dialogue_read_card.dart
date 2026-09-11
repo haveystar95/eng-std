@@ -6,7 +6,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
-import '../../../../data/plan/plan_contract.dart';
+import '../../../../data/plan/day_contract.dart';
 import '../day_card_frame.dart';
 import 'card_context.dart';
 

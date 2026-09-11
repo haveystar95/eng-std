@@ -15,7 +15,8 @@ import '../../../data/languages.dart' show sttLocaleFor;
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/plan/day_rules.dart';
 import '../../../data/plan/day_session.dart';
-import '../../../data/plan/plan_contract.dart';
+import '../../../data/plan/plan_models.dart';
+import '../../../data/plan/day_contract.dart';
 import '../../../data/providers.dart';
 import 'cards/card_context.dart';
 import 'cards/dialogue_read_card.dart';
@@ -46,7 +47,7 @@ class DaySessionScreen extends ConsumerStatefulWidget {
   const DaySessionScreen({super.key, required this.plan, required this.room});
 
   final Plan plan;
-  final DayRoom room;
+  final PlanDayRoom room;
 
   @override
   ConsumerState<DaySessionScreen> createState() => _DaySessionScreenState();
@@ -103,10 +104,10 @@ class _DaySessionScreenState extends ConsumerState<DaySessionScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      final code = ApiClient.problemCode(e);
+      final code = problemCodeOf(e);
       setState(() {
         _openError = e;
-        _lessonStatus = code == 'plan_lesson_not_ready' ? (ApiClient.problemMeta(e)['lesson_status'] as String? ?? 'building') : null;
+        _lessonStatus = code == 'plan_lesson_not_ready' ? (problemMetaOf(e)['lesson_status'] as String? ?? 'building') : null;
       });
       // Урок ещё собирается — ждём и пробуем снова, без кнопки.
       if (_lessonStatus != null && _lessonStatus != 'failed') {
@@ -120,7 +121,7 @@ class _DaySessionScreenState extends ConsumerState<DaySessionScreen> {
     if (sceneId == null || _retrying) return;
     setState(() => _retrying = true);
     try {
-      await ref.read(apiClientProvider).retryLesson(widget.plan.id, sceneId);
+      await ref.read(apiClientProvider).retryPlanLesson(widget.plan.id, sceneId);
     } catch (_) {
       // Сервер скажет своё при следующем открытии.
     }
@@ -236,12 +237,12 @@ class _DaySessionScreenState extends ConsumerState<DaySessionScreen> {
       return Center(child: Text(l.dayLessonBuilding, style: AppTextDay.facts));
     }
     if (_openError != null) {
-      final code = ApiClient.problemCode(_openError!);
-      final meta = ApiClient.problemMeta(_openError!);
+      final code = problemCodeOf(_openError!);
+      final meta = problemMetaOf(_openError!);
       final text = switch (code) {
         'plan_day_locked' when meta['blocked_by_day'] != null => l.dayLockedByDay((meta['blocked_by_day'] as num).toInt()),
         'plan_day_locked' when meta['opens_on'] != null => l.dayLockedUntil(meta['opens_on'] as String),
-        _ => l.planErrorLoadFailed,
+        _ => l.planTabLoadFailedTitle,
       };
       return Center(
         child: Padding(
@@ -251,7 +252,7 @@ class _DaySessionScreenState extends ConsumerState<DaySessionScreen> {
             children: [
               Text(text, style: AppTextDay.facts, textAlign: TextAlign.center),
               const SizedBox(height: 18),
-              PrimaryButton(label: l.generationRetry, minHeight: 52, onPressed: _open),
+              PrimaryButton(label: l.planTabRetry, minHeight: 52, onPressed: _open),
             ],
           ),
         ),
@@ -320,7 +321,7 @@ class _DaySessionScreenState extends ConsumerState<DaySessionScreen> {
     final scene = widget.room.scene ?? (card.sceneId.isEmpty ? null : plan.sceneById(card.sceneId));
     final localeId = sttLocaleFor(plan.targetLang);
     final dayWords = [
-      for (final c in s.cardsOf(DayStage.words))
+      for (final c in s.cardsOf(PlanStage.words))
         if (c.kind == DayCardKind.wordIntro) c.textTarget,
     ];
     final ctx = DayCardContext(
@@ -362,7 +363,7 @@ class _Header extends StatelessWidget {
   const _Header({required this.session, required this.stages, required this.onClose, required this.closeLabel});
 
   final DaySession? session;
-  final List<DayStageProgress> stages;
+  final List<PlanStageProgress> stages;
   final VoidCallback onClose;
   final String closeLabel;
 
@@ -391,8 +392,8 @@ class _Header extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              for (final st in DayStage.values) ...[
-                if (st != DayStage.values.first) const SizedBox(width: 4),
+              for (final st in PlanStage.known) ...[
+                if (st != PlanStage.known.first) const SizedBox(width: 4),
                 Expanded(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(1.5),
@@ -424,7 +425,7 @@ class _Header extends StatelessWidget {
   }
 
   /// Доля заливки сегмента: закрытые этапы — 1, текущий — по карточкам, остальные — 0.
-  double _fill(DayStage st) {
+  double _fill(PlanStage st) {
     final s = session;
     if (s == null) {
       final p = stages.where((x) => x.stage == st).firstOrNull;
@@ -444,7 +445,7 @@ class _StageEntry extends StatelessWidget {
   const _StageEntry({super.key, required this.session, required this.room, required this.returnedFromDay, required this.onStart});
 
   final DaySession session;
-  final DayRoom room;
+  final PlanDayRoom room;
   final int Function(String? dayId) returnedFromDay;
   final VoidCallback onStart;
 
@@ -455,7 +456,7 @@ class _StageEntry extends StatelessWidget {
     final stage = s.stage!;
     final cards = s.cardsOf(stage);
     final units = s.unitsOf(stage);
-    final kind = cards.isEmpty ? DayUnitKind.word : cards.first.unitKind;
+    final kind = cards.isEmpty ? PlanUnitKind.word : cards.first.unitKind;
     final resuming = s.resumingIn(stage);
     final remaining = s.remainingIn(stage);
     final minutes = DayRules.estimateMinutes(resuming ? remaining : cards.length);
@@ -497,7 +498,7 @@ class _StageEntry extends StatelessWidget {
     );
   }
 
-  Widget _unitRow(AppLocalizations l, DayStage stage, String ref) {
+  Widget _unitRow(AppLocalizations l, PlanStage stage, String ref) {
     final s = session;
     final first = s.firstCardOf(stage, ref);
     if (first == null) return const SizedBox.shrink();
@@ -510,7 +511,7 @@ class _StageEntry extends StatelessWidget {
         : null;
 
     switch (first.unitKind) {
-      case DayUnitKind.word:
+      case PlanUnitKind.word:
         final image = first.image?.url;
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -550,7 +551,7 @@ class _StageEntry extends StatelessWidget {
             ],
           ),
         );
-      case DayUnitKind.phrase:
+      case PlanUnitKind.phrase:
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: Row(
@@ -560,7 +561,8 @@ class _StageEntry extends StatelessWidget {
             ],
           ),
         );
-      case DayUnitKind.exchange:
+      case PlanUnitKind.exchange:
+      case PlanUnitKind.unknown:
         final partner = first.partner?.textTarget ?? first.exchanges.firstOrNull?.messages.where((m) => m.isPartner).firstOrNull?.textTarget ?? '';
         final own = first.expected.isNotEmpty ? first.expected : (first.answer.isNotEmpty ? first.answer : first.options.where((o) => o.correct).firstOrNull?.text ?? '');
         return Padding(
@@ -586,7 +588,7 @@ class _StageEntry extends StatelessWidget {
     }
   }
 
-  MarkerState _unitMarker(DayStage stage, String ref) {
+  MarkerState _unitMarker(PlanStage stage, String ref) {
     final results = session.cardsOf(stage).where((c) => c.unitRef == ref).map((c) => c.result);
     if (results.any((r) => r == DayCardResult.failed || r == DayCardResult.skipped)) return MarkerState.failed;
     if (results.any((r) => r == DayCardResult.hinted)) return MarkerState.hinted;
@@ -602,7 +604,7 @@ class _StageDone extends StatefulWidget {
   const _StageDone({super.key, required this.session, required this.room, required this.busy, required this.onNext});
 
   final DaySession session;
-  final DayRoom room;
+  final PlanDayRoom room;
   final bool busy;
   final VoidCallback onNext;
 
@@ -625,7 +627,7 @@ class _StageDoneState extends State<_StageDone> {
     final cards = s.cardsOf(stage);
     final tally = s.tallyOf(stage);
     final total = cards.isEmpty ? 1 : cards.length;
-    final kind = cards.isEmpty ? DayUnitKind.word : cards.first.unitKind;
+    final kind = cards.isEmpty ? PlanUnitKind.word : cards.first.unitKind;
     final units = s.unitsOf(stage).length;
     final hinted = s.hintedIn(stage);
     final returning = s.returningIn(stage);
@@ -691,7 +693,7 @@ class _StageDoneState extends State<_StageDone> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Text(
-                        c.unitKind == DayUnitKind.exchange ? (c.partner?.textTarget ?? c.expected) : c.textTarget,
+                        c.unitKind == PlanUnitKind.exchange ? (c.partner?.textTarget ?? c.expected) : c.textTarget,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextDay.listWord,

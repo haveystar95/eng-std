@@ -8,7 +8,7 @@ import 'package:eng_std/ui/ui.dart';
 
 import '../../../../data/local/cached_image_provider.dart';
 import '../../../../data/plan/day_rules.dart';
-import '../../../../data/plan/plan_contract.dart';
+import '../../../../data/plan/day_contract.dart';
 import '../../../training/session/session_exercise.dart' show spanPositionIn, termSearchForm;
 import '../day_card_frame.dart';
 import '../day_texts.dart';

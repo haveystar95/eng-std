@@ -25,7 +25,8 @@ import 'package:eng_std/data/api_client.dart';
 import 'package:eng_std/data/line_audio.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
-import 'package:eng_std/data/plan/plan_contract.dart';
+import 'package:eng_std/data/plan/plan_models.dart';
+import 'package:eng_std/data/plan/day_contract.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/speech/speech_diagnostics.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
@@ -80,19 +81,19 @@ class GoldenApi extends ApiClient {
   GoldenApi({required Plan plan, required this.room, required this.cards, this.sheet}) : current = plan, super(TokenStore());
 
   Plan current;
-  DayRoom room;
+  PlanDayRoom room;
   List<DayCard> cards;
   DaySheet? sheet;
   int _position = 1000;
 
   @override
-  Future<Plan?> currentPlan() async => current;
+  Future<({Plan plan, Map<String, dynamic> raw})?> currentPlan() async => (plan: current, raw: current.raw);
 
   @override
-  Future<Plan> planById(String planId) async => current;
+  Future<Plan> plan(String planId) async => current;
 
   @override
-  Future<DayRoom> dayRoom(String planId, int number) async => room;
+  Future<PlanDayRoom> planDayRoom(String planId, int number) async => room;
 
   @override
   Future<DayCards> openDay(String planId, int number) async => DayCards(planId: planId, dayId: room.day.id, number: number, status: room.day.status, cards: cards);
@@ -132,13 +133,13 @@ class GoldenApi extends ApiClient {
   }
 
   @override
-  Future<DayRoom> closeStage(String planId, int number, DayStage stage) async => room;
+  Future<PlanDayRoom> closeStage(String planId, int number, PlanStage stage) async => room;
 
   @override
-  Future<DayRoom> closeDay(String planId, int number) async => room;
+  Future<PlanDayRoom> closeDay(String planId, int number) async => room;
 
   @override
-  Future<void> retryLesson(String planId, String sceneId) async {}
+  Future<Plan> retryPlanLesson(String planId, String sceneId) async => current;
 
   static DayCard _copy(DayCard c, {DayCardResult? result, int? attempts, bool? returns}) => DayCard(
     id: c.id,
@@ -159,7 +160,7 @@ class GoldenApi extends ApiClient {
 
 /// Карточки фикстуры, где всё ДО [target] (по этапу и position) уже отвечено `passed` — сессия
 /// откроется ровно на нужной карточке.
-List<DayCard> cardsUpTo(List<DayCard> all, bool Function(DayCard) target, {List<DayStage>? onlyStages}) {
+List<DayCard> cardsUpTo(List<DayCard> all, bool Function(DayCard) target, {List<PlanStage>? onlyStages}) {
   final sorted = [...all]..sort((a, b) => a.stage.index != b.stage.index ? a.stage.index.compareTo(b.stage.index) : a.position.compareTo(b.position));
   final i = sorted.indexWhere(target);
   assert(i >= 0, 'no such card in the fixture');

@@ -69,7 +69,6 @@ void main() {
             appDatabaseProvider.overrideWithValue(db),
             connectivityProvider.overrideWith((ref) => Stream.value(true)),
             // The plan slot above the tile reads the network; this test is about the tile.
-            activePlanProvider.overrideWith((ref) async => null),
             statsProvider.overrideWith(
               (ref) => Stream.value(
                 Stats(

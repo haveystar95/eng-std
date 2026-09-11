@@ -18,6 +18,9 @@ import 'haptics.dart';
 /// «звук никогда поверх озвучки реплики» держит ВЫЗЫВАЮЩИЙ: карточка ждёт конца реплики
 /// (`Pronouncer.speakText(awaitDone: true)`) и только потом зовёт [correct].
 abstract final class AppFeedback {
+  /// «Звуки» в профиле (4к-3). Flipped by the settings controller; the haptic never depends on it.
+  static bool soundsEnabled = true;
+
   /// Handled in `ios/Runner/AppDelegate.swift`. Android has no handler and would throw
   /// [MissingPluginException]; that is caught below rather than guarded by a platform check,
   /// because the app is iOS-only and the failure mode that matters is «a sound must never take an
@@ -35,8 +38,6 @@ abstract final class AppFeedback {
   @visibleForTesting
   static const String dayClosedSound = 'day_closed';
 
-  /// «Звуки» в профиле. Хаптика от него не зависит (4к-3).
-  static bool soundsEnabled = true;
 
   /// «Верно» — короткий мягкий тон вверх, 120 мс. Haptic success.
   static void correct() {

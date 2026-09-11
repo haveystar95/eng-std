@@ -10,7 +10,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:eng_std/data/plan/plan_contract.dart';
+import 'package:eng_std/data/plan/plan_models.dart';
+import 'package:eng_std/data/plan/day_contract.dart';
 import 'package:eng_std/features/plan/day/day_card_frame.dart';
 import 'package:eng_std/features/plan/day/day_room_screen.dart';
 import 'package:eng_std/features/plan/day/day_session_screen.dart';
@@ -36,8 +37,8 @@ void main() {
 
   final planI = Plan.fromJson(fixture('plan-intermediate'));
   final planB = Plan.fromJson(fixture('plan-beginner'));
-  DayRoom roomI() => DayRoom.fromJson(fixture('room-intermediate-d1-in-progress'));
-  DayRoom roomB() => DayRoom.fromJson(fixture('room-beginner-d1-open'));
+  PlanDayRoom roomI() => PlanDayRoom.fromJson(fixture('room-intermediate-d1-in-progress'));
+  PlanDayRoom roomB() => PlanDayRoom.fromJson(fixture('room-beginner-d1-open'));
   DaySheet sheetI() => DaySheet.fromJson(fixture('sheet-intermediate-d1'));
   DaySheet sheetB() => DaySheet.fromJson(fixture('sheet-beginner-d1'));
   List<Map<String, dynamic>> cardsJson() =>
@@ -131,7 +132,7 @@ void main() {
       (room['stages'] as List)[0]['done'] = 12;
       room['day']['cards_done'] = 12;
       room['day']['minutes_spent'] = 4;
-      await pumpRoom(tester, GoldenApi(plan: planI, room: DayRoom.fromJson(room), cards: parseCards(json), sheet: sheetI()), height: 2400);
+      await pumpRoom(tester, GoldenApi(plan: planI, room: PlanDayRoom.fromJson(room), cards: parseCards(json), sheet: sheetI()), height: 2400);
       await expectGolden(tester, '23-0b-room-in-progress');
     });
 
@@ -165,7 +166,7 @@ void main() {
         u['cards_done'] = u['cards_total'];
         u['state'] = 'passed';
       }
-      await pumpRoom(tester, GoldenApi(plan: planI, room: DayRoom.fromJson(room), cards: parseCards(json), sheet: sheetI()), height: 2600);
+      await pumpRoom(tester, GoldenApi(plan: planI, room: PlanDayRoom.fromJson(room), cards: parseCards(json), sheet: sheetI()), height: 2600);
       await expectGolden(tester, '23-0c-room-closed');
     });
 
@@ -233,15 +234,15 @@ void main() {
     });
 
     testWidgets('23-2b — продолжаем: «Слушаю и отвечаю», галки у пройденного', (tester) async {
-      final listen = cardsI().where((c) => c.stage == DayStage.listen).toList()..sort((a, b) => a.position.compareTo(b.position));
+      final listen = cardsI().where((c) => c.stage == PlanStage.listen).toList()..sort((a, b) => a.position.compareTo(b.position));
       final cards = cardsUpTo(cardsI(), (c) => c.id == listen[6].id);
       await pumpSession(tester, cards, start: false);
       await expectGolden(tester, '23-2b-stage-resume');
     });
 
     testWidgets('23-9 — итог этапа «Слова закрыты»', (tester) async {
-      final words = cardsI().where((c) => c.stage == DayStage.words).toList()..sort((a, b) => a.position.compareTo(b.position));
-      final cards = cardsUpTo(cardsI(), (c) => c.id == words.last.id, onlyStages: [DayStage.words, DayStage.phrases]);
+      final words = cardsI().where((c) => c.stage == PlanStage.words).toList()..sort((a, b) => a.position.compareTo(b.position));
+      final cards = cardsUpTo(cardsI(), (c) => c.id == words.last.id, onlyStages: [PlanStage.words, PlanStage.phrases]);
       await pumpSession(tester, cards);
       // Последняя карточка «Слова» закрывает этап — какого бы вида она ни была.
       final last = words.last;

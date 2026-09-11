@@ -1,246 +1,171 @@
 # Словарь подписей плана — «ключ ARB → русская подпись → где стоит»
 
-Наряд DAY-FIX-2, Ч.6. **Источник правды — `mobile/lib/l10n/app_ru.arb`**; этот файл — его
-витрина для плановых экранов. Правило: каждая строка на экранах плана берётся из ARB, а каждый
-ключ ARB с префиксом `plan*` стоит в этой таблице. Гард: `mobile/test/l10n/plan_glossary_test.dart`
-— падает, если ключ есть в ARB и отсутствует здесь. Обновлять таблицу: `python3 glossary.py`
-(скрипт наряда) или вручную той же строкой.
+Наряд PLAN-UI (2026-09-11). **Источник правды — `mobile/lib/l10n/app_ru.arb`**; этот файл — его
+витрина для экранов плана: таба «План» (кадры 21-x) и входа в план (22-x). Тексты перенесены из
+таблицы «Тексты плана · основа для переводов» канваса «План» (`backend2/docs/design/plan.dc.html`):
+ключ таблицы `plan.empty.title` → ключ ARB `planEmptyTitle`, `entry.goal.title` → `planEntryGoalTitle`.
 
-## Обязательные слова
+Правило: каждая строка на экранах плана берётся из ARB, каждый ключ ARB с префиксом `plan*` стоит
+здесь, и каждый такой ключ читается из кода — гард `mobile/test/l10n/plan_glossary_test.dart`
+падает на ключе без строки в словаре и на строке без экрана. Словарь 4к-4 (ступень, такт, промпт,
+модель, генерация, умение, чек-пойнт, готовность, A/B, ИИ) стережёт `no_internal_words_in_plan_test.dart`.
 
-> **DAY-FIX-2, Ч.6.2 ОТМЕНЕНА нарядом DAY-GATE-1 (доработка окна 2)** в части четырёх слов. Она
-> объявляла обязательными «Спасатели», «Прогон сцены» и «Материал пройден»; владелец решил, что это
-> имена механики, а не продукта, и назвал замены. Отмена записана здесь, а не молча в коммите:
-> правило, отменённое молча, возвращается следующим нарядом.
->
-> | было (внутреннее) | стало (на экране) |
-> |---|---|
-> | Материал | **Слова и фразы** («Слова и фразы пройдены · разговор около N минут») |
-> | Прогон сцены | **Скажи сам** |
-> | Разогрев | **Из прошлых дней** |
-> | Спасатели | **На всякий случай** + подпись `planRescueHint` |
->
-> **Уточнение (доработка, п. 3): «Из прошлых дней» — это ТОЛЬКО реплики прошлых дней.** Секция
-> `warmup` держит две разные вещи, и подпись теперь читается по КАРТОЧКАМ, а не по коду секции:
-> набор (полка `rescue`) зовётся «На всякий случай», промахи прошлых дней — «Из прошлых дней». На
-> дне 1 второй половины не бывает, и секции там нет по построению. Замок:
-> `mobile/test/features/plan/plan_session_seam_test.dart`.
->
-> Старые слова остаются ВНУТРЕННИМИ: `section_code` сервера (`warmup`, `rehearsal`), имена классов
-> и docstring'и их не меняют — это язык кода, и переименовывать его вслед за экраном значит терять
-> связь с сервером. Гард на экраны: `mobile/test/l10n/no_internal_words_in_plan_test.dart`.
+Обновлять таблицу после правки ARB:
 
-| Слово | Ключ | Где стоит |
+```bash
+python3 docs/plan-ui-glossary.py
+```
+
+Строки, которых нет в таблице канваса и которые добавил наряд PLAN-UI (каждая названа в описании
+ключа и в отчёте наряда): `planKitCollapse`, `planMenuLabel`, `planDateTitleNoEvent`, `planDateRemove`,
+`planDeleteBodyNoCollection`, `planTabOffline`, `planTabLoadFailedTitle`, `planTabRetry`, `planDayStub*`,
+`planRouteDayRepeatSubOne`, `planEntryGoalTemplateRent/Interview/Trip`, `planEntryGoalDictate*`,
+`planEntryTapeLanguageValue`, `planEntryTapeDaysValueDated`, `planEntryOffline`.
+
+| Ключ | Подпись | Где стоит |
 |---|---|---|
-| если не понял или не расслышал | `planRescueHint` | подпись под «На всякий случай» |
-| не начат | `planStateNotStarted` | вкладка «План», экран дня, шапка присеста, главная |
-| идёт | `planStateInProgress` | там же; рядом — минуты (`planStateMinutes`) |
-| слова и фразы пройдены | `planStateMaterialDone` | там же (day_state = material_done); рядом — `planStateConversationAbout` |
-| пройден | `planStateDone` | там же |
-| слова и фразы около N минут · разговор около N минут | `planStateMaterialAbout` · `planStateConversationAbout` | экран дня под названием сцены (оба присеста); вкладка «План» при «материал пройден» |
-| К разговору | `planSittingToConversation` | вкладка «План», экран дня (material_done), итог материала между присестами |
-| Начать день | `planRowStartDay` | вкладка «План», экран дня (day_state = not_started) |
-| Продолжить | `planSittingContinue` | вкладка «План», экран дня (in_progress), экран перед прогоном |
-| Пройти ещё раз | `planDayRepeat` | вкладка «План», экран дня (done) |
-| Пропустить | `sessionSkip` | карточка в посадке |
-| около N минут | `planStateMinutes` | единственная цифра на экранах плана |
-
-## Все ключи `plan*` (и дев-ключи наряда)
-
-Колонка «где стоит» — по вхождениям `l.<ключ>` в `mobile/lib/`; «не используется» значит, что ключ
-жив только в ARB (уведомления по коду, запас) — кандидат на удаление своим нарядом.
-
-| Ключ | Русская подпись | Где стоит |
-|---|---|---|
-| `planSittingContinue` | Продолжить | общие подписи плана; посадка (шапка, швы, присест) |
-| `planStepEdit` | Изм. | вход в план (V4) |
-| `planLevelZero` | С нуля | вход в план (V4) |
-| `planLevelBasic` | Понимаю простое | вход в план (V4) |
-| `planLevelConversational` | Объясняюсь | вход в план (V4) |
-| `planLevelFluent` | Свободно | вход в план (V4) |
-| `planWhenSheetTitle` | Когда это случится? | вход в план (V4); превью плана |
-| `planBuilderBusyLine` | Разбираю цель — обычно 15–30 секунд | превью плана |
-| `planErrorOffline` | Нет соединения. План собирается на сервере — попробуй, когда появится сеть. | экран дня; «Как прошло?»; превью плана; финал плана; быстрая репетиция; вкладка «План» (D·07); вкладка «План» (пусто/архив) |
-| `planErrorBuildFailed` | Не получилось собрать план. Попробуй ещё раз. | «Как прошло?»; превью плана |
-| `planErrorStartFailed` | Не получилось начать план. Попробуй ещё раз. | превью плана |
-| `planErrorLoadFailed` | Не удалось загрузить план. | экран дня; быстрая репетиция; вкладка «План» (D·07); вкладка «План» (пусто/архив) |
-| `planDayNumber` | День {index} | превью плана |
-| `planDaysCount` | {count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дня}} | вкладка «План» (D·07); вкладка «План» (пусто/архив) |
-| `planPreviewDropDay` | Убрать день | превью плана |
-| `planPricePlaceholder` | [цена / условия — placeholder] | превью плана |
-| `planDropDaySheet` | Какой день убрать? | превью плана |
-| `planDropLastDay` | Последний день подготовки убрать нельзя. | превью плана |
-| `planTightTitle` | {days, plural, one{За {days} день по {minutes} минут закроем половину: вот эти умения.} few{За {days} дня по {minutes} минут закроем половину: вот эти умения.} many{За {days} дней по {minutes} минут закроем половину: вот эти умения.} other{За {days} дня по {minutes} минут закроем половину: вот эти умения.}} | превью плана |
-| `planTightAddMinutes` | Добавить {minutes} минут в день | превью плана |
-| `planTightKeep` | Оставить | превью плана |
-| `planBuildingTitle` | Собираю день {index} | сборка дня |
-| `planBuildingBody` | Подбираю реплики события и слова, которые в них подставляются. | сборка дня |
-| `planBuildingStep1` | Цель разобрана | сборка дня |
-| `planBuildingStep2` | Реплики подобраны | сборка дня |
-| `planBuildingStep3` | Слова и примеры | сборка дня |
-| `planBuildingFailed` | День собирается дольше обычного. План уже создан — его можно открыть и вернуться к дню позже. | сборка дня |
-| `planBuildingOpenAnyway` | Открыть план | сборка дня |
-| `planDayOfTotal` | День {index} из {total} | — (не используется в lib/) |
-| `planCanAlready` | Ты уже можешь · {hit} из {total} | — (не используется в lib/) |
-| `planDaysHeader` | Дни · {index} из {total} | — (не используется в lib/) |
-| `planDayOfPlan` | День {index} из {total} | экран дня |
-| `planAbandonTitle` | Отказаться от этого плана? | вкладка «План» (пусто/архив) |
-| `planAbandonBody` | План уйдёт в архив, а его слова — в общее повторение. Собранные дни останутся обычными коллекциями. | вкладка «План» (пусто/архив) |
-| `planAbandonConfirm` | Отказаться | вкладка «План» (пусто/архив) |
-| `planBuildingRefused` | Сервер отказался собирать этот день. Ждать дальше нечего — открой план: на экране дня написано, что именно случилось. | сборка дня |
-| `planRowStartDay` | Начать день | общие подписи плана |
-| `planMaturityMeeting` | Знакомишься со словами и фразами | общие подписи плана |
-| `planMaturityApplying` | Применяешь в разговоре | общие подписи плана |
-| `planMaturitySpeaking` | Говоришь сам | общие подписи плана |
-| `planEmptyTitle` | Подготовиться к чему-то конкретному | вкладка «План» (пусто/архив) |
-| `planEmptyBody` | Коллекции — про темы, которые хочется знать. План — про день, когда придётся говорить: приём, собеседование, подпись договора. | вкладка «План» (пусто/архив) |
-| `planEmptyStep1` | Говоришь цель и дату | вкладка «План» (пусто/архив) |
-| `planEmptyStep2` | Каждый день — фразы, которые реально скажешь, и слова из них | вкладка «План» (пусто/архив) |
-| `planEmptyStep3` | В конце — разговор в роли и вся ситуация вслух | вкладка «План» (пусто/архив) |
-| `planEmptyCta` | Составить план | вкладка «План» (пусто/архив) |
-| `planFinishedBadge` | Подготовка завершена | финал плана; вкладка «План» (пусто/архив) |
-| `planFinishedSummary` | {days, plural, one{За {days} день подготовки. Событие было {date}.} few{За {days} дня подготовки. Событие было {date}.} many{За {days} дней подготовки. Событие было {date}.} other{За {days} дня подготовки. Событие было {date}.}} | вкладка «План» (пусто/архив) |
-| `planWordsReleasedTitle` | Слова плана остались в архиве | вкладка «План» (пусто/архив) |
-| `planWordsReleasedBody` | Они никуда не делись — прогресс, расписание и вся история на месте. Сами в ежедневные занятия они не придут: чтобы вернуть слово в работу, открой его карточку и нажми «Учить это слово». | вкладка «План» (пусто/архив) |
-| `planArchive` | Архив | вкладка «План» (пусто/архив) |
-| `planFinishedNewPlan` | Составить новый | вкладка «План» (пусто/архив) |
-| `planNotifyChannelName` | План подготовки | lib/features/plan/plan_notification_host.dart |
-| `planNotifyChannelBody` | Напоминания перед событием, к которому идёт подготовка | lib/features/plan/plan_notification_host.dart |
-| `planNotifyBeforeTitle` | {days, plural, one{До события {days} день. День {index} ждёт} few{До события {days} дня. День {index} ждёт} many{До события {days} дней. День {index} ждёт} other{До события {days} дня. День {index} ждёт}} | lib/features/plan/plan_notification_host.dart |
-| `planNotifyBeforeBody` | Готовность {percent}%. Сегодня — {title}. | lib/features/plan/plan_notification_host.dart |
-| `planNotifyMorningTitle` | {count, plural, one{Сегодня событие. {count} фраза за 3 минуты} few{Сегодня событие. {count} фразы за 3 минуты} many{Сегодня событие. {count} фраз за 3 минуты} other{Сегодня событие. {count} фразы за 3 минуты}} | lib/features/plan/plan_notification_host.dart |
-| `planNotifyMorningBody` | Быстрая репетиция перед выходом — только то, что скажешь. | lib/features/plan/plan_notification_host.dart |
-| `planNotifyEveningTitle` | Как прошло? Отметь, что сказал | lib/features/plan/plan_notification_host.dart |
-| `planNotifyEveningBody` | Отметь умения, которые пригодились — план закроется этим. | lib/features/plan/plan_notification_host.dart |
-| `planFinishedAtEvent` | На событии сказал {used} из {total}. | вкладка «План» (пусто/архив) |
-| `planNoDate` | Без даты | вход в план (V4); карточка плана на главной; общие подписи плана |
-| `planEntryKicker` | План подготовки | вход в план (V4) |
-| `planEntryGoalTitle` | К чему готовишься? | вход в план (V4) |
-| `planEntryGoalSubtitleLong` | Расскажи своими словами: где будешь, с кем, что нужно сказать и понять. Подробности — это те самые фразы, которые пригодятся. | вход в план (V4) |
-| `planEntryGoalSubtitle` | Расскажи своими словами: где будешь, с кем, что нужно сказать и понять. | вход в план (V4) |
-| `planEntryGoalPlaceholder` | Например: иду к врачу с ребёнком, надо объяснить симптомы и понять назначение | вход в план (V4) |
-| `planEntryLinesHint` | можно 4–6 строк | вход в план (V4) |
-| `planEntryEnough` | хватит для плана | вход в план (V4) |
-| `planEntryDetailed` | подробно — это хорошо | вход в план (V4) |
-| `planEntryTooShort` | Пары слов мало. Добавь: к какому врачу, с кем идёшь, что нужно понять. | вход в план (V4) |
-| `planEntryExamplesTitle` | Так тоже подходит | вход в план (V4) |
-| `planEntryAdditionsTitle` | Можно добавить | вход в план (V4) |
-| `planEntryFinishTitle` | Дописать за тебя | вход в план (V4) |
-| `planEntryExample1` | Иду к врачу, болит спина, надо объяснить и понять назначение | вход в план (V4) |
-| `planEntryExample2` | Онлайн-собеседование PHP-разработчика, удалённо, английская команда | вход в план (V4) |
-| `planEntryExample3` | Летим в отпуск с ребёнком, аэропорт, отель, аптека | вход в план (V4) |
-| `planEntryNext` | Дальше | вход в план (V4) |
-| `planEntryDictate` | Продиктовать | вход в план (V4) |
-| `planEntryLangTitle` | Какой язык учишь? | вход в план (V4) |
-| `planEntryTranslationsInto` | Переводы на {language} | вход в план (V4) |
-| `planEntrySettingsLink` | изменить в настройках | вход в план (V4) |
-| `planEntryLevelTitle` | Как сейчас говоришь? | вход в план (V4) |
-| `planLevelZeroHint` | Знаю отдельные слова, фразу не соберу | вход в план (V4) |
-| `planLevelBasicHint` | Читаю переписку, но говорю с паузами | вход в план (V4) |
-| `planLevelConversationalHint` | Договорюсь о бытовом, сложное — подбираю слова | вход в план (V4) |
-| `planLevelFluentHint` | Говорю без подготовки, шлифую точность | вход в план (V4) |
-| `planListenKicker` | Необязательный шаг | вход в план (V4) |
-| `planListenOfferTitle` | Хочешь, настрою точнее? | вход в план (V4) |
-| `planListenOfferBody` | Послушай три реплики из твоей ситуации — как они прозвучат на самом деле. Минута. | вход в план (V4) |
-| `planListenListen` | Послушать | вход в план (V4) |
-| `planListenSkip` | Пропустить | вход в план (V4) |
-| `planListenReassure` | Это не тест. Ответы никто не увидит, план соберётся и без этого шага. | вход в план (V4) |
-| `planListenEnough` | Хватит | вход в план (V4) |
-| `planListenLine` | Реплика {index} | вход в план (V4) |
-| `planListenLineAt` | Реплика {index} · {place} | вход в план (V4) |
-| `planListenReplayHint` | Слушай столько раз, сколько нужно. | вход в план (V4) |
-| `planListenShowText` | Показать текст | вход в план (V4) |
-| `planListenFeelLabel` | Как ощущается | вход в план (V4) |
-| `planListenGot` | Понял | вход в план (V4) |
-| `planListenNotQuite` | Не совсем | вход в план (V4) |
-| `planListenNoRightAnswer` | Правильного ответа нет — это про то, что подобрать в план. | вход в план (V4) |
-| `planListenResultUnderstanding` | Понял: сделаю упор на понимание на слух | вход в план (V4) |
-| `planListenResultUnderstandingBody` | Речь идёт быстрее, чем удобно. В плане будет больше прослушивания и меньше зубрёжки слов. | вход в план (V4) |
-| `planListenResultSpeaking` | Понимаешь на слух уверенно: сделаю упор на говорение | вход в план (V4) |
-| `planListenResultSpeakingBody` | Реплики тебе даются — в плане будет больше твоих ответов вслух и меньше зубрёжки слов. | вход в план (V4) |
-| `planListenResultFootnote` | Настройку можно поменять в плане в любой день. | вход в план (V4) |
-| `planEntryRibbonListenUnderstanding` | Слух · упор на понимание | вход в план (V4) |
-| `planEntryRibbonListenSpeaking` | Слух · упор на говорение | вход в план (V4) |
-| `planEntryRibbonListenSkipped` | Слух · шаг пропущен | вход в план (V4) |
-| `planEntryPass` | Пройти | вход в план (V4) |
-| `planEntryRibbonLangLevel` | {language} · {level} | вход в план (V4) |
-| `planEntryWhenTitle` | Когда это случится? | вход в план (V4) |
-| `planEntryPickDate` | Выбрать дату | вход в план (V4) |
-| `planEntryHintDays` | {days, plural, one{Через {days} день · сервер разложит подготовку по этим дням} few{Через {days} дня · сервер разложит подготовку по этим дням} many{Через {days} дней · сервер разложит подготовку по этим дням} other{Через {days} дня · сервер разложит подготовку по этим дням}} | вход в план (V4) |
-| `planEntryHintToday` | Сегодня · вся подготовка уместится в один подход | вход в план (V4) |
-| `planEntryHintNoDate` | Даты нет · идём в своём темпе, по одной сцене за подход | вход в план (V4); вкладка «План» (D·07) |
-| `planEntryMinutesTitle` | Сколько минут в день? | вход в план (V4) |
-| `planEntryMinutesUnit` | минут | вход в план (V4) |
-| `planEntryBuild` | Собрать план | вход в план (V4) |
-| `planBuildKicker` | Собираю твой план | вход в план (V4) |
-| `planBuildStep1` | Разбираю цель | вход в план (V4) |
-| `planBuildStep2` | Подбираю реплики | вход в план (V4) |
-| `planBuildStep3` | Собираю слова | вход в план (V4) |
-| `planBuildFootnote` | Реплики берём из живой речи, не из учебника. Это занимает несколько секунд. | вход в план (V4) |
-| `planBuildRetryKicker` | Сборка идёт | вход в план (V4) |
-| `planBuildRetryBody` | Не получилось собрать с первого раза — пробую ещё. | вход в план (V4) |
-| `planBuildRetryFootnote` | Ответы на месте. Вторая попытка идёт с того же шага. | вход в план (V4) |
-| `planBuildOfflineKicker` | Сборка приостановлена | вход в план (V4) |
-| `planBuildOfflineTitle` | Пропала связь на середине | вход в план (V4) |
-| `planBuildOfflineBody` | Ответы сохранены — ничего вводить заново не придётся. Продолжим, как только сеть вернётся. | вход в план (V4) |
-| `planBuildRetryButton` | Попробовать снова | вход в план (V4) |
-| `planBuildNotifyButton` | Сообщить, когда будет готов | вход в план (V4) |
-| `planBuildNotifyUnavailable` | Уведомления ещё не подключены | вход в план (V4) |
-| `planBuildFailedKicker` | Не собралось | вход в план (V4) |
-| `planBuildFailedTitle` | Не собралось. Твои ответы сохранены | вход в план (V4) |
-| `planBuildFailedBody` | Ничего вводить заново не придётся. Можно вернуться к ответам и запустить сборку снова — или написать нам. | вход в план (V4) |
-| `planBuildBackToAnswers` | Вернуться к ответам | вход в план (V4) |
-| `planBuildWriteUs` | Написать нам | вход в план (V4) |
-| `planBuildMailSubject` | Не собрался план | вход в план (V4) |
-| `planPreviewKicker` | Твой план готов | превью плана |
-| `planPreviewSubtitle` | По твоим словам — {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}: {topics}. | превью плана |
-| `planPreviewSubtitleNoDate` | По твоим словам — {scenes, plural, one{{scenes} сцена} few{{scenes} сцены} many{{scenes} сцен} other{{scenes} сцены}}: {topics}. Даты нет, идём в своём темпе. | превью плана |
-| `planPreviewOrientation` | {days, plural, one{{days} ДЕНЬ ПОДГОТОВКИ} few{{days} ДНЯ ПОДГОТОВКИ} many{{days} ДНЕЙ ПОДГОТОВКИ} other{{days} ДНЯ ПОДГОТОВКИ}} · {minutes} МИНУТ В ДЕНЬ | превью плана |
-| `planPreviewOrientationNoDate` | {scenes, plural, one{{scenes} СЦЕНА} few{{scenes} СЦЕНЫ} many{{scenes} СЦЕН} other{{scenes} СЦЕНЫ}} · {minutes} МИНУТ В ДЕНЬ · ПО ОДНОЙ ЗА ПОДХОД | превью плана |
-| `planPreviewDaysTitle` | Твои дни | превью плана |
-| `planPreviewScenesTitle` | Твои сцены | превью плана |
-| `planPreviewDayLabel` | ДЕНЬ {index} | превью плана |
-| `planPreviewSceneLabel` | СЦЕНА {index} | превью плана |
-| `planPreviewRescueBody` | Пять фраз на всякий случай — с первого дня, если не понял или не расслышал. | превью плана |
-| `planPreviewRescueQuote` | «Помедленнее, пожалуйста» — и ещё четыре таких, с первого дня. | превью плана |
-| `planPreviewRehearsalEveLabel` | НАКАНУНЕ | превью плана |
-| `planPreviewRehearsalEndLabel` | В КОНЦЕ | превью плана |
-| `planPreviewRehearsalTitle` | Скажи сам перед событием | превью плана |
-| `planPreviewRehearsalEveBody` | {scenes, plural, one{Одна сцена} few{Все {scenes} сцены} many{Все {scenes} сцен} other{Все {scenes} сцены}} подряд, вслух, за один присест. | превью плана |
-| `planPreviewRehearsalEndBody` | Откроется, когда пройдёшь все сцены. Дату можно поставить в любой день. | превью плана |
-| `planPreviewStartDay` | Начать первый день | превью плана |
-| `planPreviewStartScene` | Начать первую сцену | превью плана |
-| `planPreviewEditAnswers` | Изменить ответы | превью плана |
-| `planPreviewSetDate` | Поставить дату | превью плана |
-| `planStateNotStarted` | не начат | общие подписи плана |
-| `planStateInProgress` | идёт | общие подписи плана |
-| `planStateDone` | пройден | вкладка «План» (D·07); общие подписи плана |
-| `planStateMaterialDone` | слова и фразы пройдены | общие подписи плана |
-| `planStateMaterialAbout` | {minutes, plural, one{слова и фразы около {minutes} минуты} few{слова и фразы около {minutes} минут} many{слова и фразы около {minutes} минут} other{слова и фразы около {minutes} минуты}} | общие подписи плана (экран дня) |
-| `planStateConversationAbout` | {minutes, plural, one{разговор около {minutes} минуты} few{разговор около {minutes} минут} many{разговор около {minutes} минут} other{разговор около {minutes} минуты}} | общие подписи плана (вкладка «План», экран дня) |
-| `planSittingToConversation` | К разговору | общие подписи плана; посадка (итог материала) |
-| `planStateMinutes` | {minutes, plural, one{около {minutes} минуты} few{около {minutes} минут} many{около {minutes} минут} other{около {minutes} минуты}} | общие подписи плана |
-| `planDayRepeat` | Пройти ещё раз | общие подписи плана |
-| `planHomeDayState` | День {index} · {state} | карточка плана на главной |
-| `devQaClockTitle` | QA · «сегодня» плана | профиль → Разработка |
-| `devQaClockShift` | {days, plural, =0{без сдвига} one{сдвиг: {days} день} few{сдвиг: {days} дня} other{сдвиг: {days} дней}} | профиль → Разработка |
-| `devQaClockPlus` | +1 день | профиль → Разработка |
-| `devQaClockReset` | Сбросить | профиль → Разработка |
-
-## Этапы дня и замок — наряд DAY-GATE-1, Ч.2
-
-День состоит из ЭТАПОВ, и все они приходят кодами с сервера (`PlanDay.stages`); подписи ниже
-клиентские, как у всех кодов плана. Замок дня — поле `locked_by_day_index`, и выводить его
-самостоятельно нельзя. Чисел «N из M» в этих строках нет намеренно.
-
-| Ключ | Русская подпись | Где стоит |
-|---|---|---|
-| `planRescueHint` | если не понял или не расслышал | экран дня (секция «На всякий случай»), панель в диалоге |
+| `planTitle` | План | Шапка таба «План» (plan.title). |
+| `planEmptyTitle` | К чему готовишься? | Кадр 21-1, Literata 30 (plan.empty.title). |
+| `planEmptyBody` | План — подготовка к конкретной ситуации: врач, аренда, собеседование, поездка. Каждый день — одна сцена из неё, 20 минут. В конце — репетиция вслух. | Кадр 21-1 (plan.empty.body). |
+| `planEmptyCta` | Собрать план | Кадр 21-1, кнопка (plan.empty.cta). |
+| `planEmptyNote` | три вопроса, меньше минуты | Кадр 21-1 (plan.empty.note). |
+| `planFinishedTitle` | Завершённые планы | Кадры 21-1, 21-2b (plan.finished.title). |
+| `planFinishedItemDate` | завершён {date} | Кадры 21-1, 21-2b; дата по локали (plan.finished.item.date). |
+| `planProgressDay` | День {n} из {total} | Шапка таба (plan.progress.day). |
+| `planPlateLabel` | День {n} | Плита дня, лейбл латунью (plan.plate.label). |
+| `planCardsCount` | {n, plural, one{{n} карточка} few{{n} карточки} many{{n} карточек} other{{n} карточки}} | Счётные формы карточек: 1 карточка / 2 карточки / 5 карточек (plan.plate.meta, plan.closed.meta, plan.closed.return). |
+| `planMinutesCount` | {n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}} | Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta). |
+| `planPlateStageWords` | Слова | Плита дня, этап (plan.plate.stage.words). |
+| `planPlateStagePhrases` | Фразы | Плита дня, этап (plan.plate.stage.phrases). |
+| `planPlateStageDialog` | Диалог | Плита дня, этап (plan.plate.stage.dialog). |
+| `planPlateStageListen` | Слушаю и отвечаю | Плита дня, этап (plan.plate.stage.listen). |
+| `planPlateStageSpeak` | Говорю сам | Плита дня, этап (plan.plate.stage.speak). |
+| `planPlateStageCount` | {done} / {total} | Плита дня, счётчик этапа (plan.plate.stage.count). |
+| `planNewWordsCount` | {n, plural, one{{n} новое слово} few{{n} новых слова} many{{n} новых слов} other{{n} новых слова}} | Формы «1 новое слово / 2 новых слова / 5 новых слов» (plan.plate.stage.sub.start). |
+| `planPlateStageSubStart` | начни отсюда · {words} | Плита дня, вторая строка текущего этапа (plan.plate.stage.sub.start); words — planNewWordsCount. |
+| `planPlateStageSubUnfinished` | не закончен · {cards} | Плита дня, вторая строка брошенного этапа (plan.plate.stage.sub.unfinished); cards — planCardsCount. Оценки минут в контракте нет — часть «≈ N мин» не рисуется, как и вся строка plan.plate.meta «{n} карточек · ≈ {min} минут» (вопрос архитектору). |
+| `planPlateCtaStart` | Начать | Плита дня, кнопка (plan.plate.cta.start). |
+| `planPlateCtaContinue` | Продолжить | Плита дня, кнопка (plan.plate.cta.continue). |
+| `planClosedTitle` | День {n} закрыт | Кадр 21-4 (plan.closed.title). |
+| `planClosedMeta` | {title} · {cards} · {minutes} | Кадр 21-4 (plan.closed.meta); title — сервер, cards/minutes — planCardsCount / planMinutesCount. |
+| `planClosedReturn` | {k, plural, one{Вернётся в день {n} · {k} карточка} few{Вернутся в день {n} · {k} карточки} many{Вернутся в день {n} · {k} карточек} other{Вернутся в день {n} · {k} карточки}} | Кадр 21-4, терракота (plan.closed.return): Вернётся 1 карточка / Вернутся 2 карточки / Вернутся 5 карточек. |
+| `planRouteDayRepeat` | День повторения | Строка маршрута, tertiary (plan.route.day.repeat). |
+| `planRouteDayRepeatSub` | слова и фразы дней {a}–{b} | Строка маршрута (plan.route.day.repeat.sub). |
+| `planRouteDayRepeatSubOne` | слова и фразы дня {a} | Строка маршрута, когда повторению предшествует один день ситуации (день 1 → повторение день 2). |
+| `planRouteDayRehearsal` | Репетиция | Строка маршрута, tertiary (plan.route.day.rehearsal). |
+| `planRouteDayRehearsalSub` | весь маршрут вслух | Строка маршрута (plan.route.day.rehearsal.sub). |
+| `planRouteEventTitle` | {event} · {date} | Пункт назначения: «Приём · 15 сентября» (plan.route.event.title, entry.preview.event.dated); event — сервер, дата по локали. |
+| `planKitLabel` | Спасательный набор | Набор, лейбл (plan.kit.label). |
+| `planKitSub` | {n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}} | Набор, подпись (plan.kit.sub): 1 фраза / 2 фразы / 5 фраз. |
+| `planKitAll` | все {n} → | Набор, ссылка (plan.kit.all). |
+| `planKitCollapse` | свернуть | Набор, раскрытый на все пять фраз: обратная ссылка на место «все {n} →». Строки в таблице нет — добавлена нарядом PLAN-UI, чтобы у раскрытия был выход. |
+| `planDoneTitle` | План пройден | Кадр 21-7 (plan.done.title). |
+| `planDaysCount` | {n, plural, one{{n} день} few{{n} дня} many{{n} дней} other{{n} дня}} | Счётные формы дней: 1 день / 2 дня / 5 дней (plan.done.meta, plan.overdue.meta, entry.preview.sub). |
+| `planDoneMeta` | {days} | Кадр 21-7 (plan.done.meta): «7 дней». Части «фраз и слов в работе» в контракте нет — не рисуются (вопрос архитектору). |
+| `planDoneCollection` | Слова и фразы плана остались в коллекции «{name}» — они будут приходить на повторение | Кадр 21-7 (plan.done.collection); name — сервер. |
+| `planDoneCta` | Собрать новый план | Кадр 21-7 (plan.done.cta). |
+| `planDoneCtaReadonly` | Открыть коллекцию | Кадр 21-7, режим чтения (plan.done.cta.readonly). |
+| `planMenuDate` | Изменить дату | Кадр 21-9 (plan.menu.date). |
+| `planMenuNew` | Собрать новый план | Кадр 21-9 (plan.menu.new). |
+| `planMenuCollection` | Открыть коллекцию | Кадр 21-9 (plan.menu.collection). |
+| `planMenuDelete` | Удалить план | Кадр 21-9, терракота (plan.menu.delete). |
+| `planMenuLabel` | Меню плана | Подпись кнопки-меню в шапке таба для читалки экрана; кадра нет. |
+| `planDateTitle` | Когда {event}? | Кадр 21-10 (plan.date.title). По таблице строку склоняет сервер; в контракте её нет — собрана из event_native (вопрос архитектору). |
+| `planDateTitleNoEvent` | Когда событие? | Кадр 21-10 у плана без даты и без названного события. |
+| `planDateOptionCurrent` | {date} · как сейчас | Кадр 21-10 (plan.date.option.current); дата по локали. |
+| `planDateOptionOther` | Другая дата | Кадры 21-10, 22-3b (plan.date.option.other, entry.date.option.other). |
+| `planDateOptionOtherSub` | выбрать в календаре | Кадры 21-10, 22-3b (plan.date.option.other.sub, entry.date.option.other.sub). |
+| `planDateCta` | Применить | Кадр 21-10 (plan.date.cta). |
+| `planDateCancel` | Отменить | Кадры 21-10, 21-12 (plan.date.cancel). |
+| `planDateRemove` | Без даты | Кадр 21-10, план с датой: снять дату (event_date: null). Строки в таблице нет — добавлена нарядом PLAN-UI по контракту PATCH /schedule. |
+| `planNewTitle` | Начать другой план? | Кадр 21-11 (plan.new.title). |
+| `planNewBody` | Этот план завершится на дне {n} из {total}. Всё, что уже в работе, останется в коллекции «{name}» и будет приходить на повторение | Кадр 21-11 (plan.new.body); name — сервер. |
+| `planNewCta` | Собрать новый | Кадр 21-11 (plan.new.cta). |
+| `planNewKeep` | Оставить этот | Кадр 21-11 (plan.new.keep). |
+| `planDeleteTitle` | Удалить план? | Кадр 21-12 (plan.delete.title). |
+| `planDeleteBody` | План исчезнет из истории. Коллекция «{name}» и её слова останутся | Кадр 21-12 (plan.delete.body); name — сервер. |
+| `planDeleteBodyNoCollection` | План исчезнет из истории | Кадр 21-12 у плана, у которого коллекции ещё нет (ни один день не закрыт). |
+| `planDeleteConfirm` | Удалить | Кадр 21-12, терракота (plan.delete.confirm). |
+| `planOverdueMeta` | Пройдено {days} из {total} | Кадр 21-14 (plan.overdue.meta): «Пройдено 4 дня из 7»; days — planDaysCount. Части «фраз и слов в работе» в контракте нет. |
+| `planOverdueFinish` | Завершить план | Кадр 21-14 (plan.overdue.finish). |
+| `planOverdueReschedule` | Перенести дату | Кадр 21-14 (plan.overdue.reschedule). |
+| `planHintFirstStart` | Начни с этапа «Слова». Остальные откроются по порядку | Кадр 21-2c (plan.hint.first.start). |
+| `planHintFirstRoute` | Сегодняшний день открыт, следующий откроется завтра | Кадр 21-2c (plan.hint.first.route). |
+| `planHintFirstKit` | Пять фраз на случай, если не понял или не успел. Пригодятся в любом разговоре | Кадр 21-2c, под набором (plan.hint.first.kit). |
+| `planHintFirstReturn` | Эти карточки придут в следующий день ещё раз — так они и запоминаются | Кадр 21-4c (plan.hint.first.return). |
+| `planSheetTitle` | Как устроен план | Кадр 21-8 (plan.sheet.title). |
+| `planSheetRowDays` | Каждый день — одна ситуация. Дни открываются по одному | Кадр 21-8 (plan.sheet.row.days). |
+| `planSheetRowStages` | Пять этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам. Следующий открывается, когда закрыт этот | Кадр 21-8 (plan.sheet.row.stages). |
+| `planSheetRowReturn` | То, что не получилось, вернётся в следующий день. Ничего не потеряется | Кадр 21-8 (plan.sheet.row.return). |
+| `planSheetCta` | Понятно | Кадр 21-8 (plan.sheet.cta). |
+| `planTabOffline` | нет сети | Тихая строка на табе, когда показано последнее известное состояние из кэша (наряд PLAN-UI, §6). |
+| `planTabLoadFailedTitle` | Не получилось загрузить план | Таб без кэша, когда сервер не ответил (§6: состояние с «Повторить»). Строки в таблице нет — добавлена нарядом PLAN-UI. |
+| `planTabRetry` | Повторить | Кнопка «Повторить» на табе и на плите (entry.day.failed.retry). |
+| `planEntryNavTitle` | Новый план | Шапка входа (entry.nav.title). |
+| `planEntryNavCancel` | Отмена | Шапка входа, tertiary (entry.nav.cancel). |
+| `planEntryNext` | Далее | Шапка входа, справа, 17/700 (entry.next). |
+| `planEntryGoalTitle` | К чему готовишься? | Кадр 22-1, Literata 30 (entry.goal.title). |
+| `planEntryGoalHint` | ситуация · с кем говоришь · что важно | Кадр 22-1, над полем (entry.goal.hint). |
+| `planEntryGoalPlaceholder` | Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике, боюсь не понять назначения | Кадр 22-1a, плейсхолдер-пример (entry.goal.placeholder). |
+| `planEntryGoalChipDoctor` | Врач | Кадр 22-1, чип (entry.goal.chip.doctor). |
+| `planEntryGoalChipRent` | Аренда | Кадр 22-1, чип (entry.goal.chip.rent). |
+| `planEntryGoalChipInterview` | Собеседование | Кадр 22-1, чип (entry.goal.chip.interview). |
+| `planEntryGoalChipTrip` | Поездка | Кадр 22-1, чип (entry.goal.chip.trip). |
+| `planEntryGoalChipOther` | Другое | Кадр 22-1, чип (entry.goal.chip.other). |
+| `planEntryGoalTemplateDoctor` | Иду к врачу. Проблема: … . Важно: понять назначения и спросить про … | Кадр 22-1b, заготовка по чипу «Врач» (entry.goal.template.doctor). |
+| `planEntryGoalTemplateRent` | Снимаю квартиру. Смотрю жильё с … . Важно: спросить про … и понять условия | Заготовка по чипу «Аренда». В таблице текстов есть только заготовка «Врач» — эта добавлена нарядом PLAN-UI по её образцу (вопрос архитектору). |
+| `planEntryGoalTemplateInterview` | Иду на собеседование на … . Важно: рассказать о себе и спросить про … | Заготовка по чипу «Собеседование» — добавлена нарядом PLAN-UI по образцу «Врач». |
+| `planEntryGoalTemplateTrip` | Еду в … с … . Важно: … и понять, куда идти | Заготовка по чипу «Поездка» — добавлена нарядом PLAN-UI по образцу «Врач». |
+| `planEntryGoalShort` | Добавь, с кем и что важно — план будет точнее | Кадр 22-1c, строка под коротким ответом (entry.goal.short). |
+| `planEntryGoalDictate` | Надиктовать | Микрофон в поле цели (22-1a): подпись для читалки экрана и кнопки остановки. |
+| `planEntryGoalDictateStop` | Стоп | Микрофон в поле цели: остановить запись. |
+| `planEntryTapeGoal` | Цель | Лента ответов (entry.tape.goal). |
+| `planEntryTapeLanguage` | Язык | Лента ответов (entry.tape.language). |
+| `planEntryTapeDays` | Дни | Лента ответов (entry.tape.days). |
+| `planEntryTapeEdit` | Изм. | Лента ответов, tertiary (entry.tape.edit). |
+| `planEntryTapeLanguageValue` | {language} · {level} | Лента ответов: «Английский · Средний». |
+| `planEntryTapeDaysValue` | {n} · {event} {date} | Лента ответов, 22-4 (entry.tape.days.value): «5 · приём 15 сентября»; event — сервер, дата по локали. |
+| `planEntryTapeDaysValueDated` | {n} · {date} | Лента ответов до ответа сервера: событие ещё не названо, дата уже выбрана. |
+| `planEntryLanguageTitle` | Какой язык? | Кадр 22-2, Literata 30 (entry.language.title). |
+| `planEntryLevelLabel` | Уровень | Кадр 22-2 (entry.level.label). |
+| `planEntryLevelBeginner` | Начинающий | Кадр 22-2 (entry.level.beginner). |
+| `planEntryLevelBeginnerSub` | понимаю отдельные слова и простые фразы | Кадр 22-2 (entry.level.beginner.sub). |
+| `planEntryLevelIntermediate` | Средний | Кадр 22-2 (entry.level.intermediate). |
+| `planEntryLevelIntermediateSub` | объясняюсь, но не хватает слов | Кадр 22-2 (entry.level.intermediate.sub). |
+| `planEntryLevelFluentNote` | Для подготовки к ситуации среднего уровня достаточно | Кадр 22-2, при предвыбранном «Средний» (entry.level.fluent.note). |
+| `planEntryDaysTitle` | Сколько дней на подготовку? | Кадр 22-3, Literata 30 (entry.days.title). |
+| `planEntryDateToggle` | Знаю дату события | Кадр 22-3 (entry.date.toggle). |
+| `planEntryDateNote` | Дата встанет в конец маршрута, напомним накануне | Кадр 22-3 (entry.date.note). |
+| `planEntryDateShorten` | {left, plural, one{До события {left} день — план сократится до {to}} few{До события {left} дня — план сократится до {to}} many{До события {left} дней — план сократится до {to}} other{До события {left} дня — план сократится до {to}}} | Кадр 22-3b, латунь (entry.date.shorten): 1 день / 2 дня / 5 дней. |
+| `planEntryPreviewTitle` | Маршрут | Кадр 22-4, Literata 30 (entry.preview.title). |
+| `planEntryPreviewSub` | {days} · {language} · {level} | Кадр 22-4 (entry.preview.sub); days — planDaysCount. |
+| `planEntryPreviewLoadingTitle` | Собираем маршрут | Кадр 22-4a, Literata 30 (entry.preview.loading.title). |
+| `planEntryPreviewLoadingSub` | около 10 секунд | Кадр 22-4a (entry.preview.loading.sub). |
+| `planEntryPreviewRemove` | Убрать | Кадр 22-4b, свайп (entry.preview.remove). |
+| `planEntryPreviewHint` | Не то? Убери день свайпом или измени цель | Кадр 22-4b, в доке над «Начать» (entry.preview.hint). |
+| `planEntryPreviewCta` | Начать | Кадр 22-4 (entry.preview.cta). |
+| `planEntryPreviewErrorTitle` | Не получилось собрать маршрут | Кадр 22-4c (entry.preview.error.title). |
+| `planEntryPreviewErrorSub` | Сервис не ответил. Цель и ответы сохранены — ничего вводить заново не нужно | Кадр 22-4c (entry.preview.error.sub). |
+| `planEntryPreviewErrorRetry` | Ещё раз | Кадр 22-4c (entry.preview.error.retry). |
+| `planEntryPreviewErrorEdit` | Изменить цель | Кадр 22-4c (entry.preview.error.edit). |
+| `planEntryPreviewUnclearTitle` | Не понял, к чему готовишься | Кадр 22-4d (entry.preview.unclear.title). |
+| `planEntryPreviewUnclearSub` | Опиши ситуацию словами: где, с кем, зачем | Кадр 22-4d (entry.preview.unclear.sub). |
+| `planEntryPreviewUnclearCta` | К цели | Кадр 22-4d (entry.preview.unclear.cta). |
+| `planEntryDayBuilding` | Собираем день {n} · около минуты | Кадр 22-5a (entry.day.building). |
+| `planEntryDayFailedTitle` | День не собрался | Кадр 22-5c (entry.day.failed.title). |
+| `planEntryDayFailedSub` | Маршрут на месте. Попробуем ещё раз — это займёт около минуты | Кадр 22-5c (entry.day.failed.sub). |
+| `planEntryPushTitle` | План готов | Кадр 22-6 (entry.push.title). |
+| `planEntryPushBody` | День 1 · {dayTitle} — можно начинать | Кадр 22-6 (entry.push.body); dayTitle — сервер. |
+| `planEntryOffline` | Без сети план не собрать | Вход офлайн (§6): нельзя начать сборку. Строки в таблице нет — добавлена нарядом PLAN-UI. |
 
 ## День плана — наряд DAY-UI (11.09.2026)
 
 Строки дня живут под префиксом `day*` (таблица `day.*` в канве «План», раздел «План · день»);
-гард словаря их не проверяет — источник правды по-прежнему `mobile/lib/l10n/app_ru.arb`. Задания
-карточек («Что он спросил», вопросы, переводы реплик) приходят с сервера и в ARB не дублируются.
-Экраны прежних серий (день v1, диалог v1, прогон, «Как прошло?») удалены вместе с их ключами —
-270 ключей `plan*`; список — `backend2/docs/research/day-ui/README.md`, §1.
+гард словаря проверяет только `plan*` — источник правды по-прежнему `mobile/lib/l10n/app_ru.arb`.
+Задания карточек («Что он спросил», вопросы, переводы реплик) приходят с сервера и в ARB не
+дублируются. Кадры дня и их снимки — `backend2/docs/design/design-map.md` и
+`mobile/test/goldens/`; отчёт — `backend2/docs/research/day-ui/README.md`.
+
+Ключи прежних серий (день v1, диалог v1, прогон, «Как прошло?», присесты, лестница A/B/C) сняты
+вместе со своими экранами — 270 ключей нарядом DAY-UI и остальные нарядом PLAN-UI; воскрешать их
+не надо, у них нет экрана.

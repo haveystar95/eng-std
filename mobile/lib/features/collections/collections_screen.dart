@@ -14,6 +14,7 @@ import '../../data/pending_content_refresher.dart';
 import '../../data/providers.dart';
 import '../../data/store_providers.dart';
 import '../home/home_cta.dart';
+import '../profile/profile_avatar.dart';
 import '../search/search_button.dart';
 import 'collection_cover.dart';
 import 'collection_cta.dart';
@@ -341,6 +342,9 @@ class _Header extends ConsumerWidget {
             ),
           ),
         ),
+        // ПРОФИЛЬ — кружок-аватар в шапке (4к-1): таба у профиля нет.
+        const SizedBox(width: 6),
+        const ProfileAvatarButton(),
       ],
     );
   }

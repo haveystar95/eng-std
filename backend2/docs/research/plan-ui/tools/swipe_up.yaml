@@ -1,0 +1,6 @@
+appId: com.denis.engstd
+---
+- swipe:
+    start: "50%,80%"
+    end: "50%,20%"
+    duration: 600

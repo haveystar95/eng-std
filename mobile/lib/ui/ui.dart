@@ -12,6 +12,7 @@ export 'buttons.dart';
 export 'center_alert.dart';
 export 'chip.dart';
 export 'cloze_sentence.dart';
+export 'choice_card.dart';
 export 'day_plate.dart';
 export 'dotted_border_box.dart';
 export 'floating_context_menu.dart';

@@ -8,12 +8,13 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
-import '../../../data/api_client.dart' show isOffline;
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/plan/day_rules.dart';
-import '../../../data/plan/plan_contract.dart';
-import '../../../data/plan/plan_providers.dart';
-import '../plan_ui.dart' show PlanNotice;
+import '../../../data/plan/plan_models.dart';
+import '../../../data/plan/day_contract.dart';
+import '../../../data/plan/day_providers.dart';
+import '../plan_providers.dart';
+import '../plan_tab_parts.dart' show PlanLoadFailedCard;
 import 'day_card_frame.dart';
 import 'day_session_screen.dart';
 import 'day_texts.dart';
@@ -42,7 +43,7 @@ class _DayRoomScreenState extends ConsumerState<DayRoomScreen> {
 
   DayAddress get _address => (planId: widget.plan.id, number: widget.number);
 
-  Future<void> _openSession(DayRoom room) async {
+  Future<void> _openSession(PlanDayRoom room) async {
     AppHaptics.light();
     final exit = await Navigator.of(context).push<DaySessionExit>(
       MaterialPageRoute(builder: (_) => DaySessionScreen(plan: widget.plan, room: room)),
@@ -52,13 +53,12 @@ class _DayRoomScreenState extends ConsumerState<DayRoomScreen> {
     ref.invalidate(dayRoomProvider(_address));
     ref.invalidate(dayCardsProvider(_address));
     ref.invalidate(daySheetProvider(_address));
-    ref.invalidate(currentPlanProvider);
+    unawaited(ref.read(planTabProvider.notifier).refresh());
     if (_justClosed) AppFeedback.dayClosed();
   }
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
     final room = ref.watch(dayRoomProvider(_address));
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -68,11 +68,7 @@ class _DayRoomScreenState extends ConsumerState<DayRoomScreen> {
         body: room.when(
           loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
           error: (e, _) => SafeArea(
-            child: PlanNotice(
-              text: isOffline(e) ? l.planErrorOffline : l.planErrorLoadFailed,
-              actionLabel: l.generationRetry,
-              onAction: () => ref.invalidate(dayRoomProvider(_address)),
-            ),
+            child: PlanLoadFailedCard(onRetry: () => ref.invalidate(dayRoomProvider(_address))),
           ),
           data: (r) => _Room(
             plan: widget.plan,
@@ -91,7 +87,7 @@ class _Room extends ConsumerWidget {
   const _Room({required this.plan, required this.room, required this.animateClose, required this.onOpen, required this.onBack});
 
   final Plan plan;
-  final DayRoom room;
+  final PlanDayRoom room;
   final bool animateClose;
   final VoidCallback onOpen;
   final VoidCallback onBack;
@@ -100,10 +96,10 @@ class _Room extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final address = (planId: plan.id, number: room.day.number);
-    final cards = room.day.status == DayStatus.open ? const <DayCard>[] : (ref.watch(dayCardsProvider(address)).value?.cards ?? const <DayCard>[]);
+    final cards = room.day.status == PlanDayStatus.open ? const <DayCard>[] : (ref.watch(dayCardsProvider(address)).value?.cards ?? const <DayCard>[]);
     final sheet = room.sheetAvailable ? ref.watch(daySheetProvider(address)).value : null;
     final status = room.day.status;
-    final closed = status == DayStatus.closed;
+    final closed = status == PlanDayStatus.closed;
     final title = room.day.titleNative ?? room.scene?.titleNative ?? plan.titleNative ?? '';
     final total = room.cardsTotal;
     final photo = room.scene?.image?.url;
@@ -112,26 +108,26 @@ class _Room extends ConsumerWidget {
     // ДО ОТКРЫТИЯ ДНЯ сервер ещё не раздал карточки: этапы «absent», программа пуста. Пять строк
     // этапов рисуются без счётчиков, программа — из шита (слова и фразы дня известны заранее;
     // обмены раздаются только с карточками). Отклонение от 23-0a названо в отчёте.
-    final known = room.stages.where((p) => p.state != DayStageState.absent).toList();
+    final known = room.stages.where((p) => p.state != PlanStageState.absent).toList();
     final stageRows = known.isNotEmpty
         ? known
         : [
-            for (final s in DayStage.values)
-              DayStageProgress(stage: s, total: 0, done: 0, state: s == DayStage.words ? DayStageState.current : DayStageState.locked),
+            for (final s in PlanStage.known)
+              PlanStageProgress(stage: s, total: 0, done: 0, state: s == PlanStage.words ? PlanStageState.current : PlanStageState.locked),
           ];
     final stages = [for (final p in stageRows) _stageRow(l, p, cards, status, ref: ref, address: address)];
 
     final footer = switch (status) {
-      DayStatus.closed => DayPlateClosed(
+      PlanDayStatus.closed => DayRoomClosed(
         title: l.dayClosedTitle(room.day.number),
         numbers: _numbers(l, room, cards),
         animate: animateClose,
       ),
-      DayStatus.inProgress => DayPlateProgress(numbers: _numbers(l, room, cards), button: l.dayCtaContinue(room.cardsRemaining)),
-      _ => DayPlateStart(button: l.dayCtaStart),
+      PlanDayStatus.inProgress => DayRoomProgress(numbers: _numbers(l, room, cards), button: l.dayCtaContinue(room.cardsRemaining)),
+      _ => DayRoomStart(button: l.dayCtaStart),
     };
 
-    final plate = DayPlate.header(
+    final plate = DayRoomPlate.header(
       label: l.dayLabel(room.day.number),
       title: title,
       meta: total == 0
@@ -147,10 +143,10 @@ class _Room extends ConsumerWidget {
     );
 
     final fromSheet = room.program.isEmpty && sheet != null;
-    final words = fromSheet ? [for (final t in sheet.words) _unitOf(t, DayUnitKind.word)] : room.words.toList();
-    final phrases = fromSheet ? [for (final t in sheet.phrases) _unitOf(t, DayUnitKind.phrase)] : room.phrases.toList();
+    final words = fromSheet ? [for (final t in sheet.words) _unitOf(t, PlanUnitKind.word)] : room.words.toList();
+    final phrases = fromSheet ? [for (final t in sheet.phrases) _unitOf(t, PlanUnitKind.phrase)] : room.phrases.toList();
     final exchanges = room.exchanges.toList();
-    final returnedWords = words.where((u) => u.source == DayCardSource.returned).toList();
+    final returnedWords = words.where((u) => u.source == PlanUnitSource.returned).toList();
     final returnedFrom = returnedWords.isEmpty ? null : _returnedFromDay(cards, returnedWords.first.unitRef);
 
     return ListView(
@@ -187,7 +183,7 @@ class _Room extends ConsumerWidget {
                         unit: u,
                         term: sheet?.byRef(u.unitRef),
                         marker: _unitMarker(u, cards, closed),
-                        fromDay: u.source == DayCardSource.returned ? (_returnedFromDay(cards, u.unitRef) ?? room.day.number - 1) : null,
+                        fromDay: u.source == PlanUnitSource.returned ? (_returnedFromDay(cards, u.unitRef) ?? room.day.number - 1) : null,
                         onTap: () => _showSheet(context, u, sheet, cards, returnDay),
                       ),
                   ],
@@ -215,33 +211,33 @@ class _Room extends ConsumerWidget {
   }
 
   /// Единица программы из термина шита — для дня, который ещё не открыт.
-  DayUnit _unitOf(DayTerm t, DayUnitKind kind) => DayUnit(
+  PlanProgramUnit _unitOf(DayTerm t, PlanUnitKind kind) => PlanProgramUnit(
     unitKind: kind,
     unitRef: t.ref,
     sceneId: t.sceneId,
     textTarget: t.textTarget,
     textNative: t.textNative,
-    source: DayCardSource.today,
+    source: PlanUnitSource.today,
     cardsTotal: 0,
     cardsDone: 0,
-    state: DayUnitState.pending,
+    state: PlanUnitState.pending,
   );
 
   /// Три числа подвала: карточек · минут · с первого раза. В идущем дне процент считает клиент
   /// по карточкам, пока сервер не отдаст свой в закрытии (отклонение, названо в отчёте).
-  List<DayPlateNumber> _numbers(AppLocalizations l, DayRoom room, List<DayCard> cards) {
+  List<DayRoomNumber> _numbers(AppLocalizations l, PlanDayRoom room, List<DayCard> cards) {
     final m = room.metrics;
     final done = m?.cardsDone ?? room.cardsDone;
     final minutes = m?.minutesSpent ?? room.day.minutesSpent;
     final percent = m?.firstTryPercent ?? DayRules.firstTryPercent(cards) ?? 0;
     return [
-      DayPlateNumber(value: done, label: l.dayNumCards(done)),
-      DayPlateNumber(value: minutes, label: l.dayNumMinutes(minutes)),
-      DayPlateNumber(value: percent, label: l.dayNumFirstTry, unit: '%'),
+      DayRoomNumber(value: done, label: l.dayNumCards(done)),
+      DayRoomNumber(value: minutes, label: l.dayNumMinutes(minutes)),
+      DayRoomNumber(value: percent, label: l.dayNumFirstTry, unit: '%'),
     ];
   }
 
-  DayPlateStage _stageRow(AppLocalizations l, DayStageProgress p, List<DayCard> cards, DayStatus status, {required WidgetRef ref, required DayAddress address}) {
+  DayRoomStage _stageRow(AppLocalizations l, PlanStageProgress p, List<DayCard> cards, PlanDayStatus status, {required WidgetRef ref, required DayAddress address}) {
     var passed = 0, hinted = 0, failed = 0;
     for (final c in cards) {
       if (c.stage != p.stage) continue;
@@ -259,18 +255,18 @@ class _Room extends ConsumerWidget {
     }
     // Карточек ещё нет (день не открыт) — полоска по серверному `done` шалфеем.
     if (cards.isEmpty) passed = p.done;
-    final current = p.state == DayStageState.current && status != DayStatus.closed;
+    final current = p.state == PlanStageState.current && status != PlanDayStatus.closed;
     String? sub;
     if (current) {
       if (p.done == 0) {
-        final units = p.stage == DayStage.words && room.words.isEmpty ? (ref.read(daySheetProvider(address)).value?.words.length ?? 0) : _unitsIn(p.stage);
-        final what = p.stage == DayStage.words ? l.dayNewWords(units) : l.dayCards(p.total);
+        final units = p.stage == PlanStage.words && room.words.isEmpty ? (ref.read(daySheetProvider(address)).value?.words.length ?? 0) : _unitsIn(p.stage);
+        final what = p.stage == PlanStage.words ? l.dayNewWords(units) : l.dayCards(p.total);
         sub = l.dayStageSubStart(what);
       } else {
         sub = l.dayStageSubUnfinished(l.dayCards(p.remaining), l.dayApproxMin(DayRules.estimateMinutes(p.remaining)));
       }
     }
-    return DayPlateStage(
+    return DayRoomStage(
       name: DayTexts.stage(l, p.stage),
       done: p.done,
       total: p.total,
@@ -278,19 +274,19 @@ class _Room extends ConsumerWidget {
       hinted: hinted,
       failed: failed,
       current: current,
-      locked: p.state == DayStageState.locked,
+      locked: p.state == PlanStageState.locked,
       sub: sub,
     );
   }
 
-  int _unitsIn(DayStage stage) => switch (stage) {
-    DayStage.words => room.words.length,
-    DayStage.phrases => room.phrases.length,
+  int _unitsIn(PlanStage stage) => switch (stage) {
+    PlanStage.words => room.words.length,
+    PlanStage.phrases => room.phrases.length,
     _ => room.exchanges.length,
   };
 
   /// Маркер единицы: по карточкам (с подсказкой видно только там), иначе по состоянию с сервера.
-  MarkerState _unitMarker(DayUnit u, List<DayCard> cards, bool closed) {
+  MarkerState _unitMarker(PlanProgramUnit u, List<DayCard> cards, bool closed) {
     final own = cards.where((c) => c.unitRef == u.unitRef).toList();
     if (own.isNotEmpty) {
       final results = own.map((c) => c.result).toList();
@@ -301,9 +297,10 @@ class _Room extends ConsumerWidget {
       return MarkerState.empty;
     }
     return switch (u.state) {
-      DayUnitState.pending => MarkerState.empty,
-      DayUnitState.passed => MarkerState.passed,
-      DayUnitState.failed => MarkerState.failed,
+      PlanUnitState.pending => MarkerState.empty,
+      PlanUnitState.passed => MarkerState.passed,
+      PlanUnitState.failed => MarkerState.failed,
+      PlanUnitState.unknown => MarkerState.empty,
     };
   }
 
@@ -319,7 +316,7 @@ class _Room extends ConsumerWidget {
   }
 
   /// Реплика собеседника в обмене — у единицы программы текста нет, он в карточках.
-  String _partnerLineOf(DayUnit u, List<DayCard> cards) {
+  String _partnerLineOf(PlanProgramUnit u, List<DayCard> cards) {
     if (u.textTarget case final t? when t.isNotEmpty) return t;
     for (final c in cards) {
       if (c.unitRef != u.unitRef) continue;
@@ -335,7 +332,7 @@ class _Room extends ConsumerWidget {
 
   /// Своя реплика обмена — из карточек, где её произносит или собирает ученик; «что он спросил»
   /// и «услышал → собери» про реплику собеседника и сюда не идут.
-  String _ownLineOf(DayUnit u, List<DayCard> cards) {
+  String _ownLineOf(PlanProgramUnit u, List<DayCard> cards) {
     for (final c in cards) {
       if (c.unitRef != u.unitRef) continue;
       switch (c.kind) {
@@ -361,7 +358,7 @@ class _Room extends ConsumerWidget {
     return '';
   }
 
-  List<Widget> _closedCards(AppLocalizations l, DayRoom room, List<DayCard> cards, List<DayUnit> words, List<DayUnit> phrases, List<DayUnit> exchanges, int returnDay) {
+  List<Widget> _closedCards(AppLocalizations l, PlanDayRoom room, List<DayCard> cards, List<PlanProgramUnit> words, List<PlanProgramUnit> phrases, List<PlanProgramUnit> exchanges, int returnDay) {
     final m = room.metrics;
     final hardestText = m?.hardestUnitText;
     final hardestRef = m?.hardestUnitRef;
@@ -418,14 +415,14 @@ class _Room extends ConsumerWidget {
     ];
   }
 
-  Future<void> _showSheet(BuildContext context, DayUnit u, DaySheet? sheet, List<DayCard> cards, int returnDay) async {
+  Future<void> _showSheet(BuildContext context, PlanProgramUnit u, DaySheet? sheet, List<DayCard> cards, int returnDay) async {
     AppHaptics.light();
     final own = cards.where((c) => c.unitRef == u.unitRef).toList();
     final term = sheet?.byRef(u.unitRef) ??
         DayTerm(
           id: u.unitRef,
           sceneId: u.sceneId,
-          kind: u.unitKind == DayUnitKind.phrase ? 'phrase' : 'word',
+          kind: u.unitKind == PlanUnitKind.phrase ? 'phrase' : 'word',
           ref: u.unitRef,
           textTarget: u.textTarget ?? own.firstOrNull?.textTarget ?? '',
           textNative: u.textNative ?? own.firstOrNull?.textNative ?? '',
@@ -436,7 +433,7 @@ class _Room extends ConsumerWidget {
           speakingKey: own.firstOrNull?.speakingKey,
           image: own.firstOrNull?.image,
         );
-    final marker = _unitMarker(u, cards, room.day.status == DayStatus.closed);
+    final marker = _unitMarker(u, cards, room.day.status == PlanDayStatus.closed);
     final state = switch (marker) {
       MarkerState.empty => SheetTermState.pending,
       MarkerState.passed => SheetTermState.passed,
@@ -455,7 +452,7 @@ class _Room extends ConsumerWidget {
       partnerRole: room.scene?.partnerRoleNative ?? '',
       inTalkPartner: intro?.exampleTarget,
       inTalkOwn: term.textTarget,
-      fromDay: u.source == DayCardSource.returned ? (_returnedFromDay(cards, u.unitRef) ?? room.day.number - 1) : null,
+      fromDay: u.source == PlanUnitSource.returned ? (_returnedFromDay(cards, u.unitRef) ?? room.day.number - 1) : null,
     );
   }
 }
@@ -465,7 +462,7 @@ class _Room extends ConsumerWidget {
 class _WordCard extends StatelessWidget {
   const _WordCard({required this.unit, required this.term, required this.marker, required this.fromDay, required this.onTap});
 
-  final DayUnit unit;
+  final PlanProgramUnit unit;
   final DayTerm? term;
   final MarkerState marker;
   final int? fromDay;
@@ -529,7 +526,7 @@ class _WordCard extends StatelessWidget {
 class _PhraseRow extends StatelessWidget {
   const _PhraseRow({required this.unit, required this.marker, required this.onTap});
 
-  final DayUnit unit;
+  final PlanProgramUnit unit;
   final MarkerState marker;
   final VoidCallback onTap;
 
@@ -566,7 +563,7 @@ class _PhraseRow extends StatelessWidget {
 class _ExchangeRow extends StatelessWidget {
   const _ExchangeRow({required this.unit, required this.partner, required this.own, required this.marker});
 
-  final DayUnit unit;
+  final PlanProgramUnit unit;
   final String partner;
   final String own;
   final MarkerState marker;

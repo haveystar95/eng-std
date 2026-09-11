@@ -6,20 +6,9 @@ import 'package:eng_std/theme/theme.dart';
 
 /// Один таб плавающей пилюли.
 class FloatingTabItem {
-  const FloatingTabItem({required this.icon, required this.label, this.accent = false});
+  const FloatingTabItem({required this.icon, required this.label});
   final IconData icon;
   final String label;
-
-  /// THE CENTRE TAB, and there is exactly one of it: «План» (макет «Фаза 4», кадры 08–11).
-  ///
-  /// Its icon sits in a brass ring instead of standing bare, so the bar has a centre the eye finds
-  /// without reading five words. The brass is the plan's own service mark everywhere else in the
-  /// app — the same colour on the plan card, on the day badge and in the session header — which is
-  /// what makes the ring read as «this is the plan» rather than as «this one is important».
-  ///
-  /// It is a RING and not a fill: a filled centre tab would be the loudest thing on every screen in
-  /// the product, and the loudest thing on a screen is supposed to be that screen's own action.
-  final bool accent;
 }
 
 /// Плавающая таб-пилюля (rule 09, §3): полупрозрачное стекло (blur 22,
@@ -120,11 +109,7 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The accent tab keeps its brass whether it is selected or not: the ring says WHICH tab this
-    // is, and a mark that only appears when you are already there is a mark for nobody.
-    final color = item.accent
-        ? AppColors.brassInk
-        : (active ? AppColors.ink : AppColors.secondary);
+    final color = active ? AppColors.ink : AppColors.secondary;
 
     return SizedBox(
       width: width,
@@ -134,25 +119,8 @@ class _TabButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // The ring is 20pt and its gap is 2 — measured, not chosen. The pill is 54pt tall with
-            // 9pt of padding, so a tab has 36pt to fill, and a 9.5pt label takes ~14 of them. The
-            // frames' 30pt ring came from a taller bar; drawn at that size here it overflowed by
-            // seven pixels, live on the simulator. The bar's height is what every screen's bottom
-            // inset is built on, so the ring is what gives way.
-            if (item.accent)
-              Container(
-                width: 20,
-                height: 20,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.brassFrame, width: active ? 1.8 : 1.2),
-                ),
-                child: Icon(item.icon, size: 11, color: color),
-              )
-            else
-              Icon(item.icon, size: 17, color: color),
-            SizedBox(height: item.accent ? 2 : 3),
+            Icon(item.icon, size: 17, color: color),
+            const SizedBox(height: 3),
             // The label shrinks with the pill rather than wrapping: a two-line tab would change the
             // bar's height, and the bar's height is what every screen's bottom padding is built on.
             Text(
@@ -160,9 +128,7 @@ class _TabButton extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.fade,
               softWrap: false,
-              style: (active ? AppText.tabActive : AppText.tabInactive).copyWith(
-                color: item.accent ? AppColors.brassInk : null,
-              ),
+              style: active ? AppText.tabActive : AppText.tabInactive,
             ),
           ],
         ),

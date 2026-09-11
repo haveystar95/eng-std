@@ -4,7 +4,6 @@ import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart' show ValueNotifier, debugPrint;
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
@@ -24,8 +23,6 @@ import 'practice/learning_ladder.dart';
 import 'practice/local_session_builder.dart';
 import 'practice/practice_mode_selector.dart';
 import 'models.dart';
-import 'plan_models.dart';
-import 'plan_notifications.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
 import 'pool_sync.dart';
@@ -905,52 +902,3 @@ final studySessionProvider = FutureProvider.family<StudySession, SessionArgs>((r
         limit: args.limit,
       );
 });
-
-// ── Learning plans (PLAN-1c) ────────────────────────────────────────────────────────────────────
-//
-// THE ONE FAMILY OF SCREENS THAT READS THE NETWORK DIRECTLY, and it is worth saying why: everything
-// else in this app draws from the drift mirror, because everything else is CONTENT and content is
-// the same whether it arrived a second or a day ago. A plan's two headline numbers are not content.
-// «Готовность» and «на каком ты дне» are derived by the server from the review log on every read
-// (`PlanProgress`), and a cached copy of them is a second, older opinion about where the learner is
-// standing — which is exactly the disagreement PLAN-1b went out of its way to make impossible
-// between the session and the screen. So the plan screens read live and say «нет сети» when there
-// is none, and no plan row is ever written into the local database.
-
-/// The plan's three reminders, hung off its event date. See [PlanNotifications].
-final planNotificationsProvider = Provider<PlanNotifications>((ref) {
-  return PlanNotifications(FlutterLocalNotificationsPlugin());
-});
-
-/// The plan the learner is on, or null when there is none. Read on every entry to the tab.
-final activePlanProvider = FutureProvider<LearningPlan?>((ref) async {
-  return ref.watch(apiClientProvider).activePlan();
-});
-
-/// Every plan the learner has run — the finished one at the top of the tab and the archive under
-/// it. Read alongside [activePlanProvider] rather than instead of it: «на чём я сейчас» and «что у
-/// меня было» are two questions, and the tab shows a different screen for each answer.
-final planArchiveProvider = FutureProvider<List<PlanSummary>>((ref) async {
-  return ref.watch(apiClientProvider).plans();
-});
-
-/// One plan by id — the archive, and any screen that already knows which plan it is showing.
-///
-/// THE ACTIVE PLAN IS READ THROUGH [activePlanProvider] AND NOWHERE ELSE (E2E-SIM-2, С-11).
-///
-/// The two providers used to fetch the same plan independently, and the deck was then counted twice
-/// from two answers taken at two moments: right after a plan started, «План» said «37 карточек · 37
-/// осталось» and «Главная», in the same minute, said 53 — the honest number. Neither screen was
-/// computing anything; they were holding two different snapshots of one server answer, and there is
-/// no way for a person to read that as anything but a bug.
-///
-/// So the active plan has ONE cached answer. An archived plan — which the active provider will
-/// never hold — is fetched here as it always was, and the extra `await` costs one already-cached
-/// future.
-final planProvider = FutureProvider.family<LearningPlan, String>((ref, planId) async {
-  final active = await ref.watch(activePlanProvider.future);
-  if (active != null && active.id == planId) return active;
-
-  return ref.watch(apiClientProvider).plan(planId);
-});
-

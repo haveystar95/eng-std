@@ -50,6 +50,19 @@ abstract final class AppColors {
   /// Поле ввода внутри карточки — чистая белая бумага.
   static const field = Color(0xFFFFFFFF);
 
+  /// ФОН ЭКРАНОВ ПЛАНА И ГЛАВНОЙ — «#EFEBE3, на полтона глубже paper» (токен-лист 4и; кадры 21-x).
+  /// Плита и слоёная бумага лежат на нём, а не сливаются с ним.
+  static const ground = Color(0xFFEFEBE3);
+
+  /// ПОДЛОЖКА ФОТО-МИНИАТЮРЫ И АВАТАРА — #E3DCCF (токен-лист 4г, 4и «подложка пустого слота»):
+  /// кружок обложки плана, фото 48 на маршруте, кружок-аватар в шапке.
+  static const photoPlaceholder = Color(0xFFE3DCCF);
+
+  /// ШИММЕР — «#EAE5DB с проблеском #F7F4EE» (кадр 7a, источник для 22-4a): узлы и фото маршрута,
+  /// пока сервер собирает план.
+  static const shimmerBase = Color(0xFFEAE5DB);
+  static const shimmerHighlight = Color(0xFFF7F4EE);
+
   /// Подтверждения удаления (центральные alert-окна).
   static const alertSurface = Color(0xFFF8F6F0);
 

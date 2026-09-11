@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/plan/day_rules.dart';
-import 'package:eng_std/data/plan/plan_contract.dart';
+import 'package:eng_std/data/plan/plan_models.dart';
+import 'package:eng_std/data/plan/day_contract.dart';
 
 /// КАНОН ЗАЧЁТА ДНЯ — наряд DAY-UI, раздел 5. Тесты на правила, не на код: каждый называет
 /// строку канона, которую охраняет.
@@ -89,12 +90,12 @@ void main() {
 
   group('состав дня по уровню (§4)', () {
     test('«услышал → собери» — только Intermediate, только утверждения ≤ 10 слов', () {
-      expect(DayRules.listenAssembleAllowed(level: PlanLevel2.intermediate, partnerLine: 'Take this twice a day after meals.'), isTrue);
-      expect(DayRules.listenAssembleAllowed(level: PlanLevel2.beginner, partnerLine: 'Take this twice a day after meals.'), isFalse);
-      expect(DayRules.listenAssembleAllowed(level: PlanLevel2.intermediate, partnerLine: 'Did it start today, or earlier?'), isFalse);
+      expect(DayRules.listenAssembleAllowed(level: PlanLevel.intermediate, partnerLine: 'Take this twice a day after meals.'), isTrue);
+      expect(DayRules.listenAssembleAllowed(level: PlanLevel.beginner, partnerLine: 'Take this twice a day after meals.'), isFalse);
+      expect(DayRules.listenAssembleAllowed(level: PlanLevel.intermediate, partnerLine: 'Did it start today, or earlier?'), isFalse);
       expect(
         DayRules.listenAssembleAllowed(
-          level: PlanLevel2.intermediate,
+          level: PlanLevel.intermediate,
           partnerLine: 'It looks like a muscle strain so rest and use a heating pad every evening.',
         ),
         isFalse,
@@ -110,11 +111,11 @@ void main() {
   group('метрики дня', () {
     DayCard card(String id, DayCardKind kind, {DayCardResult? result, int attempts = 0, String? retryOf}) => DayCard(
       id: id,
-      stage: DayStage.words,
+      stage: PlanStage.words,
       position: 0,
       kind: kind,
       source: DayCardSource.today,
-      unitKind: DayUnitKind.word,
+      unitKind: PlanUnitKind.word,
       unitRef: id,
       payload: const {},
       result: result,

@@ -42,6 +42,9 @@ abstract final class LanguageModeSupport {
     ExerciseMode.pickCorrect,
     ExerciseMode.speaking,
     ExerciseMode.descriptionMatch,
+    // The scene's situational cards are NOT on the server's registry any more (наряд PLAN-GEN
+    // dropped the old plan that dealt them), so they are not here either — the parity test reads
+    // the PHP table and this list must match it row for row.
   ];
 
   /// Language → what it cannot carry, and what it carries only with a network. A language ABSENT

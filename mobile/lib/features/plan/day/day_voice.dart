@@ -8,7 +8,7 @@ import 'package:eng_std/ui/ui.dart';
 
 import '../../../data/api_client.dart';
 import '../../../data/line_audio.dart';
-import '../../../data/plan/plan_contract.dart';
+import '../../../data/plan/day_contract.dart';
 import '../../../data/pronouncer.dart';
 
 /// ГОЛОС ДНЯ — один на сессию: реплики собеседника файлом по `audio_id` (докачка на входе в

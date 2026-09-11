@@ -8,7 +8,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../../data/plan/day_rules.dart';
-import '../../../data/plan/plan_contract.dart';
+import '../../../data/plan/day_contract.dart';
 import '../../../data/providers.dart';
 import '../../../data/speech/speech_diagnostics.dart';
 import '../../../data/speech/speech_recognizer.dart';

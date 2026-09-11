@@ -45,6 +45,17 @@ abstract final class AppShadows {
     ),
   ];
 
+  /// ПОЛЕ ЦЕЛИ В ФОКУСЕ (кадр 22-1b, записка входа): «в фокусе тень 0 4 12 .06 + 0 18 40 .12 вместо
+  /// рамки» — глубже [card], потому что фокус здесь показывает тень, а не контур.
+  static const fieldFocus = <BoxShadow>[
+    BoxShadow(color: Color.fromARGB(15, _inkR, _inkG, _inkB), blurRadius: 12, offset: Offset(0, 4)),
+    BoxShadow(
+      color: Color.fromARGB(31, _inkR, _inkG, _inkB),
+      blurRadius: 40,
+      offset: Offset(0, 18),
+    ),
+  ];
+
   /// Плавающая таб-пилюля (§3, «Стекло пилюли»).
   /// `0 12 32 rgba(60,50,40,.16)`.
   static const pill = <BoxShadow>[

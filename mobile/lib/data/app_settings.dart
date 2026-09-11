@@ -44,8 +44,9 @@ class AppSettings {
   /// decision, which outlives any later change to that default.
   final bool? transliteration;
 
-  /// «Звуки» (токен-лист 4к-3): четыре события — верно · неверно · этап закрыт · день закрыт.
-  /// Выключатель гасит звук; хаптика остаётся. Беззвучный режим телефона уважается и без него.
+  /// «Звуки» (токен-лист 4к-3) — the four sounds of the trainers and the plan: верно · неверно ·
+  /// этап закрыт · день закрыт. On by default; the phone's silent switch still wins (правило 4е —
+  /// хаптика остаётся).
   final bool soundsEnabled;
 
   static const defaults = AppSettings(
@@ -74,14 +75,14 @@ abstract final class _Keys {
   static const reminderTime = 'reminder_time';
   static const autoPronounce = 'autopronounce';
   static const transliteration = 'transliteration';
-  static const sounds = 'sounds';
+  static const sounds = 'sounds_enabled';
 }
 
 class AppSettingsController extends AsyncNotifier<AppSettings> {
   @override
   Future<AppSettings> build() async {
     final db = ref.read(appDatabaseProvider);
-    return AppSettings(
+    final settings = AppSettings(
       remindersEnabled: (await db.getMeta(_Keys.remindersEnabled)) == '1',
       reminderTime: (await db.getMeta(_Keys.reminderTime)) ?? AppSettings.defaults.reminderTime,
       autoPronounce: (await db.getMeta(_Keys.autoPronounce)) != '0', // default on
@@ -93,9 +94,13 @@ class AppSettingsController extends AsyncNotifier<AppSettings> {
       },
       soundsEnabled: (await db.getMeta(_Keys.sounds)) != '0', // default on
     );
+    AppFeedback.soundsEnabled = settings.soundsEnabled;
+
+    return settings;
   }
 
   Future<void> setSoundsEnabled(bool on) async {
+    AppFeedback.soundsEnabled = on;
     await ref.read(appDatabaseProvider).setMeta(_Keys.sounds, on ? '1' : '0');
     state = AsyncData((state.value ?? AppSettings.defaults).copyWith(soundsEnabled: on));
   }

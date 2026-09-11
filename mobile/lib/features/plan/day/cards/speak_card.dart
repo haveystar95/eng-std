@@ -7,7 +7,8 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../../../data/plan/day_rules.dart';
-import '../../../../data/plan/plan_contract.dart';
+import '../../../../data/plan/plan_models.dart';
+import '../../../../data/plan/day_contract.dart';
 import '../day_texts.dart';
 import '../day_voice.dart';
 import '../speech_attempt.dart';
@@ -115,7 +116,7 @@ class _SpeakCardState extends State<SpeakCard> {
       _ => l.daySayMic,
     };
 
-    final past = widget.context.session.cardsOf(DayStage.speak).where((c) => c.isAnswered && c.id != card.id).toList();
+    final past = widget.context.session.cardsOf(PlanStage.speak).where((c) => c.isAnswered && c.id != card.id).toList();
     final spoken = widget.context.session.spoken;
 
     return Column(

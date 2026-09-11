@@ -7,7 +7,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../../../data/plan/day_rules.dart';
-import '../../../../data/plan/plan_contract.dart';
+import '../../../../data/plan/day_contract.dart';
 import '../day_card_frame.dart';
 import '../day_texts.dart';
 import '../speech_attempt.dart';

@@ -1,0 +1,15 @@
+{
+  "id": "01M26PVVDC1WQBMKDY368GTQ4K",
+  "status": "ready",
+  "unclear_reason": null,
+  "fail_reason": null,
+  "scenes_count": 3,
+  "cost_usd": "0.024050",
+  "latency_ms": 10825,
+  "attempts": 1,
+  "versions": {
+    "build": "b816951b",
+    "prompt_plan": "plan-builder-v2",
+    "prompt_lesson": "lesson-v3"
+  }
+}

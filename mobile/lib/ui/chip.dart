@@ -16,11 +16,17 @@ class AppChip extends StatelessWidget {
     this.used = false,
     this.onTap,
     this.leading,
+    this.paper = false,
   });
 
   final String label;
   final bool selected;
   final bool used;
+
+  /// СЛОЁНАЯ БУМАГА ВМЕСТО КОНТУРА — чип экранов плана (токен-лист 4к: «ни одной рамки — слоёная
+  /// бумага и тень»; кадры 22-1…22-3). Фон #FCFAF5 с тенью карточки, radius 24, padding 9/15;
+  /// выбранный — та же заливка ink, что и у обычного чипа.
+  final bool paper;
   final VoidCallback? onTap;
 
   /// Ведущий виджет (напр. [MiniFlag] в языковом чипе).
@@ -31,7 +37,11 @@ class AppChip extends StatelessWidget {
     final Color bg;
     final Color fg;
     final BoxBorder? border;
-    if (used) {
+    if (paper && !selected && !used) {
+      bg = AppColors.surfaceRaised;
+      fg = AppColors.ink;
+      border = null;
+    } else if (used) {
       bg = AppColors.faintInk;
       fg = AppColors.tertiary;
       border = null;
@@ -46,8 +56,10 @@ class AppChip extends StatelessWidget {
     }
 
     final content = Padding(
-      // padding 8 / 13 (§3 «Чип в ряду»); текст в одну строку, без обрезки.
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+      // padding 8 / 13 (§3 «Чип в ряду»), у бумажного чипа плана — 9 / 15; текст в одну строку.
+      padding: paper
+          ? const EdgeInsets.symmetric(horizontal: 15, vertical: 9)
+          : const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -66,21 +78,30 @@ class AppChip extends StatelessWidget {
       ),
     );
 
-    final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.chip));
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(paper ? 24 : AppRadii.chip),
+    );
+    final chip = Material(
+      color: bg,
+      shape: border == null ? shape : shape.copyWith(side: BorderSide(color: AppColors.hairline)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(onTap: onTap, child: content),
+    );
     return Semantics(
       button: onTap != null,
       selected: selected,
       label: label,
       child: MinTapHeight(
         onTap: onTap,
-        child: Material(
-          color: bg,
-          shape: border == null
-              ? shape
-              : shape.copyWith(side: BorderSide(color: AppColors.hairline)),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(onTap: onTap, child: content),
-        ),
+        child: paper && border == null && !selected && !used
+            ? DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: AppShadows.card,
+                ),
+                child: chip,
+              )
+            : chip,
       ),
     );
   }

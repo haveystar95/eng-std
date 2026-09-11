@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../data/plan/day_session.dart';
-import '../../../../data/plan/plan_contract.dart';
+import '../../../../data/plan/plan_models.dart';
+import '../../../../data/plan/day_contract.dart';
 import '../day_voice.dart';
 import '../speech_attempt.dart';
 
@@ -24,7 +25,7 @@ class DayCardContext {
 
   final DaySession session;
   final DayVoice voice;
-  final PlanLevel2 level;
+  final PlanLevel level;
   final String targetLang;
 
   /// Локаль распознавания — `en_US`.

@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../api_client.dart';
-import 'plan_contract.dart';
+import 'plan_models.dart';
+import 'day_contract.dart';
 
 /// ГДЕ СТОИТ СЕССИЯ ДНЯ.
 enum DayPhase {
@@ -35,7 +36,7 @@ class DaySession extends ChangeNotifier {
     required this.returnDay,
   }) : _cards = List.of(cards) {
     _stages = [
-      for (final s in DayStage.values)
+      for (final s in PlanStage.known)
         if (_cards.any((c) => c.stage == s)) s,
     ];
     _openFirstUnfinished();
@@ -49,8 +50,8 @@ class DaySession extends ChangeNotifier {
   final int returnDay;
 
   final List<DayCard> _cards;
-  late List<DayStage> _stages;
-  DayStage? _stage;
+  late List<PlanStage> _stages;
+  PlanStage? _stage;
   DayPhase _phase = DayPhase.stageEntry;
   DayCard? _current;
   Object? _error;
@@ -63,13 +64,13 @@ class DaySession extends ChangeNotifier {
 
   /// Когда этап начали — «N минут» в итоге этапа.
   DateTime? _stageStartedAt;
-  final Map<DayStage, int> _stageMinutes = {};
+  final Map<PlanStage, int> _stageMinutes = {};
 
   bool _busy = false;
 
   List<DayCard> get cards => List.unmodifiable(_cards);
-  List<DayStage> get stages => List.unmodifiable(_stages);
-  DayStage? get stage => _stage;
+  List<PlanStage> get stages => List.unmodifiable(_stages);
+  PlanStage? get stage => _stage;
   DayPhase get phase => _phase;
   DayCard? get current => _current;
   Object? get error => _error;
@@ -80,29 +81,29 @@ class DaySession extends ChangeNotifier {
   int get stageOrdinal => _stage == null ? 1 : _stage!.ordinal;
 
   /// Карточки этапа в порядке хода (повторы — в конце, как их поставил сервер).
-  List<DayCard> cardsOf(DayStage s) {
+  List<DayCard> cardsOf(PlanStage s) {
     final list = _cards.where((c) => c.stage == s).toList();
     list.sort((a, b) => a.position.compareTo(b.position));
     return list;
   }
 
-  int doneIn(DayStage s) => cardsOf(s).where((c) => c.isAnswered).length;
-  int totalIn(DayStage s) => cardsOf(s).length;
-  int remainingIn(DayStage s) => totalIn(s) - doneIn(s);
+  int doneIn(PlanStage s) => cardsOf(s).where((c) => c.isAnswered).length;
+  int totalIn(PlanStage s) => cardsOf(s).length;
+  int remainingIn(PlanStage s) => totalIn(s) - doneIn(s);
 
   /// Уже ли в этом этапе что-то отвечено — «продолжаем» вместо «начать».
-  bool resumingIn(DayStage s) => doneIn(s) > 0;
+  bool resumingIn(PlanStage s) => doneIn(s) > 0;
 
   int attemptsOf(DayCard card) => _attempts[card.id] ?? 0;
 
   /// Единицы этапа — по `unit_ref`, в порядке первого появления.
-  List<String> unitsOf(DayStage s) {
+  List<String> unitsOf(PlanStage s) {
     final seen = <String>{};
     return [for (final c in cardsOf(s)) if (seen.add(c.unitRef)) c.unitRef];
   }
 
   /// Первая карточка единицы в этапе — та, чей пейлоад описывает единицу (знакомство и т. п.).
-  DayCard? firstCardOf(DayStage s, String unitRef) {
+  DayCard? firstCardOf(PlanStage s, String unitRef) {
     for (final c in cardsOf(s)) {
       if (c.unitRef == unitRef) return c;
     }
@@ -110,11 +111,11 @@ class DaySession extends ChangeNotifier {
   }
 
   /// Единица закрыта в этом этапе — все её карточки отвечены.
-  bool unitDoneIn(DayStage s, String unitRef) =>
+  bool unitDoneIn(PlanStage s, String unitRef) =>
       cardsOf(s).where((c) => c.unitRef == unitRef).every((c) => c.isAnswered);
 
   /// Как этап разложился — для полоски в трёх цветах и фактов итога.
-  ({int passed, int hinted, int failed}) tallyOf(DayStage s) {
+  ({int passed, int hinted, int failed}) tallyOf(PlanStage s) {
     var passed = 0, hinted = 0, failed = 0;
     for (final c in cardsOf(s)) {
       switch (c.result) {
@@ -133,7 +134,7 @@ class DaySession extends ChangeNotifier {
   }
 
   /// Единицы этапа, которые вернутся в следующий день.
-  int returningIn(DayStage s) {
+  int returningIn(PlanStage s) {
     final refs = <String>{};
     for (final c in cardsOf(s)) {
       if (c.returns || c.result == DayCardResult.failed) refs.add(c.unitRef);
@@ -141,7 +142,7 @@ class DaySession extends ChangeNotifier {
     return refs.length;
   }
 
-  int hintedIn(DayStage s) {
+  int hintedIn(PlanStage s) {
     final refs = <String>{};
     for (final c in cardsOf(s)) {
       if (c.result == DayCardResult.hinted) refs.add(c.unitRef);
@@ -149,10 +150,10 @@ class DaySession extends ChangeNotifier {
     return refs.length;
   }
 
-  int minutesOf(DayStage s) => _stageMinutes[s] ?? 0;
+  int minutesOf(PlanStage s) => _stageMinutes[s] ?? 0;
 
   /// Следующий этап после текущего, или null.
-  DayStage? get nextStage {
+  PlanStage? get nextStage {
     final i = _stage == null ? -1 : _stages.indexOf(_stage!);
     return i + 1 < _stages.length ? _stages[i + 1] : null;
   }
@@ -227,7 +228,7 @@ class DaySession extends ChangeNotifier {
       }
     } catch (e) {
       // Уже отвеченная карточка (409 `plan_card_answered`) — сервер её знает; дальше без ошибки.
-      if (ApiClient.problemCode(e) == 'plan_card_answered') {
+      if (problemCodeOf(e) == 'plan_card_answered') {
         _replace(card.copyWith(result: result, attempts: attempts));
       } else {
         // Сеть упала: вердикт человека не теряется — карточка закрывается локально и день идёт;
@@ -251,19 +252,19 @@ class DaySession extends ChangeNotifier {
   }
 
   /// «Дальше» на итоге этапа: закрыть этап на сервере и открыть следующий (или закрыть день).
-  Future<DayRoom?> closeStage() async {
+  Future<PlanDayRoom?> closeStage() async {
     final s = _stage;
     if (s == null || _busy) return null;
     _busy = true;
     _error = null;
     notifyListeners();
-    DayRoom? room;
+    PlanDayRoom? room;
     try {
       room = await api.closeStage(planId, number, s);
     } catch (e) {
       // Этап, который сервер уже считает закрытым, — не ошибка; всё остальное — показать и дать
       // повторить.
-      if (ApiClient.problemCode(e) != 'plan_stage_incomplete') {
+      if (problemCodeOf(e) != 'plan_stage_incomplete') {
         _error = e;
       } else {
         _error = e;
@@ -287,7 +288,7 @@ class DaySession extends ChangeNotifier {
   }
 
   /// Закрыть день — кабинет с метриками.
-  Future<DayRoom> closeDay() => api.closeDay(planId, number);
+  Future<PlanDayRoom> closeDay() => api.closeDay(planId, number);
 }
 
 extension on DayCard {

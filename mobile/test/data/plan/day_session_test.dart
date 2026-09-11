@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/api_client.dart';
 import 'package:eng_std/data/plan/day_session.dart';
-import 'package:eng_std/data/plan/plan_contract.dart';
+import 'package:eng_std/data/plan/plan_models.dart';
+import 'package:eng_std/data/plan/day_contract.dart';
 import 'package:eng_std/data/token_store.dart';
 
 /// КАНОН МАШИНЫ СОСТОЯНИЙ ДНЯ — карточка и этап (наряд DAY-UI, §3–5): порядок от сервера, повтор
@@ -12,18 +13,18 @@ void main() {
   group('этапы и порядок', () {
     test('состав дня — только этапы, у которых есть карточки, в каноническом порядке', () {
       final s = DaySession(api: _Api(), planId: 'p', number: 1, returnDay: 2, cards: [
-        _card('s1', DayStage.speak, DayCardKind.speak, 0),
-        _card('w1', DayStage.words, DayCardKind.wordIntro, 0),
+        _card('s1', PlanStage.speak, DayCardKind.speak, 0),
+        _card('w1', PlanStage.words, DayCardKind.wordIntro, 0),
       ]);
-      expect(s.stages, [DayStage.words, DayStage.speak]);
-      expect(s.stage, DayStage.words);
+      expect(s.stages, [PlanStage.words, PlanStage.speak]);
+      expect(s.stage, PlanStage.words);
       expect(s.phase, DayPhase.stageEntry);
     });
 
     test('«Начать» открывает первую карточку этапа по position, а не по порядку в списке', () {
       final s = DaySession(api: _Api(), planId: 'p', number: 1, returnDay: 2, cards: [
-        _card('w2', DayStage.words, DayCardKind.wordSay, 1),
-        _card('w1', DayStage.words, DayCardKind.wordIntro, 0),
+        _card('w2', PlanStage.words, DayCardKind.wordSay, 1),
+        _card('w1', PlanStage.words, DayCardKind.wordIntro, 0),
       ])..startStage();
       expect(s.phase, DayPhase.card);
       expect(s.current?.id, 'w1');
@@ -31,13 +32,13 @@ void main() {
 
     test('возврат после паузы — первый этап с неотвеченными карточками, «продолжаем»', () {
       final s = DaySession(api: _Api(), planId: 'p', number: 1, returnDay: 2, cards: [
-        _card('w1', DayStage.words, DayCardKind.wordIntro, 0, result: DayCardResult.passed),
-        _card('l1', DayStage.listen, DayCardKind.listenQuestion, 0, result: DayCardResult.passed),
-        _card('l2', DayStage.listen, DayCardKind.answerChoose, 1),
+        _card('w1', PlanStage.words, DayCardKind.wordIntro, 0, result: DayCardResult.passed),
+        _card('l1', PlanStage.listen, DayCardKind.listenQuestion, 0, result: DayCardResult.passed),
+        _card('l2', PlanStage.listen, DayCardKind.answerChoose, 1),
       ]);
-      expect(s.stage, DayStage.listen);
-      expect(s.resumingIn(DayStage.listen), isTrue);
-      expect(s.remainingIn(DayStage.listen), 1);
+      expect(s.stage, PlanStage.listen);
+      expect(s.resumingIn(PlanStage.listen), isTrue);
+      expect(s.remainingIn(PlanStage.listen), 1);
     });
   });
 
@@ -45,8 +46,8 @@ void main() {
     test('первая ошибка — сервер возвращает requeued, карточка встаёт в конец этапа', () async {
       final api = _Api();
       final s = DaySession(api: api, planId: 'p', number: 1, returnDay: 2, cards: [
-        _card('w1', DayStage.words, DayCardKind.wordChoose, 0),
-        _card('w2', DayStage.words, DayCardKind.wordChoose, 1),
+        _card('w1', PlanStage.words, DayCardKind.wordChoose, 0),
+        _card('w2', PlanStage.words, DayCardKind.wordChoose, 1),
       ])..startStage();
       await s.answer(s.current!, DayCardResult.failed, attempts: 1);
       expect(api.answers, [('w1', DayCardResult.failed, 1)]);
@@ -57,29 +58,29 @@ void main() {
       // Повтор — в конце этапа, с retry_of.
       expect(s.current?.id, 'w1-retry');
       expect(s.current?.retryOf, 'w1');
-      expect(s.totalIn(DayStage.words), 3);
+      expect(s.totalIn(PlanStage.words), 3);
     });
 
     test('вторая ошибка — failed, «вернётся в день N», этап идёт дальше', () async {
       final api = _Api();
       final s = DaySession(api: api, planId: 'p', number: 1, returnDay: 2, cards: [
-        _card('w1', DayStage.words, DayCardKind.wordChoose, 0),
+        _card('w1', PlanStage.words, DayCardKind.wordChoose, 0),
       ])..startStage();
       await s.answer(s.current!, DayCardResult.failed, attempts: 1);
       s.next();
       expect(s.current?.retryOf, 'w1');
       await s.answer(s.current!, DayCardResult.failed, attempts: 1);
       expect(s.cards.where((c) => c.id == 'w1-retry').single.returns, isTrue);
-      expect(s.returningIn(DayStage.words), 1);
+      expect(s.returningIn(PlanStage.words), 1);
       s.next();
       expect(s.phase, DayPhase.stageDone);
-      expect(s.tallyOf(DayStage.words), (passed: 0, hinted: 0, failed: 2));
+      expect(s.tallyOf(PlanStage.words), (passed: 0, hinted: 0, failed: 2));
     });
 
     test('уже отвеченная карточка (409 plan_card_answered) — не ошибка, день идёт', () async {
       final api = _Api(conflict: true);
       final s = DaySession(api: api, planId: 'p', number: 1, returnDay: 2, cards: [
-        _card('w1', DayStage.words, DayCardKind.wordIntro, 0),
+        _card('w1', PlanStage.words, DayCardKind.wordIntro, 0),
       ])..startStage();
       await s.acknowledge(s.current!);
       expect(s.error, isNull);
@@ -88,11 +89,11 @@ void main() {
 
     test('подсказка-текст — hinted, считается отдельно от «вернётся»', () async {
       final s = DaySession(api: _Api(), planId: 'p', number: 1, returnDay: 2, cards: [
-        _card('s1', DayStage.speak, DayCardKind.speak, 0),
+        _card('s1', PlanStage.speak, DayCardKind.speak, 0),
       ])..startStage();
       await s.answer(s.current!, DayCardResult.hinted, attempts: 1, spokenText: 'my back hurts');
-      expect(s.hintedIn(DayStage.speak), 1);
-      expect(s.returningIn(DayStage.speak), 0);
+      expect(s.hintedIn(PlanStage.speak), 1);
+      expect(s.returningIn(PlanStage.speak), 0);
       expect(s.spoken['s1'], 'my back hurts');
     });
   });
@@ -101,23 +102,23 @@ void main() {
     test('после последней карточки — итог этапа; «Дальше» закрывает этап и открывает следующий', () async {
       final api = _Api();
       final s = DaySession(api: api, planId: 'p', number: 1, returnDay: 2, cards: [
-        _card('w1', DayStage.words, DayCardKind.wordIntro, 0),
-        _card('p1', DayStage.phrases, DayCardKind.phraseIntro, 0),
+        _card('w1', PlanStage.words, DayCardKind.wordIntro, 0),
+        _card('p1', PlanStage.phrases, DayCardKind.phraseIntro, 0),
       ])..startStage();
       await s.acknowledge(s.current!);
       s.next();
       expect(s.phase, DayPhase.stageDone);
-      expect(s.nextStage, DayStage.phrases);
+      expect(s.nextStage, PlanStage.phrases);
       await s.closeStage();
-      expect(api.closedStages, [DayStage.words]);
-      expect(s.stage, DayStage.phrases);
+      expect(api.closedStages, [PlanStage.words]);
+      expect(s.stage, PlanStage.phrases);
       expect(s.phase, DayPhase.stageEntry);
     });
 
     test('закрытие последнего этапа — день закрыт', () async {
       final api = _Api();
       final s = DaySession(api: api, planId: 'p', number: 1, returnDay: 2, cards: [
-        _card('s1', DayStage.speak, DayCardKind.speak, 0),
+        _card('s1', PlanStage.speak, DayCardKind.speak, 0),
       ])..startStage();
       await s.answer(s.current!, DayCardResult.passed, attempts: 1);
       s.next();
@@ -128,16 +129,16 @@ void main() {
   });
 }
 
-DayCard _card(String id, DayStage stage, DayCardKind kind, int position, {DayCardResult? result, String? retryOf, bool returns = false}) => DayCard(
+DayCard _card(String id, PlanStage stage, DayCardKind kind, int position, {DayCardResult? result, String? retryOf, bool returns = false}) => DayCard(
   id: id,
   stage: stage,
   position: position,
   kind: kind,
   source: DayCardSource.today,
   unitKind: switch (stage) {
-    DayStage.words => DayUnitKind.word,
-    DayStage.phrases => DayUnitKind.phrase,
-    _ => DayUnitKind.exchange,
+    PlanStage.words => PlanUnitKind.word,
+    PlanStage.phrases => PlanUnitKind.phrase,
+    _ => PlanUnitKind.exchange,
   },
   unitRef: id.split('-').first,
   payload: const {},
@@ -153,7 +154,7 @@ class _Api extends ApiClient {
 
   final bool conflict;
   final List<(String, DayCardResult, int)> answers = [];
-  final List<DayStage> closedStages = [];
+  final List<PlanStage> closedStages = [];
   final Map<String, DayCard> _known = {};
   int _position = 100;
 
@@ -174,7 +175,7 @@ class _Api extends ApiClient {
       position: _known[cardId]?.position ?? 0,
       kind: DayCardKind.wordChoose,
       source: DayCardSource.today,
-      unitKind: DayUnitKind.word,
+      unitKind: PlanUnitKind.word,
       unitRef: cardId.split('-').first,
       payload: const {},
       retryOf: isRetry ? cardId.replaceAll('-retry', '') : null,
@@ -190,7 +191,7 @@ class _Api extends ApiClient {
         position: _position++,
         kind: DayCardKind.wordChoose,
         source: DayCardSource.today,
-        unitKind: DayUnitKind.word,
+        unitKind: PlanUnitKind.word,
         unitRef: cardId,
         payload: const {},
         retryOf: cardId,
@@ -202,23 +203,23 @@ class _Api extends ApiClient {
     return DayAnswerOutcome(card: answered, requeued: requeued);
   }
 
-  DayStage _stageOf(String id) => switch (id[0]) {
-    'w' => DayStage.words,
-    'p' => DayStage.phrases,
-    'l' => DayStage.listen,
-    _ => DayStage.speak,
+  PlanStage _stageOf(String id) => switch (id[0]) {
+    'w' => PlanStage.words,
+    'p' => PlanStage.phrases,
+    'l' => PlanStage.listen,
+    _ => PlanStage.speak,
   };
 
   @override
-  Future<DayRoom> closeStage(String planId, int number, DayStage stage) async {
+  Future<PlanDayRoom> closeStage(String planId, int number, PlanStage stage) async {
     closedStages.add(stage);
     return _room();
   }
 
   @override
-  Future<DayRoom> closeDay(String planId, int number) async => _room();
+  Future<PlanDayRoom> closeDay(String planId, int number) async => _room();
 
-  DayRoom _room() => DayRoom(
+  PlanDayRoom _room() => PlanDayRoom(
     planId: 'p',
     day: PlanDayRoute.fromJson(const {'id': 'd1', 'number': 1, 'type': 'scene', 'status': 'in_progress'}),
     goalsNative: const [],

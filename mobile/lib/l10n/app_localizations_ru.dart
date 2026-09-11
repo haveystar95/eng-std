@@ -116,13 +116,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get tabHome => 'Главная';
+  String get tabHome => 'Сегодня';
 
   @override
   String get tabCollections => 'Коллекции';
-
-  @override
-  String get tabProfile => 'Профиль';
 
   @override
   String get homeSessionTitle => 'Занятие';
@@ -552,9 +549,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get collectionSheetCreateButton => 'Создать';
 
   @override
-  String get tabSearch => 'Поиск';
-
-  @override
   String get searchTitle => 'Поиск слова';
 
   @override
@@ -714,9 +708,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get wordCardNoPhoto => 'Без фото';
-
-  @override
-  String get tabProgress => 'Прогресс';
 
   @override
   String get progressTitle => 'Прогресс';
@@ -1504,6 +1495,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrAssembleTurn => 'собери свой ответ из блоков';
 
   @override
+  String get sessionSceneRunHint => 'скажи свою реплику — текста не будет';
+
+  @override
   String get sessionInstrSituationalAsk => 'выбери, что спросишь';
 
   @override
@@ -1519,9 +1513,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String sessionSituationTask(String outcome) {
     return 'Твоя задача — $outcome.';
   }
-
-  @override
-  String get planSittingContinue => 'Продолжить';
 
   @override
   String get sessionListenReplaySlow => 'Замедленно';
@@ -2535,210 +2526,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonBack => 'Назад';
 
   @override
-  String get planStepEdit => 'Изм.';
-
-  @override
-  String get planLevelZero => 'С нуля';
-
-  @override
-  String get planLevelBasic => 'Понимаю простое';
-
-  @override
-  String get planLevelConversational => 'Объясняюсь';
-
-  @override
-  String get planLevelFluent => 'Свободно';
-
-  @override
-  String get planWhenSheetTitle => 'Когда это случится?';
-
-  @override
-  String get planBuilderBusyLine => 'Разбираю цель — обычно 15–30 секунд';
-
-  @override
-  String get planErrorOffline =>
-      'Нет соединения. План собирается на сервере — попробуй, когда появится сеть.';
-
-  @override
-  String get planErrorBuildFailed => 'Не получилось собрать план. Попробуй ещё раз.';
-
-  @override
-  String get planErrorStartFailed => 'Не получилось начать план. Попробуй ещё раз.';
-
-  @override
-  String get planErrorLoadFailed => 'Не удалось загрузить план.';
-
-  @override
-  String planDayNumber(int index) {
-    return 'День $index';
+  String sessionSayIntent(String intent) {
+    return 'Скажи: $intent';
   }
-
-  @override
-  String planDaysCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count дня',
-      many: '$count дней',
-      few: '$count дня',
-      one: '$count день',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planPreviewDropDay => 'Убрать день';
-
-  @override
-  String get planPricePlaceholder => '[цена / условия — placeholder]';
-
-  @override
-  String get planDropDaySheet => 'Какой день убрать?';
-
-  @override
-  String get planDropLastDay => 'Последний день подготовки убрать нельзя.';
-
-  @override
-  String planTightTitle(int days, int minutes) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'За $days дня по $minutes минут закроем половину: вот эти умения.',
-      many: 'За $days дней по $minutes минут закроем половину: вот эти умения.',
-      few: 'За $days дня по $minutes минут закроем половину: вот эти умения.',
-      one: 'За $days день по $minutes минут закроем половину: вот эти умения.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String planTightAddMinutes(int minutes) {
-    return 'Добавить $minutes минут в день';
-  }
-
-  @override
-  String get planTightKeep => 'Оставить';
-
-  @override
-  String planBuildingTitle(int index) {
-    return 'Собираю день $index';
-  }
-
-  @override
-  String get planBuildingBody => 'Подбираю реплики события и слова, которые в них подставляются.';
-
-  @override
-  String get planBuildingStep1 => 'Цель разобрана';
-
-  @override
-  String get planBuildingStep2 => 'Реплики подобраны';
-
-  @override
-  String get planBuildingStep3 => 'Слова и примеры';
-
-  @override
-  String get planBuildingFailed =>
-      'День собирается дольше обычного. План уже создан — его можно открыть и вернуться к дню позже.';
-
-  @override
-  String get planBuildingOpenAnyway => 'Открыть план';
-
-  @override
-  String planDayOfTotal(int index, int total) {
-    return 'День $index из $total';
-  }
-
-  @override
-  String planCanAlready(int hit, int total) {
-    return 'Ты уже можешь · $hit из $total';
-  }
-
-  @override
-  String planDaysHeader(int index, int total) {
-    return 'Дни · $index из $total';
-  }
-
-  @override
-  String planDayOfPlan(int index, int total) {
-    return 'День $index из $total';
-  }
-
-  @override
-  String get planRescueHint => 'если не понял или не расслышал';
-
-  @override
-  String get planAbandonTitle => 'Отказаться от этого плана?';
-
-  @override
-  String get planAbandonBody =>
-      'План уйдёт в архив, а его слова — в общее повторение. Собранные дни останутся обычными коллекциями.';
-
-  @override
-  String get planAbandonConfirm => 'Отказаться';
-
-  @override
-  String get planBuildingRefused =>
-      'Сервер отказался собирать этот день. Ждать дальше нечего — открой план: на экране дня написано, что именно случилось.';
-
-  @override
-  String get planRowStartDay => 'Начать день';
-
-  @override
-  String get planMaturityMeeting => 'Знакомишься со словами и фразами';
-
-  @override
-  String get planMaturityApplying => 'Применяешь в разговоре';
-
-  @override
-  String get planMaturitySpeaking => 'Говоришь сам';
-
-  @override
-  String get planEmptyTitle => 'Подготовиться к чему-то конкретному';
-
-  @override
-  String get planEmptyBody =>
-      'Коллекции — про темы, которые хочется знать. План — про день, когда придётся говорить: приём, собеседование, подпись договора.';
-
-  @override
-  String get planEmptyStep1 => 'Говоришь цель и дату';
-
-  @override
-  String get planEmptyStep2 => 'Каждый день — фразы, которые реально скажешь, и слова из них';
-
-  @override
-  String get planEmptyStep3 => 'В конце — разговор в роли и вся ситуация вслух';
-
-  @override
-  String get planEmptyCta => 'Составить план';
-
-  @override
-  String get planFinishedBadge => 'Подготовка завершена';
-
-  @override
-  String planFinishedSummary(int days, String date) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'За $days дня подготовки. Событие было $date.',
-      many: 'За $days дней подготовки. Событие было $date.',
-      few: 'За $days дня подготовки. Событие было $date.',
-      one: 'За $days день подготовки. Событие было $date.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planWordsReleasedTitle => 'Слова плана остались в архиве';
-
-  @override
-  String get planWordsReleasedBody =>
-      'Они никуда не делись — прогресс, расписание и вся история на месте. Сами в ежедневные занятия они не придут: чтобы вернуть слово в работу, открой его карточку и нажми «Учить это слово».';
-
-  @override
-  String get planArchive => 'Архив';
-
-  @override
-  String get planFinishedNewPlan => 'Составить новый';
 
   @override
   String homePlanCardBadge(int index, int total) {
@@ -2762,11 +2552,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homePlanCardEventToday => 'Событие сегодня';
 
   @override
-  String homePlanCardReadiness(int hit, int total) {
-    return 'готовности к событию · $hit из $total';
-  }
-
-  @override
   String get homePlanCardContinue => 'Продолжить';
 
   @override
@@ -2777,442 +2562,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homePlanInviteCta => 'Составить';
-
-  @override
-  String get planNotifyChannelName => 'План подготовки';
-
-  @override
-  String get planNotifyChannelBody => 'Напоминания перед событием, к которому идёт подготовка';
-
-  @override
-  String planNotifyBeforeTitle(int days, int index) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'До события $days дня. День $index ждёт',
-      many: 'До события $days дней. День $index ждёт',
-      few: 'До события $days дня. День $index ждёт',
-      one: 'До события $days день. День $index ждёт',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String planNotifyBeforeBody(int percent, String title) {
-    return 'Готовность $percent%. Сегодня — $title.';
-  }
-
-  @override
-  String planNotifyMorningTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Сегодня событие. $count фразы за 3 минуты',
-      many: 'Сегодня событие. $count фраз за 3 минуты',
-      few: 'Сегодня событие. $count фразы за 3 минуты',
-      one: 'Сегодня событие. $count фраза за 3 минуты',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planNotifyMorningBody => 'Быстрая репетиция перед выходом — только то, что скажешь.';
-
-  @override
-  String get planNotifyEveningTitle => 'Как прошло? Отметь, что сказал';
-
-  @override
-  String get planNotifyEveningBody => 'Отметь умения, которые пригодились — план закроется этим.';
-
-  @override
-  String planFinishedAtEvent(int used, int total) {
-    return 'На событии сказал $used из $total.';
-  }
-
-  @override
-  String get planNoDate => 'Без даты';
-
-  @override
-  String get planEntryKicker => 'План подготовки';
-
-  @override
-  String get planEntryGoalTitle => 'К чему готовишься?';
-
-  @override
-  String get planEntryGoalSubtitleLong =>
-      'Расскажи своими словами: где будешь, с кем, что нужно сказать и понять. Подробности — это те самые фразы, которые пригодятся.';
-
-  @override
-  String get planEntryGoalSubtitle =>
-      'Расскажи своими словами: где будешь, с кем, что нужно сказать и понять.';
-
-  @override
-  String get planEntryGoalPlaceholder =>
-      'Например: иду к врачу с ребёнком, надо объяснить симптомы и понять назначение';
-
-  @override
-  String get planEntryLinesHint => 'можно 4–6 строк';
-
-  @override
-  String get planEntryEnough => 'хватит для плана';
-
-  @override
-  String get planEntryDetailed => 'подробно — это хорошо';
-
-  @override
-  String get planEntryTooShort =>
-      'Пары слов мало. Добавь: к какому врачу, с кем идёшь, что нужно понять.';
-
-  @override
-  String get planEntryExamplesTitle => 'Так тоже подходит';
-
-  @override
-  String get planEntryAdditionsTitle => 'Можно добавить';
-
-  @override
-  String get planEntryFinishTitle => 'Дописать за тебя';
-
-  @override
-  String get planEntryExample1 => 'Иду к врачу, болит спина, надо объяснить и понять назначение';
-
-  @override
-  String get planEntryExample2 =>
-      'Онлайн-собеседование PHP-разработчика, удалённо, английская команда';
-
-  @override
-  String get planEntryExample3 => 'Летим в отпуск с ребёнком, аэропорт, отель, аптека';
-
-  @override
-  String get planEntryNext => 'Дальше';
-
-  @override
-  String get planEntryDictate => 'Продиктовать';
-
-  @override
-  String get planEntryLangTitle => 'Какой язык учишь?';
-
-  @override
-  String planEntryTranslationsInto(String language) {
-    return 'Переводы на $language';
-  }
-
-  @override
-  String get planEntrySettingsLink => 'изменить в настройках';
-
-  @override
-  String get planEntryLevelTitle => 'Как сейчас говоришь?';
-
-  @override
-  String get planLevelZeroHint => 'Знаю отдельные слова, фразу не соберу';
-
-  @override
-  String get planLevelBasicHint => 'Читаю переписку, но говорю с паузами';
-
-  @override
-  String get planLevelConversationalHint => 'Договорюсь о бытовом, сложное — подбираю слова';
-
-  @override
-  String get planLevelFluentHint => 'Говорю без подготовки, шлифую точность';
-
-  @override
-  String get planListenKicker => 'Необязательный шаг';
-
-  @override
-  String get planListenOfferTitle => 'Хочешь, настрою точнее?';
-
-  @override
-  String get planListenOfferBody =>
-      'Послушай три реплики из твоей ситуации — как они прозвучат на самом деле. Минута.';
-
-  @override
-  String get planListenListen => 'Послушать';
-
-  @override
-  String get planListenSkip => 'Пропустить';
-
-  @override
-  String get planListenReassure =>
-      'Это не тест. Ответы никто не увидит, план соберётся и без этого шага.';
-
-  @override
-  String get planListenEnough => 'Хватит';
-
-  @override
-  String planListenLine(int index) {
-    return 'Реплика $index';
-  }
-
-  @override
-  String planListenLineAt(int index, String place) {
-    return 'Реплика $index · $place';
-  }
-
-  @override
-  String get planListenReplayHint => 'Слушай столько раз, сколько нужно.';
-
-  @override
-  String get planListenShowText => 'Показать текст';
-
-  @override
-  String get planListenFeelLabel => 'Как ощущается';
-
-  @override
-  String get planListenGot => 'Понял';
-
-  @override
-  String get planListenNotQuite => 'Не совсем';
-
-  @override
-  String get planListenNoRightAnswer =>
-      'Правильного ответа нет — это про то, что подобрать в план.';
-
-  @override
-  String get planListenResultUnderstanding => 'Понял: сделаю упор на понимание на слух';
-
-  @override
-  String get planListenResultUnderstandingBody =>
-      'Речь идёт быстрее, чем удобно. В плане будет больше прослушивания и меньше зубрёжки слов.';
-
-  @override
-  String get planListenResultSpeaking => 'Понимаешь на слух уверенно: сделаю упор на говорение';
-
-  @override
-  String get planListenResultSpeakingBody =>
-      'Реплики тебе даются — в плане будет больше твоих ответов вслух и меньше зубрёжки слов.';
-
-  @override
-  String get planListenResultFootnote => 'Настройку можно поменять в плане в любой день.';
-
-  @override
-  String get planEntryRibbonListenUnderstanding => 'Слух · упор на понимание';
-
-  @override
-  String get planEntryRibbonListenSpeaking => 'Слух · упор на говорение';
-
-  @override
-  String get planEntryRibbonListenSkipped => 'Слух · шаг пропущен';
-
-  @override
-  String get planEntryPass => 'Пройти';
-
-  @override
-  String planEntryRibbonLangLevel(String language, String level) {
-    return '$language · $level';
-  }
-
-  @override
-  String get planEntryWhenTitle => 'Когда это случится?';
-
-  @override
-  String get planEntryPickDate => 'Выбрать дату';
-
-  @override
-  String planEntryHintDays(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'Через $days дня · сервер разложит подготовку по этим дням',
-      many: 'Через $days дней · сервер разложит подготовку по этим дням',
-      few: 'Через $days дня · сервер разложит подготовку по этим дням',
-      one: 'Через $days день · сервер разложит подготовку по этим дням',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planEntryHintToday => 'Сегодня · вся подготовка уместится в один подход';
-
-  @override
-  String get planEntryHintNoDate => 'Даты нет · идём в своём темпе, по одной сцене за подход';
-
-  @override
-  String get planEntryMinutesTitle => 'Сколько минут в день?';
-
-  @override
-  String get planEntryMinutesUnit => 'минут';
-
-  @override
-  String get planEntryBuild => 'Собрать план';
-
-  @override
-  String get planBuildKicker => 'Собираю твой план';
-
-  @override
-  String get planBuildStep1 => 'Разбираю цель';
-
-  @override
-  String get planBuildStep2 => 'Подбираю реплики';
-
-  @override
-  String get planBuildStep3 => 'Собираю слова';
-
-  @override
-  String get planBuildFootnote =>
-      'Реплики берём из живой речи, не из учебника. Это занимает несколько секунд.';
-
-  @override
-  String get planBuildRetryKicker => 'Сборка идёт';
-
-  @override
-  String get planBuildRetryBody => 'Не получилось собрать с первого раза — пробую ещё.';
-
-  @override
-  String get planBuildRetryFootnote => 'Ответы на месте. Вторая попытка идёт с того же шага.';
-
-  @override
-  String get planBuildOfflineKicker => 'Сборка приостановлена';
-
-  @override
-  String get planBuildOfflineTitle => 'Пропала связь на середине';
-
-  @override
-  String get planBuildOfflineBody =>
-      'Ответы сохранены — ничего вводить заново не придётся. Продолжим, как только сеть вернётся.';
-
-  @override
-  String get planBuildRetryButton => 'Попробовать снова';
-
-  @override
-  String get planBuildNotifyButton => 'Сообщить, когда будет готов';
-
-  @override
-  String get planBuildNotifyUnavailable => 'Уведомления ещё не подключены';
-
-  @override
-  String get planBuildFailedKicker => 'Не собралось';
-
-  @override
-  String get planBuildFailedTitle => 'Не собралось. Твои ответы сохранены';
-
-  @override
-  String get planBuildFailedBody =>
-      'Ничего вводить заново не придётся. Можно вернуться к ответам и запустить сборку снова — или написать нам.';
-
-  @override
-  String get planBuildBackToAnswers => 'Вернуться к ответам';
-
-  @override
-  String get planBuildWriteUs => 'Написать нам';
-
-  @override
-  String get planBuildMailSubject => 'Не собрался план';
-
-  @override
-  String get planPreviewKicker => 'Твой план готов';
-
-  @override
-  String planPreviewSubtitle(int scenes, String topics) {
-    String _temp0 = intl.Intl.pluralLogic(
-      scenes,
-      locale: localeName,
-      other: '$scenes сцены',
-      many: '$scenes сцен',
-      few: '$scenes сцены',
-      one: '$scenes сцена',
-    );
-    return 'По твоим словам — $_temp0: $topics.';
-  }
-
-  @override
-  String planPreviewSubtitleNoDate(int scenes, String topics) {
-    String _temp0 = intl.Intl.pluralLogic(
-      scenes,
-      locale: localeName,
-      other: '$scenes сцены',
-      many: '$scenes сцен',
-      few: '$scenes сцены',
-      one: '$scenes сцена',
-    );
-    return 'По твоим словам — $_temp0: $topics. Даты нет, идём в своём темпе.';
-  }
-
-  @override
-  String planPreviewOrientation(int days, int minutes) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: '$days ДНЯ ПОДГОТОВКИ',
-      many: '$days ДНЕЙ ПОДГОТОВКИ',
-      few: '$days ДНЯ ПОДГОТОВКИ',
-      one: '$days ДЕНЬ ПОДГОТОВКИ',
-    );
-    return '$_temp0 · $minutes МИНУТ В ДЕНЬ';
-  }
-
-  @override
-  String planPreviewOrientationNoDate(int scenes, int minutes) {
-    String _temp0 = intl.Intl.pluralLogic(
-      scenes,
-      locale: localeName,
-      other: '$scenes СЦЕНЫ',
-      many: '$scenes СЦЕН',
-      few: '$scenes СЦЕНЫ',
-      one: '$scenes СЦЕНА',
-    );
-    return '$_temp0 · $minutes МИНУТ В ДЕНЬ · ПО ОДНОЙ ЗА ПОДХОД';
-  }
-
-  @override
-  String get planPreviewDaysTitle => 'Твои дни';
-
-  @override
-  String get planPreviewScenesTitle => 'Твои сцены';
-
-  @override
-  String planPreviewDayLabel(int index) {
-    return 'ДЕНЬ $index';
-  }
-
-  @override
-  String planPreviewSceneLabel(int index) {
-    return 'СЦЕНА $index';
-  }
-
-  @override
-  String get planPreviewRescueBody =>
-      'Пять фраз на всякий случай — с первого дня, если не понял или не расслышал.';
-
-  @override
-  String get planPreviewRescueQuote =>
-      '«Помедленнее, пожалуйста» — и ещё четыре таких, с первого дня.';
-
-  @override
-  String get planPreviewRehearsalEveLabel => 'НАКАНУНЕ';
-
-  @override
-  String get planPreviewRehearsalEndLabel => 'В КОНЦЕ';
-
-  @override
-  String get planPreviewRehearsalTitle => 'Скажи сам перед событием';
-
-  @override
-  String planPreviewRehearsalEveBody(int scenes) {
-    String _temp0 = intl.Intl.pluralLogic(
-      scenes,
-      locale: localeName,
-      other: 'Все $scenes сцены',
-      many: 'Все $scenes сцен',
-      few: 'Все $scenes сцены',
-      one: 'Одна сцена',
-    );
-    return '$_temp0 подряд, вслух, за один присест.';
-  }
-
-  @override
-  String get planPreviewRehearsalEndBody =>
-      'Откроется, когда пройдёшь все сцены. Дату можно поставить в любой день.';
-
-  @override
-  String get planPreviewStartDay => 'Начать первый день';
-
-  @override
-  String get planPreviewStartScene => 'Начать первую сцену';
-
-  @override
-  String get planPreviewEditAnswers => 'Изменить ответы';
-
-  @override
-  String get planPreviewSetDate => 'Поставить дату';
 
   @override
   String get devVoicesTitle => 'Голоса реплик';
@@ -3248,68 +2597,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get planStateNotStarted => 'не начат';
-
-  @override
-  String get planStateInProgress => 'идёт';
-
-  @override
-  String get planStateDone => 'пройден';
-
-  @override
-  String get planStateMaterialDone => 'слова и фразы пройдены';
-
-  @override
-  String planStateMaterialAbout(int minutes) {
-    String _temp0 = intl.Intl.pluralLogic(
-      minutes,
-      locale: localeName,
-      other: 'слова и фразы около $minutes минуты',
-      many: 'слова и фразы около $minutes минут',
-      few: 'слова и фразы около $minutes минут',
-      one: 'слова и фразы около $minutes минуты',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String planStateConversationAbout(int minutes) {
-    String _temp0 = intl.Intl.pluralLogic(
-      minutes,
-      locale: localeName,
-      other: 'разговор около $minutes минуты',
-      many: 'разговор около $minutes минут',
-      few: 'разговор около $minutes минут',
-      one: 'разговор около $minutes минуты',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planSittingToConversation => 'К разговору';
-
-  @override
-  String planStateMinutes(int minutes) {
-    String _temp0 = intl.Intl.pluralLogic(
-      minutes,
-      locale: localeName,
-      other: 'около $minutes минуты',
-      many: 'около $minutes минут',
-      few: 'около $minutes минут',
-      one: 'около $minutes минуты',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get planDayRepeat => 'Пройти ещё раз';
-
-  @override
-  String planHomeDayState(int index, String state) {
-    return 'День $index · $state';
-  }
-
-  @override
   String get devQaClockTitle => 'QA · «сегодня» плана';
 
   @override
@@ -3330,6 +2617,536 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devQaClockReset => 'Сбросить';
+
+  @override
+  String get planTitle => 'План';
+
+  @override
+  String get planEmptyTitle => 'К чему готовишься?';
+
+  @override
+  String get planEmptyBody =>
+      'План — подготовка к конкретной ситуации: врач, аренда, собеседование, поездка. Каждый день — одна сцена из неё, 20 минут. В конце — репетиция вслух.';
+
+  @override
+  String get planEmptyCta => 'Собрать план';
+
+  @override
+  String get planEmptyNote => 'три вопроса, меньше минуты';
+
+  @override
+  String get planFinishedTitle => 'Завершённые планы';
+
+  @override
+  String planFinishedItemDate(String date) {
+    return 'завершён $date';
+  }
+
+  @override
+  String planProgressDay(int n, int total) {
+    return 'День $n из $total';
+  }
+
+  @override
+  String planPlateLabel(int n) {
+    return 'День $n';
+  }
+
+  @override
+  String planCardsCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n карточки',
+      many: '$n карточек',
+      few: '$n карточки',
+      one: '$n карточка',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planMinutesCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n минуты',
+      many: '$n минут',
+      few: '$n минуты',
+      one: '$n минута',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planPlateStageWords => 'Слова';
+
+  @override
+  String get planPlateStagePhrases => 'Фразы';
+
+  @override
+  String get planPlateStageDialog => 'Диалог';
+
+  @override
+  String get planPlateStageListen => 'Слушаю и отвечаю';
+
+  @override
+  String get planPlateStageSpeak => 'Говорю сам';
+
+  @override
+  String planPlateStageCount(int done, int total) {
+    return '$done / $total';
+  }
+
+  @override
+  String planNewWordsCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n новых слова',
+      many: '$n новых слов',
+      few: '$n новых слова',
+      one: '$n новое слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planPlateStageSubStart(String words) {
+    return 'начни отсюда · $words';
+  }
+
+  @override
+  String planPlateStageSubUnfinished(String cards) {
+    return 'не закончен · $cards';
+  }
+
+  @override
+  String get planPlateCtaStart => 'Начать';
+
+  @override
+  String get planPlateCtaContinue => 'Продолжить';
+
+  @override
+  String planClosedTitle(int n) {
+    return 'День $n закрыт';
+  }
+
+  @override
+  String planClosedMeta(String title, String cards, String minutes) {
+    return '$title · $cards · $minutes';
+  }
+
+  @override
+  String planClosedReturn(int n, int k) {
+    String _temp0 = intl.Intl.pluralLogic(
+      k,
+      locale: localeName,
+      other: 'Вернутся в день $n · $k карточки',
+      many: 'Вернутся в день $n · $k карточек',
+      few: 'Вернутся в день $n · $k карточки',
+      one: 'Вернётся в день $n · $k карточка',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planRouteDayRepeat => 'День повторения';
+
+  @override
+  String planRouteDayRepeatSub(int a, int b) {
+    return 'слова и фразы дней $a–$b';
+  }
+
+  @override
+  String planRouteDayRepeatSubOne(int a) {
+    return 'слова и фразы дня $a';
+  }
+
+  @override
+  String get planRouteDayRehearsal => 'Репетиция';
+
+  @override
+  String get planRouteDayRehearsalSub => 'весь маршрут вслух';
+
+  @override
+  String planRouteEventTitle(String event, String date) {
+    return '$event · $date';
+  }
+
+  @override
+  String get planKitLabel => 'Спасательный набор';
+
+  @override
+  String planKitSub(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n фразы на любой случай',
+      many: '$n фраз на любой случай',
+      few: '$n фразы на любой случай',
+      one: '$n фраза на любой случай',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planKitAll(int n) {
+    return 'все $n →';
+  }
+
+  @override
+  String get planKitCollapse => 'свернуть';
+
+  @override
+  String get planDoneTitle => 'План пройден';
+
+  @override
+  String planDaysCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n дня',
+      many: '$n дней',
+      few: '$n дня',
+      one: '$n день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planDoneMeta(String days) {
+    return '$days';
+  }
+
+  @override
+  String planDoneCollection(String name) {
+    return 'Слова и фразы плана остались в коллекции «$name» — они будут приходить на повторение';
+  }
+
+  @override
+  String get planDoneCta => 'Собрать новый план';
+
+  @override
+  String get planDoneCtaReadonly => 'Открыть коллекцию';
+
+  @override
+  String get planMenuDate => 'Изменить дату';
+
+  @override
+  String get planMenuNew => 'Собрать новый план';
+
+  @override
+  String get planMenuCollection => 'Открыть коллекцию';
+
+  @override
+  String get planMenuDelete => 'Удалить план';
+
+  @override
+  String get planMenuLabel => 'Меню плана';
+
+  @override
+  String planDateTitle(String event) {
+    return 'Когда $event?';
+  }
+
+  @override
+  String get planDateTitleNoEvent => 'Когда событие?';
+
+  @override
+  String planDateOptionCurrent(String date) {
+    return '$date · как сейчас';
+  }
+
+  @override
+  String get planDateOptionOther => 'Другая дата';
+
+  @override
+  String get planDateOptionOtherSub => 'выбрать в календаре';
+
+  @override
+  String get planDateCta => 'Применить';
+
+  @override
+  String get planDateCancel => 'Отменить';
+
+  @override
+  String get planDateRemove => 'Без даты';
+
+  @override
+  String get planNewTitle => 'Начать другой план?';
+
+  @override
+  String planNewBody(int n, int total, String name) {
+    return 'Этот план завершится на дне $n из $total. Всё, что уже в работе, останется в коллекции «$name» и будет приходить на повторение';
+  }
+
+  @override
+  String get planNewCta => 'Собрать новый';
+
+  @override
+  String get planNewKeep => 'Оставить этот';
+
+  @override
+  String get planDeleteTitle => 'Удалить план?';
+
+  @override
+  String planDeleteBody(String name) {
+    return 'План исчезнет из истории. Коллекция «$name» и её слова останутся';
+  }
+
+  @override
+  String get planDeleteBodyNoCollection => 'План исчезнет из истории';
+
+  @override
+  String get planDeleteConfirm => 'Удалить';
+
+  @override
+  String planOverdueMeta(String days, int total) {
+    return 'Пройдено $days из $total';
+  }
+
+  @override
+  String get planOverdueFinish => 'Завершить план';
+
+  @override
+  String get planOverdueReschedule => 'Перенести дату';
+
+  @override
+  String get planHintFirstStart => 'Начни с этапа «Слова». Остальные откроются по порядку';
+
+  @override
+  String get planHintFirstRoute => 'Сегодняшний день открыт, следующий откроется завтра';
+
+  @override
+  String get planHintFirstKit =>
+      'Пять фраз на случай, если не понял или не успел. Пригодятся в любом разговоре';
+
+  @override
+  String get planHintFirstReturn =>
+      'Эти карточки придут в следующий день ещё раз — так они и запоминаются';
+
+  @override
+  String get planSheetTitle => 'Как устроен план';
+
+  @override
+  String get planSheetRowDays => 'Каждый день — одна ситуация. Дни открываются по одному';
+
+  @override
+  String get planSheetRowStages =>
+      'Пять этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам. Следующий открывается, когда закрыт этот';
+
+  @override
+  String get planSheetRowReturn =>
+      'То, что не получилось, вернётся в следующий день. Ничего не потеряется';
+
+  @override
+  String get planSheetCta => 'Понятно';
+
+  @override
+  String get planTabOffline => 'нет сети';
+
+  @override
+  String get planTabLoadFailedTitle => 'Не получилось загрузить план';
+
+  @override
+  String get planTabRetry => 'Повторить';
+
+  @override
+  String get planEntryNavTitle => 'Новый план';
+
+  @override
+  String get planEntryNavCancel => 'Отмена';
+
+  @override
+  String get planEntryNext => 'Далее';
+
+  @override
+  String get planEntryGoalTitle => 'К чему готовишься?';
+
+  @override
+  String get planEntryGoalHint => 'ситуация · с кем говоришь · что важно';
+
+  @override
+  String get planEntryGoalPlaceholder =>
+      'Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике, боюсь не понять назначения';
+
+  @override
+  String get planEntryGoalChipDoctor => 'Врач';
+
+  @override
+  String get planEntryGoalChipRent => 'Аренда';
+
+  @override
+  String get planEntryGoalChipInterview => 'Собеседование';
+
+  @override
+  String get planEntryGoalChipTrip => 'Поездка';
+
+  @override
+  String get planEntryGoalChipOther => 'Другое';
+
+  @override
+  String get planEntryGoalTemplateDoctor =>
+      'Иду к врачу. Проблема: … . Важно: понять назначения и спросить про …';
+
+  @override
+  String get planEntryGoalTemplateRent =>
+      'Снимаю квартиру. Смотрю жильё с … . Важно: спросить про … и понять условия';
+
+  @override
+  String get planEntryGoalTemplateInterview =>
+      'Иду на собеседование на … . Важно: рассказать о себе и спросить про …';
+
+  @override
+  String get planEntryGoalTemplateTrip => 'Еду в … с … . Важно: … и понять, куда идти';
+
+  @override
+  String get planEntryGoalShort => 'Добавь, с кем и что важно — план будет точнее';
+
+  @override
+  String get planEntryGoalDictate => 'Надиктовать';
+
+  @override
+  String get planEntryGoalDictateStop => 'Стоп';
+
+  @override
+  String get planEntryTapeGoal => 'Цель';
+
+  @override
+  String get planEntryTapeLanguage => 'Язык';
+
+  @override
+  String get planEntryTapeDays => 'Дни';
+
+  @override
+  String get planEntryTapeEdit => 'Изм.';
+
+  @override
+  String planEntryTapeLanguageValue(String language, String level) {
+    return '$language · $level';
+  }
+
+  @override
+  String planEntryTapeDaysValue(int n, String event, String date) {
+    return '$n · $event $date';
+  }
+
+  @override
+  String planEntryTapeDaysValueDated(int n, String date) {
+    return '$n · $date';
+  }
+
+  @override
+  String get planEntryLanguageTitle => 'Какой язык?';
+
+  @override
+  String get planEntryLevelLabel => 'Уровень';
+
+  @override
+  String get planEntryLevelBeginner => 'Начинающий';
+
+  @override
+  String get planEntryLevelBeginnerSub => 'понимаю отдельные слова и простые фразы';
+
+  @override
+  String get planEntryLevelIntermediate => 'Средний';
+
+  @override
+  String get planEntryLevelIntermediateSub => 'объясняюсь, но не хватает слов';
+
+  @override
+  String get planEntryLevelFluentNote => 'Для подготовки к ситуации среднего уровня достаточно';
+
+  @override
+  String get planEntryDaysTitle => 'Сколько дней на подготовку?';
+
+  @override
+  String get planEntryDateToggle => 'Знаю дату события';
+
+  @override
+  String get planEntryDateNote => 'Дата встанет в конец маршрута, напомним накануне';
+
+  @override
+  String planEntryDateShorten(int left, int to) {
+    String _temp0 = intl.Intl.pluralLogic(
+      left,
+      locale: localeName,
+      other: 'До события $left дня — план сократится до $to',
+      many: 'До события $left дней — план сократится до $to',
+      few: 'До события $left дня — план сократится до $to',
+      one: 'До события $left день — план сократится до $to',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planEntryPreviewTitle => 'Маршрут';
+
+  @override
+  String planEntryPreviewSub(String days, String language, String level) {
+    return '$days · $language · $level';
+  }
+
+  @override
+  String get planEntryPreviewLoadingTitle => 'Собираем маршрут';
+
+  @override
+  String get planEntryPreviewLoadingSub => 'около 10 секунд';
+
+  @override
+  String get planEntryPreviewRemove => 'Убрать';
+
+  @override
+  String get planEntryPreviewHint => 'Не то? Убери день свайпом или измени цель';
+
+  @override
+  String get planEntryPreviewCta => 'Начать';
+
+  @override
+  String get planEntryPreviewErrorTitle => 'Не получилось собрать маршрут';
+
+  @override
+  String get planEntryPreviewErrorSub =>
+      'Сервис не ответил. Цель и ответы сохранены — ничего вводить заново не нужно';
+
+  @override
+  String get planEntryPreviewErrorRetry => 'Ещё раз';
+
+  @override
+  String get planEntryPreviewErrorEdit => 'Изменить цель';
+
+  @override
+  String get planEntryPreviewUnclearTitle => 'Не понял, к чему готовишься';
+
+  @override
+  String get planEntryPreviewUnclearSub => 'Опиши ситуацию словами: где, с кем, зачем';
+
+  @override
+  String get planEntryPreviewUnclearCta => 'К цели';
+
+  @override
+  String planEntryDayBuilding(int n) {
+    return 'Собираем день $n · около минуты';
+  }
+
+  @override
+  String get planEntryDayFailedTitle => 'День не собрался';
+
+  @override
+  String get planEntryDayFailedSub =>
+      'Маршрут на месте. Попробуем ещё раз — это займёт около минуты';
+
+  @override
+  String get planEntryPushTitle => 'План готов';
+
+  @override
+  String planEntryPushBody(String dayTitle) {
+    return 'День 1 · $dayTitle — можно начинать';
+  }
+
+  @override
+  String get planEntryOffline => 'Без сети план не собрать';
 
   @override
   String get profileRowSounds => 'Звуки';
