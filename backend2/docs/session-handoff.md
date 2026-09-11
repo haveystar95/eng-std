@@ -7,13 +7,15 @@
 > Канон плана: **`docs/plan-v2.md`**; контракт: **`docs/plan-api.md`** + `openapi/openapi.yaml`
 > (тег `Plans`); модуль: `app/Modules/Plan/README.md`. Отчёт наряда — `docs/research/plan-gen/README.md`.
 
-Branch: `day-ui` (мобильный), коммит — см. `git log`; `main` — `b816951b`. Last updated: 2026-09-11 (наряд DAY-UI).
+Branch: `main`, коммит `6a9f8dfc` (слияние DAY-UI + PLAN-UI). Last updated: 2026-09-11.
 
 ---
 
-## ПЕРВОЕ (мобильный, ветка `day-ui`): DAY-UI — кабинет дня и сессия по кадрам
+## ПЕРВОЕ (мобильный, `main` = `6a9f8dfc`): DAY-UI влит в PLAN-UI — весь плановый контур на клиенте
 
-Наряд DAY-UI (11.09.2026) на ветке `day-ui` от `b816951b`, отчёт — `docs/research/day-ui/README.md`.
+Наряды PLAN-UI (таб 21-x, вход 22-x) и DAY-UI (кабинет 23-0x, сессия 23-1…23-15) слиты в `main`
+коммитом `6a9f8dfc`; отчёты — `docs/research/plan-ui/README.md` и `docs/research/day-ui/README.md`
+(слияние — §9 второго: список конфликтов и решений).
 Клиент переведён на контракт PLAN-GEN (`docs/plan-api.md`): `lib/data/plan/` (контракт, машина
 состояний `DaySession`, правила зачёта `DayRules`), кабинет дня `lib/features/plan/day/day_room_screen.dart`
 (23-0a…0e), сессия `day_session_screen.dart` + 13 карточек `day/cards/` (23-1…23-15), общие виджеты
@@ -22,16 +24,15 @@ Branch: `day-ui` (мобильный), коммит — см. `git log`; `main` 
 `PlanHearOptions`, 270 ключей `plan*` удалены. Карта экранов `docs/design/design-map.md` переписана.
 
 Что надо знать:
-1. **Вход в кабинет — ссылка `engstd://plan/day/{dayId}`** (`lib/data/deep_links.dart`, `SceneDelegate` →
-   `AppDelegate.handleLink`, канал `com.denis.engstd/links`); уведомления и QA-прогон ходят ею. Таб «План» —
-   заглушка `_DayEntryStub`, домашняя карточка и сборка → `openDayRoom`; сам таб/вход рисует PLAN-UI
-   параллельно — при слиянии конфликты в `plan_tab_screen.dart`, `home_plan_card.dart`,
-   `plan_building_screen.dart`, `plan_notification_host.dart`, ARB, `docs/plan-ui-glossary.md`.
+1. **Один контракт плана**: `lib/data/plan/plan_models.dart` (план, маршрут, сцены, кабинет,
+   сборка, версии) + `day_contract.dart` (карточки дня, шит) — второй стоит на enum'ах первого.
+   **Одна дверь в кабинет** — `openDayRoom`: тап по плите таба, уведомление и ссылка
+   `engstd://plan/day/{dayId}` (слушает `plan_ready_notification_host.dart`).
 2. **Состояния экранов — golden-тесты** `mobile/test/goldens/` (41 PNG, фикстуры ответов сервера в
    `fixtures/`); перерисовать — `flutter test test/goldens --update-goldens`.
-3. Ворота: `flutter analyze` 0, `flutter test` 1270 passed. Живой прогон на симуляторе — только до
-   кабинета (автоматизация тапов делит XCTest-порт с сессией PLAN-UI); пять этапов живьём, день 2,
-   Intermediate живьём и звук на слух — **не проверены**, см. отчёт §6.
+3. Ворота после слияния: `flutter analyze` 0, `flutter test` **1327 passed** (41 golden дня + 32
+   PLAN-UI). Живой прогон на симуляторе — только до кабинета; пять этапов живьём, день 2,
+   Intermediate живьём и звук на слух — **не проверены**, см. отчёт DAY-UI §6.
 4. Отклонения от кадров — все от контракта: до `POST …/open` у дня нет этапов/программы/обменов;
    `metrics` только у закрытого дня; минут на день у сервера нет. Вопросы архитектору — отчёт §7.
 5. Стенд: QA-аккаунты `qa-dayui@wt.test` (план «врач», Beginner, `01M26KPM34Z9C9B31GBRR4YZGA`) и
