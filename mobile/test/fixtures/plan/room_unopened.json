@@ -1,0 +1,339 @@
+{
+ "plan_id": "01M26PB5WX7K4B6K3HMNN9S9CY",
+ "day": {
+  "id": "01M26PB5X5RWNNEEP5X5YHRXBC",
+  "number": 1,
+  "type": "scene",
+  "status": "locked",
+  "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+  "title_native": "Запись в клинику",
+  "title_target": "Clinic booking",
+  "teaches_native": "записаться, спросить про документы",
+  "lesson_status": "ready",
+  "opens_on": null,
+  "slot": {
+   "code": "today",
+   "date": "2026-09-12",
+   "label_native": "сегодня"
+  },
+  "cards_total": 0,
+  "cards_done": 0,
+  "minutes_spent": 0,
+  "opened_at": null,
+  "closed_at": null
+ },
+ "scene": {
+  "id": "01M26PBHTJXG0PEQVE5BNKB25K",
+  "order": 1,
+  "kind": "situation",
+  "priority": 3,
+  "title_native": "Запись в клинику",
+  "title_target": "Clinic booking",
+  "teaches_native": "записаться, спросить про документы",
+  "goals_native": [
+   "записать ребёнка на приём",
+   "сказать причину визита",
+   "спросить про документы",
+   "уточнить время и адрес"
+  ],
+  "learner_role_target": "Parent",
+  "learner_role_native": "Родитель",
+  "partner_role_target": "Receptionist",
+  "partner_role_native": "Администратор",
+  "image": {
+   "url": "https://images.pexels.com/photos/6809657/pexels-photo-6809657.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+   "author": "Pavel Danilyuk",
+   "author_url": "https://www.pexels.com/@pavel-danilyuk"
+  },
+  "lesson_status": "ready",
+  "lesson_fail_reason": null,
+  "day_number": 1,
+  "cost_usd": "0.084400",
+  "latency_ms": 33148,
+  "prompt_version": "lesson-v3"
+ },
+ "goals_native": [
+  "записать ребёнка на приём",
+  "сказать причину визита",
+  "спросить про документы",
+  "уточнить время и адрес"
+ ],
+ "stages": [
+  {
+   "stage": "words",
+   "total": 32,
+   "done": 0,
+   "state": "current"
+  },
+  {
+   "stage": "phrases",
+   "total": 18,
+   "done": 0,
+   "state": "locked"
+  },
+  {
+   "stage": "dialogue",
+   "total": 1,
+   "done": 0,
+   "state": "locked"
+  },
+  {
+   "stage": "listen",
+   "total": 16,
+   "done": 0,
+   "state": "locked"
+  },
+  {
+   "stage": "speak",
+   "total": 8,
+   "done": 0,
+   "state": "locked"
+  }
+ ],
+ "metrics": null,
+ "program": [
+  {
+   "unit_kind": "word",
+   "unit_ref": "v1",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "appointment",
+   "text_native": "запись на приём",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v2",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "back pain",
+   "text_native": "боль в спине",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v3",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "documents",
+   "text_native": "документы",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v4",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "insurance card",
+   "text_native": "страховая карта",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v5",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "previous records",
+   "text_native": "предыдущие медицинские записи",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v6",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "registration",
+   "text_native": "регистрация",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v7",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "address",
+   "text_native": "адрес",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v8",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "first visit",
+   "text_native": "первый визит",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p1",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "I need an appointment for my child.",
+   "text_native": "Мне нужна запись на приём для моего ребёнка.",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p3",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "What's the clinic address?",
+   "text_native": "Какой адрес клиники?",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p4",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "What documents should I bring?",
+   "text_native": "Какие документы мне нужно принести?",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p5",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "Do you accept our insurance?",
+   "text_native": "Вы принимаете нашу страховку?",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p6",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "So the appointment is Thursday at 10, right?",
+   "text_native": "То есть приём в четверг в 10, верно?",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p2",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "Thursday at 10 works better.",
+   "text_native": "Четверг в 10 подходит лучше.",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x1",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x2",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x3",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x4",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "Yes, we do, but please bring the card for registration.",
+   "text_native": "Да, принимаем, но, пожалуйста, принесите карту для регистрации.",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x5",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "We're at 18 Green Street, next to the pharmacy.",
+   "text_native": "Мы находимся по адресу: Грин-стрит, 18, рядом с аптекой.",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x6",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": "Since it's your first visit, please arrive 15 minutes early.",
+   "text_native": "Поскольку это ваш первый визит, пожалуйста, придите на 15 минут раньше.",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x7",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x8",
+   "scene_id": "01M26PBHTJXG0PEQVE5BNKB25K",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 0,
+   "state": "pending"
+  }
+ ],
+ "sheet_available": true
+}

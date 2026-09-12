@@ -70,9 +70,12 @@ const Map<String, String> kLanguageGreetings = {
   'pl': 'Cześć, jak się masz?',
   'pt': 'Olá, tudo bem?',
   'ro': 'Salut, ce faci?',
-  'uk': 'Привіт, як справи?',
-  'ru': 'Привет, как дела?',
 };
+
+// Приветствий на кириллице здесь нет намеренно: `ru` и `uk` в этом продукте — языки, НА которых
+// объясняют, а не которые изучают, и в карточке выбора языка они не появляются. Если такой язык
+// когда-нибудь станет изучаемым, его приветствие поедет через ARB, а не сюда: гард
+// `no_cyrillic_outside_l10n_test` держит это правило.
 
 /// Приветствие на языке [code], или null — тогда карточка стоит без подписи.
 String? greetingFor(String code) => kLanguageGreetings[code.trim().toLowerCase()];

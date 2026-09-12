@@ -449,6 +449,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
         days: _s.days,
         eventDate: _s.eventDate,
         suggested: _suggestedDate(),
+        today: DateTime.now(),
         onPickSuggested: () => setState(
           () => _s = _s.copyWith(
             eventDate: _s.eventDate ?? _suggestedDate(),

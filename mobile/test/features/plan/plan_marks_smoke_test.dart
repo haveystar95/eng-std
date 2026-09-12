@@ -51,8 +51,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // 5 этапов + 3 системных дня + 7 иконок серии 22 = 15 файлов канвы, все нашлись.
-    expect(find.byType(SvgPicture), findsNWidgets(15));
+    // Счёт берётся из самих перечислений: набор значков канвы растёт, и число в тесте, которое
+    // надо помнить обновить, ловило бы не пропавший файл, а собственную несвежесть.
+    final expected = PlanStageMarkKind.values.length +
+        PlanSystemDay.values.length +
+        PlanIcon.values.length;
+    expect(find.byType(SvgPicture), findsNWidgets(expected));
 
     // Пустой svg рисуется без ошибок, поэтому мало найти виджет — у каждого должна быть
     // РАСПАКОВАННАЯ картинка с ненулевым размером.

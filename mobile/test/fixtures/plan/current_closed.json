@@ -1,290 +1,217 @@
 {
-  "id": "01M26S6T90GV28WCR6ZE0YQTHR",
-  "status": "active",
-  "goal_text": "Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике, боюсь не понять назначения",
-  "target_lang": "en",
-  "native_lang": "ru",
-  "level": "intermediate",
-  "days_total": 5,
-  "days_requested": 5,
-  "days_shortened_from": null,
-  "event_date": "2026-09-16",
-  "days_left": 5,
-  "title_native": "Приём с ребёнком",
-  "title_target": "Doctor visit with child",
-  "event_native": "Приём",
-  "until_phrase": "До приёма · 5 дней",
-  "overdue_native": null,
-  "route_summary": "5 дней · 3 ситуации, 1 повторение, репетиция",
-  "learner_role_target": "Parent",
-  "learner_role_native": "Родитель",
-  "cover_image": {
-    "url": "https://images.pexels.com/photos/39192346/pexels-photo-39192346.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+ "id": "01M26KTYVVTXRN9T4AE4807BXV",
+ "status": "active",
+ "goal_text": "Снимаю квартиру: звонок агенту и просмотр жилья, важно обсудить условия и договор",
+ "target_lang": "en",
+ "native_lang": "ru",
+ "level": "intermediate",
+ "days_total": 3,
+ "days_requested": 3,
+ "days_shortened_from": null,
+ "event_date": null,
+ "days_left": null,
+ "title_native": "Съём квартиры",
+ "title_target": "Renting a flat",
+ "event_native": "Просмотр",
+ "until_phrase": null,
+ "overdue_native": null,
+ "route_summary": "3 дня · 2 ситуации, репетиция",
+ "learner_role_target": "Tenant",
+ "learner_role_native": "Арендатор",
+ "cover_image": {
+  "url": "https://images.pexels.com/photos/7937363/pexels-photo-7937363.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+  "author": "Pavel Danilyuk",
+  "author_url": "https://www.pexels.com/@pavel-danilyuk"
+ },
+ "collection_id": "01M2B23360E5VDJFNWBPVKDQJR",
+ "unclear_reason": null,
+ "fail_reason": null,
+ "current_day": {
+  "id": "01M26KTYVXZ8K9P5G1K3HHPSKP",
+  "number": 2,
+  "type": "scene",
+  "status": "locked",
+  "scene_id": "01M26KV8TNPJ1QAGPSJEGE8ESX",
+  "title_native": "Просмотр жилья",
+  "title_target": "Flat viewing",
+  "teaches_native": "обсудить условия и договор",
+  "lesson_status": "ready",
+  "opens_on": "2026-09-13",
+  "slot": {
+   "code": "tomorrow",
+   "date": "2026-09-13",
+   "label_native": "завтра"
+  },
+  "cards_total": 0,
+  "cards_done": 0,
+  "minutes_spent": 0,
+  "opened_at": null,
+  "closed_at": null
+ },
+ "days": [
+  {
+   "id": "01M26KTYVXZ7AGN96QGZGT1B00",
+   "number": 1,
+   "type": "scene",
+   "status": "closed",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "title_native": "Звонок агенту",
+   "title_target": "Call to the agent",
+   "teaches_native": "уточнить цену, адрес и условия",
+   "lesson_status": "ready",
+   "opens_on": "2026-09-11",
+   "slot": {
+    "code": "past",
+    "date": "2026-09-12",
+    "label_native": null
+   },
+   "cards_total": 75,
+   "cards_done": 75,
+   "minutes_spent": 1,
+   "opened_at": "2026-09-10T23:47:46+00:00",
+   "closed_at": "2026-09-12T14:59:36+00:00"
+  },
+  {
+   "id": "01M26KTYVXZ8K9P5G1K3HHPSKP",
+   "number": 2,
+   "type": "scene",
+   "status": "locked",
+   "scene_id": "01M26KV8TNPJ1QAGPSJEGE8ESX",
+   "title_native": "Просмотр жилья",
+   "title_target": "Flat viewing",
+   "teaches_native": "обсудить условия и договор",
+   "lesson_status": "ready",
+   "opens_on": "2026-09-13",
+   "slot": {
+    "code": "tomorrow",
+    "date": "2026-09-13",
+    "label_native": "завтра"
+   },
+   "cards_total": 0,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": null,
+   "closed_at": null
+  },
+  {
+   "id": "01M26KTYVXGCRJ3ZZS89AVP9Y8",
+   "number": 3,
+   "type": "rehearsal",
+   "status": "locked",
+   "scene_id": null,
+   "title_native": null,
+   "title_target": null,
+   "teaches_native": null,
+   "lesson_status": null,
+   "opens_on": null,
+   "slot": {
+    "code": "date",
+    "date": "2026-09-14",
+    "label_native": null
+   },
+   "cards_total": 0,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": null,
+   "closed_at": null
+  }
+ ],
+ "scenes": [
+  {
+   "id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "order": 1,
+   "kind": "situation",
+   "priority": 2,
+   "title_native": "Звонок агенту",
+   "title_target": "Call to the agent",
+   "teaches_native": "уточнить цену, адрес и условия",
+   "goals_native": [
+    "спросить про цену и адрес",
+    "уточнить срок и залог",
+    "договориться о просмотре",
+    "спросить про договор"
+   ],
+   "learner_role_target": "Tenant",
+   "learner_role_native": "Арендатор",
+   "partner_role_target": "Estate agent",
+   "partner_role_native": "Агент по аренде",
+   "image": {
+    "url": "https://images.pexels.com/photos/36713143/pexels-photo-36713143.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
     "author": "Vitaly Gariev",
     "author_url": "https://www.pexels.com/@silverkblack"
+   },
+   "lesson_status": "ready",
+   "lesson_fail_reason": null,
+   "day_number": 1,
+   "cost_usd": "0.066388",
+   "latency_ms": 25349,
+   "prompt_version": "lesson-v3"
   },
-  "collection_id": "01M26W8MP6440BCF6CVRQYJ79Q",
-  "unclear_reason": null,
-  "fail_reason": null,
-  "current_day": {
-    "id": "01M26S6T9F3RS2BYNQ2F7EGEV5",
-    "number": 2,
-    "type": "scene",
-    "status": "locked",
-    "scene_id": "01M26S7763ERWYXG1JF9PV5A2Y",
-    "title_native": "Приём у врача",
-    "title_target": "Doctor consultation",
-    "teaches_native": "описать боль, понять назначения",
-    "lesson_status": "ready",
-    "opens_on": "2026-09-12",
-    "slot": {
-      "code": "tomorrow",
-      "date": "2026-09-12",
-      "label_native": "завтра"
-    },
-    "cards_total": 0,
-    "cards_done": 0,
-    "minutes_spent": 0,
-    "opened_at": null,
-    "closed_at": null
+  {
+   "id": "01M26KV8TNPJ1QAGPSJEGE8ESX",
+   "order": 2,
+   "kind": "situation",
+   "priority": 1,
+   "title_native": "Просмотр жилья",
+   "title_target": "Flat viewing",
+   "teaches_native": "обсудить условия и договор",
+   "goals_native": [
+    "осмотреть жильё и спросить",
+    "уточнить правила проживания",
+    "обсудить срок и оплату",
+    "задать вопросы о договоре"
+   ],
+   "learner_role_target": "Tenant",
+   "learner_role_native": "Арендатор",
+   "partner_role_target": "Estate agent",
+   "partner_role_native": "Агент по аренде",
+   "image": {
+    "url": "https://images.pexels.com/photos/7642155/pexels-photo-7642155.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Alena Darmel",
+    "author_url": "https://www.pexels.com/@a-darmel"
+   },
+   "lesson_status": "ready",
+   "lesson_fail_reason": null,
+   "day_number": 2,
+   "cost_usd": "0.065583",
+   "latency_ms": 25470,
+   "prompt_version": "lesson-v3"
+  }
+ ],
+ "rescue_kit": [
+  {
+   "text_target": "Could you speak more slowly, please?",
+   "text_native": "Помедленнее, пожалуйста.",
+   "pronunciation_native": "куд ю спик мор слоули плиз"
   },
-  "days": [
-    {
-      "id": "01M26S6T9B2Q2REKF15SYHQP3J",
-      "number": 1,
-      "type": "scene",
-      "status": "closed",
-      "scene_id": "01M26S7763FSCM77EATV6BVB42",
-      "title_native": "Запись в клинику",
-      "title_target": "Clinic booking",
-      "teaches_native": "записать ребёнка, уточнить условия",
-      "lesson_status": "ready",
-      "opens_on": "2026-09-11",
-      "slot": {
-        "code": "past",
-        "date": "2026-09-11",
-        "label_native": null
-      },
-      "cards_total": 75,
-      "cards_done": 75,
-      "minutes_spent": 1,
-      "opened_at": "2026-09-11T00:00:04+00:00",
-      "closed_at": "2026-09-11T00:00:48+00:00"
-    },
-    {
-      "id": "01M26S6T9F3RS2BYNQ2F7EGEV5",
-      "number": 2,
-      "type": "scene",
-      "status": "locked",
-      "scene_id": "01M26S7763ERWYXG1JF9PV5A2Y",
-      "title_native": "Приём у врача",
-      "title_target": "Doctor consultation",
-      "teaches_native": "описать боль, понять назначения",
-      "lesson_status": "ready",
-      "opens_on": "2026-09-12",
-      "slot": {
-        "code": "tomorrow",
-        "date": "2026-09-12",
-        "label_native": "завтра"
-      },
-      "cards_total": 0,
-      "cards_done": 0,
-      "minutes_spent": 0,
-      "opened_at": null,
-      "closed_at": null
-    },
-    {
-      "id": "01M26S6T9FWMBCA82EJSJQMVX4",
-      "number": 3,
-      "type": "review",
-      "status": "locked",
-      "scene_id": null,
-      "title_native": null,
-      "title_target": null,
-      "teaches_native": null,
-      "lesson_status": null,
-      "opens_on": null,
-      "slot": {
-        "code": "tomorrow",
-        "date": "2026-09-12",
-        "label_native": "завтра"
-      },
-      "cards_total": 0,
-      "cards_done": 0,
-      "minutes_spent": 0,
-      "opened_at": null,
-      "closed_at": null
-    },
-    {
-      "id": "01M26S6T9FFCTCNS30ZP3RRRQB",
-      "number": 4,
-      "type": "scene",
-      "status": "locked",
-      "scene_id": "01M26S7763992GANXHYTAWSSH5",
-      "title_native": "Аптека",
-      "title_target": "Pharmacy",
-      "teaches_native": "купить лекарство, понять дозировку",
-      "lesson_status": "pending",
-      "opens_on": null,
-      "slot": {
-        "code": "date",
-        "date": "2026-09-13",
-        "label_native": null
-      },
-      "cards_total": 0,
-      "cards_done": 0,
-      "minutes_spent": 0,
-      "opened_at": null,
-      "closed_at": null
-    },
-    {
-      "id": "01M26S6T9F4HWN5QCA609CYNXS",
-      "number": 5,
-      "type": "rehearsal",
-      "status": "locked",
-      "scene_id": null,
-      "title_native": null,
-      "title_target": null,
-      "teaches_native": null,
-      "lesson_status": null,
-      "opens_on": null,
-      "slot": {
-        "code": "date",
-        "date": "2026-09-14",
-        "label_native": null
-      },
-      "cards_total": 0,
-      "cards_done": 0,
-      "minutes_spent": 0,
-      "opened_at": null,
-      "closed_at": null
-    }
-  ],
-  "scenes": [
-    {
-      "id": "01M26S7763FSCM77EATV6BVB42",
-      "order": 1,
-      "kind": "situation",
-      "priority": 3,
-      "title_native": "Запись в клинику",
-      "title_target": "Clinic booking",
-      "teaches_native": "записать ребёнка, уточнить условия",
-      "goals_native": [
-        "записать ребёнка на приём",
-        "назвать причину визита",
-        "уточнить время и документы"
-      ],
-      "learner_role_target": "Parent",
-      "learner_role_native": "Родитель",
-      "partner_role_target": "Receptionist",
-      "partner_role_native": "Администратор",
-      "image": {
-        "url": "https://images.pexels.com/photos/6809668/pexels-photo-6809668.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-        "author": "Pavel Danilyuk",
-        "author_url": "https://www.pexels.com/@pavel-danilyuk"
-      },
-      "lesson_status": "ready",
-      "lesson_fail_reason": null,
-      "day_number": 1,
-      "cost_usd": "0.088260",
-      "latency_ms": 33446,
-      "prompt_version": "lesson-v3"
-    },
-    {
-      "id": "01M26S7763ERWYXG1JF9PV5A2Y",
-      "order": 2,
-      "kind": "situation",
-      "priority": 1,
-      "title_native": "Приём у врача",
-      "title_target": "Doctor consultation",
-      "teaches_native": "описать боль, понять назначения",
-      "goals_native": [
-        "описать, где и как болит",
-        "сказать, как долго болит",
-        "понять диагноз и назначения",
-        "спросить про ограничения"
-      ],
-      "learner_role_target": "Parent",
-      "learner_role_native": "Родитель",
-      "partner_role_target": "Doctor",
-      "partner_role_native": "Врач",
-      "image": {
-        "url": "https://images.pexels.com/photos/39192346/pexels-photo-39192346.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-        "author": "Vitaly Gariev",
-        "author_url": "https://www.pexels.com/@silverkblack"
-      },
-      "lesson_status": "ready",
-      "lesson_fail_reason": null,
-      "day_number": 2,
-      "cost_usd": "0.063322",
-      "latency_ms": 24594,
-      "prompt_version": "lesson-v3"
-    },
-    {
-      "id": "01M26S7763992GANXHYTAWSSH5",
-      "order": 3,
-      "kind": "situation",
-      "priority": 2,
-      "title_native": "Аптека",
-      "title_target": "Pharmacy",
-      "teaches_native": "купить лекарство, понять дозировку",
-      "goals_native": [
-        "передать рецепт фармацевту",
-        "понять дозировку и приём",
-        "спросить про побочные действия",
-        "уточнить замену подешевле"
-      ],
-      "learner_role_target": "Parent",
-      "learner_role_native": "Родитель",
-      "partner_role_target": "Pharmacist",
-      "partner_role_native": "Фармацевт",
-      "image": {
-        "url": "https://images.pexels.com/photos/8657297/pexels-photo-8657297.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-        "author": "cottonbro studio",
-        "author_url": "https://www.pexels.com/@cottonbro"
-      },
-      "lesson_status": "pending",
-      "lesson_fail_reason": null,
-      "day_number": 4,
-      "cost_usd": null,
-      "latency_ms": null,
-      "prompt_version": null
-    }
-  ],
-  "rescue_kit": [
-    {
-      "text_target": "Could you speak more slowly, please?",
-      "text_native": "Помедленнее, пожалуйста.",
-      "pronunciation_native": "куд ю спик мор слоули плиз"
-    },
-    {
-      "text_target": "Could you write it down, please?",
-      "text_native": "Напишите, пожалуйста.",
-      "pronunciation_native": "куд ю райт ит даун плиз"
-    },
-    {
-      "text_target": "Could you repeat that, please?",
-      "text_native": "Повторите ещё раз, пожалуйста.",
-      "pronunciation_native": "куд ю рипит зэт плиз"
-    },
-    {
-      "text_target": "How much is it?",
-      "text_native": "Сколько это стоит?",
-      "pronunciation_native": "хау мач из ит"
-    },
-    {
-      "text_target": "One moment, let me check.",
-      "text_native": "Секунду, я проверю.",
-      "pronunciation_native": "уан моумент лет ми чек"
-    }
-  ],
-  "cost_usd": "0.174942",
-  "versions": {
-    "build": "b816951b",
-    "prompt_plan": "plan-builder-v2",
-    "prompt_lesson": "lesson-v3"
+  {
+   "text_target": "Could you write it down, please?",
+   "text_native": "Напишите, пожалуйста.",
+   "pronunciation_native": "куд ю райт ит даун плиз"
   },
-  "started_at": "2026-09-10T23:13:58+00:00",
-  "finished_at": null,
-  "created_at": "2026-09-10T23:07:23+00:00"
+  {
+   "text_target": "Could you repeat that, please?",
+   "text_native": "Повторите ещё раз, пожалуйста.",
+   "pronunciation_native": "куд ю рипит зэт плиз"
+  },
+  {
+   "text_target": "How much is it?",
+   "text_native": "Сколько это стоит?",
+   "pronunciation_native": "хау мач из ит"
+  },
+  {
+   "text_target": "One moment, let me check.",
+   "text_native": "Секунду, я проверю.",
+   "pronunciation_native": "уан моумент лет ми чек"
+  }
+ ],
+ "cost_usd": "0.151281",
+ "versions": {
+  "build": "beaa99fa",
+  "prompt_plan": "plan-builder-v2",
+  "prompt_lesson": "lesson-v3"
+ },
+ "started_at": "2026-09-10T21:34:36+00:00",
+ "finished_at": null,
+ "created_at": "2026-09-10T21:33:31+00:00"
 }

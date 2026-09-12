@@ -3819,29 +3819,83 @@ abstract class AppLocalizations {
   /// **'План'**
   String get planTitle;
 
-  /// Кадр 21-1, Literata 30 (plan.empty.title).
+  /// Заголовок витрины, Literata 30 — обещание результата, а не вопрос (кадр 21-1, plan.empty.title).
   ///
   /// In ru, this message translates to:
-  /// **'К чему готовишься?'**
+  /// **'Разговор, к которому готовишься'**
   String get planEmptyTitle;
 
-  /// Кадр 21-1 (plan.empty.body).
+  /// Подпись витрины в ОДНУ строку (кадр 21-1, plan.empty.sub).
   ///
   /// In ru, this message translates to:
-  /// **'План — подготовка к конкретной ситуации: врач, аренда, собеседование, поездка. Каждый день — одна сцена из неё, 20 минут. В конце — репетиция вслух.'**
-  String get planEmptyBody;
+  /// **'сцена в день · 20 минут · репетиция вслух'**
+  String get planEmptySub;
+
+  /// Первое правило плана — витрина 21-1 и лист 21-8 (plan.rule.situation).
+  ///
+  /// In ru, this message translates to:
+  /// **'Каждый день — одна ситуация. Дни открываются по одному'**
+  String get planRuleSituation;
+
+  /// Второе правило плана; в листе 21-8 под ним стоит ряд пяти значков этапов (plan.rule.stages).
+  ///
+  /// In ru, this message translates to:
+  /// **'Пять этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам'**
+  String get planRuleStages;
+
+  /// Третье правило плана — витрина 21-1 и лист 21-8 (plan.rule.return).
+  ///
+  /// In ru, this message translates to:
+  /// **'То, что не получилось, вернётся в следующий день. Ничего не потеряется'**
+  String get planRuleReturn;
+
+  /// Метка карточки-примера на витрине (кадр 21-1, plan.example.title).
+  ///
+  /// In ru, this message translates to:
+  /// **'Пример · приём у врача'**
+  String get planExampleTitle;
+
+  /// Первый узел карточки-примера (кадр 21-1, plan.example.day1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Запись к врачу'**
+  String get planExampleDay1;
+
+  /// Описание первого узла примера (кадр 21-1, plan.example.day1.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'спросить время приёма и страховку'**
+  String get planExampleDay1Sub;
+
+  /// Второй узел карточки-примера (кадр 21-1, plan.example.day2).
+  ///
+  /// In ru, this message translates to:
+  /// **'Приём у врача'**
+  String get planExampleDay2;
+
+  /// Описание второго узла примера (кадр 21-1, plan.example.day2.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'описать боль, понять назначения'**
+  String get planExampleDay2Sub;
+
+  /// Третий узел карточки-примера (кадр 21-1, plan.example.day3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Аптека'**
+  String get planExampleDay3;
+
+  /// Описание третьего узла примера (кадр 21-1, plan.example.day3.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'понять дозировку, спросить аналог'**
+  String get planExampleDay3Sub;
 
   /// Кадр 21-1, кнопка (plan.empty.cta).
   ///
   /// In ru, this message translates to:
   /// **'Собрать план'**
   String get planEmptyCta;
-
-  /// Кадр 21-1 (plan.empty.note).
-  ///
-  /// In ru, this message translates to:
-  /// **'три вопроса, меньше минуты'**
-  String get planEmptyNote;
 
   /// Кадры 21-1, 21-2b (plan.finished.title).
   ///
@@ -3854,12 +3908,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'завершён {date}'**
   String planFinishedItemDate(String date);
-
-  /// Шапка таба (plan.progress.day).
-  ///
-  /// In ru, this message translates to:
-  /// **'День {n} из {total}'**
-  String planProgressDay(int n, int total);
 
   /// Бровь шапки плана, 11/700 caps (кадр 21-2, plan.header.brow).
   ///
@@ -3987,12 +4035,6 @@ abstract class AppLocalizations {
   /// **'День {n} закрыт'**
   String planClosedTitle(int n);
 
-  /// Кадр 21-4 (plan.closed.meta); title — сервер, cards/minutes — planCardsCount / planMinutesCount.
-  ///
-  /// In ru, this message translates to:
-  /// **'{title} · {cards} · {minutes}'**
-  String planClosedMeta(String title, String cards, String minutes);
-
   /// Счёт закрытого дня в шапке плиты: «75 карточек · 19 минут» (кадр 21-4, plan.closed.count).
   ///
   /// In ru, this message translates to:
@@ -4015,7 +4057,7 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}'**
-  String planClosedReturn(int k, int n);
+  String planClosedReturn(int n, int k);
 
   /// Строка маршрута, tertiary (plan.route.day.repeat).
   ///
@@ -4046,12 +4088,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'весь маршрут вслух'**
   String get planRouteDayRehearsalSub;
-
-  /// Пункт назначения: «Приём · 15 сентября» (plan.route.event.title, entry.preview.event.dated); event — сервер, дата по локали.
-  ///
-  /// In ru, this message translates to:
-  /// **'{event} · {date}'**
-  String planRouteEventTitle(String event, String date);
 
   /// Мета-строка узла маршрута, первое слово — номер дня (кадр 21-2b, plan.route.meta.day).
   ///
@@ -4094,30 +4130,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Событие'**
   String get planRouteEventFallback;
-
-  /// Набор, лейбл (plan.kit.label).
-  ///
-  /// In ru, this message translates to:
-  /// **'Спасательный набор'**
-  String get planKitLabel;
-
-  /// Набор, подпись (plan.kit.sub): 1 фраза / 2 фразы / 5 фраз.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}}'**
-  String planKitSub(int n);
-
-  /// Набор, ссылка (plan.kit.all).
-  ///
-  /// In ru, this message translates to:
-  /// **'все {n} →'**
-  String planKitAll(int n);
-
-  /// Набор, раскрытый на все пять фраз: обратная ссылка на место «все {n} →». Строки в таблице нет — добавлена нарядом PLAN-UI, чтобы у раскрытия был выход.
-  ///
-  /// In ru, this message translates to:
-  /// **'свернуть'**
-  String get planKitCollapse;
 
   /// Кадр 21-7 (plan.done.title).
   ///
@@ -4293,11 +4305,11 @@ abstract class AppLocalizations {
   /// **'Завершить план'**
   String get planOverdueFinish;
 
-  /// Кадр 21-14 (plan.overdue.reschedule).
+  /// Второй выход прошедшего события — вернуться к текущему дню (кадр 21-14, plan.overdue.continue).
   ///
   /// In ru, this message translates to:
-  /// **'Перенести дату'**
-  String get planOverdueReschedule;
+  /// **'Дозаниматься · {days}'**
+  String planOverdueContinue(String days);
 
   /// Кадр 21-2c (plan.hint.first.start).
   ///
@@ -4305,17 +4317,17 @@ abstract class AppLocalizations {
   /// **'Начни с этапа «Слова». Остальные откроются по порядку'**
   String get planHintFirstStart;
 
-  /// Кадр 21-2c (plan.hint.first.route).
+  /// Подсказка первого плана под заголовком маршрута, один раз (кадр 21-2c, plan.hint.first.route).
   ///
   /// In ru, this message translates to:
-  /// **'Сегодняшний день открыт, следующий откроется завтра'**
-  String get planHintFirstRoute;
+  /// **'День {n} открыт. Следующий откроется, когда пройдёшь этот'**
+  String planHintFirstRoute(int n);
 
-  /// Кадр 21-2c, под набором (plan.hint.first.kit).
+  /// Плашка пересборки над плитой — состояние плана, не сообщение (кадр 21-13, plan.rebuilt.title).
   ///
   /// In ru, this message translates to:
-  /// **'Пять фраз на случай, если не понял или не успел. Пригодятся в любом разговоре'**
-  String get planHintFirstKit;
+  /// **'Маршрут пересобран: было {from} дней, стало {to}'**
+  String planRebuiltTitle(int from, int to);
 
   /// Кадр 21-4c (plan.hint.first.return).
   ///
@@ -4328,24 +4340,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Как устроен план'**
   String get planSheetTitle;
-
-  /// Кадр 21-8 (plan.sheet.row.days).
-  ///
-  /// In ru, this message translates to:
-  /// **'Каждый день — одна ситуация. Дни открываются по одному'**
-  String get planSheetRowDays;
-
-  /// Кадр 21-8 (plan.sheet.row.stages).
-  ///
-  /// In ru, this message translates to:
-  /// **'Пять этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам. Следующий открывается, когда закрыт этот'**
-  String get planSheetRowStages;
-
-  /// Кадр 21-8 (plan.sheet.row.return).
-  ///
-  /// In ru, this message translates to:
-  /// **'То, что не получилось, вернётся в следующий день. Ничего не потеряется'**
-  String get planSheetRowReturn;
 
   /// Кадр 21-8 (plan.sheet.cta).
   ///
@@ -4370,18 +4364,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Повторить'**
   String get planTabRetry;
-
-  /// Шапка входа (entry.nav.title).
-  ///
-  /// In ru, this message translates to:
-  /// **'Новый план'**
-  String get planEntryNavTitle;
-
-  /// Шапка входа, tertiary (entry.nav.cancel).
-  ///
-  /// In ru, this message translates to:
-  /// **'Отмена'**
-  String get planEntryNavCancel;
 
   /// Шапка входа, справа, 17/700 (entry.next).
   ///
@@ -4449,78 +4431,6 @@ abstract class AppLocalizations {
   /// **'Добавь, с кем и что важно — план будет точнее'**
   String get planEntryGoalShortHint;
 
-  /// Кадр 22-1, над полем (entry.goal.hint).
-  ///
-  /// In ru, this message translates to:
-  /// **'ситуация · с кем говоришь · что важно'**
-  String get planEntryGoalHint;
-
-  /// Кадр 22-1a, плейсхолдер-пример (entry.goal.placeholder).
-  ///
-  /// In ru, this message translates to:
-  /// **'Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике, боюсь не понять назначения'**
-  String get planEntryGoalPlaceholder;
-
-  /// Кадр 22-1, чип (entry.goal.chip.doctor).
-  ///
-  /// In ru, this message translates to:
-  /// **'Врач'**
-  String get planEntryGoalChipDoctor;
-
-  /// Кадр 22-1, чип (entry.goal.chip.rent).
-  ///
-  /// In ru, this message translates to:
-  /// **'Аренда'**
-  String get planEntryGoalChipRent;
-
-  /// Кадр 22-1, чип (entry.goal.chip.interview).
-  ///
-  /// In ru, this message translates to:
-  /// **'Собеседование'**
-  String get planEntryGoalChipInterview;
-
-  /// Кадр 22-1, чип (entry.goal.chip.trip).
-  ///
-  /// In ru, this message translates to:
-  /// **'Поездка'**
-  String get planEntryGoalChipTrip;
-
-  /// Кадр 22-1, чип (entry.goal.chip.other).
-  ///
-  /// In ru, this message translates to:
-  /// **'Другое'**
-  String get planEntryGoalChipOther;
-
-  /// Кадр 22-1b, заготовка по чипу «Врач» (entry.goal.template.doctor).
-  ///
-  /// In ru, this message translates to:
-  /// **'Иду к врачу. Проблема: … . Важно: понять назначения и спросить про …'**
-  String get planEntryGoalTemplateDoctor;
-
-  /// Заготовка по чипу «Аренда». В таблице текстов есть только заготовка «Врач» — эта добавлена нарядом PLAN-UI по её образцу (вопрос архитектору).
-  ///
-  /// In ru, this message translates to:
-  /// **'Снимаю квартиру. Смотрю жильё с … . Важно: спросить про … и понять условия'**
-  String get planEntryGoalTemplateRent;
-
-  /// Заготовка по чипу «Собеседование» — добавлена нарядом PLAN-UI по образцу «Врач».
-  ///
-  /// In ru, this message translates to:
-  /// **'Иду на собеседование на … . Важно: рассказать о себе и спросить про …'**
-  String get planEntryGoalTemplateInterview;
-
-  /// Заготовка по чипу «Поездка» — добавлена нарядом PLAN-UI по образцу «Врач».
-  ///
-  /// In ru, this message translates to:
-  /// **'Еду в … с … . Важно: … и понять, куда идти'**
-  String get planEntryGoalTemplateTrip;
-
-  /// Кадр 22-1c, строка под коротким ответом (entry.goal.short).
-  ///
-  /// In ru, this message translates to:
-  /// **'Добавь, с кем и что важно — план будет точнее'**
-  String get planEntryGoalShort;
-
   /// Подпись у микрофона в покое (кадр 22-1, entry.goal.dictate).
   ///
   /// In ru, this message translates to:
@@ -4569,29 +4479,11 @@ abstract class AppLocalizations {
   /// **'Дни'**
   String get planEntryTapeDays;
 
-  /// Лента ответов, tertiary (entry.tape.edit).
-  ///
-  /// In ru, this message translates to:
-  /// **'Изм.'**
-  String get planEntryTapeEdit;
-
   /// Лента ответов: «Английский · Средний».
   ///
   /// In ru, this message translates to:
   /// **'{language} · {level}'**
   String planEntryTapeLanguageValue(String language, String level);
-
-  /// Лента ответов, 22-4 (entry.tape.days.value): «5 · приём 15 сентября»; event — сервер, дата по локали.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n} · {event} {date}'**
-  String planEntryTapeDaysValue(int n, String event, String date);
-
-  /// Лента ответов до ответа сервера: событие ещё не названо, дата уже выбрана.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n} · {date}'**
-  String planEntryTapeDaysValueDated(int n, String date);
 
   /// Вопрос шага языка (кадр 22-2, entry.language.title).
   ///
@@ -4634,12 +4526,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'понимаю простую речь, говорю с ошибками'**
   String get planEntryLevelIntermediateSub;
-
-  /// Кадр 22-2, при предвыбранном «Средний» (entry.level.fluent.note).
-  ///
-  /// In ru, this message translates to:
-  /// **'Для подготовки к ситуации среднего уровня достаточно'**
-  String get planEntryLevelFluentNote;
 
   /// Вопрос шага длины плана (кадр 22-3a, entry.days.title).
   ///
@@ -4719,35 +4605,11 @@ abstract class AppLocalizations {
   /// **'Собрать план'**
   String get planEntryDateCta;
 
-  /// Кадр 22-3 (entry.date.toggle).
-  ///
-  /// In ru, this message translates to:
-  /// **'Знаю дату события'**
-  String get planEntryDateToggle;
-
-  /// Кадр 22-3 (entry.date.note).
-  ///
-  /// In ru, this message translates to:
-  /// **'Дата встанет в конец маршрута, напомним накануне'**
-  String get planEntryDateNote;
-
-  /// Кадр 22-3b, латунь (entry.date.shorten): 1 день / 2 дня / 5 дней.
-  ///
-  /// In ru, this message translates to:
-  /// **'{left, plural, one{До события {left} день — план сократится до {to}} few{До события {left} дня — план сократится до {to}} many{До события {left} дней — план сократится до {to}} other{До события {left} дня — план сократится до {to}}}'**
-  String planEntryDateShorten(int left, int to);
-
   /// Заголовок готового превью (кадр 22-4b, entry.preview.title).
   ///
   /// In ru, this message translates to:
   /// **'Твой план готов'**
   String get planEntryPreviewTitle;
-
-  /// Кадр 22-4 (entry.preview.sub); days — planDaysCount.
-  ///
-  /// In ru, this message translates to:
-  /// **'{days} · {language} · {level}'**
-  String planEntryPreviewSub(String days, String language, String level);
 
   /// Заголовок превью во время сборки (кадр 22-4a, entry.preview.loading.title).
   ///
@@ -4766,18 +4628,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Подбираю ситуации под твой разговор и расставляю их по дням'**
   String get planEntryPreviewLoadingSub;
-
-  /// Кадр 22-4b, свайп (entry.preview.remove).
-  ///
-  /// In ru, this message translates to:
-  /// **'Убрать'**
-  String get planEntryPreviewRemove;
-
-  /// Кадр 22-4b, в доке над «Начать» (entry.preview.hint).
-  ///
-  /// In ru, this message translates to:
-  /// **'Не то? Убери день свайпом или измени цель'**
-  String get planEntryPreviewHint;
 
   /// Кадр 22-4 (entry.preview.cta).
   ///
@@ -4809,12 +4659,6 @@ abstract class AppLocalizations {
   /// **'Попробовать ещё'**
   String get planEntryPreviewErrorRetry;
 
-  /// Кадр 22-4c (entry.preview.error.edit).
-  ///
-  /// In ru, this message translates to:
-  /// **'Изменить цель'**
-  String get planEntryPreviewErrorEdit;
-
   /// Заголовок, когда цель непонятна — просьба, не упрёк (кадр 22-4d, entry.preview.unclear.title).
   ///
   /// In ru, this message translates to:
@@ -4839,35 +4683,23 @@ abstract class AppLocalizations {
   /// **'К цели'**
   String get planEntryPreviewUnclearCta;
 
-  /// Кадр 22-5a (entry.day.building).
-  ///
-  /// In ru, this message translates to:
-  /// **'Собираем день {n} · около минуты'**
-  String planEntryDayBuilding(int n);
-
-  /// Кадр 22-5c (entry.day.failed.title).
-  ///
-  /// In ru, this message translates to:
-  /// **'День не собрался'**
-  String get planEntryDayFailedTitle;
-
-  /// Кадр 22-5c (entry.day.failed.sub).
-  ///
-  /// In ru, this message translates to:
-  /// **'Маршрут на месте. Попробуем ещё раз — это займёт около минуты'**
-  String get planEntryDayFailedSub;
-
   /// Кадр 22-6 (entry.push.title).
   ///
   /// In ru, this message translates to:
   /// **'План готов'**
   String get planEntryPushTitle;
 
-  /// Кадр 22-6 (entry.push.body); dayTitle — сервер.
+  /// Тело уведомления «План готов»: срок до события и первый день (кадр 22-6, entry.push.body).
   ///
   /// In ru, this message translates to:
-  /// **'День 1 · {dayTitle} — можно начинать'**
-  String planEntryPushBody(String dayTitle);
+  /// **'{until}. День 1 — «{dayTitle}»'**
+  String planEntryPushBody(String until, String dayTitle);
+
+  /// Тело уведомления у плана без даты события (кадр 22-6, entry.push.body.nodate).
+  ///
+  /// In ru, this message translates to:
+  /// **'{days}. День 1 — «{dayTitle}»'**
+  String planEntryPushBodyNoDate(String days, String dayTitle);
 
   /// Вход офлайн (§6): нельзя начать сборку. Строки в таблице нет — добавлена нарядом PLAN-UI.
   ///

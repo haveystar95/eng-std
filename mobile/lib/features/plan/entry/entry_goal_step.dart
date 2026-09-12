@@ -246,16 +246,20 @@ class _Field extends StatelessWidget {
         boxShadow: AppShadows.card,
       ),
       child: Column(
+        // Поле живёт в прокрутке, где высота НЕ ограничена сверху, поэтому текстовая область
+        // задаётся своим минимумом и растёт вниз. `Expanded` здесь падал: колонка в скролле
+        // сжимается по содержимому, а Expanded требует остатка бесконечной высоты.
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 72),
             child: listening || recognising
                 ? _Wave(flat: recognising, seconds: micSeconds)
                 : TextField(
                     controller: controller,
                     focusNode: focus,
                     maxLines: null,
-                    expands: true,
                     textAlignVertical: TextAlignVertical.top,
                     keyboardType: TextInputType.multiline,
                     textCapitalization: TextCapitalization.sentences,

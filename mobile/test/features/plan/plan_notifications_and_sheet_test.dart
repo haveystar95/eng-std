@@ -48,13 +48,16 @@ void main() {
         ),
       );
       await tester.pump();
-      // Цель с чипа → «Далее» ×3 → готовое превью → «Начать».
-      await tester.tap(find.text('Врач'));
+      // Цель историей → «Далее» ×3 → «Собрать план» → готовое превью → «Начать».
+      await tester.tap(find.text('Звонок арендодателю про залог'));
       await tester.pump();
       for (var i = 0; i < 3; i++) {
         await tester.tap(find.text('Далее'));
         await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
       }
+      await tester.tap(find.text('Собрать план'));
+      await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       await tester.tap(find.text('Начать'));
       await tester.pump();

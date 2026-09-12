@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/deep_links.dart';
+import '../../data/plan/plan_models.dart';
 import '../../data/plan/plan_ready_notification.dart';
 import 'day/open_day.dart';
 import 'plan_providers.dart';
@@ -79,13 +80,26 @@ class _PlanReadyNotificationHostState extends ConsumerState<PlanReadyNotificatio
       unawaited(
         ref.read(planReadyNotificationProvider).show(
           title: l.planEntryPushTitle,
-          body: l.planEntryPushBody(after.titleNative ?? plan.displayTitle),
+          // «7 дней до приёма 17 сентября. День 1 — «Запись к врачу»» (кадр 22-6): срок до
+          // события берётся ГОТОВОЙ строкой сервера (`until_phrase`) — ни числа, ни склонения
+          // события клиент здесь не выводит. «≈ 20 минут» из кадра нет: оценки минут у дня
+          // контракт не отдаёт.
+          body: _pushBody(l, plan, after.titleNative ?? plan.displayTitle),
           channel: (name: l.planTitle, description: l.planEntryPushTitle),
         ),
       );
     });
 
     return widget.child;
+  }
+
+  /// Тело уведомления: срок до события строкой сервера, иначе — длина плана.
+  String _pushBody(AppLocalizations l, Plan plan, String dayTitle) {
+    final until = (plan.untilPhrase ?? '').trim();
+
+    return until.isEmpty
+        ? l.planEntryPushBodyNoDate(l.planDaysCount(plan.daysTotal), dayTitle)
+        : l.planEntryPushBody(until, dayTitle);
   }
 
   void _openTapped() {

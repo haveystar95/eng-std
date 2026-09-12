@@ -341,83 +341,46 @@ class PlanRouteHeader extends StatelessWidget {
   }
 }
 
-/// «Спасательный набор» (кадр 21-2b): the label, «все 5 →», the first phrase in Literata and its
-/// meaning; «все 5» unfolds the other four in place — the frame has no second screen for them.
-class PlanRescueKitCard extends StatefulWidget {
-  const PlanRescueKitCard({super.key, required this.phrases});
+/// ПЛАШКА ПЕРЕСБОРКИ МАРШРУТА (кадр 21-13) — над плитой, и она ОСТАЁТСЯ на экране.
+///
+/// Это состояние плана, а не сообщение: кнопки у неё нет, закрыть её нечем, и действие экрана
+/// по-прежнему «Начать» на плите. Плашка говорит только то, что сделала система, — без укора.
+class PlanNoticeBanner extends StatelessWidget {
+  const PlanNoticeBanner({super.key, required this.text});
 
-  final List<PlanRescuePhrase> phrases;
-
-  @override
-  State<PlanRescueKitCard> createState() => _PlanRescueKitCardState();
-}
-
-class _PlanRescueKitCardState extends State<PlanRescueKitCard> {
-  bool _open = false;
+  final String text;
 
   @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final phrases = widget.phrases;
-    if (phrases.isEmpty) return const SizedBox.shrink();
-    final shown = _open ? phrases : phrases.take(1).toList();
-
-    return PaperCard(
-      radius: 22,
-      padding: const EdgeInsets.fromLTRB(17, 15, 17, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(child: PlanSectionLabel(l.planKitLabel)),
-              Semantics(
-                button: true,
-                child: InkWell(
-                  onTap: () {
-                    AppHaptics.light();
-                    setState(() => _open = !_open);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: Text(
-                      _open ? l.planKitCollapse : l.planKitAll(phrases.length),
-                      style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 14, color: AppColors.tertiary),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l.planKitSub(phrases.length),
-            style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 14, color: AppColors.tertiary),
-          ),
-          for (final p in shown) ...[
-            const SizedBox(height: 12),
-            Text(
-              p.textTarget,
-              style: const TextStyle(
-                fontFamily: AppFonts.literata,
-                fontSize: 17,
-                fontWeight: FontWeight.w500,
-                height: 1.3,
-                color: AppColors.ink,
-              ),
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    decoration: BoxDecoration(
+      color: AppColors.brassWash,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppColors.brassHairline),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 1),
+          child: PlanIconMark(icon: PlanIcon.route, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontFamily: AppFonts.inter,
+              fontSize: 14,
+              height: 1.4,
+              color: AppColors.ink,
             ),
-            const SizedBox(height: 3),
-            Text(
-              p.textNative,
-              style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 14, color: AppColors.secondary),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+          ),
+        ),
+      ],
+    ),
+  );
 }
-
 /// «Завершённые планы» (кадры 21-1, 21-2b): rows of 60 between hairlines, title 16/600, «завершён
 /// 12 августа» 14 tertiary, a chevron. Absent when there is nothing to list.
 class PlanFinishedList extends StatelessWidget {
@@ -554,12 +517,15 @@ class PlanOverdueCard extends StatelessWidget {
     super.key,
     required this.plan,
     required this.onFinish,
-    required this.onReschedule,
+    required this.onContinue,
   });
 
   final Plan plan;
   final VoidCallback onFinish;
-  final VoidCallback onReschedule;
+
+  /// «Дозаниматься» — ВОЗВРАТ К ТЕКУЩЕМУ ДНЮ, а не перенос даты: событие уже прошло, переносить
+  /// нечего, а дни 5–7 остаются доступными (кадр 21-14).
+  final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -599,58 +565,16 @@ class PlanOverdueCard extends StatelessWidget {
           const SizedBox(height: 16),
           PlanInkButton(label: l.planOverdueFinish, onTap: onFinish, arrow: false),
           const SizedBox(height: 4),
-          PlanTextButton(label: l.planOverdueReschedule, onTap: onReschedule),
+          // Сколько дней осталось — считаем из того, что уже закрыто: счёт дней идёт дальше.
+          PlanTextButton(
+            label: l.planOverdueContinue(l.planDaysCount(plan.daysTotal - plan.closedDays)),
+            onTap: onContinue,
+          ),
         ],
       ),
     );
   }
 }
-
-/// «День не собрался» (кадр 22-5c): the day's label in brass, one sentence, «Повторить».
-class PlanDayFailedCard extends StatelessWidget {
-  const PlanDayFailedCard({super.key, required this.day, required this.onRetry});
-
-  final PlanDayRoute day;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-
-    return PaperCard(
-      radius: 28,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l.planPlateLabel(day.number).toUpperCase(),
-            style: const TextStyle(
-              fontFamily: AppFonts.inter,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.54,
-              color: AppColors.brass,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l.planEntryDayFailedTitle,
-            style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.ink),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l.planEntryDayFailedSub,
-            style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 14, height: 1.45, color: AppColors.secondary),
-          ),
-          const SizedBox(height: 16),
-          PlanInkButton(label: l.planTabRetry, onTap: onRetry, arrow: false),
-        ],
-      ),
-    );
-  }
-}
-
 /// The tab without a cache when the server did not answer — a card with «Повторить» (§6).
 class PlanLoadFailedCard extends StatelessWidget {
   const PlanLoadFailedCard({super.key, required this.onRetry});

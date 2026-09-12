@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
@@ -194,7 +195,7 @@ class _GrowingNodesState extends State<_GrowingNodes> {
             border: i == _grown ? Border.all(color: AppColors.brassInk, width: 2) : null,
           ),
           child: i < _grown
-              ? const Icon(Icons.check, size: 16, color: AppColors.paper)
+              ? const Icon(LucideIcons.check, size: 16, color: AppColors.paper)
               : (i > _grown
                     ? DecoratedBox(
                         decoration: BoxDecoration(

@@ -16,6 +16,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:eng_std/theme/theme.dart';
@@ -111,7 +112,7 @@ class PlanStageMark extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: AppColors.verdictKnown,
                 ),
-                child: const Icon(Icons.check, size: 7, color: AppColors.paper),
+                child: const Icon(LucideIcons.check, size: 7, color: AppColors.paper),
               ),
             ),
         ],
@@ -172,7 +173,12 @@ enum PlanIcon {
 
   /// Значки извещений превью 40 × 40 (22-4c, 22-4d).
   noticeFailed('assets/icons/notice-failed.svg'),
-  noticeUnclear('assets/icons/notice-unclear.svg');
+  noticeUnclear('assets/icons/notice-unclear.svg'),
+
+  /// Три значка правил плана 24 × 24 — одни и те же на витрине (21-1) и в листе (21-8).
+  ruleSituation('assets/icons/rule-situation.svg'),
+  ruleStages('assets/icons/rule-stages.svg'),
+  ruleReturn('assets/icons/rule-return.svg');
 
   const PlanIcon(this.asset);
 

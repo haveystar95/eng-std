@@ -1,0 +1,217 @@
+{
+ "id": "01M26PPGWZT0P72Z7J76KD51ZS",
+ "status": "ready",
+ "goal_text": "Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике, боюсь не понять назначения",
+ "target_lang": "en",
+ "native_lang": "ru",
+ "level": "intermediate",
+ "days_total": 3,
+ "days_requested": 5,
+ "days_shortened_from": 5,
+ "event_date": "2026-09-15",
+ "days_left": 3,
+ "title_native": "Приём у врача",
+ "title_target": "Doctor's appointment",
+ "event_native": "Приём",
+ "until_phrase": "До приёма · 3 дня",
+ "overdue_native": null,
+ "route_summary": "3 дня · 2 ситуации, репетиция",
+ "learner_role_target": "Parent",
+ "learner_role_native": "Родитель",
+ "cover_image": {
+  "url": "https://images.pexels.com/photos/39192346/pexels-photo-39192346.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+  "author": "Vitaly Gariev",
+  "author_url": "https://www.pexels.com/@silverkblack"
+ },
+ "collection_id": null,
+ "unclear_reason": null,
+ "fail_reason": null,
+ "current_day": {
+  "id": "01M26PPGX4J02HT688B16EEM1Q",
+  "number": 1,
+  "type": "scene",
+  "status": "locked",
+  "scene_id": "01M26PPXB9ZVS88HBYN65E6M9T",
+  "title_native": "Приём у врача",
+  "title_target": "Doctor consultation",
+  "teaches_native": "описать боль, понять назначения",
+  "lesson_status": "pending",
+  "opens_on": null,
+  "slot": {
+   "code": "today",
+   "date": "2026-09-12",
+   "label_native": "сегодня"
+  },
+  "cards_total": 0,
+  "cards_done": 0,
+  "minutes_spent": 0,
+  "opened_at": null,
+  "closed_at": null
+ },
+ "days": [
+  {
+   "id": "01M26PPGX4J02HT688B16EEM1Q",
+   "number": 1,
+   "type": "scene",
+   "status": "locked",
+   "scene_id": "01M26PPXB9ZVS88HBYN65E6M9T",
+   "title_native": "Приём у врача",
+   "title_target": "Doctor consultation",
+   "teaches_native": "описать боль, понять назначения",
+   "lesson_status": "pending",
+   "opens_on": null,
+   "slot": {
+    "code": "today",
+    "date": "2026-09-12",
+    "label_native": "сегодня"
+   },
+   "cards_total": 0,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": null,
+   "closed_at": null
+  },
+  {
+   "id": "01M26PPGX5AHWNY187V5A3WW1W",
+   "number": 2,
+   "type": "scene",
+   "status": "locked",
+   "scene_id": "01M26PPXB9MVQH19KK350B4SZH",
+   "title_native": "Аптека",
+   "title_target": "Pharmacy",
+   "teaches_native": "получить лекарство, уточнить приём",
+   "lesson_status": "pending",
+   "opens_on": null,
+   "slot": {
+    "code": "tomorrow",
+    "date": "2026-09-13",
+    "label_native": "завтра"
+   },
+   "cards_total": 0,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": null,
+   "closed_at": null
+  },
+  {
+   "id": "01M26PPGX5Y9G4BEJ1WA14YXD5",
+   "number": 3,
+   "type": "rehearsal",
+   "status": "locked",
+   "scene_id": null,
+   "title_native": null,
+   "title_target": null,
+   "teaches_native": null,
+   "lesson_status": null,
+   "opens_on": null,
+   "slot": {
+    "code": "date",
+    "date": "2026-09-14",
+    "label_native": null
+   },
+   "cards_total": 0,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": null,
+   "closed_at": null
+  }
+ ],
+ "scenes": [
+  {
+   "id": "01M26PPXB9ZVS88HBYN65E6M9T",
+   "order": 2,
+   "kind": "situation",
+   "priority": 1,
+   "title_native": "Приём у врача",
+   "title_target": "Doctor consultation",
+   "teaches_native": "описать боль, понять назначения",
+   "goals_native": [
+    "описать, где и как болит",
+    "ответить на вопросы врача",
+    "понять диагноз и назначения",
+    "спросить про ограничения"
+   ],
+   "learner_role_target": "Parent",
+   "learner_role_native": "Родитель",
+   "partner_role_target": "Doctor",
+   "partner_role_native": "Врач",
+   "image": {
+    "url": "https://images.pexels.com/photos/8460030/pexels-photo-8460030.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Los Muertos Crew",
+    "author_url": "https://www.pexels.com/@cristian-rojas"
+   },
+   "lesson_status": "pending",
+   "lesson_fail_reason": null,
+   "day_number": 1,
+   "cost_usd": null,
+   "latency_ms": null,
+   "prompt_version": null
+  },
+  {
+   "id": "01M26PPXB9MVQH19KK350B4SZH",
+   "order": 3,
+   "kind": "situation",
+   "priority": 2,
+   "title_native": "Аптека",
+   "title_target": "Pharmacy",
+   "teaches_native": "получить лекарство, уточнить приём",
+   "goals_native": [
+    "передать рецепт фармацевту",
+    "уточнить дозировку ребёнку",
+    "спросить про побочные действия",
+    "понять, как давать лекарство"
+   ],
+   "learner_role_target": "Parent",
+   "learner_role_native": "Родитель",
+   "partner_role_target": "Pharmacist",
+   "partner_role_native": "Фармацевт",
+   "image": {
+    "url": "https://images.pexels.com/photos/8667528/pexels-photo-8667528.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "cottonbro studio",
+    "author_url": "https://www.pexels.com/@cottonbro"
+   },
+   "lesson_status": "pending",
+   "lesson_fail_reason": null,
+   "day_number": 2,
+   "cost_usd": null,
+   "latency_ms": null,
+   "prompt_version": null
+  }
+ ],
+ "rescue_kit": [
+  {
+   "text_target": "Could you speak more slowly, please?",
+   "text_native": "Помедленнее, пожалуйста.",
+   "pronunciation_native": "куд ю спик мор слоули плиз"
+  },
+  {
+   "text_target": "Could you write it down, please?",
+   "text_native": "Напишите, пожалуйста.",
+   "pronunciation_native": "куд ю райт ит даун плиз"
+  },
+  {
+   "text_target": "Could you repeat that, please?",
+   "text_native": "Повторите ещё раз, пожалуйста.",
+   "pronunciation_native": "куд ю рипит зэт плиз"
+  },
+  {
+   "text_target": "How much is it?",
+   "text_native": "Сколько это стоит?",
+   "pronunciation_native": "хау мач из ит"
+  },
+  {
+   "text_target": "One moment, let me check.",
+   "text_native": "Секунду, я проверю.",
+   "pronunciation_native": "уан моумент лет ми чек"
+  }
+ ],
+ "cost_usd": "0.023435",
+ "versions": {
+  "build": "beaa99fa",
+  "prompt_plan": "plan-builder-v2",
+  "prompt_lesson": "lesson-v3"
+ },
+ "started_at": null,
+ "finished_at": null,
+ "created_at": "2026-09-10T22:23:32+00:00"
+}

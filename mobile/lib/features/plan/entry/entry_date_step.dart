@@ -27,6 +27,7 @@ class EntryDateStep extends StatelessWidget {
     required this.days,
     required this.eventDate,
     required this.suggested,
+    required this.today,
     required this.onPickSuggested,
     required this.onPickUnknown,
     required this.onPickCustom,
@@ -45,6 +46,13 @@ class EntryDateStep extends StatelessWidget {
   /// Ближняя дата, посчитанная от длины плана — первая строка выбора.
   final DateTime suggested;
 
+  /// СЕГОДНЯ — приходит снаружи, а не из `DateTime.now()` внутри.
+  ///
+  /// Единственный шаг входа, который считает от текущего дня («через 7 дней»), и потому
+  /// единственный, который без этого параметра нельзя было снять снимком: кадр зависел бы от
+  /// того, в какой день его сняли.
+  final DateTime today;
+
   final VoidCallback onPickSuggested;
   final VoidCallback onPickUnknown;
   final VoidCallback onPickCustom;
@@ -56,7 +64,6 @@ class EntryDateStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
-    final today = DateTime.now();
     final onSuggested = eventDate != null && _sameDay(eventDate!, suggested);
     final onCustom = eventDate != null && !onSuggested;
     final chosen = eventDate;

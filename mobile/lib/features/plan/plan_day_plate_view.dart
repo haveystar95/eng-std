@@ -43,7 +43,7 @@ class PlanDayPlateView extends StatelessWidget {
     final coverUrl = scene?.image?.url ?? plan.coverImage?.url;
     final cover = coverUrl == null ? null : CachedNetworkImage(coverUrl);
 
-    final cards = room?.metrics?.cardsTotal ?? day.cardsTotal;
+    final cards = _cardsTotal;
     String? cardsMeta(AppLocalizations l) => cards > 0 ? l.planCardsCount(cards) : null;
 
     // Кадр 22-5a: день ещё пишется — на месте этапов строка о сроке и разрешение уйти. Кнопки
@@ -112,6 +112,22 @@ class PlanDayPlateView extends StatelessWidget {
       ),
       onTap: onOpen,
     );
+  }
+
+  /// СКОЛЬКО КАРТОЧЕК В ДНЕ — «75 карточек» на плите (кадры 21-2, 21-3, 21-4).
+  ///
+  /// Три источника по убыванию точности, и третий появился не от лени: у ещё НЕ ОТКРЫТОГО дня
+  /// сервер отдаёт `metrics: null` и `cards_total: 0`, но его кабинет уже несёт все пять этапов с
+  /// их `total` — 32 + 18 + 1 + 16 + 8. Сумма СВОИХ ЖЕ чисел сервера — не выдуманная оценка (в
+  /// отличие от «≈ 20 минут», которого нет нигде), поэтому строка на плите остаётся, а не
+  /// исчезает у каждого не начатого дня. Расхождение названо в отчёте наряда.
+  int get _cardsTotal {
+    final metrics = room?.metrics?.cardsTotal ?? 0;
+    if (metrics > 0) return metrics;
+    if (day.cardsTotal > 0) return day.cardsTotal;
+    final stages = room?.stages ?? const <PlanStageProgress>[];
+
+    return stages.fold(0, (sum, s) => sum + s.total);
   }
 
   /// «День 3 откроется завтра, 12 сентября» (21-4) — дата из слота следующего дня, слово «завтра»

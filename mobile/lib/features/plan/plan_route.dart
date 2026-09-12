@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
@@ -140,7 +141,7 @@ class _Node extends StatelessWidget {
               const SizedBox(width: 10),
               const Padding(
                 padding: EdgeInsets.only(top: 3),
-                child: Icon(Icons.check, size: 16, color: AppColors.verdictKnown),
+                child: Icon(LucideIcons.check, size: 16, color: AppColors.verdictKnown),
               ),
             ] else if (today && (day.slot.labelNative ?? '').isNotEmpty) ...[
               const SizedBox(width: 10),
@@ -438,7 +439,7 @@ class _EventNode extends StatelessWidget {
                       const SizedBox(width: 10),
                       const Padding(
                         padding: EdgeInsets.only(top: 3),
-                        child: Icon(Icons.check, size: 16, color: AppColors.verdictKnown),
+                        child: Icon(LucideIcons.check, size: 16, color: AppColors.verdictKnown),
                       ),
                     ],
                   ],

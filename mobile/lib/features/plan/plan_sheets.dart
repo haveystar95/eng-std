@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
@@ -11,6 +10,7 @@ import 'package:eng_std/ui/ui.dart';
 import '../../data/plan/plan_models.dart';
 import 'plan_format.dart';
 import 'plan_providers.dart';
+import 'plan_rules.dart';
 
 /// THE THREE SHEETS AND THE ALERT OF THE TAB — кадры 21-8, 21-10, 21-11, 21-12.
 ///
@@ -43,6 +43,9 @@ Future<bool> showPlanHowSheetOnce(
 }
 
 /// «Как устроен план» (кадр 21-8) — the sheet itself; [showPlanHowSheetOnce] owns WHEN it comes.
+///
+/// Три правила — ТЕ ЖЕ, что на витрине (21-1): один [PlanRules], а не свой список. Под правилом
+/// про этапы стоит ряд пяти значков этапов — «чтобы правило было видно, а не только прочитано».
 Future<void> showPlanHowSheet(BuildContext context) {
   final l = AppLocalizations.of(context);
 
@@ -51,17 +54,7 @@ Future<void> showPlanHowSheet(BuildContext context) {
     builder: (sheet) => _Sheet(
       title: l.planSheetTitle,
       children: [
-        _HowRow(
-          icon: _BrassCircle(child: Text('1', style: _brassNumber)),
-          text: l.planSheetRowDays,
-        ),
-        const SizedBox(height: 18),
-        _HowRow(icon: const _StagesGlyph(), text: l.planSheetRowStages),
-        const SizedBox(height: 18),
-        _HowRow(
-          icon: const _BrassCircle(child: Icon(LucideIcons.undo2, size: 12, color: AppColors.brassInk)),
-          text: l.planSheetRowReturn,
-        ),
+        const PlanRules(stageRow: true),
         const SizedBox(height: AppSpacing.s26),
         _InkButton(label: l.planSheetCta, onTap: () => Navigator.of(sheet).pop()),
       ],
@@ -253,7 +246,7 @@ Future<bool> showPlanDeleteAlert(BuildContext context, Plan plan) async {
 }
 
 // ── the sheet's own materials ───────────────────────────────────────────────────────────────
-
+/// РАМКА ЛИСТА — заголовок Inter 22/800 и содержимое под ним (кадры 21-8, 21-10, 21-11).
 class _Sheet extends StatelessWidget {
   const _Sheet({required this.title, required this.children});
 
@@ -282,86 +275,6 @@ class _Sheet extends StatelessWidget {
       ],
     ),
   );
-}
-
-class _HowRow extends StatelessWidget {
-  const _HowRow({required this.icon, required this.text});
-
-  final Widget icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      SizedBox(width: 40, child: Align(alignment: Alignment.topLeft, child: icon)),
-      Expanded(
-        child: Text(
-          text,
-          style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, height: 1.45, color: AppColors.ink),
-        ),
-      ),
-    ],
-  );
-}
-
-const _brassNumber = TextStyle(
-  fontFamily: AppFonts.inter,
-  fontSize: 11,
-  fontWeight: FontWeight.w700,
-  color: AppColors.brassInk,
-);
-
-class _BrassCircle extends StatelessWidget {
-  const _BrassCircle({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 22,
-    height: 22,
-    alignment: Alignment.center,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      border: Border.all(color: AppColors.brassInk, width: 1.5),
-    ),
-    child: child,
-  );
-}
-
-/// The three-dot «stages in order» glyph of the sheet — dots and dashes, brass, fading.
-class _StagesGlyph extends StatelessWidget {
-  const _StagesGlyph();
-
-  @override
-  Widget build(BuildContext context) {
-    Widget dot(bool filled, double alpha) => Container(
-      width: 8,
-      height: 8,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: filled ? AppColors.brassInk : null,
-        border: filled ? null : Border.all(color: AppColors.brassInk.withValues(alpha: alpha), width: 1.5),
-      ),
-    );
-    Widget dash(double alpha) => Expanded(
-      child: Container(height: 2, color: AppColors.brassInk.withValues(alpha: alpha)),
-    );
-
-    return SizedBox(
-      width: 36,
-      child: Column(
-        children: [
-          Row(children: [dot(true, 1), const SizedBox(width: 4), dash(.7)]),
-          const SizedBox(height: 4),
-          Row(children: [dot(false, 1), const SizedBox(width: 4), dash(.7)]),
-          const SizedBox(height: 4),
-          Row(children: [dot(false, .35), const SizedBox(width: 4), dash(.35)]),
-        ],
-      ),
-    );
-  }
 }
 
 /// The sheet's ink button — 52 / radius 16 / 17 / 700, like every ink button of the plan.

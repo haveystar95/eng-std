@@ -9,21 +9,25 @@ import 'package:eng_std/theme/theme.dart';
 
 import '../../support/plan_goldens.dart';
 
-/// СОСТОЯНИЯ ТАБА «ПЛАН» — ответ сервера → экран → снимок (кадры 21-x, 22-5x).
+/// СОСТОЯНИЯ ТАБА «ПЛАН» — ответ сервера → экран → снимок (серия 21, плюс 22-5a/b/c).
 ///
-/// Каждый тест — это одно предложение контракта: «сервер ответил ВОТ ТАК — экран выглядит ВОТ
-/// ТАК». Фикстуры сняты с живого backend2 (план врача, 5 дней, 11.09.2026) и лежат как пришли;
-/// состояния, до которых живой план за один вечер не доходит (пройден, событие прошло, десять
-/// дней, день не собрался), получены ЯВНОЙ правкой той же фикстуры — правка видна в тесте, и
-/// видно, чем именно состояние отличается от снятого.
+/// Каждый тест — одно предложение контракта: «сервер ответил ВОТ ТАК — экран выглядит ВОТ ТАК».
+/// Фикстуры сняты с ЖИВОГО backend2 после PLAN-API-FIX-1 (12.09.2026), и состояния, до которых
+/// план сам не доходит, тоже СНЯТЫ, а не подделаны: закрытый день прогнан по API карточка за
+/// карточкой, прошедшее событие получено `plan:shift-day` + `start`, пересборка — переносом даты.
 ///
-/// Снимки — `test/goldens/`. Обновлять: `flutter test --update-goldens test/features/plan/`.
+/// Правкой фикстуры остался ровно один кадр — 21-6: там проверяется не состояние сервера, а
+/// поведение КЛИЕНТА, когда короткого названия нет и дней вдвое больше; правка видна в тесте.
+///
+/// `room_unopened` — кабинет дня, который ещё НЕ ОТКРЫВАЛИ: после PLAN-API-FIX-1 он уже отдаёт
+/// все пять этапов с их `total`, поэтому плита не начатого дня (21-2) рисуется целиком. До
+/// исправления тот же запрос отдавал пять `absent`, и плита стояла пустой.
+///
+/// Снимки — `test/goldens/plan/`. Обновлять: `flutter test --update-goldens test/features/plan/`.
 void main() {
   setUpAll(setUpPlanGoldens);
 
-  /// Настоящий экран таба с подменённым ответом сервера — снимается то, что видит человек, вместе
-  /// с его подложкой и безопасной зоной. Оболочка табов даёт `Scaffold` (материал под чернильными
-  /// откликами) и нижний отступ под плавающий таб-бар.
+  /// Настоящий экран таба с подменённым ответом сервера.
   Widget tab(
     PlanTabState state, {
     PlanHints hints = const PlanHints(tabShown: true, closeShown: true, howShown: true),
@@ -61,8 +65,9 @@ void main() {
     'collection_id': 'col$id',
   });
 
+  // ── 21-1 · витрина ────────────────────────────────────────────────────────────────────────
   group('плана нет (кадр 21-1)', () {
-    testWidgets('«К чему готовишься?» и ничего больше', (tester) async {
+    testWidgets('витрина: заголовок, подпись, три правила, одно действие', (tester) async {
       await expectPlanGolden(
         tester,
         tab(const PlanTabState(plan: null, finished: [])),
@@ -70,7 +75,7 @@ void main() {
       );
     });
 
-    testWidgets('под приглашением — завершённые планы', (tester) async {
+    testWidgets('прокручен: карточка-пример и завершённые планы', (tester) async {
       await expectPlanGolden(
         tester,
         tab(
@@ -82,7 +87,8 @@ void main() {
             ],
           ),
         ),
-        'plan/21-1-empty-finished',
+        'plan/21-1-empty-scrolled',
+        size: const Size(390, 1250),
       );
     });
 
@@ -104,30 +110,32 @@ void main() {
     });
   });
 
-  group('день идёт сегодня (кадры 21-2, 21-2c)', () {
-    testWidgets('день открыт, урок готов — плита с кнопкой «Начать»', (tester) async {
+  // ── 21-2 · план идёт, день не начат ───────────────────────────────────────────────────────
+  group('день не начат (кадры 21-2, 21-2b, 21-2c)', () {
+    PlanTabState fresh() => PlanTabState(
+      plan: planFrom('current_ready'),
+      room: roomFrom('room_unopened'),
+      finished: const [],
+    );
+
+    testWidgets('верх: шапка, плита с «Начать», начало маршрута', (tester) async {
+      await expectPlanGolden(tester, tab(fresh()), 'plan/21-2');
+    });
+
+    testWidgets('прокручен: маршрут целиком и мишень события', (tester) async {
       await expectPlanGolden(
         tester,
-        tab(
-          PlanTabState(
-            plan: planFrom('current_open'),
-            room: roomFrom('room_day1_fresh'),
-            finished: const [],
-          ),
-        ),
-        'plan/21-2-plate-fresh',
+        tab(fresh()),
+        'plan/21-2b-route',
+        size: const Size(390, 1500),
       );
     });
 
-    testWidgets('первый план — три подсказки первого раза', (tester) async {
+    testWidgets('первый план — подсказки под плитой и маршрутом', (tester) async {
       await expectPlanGolden(
         tester,
         tab(
-          PlanTabState(
-            plan: planFrom('current_open'),
-            room: roomFrom('room_day1_fresh'),
-            finished: const [],
-          ),
+          fresh(),
           hints: const PlanHints(tabShown: false, closeShown: false, howShown: false),
         ),
         'plan/21-2c-first-hints',
@@ -138,54 +146,41 @@ void main() {
       await expectPlanGolden(
         tester,
         tab(
-          PlanTabState(plan: planFrom('current_open'), finished: const [], offline: true),
+          PlanTabState(plan: planFrom('current_ready'), finished: const [], offline: true),
         ),
         'plan/21-2-offline',
       );
     });
-
-    testWidgets('маршрут и спасательный набор целиком', (tester) async {
-      await expectPlanGolden(
-        tester,
-        tab(
-          PlanTabState(
-            plan: planFrom('current_abandoned'),
-            room: roomFrom('room_day1_abandoned'),
-            finished: const [],
-          ),
-        ),
-        'plan/21-2b-route-and-kit',
-        size: const Size(390, 1500),
-      );
-    });
   });
 
-  testWidgets('день брошен на середине (кадр 21-3)', (tester) async {
+  // ── 21-3 · день идёт ──────────────────────────────────────────────────────────────────────
+  testWidgets('день идёт — «Продолжить» (кадр 21-3)', (tester) async {
     await expectPlanGolden(
       tester,
       tab(
         PlanTabState(
-          plan: planFrom('current_abandoned'),
-          room: roomFrom('room_day1_abandoned'),
+          plan: planFrom('current_progress'),
+          room: roomFrom('room_progress'),
           finished: const [],
         ),
       ),
-      'plan/21-3-abandoned',
+      'plan/21-3',
     );
   });
 
+  // ── 21-4 · день закрыт ────────────────────────────────────────────────────────────────────
   group('день закрыт (кадры 21-4, 21-4c, 21-5)', () {
     PlanTabState closed() => PlanTabState(
       plan: planFrom('current_closed'),
-      room: roomFrom('room_day1_closed'),
+      room: roomFrom('room_closed'),
       finished: const [],
     );
 
-    testWidgets('плита про закрытый день, следующий — завтра', (tester) async {
-      await expectPlanGolden(tester, tab(closed()), 'plan/21-4-closed');
+    testWidgets('светлая бумага, этапы с полным счётом, две строки подвала', (tester) async {
+      await expectPlanGolden(tester, tab(closed()), 'plan/21-4');
     });
 
-    testWidgets('первое закрытие — подсказка про возврат', (tester) async {
+    testWidgets('первое закрытие — подсказка про возврат карточек', (tester) async {
       await expectPlanGolden(
         tester,
         tab(
@@ -196,79 +191,137 @@ void main() {
       );
     });
 
-    testWidgets('маршрут целиком после закрытия дня', (tester) async {
+    testWidgets('часть карточек вернётся — терракотовая строка подвала', (tester) async {
+      await expectPlanGolden(
+        tester,
+        tab(
+          PlanTabState(
+            plan: planFrom('current_closed'),
+            room: roomFrom('room_closed', _someFailed),
+            finished: const [],
+          ),
+        ),
+        'plan/21-4-returning',
+      );
+    });
+
+    testWidgets('маршрут целиком после закрытия дня (кадр 21-5)', (tester) async {
       await expectPlanGolden(
         tester,
         tab(closed()),
         'plan/21-5-route-after-close',
-        size: const Size(390, 1500),
+        size: const Size(390, 1400),
       );
     });
   });
 
-  testWidgets('масштаб: десять дней и длинные строки (кадр 21-6)', (tester) async {
-    await expectPlanGolden(
-      tester,
-      tab(
-        PlanTabState(plan: planFrom('current_open', _tenDays), finished: const []),
-      ),
-      'plan/21-6-ten-days',
-      size: const Size(390, 1900),
-    );
+  // ── 21-6 · масштаб и фолбэк шапки ─────────────────────────────────────────────────────────
+  group('масштаб: нет короткого названия, десять дней (кадр 21-6)', () {
+    testWidgets('верх: формулировка цели вместо названия, три строки', (tester) async {
+      await expectPlanGolden(
+        tester,
+        tab(PlanTabState(plan: planFrom('current_ready', _tenDaysNoTitle), finished: const [])),
+        'plan/21-6',
+      );
+    });
+
+    testWidgets('прокручен: середина и хвост маршрута', (tester) async {
+      await expectPlanGolden(
+        tester,
+        tab(PlanTabState(plan: planFrom('current_ready', _tenDaysNoTitle), finished: const [])),
+        'plan/21-6-scrolled',
+        size: const Size(390, 2100),
+      );
+    });
   });
 
+  // ── 21-7 · план пройден ───────────────────────────────────────────────────────────────────
   group('план пройден (кадр 21-7)', () {
-    testWidgets('живой план, все дни закрыты — «Собрать новый план»', (tester) async {
+    testWidgets('итог плана и «Собрать новый план»', (tester) async {
       await expectPlanGolden(
         tester,
         tab(PlanTabState(plan: planFrom('current_closed', _allClosed), finished: const [])),
-        'plan/21-7-done',
-        size: const Size(390, 1400),
+        'plan/21-7',
+        size: const Size(390, 1200),
       );
     });
 
     testWidgets('завершённый план из списка — режим чтения', (tester) async {
       await expectPlanGolden(
         tester,
-        readingMode(
-          PlanTabState(plan: planFrom('current_closed', _finished), finished: const []),
-        ),
-        'plan/21-7-done-reading',
-        size: const Size(390, 1400),
+        readingMode(PlanTabState(plan: planFrom('current_done'), finished: const [])),
+        'plan/21-7-reading',
+        size: const Size(390, 1200),
       );
     });
   });
 
-  testWidgets('событие прошло, план не закончен (кадр 21-14)', (tester) async {
+  // ── 21-13 · маршрут пересобран ────────────────────────────────────────────────────────────
+  testWidgets('маршрут пересобран — плашка над плитой (кадр 21-13)', (tester) async {
     await expectPlanGolden(
       tester,
-      tab(PlanTabState(plan: planFrom('current_closed', _overdue), finished: const [])),
-      'plan/21-14-overdue',
+      tab(
+        PlanTabState(
+          plan: planFrom('current_rebuilt'),
+          room: roomFrom('room_unopened'),
+          finished: const [],
+        ),
+      ),
+      'plan/21-13',
     );
   });
 
-  group('после «Начать» (кадры 22-5a, 22-5c)', () {
-    testWidgets('день 1 ещё пишется — плита в шиммере', (tester) async {
+  // ── 21-14 · событие прошло ────────────────────────────────────────────────────────────────
+  testWidgets('событие прошло, план не закончен (кадр 21-14)', (tester) async {
+    await expectPlanGolden(
+      tester,
+      tab(PlanTabState(plan: planFrom('current_overdue'), finished: const [])),
+      'plan/21-14',
+    );
+  });
+
+  // ── 22-5a/b/c · после «Начать» ────────────────────────────────────────────────────────────
+  group('после «Начать» (кадры 22-5a, 22-5b, 22-5c)', () {
+    testWidgets('день 1 собирается — срок и разрешение уйти', (tester) async {
       await expectPlanGolden(
         tester,
-        tab(PlanTabState(plan: planFrom('current_open', _lesson('building')), finished: const [])),
+        tab(PlanTabState(plan: planFrom('current_ready', _lesson('building')), finished: const [])),
         'plan/22-5a-building',
       );
     });
 
-    testWidgets('день не собрался — «Повторить»', (tester) async {
+    testWidgets('день готов — этапы со счётом и «Начать»', (tester) async {
       await expectPlanGolden(
         tester,
-        tab(PlanTabState(plan: planFrom('current_open', _lesson('failed')), finished: const [])),
-        'plan/22-5c-lesson-failed',
+        tab(
+          PlanTabState(
+            plan: planFrom('current_ready'),
+            room: roomFrom('room_unopened'),
+            finished: const [],
+          ),
+          // Подсказки первого плана здесь НЕ показываются — они приходят позже и один раз.
+          hints: const PlanHints(tabShown: true, closeShown: true, howShown: true),
+        ),
+        'plan/22-5b-ready',
+      );
+    });
+
+    testWidgets('день не собрался — «Повторить», маршрут на месте', (tester) async {
+      await expectPlanGolden(
+        tester,
+        tab(PlanTabState(plan: planFrom('current_ready', _lesson('failed')), finished: const [])),
+        'plan/22-5c-failed',
       );
     });
   });
 }
 
-// ── правки фикстуры: состояния, которых у снятого плана не было ──────────────────────────────
+// ── правки фикстуры ───────────────────────────────────────────────────────────────────────────
 
 /// Урок дня 1 в другом состоянии — `building` (22-5a) или `failed` (22-5c).
+///
+/// Единственное, чего нельзя дождаться от снятого плана: сборка дня идёт секунды, а её отказ
+/// требует уронить сеть ровно в эти секунды.
 Map<String, dynamic> Function(Map<String, dynamic>) _lesson(String status) => (json) {
   final days = (json['days'] as List).cast<Map<String, dynamic>>();
   days.first['lesson_status'] = status;
@@ -277,7 +330,19 @@ Map<String, dynamic> Function(Map<String, dynamic>) _lesson(String status) => (j
   return json;
 };
 
-/// Все дни закрыты, текущего нет — «план пройден» (21-7). Коллекция у плана уже есть.
+/// Три единицы дня не сдались — подвал закрытого дня получает терракотовую строку «вернутся в
+/// день N» (21-4). В прогнанном дне всё отвечено `passed`, поэтому провал ставится правкой: уронить
+/// ровно три карточки из семидесяти пяти по API дороже, чем сказать это здесь одной строкой.
+Map<String, dynamic> _someFailed(Map<String, dynamic> json) {
+  final program = (json['program'] as List).cast<Map<String, dynamic>>();
+  for (var i = 0; i < 3 && i < program.length; i++) {
+    program[i]['state'] = 'failed';
+  }
+
+  return json;
+}
+
+/// Все дни закрыты, текущего нет — «план пройден» (21-7).
 Map<String, dynamic> _allClosed(Map<String, dynamic> json) {
   for (final d in (json['days'] as List).cast<Map<String, dynamic>>()) {
     d['status'] = 'closed';
@@ -290,49 +355,34 @@ Map<String, dynamic> _allClosed(Map<String, dynamic> json) {
   return json;
 }
 
-/// План, закрытый кнопкой «Собрать новый» — в списке завершённых и открытый оттуда (21-7).
-Map<String, dynamic> _finished(Map<String, dynamic> json) {
-  _allClosed(json);
-  json['status'] = 'finished';
-  json['finished_at'] = '2026-09-15T18:20:00Z';
-
-  return json;
-}
-
-/// Событие прошло, а дни ещё остались — сервер отдаёт `overdue` и готовую строку (21-14).
-Map<String, dynamic> _overdue(Map<String, dynamic> json) {
-  json['status'] = 'overdue';
-  json['overdue_native'] = 'Приём был вчера';
-  json['until_phrase'] = null;
-  // Дата события — во вчера снятой фикстуры (её «сегодня» — 11.09): мишень маршрута рисует ту же
-  // дату, что и строка «Приём был вчера», иначе снимок показывал бы небывалое состояние.
-  json['event_date'] = '2026-09-10';
-  json['days_left'] = -1;
-
-  return json;
-}
-
-/// Десять дней и длинные названия сцен — проверка масштаба (21-6): маршрут вдвое длиннее, строки
-/// переносятся. Дни 6–10 слеплены из снятых: те же поля, свои номера, даты и заголовки.
-Map<String, dynamic> _tenDays(Map<String, dynamic> json) {
+/// КАДР 21-6 проверяет КЛИЕНТА, а не сервер: что он делает, когда короткого названия нет и дней
+/// вдвое больше. Поэтому у снятого плана здесь отбирается `title_native` (шапка обязана перейти на
+/// формулировку цели в три строки без троеточия) и дни доклеиваются до десяти — теми же полями,
+/// своими номерами и датами.
+Map<String, dynamic> _tenDaysNoTitle(Map<String, dynamic> json) {
+  json['title_native'] = null;
+  json['goal_text'] =
+      'Едем в Лиссабон на неделю с ребёнком, боюсь не объясниться в отеле, в ресторане и в аптеке';
   final days = (json['days'] as List).cast<Map<String, dynamic>>();
   final titles = [
     'Приём у врача: жалобы и анализы',
-    'Повторение',
+    null,
     'Аптека: рецепт и дозировка',
     'Звонок в клинику: перенести приём',
-    'Репетиция',
+    null,
   ];
-  for (var i = 0; i < 5; i++) {
-    final base = Map<String, dynamic>.from(days[i % days.length]);
-    final number = 6 + i;
+  final start = days.length;
+  for (var i = 0; i < 10 - start; i++) {
+    final base = Map<String, dynamic>.from(days[i % start]);
+    final number = start + 1 + i;
     base['id'] = 'day$number';
     base['number'] = number;
     base['status'] = 'locked';
-    base['title_native'] = base['type'] == 'scene' ? titles[i] : null;
-    base['teaches_native'] = base['type'] == 'scene'
-        ? 'назвать симптомы, понять назначение и сроки'
-        : null;
+    base['lesson_status'] = 'pending';
+    base['title_native'] = titles[i % titles.length];
+    base['teaches_native'] = titles[i % titles.length] == null
+        ? null
+        : 'назвать симптомы, понять назначение и сроки';
     base['slot'] = {'code': 'date', 'date': '2026-09-${16 + i}', 'label_native': null};
     days.add(base);
   }
@@ -344,7 +394,6 @@ Map<String, dynamic> _tenDays(Map<String, dynamic> json) {
   return json;
 }
 
-/// Таб, которому сервер не ответил и кэша нет: `PlanTabScreen` рисует «Не получилось загрузить».
 /// Ответ сервера, уже разобранный: таб рисует его и ничего не спрашивает.
 class _StubTab extends PlanTabController {
   _StubTab(this._state);
@@ -358,6 +407,7 @@ class _StubTab extends PlanTabController {
   Future<void> refresh({bool silent = true}) async {}
 }
 
+/// Таб, которому сервер не ответил и кэша нет.
 class _FailingTab extends PlanTabController {
   @override
   Future<PlanTabState> build() async => throw Exception('no network');

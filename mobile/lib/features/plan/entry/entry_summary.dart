@@ -42,8 +42,6 @@ class EntrySummaryRow extends StatelessWidget {
   /// Последняя сводка в столбце несёт ещё и нижнюю волосяную линию.
   final bool last;
 
-  static const _hairline = Color(0x1A2E2620); // rgba(46,38,32,.10)
-
   @override
   Widget build(BuildContext context) {
     final text = Text(
@@ -71,8 +69,8 @@ class EntrySummaryRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             border: Border(
-              top: const BorderSide(color: _hairline),
-              bottom: last ? const BorderSide(color: _hairline) : BorderSide.none,
+              top: const BorderSide(color: AppColors.dividerFaint),
+              bottom: last ? const BorderSide(color: AppColors.dividerFaint) : BorderSide.none,
             ),
           ),
           child: Row(

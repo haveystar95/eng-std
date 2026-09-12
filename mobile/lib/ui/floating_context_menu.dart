@@ -5,13 +5,18 @@ import 'package:eng_std/theme/theme.dart';
 /// Одна строка плавающего контекстного меню (§4в).
 class ContextMenuAction {
   const ContextMenuAction({
-    required this.icon,
     required this.label,
+    this.icon,
     this.destructive = false,
     required this.onSelected,
   });
 
-  final IconData icon;
+  /// Значок строки, или null — строка ТЕКСТОМ.
+  ///
+  /// Меню плана канва оставила без значков (кадр 21-9, «Вычтено: иконки в меню»): четыре действия
+  /// читаются словами, а четыре иконки рядом с четырьмя словами — вторая азбука к той же строке.
+  /// Другие меню приложения значки держат, поэтому параметр необязательный, а не удалённый.
+  final IconData? icon;
   final String label;
 
   /// Деструктив — иконка и текст #9A4430, всегда последней строкой.
@@ -159,8 +164,10 @@ class _MenuRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              Icon(action.icon, size: 17, color: color),
-              const SizedBox(width: 13),
+              if (action.icon != null) ...[
+                Icon(action.icon, size: 17, color: color),
+                const SizedBox(width: 13),
+              ],
               Expanded(
                 child: Text(
                   action.label,

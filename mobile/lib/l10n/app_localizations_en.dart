@@ -2507,17 +2507,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTitle => 'Plan';
 
   @override
-  String get planEmptyTitle => 'What are you preparing for?';
+  String get planEmptyTitle => 'The conversation you are getting ready for';
 
   @override
-  String get planEmptyBody =>
-      'A plan is preparation for one real situation: a doctor, a rental, an interview, a trip. Every day is one scene of it, 20 minutes. At the end — a rehearsal out loud.';
+  String get planEmptySub => 'a scene a day · 20 minutes · a rehearsal out loud';
+
+  @override
+  String get planRuleSituation => 'One situation a day. Days open one at a time';
+
+  @override
+  String get planRuleStages =>
+      'Five stages in order: words → phrases → dialogue → listen and reply → speak on my own';
+
+  @override
+  String get planRuleReturn => 'Whatever did not work comes back the next day. Nothing is lost';
+
+  @override
+  String get planExampleTitle => 'Example · a doctor\'s visit';
+
+  @override
+  String get planExampleDay1 => 'Booking the visit';
+
+  @override
+  String get planExampleDay1Sub => 'ask about the time and the insurance';
+
+  @override
+  String get planExampleDay2 => 'The doctor\'s visit';
+
+  @override
+  String get planExampleDay2Sub => 'describe the pain, follow the instructions';
+
+  @override
+  String get planExampleDay3 => 'The pharmacy';
+
+  @override
+  String get planExampleDay3Sub => 'get the dosage, ask for an alternative';
 
   @override
   String get planEmptyCta => 'Build a plan';
-
-  @override
-  String get planEmptyNote => 'three questions, under a minute';
 
   @override
   String get planFinishedTitle => 'Finished plans';
@@ -2525,11 +2552,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String planFinishedItemDate(String date) {
     return 'finished $date';
-  }
-
-  @override
-  String planProgressDay(int n, int total) {
-    return 'Day $n of $total';
   }
 
   @override
@@ -2631,11 +2653,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String planClosedMeta(String title, String cards, String minutes) {
-    return '$title · $cards · $minutes';
-  }
-
-  @override
   String planClosedCount(String cards, String minutes) {
     return '$cards · $minutes';
   }
@@ -2651,7 +2668,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String planClosedReturn(int k, int n) {
+  String planClosedReturn(int n, int k) {
     String _temp0 = intl.Intl.pluralLogic(
       k,
       locale: localeName,
@@ -2681,11 +2698,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planRouteDayRehearsalSub => 'the whole route out loud';
 
   @override
-  String planRouteEventTitle(String event, String date) {
-    return '$event · $date';
-  }
-
-  @override
   String planRouteMetaDay(int n) {
     return 'Day $n';
   }
@@ -2711,28 +2723,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planRouteEventFallback => 'Event';
-
-  @override
-  String get planKitLabel => 'Rescue kit';
-
-  @override
-  String planKitSub(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n phrases for any moment',
-      one: '$n phrase for any moment',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String planKitAll(int n) {
-    return 'all $n →';
-  }
-
-  @override
-  String get planKitCollapse => 'collapse';
 
   @override
   String get planDoneTitle => 'Plan completed';
@@ -2839,33 +2829,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planOverdueFinish => 'Finish the plan';
 
   @override
-  String get planOverdueReschedule => 'Move the date';
+  String planOverdueContinue(String days) {
+    return 'Keep going · $days';
+  }
 
   @override
   String get planHintFirstStart => 'Start with the “Words” stage. The rest open in order';
 
   @override
-  String get planHintFirstRoute => 'Today\'s day is open, the next one opens tomorrow';
+  String planHintFirstRoute(int n) {
+    return 'Day $n is open. The next one opens once you finish this one';
+  }
 
   @override
-  String get planHintFirstKit =>
-      'Five phrases for when you did not catch it or did not make it. Useful in any conversation';
+  String planRebuiltTitle(int from, int to) {
+    return 'The route was rebuilt: $from days became $to';
+  }
 
   @override
   String get planHintFirstReturn => 'These cards come back the next day — that is how they stick';
 
   @override
   String get planSheetTitle => 'How the plan works';
-
-  @override
-  String get planSheetRowDays => 'Every day is one situation. Days open one at a time';
-
-  @override
-  String get planSheetRowStages =>
-      'Five stages in order: words → phrases → dialogue → listen and answer → speak myself. The next opens when this one is closed';
-
-  @override
-  String get planSheetRowReturn => 'What did not work out comes back the next day. Nothing is lost';
 
   @override
   String get planSheetCta => 'Got it';
@@ -2878,12 +2863,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planTabRetry => 'Retry';
-
-  @override
-  String get planEntryNavTitle => 'New plan';
-
-  @override
-  String get planEntryNavCancel => 'Cancel';
 
   @override
   String get planEntryNext => 'Next';
@@ -2921,48 +2900,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add who you talk to and what matters — the plan gets sharper';
 
   @override
-  String get planEntryGoalHint => 'the situation · who you talk to · what matters';
-
-  @override
-  String get planEntryGoalPlaceholder =>
-      'Going to the doctor with my child, my back hurts. First time at the local clinic, afraid I will not understand the prescriptions';
-
-  @override
-  String get planEntryGoalChipDoctor => 'Doctor';
-
-  @override
-  String get planEntryGoalChipRent => 'Rental';
-
-  @override
-  String get planEntryGoalChipInterview => 'Interview';
-
-  @override
-  String get planEntryGoalChipTrip => 'Trip';
-
-  @override
-  String get planEntryGoalChipOther => 'Other';
-
-  @override
-  String get planEntryGoalTemplateDoctor =>
-      'Going to the doctor. The problem: … . What matters: understand the prescriptions and ask about …';
-
-  @override
-  String get planEntryGoalTemplateRent =>
-      'Renting a flat. Viewing it with … . What matters: ask about … and understand the terms';
-
-  @override
-  String get planEntryGoalTemplateInterview =>
-      'Going to an interview for … . What matters: talk about myself and ask about …';
-
-  @override
-  String get planEntryGoalTemplateTrip =>
-      'Travelling to … with … . What matters: … and understand where to go';
-
-  @override
-  String get planEntryGoalShort =>
-      'Add who it is with and what matters — the plan will be more precise';
-
-  @override
   String get planEntryGoalDictate => 'or dictate it';
 
   @override
@@ -2989,21 +2926,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEntryTapeDays => 'Days';
 
   @override
-  String get planEntryTapeEdit => 'Edit';
-
-  @override
   String planEntryTapeLanguageValue(String language, String level) {
     return '$language · $level';
-  }
-
-  @override
-  String planEntryTapeDaysValue(int n, String event, String date) {
-    return '$n · $event $date';
-  }
-
-  @override
-  String planEntryTapeDaysValueDated(int n, String date) {
-    return '$n · $date';
   }
 
   @override
@@ -3026,9 +2950,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planEntryLevelIntermediateSub => 'I follow simple speech, I speak with mistakes';
-
-  @override
-  String get planEntryLevelFluentNote => 'Intermediate is enough to prepare for a situation';
 
   @override
   String get planEntryDaysTitle => 'How many days until the conversation?';
@@ -3096,30 +3017,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEntryDateCta => 'Build the plan';
 
   @override
-  String get planEntryDateToggle => 'I know the event date';
-
-  @override
-  String get planEntryDateNote =>
-      'The date goes at the end of the route, we remind you the day before';
-
-  @override
-  String planEntryDateShorten(int left, int to) {
-    String _temp0 = intl.Intl.pluralLogic(
-      left,
-      locale: localeName,
-      other: '$left days to the event — the plan shortens to $to',
-      one: '$left day to the event — the plan shortens to $to',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get planEntryPreviewTitle => 'Your plan is ready';
-
-  @override
-  String planEntryPreviewSub(String days, String language, String level) {
-    return '$days · $language · $level';
-  }
 
   @override
   String get planEntryPreviewLoadingTitle => 'Building your plan';
@@ -3130,12 +3028,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get planEntryPreviewLoadingSub =>
       'Picking situations for your conversation and laying them out by day';
-
-  @override
-  String get planEntryPreviewRemove => 'Remove';
-
-  @override
-  String get planEntryPreviewHint => 'Not it? Swipe a day away or change the goal';
 
   @override
   String get planEntryPreviewCta => 'Start';
@@ -3154,9 +3046,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEntryPreviewErrorRetry => 'Try again';
 
   @override
-  String get planEntryPreviewErrorEdit => 'Change the goal';
-
-  @override
   String get planEntryPreviewUnclearTitle => 'A little more, please';
 
   @override
@@ -3172,23 +3061,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEntryPreviewUnclearCta => 'Back to the goal';
 
   @override
-  String planEntryDayBuilding(int n) {
-    return 'Building day $n · about a minute';
-  }
-
-  @override
-  String get planEntryDayFailedTitle => 'The day did not build';
-
-  @override
-  String get planEntryDayFailedSub =>
-      'The route is in place. Let us try again — it takes about a minute';
-
-  @override
   String get planEntryPushTitle => 'Plan is ready';
 
   @override
-  String planEntryPushBody(String dayTitle) {
-    return 'Day 1 · $dayTitle — you can start';
+  String planEntryPushBody(String until, String dayTitle) {
+    return '$until. Day 1 — “$dayTitle”';
+  }
+
+  @override
+  String planEntryPushBodyNoDate(String days, String dayTitle) {
+    return '$days. Day 1 — “$dayTitle”';
   }
 
   @override

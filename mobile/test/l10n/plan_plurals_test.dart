@@ -43,28 +43,31 @@ void main() {
     expect(l.planNewWordsCount(8), '8 новых слов');
   });
 
-  test('фразы набора — 1 фраза / 2 фразы / 5 фраз', () {
-    expect(l.planKitSub(1), '1 фраза на любой случай');
-    expect(l.planKitSub(2), '2 фразы на любой случай');
-    expect(l.planKitSub(5), '5 фраз на любой случай');
+  test('«1 карточка вернётся / 2 карточки вернутся / 5 карточек вернутся» — глагол склоняется', () {
+    expect(l.planClosedReturn(3, 1), '1 карточка вернётся в день 3 →');
+    expect(l.planClosedReturn(3, 3), '3 карточки вернутся в день 3 →');
+    expect(l.planClosedReturn(3, 5), '5 карточек вернутся в день 3 →');
   });
 
-  test('«Вернётся 1 карточка / Вернутся 2 карточки / Вернутся 5 карточек» — глагол тоже склоняется', () {
-    expect(l.planClosedReturn(3, 1), 'Вернётся в день 3 · 1 карточка');
-    expect(l.planClosedReturn(3, 3), 'Вернутся в день 3 · 3 карточки');
-    expect(l.planClosedReturn(3, 5), 'Вернутся в день 3 · 5 карточек');
+  test('состав длины плана — ситуации и повторения склоняются (22-3a)', () {
+    expect(l.planEntryDaysScenes(1), '1 ситуация');
+    expect(l.planEntryDaysScenes(3), '3 ситуации');
+    expect(l.planEntryDaysScenes(6), '6 ситуаций');
+    expect(l.planEntryDaysReviews(1), '1 повторение');
+    expect(l.planEntryDaysReviews(2), '2 повторения');
+    expect(l.planEntryDaysReviews(5), '5 повторений');
   });
 
-  test('«До события N день/дня/дней — план сократится до M» (22-3b)', () {
-    expect(l.planEntryDateShorten(1, 1), 'До события 1 день — план сократится до 1');
-    expect(l.planEntryDateShorten(3, 3), 'До события 3 дня — план сократится до 3');
-    expect(l.planEntryDateShorten(6, 6), 'До события 6 дней — план сократится до 6');
+  test('«через N день/дня/дней» у ближней даты (22-3b)', () {
+    expect(l.planEntryDateIn('четверг', 1), 'четверг · через 1 день');
+    expect(l.planEntryDateIn('четверг', 3), 'четверг · через 3 дня');
+    expect(l.planEntryDateIn('четверг', 7), 'четверг · через 7 дней');
   });
 
   test('составные строки собираются из форм, а не дублируют их', () {
     expect(
-      l.planClosedMeta('Приём у врача', l.planCardsCount(75), l.planMinutesCount(19)),
-      'Приём у врача · 75 карточек · 19 минут',
+      l.planClosedCount(l.planCardsCount(75), l.planMinutesCount(19)),
+      '75 карточек · 19 минут',
     );
     expect(l.planPlateStageSubStart(l.planNewWordsCount(8)), 'начни отсюда · 8 новых слов');
     expect(l.planOverdueMeta(l.planDaysCount(4), 7), 'Пройдено 4 дня из 7');

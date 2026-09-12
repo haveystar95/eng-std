@@ -47,7 +47,7 @@ void main() {
   });
 
   testWidgets('«Изменить дату» — дата плана, другая дата, «Без даты» (кадр 21-10)', (tester) async {
-    final plan = planFrom('current_open');
+    final plan = planFrom('current_ready');
     await shoot(
       tester,
       host((context) => showPlanDateSheet(context, plan)),
@@ -56,7 +56,7 @@ void main() {
   });
 
   testWidgets('«Начать другой план?» (кадр 21-11)', (tester) async {
-    final plan = planFrom('current_abandoned');
+    final plan = planFrom('current_progress');
     await shoot(tester, host((context) => showPlanNewSheet(context, plan)), 'plan/21-11-sheet-new');
   });
 
@@ -72,7 +72,7 @@ void main() {
   testWidgets('у плана без закрытого дня коллекции ещё нет — другой текст (кадр 21-12)', (
     tester,
   ) async {
-    final plan = planFrom('current_open', (json) {
+    final plan = planFrom('current_ready', (json) {
       json['collection_id'] = null;
 
       return json;

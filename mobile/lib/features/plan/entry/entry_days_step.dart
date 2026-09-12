@@ -134,12 +134,19 @@ class _MiniRoute extends StatelessWidget {
     final brass = selected ? AppColors.brass : AppColors.brassInk;
     final link = ink.withValues(alpha: .28);
 
+    // Колонка 88 фиксирована канвой, а точек бывает и десять: сжимается СВЯЗКА между ними, а не
+    // сами точки — точка должна остаться читаемой, связка нет.
+    final links = kinds.length - 1;
+    final linkWidth = links <= 0
+        ? 0.0
+        : ((88 - kinds.length * 6) / links).clamp(1.5, 4.0);
+
     return SizedBox(
       width: 88,
       child: Row(
         children: [
           for (var i = 0; i < kinds.length; i++) ...[
-            if (i > 0) Container(width: 4, height: 1.5, color: link),
+            if (i > 0) Container(width: linkWidth, height: 1.5, color: link),
             Container(
               width: 6,
               height: 6,

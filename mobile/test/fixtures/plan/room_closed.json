@@ -1,0 +1,347 @@
+{
+ "plan_id": "01M26KTYVVTXRN9T4AE4807BXV",
+ "day": {
+  "id": "01M26KTYVXZ7AGN96QGZGT1B00",
+  "number": 1,
+  "type": "scene",
+  "status": "closed",
+  "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+  "title_native": "Звонок агенту",
+  "title_target": "Call to the agent",
+  "teaches_native": "уточнить цену, адрес и условия",
+  "lesson_status": "ready",
+  "opens_on": "2026-09-11",
+  "slot": {
+   "code": "past",
+   "date": "2026-09-12",
+   "label_native": null
+  },
+  "cards_total": 75,
+  "cards_done": 75,
+  "minutes_spent": 1,
+  "opened_at": "2026-09-10T23:47:46+00:00",
+  "closed_at": "2026-09-12T14:59:36+00:00"
+ },
+ "scene": {
+  "id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+  "order": 1,
+  "kind": "situation",
+  "priority": 2,
+  "title_native": "Звонок агенту",
+  "title_target": "Call to the agent",
+  "teaches_native": "уточнить цену, адрес и условия",
+  "goals_native": [
+   "спросить про цену и адрес",
+   "уточнить срок и залог",
+   "договориться о просмотре",
+   "спросить про договор"
+  ],
+  "learner_role_target": "Tenant",
+  "learner_role_native": "Арендатор",
+  "partner_role_target": "Estate agent",
+  "partner_role_native": "Агент по аренде",
+  "image": {
+   "url": "https://images.pexels.com/photos/36713143/pexels-photo-36713143.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+   "author": "Vitaly Gariev",
+   "author_url": "https://www.pexels.com/@silverkblack"
+  },
+  "lesson_status": "ready",
+  "lesson_fail_reason": null,
+  "day_number": 1,
+  "cost_usd": "0.066388",
+  "latency_ms": 25349,
+  "prompt_version": "lesson-v3"
+ },
+ "goals_native": [
+  "спросить про цену и адрес",
+  "уточнить срок и залог",
+  "договориться о просмотре",
+  "спросить про договор"
+ ],
+ "stages": [
+  {
+   "stage": "words",
+   "total": 32,
+   "done": 32,
+   "state": "done"
+  },
+  {
+   "stage": "phrases",
+   "total": 18,
+   "done": 18,
+   "state": "done"
+  },
+  {
+   "stage": "dialogue",
+   "total": 1,
+   "done": 1,
+   "state": "done"
+  },
+  {
+   "stage": "listen",
+   "total": 16,
+   "done": 16,
+   "state": "done"
+  },
+  {
+   "stage": "speak",
+   "total": 8,
+   "done": 8,
+   "state": "done"
+  }
+ ],
+ "metrics": {
+  "cards_total": 75,
+  "cards_done": 75,
+  "minutes_spent": 1,
+  "first_try_share": 1,
+  "hardest_unit_kind": "word",
+  "hardest_unit_ref": "v1",
+  "hardest_unit_text": "available"
+ },
+ "program": [
+  {
+   "unit_kind": "word",
+   "unit_ref": "v1",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "available",
+   "text_native": "доступный для аренды",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 4,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v2",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "rent",
+   "text_native": "арендная плата",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 4,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v3",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "included",
+   "text_native": "включённый",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 4,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v4",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "deposit",
+   "text_native": "депозит",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 4,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v5",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "lease term",
+   "text_native": "срок аренды",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 4,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v6",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "viewing",
+   "text_native": "просмотр",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 4,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v7",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "proof of income",
+   "text_native": "подтверждение дохода",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 4,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "unit_ref": "v8",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "references",
+   "text_native": "рекомендации",
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 4,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p1",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "Is the flat still available?",
+   "text_native": "Квартира всё ещё сдаётся?",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p2",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "How much is the deposit?",
+   "text_native": "Сколько составляет депозит?",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p3",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "When would the flat be available?",
+   "text_native": "Когда квартира будет доступна для заезда?",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p4",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "Saturday at eleven would suit me better.",
+   "text_native": "Суббота в одиннадцать мне подошла бы больше.",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p5",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "What documents would I need later?",
+   "text_native": "Какие документы мне потом понадобятся?",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "unit_ref": "p6",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": "Could you confirm the full address, please?",
+   "text_native": "Не могли бы вы подтвердить полный адрес?",
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x1",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 4,
+   "cards_done": 4,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x2",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x3",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x4",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x5",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x6",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x7",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  },
+  {
+   "unit_kind": "exchange",
+   "unit_ref": "x8",
+   "scene_id": "01M26KV8TND2YRZ1MN8GCBY7W5",
+   "text_target": null,
+   "text_native": null,
+   "source": "today",
+   "cards_total": 3,
+   "cards_done": 3,
+   "state": "passed"
+  }
+ ],
+ "sheet_available": true
+}

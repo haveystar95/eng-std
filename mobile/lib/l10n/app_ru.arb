@@ -3254,21 +3254,57 @@
   "@planTitle": {
     "description": "Шапка таба «План» (plan.title)."
   },
-  "planEmptyTitle": "К чему готовишься?",
+  "planEmptyTitle": "Разговор, к которому готовишься",
   "@planEmptyTitle": {
-    "description": "Кадр 21-1, Literata 30 (plan.empty.title)."
+    "description": "Заголовок витрины, Literata 30 — обещание результата, а не вопрос (кадр 21-1, plan.empty.title)."
   },
-  "planEmptyBody": "План — подготовка к конкретной ситуации: врач, аренда, собеседование, поездка. Каждый день — одна сцена из неё, 20 минут. В конце — репетиция вслух.",
-  "@planEmptyBody": {
-    "description": "Кадр 21-1 (plan.empty.body)."
+  "planEmptySub": "сцена в день · 20 минут · репетиция вслух",
+  "@planEmptySub": {
+    "description": "Подпись витрины в ОДНУ строку (кадр 21-1, plan.empty.sub)."
+  },
+  "planRuleSituation": "Каждый день — одна ситуация. Дни открываются по одному",
+  "@planRuleSituation": {
+    "description": "Первое правило плана — витрина 21-1 и лист 21-8 (plan.rule.situation)."
+  },
+  "planRuleStages": "Пять этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам",
+  "@planRuleStages": {
+    "description": "Второе правило плана; в листе 21-8 под ним стоит ряд пяти значков этапов (plan.rule.stages)."
+  },
+  "planRuleReturn": "То, что не получилось, вернётся в следующий день. Ничего не потеряется",
+  "@planRuleReturn": {
+    "description": "Третье правило плана — витрина 21-1 и лист 21-8 (plan.rule.return)."
+  },
+  "planExampleTitle": "Пример · приём у врача",
+  "@planExampleTitle": {
+    "description": "Метка карточки-примера на витрине (кадр 21-1, plan.example.title)."
+  },
+  "planExampleDay1": "Запись к врачу",
+  "@planExampleDay1": {
+    "description": "Первый узел карточки-примера (кадр 21-1, plan.example.day1)."
+  },
+  "planExampleDay1Sub": "спросить время приёма и страховку",
+  "@planExampleDay1Sub": {
+    "description": "Описание первого узла примера (кадр 21-1, plan.example.day1.sub)."
+  },
+  "planExampleDay2": "Приём у врача",
+  "@planExampleDay2": {
+    "description": "Второй узел карточки-примера (кадр 21-1, plan.example.day2)."
+  },
+  "planExampleDay2Sub": "описать боль, понять назначения",
+  "@planExampleDay2Sub": {
+    "description": "Описание второго узла примера (кадр 21-1, plan.example.day2.sub)."
+  },
+  "planExampleDay3": "Аптека",
+  "@planExampleDay3": {
+    "description": "Третий узел карточки-примера (кадр 21-1, plan.example.day3)."
+  },
+  "planExampleDay3Sub": "понять дозировку, спросить аналог",
+  "@planExampleDay3Sub": {
+    "description": "Описание третьего узла примера (кадр 21-1, plan.example.day3.sub)."
   },
   "planEmptyCta": "Собрать план",
   "@planEmptyCta": {
     "description": "Кадр 21-1, кнопка (plan.empty.cta)."
-  },
-  "planEmptyNote": "три вопроса, меньше минуты",
-  "@planEmptyNote": {
-    "description": "Кадр 21-1 (plan.empty.note)."
   },
   "planFinishedTitle": "Завершённые планы",
   "@planFinishedTitle": {
@@ -3280,18 +3316,6 @@
     "placeholders": {
       "date": {
         "type": "String"
-      }
-    }
-  },
-  "planProgressDay": "День {n} из {total}",
-  "@planProgressDay": {
-    "description": "Шапка таба (plan.progress.day).",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
       }
     }
   },
@@ -3440,21 +3464,6 @@
       }
     }
   },
-  "planClosedMeta": "{title} · {cards} · {minutes}",
-  "@planClosedMeta": {
-    "description": "Кадр 21-4 (plan.closed.meta); title — сервер, cards/minutes — planCardsCount / planMinutesCount.",
-    "placeholders": {
-      "title": {
-        "type": "String"
-      },
-      "cards": {
-        "type": "String"
-      },
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
   "planClosedCount": "{cards} · {minutes}",
   "@planClosedCount": {
     "description": "Счёт закрытого дня в шапке плиты: «75 карточек · 19 минут» (кадр 21-4, plan.closed.count).",
@@ -3495,10 +3504,10 @@
   "@planClosedReturn": {
     "description": "Вторая строка подвала закрытого дня, терракотой (кадр 21-4, plan.closed.return).",
     "placeholders": {
-      "k": {
+      "n": {
         "type": "int"
       },
-      "n": {
+      "k": {
         "type": "int"
       }
     }
@@ -3535,18 +3544,6 @@
   "planRouteDayRehearsalSub": "весь маршрут вслух",
   "@planRouteDayRehearsalSub": {
     "description": "Строка маршрута (plan.route.day.rehearsal.sub)."
-  },
-  "planRouteEventTitle": "{event} · {date}",
-  "@planRouteEventTitle": {
-    "description": "Пункт назначения: «Приём · 15 сентября» (plan.route.event.title, entry.preview.event.dated); event — сервер, дата по локали.",
-    "placeholders": {
-      "event": {
-        "type": "String"
-      },
-      "date": {
-        "type": "String"
-      }
-    }
   },
   "planRouteMetaDay": "День {n}",
   "@planRouteMetaDay": {
@@ -3590,32 +3587,6 @@
   "planRouteEventFallback": "Событие",
   "@planRouteEventFallback": {
     "description": "Заголовок мишени, когда сервер не назвал событие (кадр 21-2b, plan.route.event.fallback)."
-  },
-  "planKitLabel": "Спасательный набор",
-  "@planKitLabel": {
-    "description": "Набор, лейбл (plan.kit.label)."
-  },
-  "planKitSub": "{n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}}",
-  "@planKitSub": {
-    "description": "Набор, подпись (plan.kit.sub): 1 фраза / 2 фразы / 5 фраз.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "planKitAll": "все {n} →",
-  "@planKitAll": {
-    "description": "Набор, ссылка (plan.kit.all).",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "planKitCollapse": "свернуть",
-  "@planKitCollapse": {
-    "description": "Набор, раскрытый на все пять фраз: обратная ссылка на место «все {n} →». Строки в таблице нет — добавлена нарядом PLAN-UI, чтобы у раскрытия был выход."
   },
   "planDoneTitle": "План пройден",
   "@planDoneTitle": {
@@ -3782,21 +3753,39 @@
   "@planOverdueFinish": {
     "description": "Кадр 21-14 (plan.overdue.finish)."
   },
-  "planOverdueReschedule": "Перенести дату",
-  "@planOverdueReschedule": {
-    "description": "Кадр 21-14 (plan.overdue.reschedule)."
+  "planOverdueContinue": "Дозаниматься · {days}",
+  "@planOverdueContinue": {
+    "description": "Второй выход прошедшего события — вернуться к текущему дню (кадр 21-14, plan.overdue.continue).",
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
   },
   "planHintFirstStart": "Начни с этапа «Слова». Остальные откроются по порядку",
   "@planHintFirstStart": {
     "description": "Кадр 21-2c (plan.hint.first.start)."
   },
-  "planHintFirstRoute": "Сегодняшний день открыт, следующий откроется завтра",
+  "planHintFirstRoute": "День {n} открыт. Следующий откроется, когда пройдёшь этот",
   "@planHintFirstRoute": {
-    "description": "Кадр 21-2c (plan.hint.first.route)."
+    "description": "Подсказка первого плана под заголовком маршрута, один раз (кадр 21-2c, plan.hint.first.route).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
-  "planHintFirstKit": "Пять фраз на случай, если не понял или не успел. Пригодятся в любом разговоре",
-  "@planHintFirstKit": {
-    "description": "Кадр 21-2c, под набором (plan.hint.first.kit)."
+  "planRebuiltTitle": "Маршрут пересобран: было {from} дней, стало {to}",
+  "@planRebuiltTitle": {
+    "description": "Плашка пересборки над плитой — состояние плана, не сообщение (кадр 21-13, plan.rebuilt.title).",
+    "placeholders": {
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      }
+    }
   },
   "planHintFirstReturn": "Эти карточки придут в следующий день ещё раз — так они и запоминаются",
   "@planHintFirstReturn": {
@@ -3805,18 +3794,6 @@
   "planSheetTitle": "Как устроен план",
   "@planSheetTitle": {
     "description": "Кадр 21-8 (plan.sheet.title)."
-  },
-  "planSheetRowDays": "Каждый день — одна ситуация. Дни открываются по одному",
-  "@planSheetRowDays": {
-    "description": "Кадр 21-8 (plan.sheet.row.days)."
-  },
-  "planSheetRowStages": "Пять этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам. Следующий открывается, когда закрыт этот",
-  "@planSheetRowStages": {
-    "description": "Кадр 21-8 (plan.sheet.row.stages)."
-  },
-  "planSheetRowReturn": "То, что не получилось, вернётся в следующий день. Ничего не потеряется",
-  "@planSheetRowReturn": {
-    "description": "Кадр 21-8 (plan.sheet.row.return)."
   },
   "planSheetCta": "Понятно",
   "@planSheetCta": {
@@ -3833,14 +3810,6 @@
   "planTabRetry": "Повторить",
   "@planTabRetry": {
     "description": "Кнопка «Повторить» на табе и на плите (entry.day.failed.retry)."
-  },
-  "planEntryNavTitle": "Новый план",
-  "@planEntryNavTitle": {
-    "description": "Шапка входа (entry.nav.title)."
-  },
-  "planEntryNavCancel": "Отмена",
-  "@planEntryNavCancel": {
-    "description": "Шапка входа, tertiary (entry.nav.cancel)."
   },
   "planEntryNext": "Далее",
   "@planEntryNext": {
@@ -3886,54 +3855,6 @@
   "@planEntryGoalShortHint": {
     "description": "Подсказка под коротким ответом; НЕ блокирует «Далее» (кадр 22-1c, entry.goal.short.hint)."
   },
-  "planEntryGoalHint": "ситуация · с кем говоришь · что важно",
-  "@planEntryGoalHint": {
-    "description": "Кадр 22-1, над полем (entry.goal.hint)."
-  },
-  "planEntryGoalPlaceholder": "Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике, боюсь не понять назначения",
-  "@planEntryGoalPlaceholder": {
-    "description": "Кадр 22-1a, плейсхолдер-пример (entry.goal.placeholder)."
-  },
-  "planEntryGoalChipDoctor": "Врач",
-  "@planEntryGoalChipDoctor": {
-    "description": "Кадр 22-1, чип (entry.goal.chip.doctor)."
-  },
-  "planEntryGoalChipRent": "Аренда",
-  "@planEntryGoalChipRent": {
-    "description": "Кадр 22-1, чип (entry.goal.chip.rent)."
-  },
-  "planEntryGoalChipInterview": "Собеседование",
-  "@planEntryGoalChipInterview": {
-    "description": "Кадр 22-1, чип (entry.goal.chip.interview)."
-  },
-  "planEntryGoalChipTrip": "Поездка",
-  "@planEntryGoalChipTrip": {
-    "description": "Кадр 22-1, чип (entry.goal.chip.trip)."
-  },
-  "planEntryGoalChipOther": "Другое",
-  "@planEntryGoalChipOther": {
-    "description": "Кадр 22-1, чип (entry.goal.chip.other)."
-  },
-  "planEntryGoalTemplateDoctor": "Иду к врачу. Проблема: … . Важно: понять назначения и спросить про …",
-  "@planEntryGoalTemplateDoctor": {
-    "description": "Кадр 22-1b, заготовка по чипу «Врач» (entry.goal.template.doctor)."
-  },
-  "planEntryGoalTemplateRent": "Снимаю квартиру. Смотрю жильё с … . Важно: спросить про … и понять условия",
-  "@planEntryGoalTemplateRent": {
-    "description": "Заготовка по чипу «Аренда». В таблице текстов есть только заготовка «Врач» — эта добавлена нарядом PLAN-UI по её образцу (вопрос архитектору)."
-  },
-  "planEntryGoalTemplateInterview": "Иду на собеседование на … . Важно: рассказать о себе и спросить про …",
-  "@planEntryGoalTemplateInterview": {
-    "description": "Заготовка по чипу «Собеседование» — добавлена нарядом PLAN-UI по образцу «Врач»."
-  },
-  "planEntryGoalTemplateTrip": "Еду в … с … . Важно: … и понять, куда идти",
-  "@planEntryGoalTemplateTrip": {
-    "description": "Заготовка по чипу «Поездка» — добавлена нарядом PLAN-UI по образцу «Врач»."
-  },
-  "planEntryGoalShort": "Добавь, с кем и что важно — план будет точнее",
-  "@planEntryGoalShort": {
-    "description": "Кадр 22-1c, строка под коротким ответом (entry.goal.short)."
-  },
   "planEntryGoalDictate": "или надиктуй",
   "@planEntryGoalDictate": {
     "description": "Подпись у микрофона в покое (кадр 22-1, entry.goal.dictate)."
@@ -3971,10 +3892,6 @@
   "@planEntryTapeDays": {
     "description": "Лента ответов (entry.tape.days)."
   },
-  "planEntryTapeEdit": "Изм.",
-  "@planEntryTapeEdit": {
-    "description": "Лента ответов, tertiary (entry.tape.edit)."
-  },
   "planEntryTapeLanguageValue": "{language} · {level}",
   "@planEntryTapeLanguageValue": {
     "description": "Лента ответов: «Английский · Средний».",
@@ -3983,33 +3900,6 @@
         "type": "String"
       },
       "level": {
-        "type": "String"
-      }
-    }
-  },
-  "planEntryTapeDaysValue": "{n} · {event} {date}",
-  "@planEntryTapeDaysValue": {
-    "description": "Лента ответов, 22-4 (entry.tape.days.value): «5 · приём 15 сентября»; event — сервер, дата по локали.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "event": {
-        "type": "String"
-      },
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "planEntryTapeDaysValueDated": "{n} · {date}",
-  "@planEntryTapeDaysValueDated": {
-    "description": "Лента ответов до ответа сервера: событие ещё не названо, дата уже выбрана.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "date": {
         "type": "String"
       }
     }
@@ -4041,10 +3931,6 @@
   "planEntryLevelIntermediateSub": "понимаю простую речь, говорю с ошибками",
   "@planEntryLevelIntermediateSub": {
     "description": "Уровень описан тем, что человек умеет (кадр 22-2, entry.level.intermediate.sub)."
-  },
-  "planEntryLevelFluentNote": "Для подготовки к ситуации среднего уровня достаточно",
-  "@planEntryLevelFluentNote": {
-    "description": "Кадр 22-2, при предвыбранном «Средний» (entry.level.fluent.note)."
   },
   "planEntryDaysTitle": "Сколько дней до разговора?",
   "@planEntryDaysTitle": {
@@ -4121,44 +4007,9 @@
   "@planEntryDateCta": {
     "description": "Кнопка шага даты — называет результат, а не «Готово» (кадр 22-3b, entry.date.cta)."
   },
-  "planEntryDateToggle": "Знаю дату события",
-  "@planEntryDateToggle": {
-    "description": "Кадр 22-3 (entry.date.toggle)."
-  },
-  "planEntryDateNote": "Дата встанет в конец маршрута, напомним накануне",
-  "@planEntryDateNote": {
-    "description": "Кадр 22-3 (entry.date.note)."
-  },
-  "planEntryDateShorten": "{left, plural, one{До события {left} день — план сократится до {to}} few{До события {left} дня — план сократится до {to}} many{До события {left} дней — план сократится до {to}} other{До события {left} дня — план сократится до {to}}}",
-  "@planEntryDateShorten": {
-    "description": "Кадр 22-3b, латунь (entry.date.shorten): 1 день / 2 дня / 5 дней.",
-    "placeholders": {
-      "left": {
-        "type": "int"
-      },
-      "to": {
-        "type": "int"
-      }
-    }
-  },
   "planEntryPreviewTitle": "Твой план готов",
   "@planEntryPreviewTitle": {
     "description": "Заголовок готового превью (кадр 22-4b, entry.preview.title)."
-  },
-  "planEntryPreviewSub": "{days} · {language} · {level}",
-  "@planEntryPreviewSub": {
-    "description": "Кадр 22-4 (entry.preview.sub); days — planDaysCount.",
-    "placeholders": {
-      "days": {
-        "type": "String"
-      },
-      "language": {
-        "type": "String"
-      },
-      "level": {
-        "type": "String"
-      }
-    }
   },
   "planEntryPreviewLoadingTitle": "Собираю план",
   "@planEntryPreviewLoadingTitle": {
@@ -4171,14 +4022,6 @@
   "planEntryPreviewLoadingSub": "Подбираю ситуации под твой разговор и расставляю их по дням",
   "@planEntryPreviewLoadingSub": {
     "description": "Что именно происходит во время сборки (кадр 22-4a, entry.preview.loading.sub)."
-  },
-  "planEntryPreviewRemove": "Убрать",
-  "@planEntryPreviewRemove": {
-    "description": "Кадр 22-4b, свайп (entry.preview.remove)."
-  },
-  "planEntryPreviewHint": "Не то? Убери день свайпом или измени цель",
-  "@planEntryPreviewHint": {
-    "description": "Кадр 22-4b, в доке над «Начать» (entry.preview.hint)."
   },
   "planEntryPreviewCta": "Начать",
   "@planEntryPreviewCta": {
@@ -4199,10 +4042,6 @@
   "planEntryPreviewErrorRetry": "Попробовать ещё",
   "@planEntryPreviewErrorRetry": {
     "description": "Кнопка неудачной сборки; повтор не уводит на первый шаг (кадр 22-4c, entry.preview.error.retry)."
-  },
-  "planEntryPreviewErrorEdit": "Изменить цель",
-  "@planEntryPreviewErrorEdit": {
-    "description": "Кадр 22-4c (entry.preview.error.edit)."
   },
   "planEntryPreviewUnclearTitle": "Нужно чуть больше",
   "@planEntryPreviewUnclearTitle": {
@@ -4225,31 +4064,29 @@
   "@planEntryPreviewUnclearCta": {
     "description": "Кнопка возврата к полю цели с сохранённым текстом (кадр 22-4d, entry.preview.unclear.cta)."
   },
-  "planEntryDayBuilding": "Собираем день {n} · около минуты",
-  "@planEntryDayBuilding": {
-    "description": "Кадр 22-5a (entry.day.building).",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "planEntryDayFailedTitle": "День не собрался",
-  "@planEntryDayFailedTitle": {
-    "description": "Кадр 22-5c (entry.day.failed.title)."
-  },
-  "planEntryDayFailedSub": "Маршрут на месте. Попробуем ещё раз — это займёт около минуты",
-  "@planEntryDayFailedSub": {
-    "description": "Кадр 22-5c (entry.day.failed.sub)."
-  },
   "planEntryPushTitle": "План готов",
   "@planEntryPushTitle": {
     "description": "Кадр 22-6 (entry.push.title)."
   },
-  "planEntryPushBody": "День 1 · {dayTitle} — можно начинать",
+  "planEntryPushBody": "{until}. День 1 — «{dayTitle}»",
   "@planEntryPushBody": {
-    "description": "Кадр 22-6 (entry.push.body); dayTitle — сервер.",
+    "description": "Тело уведомления «План готов»: срок до события и первый день (кадр 22-6, entry.push.body).",
     "placeholders": {
+      "until": {
+        "type": "String"
+      },
+      "dayTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "planEntryPushBodyNoDate": "{days}. День 1 — «{dayTitle}»",
+  "@planEntryPushBodyNoDate": {
+    "description": "Тело уведомления у плана без даты события (кадр 22-6, entry.push.body.nodate).",
+    "placeholders": {
+      "days": {
+        "type": "String"
+      },
       "dayTitle": {
         "type": "String"
       }
