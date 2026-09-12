@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/image_loader.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
+import 'package:eng_std/data/plan/plan_notifications.dart';
 import 'package:eng_std/data/plan/plan_reminder_rules.dart';
+import 'package:eng_std/data/plan/plan_reminder_scheduler.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/plan/entry/dictation_wave.dart';
 import 'package:eng_std/features/plan/entry/entry_state.dart';
@@ -52,24 +54,26 @@ void main() {
   // ── УВЕДОМЛЕНИЯ ───────────────────────────────────────────────────────────────────────────
   group('уведомление не чаще раза в сутки', () {
     final now = DateTime(2026, 9, 12, 9, 0);
-    Plan live({String? slotDate = '2026-09-12', String? event = '2026-09-16', String status = 'active'}) => Plan.fromJson({
-      'id': 'p',
-      'status': status,
-      'days_total': 5,
-      'event_date': event,
-      'current_day': {
-        'id': 'd2',
-        'number': 2,
-        'status': 'open',
-        'title_native': 'Приём у врача',
-        'slot': {'code': 'today', 'date': slotDate},
-      },
-      'days': const [],
-    });
+    Plan live({String? slotDate = '2026-09-12', String? event = '2026-09-16', String status = 'active', int hour = 19}) =>
+        Plan.fromJson({
+          'id': 'p',
+          'status': status,
+          'days_total': 5,
+          'event_date': event,
+          'reminder_hour': hour,
+          'current_day': {
+            'id': 'd2',
+            'number': 2,
+            'status': 'open',
+            'title_native': 'Приём у врача',
+            'slot': {'code': 'today', 'date': slotDate},
+          },
+          'days': const [],
+        });
 
     // ЛОВИТ: два напоминания в один день (напоминание и «ждёт со вчера», напоминание и событие).
     test('на каждую дату — не больше одного', () {
-      final notices = planLocalNotices(live(), now, const VisitTime(19, 0));
+      final notices = planLocalNotices(live(), now, pushEnabled: false);
       final dates = notices.map((n) => DateTime(n.at.year, n.at.month, n.at.day)).toList();
 
       expect(dates.toSet().length, dates.length);
@@ -78,39 +82,60 @@ void main() {
 
     // ЛОВИТ: «ждёт со вчера» в тот же день, что и сам день, и напоминание вместо события.
     test('в дату дня — напоминание, позже — «ждёт со вчера», в дату события — событие', () {
-      final kinds = {for (final n in planLocalNotices(live(), now, const VisitTime(19, 0))) n.at.day: n.kind};
+      final kinds = {for (final n in planLocalNotices(live(), now, pushEnabled: false)) n.at.day: n.kind};
 
       expect(kinds[12], PlanNoticeKind.reminder);
       expect(kinds[13], PlanNoticeKind.skipped);
       expect(kinds[16], PlanNoticeKind.eventToday);
     });
 
+    // ПРАВИЛО (доработка п. 1): час один — `reminder_hour` сервера; телефон своих заходов не считает.
+    // ЛОВИТ: телефон, который ставит напоминание на свой час, а сервер шлёт на другой.
+    test('все локальные уведомления — ровно в час сервера, и событие тоже', () {
+      final notices = planLocalNotices(live(hour: 9), DateTime(2026, 9, 12, 8, 0), pushEnabled: false);
+
+      expect(notices.map((n) => '${n.at.hour}:${n.at.minute}').toSet(), {'9:0'});
+      expect(Plan.fromJson({'id': 'p', 'reminder_hour': 5}).reminderHour, 8, reason: 'раньше 08:00 не бывает');
+    });
+
     // ЛОВИТ: напоминание, поставленное в прошлое (iOS показал бы его сразу при открытии).
     test('ничего раньше «сейчас»', () {
       final late = DateTime(2026, 9, 12, 20, 0);
-      expect(planLocalNotices(live(), late, const VisitTime(19, 0)).every((n) => n.at.isAfter(late)), isTrue);
+      expect(planLocalNotices(live(), late, pushEnabled: false).every((n) => n.at.isAfter(late)), isTrue);
     });
 
     // ЛОВИТ: напоминания у плана, который не идёт (не начат или завершён).
     test('план не идёт — уведомлений нет', () {
-      expect(planLocalNotices(live(status: 'ready'), now, VisitTime.evening), isEmpty);
-      expect(planLocalNotices(live(status: 'finished'), now, VisitTime.evening), isEmpty);
-      expect(planLocalNotices(null, now, VisitTime.evening), isEmpty);
+      expect(planLocalNotices(live(status: 'ready'), now, pushEnabled: false), isEmpty);
+      expect(planLocalNotices(live(status: 'finished'), now, pushEnabled: false), isEmpty);
+      expect(planLocalNotices(null, now, pushEnabled: false), isEmpty);
     });
-  });
 
-  group('час напоминания — обычный заход', () {
-    // ЛОВИТ: напоминание в полночь у человека, который ещё ни разу не заходил.
-    test('заходов нет — 19:00', () => expect(usualVisitTime(const []), VisitTime.evening));
+    // ПРАВИЛО (доработка п. 2): `push_enabled: true` — письма шлёт сервер, локальных нет вовсе;
+    // смена false → true снимает всё, что стояло, и дублей не остаётся.
+    // ЛОВИТ: два одинаковых напоминания в 19:00 — от сервера и от телефона; расписание, которое
+    // дописывается, а не заменяется.
+    test('push_enabled false → true снимает локальные напоминания, дублей нет', () async {
+      final notifications = _ScheduleSpy();
+      final scheduler = PlanReminderScheduler(notifications);
+      Future<int> apply(bool push) => scheduler.apply(
+        plan: live(),
+        pushEnabled: push,
+        now: now,
+        zone: 'Europe/Kyiv',
+        channel: 'План',
+        text: (plan, n) => (title: '${n.kind}', body: '${n.dayNumber}'),
+      );
 
-    // ЛОВИТ: среднее вместо медианы — один ночной заход утащил бы напоминание на ночь.
-    test('медиана последних семи, вниз до четверти часа', () {
-      final visits = [
-        for (final (d, h, m) in const [(1, 8, 0), (2, 19, 10), (3, 19, 20), (4, 19, 40), (5, 23, 50), (6, 19, 5), (7, 18, 55), (8, 20, 0)])
-          DateTime(2026, 9, d, h, m),
-      ];
-      // Последние семь: 19:10 19:20 19:40 23:50 19:05 18:55 20:00 → медиана 19:20 → 19:15.
-      expect(usualVisitTime(visits), const VisitTime(19, 15));
+      final first = await apply(false);
+      final again = await apply(false); // повторное открытие приложения
+      expect(first, again);
+      expect(notifications.scheduled.length, first, reason: 'повтор заменил, а не дописал');
+      expect(notifications.scheduled.map((e) => e.at).toSet().length, first, reason: 'двух на одно время нет');
+
+      await apply(true);
+      expect(notifications.scheduled, isEmpty, reason: 'сервер шлёт сам — локальных нет');
+      expect(notifications.replacements, 3);
     });
   });
 
@@ -300,6 +325,25 @@ class _ScriptedRecognizer implements SpeechRecognizer {
 
   @override
   Future<void> cancel() async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Центр уведомлений телефона в миниатюре: `replaceScheduled` заменяет всё, что стоит.
+class _ScheduleSpy implements PlanNotifications {
+  List<({DateTime at, String title, String body, int dayNumber})> scheduled = [];
+  int replacements = 0;
+
+  @override
+  Future<void> replaceScheduled(
+    List<({DateTime at, String title, String body, int dayNumber})> items, {
+    required String channel,
+    required String zone,
+  }) async {
+    replacements++;
+    scheduled = [...items];
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

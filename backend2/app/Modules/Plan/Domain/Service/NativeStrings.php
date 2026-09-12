@@ -50,7 +50,7 @@ final class NativeStrings
 
     /** @var array<string, array{dated: string, undated: string}> the promise closing the plan summary */
     private const PROMISE = [
-        'ru' => ['dated' => 'К {day} {month} скажешь всё это сам', 'undated' => 'Скажешь всё это сам'],
+        'ru' => ['dated' => '{to} {day} {month} скажешь всё это сам', 'undated' => 'Скажешь всё это сам'],
         'uk' => ['dated' => 'До {day} {month} скажеш усе це сам', 'undated' => 'Скажеш усе це сам'],
         'en' => ['dated' => 'By {month} {day} you will say all of this yourself', 'undated' => 'You will say all of this yourself'],
     ];
@@ -89,11 +89,21 @@ final class NativeStrings
         $tail = $eventDate === null
             ? $promise['undated']
             : strtr($promise['dated'], [
+                '{to}' => self::toBefore((int) $eventDate->format('j')),
                 '{day}' => (string) (int) $eventDate->format('j'),
                 '{month}' => self::MONTHS[$this->table()][(int) $eventDate->format('n') - 1],
             ]);
 
         return "{$joined}. {$tail}";
+    }
+
+    /**
+     * Russian «к» / «ко» before the day of the month: «ко» only before 2 («ко 2 сентября» — «ко
+     * второму»), «к» before everything else, 12 and 22 included («к 12», «к 22») — доработка PLAN-UI-3.
+     */
+    private static function toBefore(int $day): string
+    {
+        return $day === 2 ? 'Ко' : 'К';
     }
 
     /** «До приёма · 5 дней» — the prompt's `until_phrase_native` with the count the server knows. */

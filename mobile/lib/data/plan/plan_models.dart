@@ -577,6 +577,7 @@ class Plan {
     this.untilPhrase,
     this.overdueNative,
     this.summary,
+    this.reminderHour = 19,
     this.coverImage,
     this.collectionId,
     this.unclearReason,
@@ -614,6 +615,10 @@ class Plan {
   /// plate «Как это будет» of the preview (кадр 22-4b), READY. Null on a plan from before the
   /// field: that plan has no plate, not an invented one.
   final String? summary;
+
+  /// Локальный час ежедневного напоминания и «сегодня разговор» — ОДНО правило сервера для него и
+  /// для телефона (`reminder_hour`: час обычного захода, 19 без заходов, не раньше 8).
+  final int reminderHour;
   final PlanImage? coverImage;
   final String? collectionId;
   final String? unclearReason;
@@ -652,6 +657,7 @@ class Plan {
     summary: (j['summary'] is String && (j['summary'] as String).trim().isNotEmpty)
         ? (j['summary'] as String).trim()
         : null,
+    reminderHour: ((j['reminder_hour'] as num?)?.toInt() ?? 19).clamp(8, 23),
     coverImage: PlanImage.fromJson(j['cover_image'] as Map<String, dynamic>?),
     collectionId: j['collection_id'] as String?,
     unclearReason: j['unclear_reason'] as String?,

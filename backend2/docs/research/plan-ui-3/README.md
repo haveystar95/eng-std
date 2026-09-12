@@ -227,5 +227,110 @@ Golden на таймлайн — `strip-route-day-states`: один живой �
    golden-снимках рисуются «NO GLYPH» (нет шрифта эмодзи в тестовом окружении, на устройстве — флаги);
    анимация появления правил витрины (60 мс шаг) и мигание курсора 1.1 с не сделаны.
 
-**Стоимость живой генерации:** план фикстур $0.169 (`qa-planui3@wt.test`) + план прогона
-$0.173 (`qa-planui3live@wt.test`) — **$0.342 из $2**.
+**Стоимость живой генерации (исправлено в доработке):** 2 плана и 4 урока дней — план фикстур
+$0.1831 (`qa-planui3@wt.test`) + план прогона $0.1897 (`qa-planui3live@wt.test`), озвучка реплик
+$0.0306 входит в эти суммы — **$0.373 из $2**. Прежняя строка «$0.342» не учитывала озвучку и
+второй день.
+
+---
+
+## Доработка (13.09, та же сессия)
+
+Постановка владельца — пять пунктов; канва `plan-canvas.dc.html` не тронута (её правит архитектор).
+Вопросы §11 п. 2, 3, 4, 6 закрыты этой доработкой.
+
+### Д1. Одно время напоминаний — правило на сервере, час в плане
+
+- Правило одно — `Identity/Domain/Service/UsualVisitTime::of()`: медиана последних 7 заходов в зоне
+  профиля (заход до 04:00 — вечер прошлого дня), **округление вниз до часа**, **не раньше 08:00**,
+  без заходов — 19:00.
+- Сервер: `RunNotificationTickHandler` читает час один раз на план; и ежедневное напоминание, и
+  `event_today` уходят в этот час (константа «event_today не раньше 08:00» удалена —
+  `PlanEventRules::dueOnCalendar(..., int $reminderMinutes, ...)`). В день события напоминания нет —
+  только «сегодня разговор».
+- Клиент: `GET /plans` → `reminder_hour` (8…23, OpenAPI + `plan-api.md`); `Plan.reminderHour`
+  (клиент ещё раз прижимает к 8…23). Свой счёт заходов на телефоне удалён (`usualVisitTime`,
+  `PlanStore.visits/recordVisit`) — `POST /devices/visit` остаётся, это вход в серверное правило.
+- Тесты: `UsualVisitTimeTest` (20:20→20:00, 18:59→18:00, ранняя пташка/сова 01:30/медиана за
+  полночь → 08:00, 23:55→23:00); `PlanEventsTest` (день события: 08:00 и 18:45 — ничего, 19:00 /
+  19:10 / 20:30 — ровно одно `event_today`, `daily_reminder` нет); `PlanNotificationRulesTest`;
+  клиентский канон — все уведомления в час сервера, час < 8 прижимается.
+
+### Д2. `push_enabled` в ответе регистрации токена
+
+- `PUT /devices/push-token` → `200 {"data":{"push_enabled":bool}}` (было 204).
+  `push_enabled = токен сохранён И задан APNS_KEY_P8` — порт `Identity/Application/Port/PushDelivery`,
+  адаптер `ConfiguredPushDelivery`.
+- Клиент: `PushRegistration.register(onPushEnabled:)` → `planPushEnabledProvider` (хранится в
+  `sync_meta`, ключ `plan_push_enabled`) → смена значения принудительно пересчитывает расписание.
+  Единственная дверь — `PlanReminderScheduler.apply()`: всегда ЗАМЕНЯЕТ расписание целиком;
+  при `true` правило `planLocalNotices` пустое, и замена снимает всё.
+- Тест «push_enabled false → true снимает локальные напоминания, дублей нет»
+  (`plan_rules_canon_test.dart`, шпион `PlanNotifications`): false — поставлено N, повторный вызов
+  — те же N без дублей; true — расписание пустое. **Мутация:** убран `pushEnabled ||` в правиле —
+  тест красный; откачено.
+- Бэкенд: `DeviceEndpointsTest` — `push_enabled` false при пустом ключе, true при заданном.
+
+Таблица §9 после доработки: пока ключа нет — как в §9, но напоминание и «сегодня разговор» в один
+час сервера; после ключа сервер отвечает `push_enabled: true`, телефон снимает свои локальные, и
+письма идут только APNs — двух писем не бывает.
+
+### Д3. Картинки вне лимита API — nginx отдаёт статику
+
+- Новый сервис compose `web` (`nginx:1.27-alpine`, `wt_web`, конфиг `docker/nginx/default.conf`).
+  **Порт :8001 и ngrok теперь смотрят в nginx**, `app` наружу не публикуется (`expose 8000`).
+- `location ~ "^/api/v1/plans/images/(?<scene>ULID)/(?<size>112|448)$"` → `try_files
+  /plan-images/$scene/$size.jpg @laravel` (том `storage/app/private/plan-images`, read-only),
+  `Cache-Control: public, max-age=31536000, immutable`, ETag. Нет копии на диске — в Laravel
+  (самолечение), который её скачает и положит; следующий запрос уже статика.
+- В Laravel маршрут картинок вынесен из группы `throttle:120,1` (только `auth:sanctum`) — на
+  случай самолечения и тестового окружения без nginx. Тест `PlanSceneImageTest`: у ответа нет
+  `X-RateLimit-*`, у маршрута нет throttle-мидлвара, у `plans/versions` — `throttle:120,1` есть.
+- **Компромисс:** статика не проверяет владельца сцены и токен (ULID сцены — неугадываемый адрес,
+  фото — стоковые Pexels). Проверка владельца остаётся только на пути самолечения через Laravel.
+
+`curl -I` (13.09):
+
+```
+# :8001, без токена, копия на диске
+$ curl -sI http://localhost:8001/api/v1/plans/images/01M26KQ1W88N39AETVYW3884PW/112
+HTTP/1.1 200 OK
+Server: nginx/1.27.5
+Content-Type: image/jpeg
+Content-Length: 4044
+ETag: "6aa5a795-fcc"
+Cache-Control: public, max-age=31536000, immutable
+Accept-Ranges: bytes
+# X-RateLimit-* — нет
+
+# через ngrok, …/448: HTTP/2 200, cache-control: public, max-age=31536000, immutable, content-type: image/jpeg
+# 150 запросов подряд — 150 × 200, ни одного X-RateLimit-*, ни одного 429
+# If-None-Match: "6aa5a795-fcc" → 304
+# API /api/v1/plans/versions через nginx → X-RateLimit-Limit: 120 (лимит API на месте)
+# удалённая 448.jpg → 200 через Laravel (X-Powered-By: PHP, без X-RateLimit-*), затем снова статика
+```
+
+### Д4. «Ко» только перед 2
+
+`NativeStrings` (ru): `{to} {day} {month} скажешь всё это сам`, `{to}` = «Ко» при дне 2, иначе «К».
+`PlanSummaryTest` (датасет): 2 → «Ко 2 сентября», 12 / 22 / 17 → «К 12 / 22 / 17 сентября».
+
+### Д5. Попутно: снимки входа протухали назавтра
+
+Полный `flutter test` 13.09 упал на 6 снимках входа (22-3b…22-4d): экран входа брал
+`DateTime.now()` в пяти местах, хотя тест утверждал обратное. `PlanEntryScreen(now:)` — часы
+параметром (по умолчанию `DateTime.now`), тест подставляет 12.09.2026 — день съёмки PNG. Снимки не
+перегенерировались.
+
+### Ворота (один раз в конце)
+
+- backend2 `composer check`: deptrac **0**, PHPStan **0**, Pest **1983 passed** (9957 assertions).
+- mobile: `flutter analyze` — **No issues found**; `flutter test` — **1371, All tests passed**.
+
+### База и стенд
+
+- Миграций в доработке нет. Перед пересозданием `app` (смена портов compose) — бэкап
+  `storage/db-backups/wordtrainer-20260913-001354.sql.gz`.
+- Подняты `web` и пересоздан `ngrok`; `/api/v1/health` через ngrok — 200.
+- Не проверено живьём: `push_enabled: true` (ключа .p8 нет — проверено тестом с заданным ключом);
+  срабатывание локальных уведомлений в час сервера на устройстве.

@@ -23,11 +23,15 @@ use DateTimeImmutable;
 /**
  * THE TICK. For every active plan, in the learner's own zone:
  *
- * 1. the event date — `event_today` on the day (from 08:00, {@see PlanEventRules}), `event_passed`
+ * 1. the event date — `event_today` on the day at the reminder hour, `event_passed`
  *    after it; each written once per plan (checked first, and the partial unique index holds it if
  *    two ticks overlap), `event_today` becomes a letter;
- * 2. the daily reminder — when now is inside [usual visit time, +15 min), the current day is
- *    available and not closed, and the learner has had no reminder on this local date.
+ * 2. the daily reminder — when now is inside [reminder hour, +15 min), the current day is
+ *    available and not closed, the learner has had no reminder on this local date, and today is not
+ *    the event day (that day's one letter is «Сегодня разговор»).
+ *
+ * The reminder hour is ONE rule — Identity's `UsualVisitTime` (the usual visit hour, never before
+ * 08:00) — read once per plan here and handed to the phone in `GET /plans` as `reminder_hour`.
  *
  * Idempotent by construction: a second run in the same quarter hour finds the journal lines and the
  * log line already there and does nothing. Reads only; every write goes through the journal or the
@@ -56,12 +60,13 @@ final readonly class RunNotificationTickHandler
                 continue;
             }
             $localNow = $now->setTimezone($this->calendar->timezoneFor($plan->userId()));
-            $this->calendarFacts($plan, $localNow);
-            $this->dailyReminder($plan, $localNow);
+            $reminder = $this->habits->usualVisitMinutes($plan->userId());
+            $this->calendarFacts($plan, $localNow, $reminder);
+            $this->dailyReminder($plan, $localNow, $reminder);
         }
     }
 
-    private function calendarFacts(Plan $plan, DateTimeImmutable $localNow): void
+    private function calendarFacts(Plan $plan, DateTimeImmutable $localNow, int $reminderMinutes): void
     {
         $eventDate = $plan->eventDate();
         if ($eventDate === null) {
@@ -70,6 +75,7 @@ final readonly class RunNotificationTickHandler
         $due = PlanEventRules::dueOnCalendar(
             $eventDate,
             $localNow,
+            $reminderMinutes,
             $this->events->has($plan->id(), PlanEventKind::EventToday),
             $this->events->has($plan->id(), PlanEventKind::EventPassed),
         );
@@ -79,9 +85,12 @@ final readonly class RunNotificationTickHandler
         }
     }
 
-    private function dailyReminder(Plan $plan, DateTimeImmutable $localNow): void
+    private function dailyReminder(Plan $plan, DateTimeImmutable $localNow, int $reminderMinutes): void
     {
         $today = $localNow->setTime(0, 0);
+        if ($plan->eventDate()?->format('Y-m-d') === $today->format('Y-m-d')) {
+            return;
+        }
         $day = $plan->currentDay();
         $waiting = $day !== null && $day->isAvailableOn($today);
         if (! $waiting) {
@@ -89,7 +98,7 @@ final readonly class RunNotificationTickHandler
         }
         $due = NotificationRules::reminderDue(
             $localNow,
-            $this->habits->usualVisitMinutes($plan->userId()),
+            $reminderMinutes,
             true,
             $this->log->hasDailyReminder($plan->userId(), $today->format('Y-m-d')),
         );

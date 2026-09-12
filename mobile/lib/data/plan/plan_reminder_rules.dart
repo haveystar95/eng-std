@@ -1,55 +1,22 @@
-/// ЧТО ТЕЛЕФОН ПЛАНА СТАВИТ СЕБЕ САМ (наряд PLAN-UI-3 §4, решение владельца 12.09).
+/// ЧТО ТЕЛЕФОН ПЛАНА СТАВИТ СЕБЕ САМ (наряд PLAN-UI-3 §4 и его доработка).
 ///
-/// Push на телефоне сегодня не доходит: бесплатная Personal Team не даёт APNs-токена, ключа .p8
-/// нет. Поэтому то, что можно посчитать заранее по датам плана, телефон ставит ЛОКАЛЬНО и
+/// Пока сервер не доставляет push (`push_enabled: false` в ответе регистрации токена — нет ключа
+/// APNs или нет токена), то, что можно посчитать заранее по датам плана, телефон ставит ЛОКАЛЬНО и
 /// пересчитывает при каждом открытии приложения и каждой смене маршрута:
 ///
-/// - ежедневное напоминание в час обычного захода — про день, который ждёт;
-/// - наутро после даты дня, который так и не пройден, — «день N ждёт со вчера» (он же и есть
+/// - ежедневное напоминание — про день, который ждёт;
+/// - в каждую следующую дату, пока день не пройден, — «день N ждёт со вчера» (он же и есть
 ///   напоминание этого дня: в сутки уходит одно, не два);
 /// - в день события — «Сегодня приём» вместо напоминания.
 ///
-/// «План готов» и «день собран» не считаются заранее — они видны внутри приложения при возврате.
-/// Всё здесь — чистые функции от ответа сервера и часов: ни одно правило не ждёт плагина.
+/// ЧАС — НЕ ЗДЕСЬ. Час напоминаний считает сервер одним правилом для себя и для телефона (час
+/// обычного захода, 19:00 без заходов, не раньше 08:00) и отдаёт его в плане (`reminder_hour`).
+/// Телефон своих заходов не считает: два счётчика — это два разных часа и два письма.
+///
+/// Когда сервер доставляет push сам (`push_enabled: true`), локальных уведомлений нет вовсе.
 library;
 
 import 'plan_models.dart';
-
-/// Час и минута обычного захода.
-class VisitTime {
-  const VisitTime(this.hour, this.minute);
-
-  final int hour;
-  final int minute;
-
-  /// Дефолт, пока заходов нет, — 19:00 в зоне телефона.
-  static const evening = VisitTime(19, 0);
-
-  @override
-  bool operator ==(Object other) => other is VisitTime && other.hour == hour && other.minute == minute;
-
-  @override
-  int get hashCode => Object.hash(hour, minute);
-
-  @override
-  String toString() => '$hour:${minute.toString().padLeft(2, '0')}';
-}
-
-/// ЧАС ОБЫЧНОГО ЗАХОДА — медиана времени суток последних семи заходов, вниз до четверти часа.
-///
-/// Медиана, а не среднее: один ночной заход не должен утаскивать напоминание на полночь. Пустая
-/// история — 19:00.
-VisitTime usualVisitTime(List<DateTime> visits) {
-  if (visits.isEmpty) return VisitTime.evening;
-  final recent = [...visits]..sort();
-  final last = recent.sublist(recent.length > 7 ? recent.length - 7 : 0);
-  final minutes = [for (final v in last) v.hour * 60 + v.minute]..sort();
-  final mid = minutes.length ~/ 2;
-  final median = minutes.length.isOdd ? minutes[mid] : (minutes[mid - 1] + minutes[mid]) ~/ 2;
-  final rounded = median - median % 15;
-
-  return VisitTime(rounded ~/ 60, rounded % 60);
-}
 
 /// Вид локального уведомления.
 enum PlanNoticeKind { reminder, skipped, eventToday }
@@ -67,13 +34,14 @@ class PlanNotice {
   String toString() => '$kind $at day $dayNumber';
 }
 
-/// Уведомления плана на неделю вперёд — не больше одного в календарный день.
+/// Уведомления плана на неделю вперёд — не больше одного в календарный день, в час сервера.
 ///
 /// День, который ждёт, — первый не закрытый (`current_day`); его дата — дата слота сервера. В дату
 /// слота — напоминание, в каждую следующую — «ждёт со вчера», в дату события — событие. Всё раньше
-/// [now] не ставится. План, который не идёт (не начат, завершён, нет плана), — ничего.
-List<PlanNotice> planLocalNotices(Plan? plan, DateTime now, VisitTime at, {int days = 7}) {
-  if (plan == null || !plan.status.isLive) return const [];
+/// [now] не ставится. План, который не идёт (не начат, завершён, нет плана), и план, чьи письма
+/// доставляет сервер ([pushEnabled]), — ничего.
+List<PlanNotice> planLocalNotices(Plan? plan, DateTime now, {required bool pushEnabled, int days = 7}) {
+  if (pushEnabled || plan == null || !plan.status.isLive) return const [];
   final day = plan.currentDay;
   final slot = _date(day?.slot.date);
   final event = _date(plan.eventDate);
@@ -82,7 +50,7 @@ List<PlanNotice> planLocalNotices(Plan? plan, DateTime now, VisitTime at, {int d
 
   for (var k = 0; k < days; k++) {
     final date = today.add(Duration(days: k));
-    final when = DateTime(date.year, date.month, date.day, at.hour, at.minute);
+    final when = DateTime(date.year, date.month, date.day, plan.reminderHour);
     if (!when.isAfter(now)) continue;
 
     if (event != null && date == event) {

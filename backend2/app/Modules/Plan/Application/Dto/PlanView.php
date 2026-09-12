@@ -48,5 +48,7 @@ final readonly class PlanView
         public string $createdAt,
         /** «Регистрация на рейс, заселение в отель, ресторан. К 17 сентября скажешь всё это сам» — computed on read, never stored */
         public ?string $summary = null,
+        /** Local hour of the daily reminder and «сегодня разговор» (8…23; 19 without visits). */
+        public int $reminderHour = 19,
     ) {}
 }

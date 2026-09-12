@@ -40,7 +40,11 @@ Future<Plan?> openPlanEntry(BuildContext context) =>
 /// Шапки с «Отмена / Новый план / Далее» здесь больше нет: наверху стрелка назад и четыре точки,
 /// единственное действие шага — кнопка внизу.
 class PlanEntryScreen extends ConsumerStatefulWidget {
-  const PlanEntryScreen({super.key});
+  const PlanEntryScreen({super.key, this.now = DateTime.now});
+
+  /// Часы входа: ближняя дата, календарь и сокращение плана считаются от них. Снимки подставляют
+  /// день, на который сняты, — иначе кадры 22-3b…22-4b протухают назавтра.
+  final DateTime Function() now;
 
   @override
   ConsumerState<PlanEntryScreen> createState() => _PlanEntryScreenState();
@@ -152,7 +156,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
 
   /// Ближняя дата — через столько дней, сколько выбрано: разговор ровно в конце плана.
   DateTime _suggestedDate() {
-    final today = DateTime.now();
+    final today = widget.now();
 
     return DateTime(today.year, today.month, today.day).add(Duration(days: _s.days));
   }
@@ -316,7 +320,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
   }
 
   Future<void> _pickDate() async {
-    final today = DateTime.now();
+    final today = widget.now();
     final picked = await showDatePicker(
       context: context,
       initialDate: _s.eventDate ?? today.add(const Duration(days: 7)),
@@ -344,7 +348,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
   int _fits(int chosen, {DateTime? date}) {
     final event = date ?? _s.effectiveDate;
     if (event == null) return chosen;
-    final left = PlanFormat.daysUntil(event, DateTime.now());
+    final left = PlanFormat.daysUntil(event, widget.now());
 
     return PlanFormat.shortenedDays(chosen: chosen, daysLeft: left) ?? chosen;
   }
@@ -396,7 +400,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
         days: _s.days,
         eventDate: _s.eventDate,
         suggested: _suggestedDate(),
-        today: DateTime.now(),
+        today: widget.now(),
         onPickSuggested: () => setState(
           () => _s = _s.copyWith(
             eventDate: _s.eventDate ?? _suggestedDate(),

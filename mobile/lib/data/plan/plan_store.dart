@@ -51,34 +51,16 @@ class PlanStore {
   Future<void> markHowSheetShown() => _db.setMeta(_kSheetHow, '1');
 
   static const _kNotifyAsked = 'plan_notify_permission_asked';
-  static const _kVisits = 'plan_visits';
+  static const _kPushEnabled = 'plan_push_enabled';
 
   /// Разрешение на уведомления спрошено — второй раз системного окна не будет (наряд PLAN-UI-3 §4).
   Future<bool> notifyPermissionAsked() async => (await _db.getMeta(_kNotifyAsked)) == '1';
   Future<void> markNotifyPermissionAsked() => _db.setMeta(_kNotifyAsked, '1');
 
-  /// Последние семь заходов (локальное время) — по ним телефон ставит час напоминания.
-  Future<List<DateTime>> visits() async {
-    try {
-      final raw = await _db.getMeta(_kVisits);
-      if (raw == null || raw.isEmpty) return const [];
-
-      return [for (final s in jsonDecode(raw) as List) ?DateTime.tryParse('$s')];
-    } catch (_) {
-      return const [];
-    }
-  }
-
-  /// Записать заход — не чаще раза в 30 минут, храним семь последних.
-  Future<List<DateTime>> recordVisit(DateTime at) async {
-    final list = [...await visits()];
-    if (list.isNotEmpty && at.difference(list.last) < const Duration(minutes: 30)) return list;
-    list.add(at);
-    final kept = list.length > 7 ? list.sublist(list.length - 7) : list;
-    await _db.setMeta(_kVisits, jsonEncode([for (final d in kept) d.toIso8601String()]));
-
-    return kept;
-  }
+  /// Последний ответ сервера на регистрацию токена: доставляет ли он push сам. Нет ответа — false,
+  /// и телефон ставит напоминания локально.
+  Future<bool> pushEnabled() async => (await _db.getMeta(_kPushEnabled)) == '1';
+  Future<void> setPushEnabled(bool enabled) => _db.setMeta(_kPushEnabled, enabled ? '1' : '0');
 }
 
 /// What the cache holds: never written · «плана нет» · a plan's JSON.

@@ -13,6 +13,7 @@ use App\Modules\Plan\Application\Dto\RouteStageView;
 use App\Modules\Plan\Application\Dto\SceneView;
 use App\Modules\Plan\Application\Dto\VersionsView;
 use App\Modules\Plan\Application\Port\BuildVersion;
+use App\Modules\Plan\Application\Port\LearnerHabits;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\Plan;
@@ -43,6 +44,7 @@ final readonly class PlanViews
         private PlanConfig $config,
         private DayCardRepository $cards,
         private DayDealer $dealer,
+        private LearnerHabits $habits,
     ) {}
 
     public function versions(): VersionsView
@@ -106,6 +108,9 @@ final readonly class PlanViews
             finishedAt: $plan->finishedAt()?->format(DATE_ATOM),
             createdAt: $plan->createdAt()->format(DATE_ATOM),
             summary: $strings->planSummary($this->sceneTitles($plan), $plan->eventDate()),
+            // One reminder hour for the server's tick and the phone's local reminders — the rule is
+            // Identity's `UsualVisitTime` (usual visit hour, 19:00 without visits, never before 08:00).
+            reminderHour: intdiv($this->habits->usualVisitMinutes($plan->userId()), 60),
         );
     }
 

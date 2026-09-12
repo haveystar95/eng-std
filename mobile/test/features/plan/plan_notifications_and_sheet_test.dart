@@ -151,7 +151,8 @@ class _CountingPush implements PushRegistration {
   int registrations = 0;
 
   @override
-  Future<void> register({String? locale, String? timezone}) async => registrations++;
+  Future<void> register({String? locale, String? timezone, required Future<void> Function(bool enabled) onPushEnabled}) async =>
+      registrations++;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

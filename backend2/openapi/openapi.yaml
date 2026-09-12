@@ -189,7 +189,22 @@ paths:
                 locale: { type: [string, 'null'], maxLength: 35, description: "Device locale, e.g. ru-UA." }
                 timezone: { type: [string, 'null'], description: "Device IANA timezone; validated like PUT /profile." }
       responses:
-        '204': { description: Registered }
+        '200':
+          description: >
+            Registered. `push_enabled` says whether the server will actually deliver plan letters to
+            this address: an APNs key is configured AND the token is stored. true — the phone removes
+            its local reminders (the server sends them); false — the phone keeps scheduling them.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [push_enabled]
+                    properties:
+                      push_enabled: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
     delete:
@@ -2849,6 +2864,14 @@ components:
         until_phrase: { type: [string, 'null'], description: 'The countdown header, ready — null without a date or once the event has passed' }
         overdue_native: { type: [string, 'null'], description: 'The prompt''s own sentence, present only while the plan is overdue' }
         route_summary: { type: string }
+        reminder_hour:
+          type: integer
+          minimum: 8
+          maximum: 23
+          description: >
+            Local hour of the daily reminder and «сегодня разговор» — ONE rule for the server and the
+            phone: the learner's usual visit hour (median of the last seven visits, down to the hour),
+            19 without visits, never before 8.
         summary:
           type: [string, 'null']
           description: >-

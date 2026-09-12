@@ -73,6 +73,21 @@ it('serves a stored copy as an immutable jpeg with an ETag', function () {
     expect($cache)->toContain('public')->toContain('max-age=31536000')->toContain('immutable')->not->toContain('private');
 });
 
+it('keeps the photo copies outside the API throttle — catches a ten-photo route eating the 120/min limit', function () {
+    [$token, , $sceneId] = imgPlan($this);
+    Storage::disk('local')->put("plan-images/{$sceneId}/112.jpg", 'jpeg-bytes-112');
+
+    $response = imgGet($this, $token, $sceneId, 112)->assertOk();
+
+    // A throttled route answers with its limit headers; this one carries none, and its route has no
+    // throttle middleware at all — while the rest of the plan API keeps its 120/min.
+    expect($response->headers->has('X-RateLimit-Limit'))->toBeFalse();
+    $middleware = static fn (string $uri): array => collect(Illuminate\Support\Facades\Route::getRoutes()->getRoutes())
+        ->first(static fn ($r): bool => $r->uri() === $uri)?->gatherMiddleware() ?? [];
+    expect(collect($middleware('api/v1/plans/images/{sceneId}/{size}'))->contains(static fn (string $m): bool => str_starts_with($m, 'throttle')))->toBeFalse()
+        ->and($middleware('api/v1/plans/versions'))->toContain('throttle:120,1');
+});
+
 it('answers 304 to a client that already holds the bytes', function () {
     [$token, , $sceneId] = imgPlan($this);
     Storage::disk('local')->put("plan-images/{$sceneId}/112.jpg", 'jpeg-bytes-112');

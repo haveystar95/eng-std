@@ -29,12 +29,12 @@ it('registers a push token and moves it when another account signs in on the pho
     [$second, $secondToken] = learner();
     $apns = str_repeat('ab', 32);
 
-    devicePut($this, $firstToken, ['platform' => 'ios', 'token' => $apns, 'locale' => 'ru-UA', 'timezone' => 'Europe/Kyiv'])->assertNoContent();
-    devicePut($this, $firstToken, ['platform' => 'ios', 'token' => $apns, 'locale' => 'ru-UA', 'timezone' => 'Europe/Kyiv'])->assertNoContent();
+    devicePut($this, $firstToken, ['platform' => 'ios', 'token' => $apns, 'locale' => 'ru-UA', 'timezone' => 'Europe/Kyiv'])->assertOk();
+    devicePut($this, $firstToken, ['platform' => 'ios', 'token' => $apns, 'locale' => 'ru-UA', 'timezone' => 'Europe/Kyiv'])->assertOk();
     expect(DB::table('device_push_tokens')->count())->toBe(1)
         ->and(DB::table('device_push_tokens')->value('user_id'))->toBe($first->id);
 
-    devicePut($this, $secondToken, ['platform' => 'ios', 'token' => $apns, 'locale' => 'en-US', 'timezone' => 'UTC'])->assertNoContent();
+    devicePut($this, $secondToken, ['platform' => 'ios', 'token' => $apns, 'locale' => 'en-US', 'timezone' => 'UTC'])->assertOk();
 
     $rows = DB::table('device_push_tokens')->get();
     expect($rows)->toHaveCount(1)
@@ -47,7 +47,7 @@ it('deletes only the caller’s own token — catches one account unregistering 
     [, $owner] = learner();
     [, $stranger] = learner();
     $apns = str_repeat('cd', 32);
-    devicePut($this, $owner, ['platform' => 'ios', 'token' => $apns])->assertNoContent();
+    devicePut($this, $owner, ['platform' => 'ios', 'token' => $apns])->assertOk();
 
     app('auth')->forgetGuards();
     $this->withHeader('Authorization', "Bearer {$stranger}")->deleteJson('/api/v1/devices/push-token', ['platform' => 'ios', 'token' => $apns])->assertNoContent();
@@ -56,6 +56,17 @@ it('deletes only the caller’s own token — catches one account unregistering 
     app('auth')->forgetGuards();
     $this->withHeader('Authorization', "Bearer {$owner}")->deleteJson('/api/v1/devices/push-token', ['platform' => 'ios', 'token' => $apns])->assertNoContent();
     expect(DB::table('device_push_tokens')->count())->toBe(0);
+});
+
+it('answers push_enabled false without an APNs key and true with one — catches a phone that drops its local reminders while the server only dry-runs', function () {
+    [, $token] = learner();
+    $body = ['platform' => 'ios', 'token' => str_repeat('ab', 32)];
+
+    config()->set('services.apns.key_p8', '');
+    devicePut($this, $token, $body)->assertOk()->assertExactJson(['data' => ['push_enabled' => false]]);
+
+    config()->set('services.apns.key_p8', "-----BEGIN PRIVATE KEY-----\nkey\n-----END PRIVATE KEY-----");
+    devicePut($this, $token, $body)->assertOk()->assertExactJson(['data' => ['push_enabled' => true]]);
 });
 
 it('validates the device endpoints and refuses a stranger — catches an Android token or a bad zone stored as iOS', function () {
@@ -110,8 +121,8 @@ it('reads the usual visit time as the median of the last seven visits in the pro
     }
 
     $view = $usual(new GetUsualVisitTime(UserId::fromString($user->id)));
-    // Local: 20:40, 20:05, 21:10, 20:25, 20:50, 19:55, 20:30 → median 20:30 → 20:30.
-    expect($view->hhmm())->toBe('20:30')
+    // Local: 20:40, 20:05, 21:10, 20:25, 20:50, 19:55, 20:30 → median 20:30 → the hour 20:00.
+    expect($view->hhmm())->toBe('20:00')
         ->and($view->visitsCounted)->toBe(7)
         ->and($view->timezone)->toBe('Europe/Kyiv');
 });

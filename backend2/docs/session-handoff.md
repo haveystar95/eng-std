@@ -7,7 +7,7 @@
 > Канон плана: **`docs/plan-v2.md`**; контракт: **`docs/plan-api.md`** + `openapi/openapi.yaml`
 > (теги `Plans`, `Devices`); модуль: `app/Modules/Plan/README.md`.
 
-Branch: `main`. Last updated: 2026-09-12 (наряд PLAN-UI-3). Отчёт — `docs/research/plan-ui-3/README.md`.
+Branch: `main`. Last updated: 2026-09-13 (наряд PLAN-UI-3 + доработка). Отчёт — `docs/research/plan-ui-3/README.md`.
 
 ---
 
@@ -20,7 +20,9 @@ Branch: `main`. Last updated: 2026-09-12 (наряд PLAN-UI-3). Отчёт — 
    повторения / репетиции — сколько отдал сервер. Канва с тремя узлами и «Повторить ошибки»
    расходится с продуктом, архитектор перерисует кадры; «Повторить ошибки» — функции нет.
 2. **Push без entitlement** (бесплатная Personal Team): токен не выдаётся, регистрация пишет в лог;
-   напоминание / «ждёт со вчера» / «сегодня событие» телефон ставит **локально** по датам плана;
+   напоминание / «ждёт со вчера» / «сегодня событие» телефон ставит **локально** по датам плана —
+   только пока `PUT /devices/push-token` отвечает `push_enabled: false` (true = ключ .p8 задан →
+   локальные снимаются, `PlanReminderScheduler` заменяет расписание целиком);
    «план готов» / «день собран» — баннер в приложении при возврате. Сервер шлёт в сухом режиме.
 3. **`plan.summary` — без модели**, считается в ресурсе: три сцены + «К <дате> скажешь всё это сам».
 4. **Языки плана — `GET /plans/languages`** (`PLAN_LANGUAGES`, сегодня en, de); `POST /plans` сверяет.
@@ -33,6 +35,11 @@ Branch: `main`. Last updated: 2026-09-12 (наряд PLAN-UI-3). Отчёт — 
   `device_push_tokens`, `user_visits`, `PUT/DELETE /devices/push-token`, `POST /devices/visit`;
 - `PushSender`: `ApnsPushSender` при `APNS_KEY_P8` (+ `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_TOPIC`,
   `APNS_ENV`), иначе `DryRunPushSender` (лог `plan push (dry run)`, `not_sent`);
+- **час напоминаний — одно правило** `Identity/Domain/Service/UsualVisitTime` (медиана 7 заходов,
+  вниз до часа, не раньше 08:00, дефолт 19:00); и напоминание, и `event_today` — в этот час;
+  клиент получает его в плане (`reminder_hour`) и своих заходов не считает;
+- **nginx `web` (`wt_web`) перед `app`**: :8001 и ngrok идут в nginx; `/api/v1/plans/images/{scene}/{112|448}`
+  — статика с диска (`immutable`, вне троттла 120/мин, без проверки владельца), нет файла → Laravel;
 - `plan:notify-tick` каждые 15 мин — **сервис `scheduler` в compose** (поднят); `plan:notify-test`.
 
 **Боевая база `wordtrainer`:** 5 миграций `2026_09_12_*` применены после бэкапа
@@ -47,7 +54,7 @@ Branch: `main`. Last updated: 2026-09-12 (наряд PLAN-UI-3). Отчёт — 
 - канон — `test/features/plan/plan_canon_test.dart`, `plan_rules_canon_test.dart`; фикстуры сняты
   живым прогоном (`qa-planui3@wt.test`), новые: `current_started`, `current_day2`, `room_day2`.
 
-Ворота: `composer check` — deptrac 0, PHPStan 0, Pest 1973; `flutter analyze` 0; `flutter test` 1371.
+Ворота (после доработки 13.09, раздел «Доработка» в отчёте): `composer check` — deptrac 0, PHPStan 0, Pest 1983; `flutter analyze` 0; `flutter test` 1371.
 Телефон: release `8acb7755` установлен на iPhone (Denis) — установка снесла данные, нужен вход.
 
 **Не проверено живьём:** APNs (нет ключа), голос (нет микрофона на симуляторе), баннер «день

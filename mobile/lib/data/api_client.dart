@@ -538,9 +538,17 @@ class ApiClient {
     return (plan: Plan.fromJson(raw), raw: raw);
   }
 
-  /// `PUT /devices/push-token` — the APNs token of this phone (наряд PLAN-UI-3 §4).
-  Future<void> putPushToken({required String token, String? locale, String? timezone}) =>
-      _dio.put('/devices/push-token', data: {'platform': 'ios', 'token': token, 'locale': ?locale, 'timezone': ?timezone});
+  /// `PUT /devices/push-token` — the APNs token of this phone (наряд PLAN-UI-3 §4). Answers
+  /// `push_enabled`: does the server deliver plan letters itself (then the phone drops its local ones).
+  Future<bool> putPushToken({required String token, String? locale, String? timezone}) async {
+    final r = await _dio.put(
+      '/devices/push-token',
+      data: {'platform': 'ios', 'token': token, 'locale': ?locale, 'timezone': ?timezone},
+    );
+    final data = _data(r);
+
+    return data is Map<String, dynamic> && data['push_enabled'] == true;
+  }
 
   /// `POST /devices/visit` — «зашёл»: по последним семи заходам сервер считает час напоминания.
   Future<void> postVisit({String? timezone}) => _dio.post('/devices/visit', data: {'timezone': ?timezone});

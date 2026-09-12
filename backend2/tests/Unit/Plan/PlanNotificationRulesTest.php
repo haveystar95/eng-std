@@ -26,16 +26,17 @@ it('makes a shortened reschedule a rebuild and nothing else one — catches a le
     'longer' => [5, 8, null],
 ]);
 
-it('owes event_today on the event day from 08:00 and event_passed after it, once each — catches a midnight letter and a daily repeat', function (string $localNow, bool $hasToday, bool $hasPassed, array $expected) {
+it('owes event_today on the event day at the reminder hour and event_passed after it, once each — catches a midnight letter, a second hour and a daily repeat', function (string $localNow, bool $hasToday, bool $hasPassed, array $expected) {
     $event = new DateTimeImmutable('2026-09-20');
-    $due = PlanEventRules::dueOnCalendar($event, new DateTimeImmutable($localNow), $hasToday, $hasPassed);
+    $due = PlanEventRules::dueOnCalendar($event, new DateTimeImmutable($localNow), 19 * 60, $hasToday, $hasPassed);
 
     expect(array_map(static fn (PlanEventKind $k): string => $k->value, $due))->toBe($expected);
 })->with([
     'the day before' => ['2026-09-19 23:59:00', false, false, []],
     'event day, 00:15 — too early' => ['2026-09-20 00:15:00', false, false, []],
-    'event day, 08:00' => ['2026-09-20 08:00:00', false, false, ['event_today']],
-    'event day, already written' => ['2026-09-20 12:00:00', true, false, []],
+    'event day, 18:59 — before the reminder hour' => ['2026-09-20 18:59:00', false, false, []],
+    'event day, 19:00 — the reminder hour' => ['2026-09-20 19:00:00', false, false, ['event_today']],
+    'event day, already written' => ['2026-09-20 20:00:00', true, false, []],
     'the day after' => ['2026-09-21 00:00:00', true, false, ['event_passed']],
     'the day after, already written' => ['2026-09-21 09:00:00', true, true, []],
     'long after, today never written' => ['2026-09-25 09:00:00', false, false, ['event_passed']],

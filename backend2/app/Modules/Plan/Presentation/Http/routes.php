@@ -9,13 +9,20 @@ use App\Modules\Plan\Presentation\Http\Controller\PlanImageController;
 use Illuminate\Support\Facades\Route;
 
 // Prefixed with /api/v1 by PlanServiceProvider. The contract: docs/plan-api.md.
+
+// Scene photo copies — OUTSIDE the API throttle (доработка PLAN-UI-3). In the compose stack nginx
+// serves the stored file itself (docker/nginx/default.conf) and only a missing copy reaches this
+// route, which fetches, stores and serves it; ten photos of a route never eat the API's 120/min.
+Route::middleware(['auth:sanctum'])->group(function (): void {
+    Route::get('/plans/images/{sceneId}/{size}', [PlanImageController::class, 'show'])->whereIn('size', ['112', '448']);
+});
+
 Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
-    // Named routes before /plans/{id}: «current», «versions», «languages», «audio» and «images» are words, not ULIDs.
+    // Named routes before /plans/{id}: «current», «versions», «languages» and «audio» are words, not ULIDs.
     Route::get('/plans/current', [PlanController::class, 'current']);
     Route::get('/plans/versions', [PlanController::class, 'versions']);
     Route::get('/plans/languages', [PlanController::class, 'languages']);
     Route::get('/plans/audio/{audioId}', [PlanAudioController::class, 'show']);
-    Route::get('/plans/images/{sceneId}/{size}', [PlanImageController::class, 'show'])->whereIn('size', ['112', '448']);
 
     Route::get('/plans', [PlanController::class, 'index']);
     Route::post('/plans', [PlanController::class, 'store']);

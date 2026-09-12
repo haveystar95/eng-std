@@ -9,6 +9,6 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 /** When the learner usually comes — read from Identity's visit log. */
 interface LearnerHabits
 {
-    /** Minutes after local midnight in the learner's zone, a multiple of 15; 19:00 without visits. */
+    /** The reminder hour as minutes after local midnight in the learner's zone: a whole hour, ≥ 08:00, 19:00 without visits. */
     public function usualVisitMinutes(UserId $user): int;
 }

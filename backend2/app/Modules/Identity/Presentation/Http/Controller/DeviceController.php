@@ -14,16 +14,17 @@ use App\Modules\Identity\Presentation\Http\Request\PushTokenRequest;
 use App\Modules\Identity\Presentation\Http\Request\RemovePushTokenRequest;
 use App\Modules\Identity\Presentation\Http\Request\VisitRequest;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-/** The device's side of notifications: its push address and its visits. Every answer is 204. */
+/** The device's side of notifications: its push address and its visits. Registration answers `push_enabled`; the rest is 204. */
 final class DeviceController
 {
-    public function putPushToken(PushTokenRequest $request, RegisterPushTokenHandler $handler): Response
+    public function putPushToken(PushTokenRequest $request, RegisterPushTokenHandler $handler): JsonResponse
     {
         $data = $request->validated();
-        $handler(new RegisterPushToken(
+        $enabled = $handler(new RegisterPushToken(
             userId: self::actor($request),
             platform: (string) $data['platform'],
             token: (string) $data['token'],
@@ -31,7 +32,7 @@ final class DeviceController
             timezone: isset($data['timezone']) ? (string) $data['timezone'] : null,
         ));
 
-        return response()->noContent();
+        return response()->json(['data' => ['push_enabled' => $enabled]]);
     }
 
     public function deletePushToken(RemovePushTokenRequest $request, RemovePushTokenHandler $handler): Response

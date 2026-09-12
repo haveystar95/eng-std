@@ -11,6 +11,7 @@ import '../../data/device_timezone.dart';
 import '../../data/plan/plan_models.dart';
 import '../../data/plan/plan_notifications.dart';
 import '../../data/plan/plan_reminder_rules.dart';
+import '../../data/plan/plan_reminder_scheduler.dart';
 import '../../data/plan/push_registration.dart';
 import '../../data/providers.dart';
 import 'day/open_day.dart';
@@ -23,6 +24,20 @@ final planNotificationsProvider = Provider<PlanNotifications>(
 
 final pushRegistrationProvider = Provider<PushRegistration>((ref) => PushRegistration(ref.watch(apiClientProvider)));
 
+/// Доставляет ли сервер письма плана сам — последний ответ `PUT /devices/push-token` (доработка
+/// PLAN-UI-3, п. 2). true — локальных напоминаний нет; false (и нет ответа) — телефон ставит их сам.
+class PlanPushEnabled extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() => ref.read(planStoreProvider).pushEnabled();
+
+  Future<void> set(bool enabled) async {
+    await ref.read(planStoreProvider).setPushEnabled(enabled);
+    state = AsyncData(enabled);
+  }
+}
+
+final planPushEnabledProvider = AsyncNotifierProvider<PlanPushEnabled, bool>(PlanPushEnabled.new);
+
 /// Разрешение на уведомления — ОДИН раз, после «Начать» на превью (наряд PLAN-UI-3 §4), и сразу
 /// следом регистрация push-токена. Второй вызов ничего не спрашивает.
 Future<void> askPlanNotificationsOnce(WidgetRef ref) async {
@@ -32,7 +47,10 @@ Future<void> askPlanNotificationsOnce(WidgetRef ref) async {
   final granted = await ref.read(planNotificationsProvider).requestPermission();
   debugPrint('[plan-notify] permission granted: $granted');
   if (!granted) return;
-  await ref.read(pushRegistrationProvider).register(timezone: await deviceTimezone());
+  await ref.read(pushRegistrationProvider).register(
+    timezone: await deviceTimezone(),
+    onPushEnabled: (enabled) => ref.read(planPushEnabledProvider.notifier).set(enabled),
+  );
 }
 
 /// ГДЕ ЖИВУТ УВЕДОМЛЕНИЯ ПЛАНА (наряд PLAN-UI-3 §4, кадр 22-6 — эталон вида).
@@ -40,9 +58,10 @@ Future<void> askPlanNotificationsOnce(WidgetRef ref) async {
 /// Ничего не рисует сам, кроме баннера поверх оболочки. Делает четыре вещи, потому что всё нужное
 /// для них есть только в оболочке — локализации, переключатель табов и жизненный цикл приложения:
 ///
-/// 1. на каждом возвращении в приложение — записывает заход (у себя и `POST /devices/visit`) и
-///    пересчитывает локальное расписание по датам плана (`planLocalNotices`); то же при каждой
-///    смене маршрута;
+/// 1. на каждом возвращении в приложение — сообщает заход (`POST /devices/visit`, по заходам сервер
+///    считает час напоминаний и отдаёт его в плане) и пересчитывает локальное расписание
+///    ([PlanReminderScheduler]); то же при каждой смене маршрута и смене `push_enabled` — при true
+///    локальных напоминаний нет;
 /// 2. «план готов» и «день N собран», случившиеся, пока приложение было свёрнуто, показывает
 ///    баннером при возврате — push на телефон сегодня не доходит;
 /// 3. тап по уведомлению или баннеру — таб «План», прокрученный к нужному дню;
@@ -96,31 +115,31 @@ class _PlanNotificationsHostState extends ConsumerState<PlanNotificationsHost> w
     unawaited(_visited());
   }
 
-  /// Заход: у себя (для часа напоминания) и на сервере (для push после ключа).
+  /// Заход — на сервер: там по семи последним заходам считается час напоминаний.
   Future<void> _visited() async {
-    final store = ref.read(planStoreProvider);
-    final visits = await store.recordVisit(DateTime.now());
     final zone = await deviceTimezone();
     unawaited(ref.read(apiClientProvider).postVisit(timezone: zone).catchError((Object e) => debugPrint('[plan-notify] visit: $e')));
     if (!mounted) return;
-    await _reschedule(ref.read(planTabProvider).value?.plan, usualVisitTime(visits), zone, force: true);
+    await _reschedule(force: true);
   }
 
-  Future<void> _reschedule(Plan? plan, VisitTime at, String zone, {bool force = false}) async {
-    final signature = [plan?.id, plan?.status, plan?.currentDay?.number, plan?.currentDay?.slot.date, plan?.eventDate, at].join('|');
+  Future<void> _reschedule({bool force = false}) async {
+    final plan = ref.read(planTabProvider).value?.plan;
+    final pushEnabled = await ref.read(planPushEnabledProvider.future);
+    final signature = [plan?.id, plan?.status, plan?.currentDay?.number, plan?.currentDay?.slot.date, plan?.eventDate, plan?.reminderHour, pushEnabled].join('|');
     if (!force && signature == _scheduledFor) return;
     _scheduledFor = signature;
     if (!mounted) return;
     final l = AppLocalizations.of(context);
-    final notices = planLocalNotices(plan, DateTime.now(), at);
-    await ref.read(planNotificationsProvider).replaceScheduled(
-      [
-        for (final n in notices)
-          (at: n.at, dayNumber: n.dayNumber, title: _title(l, plan!, n), body: _body(l, plan, n)),
-      ],
+    final count = await PlanReminderScheduler(ref.read(planNotificationsProvider)).apply(
+      plan: plan,
+      pushEnabled: pushEnabled,
+      now: DateTime.now(),
+      zone: await deviceTimezone(),
       channel: l.planTitle,
-      zone: zone,
+      text: (plan, n) => (title: _title(l, plan, n), body: _body(l, plan, n)),
     );
+    debugPrint('[plan-notify] push_enabled=$pushEnabled local=$count at ${plan?.reminderHour}:00');
   }
 
   static String _title(AppLocalizations l, Plan plan, PlanNotice n) => switch (n.kind) {
@@ -142,12 +161,11 @@ class _PlanNotificationsHostState extends ConsumerState<PlanNotificationsHost> w
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<PlanTabState>>(planTabProvider, (previous, next) {
-      final plan = next.value?.plan;
-      unawaited(() async {
-        final visits = await ref.read(planStoreProvider).visits();
-        await _reschedule(plan, usualVisitTime(visits), await deviceTimezone());
-      }());
-      _bannerOnReturn(previous?.value?.plan, plan);
+      unawaited(_reschedule());
+      _bannerOnReturn(previous?.value?.plan, next.value?.plan);
+    });
+    ref.listen<AsyncValue<bool>>(planPushEnabledProvider, (previous, next) {
+      if (previous?.value != next.value) unawaited(_reschedule(force: true));
     });
 
     return Stack(

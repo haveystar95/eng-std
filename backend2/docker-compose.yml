@@ -2,8 +2,10 @@ services:
   app:
     build: .
     container_name: wt_app
-    ports:
-      - "8001:8000"
+    # Порт наружу держит `web` (nginx): :8001 и ngrok идут через него. Laravel напрямую — только
+    # внутри сети compose (web, admin). Картинкам сцен не нужен ни PHP, ни лимитер API.
+    expose:
+      - "8000"
     volumes:
       - ./:/app
     depends_on:
@@ -35,19 +37,32 @@ services:
       - redis
     command: php artisan schedule:work
 
+  # Входная дверь (доработка PLAN-UI-3): статика копий фото сцен с вечным кэшем мимо Laravel и его
+  # лимитера, всё остальное — прокси в app. Конфиг — docker/nginx/default.conf.
+  web:
+    image: nginx:1.27-alpine
+    container_name: wt_web
+    ports:
+      - "8001:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./storage/app/private/plan-images:/srv/plan-images:ro
+    depends_on:
+      - app
+
   # Public tunnel to the app, on the account's reserved static domain (same one the
   # mobile app defaults to). Free plan = one tunnel: don't run the old backend's ngrok
   # at the same time. Inspector at http://localhost:4041.
   ngrok:
     image: ngrok/ngrok:latest
     container_name: wt_ngrok
-    command: http --url=https://greedily-thermos-finer.ngrok-free.dev app:8000 --log=stdout
+    command: http --url=https://greedily-thermos-finer.ngrok-free.dev web:80 --log=stdout
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
     ports:
       - "4041:4040"
     depends_on:
-      - app
+      - web
 
   db:
     image: pgvector/pgvector:pg17

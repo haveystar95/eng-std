@@ -118,7 +118,7 @@ it('writes days_skipped_rebuilt {from, to} only when the route shrinks, and lett
     Log::shouldHaveReceived('info')->withArgs(static fn (string $m, array $c): bool => $c['title'] === 'Маршрут пересобран' && $c['body'] === 'Было 6 дней, стало 4');
 });
 
-it('appends event_today once on the event day and event_passed after it, however many ticks run — catches a journal that doubles and a letter every quarter hour', function () {
+it('appends event_today once on the event day at the reminder hour and event_passed after it, however many ticks run — catches a journal that doubles, a letter every quarter hour and a second letter that day', function () {
     Log::spy();
     [, $token] = planLearner();
     $eventDate = now()->utc()->addDays(2)->startOfDay();
@@ -127,12 +127,16 @@ it('appends event_today once on the event day and event_passed after it, however
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/start")->assertOk();
     $day = $eventDate->toDateString();
 
-    notifTick("{$day}T07:45:00Z"); // too early for a letter on the event day
+    // No visits: the reminder hour is 19:00 (UTC learner) — «Сегодня разговор» waits for it.
+    notifTick("{$day}T08:00:00Z");
+    notifTick("{$day}T18:45:00Z");
     expect(notifEventKinds($id))->not->toContain('event_today');
 
-    notifTick("{$day}T08:00:00Z");
-    notifTick("{$day}T08:15:00Z");
-    notifTick("{$day}T13:30:00Z");
+    notifTick("{$day}T19:00:00Z");
+    notifTick("{$day}T19:10:00Z");
+    notifTick("{$day}T20:30:00Z");
+    // The event day's one letter is «Сегодня …» — no daily reminder beside it.
+    expect(DB::table('plan_notifications')->where('plan_id', $id)->where('kind', 'daily_reminder')->count())->toBe(0);
 
     expect(array_count_values(notifEventKinds($id))['event_today'] ?? 0)->toBe(1)
         ->and(DB::table('plan_notifications')->where('plan_id', $id)->where('kind', 'event_today')->count())->toBe(1);
@@ -194,7 +198,8 @@ it('aims the reminder at the learner’s usual visit time in their zone — catc
     notifTick($kyivTomorrow->setTime(19, 5)->format(DATE_ATOM));
     expect(DB::table('plan_notifications')->where('kind', 'daily_reminder')->count())->toBe(0);
 
-    notifTick($kyivTomorrow->setTime(8, 15)->format(DATE_ATOM));
+    // 08:20 visits → the reminder hour 08:00 (whole hour, never earlier than 08:00).
+    notifTick($kyivTomorrow->setTime(8, 5)->format(DATE_ATOM));
     expect(DB::table('plan_notifications')->where('kind', 'daily_reminder')->value('local_date'))->toStartWith($kyivTomorrow->format('Y-m-d'));
 });
 

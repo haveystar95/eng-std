@@ -19,6 +19,15 @@ it('three scenes and a date make exactly the owner’s sentence', function () {
     expect($summary)->toBe('Регистрация на рейс, заселение в отель, ресторан. К 17 сентября скажешь всё это сам');
 });
 
+it('says «ко» only before 2 — catches «К 2 сентября» and an over-eager «Ко 12» / «Ко 22»', function (string $date, string $expected) {
+    expect((new NativeStrings('ru'))->planSummary(['Аптека'], new DateTimeImmutable($date)))->toBe($expected);
+})->with([
+    '2' => ['2026-09-02', 'Аптека. Ко 2 сентября скажешь всё это сам'],
+    '12' => ['2026-09-12', 'Аптека. К 12 сентября скажешь всё это сам'],
+    '22' => ['2026-09-22', 'Аптека. К 22 сентября скажешь всё это сам'],
+    '17' => ['2026-09-17', 'Аптека. К 17 сентября скажешь всё это сам'],
+]);
+
 it('a plan without a date promises without one', function () {
     expect((new NativeStrings('ru'))->planSummary(['Регистрация на рейс', 'Заселение в отель', 'Ресторан'], null))
         ->toBe('Регистрация на рейс, заселение в отель, ресторан. Скажешь всё это сам');

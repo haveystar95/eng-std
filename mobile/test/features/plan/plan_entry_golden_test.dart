@@ -20,7 +20,8 @@ import '../../support/plan_goldens.dart';
 /// отдельно собранного виджета не отвечает.
 ///
 /// Кадр 22-3b снимается здесь же: единственное место входа, которое считало от «сегодня», теперь
-/// принимает этот день параметром ([EntryDateStep.today]), и снимок больше не протухает назавтра.
+/// принимает этот день параметром ([PlanEntryScreen.now] → [EntryDateStep.today]); тест подставляет
+/// 12.09.2026 — день, на который сняты PNG, — и снимок больше не протухает назавтра.
 void main() {
   setUpAll(setUpPlanGoldens);
 
@@ -30,7 +31,7 @@ void main() {
         apiClientProvider.overrideWithValue(api),
         connectivityProvider.overrideWith((ref) => Stream.value(online)),
       ],
-      child: const PlanEntryScreen(),
+      child: PlanEntryScreen(now: () => DateTime(2026, 9, 12, 12)),
     ),
   );
 
