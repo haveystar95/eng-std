@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -254,6 +255,27 @@ void main() {
         size: const Size(390, 1200),
       );
     });
+  });
+
+  // ── 21-9 · меню плана ─────────────────────────────────────────────────────────────────────
+  testWidgets('меню под «…» — четыре действия текстом (кадр 21-9)', (tester) async {
+    await expectPlanGolden(
+      tester,
+      tab(
+        PlanTabState(
+          plan: planFrom('current_ready'),
+          room: roomFrom('room_unopened'),
+          finished: const [],
+        ),
+      ),
+      'plan/21-9-menu',
+      // Меню открывает сам экран — тест жмёт «…» там же, где человек.
+      prime: (tester) async {
+        await tester.tap(find.byIcon(LucideIcons.ellipsis));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+      },
+    );
   });
 
   // ── 21-13 · маршрут пересобран ────────────────────────────────────────────────────────────
