@@ -173,8 +173,12 @@ class _Node extends StatelessWidget {
         // Кадр 22-4b: в превью у дня-ситуации стоят его ЦЕЛИ СЛОВАМИ. Канва просит «скажешь: …» /
         // «спросишь: …», но сервер таких строк не отдаёт — только `goals_native` (расхождение в
         // отчёте), а выдумывать реплики на клиенте нельзя.
+        //
+        // ДВЕ ПЕРВЫЕ цели, а не все: канва держит у узла ровно две строки собственных слов, и живой
+        // прогон показал почему — сервер отдаёт по четыре-пять целей, узел вырастал вдвое и маршрут
+        // перестал читаться как маршрут.
         if (preview && isScene)
-          for (final goal in (scene?.goalsNative ?? const <String>[]))
+          for (final goal in (scene?.goalsNative ?? const <String>[]).take(2))
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
