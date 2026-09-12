@@ -13,6 +13,12 @@ use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 /**
  * Same shape as the collection's photo job: only what lacks a photo is searched, an empty result
  * is a null and not a retry, and nothing here can hold a day back.
+ *
+ * Every write is one photo into its own three columns, conditional on the row still having none
+ * — `UPDATE … WHERE image_url IS NULL`. The searches take seconds each and the scene the job read
+ * at the start may have had its lesson written, the plan may have been started and day 1 opened by
+ * the time they come back; a job that saved the aggregate it was holding undid all of it (11.09 on
+ * the stand). Nothing here reads the plan's status and nothing here writes it.
  */
 final readonly class AttachPlanImagesHandler
 {
@@ -33,18 +39,17 @@ final readonly class AttachPlanImagesHandler
         if ($plan->coverImage() === null && $titles !== null && trim($titles->coverImagePrompt) !== '') {
             $found = $this->images->find($titles->coverImagePrompt);
             if ($found !== null) {
-                $plan->attachCoverImage($found);
+                $this->plans->attachCoverImage($plan->id(), $found);
             }
         }
         foreach ($plan->scenes() as $scene) {
             if ($scene->image() === null && trim($scene->imagePrompt()) !== '') {
                 $found = $this->images->find($scene->imagePrompt());
                 if ($found !== null) {
-                    $scene->attachImage($found);
+                    $this->plans->attachSceneImage($scene->id(), $found);
                 }
             }
         }
-        $this->plans->save($plan);
 
         $ready = array_map(static fn (PlanScene $s): PlanSceneId => $s->id(), array_values(array_filter(
             $plan->scenes(), static fn (PlanScene $s): bool => $s->isReady(),
@@ -56,8 +61,7 @@ final readonly class AttachPlanImagesHandler
                 }
                 $found = $this->images->find((string) $term->imagePrompt());
                 if ($found !== null) {
-                    $term->attachImage($found);
-                    $this->terms->save($term);
+                    $this->terms->attachImage($term->id(), $found);
                 }
             }
         }

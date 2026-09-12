@@ -2,96 +2,17 @@
 
 declare(strict_types=1);
 
-use App\Modules\Identity\Infrastructure\Eloquent\User;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\Check\LessonChecker;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
 // A walked day is eighty answers in a row; the API's per-minute throttle is not what is under test.
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
-
-/**
- * THE PLAN OVER HTTP (docs/plan-api.md): the queue is `sync` under test, so a created plan is built
- * inside the request by the fake model, day 1's lesson right after it — exactly the order the
- * canon asks for (§4), only without the wait.
- *
- * @return array{0: User, 1: string}
- */
-function planLearner(string $tz = 'UTC'): array
-{
-    [$user, $token] = learner();
-    profileFor($user, ['daily_goal' => 10, 'timezone' => $tz, 'native_language' => 'ru', 'target_language' => 'en']);
-
-    return [$user, $token];
-}
-
-function planCreate(object $ctx, string $token, array $overrides = []): array
-{
-    return $ctx->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/plans', $overrides + [
-            'goal_text' => 'Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике.',
-            'target_lang' => 'en',
-            'level' => 'beginner',
-            'days_total' => 5,
-        ])
-        ->assertStatus(202)
-        ->json('data');
-}
-
-function planRead(object $ctx, string $token, string $id): array
-{
-    return $ctx->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}")->assertOk()->json('data');
-}
-
-function planOpenDay(object $ctx, string $token, string $id, int $number): array
-{
-    return $ctx->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/{$number}/open")->assertOk()->json('data');
-}
-
-function planAnswer(object $ctx, string $token, string $id, int $number, string $cardId, string $result, int $attempts = 1): array
-{
-    return $ctx->withHeader('Authorization', "Bearer {$token}")
-        ->postJson("/api/v1/plans/{$id}/days/{$number}/cards/{$cardId}/answer", ['result' => $result, 'attempts' => $attempts])
-        ->assertOk()->json('data');
-}
-
-/** Walk the whole day: every card passed, except what `$script` says (card index → [result, attempts]). */
-function planWalkDay(object $ctx, string $token, string $id, int $number, array $script = []): array
-{
-    $cards = planOpenDay($ctx, $token, $id, $number)['cards'];
-    $seen = [];
-    $queue = $cards;
-    $index = 0;
-    while ($queue !== []) {
-        $card = array_shift($queue);
-        if (isset($seen[$card['id']]) || $card['result'] !== null) {
-            continue;
-        }
-        $seen[$card['id']] = true;
-        [$result, $attempts] = $script[$index] ?? ['passed', 1];
-        $index++;
-        $outcome = planAnswer($ctx, $token, $id, $number, $card['id'], $result, $attempts);
-        if ($outcome['requeued'] !== null) {
-            $queue[] = $outcome['requeued'];
-        }
-    }
-    foreach (['words', 'phrases', 'dialogue', 'listen', 'speak'] as $stage) {
-        $ctx->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/{$number}/stages/{$stage}/close")->assertOk();
-    }
-
-    return $ctx->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/{$number}/close")->assertOk()->json('data');
-}
-
-function planShiftDay(string $planId, int $days = 1): void
-{
-    Artisan::call('plan:shift-day', ['plan' => $planId, '--days' => $days]);
-}
 
 it('builds the plan and day one at creation, and reports the versions on every answer', function () {
     [$user, $token] = planLearner();

@@ -25,11 +25,16 @@ final readonly class GetPlanBuildHandler
         $plan = $this->access->owned($query->planId, $query->actorId);
         $call = $plan->planCall();
 
-        // A build that started and never came back is reported as failed, so the client can ask
-        // for a retry instead of polling a spinner forever.
-        $status = $plan->isBuildStale($this->clock->now(), $this->config->buildStaleSeconds)
-            ? PlanStatus::Failed
-            : $plan->status();
+        // Four values and no fifth (docs/plan-api.md): a build that started and never came back
+        // is reported as `failed`, so the client can ask for a retry instead of polling a spinner
+        // forever — and a plan that is BUILT is `ready`, whatever it has become since. «Начать» is
+        // legal while day 1's lesson is still being written, so a poll that outlives the press
+        // would otherwise answer `active`, a word this endpoint does not have.
+        $status = match (true) {
+            $plan->isBuildStale($this->clock->now(), $this->config->buildStaleSeconds) => PlanStatus::Failed,
+            $plan->status()->isBuilt() => PlanStatus::Ready,
+            default => $plan->status(),
+        };
 
         return new PlanBuildView(
             id: $plan->id()->value,

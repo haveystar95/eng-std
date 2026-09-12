@@ -10,6 +10,9 @@ use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
+use App\Modules\Plan\Domain\ValueObject\DayMetrics;
+use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\PlanStatus;
@@ -61,6 +64,22 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
         return $row === null ? null : $this->mapper->toDomain($row);
     }
 
+    /**
+     * Live first, then the newest built-and-unstarted one — one index scan on
+     * `plans_user_status_idx`, ordered by a case so the two states come back in one query.
+     */
+    public function findCurrentFor(UserId $owner): ?Plan
+    {
+        $row = $this->query()
+            ->where('user_id', $owner->value)
+            ->whereIn('status', [PlanStatus::Active->value, PlanStatus::Overdue->value, PlanStatus::Ready->value])
+            ->orderByRaw("CASE WHEN status = 'ready' THEN 1 ELSE 0 END")
+            ->orderByDesc('created_at')
+            ->first();
+
+        return $row === null ? null : $this->mapper->toDomain($row);
+    }
+
     public function allFor(UserId $owner): array
     {
         $rows = $this->query()
@@ -80,10 +99,48 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
         return is_string($planId) ? PlanId::fromString($planId) : null;
     }
 
+    public function findSceneForUpdate(PlanSceneId $id): ?PlanScene
+    {
+        $row = PlanSceneModel::query()->whereKey($id->value)->lockForUpdate()->first();
+
+        return $row === null ? null : $this->mapper->sceneOf($row);
+    }
+
+    public function saveScene(PlanScene $scene): void
+    {
+        PlanSceneModel::query()->whereKey($scene->id()->value)
+            ->update([...$this->mapper->sceneColumns($scene), 'updated_at' => now()]);
+    }
+
+    public function saveDayMetrics(PlanDayId $dayId, DayMetrics $metrics): void
+    {
+        PlanDayModel::query()->whereKey($dayId->value)
+            ->update([...PlanMapper::metricColumns($metrics), 'updated_at' => now()]);
+    }
+
+    public function attachCoverImage(PlanId $id, Image $image): void
+    {
+        PlanModel::query()->whereKey($id->value)->whereNull('cover_image_url')->update([
+            'cover_image_url' => $image->url,
+            'cover_image_author' => $image->author,
+            'cover_image_author_url' => $image->authorUrl,
+            'updated_at' => now(),
+        ]);
+    }
+
+    public function attachSceneImage(PlanSceneId $id, Image $image): void
+    {
+        PlanSceneModel::query()->whereKey($id->value)->whereNull('image_url')->update([
+            'image_url' => $image->url,
+            'image_author' => $image->author,
+            'image_author_url' => $image->authorUrl,
+            'updated_at' => now(),
+        ]);
+    }
+
     public function save(Plan $plan): void
     {
         DB::transaction(function () use ($plan): void {
-            $now = now();
             PlanModel::query()->updateOrCreate(['id' => $plan->id()->value], $this->mapper->planColumns($plan));
 
             $sceneIds = array_map(static fn (PlanScene $s): string => $s->id()->value, $plan->scenes());
@@ -93,7 +150,10 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
             }
             $removed->delete();
             foreach ($plan->scenes() as $scene) {
-                PlanSceneModel::query()->updateOrCreate(['id' => $scene->id()->value], $this->mapper->sceneColumns($scene, $plan->userId()));
+                PlanSceneModel::query()->updateOrCreate(
+                    ['id' => $scene->id()->value],
+                    [...$this->mapper->sceneColumns($scene), 'plan_id' => $scene->planId()->value, 'user_id' => $plan->userId()->value],
+                );
             }
 
             $dayIds = array_map(static fn (PlanDay $d): string => $d->id()->value, $plan->days());
@@ -103,9 +163,11 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
             }
             $gone->delete();
             foreach ($plan->days() as $day) {
-                PlanDayModel::query()->updateOrCreate(['id' => $day->id()->value], $this->mapper->dayColumns($day, $plan->userId()));
+                PlanDayModel::query()->updateOrCreate(
+                    ['id' => $day->id()->value],
+                    [...$this->mapper->dayColumns($day), 'plan_id' => $day->planId()->value, 'user_id' => $plan->userId()->value],
+                );
             }
-            unset($now);
         });
     }
 

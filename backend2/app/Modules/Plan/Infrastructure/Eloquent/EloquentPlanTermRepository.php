@@ -54,9 +54,14 @@ final class EloquentPlanTermRepository implements PlanTermRepository
         });
     }
 
-    public function save(PlanTerm $term): void
+    public function attachImage(PlanTermId $id, Image $image): void
     {
-        PlanTermModel::query()->whereKey($term->id()->value)->update([...$this->columns($term), 'updated_at' => now()]);
+        PlanTermModel::query()->whereKey($id->value)->whereNull('image_url')->update([
+            'image_url' => $image->url,
+            'image_author' => $image->author,
+            'image_author_url' => $image->authorUrl,
+            'updated_at' => now(),
+        ]);
     }
 
     /** @return array<string, mixed> */

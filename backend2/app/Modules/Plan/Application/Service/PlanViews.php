@@ -182,7 +182,13 @@ final readonly class PlanViews
 
     /**
      * The day's date: a closed day has the day it was closed; an available day is today; a locked
-     * day behind an open one is «tomorrow» or later, counted one per day from today.
+     * day behind an open one is «tomorrow» or later, counted one per day FROM THE CURRENT DAY'S
+     * OWN DATE.
+     *
+     * That last part is the whole rule. The days after the current one are not counted from today
+     * — they are counted from where the current day itself stands. Closing day N puts day N+1 on
+     * tomorrow, and counting day N+2 from today put it on tomorrow as well: two days wearing the
+     * same «завтра» on one route.
      */
     private function slot(Plan $plan, PlanDay $day, DateTimeImmutable $today, NativeStrings $strings): DaySlotView
     {
@@ -193,15 +199,13 @@ final readonly class PlanViews
 
             return new DaySlotView(DaySlotView::PAST, $date->format('Y-m-d'), null);
         }
-        if (! $plan->status()->isLive()) {
+        $current = $plan->status()->isLive() ? $plan->currentDay() : null;
+        if ($current === null) {
             $offset = $day->number() - 1;
         } else {
-            $current = $plan->currentDay();
-            $offset = $current === null ? 0 : $day->number() - $current->number();
-            $opens = $day->opensOn();
-            if ($current !== null && $day->number() === $current->number() && $opens !== null) {
-                $offset = max(0, PlanCalendar::calendarDaysBetween($midnight, $opens));
-            }
+            $opens = $current->opensOn();
+            $base = $opens === null ? 0 : max(0, PlanCalendar::calendarDaysBetween($midnight, $opens));
+            $offset = max(0, $base + $day->number() - $current->number());
         }
         $date = $midnight->modify("+{$offset} day");
 

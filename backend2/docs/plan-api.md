@@ -18,7 +18,15 @@
 | ещё раз | `POST /plans/{id}/build/retry` | 202 `PlanBuild`; 409 `plan_state`, если план не `unclear`/`failed`/не завис |
 
 `PlanBuild.status = failed` показывается и тогда, когда сборка зависла дольше
-`build_stale_seconds` — клиент предлагает повторить, а не крутит спиннер.
+`build_stale_seconds` — клиент предлагает повторить, а не крутит спиннер. Значений ровно четыре и
+пятого нет: **собранный план читается как `ready`**, чем бы он ни стал потом. «Начать» разрешено,
+пока пишется урок дня 1, и опрос, переживший нажатие, не должен отвечать словом, которого у этой
+ручки нет.
+
+**Сборка урока и картинки не трогают план.** Job урока пишет только свою сцену, обработчик картинок
+— только колонки фотографий (и только пока их нет); статус плана, `started_at` и расписание дней
+job не пишет никогда. Поэтому `POST …/start` во время идущей сборки разрешён и переживает её
+завершение: урок и картинка доедут на уже запущенный план.
 
 ## Превью
 
@@ -33,8 +41,14 @@
 
 ## Вкладка «План»
 
-`GET /plans/current` → `Plan` или `data: null`. `current_day` — первый незакрытый день; каждый
-день несёт **эффективный** `status` (`locked` / `open` / `in_progress` / `closed`) и `slot`:
+`GET /plans/current` → `Plan` или `data: null`. Отдаёт живой план (`active` / `overdue`), а если
+живого нет — **самый свежий собранный и незапущенный** (`status: ready`, все дни `locked`,
+`opens_on` и `started_at` — null). Неначатый план это СОСТОЯНИЕ вкладки, а не пустота: у клиента
+под него есть кадр и фикстура `mobile/test/fixtures/plan/plan_ready_preview.json`, форма ответа —
+обычный `Plan`. `data: null` — только когда плана нет вовсе.
+
+`current_day` — первый незакрытый день; каждый день несёт **эффективный** `status`
+(`locked` / `open` / `in_progress` / `closed`) и `slot`:
 
 | `slot.code` | `date` | `label_native` | когда |
 |---|---|---|---|
@@ -42,6 +56,10 @@
 | `tomorrow` | завтра | «завтра» | следующий день, или текущий, чей `opens_on` завтра |
 | `date` | дата | null | дальше завтрашнего; клиент форматирует дату |
 | `past` | дата закрытия | null | закрытый день |
+
+Дни после текущего считаются по одному в календарный день **от даты самого текущего дня**, а не от
+сегодня. Поэтому `today` и `tomorrow` носит не больше чем по одному дню маршрута: закрытие дня N
+ставит день N+1 на завтра, а день N+2 — на послезавтра.
 
 Меню: «перенести дату» / «изменить дни» — `PATCH /plans/{id}/schedule` `{event_date?, days_total?}`
 (`event_date: null` снимает дату; 409 `plan_too_short` при попытке отрезать пройденные дни);
@@ -52,7 +70,7 @@
 
 | действие | вызов | ответ |
 |---|---|---|
-| кабинет дня | `GET /plans/{id}/days/{n}` | `PlanDayRoom`: `day`, `scene`, `goals_native`, `stages[]` (`locked`/`current`/`done`/`absent`), `metrics` (после закрытия), `program[]` (единицы с состоянием `pending`/`passed`/`failed`), `sheet_available` |
+| кабинет дня | `GET /plans/{id}/days/{n}` | `PlanDayRoom`: `day`, `scene`, `goals_native`, `stages[]` (`locked`/`current`/`done`/`absent`), `metrics`, `program[]` (единицы с состоянием `pending`/`passed`/`failed`), `sheet_available` |
 | открыть / продолжить | `POST /plans/{id}/days/{n}/open` | `PlanDayCards` — **весь** список карточек с состоянием; 409 `plan_day_locked` (`meta.blocked_by_day` или `meta.opens_on`), 409 `plan_lesson_not_ready` (`meta.lesson_status`: `building` — подождать, `failed` — предложить `POST …/scenes/{sceneId}/lesson/retry`) |
 | перечитать карточки | `GET /plans/{id}/days/{n}/cards` | `PlanDayCards` |
 | ответить | `POST …/cards/{cardId}/answer` `{result, attempts}` | `{card, requeued}`; `requeued` — та же карточка в конце этапа после первого `failed`; 409 `plan_card_answered` |
@@ -65,6 +83,16 @@
 описан в схеме `PlanCard`; общее: `scene_id` у всех; у карточек слов/фраз `plan_term_id`, `image`;
 у карточек обмена `exchange_step`, `partner` (реплика A), `audio_id`
 (→ `GET /plans/audio/{audioId}`, `audio/mpeg`).
+
+**День известен ДО открытия.** Как только урок сцены написан, кабинет отдаёт настоящие `stages[]`
+(те же счётчики, что раздаст `open`: первый этап `current`, остальные `locked`, `done` = 0) и
+заполненную `program[]` — `absent` и пустая программа означают «урока ещё нет», а не «день ещё не
+открыт». `open` меняет статус дня, а не появление структуры.
+
+**Счёт дня живой.** `day.cards_done` / `minutes_spent` и `metrics` пересчитываются из карточек дня
+на каждый ответ — тем же калькулятором, которым закрывается день, по тем же строкам. `metrics`
+приходит у открытого дня, не только у закрытого; у неоткрытого — `null`. `cards_total` растёт,
+когда проваленная карточка раздаётся заново.
 
 Клиент оценивает сам по данным пейлоада (варианты с `correct`, `answer`, `expected` + `coverage`,
 `speaking_key` + `variants`) и присылает вердикт: `passed` / `hinted` (зачёт с подсказкой) /

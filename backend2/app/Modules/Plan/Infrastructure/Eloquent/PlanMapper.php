@@ -78,6 +78,12 @@ final class PlanMapper
         );
     }
 
+    /** One scene row on its own — what a scene-addressed job reads and writes. */
+    public function sceneOf(PlanSceneModel $row): PlanScene
+    {
+        return $this->scene($row, PlanId::fromString($row->plan_id));
+    }
+
     private function scene(PlanSceneModel $row, PlanId $planId): PlanScene
     {
         $lesson = null;
@@ -180,14 +186,17 @@ final class PlanMapper
         ];
     }
 
-    /** @return array<string, mixed> */
-    public function sceneColumns(PlanScene $scene, UserId $userId): array
+    /**
+     * A scene's own columns — no `plan_id`, no `user_id`: both are set when the row is created and
+     * neither may be rewritten by a pointwise update.
+     *
+     * @return array<string, mixed>
+     */
+    public function sceneColumns(PlanScene $scene): array
     {
         $call = $scene->lessonCall();
 
         return [
-            'plan_id' => $scene->planId()->value,
-            'user_id' => $userId->value,
             'order' => $scene->order(),
             'kind' => $scene->kind()->value,
             'priority' => $scene->priority(),
@@ -219,14 +228,14 @@ final class PlanMapper
         ];
     }
 
-    /** @return array<string, mixed> */
-    public function dayColumns(PlanDay $day, UserId $userId): array
+    /**
+     * A day's own columns — no `plan_id`, no `user_id`, for the reason {@see sceneColumns()} gives.
+     *
+     * @return array<string, mixed>
+     */
+    public function dayColumns(PlanDay $day): array
     {
-        $m = $day->metrics();
-
         return [
-            'plan_id' => $day->planId()->value,
-            'user_id' => $userId->value,
             'number' => $day->number(),
             'type' => $day->type()->value,
             'scene_id' => $day->sceneId()?->value,
@@ -234,6 +243,18 @@ final class PlanMapper
             'opens_on' => $day->opensOn()?->format('Y-m-d'),
             'opened_at' => $day->openedAt()?->format(DATE_ATOM),
             'closed_at' => $day->closedAt()?->format(DATE_ATOM),
+            ...self::metricColumns($day->metrics()),
+        ];
+    }
+
+    /**
+     * The day's numbers alone — the columns an answer refreshes without touching the calendar.
+     *
+     * @return array<string, mixed>
+     */
+    public static function metricColumns(DayMetrics $m): array
+    {
+        return [
             'cards_total' => $m->cardsTotal,
             'cards_done' => $m->cardsDone,
             'minutes_spent' => $m->minutesSpent,

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Repository;
 
 use App\Modules\Plan\Domain\Entity\PlanTerm;
+use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
+use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 
 interface PlanTermRepository
 {
@@ -21,5 +23,6 @@ interface PlanTermRepository
     /** @param list<PlanTerm> $terms replaces the scene's terms wholesale */
     public function replaceForScene(PlanSceneId $sceneId, array $terms): void;
 
-    public function save(PlanTerm $term): void;
+    /** The term's photo into its own columns, only while it has none — see {@see PlanRepository}. */
+    public function attachImage(PlanTermId $id, Image $image): void;
 }

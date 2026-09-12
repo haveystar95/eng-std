@@ -42,11 +42,40 @@ final readonly class DayDealer
     /** @return list<DayCard> */
     public function deal(Plan $plan, PlanDay $day): array
     {
+        return $this->assemble($plan, $day, withTopUp: true);
+    }
+
+    /**
+     * The day as it WILL be dealt, dealt nowhere: the same assembler over the same material, so
+     * the room can show the stages and the programme of a day whose lesson is written and whose
+     * turn has not come. Nothing is written and no id is kept — only the shape.
+     *
+     * A day whose lesson is not ready has no shape yet, and says so with an empty list rather
+     * than an exception: the room draws that as five absent stages.
+     *
+     * The Beginner top-up is not bought here. It fills the wrong options of a choice card and
+     * changes neither how many cards a day has nor which units they belong to — the two things
+     * the room reads off this.
+     *
+     * @return list<DayCard>
+     */
+    public function outline(Plan $plan, PlanDay $day): array
+    {
+        try {
+            return $this->assemble($plan, $day, withTopUp: false);
+        } catch (LessonNotReady) {
+            return [];
+        }
+    }
+
+    /** @return list<DayCard> */
+    private function assemble(Plan $plan, PlanDay $day, bool $withTopUp): array
+    {
         $ids = static fn (): DayCardId => DayCardId::generate();
 
         return match ($day->type()) {
-            DayType::Scene => $this->sceneDay($plan, $day, $ids),
-            DayType::Review => $this->reviewDay($plan, $day, $ids),
+            DayType::Scene => $this->sceneDay($plan, $day, $ids, $withTopUp),
+            DayType::Review => $this->reviewDay($plan, $day, $ids, $withTopUp),
             DayType::Rehearsal => $this->rehearsalDay($plan, $day, $ids),
         };
     }
@@ -55,7 +84,7 @@ final readonly class DayDealer
      * @param  callable(): DayCardId  $ids
      * @return list<DayCard>
      */
-    private function sceneDay(Plan $plan, PlanDay $day, callable $ids): array
+    private function sceneDay(Plan $plan, PlanDay $day, callable $ids, bool $withTopUp): array
     {
         $scene = $plan->sceneOf($day);
         if ($scene === null || ! $scene->isReady()) {
@@ -72,7 +101,7 @@ final readonly class DayDealer
 
         return $this->assembler->sceneDay(
             $day->id(), $today, $material, $plan->level(), $returned,
-            $this->topUp($plan, $today, $plan->level()), $ids,
+            $withTopUp ? $this->topUp($plan, $today, $plan->level()) : [], $ids,
         );
     }
 
@@ -80,7 +109,7 @@ final readonly class DayDealer
      * @param  callable(): DayCardId  $ids
      * @return list<DayCard>
      */
-    private function reviewDay(Plan $plan, PlanDay $day, callable $ids): array
+    private function reviewDay(Plan $plan, PlanDay $day, callable $ids, bool $withTopUp): array
     {
         $previous = $plan->sceneDaysBefore($day->number(), 2);
         $returned = $this->returnedUnits($plan, $day, 2);
@@ -104,7 +133,7 @@ final readonly class DayDealer
 
         return $this->assembler->reviewDay(
             $day->id(), $scenes, $material, $plan->level(), $returned,
-            $first === null ? [] : $this->topUp($plan, $first, $plan->level()), $ids,
+            $first === null || ! $withTopUp ? [] : $this->topUp($plan, $first, $plan->level()), $ids,
         );
     }
 

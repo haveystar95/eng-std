@@ -20,6 +20,16 @@ Nothing in Domain imports Laravel.
 | Aggregate | Invariants it protects |
 |---|---|
 | `Plan` (+ `PlanScene`, `PlanDay`) | one status machine (building → ready/unclear/failed → active → finished; overdue derived); the calendar layout by `PlanCalendar`; days open one per calendar day in the learner's zone and never ahead of an unclosed day; the core scene (priority 1) is never dropped or removed; a reschedule never cuts a walked day; a scene is claimed (`building`) before the model is asked |
+
+**No job writes the aggregate.** `PlanRepository::save()` writes the whole plan — row, scenes and
+days — from the snapshot in hand, so only a handler that read the plan under a lock and writes it
+in the same transaction may call it. A job holds its snapshot across a model call or an image
+search, and the learner is free to press «Начать» meanwhile: the lesson job and the photo job write
+their own columns instead (`saveScene`, `attachSceneImage`, `attachCoverImage`, `PlanTermRepository
+::attachImage`), and the plan builder — whose write IS the aggregate — re-reads under
+`lockForUpdate` inside the writing transaction and re-checks the status first. Paid for once: on
+11.09 a lesson job and a photo job put their pre-start snapshot back over a started plan, and the
+plan fell to `ready` with no start date and day 1 locked again (`docs/research/plan-api-fix-1/`).
 | `DayCard` | answered once; first failure requeues, second returns the unit tomorrow; a skip has no consequence |
 | `PlanTerm` | written once from the lesson (`fromLesson`), refs `v*`/`p*` are how cards point at terms |
 

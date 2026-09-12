@@ -15,6 +15,7 @@ use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Service\PlanCalendar;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
+use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\PlanStatus;
 use App\Modules\Shared\Domain\Service\LanguageName;
@@ -25,6 +26,11 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * extension has no empty scene days) is left alone, so a re-queued job cannot buy a second plan.
  * Day 1's lesson is queued the moment the plan is accepted — before «Начать» — and so are the
  * photos.
+ *
+ * The blueprint IS the aggregate (scenes, and the calendar they are laid onto), so there is no
+ * pointwise column to write here. The plan is therefore re-read under `lockForUpdate` inside the
+ * writing transaction and re-checked: the snapshot that went into the model call is a stale read
+ * by the time it comes back, and a plan the learner deleted meanwhile must stay deleted.
  */
 final readonly class BuildPlanHandler
 {
@@ -57,29 +63,48 @@ final readonly class BuildPlanHandler
         try {
             $outcome = $this->builder->build($request);
         } catch (PlanModelUnavailable $e) {
-            $this->tx->run(function () use ($plan, $e): void {
-                $plan->markFailed($e->getMessage(), null, []);
-                $this->plans->save($plan);
+            $this->write($plan->id(), function (Plan $fresh) use ($e): void {
+                $fresh->markFailed($e->getMessage(), null, []);
             });
 
             return;
         }
 
-        $this->tx->run(function () use ($plan, $outcome): void {
+        $built = $this->write($plan->id(), function (Plan $fresh) use ($outcome): void {
             if ($outcome->blueprint !== null && $outcome->call !== null) {
-                $plan->acceptBlueprint($outcome->blueprint, $outcome->call, $outcome->findings, static fn (): PlanSceneId => PlanSceneId::generate());
+                $fresh->acceptBlueprint($outcome->blueprint, $outcome->call, $outcome->findings, static fn (): PlanSceneId => PlanSceneId::generate());
             } elseif ($outcome->unclearReason !== null && $outcome->call !== null) {
-                $plan->markUnclear($outcome->unclearReason, $outcome->call);
+                $fresh->markUnclear($outcome->unclearReason, $outcome->call);
             } else {
-                $plan->markFailed($outcome->failReason ?? 'unknown', $outcome->call, $outcome->findings);
+                $fresh->markFailed($outcome->failReason ?? 'unknown', $outcome->call, $outcome->findings);
             }
-            $this->plans->save($plan);
         });
 
-        if ($plan->status() === PlanStatus::Ready) {
-            $this->queueFirstLesson($plan);
-            $this->dispatcher->attachImages($plan->id());
+        if ($built !== null && $built->status() === PlanStatus::Ready) {
+            $this->queueFirstLesson($built);
+            $this->dispatcher->attachImages($built->id());
         }
+    }
+
+    /**
+     * The plan re-read under a lock, changed and saved in one transaction — the only way this job
+     * writes. A plan that left `building` while the model was answering (deleted, or already
+     * rebuilt by a retry) is left exactly as it is.
+     *
+     * @param  callable(Plan): void  $change
+     */
+    private function write(PlanId $planId, callable $change): ?Plan
+    {
+        return $this->tx->run(function () use ($planId, $change): ?Plan {
+            $fresh = $this->plans->findByIdForUpdate($planId);
+            if ($fresh === null || $fresh->status() !== PlanStatus::Building) {
+                return null;
+            }
+            $change($fresh);
+            $this->plans->save($fresh);
+
+            return $fresh;
+        });
     }
 
     private function extend(Plan $plan, int $scenesToAdd): void
@@ -96,17 +121,26 @@ final readonly class BuildPlanHandler
             return;
         }
 
-        $this->tx->run(function () use ($plan, $outcome): void {
+        $extended = $this->tx->run(function () use ($plan, $outcome): ?Plan {
+            $fresh = $this->plans->findByIdForUpdate($plan->id());
+            if ($fresh === null || ! $fresh->status()->isBuilt()) {
+                return null;
+            }
             /** @var Blueprint $blueprint */
             $blueprint = $outcome->blueprint;
             /** @var ModelCall $call */
             $call = $outcome->call;
-            $plan->appendScenes($blueprint->scenes, $call, static fn (): PlanSceneId => PlanSceneId::generate());
-            $this->plans->save($plan);
-        });
+            $fresh->appendScenes($blueprint->scenes, $call, static fn (): PlanSceneId => PlanSceneId::generate());
+            $this->plans->save($fresh);
 
-        $this->dispatcher->attachImages($plan->id());
-        $this->queueFirstLesson($plan);
+            return $fresh;
+        });
+        if ($extended === null) {
+            return;
+        }
+
+        $this->dispatcher->attachImages($extended->id());
+        $this->queueFirstLesson($extended);
     }
 
     /** Day 1's lesson is written before «Начать»; after a start the next open scene day is what waits. */

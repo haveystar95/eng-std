@@ -1750,11 +1750,15 @@ paths:
   /plans/current:
     get:
       tags: [Plans]
-      summary: The live plan for the tab, or null
-      description: The active or overdue plan, whole. `data` is null when the learner has no live plan.
+      summary: The plan for the tab, or null
+      description: >-
+        The active or overdue plan, whole. When there is none, the newest plan that is BUILT and
+        not started yet (`status: ready`, every day `locked`, `opens_on` null, `started_at` null) —
+        it is a state the tab draws, not an absence. `data` is null only when the learner has no
+        plan at all.
       responses:
         '200':
-          description: The live plan or null
+          description: The plan or null
           content:
             application/json:
               schema:
@@ -2548,11 +2552,15 @@ components:
 
     PlanBuild:
       type: object
-      description: What the client polls after creating a plan.
+      description: >-
+        What the client polls after creating a plan. Four values and no fifth: a plan that is built
+        reads `ready` whatever it has become since — «Начать» is legal while day 1's lesson is still
+        being written, and a poll that outlives the press must not answer with a word this endpoint
+        does not have.
       required: [id, status, scenes_count, versions]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
-        status: { type: string, enum: [building, unclear, failed, ready, active, finished, overdue] }
+        status: { type: string, enum: [building, unclear, failed, ready] }
         unclear_reason: { type: [string, 'null'], description: 'The model''s one sentence (English, for the log) when the goal is not a situation' }
         fail_reason: { type: [string, 'null'] }
         scenes_count: { type: integer }
@@ -2591,7 +2599,9 @@ components:
       description: >-
         WHEN a day sits in the learner's calendar. `label_native` is the ready word («сегодня»,
         «завтра») for the two slots that have one; for `date` the client formats `date` itself;
-        `past` is the day it was closed.
+        `past` is the day it was closed. The days after the current one are counted one per calendar
+        day FROM THE CURRENT DAY'S OWN DATE, so `today` and `tomorrow` are each worn by at most one
+        day of a route.
       required: [code]
       properties:
         code: { type: string, enum: [today, tomorrow, date, past, unscheduled] }
@@ -2614,8 +2624,8 @@ components:
         lesson_status: { type: [string, 'null'], enum: [pending, building, ready, failed, null] }
         opens_on: { type: [string, 'null'], format: date }
         slot: { $ref: '#/components/schemas/PlanDaySlot' }
-        cards_total: { type: integer }
-        cards_done: { type: integer }
+        cards_total: { type: integer, description: 'The cards dealt to the day; grows when a failed card is dealt again' }
+        cards_done: { type: integer, description: 'Refolded on every answer — a day being walked shows its own progress, not a zero until it closes' }
         minutes_spent: { type: integer }
         opened_at: { type: [string, 'null'], format: date-time }
         closed_at: { type: [string, 'null'], format: date-time }
@@ -2718,7 +2728,14 @@ components:
         stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
         total: { type: integer }
         done: { type: integer }
-        state: { type: string, enum: [locked, current, done, absent], description: 'The first stage with an unanswered card is `current`; a stage with no cards is `absent`' }
+        state:
+          type: string
+          enum: [locked, current, done, absent]
+          description: >-
+            The first stage with an unanswered card is `current`, the ones before it `done`, the
+            ones after `locked`. A day whose lesson is written knows its stages BEFORE it is opened
+            — the totals are what `POST …/open` will deal — so `absent` means «no lesson yet», not
+            «not opened yet».
 
     PlanProgramUnit:
       type: object
@@ -2766,9 +2783,14 @@ components:
           oneOf:
             - $ref: '#/components/schemas/PlanDayMetrics'
             - type: 'null'
-          description: Filled once the day is closed
+          description: >-
+            Filled from the moment the day is opened and refolded on every answer, so a day being
+            walked shows its own progress. Null for a day that has not been opened.
         program:
           type: array
+          description: >-
+            Every unit of the day. Known as soon as the lesson is written — before the day is
+            opened, every unit is `pending` with `cards_done` 0.
           items: { $ref: '#/components/schemas/PlanProgramUnit' }
         sheet_available: { type: boolean }
 

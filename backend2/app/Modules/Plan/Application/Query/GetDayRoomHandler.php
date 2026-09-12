@@ -9,6 +9,7 @@ use App\Modules\Plan\Application\Dto\DayRoomView;
 use App\Modules\Plan\Application\Dto\ProgramUnitView;
 use App\Modules\Plan\Application\Dto\StageProgressView;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
+use App\Modules\Plan\Application\Service\DayDealer;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Application\Service\PlanViews;
 use App\Modules\Plan\Application\Service\UnitNames;
@@ -19,12 +20,21 @@ use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Shared\Domain\Service\Clock;
 
-/** «Кабинет дня»: three queries — the plan, its cards, nothing else. */
+/**
+ * «Кабинет дня»: the plan, its cards, nothing else.
+ *
+ * A day that has not been opened yet has no cards in the table — but it has a SHAPE, from the
+ * moment its lesson is written: the same stages over the same words, phrases and exchanges that
+ * `POST …/open` will deal. The room asks the dealer for that outline instead of reporting five
+ * absent stages and an empty programme at a day the learner is looking straight at. `open` moves
+ * the day's status; it is not what makes the day exist.
+ */
 final readonly class GetDayRoomHandler
 {
     public function __construct(
         private PlanAccess $access,
         private DayCardRepository $cards,
+        private DayDealer $dealer,
         private PlanViews $views,
         private LearnerCalendar $calendar,
         private Clock $clock,
@@ -36,7 +46,7 @@ final readonly class GetDayRoomHandler
         $day = $plan->day($query->number);
         $today = $this->calendar->todayFor($query->actorId, $this->clock->now());
         $scene = $plan->sceneOf($day);
-        $cards = $this->cards->forDay($day->id());
+        $cards = $day->openedAt() === null ? $this->dealer->outline($plan, $day) : $this->cards->forDay($day->id());
         $metrics = $day->metrics();
 
         return new DayRoomView(
@@ -45,10 +55,13 @@ final readonly class GetDayRoomHandler
             scene: $scene === null ? null : $this->views->scene($plan, $scene),
             goalsNative: $scene?->goalsNative() ?? [],
             stages: $this->stages($cards),
-            metrics: $day->isClosed() ? new DayMetricsView(
+            // The numbers of a day that is being walked, not only of one that is over: they are
+            // refreshed on every answer, and «сколько уже сделано» is the question of a day in
+            // progress. A day not yet opened has nothing to count.
+            metrics: $day->openedAt() === null ? null : new DayMetricsView(
                 $metrics->cardsTotal, $metrics->cardsDone, $metrics->minutesSpent, $metrics->firstTryShare,
                 $metrics->hardestUnitKind?->value, $metrics->hardestUnitRef, $metrics->hardestUnitText,
-            ) : null,
+            ),
             program: $this->program($cards),
             sheetAvailable: $day->type() === DayType::Scene && $scene !== null && $scene->isReady(),
         );
