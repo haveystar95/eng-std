@@ -41,12 +41,37 @@ class _DayRoomScreenState extends ConsumerState<DayRoomScreen> {
   /// День только что закрыли в сессии — плита проигрывает 23-0b → 23-0c один раз.
   bool _justClosed = false;
 
+  /// План кабинета — тот, с которым пришли, или он же уже запущенный (см. [_openSession]).
+  late Plan _plan = widget.plan;
+
   DayAddress get _address => (planId: widget.plan.id, number: widget.number);
 
   Future<void> _openSession(PlanDayRoom room) async {
+    // НЕНАЧАТЫЙ ПЛАН (13.09, с телефона): `/plans/current` отдаёт собранный и не запущенный план
+    // (`ready`), и в кабинет его дня 1 можно войти до «Начать». Сессия открывала день у такого
+    // плана — сервер отвечал 409 `plan_state`, экран показывал «Не получилось загрузить план», и
+    // «Повторить» получал тот же 409. «Начать» дня 1 неначатого плана и есть «Начать» плана.
+    if (_plan.status == PlanStatus.ready) {
+      try {
+        _plan = await ref.read(planTabProvider.notifier).start(_plan.id);
+      } catch (_) {
+        AppHaptics.warning();
+        unawaited(ref.read(planTabProvider.notifier).refresh());
+
+        return;
+      }
+      if (!mounted) return;
+      ref.invalidate(dayRoomProvider(_address));
+      try {
+        room = await ref.read(dayRoomProvider(_address).future);
+      } catch (_) {
+        return;
+      }
+      if (!mounted) return;
+    }
     AppHaptics.light();
     final exit = await Navigator.of(context).push<DaySessionExit>(
-      MaterialPageRoute(builder: (_) => DaySessionScreen(plan: widget.plan, room: room)),
+      MaterialPageRoute(builder: (_) => DaySessionScreen(plan: _plan, room: room)),
     );
     if (!mounted) return;
     _justClosed = exit == DaySessionExit.dayClosed;
@@ -71,7 +96,7 @@ class _DayRoomScreenState extends ConsumerState<DayRoomScreen> {
             child: PlanLoadFailedCard(onRetry: () => ref.invalidate(dayRoomProvider(_address))),
           ),
           data: (r) => _Room(
-            plan: widget.plan,
+            plan: _plan,
             room: r,
             animateClose: _justClosed,
             onOpen: () => _openSession(r),
@@ -145,7 +170,9 @@ class _Room extends ConsumerWidget {
     final fromSheet = room.program.isEmpty && sheet != null;
     final words = fromSheet ? [for (final t in sheet.words) _unitOf(t, PlanUnitKind.word)] : room.words.toList();
     final phrases = fromSheet ? [for (final t in sheet.phrases) _unitOf(t, PlanUnitKind.phrase)] : room.phrases.toList();
-    final exchanges = room.exchanges.toList();
+    // Обмен, у которого ещё нечего показать (день не открыт — реплики живут в карточках), строкой
+    // не рисуется: восемь пустых строк по 72 стояли дырой в полэкрана между «Разговор» и концом.
+    final exchanges = room.exchanges.where((u) => _partnerLineOf(u, cards).isNotEmpty || _ownLineOf(u, cards).isNotEmpty || (u.textNative ?? '').isNotEmpty).toList();
     final returnedWords = words.where((u) => u.source == PlanUnitSource.returned).toList();
     final returnedFrom = returnedWords.isEmpty ? null : _returnedFromDay(cards, returnedWords.first.unitRef);
 
