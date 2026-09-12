@@ -22,8 +22,11 @@ use App\Modules\Generation\Presentation\Console\RecoverLostTermsCommand;
 use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanImagesBackfillCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanSeedLoadCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanShiftDayCommand;
+use App\Modules\Plan\Presentation\Console\PlanNotifyTestCommand;
+use App\Modules\Plan\Presentation\Console\PlanNotifyTickCommand;
 use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
 use App\Modules\Vocabulary\Presentation\Console\RelabelRepairedTranslationsCommand;
 use App\Modules\Shared\Domain\Exception\ProblemDetails;
@@ -60,6 +63,11 @@ return Application::configure(basePath: dirname(__DIR__))
         GrantPremiumCommand::class,
         PlanShiftDayCommand::class,
         PlanSeedLoadCommand::class,
+        // Plan notifications (PLAN-UI-3): the 15-minute tick (scheduled in routes/console.php) and
+        // the QA «send one letter now».
+        PlanNotifyTickCommand::class,
+        PlanNotifyTestCommand::class,
+        PlanImagesBackfillCommand::class,
         VerificationStatsCommand::class,
         StorePublishCommand::class,
         BatchAgeProgressCommand::class,

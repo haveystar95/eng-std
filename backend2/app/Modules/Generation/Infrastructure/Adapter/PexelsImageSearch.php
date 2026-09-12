@@ -72,6 +72,44 @@ final class PexelsImageSearch implements ImageSearchPort
             return null; // no photo matched — normal, do not retry
         }
 
+        return $this->result($photo);
+    }
+
+    public function photo(string $photoId): ?ImageResult
+    {
+        if (preg_match('/^\d+$/', $photoId) !== 1) {
+            return null; // not a Pexels id — nothing to ask for
+        }
+
+        try {
+            $response = $this->context->run('images', null, fn () => Http::withHeaders(['Authorization' => $this->apiKey])
+                ->timeout($this->timeoutSeconds)
+                ->get(rtrim($this->baseUrl, '/') . '/photos/' . $photoId));
+        } catch (ConnectionException $e) {
+            throw TransientImageSearchError::network($e->getMessage());
+        }
+
+        if ($response->status() === 404) {
+            return null; // the photo is gone — terminal, like an empty search
+        }
+        if ($response->status() === 429) {
+            throw TransientImageSearchError::rateLimited($this->retryAfter($response));
+        }
+        if ($response->serverError()) {
+            throw TransientImageSearchError::upstream($response->status());
+        }
+        if (! $response->successful()) {
+            throw new RuntimeException('Pexels API error: ' . $response->status() . ' ' . $response->body());
+        }
+
+        $photo = $response->json();
+
+        return is_array($photo) ? $this->result($photo) : null;
+    }
+
+    /** @param array<string, mixed> $photo */
+    private function result(array $photo): ?ImageResult
+    {
         $url = $this->pickUrl($photo);
         if ($url === null) {
             return null;
@@ -81,6 +119,7 @@ final class PexelsImageSearch implements ImageSearchPort
             url: $url,
             author: is_string($photo['photographer'] ?? null) ? $photo['photographer'] : null,
             authorUrl: is_string($photo['photographer_url'] ?? null) ? $photo['photographer_url'] : null,
+            avgColor: is_string($photo['avg_color'] ?? null) ? $photo['avg_color'] : null,
         );
     }
 

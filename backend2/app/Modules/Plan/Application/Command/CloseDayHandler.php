@@ -8,8 +8,11 @@ use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\PlanCollectionWriter;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\PlanAccess;
+use App\Modules\Plan\Application\Service\PlanEventJournal;
+use App\Modules\Plan\Application\Service\PlanNotifier;
 use App\Modules\Plan\Application\Service\UnitNames;
 use App\Modules\Plan\Domain\Entity\DayCard;
+use App\Modules\Plan\Domain\Entity\PlanEvent;
 use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
 use App\Modules\Plan\Domain\Exception\StageIncomplete;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
@@ -18,9 +21,15 @@ use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Service\DayMetricsCalculator;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\DayType;
+use App\Modules\Plan\Domain\ValueObject\PlanEventKind;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
+/**
+ * «День пройден»: metrics, the next day unlocked for tomorrow, the day's words into the plan's
+ * collection — and a `day_passed` line in the plan's journal, in the same transaction (PLAN-UI-3;
+ * the order's «PlanDayPassing» is this handler). `day_passed` is journal-only: no letter.
+ */
 final readonly class CloseDayHandler
 {
     public function __construct(
@@ -34,6 +43,8 @@ final readonly class CloseDayHandler
         private PlanDispatcher $dispatcher,
         private Clock $clock,
         private TransactionManager $tx,
+        private PlanEventJournal $journal,
+        private PlanNotifier $notifier,
     ) {}
 
     public function __invoke(CloseDay $command): void
@@ -41,7 +52,9 @@ final readonly class CloseDayHandler
         $now = $this->clock->now();
         $today = $this->calendar->todayFor($command->actorId, $now);
 
-        $nextSceneId = $this->tx->run(function () use ($command, $today, $now): ?\App\Modules\Plan\Domain\ValueObject\PlanSceneId {
+        /** @var PlanEvent|null $passed */
+        $passed = null;
+        $nextSceneId = $this->tx->run(function () use ($command, $today, $now, &$passed): ?\App\Modules\Plan\Domain\ValueObject\PlanSceneId {
             $plan = $this->access->ownedForUpdate($command->planId, $command->actorId);
             $day = $plan->day($command->number);
             if ($day->status() !== DayStatus::InProgress) {
@@ -72,6 +85,7 @@ final readonly class CloseDayHandler
                 );
             }
             $this->plans->save($plan);
+            $passed = $this->journal->record($plan->id(), $plan->userId(), PlanEventKind::DayPassed, $day->id(), $day->number());
 
             $nextScene = $next === null ? null : $plan->sceneOf($next);
 
@@ -81,5 +95,6 @@ final readonly class CloseDayHandler
         if ($nextSceneId !== null) {
             $this->dispatcher->buildLesson($nextSceneId);
         }
+        $this->notifier->notify($passed);
     }
 }

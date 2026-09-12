@@ -41,6 +41,24 @@ final class FakePexelsImageSearch implements ImageSearchPort
                 url: 'https://images.pexels.test/' . md5($q) . '.jpg',
                 author: 'Fake Photographer',
                 authorUrl: 'https://pexels.test/@fake',
+                avgColor: '#' . strtoupper(substr(md5($q), 0, 6)),
+            ),
+        };
+    }
+
+    public function photo(string $photoId): ?ImageResult
+    {
+        $this->calls++;
+
+        return match ($this->mode) {
+            self::NOT_FOUND => null,
+            self::RATE_LIMITED => throw TransientImageSearchError::rateLimited(1),
+            self::TRANSIENT_ERROR => throw TransientImageSearchError::upstream(503),
+            default => preg_match('/^\d+$/', $photoId) !== 1 ? null : new ImageResult(
+                url: "https://images.pexels.com/photos/{$photoId}/pexels-photo-{$photoId}.jpeg",
+                author: 'Fake Photographer',
+                authorUrl: 'https://pexels.test/@fake',
+                avgColor: '#978E82',
             ),
         };
     }

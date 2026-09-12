@@ -22,4 +22,13 @@ interface ImageSearchPort
      * @throws TransientImageSearchError on a retryable failure (rate limit / upstream 5xx / network)
      */
     public function search(string $query): ?ImageResult;
+
+    /**
+     * One photo by the vendor's own id — for a photo found earlier whose details (the average
+     * colour) were not kept. Null when the vendor has no such photo; the same transient contract
+     * as {@see search()}.
+     *
+     * @throws TransientImageSearchError on a retryable failure (rate limit / upstream 5xx / network)
+     */
+    public function photo(string $photoId): ?ImageResult;
 }

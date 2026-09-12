@@ -8,13 +8,17 @@ use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\PlanBuildService;
+use App\Modules\Plan\Application\Service\PlanEventJournal;
+use App\Modules\Plan\Application\Service\PlanNotifier;
 use App\Modules\Plan\Domain\Blueprint\Blueprint;
+use App\Modules\Plan\Domain\Entity\PlanEvent;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Service\PlanCalendar;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
+use App\Modules\Plan\Domain\ValueObject\PlanEventKind;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\PlanStatus;
@@ -31,6 +35,9 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * pointwise column to write here. The plan is therefore re-read under `lockForUpdate` inside the
  * writing transaction and re-checked: the snapshot that went into the model call is a stale read
  * by the time it comes back, and a plan the learner deleted meanwhile must stay deleted.
+ *
+ * A plan that comes out `ready` gets its `plan_ready` journal line in the same transaction; the
+ * letter it becomes is queued after the commit (PLAN-UI-3).
  */
 final readonly class BuildPlanHandler
 {
@@ -39,6 +46,8 @@ final readonly class BuildPlanHandler
         private PlanBuildService $builder,
         private PlanDispatcher $dispatcher,
         private TransactionManager $tx,
+        private PlanEventJournal $journal,
+        private PlanNotifier $notifier,
     ) {}
 
     public function __invoke(BuildPlan $command): void
@@ -70,9 +79,12 @@ final readonly class BuildPlanHandler
             return;
         }
 
-        $built = $this->write($plan->id(), function (Plan $fresh) use ($outcome): void {
+        /** @var PlanEvent|null $ready */
+        $ready = null;
+        $built = $this->write($plan->id(), function (Plan $fresh) use ($outcome, &$ready): void {
             if ($outcome->blueprint !== null && $outcome->call !== null) {
                 $fresh->acceptBlueprint($outcome->blueprint, $outcome->call, $outcome->findings, static fn (): PlanSceneId => PlanSceneId::generate());
+                $ready = $this->journal->record($fresh->id(), $fresh->userId(), PlanEventKind::PlanReady);
             } elseif ($outcome->unclearReason !== null && $outcome->call !== null) {
                 $fresh->markUnclear($outcome->unclearReason, $outcome->call);
             } else {
@@ -83,6 +95,7 @@ final readonly class BuildPlanHandler
         if ($built !== null && $built->status() === PlanStatus::Ready) {
             $this->queueFirstLesson($built);
             $this->dispatcher->attachImages($built->id());
+            $this->notifier->notify($ready);
         }
     }
 

@@ -22,6 +22,19 @@ services:
       - redis
     command: php artisan horizon
 
+  # The scheduler (routes/console.php): plan:notify-tick every 15 minutes (PLAN-UI-3). Same image and
+  # volume as horizon; the letters it decides on are queued and sent by horizon. Like horizon it
+  # answers from memory — restart it after touching the tick or anything it calls.
+  scheduler:
+    build: .
+    container_name: wt_scheduler
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - redis
+    command: php artisan schedule:work
+
   # Public tunnel to the app, on the account's reserved static domain (same one the
   # mobile app defaults to). Free plan = one tunnel: don't run the old backend's ngrok
   # at the same time. Inspector at http://localhost:4041.

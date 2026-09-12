@@ -11,6 +11,7 @@ use App\Modules\Plan\Domain\ValueObject\CardResult;
 use App\Modules\Plan\Domain\ValueObject\CardSource;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
+use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use DateTimeImmutable;
@@ -35,6 +36,28 @@ final class EloquentDayCardRepository implements DayCardRepository
     public function countForDay(PlanDayId $dayId): int
     {
         return DayCardModel::query()->where('day_id', $dayId->value)->count();
+    }
+
+    /**
+     * `plan_days` by `plan_days_number_uidx (plan_id, number)`, then each day's cards by
+     * `day_cards_position_uidx (day_id, stage, position)` — one grouped statement for the route.
+     */
+    public function stageTallies(PlanId $planId): array
+    {
+        $rows = DB::table('day_cards as c')
+            ->join('plan_days as d', 'd.id', '=', 'c.day_id')
+            ->where('d.plan_id', $planId->value)
+            ->groupBy('c.day_id', 'c.stage')
+            ->select(['c.day_id', 'c.stage'])
+            ->selectRaw('COUNT(*) AS total, COUNT(c.result) AS answered')
+            ->get();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[(string) $row->day_id][(string) $row->stage] = ['total' => (int) $row->total, 'answered' => (int) $row->answered];
+        }
+
+        return $out;
     }
 
     public function find(DayCardId $id): ?DayCard

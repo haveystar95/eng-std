@@ -10,14 +10,17 @@ use App\Modules\Plan\Application\Dto\DayRoomView;
 use App\Modules\Plan\Application\Dto\DayRouteView;
 use App\Modules\Plan\Application\Dto\DaySlotView;
 use App\Modules\Plan\Application\Dto\PlanBuildView;
+use App\Modules\Plan\Application\Dto\PlanLanguagesView;
 use App\Modules\Plan\Application\Dto\PlanSummaryView;
 use App\Modules\Plan\Application\Dto\PlanView;
 use App\Modules\Plan\Application\Dto\ProgramUnitView;
+use App\Modules\Plan\Application\Dto\RouteStageView;
 use App\Modules\Plan\Application\Dto\SceneView;
 use App\Modules\Plan\Application\Dto\SheetView;
 use App\Modules\Plan\Application\Dto\StageProgressView;
 use App\Modules\Plan\Application\Dto\TermView;
 use App\Modules\Plan\Application\Dto\VersionsView;
+use App\Modules\Plan\Domain\ValueObject\SceneImageSize;
 
 /**
  * The read models → the wire, snake_case, in one place so the tab, the preview and the day room
@@ -47,6 +50,7 @@ final class PlanJson
             'until_phrase' => $p->untilPhrase,
             'overdue_native' => $p->overdueNative,
             'route_summary' => $p->routeSummary,
+            'summary' => $p->summary,
             'learner_role_target' => $p->learnerRoleTarget,
             'learner_role_native' => $p->learnerRoleNative,
             'cover_image' => $p->coverImage,
@@ -98,6 +102,12 @@ final class PlanJson
         ];
     }
 
+    /** @return array{targets: list<string>} */
+    public static function languages(PlanLanguagesView $l): array
+    {
+        return ['targets' => $l->targets];
+    }
+
     /** @return array<string, string> */
     public static function versions(VersionsView $v): array
     {
@@ -120,7 +130,7 @@ final class PlanJson
             'learner_role_native' => $s->learnerRoleNative,
             'partner_role_target' => $s->partnerRoleTarget,
             'partner_role_native' => $s->partnerRoleNative,
-            'image' => $s->image,
+            'image' => self::sceneImage($s),
             'lesson_status' => $s->lessonStatus,
             'lesson_fail_reason' => $s->lessonFailReason,
             'day_number' => $s->dayNumber,
@@ -150,6 +160,29 @@ final class PlanJson
             'minutes_spent' => $d->minutesSpent,
             'opened_at' => $d->openedAt,
             'closed_at' => $d->closedAt,
+            'stages' => array_map(static fn (RouteStageView $st): array => ['stage' => $st->stage, 'state' => $st->state], $d->stages),
+        ];
+    }
+
+    /**
+     * The scene photo: the vendor's address and credit, its tone, and the two square copies the
+     * server keeps — absolute addresses built from the request (the phone comes through ngrok, the
+     * simulator through localhost; proxies are trusted), each with the photo's version in the query
+     * so the `immutable` they are served with is honest.
+     *
+     * @return array<string, string|null>|null
+     */
+    public static function sceneImage(SceneView $s): ?array
+    {
+        if ($s->image === null) {
+            return null;
+        }
+        $address = static fn (SceneImageSize $size): string => url("/api/v1/plans/images/{$s->id}/{$size->value}").'?v='.$s->imageVersion;
+
+        return [
+            ...$s->image,
+            'url_112' => $address(SceneImageSize::Small),
+            'url_448' => $address(SceneImageSize::Large),
         ];
     }
 

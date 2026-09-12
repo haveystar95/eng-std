@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Service;
 
 use App\Modules\Plan\Domain\ValueObject\DayType;
+use DateTimeImmutable;
 
 /**
  * EVERY DYNAMIC STRING THAT INFLECTS comes from the server, ready to print (`docs/plan-v2.md` §10):
@@ -40,7 +41,60 @@ final class NativeStrings
         'en' => ['rehearsal' => 'rehearsal', 'today' => 'today', 'tomorrow' => 'tomorrow'],
     ];
 
+    /** @var array<string, list<string>> the month a date is written with, January first — genitive where the language inflects it */
+    private const MONTHS = [
+        'ru' => ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'],
+        'uk' => ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'],
+        'en' => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    ];
+
+    /** @var array<string, array{dated: string, undated: string}> the promise closing the plan summary */
+    private const PROMISE = [
+        'ru' => ['dated' => 'К {day} {month} скажешь всё это сам', 'undated' => 'Скажешь всё это сам'],
+        'uk' => ['dated' => 'До {day} {month} скажеш усе це сам', 'undated' => 'Скажеш усе це сам'],
+        'en' => ['dated' => 'By {month} {day} you will say all of this yourself', 'undated' => 'You will say all of this yourself'],
+    ];
+
+    /** How many scene titles the plan summary names. */
+    public const SUMMARY_SCENES = 3;
+
     public function __construct(private readonly string $lang) {}
+
+    /**
+     * «Регистрация на рейс, заселение в отель, ресторан. К 17 сентября скажешь всё это сам» — the
+     * first scene titles of the route, lowercased and joined, the first letter raised, then the
+     * promise, dated when the plan has a date. Null when there is no title to name.
+     *
+     * @param  list<string>  $sceneTitles  the scene days' titles in route order
+     */
+    public function planSummary(array $sceneTitles, ?DateTimeImmutable $eventDate): ?string
+    {
+        $titles = [];
+        foreach ($sceneTitles as $title) {
+            $clean = trim($title);
+            if ($clean !== '') {
+                $titles[] = mb_strtolower($clean);
+            }
+            if (count($titles) === self::SUMMARY_SCENES) {
+                break;
+            }
+        }
+        if ($titles === []) {
+            return null;
+        }
+        $joined = implode(', ', $titles);
+        $joined = mb_strtoupper(mb_substr($joined, 0, 1)).mb_substr($joined, 1);
+
+        $promise = self::PROMISE[$this->table()];
+        $tail = $eventDate === null
+            ? $promise['undated']
+            : strtr($promise['dated'], [
+                '{day}' => (string) (int) $eventDate->format('j'),
+                '{month}' => self::MONTHS[$this->table()][(int) $eventDate->format('n') - 1],
+            ]);
+
+        return "{$joined}. {$tail}";
+    }
 
     /** «До приёма · 5 дней» — the prompt's `until_phrase_native` with the count the server knows. */
     public function untilPhrase(string $untilNative, int $daysLeft): string

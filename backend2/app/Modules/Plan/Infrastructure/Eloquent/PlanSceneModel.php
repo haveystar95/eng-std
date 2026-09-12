@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $image_url
  * @property string|null $image_author
  * @property string|null $image_author_url
+ * @property string|null $image_tone
  * @property array<string, mixed>|null $lesson_json
  * @property string $lesson_status
  * @property string|null $prompt_version_lesson

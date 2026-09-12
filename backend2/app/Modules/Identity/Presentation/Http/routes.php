@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Identity\Domain\Service\DevLoginGate;
 use App\Modules\Identity\Presentation\Http\Controller\AuthController;
+use App\Modules\Identity\Presentation\Http\Controller\DeviceController;
 use App\Modules\Identity\Presentation\Http\Controller\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,5 +25,10 @@ Route::middleware('throttle:60,1')->group(function (): void {
         Route::delete('/auth/me', [AuthController::class, 'deleteAccount']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::put('/profile', [ProfileController::class, 'update']);
+
+        // Devices (PLAN-UI-3): the push address and «I'm here». All three answer 204.
+        Route::put('/devices/push-token', [DeviceController::class, 'putPushToken']);
+        Route::delete('/devices/push-token', [DeviceController::class, 'deletePushToken']);
+        Route::post('/devices/visit', [DeviceController::class, 'visit']);
     });
 });

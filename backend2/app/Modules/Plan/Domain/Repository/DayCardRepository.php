@@ -7,6 +7,7 @@ namespace App\Modules\Plan\Domain\Repository;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
+use App\Modules\Plan\Domain\ValueObject\PlanId;
 
 interface DayCardRepository
 {
@@ -14,6 +15,14 @@ interface DayCardRepository
     public function forDay(PlanDayId $dayId): array;
 
     public function countForDay(PlanDayId $dayId): int;
+
+    /**
+     * Every dealt day of the plan counted per stage, in one grouped query — what the route reads
+     * its stages from. A day with no card is not in the result.
+     *
+     * @return array<string, array<string, array{total: int, answered: int}>> day id → stage → counts
+     */
+    public function stageTallies(PlanId $planId): array;
 
     public function find(DayCardId $id): ?DayCard;
 

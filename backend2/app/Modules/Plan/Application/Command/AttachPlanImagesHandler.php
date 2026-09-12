@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Port\PlanImageFinder;
+use App\Modules\Plan\Application\Port\SceneImageStore;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
+use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
+use App\Modules\Plan\Domain\ValueObject\SceneImageSize;
 
 /**
  * Same shape as the collection's photo job: only what lacks a photo is searched, an empty result
@@ -19,6 +22,10 @@ use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
  * at the start may have had its lesson written, the plan may have been started and day 1 opened by
  * the time they come back; a job that saved the aggregate it was holding undid all of it (11.09 on
  * the stand). Nothing here reads the plan's status and nothing here writes it.
+ *
+ * The photo's tone rides in the same write as the photo. Once a scene has its photo, the two
+ * square copies the client shows are fetched and kept (PLAN-UI-3) — best effort: a copy that does
+ * not come is fetched by the image endpoint on first request, and never fails this job.
  */
 final readonly class AttachPlanImagesHandler
 {
@@ -26,6 +33,7 @@ final readonly class AttachPlanImagesHandler
         private PlanRepository $plans,
         private PlanTermRepository $terms,
         private PlanImageFinder $images,
+        private SceneImageStore $sceneImages,
     ) {}
 
     public function __invoke(AttachPlanImages $command): void
@@ -43,11 +51,16 @@ final readonly class AttachPlanImagesHandler
             }
         }
         foreach ($plan->scenes() as $scene) {
-            if ($scene->image() === null && trim($scene->imagePrompt()) !== '') {
+            $image = $scene->image();
+            if ($image === null && trim($scene->imagePrompt()) !== '') {
                 $found = $this->images->find($scene->imagePrompt());
-                if ($found !== null) {
-                    $this->plans->attachSceneImage($scene->id(), $found);
+                // Another writer that came first owns the photo — and its copies.
+                if ($found !== null && $this->plans->attachSceneImage($scene->id(), $found)) {
+                    $image = $found;
                 }
+            }
+            if ($image !== null) {
+                $this->keepCopies($scene->id(), $image);
             }
         }
 
@@ -63,6 +76,15 @@ final readonly class AttachPlanImagesHandler
                 if ($found !== null) {
                     $this->terms->attachImage($term->id(), $found);
                 }
+            }
+        }
+    }
+
+    private function keepCopies(PlanSceneId $sceneId, Image $image): void
+    {
+        foreach (SceneImageSize::cases() as $size) {
+            if (! $this->sceneImages->has($sceneId, $size)) {
+                $this->sceneImages->fetch($sceneId, $image->url, $size);
             }
         }
     }

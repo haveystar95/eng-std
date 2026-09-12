@@ -51,7 +51,7 @@ final readonly class GetDayRoomHandler
 
         return new DayRoomView(
             planId: $plan->id()->value,
-            day: $this->views->day($plan, $day, $today),
+            day: $this->views->day($plan, $day, $today, null, $cards),
             scene: $scene === null ? null : $this->views->scene($plan, $scene),
             goalsNative: $scene?->goalsNative() ?? [],
             stages: $this->stages($cards),

@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $cover_image_url
  * @property string|null $cover_image_author
  * @property string|null $cover_image_author_url
+ * @property string|null $cover_image_tone
  * @property string|null $prompt_version_plan
  * @property string|null $build_version
  * @property string|null $model_plan

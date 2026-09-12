@@ -6,7 +6,16 @@ scene, the partner-line audio, the check counters. Canon: `docs/plan-v2.md`; con
 `docs/plan-api.md` + `openapi/openapi.yaml` (tag `Plans`).
 
 Tables: `plans`, `plan_scenes`, `plan_days`, `day_cards`, `plan_terms`, `plan_line_audios`,
-`plan_check_counters`.
+`plan_check_counters`. Photo tones (PLAN-UI-3): `plan_scenes.image_tone`, `plans.cover_image_tone`
+(`#RRGGBB`, written in the same conditional UPDATE as the photo). Files on disks, not tables:
+partner-line audio (`plan.audio_disk`, `plan-audio/…`) and the square copies of scene photos
+(`plan.image_disk`, `plan-images/<scene>/<112|448>.jpg`).
+
+Notifications (PLAN-UI-3): `plan_events` — the plan's append-only journal (`plan_ready`,
+`day_ready`, `day_passed`, `days_skipped_rebuilt`, `event_today`, `event_passed`; once-only kinds
+held by partial unique indexes) and `plan_notifications` — the append-only delivery log
+(`sent|not_sent|failed|no_token`, one `daily_reminder` per user per local date by a partial unique
+index). Rules and texts: `docs/plan-api.md` «События и уведомления».
 
 ## Model style
 
@@ -32,11 +41,17 @@ their own columns instead (`saveScene`, `attachSceneImage`, `attachCoverImage`, 
 plan fell to `ready` with no start date and day 1 locked again (`docs/research/plan-api-fix-1/`).
 | `DayCard` | answered once; first failure requeues, second returns the unit tomorrow; a skip has no consequence |
 | `PlanTerm` | written once from the lesson (`fromLesson`), refs `v*`/`p*` are how cards point at terms |
+| `PlanEvent` | a journal line, written once and never changed (no mutator; `PlanEventRepository` has `append`/`has`/`forPlan` only); a day event names its day; a rebuild carries `{from, to}` with `to < from`. Written inside the transaction of the handler whose change it records (`BuildPlanHandler`, `BuildLessonHandler`, `CloseDayHandler`, `ReschedulePlanHandler`) or by the tick; the letter is queued after the commit |
 
 Pure services: `PlanCalendar` (layout 1…10, days until the event), `DayAssembler` + stages (the
-day, dealt deterministically), `LessonChecker` / `BlueprintChecker` (the §5 checks in
+day, dealt deterministically), `RouteStages` (which stages a day on the route has and where each
+stands — from card tallies, the dealer's outline or the day type), `LessonChecker` / `BlueprintChecker` (the §5 checks in
 observe/drop/gate), `Words` / `PhraseInMessage` / `NativeScript` (the text rules the checks and
 the assembly share), `DayMetricsCalculator`, `NativeStrings`, `Shuffle`.
+Notifications: `PlanEventRules` (which reschedule is a rebuild; what the calendar owes on and after
+the event date, `event_today` not before 08:00), `NotificationRules` (which fact is a letter —
+`day_ready` only for day ≥ 2; which plan status still gets it; the 15-minute reminder window),
+`NotificationTexts` (the letters' words, ru + en, plurals via `NativeStrings`).
 
 ## Public surface (what other modules may call)
 
@@ -52,10 +67,10 @@ reads plan tables.
 | Module | How | Why |
 |---|---|---|
 | `Generation` | `ContentModelCatalog` → `ContentModelPort` (purpose `plan`, own timeout); `ImageSearchPort`; `SpeechSynthesizerPort` | the two model calls, the photos, the partner-line audio |
-| `Identity` | `UserReader` | the learner's timezone and native language |
+| `Identity` | `UserReader`; `GetPushTokens` + `RemovePushToken`; `GetUsualVisitTime` | the learner's timezone and native language; the device addresses a letter goes to (and forgetting a dead one); when the daily reminder is due |
 | `Vocabulary` | `ImportTerm`; `NativeDistractorReader` | a closed day's words and phrases become terms (dedup, provenance); catalogue translations as wrong options for a thin Beginner choice |
 | `Collections` | `CreateGeneratedCollection` (origin `plan`), `AddTermToCollection` | the plan's collection |
-| `Observability` | `OutboundCallContext` | the image job labels its calls |
+| `Observability` | `OutboundCallContext` | the image job, the photo-copy fetch and the backfill label their calls |
 
 ## Ports (outbound interfaces)
 
@@ -65,13 +80,21 @@ reads plan tables.
 | `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob`, `SpeakSceneLinesJob`) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
 | `BuildVersion` | `StampedBuildVersion` (`APP_COMMIT` / `storage/app/commit`) |
-| `PlanImageFinder` | `PexelsPlanImageFinder` |
+| `PlanImageFinder` | `PexelsPlanImageFinder` (search → photo + tone; `tone(url)` → Pexels `GET /photos/{id}` for the backfill) |
+| `SceneImageStore` | `CdnSceneImageStore` (disk `plan.image_disk`; fetches the 112/448 square crops from the photo's CDN, labelled `images`; fetches nothing under the fake image driver) |
 | `LineSpeaker` | `GenerationLineSpeaker` (off when `SPEECH_ENABLED=false`) |
 | `LineAudioStore` | `EloquentLineAudioStore` (private disk `plan.audio_disk`) |
 | `PlanCollectionWriter` | `VocabularyPlanCollectionWriter` |
 | `NativeDistractorSource` | `VocabularyNativeDistractorSource` (over Vocabulary's `NativeDistractorReader` — catalogue translations for a thin Beginner choice) |
 | `CheckCounters` | `EloquentCheckCounters` |
-| `PlanListReader`, `SceneLocator`, repositories | `EloquentPlanRepository` (+ `PlanMapper`), `EloquentDayCardRepository`, `EloquentPlanTermRepository` |
+| `PlanListReader`, `SceneLocator` (plan of a scene, the owner's scene photo, scenes with photos), repositories | `EloquentPlanRepository` (+ `PlanMapper`), `EloquentDayCardRepository` (+ `stageTallies` — the route's one grouped query), `EloquentPlanTermRepository` |
+| `PlanEventRepository` (Domain) | `EloquentPlanEventRepository` (INSERT … ON CONFLICT DO NOTHING + SELECT; no UPDATE/DELETE) |
+| `NotificationLog` | `EloquentNotificationLog` (same shape) |
+| `NotifiablePlans` | `EloquentNotifiablePlans` (stored `active` plans, over `plans_one_active_uidx`) |
+| `NotificationDispatcher` | `QueuedNotificationDispatcher` (`SendPlanNotificationJob`, one try) |
+| `PushSender` | `ApnsPushSender` (+ `ApnsProviderToken`: ES256 JWT, cached 50 min; HTTP/2; 410/`BadDeviceToken` → the address is forgotten) when `APNS_KEY_P8` is set, else `DryRunPushSender` (the letter to the log, `not_sent`) |
+| `LearnerDevices` | `IdentityLearnerDevices` (Identity's `GetPushTokens` / `RemovePushToken`) |
+| `LearnerHabits` | `IdentityLearnerHabits` (Identity's `GetUsualVisitTime`) |
 
 ## Notes
 
@@ -81,3 +104,12 @@ reads plan tables.
   a check in `drop` mode stores the corrected lesson.
 - Every check ships in `observe`; modes are flipped in `config/plan.php`, never in code.
 - QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN).
+- Ops: `plan:images-backfill {--plan=}` — tones and square copies for scene photos stored before
+  PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a missing copy
+  on its own, so the copies part is an optimisation; the tones only come from here.
+- The plan languages are the server's list (`plan.languages`, `GET /plans/languages`), and
+  `POST /plans` validates against it.
+- Notifications: `plan:notify-tick` (Presentation/Console, every 15 min in `routes/console.php`, run
+  by the `scheduler` compose service) writes `event_today` / `event_passed` and the daily reminder;
+  `plan:notify-test {user} {kind}` sends one letter now through the same handler. The server does NOT
+  detect skipped days: `days_skipped_rebuilt` comes only from a shortening `PATCH …/schedule`.

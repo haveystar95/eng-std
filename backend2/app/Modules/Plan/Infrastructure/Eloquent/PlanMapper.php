@@ -63,7 +63,7 @@ final class PlanMapper
             eventDate: self::date($row->event_date),
             status: PlanStatus::from($row->status),
             titles: $titles,
-            coverImage: self::image($row->cover_image_url, $row->cover_image_author, $row->cover_image_author_url),
+            coverImage: self::image($row->cover_image_url, $row->cover_image_author, $row->cover_image_author_url, $row->cover_image_tone),
             planCall: self::call($row->prompt_version_plan, $row->build_version, $row->model_plan, $row->cost_usd_plan, $row->latency_ms_plan, $row->attempts_plan),
             findings: self::findings($row->checks_json),
             unclearReason: $row->unclear_reason,
@@ -107,7 +107,7 @@ final class PlanMapper
             partnerRoleNative: $row->partner_role_native,
             topicDescription: $row->topic_description,
             imagePrompt: $row->image_prompt,
-            image: self::image($row->image_url, $row->image_author, $row->image_author_url),
+            image: self::image($row->image_url, $row->image_author, $row->image_author_url, $row->image_tone),
             lesson: $lesson,
             lessonStatus: LessonStatus::from($row->lesson_status),
             lessonCall: self::call($row->prompt_version_lesson, $row->build_version, $row->model_lesson, $row->cost_usd_lesson, $row->latency_ms_lesson, $row->attempts_lesson),
@@ -169,6 +169,7 @@ final class PlanMapper
             'cover_image_url' => $plan->coverImage()?->url,
             'cover_image_author' => $plan->coverImage()?->author,
             'cover_image_author_url' => $plan->coverImage()?->authorUrl,
+            'cover_image_tone' => $plan->coverImage()?->tone,
             'prompt_version_plan' => $call?->promptVersion,
             'build_version' => $call?->buildVersion,
             'model_plan' => $call?->model,
@@ -213,6 +214,7 @@ final class PlanMapper
             'image_url' => $scene->image()?->url,
             'image_author' => $scene->image()?->author,
             'image_author_url' => $scene->image()?->authorUrl,
+            'image_tone' => $scene->image()?->tone,
             'lesson_json' => $scene->lesson()?->toArray(),
             'lesson_status' => $scene->lessonStatus()->value,
             'prompt_version_lesson' => $call?->promptVersion,
@@ -274,9 +276,9 @@ final class PlanMapper
         return new ModelCall($prompt, (string) $build, $model, $cost ?? '0.000000', $latency ?? 0, $attempts ?? 1);
     }
 
-    private static function image(?string $url, ?string $author, ?string $authorUrl): ?Image
+    private static function image(?string $url, ?string $author, ?string $authorUrl, ?string $tone): ?Image
     {
-        return $url === null || trim($url) === '' ? null : new Image($url, $author, $authorUrl);
+        return $url === null || trim($url) === '' ? null : new Image($url, $author, $authorUrl, $tone);
     }
 
     /** @return list<array{check: string, mode: string, action: string, detail: string}> */

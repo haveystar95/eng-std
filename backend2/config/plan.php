@@ -81,6 +81,15 @@ return [
         ],
     ],
 
+    // THE LANGUAGES A PLAN MAY BE BUILT IN — the server's list, not a client constant (owner's
+    // decision, PLAN-UI-3): `GET /plans/languages` hands it to the entry screen and `POST /plans`
+    // refuses anything else. Comma-separated codes.
+    'languages' => array_values(array_filter(array_map('trim', explode(',', (string) env('PLAN_LANGUAGES', 'en,de'))))),
+
     // Where the partner-line audio files land — a private disk, served by the plan's own route.
     'audio_disk' => env('PLAN_AUDIO_DISK', env('SPEECH_DISK', 'local')),
+
+    // Where the square copies of scene photos land (`plan-images/<scene>/<112|448>.jpg`) — fetched
+    // once from the photo's CDN and served by `GET /plans/images/{scene}/{size}` (PLAN-UI-3).
+    'image_disk' => env('PLAN_IMAGE_DISK', 'local'),
 ];

@@ -5,14 +5,17 @@ declare(strict_types=1);
 use App\Modules\Plan\Presentation\Http\Controller\PlanAudioController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanDayController;
+use App\Modules\Plan\Presentation\Http\Controller\PlanImageController;
 use Illuminate\Support\Facades\Route;
 
 // Prefixed with /api/v1 by PlanServiceProvider. The contract: docs/plan-api.md.
 Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
-    // Named routes before /plans/{id}: «current», «versions» and «audio» are words, not ULIDs.
+    // Named routes before /plans/{id}: «current», «versions», «languages», «audio» and «images» are words, not ULIDs.
     Route::get('/plans/current', [PlanController::class, 'current']);
     Route::get('/plans/versions', [PlanController::class, 'versions']);
+    Route::get('/plans/languages', [PlanController::class, 'languages']);
     Route::get('/plans/audio/{audioId}', [PlanAudioController::class, 'show']);
+    Route::get('/plans/images/{sceneId}/{size}', [PlanImageController::class, 'show'])->whereIn('size', ['112', '448']);
 
     Route::get('/plans', [PlanController::class, 'index']);
     Route::post('/plans', [PlanController::class, 'store']);

@@ -10,7 +10,7 @@ final readonly class PlanView
     /**
      * @param  list<DayRouteView>  $days
      * @param  list<SceneView>  $scenes
-     * @param  array{url: string, author: string|null, author_url: string|null}|null  $coverImage
+     * @param  array{url: string, author: string|null, author_url: string|null, tone: string|null}|null  $coverImage
      * @param  list<array{text_target: string, text_native: string, pronunciation_native: string}>  $rescueKit
      */
     public function __construct(
@@ -46,5 +46,7 @@ final readonly class PlanView
         public ?string $startedAt,
         public ?string $finishedAt,
         public string $createdAt,
+        /** «Регистрация на рейс, заселение в отель, ресторан. К 17 сентября скажешь всё это сам» — computed on read, never stored */
+        public ?string $summary = null,
     ) {}
 }

@@ -7,6 +7,9 @@ namespace App\Modules\Plan\Application\Dto;
 /** One day on the route: what it is, whether it may be walked, and how it went if it was. */
 final readonly class DayRouteView
 {
+    /**
+     * @param  list<RouteStageView>  $stages  only the stages the day has, in walking order
+     */
     public function __construct(
         public string $id,
         public int $number,
@@ -25,5 +28,6 @@ final readonly class DayRouteView
         public int $minutesSpent,
         public ?string $openedAt,
         public ?string $closedAt,
+        public array $stages = [],
     ) {}
 }

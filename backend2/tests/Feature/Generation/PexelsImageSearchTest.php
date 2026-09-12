@@ -63,3 +63,23 @@ it('fails loudly (non-transient) on a bad key', function () {
 
     pexels()->search('x');
 })->throws(RuntimeException::class);
+
+it('carries the photo’s average colour with the result', function () {
+    Http::fake(['*' => Http::response([
+        'photos' => [['avg_color' => '#978E82', 'photographer' => 'J', 'src' => ['landscape' => 'https://img.pexels.com/land.jpg']]],
+    ], 200)]);
+
+    expect(pexels()->search('hotel lobby')?->avgColor)->toBe('#978E82');
+});
+
+it('looks one photo up by its id, and a gone photo is null', function () {
+    Http::fake([
+        '*/photos/2034335' => Http::response(['id' => 2034335, 'avg_color' => '#5A6B7C', 'photographer' => 'J', 'src' => ['landscape' => 'https://img.pexels.com/2034335.jpg']], 200),
+        '*/photos/404404' => Http::response(['error' => 'Not Found'], 404),
+    ]);
+
+    expect(pexels()->photo('2034335')?->avgColor)->toBe('#5A6B7C')
+        ->and(pexels()->photo('404404'))->toBeNull()
+        ->and(pexels()->photo('not-an-id'))->toBeNull();
+    Http::assertSentCount(2);
+});

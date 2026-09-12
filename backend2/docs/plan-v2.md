@@ -175,7 +175,10 @@
 
 - **Фото** (`AttachPlanImagesJob`, `PexelsPlanImageFinder` → `ImageSearchPort`): обложка плана по
   `cover_image_prompt`, сцены по `image_prompt`, слова/связки по `image_prompt` (null = без фото).
-  Best effort, ретрай только на transient; день не ждёт.
+  Best effort, ретрай только на transient; день не ждёт. Вместе с фото пишется его тон
+  (`avg_color` → `image_tone` / `cover_image_tone`), а у сцены с фото job кладёт две квадратные копии
+  (112 и 448, кроп CDN Pexels) на `plan.image_disk`; не скачалось — копию добудет
+  `GET /plans/images/{scene}/{size}` при первом запросе (PLAN-UI-3).
 - **Озвучка** (`SpeakSceneLinesJob`, `GenerationLineSpeaker` → `SpeechSynthesizerPort` +
   `VoiceCatalog`): реплики A премиум-голосом языкового пакета, если `SPEECH_ENABLED`; слова, фразы,
   реплики B — системный голос телефона. Файл один на (сцена, шаг, голос); отдаётся
@@ -190,7 +193,9 @@
 ## 9. Конфиг (`config/plan.php`)
 
 `model.*` (драйвер, провайдер, две модели, два таймаута), `build_stale_seconds`, `counts` по
-уровню, `checks.lesson.*` / `checks.plan.*` (режимы), `rescue_kit`, `audio_disk`.
+уровню, `checks.lesson.*` / `checks.plan.*` (режимы), `rescue_kit`, `audio_disk`, `image_disk`
+(квадратные копии фото сцен, PLAN-UI-3), `languages` (языки плана, `PLAN_LANGUAGES`, по умолчанию
+`en,de`; `GET /plans/languages`, валидация `POST /plans`).
 
 ## 10. Инструменты QA
 

@@ -9,16 +9,24 @@ use App\Modules\Plan\Application\Dto\DaySlotView;
 use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Dto\PlanSummaryView;
 use App\Modules\Plan\Application\Dto\PlanView;
+use App\Modules\Plan\Application\Dto\RouteStageView;
 use App\Modules\Plan\Application\Dto\SceneView;
 use App\Modules\Plan\Application\Dto\VersionsView;
 use App\Modules\Plan\Application\Port\BuildVersion;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\PlanScene;
+use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Service\NativeStrings;
 use App\Modules\Plan\Domain\Service\PlanCalendar;
+use App\Modules\Plan\Domain\Service\RouteStages;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
+use App\Modules\Plan\Domain\ValueObject\DayType;
+use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\RouteStage;
+use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
 use App\Modules\Plan\Domain\ValueObject\PlanStatus;
 use DateTimeImmutable;
@@ -33,6 +41,8 @@ final readonly class PlanViews
         private PlanModelPort $model,
         private BuildVersion $build,
         private PlanConfig $config,
+        private DayCardRepository $cards,
+        private DayDealer $dealer,
     ) {}
 
     public function versions(): VersionsView
@@ -47,6 +57,11 @@ final readonly class PlanViews
         $daysLeft = $plan->daysLeftUntilEvent($today);
         $status = $plan->effectiveStatus($today);
         $current = $plan->currentDay();
+
+        // The route's stages: every dealt day counted in one grouped query, and the one day that
+        // is not dealt yet but is the learner's next — drawn from what the dealer will deal.
+        $tallies = $this->cards->stageTallies($plan->id());
+        $outline = $current === null || isset($tallies[$current->id()->value]) ? [] : $this->outline($plan, $current);
 
         $cost = $plan->planCall()->costUsd ?? '0.000000';
         foreach ($plan->scenes() as $scene) {
@@ -75,12 +90,14 @@ final readonly class PlanViews
             routeSummary: $strings->routeSummary(PlanCalendar::layout($plan->daysTotal())),
             learnerRoleTarget: $titles?->learnerRoleTarget,
             learnerRoleNative: $titles?->learnerRoleNative,
-            coverImage: $plan->coverImage()?->toArray(),
+            coverImage: self::imageArray($plan->coverImage()),
             collectionId: $plan->collectionId()?->value,
             unclearReason: $plan->unclearReason(),
             failReason: $plan->failReason(),
-            currentDay: $current === null ? null : $this->day($plan, $current, $today, $strings),
-            days: array_map(fn (PlanDay $d): DayRouteView => $this->day($plan, $d, $today, $strings), $plan->days()),
+            currentDay: $current === null ? null : $this->routeDay($plan, $current, $today, $strings, $tallies[$current->id()->value] ?? [], $outline),
+            days: array_map(fn (PlanDay $d): DayRouteView => $this->routeDay(
+                $plan, $d, $today, $strings, $tallies[$d->id()->value] ?? [], $current !== null && $d->id()->equals($current->id()) ? $outline : [],
+            ), $plan->days()),
             scenes: array_map(fn (PlanScene $s): SceneView => $this->scene($plan, $s), $plan->scenes()),
             rescueKit: $this->config->rescueKit,
             costUsd: $cost,
@@ -88,6 +105,7 @@ final readonly class PlanViews
             startedAt: $plan->startedAt()?->format(DATE_ATOM),
             finishedAt: $plan->finishedAt()?->format(DATE_ATOM),
             createdAt: $plan->createdAt()->format(DATE_ATOM),
+            summary: $strings->planSummary($this->sceneTitles($plan), $plan->eventDate()),
         );
     }
 
@@ -130,27 +148,61 @@ final readonly class PlanViews
             learnerRoleNative: $scene->learnerRoleNative(),
             partnerRoleTarget: $scene->partnerRoleTarget(),
             partnerRoleNative: $scene->partnerRoleNative(),
-            image: $scene->image()?->toArray(),
+            image: self::imageArray($scene->image()),
             lessonStatus: $scene->lessonStatus()->value,
             lessonFailReason: $scene->failReason(),
             dayNumber: $dayNumber,
             costUsd: $scene->lessonCall()?->costUsd,
             latencyMs: $scene->lessonCall()?->latencyMs,
             promptVersion: $scene->lessonCall()?->promptVersion,
+            imageVersion: $scene->image()?->version(),
         );
     }
 
-    public function day(Plan $plan, PlanDay $day, DateTimeImmutable $today, ?NativeStrings $strings = null): DayRouteView
+    /**
+     * One day of the route on its own. `$cards` are the day's cards when the caller already holds
+     * them — dealt ones for an opened day, the dealer's outline for one not opened yet (the day
+     * room has exactly that list) — so the stages cost nothing more; without them the day's stages
+     * are read with the plan's one grouped query.
+     *
+     * @param  list<DayCard>|null  $cards
+     */
+    public function day(Plan $plan, PlanDay $day, DateTimeImmutable $today, ?NativeStrings $strings = null, ?array $cards = null): DayRouteView
     {
         $strings ??= new NativeStrings($plan->nativeLang()->value);
+        if ($cards === null) {
+            $tallies = $this->cards->stageTallies($plan->id())[$day->id()->value] ?? [];
+            $current = $plan->currentDay();
+            $outline = $tallies === [] && $current !== null && $current->id()->equals($day->id()) ? $this->outline($plan, $day) : [];
+        } elseif ($day->openedAt() !== null) {
+            $tallies = RouteStages::tally($cards);
+            $outline = [];
+        } else {
+            $tallies = [];
+            $outline = RouteStages::stagesOf($cards);
+        }
+
+        return $this->routeDay($plan, $day, $today, $strings, $tallies, $outline);
+    }
+
+    /**
+     * @param  array<string, array{total: int, answered: int}>  $tallies
+     * @param  list<Stage>  $outline
+     */
+    private function routeDay(Plan $plan, PlanDay $day, DateTimeImmutable $today, NativeStrings $strings, array $tallies, array $outline): DayRouteView
+    {
         $scene = $plan->sceneOf($day);
+        $status = $this->effectiveDayStatus($plan, $day, $today);
+        $current = $plan->currentDay();
+        $availableToday = $current !== null && $current->id()->equals($day->id())
+            && ($status === DayStatus::Open || $status === DayStatus::InProgress);
         $metrics = $day->metrics();
 
         return new DayRouteView(
             id: $day->id()->value,
             number: $day->number(),
             type: $day->type()->value,
-            status: $this->effectiveDayStatus($plan, $day, $today)->value,
+            status: $status->value,
             sceneId: $scene?->id()->value,
             titleNative: $scene?->titleNative(),
             titleTarget: $scene?->titleTarget(),
@@ -163,7 +215,46 @@ final readonly class PlanViews
             minutesSpent: $metrics->minutesSpent,
             openedAt: $day->openedAt()?->format(DATE_ATOM),
             closedAt: $day->closedAt()?->format(DATE_ATOM),
+            stages: array_map(
+                static fn (RouteStage $s): RouteStageView => new RouteStageView($s->stage->value, $s->state->value),
+                RouteStages::of($day->type(), $tallies, $day->isClosed(), $availableToday, $outline),
+            ),
         );
+    }
+
+    /**
+     * The stages the dealer would deal the day now — nothing written. Empty when the day has no
+     * material yet (its lesson is not written), which leaves the day to its type's stages.
+     *
+     * @return list<Stage>
+     */
+    private function outline(Plan $plan, PlanDay $day): array
+    {
+        return RouteStages::stagesOf($this->dealer->outline($plan, $day));
+    }
+
+    /**
+     * The titles of the scene days in route order — reviews and the rehearsal have no scene.
+     *
+     * @return list<string>
+     */
+    private function sceneTitles(Plan $plan): array
+    {
+        $titles = [];
+        foreach ($plan->days() as $day) {
+            $scene = $day->type() === DayType::Scene ? $plan->sceneOf($day) : null;
+            if ($scene !== null) {
+                $titles[] = $scene->titleNative();
+            }
+        }
+
+        return $titles;
+    }
+
+    /** @return array{url: string, author: string|null, author_url: string|null, tone: string|null}|null */
+    private static function imageArray(?Image $image): ?array
+    {
+        return $image === null ? null : [...$image->toArray(), 'tone' => $image->tone];
     }
 
     /** A locked day whose date has come and whose predecessor is closed reads as `open`. */

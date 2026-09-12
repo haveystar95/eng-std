@@ -11,10 +11,12 @@ use App\Modules\Identity\Application\Port\GoogleSignIn;
 use App\Modules\Identity\Application\Port\GoogleTokenVerifier;
 use App\Modules\Identity\Application\Port\NativeLangReader;
 use App\Modules\Identity\Application\Port\ProfileUpdater;
+use App\Modules\Identity\Application\Port\PushTokenStore;
 use App\Modules\Identity\Application\Port\SignOut;
 use App\Modules\Identity\Application\Port\UserReader;
 use App\Modules\Identity\Application\Port\UserTierReader;
 use App\Modules\Identity\Application\Port\UserTierWriter;
+use App\Modules\Identity\Application\Port\VisitLog;
 use App\Modules\Identity\Infrastructure\Adapter\GoogleAuthTokenVerifier;
 use App\Modules\Identity\Infrastructure\Auth\SanctumDevSignIn;
 use App\Modules\Identity\Infrastructure\Auth\SanctumGoogleSignIn;
@@ -23,9 +25,11 @@ use App\Modules\Identity\Infrastructure\Auth\SanctumSignOut;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentDefaultTargetLangReader;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentNativeLangReader;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentProfileUpdater;
+use App\Modules\Identity\Infrastructure\Eloquent\EloquentPushTokenStore;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentUserReader;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentUserTierReader;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentUserTierWriter;
+use App\Modules\Identity\Infrastructure\Eloquent\EloquentVisitLog;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -52,6 +56,9 @@ final class IdentityServiceProvider extends ServiceProvider
         $this->app->bind(ProfileUpdater::class, EloquentProfileUpdater::class);
         $this->app->bind(SignOut::class, SanctumSignOut::class);
         $this->app->bind(AccountEraser::class, CrossModuleAccountEraser::class);
+        // Devices: push addresses and visits (PLAN-UI-3). Both tables cascade with the user row.
+        $this->app->bind(PushTokenStore::class, EloquentPushTokenStore::class);
+        $this->app->bind(VisitLog::class, EloquentVisitLog::class);
     }
 
     public function boot(): void

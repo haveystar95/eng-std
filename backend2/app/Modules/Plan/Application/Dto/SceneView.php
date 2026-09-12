@@ -8,7 +8,8 @@ final readonly class SceneView
 {
     /**
      * @param  list<string>  $goalsNative
-     * @param  array{url: string, author: string|null, author_url: string|null}|null  $image
+     * @param  array{url: string, author: string|null, author_url: string|null, tone: string|null}|null  $image
+     * @param  string|null  $imageVersion  names the photo's bytes for the sized copies' addresses; null without a photo
      */
     public function __construct(
         public string $id,
@@ -30,5 +31,6 @@ final readonly class SceneView
         public ?string $costUsd,
         public ?int $latencyMs,
         public ?string $promptVersion,
+        public ?string $imageVersion = null,
     ) {}
 }

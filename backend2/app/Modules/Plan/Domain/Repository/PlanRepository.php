@@ -52,11 +52,21 @@ interface PlanRepository
     /** The day's numbers, refreshed from the cards they are counted off. */
     public function saveDayMetrics(PlanDayId $dayId, DayMetrics $metrics): void;
 
-    /** The cover photo — written only while the plan still has none. */
+    /** The cover photo and its tone — written only while the plan still has none. */
     public function attachCoverImage(PlanId $id, Image $image): void;
 
-    /** The scene's photo — written only while the scene still has none. */
-    public function attachSceneImage(PlanSceneId $id, Image $image): void;
+    /**
+     * The scene's photo and its tone, in one write — only while the scene still has none.
+     *
+     * @return bool whether THIS photo is the scene's now (false: another writer was first)
+     */
+    public function attachSceneImage(PlanSceneId $id, Image $image): bool;
+
+    /**
+     * The tone of a photo the scene already has — for scenes photographed before tones were kept.
+     * Written only while the scene has no tone and still has exactly this photo.
+     */
+    public function attachSceneImageTone(PlanSceneId $id, string $imageUrl, string $tone): bool;
 
     public function save(Plan $plan): void;
 }

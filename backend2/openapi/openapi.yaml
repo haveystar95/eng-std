@@ -25,6 +25,7 @@ tags:
   - name: Generation
   - name: Search
   - name: Plans
+  - name: Devices
 
 paths:
   /auth/google:
@@ -163,6 +164,72 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /devices/push-token:
+    put:
+      tags: [Devices]
+      summary: Register this device's push address
+      description: >
+        Upsert keyed by (platform, token). A token already registered under another account MOVES to
+        the caller (one phone, one learner's letters). Send it after sign-in and whenever iOS hands out
+        a new token. Plan notifications are delivered to every address of the learner; while the server
+        has no APNs key they are logged as not_sent (docs/plan-api.md, «События и уведомления»).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform, token]
+              properties:
+                platform: { type: string, enum: [ios] }
+                token: { type: string, minLength: 1, maxLength: 255, description: APNs device token (hex). }
+                locale: { type: [string, 'null'], maxLength: 35, description: "Device locale, e.g. ru-UA." }
+                timezone: { type: [string, 'null'], description: "Device IANA timezone; validated like PUT /profile." }
+      responses:
+        '204': { description: Registered }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Devices]
+      summary: Forget this device's push address (sign-out)
+      description: Removes the caller's own row for (platform, token); a token held by another account is left alone. Always 204.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform, token]
+              properties:
+                platform: { type: string, enum: [ios] }
+                token: { type: string, minLength: 1, maxLength: 255 }
+      responses:
+        '204': { description: Removed (or was not there) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /devices/visit:
+    post:
+      tags: [Devices]
+      summary: Say «I'm here» (app came to the foreground)
+      description: >
+        Append-only visit log. A visit less than 30 minutes after the previous recorded one writes
+        nothing (still 204). The server aims the daily plan reminder at the median of the last seven
+        visits, read in profiles.timezone and rounded down to the quarter hour (19:00 with no visits).
+        `timezone` is accepted and validated but not stored — keep the zone current through PUT /profile.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                timezone: { type: [string, 'null'], description: Device IANA timezone. }
+      responses:
+        '204': { description: Recorded or throttled }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
@@ -1738,7 +1805,7 @@ paths:
               required: [goal_text, target_lang, level, days_total]
               properties:
                 goal_text: { type: string, minLength: 1, maxLength: 1000 }
-                target_lang: { type: string, pattern: '^[a-z]{2,5}$' }
+                target_lang: { type: string, pattern: '^[a-z]{2,5}$', description: 'One of `GET /plans/languages` → `targets`; any other code is a 422' }
                 level: { type: string, enum: [beginner, intermediate] }
                 days_total: { type: integer, minimum: 1, maximum: 10 }
                 event_date: { type: [string, 'null'], format: date, description: 'YYYY-MM-DD in the learner''s own calendar; null or absent = no date' }
@@ -1784,6 +1851,62 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/PlanVersions' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /plans/languages:
+    get:
+      tags: [Plans]
+      summary: The languages a plan may be built in
+      description: >-
+        The server's list (`config/plan.php` → `languages`, env `PLAN_LANGUAGES`; today `en`, `de`),
+        in the order the entry screen offers them. Not a client constant — `POST /plans` refuses a
+        `target_lang` outside this list with a 422.
+      responses:
+        '200':
+          description: The list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [targets]
+                    properties:
+                      targets: { type: array, items: { type: string, pattern: '^[a-z]{2,5}$' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /plans/images/{sceneId}/{size}:
+    get:
+      tags: [Plans]
+      summary: A square copy of a scene photo
+      description: >-
+        What a scene image's `url_112` / `url_448` point at (with `?v=<version>`; the query is not
+        read, it only makes the address change when the photo would). Only the owner's scenes. The
+        server keeps both copies from the photo job; a copy it does not have yet is fetched from the
+        photo's CDN, stored and served on this request. `Cache-Control: public, max-age=31536000,
+        immutable` and a strong `ETag` (sha1 of the bytes); `If-None-Match` with that tag answers 304.
+      parameters:
+        - name: sceneId
+          in: path
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+        - name: size
+          in: path
+          required: true
+          schema: { type: integer, enum: [112, 448] }
+      responses:
+        '200':
+          description: The JPEG bytes
+          headers:
+            Cache-Control: { schema: { type: string }, description: 'public, max-age=31536000, immutable' }
+            ETag: { schema: { type: string }, description: 'Quoted sha1 of the bytes' }
+          content:
+            image/jpeg: { schema: { type: string, format: binary } }
+        '304': { description: 'Not modified — the If-None-Match tag matches' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: '`plan_scene_image_not_found` — not the learner''s scene, or the scene has no photo; also a size other than 112/448' }
+        '503': { description: '`plan_scene_image_unavailable` — the copy is not stored and the CDN did not hand it over now; ask again later' }
 
   /plans/audio/{audioId}:
     get:
@@ -2593,6 +2716,30 @@ components:
         url: { type: string }
         author: { type: [string, 'null'] }
         author_url: { type: [string, 'null'] }
+        tone: { type: [string, 'null'], pattern: '^#[0-9A-F]{6}$', description: 'The photo''s average colour — paint the placeholder with it. On the plan cover and scene photos; null for photos stored before tones were kept (until the backfill) and absent on term photos' }
+
+    PlanSceneImage:
+      description: >-
+        A scene photo: the vendor's address and credit, its tone, and the two square copies the
+        server keeps (`GET /plans/images/{sceneId}/{size}`). `url_112` is for a 56-pt circle at 2x,
+        `url_448` for 4x and larger. Both are absolute and versioned — cache them forever.
+      allOf:
+        - $ref: '#/components/schemas/PlanImage'
+        - type: object
+          required: [tone, url_112, url_448]
+          properties:
+            url_112: { type: string, format: uri }
+            url_448: { type: string, format: uri }
+
+    PlanRouteStage:
+      type: object
+      required: [stage, state]
+      properties:
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+        state:
+          type: string
+          enum: [done, current, locked]
+          description: Exactly these three words — any other is an error for the client
 
     PlanDaySlot:
       type: object
@@ -2629,6 +2776,17 @@ components:
         minutes_spent: { type: integer }
         opened_at: { type: [string, 'null'], format: date-time }
         closed_at: { type: [string, 'null'], format: date-time }
+        stages:
+          type: array
+          items: { $ref: '#/components/schemas/PlanRouteStage' }
+          description: >-
+            ONLY the stages the day has, in walking order — a stage with no cards is omitted, never
+            `absent`. A dealt day (open / in_progress / closed) is counted off its cards: all
+            answered → `done`, the first unfinished → `current`, the rest `locked`; a closed day is
+            all `done`. A day not dealt yet: the current day with a written lesson shows what the
+            dealer will deal, any other day its type's stages (scene — five, review — words and
+            speak, rehearsal — speak); its first stage is `current` only when it is the plan's
+            current day and may be started today, otherwise all `locked`.
 
     PlanScene:
       type: object
@@ -2648,7 +2806,7 @@ components:
         partner_role_native: { type: string }
         image:
           oneOf:
-            - $ref: '#/components/schemas/PlanImage'
+            - $ref: '#/components/schemas/PlanSceneImage'
             - type: 'null'
         lesson_status: { type: string, enum: [pending, building, ready, failed] }
         lesson_fail_reason: { type: [string, 'null'] }
@@ -2691,6 +2849,14 @@ components:
         until_phrase: { type: [string, 'null'], description: 'The countdown header, ready — null without a date or once the event has passed' }
         overdue_native: { type: [string, 'null'], description: 'The prompt''s own sentence, present only while the plan is overdue' }
         route_summary: { type: string }
+        summary:
+          type: [string, 'null']
+          description: >-
+            The plan in one sentence, computed on read: the first three scene days' titles in route
+            order (never a review or the rehearsal), lowercased and joined, the first letter raised,
+            then the promise — «Регистрация на рейс, заселение в отель, ресторан. К 17 сентября
+            скажешь всё это сам», or «… Скажешь всё это сам» without a date. In the learner's native
+            language (ru, uk, en; others fall back to English). Null when no scene has a title.
         learner_role_target: { type: [string, 'null'] }
         learner_role_native: { type: [string, 'null'] }
         cover_image:

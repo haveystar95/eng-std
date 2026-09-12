@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Infrastructure\Eloquent;
 
+use App\Modules\Plan\Application\Dto\SceneImageRef;
 use App\Modules\Plan\Application\Port\PlanListReader;
 use App\Modules\Plan\Application\Port\SceneLocator;
 use App\Modules\Plan\Domain\Entity\Plan;
@@ -124,18 +125,67 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
             'cover_image_url' => $image->url,
             'cover_image_author' => $image->author,
             'cover_image_author_url' => $image->authorUrl,
+            'cover_image_tone' => $image->tone,
             'updated_at' => now(),
         ]);
     }
 
-    public function attachSceneImage(PlanSceneId $id, Image $image): void
+    public function attachSceneImage(PlanSceneId $id, Image $image): bool
     {
-        PlanSceneModel::query()->whereKey($id->value)->whereNull('image_url')->update([
+        return PlanSceneModel::query()->whereKey($id->value)->whereNull('image_url')->update([
             'image_url' => $image->url,
             'image_author' => $image->author,
             'image_author_url' => $image->authorUrl,
+            'image_tone' => $image->tone,
             'updated_at' => now(),
-        ]);
+        ]) > 0;
+    }
+
+    public function attachSceneImageTone(PlanSceneId $id, string $imageUrl, string $tone): bool
+    {
+        $tone = Image::normalTone($tone);
+        if ($tone === null) {
+            return false;
+        }
+
+        return PlanSceneModel::query()->whereKey($id->value)
+            ->where('image_url', $imageUrl)
+            ->whereNull('image_tone')
+            ->update(['image_tone' => $tone, 'updated_at' => now()]) > 0;
+    }
+
+    /** One row by primary key, the owner in the same predicate — a stranger's scene is simply not found. */
+    public function ownedImage(PlanSceneId $sceneId, UserId $owner): ?Image
+    {
+        $row = PlanSceneModel::query()
+            ->whereKey($sceneId->value)
+            ->where('user_id', $owner->value)
+            ->whereNotNull('image_url')
+            ->first(['image_url', 'image_author', 'image_author_url', 'image_tone']);
+
+        return $row === null || $row->image_url === null ? null
+            : new Image($row->image_url, $row->image_author, $row->image_author_url, $row->image_tone);
+    }
+
+    public function scenesWithImages(?PlanId $planId): array
+    {
+        $query = PlanSceneModel::query()->whereNotNull('image_url')->orderBy('plan_id')->orderBy('order');
+        if ($planId !== null) {
+            $query->where('plan_id', $planId->value);
+        }
+
+        $out = [];
+        foreach ($query->cursor() as $row) {
+            if ($row->image_url === null) {
+                continue;
+            }
+            $out[] = new SceneImageRef(
+                PlanSceneId::fromString($row->id),
+                new Image($row->image_url, $row->image_author, $row->image_author_url, $row->image_tone),
+            );
+        }
+
+        return $out;
     }
 
     public function save(Plan $plan): void

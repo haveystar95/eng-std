@@ -26,6 +26,8 @@ use App\Modules\Plan\Application\Query\GetPlan;
 use App\Modules\Plan\Application\Query\GetPlanBuild;
 use App\Modules\Plan\Application\Query\GetPlanBuildHandler;
 use App\Modules\Plan\Application\Query\GetPlanHandler;
+use App\Modules\Plan\Application\Query\GetPlanLanguages;
+use App\Modules\Plan\Application\Query\GetPlanLanguagesHandler;
 use App\Modules\Plan\Application\Query\GetVersions;
 use App\Modules\Plan\Application\Query\GetVersionsHandler;
 use App\Modules\Plan\Application\Query\ListPlans;
@@ -62,6 +64,7 @@ final class PlanController
         private readonly FinishPlanHandler $finish,
         private readonly DeletePlanHandler $delete,
         private readonly GetVersionsHandler $versions,
+        private readonly GetPlanLanguagesHandler $languages,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -100,6 +103,11 @@ final class PlanController
     public function versions(): JsonResponse
     {
         return response()->json(['data' => PlanJson::versions(($this->versions)(new GetVersions))]);
+    }
+
+    public function languages(): JsonResponse
+    {
+        return response()->json(['data' => PlanJson::languages(($this->languages)(new GetPlanLanguages))]);
     }
 
     public function show(Request $request, string $id): JsonResponse

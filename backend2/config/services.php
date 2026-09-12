@@ -107,6 +107,17 @@ return [
         'driver' => env('TRANSLATION_DRIVER', 'deepl'),
     ],
 
+    'apns' => [
+        // Plan notifications (PLAN-UI-3). An empty key = DRY MODE: the letter goes to the log and the
+        // delivery is logged `not_sent` (DryRunPushSender). The key is the .p8's contents or a path.
+        'key_p8' => env('APNS_KEY_P8'),
+        'key_id' => env('APNS_KEY_ID'),
+        'team_id' => env('APNS_TEAM_ID'),
+        'topic' => env('APNS_TOPIC', 'com.denis.engstd'),
+        // sandbox (a debug build from Xcode) | production (TestFlight / App Store)
+        'env' => env('APNS_ENV', 'sandbox'),
+    ],
+
     'pexels' => [
         // Stock-image search for AI-generated collections (A3). Key from the Pexels dashboard.
         'key' => env('PEXELS_API_KEY'),
