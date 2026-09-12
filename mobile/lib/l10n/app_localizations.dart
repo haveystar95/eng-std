@@ -3861,6 +3861,12 @@ abstract class AppLocalizations {
   /// **'День {n} из {total}'**
   String planProgressDay(int n, int total);
 
+  /// Бровь шапки плана, 11/700 caps (кадр 21-2, plan.header.brow).
+  ///
+  /// In ru, this message translates to:
+  /// **'План · день {n} из {total}'**
+  String planHeaderBrow(int n, int total);
+
   /// Плита дня, лейбл латунью (plan.plate.label).
   ///
   /// In ru, this message translates to:
@@ -3939,6 +3945,36 @@ abstract class AppLocalizations {
   /// **'Начать'**
   String get planPlateCtaStart;
 
+  /// Строка вместо этапов, пока день пишется (кадр 22-5a, plan.plate.building.title).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собираем день {n}'**
+  String planPlateBuildingTitle(int n);
+
+  /// Подпись под «Собираем день N»: срок назван, уходить разрешено (кадр 22-5a, plan.plate.building.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'около минуты · можно закрыть приложение'**
+  String get planPlateBuildingSub;
+
+  /// Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title).
+  ///
+  /// In ru, this message translates to:
+  /// **'День не собрался'**
+  String get planPlateFailedTitle;
+
+  /// Подпись под «День не собрался» (кадр 22-5c, plan.plate.failed.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сеть пропала. Маршрут на месте, пропал только день {n}'**
+  String planPlateFailedSub(int n);
+
+  /// Кнопка плиты у несобравшегося дня (кадр 22-5c, plan.plate.cta.retry).
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторить'**
+  String get planPlateCtaRetry;
+
   /// Плита дня, кнопка (plan.plate.cta.continue).
   ///
   /// In ru, this message translates to:
@@ -3957,11 +3993,29 @@ abstract class AppLocalizations {
   /// **'{title} · {cards} · {minutes}'**
   String planClosedMeta(String title, String cards, String minutes);
 
-  /// Кадр 21-4, терракота (plan.closed.return): Вернётся 1 карточка / Вернутся 2 карточки / Вернутся 5 карточек.
+  /// Счёт закрытого дня в шапке плиты: «75 карточек · 19 минут» (кадр 21-4, plan.closed.count).
   ///
   /// In ru, this message translates to:
-  /// **'{k, plural, one{Вернётся в день {n} · {k} карточка} few{Вернутся в день {n} · {k} карточки} many{Вернутся в день {n} · {k} карточек} other{Вернутся в день {n} · {k} карточки}}'**
-  String planClosedReturn(int n, int k);
+  /// **'{cards} · {minutes}'**
+  String planClosedCount(String cards, String minutes);
+
+  /// Первая строка подвала закрытого дня (кадр 21-4, plan.closed.next.tomorrow).
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n} откроется завтра, {date}'**
+  String planClosedNextTomorrow(int n, String date);
+
+  /// Подвал закрытого дня, когда следующий день не «завтра» (кадр 21-4, plan.closed.next.on).
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n} откроется {date}'**
+  String planClosedNextOn(int n, String date);
+
+  /// Вторая строка подвала закрытого дня, терракотой (кадр 21-4, plan.closed.return).
+  ///
+  /// In ru, this message translates to:
+  /// **'{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}'**
+  String planClosedReturn(int k, int n);
 
   /// Строка маршрута, tertiary (plan.route.day.repeat).
   ///
@@ -3998,6 +4052,48 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{event} · {date}'**
   String planRouteEventTitle(String event, String date);
+
+  /// Мета-строка узла маршрута, первое слово — номер дня (кадр 21-2b, plan.route.meta.day).
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n}'**
+  String planRouteMetaDay(int n);
+
+  /// Мета-строка пройденного дня маршрута (кадр 21-2b, plan.route.meta.passed).
+  ///
+  /// In ru, this message translates to:
+  /// **'пройден'**
+  String get planRouteMetaPassed;
+
+  /// Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes).
+  ///
+  /// In ru, this message translates to:
+  /// **'{n} мин'**
+  String planMinutesShort(int n);
+
+  /// Мета-строка ПЕРВОГО запертого дня маршрута (кадр 21-2b, plan.route.meta.opens.after).
+  ///
+  /// In ru, this message translates to:
+  /// **'откроется после дня {n}'**
+  String planRouteMetaOpensAfter(int n);
+
+  /// Мета-строка первого запертого дня, когда предыдущий уже пройден (кадр 21-4, plan.route.meta.opens.tomorrow).
+  ///
+  /// In ru, this message translates to:
+  /// **'откроется завтра'**
+  String get planRouteMetaOpensTomorrow;
+
+  /// Мишень события без даты — пунктирный узел маршрута (кадр 21-2b, plan.route.event.nodate).
+  ///
+  /// In ru, this message translates to:
+  /// **'указать дату'**
+  String get planRouteEventNoDate;
+
+  /// Заголовок мишени, когда сервер не назвал событие (кадр 21-2b, plan.route.event.fallback).
+  ///
+  /// In ru, this message translates to:
+  /// **'Событие'**
+  String get planRouteEventFallback;
 
   /// Набор, лейбл (plan.kit.label).
   ///
@@ -4293,11 +4389,65 @@ abstract class AppLocalizations {
   /// **'Далее'**
   String get planEntryNext;
 
-  /// Кадр 22-1, Literata 30 (entry.goal.title).
+  /// Вопрос шага цели, Literata 26 (кадр 22-1, entry.goal.title).
   ///
   /// In ru, this message translates to:
   /// **'К чему готовишься?'**
   String get planEntryGoalTitle;
+
+  /// Подпись под вопросом цели (кадр 22-1, entry.goal.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'Расскажи ситуацию своими словами: что будет, с кем говоришь, чего боишься'**
+  String get planEntryGoalSub;
+
+  /// Печатающийся плейсхолдер поля цели, кадр 1 — примеры НЕ те, что в списке историй (кадр 22-1, entry.goal.typing.1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседование в пятницу, боюсь…'**
+  String get planEntryGoalTyping1;
+
+  /// Печатающийся плейсхолдер поля цели, кадр 2 (кадр 22-1, entry.goal.typing.2).
+  ///
+  /// In ru, this message translates to:
+  /// **'Звоню в банк, не понимаю по телефону…'**
+  String get planEntryGoalTyping2;
+
+  /// Печатающийся плейсхолдер поля цели, кадр 3 (кадр 22-1, entry.goal.typing.3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Иду к врачу…'**
+  String get planEntryGoalTyping3;
+
+  /// Метка списка историй под полем цели (кадр 22-1, entry.goal.stories.title).
+  ///
+  /// In ru, this message translates to:
+  /// **'Так пишут другие'**
+  String get planEntryGoalStoriesTitle;
+
+  /// История «так пишут другие» — тап подставляет её в поле (кадр 22-1, entry.goal.story.1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседование в пятницу, боюсь вопросов про опыт'**
+  String get planEntryGoalStory1;
+
+  /// История «так пишут другие» (кадр 22-1, entry.goal.story.2).
+  ///
+  /// In ru, this message translates to:
+  /// **'К врачу с ребёнком, первый раз в местной клинике'**
+  String get planEntryGoalStory2;
+
+  /// История «так пишут другие» (кадр 22-1, entry.goal.story.3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Звонок арендодателю про залог'**
+  String get planEntryGoalStory3;
+
+  /// Подсказка под коротким ответом; НЕ блокирует «Далее» (кадр 22-1c, entry.goal.short.hint).
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавь, с кем и что важно — план будет точнее'**
+  String get planEntryGoalShortHint;
 
   /// Кадр 22-1, над полем (entry.goal.hint).
   ///
@@ -4371,17 +4521,35 @@ abstract class AppLocalizations {
   /// **'Добавь, с кем и что важно — план будет точнее'**
   String get planEntryGoalShort;
 
-  /// Микрофон в поле цели (22-1a): подпись для читалки экрана и кнопки остановки.
+  /// Подпись у микрофона в покое (кадр 22-1, entry.goal.dictate).
   ///
   /// In ru, this message translates to:
-  /// **'Надиктовать'**
+  /// **'или надиктуй'**
   String get planEntryGoalDictate;
 
-  /// Микрофон в поле цели: остановить запись.
+  /// Подпись у микрофона во время записи (кадр 22-1, entry.goal.dictate.stop).
   ///
   /// In ru, this message translates to:
-  /// **'Стоп'**
+  /// **'тап — остановить'**
   String get planEntryGoalDictateStop;
+
+  /// Подпись у микрофона после распознавания (кадр 22-1, entry.goal.dictate.edit).
+  ///
+  /// In ru, this message translates to:
+  /// **'можно поправить руками'**
+  String get planEntryGoalDictateEdit;
+
+  /// Таймер и приглашение над волной записи (кадр 22-1, entry.goal.listening).
+  ///
+  /// In ru, this message translates to:
+  /// **'{time} · говори, я слушаю'**
+  String planEntryGoalListening(String time);
+
+  /// Состояние микрофона между записью и текстом в поле (кадр 22-1, entry.goal.recognising).
+  ///
+  /// In ru, this message translates to:
+  /// **'распознаю…'**
+  String get planEntryGoalRecognising;
 
   /// Лента ответов (entry.tape.goal).
   ///
@@ -4425,11 +4593,17 @@ abstract class AppLocalizations {
   /// **'{n} · {date}'**
   String planEntryTapeDaysValueDated(int n, String date);
 
-  /// Кадр 22-2, Literata 30 (entry.language.title).
+  /// Вопрос шага языка (кадр 22-2, entry.language.title).
   ///
   /// In ru, this message translates to:
-  /// **'Какой язык?'**
+  /// **'На каком языке говорить?'**
   String get planEntryLanguageTitle;
+
+  /// Метка зоны языков (кадр 22-2, entry.language.label).
+  ///
+  /// In ru, this message translates to:
+  /// **'Язык'**
+  String get planEntryLanguageLabel;
 
   /// Кадр 22-2 (entry.level.label).
   ///
@@ -4437,16 +4611,16 @@ abstract class AppLocalizations {
   /// **'Уровень'**
   String get planEntryLevelLabel;
 
-  /// Кадр 22-2 (entry.level.beginner).
+  /// Уровень — название (кадр 22-2, entry.level.beginner).
   ///
   /// In ru, this message translates to:
-  /// **'Начинающий'**
+  /// **'Начальный'**
   String get planEntryLevelBeginner;
 
-  /// Кадр 22-2 (entry.level.beginner.sub).
+  /// Уровень описан тем, что человек умеет (кадр 22-2, entry.level.beginner.sub).
   ///
   /// In ru, this message translates to:
-  /// **'понимаю отдельные слова и простые фразы'**
+  /// **'знаю отдельные слова'**
   String get planEntryLevelBeginnerSub;
 
   /// Кадр 22-2 (entry.level.intermediate).
@@ -4455,10 +4629,10 @@ abstract class AppLocalizations {
   /// **'Средний'**
   String get planEntryLevelIntermediate;
 
-  /// Кадр 22-2 (entry.level.intermediate.sub).
+  /// Уровень описан тем, что человек умеет (кадр 22-2, entry.level.intermediate.sub).
   ///
   /// In ru, this message translates to:
-  /// **'объясняюсь, но не хватает слов'**
+  /// **'понимаю простую речь, говорю с ошибками'**
   String get planEntryLevelIntermediateSub;
 
   /// Кадр 22-2, при предвыбранном «Средний» (entry.level.fluent.note).
@@ -4467,11 +4641,83 @@ abstract class AppLocalizations {
   /// **'Для подготовки к ситуации среднего уровня достаточно'**
   String get planEntryLevelFluentNote;
 
-  /// Кадр 22-3, Literata 30 (entry.days.title).
+  /// Вопрос шага длины плана (кадр 22-3a, entry.days.title).
   ///
   /// In ru, this message translates to:
-  /// **'Сколько дней на подготовку?'**
+  /// **'Сколько дней до разговора?'**
   String get planEntryDaysTitle;
+
+  /// Состав длины плана — ситуации (кадр 22-3a, entry.days.scenes).
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} ситуация} few{{n} ситуации} many{{n} ситуаций} other{{n} ситуации}}'**
+  String planEntryDaysScenes(int n);
+
+  /// Состав длины плана — дни повторения (кадр 22-3a, entry.days.reviews).
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} повторение} few{{n} повторения} many{{n} повторений} other{{n} повторения}}'**
+  String planEntryDaysReviews(int n);
+
+  /// Состав длины плана — репетиция, она есть всегда (кадр 22-3a, entry.days.rehearsal).
+  ///
+  /// In ru, this message translates to:
+  /// **'репетиция'**
+  String get planEntryDaysRehearsal;
+
+  /// Вопрос шага даты (кадр 22-3b, entry.date.title).
+  ///
+  /// In ru, this message translates to:
+  /// **'Когда разговор?'**
+  String get planEntryDateTitle;
+
+  /// Метка зоны выбора даты (кадр 22-3b, entry.date.label).
+  ///
+  /// In ru, this message translates to:
+  /// **'Дата'**
+  String get planEntryDateLabel;
+
+  /// Подпись ближней даты: день недели и сколько до неё (кадр 22-3b, entry.date.in).
+  ///
+  /// In ru, this message translates to:
+  /// **'{weekday} · {n, plural, one{через {n} день} few{через {n} дня} many{через {n} дней} other{через {n} дня}}'**
+  String planEntryDateIn(String weekday, int n);
+
+  /// Равноправный вариант выбора даты (кадр 22-3b, entry.date.unknown).
+  ///
+  /// In ru, this message translates to:
+  /// **'Дата пока неизвестна'**
+  String get planEntryDateUnknown;
+
+  /// Подпись варианта без даты (кадр 22-3b, entry.date.unknown.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'план без даты, дни идут подряд'**
+  String get planEntryDateUnknownSub;
+
+  /// Третий вариант выбора даты (кадр 22-3b, entry.date.other).
+  ///
+  /// In ru, this message translates to:
+  /// **'Другая дата'**
+  String get planEntryDateOther;
+
+  /// Подпись варианта «Другая дата» (кадр 22-3b, entry.date.other.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'выбрать в календаре'**
+  String get planEntryDateOtherSub;
+
+  /// Строка следствия под выбором даты (кадр 22-3b, entry.date.rehearsal.on).
+  ///
+  /// In ru, this message translates to:
+  /// **'Репетиция встанет на {date} — день перед разговором'**
+  String planEntryDateRehearsalOn(String date);
+
+  /// Кнопка шага даты — называет результат, а не «Готово» (кадр 22-3b, entry.date.cta).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрать план'**
+  String get planEntryDateCta;
 
   /// Кадр 22-3 (entry.date.toggle).
   ///
@@ -4491,10 +4737,10 @@ abstract class AppLocalizations {
   /// **'{left, plural, one{До события {left} день — план сократится до {to}} few{До события {left} дня — план сократится до {to}} many{До события {left} дней — план сократится до {to}} other{До события {left} дня — план сократится до {to}}}'**
   String planEntryDateShorten(int left, int to);
 
-  /// Кадр 22-4, Literata 30 (entry.preview.title).
+  /// Заголовок готового превью (кадр 22-4b, entry.preview.title).
   ///
   /// In ru, this message translates to:
-  /// **'Маршрут'**
+  /// **'Твой план готов'**
   String get planEntryPreviewTitle;
 
   /// Кадр 22-4 (entry.preview.sub); days — planDaysCount.
@@ -4503,16 +4749,22 @@ abstract class AppLocalizations {
   /// **'{days} · {language} · {level}'**
   String planEntryPreviewSub(String days, String language, String level);
 
-  /// Кадр 22-4a, Literata 30 (entry.preview.loading.title).
+  /// Заголовок превью во время сборки (кадр 22-4a, entry.preview.loading.title).
   ///
   /// In ru, this message translates to:
-  /// **'Собираем маршрут'**
+  /// **'Собираю план'**
   String get planEntryPreviewLoadingTitle;
 
-  /// Кадр 22-4a (entry.preview.loading.sub).
+  /// Срок сборки человеческими словами, без процента (кадр 22-4a, entry.preview.about).
   ///
   /// In ru, this message translates to:
-  /// **'около 10 секунд'**
+  /// **'Около 10 секунд'**
+  String get planEntryPreviewAbout;
+
+  /// Что именно происходит во время сборки (кадр 22-4a, entry.preview.loading.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'Подбираю ситуации под твой разговор и расставляю их по дням'**
   String get planEntryPreviewLoadingSub;
 
   /// Кадр 22-4b, свайп (entry.preview.remove).
@@ -4533,22 +4785,28 @@ abstract class AppLocalizations {
   /// **'Начать'**
   String get planEntryPreviewCta;
 
-  /// Кадр 22-4c (entry.preview.error.title).
+  /// Заголовок неудачной сборки (кадр 22-4c, entry.preview.error.title).
   ///
   /// In ru, this message translates to:
-  /// **'Не получилось собрать маршрут'**
+  /// **'План не собрался'**
   String get planEntryPreviewErrorTitle;
 
-  /// Кадр 22-4c (entry.preview.error.sub).
+  /// Что случилось при неудачной сборке (кадр 22-4c, entry.preview.error.what).
   ///
   /// In ru, this message translates to:
-  /// **'Сервис не ответил. Цель и ответы сохранены — ничего вводить заново не нужно'**
+  /// **'Сеть пропала на середине'**
+  String get planEntryPreviewErrorWhat;
+
+  /// Что уцелело при неудачной сборке (кадр 22-4c, entry.preview.error.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ответы сохранены — попробуй ещё раз, заново рассказывать не придётся'**
   String get planEntryPreviewErrorSub;
 
-  /// Кадр 22-4c (entry.preview.error.retry).
+  /// Кнопка неудачной сборки; повтор не уводит на первый шаг (кадр 22-4c, entry.preview.error.retry).
   ///
   /// In ru, this message translates to:
-  /// **'Ещё раз'**
+  /// **'Попробовать ещё'**
   String get planEntryPreviewErrorRetry;
 
   /// Кадр 22-4c (entry.preview.error.edit).
@@ -4557,19 +4815,25 @@ abstract class AppLocalizations {
   /// **'Изменить цель'**
   String get planEntryPreviewErrorEdit;
 
-  /// Кадр 22-4d (entry.preview.unclear.title).
+  /// Заголовок, когда цель непонятна — просьба, не упрёк (кадр 22-4d, entry.preview.unclear.title).
   ///
   /// In ru, this message translates to:
-  /// **'Не понял, к чему готовишься'**
+  /// **'Нужно чуть больше'**
   String get planEntryPreviewUnclearTitle;
 
-  /// Кадр 22-4d (entry.preview.unclear.sub).
+  /// Цитата ответа человека в кадре «цель непонятна» (кадр 22-4d, entry.preview.unclear.quote).
   ///
   /// In ru, this message translates to:
-  /// **'Опиши ситуацию словами: где, с кем, зачем'**
+  /// **'«{goal}» — это про что?'**
+  String planEntryPreviewUnclearQuote(String goal);
+
+  /// Три примера того, чего не хватает (кадр 22-4d, entry.preview.unclear.sub).
+  ///
+  /// In ru, this message translates to:
+  /// **'Напиши, где будешь говорить и с кем: приём у врача, звонок в банк, разговор с соседом'**
   String get planEntryPreviewUnclearSub;
 
-  /// Кадр 22-4d (entry.preview.unclear.cta).
+  /// Кнопка возврата к полю цели с сохранённым текстом (кадр 22-4d, entry.preview.unclear.cta).
   ///
   /// In ru, this message translates to:
   /// **'К цели'**

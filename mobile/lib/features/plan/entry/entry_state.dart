@@ -3,9 +3,17 @@ import '../../../data/plan/plan_models.dart';
 /// THE ENTRY'S ANSWERS AND WHERE THE BUILD STANDS — one value the four steps read and write.
 ///
 /// A plain immutable state held by the entry screen; the steps are pure functions of it. What the
-/// server owns (the plan, its build status) sits beside what the learner typed, so «Изм.» keeps the
-/// answers and a re-build asks for a NEW plan from the same answers.
-enum EntryStep { goal, language, days, preview }
+/// server owns (the plan, its build status) sits beside what the learner typed, so a step revisited
+/// from a summary row keeps the answers and a re-build asks for a NEW plan from the same answers.
+///
+/// ЧЕТЫРЕ ВОПРОСА, а не три: канва развела длину плана (22-3a) и дату разговора (22-3b) на
+/// отдельные шаги — дата меняет длину, и спрашивать их одним экраном значило показывать человеку,
+/// как его собственный ответ переезжает под ним. Превью шагом не считается и точки не занимает.
+enum EntryStep { goal, language, days, date, preview }
+
+/// ЧЕТЫРЕ СОСТОЯНИЯ МИКРОФОНА в поле цели (кадр 22-1): покой → слушаю (волна и таймер, тап =
+/// стоп) → распознаю → текст в поле, редактируемый руками.
+enum EntryMicState { idle, listening, recognising, done }
 
 enum EntryBuildPhase {
   /// No plan asked for yet — or the answers changed since the last one.
@@ -31,12 +39,10 @@ class EntryState {
   const EntryState({
     this.step = EntryStep.goal,
     this.goal = '',
-    this.chip,
     this.targetLang = 'en',
     this.level = PlanLevel.beginner,
     this.days = 5,
     this.requestedDays = 5,
-    this.dateEnabled = false,
     this.eventDate,
     this.phase = EntryBuildPhase.idle,
     this.plan,
@@ -46,9 +52,6 @@ class EntryState {
 
   final EntryStep step;
   final String goal;
-
-  /// The chip whose template filled the field, if any (кадр 22-1b).
-  final EntryGoalChip? chip;
   final String targetLang;
   final PlanLevel level;
 
@@ -58,7 +61,8 @@ class EntryState {
   /// What the learner CHOSE. The date may shorten [days] below it (22-3b: «чип переезжает с 5 на
   /// 3»), and the brass line says so as long as the two differ.
   final int requestedDays;
-  final bool dateEnabled;
+  /// ДАТА РАЗГОВОРА, или null — «дата пока неизвестна» (кадр 22-3b): вариант без даты
+  /// РАВНОПРАВЕН, иначе человек с открытой датой упирается в тупик.
   final DateTime? eventDate;
   final EntryBuildPhase phase;
 
@@ -71,23 +75,23 @@ class EntryState {
   /// The last build attempt never reached the server (§6: без сети сборку не начать).
   final bool offline;
 
-  static const dayChoices = [1, 3, 5, 7, 10];
+  /// ЧЕТЫРЕ ДЛИНЫ (кадр 22-3a): 3 · 5 · 7 · 10. Одного дня в канве больше нет — план из одного
+  /// дня не успевает ни повторить, ни отрепетировать, и «1 день» обещал подготовку, которой не
+  /// бывает.
+  static const dayChoices = [3, 5, 7, 10];
 
-  /// The date the plan is asked with — only when the toggle is on.
-  DateTime? get effectiveDate => dateEnabled ? eventDate : null;
+  /// The date the plan is asked with.
+  DateTime? get effectiveDate => eventDate;
 
   bool get goalFilled => goal.trim().isNotEmpty;
 
   EntryState copyWith({
     EntryStep? step,
     String? goal,
-    EntryGoalChip? chip,
-    bool clearChip = false,
     String? targetLang,
     PlanLevel? level,
     int? days,
     int? requestedDays,
-    bool? dateEnabled,
     DateTime? eventDate,
     bool clearDate = false,
     EntryBuildPhase? phase,
@@ -98,12 +102,10 @@ class EntryState {
   }) => EntryState(
     step: step ?? this.step,
     goal: goal ?? this.goal,
-    chip: clearChip ? null : (chip ?? this.chip),
     targetLang: targetLang ?? this.targetLang,
     level: level ?? this.level,
     days: days ?? this.days,
     requestedDays: requestedDays ?? this.requestedDays,
-    dateEnabled: dateEnabled ?? this.dateEnabled,
     eventDate: clearDate ? null : (eventDate ?? this.eventDate),
     phase: phase ?? this.phase,
     plan: clearPlan ? null : (plan ?? this.plan),
@@ -111,6 +113,3 @@ class EntryState {
     offline: offline ?? this.offline,
   );
 }
-
-/// The five chips under the goal field (кадр 22-1).
-enum EntryGoalChip { doctor, rent, interview, trip, other }

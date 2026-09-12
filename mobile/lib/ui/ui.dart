@@ -24,6 +24,7 @@ export 'mic_button.dart';
 export 'mini_flag.dart';
 export 'pair_badge.dart';
 export 'paper_card.dart';
+export 'plan_marks.dart';
 export 'play_circle.dart';
 export 'progress_line.dart';
 export 'record_button.dart';

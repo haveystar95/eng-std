@@ -38,6 +38,54 @@ const List<String> kNativeLanguageCodes = ['uk', 'ru', 'de', 'pl', 'fr', 'it', '
 /// actually on so a picker can never fail to show the current value.
 const List<String> kStudyLanguageCodes = ['en', 'de'];
 
+/// ЯЗЫКИ, КОТОРЫЕ ПРЕДЛАГАЕТ ВХОД В ПЛАН (кадр 22-2) — английский, испанский, немецкий.
+///
+/// Отдельный список, а не [kStudyLanguageCodes]: канва серии 22 называет на этом шаге три языка,
+/// а продуктовый список профиля пока держит два (`en`, `de`). Расхождение НАМЕРЕННО оставлено
+/// видимым и названо в отчёте наряда PLAN-UI-2 — менять продуктовое решение о том, что вообще
+/// предлагается в профиле, наряд про экран плана не вправе.
+const List<String> kPlanEntryLanguageCodes = ['en', 'es', 'de'];
+
+/// Строки входа для языка, плюс текущий язык аккаунта, если он не из трёх.
+List<Language> planEntryLanguagesFor(String? current) {
+  final codes = [
+    ...kPlanEntryLanguageCodes,
+    if (current != null && current.isNotEmpty && !kPlanEntryLanguageCodes.contains(current))
+      current,
+  ];
+
+  return codes.map(languageByCode).toList(growable: false);
+}
+
+/// ПРИВЕТСТВИЕ НА ЯЗЫКЕ — подпись под его названием в карточке выбора (кадр 22-2).
+///
+/// Это НЕ подпись интерфейса и в ARB ей не место: строка написана на том языке, про который
+/// говорит, и переводить её на русский или английский нечем — она и есть образец языка.
+const Map<String, String> kLanguageGreetings = {
+  'en': 'Hello, how are you?',
+  'es': 'Hola, ¿qué tal?',
+  'de': "Hallo, wie geht's?",
+  'fr': 'Bonjour, ça va ?',
+  'it': 'Ciao, come stai?',
+  'pl': 'Cześć, jak się masz?',
+  'pt': 'Olá, tudo bem?',
+  'ro': 'Salut, ce faci?',
+  'uk': 'Привіт, як справи?',
+  'ru': 'Привет, как дела?',
+};
+
+/// Приветствие на языке [code], или null — тогда карточка стоит без подписи.
+String? greetingFor(String code) => kLanguageGreetings[code.trim().toLowerCase()];
+
+/// Монограмма языка для кружка 36 — «En», «Es», «De» (кадр 22-2).
+String monogramFor(String code) {
+  final c = code.trim();
+  if (c.isEmpty) return '';
+  if (c.length == 1) return c.toUpperCase();
+
+  return c[0].toUpperCase() + c.substring(1, 2).toLowerCase();
+}
+
 /// The native-language rows, in the order the picker lists them.
 List<Language> get kNativeLanguages =>
     kNativeLanguageCodes.map(languageByCode).toList(growable: false);

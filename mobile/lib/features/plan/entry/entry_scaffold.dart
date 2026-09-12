@@ -1,163 +1,119 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import 'entry_state.dart';
 
-/// THE FRAME EVERY STEP OF THE ENTRY WEARS (кадры 22-1 … 22-4): «Отмена» tertiary 15 on the left,
-/// «Новый план» 16.5/700 in the middle, «Далее» 17/700 ink on the right — transparent on the
-/// preview, where the one action is «Начать» at the bottom. Under it the four dots of 6 px, then
-/// the step's own content on paper with fields of 26 (каркас онбординга 10b–10d).
+/// КАРКАС ВХОДА (кадры 22-1 … 22-3b).
+///
+/// Что канва вычла из шапки: «Отмена», «Новый план» и «Далее». Осталось ДВА элемента — стрелка
+/// назад и четыре точки шага; единственное действие шага стоит ВНИЗУ, кнопкой 52, и оттуда не
+/// уезжает. Причина в том, что «Далее» в правом верхнем углу и «Далее» внизу — это два обещания
+/// на одном экране, и человек ищет то, которое ближе к пальцу.
+///
+/// Фон входа — ground #EFEBE3, а не бумага: поле и карточки историй стоят НА нём светлой бумагой,
+/// и на бумажном фоне они бы пропали.
 class EntryScaffold extends StatelessWidget {
   const EntryScaffold({
     super.key,
     required this.step,
-    required this.onCancel,
+    required this.onBack,
     required this.child,
-    this.onNext,
-    this.nextEnabled = true,
-    this.showNext = true,
     this.dock,
   });
 
+  /// Шаг, который держит точку. Превью точки не занимает — это уже не вопрос.
   final EntryStep step;
-  final VoidCallback onCancel;
-  final VoidCallback? onNext;
-  final bool nextEnabled;
 
-  /// False on the preview: the «Далее» slot stays, its text goes transparent (кадр 22-4).
-  final bool showNext;
+  /// Стрелка назад: на первом шаге закрывает вход, дальше возвращает на шаг назад.
+  final VoidCallback onBack;
+
   final Widget child;
 
-  /// What is pinned above the safe area — the preview's hint and «Начать».
+  /// Кнопка шага над безопасной зоной — «Далее» / «Собрать план» / «Начать».
   final Widget? dock;
 
   @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-
-    return Scaffold(
-      backgroundColor: AppColors.paper,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: Column(
-          children: [
-            SizedBox(
-              height: 44,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s22),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.ground,
+    resizeToAvoidBottomInset: true,
+    body: SafeArea(
+      bottom: false,
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
                 child: Row(
                   children: [
-                    _HeaderAction(
-                      label: l.planEntryNavCancel,
-                      style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, color: AppColors.tertiary),
-                      onTap: onCancel,
-                      alignment: Alignment.centerLeft,
-                    ),
-                    Expanded(
-                      child: Text(
-                        l.planEntryNavTitle,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontFamily: AppFonts.inter,
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.ink,
+                    Semantics(
+                      button: true,
+                      child: InkResponse(
+                        radius: 22,
+                        onTap: () {
+                          AppHaptics.light();
+                          onBack();
+                        },
+                        child: const SizedBox(
+                          width: 22,
+                          height: AppSpacing.minTap,
+                          child: Icon(LucideIcons.arrowLeft, size: 22, color: AppColors.ink),
                         ),
                       ),
                     ),
-                    _HeaderAction(
-                      label: l.planEntryNext,
-                      style: TextStyle(
-                        fontFamily: AppFonts.inter,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: !showNext
-                            ? Colors.transparent
-                            : (nextEnabled ? AppColors.ink : AppColors.ink.withValues(alpha: .35)),
-                      ),
-                      onTap: showNext && nextEnabled ? onNext : null,
-                      alignment: Alignment.centerRight,
-                    ),
+                    const SizedBox(width: 14),
+                    Expanded(child: Center(child: _Dots(step: step))),
+                    // Пустой слот шириной стрелки — точки стоят по центру экрана, а не по центру
+                    // остатка строки.
+                    const SizedBox(width: 14),
+                    const SizedBox(width: 22),
                   ],
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.s26, 10, AppSpacing.s26, 0),
-              child: Align(alignment: Alignment.centerLeft, child: _Dots(step: step)),
-            ),
-            Expanded(child: child),
-            ?dock,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeaderAction extends StatelessWidget {
-  const _HeaderAction({
-    required this.label,
-    required this.style,
-    required this.alignment,
-    this.onTap,
-  });
-
-  final String label;
-  final TextStyle style;
-  final VoidCallback? onTap;
-  final Alignment alignment;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: onTap != null,
-    label: label,
-    child: InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap == null
-          ? null
-          : () {
-              AppHaptics.light();
-              onTap!();
-            },
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 64, minHeight: AppSpacing.minTap),
-        alignment: alignment,
-        child: Text(label, style: style),
+              Expanded(child: child),
+            ],
+          ),
+          if (dock != null) Positioned(left: 0, right: 0, bottom: 0, child: dock!),
+        ],
       ),
     ),
   );
 }
 
-/// Four dots of 6 px: the steps behind and the one in hand are ink, the rest .18.
+/// ЧЕТЫРЕ ТОЧКИ ШАГА: шаг в руке — пилюля 18 × 6 ink, пройденные — точки 6 ink, будущие — точки
+/// 6 rgba(ink,.20). Форма говорит «здесь я», цвет — «это уже сделано».
 class _Dots extends StatelessWidget {
   const _Dots({required this.step});
 
   final EntryStep step;
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      for (final s in EntryStep.values) ...[
-        if (s != EntryStep.goal) const SizedBox(width: 8),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: s.index <= step.index ? AppColors.ink : AppColors.ink.withValues(alpha: .18),
+  Widget build(BuildContext context) {
+    final dots = EntryStep.values.where((s) => s != EntryStep.preview).toList();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final s in dots) ...[
+          if (s != dots.first) const SizedBox(width: 6),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: s == step ? 18 : 6,
+            height: 6,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(3),
+              color: s.index <= step.index ? AppColors.ink : AppColors.ink.withValues(alpha: .20),
+            ),
           ),
-        ),
+        ],
       ],
-    ],
-  );
+    );
+  }
 }
 
-/// The question every step opens with — Literata 30/500, −.02em (исключение раздела 2).
+/// ВОПРОС ШАГА — Literata 26/500, −.015em (канва 22-1 … 22-3b).
 class EntryQuestion extends StatelessWidget {
   const EntryQuestion(this.text, {super.key});
 
@@ -168,16 +124,16 @@ class EntryQuestion extends StatelessWidget {
     text,
     style: const TextStyle(
       fontFamily: AppFonts.literata,
-      fontSize: 30,
+      fontSize: 26,
       fontWeight: FontWeight.w500,
-      letterSpacing: -0.6,
-      height: 1.1,
+      letterSpacing: -0.39,
+      height: 1.18,
       color: AppColors.ink,
     ),
   );
 }
 
-/// The step's scrolling content with the entry's fields of 26.
+/// Прокручиваемое содержимое шага. Нижний отступ оставляет место закреплённой кнопке.
 class EntryContent extends StatelessWidget {
   const EntryContent({super.key, required this.children});
 
@@ -186,7 +142,67 @@ class EntryContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListView(
     keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-    padding: const EdgeInsets.fromLTRB(AppSpacing.s26, 16, AppSpacing.s26, AppSpacing.s26),
+    padding: EdgeInsets.fromLTRB(20, 8, 20, 110 + MediaQuery.viewPaddingOf(context).bottom),
     children: children,
   );
+}
+
+/// КНОПКА ШАГА — 52 / radius 16 / 17 / 700 под градиентом, которым содержимое уходит под неё.
+class EntryDock extends StatelessWidget {
+  const EntryDock({super.key, required this.label, required this.enabled, this.onTap});
+
+  final String label;
+  final bool enabled;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final on = enabled && onTap != null;
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.groundClear, AppColors.ground],
+          stops: [0, .34],
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20, 14, 20, 30 + MediaQuery.viewPaddingOf(context).bottom),
+        child: Semantics(
+          button: true,
+          enabled: on,
+          label: label,
+          child: Material(
+            color: on ? AppColors.ink : AppColors.ink.withValues(alpha: .14),
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: on
+                  ? () {
+                      AppHaptics.light();
+                      onTap!();
+                    }
+                  : null,
+              child: SizedBox(
+                height: 52,
+                child: Center(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: AppFonts.inter,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: on ? AppColors.paper : AppColors.ink.withValues(alpha: .45),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

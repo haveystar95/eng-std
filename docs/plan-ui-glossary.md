@@ -32,6 +32,7 @@ python3 docs/plan-ui-glossary.py
 | `planFinishedTitle` | Завершённые планы | Кадры 21-1, 21-2b (plan.finished.title). |
 | `planFinishedItemDate` | завершён {date} | Кадры 21-1, 21-2b; дата по локали (plan.finished.item.date). |
 | `planProgressDay` | День {n} из {total} | Шапка таба (plan.progress.day). |
+| `planHeaderBrow` | План · день {n} из {total} | Бровь шапки плана, 11/700 caps (кадр 21-2, plan.header.brow). |
 | `planPlateLabel` | День {n} | Плита дня, лейбл латунью (plan.plate.label). |
 | `planCardsCount` | {n, plural, one{{n} карточка} few{{n} карточки} many{{n} карточек} other{{n} карточки}} | Счётные формы карточек: 1 карточка / 2 карточки / 5 карточек (plan.plate.meta, plan.closed.meta, plan.closed.return). |
 | `planMinutesCount` | {n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}} | Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta). |
@@ -45,16 +46,31 @@ python3 docs/plan-ui-glossary.py
 | `planPlateStageSubStart` | начни отсюда · {words} | Плита дня, вторая строка текущего этапа (plan.plate.stage.sub.start); words — planNewWordsCount. |
 | `planPlateStageSubUnfinished` | не закончен · {cards} | Плита дня, вторая строка брошенного этапа (plan.plate.stage.sub.unfinished); cards — planCardsCount. Оценки минут в контракте нет — часть «≈ N мин» не рисуется, как и вся строка plan.plate.meta «{n} карточек · ≈ {min} минут» (вопрос архитектору). |
 | `planPlateCtaStart` | Начать | Плита дня, кнопка (plan.plate.cta.start). |
+| `planPlateBuildingTitle` | Собираем день {n} | Строка вместо этапов, пока день пишется (кадр 22-5a, plan.plate.building.title). |
+| `planPlateBuildingSub` | около минуты · можно закрыть приложение | Подпись под «Собираем день N»: срок назван, уходить разрешено (кадр 22-5a, plan.plate.building.sub). |
+| `planPlateFailedTitle` | День не собрался | Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title). |
+| `planPlateFailedSub` | Сеть пропала. Маршрут на месте, пропал только день {n} | Подпись под «День не собрался» (кадр 22-5c, plan.plate.failed.sub). |
+| `planPlateCtaRetry` | Повторить | Кнопка плиты у несобравшегося дня (кадр 22-5c, plan.plate.cta.retry). |
 | `planPlateCtaContinue` | Продолжить | Плита дня, кнопка (plan.plate.cta.continue). |
 | `planClosedTitle` | День {n} закрыт | Кадр 21-4 (plan.closed.title). |
 | `planClosedMeta` | {title} · {cards} · {minutes} | Кадр 21-4 (plan.closed.meta); title — сервер, cards/minutes — planCardsCount / planMinutesCount. |
-| `planClosedReturn` | {k, plural, one{Вернётся в день {n} · {k} карточка} few{Вернутся в день {n} · {k} карточки} many{Вернутся в день {n} · {k} карточек} other{Вернутся в день {n} · {k} карточки}} | Кадр 21-4, терракота (plan.closed.return): Вернётся 1 карточка / Вернутся 2 карточки / Вернутся 5 карточек. |
+| `planClosedCount` | {cards} · {minutes} | Счёт закрытого дня в шапке плиты: «75 карточек · 19 минут» (кадр 21-4, plan.closed.count). |
+| `planClosedNextTomorrow` | День {n} откроется завтра, {date} | Первая строка подвала закрытого дня (кадр 21-4, plan.closed.next.tomorrow). |
+| `planClosedNextOn` | День {n} откроется {date} | Подвал закрытого дня, когда следующий день не «завтра» (кадр 21-4, plan.closed.next.on). |
+| `planClosedReturn` | {k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}} | Вторая строка подвала закрытого дня, терракотой (кадр 21-4, plan.closed.return). |
 | `planRouteDayRepeat` | День повторения | Строка маршрута, tertiary (plan.route.day.repeat). |
 | `planRouteDayRepeatSub` | слова и фразы дней {a}–{b} | Строка маршрута (plan.route.day.repeat.sub). |
 | `planRouteDayRepeatSubOne` | слова и фразы дня {a} | Строка маршрута, когда повторению предшествует один день ситуации (день 1 → повторение день 2). |
 | `planRouteDayRehearsal` | Репетиция | Строка маршрута, tertiary (plan.route.day.rehearsal). |
 | `planRouteDayRehearsalSub` | весь маршрут вслух | Строка маршрута (plan.route.day.rehearsal.sub). |
 | `planRouteEventTitle` | {event} · {date} | Пункт назначения: «Приём · 15 сентября» (plan.route.event.title, entry.preview.event.dated); event — сервер, дата по локали. |
+| `planRouteMetaDay` | День {n} | Мета-строка узла маршрута, первое слово — номер дня (кадр 21-2b, plan.route.meta.day). |
+| `planRouteMetaPassed` | пройден | Мета-строка пройденного дня маршрута (кадр 21-2b, plan.route.meta.passed). |
+| `planMinutesShort` | {n} мин | Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes). |
+| `planRouteMetaOpensAfter` | откроется после дня {n} | Мета-строка ПЕРВОГО запертого дня маршрута (кадр 21-2b, plan.route.meta.opens.after). |
+| `planRouteMetaOpensTomorrow` | откроется завтра | Мета-строка первого запертого дня, когда предыдущий уже пройден (кадр 21-4, plan.route.meta.opens.tomorrow). |
+| `planRouteEventNoDate` | указать дату | Мишень события без даты — пунктирный узел маршрута (кадр 21-2b, plan.route.event.nodate). |
+| `planRouteEventFallback` | Событие | Заголовок мишени, когда сервер не назвал событие (кадр 21-2b, plan.route.event.fallback). |
 | `planKitLabel` | Спасательный набор | Набор, лейбл (plan.kit.label). |
 | `planKitSub` | {n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}} | Набор, подпись (plan.kit.sub): 1 фраза / 2 фразы / 5 фраз. |
 | `planKitAll` | все {n} → | Набор, ссылка (plan.kit.all). |
@@ -104,7 +120,16 @@ python3 docs/plan-ui-glossary.py
 | `planEntryNavTitle` | Новый план | Шапка входа (entry.nav.title). |
 | `planEntryNavCancel` | Отмена | Шапка входа, tertiary (entry.nav.cancel). |
 | `planEntryNext` | Далее | Шапка входа, справа, 17/700 (entry.next). |
-| `planEntryGoalTitle` | К чему готовишься? | Кадр 22-1, Literata 30 (entry.goal.title). |
+| `planEntryGoalTitle` | К чему готовишься? | Вопрос шага цели, Literata 26 (кадр 22-1, entry.goal.title). |
+| `planEntryGoalSub` | Расскажи ситуацию своими словами: что будет, с кем говоришь, чего боишься | Подпись под вопросом цели (кадр 22-1, entry.goal.sub). |
+| `planEntryGoalTyping1` | Собеседование в пятницу, боюсь… | Печатающийся плейсхолдер поля цели, кадр 1 — примеры НЕ те, что в списке историй (кадр 22-1, entry.goal.typing.1). |
+| `planEntryGoalTyping2` | Звоню в банк, не понимаю по телефону… | Печатающийся плейсхолдер поля цели, кадр 2 (кадр 22-1, entry.goal.typing.2). |
+| `planEntryGoalTyping3` | Иду к врачу… | Печатающийся плейсхолдер поля цели, кадр 3 (кадр 22-1, entry.goal.typing.3). |
+| `planEntryGoalStoriesTitle` | Так пишут другие | Метка списка историй под полем цели (кадр 22-1, entry.goal.stories.title). |
+| `planEntryGoalStory1` | Собеседование в пятницу, боюсь вопросов про опыт | История «так пишут другие» — тап подставляет её в поле (кадр 22-1, entry.goal.story.1). |
+| `planEntryGoalStory2` | К врачу с ребёнком, первый раз в местной клинике | История «так пишут другие» (кадр 22-1, entry.goal.story.2). |
+| `planEntryGoalStory3` | Звонок арендодателю про залог | История «так пишут другие» (кадр 22-1, entry.goal.story.3). |
+| `planEntryGoalShortHint` | Добавь, с кем и что важно — план будет точнее | Подсказка под коротким ответом; НЕ блокирует «Далее» (кадр 22-1c, entry.goal.short.hint). |
 | `planEntryGoalHint` | ситуация · с кем говоришь · что важно | Кадр 22-1, над полем (entry.goal.hint). |
 | `planEntryGoalPlaceholder` | Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике, боюсь не понять назначения | Кадр 22-1a, плейсхолдер-пример (entry.goal.placeholder). |
 | `planEntryGoalChipDoctor` | Врач | Кадр 22-1, чип (entry.goal.chip.doctor). |
@@ -117,8 +142,11 @@ python3 docs/plan-ui-glossary.py
 | `planEntryGoalTemplateInterview` | Иду на собеседование на … . Важно: рассказать о себе и спросить про … | Заготовка по чипу «Собеседование» — добавлена нарядом PLAN-UI по образцу «Врач». |
 | `planEntryGoalTemplateTrip` | Еду в … с … . Важно: … и понять, куда идти | Заготовка по чипу «Поездка» — добавлена нарядом PLAN-UI по образцу «Врач». |
 | `planEntryGoalShort` | Добавь, с кем и что важно — план будет точнее | Кадр 22-1c, строка под коротким ответом (entry.goal.short). |
-| `planEntryGoalDictate` | Надиктовать | Микрофон в поле цели (22-1a): подпись для читалки экрана и кнопки остановки. |
-| `planEntryGoalDictateStop` | Стоп | Микрофон в поле цели: остановить запись. |
+| `planEntryGoalDictate` | или надиктуй | Подпись у микрофона в покое (кадр 22-1, entry.goal.dictate). |
+| `planEntryGoalDictateStop` | тап — остановить | Подпись у микрофона во время записи (кадр 22-1, entry.goal.dictate.stop). |
+| `planEntryGoalDictateEdit` | можно поправить руками | Подпись у микрофона после распознавания (кадр 22-1, entry.goal.dictate.edit). |
+| `planEntryGoalListening` | {time} · говори, я слушаю | Таймер и приглашение над волной записи (кадр 22-1, entry.goal.listening). |
+| `planEntryGoalRecognising` | распознаю… | Состояние микрофона между записью и текстом в поле (кадр 22-1, entry.goal.recognising). |
 | `planEntryTapeGoal` | Цель | Лента ответов (entry.tape.goal). |
 | `planEntryTapeLanguage` | Язык | Лента ответов (entry.tape.language). |
 | `planEntryTapeDays` | Дни | Лента ответов (entry.tape.days). |
@@ -126,46 +154,50 @@ python3 docs/plan-ui-glossary.py
 | `planEntryTapeLanguageValue` | {language} · {level} | Лента ответов: «Английский · Средний». |
 | `planEntryTapeDaysValue` | {n} · {event} {date} | Лента ответов, 22-4 (entry.tape.days.value): «5 · приём 15 сентября»; event — сервер, дата по локали. |
 | `planEntryTapeDaysValueDated` | {n} · {date} | Лента ответов до ответа сервера: событие ещё не названо, дата уже выбрана. |
-| `planEntryLanguageTitle` | Какой язык? | Кадр 22-2, Literata 30 (entry.language.title). |
+| `planEntryLanguageTitle` | На каком языке говорить? | Вопрос шага языка (кадр 22-2, entry.language.title). |
+| `planEntryLanguageLabel` | Язык | Метка зоны языков (кадр 22-2, entry.language.label). |
 | `planEntryLevelLabel` | Уровень | Кадр 22-2 (entry.level.label). |
-| `planEntryLevelBeginner` | Начинающий | Кадр 22-2 (entry.level.beginner). |
-| `planEntryLevelBeginnerSub` | понимаю отдельные слова и простые фразы | Кадр 22-2 (entry.level.beginner.sub). |
+| `planEntryLevelBeginner` | Начальный | Уровень — название (кадр 22-2, entry.level.beginner). |
+| `planEntryLevelBeginnerSub` | знаю отдельные слова | Уровень описан тем, что человек умеет (кадр 22-2, entry.level.beginner.sub). |
 | `planEntryLevelIntermediate` | Средний | Кадр 22-2 (entry.level.intermediate). |
-| `planEntryLevelIntermediateSub` | объясняюсь, но не хватает слов | Кадр 22-2 (entry.level.intermediate.sub). |
+| `planEntryLevelIntermediateSub` | понимаю простую речь, говорю с ошибками | Уровень описан тем, что человек умеет (кадр 22-2, entry.level.intermediate.sub). |
 | `planEntryLevelFluentNote` | Для подготовки к ситуации среднего уровня достаточно | Кадр 22-2, при предвыбранном «Средний» (entry.level.fluent.note). |
-| `planEntryDaysTitle` | Сколько дней на подготовку? | Кадр 22-3, Literata 30 (entry.days.title). |
+| `planEntryDaysTitle` | Сколько дней до разговора? | Вопрос шага длины плана (кадр 22-3a, entry.days.title). |
+| `planEntryDaysScenes` | {n, plural, one{{n} ситуация} few{{n} ситуации} many{{n} ситуаций} other{{n} ситуации}} | Состав длины плана — ситуации (кадр 22-3a, entry.days.scenes). |
+| `planEntryDaysReviews` | {n, plural, one{{n} повторение} few{{n} повторения} many{{n} повторений} other{{n} повторения}} | Состав длины плана — дни повторения (кадр 22-3a, entry.days.reviews). |
+| `planEntryDaysRehearsal` | репетиция | Состав длины плана — репетиция, она есть всегда (кадр 22-3a, entry.days.rehearsal). |
+| `planEntryDateTitle` | Когда разговор? | Вопрос шага даты (кадр 22-3b, entry.date.title). |
+| `planEntryDateLabel` | Дата | Метка зоны выбора даты (кадр 22-3b, entry.date.label). |
+| `planEntryDateIn` | {weekday} · {n, plural, one{через {n} день} few{через {n} дня} many{через {n} дней} other{через {n} дня}} | Подпись ближней даты: день недели и сколько до неё (кадр 22-3b, entry.date.in). |
+| `planEntryDateUnknown` | Дата пока неизвестна | Равноправный вариант выбора даты (кадр 22-3b, entry.date.unknown). |
+| `planEntryDateUnknownSub` | план без даты, дни идут подряд | Подпись варианта без даты (кадр 22-3b, entry.date.unknown.sub). |
+| `planEntryDateOther` | Другая дата | Третий вариант выбора даты (кадр 22-3b, entry.date.other). |
+| `planEntryDateOtherSub` | выбрать в календаре | Подпись варианта «Другая дата» (кадр 22-3b, entry.date.other.sub). |
+| `planEntryDateRehearsalOn` | Репетиция встанет на {date} — день перед разговором | Строка следствия под выбором даты (кадр 22-3b, entry.date.rehearsal.on). |
+| `planEntryDateCta` | Собрать план | Кнопка шага даты — называет результат, а не «Готово» (кадр 22-3b, entry.date.cta). |
 | `planEntryDateToggle` | Знаю дату события | Кадр 22-3 (entry.date.toggle). |
 | `planEntryDateNote` | Дата встанет в конец маршрута, напомним накануне | Кадр 22-3 (entry.date.note). |
 | `planEntryDateShorten` | {left, plural, one{До события {left} день — план сократится до {to}} few{До события {left} дня — план сократится до {to}} many{До события {left} дней — план сократится до {to}} other{До события {left} дня — план сократится до {to}}} | Кадр 22-3b, латунь (entry.date.shorten): 1 день / 2 дня / 5 дней. |
-| `planEntryPreviewTitle` | Маршрут | Кадр 22-4, Literata 30 (entry.preview.title). |
+| `planEntryPreviewTitle` | Твой план готов | Заголовок готового превью (кадр 22-4b, entry.preview.title). |
 | `planEntryPreviewSub` | {days} · {language} · {level} | Кадр 22-4 (entry.preview.sub); days — planDaysCount. |
-| `planEntryPreviewLoadingTitle` | Собираем маршрут | Кадр 22-4a, Literata 30 (entry.preview.loading.title). |
-| `planEntryPreviewLoadingSub` | около 10 секунд | Кадр 22-4a (entry.preview.loading.sub). |
+| `planEntryPreviewLoadingTitle` | Собираю план | Заголовок превью во время сборки (кадр 22-4a, entry.preview.loading.title). |
+| `planEntryPreviewAbout` | Около 10 секунд | Срок сборки человеческими словами, без процента (кадр 22-4a, entry.preview.about). |
+| `planEntryPreviewLoadingSub` | Подбираю ситуации под твой разговор и расставляю их по дням | Что именно происходит во время сборки (кадр 22-4a, entry.preview.loading.sub). |
 | `planEntryPreviewRemove` | Убрать | Кадр 22-4b, свайп (entry.preview.remove). |
 | `planEntryPreviewHint` | Не то? Убери день свайпом или измени цель | Кадр 22-4b, в доке над «Начать» (entry.preview.hint). |
 | `planEntryPreviewCta` | Начать | Кадр 22-4 (entry.preview.cta). |
-| `planEntryPreviewErrorTitle` | Не получилось собрать маршрут | Кадр 22-4c (entry.preview.error.title). |
-| `planEntryPreviewErrorSub` | Сервис не ответил. Цель и ответы сохранены — ничего вводить заново не нужно | Кадр 22-4c (entry.preview.error.sub). |
-| `planEntryPreviewErrorRetry` | Ещё раз | Кадр 22-4c (entry.preview.error.retry). |
+| `planEntryPreviewErrorTitle` | План не собрался | Заголовок неудачной сборки (кадр 22-4c, entry.preview.error.title). |
+| `planEntryPreviewErrorWhat` | Сеть пропала на середине | Что случилось при неудачной сборке (кадр 22-4c, entry.preview.error.what). |
+| `planEntryPreviewErrorSub` | Ответы сохранены — попробуй ещё раз, заново рассказывать не придётся | Что уцелело при неудачной сборке (кадр 22-4c, entry.preview.error.sub). |
+| `planEntryPreviewErrorRetry` | Попробовать ещё | Кнопка неудачной сборки; повтор не уводит на первый шаг (кадр 22-4c, entry.preview.error.retry). |
 | `planEntryPreviewErrorEdit` | Изменить цель | Кадр 22-4c (entry.preview.error.edit). |
-| `planEntryPreviewUnclearTitle` | Не понял, к чему готовишься | Кадр 22-4d (entry.preview.unclear.title). |
-| `planEntryPreviewUnclearSub` | Опиши ситуацию словами: где, с кем, зачем | Кадр 22-4d (entry.preview.unclear.sub). |
-| `planEntryPreviewUnclearCta` | К цели | Кадр 22-4d (entry.preview.unclear.cta). |
+| `planEntryPreviewUnclearTitle` | Нужно чуть больше | Заголовок, когда цель непонятна — просьба, не упрёк (кадр 22-4d, entry.preview.unclear.title). |
+| `planEntryPreviewUnclearQuote` | «{goal}» — это про что? | Цитата ответа человека в кадре «цель непонятна» (кадр 22-4d, entry.preview.unclear.quote). |
+| `planEntryPreviewUnclearSub` | Напиши, где будешь говорить и с кем: приём у врача, звонок в банк, разговор с соседом | Три примера того, чего не хватает (кадр 22-4d, entry.preview.unclear.sub). |
+| `planEntryPreviewUnclearCta` | К цели | Кнопка возврата к полю цели с сохранённым текстом (кадр 22-4d, entry.preview.unclear.cta). |
 | `planEntryDayBuilding` | Собираем день {n} · около минуты | Кадр 22-5a (entry.day.building). |
 | `planEntryDayFailedTitle` | День не собрался | Кадр 22-5c (entry.day.failed.title). |
 | `planEntryDayFailedSub` | Маршрут на месте. Попробуем ещё раз — это займёт около минуты | Кадр 22-5c (entry.day.failed.sub). |
 | `planEntryPushTitle` | План готов | Кадр 22-6 (entry.push.title). |
 | `planEntryPushBody` | День 1 · {dayTitle} — можно начинать | Кадр 22-6 (entry.push.body); dayTitle — сервер. |
 | `planEntryOffline` | Без сети план не собрать | Вход офлайн (§6): нельзя начать сборку. Строки в таблице нет — добавлена нарядом PLAN-UI. |
-
-## День плана — наряд DAY-UI (11.09.2026)
-
-Строки дня живут под префиксом `day*` (таблица `day.*` в канве «План», раздел «План · день»);
-гард словаря проверяет только `plan*` — источник правды по-прежнему `mobile/lib/l10n/app_ru.arb`.
-Задания карточек («Что он спросил», вопросы, переводы реплик) приходят с сервера и в ARB не
-дублируются. Кадры дня и их снимки — `backend2/docs/design/design-map.md` и
-`mobile/test/goldens/`; отчёт — `backend2/docs/research/day-ui/README.md`.
-
-Ключи прежних серий (день v1, диалог v1, прогон, «Как прошло?», присесты, лестница A/B/C) сняты
-вместе со своими экранами — 270 ключей нарядом DAY-UI и остальные нарядом PLAN-UI; воскрешать их
-не надо, у них нет экрана.

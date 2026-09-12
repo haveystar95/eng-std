@@ -145,94 +145,154 @@ class PlanHintLine extends StatelessWidget {
   }
 }
 
-/// «День 2 из 7» and the 4 px progress line under it — the plan's own progress (кадры 21-2…21-7).
-class PlanProgressLine extends StatelessWidget {
-  const PlanProgressLine({super.key, required this.day, required this.total, required this.closed});
+/// ШАПКА ПЛАНА — бровь, короткое название и полоса дня (кадры 21-2 … 21-14, 22-5a/b/c).
+///
+/// СЛОВА «ПЛАН» В ЗАГОЛОВКЕ НЕТ: канва вычла его вместе со старой шапкой — вкладка и так
+/// называется планом, а строчку заняла бровь «План · день 2 из 7». Дальше идёт КОРОТКОЕ НАЗВАНИЕ
+/// плана Literata 30 («Спина и врач») — название ПЛАНА, не дня.
+///
+/// Фолбэк 21-6: когда сервер короткого названия не дал, его место занимает формулировка человека
+/// Inter 21/600 — до трёх строк, четвёртая ОБРЕЗАЕТСЯ БЕЗ ТРОЕТОЧИЯ (`max-height:82px;
+/// overflow:hidden` в канве), потому что троеточие в такой строке читается как «тут что-то
+/// потеряли», а обрыв — как «тут ещё есть».
+///
+/// Латуни в шапке нет ни в одном состоянии: латунь метит ДЕНЬ, а не план.
+class PlanHeader extends StatelessWidget {
+  const PlanHeader({
+    super.key,
+    required this.brow,
+    required this.shortTitle,
+    required this.goal,
+    required this.total,
+    required this.closed,
+    required this.onMenu,
+    this.trailing,
+    this.leading,
+  });
 
-  /// The day named in the line — the plate's day.
-  final int day;
+  /// «План · день 2 из 7» — бровь 11/700/.14em caps.
+  final String brow;
+
+  /// Короткое название плана, или null → фолбэк 21-6 на [goal].
+  final String? shortTitle;
+  final String goal;
+
   final int total;
 
-  /// How many days are closed — the line's fill.
+  /// Сколько дней закрыто — заливка полосы (1 из 7 = 14 %, как в кадре).
   final int closed;
+
+  /// Меню открывается от САМОЙ кнопки «…» (4в), поэтому наружу уходит её контекст.
+  final void Function(BuildContext anchor) onMenu;
+
+  /// Кружок-аватар; в режиме чтения завершённого плана — ничего.
+  final Widget? trailing;
+
+  /// Шеврон «назад» — завершённый план открывается поверх таба и уходить ему больше некуда.
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final reduce = MediaQuery.of(context).disableAnimations;
     final value = total == 0 ? 0.0 : (closed / total).clamp(0.0, 1.0);
+    final named = (shortTitle ?? '').trim();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l.planProgressDay(day, total),
-          style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 14, color: AppColors.secondary),
-        ),
-        const SizedBox(height: 8),
-        // The line fills in 420 ms ease-out when a day closes (спека 21-4 «полоса»).
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: value, end: value),
-          duration: reduce ? Duration.zero : AppMotion.goalBar,
-          curve: AppMotion.easeOut,
-          builder: (context, v, _) => ProgressLine(
-            value: v,
-            height: 4,
-            trackColor: AppColors.ink.withValues(alpha: .12),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// The plan's goal in the header and the menu button beside it (кадры 21-2, 21-9).
-class PlanGoalRow extends StatelessWidget {
-  const PlanGoalRow({super.key, required this.goal, required this.onMenu});
-
-  final String goal;
-
-  /// The anchor context of the menu is the button's own — the menu opens from it (4в).
-  final void Function(BuildContext anchor) onMenu;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Text(
-            goal,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontFamily: AppFonts.inter,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              height: 1.3,
-              color: AppColors.ink,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Builder(
-          builder: (anchor) => Semantics(
-            button: true,
-            label: l.planMenuLabel,
-            child: InkResponse(
-              radius: 20,
-              onTap: () => onMenu(anchor),
-              child: const SizedBox(
-                width: 32,
-                height: 32,
-                child: Icon(LucideIcons.ellipsis, size: 20, color: AppColors.secondary),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ?leading,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      brow,
+                      style: const TextStyle(
+                        fontFamily: AppFonts.inter,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.54, // .14em
+                        height: 1.2,
+                        color: AppColors.tertiary,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    if (named.isNotEmpty)
+                      Text(
+                        named,
+                        style: const TextStyle(
+                          fontFamily: AppFonts.literata,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: -0.6, // -.02em
+                          height: 1.15,
+                          color: AppColors.ink,
+                        ),
+                      )
+                    else
+                      Text(
+                        goal,
+                        maxLines: 3,
+                        // Без троеточия — канва режет четвёртую строку рамкой, а не многоточием.
+                        overflow: TextOverflow.clip,
+                        style: const TextStyle(
+                          fontFamily: AppFonts.inter,
+                          fontSize: 21,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.21, // -.01em
+                          height: 1.3,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  children: [
+                    Builder(
+                      builder: (anchor) => Semantics(
+                        button: true,
+                        label: l.planMenuLabel,
+                        child: InkResponse(
+                          radius: 20,
+                          onTap: () => onMenu(anchor),
+                          child: const SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: Icon(LucideIcons.ellipsis, size: 18, color: AppColors.tertiary),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // ПОЛОСА ДНЯ 4 px — заполняется за 420 мс, когда день закрывается (21-4).
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: value, end: value),
+            duration: reduce ? Duration.zero : AppMotion.goalBar,
+            curve: AppMotion.easeOut,
+            builder: (context, v, _) => ProgressLine(
+              value: v,
+              height: 4,
+              trackColor: AppColors.ink.withValues(alpha: .12),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

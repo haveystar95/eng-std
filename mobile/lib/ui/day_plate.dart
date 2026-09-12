@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/theme/theme.dart';
 
+import 'plan_marks.dart';
 import 'verdict_marker.dart';
 
 /// ПЛИТА ДНЯ — компонент 4н токен-листа, в свёрнутом размере (карточка на табе «План»,
@@ -33,7 +34,8 @@ class DayPlate extends StatelessWidget {
     this.footer = const DayPlateFooter.none(),
     this.closed = false,
     this.returnLine,
-    this.building = false,
+    this.nextDayLine,
+    this.notice,
     this.onTap,
   });
 
@@ -55,73 +57,96 @@ class DayPlate extends StatelessWidget {
   /// Закрытый день (кадр 21-4): светлая бумага, галка в круге 30, Literata 23, счётчики 600.
   final bool closed;
 
-  /// «Вернутся в день 3 · 3 карточки» — терракотой, только у закрытого дня. Null — строки нет.
+  /// «3 карточки вернутся в день 3 →» — терракотой, только у закрытого дня. Null — строки нет.
   final String? returnLine;
 
-  /// День ещё пишется (кадр 22-5a): строки этапов — шиммер, кнопка приглушена, обложки нет.
-  final bool building;
+  /// «День 3 откроется завтра, 12 сентября» — первая строка подвала закрытого дня (21-4): экран
+  /// НЕ даёт кнопки «дальше», следующий день открывается со своего узла в маршруте, и подвал
+  /// говорит только когда.
+  final String? nextDayLine;
+
+  /// СТРОКА ВМЕСТО ЭТАПОВ (22-5a, 22-5c): день ещё пишется или не собрался. Пока она стоит,
+  /// строк этапов на плите нет — их ещё нечем заполнить.
+  final DayPlateNotice? notice;
 
   /// Тап по карточке — в кабинет дня.
   final VoidCallback? onTap;
 
   static const double _radius = 28;
 
+  /// Закрытый день — светлая бумага чуть меньшего радиуса (21-4: 26 против 28 у тёмной плиты).
+  static const double _closedRadius = 26;
+
   @override
   Widget build(BuildContext context) {
-    final br = BorderRadius.circular(_radius);
+    final br = BorderRadius.circular(closed ? _closedRadius : _radius);
     final ink = closed ? AppColors.ink : AppColors.paper;
     final body = Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (closed) _ClosedHead(title: title) else _Head(label: label, title: title, cover: cover, building: building),
-          if (meta != null) ...[
+          if (closed)
+            _ClosedHead(title: title, meta: meta)
+          else
+            _Head(label: label, title: title, cover: cover),
+          // На тёмной плите счёт дня — своя строка под шапкой; у закрытого он уже внутри шапки.
+          if (meta != null && !closed) ...[
             const SizedBox(height: 10),
             Text(
               meta!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontFamily: AppFonts.inter,
                 fontSize: 14,
-                color: closed ? AppColors.secondary : AppColors.paper.withValues(alpha: .55),
+                color: AppColors.paper.withValues(alpha: .55),
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ],
           const SizedBox(height: 12),
-          if (building)
-            const _SkeletonRows()
+          if (notice != null)
+            _NoticeRow(notice: notice!)
           else
             for (var i = 0; i < stages.length; i++)
               _StageRow(stage: stages[i], last: i == stages.length - 1, ink: ink, closed: closed),
-          if (returnLine != null) ...[
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Container(
-                  width: 16,
-                  height: 16,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.verdictUnknown,
-                  ),
-                  child: const Icon(LucideIcons.undo2, size: 10, color: AppColors.paper),
-                ),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    returnLine!,
-                    style: const TextStyle(
-                      fontFamily: AppFonts.inter,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.destructiveText,
+          // ПОДВАЛ ЗАКРЫТОГО ДНЯ (21-4) — две строки текстом под волосяной линией: когда откроется
+          // следующий день и какие карточки в него вернутся. Значков и кнопок здесь нет: действия
+          // на этом экране тоже нет.
+          if (nextDayLine != null || returnLine != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.only(top: 12),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.ink.withValues(alpha: .10))),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (nextDayLine != null)
+                    Text(
+                      nextDayLine!,
+                      style: const TextStyle(
+                        fontFamily: AppFonts.inter,
+                        fontSize: 14,
+                        height: 1.4,
+                        color: AppColors.tertiary,
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                  if (returnLine != null) ...[
+                    if (nextDayLine != null) const SizedBox(height: 4),
+                    Text(
+                      returnLine!,
+                      style: const TextStyle(
+                        fontFamily: AppFonts.inter,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                        color: AppColors.destructiveText,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ],
           ..._footer(),
@@ -141,7 +166,7 @@ class DayPlate extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [AppColors.plateTop, AppColors.plateBottom],
                 ),
-          color: closed ? AppColors.surfaceRaised : null,
+          color: closed ? AppColors.paper : null,
           boxShadow: closed ? AppShadows.card : AppShadows.plate,
         ),
         child: Material(
@@ -163,7 +188,7 @@ class DayPlate extends StatelessWidget {
     DayPlateFooterNone() => const [],
     DayPlateFooterButton(:final label, :final onTap, :final enabled) => [
       const SizedBox(height: 14),
-      _PaperButton(label: label, onTap: onTap, enabled: enabled && !building),
+      _PaperButton(label: label, onTap: onTap, enabled: enabled),
     ],
   };
 }
@@ -195,12 +220,17 @@ class DayPlateFooterButton extends DayPlateFooter {
 /// One stage row: name, «done / total», its state, and the second line the current one carries.
 class DayPlateStage {
   const DayPlateStage({
+    required this.kind,
     required this.name,
     required this.count,
     required this.state,
     this.note,
     this.noteColor,
   });
+
+  /// КАКОЙ ЭТО ЭТАП — значок канвы стоит слева в строке вместо кружка-маркера, и состояние он
+  /// несёт тонировкой (`assets/stages/`, правило — в [PlanStageMark]).
+  final PlanStageMarkKind kind;
 
   final String name;
 
@@ -218,12 +248,11 @@ class DayPlateStage {
 enum DayPlateStageState { locked, current, done }
 
 class _Head extends StatelessWidget {
-  const _Head({required this.label, required this.title, this.cover, required this.building});
+  const _Head({required this.label, required this.title, this.cover});
 
   final String label;
   final String title;
   final ImageProvider? cover;
-  final bool building;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -234,7 +263,7 @@ class _Head extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: building ? AppColors.paper.withValues(alpha: .10) : AppColors.photoPlate,
+          color: AppColors.photoPlate,
           border: Border.all(color: AppColors.brassHairline),
         ),
         child: cover == null ? null : Image(image: cover!, fit: BoxFit.cover),
@@ -255,16 +284,19 @@ class _Head extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 5),
+            // НАЗВАНИЕ ДНЯ ПЕРЕНОСИТСЯ НА ДВЕ СТРОКИ, обрезки нет (канва 21-2): длинное название
+            // сцены («Ресторан с ребёнком», «Повторный визит к врачу») в одну строку с троеточием
+            // теряло ровно то слово, которым день и отличается от соседнего.
             Text(
               title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              overflow: TextOverflow.clip,
               style: TextStyle(
                 fontFamily: AppFonts.inter,
-                fontSize: building ? 16 : 22,
-                fontWeight: building ? FontWeight.w600 : FontWeight.w700,
-                letterSpacing: building ? 0 : -0.33,
-                height: 1.1,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.33,
+                height: 1.15,
                 color: AppColors.paper,
               ),
             ),
@@ -275,33 +307,52 @@ class _Head extends StatelessWidget {
   );
 }
 
+/// ШАПКА ЗАКРЫТОГО ДНЯ (кадр 21-4): галка в круге ink 34, «День 2 закрыт» Literata 22 и под ней
+/// счёт дня — обе строки в одной колонке, потому что это один итог, а не заголовок с подписью.
 class _ClosedHead extends StatelessWidget {
-  const _ClosedHead({required this.title});
+  const _ClosedHead({required this.title, this.meta});
 
   final String title;
+  final String? meta;
 
   @override
   Widget build(BuildContext context) => Row(
     children: [
       Container(
-        width: 30,
-        height: 30,
+        width: 34,
+        height: 34,
         decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.ink),
-        child: const Icon(LucideIcons.check, size: 16, color: AppColors.paper),
+        child: const Icon(LucideIcons.check, size: 18, color: AppColors.paper),
       ),
-      const SizedBox(width: 11),
+      const SizedBox(width: 12),
       Expanded(
-        child: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontFamily: AppFonts.literata,
-            fontSize: 23,
-            fontWeight: FontWeight.w500,
-            letterSpacing: -0.23,
-            color: AppColors.ink,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontFamily: AppFonts.literata,
+                fontSize: 22,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.33,
+                height: 1.15,
+                color: AppColors.ink,
+              ),
+            ),
+            if (meta != null) ...[
+              const SizedBox(height: 3),
+              Text(
+                meta!,
+                style: const TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 14,
+                  height: 1.35,
+                  color: AppColors.secondary,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     ],
@@ -326,22 +377,70 @@ class _StageRow extends StatelessWidget {
     final line = BorderSide(color: ink.withValues(alpha: closed ? .10 : .14));
     final current = stage.state == DayPlateStageState.current;
     final locked = stage.state == DayPlateStageState.locked;
-    final done = stage.state == DayPlateStageState.done;
-    // Текущий — 600 / alpha 1, остальные 400 / .72, запертые .5 (записка); на светлой бумаге
-    // закрытого дня все строки — ink-body / ink 600.
-    final nameAlpha = closed ? 1.0 : (current ? 1.0 : (locked ? .5 : .72));
-    final countAlpha = closed || current || done ? 1.0 : .5;
-    final noteColor = stage.noteColor ?? (closed ? AppColors.secondary : ink.withValues(alpha: .6));
+
+    // ДВА НАБОРА СТИЛЕЙ, а не один с поправками: тёмная плита идущего дня (21-2, 21-3) и светлая
+    // бумага закрытого (21-4) — это разные строки в канве, вплоть до кегля имени и цвета счёта.
+    //
+    // тёмная:  имя 14, текущий w600/1, пройденный w400/.72, запертый w400/.5; счёт 14.5 w600,
+    //          alpha 1 у пройденного и текущего, .5 у запертого; вторая строка paper .60.
+    // светлая: имя 15 w600 ink; счёт 14 w600 ШАЛФЕЕМ (день сдан, и счёт об этом говорит);
+    //          вторая строка 13 tertiary.
+    final nameStyle = closed
+        ? const TextStyle(
+            fontFamily: AppFonts.inter,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            height: 1.3,
+            color: AppColors.ink,
+          )
+        : TextStyle(
+            fontFamily: AppFonts.inter,
+            fontSize: 14,
+            fontWeight: current ? FontWeight.w600 : FontWeight.w400,
+            color: ink.withValues(alpha: current ? 1 : (locked ? .5 : .72)),
+          );
+    final countStyle = closed
+        ? const TextStyle(
+            fontFamily: AppFonts.inter,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.verdictKnown,
+            fontFeatures: [FontFeature.tabularFigures()],
+          )
+        : TextStyle(
+            fontFamily: AppFonts.inter,
+            fontSize: 14.5,
+            fontWeight: FontWeight.w600,
+            color: ink.withValues(alpha: locked ? .5 : 1),
+            fontFeatures: const [FontFeature.tabularFigures()],
+          );
+    final noteStyle = TextStyle(
+      fontFamily: AppFonts.inter,
+      fontSize: closed ? 13 : 14,
+      height: closed ? 1.35 : 1.3,
+      color: stage.noteColor ?? (closed ? AppColors.tertiary : ink.withValues(alpha: .6)),
+    );
+
+    final name = Text(stage.name, style: nameStyle);
+    final count = Text(stage.count, style: countStyle);
+    final note = stage.note == null ? null : Text(stage.note!, style: noteStyle);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 9),
+      // 9 на тёмной плите, 11 на светлой бумаге закрытого дня — числа канвы.
+      padding: EdgeInsets.symmetric(vertical: closed ? 11 : 9),
       decoration: BoxDecoration(border: Border(top: line, bottom: last ? line : BorderSide.none)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 3),
-            child: _Indicator(state: stage.state, ink: ink, closed: closed),
+          // Значок этапа — 20, и он же маркер состояния; кружков в строках больше нет.
+          PlanStageMark(
+            kind: stage.kind,
+            state: switch (stage.state) {
+              DayPlateStageState.done => PlanStageMarkState.done,
+              DayPlateStageState.current => PlanStageMarkState.current,
+              DayPlateStageState.locked => PlanStageMarkState.locked,
+            },
+            onDark: !closed,
           ),
           const SizedBox(width: 11),
           Expanded(
@@ -349,45 +448,9 @@ class _StageRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        stage.name,
-                        style: TextStyle(
-                          fontFamily: AppFonts.inter,
-                          fontSize: 14,
-                          fontWeight: current && !closed ? FontWeight.w600 : FontWeight.w400,
-                          color: (closed ? AppColors.inkBody : ink).withValues(alpha: nameAlpha),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      stage.count,
-                      style: TextStyle(
-                        fontFamily: AppFonts.inter,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
-                        color: ink.withValues(alpha: countAlpha),
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
+                  children: [Expanded(child: name), const SizedBox(width: 10), count],
                 ),
-                if (stage.note != null) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    stage.note!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: AppFonts.inter,
-                      fontSize: 14,
-                      height: 1.3,
-                      color: noteColor,
-                    ),
-                  ),
-                ],
+                if (note != null) ...[const SizedBox(height: 3), note],
               ],
             ),
           ),
@@ -397,89 +460,122 @@ class _StageRow extends StatelessWidget {
   }
 }
 
-class _Indicator extends StatelessWidget {
-  const _Indicator({required this.state, required this.ink, required this.closed});
+/// СТРОКА ВМЕСТО ЭТАПОВ (кадры 22-5a, 22-5c) — то, что стоит на плите, когда этапов ещё или уже
+/// нет: «Собираем день 1 · около минуты · можно закрыть приложение» и «День не собрался».
+///
+/// Не шиммер-скелет: канва заменила пять фальшивых строк ОДНОЙ честной — срок назван словами и
+/// уходить разрешено, а пять серых полосок обещали содержимое, которого пока нет.
+class DayPlateNotice {
+  const DayPlateNotice({required this.title, required this.sub, this.spinner = false});
 
-  final DayPlateStageState state;
-  final Color ink;
-  final bool closed;
+  /// «Собираем день 1» / «День не собрался» — 15/600 paper.
+  final String title;
 
-  @override
-  Widget build(BuildContext context) {
-    switch (state) {
-      case DayPlateStageState.done:
-        return Container(
-          width: 14,
-          height: 14,
-          decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.verdictKnown),
-          child: const Icon(LucideIcons.check, size: 9, color: AppColors.paper),
-        );
-      case DayPlateStageState.current:
-        return Container(
-          width: 14,
-          height: 14,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: closed ? AppColors.ink : AppColors.paper, width: 1.5),
-          ),
-        );
-      case DayPlateStageState.locked:
-        return Container(
-          width: 14,
-          height: 14,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: ink.withValues(alpha: .30), width: 1.5),
-          ),
-        );
-    }
-  }
+  /// «около минуты · можно закрыть приложение» — 14 paper .62.
+  final String sub;
+
+  /// Кольцо 34 с оборотом 1.1 с (22-5a) вместо предупреждающего значка 30 (22-5c).
+  final bool spinner;
 }
 
-/// Пять строк-скелетов на месте этапов (кадр 22-5a): контур индикатора и две плашки .14.
-class _SkeletonRows extends StatelessWidget {
-  const _SkeletonRows();
+/// СТРОКА-ИЗВЕЩЕНИЕ НА ПЛИТЕ (22-5a, 22-5c) — под волосяной линией на месте этапов.
+class _NoticeRow extends StatelessWidget {
+  const _NoticeRow({required this.notice});
+
+  final DayPlateNotice notice;
 
   @override
-  Widget build(BuildContext context) {
-    final line = BorderSide(color: AppColors.paper.withValues(alpha: .14));
-    const widths = [64.0, 60.0, 70.0, 150.0, 100.0];
-
-    return Column(
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.only(top: 14),
+    decoration: BoxDecoration(
+      border: Border(top: BorderSide(color: AppColors.paper.withValues(alpha: .14))),
+    ),
+    child: Row(
+      crossAxisAlignment: notice.spinner ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
-        for (var i = 0; i < widths.length; i++)
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 11),
-            decoration: BoxDecoration(
-              border: Border(top: line, bottom: i == widths.length - 1 ? line : BorderSide.none),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.paper.withValues(alpha: .30), width: 1.5),
-                  ),
-                ),
-                const SizedBox(width: 11),
-                _bone(widths[i]),
-                const Spacer(),
-                _bone(40),
-              ],
-            ),
+        if (notice.spinner)
+          const _PlateSpinner()
+        else
+          const SizedBox(
+            width: 30,
+            height: 30,
+            child: Icon(LucideIcons.cloudOff, size: 30, color: AppColors.destructiveOnPlate),
           ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                notice.title,
+                style: const TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.paper,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                notice.sub,
+                style: TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 14,
+                  height: 1.4,
+                  color: AppColors.paper.withValues(alpha: .62),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
-    );
+    ),
+  );
+}
+
+/// Кольцо-спиннер 34 плиты: контур paper .20 и один светлый сектор, оборот 1.1 с.
+class _PlateSpinner extends StatefulWidget {
+  const _PlateSpinner();
+
+  @override
+  State<_PlateSpinner> createState() => _PlateSpinnerState();
+}
+
+class _PlateSpinnerState extends State<_PlateSpinner> with SingleTickerProviderStateMixin {
+  late final AnimationController _turn = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Снимок не должен зависеть от кадра, на котором его сняли.
+    if (MediaQuery.of(context).disableAnimations) {
+      _turn.stop();
+    } else if (!_turn.isAnimating) {
+      _turn.repeat();
+    }
   }
 
-  Widget _bone(double width) => Container(
-    width: width,
-    height: 12,
-    decoration: BoxDecoration(
-      color: AppColors.paper.withValues(alpha: .14),
-      borderRadius: BorderRadius.circular(3),
+  @override
+  void dispose() {
+    _turn.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 34,
+    height: 34,
+    child: RotationTransition(
+      turns: _turn,
+      child: CircularProgressIndicator(
+        strokeWidth: 3,
+        value: MediaQuery.of(context).disableAnimations ? .25 : null,
+        backgroundColor: AppColors.paper.withValues(alpha: .20),
+        valueColor: const AlwaysStoppedAnimation(AppColors.paper),
+      ),
     ),
   );
 }

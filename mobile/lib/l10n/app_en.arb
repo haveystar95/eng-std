@@ -1133,6 +1133,18 @@
       }
     }
   },
+  "planHeaderBrow": "Plan · day {n} of {total}",
+  "@planHeaderBrow": {
+    "description": "Бровь шапки плана, 11/700 caps (кадр 21-2, plan.header.brow).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "planPlateLabel": "Day {n}",
   "@planPlateLabel": {
     "placeholders": {
@@ -1204,6 +1216,36 @@
   },
   "planPlateCtaStart": "Start",
   "@planPlateCtaStart": {},
+  "planPlateBuildingTitle": "Building day {n}",
+  "@planPlateBuildingTitle": {
+    "description": "Строка вместо этапов, пока день пишется (кадр 22-5a, plan.plate.building.title).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planPlateBuildingSub": "about a minute · you can close the app",
+  "@planPlateBuildingSub": {
+    "description": "Подпись под «Собираем день N»: срок назван, уходить разрешено (кадр 22-5a, plan.plate.building.sub)."
+  },
+  "planPlateFailedTitle": "The day did not build",
+  "@planPlateFailedTitle": {
+    "description": "Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title)."
+  },
+  "planPlateFailedSub": "The network dropped. The route is intact — only day {n} is missing",
+  "@planPlateFailedSub": {
+    "description": "Подпись под «День не собрался» (кадр 22-5c, plan.plate.failed.sub).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planPlateCtaRetry": "Try again",
+  "@planPlateCtaRetry": {
+    "description": "Кнопка плиты у несобравшегося дня (кадр 22-5c, plan.plate.cta.retry)."
+  },
   "planPlateCtaContinue": "Continue",
   "@planPlateCtaContinue": {},
   "planClosedTitle": "Day {n} closed",
@@ -1228,13 +1270,50 @@
       }
     }
   },
-  "planClosedReturn": "{k, plural, one{Comes back on day {n} · {k} card} other{Come back on day {n} · {k} cards}}",
-  "@planClosedReturn": {
+  "planClosedCount": "{cards} · {minutes}",
+  "@planClosedCount": {
+    "description": "Счёт закрытого дня в шапке плиты: «75 карточек · 19 минут» (кадр 21-4, plan.closed.count).",
+    "placeholders": {
+      "cards": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "planClosedNextTomorrow": "Day {n} opens tomorrow, {date}",
+  "@planClosedNextTomorrow": {
+    "description": "Первая строка подвала закрытого дня (кадр 21-4, plan.closed.next.tomorrow).",
     "placeholders": {
       "n": {
         "type": "int"
       },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "planClosedNextOn": "Day {n} opens {date}",
+  "@planClosedNextOn": {
+    "description": "Подвал закрытого дня, когда следующий день не «завтра» (кадр 21-4, plan.closed.next.on).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "planClosedReturn": "{k, plural, one{{k} card returns on day {n} →} other{{k} cards return on day {n} →}}",
+  "@planClosedReturn": {
+    "description": "Вторая строка подвала закрытого дня, терракотой (кадр 21-4, plan.closed.return).",
+    "placeholders": {
       "k": {
+        "type": "int"
+      },
+      "n": {
         "type": "int"
       }
     }
@@ -1274,6 +1353,49 @@
         "type": "String"
       }
     }
+  },
+  "planRouteMetaDay": "Day {n}",
+  "@planRouteMetaDay": {
+    "description": "Мета-строка узла маршрута, первое слово — номер дня (кадр 21-2b, plan.route.meta.day).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planRouteMetaPassed": "done",
+  "@planRouteMetaPassed": {
+    "description": "Мета-строка пройденного дня маршрута (кадр 21-2b, plan.route.meta.passed)."
+  },
+  "planMinutesShort": "{n} min",
+  "@planMinutesShort": {
+    "description": "Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planRouteMetaOpensAfter": "opens after day {n}",
+  "@planRouteMetaOpensAfter": {
+    "description": "Мета-строка ПЕРВОГО запертого дня маршрута (кадр 21-2b, plan.route.meta.opens.after).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planRouteMetaOpensTomorrow": "opens tomorrow",
+  "@planRouteMetaOpensTomorrow": {
+    "description": "Мета-строка первого запертого дня, когда предыдущий уже пройден (кадр 21-4, plan.route.meta.opens.tomorrow)."
+  },
+  "planRouteEventNoDate": "set a date",
+  "@planRouteEventNoDate": {
+    "description": "Мишень события без даты — пунктирный узел маршрута (кадр 21-2b, plan.route.event.nodate)."
+  },
+  "planRouteEventFallback": "Event",
+  "@planRouteEventFallback": {
+    "description": "Заголовок мишени, когда сервер не назвал событие (кадр 21-2b, plan.route.event.fallback)."
   },
   "planKitLabel": "Rescue kit",
   "@planKitLabel": {},
@@ -1442,8 +1564,46 @@
   "@planEntryNavCancel": {},
   "planEntryNext": "Next",
   "@planEntryNext": {},
-  "planEntryGoalTitle": "What are you preparing for?",
-  "@planEntryGoalTitle": {},
+  "planEntryGoalTitle": "What are you getting ready for?",
+  "@planEntryGoalTitle": {
+    "description": "Вопрос шага цели, Literata 26 (кадр 22-1, entry.goal.title)."
+  },
+  "planEntryGoalSub": "Tell the situation in your own words: what happens, who you talk to, what worries you",
+  "@planEntryGoalSub": {
+    "description": "Подпись под вопросом цели (кадр 22-1, entry.goal.sub)."
+  },
+  "planEntryGoalTyping1": "Interview on Friday, afraid of…",
+  "@planEntryGoalTyping1": {
+    "description": "Печатающийся плейсхолдер поля цели, кадр 1 — примеры НЕ те, что в списке историй (кадр 22-1, entry.goal.typing.1)."
+  },
+  "planEntryGoalTyping2": "Calling the bank, can't follow on the phone…",
+  "@planEntryGoalTyping2": {
+    "description": "Печатающийся плейсхолдер поля цели, кадр 2 (кадр 22-1, entry.goal.typing.2)."
+  },
+  "planEntryGoalTyping3": "Going to the doctor…",
+  "@planEntryGoalTyping3": {
+    "description": "Печатающийся плейсхолдер поля цели, кадр 3 (кадр 22-1, entry.goal.typing.3)."
+  },
+  "planEntryGoalStoriesTitle": "How others put it",
+  "@planEntryGoalStoriesTitle": {
+    "description": "Метка списка историй под полем цели (кадр 22-1, entry.goal.stories.title)."
+  },
+  "planEntryGoalStory1": "Interview on Friday, afraid of questions about my experience",
+  "@planEntryGoalStory1": {
+    "description": "История «так пишут другие» — тап подставляет её в поле (кадр 22-1, entry.goal.story.1)."
+  },
+  "planEntryGoalStory2": "To the doctor with my child, first time at the local clinic",
+  "@planEntryGoalStory2": {
+    "description": "История «так пишут другие» (кадр 22-1, entry.goal.story.2)."
+  },
+  "planEntryGoalStory3": "Call to the landlord about the deposit",
+  "@planEntryGoalStory3": {
+    "description": "История «так пишут другие» (кадр 22-1, entry.goal.story.3)."
+  },
+  "planEntryGoalShortHint": "Add who you talk to and what matters — the plan gets sharper",
+  "@planEntryGoalShortHint": {
+    "description": "Подсказка под коротким ответом; НЕ блокирует «Далее» (кадр 22-1c, entry.goal.short.hint)."
+  },
   "planEntryGoalHint": "the situation · who you talk to · what matters",
   "@planEntryGoalHint": {},
   "planEntryGoalPlaceholder": "Going to the doctor with my child, my back hurts. First time at the local clinic, afraid I will not understand the prescriptions",
@@ -1468,10 +1628,31 @@
   "@planEntryGoalTemplateTrip": {},
   "planEntryGoalShort": "Add who it is with and what matters — the plan will be more precise",
   "@planEntryGoalShort": {},
-  "planEntryGoalDictate": "Dictate",
-  "@planEntryGoalDictate": {},
-  "planEntryGoalDictateStop": "Stop",
-  "@planEntryGoalDictateStop": {},
+  "planEntryGoalDictate": "or dictate it",
+  "@planEntryGoalDictate": {
+    "description": "Подпись у микрофона в покое (кадр 22-1, entry.goal.dictate)."
+  },
+  "planEntryGoalDictateStop": "tap to stop",
+  "@planEntryGoalDictateStop": {
+    "description": "Подпись у микрофона во время записи (кадр 22-1, entry.goal.dictate.stop)."
+  },
+  "planEntryGoalDictateEdit": "you can edit it by hand",
+  "@planEntryGoalDictateEdit": {
+    "description": "Подпись у микрофона после распознавания (кадр 22-1, entry.goal.dictate.edit)."
+  },
+  "planEntryGoalListening": "{time} · go ahead, I'm listening",
+  "@planEntryGoalListening": {
+    "description": "Таймер и приглашение над волной записи (кадр 22-1, entry.goal.listening).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "planEntryGoalRecognising": "recognising…",
+  "@planEntryGoalRecognising": {
+    "description": "Состояние микрофона между записью и текстом в поле (кадр 22-1, entry.goal.recognising)."
+  },
   "planEntryTapeGoal": "Goal",
   "@planEntryTapeGoal": {},
   "planEntryTapeLanguage": "Language",
@@ -1516,22 +1697,107 @@
       }
     }
   },
-  "planEntryLanguageTitle": "Which language?",
-  "@planEntryLanguageTitle": {},
+  "planEntryLanguageTitle": "Which language will you speak?",
+  "@planEntryLanguageTitle": {
+    "description": "Вопрос шага языка (кадр 22-2, entry.language.title)."
+  },
+  "planEntryLanguageLabel": "Language",
+  "@planEntryLanguageLabel": {
+    "description": "Метка зоны языков (кадр 22-2, entry.language.label)."
+  },
   "planEntryLevelLabel": "Level",
   "@planEntryLevelLabel": {},
   "planEntryLevelBeginner": "Beginner",
-  "@planEntryLevelBeginner": {},
-  "planEntryLevelBeginnerSub": "I understand single words and simple phrases",
-  "@planEntryLevelBeginnerSub": {},
+  "@planEntryLevelBeginner": {
+    "description": "Уровень — название (кадр 22-2, entry.level.beginner)."
+  },
+  "planEntryLevelBeginnerSub": "I know some words",
+  "@planEntryLevelBeginnerSub": {
+    "description": "Уровень описан тем, что человек умеет (кадр 22-2, entry.level.beginner.sub)."
+  },
   "planEntryLevelIntermediate": "Intermediate",
   "@planEntryLevelIntermediate": {},
-  "planEntryLevelIntermediateSub": "I can explain myself but lack the words",
-  "@planEntryLevelIntermediateSub": {},
+  "planEntryLevelIntermediateSub": "I follow simple speech, I speak with mistakes",
+  "@planEntryLevelIntermediateSub": {
+    "description": "Уровень описан тем, что человек умеет (кадр 22-2, entry.level.intermediate.sub)."
+  },
   "planEntryLevelFluentNote": "Intermediate is enough to prepare for a situation",
   "@planEntryLevelFluentNote": {},
-  "planEntryDaysTitle": "How many days to prepare?",
-  "@planEntryDaysTitle": {},
+  "planEntryDaysTitle": "How many days until the conversation?",
+  "@planEntryDaysTitle": {
+    "description": "Вопрос шага длины плана (кадр 22-3a, entry.days.title)."
+  },
+  "planEntryDaysScenes": "{n, plural, one{{n} situation} other{{n} situations}}",
+  "@planEntryDaysScenes": {
+    "description": "Состав длины плана — ситуации (кадр 22-3a, entry.days.scenes).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planEntryDaysReviews": "{n, plural, one{{n} review} other{{n} reviews}}",
+  "@planEntryDaysReviews": {
+    "description": "Состав длины плана — дни повторения (кадр 22-3a, entry.days.reviews).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planEntryDaysRehearsal": "rehearsal",
+  "@planEntryDaysRehearsal": {
+    "description": "Состав длины плана — репетиция, она есть всегда (кадр 22-3a, entry.days.rehearsal)."
+  },
+  "planEntryDateTitle": "When is the conversation?",
+  "@planEntryDateTitle": {
+    "description": "Вопрос шага даты (кадр 22-3b, entry.date.title)."
+  },
+  "planEntryDateLabel": "Date",
+  "@planEntryDateLabel": {
+    "description": "Метка зоны выбора даты (кадр 22-3b, entry.date.label)."
+  },
+  "planEntryDateIn": "{weekday} · {n, plural, one{in {n} day} other{in {n} days}}",
+  "@planEntryDateIn": {
+    "description": "Подпись ближней даты: день недели и сколько до неё (кадр 22-3b, entry.date.in).",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planEntryDateUnknown": "No date yet",
+  "@planEntryDateUnknown": {
+    "description": "Равноправный вариант выбора даты (кадр 22-3b, entry.date.unknown)."
+  },
+  "planEntryDateUnknownSub": "a plan with no date, days run back to back",
+  "@planEntryDateUnknownSub": {
+    "description": "Подпись варианта без даты (кадр 22-3b, entry.date.unknown.sub)."
+  },
+  "planEntryDateOther": "Another date",
+  "@planEntryDateOther": {
+    "description": "Третий вариант выбора даты (кадр 22-3b, entry.date.other)."
+  },
+  "planEntryDateOtherSub": "pick in the calendar",
+  "@planEntryDateOtherSub": {
+    "description": "Подпись варианта «Другая дата» (кадр 22-3b, entry.date.other.sub)."
+  },
+  "planEntryDateRehearsalOn": "The rehearsal lands on {date} — the day before the conversation",
+  "@planEntryDateRehearsalOn": {
+    "description": "Строка следствия под выбором даты (кадр 22-3b, entry.date.rehearsal.on).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "planEntryDateCta": "Build the plan",
+  "@planEntryDateCta": {
+    "description": "Кнопка шага даты — называет результат, а не «Готово» (кадр 22-3b, entry.date.cta)."
+  },
   "planEntryDateToggle": "I know the event date",
   "@planEntryDateToggle": {},
   "planEntryDateNote": "The date goes at the end of the route, we remind you the day before",
@@ -1547,8 +1813,10 @@
       }
     }
   },
-  "planEntryPreviewTitle": "Route",
-  "@planEntryPreviewTitle": {},
+  "planEntryPreviewTitle": "Your plan is ready",
+  "@planEntryPreviewTitle": {
+    "description": "Заголовок готового превью (кадр 22-4b, entry.preview.title)."
+  },
   "planEntryPreviewSub": "{days} · {language} · {level}",
   "@planEntryPreviewSub": {
     "placeholders": {
@@ -1563,30 +1831,63 @@
       }
     }
   },
-  "planEntryPreviewLoadingTitle": "Building the route",
-  "@planEntryPreviewLoadingTitle": {},
-  "planEntryPreviewLoadingSub": "about 10 seconds",
-  "@planEntryPreviewLoadingSub": {},
+  "planEntryPreviewLoadingTitle": "Building your plan",
+  "@planEntryPreviewLoadingTitle": {
+    "description": "Заголовок превью во время сборки (кадр 22-4a, entry.preview.loading.title)."
+  },
+  "planEntryPreviewAbout": "About 10 seconds",
+  "@planEntryPreviewAbout": {
+    "description": "Срок сборки человеческими словами, без процента (кадр 22-4a, entry.preview.about)."
+  },
+  "planEntryPreviewLoadingSub": "Picking situations for your conversation and laying them out by day",
+  "@planEntryPreviewLoadingSub": {
+    "description": "Что именно происходит во время сборки (кадр 22-4a, entry.preview.loading.sub)."
+  },
   "planEntryPreviewRemove": "Remove",
   "@planEntryPreviewRemove": {},
   "planEntryPreviewHint": "Not it? Swipe a day away or change the goal",
   "@planEntryPreviewHint": {},
   "planEntryPreviewCta": "Start",
   "@planEntryPreviewCta": {},
-  "planEntryPreviewErrorTitle": "Could not build the route",
-  "@planEntryPreviewErrorTitle": {},
-  "planEntryPreviewErrorSub": "The service did not answer. Your goal and answers are kept — nothing to type again",
-  "@planEntryPreviewErrorSub": {},
+  "planEntryPreviewErrorTitle": "The plan did not build",
+  "@planEntryPreviewErrorTitle": {
+    "description": "Заголовок неудачной сборки (кадр 22-4c, entry.preview.error.title)."
+  },
+  "planEntryPreviewErrorWhat": "The network dropped halfway",
+  "@planEntryPreviewErrorWhat": {
+    "description": "Что случилось при неудачной сборке (кадр 22-4c, entry.preview.error.what)."
+  },
+  "planEntryPreviewErrorSub": "Your answers are saved — try again, no need to retell anything",
+  "@planEntryPreviewErrorSub": {
+    "description": "Что уцелело при неудачной сборке (кадр 22-4c, entry.preview.error.sub)."
+  },
   "planEntryPreviewErrorRetry": "Try again",
-  "@planEntryPreviewErrorRetry": {},
+  "@planEntryPreviewErrorRetry": {
+    "description": "Кнопка неудачной сборки; повтор не уводит на первый шаг (кадр 22-4c, entry.preview.error.retry)."
+  },
   "planEntryPreviewErrorEdit": "Change the goal",
   "@planEntryPreviewErrorEdit": {},
-  "planEntryPreviewUnclearTitle": "Did not get what you are preparing for",
-  "@planEntryPreviewUnclearTitle": {},
-  "planEntryPreviewUnclearSub": "Describe the situation in words: where, with whom, why",
-  "@planEntryPreviewUnclearSub": {},
-  "planEntryPreviewUnclearCta": "To the goal",
-  "@planEntryPreviewUnclearCta": {},
+  "planEntryPreviewUnclearTitle": "A little more, please",
+  "@planEntryPreviewUnclearTitle": {
+    "description": "Заголовок, когда цель непонятна — просьба, не упрёк (кадр 22-4d, entry.preview.unclear.title)."
+  },
+  "planEntryPreviewUnclearQuote": "“{goal}” — what is it about?",
+  "@planEntryPreviewUnclearQuote": {
+    "description": "Цитата ответа человека в кадре «цель непонятна» (кадр 22-4d, entry.preview.unclear.quote).",
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "planEntryPreviewUnclearSub": "Say where you will be speaking and with whom: a doctor's visit, a call to the bank, a chat with a neighbour",
+  "@planEntryPreviewUnclearSub": {
+    "description": "Три примера того, чего не хватает (кадр 22-4d, entry.preview.unclear.sub)."
+  },
+  "planEntryPreviewUnclearCta": "Back to the goal",
+  "@planEntryPreviewUnclearCta": {
+    "description": "Кнопка возврата к полю цели с сохранённым текстом (кадр 22-4d, entry.preview.unclear.cta)."
+  },
   "planEntryDayBuilding": "Building day {n} · about a minute",
   "@planEntryDayBuilding": {
     "placeholders": {

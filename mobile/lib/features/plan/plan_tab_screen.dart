@@ -80,12 +80,20 @@ class _PlanTabScreenState extends ConsumerState<PlanTabScreen> {
   }
 }
 
-/// The tab's page: the title row with the avatar, then the blocks, under the tab bar's inset.
+/// The tab's page: whatever stands at the top, then the blocks, under the tab bar's inset.
+///
+/// The top is NOT always the same row any more. With no plan (кадр 21-1) the tab wears its own
+/// name — «План» 28/800 with the avatar. With a plan the name is gone and [PlanHeader] stands
+/// there instead: the canvas subtracted the word «План» from the header, because the brow already
+/// says it («План · день 2 из 7») and the big type belongs to the plan's own name.
 class _Page extends StatelessWidget {
-  const _Page({required this.children, required this.bottomInset, this.leading});
+  const _Page({required this.children, required this.bottomInset, this.top, this.leading});
 
   final List<Widget> children;
   final double bottomInset;
+
+  /// The plan's header. Null — the tab's own name row (no plan, or nothing loaded yet).
+  final Widget? top;
 
   /// A back chevron in place of nothing — the reading mode of a finished plan is pushed.
   final Widget? leading;
@@ -97,16 +105,17 @@ class _Page extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.fromLTRB(20, AppSpacing.s8, 20, bottomInset),
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Row(
-            children: [
-              ?leading,
-              Expanded(child: Text(l.planTitle, style: AppText.screenTitle)),
-              const ProfileAvatarButton(),
-            ],
-          ),
-        ),
+        top ??
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Row(
+                children: [
+                  ?leading,
+                  Expanded(child: Text(l.planTitle, style: AppText.screenTitle)),
+                  const ProfileAvatarButton(),
+                ],
+              ),
+            ),
         ...children,
       ],
     );
@@ -175,13 +184,20 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
     return _Page(
       bottomInset: widget.bottomInset,
       leading: widget.leading,
+      top: PlanHeader(
+        brow: l.planHeaderBrow(dayLabel, p.daysTotal),
+        shortTitle: p.shortTitle,
+        goal: p.goalText,
+        total: p.daysTotal,
+        closed: p.closedDays,
+        onMenu: widget.readOnly ? (_) {} : _openMenu,
+        trailing: widget.readOnly ? null : const ProfileAvatarButton(),
+        leading: widget.leading,
+      ),
       children: [
-        const SizedBox(height: 12),
-        PlanGoalRow(goal: p.goalText, onMenu: widget.readOnly ? (_) {} : _openMenu),
-        const SizedBox(height: 14),
-        PlanProgressLine(day: dayLabel, total: p.daysTotal, closed: p.closedDays),
         if (s.offline) ...[const SizedBox(height: 8), _OfflineLine(l.planTabOffline)],
-        const SizedBox(height: 14),
+        // Шапка → плита: 32, как между всеми зонами экрана (кадр 21-2).
+        const SizedBox(height: 32),
         // THE PLATE — or the card that stands in its place.
         if (showsDone)
           PlanDoneCard(
@@ -192,10 +208,17 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
           )
         else if (overdue)
           PlanOverdueCard(plan: p, onFinish: _finish, onReschedule: _changeDate)
-        else if (focus != null && focus.lessonFailed)
-          PlanDayFailedCard(day: focus, onRetry: () => _retryLesson(focus))
         else if (focus != null)
-          PlanDayPlateView(plan: p, day: focus, room: s.room, onOpen: () => _openDay(focus)),
+          // 22-5a/22-5c живут НА ПЛИТЕ, а не отдельной карточкой: канва не уводит человека из
+          // таба ни пока день пишется, ни когда он не собрался — шапка, плита и маршрут стоят на
+          // местах, меняется только середина плиты.
+          PlanDayPlateView(
+            plan: p,
+            day: focus,
+            room: s.room,
+            onOpen: () => _openDay(focus),
+            onRetryLesson: () => _retryLesson(focus),
+          ),
         if (showTabHints) ...[
           const SizedBox(height: 14),
           PlanHintLine(text: l.planHintFirstStart, visible: true),
@@ -204,7 +227,7 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
           const SizedBox(height: 14),
           PlanHintLine(text: l.planHintFirstReturn, visible: true),
         ],
-        const SizedBox(height: 28),
+        gap,
         // THE ROUTE, under its countdown when the plan has a date.
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -217,7 +240,8 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
                   padding: const EdgeInsets.fromLTRB(0, 6, 0, 4),
                   child: PlanHintLine(text: l.planHintFirstRoute, visible: true),
                 ),
-              PlanRoute(plan: p),
+              // Тап по узлу — кабинет ТОГО ЖЕ дня (21-2b); в режиме чтения узлы не нажимаются.
+              PlanRoute(plan: p, onOpenDay: widget.readOnly ? null : _openDay),
             ],
           ),
         ),

@@ -610,6 +610,17 @@ class Plan {
 
   String get displayTitle => (titleNative ?? '').trim().isNotEmpty ? titleNative!.trim() : goalText;
 
+  /// КОРОТКОЕ НАЗВАНИЕ ПЛАНА для шапки (кадр 21-2, Literata 30) — или null, и тогда шапка берёт
+  /// фолбэк 21-6 (формулировка человека Inter 21/600 в три строки).
+  ///
+  /// Отличается от [displayTitle] ровно этим: там пустое название молча подменяется целью и
+  /// рисуется теми же 30 Literata, а шапке нужно ЗНАТЬ, что названия нет, — у фолбэка свой кегль.
+  String? get shortTitle {
+    final t = (titleNative ?? '').trim();
+
+    return t.isEmpty ? null : t;
+  }
+
   /// How many days are closed — what the header's progress line and «День N из M» read.
   int get closedDays => days.where((d) => d.isClosed).length;
 

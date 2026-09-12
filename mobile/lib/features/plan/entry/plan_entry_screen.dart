@@ -14,25 +14,30 @@ import '../../../data/plan/plan_models.dart';
 import '../../../data/providers.dart';
 import '../plan_format.dart';
 import '../plan_providers.dart';
+import 'entry_date_step.dart';
 import 'entry_days_step.dart';
 import 'entry_goal_step.dart';
 import 'entry_language_step.dart';
 import 'entry_preview_step.dart';
 import 'entry_scaffold.dart';
 import 'entry_state.dart';
-import 'entry_tape.dart';
 
 /// Open the entry over the tab. Resolves with the started plan, or null when the learner left.
 Future<Plan?> openPlanEntry(BuildContext context) =>
     Navigator.of(context).push<Plan>(MaterialPageRoute(builder: (_) => const PlanEntryScreen()));
 
-/// ВХОД В ПЛАН — кадры 22-1a … 22-5 (наряд PLAN-UI, §4).
+/// ВХОД В ПЛАН — кадры 22-1 … 22-4d (наряд PLAN-UI-2).
 ///
-/// Four steps under one header: the goal, the language and level, the days and the date, the
-/// preview. The answers ride in [EntryState]; each step is a widget that reads it and calls back.
-/// The plan is asked for when the days step is left — `POST /plans` answers 202 and the preview
-/// polls the build (§4: «промт плана — асинхронный job»); «Начать» is `POST /plans/{id}/start`,
-/// and day one the server writes on its own — the tab only asks whether it has.
+/// ЧЕТЫРЕ ВОПРОСА и результат: цель (22-1), язык с уровнем (22-2), длина (22-3a), дата (22-3b) —
+/// и превью (22-4a…22-4d), которое шагом не считается. Ответы едут в [EntryState]; каждый шаг —
+/// виджет, который его читает и звонит наружу.
+///
+/// План заказывается, когда уходят с шага ДАТЫ — `POST /plans` отвечает 202, превью опрашивает
+/// сборку; «Начать» — это `POST /plans/{id}/start`, а день 1 сервер пишет сам, и таб только
+/// спрашивает, написал ли.
+///
+/// Шапки с «Отмена / Новый план / Далее» здесь больше нет: наверху стрелка назад и четыре точки,
+/// единственное действие шага — кнопка внизу.
 class PlanEntryScreen extends ConsumerStatefulWidget {
   const PlanEntryScreen({super.key});
 
@@ -52,7 +57,9 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
   // ── dictation (кадр 22-1a: микрофон в поле) ────────────────────────────────────────────────
   final SpeechToText _speech = SpeechToText();
   bool _speechInitDone = false;
-  bool _listening = false;
+  EntryMicState _mic = EntryMicState.idle;
+  int _micSeconds = 0;
+  Timer? _micTick;
   String _voiceBase = '';
 
   static const _pollEvery = Duration(seconds: 2);
@@ -67,13 +74,14 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     final level = _levelFor(profile?.cefrLevel);
     _s = _s.copyWith(targetLang: lang, level: level);
     _goal.addListener(() {
-      if (_goal.text != _s.goal) setState(() => _s = _s.copyWith(goal: _goal.text, clearChip: _s.chip != null && _goal.text != _templateOf(_s.chip)));
+      if (_goal.text != _s.goal) setState(() => _s = _s.copyWith(goal: _goal.text));
     });
   }
 
   @override
   void dispose() {
     _poll?.cancel();
+    _micTick?.cancel();
     if (_speech.isListening) _speech.stop();
     _goal.dispose();
     _goalFocus.dispose();
@@ -84,15 +92,6 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     'B1' || 'B2' || 'C1' || 'C2' => PlanLevel.intermediate,
     _ => PlanLevel.beginner,
   };
-
-  bool get _fluentNote {
-    final cefr = ref.read(authControllerProvider).value?.profile?.cefrLevel;
-
-    return _levelFor(cefr) == PlanLevel.intermediate;
-  }
-
-  String? _templateOf(EntryGoalChip? chip) =>
-      chip == null ? null : EntryGoalStep.templateFor(AppLocalizations.of(context), chip);
 
   // ── navigation between the steps ───────────────────────────────────────────────────────────
 
@@ -110,13 +109,40 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       case EntryStep.language:
         _go(EntryStep.days);
       case EntryStep.days:
+        // Уходя с длины, подставляем ближнюю дату: шаг даты открывается с предвыбранным ответом,
+        // а не с тремя пустыми строками.
+        setState(() => _s = _s.copyWith(eventDate: _s.eventDate ?? _suggestedDate()));
+        _go(EntryStep.date);
+      case EntryStep.date:
         _go(EntryStep.preview);
       case EntryStep.preview:
         break;
     }
   }
 
-  void _cancel() => Navigator.of(context).pop();
+  /// СТРЕЛКА НАЗАД: на первом шаге закрывает вход, дальше возвращает на шаг назад. Из превью —
+  /// на дату: план уже заказан, и человек возвращается к последнему своему ответу, а не к цели.
+  void _back() {
+    switch (_s.step) {
+      case EntryStep.goal:
+        Navigator.of(context).pop();
+      case EntryStep.language:
+        _go(EntryStep.goal);
+      case EntryStep.days:
+        _go(EntryStep.language);
+      case EntryStep.date:
+        _go(EntryStep.days);
+      case EntryStep.preview:
+        _go(EntryStep.date);
+    }
+  }
+
+  /// Ближняя дата — через столько дней, сколько выбрано: разговор ровно в конце плана.
+  DateTime _suggestedDate() {
+    final today = DateTime.now();
+
+    return DateTime(today.year, today.month, today.day).add(Duration(days: _s.days));
+  }
 
   // ── the build (кадры 22-4a … 22-4d) ────────────────────────────────────────────────────────
 
@@ -233,21 +259,6 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     }
   }
 
-  /// «Убери день свайпом» (22-4b): the server answers with the rebuilt route; the core scene is
-  /// refused (409 `plan_core_scene`) and the row springs back — the frames draw nothing for it.
-  Future<void> _removeScene(PlanScene scene) async {
-    final id = _s.planId;
-    if (id == null || _s.phase != EntryBuildPhase.ready) return;
-    try {
-      final plan = await ref.read(apiClientProvider).removePlanScene(id, scene.id);
-      if (!mounted) return;
-      AppHaptics.light();
-      setState(() => _s = _s.copyWith(plan: plan));
-    } catch (_) {
-      AppHaptics.warning();
-    }
-  }
-
   /// «Начать» (22-4b → 22-5a): the plan goes live and the entry closes over the tab.
   Future<void> _start() async {
     final id = _s.planId;
@@ -269,25 +280,36 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
 
   // ── dictation ──────────────────────────────────────────────────────────────────────────────
 
+  /// МИКРОФОН В ЧЕТЫРЕ СОСТОЯНИЯ (кадр 22-1): покой → слушаю → распознаю → текст в поле.
+  ///
+  /// «Распознаю» — не украшение: движок отдаёт финальный результат уже после того, как перестал
+  /// слушать, и без этого состояния поле секунду стояло пустым, будто запись пропала.
   Future<void> _toggleMic() async {
-    if (_listening) {
+    if (_mic == EntryMicState.listening) {
       await _speech.stop();
-      if (mounted) setState(() => _listening = false);
+      if (mounted) _setMic(EntryMicState.recognising);
 
       return;
     }
-    // The GOAL is written in the learner's own language, so the recogniser listens for that one.
+    if (_mic == EntryMicState.recognising) return;
+
+    // Цель человек пишет на СВОЁМ языке, поэтому слушаем его, а не изучаемый.
     final support = ref.read(authControllerProvider).value?.profile?.nativeLanguage ?? 'ru';
     _goalFocus.unfocus();
     if (!_speechInitDone) {
       _speechInitDone = true;
       try {
         final ok = await _speech.initialize(
-          onStatus: (s) {
-            if ((s == 'notListening' || s == 'done') && mounted) setState(() => _listening = false);
+          onStatus: (status) {
+            if (!mounted) return;
+            if (status == 'notListening' && _mic == EntryMicState.listening) {
+              _setMic(EntryMicState.recognising);
+            } else if (status == 'done') {
+              _setMic(_goal.text.trim().isEmpty ? EntryMicState.idle : EntryMicState.done);
+            }
           },
           onError: (_) {
-            if (mounted) setState(() => _listening = false);
+            if (mounted) _setMic(EntryMicState.idle);
           },
         );
         if (!ok) {
@@ -304,7 +326,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     if (!_speech.isAvailable) return;
     AppHaptics.light();
     _voiceBase = _goal.text;
-    setState(() => _listening = true);
+    _setMic(EntryMicState.listening);
     await _speech.listen(
       onResult: (r) {
         if (!mounted) return;
@@ -314,21 +336,37 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
           text: combined,
           selection: TextSelection.collapsed(offset: combined.length),
         );
+        if (r.finalResult) _setMic(EntryMicState.done);
       },
-      listenOptions: SpeechListenOptions(partialResults: true, cancelOnError: true, localeId: sttLocaleFor(support)),
+      listenOptions: SpeechListenOptions(
+        partialResults: true,
+        cancelOnError: true,
+        localeId: sttLocaleFor(support),
+      ),
     );
   }
 
-  void _chip(EntryGoalChip chip) {
+  /// Смена состояния микрофона вместе с таймером записи — «0:07 · говори, я слушаю».
+  void _setMic(EntryMicState next) {
+    _micTick?.cancel();
+    if (next == EntryMicState.listening) {
+      _micSeconds = 0;
+      _micTick = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() => _micSeconds++);
+      });
+    }
+    setState(() => _mic = next);
+  }
+
+  /// Тап по истории «так пишут другие» — текст встаёт в поле, курсор в конце (22-1).
+  void _story(String text) {
     AppHaptics.light();
-    final template = _templateOf(chip);
-    // «Заготовка проявляется 160 мс, курсор в конце» — the text lands whole, the cursor after it.
     _goal.value = TextEditingValue(
-      text: template ?? '',
-      selection: TextSelection.collapsed(offset: (template ?? '').length),
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
     );
-    setState(() => _s = _s.copyWith(goal: template ?? '', chip: chip));
-    _goalFocus.requestFocus();
+    _setMic(EntryMicState.idle);
+    setState(() => _s = _s.copyWith(goal: text));
   }
 
   Future<void> _pickDate() async {
@@ -376,158 +414,110 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       PlanLevel.beginner => l.planEntryLevelBeginner,
       PlanLevel.intermediate => l.planEntryLevelIntermediate,
     };
-
-    final tape = <EntryTapeRow>[
-      if (_s.step.index > EntryStep.goal.index)
-        EntryTapeRow(label: l.planEntryTapeGoal, value: _s.goal.trim(), onEdit: () => _go(EntryStep.goal)),
-      if (_s.step.index > EntryStep.language.index)
-        EntryTapeRow(
-          label: l.planEntryTapeLanguage,
-          value: l.planEntryTapeLanguageValue(languageName, levelName),
-          onEdit: () => _go(EntryStep.language),
-        ),
-      if (_s.step.index > EntryStep.days.index)
-        EntryTapeRow(label: l.planEntryTapeDays, value: _daysValue(l, locale), onEdit: () => _go(EntryStep.days)),
-    ];
+    final languageValue = l.planEntryTapeLanguageValue(languageName, levelName);
+    final goal = _s.goal.trim();
 
     final Widget body = switch (_s.step) {
       EntryStep.goal => EntryGoalStep(
         controller: _goal,
         focus: _goalFocus,
-        chip: _s.chip,
-        listening: _listening,
-        onChip: _chip,
+        mic: _mic,
+        micSeconds: _micSeconds,
         onMic: _toggleMic,
+        onStory: _story,
       ),
       EntryStep.language => EntryLanguageStep(
-        tape: tape,
-        languages: studyLanguagesFor(_s.targetLang),
+        goal: goal,
+        languages: planEntryLanguagesFor(_s.targetLang),
         targetLang: _s.targetLang,
         level: _s.level,
-        fluentNote: _fluentNote,
         onLanguage: (code) => setState(() => _s = _s.copyWith(targetLang: code)),
         onLevel: (level) => setState(() => _s = _s.copyWith(level: level)),
+        onEditGoal: () => _go(EntryStep.goal),
       ),
       EntryStep.days => EntryDaysStep(
-        tape: tape,
+        goal: goal,
+        languageValue: languageValue,
         days: _s.days,
-        requestedDays: _s.requestedDays,
-        dateEnabled: _s.dateEnabled,
-        eventDate: _s.eventDate,
         onDays: (n) => setState(() => _s = _s.copyWith(days: _fits(n), requestedDays: n)),
-        onDateEnabled: (on) => setState(() => _s = _s.copyWith(dateEnabled: on, days: on ? _fits(_s.requestedDays) : _s.requestedDays)),
-        onPickDate: _pickDate,
+        onEditGoal: () => _go(EntryStep.goal),
+        onEditLanguage: () => _go(EntryStep.language),
+      ),
+      EntryStep.date => EntryDateStep(
+        goal: goal,
+        languageValue: languageValue,
+        days: _s.days,
+        eventDate: _s.eventDate,
+        suggested: _suggestedDate(),
+        onPickSuggested: () => setState(
+          () => _s = _s.copyWith(
+            eventDate: _s.eventDate ?? _suggestedDate(),
+            days: _fits(_s.requestedDays, date: _s.eventDate ?? _suggestedDate()),
+          ),
+        ),
+        // «Дата пока неизвестна» — план идёт подряд, и длина возвращается к выбранной.
+        onPickUnknown: () =>
+            setState(() => _s = _s.copyWith(clearDate: true, days: _s.requestedDays)),
+        onPickCustom: _pickDate,
+        onEditGoal: () => _go(EntryStep.goal),
+        onEditLanguage: () => _go(EntryStep.language),
+        onEditDays: () => _go(EntryStep.days),
       ),
       EntryStep.preview => EntryPreviewStep(
-        tape: tape,
         state: _s,
-        languageName: languageName,
+        summary: _summary(l, locale, languageName, levelName),
         onRetry: _retry,
         onEditGoal: () => _go(EntryStep.goal),
-        onRemoveScene: _removeScene,
       ),
     };
 
-    final preview = _s.step == EntryStep.preview;
-    final canStart = preview && _s.phase == EntryBuildPhase.ready;
+    // Кнопка шага называет РЕЗУЛЬТАТ: с даты уходят «Собрать план», из превью — «Начать».
+    final (String dockLabel, bool dockEnabled, VoidCallback dockTap) = switch (_s.step) {
+      EntryStep.goal => (l.planEntryNext, _s.goalFilled, _next),
+      EntryStep.language || EntryStep.days => (l.planEntryNext, true, _next),
+      EntryStep.date => (l.planEntryDateCta, true, _next),
+      EntryStep.preview => (
+        l.planEntryPreviewCta,
+        _s.phase == EntryBuildPhase.ready,
+        _start,
+      ),
+    };
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) _cancel();
+          if (!didPop) _back();
         },
         child: EntryScaffold(
           step: _s.step,
-          onCancel: _cancel,
-          onNext: _next,
-          showNext: !preview,
-          nextEnabled: _s.step != EntryStep.goal || _s.goalFilled,
-          dock: preview ? _StartDock(enabled: canStart, onStart: _start) : null,
+          onBack: _back,
+          dock: EntryDock(label: dockLabel, enabled: dockEnabled, onTap: dockTap),
           child: body,
         ),
       ),
     );
   }
 
-  /// «5 · приём 15 сентября» — the event's word is the server's once the plan is built; before
-  /// that the days and the date alone.
-  String _daysValue(AppLocalizations l, String locale) {
+  /// «7 дней · английский · средний · приём 17 сентября» — одна строка под заголовком превью.
+  ///
+  /// Слово события — сервера («приём»), и до готовности плана его нет: тогда строка называет
+  /// только дату. Ничего про событие клиент не склоняет.
+  String _summary(AppLocalizations l, String locale, String languageName, String levelName) {
+    final parts = <String>[
+      l.planDaysCount(_s.days),
+      languageName.toLowerCase(),
+      levelName.toLowerCase(),
+    ];
     final date = _s.effectiveDate;
-    final plan = _s.plan;
-    if (date == null) return '${_s.days}';
-    final formatted = PlanFormat.date(date, locale);
-    final event = (plan?.eventNative ?? '').trim();
-    if (event.isEmpty) return l.planEntryTapeDaysValueDated(_s.days, formatted);
+    if (date != null) {
+      final when = PlanFormat.date(date, locale);
+      final event = (_s.plan?.eventNative ?? '').trim();
+      parts.add(event.isEmpty ? when : '${event.toLowerCase()} $when');
+    }
 
-    return l.planEntryTapeDaysValue(_s.days, event.toLowerCase(), formatted);
+    return parts.join(' · ');
   }
-}
 
-/// The dock over the safe area on the preview: the hint line and «Начать» 54 / radius 18.
-class _StartDock extends StatelessWidget {
-  const _StartDock({required this.enabled, required this.onStart});
-
-  final bool enabled;
-  final VoidCallback onStart;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.s26, 8, AppSpacing.s26, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (enabled) ...[
-            Text(
-              l.planEntryPreviewHint,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 14, color: AppColors.tertiary),
-            ),
-            const SizedBox(height: 12),
-          ],
-          Semantics(
-            button: true,
-            enabled: enabled,
-            label: l.planEntryPreviewCta,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              height: 54,
-              decoration: BoxDecoration(
-                color: enabled ? AppColors.ink : AppColors.ink.withValues(alpha: .10),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Material(
-                type: MaterialType.transparency,
-                borderRadius: BorderRadius.circular(18),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: enabled
-                      ? () {
-                          AppHaptics.light();
-                          onStart();
-                        }
-                      : null,
-                  child: Center(
-                    child: Text(
-                      l.planEntryPreviewCta,
-                      style: TextStyle(
-                        fontFamily: AppFonts.inter,
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w700,
-                        color: enabled ? AppColors.paper : AppColors.tertiary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
