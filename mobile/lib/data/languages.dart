@@ -38,24 +38,25 @@ const List<String> kNativeLanguageCodes = ['uk', 'ru', 'de', 'pl', 'fr', 'it', '
 /// actually on so a picker can never fail to show the current value.
 const List<String> kStudyLanguageCodes = ['en', 'de'];
 
-/// ЯЗЫКИ, КОТОРЫЕ ПРЕДЛАГАЕТ ВХОД В ПЛАН (кадр 22-2) — английский, испанский, немецкий.
+/// ФЛАГ ЯЗЫКА — эмодзи в кружке карточки выбора (кадр 22-2, канва PLAN-DES-3).
 ///
-/// Отдельный список, а не [kStudyLanguageCodes]: канва серии 22 называет на этом шаге три языка,
-/// а продуктовый список профиля пока держит два (`en`, `de`). Расхождение НАМЕРЕННО оставлено
-/// видимым и названо в отчёте наряда PLAN-UI-2 — менять продуктовое решение о том, что вообще
-/// предлагается в профиле, наряд про экран плана не вправе.
-const List<String> kPlanEntryLanguageCodes = ['en', 'es', 'de'];
+/// Флаг — примета языка, а не страны: английский узнаётся британским флагом. Какие языки вообще
+/// предлагать, решает СЕРВЕР (`GET /plans/languages`, решение владельца 12.09); здесь только
+/// картинка к коду. Кода без флага — null, и карточка берёт монограмму.
+const Map<String, String> kLanguageFlags = {
+  'en': '\u{1F1EC}\u{1F1E7}',
+  'de': '\u{1F1E9}\u{1F1EA}',
+  'es': '\u{1F1EA}\u{1F1F8}',
+  'fr': '\u{1F1EB}\u{1F1F7}',
+  'it': '\u{1F1EE}\u{1F1F9}',
+  'pl': '\u{1F1F5}\u{1F1F1}',
+  'ro': '\u{1F1F7}\u{1F1F4}',
+  'pt': '\u{1F1F5}\u{1F1F9}',
+  'uk': '\u{1F1FA}\u{1F1E6}',
+  'tr': '\u{1F1F9}\u{1F1F7}',
+};
 
-/// Строки входа для языка, плюс текущий язык аккаунта, если он не из трёх.
-List<Language> planEntryLanguagesFor(String? current) {
-  final codes = [
-    ...kPlanEntryLanguageCodes,
-    if (current != null && current.isNotEmpty && !kPlanEntryLanguageCodes.contains(current))
-      current,
-  ];
-
-  return codes.map(languageByCode).toList(growable: false);
-}
+String? flagEmojiFor(String code) => kLanguageFlags[code.trim().toLowerCase()];
 
 /// ПРИВЕТСТВИЕ НА ЯЗЫКЕ — подпись под его названием в карточке выбора (кадр 22-2).
 ///

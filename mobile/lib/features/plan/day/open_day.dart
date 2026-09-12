@@ -7,6 +7,8 @@ import '../../../data/deep_links.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/providers.dart';
 import '../plan_providers.dart';
+import '../route/plan_route.dart';
+import '../route/route_view.dart';
 import 'day_room_screen.dart';
 
 /// ОДНА ДВЕРЬ В КАБИНЕТ ДНЯ — с плиты таба «План», из уведомления и по ссылке `engstd://…`.
@@ -18,6 +20,15 @@ Future<void> openDayRoom(BuildContext context, WidgetRef ref, {Plan? plan, int? 
   final p = plan ?? await _plan(ref);
   if (p == null || !context.mounted) return;
   final n = number ?? p.currentDay?.number ?? 1;
+  final day = p.days.where((d) => d.number == n).firstOrNull;
+  // ЗАПЕРТЫЙ ДЕНЬ НЕ ОТКРЫВАЕТСЯ (наряд PLAN-UI-3): ни плита, ни ссылка, ни уведомление не ведут в
+  // кабинет дня, который сервер ещё не открыл. Таб называет причину строкой на маршруте.
+  if (day != null && PlanRouteDayState.of(day) == RouteDayTone.locked) {
+    AppHaptics.warning();
+    ref.read(planExplainDayProvider.notifier).explain(n);
+
+    return;
+  }
   AppHaptics.light();
   await Navigator.of(context).push(
     MaterialPageRoute(builder: (_) => DayRoomScreen(plan: p, number: n)),

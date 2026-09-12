@@ -154,7 +154,7 @@ class PlanSystemDayMark extends StatelessWidget {
 /// Иконки серии 22 — по строке, в которой стоят.
 ///
 /// Где канва нарисовала ВАРИАНТЫ одного значка, вариант — отдельное значение, а не параметр:
-/// уровень бывает в одну и в две полоски, а календарь — с числом, с вопросом и с плюсом, и это
+/// уровень бывает плиткой и двумя пузырями, а календарь — с числом, с вопросом и с плюсом, и это
 /// три разных утверждения про дату, не три состояния одной иконки.
 enum PlanIcon {
   goal('assets/icons/goal.svg'),
@@ -167,8 +167,9 @@ enum PlanIcon {
   calendarUnknown('assets/icons/calendar-unknown.svg'),
   calendarPlus('assets/icons/calendar-plus.svg'),
   quote('assets/icons/quote.svg'),
-  level1('assets/icons/level-1.svg'),
-  level2('assets/icons/level-2.svg'),
+  /// Уровень 24 (канва PLAN-DES-3, 22-2): плитка со словом — «Начальный», два пузыря — «Средний».
+  levelBeginner('assets/icons/level-beginner.svg'),
+  levelIntermediate('assets/icons/level-intermediate.svg'),
   mic('assets/icons/mic.svg'),
 
   /// Значки извещений превью 40 × 40 (22-4c, 22-4d).

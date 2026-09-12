@@ -99,6 +99,10 @@ class PlanTabController extends AsyncNotifier<PlanTabState> {
     ({Plan plan, Map<String, dynamic> raw})? current;
     try {
       current = await _api.currentPlan();
+    } on PlanContractError {
+      // The server answered, and the answer names a state this build cannot draw: that is not
+      // «нет сети», and yesterday's cache would show a route that is no longer true.
+      rethrow;
     } catch (e) {
       debugPrint('[plan-tab] current plan: $e');
       final cached = await _store.readCurrent();
@@ -264,3 +268,29 @@ class PlanHintsController extends AsyncNotifier<PlanHints> {
     state = AsyncData(_now.copyWith(howShown: true));
   }
 }
+
+/// ЗАПЕРТЫЙ ДЕНЬ, ЧЬЮ ПРИЧИНУ ТАБ ДОЛЖЕН НАЗВАТЬ (наряд PLAN-UI-3 §1).
+///
+/// Запертый день не открывается ни с какой двери: тап по нему на маршруте, ссылка
+/// `engstd://plan/day/{id}`, уведомление и 409 `plan_day_locked` от сервера приводят сюда, и
+/// маршрут дописывает в мету этого дня «откроется после дня N» — строкой, без экрана.
+class PlanExplainDay extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void explain(int number) => state = number;
+}
+
+final planExplainDayProvider = NotifierProvider<PlanExplainDay, int?>(PlanExplainDay.new);
+
+/// ДЕНЬ, К КОТОРОМУ ТАБ ДОЛЖЕН ПРОКРУТИТЬ МАРШРУТ — тап по уведомлению открывает вкладку «План» на
+/// нужном дне (наряд PLAN-UI-3 §4). Номер и порядковый счётчик: второй тап по тому же дню тоже
+/// прокручивает.
+class PlanFocusDay extends Notifier<({int day, int seq})?> {
+  @override
+  ({int day, int seq})? build() => null;
+
+  void focus(int day) => state = (day: day, seq: (state?.seq ?? 0) + 1);
+}
+
+final planFocusDayProvider = NotifierProvider<PlanFocusDay, ({int day, int seq})?>(PlanFocusDay.new);

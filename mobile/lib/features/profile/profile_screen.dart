@@ -20,7 +20,7 @@ import '../../data/locale_controller.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
-import '../plan/plan_ready_notification_host.dart';
+import '../plan/plan_notifications_host.dart';
 import 'build_stamp.dart';
 import 'perf_log_screen.dart';
 import 'qa_speech_view.dart';
@@ -123,18 +123,16 @@ class ProfileScreen extends ConsumerWidget {
               value: _uiLangName(l, uiLang),
               onTap: () => _editUiLang(context, ref, uiLang),
             ),
-            // ЕДИНСТВЕННОЕ МЕСТО, ГДЕ СПРАШИВАЕТСЯ РАЗРЕШЕНИЕ НА УВЕДОМЛЕНИЯ (наряд PLAN-UI,
-            // доработка). Системное окно поднимает ЯВНОЕ действие человека — он включил
-            // напоминания, — а не «Начать» на входе в план: там оно всплывало поверх свежего
-            // плана в момент, которого нет ни в одном кадре. Выключение ничего не спрашивает:
-            // отозвать разрешение можно только в настройках телефона.
+            // Разрешение на уведомления спрашивается в двух местах: здесь — явным включением
+            // напоминаний, и один раз после «Начать» первого плана (наряд PLAN-UI-3 §4).
+            // Выключение ничего не спрашивает: отозвать разрешение можно только в настройках.
             _SwitchRow(
               label: l.profileRowReminders,
               hint: l.profileRemindersHint,
               value: settings.remindersEnabled,
               onChanged: (v) {
                 unawaited(ref.read(appSettingsProvider.notifier).setRemindersEnabled(v));
-                if (v) unawaited(ref.read(planReadyNotificationProvider).requestPermission());
+                if (v) unawaited(ref.read(planNotificationsProvider).requestPermission());
               },
             ),
             // «Время» appears only while reminders are on (design 13a — the row slides in/out).

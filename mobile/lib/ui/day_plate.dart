@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import 'plan_marks.dart';
+import 'plan_preloader.dart';
 import 'verdict_marker.dart';
 
 /// ПЛИТА ДНЯ — компонент 4н токен-листа, в свёрнутом размере (карточка на табе «План»,
@@ -466,7 +467,7 @@ class _StageRow extends StatelessWidget {
 /// Не шиммер-скелет: канва заменила пять фальшивых строк ОДНОЙ честной — срок назван словами и
 /// уходить разрешено, а пять серых полосок обещали содержимое, которого пока нет.
 class DayPlateNotice {
-  const DayPlateNotice({required this.title, required this.sub, this.spinner = false});
+  const DayPlateNotice({required this.title, required this.sub, this.preloaderLines});
 
   /// «Собираем день 1» / «День не собрался» — 15/600 paper.
   final String title;
@@ -474,8 +475,9 @@ class DayPlateNotice {
   /// «около минуты · можно закрыть приложение» — 14 paper .62.
   final String sub;
 
-  /// Кольцо 34 с оборотом 1.1 с (22-5a) вместо предупреждающего значка 30 (22-5c).
-  final bool spinner;
+  /// 22-5a: три строки статуса живого прелоадера под строкой — тот же прелоадер, что на 22-4a, на
+  /// угольной плите. Null — день не собрался (22-5c): значок вместо прелоадера.
+  final List<String>? preloaderLines;
 }
 
 /// СТРОКА-ИЗВЕЩЕНИЕ НА ПЛИТЕ (22-5a, 22-5c) — под волосяной линией на месте этапов.
@@ -485,99 +487,50 @@ class _NoticeRow extends StatelessWidget {
   final DayPlateNotice notice;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.only(top: 14),
-    decoration: BoxDecoration(
-      border: Border(top: BorderSide(color: AppColors.paper.withValues(alpha: .14))),
-    ),
-    child: Row(
-      crossAxisAlignment: notice.spinner ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+  Widget build(BuildContext context) {
+    final lines = notice.preloaderLines;
+    final text = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (notice.spinner)
-          const _PlateSpinner()
-        else
-          const SizedBox(
-            width: 30,
-            height: 30,
-            child: Icon(LucideIcons.cloudOff, size: 30, color: AppColors.destructiveOnPlate),
-          ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                notice.title,
-                style: const TextStyle(
-                  fontFamily: AppFonts.inter,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.paper,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                notice.sub,
-                style: TextStyle(
-                  fontFamily: AppFonts.inter,
-                  fontSize: 14,
-                  height: 1.4,
-                  color: AppColors.paper.withValues(alpha: .62),
-                ),
-              ),
-            ],
-          ),
+        Text(
+          notice.title,
+          style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.paper),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          notice.sub,
+          style: TextStyle(fontFamily: AppFonts.inter, fontSize: 14, height: 1.35, color: AppColors.paper.withValues(alpha: .62)),
         ),
       ],
-    ),
-  );
-}
+    );
 
-/// Кольцо-спиннер 34 плиты: контур paper .20 и один светлый сектор, оборот 1.1 с.
-class _PlateSpinner extends StatefulWidget {
-  const _PlateSpinner();
-
-  @override
-  State<_PlateSpinner> createState() => _PlateSpinnerState();
-}
-
-class _PlateSpinnerState extends State<_PlateSpinner> with SingleTickerProviderStateMixin {
-  late final AnimationController _turn = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1100),
-  );
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Снимок не должен зависеть от кадра, на котором его сняли.
-    if (MediaQuery.of(context).disableAnimations) {
-      _turn.stop();
-    } else if (!_turn.isAnimating) {
-      _turn.repeat();
-    }
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.only(top: 16),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColors.paper.withValues(alpha: .14)))),
+      child: lines == null
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(
+                  width: 30,
+                  height: 30,
+                  child: Icon(LucideIcons.cloudOff, size: 30, color: AppColors.destructiveOnPlate),
+                ),
+                const SizedBox(width: 14),
+                Expanded(child: text),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                text,
+                const SizedBox(height: 14),
+                Center(child: PlanPreloader(lines: lines, onDark: true)),
+              ],
+            ),
+    );
   }
-
-  @override
-  void dispose() {
-    _turn.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 34,
-    height: 34,
-    child: RotationTransition(
-      turns: _turn,
-      child: CircularProgressIndicator(
-        strokeWidth: 3,
-        value: MediaQuery.of(context).disableAnimations ? .25 : null,
-        backgroundColor: AppColors.paper.withValues(alpha: .20),
-        valueColor: const AlwaysStoppedAnimation(AppColors.paper),
-      ),
-    ),
-  );
 }
 
 /// Бумажная кнопка плиты — 52 / radius 16 / 17 / 700 (4и).

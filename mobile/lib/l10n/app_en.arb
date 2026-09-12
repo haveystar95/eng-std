@@ -1124,33 +1124,186 @@
   "@planRuleReturn": {
     "description": "Третье правило плана — витрина 21-1 и лист 21-8 (plan.rule.return)."
   },
-  "planExampleTitle": "Example · a doctor's visit",
-  "@planExampleTitle": {
-    "description": "Метка карточки-примера на витрине (кадр 21-1, plan.example.title)."
+  "planExampleDoctorTitle": "A doctor's visit",
+  "@planExampleDoctorTitle": {
+    "description": "Витрина 21-1, лента примеров: заголовок карточки «Приём у врача» (Literata 20). Статический пример клиента, тексты из кадра."
   },
-  "planExampleDay1": "Booking the visit",
-  "@planExampleDay1": {
-    "description": "Первый узел карточки-примера (кадр 21-1, plan.example.day1)."
+  "planExampleDoctorDay1": "Booking the visit",
+  "@planExampleDoctorDay1": {
+    "description": "Витрина 21-1, пример «Приём у врача»: название дня 1 — идёт после «День 1 · »."
   },
-  "planExampleDay1Sub": "ask about the time and the insurance",
-  "@planExampleDay1Sub": {
-    "description": "Описание первого узла примера (кадр 21-1, plan.example.day1.sub)."
+  "planExampleDoctorGoal11": "ask about the time",
+  "@planExampleDoctorGoal11": {
+    "description": "Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleDay2": "The doctor's visit",
-  "@planExampleDay2": {
-    "description": "Второй узел карточки-примера (кадр 21-1, plan.example.day2)."
+  "planExampleDoctorGoal12": "agree on a slot",
+  "@planExampleDoctorGoal12": {
+    "description": "Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleDay2Sub": "describe the pain, follow the instructions",
-  "@planExampleDay2Sub": {
-    "description": "Описание второго узла примера (кадр 21-1, plan.example.day2.sub)."
+  "planExampleDoctorGoal13": "name your insurance",
+  "@planExampleDoctorGoal13": {
+    "description": "Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleDay3": "The pharmacy",
-  "@planExampleDay3": {
-    "description": "Третий узел карточки-примера (кадр 21-1, plan.example.day3)."
+  "planExampleDoctorDay2": "At the doctor's",
+  "@planExampleDoctorDay2": {
+    "description": "Витрина 21-1, пример «Приём у врача»: название дня 2 — идёт после «День 2 · »."
   },
-  "planExampleDay3Sub": "get the dosage, ask for an alternative",
-  "@planExampleDay3Sub": {
-    "description": "Описание третьего узла примера (кадр 21-1, plan.example.day3.sub)."
+  "planExampleDoctorGoal21": "describe the pain",
+  "@planExampleDoctorGoal21": {
+    "description": "Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleDoctorGoal22": "answer about medicines",
+  "@planExampleDoctorGoal22": {
+    "description": "Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleDoctorGoal23": "follow the instructions",
+  "@planExampleDoctorGoal23": {
+    "description": "Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleDoctorDay3": "The pharmacy",
+  "@planExampleDoctorDay3": {
+    "description": "Витрина 21-1, пример «Приём у врача»: название дня 3 — идёт после «День 3 · »."
+  },
+  "planExampleDoctorGoal31": "name the prescription",
+  "@planExampleDoctorGoal31": {
+    "description": "Витрина 21-1, пример «Приём у врача», день 3: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleDoctorGoal32": "understand the dosage",
+  "@planExampleDoctorGoal32": {
+    "description": "Витрина 21-1, пример «Приём у врача», день 3: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleDoctorGoal33": "ask for an alternative",
+  "@planExampleDoctorGoal33": {
+    "description": "Витрина 21-1, пример «Приём у врача», день 3: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleInterviewTitle": "A job interview",
+  "@planExampleInterviewTitle": {
+    "description": "Витрина 21-1, лента примеров: заголовок карточки «Собеседование» (Literata 20). Статический пример клиента, тексты из кадра."
+  },
+  "planExampleInterviewDay1": "Introductions",
+  "@planExampleInterviewDay1": {
+    "description": "Витрина 21-1, пример «Собеседование»: название дня 1 — идёт после «День 1 · »."
+  },
+  "planExampleInterviewGoal11": "talk about yourself",
+  "@planExampleInterviewGoal11": {
+    "description": "Витрина 21-1, пример «Собеседование», день 1: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleInterviewGoal12": "name your experience",
+  "@planExampleInterviewGoal12": {
+    "description": "Витрина 21-1, пример «Собеседование», день 1: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleInterviewGoal13": "explain why you left",
+  "@planExampleInterviewGoal13": {
+    "description": "Витрина 21-1, пример «Собеседование», день 1: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleInterviewDay2": "Questions about the job",
+  "@planExampleInterviewDay2": {
+    "description": "Витрина 21-1, пример «Собеседование»: название дня 2 — идёт после «День 2 · »."
+  },
+  "planExampleInterviewGoal21": "describe a project",
+  "@planExampleInterviewGoal21": {
+    "description": "Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleInterviewGoal22": "answer about deadlines",
+  "@planExampleInterviewGoal22": {
+    "description": "Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleInterviewGoal23": "own a mistake",
+  "@planExampleInterviewGoal23": {
+    "description": "Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleInterviewDay3": "Salary",
+  "@planExampleInterviewDay3": {
+    "description": "Витрина 21-1, пример «Собеседование»: название дня 3 — идёт после «День 3 · »."
+  },
+  "planExampleInterviewGoal31": "name your range",
+  "@planExampleInterviewGoal31": {
+    "description": "Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleInterviewGoal32": "ask about bonuses",
+  "@planExampleInterviewGoal32": {
+    "description": "Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleInterviewGoal33": "agree a start date",
+  "@planExampleInterviewGoal33": {
+    "description": "Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleLandlordTitle": "A call to the landlord",
+  "@planExampleLandlordTitle": {
+    "description": "Витрина 21-1, лента примеров: заголовок карточки «Звонок арендодателю» (Literata 20). Статический пример клиента, тексты из кадра."
+  },
+  "planExampleLandlordDay1": "The deposit",
+  "@planExampleLandlordDay1": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю»: название дня 1 — идёт после «День 1 · »."
+  },
+  "planExampleLandlordGoal11": "ask the amount",
+  "@planExampleLandlordGoal11": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю», день 1: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleLandlordGoal12": "find out when it comes back",
+  "@planExampleLandlordGoal12": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю», день 1: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleLandlordGoal13": "give your account",
+  "@planExampleLandlordGoal13": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю», день 1: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleLandlordDay2": "Repairs",
+  "@planExampleLandlordDay2": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю»: название дня 2 — идёт после «День 2 · »."
+  },
+  "planExampleLandlordGoal21": "describe what broke",
+  "@planExampleLandlordGoal21": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleLandlordGoal22": "ask for a repairman",
+  "@planExampleLandlordGoal22": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleLandlordGoal23": "agree on a time",
+  "@planExampleLandlordGoal23": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleLandlordDay3": "The lease",
+  "@planExampleLandlordDay3": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю»: название дня 3 — идёт после «День 3 · »."
+  },
+  "planExampleLandlordGoal31": "ask about the term",
+  "@planExampleLandlordGoal31": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleLandlordGoal32": "check about pets",
+  "@planExampleLandlordGoal32": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleLandlordGoal33": "name the move-out date",
+  "@planExampleLandlordGoal33": {
+    "description": "Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки."
+  },
+  "planExampleMeta": "{days} · {level}",
+  "@planExampleMeta": {
+    "description": "Витрина 21-1: мета примера «5 дней · начальный»; days — planDaysCount, level — название уровня строчными.",
+    "placeholders": {
+      "days": {
+        "type": "String"
+      },
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "planExampleMore": "{n, plural, one{{n} more day} other{{n} more days}}",
+  "@planExampleMore": {
+    "description": "Витрина 21-1: подвал примера, когда в плане больше трёх дней («ещё 2 дня»).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planExampleWhole": "the whole plan",
+  "@planExampleWhole": {
+    "description": "Витрина 21-1: подвал примера, где показаны все дни плана (3 дня)."
   },
   "planEmptyCta": "Build a plan",
   "@planEmptyCta": {},
@@ -1210,16 +1363,17 @@
   "@planPlateStageListen": {},
   "planPlateStageSpeak": "Speak myself",
   "@planPlateStageSpeak": {},
-  "planPlateStageCount": "{done} / {total}",
-  "@planPlateStageCount": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
+  "planPlateStateDone": "done",
+  "@planPlateStateDone": {
+    "description": "Плита дня (21-2 … 21-4): состояние этапа словами справа — этап пройден."
+  },
+  "planPlateStateCurrent": "in progress",
+  "@planPlateStateCurrent": {
+    "description": "Плита дня (21-2, 21-3): состояние текущего этапа словами справа."
+  },
+  "planPlateStateAhead": "ahead",
+  "@planPlateStateAhead": {
+    "description": "Плита дня (21-2): состояние этапа, до которого ещё не дошли."
   },
   "planNewWordsCount": "{n, plural, one{{n} new word} other{{n} new words}}",
   "@planNewWordsCount": {
@@ -1335,8 +1489,6 @@
       }
     }
   },
-  "planRouteDayRepeat": "Review day",
-  "@planRouteDayRepeat": {},
   "planRouteDayRepeatSub": "words and phrases of days {a}–{b}",
   "@planRouteDayRepeatSub": {
     "placeholders": {
@@ -1356,19 +1508,26 @@
       }
     }
   },
+  "planRouteDayTitle": "Day {n} · {title}",
+  "@planRouteDayTitle": {
+    "description": "Заголовок дня на маршруте (кадры 21-2b, 22-4b): номер дня и название; мета стоит строкой ниже.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "planRouteDayReview": "Review",
+  "@planRouteDayReview": {
+    "description": "Название дня повторения на маршруте (кадры 21-2b, 22-4b)."
+  },
   "planRouteDayRehearsal": "Rehearsal",
   "@planRouteDayRehearsal": {},
   "planRouteDayRehearsalSub": "the whole route out loud",
   "@planRouteDayRehearsalSub": {},
-  "planRouteMetaDay": "Day {n}",
-  "@planRouteMetaDay": {
-    "description": "Мета-строка узла маршрута, первое слово — номер дня (кадр 21-2b, plan.route.meta.day).",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "planRouteMetaPassed": "done",
   "@planRouteMetaPassed": {
     "description": "Мета-строка пройденного дня маршрута (кадр 21-2b, plan.route.meta.passed)."
@@ -1608,10 +1767,6 @@
   "@planEntryGoalDictate": {
     "description": "Подпись у микрофона в покое (кадр 22-1, entry.goal.dictate)."
   },
-  "planEntryGoalDictateStop": "tap to stop",
-  "@planEntryGoalDictateStop": {
-    "description": "Подпись у микрофона во время записи (кадр 22-1, entry.goal.dictate.stop)."
-  },
   "planEntryGoalDictateEdit": "you can edit it by hand",
   "@planEntryGoalDictateEdit": {
     "description": "Подпись у микрофона после распознавания (кадр 22-1, entry.goal.dictate.edit)."
@@ -1624,10 +1779,6 @@
         "type": "String"
       }
     }
-  },
-  "planEntryGoalRecognising": "recognising…",
-  "@planEntryGoalRecognising": {
-    "description": "Состояние микрофона между записью и текстом в поле (кадр 22-1, entry.goal.recognising)."
   },
   "planEntryTapeGoal": "Goal",
   "@planEntryTapeGoal": {},
@@ -1757,9 +1908,25 @@
   "@planEntryPreviewAbout": {
     "description": "Срок сборки человеческими словами, без процента (кадр 22-4a, entry.preview.about)."
   },
-  "planEntryPreviewLoadingSub": "Picking situations for your conversation and laying them out by day",
-  "@planEntryPreviewLoadingSub": {
-    "description": "Что именно происходит во время сборки (кадр 22-4a, entry.preview.loading.sub)."
+  "planEntryPreviewLine1": "Picking situations for your conversation",
+  "@planEntryPreviewLine1": {
+    "description": "Прелоадер 22-4a и 22-5a: первая строка статуса по кругу (om-pre-line1)."
+  },
+  "planEntryPreviewLine2": "Laying them out by day",
+  "@planEntryPreviewLine2": {
+    "description": "Прелоадер 22-4a и 22-5a: вторая строка статуса (om-pre-line2)."
+  },
+  "planEntryPreviewLine3": "Gathering words and phrases",
+  "@planEntryPreviewLine3": {
+    "description": "Прелоадер 22-4a и 22-5a: третья строка статуса (om-pre-line3)."
+  },
+  "planEntryPreviewHowLabel": "How it will go",
+  "@planEntryPreviewHowLabel": {
+    "description": "Превью 22-4b: метка плиты с пересказом плана (summary сервера)."
+  },
+  "planEntryPreviewEdit": "Change",
+  "@planEntryPreviewEdit": {
+    "description": "Превью 22-4b: текстовая ссылка над «Начать» — вернуться к ответам входа."
   },
   "planEntryPreviewCta": "Start",
   "@planEntryPreviewCta": {},
@@ -1825,6 +1992,80 @@
         "type": "String"
       }
     }
+  },
+  "planNotifyDayReadyTitle": "Day {n} is ready",
+  "@planNotifyDayReadyTitle": {
+    "description": "Уведомление «день собран» (кадр 22-6 — эталон вида); без push — баннер в приложении при возврате.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planNotifyDayReadyBody": "“{title}” — you can start",
+  "@planNotifyDayReadyBody": {
+    "description": "Тело уведомления «день собран».",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "planNotifyReminderTitle": "Day {n} is waiting",
+  "@planNotifyReminderTitle": {
+    "description": "Ежедневное напоминание в час обычного захода (локальное уведомление, не чаще раза в сутки).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planNotifyReminderBody": "“{title}” — pick up where you left off",
+  "@planNotifyReminderBody": {
+    "description": "Тело ежедневного напоминания.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "planNotifyEventTodayTitle": "Today: {event}",
+  "@planNotifyEventTodayTitle": {
+    "description": "Уведомление в день события: «Сегодня приём»; event — слово события сервера строчными.",
+    "placeholders": {
+      "event": {
+        "type": "String"
+      }
+    }
+  },
+  "planNotifyEventTodayTitleNoName": "Today is the conversation",
+  "@planNotifyEventTodayTitleNoName": {
+    "description": "Уведомление в день события, когда сервер не назвал событие."
+  },
+  "planNotifyEventTodayBody": "Say it yourself first — run it out loud",
+  "@planNotifyEventTodayBody": {
+    "description": "Тело уведомления в день события."
+  },
+  "planNotifySkippedTitle": "Day {n} has been waiting since yesterday",
+  "@planNotifySkippedTitle": {
+    "description": "Локальное уведомление «дни пропущены»: наутро после даты дня, который не пройден.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planNotifySkippedBody": "The route has moved: the next days start from today",
+  "@planNotifySkippedBody": {
+    "description": "Тело уведомления «дни пропущены» — говорит, что сделала система, без укора."
+  },
+  "planBannerNow": "now",
+  "@planBannerNow": {
+    "description": "Баннер уведомления в приложении (вид кадра 22-6): время справа от заголовка."
+  },
+  "planBannerAppMark": "S",
+  "@planBannerAppMark": {
+    "description": "Баннер уведомления в приложении (кадр 22-6): буква-значок приложения «Слова» в квадрате 34."
   },
   "planEntryOffline": "The plan cannot be built without a network",
   "@planEntryOffline": {},

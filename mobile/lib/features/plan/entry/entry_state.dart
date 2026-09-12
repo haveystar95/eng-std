@@ -11,9 +11,10 @@ import '../../../data/plan/plan_models.dart';
 /// как его собственный ответ переезжает под ним. Превью шагом не считается и точки не занимает.
 enum EntryStep { goal, language, days, date, preview }
 
-/// ЧЕТЫРЕ СОСТОЯНИЯ МИКРОФОНА в поле цели (кадр 22-1): покой → слушаю (волна и таймер, тап =
-/// стоп) → распознаю → текст в поле, редактируемый руками.
-enum EntryMicState { idle, listening, recognising, done }
+/// ТРИ СОСТОЯНИЯ МИКРОФОНА в поле цели (кадры 22-1, 22-1c): покой → говорит (текст печатается по
+/// мере речи, волна от громкости, тап = стоп) → сказал (текст в поле, правится руками). Состояния
+/// «распознаю…» в продукте нет (наряд PLAN-UI-3).
+enum EntryMicState { idle, listening, done }
 
 enum EntryBuildPhase {
   /// No plan asked for yet — or the answers changed since the last one.

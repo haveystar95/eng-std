@@ -1,14 +1,14 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
-import 'package:flutter/scheduler.dart';
 
+import '../image_loader.dart';
 import 'image_disk_cache.dart';
 
-/// A remote image whose BYTES come from the disk cache when we have them.
+/// A remote image whose BYTES come from the app's one [ImageLoader] — the disk cache when we have
+/// them, otherwise a download that shares the loader's six connections and its retries.
 ///
 /// A drop-in replacement for [NetworkImage] and nothing more. It is still wrapped in `ResizeImage`
 /// at every call site, so the ImageCache key, the decode width, the session's warm-up and its
@@ -25,15 +25,15 @@ class CachedNetworkImage extends ImageProvider<CachedNetworkImage> {
 
   final String url;
 
-  /// The cache every instance reads and fills. A single app-wide store, installed once at start-up
+  /// The disk cache every load reads and fills — the loader's. Installed once at start-up
   /// ([installImageDiskCache]); null in tests and in the design preview, where this degrades to a
   /// plain network image.
-  static ImageDiskCache? store;
+  static ImageDiskCache? get store => ImageLoader.instance.store;
+  static set store(ImageDiskCache? cache) => ImageLoader.instance.store = cache;
 
   /// Is this URL already on disk? Drives the card's decision to show the banner straight away
   /// instead of reserving the plate — synchronous because that decision is made while building.
-  static bool isCached(String? url) =>
-      url != null && url.isNotEmpty && (store?.containsSync(url) ?? false);
+  static bool isCached(String? url) => ImageLoader.instance.isCached(url);
 
   @override
   Future<CachedNetworkImage> obtainKey(ImageConfiguration configuration) =>
@@ -50,46 +50,9 @@ class CachedNetworkImage extends ImageProvider<CachedNetworkImage> {
   }
 
   Future<ui.Codec> _load(CachedNetworkImage key, ImageDecoderCallback decode) async {
-    final cache = store;
-
-    final cached = await cache?.read(key.url);
-    if (cached != null) {
-      return decode(await ui.ImmutableBuffer.fromUint8List(cached));
-    }
-
-    final bytes = await _fetch(key.url);
-    if (cache != null) _storeWhenIdle(cache, key.url, bytes);
+    final bytes = await ImageLoader.instance.bytes(key.url);
 
     return decode(await ui.ImmutableBuffer.fromUint8List(bytes));
-  }
-
-  static Future<Uint8List> _fetch(String url) async {
-    final client = HttpClient()..autoUncompress = true;
-    try {
-      final request = await client.getUrl(Uri.parse(url));
-      final response = await request.close();
-      if (response.statusCode != HttpStatus.ok) {
-        throw NetworkImageLoadException(statusCode: response.statusCode, uri: Uri.parse(url));
-      }
-
-      return await consolidateHttpClientResponseBytes(response);
-    } finally {
-      client.close();
-    }
-  }
-
-  /// Write at idle priority, never inside the frames of a card transition.
-  ///
-  /// The write itself is off the main thread (dart:io hands it to the IO pool), so this is belt and
-  /// braces — but F20's lesson was that anything scheduled during the 250 ms slide is a candidate
-  /// for the stutter, and by the time we get here the image is already decoded and on screen.
-  /// Nothing is waiting on the file.
-  static void _storeWhenIdle(ImageDiskCache cache, String url, Uint8List bytes) {
-    SchedulerBinding.instance.scheduleTask<void>(
-      () => cache.write(url, bytes),
-      Priority.idle,
-      debugLabel: 'image-cache write',
-    );
   }
 
   @override

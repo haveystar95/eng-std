@@ -12,6 +12,7 @@ import 'config.dart';
 import 'device_timezone.dart';
 import 'exposure_sync.dart';
 import 'generation_controller.dart';
+import 'image_loader.dart';
 import 'line_audio.dart';
 import '../features/daily/word_challenge.dart';
 import '../features/daily/word_challenge_store.dart';
@@ -70,6 +71,17 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 /// nothing: until it is ready, images load from the network exactly as they always did, so a slow
 /// disk cannot delay the first screen.
 final imageDiskCacheProvider = FutureProvider<ImageDiskCache?>((ref) async {
+  // The scene crops (`image.url_112` / `url_448`) are served by backend2 behind the bearer token;
+  // the loader gets it for the API host only — a Pexels URL is never sent our token.
+  final tokens = ref.watch(tokenStoreProvider);
+  final apiHost = Uri.parse(AppConfig.apiBaseUrl).host;
+  ImageLoader.instance.headers = (uri) {
+    final token = tokens.current;
+    if (uri.host != apiHost || token == null) return const {};
+
+    return {'Authorization': 'Bearer $token', 'ngrok-skip-browser-warning': 'true'};
+  };
+
   return installImageDiskCache(ref.watch(appDatabaseProvider));
 });
 

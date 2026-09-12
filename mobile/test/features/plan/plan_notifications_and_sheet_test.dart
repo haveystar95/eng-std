@@ -3,86 +3,78 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:eng_std/data/api_client.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
-import 'package:eng_std/data/plan/plan_models.dart';
-import 'package:eng_std/data/plan/plan_ready_notification.dart';
+import 'package:eng_std/data/plan/plan_notifications.dart';
+import 'package:eng_std/data/plan/push_registration.dart';
 import 'package:eng_std/data/providers.dart';
-import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
+import 'package:eng_std/features/plan/plan_notifications_host.dart';
 import 'package:eng_std/features/plan/plan_providers.dart';
-import 'package:eng_std/features/plan/plan_ready_notification_host.dart';
 import 'package:eng_std/features/plan/plan_sheets.dart';
 import 'package:eng_std/features/profile/profile_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../support/plan_goldens.dart';
 
-/// ДВА ПРАВИЛА, КОТОРЫЕ НЕ ВИДНО НА СНИМКЕ (наряд PLAN-UI, доработка).
-///
-/// Системное окно и одноразовый лист — это МОМЕНТЫ, а не состояния: снимок их не ловит, а живой
-/// прогон ловит по одному разу за вечер. Поэтому они закреплены здесь.
+/// ПРАВИЛА, КОТОРЫЕ НЕ ВИДНО НА СНИМКЕ — моменты, а не состояния (наряды PLAN-UI, PLAN-UI-3).
 void main() {
   setUpAll(setUpPlanGoldens);
 
-  group('разрешение на уведомления просит только явное действие', () {
-    // ПРАВИЛО: после «Начать» человек попадает на таб со своим планом — без системных окон
-    // (кадры 22-5a/22-6 такого момента не рисуют).
-    // ЛОВИТ: возврат старого поведения, когда разрешение просилось прямо в `_start` и алерт iOS
-    // всплывал поверх только что собранного плана. Живьём это ловится один раз на устройство —
-    // разрешение спрашивают единожды, и второй запуск уже ничего не показывает.
-    testWidgets('«Начать» не поднимает системный запрос', (tester) async {
+  AppDatabase memoryDb(Ref ref) {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    ref.onDispose(db.close);
+
+    return db;
+  }
+
+  group('разрешение на уведомления — один раз, после «Начать»', () {
+    // ПРАВИЛО (наряд PLAN-UI-3 §4): системный вопрос задаётся ОДИН раз — после «Начать» на
+    // превью, — и следом регистрируется push-токен.
+    // ЛОВИТ: вопрос на каждом новом плане (второй «Начать» снова поднимает алерт iOS) и
+    // регистрацию токена без разрешения или без вопроса вовсе.
+    testWidgets('второй «Начать» не спрашивает снова, токен регистрируется один раз', (tester) async {
       final notifications = _CountingNotifications();
-      final plan = planFrom('plan_ready_preview');
+      final push = _CountingPush();
       await tester.pumpWidget(
-        planGoldenApp(
-          ProviderScope(
-            overrides: [
-              apiClientProvider.overrideWithValue(_EntryApi()),
-              connectivityProvider.overrideWith((ref) => Stream.value(true)),
-              planReadyNotificationProvider.overrideWithValue(notifications),
-              planTabProvider.overrideWith(() => _StartingTab(plan)),
-            ],
-            child: const PlanEntryScreen(),
+        ProviderScope(
+          overrides: [
+            appDatabaseProvider.overrideWith(memoryDb),
+            planNotificationsProvider.overrideWithValue(notifications),
+            pushRegistrationProvider.overrideWithValue(push),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: Consumer(
+                builder: (context, ref, _) =>
+                    TextButton(onPressed: () => askPlanNotificationsOnce(ref), child: const Text('после «Начать»')),
+              ),
+            ),
           ),
         ),
       );
-      await tester.pump();
-      // Цель историей → «Далее» ×3 → «Собрать план» → готовое превью → «Начать».
-      await tester.tap(find.text('Звонок арендодателю про залог'));
-      await tester.pump();
-      for (var i = 0; i < 3; i++) {
-        await tester.tap(find.text('Далее'));
+      for (var i = 0; i < 2; i++) {
+        await tester.runAsync(() async {
+          await tester.tap(find.text('после «Начать»'));
+          await Future<void>.delayed(const Duration(milliseconds: 300));
+        });
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 200));
       }
-      await tester.tap(find.text('Собрать план'));
-      await tester.pump();
-      await tester.pump(const Duration(seconds: 1));
-      await tester.tap(find.text('Начать'));
-      await tester.pump();
-      await tester.pump(const Duration(seconds: 1));
 
-      expect(notifications.requests, 0);
+      expect(notifications.requests, 1, reason: 'системный вопрос — один раз на телефон');
+      expect(push.registrations, 1, reason: 'токен — сразу после разрешения, один раз');
     });
 
-    // ПРАВИЛО: разрешение поднимает выключатель «Напоминания» в профиле — человек сам сказал, что
-    // хочет их получать.
-    // ЛОВИТ: тихое приложение, которое никогда не спросит разрешения и потому никогда не пришлёт
-    // «План готов»: убрав запрос из `_start`, его легко не поставить никуда.
+    // ПРАВИЛО: выключатель «Напоминания» в профиле — второе место, где человек сам просит
+    // уведомления; выключение ничего не спрашивает.
+    // ЛОВИТ: выключатель, который перестал поднимать разрешение после переезда на новый хост.
     testWidgets('включение «Напоминаний» в профиле — поднимает', (tester) async {
       final notifications = _CountingNotifications();
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            appDatabaseProvider.overrideWith((ref) {
-              final db = AppDatabase.forTesting(NativeDatabase.memory());
-              ref.onDispose(db.close);
-
-              return db;
-            }),
+            appDatabaseProvider.overrideWith(memoryDb),
             authControllerProvider.overrideWith(_ProfileAuth.new),
-            planReadyNotificationProvider.overrideWithValue(notifications),
+            planNotificationsProvider.overrideWithValue(notifications),
           ],
           child: const MaterialApp(
             locale: Locale('ru'),
@@ -98,7 +90,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(notifications.requests, 1);
 
-      // Выключение ничего не спрашивает: отозвать разрешение можно только в настройках телефона.
       await tester.tap(find.byType(Switch).first);
       await tester.pumpAndSettle();
       expect(notifications.requests, 1);
@@ -119,12 +110,10 @@ void main() {
     );
 
     // ПРАВИЛО: лист объясняет устройство плана ОДИН раз, за первым планом (спека 22-4b).
-    // ЛОВИТ: лист, который приходит после каждого «Начать» — и превращается в окно, которое
+    // ЛОВИТ: лист, который приходит после каждого «Начать» и превращается в окно, которое
     // закрывают не читая.
     testWidgets('флаг не выставлен — лист показан', (tester) async {
-      await tester.pumpWidget(
-        host(const PlanHints(tabShown: false, closeShown: false, howShown: false)),
-      );
+      await tester.pumpWidget(host(const PlanHints(tabShown: false, closeShown: false, howShown: false)));
       await tester.pumpAndSettle();
       await tester.tap(find.text('после «Начать»'));
       await tester.pumpAndSettle();
@@ -133,9 +122,7 @@ void main() {
     });
 
     testWidgets('флаг выставлен — листа нет', (tester) async {
-      await tester.pumpWidget(
-        host(const PlanHints(tabShown: true, closeShown: true, howShown: true)),
-      );
+      await tester.pumpWidget(host(const PlanHints(tabShown: true, closeShown: true, howShown: true)));
       await tester.pumpAndSettle();
       await tester.tap(find.text('после «Начать»'));
       await tester.pumpAndSettle();
@@ -145,49 +132,29 @@ void main() {
   });
 }
 
-/// Уведомления, которые ничего не делают и считают, сколько раз у них просили разрешение.
-class _CountingNotifications implements PlanReadyNotification {
+/// Уведомления, которые ничего не делают и считают вопросы о разрешении; разрешение дают.
+class _CountingNotifications implements PlanNotifications {
   int requests = 0;
 
   @override
-  Future<void> requestPermission() async => requests++;
+  Future<bool> requestPermission() async {
+    requests++;
+
+    return true;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-/// Вход: сборка сразу готова, план — снятая фикстура.
-class _EntryApi implements ApiClient {
-  @override
-  Future<PlanBuild> createPlan({
-    required String goalText,
-    required String targetLang,
-    required PlanLevel level,
-    required int daysTotal,
-    String? eventDate,
-  }) async => PlanBuild.fromJson({...planFixture('build_ready'), 'status': 'ready'});
+class _CountingPush implements PushRegistration {
+  int registrations = 0;
 
   @override
-  Future<Plan> plan(String planId) async => planFrom('plan_ready_preview');
+  Future<void> register({String? locale, String? timezone}) async => registrations++;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-/// Таб, который принимает запуск плана, не трогая ни сеть, ни базу.
-class _StartingTab extends PlanTabController {
-  _StartingTab(this._plan);
-
-  final Plan _plan;
-
-  @override
-  Future<PlanTabState> build() async => PlanTabState(plan: null, finished: const []);
-
-  @override
-  Future<void> refresh({bool silent = true}) async {}
-
-  @override
-  Future<Plan> start(String planId) async => _plan;
 }
 
 class _ProfileAuth extends AuthController {
@@ -195,11 +162,6 @@ class _ProfileAuth extends AuthController {
   Future<AppUser?> build() async => AppUser(
     id: 'u1',
     name: 'Денис',
-    profile: Profile(
-      nativeLanguage: 'ru',
-      targetLanguage: 'en',
-      cefrLevel: 'B1',
-      dailyGoal: 20,
-    ),
+    profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
   );
 }

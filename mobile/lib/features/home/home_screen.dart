@@ -12,7 +12,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/local/sync_service.dart';
 import '../../data/providers.dart';
 import '../collections/collections_screen.dart';
-import '../plan/plan_ready_notification_host.dart';
+import '../plan/plan_notifications_host.dart';
 import '../plan/plan_tab_screen.dart';
 import '../training/training_home_screen.dart';
 
@@ -131,9 +131,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     return Scaffold(
       extendBody: true,
       backgroundColor: AppColors.paper,
-      // «План готов» — уведомление и его тап живут ЗДЕСЬ, в оболочке: тап переключает таб, и
-      // переключатель табов есть только у неё. Виджет ничего не рисует.
-      body: PlanReadyNotificationHost(
+      // Уведомления плана и их тап живут ЗДЕСЬ, в оболочке: тап переключает таб, и переключатель
+      // табов есть только у неё. Хост рисует только баннер «план готов / день собран».
+      body: PlanNotificationsHost(
         onOpenPlan: () => _select(kPlanTabIndex),
         child: Stack(
           children: [

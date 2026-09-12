@@ -221,4 +221,47 @@ abstract final class AppColors {
   static const onVerdictUnknown = Color(0xFFFFFFFF);
   static const onVerdictUnsure = ink;
   static const onVerdictKnown = paper;
+
+  /// Текстовая ссылка канвы — `a { color:#8C4A34 }` («Изменить» над кнопкой превью 22-4b).
+  static const link = Color(0xFF8C4A34);
+
+  /// Последнее слово, которое распознавание ещё уточняет, — `#A9A39B` (кадр 22-1).
+  static const dictationPending = Color(0xFFA9A39B);
+
+  // ── Маршрут плана (канва PLAN-DES-3, кадры 21-2 … 22-4b) ──
+
+  /// Линия маршрута впереди — `rgba(46,38,32,.22)` на табе.
+  static const routeAhead = Color.fromARGB(56, _inkR, _inkG, _inkB);
+
+  /// Линия превью и примера витрины — `rgba(46,38,32,.25)`: прогресса там нет, линия ровная.
+  static const routeQuiet = Color.fromARGB(64, _inkR, _inkG, _inkB);
+
+  /// Контур незапертого, но ещё не начатого этапа на линии — `rgba(46,38,32,.40)`.
+  static const routeStageOutline = Color.fromARGB(102, _inkR, _inkG, _inkB);
+
+  /// Кольцо текущего этапа — `0 0 0 3px rgba(140,106,58,.30)`.
+  static const routeCurrentRing = Color.fromARGB(77, 140, 106, 58);
+
+  /// Метки узлов этапов пройденного дня — `rgba(46,38,32,.7)`; запертого — `.4`.
+  static const routeWalkedLabel = Color.fromARGB(179, _inkR, _inkG, _inkB);
+  static const routeLockedText = Color.fromARGB(102, _inkR, _inkG, _inkB);
+
+  /// Мета запертого дня — tertiary под вуалью `.4` канвы (`#8A857E` @ .4).
+  static const routeLockedMeta = Color.fromARGB(102, 138, 133, 126);
+
+  /// Вуаль над картинкой запертого дня — ground `.6`.
+  static const routeVeil = Color.fromARGB(153, 239, 235, 227);
+
+  /// Тень латунного узла дня — `0 2px 10px rgba(140,106,58,.28)`.
+  static const routeCurrentGlow = Color.fromARGB(71, 140, 106, 58);
+
+  /// Доминантный тон картинки с провода (`image.tone`, `#RRGGBB`) — заливка круга, пока картинка
+  /// в пути (наряд PLAN-UI-3). Не цвет палитры, а цвет фотографии: поэтому он приходит с сервера и
+  /// читается здесь, где hex законен. Кривой ответ — null, и круг остаётся бумажным.
+  static Color? wireTone(String? hex) {
+    final m = RegExp(r'^#?([0-9a-fA-F]{6})$').firstMatch((hex ?? '').trim());
+    if (m == null) return null;
+
+    return Color(int.parse(m.group(1)!, radix: 16) | 0xFF000000);
+  }
 }

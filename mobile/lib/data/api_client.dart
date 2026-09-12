@@ -538,6 +538,23 @@ class ApiClient {
     return (plan: Plan.fromJson(raw), raw: raw);
   }
 
+  /// `PUT /devices/push-token` — the APNs token of this phone (наряд PLAN-UI-3 §4).
+  Future<void> putPushToken({required String token, String? locale, String? timezone}) =>
+      _dio.put('/devices/push-token', data: {'platform': 'ios', 'token': token, 'locale': ?locale, 'timezone': ?timezone});
+
+  /// `POST /devices/visit` — «зашёл»: по последним семи заходам сервер считает час напоминания.
+  Future<void> postVisit({String? timezone}) => _dio.post('/devices/visit', data: {'timezone': ?timezone});
+
+  /// The languages a plan may be built in — the SERVER's list (кадр 22-2, решение владельца 12.09:
+  /// не константа клиента). `POST /plans` refuses anything outside it.
+  Future<List<String>> planLanguages() async {
+    final r = await _dio.get('/plans/languages');
+    final data = _data(r);
+    final targets = data is Map<String, dynamic> ? data['targets'] : null;
+
+    return [for (final t in (targets as List?) ?? const []) if (t is String && t.isNotEmpty) t];
+  }
+
   /// Every plan the learner has run — the live one first, then the rest, newest first.
   Future<List<PlanRow>> plans() async {
     final r = await _dio.get('/plans');

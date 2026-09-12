@@ -6,8 +6,10 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
+import 'dictation_wave.dart';
 import 'entry_scaffold.dart';
 import 'entry_state.dart';
+import 'goal_dictation.dart';
 
 /// ШАГ ЦЕЛИ (кадры 22-1, 22-1c) — один вопрос, одно поле, микрофон рядом, три живые истории.
 ///
@@ -26,8 +28,7 @@ class EntryGoalStep extends StatefulWidget {
     super.key,
     required this.controller,
     required this.focus,
-    required this.mic,
-    required this.micSeconds,
+    required this.dictation,
     required this.onMic,
     required this.onStory,
   });
@@ -35,11 +36,8 @@ class EntryGoalStep extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode focus;
 
-  /// Состояние микрофона — четыре, и все четыре живут в поле (22-1).
-  final EntryMicState mic;
-
-  /// Секунды записи для «0:07 · говори, я слушаю».
-  final int micSeconds;
+  /// Печать голосом — состояние микрофона, громкость, таймер, услышанное (22-1, 22-1c).
+  final GoalDictation dictation;
 
   final VoidCallback onMic;
   final ValueChanged<String> onStory;
@@ -155,13 +153,22 @@ class _EntryGoalStepState extends State<EntryGoalStep> {
           ),
         ),
         const SizedBox(height: 14),
-        _Field(
-          controller: widget.controller,
-          focus: widget.focus,
-          placeholder: placeholder,
-          mic: widget.mic,
-          micSeconds: widget.micSeconds,
-          onMic: widget.onMic,
+        ListenableBuilder(
+          listenable: widget.dictation,
+          builder: (context, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Волна над полем — только пока человек говорит; гаснет за 160 мс (22-1c).
+              AnimatedSize(
+                duration: const Duration(milliseconds: 160),
+                alignment: Alignment.topCenter,
+                child: widget.dictation.listening
+                    ? Padding(padding: const EdgeInsets.only(bottom: 10), child: DictationWave(level: widget.dictation.level))
+                    : const SizedBox(width: double.infinity),
+              ),
+              _Field(controller: widget.controller, focus: widget.focus, placeholder: placeholder, dictation: widget.dictation, onMic: widget.onMic),
+            ],
+          ),
         ),
         // 22-1c: одно слово проходит — подсказка объясняет выгоду, а не отчитывает.
         if (short) ...[
@@ -204,58 +211,54 @@ class _EntryGoalStepState extends State<EntryGoalStep> {
   }
 }
 
-/// ПОЛЕ ЦЕЛИ — светлая бумага radius 20 на ground, min-height 132, и микрофон 44 в правом углу.
+/// ПОЛЕ ЦЕЛИ — светлая бумага radius 20, min-height 132, и микрофон 44 в правом углу.
+///
+/// Пока человек говорит, вместо поля ввода стоит печатающийся текст ([DictatedText]): то, что было
+/// до записи, и сказанное, последнее слово серым; внизу — «0:07 · говори, я слушаю» и латунный
+/// микрофон со стопом. Запись закрылась — текст остаётся в обычном поле, курсор в конце.
 class _Field extends StatelessWidget {
   const _Field({
     required this.controller,
     required this.focus,
     required this.placeholder,
-    required this.mic,
-    required this.micSeconds,
+    required this.dictation,
     required this.onMic,
   });
 
   final TextEditingController controller;
   final FocusNode focus;
   final String placeholder;
-  final EntryMicState mic;
-  final int micSeconds;
+  final GoalDictation dictation;
   final VoidCallback onMic;
+
+  static const _text = TextStyle(fontFamily: AppFonts.inter, fontSize: 17, height: 1.45, color: AppColors.ink);
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final listening = mic == EntryMicState.listening;
-    final recognising = mic == EntryMicState.recognising;
+    final listening = dictation.listening;
+    final seconds = dictation.seconds;
 
     // Подпись у микрофона — по состоянию, и она всегда есть: значок не остаётся единственным
     // носителем смысла.
-    final hint = switch (mic) {
+    final hint = switch (dictation.state) {
       EntryMicState.idle => controller.text.trim().isEmpty ? l.planEntryGoalDictate : null,
-      EntryMicState.listening => l.planEntryGoalDictateStop,
-      EntryMicState.recognising => null,
+      EntryMicState.listening => l.planEntryGoalListening('${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}'),
       EntryMicState.done => l.planEntryGoalDictateEdit,
     };
 
     return Container(
       constraints: const BoxConstraints(minHeight: 132),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: AppShadows.card,
-      ),
+      decoration: BoxDecoration(color: AppColors.surfaceRaised, borderRadius: BorderRadius.circular(20), boxShadow: AppShadows.card),
       child: Column(
-        // Поле живёт в прокрутке, где высота НЕ ограничена сверху, поэтому текстовая область
-        // задаётся своим минимумом и растёт вниз. `Expanded` здесь падал: колонка в скролле
-        // сжимается по содержимому, а Expanded требует остатка бесконечной высоты.
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 72),
-            child: listening || recognising
-                ? _Wave(flat: recognising, seconds: micSeconds)
+            child: listening
+                ? DictatedText(base: dictation.base, heard: dictation.heard, style: _text)
                 : TextField(
                     controller: controller,
                     focusNode: focus,
@@ -264,23 +267,13 @@ class _Field extends StatelessWidget {
                     keyboardType: TextInputType.multiline,
                     textCapitalization: TextCapitalization.sentences,
                     cursorColor: AppColors.ink,
-                    style: const TextStyle(
-                      fontFamily: AppFonts.inter,
-                      fontSize: 17,
-                      height: 1.45,
-                      color: AppColors.ink,
-                    ),
+                    style: _text,
                     decoration: InputDecoration(
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
                       border: InputBorder.none,
                       hintText: placeholder,
-                      hintStyle: const TextStyle(
-                        fontFamily: AppFonts.inter,
-                        fontSize: 17,
-                        height: 1.45,
-                        color: AppColors.planInactive,
-                      ),
+                      hintStyle: _text.copyWith(color: AppColors.planInactive),
                     ),
                   ),
           ),
@@ -292,10 +285,12 @@ class _Field extends StatelessWidget {
                     ? const SizedBox.shrink()
                     : Text(
                         hint,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: AppFonts.inter,
                           fontSize: 13,
-                          color: AppColors.tertiary,
+                          fontWeight: listening ? FontWeight.w600 : FontWeight.w400,
+                          color: listening ? AppColors.brassInk : AppColors.tertiary,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
               ),
@@ -309,7 +304,7 @@ class _Field extends StatelessWidget {
   }
 }
 
-/// Микрофон 44: покой и «распознаю» — кружок ground со значком, «слушаю» — латунный со стопом.
+/// Микрофон 44: в покое — кружок ground со значком, пока говорит — латунный со стопом.
 class _MicButton extends StatelessWidget {
   const _MicButton({required this.listening, required this.onTap});
 
@@ -330,79 +325,17 @@ class _MicButton extends StatelessWidget {
         width: 44,
         height: 44,
         alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: listening ? AppColors.brassInk : AppColors.ground,
-        ),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: listening ? AppColors.brassInk : AppColors.ground),
         child: listening
             ? Container(
                 width: 14,
                 height: 14,
-                decoration: BoxDecoration(
-                  color: AppColors.paper,
-                  borderRadius: BorderRadius.circular(3),
-                ),
+                decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(3)),
               )
             : const PlanIconMark(icon: PlanIcon.mic, color: AppColors.ink, size: 22),
       ),
     ),
   );
-}
-
-/// ВОЛНА ЗАПИСИ — 22 полоски 3 px латунью, и она же ложится в ряд точек, пока идёт распознавание.
-class _Wave extends StatelessWidget {
-  const _Wave({required this.flat, required this.seconds});
-
-  final bool flat;
-  final int seconds;
-
-  /// Высоты из канвы — не случайные: снимок волны должен быть один и тот же.
-  static const List<double> _heights = [
-    8, 16, 24, 12, 20, 26, 14, 9, 18, 22, 11, 25, 15, 8, 19, 23, 10, 17, 26, 13, 21, 9,
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          height: 26,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              for (final h in _heights) ...[
-                if (h != _heights.first) const SizedBox(width: 3),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  width: 3,
-                  height: flat ? 3 : h,
-                  decoration: BoxDecoration(
-                    color: flat ? AppColors.ink.withValues(alpha: .25) : AppColors.brassInk,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          flat
-              ? l.planEntryGoalRecognising
-              : l.planEntryGoalListening('0:${seconds.toString().padLeft(2, '0')}'),
-          style: TextStyle(
-            fontFamily: AppFonts.inter,
-            fontSize: 13,
-            fontWeight: flat ? FontWeight.w400 : FontWeight.w600,
-            color: flat ? AppColors.tertiary : AppColors.brassInk,
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 /// ОДНА ИСТОРИЯ «так пишут другие» — кавычка слева, тап подставляет текст в поле.

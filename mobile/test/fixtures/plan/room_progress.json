@@ -1,347 +1,372 @@
 {
- "plan_id": "01M26KPM34Z9C9B31GBRR4YZGA",
- "day": {
-  "id": "01M26KPM3BA3XWGRHFV8P4G6RF",
-  "number": 1,
-  "type": "scene",
-  "status": "in_progress",
-  "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-  "title_native": "Запись в клинику",
-  "title_target": "Clinic booking",
-  "teaches_native": "записаться, спросить про документы",
-  "lesson_status": "ready",
-  "opens_on": "2026-09-11",
-  "slot": {
-   "code": "today",
-   "date": "2026-09-12",
-   "label_native": "сегодня"
+  "plan_id": "01M2BHF1K19SDY8AVTB5RBF94D",
+  "day": {
+    "id": "01M2BHF1K386MJZ6XH3RXTM8KB",
+    "number": 1,
+    "type": "scene",
+    "status": "in_progress",
+    "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+    "title_native": "Запись к врачу",
+    "title_target": "Booking an appointment",
+    "teaches_native": "записаться, спросить про время",
+    "lesson_status": "ready",
+    "opens_on": "2026-09-12",
+    "slot": {
+      "code": "today",
+      "date": "2026-09-12",
+      "label_native": "сегодня"
+    },
+    "cards_total": 78,
+    "cards_done": 40,
+    "minutes_spent": 1,
+    "opened_at": "2026-09-12T19:32:12+00:00",
+    "closed_at": null,
+    "stages": [
+      {
+        "stage": "words",
+        "state": "done"
+      },
+      {
+        "stage": "phrases",
+        "state": "current"
+      },
+      {
+        "stage": "dialogue",
+        "state": "locked"
+      },
+      {
+        "stage": "listen",
+        "state": "locked"
+      },
+      {
+        "stage": "speak",
+        "state": "locked"
+      }
+    ]
   },
-  "cards_total": 75,
-  "cards_done": 0,
-  "minutes_spent": 0,
-  "opened_at": "2026-09-11T11:03:17+00:00",
-  "closed_at": null
- },
- "scene": {
-  "id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-  "order": 1,
-  "kind": "situation",
-  "priority": 3,
-  "title_native": "Запись в клинику",
-  "title_target": "Clinic booking",
-  "teaches_native": "записаться, спросить про документы",
+  "scene": {
+    "id": "01M2BHFF55P0S72MX3S8RCEDVX",
+    "order": 1,
+    "kind": "situation",
+    "priority": 4,
+    "title_native": "Запись к врачу",
+    "title_target": "Booking an appointment",
+    "teaches_native": "записаться, спросить про время",
+    "goals_native": [
+      "назвать причину визита",
+      "выбрать день и время",
+      "спросить про документы",
+      "уточнить стоимость приёма"
+    ],
+    "learner_role_target": "Patient",
+    "learner_role_native": "Пациент",
+    "partner_role_target": "Receptionist",
+    "partner_role_native": "Администратор",
+    "image": {
+      "url": "https://images.pexels.com/photos/6809657/pexels-photo-6809657.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Pavel Danilyuk",
+      "author_url": "https://www.pexels.com/@pavel-danilyuk",
+      "tone": "#958E88",
+      "url_112": "http://localhost:8001/api/v1/plans/images/01M2BHFF55P0S72MX3S8RCEDVX/112?v=a5a4ed8d4b8d",
+      "url_448": "http://localhost:8001/api/v1/plans/images/01M2BHFF55P0S72MX3S8RCEDVX/448?v=a5a4ed8d4b8d"
+    },
+    "lesson_status": "ready",
+    "lesson_fail_reason": null,
+    "day_number": 1,
+    "cost_usd": "0.082460",
+    "latency_ms": 24912,
+    "prompt_version": "lesson-v3"
+  },
   "goals_native": [
-   "записаться на приём",
-   "сказать причину визита",
-   "спросить про документы",
-   "уточнить время приёма"
+    "назвать причину визита",
+    "выбрать день и время",
+    "спросить про документы",
+    "уточнить стоимость приёма"
   ],
-  "learner_role_target": "Patient",
-  "learner_role_native": "Пациент",
-  "partner_role_target": "Receptionist",
-  "partner_role_native": "Администратор",
-  "image": {
-   "url": "https://images.pexels.com/photos/6809668/pexels-photo-6809668.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-   "author": "Pavel Danilyuk",
-   "author_url": "https://www.pexels.com/@pavel-danilyuk"
+  "stages": [
+    {
+      "stage": "words",
+      "total": 34,
+      "done": 34,
+      "state": "done"
+    },
+    {
+      "stage": "phrases",
+      "total": 19,
+      "done": 6,
+      "state": "current"
+    },
+    {
+      "stage": "dialogue",
+      "total": 1,
+      "done": 0,
+      "state": "locked"
+    },
+    {
+      "stage": "listen",
+      "total": 16,
+      "done": 0,
+      "state": "locked"
+    },
+    {
+      "stage": "speak",
+      "total": 8,
+      "done": 0,
+      "state": "locked"
+    }
+  ],
+  "metrics": {
+    "cards_total": 78,
+    "cards_done": 40,
+    "minutes_spent": 1,
+    "first_try_share": 0.9,
+    "hardest_unit_kind": "word",
+    "hardest_unit_ref": "v2",
+    "hardest_unit_text": "back pain"
   },
-  "lesson_status": "ready",
-  "lesson_fail_reason": null,
-  "day_number": 1,
-  "cost_usd": "0.080417",
-  "latency_ms": 27986,
-  "prompt_version": "lesson-v3"
- },
- "goals_native": [
-  "записаться на приём",
-  "сказать причину визита",
-  "спросить про документы",
-  "уточнить время приёма"
- ],
- "stages": [
-  {
-   "stage": "words",
-   "total": 32,
-   "done": 1,
-   "state": "current"
-  },
-  {
-   "stage": "phrases",
-   "total": 18,
-   "done": 0,
-   "state": "locked"
-  },
-  {
-   "stage": "dialogue",
-   "total": 1,
-   "done": 0,
-   "state": "locked"
-  },
-  {
-   "stage": "listen",
-   "total": 16,
-   "done": 0,
-   "state": "locked"
-  },
-  {
-   "stage": "speak",
-   "total": 8,
-   "done": 0,
-   "state": "locked"
-  }
- ],
- "metrics": {
-  "cards_total": 75,
-  "cards_done": 0,
-  "minutes_spent": 0,
-  "first_try_share": null,
-  "hardest_unit_kind": null,
-  "hardest_unit_ref": null,
-  "hardest_unit_text": null
- },
- "program": [
-  {
-   "unit_kind": "word",
-   "unit_ref": "v1",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "appointment",
-   "text_native": "запись на прием",
-   "source": "today",
-   "cards_total": 4,
-   "cards_done": 1,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "word",
-   "unit_ref": "v2",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "available",
-   "text_native": "свободный",
-   "source": "today",
-   "cards_total": 4,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "word",
-   "unit_ref": "v3",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "back pain",
-   "text_native": "боль в спине",
-   "source": "today",
-   "cards_total": 4,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "word",
-   "unit_ref": "v4",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "visit",
-   "text_native": "визит",
-   "source": "today",
-   "cards_total": 4,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "word",
-   "unit_ref": "v5",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "documents",
-   "text_native": "документы",
-   "source": "today",
-   "cards_total": 4,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "word",
-   "unit_ref": "v6",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "passport",
-   "text_native": "паспорт",
-   "source": "today",
-   "cards_total": 4,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "word",
-   "unit_ref": "v7",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "insurance card",
-   "text_native": "страховая карта",
-   "source": "today",
-   "cards_total": 4,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "word",
-   "unit_ref": "v8",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "register",
-   "text_native": "зарегистрироваться",
-   "source": "today",
-   "cards_total": 4,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "phrase",
-   "unit_ref": "p1",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "I'd like to make an appointment.",
-   "text_native": "Я хотел(а) бы записаться на прием.",
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "phrase",
-   "unit_ref": "p2",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "I have back pain.",
-   "text_native": "У меня болит спина.",
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "phrase",
-   "unit_ref": "p3",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "Do you have anything on Friday?",
-   "text_native": "У вас есть что-нибудь на пятницу?",
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "phrase",
-   "unit_ref": "p4",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "What documents do I need?",
-   "text_native": "Какие документы мне нужны?",
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "phrase",
-   "unit_ref": "p5",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "Do I need to register first?",
-   "text_native": "Мне нужно сначала зарегистрироваться?",
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "phrase",
-   "unit_ref": "p6",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": "Friday at 3 p.m.",
-   "text_native": "В пятницу в 15:00.",
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "exchange",
-   "unit_ref": "x1",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": null,
-   "text_native": null,
-   "source": "today",
-   "cards_total": 4,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "exchange",
-   "unit_ref": "x2",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": null,
-   "text_native": null,
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "exchange",
-   "unit_ref": "x3",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": null,
-   "text_native": null,
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "exchange",
-   "unit_ref": "x4",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": null,
-   "text_native": null,
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "exchange",
-   "unit_ref": "x5",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": null,
-   "text_native": null,
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "exchange",
-   "unit_ref": "x6",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": null,
-   "text_native": null,
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "exchange",
-   "unit_ref": "x7",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": null,
-   "text_native": null,
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  },
-  {
-   "unit_kind": "exchange",
-   "unit_ref": "x8",
-   "scene_id": "01M26KQ1W8CAFHRSDJD6QC6B1T",
-   "text_target": null,
-   "text_native": null,
-   "source": "today",
-   "cards_total": 3,
-   "cards_done": 0,
-   "state": "pending"
-  }
- ],
- "sheet_available": true
+  "program": [
+    {
+      "unit_kind": "word",
+      "unit_ref": "v1",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "appointment",
+      "text_native": "приём",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 4,
+      "state": "passed"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v2",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "back pain",
+      "text_native": "боль в спине",
+      "source": "today",
+      "cards_total": 5,
+      "cards_done": 5,
+      "state": "passed"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v3",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "visit",
+      "text_native": "визит",
+      "source": "today",
+      "cards_total": 5,
+      "cards_done": 5,
+      "state": "passed"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v4",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "ID",
+      "text_native": "удостоверение личности",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 4,
+      "state": "passed"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v5",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "insurance card",
+      "text_native": "страховая карта",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 4,
+      "state": "passed"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v6",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "without insurance",
+      "text_native": "без страховки",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 4,
+      "state": "passed"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v7",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "arrive early",
+      "text_native": "прийти раньше",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 3,
+      "state": "passed"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v8",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "forms",
+      "text_native": "формы",
+      "source": "today",
+      "cards_total": 5,
+      "cards_done": 5,
+      "state": "passed"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p1",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "I need an appointment for back pain.",
+      "text_native": "Мне нужен приём из-за боли в спине.",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 3,
+      "state": "passed"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p2",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "Wednesday at 3 is better for me.",
+      "text_native": "Среда в 3 мне подходит больше.",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 2,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p3",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "How much is the visit?",
+      "text_native": "Сколько стоит приём?",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 1,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p4",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "I'll arrive fifteen minutes early.",
+      "text_native": "Я приду на пятнадцать минут раньше.",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p5",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "Do I need to bring anything else?",
+      "text_native": "Мне нужно принести что-нибудь ещё?",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p6",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": "See you on Wednesday.",
+      "text_native": "До встречи в среду.",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x1",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x2",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x3",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x4",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x5",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x6",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x7",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x8",
+      "scene_id": "01M2BHFF55P0S72MX3S8RCEDVX",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    }
+  ],
+  "sheet_available": true
 }

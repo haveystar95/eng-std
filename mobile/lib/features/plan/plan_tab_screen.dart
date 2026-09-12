@@ -9,14 +9,17 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
+import '../../data/image_loader.dart';
 import '../../data/plan/plan_models.dart';
 import '../collections/collection_detail_screen.dart';
 import '../profile/profile_avatar.dart';
 import 'entry/plan_entry_screen.dart';
 import 'plan_day_plate_view.dart';
 import 'day/open_day.dart';
+import 'plan_notifications_host.dart';
 import 'plan_providers.dart';
-import 'plan_route.dart';
+import 'route/plan_route.dart';
+import 'route/route_examples.dart';
 import 'plan_rules.dart';
 import 'plan_sheets.dart';
 import 'plan_tab_parts.dart';
@@ -168,13 +171,14 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
           const SizedBox(height: 32),
           _EmptyState(onStart: _openEntry),
           gap,
-          const _ExampleCard(),
+          const PlanExamplesStrip(),
           gap,
           PlanFinishedList(rows: s.finished, onOpen: _openFinished),
         ],
       );
     }
 
+    _prefetchPhotos(p);
     final hints = ref.watch(planHintsProvider).value;
     final focus = s.focusDay;
     final showsDone = p.allDaysClosed && p.status.isLive || (widget.readOnly && p.status == PlanStatus.finished);
@@ -251,7 +255,12 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
                   child: PlanHintLine(text: l.planHintFirstRoute(dayLabel), visible: true),
                 ),
               // Тап по узлу — кабинет ТОГО ЖЕ дня (21-2b); в режиме чтения узлы не нажимаются.
-              PlanRoute(plan: p, onOpenDay: widget.readOnly ? null : _openDay),
+              PlanRoute(
+                plan: p,
+                onOpenDay: widget.readOnly ? null : _openDay,
+                explainDay: ref.watch(planExplainDayProvider),
+                focus: ref.watch(planFocusDayProvider),
+              ),
             ],
           ),
         ),
@@ -261,6 +270,19 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
         ],
       ],
     );
+  }
+
+  String? _prefetched;
+
+  /// Фото дней, до которых маршрут дошёл, и трёх следующих — заранее, одним заходом общего
+  /// загрузчика (§3 наряда PLAN-UI-3). Второй раз тот же набор не просится.
+  void _prefetchPhotos(Plan p) {
+    final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
+    final urls = planRoutePrefetch(p, dpr);
+    final key = urls.join('|');
+    if (key == _prefetched || urls.isEmpty) return;
+    _prefetched = key;
+    unawaited(ImageLoader.instance.prefetch(urls));
   }
 
   // ── actions ─────────────────────────────────────────────────────────────────────────────────
@@ -294,7 +316,11 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
     if (!mounted || started == null) return;
     // «Начать» → таб: план принимает сам вход, а лист «Как устроен план» приходит следом — один
     // раз, за первым планом (правило целиком — в [showPlanHowSheetOnce]).
+    if (!mounted) return;
     await showPlanHowSheetOnce(context, ref);
+    // РАЗРЕШЕНИЕ НА УВЕДОМЛЕНИЯ — один раз, после «Начать» на превью и листа «Как устроен план»,
+    // не при старте приложения (наряд PLAN-UI-3 §4); следом регистрация push-токена.
+    if (mounted) await askPlanNotificationsOnce(ref);
   }
 
   void _openMenu(BuildContext anchor) {
@@ -435,8 +461,8 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
 /// кабинет, а не витрина.
 ///
 /// Над сгибом: заголовок, подпись в одну строку, три правила плана — те же, что в листе 21-8, —
-/// и одно угольное действие. Ниже сгиба одна карточка-пример из трёх узлов того же вида, что в
-/// маршруте, и «Завершённые планы».
+/// и одно угольное действие. Ниже сгиба лента из трёх примеров тем же маршрутом, что в табе
+/// ([PlanExamplesStrip]), и «Завершённые планы».
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.onStart});
 
@@ -480,119 +506,6 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
-}
-
-/// КАРТОЧКА-ПРИМЕР витрины (21-1) — три статичных узла БЕЗ ДАТ И БЕЙДЖЕЙ: она показывает, как
-/// выглядит маршрут, а не притворяется чьим-то планом.
-class _ExampleCard extends StatelessWidget {
-  const _ExampleCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final rows = <(String, String)>[
-      (l.planExampleDay1, l.planExampleDay1Sub),
-      (l.planExampleDay2, l.planExampleDay2Sub),
-      (l.planExampleDay3, l.planExampleDay3Sub),
-    ];
-
-    return PaperCard(
-      radius: 22,
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          PlanSectionLabel(l.planExampleTitle),
-          const SizedBox(height: 12),
-          for (var i = 0; i < rows.length; i++)
-            _ExampleRow(title: rows[i].$1, sub: rows[i].$2, last: i == rows.length - 1),
-        ],
-      ),
-    );
-  }
-}
-
-/// Один узел примера: пустой круг 56 на линии и две строки. Фото нет — примерных фотографий у
-/// плана, которого ещё не существует, тоже нет.
-class _ExampleRow extends StatelessWidget {
-  const _ExampleRow({required this.title, required this.sub, required this.last});
-
-  final String title, sub;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      if (!last)
-        Positioned.fill(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 28 - 0.75, top: 28),
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Container(
-                width: 1.5,
-                height: double.infinity,
-                color: AppColors.ink.withValues(alpha: .22),
-              ),
-            ),
-          ),
-        ),
-      Padding(
-        padding: EdgeInsets.only(bottom: last ? 0 : 24),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 76),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.photoPlaceholder,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.ink.withValues(alpha: .10),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontFamily: AppFonts.inter,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        height: 1.25,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      sub,
-                      style: const TextStyle(
-                        fontFamily: AppFonts.inter,
-                        fontSize: 14,
-                        height: 1.4,
-                        color: AppColors.secondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ],
-  );
 }
 
 /// «нет сети» — the quiet line over a cached state (§6).

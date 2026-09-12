@@ -3849,47 +3849,257 @@ abstract class AppLocalizations {
   /// **'То, что не получилось, вернётся в следующий день. Ничего не потеряется'**
   String get planRuleReturn;
 
-  /// Метка карточки-примера на витрине (кадр 21-1, plan.example.title).
-  ///
-  /// In ru, this message translates to:
-  /// **'Пример · приём у врача'**
-  String get planExampleTitle;
-
-  /// Первый узел карточки-примера (кадр 21-1, plan.example.day1).
-  ///
-  /// In ru, this message translates to:
-  /// **'Запись к врачу'**
-  String get planExampleDay1;
-
-  /// Описание первого узла примера (кадр 21-1, plan.example.day1.sub).
-  ///
-  /// In ru, this message translates to:
-  /// **'спросить время приёма и страховку'**
-  String get planExampleDay1Sub;
-
-  /// Второй узел карточки-примера (кадр 21-1, plan.example.day2).
+  /// Витрина 21-1, лента примеров: заголовок карточки «Приём у врача» (Literata 20). Статический пример клиента, тексты из кадра.
   ///
   /// In ru, this message translates to:
   /// **'Приём у врача'**
-  String get planExampleDay2;
+  String get planExampleDoctorTitle;
 
-  /// Описание второго узла примера (кадр 21-1, plan.example.day2.sub).
+  /// Витрина 21-1, пример «Приём у врача»: название дня 1 — идёт после «День 1 · ».
   ///
   /// In ru, this message translates to:
-  /// **'описать боль, понять назначения'**
-  String get planExampleDay2Sub;
+  /// **'Запись к врачу'**
+  String get planExampleDoctorDay1;
 
-  /// Третий узел карточки-примера (кадр 21-1, plan.example.day3).
+  /// Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'спросить время приёма'**
+  String get planExampleDoctorGoal11;
+
+  /// Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'договориться о приёме'**
+  String get planExampleDoctorGoal12;
+
+  /// Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'назвать страховку'**
+  String get planExampleDoctorGoal13;
+
+  /// Витрина 21-1, пример «Приём у врача»: название дня 2 — идёт после «День 2 · ».
+  ///
+  /// In ru, this message translates to:
+  /// **'Приём у врача'**
+  String get planExampleDoctorDay2;
+
+  /// Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'описать боль'**
+  String get planExampleDoctorGoal21;
+
+  /// Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'ответить про лекарства'**
+  String get planExampleDoctorGoal22;
+
+  /// Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'понять назначения'**
+  String get planExampleDoctorGoal23;
+
+  /// Витрина 21-1, пример «Приём у врача»: название дня 3 — идёт после «День 3 · ».
   ///
   /// In ru, this message translates to:
   /// **'Аптека'**
-  String get planExampleDay3;
+  String get planExampleDoctorDay3;
 
-  /// Описание третьего узла примера (кадр 21-1, plan.example.day3.sub).
+  /// Витрина 21-1, пример «Приём у врача», день 3: что человек скажет после дня — строка у латунной точки.
   ///
   /// In ru, this message translates to:
-  /// **'понять дозировку, спросить аналог'**
-  String get planExampleDay3Sub;
+  /// **'назвать рецепт'**
+  String get planExampleDoctorGoal31;
+
+  /// Витрина 21-1, пример «Приём у врача», день 3: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'понять дозировку'**
+  String get planExampleDoctorGoal32;
+
+  /// Витрина 21-1, пример «Приём у врача», день 3: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'спросить аналог'**
+  String get planExampleDoctorGoal33;
+
+  /// Витрина 21-1, лента примеров: заголовок карточки «Собеседование» (Literata 20). Статический пример клиента, тексты из кадра.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседование'**
+  String get planExampleInterviewTitle;
+
+  /// Витрина 21-1, пример «Собеседование»: название дня 1 — идёт после «День 1 · ».
+  ///
+  /// In ru, this message translates to:
+  /// **'Знакомство'**
+  String get planExampleInterviewDay1;
+
+  /// Витрина 21-1, пример «Собеседование», день 1: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'рассказать о себе'**
+  String get planExampleInterviewGoal11;
+
+  /// Витрина 21-1, пример «Собеседование», день 1: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'назвать свой опыт'**
+  String get planExampleInterviewGoal12;
+
+  /// Витрина 21-1, пример «Собеседование», день 1: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'объяснить, почему ушёл'**
+  String get planExampleInterviewGoal13;
+
+  /// Витрина 21-1, пример «Собеседование»: название дня 2 — идёт после «День 2 · ».
+  ///
+  /// In ru, this message translates to:
+  /// **'Вопросы о работе'**
+  String get planExampleInterviewDay2;
+
+  /// Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'описать проект'**
+  String get planExampleInterviewGoal21;
+
+  /// Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'ответить про сроки'**
+  String get planExampleInterviewGoal22;
+
+  /// Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'признать ошибку'**
+  String get planExampleInterviewGoal23;
+
+  /// Витрина 21-1, пример «Собеседование»: название дня 3 — идёт после «День 3 · ».
+  ///
+  /// In ru, this message translates to:
+  /// **'Зарплата'**
+  String get planExampleInterviewDay3;
+
+  /// Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'назвать вилку'**
+  String get planExampleInterviewGoal31;
+
+  /// Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'спросить про бонусы'**
+  String get planExampleInterviewGoal32;
+
+  /// Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'обсудить выход'**
+  String get planExampleInterviewGoal33;
+
+  /// Витрина 21-1, лента примеров: заголовок карточки «Звонок арендодателю» (Literata 20). Статический пример клиента, тексты из кадра.
+  ///
+  /// In ru, this message translates to:
+  /// **'Звонок арендодателю'**
+  String get planExampleLandlordTitle;
+
+  /// Витрина 21-1, пример «Звонок арендодателю»: название дня 1 — идёт после «День 1 · ».
+  ///
+  /// In ru, this message translates to:
+  /// **'Про залог'**
+  String get planExampleLandlordDay1;
+
+  /// Витрина 21-1, пример «Звонок арендодателю», день 1: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'спросить сумму'**
+  String get planExampleLandlordGoal11;
+
+  /// Витрина 21-1, пример «Звонок арендодателю», день 1: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'узнать, когда вернут'**
+  String get planExampleLandlordGoal12;
+
+  /// Витрина 21-1, пример «Звонок арендодателю», день 1: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'назвать свой счёт'**
+  String get planExampleLandlordGoal13;
+
+  /// Витрина 21-1, пример «Звонок арендодателю»: название дня 2 — идёт после «День 2 · ».
+  ///
+  /// In ru, this message translates to:
+  /// **'Про ремонт'**
+  String get planExampleLandlordDay2;
+
+  /// Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'описать поломку'**
+  String get planExampleLandlordGoal21;
+
+  /// Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'попросить мастера'**
+  String get planExampleLandlordGoal22;
+
+  /// Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'договориться о времени'**
+  String get planExampleLandlordGoal23;
+
+  /// Витрина 21-1, пример «Звонок арендодателю»: название дня 3 — идёт после «День 3 · ».
+  ///
+  /// In ru, this message translates to:
+  /// **'Про договор'**
+  String get planExampleLandlordDay3;
+
+  /// Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'спросить про срок'**
+  String get planExampleLandlordGoal31;
+
+  /// Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'уточнить про питомцев'**
+  String get planExampleLandlordGoal32;
+
+  /// Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки.
+  ///
+  /// In ru, this message translates to:
+  /// **'назвать дату выезда'**
+  String get planExampleLandlordGoal33;
+
+  /// Витрина 21-1: мета примера «5 дней · начальный»; days — planDaysCount, level — название уровня строчными.
+  ///
+  /// In ru, this message translates to:
+  /// **'{days} · {level}'**
+  String planExampleMeta(String days, String level);
+
+  /// Витрина 21-1: подвал примера, когда в плане больше трёх дней («ещё 2 дня»).
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{ещё {n} день} few{ещё {n} дня} many{ещё {n} дней} other{ещё {n} дня}}'**
+  String planExampleMore(int n);
+
+  /// Витрина 21-1: подвал примера, где показаны все дни плана (3 дня).
+  ///
+  /// In ru, this message translates to:
+  /// **'весь план'**
+  String get planExampleWhole;
 
   /// Кадр 21-1, кнопка (plan.empty.cta).
   ///
@@ -3963,11 +4173,23 @@ abstract class AppLocalizations {
   /// **'Говорю сам'**
   String get planPlateStageSpeak;
 
-  /// Плита дня, счётчик этапа (plan.plate.stage.count).
+  /// Плита дня (21-2 … 21-4): состояние этапа словами справа — этап пройден.
   ///
   /// In ru, this message translates to:
-  /// **'{done} / {total}'**
-  String planPlateStageCount(int done, int total);
+  /// **'пройдено'**
+  String get planPlateStateDone;
+
+  /// Плита дня (21-2, 21-3): состояние текущего этапа словами справа.
+  ///
+  /// In ru, this message translates to:
+  /// **'идёт'**
+  String get planPlateStateCurrent;
+
+  /// Плита дня (21-2): состояние этапа, до которого ещё не дошли.
+  ///
+  /// In ru, this message translates to:
+  /// **'впереди'**
+  String get planPlateStateAhead;
 
   /// Формы «1 новое слово / 2 новых слова / 5 новых слов» (plan.plate.stage.sub.start).
   ///
@@ -4059,12 +4281,6 @@ abstract class AppLocalizations {
   /// **'{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}'**
   String planClosedReturn(int n, int k);
 
-  /// Строка маршрута, tertiary (plan.route.day.repeat).
-  ///
-  /// In ru, this message translates to:
-  /// **'День повторения'**
-  String get planRouteDayRepeat;
-
   /// Строка маршрута (plan.route.day.repeat.sub).
   ///
   /// In ru, this message translates to:
@@ -4077,6 +4293,18 @@ abstract class AppLocalizations {
   /// **'слова и фразы дня {a}'**
   String planRouteDayRepeatSubOne(int a);
 
+  /// Заголовок дня на маршруте (кадры 21-2b, 22-4b): номер дня и название; мета стоит строкой ниже.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n} · {title}'**
+  String planRouteDayTitle(int n, String title);
+
+  /// Название дня повторения на маршруте (кадры 21-2b, 22-4b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторение'**
+  String get planRouteDayReview;
+
   /// Строка маршрута, tertiary (plan.route.day.rehearsal).
   ///
   /// In ru, this message translates to:
@@ -4088,12 +4316,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'весь маршрут вслух'**
   String get planRouteDayRehearsalSub;
-
-  /// Мета-строка узла маршрута, первое слово — номер дня (кадр 21-2b, plan.route.meta.day).
-  ///
-  /// In ru, this message translates to:
-  /// **'День {n}'**
-  String planRouteMetaDay(int n);
 
   /// Мета-строка пройденного дня маршрута (кадр 21-2b, plan.route.meta.passed).
   ///
@@ -4437,12 +4659,6 @@ abstract class AppLocalizations {
   /// **'или надиктуй'**
   String get planEntryGoalDictate;
 
-  /// Подпись у микрофона во время записи (кадр 22-1, entry.goal.dictate.stop).
-  ///
-  /// In ru, this message translates to:
-  /// **'тап — остановить'**
-  String get planEntryGoalDictateStop;
-
   /// Подпись у микрофона после распознавания (кадр 22-1, entry.goal.dictate.edit).
   ///
   /// In ru, this message translates to:
@@ -4454,12 +4670,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{time} · говори, я слушаю'**
   String planEntryGoalListening(String time);
-
-  /// Состояние микрофона между записью и текстом в поле (кадр 22-1, entry.goal.recognising).
-  ///
-  /// In ru, this message translates to:
-  /// **'распознаю…'**
-  String get planEntryGoalRecognising;
 
   /// Лента ответов (entry.tape.goal).
   ///
@@ -4623,11 +4833,35 @@ abstract class AppLocalizations {
   /// **'Около 10 секунд'**
   String get planEntryPreviewAbout;
 
-  /// Что именно происходит во время сборки (кадр 22-4a, entry.preview.loading.sub).
+  /// Прелоадер 22-4a и 22-5a: первая строка статуса по кругу (om-pre-line1).
   ///
   /// In ru, this message translates to:
-  /// **'Подбираю ситуации под твой разговор и расставляю их по дням'**
-  String get planEntryPreviewLoadingSub;
+  /// **'Подбираю ситуации под твой разговор'**
+  String get planEntryPreviewLine1;
+
+  /// Прелоадер 22-4a и 22-5a: вторая строка статуса (om-pre-line2).
+  ///
+  /// In ru, this message translates to:
+  /// **'Раскладываю их по дням'**
+  String get planEntryPreviewLine2;
+
+  /// Прелоадер 22-4a и 22-5a: третья строка статуса (om-pre-line3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собираю слова и фразы'**
+  String get planEntryPreviewLine3;
+
+  /// Превью 22-4b: метка плиты с пересказом плана (summary сервера).
+  ///
+  /// In ru, this message translates to:
+  /// **'Как это будет'**
+  String get planEntryPreviewHowLabel;
+
+  /// Превью 22-4b: текстовая ссылка над «Начать» — вернуться к ответам входа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить'**
+  String get planEntryPreviewEdit;
 
   /// Кадр 22-4 (entry.preview.cta).
   ///
@@ -4700,6 +4934,72 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{days}. День 1 — «{dayTitle}»'**
   String planEntryPushBodyNoDate(String days, String dayTitle);
+
+  /// Уведомление «день собран» (кадр 22-6 — эталон вида); без push — баннер в приложении при возврате.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n} собран'**
+  String planNotifyDayReadyTitle(int n);
+
+  /// Тело уведомления «день собран».
+  ///
+  /// In ru, this message translates to:
+  /// **'«{title}» — можно начинать'**
+  String planNotifyDayReadyBody(String title);
+
+  /// Ежедневное напоминание в час обычного захода (локальное уведомление, не чаще раза в сутки).
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n} ждёт'**
+  String planNotifyReminderTitle(int n);
+
+  /// Тело ежедневного напоминания.
+  ///
+  /// In ru, this message translates to:
+  /// **'«{title}» — начни с того места, где остановился'**
+  String planNotifyReminderBody(String title);
+
+  /// Уведомление в день события: «Сегодня приём»; event — слово события сервера строчными.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня {event}'**
+  String planNotifyEventTodayTitle(String event);
+
+  /// Уведомление в день события, когда сервер не назвал событие.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня разговор'**
+  String get planNotifyEventTodayTitleNoName;
+
+  /// Тело уведомления в день события.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи сам перед разговором — прогони его вслух'**
+  String get planNotifyEventTodayBody;
+
+  /// Локальное уведомление «дни пропущены»: наутро после даты дня, который не пройден.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n} ждёт со вчера'**
+  String planNotifySkippedTitle(int n);
+
+  /// Тело уведомления «дни пропущены» — говорит, что сделала система, без укора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Маршрут сдвинулся: следующие дни пойдут от сегодня'**
+  String get planNotifySkippedBody;
+
+  /// Баннер уведомления в приложении (вид кадра 22-6): время справа от заголовка.
+  ///
+  /// In ru, this message translates to:
+  /// **'сейчас'**
+  String get planBannerNow;
+
+  /// Баннер уведомления в приложении (кадр 22-6): буква-значок приложения «Слова» в квадрате 34.
+  ///
+  /// In ru, this message translates to:
+  /// **'С'**
+  String get planBannerAppMark;
 
   /// Вход офлайн (§6): нельзя начать сборку. Строки в таблице нет — добавлена нарядом PLAN-UI.
   ///

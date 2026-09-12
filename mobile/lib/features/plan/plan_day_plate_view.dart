@@ -6,6 +6,7 @@ import 'package:eng_std/ui/ui.dart';
 import '../../data/local/cached_image_provider.dart';
 import '../../data/plan/plan_models.dart';
 import 'plan_format.dart';
+import 'plan_stage_text.dart';
 
 /// ПЛИТА ДНЯ НА ТАБЕ, собранная из ответа сервера (кадры 21-2, 21-3, 21-4, 22-5a).
 ///
@@ -40,7 +41,10 @@ class PlanDayPlateView extends StatelessWidget {
     final locale = Localizations.localeOf(context).languageCode;
     final scene = plan.sceneOf(day);
     final title = day.titleNative ?? scene?.titleNative ?? plan.displayTitle;
-    final coverUrl = scene?.image?.url ?? plan.coverImage?.url;
+    // Тот же кроп, что у узла маршрута (52 и 56 при любой плотности берут один размер): фото,
+    // скачанное для маршрута, встаёт на плите без второй загрузки.
+    final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
+    final coverUrl = scene?.image?.urlFor(56, dpr) ?? plan.coverImage?.url;
     final cover = coverUrl == null ? null : CachedNetworkImage(coverUrl);
 
     final cards = _cardsTotal;
@@ -58,7 +62,7 @@ class PlanDayPlateView extends StatelessWidget {
         notice: DayPlateNotice(
           title: l.planPlateBuildingTitle(day.number),
           sub: l.planPlateBuildingSub,
-          spinner: true,
+          preloaderLines: [l.planEntryPreviewLine1, l.planEntryPreviewLine2, l.planEntryPreviewLine3],
         ),
       );
     }
@@ -164,9 +168,14 @@ class PlanDayPlateView extends StatelessWidget {
       }
       out.add(
         DayPlateStage(
-          kind: _mark(s.stage),
-          name: _name(l, s.stage),
-          count: l.planPlateStageCount(s.done, s.total),
+          kind: planStageMark(s.stage),
+          name: planStageName(l, s.stage),
+          // СОСТОЯНИЕ СЛОВАМИ, не счёт (кадры 21-2 … 21-4): «пройдено», «идёт», «впереди».
+          count: switch (state) {
+            DayPlateStageState.done => l.planPlateStateDone,
+            DayPlateStageState.current => l.planPlateStateCurrent,
+            DayPlateStageState.locked => l.planPlateStateAhead,
+          },
           state: state,
           note: note,
         ),
@@ -175,22 +184,4 @@ class PlanDayPlateView extends StatelessWidget {
 
     return out;
   }
-
-  /// Этап контракта → значок канвы (`assets/stages/`).
-  static PlanStageMarkKind _mark(PlanStage stage) => switch (stage) {
-    PlanStage.words => PlanStageMarkKind.words,
-    PlanStage.phrases => PlanStageMarkKind.phrases,
-    PlanStage.dialogue => PlanStageMarkKind.dialogue,
-    PlanStage.listen => PlanStageMarkKind.listen,
-    PlanStage.speak || PlanStage.unknown => PlanStageMarkKind.speak,
-  };
-
-  static String _name(AppLocalizations l, PlanStage stage) => switch (stage) {
-    PlanStage.words => l.planPlateStageWords,
-    PlanStage.phrases => l.planPlateStagePhrases,
-    PlanStage.dialogue => l.planPlateStageDialog,
-    PlanStage.listen => l.planPlateStageListen,
-    PlanStage.speak => l.planPlateStageSpeak,
-    PlanStage.unknown => '',
-  };
 }

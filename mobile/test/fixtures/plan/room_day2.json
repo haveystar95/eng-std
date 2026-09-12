@@ -1,0 +1,364 @@
+{
+  "plan_id": "01M2BHF1K19SDY8AVTB5RBF94D",
+  "day": {
+    "id": "01M2BHF1K3PC7987E5CDRVBRTA",
+    "number": 2,
+    "type": "scene",
+    "status": "open",
+    "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+    "title_native": "Приём у врача",
+    "title_target": "At the doctor's",
+    "teaches_native": "описать боль, понять лечение",
+    "lesson_status": "ready",
+    "opens_on": "2026-09-12",
+    "slot": {
+      "code": "today",
+      "date": "2026-09-12",
+      "label_native": "сегодня"
+    },
+    "cards_total": 0,
+    "cards_done": 0,
+    "minutes_spent": 0,
+    "opened_at": null,
+    "closed_at": null,
+    "stages": [
+      {
+        "stage": "words",
+        "state": "current"
+      },
+      {
+        "stage": "phrases",
+        "state": "locked"
+      },
+      {
+        "stage": "dialogue",
+        "state": "locked"
+      },
+      {
+        "stage": "listen",
+        "state": "locked"
+      },
+      {
+        "stage": "speak",
+        "state": "locked"
+      }
+    ]
+  },
+  "scene": {
+    "id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+    "order": 2,
+    "kind": "situation",
+    "priority": 1,
+    "title_native": "Приём у врача",
+    "title_target": "At the doctor's",
+    "teaches_native": "описать боль, понять лечение",
+    "goals_native": [
+      "сказать, где и как болит",
+      "сказать, как долго болит",
+      "ответить на вопросы врача",
+      "спросить про ограничения"
+    ],
+    "learner_role_target": "Patient",
+    "learner_role_native": "Пациент",
+    "partner_role_target": "Doctor",
+    "partner_role_native": "Врач",
+    "image": {
+      "url": "https://images.pexels.com/photos/39192339/pexels-photo-39192339.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Vitaly Gariev",
+      "author_url": "https://www.pexels.com/@silverkblack",
+      "tone": "#9DA097",
+      "url_112": "http://localhost:8001/api/v1/plans/images/01M2BHFF55F7TCB1KE3W5C4KBG/112?v=b5d0c5546961",
+      "url_448": "http://localhost:8001/api/v1/plans/images/01M2BHFF55F7TCB1KE3W5C4KBG/448?v=b5d0c5546961"
+    },
+    "lesson_status": "ready",
+    "lesson_fail_reason": null,
+    "day_number": 2,
+    "cost_usd": "0.060133",
+    "latency_ms": 19256,
+    "prompt_version": "lesson-v3"
+  },
+  "goals_native": [
+    "сказать, где и как болит",
+    "сказать, как долго болит",
+    "ответить на вопросы врача",
+    "спросить про ограничения"
+  ],
+  "stages": [
+    {
+      "stage": "words",
+      "total": 32,
+      "done": 0,
+      "state": "current"
+    },
+    {
+      "stage": "phrases",
+      "total": 18,
+      "done": 0,
+      "state": "locked"
+    },
+    {
+      "stage": "dialogue",
+      "total": 1,
+      "done": 0,
+      "state": "locked"
+    },
+    {
+      "stage": "listen",
+      "total": 16,
+      "done": 0,
+      "state": "locked"
+    },
+    {
+      "stage": "speak",
+      "total": 8,
+      "done": 0,
+      "state": "locked"
+    }
+  ],
+  "metrics": null,
+  "program": [
+    {
+      "unit_kind": "word",
+      "unit_ref": "v1",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "lower back",
+      "text_native": "поясница",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v2",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "sharp",
+      "text_native": "острый",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v3",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "dull",
+      "text_native": "тупой",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v4",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "pain",
+      "text_native": "боль",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v5",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "bend",
+      "text_native": "наклоняться",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v6",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "muscle strain",
+      "text_native": "растяжение мышцы",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v7",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "heavy lifting",
+      "text_native": "подъём тяжестей",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "word",
+      "unit_ref": "v8",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "rest",
+      "text_native": "отдыхать",
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p1",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "My lower back hurts.",
+      "text_native": "У меня болит поясница.",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p2",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "It started a week ago.",
+      "text_native": "Это началось неделю назад.",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p3",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "It's a dull pain.",
+      "text_native": "Это тупая боль.",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p4",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "It gets worse when I bend.",
+      "text_native": "Становится хуже, когда я наклоняюсь.",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p5",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "Should I avoid exercise too?",
+      "text_native": "Мне тоже избегать упражнений?",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "phrase",
+      "unit_ref": "p6",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": "Please say that more slowly.",
+      "text_native": "Пожалуйста, скажите это медленнее.",
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x1",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 4,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x2",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x3",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x4",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x5",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x6",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x7",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    },
+    {
+      "unit_kind": "exchange",
+      "unit_ref": "x8",
+      "scene_id": "01M2BHFF55F7TCB1KE3W5C4KBG",
+      "text_target": null,
+      "text_native": null,
+      "source": "today",
+      "cards_total": 3,
+      "cards_done": 0,
+      "state": "pending"
+    }
+  ],
+  "sheet_available": true
+}

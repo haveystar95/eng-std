@@ -161,6 +161,47 @@ enum PlanStageState {
   };
 }
 
+/// A route day's stage state — `PlanDayRoute.stages[].state` (наряд PLAN-UI-3).
+///
+/// A CLOSED set, unlike every other enum here: the line of the route is filled by these three
+/// words, and a fourth the client does not know would be a fill it invented. So a stranger word is
+/// not folded into `unknown` — it is a [PlanContractError], and the tab says it could not load.
+enum PlanRouteStageState {
+  done,
+  current,
+  locked;
+
+  static PlanRouteStageState fromWire(Object? s) => switch (s) {
+    'done' => done,
+    'current' => current,
+    'locked' => locked,
+    _ => throw PlanContractError('route stage state «$s»'),
+  };
+}
+
+/// The server said something the plan's contract has no word for, where guessing would draw a
+/// state that is not true (a route stage, its state). Not a network failure: the cache is not a
+/// fallback for it.
+class PlanContractError extends FormatException {
+  const PlanContractError(String what) : super('plan contract: $what');
+}
+
+/// One stage node on the route — `PlanDayRoute.stages[]`. Only the stages the day HAS arrive;
+/// a stage with no node in the answer has no node on the line.
+class PlanRouteStage {
+  const PlanRouteStage({required this.stage, required this.state});
+
+  final PlanStage stage;
+  final PlanRouteStageState state;
+
+  factory PlanRouteStage.fromJson(Map<String, dynamic> j) {
+    final stage = PlanStage.fromWire(j['stage'] as String?);
+    if (stage == PlanStage.unknown) throw PlanContractError('route stage «${j['stage']}»');
+
+    return PlanRouteStage(stage: stage, state: PlanRouteStageState.fromWire(j['state']));
+  }
+}
+
 /// `PlanProgramUnit.unit_kind`.
 enum PlanUnitKind {
   word,
@@ -205,22 +246,54 @@ enum PlanUnitSource {
 }
 
 /// A stock photo with the credit its licence asks for (`PlanImage`).
+///
+/// PLAN-UI-3: a scene's photo also carries its dominant [tone] (`#RRGGBB`, computed once when the
+/// photo was found) and two square crops served by our API with immutable caching — 112 for a
+/// 56-pt circle at 2x, 448 for anything denser. The tone is what the circle is filled with while
+/// the photo is on its way, so the route never blinks empty.
 class PlanImage {
-  const PlanImage({required this.url, this.author, this.authorUrl});
+  const PlanImage({
+    required this.url,
+    this.author,
+    this.authorUrl,
+    this.tone,
+    this.url112,
+    this.url448,
+  });
 
   final String url;
   final String? author;
   final String? authorUrl;
+  final String? tone;
+  final String? url112;
+  final String? url448;
 
   static PlanImage? fromJson(Map<String, dynamic>? j) {
     final url = j?['url'];
     if (url is! String || url.isEmpty) return null;
+    String? text(String key) {
+      final v = j![key];
+
+      return v is String && v.isNotEmpty ? v : null;
+    }
 
     return PlanImage(
       url: url,
-      author: j!['author'] as String?,
-      authorUrl: j['author_url'] as String?,
+      author: text('author'),
+      authorUrl: text('author_url'),
+      tone: text('tone'),
+      url112: text('url_112'),
+      url448: text('url_448'),
     );
+  }
+
+  /// The crop for a circle of [logicalSize] at [devicePixelRatio]: the smallest that still covers
+  /// it, the original only when the server has no crops (a plan older than the crops).
+  String urlFor(double logicalSize, double devicePixelRatio) {
+    final pixels = logicalSize * devicePixelRatio;
+    if (pixels <= 112 && url112 != null) return url112!;
+
+    return url448 ?? url112 ?? url;
   }
 }
 
@@ -342,6 +415,7 @@ class PlanDayRoute {
     required this.cardsTotal,
     required this.cardsDone,
     required this.minutesSpent,
+    this.stages = const [],
     this.sceneId,
     this.titleNative,
     this.titleTarget,
@@ -359,6 +433,10 @@ class PlanDayRoute {
   final int cardsTotal;
   final int cardsDone;
   final int minutesSpent;
+
+  /// The stage nodes of this day on the route, as the server walks them (наряд PLAN-UI-3). An
+  /// answer without the key — a cache from before — is a day with no stage nodes, not a guess.
+  final List<PlanRouteStage> stages;
   final String? sceneId;
   final String? titleNative;
   final String? titleTarget;
@@ -376,6 +454,10 @@ class PlanDayRoute {
     cardsTotal: (j['cards_total'] as num?)?.toInt() ?? 0,
     cardsDone: (j['cards_done'] as num?)?.toInt() ?? 0,
     minutesSpent: (j['minutes_spent'] as num?)?.toInt() ?? 0,
+    stages: [
+      for (final s in (j['stages'] as List?) ?? const [])
+        if (s is Map<String, dynamic>) PlanRouteStage.fromJson(s),
+    ],
     sceneId: j['scene_id'] as String?,
     titleNative: j['title_native'] as String?,
     titleTarget: j['title_target'] as String?,
@@ -494,6 +576,7 @@ class Plan {
     this.eventNative,
     this.untilPhrase,
     this.overdueNative,
+    this.summary,
     this.coverImage,
     this.collectionId,
     this.unclearReason,
@@ -526,6 +609,11 @@ class Plan {
 
   /// «5 дней · 3 ситуации, 1 повторение, репетиция» — READY.
   final String routeSummary;
+
+  /// «Регистрация на рейс, заселение в отель, ресторан. К 17 сентября скажешь всё это сам» — the
+  /// plate «Как это будет» of the preview (кадр 22-4b), READY. Null on a plan from before the
+  /// field: that plan has no plate, not an invented one.
+  final String? summary;
   final PlanImage? coverImage;
   final String? collectionId;
   final String? unclearReason;
@@ -561,6 +649,9 @@ class Plan {
     untilPhrase: j['until_phrase'] as String?,
     overdueNative: j['overdue_native'] as String?,
     routeSummary: (j['route_summary'] as String?) ?? '',
+    summary: (j['summary'] is String && (j['summary'] as String).trim().isNotEmpty)
+        ? (j['summary'] as String).trim()
+        : null,
     coverImage: PlanImage.fromJson(j['cover_image'] as Map<String, dynamic>?),
     collectionId: j['collection_id'] as String?,
     unclearReason: j['unclear_reason'] as String?,

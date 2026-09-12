@@ -75,6 +75,43 @@ import UIKit
     registerLineAudioChannel(engineBridge.applicationRegistrar.messenger())
     registerSpeechProbeChannel(engineBridge.applicationRegistrar.messenger())
     registerLinksChannel(engineBridge.applicationRegistrar.messenger())
+    registerPushChannel(engineBridge.applicationRegistrar.messenger())
+  }
+
+  /// PUSH-ТОКЕН APNs (наряд PLAN-UI-3 §4) — `lib/data/plan/push_registration.dart`.
+  ///
+  /// Dart зовёт `register` один раз, после разрешения на уведомления; ответ приходит позже методом
+  /// `token` (hex) или `failed` (текст ошибки). Без entitlement `aps-environment` — а у бесплатной
+  /// Personal Team его нет — iOS отвечает `didFailToRegister…`: это ожидаемо, Dart пишет в лог и
+  /// ничего не показывает человеку.
+  private var pushChannel: FlutterMethodChannel?
+
+  private func registerPushChannel(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "com.denis.engstd/push", binaryMessenger: messenger)
+    pushChannel = channel
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "register" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
+      result(nil)
+    }
+  }
+
+  override func application(
+    _ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+  ) {
+    let hex = deviceToken.map { String(format: "%02x", $0) }.joined()
+    pushChannel?.invokeMethod("token", arguments: hex)
+    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
+
+  override func application(
+    _ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error
+  ) {
+    pushChannel?.invokeMethod("failed", arguments: error.localizedDescription)
+    super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
 
   /// ЧТО ОС ДУМАЕТ ПРО МИКРОФОН — наряд DAY-GATE-1, Ч.0.1. См. `lib/data/speech/speech_diagnostics.dart`.

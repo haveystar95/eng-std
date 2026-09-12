@@ -110,15 +110,22 @@ class ChoiceCard extends StatelessWidget {
   }
 }
 
-/// КРУЖОК 36 В КАРТОЧКЕ-ВЫБОРЕ: подложка paper .14 у выбранной и ground у остальных, содержимое
+/// КРУЖОК В КАРТОЧКЕ-ВЫБОРЕ: подложка paper .14 у выбранной и ground у остальных, содержимое
 /// paper и латунь соответственно. Одно место знает это правило — карточек с кружком три сорта.
+///
+/// Размер 36 по умолчанию; язык и уровень (22-2, канва PLAN-DES-3) — 44 с флагом-эмодзи 28.
 class ChoiceCardMark extends StatelessWidget {
-  const ChoiceCardMark({super.key, required this.selected, this.text, this.child});
+  const ChoiceCardMark({super.key, required this.selected, this.text, this.emoji, this.child, this.size = 36});
 
   final bool selected;
 
-  /// Монограмма языка — «En» / «Es» / «De», Literata 15/500.
+  /// Монограмма — Literata 15/500.
   final String? text;
+
+  /// Флаг языка — эмодзи 28, цвет свой (22-2).
+  final String? emoji;
+
+  final double size;
 
   /// Значок вместо монограммы (уровень). Тонирует вызывающий — цвет берётся из [markColor].
   final Widget? child;
@@ -128,14 +135,15 @@ class ChoiceCardMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    width: 36,
-    height: 36,
+    width: size,
+    height: size,
     alignment: Alignment.center,
     decoration: BoxDecoration(
       shape: BoxShape.circle,
       color: selected ? AppColors.paper.withValues(alpha: .14) : AppColors.ground,
     ),
     child: child ??
+        (emoji != null ? Text(emoji!, style: const TextStyle(fontSize: 28, height: 1)) : null) ??
         Text(
           text ?? '',
           style: TextStyle(

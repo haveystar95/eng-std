@@ -15,13 +15,7 @@ import 'entry_state.dart';
 /// Фон входа — ground #EFEBE3, а не бумага: поле и карточки историй стоят НА нём светлой бумагой,
 /// и на бумажном фоне они бы пропали.
 class EntryScaffold extends StatelessWidget {
-  const EntryScaffold({
-    super.key,
-    required this.step,
-    required this.onBack,
-    required this.child,
-    this.dock,
-  });
+  const EntryScaffold({super.key, required this.step, required this.onBack, required this.child, this.dock});
 
   /// Шаг, который держит точку. Превью точки не занимает — это уже не вопрос.
   final EntryStep step;
@@ -64,7 +58,9 @@ class EntryScaffold extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 14),
-                    Expanded(child: Center(child: _Dots(step: step))),
+                    Expanded(
+                      child: Center(child: _Dots(step: step)),
+                    ),
                     // Пустой слот шириной стрелки — точки стоят по центру экрана, а не по центру
                     // остатка строки.
                     const SizedBox(width: 14),
@@ -149,58 +145,105 @@ class EntryContent extends StatelessWidget {
 
 /// КНОПКА ШАГА — 52 / radius 16 / 17 / 700 под градиентом, которым содержимое уходит под неё.
 class EntryDock extends StatelessWidget {
-  const EntryDock({super.key, required this.label, required this.enabled, this.onTap});
+  const EntryDock({
+    super.key,
+    required this.label,
+    required this.enabled,
+    this.onTap,
+    this.secondaryLabel,
+    this.onSecondary,
+  });
 
   final String label;
   final bool enabled;
   final VoidCallback? onTap;
+
+  /// «Изменить» над кнопкой превью (22-4b) — текстовая ссылка 40, кнопка по-прежнему одна.
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) {
     final on = enabled && onTap != null;
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [AppColors.groundClear, AppColors.ground],
-          stops: [0, .34],
+          colors: const [AppColors.groundClear, AppColors.ground],
+          // С «Изменить» над кнопкой док выше: градиент доходит до фона раньше, чтобы ссылка не
+          // лежала поверх маршрута (22-4b: `0 → 30 %` дока).
+          stops: secondaryLabel == null ? const [0, .34] : const [0, .12],
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 14, 20, 30 + MediaQuery.viewPaddingOf(context).bottom),
-        child: Semantics(
-          button: true,
-          enabled: on,
-          label: label,
-          child: Material(
-            color: on ? AppColors.ink : AppColors.ink.withValues(alpha: .14),
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: on
-                  ? () {
-                      AppHaptics.light();
-                      onTap!();
-                    }
-                  : null,
-              child: SizedBox(
-                height: 52,
-                child: Center(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontFamily: AppFonts.inter,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: on ? AppColors.paper : AppColors.ink.withValues(alpha: .45),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          secondaryLabel == null ? 14 : 10,
+          20,
+          30 + MediaQuery.viewPaddingOf(context).bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (secondaryLabel != null)
+              Semantics(
+                button: true,
+                label: secondaryLabel,
+                child: InkWell(
+                  onTap: onSecondary,
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    height: 40,
+                    child: Center(
+                      child: Text(
+                        secondaryLabel!,
+                        style: const TextStyle(
+                          fontFamily: AppFonts.inter,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.link,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            Semantics(
+              button: true,
+              enabled: on,
+              label: label,
+              child: Material(
+                color: on ? AppColors.ink : AppColors.ink.withValues(alpha: .14),
+                borderRadius: BorderRadius.circular(16),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: on
+                      ? () {
+                          AppHaptics.light();
+                          onTap!();
+                        }
+                      : null,
+                  child: SizedBox(
+                    height: 52,
+                    child: Center(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontFamily: AppFonts.inter,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: on ? AppColors.paper : AppColors.ink.withValues(alpha: .45),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

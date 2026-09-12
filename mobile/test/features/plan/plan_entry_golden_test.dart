@@ -217,6 +217,10 @@ class _Api implements ApiClient {
   @override
   Future<Plan> plan(String planId) async => planFrom('plan_ready_preview');
 
+  /// Языки плана — список сервера (сегодня два).
+  @override
+  Future<List<String>> planLanguages() async => const ['en', 'de'];
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

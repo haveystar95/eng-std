@@ -17,8 +17,9 @@ import '../../support/plan_goldens.dart';
 /// план сам не доходит, тоже СНЯТЫ, а не подделаны: закрытый день прогнан по API карточка за
 /// карточкой, прошедшее событие получено `plan:shift-day` + `start`, пересборка — переносом даты.
 ///
-/// Правкой фикстуры остался ровно один кадр — 21-6: там проверяется не состояние сервера, а
-/// поведение КЛИЕНТА, когда короткого названия нет и дней вдвое больше; правка видна в тесте.
+/// Правкой фикстуры остались кадры, которые проверяют КЛИЕНТА, а не сервер: 21-6 (нет короткого
+/// названия, дней вдвое больше), 21-7 (все дни закрыты), 22-5a/22-5c (урок в сборке / отказ).
+/// Фикстуры PLAN-UI-3 сняты живым прогоном 12.09 (план «Приём у врача», QA `qa-planui3@wt.test`).
 ///
 /// `room_unopened` — кабинет дня, который ещё НЕ ОТКРЫВАЛИ: после PLAN-API-FIX-1 он уже отдаёт
 /// все пять этапов с их `total`, поэтому плита не начатого дня (21-2) рисуется целиком. До
@@ -113,9 +114,10 @@ void main() {
 
   // ── 21-2 · план идёт, день не начат ───────────────────────────────────────────────────────
   group('день не начат (кадры 21-2, 21-2b, 21-2c)', () {
+    // Канонический кадр 21-2: день 1 пройден, день 2 сегодня и не начат — снято живьём.
     PlanTabState fresh() => PlanTabState(
-      plan: planFrom('current_ready'),
-      room: roomFrom('room_unopened'),
+      plan: planFrom('current_day2'),
+      room: roomFrom('room_day2'),
       finished: const [],
     );
 
@@ -136,7 +138,7 @@ void main() {
       await expectPlanGolden(
         tester,
         tab(
-          fresh(),
+          PlanTabState(plan: planFrom('current_started'), room: roomFrom('room_unopened'), finished: const []),
           hints: const PlanHints(tabShown: false, closeShown: false, howShown: false),
         ),
         'plan/21-2c-first-hints',
@@ -147,7 +149,7 @@ void main() {
       await expectPlanGolden(
         tester,
         tab(
-          PlanTabState(plan: planFrom('current_ready'), finished: const [], offline: true),
+          PlanTabState(plan: planFrom('current_day2'), finished: const [], offline: true),
         ),
         'plan/21-2-offline',
       );
@@ -192,20 +194,6 @@ void main() {
       );
     });
 
-    testWidgets('часть карточек вернётся — терракотовая строка подвала', (tester) async {
-      await expectPlanGolden(
-        tester,
-        tab(
-          PlanTabState(
-            plan: planFrom('current_closed'),
-            room: roomFrom('room_closed', _someFailed),
-            finished: const [],
-          ),
-        ),
-        'plan/21-4-returning',
-      );
-    });
-
     testWidgets('маршрут целиком после закрытия дня (кадр 21-5)', (tester) async {
       await expectPlanGolden(
         tester,
@@ -221,7 +209,7 @@ void main() {
     testWidgets('верх: формулировка цели вместо названия, три строки', (tester) async {
       await expectPlanGolden(
         tester,
-        tab(PlanTabState(plan: planFrom('current_ready', _tenDaysNoTitle), finished: const [])),
+        tab(PlanTabState(plan: planFrom('current_started', _tenDaysNoTitle), finished: const [])),
         'plan/21-6',
       );
     });
@@ -229,7 +217,7 @@ void main() {
     testWidgets('прокручен: середина и хвост маршрута', (tester) async {
       await expectPlanGolden(
         tester,
-        tab(PlanTabState(plan: planFrom('current_ready', _tenDaysNoTitle), finished: const [])),
+        tab(PlanTabState(plan: planFrom('current_started', _tenDaysNoTitle), finished: const [])),
         'plan/21-6-scrolled',
         size: const Size(390, 2100),
       );
@@ -263,8 +251,8 @@ void main() {
       tester,
       tab(
         PlanTabState(
-          plan: planFrom('current_ready'),
-          room: roomFrom('room_unopened'),
+          plan: planFrom('current_day2'),
+          room: roomFrom('room_day2'),
           finished: const [],
         ),
       ),
@@ -285,7 +273,7 @@ void main() {
       tab(
         PlanTabState(
           plan: planFrom('current_rebuilt'),
-          room: roomFrom('room_unopened'),
+          room: roomFrom('room_day2'),
           finished: const [],
         ),
       ),
@@ -307,7 +295,7 @@ void main() {
     testWidgets('день 1 собирается — срок и разрешение уйти', (tester) async {
       await expectPlanGolden(
         tester,
-        tab(PlanTabState(plan: planFrom('current_ready', _lesson('building')), finished: const [])),
+        tab(PlanTabState(plan: planFrom('current_started', _lesson('building')), finished: const [])),
         'plan/22-5a-building',
       );
     });
@@ -317,7 +305,7 @@ void main() {
         tester,
         tab(
           PlanTabState(
-            plan: planFrom('current_ready'),
+            plan: planFrom('current_started'),
             room: roomFrom('room_unopened'),
             finished: const [],
           ),
@@ -331,7 +319,7 @@ void main() {
     testWidgets('день не собрался — «Повторить», маршрут на месте', (tester) async {
       await expectPlanGolden(
         tester,
-        tab(PlanTabState(plan: planFrom('current_ready', _lesson('failed')), finished: const [])),
+        tab(PlanTabState(plan: planFrom('current_started', _lesson('failed')), finished: const [])),
         'plan/22-5c-failed',
       );
     });
@@ -352,24 +340,17 @@ Map<String, dynamic> Function(Map<String, dynamic>) _lesson(String status) => (j
   return json;
 };
 
-/// Три единицы дня не сдались — подвал закрытого дня получает терракотовую строку «вернутся в
-/// день N» (21-4). В прогнанном дне всё отвечено `passed`, поэтому провал ставится правкой: уронить
-/// ровно три карточки из семидесяти пяти по API дороже, чем сказать это здесь одной строкой.
-Map<String, dynamic> _someFailed(Map<String, dynamic> json) {
-  final program = (json['program'] as List).cast<Map<String, dynamic>>();
-  for (var i = 0; i < 3 && i < program.length; i++) {
-    program[i]['state'] = 'failed';
-  }
-
-  return json;
-}
-
 /// Все дни закрыты, текущего нет — «план пройден» (21-7).
 Map<String, dynamic> _allClosed(Map<String, dynamic> json) {
   for (final d in (json['days'] as List).cast<Map<String, dynamic>>()) {
     d['status'] = 'closed';
     d['slot'] = {'code': 'past', 'date': d['slot']['date'], 'label_native': null};
     d['cards_done'] = d['cards_total'];
+    // Закрытый день — все его этапы пройдены: состояние узлов сервер отдаёт словом, и у закрытого
+    // дня это слово одно.
+    for (final st in (d['stages'] as List).cast<Map<String, dynamic>>()) {
+      st['state'] = 'done';
+    }
   }
   json['current_day'] = null;
   json['until_phrase'] = null;

@@ -3,37 +3,43 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/api_client.dart';
+import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
 import 'package:eng_std/features/plan/plan_providers.dart';
-import 'package:eng_std/features/plan/plan_route.dart';
 import 'package:eng_std/features/plan/plan_tab_screen.dart';
+import 'package:eng_std/features/plan/route/plan_route.dart';
+import 'package:eng_std/features/plan/route/route_marks.dart';
+import 'package:eng_std/features/plan/route/route_view.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../support/plan_goldens.dart';
 
-/// КАНОН ПЛАНА — правила канвы, а не снимок текущего кода.
+/// КАНОН ПЛАНА — правила канвы и наряда, а не снимок текущего кода.
 ///
-/// Разница принципиальная: снимок падает от любой правки пикселя и ничего не утверждает, а эти
-/// тесты утверждают ПРАВИЛО и упадут ровно тогда, когда правило нарушено — даже если экран при
-/// этом выглядит прилично. Тест, который лишь закрепляет то, как сейчас написан код, здесь не
-/// нужен: он запрещает исправления, а не ошибки.
+/// Каждый тест назван правилом и в комментарии говорит, какой дефект ловит. Тест, который лишь
+/// закрепляет то, как сейчас написан код, здесь не нужен: он запрещает исправления, а не ошибки.
+/// Фикстуры — живые ответы backend2 (PLAN-UI-3, 12.09): `current_day2` — день 1 пройден, день 2
+/// сегодня, дальше заперто.
 void main() {
   setUpAll(setUpPlanGoldens);
 
   Widget tab(PlanTabState state) => planGoldenApp(
     ProviderScope(
       overrides: [planTabProvider.overrideWith(() => _StubTab(state))],
-      child: const Scaffold(
-        extendBody: true,
-        backgroundColor: AppColors.ground,
-        body: PlanTabScreen(),
-      ),
+      child: const Scaffold(extendBody: true, backgroundColor: AppColors.ground, body: PlanTabScreen()),
     ),
   );
 
-  Future<void> pumpTab(WidgetTester tester, Widget app, {Size size = const Size(390, 2200)}) async {
+  Widget route(Plan plan, {ValueChanged<PlanDayRoute>? onOpen}) => planGoldenApp(
+    Scaffold(
+      backgroundColor: AppColors.ground,
+      body: SingleChildScrollView(padding: const EdgeInsets.all(20), child: PlanRoute(plan: plan, onOpenDay: onOpen ?? (_) {})),
+    ),
+  );
+
+  Future<void> pump(WidgetTester tester, Widget app, {Size size = const Size(390, 2400)}) async {
     tester.view
       ..devicePixelRatio = 2
       ..physicalSize = size * 2;
@@ -43,169 +49,197 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
   }
 
-  // ── ЛЕСТНИЦА ДНЕЙ ─────────────────────────────────────────────────────────────────────────
-  group('день N+1 открывается только когда день N пройден', () {
-    testWidgets('ровно один день носит подпись «сегодня»', (tester) async {
-      await pumpTab(
-        tester,
-        tab(PlanTabState(plan: planFrom('current_closed'), finished: const [])),
-      );
+  // ── ЗАПЕРТЫЙ ДЕНЬ ─────────────────────────────────────────────────────────────────────────
+  group('запертый день не открывается', () {
+    // ПРАВИЛО (наряд §1): тап по запертому дню не ведёт в кабинет — строка «откроется после дня N»
+    // на месте, без экрана. Тест-замок наряда: тап по дню 3 при текущем дне 2.
+    // ЛОВИТ: узел, который зовёт кабинет у любого дня (сервер ответил бы 409 уже в кабинете, и
+    // человек увидел бы экран ошибки вместо строки на маршруте).
+    testWidgets('тап по дню 3 при текущем дне 2 — навигации нет, причина на месте', (tester) async {
+      final opened = <int>[];
+      await pump(tester, route(planFrom('current_day2'), onOpen: (d) => opened.add(d.number)));
 
-      // Подпись слота приходит с сервера и стоит только у текущего дня: два «сегодня» на экране
-      // означали бы, что открыто два дня сразу.
-      expect(_texts(tester).where((t) => t == 'сегодня').length, lessThanOrEqualTo(1));
-      expect(_texts(tester).where((t) => t == 'завтра').length, lessThanOrEqualTo(1));
+      await tester.tap(find.text('День 3 · Повторение'));
+      await tester.pump();
+
+      expect(opened, isEmpty, reason: 'запертый день не открывает кабинет');
+      expect(_texts(tester).where((t) => t.contains('откроется завтра') || t.contains('откроется после дня 2')), isNotEmpty);
     });
 
-    testWidgets('причину открытия носит ТОЛЬКО первый запертый день', (tester) async {
-      await pumpTab(
-        tester,
-        tab(PlanTabState(plan: planFrom('current_ready'), finished: const [])),
-      );
+    // ЛОВИТ: причина, которая есть только у первого запертого дня, — тап по дальнему дню молчал бы.
+    testWidgets('тап по дальнему запертому дню дописывает ЕГО причину', (tester) async {
+      final opened = <int>[];
+      await pump(tester, route(planFrom('current_day2'), onOpen: (d) => opened.add(d.number)));
 
-      // «откроется после дня N» / «откроется завтра» — по одному на маршрут: иначе маршрут
-      // читается как список запретов, а не как дорога.
-      final reasons = _texts(tester).where(
-        (t) => t.contains('откроется после дня') || t.contains('откроется завтра'),
-      );
-      expect(reasons.length, 1, reason: 'причин открытия на экране: ${reasons.toList()}');
+      await tester.tap(find.textContaining('День 5 ·'));
+      await tester.pump();
+
+      expect(opened, isEmpty);
+      expect(_texts(tester).any((t) => t.contains('откроется после дня 4')), isTrue);
     });
 
-    testWidgets('после закрытия дня причина становится календарной, а не «после дня N»',
-        (tester) async {
-      // Канон 21-4: предыдущий день ПРОЙДЕН, значит ждать осталось не работу, а календарь.
-      await pumpTab(
-        tester,
-        tab(PlanTabState(plan: planFrom('current_closed'), finished: const [])),
-      );
+    // ПРАВИЛО: сегодняшний и пройденный дни открываются.
+    // ЛОВИТ: «замок», который перестарался и запер весь маршрут.
+    testWidgets('тап по сегодняшнему и пройденному дню — кабинет', (tester) async {
+      final opened = <int>[];
+      await pump(tester, route(planFrom('current_day2'), onOpen: (d) => opened.add(d.number)));
 
+      await tester.tap(find.textContaining('День 2 ·'));
+      await tester.tap(find.textContaining('День 1 ·'));
+      await tester.pump();
+
+      expect(opened, [2, 1]);
+    });
+  });
+
+  // ── УЗЛЫ ЭТАПОВ ───────────────────────────────────────────────────────────────────────────
+  group('узлы этапов — ровно те, что пришли с сервера', () {
+    // ПРАВИЛО (решение владельца 12.09): пять этапов как на сервере; у повторения и репетиции
+    // столько узлов, сколько этапов сервер отдал для дня; нет этапа в ответе — узла нет.
+    // ЛОВИТ: клиент, который дорисовывает пять узлов каждому дню по привычке.
+    testWidgets('у дня столько точек, сколько этапов в ответе', (tester) async {
+      final plan = planFrom('current_day2');
+      await pump(tester, route(plan));
+
+      final expected = plan.days.fold<int>(0, (n, d) => n + d.stages.length);
+      expect(tester.widgetList(find.byType(RouteChildDot)).length, expected);
+      // У репетиции ровно один этап — «Говорю сам».
+      expect(plan.days.last.type, PlanDayType.rehearsal);
+      expect(plan.days.last.stages.map((s) => s.stage), [PlanStage.speak]);
+    });
+
+    // ЛОВИТ: ответ без ключа `stages` (кэш до наряда), нарисованный пятью выдуманными узлами.
+    testWidgets('нет этапов в ответе — нет узлов', (tester) async {
+      await pump(tester, route(planFrom('current_day2', _noStages)));
+
+      expect(find.byType(RouteChildDot), findsNothing);
+    });
+
+    // ПРАВИЛО (наряд §1): неизвестное состояние этапа — честная ошибка, а не догадка.
+    // ЛОВИТ: `fromWire` с запасным `locked` — узел нарисовал бы неправду о прогрессе.
+    test('незнакомое слово состояния этапа — PlanContractError', () {
       expect(
-        _texts(tester).any((t) => t.contains('откроется завтра')),
-        isTrue,
-        reason: 'у первого запертого дня после закрытого должно стоять «откроется завтра»',
-      );
-      expect(
-        _texts(tester).any((t) => t.contains('откроется после дня')),
-        isFalse,
-        reason: 'работа предыдущего дня уже сделана — ссылаться на неё нечем',
+        () => PlanDayRoute.fromJson({
+          'id': 'd',
+          'number': 1,
+          'slot': {'code': 'today'},
+          'stages': [
+            {'stage': 'words', 'state': 'absent'},
+          ],
+        }),
+        throwsA(isA<PlanContractError>()),
       );
     });
   });
 
-  // ── ЛАТУНЬ ────────────────────────────────────────────────────────────────────────────────
-  group('латунь метит ОДИН день, а не украшает экран', () {
-    testWidgets('в маршруте латунную обводку носит ровно один узел', (tester) async {
-      await pumpTab(
-        tester,
-        tab(PlanTabState(plan: planFrom('current_ready'), finished: const [])),
-      );
+  // ── ЛИНИЯ = ПРОГРЕСС ──────────────────────────────────────────────────────────────────────
+  group('линия заливается до последнего пройденного этапа', () {
+    List<Color> lineColors(WidgetTester tester) => tester
+        .widgetList<ColoredBox>(
+          find.descendant(of: find.byType(PlanRoute), matching: find.byWidgetPredicate((w) => w is ColoredBox && w.child == null)),
+        )
+        .map((b) => b.color)
+        .toList();
 
-      final ringed = tester
-          .widgetList<Container>(
-            find.descendant(of: find.byType(PlanRoute), matching: find.byType(Container)),
-          )
-          .where((c) {
-            final d = c.decoration;
-            if (d is! BoxDecoration || d.border == null) return false;
-            final side = (d.border! as Border).top;
+    // ПРАВИЛО (канва PLAN-DES-3, эталон 21-2): день 1 пройден — шалфей через все его узлы и до
+    // картинки дня 2; отрезок в текущий этап дня 2 — латунь; дальше серое.
+    // ЛОВИТ: линию одного цвета (прогресса не видно) и латунь на двух отрезках сразу.
+    testWidgets('шалфей до дня 2, одна латунь, дальше серое', (tester) async {
+      final plan = planFrom('current_day2');
+      await pump(tester, route(plan));
+      final colors = lineColors(tester);
 
-            return side.color == AppColors.brass && side.width == 2;
-          });
-
-      expect(ringed.length, 1, reason: 'латунная обводка 2 — только у текущего дня');
+      // Каждый отрезок нарисован двумя половинами (у двух соседних узлов).
+      final walked = colors.where((c) => c == AppColors.verdictKnown).length ~/ 2;
+      final current = colors.where((c) => c == AppColors.brassInk).length ~/ 2;
+      final day1Nodes = 1 + plan.days.first.stages.length;
+      expect(walked, day1Nodes, reason: 'узлы дня 1 и отрезок в картинку дня 2');
+      expect(current, 1, reason: 'латунь — только отрезок в текущий этап');
+      expect(colors.contains(AppColors.routeAhead), isTrue);
     });
 
-    testWidgets('в шапке плана латуни нет — она метит день, а не план', (tester) async {
-      await pumpTab(
-        tester,
-        tab(PlanTabState(plan: planFrom('current_ready'), finished: const [])),
-        size: const Size(390, 400),
-      );
+    // ЛОВИТ: заливку у плана, который ещё не начат (превью и `ready`-план на табе).
+    testWidgets('не начатый план — ни шалфея, ни латуни', (tester) async {
+      await pump(tester, route(planFrom('current_ready')));
+      final colors = lineColors(tester);
 
-      final headerBrass = tester
-          .widgetList<Text>(find.byType(Text))
-          .where((t) => t.style?.color == AppColors.brassInk || t.style?.color == AppColors.brass)
-          .where((t) => (t.data ?? '').startsWith('План · '));
+      expect(colors.where((c) => c == AppColors.verdictKnown), isEmpty);
+      expect(colors.where((c) => c == AppColors.brassInk), isEmpty);
+    });
+  });
 
-      expect(headerBrass, isEmpty);
+  // ── ТРИ СОСТОЯНИЯ ДНЯ ─────────────────────────────────────────────────────────────────────
+  group('три состояния дня — цвет и вуаль, не прозрачность целиком', () {
+    // ПРАВИЛО (наряд §1): запертый день — вуаль на картинке и серый текст; без Opacity над узлом.
+    // ЛОВИТ: `Opacity(.4)` на весь узел — гаснут и линия, и точки этапов, и латунь соседей.
+    testWidgets('в маршруте нет Opacity, у запертого дня — вуаль', (tester) async {
+      await pump(tester, route(planFrom('current_day2')));
+
+      expect(find.descendant(of: find.byType(PlanRoute), matching: find.byType(Opacity)), findsNothing);
+      final veils = tester.widgetList<ColoredBox>(find.byWidgetPredicate((w) => w is ColoredBox && w.color == AppColors.routeVeil));
+      expect(veils, isNotEmpty);
+    });
+
+    // ПРАВИЛО: латунная обводка 2 — ровно у одного узла, у сегодняшнего дня.
+    // ЛОВИТ: обводку у каждого незакрытого дня.
+    testWidgets('латунная обводка — у одного дня', (tester) async {
+      await pump(tester, route(planFrom('current_day2')));
+      final ringed = tester.widgetList<RouteDayCircle>(find.byType(RouteDayCircle)).where((c) => c.tone == RouteDayTone.current);
+
+      expect(ringed.length, 1);
+    });
+
+    // ПРАВИЛО: подпись «сегодня» — у одного дня маршрута (слот сервера), «завтра» — не больше одного.
+    // ЛОВИТ: два открытых дня сразу.
+    testWidgets('«сегодня» — у одного дня', (tester) async {
+      await pump(tester, tab(PlanTabState(plan: planFrom('current_day2'), room: roomFrom('room_day2'), finished: const [])));
+
+      final route = find.byType(PlanRoute);
+      final today = tester.widgetList<Text>(find.descendant(of: route, matching: find.text('сегодня')));
+      expect(today.length, 1);
+    });
+
+    // ПРАВИЛО: мета-строка стоит ПОД заголовком дня, номер дня — в заголовке.
+    // ЛОВИТ: мету на линии или над заголовком.
+    testWidgets('мета под заголовком', (tester) async {
+      await pump(tester, route(planFrom('current_day2')));
+
+      final titleY = tester.getTopLeft(find.textContaining('День 1 ·')).dy;
+      final metaY = tester.getTopLeft(find.textContaining('пройден')).dy;
+      expect(titleY, lessThan(metaY));
     });
   });
 
   // ── ТРОЕТОЧИЙ НЕТ ─────────────────────────────────────────────────────────────────────────
-  group('ни одна строка плана не обрывается троеточием', () {
-    testWidgets('таб: ellipsis 0 во всех состояниях', (tester) async {
-      for (final fixture in const ['current_ready', 'current_progress', 'current_closed']) {
-        await pumpTab(tester, tab(PlanTabState(plan: planFrom(fixture), finished: const [])));
-        final ellipsised = tester
-            .widgetList<Text>(find.byType(Text))
-            .where((t) => t.overflow == TextOverflow.ellipsis)
-            .map((t) => t.data ?? '<rich>');
+  // ПРАВИЛО: ни одна строка плана не обрывается троеточием (21-6: «ни одна строка не сжата»).
+  // ЛОВИТ: `ellipsis` в новом маршруте и на плите.
+  testWidgets('таб: ellipsis 0 во всех снятых состояниях', (tester) async {
+    for (final (plan, room) in const [
+      ('current_started', 'room_unopened'),
+      ('current_progress', 'room_progress'),
+      ('current_closed', 'room_closed'),
+      ('current_day2', 'room_day2'),
+    ]) {
+      await pump(tester, tab(PlanTabState(plan: planFrom(plan), room: roomFrom(room), finished: const [])));
+      final ellipsised = tester.widgetList<Text>(find.byType(Text)).where((t) => t.overflow == TextOverflow.ellipsis).map((t) => t.data);
 
-        expect(ellipsised, isEmpty, reason: 'фикстура $fixture: ${ellipsised.toList()}');
-      }
-    });
-
-    testWidgets('длинное название дня переносится на две строки, а не обрезается',
-        (tester) async {
-      await pumpTab(
-        tester,
-        tab(
-          PlanTabState(
-            plan: planFrom('current_ready', _longDayTitle),
-            room: roomFrom('room_unopened'),
-            finished: const [],
-          ),
-        ),
-      );
-
-      // На ПЛИТЕ длинное название занимает ровно две строки и обрезается рамкой, не троеточием;
-      // в МАРШРУТЕ оно переносится свободно — там высоту узла держит сам текст.
-      final onPlate = tester.widget<Text>(
-        find.descendant(of: find.byType(DayPlate), matching: find.text(_longTitle)),
-      );
-      expect(onPlate.maxLines, 2);
-      expect(onPlate.overflow, isNot(TextOverflow.ellipsis));
-
-      final inRoute = tester.widget<Text>(
-        find.descendant(of: find.byType(PlanRoute), matching: find.text(_longTitle)),
-      );
-      expect(inRoute.maxLines, isNull, reason: 'узел маршрута не ограничивает название');
-      expect(inRoute.overflow, isNot(TextOverflow.ellipsis));
-    });
+      expect(ellipsised, isEmpty, reason: '$plan: ${ellipsised.toList()}');
+    }
   });
 
-  // ── ТРИ СТРОКИ УЗЛА В ОДНОМ ПОРЯДКЕ ──────────────────────────────────────────────────────
-  testWidgets('узел маршрута: заголовок → описание → мета, всегда в этом порядке',
-      (tester) async {
-    await pumpTab(
-      tester,
-      tab(PlanTabState(plan: planFrom('current_ready'), finished: const [])),
-    );
+  // ── ПЛИТА ─────────────────────────────────────────────────────────────────────────────────
+  // ПРАВИЛО (решение владельца 12.09): плита — те же пять строк, что в кабинете, состояние
+  // СЛОВАМИ, одно действие.
+  // ЛОВИТ: возврат счётчиков «0 / 32» вместо слов и вторую кнопку на плите.
+  testWidgets('плита дня: пять этапов, состояние словами, одно действие', (tester) async {
+    await pump(tester, tab(PlanTabState(plan: planFrom('current_day2'), room: roomFrom('room_day2'), finished: const [])));
+    final plate = find.byType(DayPlate);
 
-    // Берём день 2: он запертый, у него все три строки и он не спорит со «сегодня».
-    final plan = planFrom('current_ready');
-    final day = plan.days.firstWhere((d) => d.number == 2);
-    final title = day.titleNative!;
-    final teaches = day.teachesNative!;
-
-    // Ищем В МАРШРУТЕ: короткое название плана в шапке может совпасть с названием дня (у снятого
-    // плана так и есть — «Приём у врача»), и незакреплённый поиск нашёл бы две строки.
-    Finder inRoute(Finder f) => find.descendant(of: find.byType(PlanRoute), matching: f);
-    final titleY = tester.getTopLeft(inRoute(find.text(title))).dy;
-    final teachesY = tester.getTopLeft(inRoute(find.text(teaches))).dy;
-    final metaY = tester
-        .getTopLeft(
-          inRoute(
-            find.byWidgetPredicate((w) => w is Text && (w.data ?? '').startsWith('День 2 ·')),
-          ),
-        )
-        .dy;
-
-    expect(titleY, lessThan(teachesY), reason: 'описание стоит ПОД заголовком');
-    expect(teachesY, lessThan(metaY), reason: 'мета стоит ПОД описанием');
-    // Номер дня — ПЕРВОЕ слово меты, а не бейдж на картинке (канва вычла бейджи).
-    final meta = _texts(tester).firstWhere((t) => t.startsWith('День 2 ·'));
-    expect(meta.startsWith('День 2 · '), isTrue, reason: 'мета: $meta');
+    Iterable<String> onPlate(String t) => tester.widgetList<Text>(find.descendant(of: plate, matching: find.text(t))).map((w) => w.data!);
+    expect(onPlate('идёт').length, 1);
+    expect(onPlate('впереди').length, 4);
+    expect(find.descendant(of: plate, matching: find.textContaining(' / ')), findsNothing);
+    expect(find.descendant(of: plate, matching: find.text('Начать')), findsOneWidget);
   });
 
   // ── ВХОД ──────────────────────────────────────────────────────────────────────────────────
@@ -213,90 +247,60 @@ void main() {
     Widget entry() => planGoldenApp(
       ProviderScope(
         overrides: [
-          apiClientProvider.overrideWithValue(_NoApi()),
+          apiClientProvider.overrideWithValue(_LanguagesApi()),
           connectivityProvider.overrideWith((ref) => Stream.value(true)),
         ],
         child: const PlanEntryScreen(),
       ),
     );
 
+    // ПРАВИЛО (22-1): «Далее» неактивно при пустом поле и оживает от первого слова.
     testWidgets('«Далее» неактивно при пустом поле и оживает от первого слова', (tester) async {
-      await pumpTab(tester, entry(), size: const Size(390, 844));
-
-      // Кнопка одна и стоит внизу; «неактивна» здесь — про то, что нажатие НИЧЕГО НЕ ДЕЛАЕТ,
-      // а не про цвет: цвет проверяет снимок.
+      await pump(tester, entry(), size: const Size(390, 844));
       await tester.tap(find.text('Далее'));
-      await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
-      expect(
-        find.text('К чему готовишься?'),
-        findsOneWidget,
-        reason: 'с пустым полем вход остаётся на шаге цели',
-      );
+      expect(find.text('К чему готовишься?'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), 'врач');
       await tester.pump();
       await tester.tap(find.text('Далее'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
-      expect(
-        find.text('На каком языке говорить?'),
-        findsOneWidget,
-        reason: 'одно слово — валидный ответ (22-1c), и он пропускает дальше',
-      );
-    });
-
-    testWidgets('одно слово проходит, а подсказка про уточнение не блокирует', (tester) async {
-      await pumpTab(tester, entry(), size: const Size(390, 844));
-      await tester.enterText(find.byType(TextField), 'врач');
-      await tester.pump();
-
-      expect(find.text('Добавь, с кем и что важно — план будет точнее'), findsOneWidget);
-      // Подсказка есть И шаг проходится — это и значит «не блокирует».
-      await tester.tap(find.text('Далее'));
-      await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
       expect(find.text('На каком языке говорить?'), findsOneWidget);
     });
 
-    testWidgets('языки названы РУССКИМИ именами, а не эндонимами', (tester) async {
-      await pumpTab(tester, entry(), size: const Size(390, 1000));
+    // ПРАВИЛО (наряд §2): состояния «распознаю…» нет — голос печатается в поле по мере речи.
+    // ЛОВИТ: возврат экрана распознавания вместе с его строкой.
+    testWidgets('«распознаю…» на шаге цели нет', (tester) async {
+      await pump(tester, entry(), size: const Size(390, 844));
+
+      expect(find.textContaining('распозна'), findsNothing);
+    });
+
+    // ПРАВИЛО (решение владельца 12.09): список языков — с сервера, а не константа клиента;
+    // названия — русскими именами, флаг — по коду.
+    // ЛОВИТ: константу на три языка (кадр с тремя карточками при серверном списке из двух).
+    testWidgets('языки — ровно серверный список, русскими именами, с флагом', (tester) async {
+      await pump(tester, entry(), size: const Size(390, 1000));
       await tester.enterText(find.byType(TextField), 'иду к врачу с ребёнком в клинику');
       await tester.pump();
       await tester.tap(find.text('Далее'));
-      await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
       expect(find.text('Английский'), findsOneWidget);
       expect(find.text('Немецкий'), findsOneWidget);
-      // Эндонимов на этом шаге быть не должно: строка ПРО язык, а не на нём.
+      expect(find.text('Испанский'), findsNothing, reason: 'сервер его не предлагает');
       expect(find.text('English'), findsNothing);
-      expect(find.text('Deutsch'), findsNothing);
-    });
-
-    testWidgets('шапки «Отмена / Новый план / Далее» больше нет', (tester) async {
-      await pumpTab(tester, entry(), size: const Size(390, 844));
-
-      expect(find.text('Отмена'), findsNothing);
-      expect(find.text('Новый план'), findsNothing);
-      // «Далее» осталось РОВНО ОДНО — кнопкой внизу, а не ещё и в шапке.
-      expect(find.text('Далее'), findsOneWidget);
+      expect(find.text('\u{1F1EC}\u{1F1E7}'), findsOneWidget);
     });
   });
 }
 
-/// Все строки, которые экран сейчас показывает.
-Iterable<String> _texts(WidgetTester tester) => tester
-    .widgetList<Text>(find.byType(Text))
-    .map((t) => t.data)
-    .whereType<String>();
+Iterable<String> _texts(WidgetTester tester) => tester.widgetList<Text>(find.byType(Text)).map((t) => t.data).whereType<String>();
 
-const _longTitle = 'Повторный визит к врачу с результатами анализов и снимком';
-
-Map<String, dynamic> _longDayTitle(Map<String, dynamic> json) {
-  final days = (json['days'] as List).cast<Map<String, dynamic>>();
-  days.first['title_native'] = _longTitle;
-  json['current_day'] = days.first;
+Map<String, dynamic> _noStages(Map<String, dynamic> json) {
+  for (final d in (json['days'] as List).cast<Map<String, dynamic>>()) {
+    d.remove('stages');
+  }
 
   return json;
 }
@@ -313,8 +317,11 @@ class _StubTab extends PlanTabController {
   Future<void> refresh({bool silent = true}) async {}
 }
 
-/// Сервер, к которому эти тесты не ходят: они проверяют шаги входа до сборки.
-class _NoApi implements ApiClient {
+/// Сервер входа: только список языков — сегодня их два.
+class _LanguagesApi implements ApiClient {
+  @override
+  Future<List<String>> planLanguages() async => const ['en', 'de'];
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../data/api_client.dart';
+import '../../../data/image_loader.dart';
 import '../../../data/languages.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/providers.dart';
@@ -21,6 +21,7 @@ import 'entry_language_step.dart';
 import 'entry_preview_step.dart';
 import 'entry_scaffold.dart';
 import 'entry_state.dart';
+import 'goal_dictation.dart';
 
 /// Open the entry over the tab. Resolves with the started plan, or null when the learner left.
 Future<Plan?> openPlanEntry(BuildContext context) =>
@@ -54,13 +55,8 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
   /// The answers the current plan was built from — a changed answer asks for a NEW plan.
   ({String goal, String lang, PlanLevel level, int days, DateTime? date})? _builtFrom;
 
-  // ── dictation (кадр 22-1a: микрофон в поле) ────────────────────────────────────────────────
-  final SpeechToText _speech = SpeechToText();
-  bool _speechInitDone = false;
-  EntryMicState _mic = EntryMicState.idle;
-  int _micSeconds = 0;
-  Timer? _micTick;
-  String _voiceBase = '';
+  // ── печать голосом (кадры 22-1, 22-1c) ────────────────────────────────────────────────────
+  late final GoalDictation _dictation = GoalDictation(recognizer: ref.read(speechRecognizerProvider), field: _goal);
 
   static const _pollEvery = Duration(seconds: 2);
 
@@ -73,6 +69,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     // about «свободно говорю» stands under it (кадр 22-2).
     final level = _levelFor(profile?.cefrLevel);
     _s = _s.copyWith(targetLang: lang, level: level);
+    unawaited(_loadLanguages());
     _goal.addListener(() {
       if (_goal.text != _s.goal) setState(() => _s = _s.copyWith(goal: _goal.text));
     });
@@ -81,11 +78,27 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
   @override
   void dispose() {
     _poll?.cancel();
-    _micTick?.cancel();
-    if (_speech.isListening) _speech.stop();
+    _dictation.dispose();
     _goal.dispose();
     _goalFocus.dispose();
     super.dispose();
+  }
+
+  /// Языки, на которых сервер собирает план (22-2). Пока не пришли — на шаге стоит язык аккаунта.
+  List<String> _languages = const [];
+
+  Future<void> _loadLanguages() async {
+    try {
+      final list = await ref.read(apiClientProvider).planLanguages();
+      if (!mounted || list.isEmpty) return;
+      setState(() {
+        _languages = list;
+        // Язык аккаунта, которого сервер для плана не предлагает, не остаётся выбранным молча.
+        if (!list.contains(_s.targetLang)) _s = _s.copyWith(targetLang: list.first);
+      });
+    } catch (e) {
+      debugPrint('[plan-entry] languages: $e');
+    }
   }
 
   static PlanLevel _levelFor(String? cefr) => switch (cefr) {
@@ -241,6 +254,10 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       final plan = await ref.read(apiClientProvider).plan(id);
       if (!mounted || _s.planId != id) return;
       setState(() => _s = _s.copyWith(phase: EntryBuildPhase.ready, plan: plan));
+      // Картинки всех дней превью качаются сразу тем же кропом, что возьмёт таб: к «Начать» фото
+      // дня 1 уже на диске, и таб встаёт без мигания (§3 наряда PLAN-UI-3).
+      final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
+      unawaited(ImageLoader.instance.prefetch([for (final s in plan.scenes) s.image?.urlFor(56, dpr)]));
       // THE PHOTOS ARRIVE A MOMENT AFTER `ready`: the server picks them after the route is written,
       // and the plan read on the very tick the build finished has none. Re-read a few times, quietly
       // — the route is already on screen and only the pictures change.
@@ -266,10 +283,8 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     setState(() => _s = _s.copyWith(phase: EntryBuildPhase.starting));
     try {
       final plan = await ref.read(planTabProvider.notifier).start(id);
-      // НИКАКИХ СИСТЕМНЫХ ОКОН НА «НАЧАТЬ». Раньше здесь просилось разрешение на уведомления, и
-      // системный алерт всплывал поверх таба ровно в тот момент, которого в кадрах 22-5a/22-6 нет:
-      // человек нажал «Начать», чтобы увидеть свой план, а увидел вопрос операционной системы.
-      // Разрешение просит явное действие — выключатель «Напоминания» в профиле, и только он.
+      // Разрешение на уведомления спрашивает таб, когда вход уже закрылся (наряд PLAN-UI-3 §4:
+      // один раз, после «Начать») — см. `PlanTabBody._openEntry`.
       if (mounted) Navigator.of(context).pop(plan);
     } catch (_) {
       if (!mounted) return;
@@ -280,82 +295,13 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
 
   // ── dictation ──────────────────────────────────────────────────────────────────────────────
 
-  /// МИКРОФОН В ЧЕТЫРЕ СОСТОЯНИЯ (кадр 22-1): покой → слушаю → распознаю → текст в поле.
-  ///
-  /// «Распознаю» — не украшение: движок отдаёт финальный результат уже после того, как перестал
-  /// слушать, и без этого состояния поле секунду стояло пустым, будто запись пропала.
+  /// МИКРОФОН (кадр 22-1): тап открывает печать голосом, повторный тап — стоп; тишина 2 с закрывает
+  /// сама. Цель человек рассказывает на СВОЁМ языке, поэтому слушаем его, а не изучаемый.
   Future<void> _toggleMic() async {
-    if (_mic == EntryMicState.listening) {
-      await _speech.stop();
-      if (mounted) _setMic(EntryMicState.recognising);
-
-      return;
-    }
-    if (_mic == EntryMicState.recognising) return;
-
-    // Цель человек пишет на СВОЁМ языке, поэтому слушаем его, а не изучаемый.
     final support = ref.read(authControllerProvider).value?.profile?.nativeLanguage ?? 'ru';
     _goalFocus.unfocus();
-    if (!_speechInitDone) {
-      _speechInitDone = true;
-      try {
-        final ok = await _speech.initialize(
-          onStatus: (status) {
-            if (!mounted) return;
-            if (status == 'notListening' && _mic == EntryMicState.listening) {
-              _setMic(EntryMicState.recognising);
-            } else if (status == 'done') {
-              _setMic(_goal.text.trim().isEmpty ? EntryMicState.idle : EntryMicState.done);
-            }
-          },
-          onError: (_) {
-            if (mounted) _setMic(EntryMicState.idle);
-          },
-        );
-        if (!ok) {
-          _speechInitDone = false;
-
-          return;
-        }
-      } catch (_) {
-        _speechInitDone = false;
-
-        return;
-      }
-    }
-    if (!_speech.isAvailable) return;
-    AppHaptics.light();
-    _voiceBase = _goal.text;
-    _setMic(EntryMicState.listening);
-    await _speech.listen(
-      onResult: (r) {
-        if (!mounted) return;
-        final base = _voiceBase.trimRight();
-        final combined = base.isEmpty ? r.recognizedWords : '$base ${r.recognizedWords}';
-        _goal.value = TextEditingValue(
-          text: combined,
-          selection: TextSelection.collapsed(offset: combined.length),
-        );
-        if (r.finalResult) _setMic(EntryMicState.done);
-      },
-      listenOptions: SpeechListenOptions(
-        partialResults: true,
-        cancelOnError: true,
-        localeId: sttLocaleFor(support),
-      ),
-    );
-  }
-
-  /// Смена состояния микрофона вместе с таймером записи — «0:07 · говори, я слушаю».
-  void _setMic(EntryMicState next) {
-    _micTick?.cancel();
-    if (next == EntryMicState.listening) {
-      _micSeconds = 0;
-      _micTick = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (mounted) setState(() => _micSeconds++);
-      });
-    }
-    setState(() => _mic = next);
+    if (!_dictation.listening) AppHaptics.light();
+    await _dictation.toggle(localeId: sttLocaleFor(support));
   }
 
   /// Тап по истории «так пишут другие» — текст встаёт в поле, курсор в конце (22-1).
@@ -365,7 +311,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       text: text,
       selection: TextSelection.collapsed(offset: text.length),
     );
-    _setMic(EntryMicState.idle);
+    _dictation.reset();
     setState(() => _s = _s.copyWith(goal: text));
   }
 
@@ -421,14 +367,15 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       EntryStep.goal => EntryGoalStep(
         controller: _goal,
         focus: _goalFocus,
-        mic: _mic,
-        micSeconds: _micSeconds,
+        dictation: _dictation,
         onMic: _toggleMic,
         onStory: _story,
       ),
       EntryStep.language => EntryLanguageStep(
         goal: goal,
-        languages: planEntryLanguagesFor(_s.targetLang),
+        languages: [
+          for (final code in {..._languages, if (_languages.isEmpty) _s.targetLang}) languageByCode(code),
+        ],
         targetLang: _s.targetLang,
         level: _s.level,
         onLanguage: (code) => setState(() => _s = _s.copyWith(targetLang: code)),
@@ -494,7 +441,14 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
         child: EntryScaffold(
           step: _s.step,
           onBack: _back,
-          dock: EntryDock(label: dockLabel, enabled: dockEnabled, onTap: dockTap),
+          dock: EntryDock(
+            label: dockLabel,
+            enabled: dockEnabled,
+            onTap: dockTap,
+            // «Изменить» над кнопкой готового превью (22-4b): к ответам, с первого вопроса.
+            secondaryLabel: _s.step == EntryStep.preview && _s.phase == EntryBuildPhase.ready ? l.planEntryPreviewEdit : null,
+            onSecondary: () => _go(EntryStep.goal),
+          ),
           child: body,
         ),
       ),

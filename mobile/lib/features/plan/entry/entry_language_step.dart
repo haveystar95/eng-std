@@ -13,7 +13,7 @@ import 'entry_summary.dart';
 ///
 /// Канва вычла шкалу A1–C1 и тест на уровень: уровень описан ТЕМ, ЧТО ЧЕЛОВЕК УМЕЕТ — «понимаю
 /// простую речь, говорю с ошибками», — а не буквой, которую надо помнить. Языки тоже перестали
-/// быть чипами: у каждого своя карточка с монограммой в кружке 36 и ПРИВЕТСТВИЕМ на нём
+/// быть чипами: у каждого своя карточка с флагом в кружке 44 и ПРИВЕТСТВИЕМ на нём
 /// («Hello, how are you?») — так видно, на что подписываешься.
 ///
 /// Цель стоит сводкой в шапке и открывается тапом по строке: возвращаться шагами не надо.
@@ -65,9 +65,13 @@ class EntryLanguageStep extends StatelessWidget {
             subtitle: greetingFor(lang.code),
             selected: lang.code == targetLang,
             onTap: () => onLanguage(lang.code),
+            // Флаг — эмодзи 28 в кружке 44 по коду языка (решение канвы PLAN-DES-3: язык узнаётся до
+            // чтения подписи); сам список языков — с сервера.
             leading: ChoiceCardMark(
               selected: lang.code == targetLang,
-              text: monogramFor(lang.code),
+              size: 44,
+              emoji: flagEmojiFor(lang.code),
+              text: flagEmojiFor(lang.code) == null ? monogramFor(lang.code) : null,
             ),
           ),
         ],
@@ -80,8 +84,8 @@ class EntryLanguageStep extends StatelessWidget {
           selected: level == PlanLevel.intermediate,
           title: l.planEntryLevelIntermediate,
           subtitle: l.planEntryLevelIntermediateSub,
-          // Две полоски у «Среднего», одна у «Начального» — значок говорит то же, что подпись.
-          mark: PlanIcon.level2,
+          // Два пузыря у «Среднего», плитка со словом у «Начального» — значок говорит то же, что подпись.
+          mark: PlanIcon.levelIntermediate,
           onTap: () => onLevel(PlanLevel.intermediate),
         ),
         const SizedBox(height: 8),
@@ -89,7 +93,7 @@ class EntryLanguageStep extends StatelessWidget {
           selected: level == PlanLevel.beginner,
           title: l.planEntryLevelBeginner,
           subtitle: l.planEntryLevelBeginnerSub,
-          mark: PlanIcon.level1,
+          mark: PlanIcon.levelBeginner,
           onTap: () => onLevel(PlanLevel.beginner),
         ),
       ],
@@ -120,7 +124,8 @@ class _LevelCard extends StatelessWidget {
     onTap: onTap,
     leading: ChoiceCardMark(
       selected: selected,
-      child: PlanIconMark(icon: mark, color: ChoiceCardMark.markColor(selected)),
+      size: 44,
+      child: PlanIconMark(icon: mark, color: ChoiceCardMark.markColor(selected), size: 24),
     ),
   );
 }
