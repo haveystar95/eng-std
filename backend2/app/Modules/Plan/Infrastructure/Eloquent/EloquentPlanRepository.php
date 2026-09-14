@@ -113,8 +113,11 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
 
     public function saveScene(PlanScene $scene): void
     {
-        PlanSceneModel::query()->whereKey($scene->id()->value)
-            ->update([...$this->mapper->sceneColumns($scene), 'updated_at' => now()]);
+        // The photo belongs to the photo jobs' conditional writes: the lesson job read this scene before its
+        // model call, and its copy would put a photo found meanwhile back as none (DAY-UI-3: both jobs start
+        // together, and the scene photo often lands while the lesson is being written).
+        $columns = array_diff_key($this->mapper->sceneColumns($scene), array_flip(PlanMapper::SCENE_PHOTO_COLUMNS));
+        PlanSceneModel::query()->whereKey($scene->id()->value)->update([...$columns, 'updated_at' => now()]);
     }
 
     public function saveDayMetrics(PlanDayId $dayId, DayMetrics $metrics): void

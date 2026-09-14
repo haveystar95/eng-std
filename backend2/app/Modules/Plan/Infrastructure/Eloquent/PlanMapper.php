@@ -184,6 +184,9 @@ final class PlanMapper
         ];
     }
 
+    /** The scene photo's columns — written by the photo jobs' conditional UPDATE, never by a pointwise scene save. */
+    public const SCENE_PHOTO_COLUMNS = ['image_url', 'image_author', 'image_author_url', 'image_tone'];
+
     /**
      * A scene's own columns — no `plan_id`, no `user_id`: both are set when the row is created and
      * neither may be rewritten by a pointwise update.

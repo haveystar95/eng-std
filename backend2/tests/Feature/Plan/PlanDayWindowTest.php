@@ -14,10 +14,13 @@ use App\Modules\Plan\Application\Command\VoiceSceneHandler;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
 use App\Modules\Plan\Application\Port\PlanImageFinder;
+use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\ImageQuery;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Infrastructure\Job\VoiceSceneJob;
+use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -415,6 +418,57 @@ it('finds every photo of a day while its lesson is written — the day is ready 
         ->and($finder->asked)->not->toContain('sharp')
         ->and($finder->asked)->not->toContain('numbness')
         ->and(DB::table('plan_events')->where('kind', 'day_ready')->count())->toBe(1);
+});
+
+// Invariant review, DAY-UI-3: the photo job and the lesson job start together, and the scene photo often lands while
+// the model is answering. Catches the lesson job writing back the scene it read before the call — the photo found
+// meanwhile put back as none, its tone lost, and the vendor asked for the same photo again.
+it('keeps a scene photo found while the lesson was being written', function () {
+    $finder = new class implements PlanImageFinder
+    {
+        public bool $open = false;
+
+        /** @var list<string> */
+        public array $asked = [];
+
+        public function find(string $prompt): ?Image
+        {
+            $this->asked[] = $prompt;
+
+            return $this->open ? new Image('https://images.pexels.test/'.md5($prompt).'.jpg', 'Fake', null, '#978E82') : null;
+        }
+
+        public function findMany(array $queries): array
+        {
+            return array_map(fn (ImageQuery $q): ?Image => $this->find($q->text), $queries);
+        }
+
+        public function tone(string $imageUrl): ?string
+        {
+            return null;
+        }
+    };
+    app()->instance(PlanImageFinder::class, $finder);
+    $midCall = new Image('https://images.pexels.test/found-mid-call.jpg', 'Fake', null, '#123456');
+    $landed = null;
+    app()->instance(PlanModelPort::class, new FakePlanModel(lesson: function (object $request) use ($finder, $midCall, &$landed): array {
+        if ($landed === null) {
+            // The model is «answering»; the photo job, running beside the lesson job, finds the scene photo.
+            $landed = (string) DB::table('plan_scenes')->where('lesson_status', 'building')->value('id');
+            app(PlanRepository::class)->attachSceneImage(PlanSceneId::fromString($landed), $midCall);
+            $finder->open = true;
+        }
+
+        return FakePlanModel::lessonPayload($request);
+    }));
+    [, $token] = planLearner();
+    planCreate($this, $token, ['days_total' => 2]);
+
+    $scene = DB::table('plan_scenes')->where('id', $landed)->first();
+    expect($scene->image_url)->toBe($midCall->url)
+        ->and($scene->image_tone)->toBe('#123456')
+        ->and($scene->lesson_status)->toBe('ready')
+        ->and(DB::table('plan_terms')->where('scene_id', $landed)->whereIn('kind', ['word', 'chunk'])->whereNull('image_url')->count())->toBe(0);
 });
 
 // Catches a day left «building» for good when the photo job gives up.

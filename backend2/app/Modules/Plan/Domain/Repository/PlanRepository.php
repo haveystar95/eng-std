@@ -47,7 +47,11 @@ interface PlanRepository
     /** One scene, its row locked for the transaction: a lesson job claims its own row, not the plan. */
     public function findSceneForUpdate(PlanSceneId $id): ?PlanScene;
 
-    /** The scene's own columns, and nothing else of the plan. */
+    /**
+     * The scene's own columns, and nothing else of the plan — not its photo either: the photo is written
+     * only by {@see attachSceneImage()}, and a lesson job's copy read before its model call must not put a
+     * photo found meanwhile back as none.
+     */
     public function saveScene(PlanScene $scene): void;
 
     /** The day's numbers, refreshed from the cards they are counted off. */
