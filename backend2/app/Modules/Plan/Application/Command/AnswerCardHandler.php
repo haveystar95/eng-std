@@ -6,7 +6,6 @@ namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Dto\AnswerOutcome;
 use App\Modules\Plan\Application\Service\PlanAccess;
-use App\Modules\Plan\Application\Service\UnitNames;
 use App\Modules\Plan\Domain\Exception\CardNotFound;
 use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
@@ -72,7 +71,7 @@ final readonly class AnswerCardHandler
                 $dealt[] = $retry;
             }
 
-            $this->plans->saveDayMetrics($day->id(), $this->metrics->calculate($dealt, UnitNames::of(...)));
+            $this->plans->saveDayMetrics($day->id(), $this->metrics->calculate($dealt));
 
             return new AnswerOutcome($card, $retry);
         });

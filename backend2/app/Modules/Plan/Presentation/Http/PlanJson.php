@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Presentation\Http;
 
 use App\Modules\Plan\Application\Dto\CardView;
-use App\Modules\Plan\Application\Dto\DayMetricsView;
 use App\Modules\Plan\Application\Dto\DayRoomView;
 use App\Modules\Plan\Application\Dto\DayRouteView;
 use App\Modules\Plan\Application\Dto\DaySlotView;
+use App\Modules\Plan\Application\Dto\DayWindowView;
 use App\Modules\Plan\Application\Dto\PlanBuildView;
 use App\Modules\Plan\Application\Dto\PlanLanguagesView;
 use App\Modules\Plan\Application\Dto\PlanSummaryView;
@@ -16,10 +16,15 @@ use App\Modules\Plan\Application\Dto\PlanView;
 use App\Modules\Plan\Application\Dto\ProgramUnitView;
 use App\Modules\Plan\Application\Dto\RouteStageView;
 use App\Modules\Plan\Application\Dto\SceneView;
-use App\Modules\Plan\Application\Dto\SheetView;
 use App\Modules\Plan\Application\Dto\StageProgressView;
-use App\Modules\Plan\Application\Dto\TermView;
 use App\Modules\Plan\Application\Dto\VersionsView;
+use App\Modules\Plan\Application\Dto\WindowGoalView;
+use App\Modules\Plan\Application\Dto\WindowLineView;
+use App\Modules\Plan\Application\Dto\WindowPairView;
+use App\Modules\Plan\Application\Dto\WindowPhraseView;
+use App\Modules\Plan\Application\Dto\WindowStageView;
+use App\Modules\Plan\Application\Dto\WindowSummaryView;
+use App\Modules\Plan\Application\Dto\WindowWordView;
 use App\Modules\Plan\Domain\ValueObject\SceneImageSize;
 
 /**
@@ -200,37 +205,90 @@ final class PlanJson
             'plan_id' => $r->planId,
             'day' => self::day($r->day),
             'scene' => $r->scene === null ? null : self::scene($r->scene),
-            'goals_native' => $r->goalsNative,
             'stages' => array_map(static fn (StageProgressView $s): array => [
                 'stage' => $s->stage, 'total' => $s->total, 'done' => $s->done, 'state' => $s->state,
             ], $r->stages),
-            'metrics' => $r->metrics === null ? null : self::metrics($r->metrics),
+            'metrics' => $r->metrics === null ? null : ['cards_total' => $r->metrics->cardsTotal, 'minutes_spent' => $r->metrics->minutesSpent],
             'program' => array_map(static fn (ProgramUnitView $u): array => [
                 'unit_kind' => $u->unitKind,
-                'unit_ref' => $u->unitRef,
-                'scene_id' => $u->sceneId,
-                'text_target' => $u->textTarget,
-                'text_native' => $u->textNative,
                 'source' => $u->source,
-                'cards_total' => $u->cardsTotal,
-                'cards_done' => $u->cardsDone,
                 'state' => $u->state,
             ], $r->program),
-            'sheet_available' => $r->sheetAvailable,
+            'window' => self::window($r->window),
         ];
     }
 
-    /** @return array<string, mixed> */
-    public static function metrics(DayMetricsView $m): array
+    /**
+     * «Окно дня» (DAY-UI-2). Counts, minutes and shares are the server's; the voice of a line is an
+     * absolute address built from the request, like the photo crops.
+     *
+     * @return array<string, mixed>
+     */
+    public static function window(DayWindowView $w): array
     {
+        $audio = static fn (?string $id): ?string => $id === null ? null : url("/api/v1/plans/audio/{$id}");
+        $summary = static fn (WindowSummaryView $s): array => ['total' => $s->total, 'done' => $s->done, 'returns' => $s->returns];
+        $line = static fn (?WindowLineView $l): ?array => $l === null ? null : [
+            'text' => $l->text,
+            'translation' => $l->translation,
+            ...($l->state === null ? ['audio_url' => $audio($l->audioId)] : ['state' => $l->state]),
+        ];
+        $scene = $w->day->scene;
+
         return [
-            'cards_total' => $m->cardsTotal,
-            'cards_done' => $m->cardsDone,
-            'minutes_spent' => $m->minutesSpent,
-            'first_try_share' => $m->firstTryShare,
-            'hardest_unit_kind' => $m->hardestUnitKind,
-            'hardest_unit_ref' => $m->hardestUnitRef,
-            'hardest_unit_text' => $m->hardestUnitText,
+            'day' => [
+                'index' => $w->day->index,
+                'type' => $w->day->type,
+                'title_native' => $scene?->titleNative,
+                'title_target' => $scene?->titleTarget,
+                'image' => $scene === null ? null : self::sceneImage($scene),
+                'image_tone' => $w->day->imageTone,
+                'status' => $w->day->status,
+                'minutes_estimate' => $w->day->minutesEstimate,
+                'minutes_spent' => $w->day->minutesSpent,
+                'goals' => array_map(static fn (WindowGoalView $g): array => ['text' => $g->text, 'passed' => $g->passed], $w->day->goals),
+            ],
+            'stages' => array_map(static fn (WindowStageView $s): array => [
+                'stage' => $s->stage,
+                'state' => $s->state,
+                'done_count' => $s->doneCount,
+                'total' => $s->total,
+                'minutes_left' => $s->minutesLeft,
+                'share' => $s->share,
+            ], $w->stages),
+            'day_progress' => $w->dayProgress,
+            'program' => [
+                'words' => [
+                    'summary' => $summary($w->program->wordsSummary),
+                    'items' => array_map(static fn (WindowWordView $v): array => [
+                        'ref' => $v->ref,
+                        'term' => $v->term,
+                        'translation' => $v->translation,
+                        'image' => $v->image,
+                        'image_tone' => $v->imageTone,
+                        'state' => $v->state,
+                    ], $w->program->words),
+                ],
+                'phrases' => [
+                    'summary' => $summary($w->program->phrasesSummary),
+                    'items' => array_map(static fn (WindowPhraseView $v): array => [
+                        'ref' => $v->ref,
+                        'text' => $v->text,
+                        'translation' => $v->translation,
+                        'audio_url' => $audio($v->audioId),
+                        'state' => $v->state,
+                    ], $w->program->phrases),
+                ],
+                'dialogue' => [
+                    'summary' => $summary($w->program->dialogueSummary),
+                    'items' => array_map(static fn (WindowPairView $v): array => [
+                        'step' => $v->step,
+                        'partner' => $line($v->partner),
+                        'learner' => $line($v->learner),
+                    ], $w->program->dialogue),
+                ],
+            ],
+            'allowed_action' => $w->allowedAction,
         ];
     }
 
@@ -252,37 +310,6 @@ final class PlanJson
             'attempts' => $c->attempts,
             'answered_at' => $c->answeredAt,
             'returns' => $c->returns,
-        ];
-    }
-
-    /** @return array<string, mixed> */
-    public static function sheet(SheetView $s): array
-    {
-        return [
-            'plan_id' => $s->planId,
-            'number' => $s->number,
-            'words' => array_map(self::term(...), $s->words),
-            'phrases' => array_map(self::term(...), $s->phrases),
-        ];
-    }
-
-    /** @return array<string, mixed> */
-    public static function term(TermView $t): array
-    {
-        return [
-            'id' => $t->id,
-            'scene_id' => $t->sceneId,
-            'kind' => $t->kind,
-            'ref' => $t->ref,
-            'text_target' => $t->textTarget,
-            'text_native' => $t->textNative,
-            'pronunciation_native' => $t->pronunciationNative,
-            'definition_target' => $t->definitionTarget,
-            'example_target' => $t->exampleTarget,
-            'example_native' => $t->exampleNative,
-            'speaking_key' => $t->speakingKey,
-            'simplified_variants' => $t->simplifiedVariants,
-            'image' => $t->image,
         ];
     }
 }

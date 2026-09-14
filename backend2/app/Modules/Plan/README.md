@@ -7,8 +7,11 @@ scene, the partner-line audio, the check counters. Canon: `docs/plan-v2.md`; con
 
 Tables: `plans`, `plan_scenes`, `plan_days`, `day_cards`, `plan_terms`, `plan_line_audios`,
 `plan_check_counters`. Photo tones (PLAN-UI-3): `plan_scenes.image_tone`, `plans.cover_image_tone`
-(`#RRGGBB`, written in the same conditional UPDATE as the photo). Files on disks, not tables:
-partner-line audio (`plan.audio_disk`, `plan-audio/…`) and the square copies of scene photos
+(`#RRGGBB`, written in the same conditional UPDATE as the photo); `plan_terms.image_tone` (DAY-UI-2)
+— the tone of a word's photo, or of its slot when the search ladder found none (which is also the
+mark that the ladder was asked). `plan_line_audios` rows are named by the unit reference
+(`line_ref`: `x3` — the partner's line of exchange 3, `p2` — phrase 2). Files on disks, not tables:
+spoken lines (`plan.audio_disk`, `plan-audio/…`) and the square copies of scene photos
 (`plan.image_disk`, `plan-images/<scene>/<112|448>.jpg`).
 
 Notifications (PLAN-UI-3): `plan_events` — the plan's append-only journal (`plan_ready`,
@@ -48,6 +51,12 @@ day, dealt deterministically), `RouteStages` (which stages a day on the route ha
 stands — from card tallies, the dealer's outline or the day type), `LessonChecker` / `BlueprintChecker` (the §5 checks in
 observe/drop/gate), `Words` / `PhraseInMessage` / `NativeScript` (the text rules the checks and
 the assembly share), `DayMetricsCalculator`, `NativeStrings`, `Shuffle`.
+The day window (DAY-UI-2, `window` of the day read, put together by `Application/Service/DayWindowViews`):
+`DayWindowStages` (the five rows — a number only on the current one — and the day's progress),
+`DayPace` (minutes by the stage's pace per card), `UnitStates` (a unit's state from its cards),
+`ImageTones` (the slot tone when there is no photo), `ImageQueries` (the photo search ladder's
+queries); value objects `WindowStatus`, `WindowStage`, `WindowAction`, `UnitState`, `ProgramSummary`.
+Application: `PlanImageLadder` (image_prompt → the bare word → the scene's theme).
 Notifications: `PlanEventRules` (which reschedule is a rebuild; what the calendar owes on and after
 the event date, `event_today` not before 08:00), `NotificationRules` (which fact is a letter —
 `day_ready` only for day ≥ 2; which plan status still gets it; the 15-minute reminder window),
@@ -104,9 +113,14 @@ reads plan tables.
   a check in `drop` mode stores the corrected lesson.
 - Every check ships in `observe`; modes are flipped in `config/plan.php`, never in code.
 - QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN).
-- Ops: `plan:images-backfill {--plan=}` — tones and square copies for scene photos stored before
-  PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a missing copy
-  on its own, so the copies part is an optimisation; the tones only come from here.
+- Ops: `plan:images-backfill {--plan=}` — first the photos plans still lack, asked the search
+  ladder (DAY-UI-2; prints «было пусто / стало»), then tones and square copies for scene photos
+  stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a
+  missing copy on its own, so the copies part is an optimisation; the tones only come from here.
+- Ops: `plan:speak-backfill {--plan=}` (DAY-UI-2) — the spoken lines scenes still lack (the phrases
+  were never voiced before DAY-UI-2), through the queue's own idempotent handler, waiting out the
+  vendor's per-minute limit; prints the stored lines before and after. `SpeakSceneLinesJob` itself
+  retries a minute apart for half an hour for the same reason.
 - The plan languages are the server's list (`plan.languages`, `GET /plans/languages`), and
   `POST /plans` validates against it.
 - Notifications: `plan:notify-tick` (Presentation/Console, every 15 min in `routes/console.php`, run

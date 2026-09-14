@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Infrastructure\Eloquent;
 
+use App\Modules\Plan\Application\Dto\MissingImageCounts;
 use App\Modules\Plan\Application\Dto\SceneImageRef;
 use App\Modules\Plan\Application\Port\PlanListReader;
 use App\Modules\Plan\Application\Port\SceneLocator;
@@ -186,6 +187,45 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
         }
 
         return $out;
+    }
+
+    public function plansMissingImages(?PlanId $planId): array
+    {
+        $ids = DB::table('plans as p')
+            ->where('p.status', '<>', PlanStatus::Deleted->value)
+            ->when($planId !== null, static fn ($q) => $q->where('p.id', $planId?->value))
+            ->where(static function ($q): void {
+                $q->whereExists(static fn ($s) => $s->from('plan_scenes as s')->whereColumn('s.plan_id', 'p.id')->whereNull('s.image_url'))
+                    ->orWhereExists(static fn ($t) => $t->from('plan_terms as t')
+                        ->join('plan_scenes as ts', 'ts.id', '=', 't.scene_id')
+                        ->whereColumn('ts.plan_id', 'p.id')
+                        ->whereIn('t.kind', ['word', 'chunk'])
+                        ->whereNull('t.image_url'));
+            })
+            ->orderBy('p.created_at')
+            ->pluck('p.id');
+
+        return array_values(array_map(static fn (mixed $id): PlanId => PlanId::fromString((string) $id), $ids->all()));
+    }
+
+    public function missingImageCounts(?PlanId $planId): MissingImageCounts
+    {
+        $scenes = DB::table('plan_scenes as s')
+            ->join('plans as p', 'p.id', '=', 's.plan_id')
+            ->where('p.status', '<>', PlanStatus::Deleted->value)
+            ->when($planId !== null, static fn ($q) => $q->where('p.id', $planId?->value))
+            ->whereNull('s.image_url')
+            ->count();
+        $terms = DB::table('plan_terms as t')
+            ->join('plan_scenes as s', 's.id', '=', 't.scene_id')
+            ->join('plans as p', 'p.id', '=', 's.plan_id')
+            ->where('p.status', '<>', PlanStatus::Deleted->value)
+            ->when($planId !== null, static fn ($q) => $q->where('p.id', $planId?->value))
+            ->whereIn('t.kind', ['word', 'chunk'])
+            ->whereNull('t.image_url')
+            ->count();
+
+        return new MissingImageCounts($scenes, $terms);
     }
 
     public function save(Plan $plan): void

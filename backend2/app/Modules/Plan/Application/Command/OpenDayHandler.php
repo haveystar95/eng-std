@@ -44,7 +44,7 @@ final readonly class OpenDayHandler
             if ($this->cards->countForDay($day->id()) === 0) {
                 $cards = $this->dealer->deal($plan, $day);
                 $this->cards->insertAll($cards);
-                $day->updateMetrics(new DayMetrics(count($cards), 0, 0, null, null, null, null));
+                $day->updateMetrics(new DayMetrics(count($cards), 0, 0));
             }
             $this->plans->save($plan);
 

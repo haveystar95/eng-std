@@ -144,9 +144,11 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
     // The room: five stages, the first one current.
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
     expect(array_column($room['stages'], 'state'))->toBe(['current', 'locked', 'locked', 'locked', 'locked'])
-        ->and($room['goals_native'])->toHaveCount(3)
-        ->and($room['sheet_available'])->toBeTrue()
-        ->and($room['program'])->not->toBeEmpty();
+        ->and($room['window']['day']['goals'])->toHaveCount(3)
+        ->and($room['program'])->not->toBeEmpty()
+        // The old day room's own keys went with it (DAY-UI-2): the goals live in the window now.
+        ->and(array_keys($room))->toBe(['plan_id', 'day', 'scene', 'stages', 'metrics', 'program', 'window'])
+        ->and(array_keys($room['program'][0]))->toBe(['unit_kind', 'source', 'state']);
 
     // Closing a stage with cards still open is refused.
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/stages/words/close")->assertStatus(409)->assertJsonPath('code', 'plan_stage_incomplete');
@@ -171,10 +173,12 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
 
     $closed = planWalkDay($this, $token, $id, 1);
     expect($closed['day']['status'])->toBe('closed')
-        ->and($closed['metrics']['cards_done'])->toBe($closed['metrics']['cards_total'])
+        ->and($closed['day']['cards_done'])->toBe($closed['metrics']['cards_total'])
+        ->and($closed['metrics'])->toBe(['cards_total' => $closed['metrics']['cards_total'], 'minutes_spent' => $closed['metrics']['minutes_spent']])
         ->and($closed['metrics']['minutes_spent'])->toBeGreaterThanOrEqual(1)
-        ->and($closed['metrics']['first_try_share'])->toBeLessThan(1.0)
-        ->and($closed['metrics']['hardest_unit_ref'])->toBe($choose['unit_ref']);
+        // The word failed twice is the one that returns — on the tab's plate and in the window's brow.
+        ->and(array_count_values(array_column($closed['program'], 'state'))['failed'])->toBe(1)
+        ->and($closed['window']['program']['words']['summary']['returns'])->toBe(1);
 
     // The words went to the plan's collection, hidden from «Мои коллекции».
     $tab = planRead($this, $token, $id);
@@ -200,9 +204,10 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
         // The returned card sits at the end of its stage, after today's words.
         ->and($returned[0]['position'])->toBe(count(array_filter($two['cards'], static fn (array $c): bool => $c['stage'] === 'words')));
 
-    // The sheet lists the day's words and phrases.
-    $sheet = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/2/sheet")->assertOk()->json('data');
-    expect($sheet['words'])->toHaveCount(8)->and($sheet['phrases'])->toHaveCount(6);
+    // The window lists the day's words and phrases — today's and the one returned from yesterday.
+    $window = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/2")->assertOk()->json('data.window');
+    expect($window['program']['words']['items'])->toHaveCount(9)
+        ->and($window['program']['phrases']['items'])->toHaveCount(6);
 });
 
 it('walks a three-day plan through to the rehearsal, which is every scene said aloud', function () {
@@ -225,7 +230,8 @@ it('walks a three-day plan through to the rehearsal, which is every scene said a
 
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/3")->assertOk()->json('data');
     expect(array_column($room['stages'], 'state'))->toBe(['absent', 'absent', 'absent', 'absent', 'current'])
-        ->and($room['sheet_available'])->toBeFalse();
+        ->and($room['window']['program']['words']['items'])->toBe([])
+        ->and($room['window']['program']['dialogue']['items'])->toHaveCount(16);
 
     $closed = planWalkDay($this, $token, $id, 3);
     expect($closed['day']['status'])->toBe('closed');

@@ -10,7 +10,6 @@ use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Application\Service\PlanEventJournal;
 use App\Modules\Plan\Application\Service\PlanNotifier;
-use App\Modules\Plan\Application\Service\UnitNames;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\PlanEvent;
 use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
@@ -71,7 +70,7 @@ final readonly class CloseDayHandler
                 }
             }
 
-            $metrics = $this->metrics->calculate($cards, UnitNames::of(...));
+            $metrics = $this->metrics->calculate($cards);
             $next = $plan->closeDay($command->number, $metrics, $today, $now);
 
             // The day's words and phrases go to the plan's collection — the ordinary mechanism.

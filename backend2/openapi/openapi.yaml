@@ -1926,10 +1926,11 @@ paths:
   /plans/audio/{audioId}:
     get:
       tags: [Plans]
-      summary: The partner's line as an audio file
+      summary: A spoken line of a scene as an audio file
       description: >-
-        The id a card's `audio_id` (and a dialogue exchange's `audio_id`) names. `audio/mpeg`
-        normally, `audio/wav` when the build had no encoder. Immutable — cache it forever.
+        The partner's line of an exchange or a phrase (DAY-UI-2) — the id a card's `audio_id` (and
+        a dialogue exchange's `audio_id`) names, and the file the day window's `audio_url` points at.
+        `audio/mpeg` normally, `audio/wav` when the build had no encoder. Immutable — cache it forever.
       parameters:
         - name: audioId
           in: path
@@ -2202,25 +2203,6 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such plan or day }
         '409': { $ref: '#/components/responses/Problem' }
-
-  /plans/{id}/days/{number}/sheet:
-    get:
-      tags: [Plans]
-      summary: «Шит» — the day's words and phrases as a list
-      parameters:
-        - $ref: '#/components/parameters/PlanId'
-        - $ref: '#/components/parameters/PlanDayNumber'
-      responses:
-        '200':
-          description: The sheet
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data: { $ref: '#/components/schemas/PlanSheet' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: No such plan or day }
 
   /sync/cursor:
     get:
@@ -2731,7 +2713,7 @@ components:
         url: { type: string }
         author: { type: [string, 'null'] }
         author_url: { type: [string, 'null'] }
-        tone: { type: [string, 'null'], pattern: '^#[0-9A-F]{6}$', description: 'The photo''s average colour — paint the placeholder with it. On the plan cover and scene photos; null for photos stored before tones were kept (until the backfill) and absent on term photos' }
+        tone: { type: [string, 'null'], pattern: '^#[0-9A-F]{6}$', description: 'The photo''s average colour — paint the placeholder with it. Null for photos stored before tones were kept (until the backfill); on a card payload''s term photo it is absent' }
 
     PlanSceneImage:
       description: >-
@@ -2928,35 +2910,180 @@ components:
 
     PlanProgramUnit:
       type: object
-      description: One unit of the day's program — a word, a phrase or an exchange — and where it stands.
-      required: [unit_kind, unit_ref, scene_id, source, cards_total, cards_done, state]
+      description: >-
+        One unit of the day's program — a word, a phrase or an exchange — and where it stands: what
+        the tab's plate counts («8 новых слов», «вернутся в день N»). The words of the programme are
+        the window's (`PlanDayWindow.program`).
+      required: [unit_kind, source, state]
       properties:
         unit_kind: { type: string, enum: [word, phrase, exchange] }
-        unit_ref: { type: string, description: '`v3`, `p1`, `x4` — the lesson''s own ids' }
-        scene_id: { type: string }
-        text_target: { type: [string, 'null'] }
-        text_native: { type: [string, 'null'] }
         source: { type: string, enum: [today, returned] }
-        cards_total: { type: integer }
-        cards_done: { type: integer }
         state: { type: string, enum: [pending, passed, failed] }
 
     PlanDayMetrics:
       type: object
-      required: [cards_total, cards_done, minutes_spent]
+      required: [cards_total, minutes_spent]
       properties:
         cards_total: { type: integer }
-        cards_done: { type: integer }
         minutes_spent: { type: integer, description: 'From answer timestamps; pauses over ten minutes not counted' }
-        first_try_share: { type: [number, 'null'], description: '«верно с первого раза» over graded cards, 0..1' }
-        hardest_unit_kind: { type: [string, 'null'], enum: [word, phrase, exchange, null] }
-        hardest_unit_ref: { type: [string, 'null'] }
-        hardest_unit_text: { type: [string, 'null'] }
+
+    PlanWindowSummary:
+      type: object
+      description: The counts a programme tab's brow is worded from — «СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА». The client counts nothing.
+      required: [total, done, returns]
+      properties:
+        total: { type: integer, minimum: 0 }
+        done: { type: integer, minimum: 0, description: 'Units every card of which is answered, none failed twice' }
+        returns: { type: integer, minimum: 0, description: 'Units failed twice — they come back on the next day' }
+
+    PlanWindowUnitState:
+      type: string
+      enum: [pending, done, returns_tomorrow]
+      description: Where a unit stands, over all its cards of the day (the dialogue read walks no exchange). Any other word is a contract error on the client.
+
+    PlanWindowStage:
+      type: object
+      description: >-
+        One stage row of the day window. `done_count`, `total` and `minutes_left` are NOT null on the
+        `current` row only — the client prints a number nowhere else. A day not started has every row
+        `locked` (no current row, no number); a passed day has every row `done`.
+      required: [stage, state, done_count, total, minutes_left, share]
+      properties:
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+        state: { type: string, enum: [done, current, locked] }
+        done_count: { type: [integer, 'null'] }
+        total: { type: [integer, 'null'] }
+        minutes_left: { type: [integer, 'null'], description: 'By the pace of the stage (`DayPace`), rounded up' }
+        share: { type: number, minimum: 0, maximum: 1, description: 'The row''s bar: 1 done, 0 locked, answered/total current' }
+
+    PlanWindowWord:
+      type: object
+      required: [ref, term, translation, image, image_tone, state]
+      properties:
+        ref: { type: string, description: 'The lesson''s own id — `v3`' }
+        term: { type: string }
+        translation: { type: string }
+        image:
+          oneOf:
+            - $ref: '#/components/schemas/PlanImage'
+            - type: 'null'
+        image_tone: { type: string, pattern: '^#[0-9A-F]{6}$', description: 'Always: the photo''s tone, else its scene''s, else the plan cover''s, else the theme''s empty slot — paint the slot with it first' }
+        state: { $ref: '#/components/schemas/PlanWindowUnitState' }
+
+    PlanWindowPhrase:
+      type: object
+      required: [ref, text, translation, audio_url, state]
+      properties:
+        ref: { type: string, description: '`p2`' }
+        text: { type: string }
+        translation: { type: string }
+        audio_url: { type: [string, 'null'], format: uri, description: 'The server''s voice of the phrase (`GET /plans/audio/{id}`); null when the scene has none — the phone reads it' }
+        state: { $ref: '#/components/schemas/PlanWindowUnitState' }
+
+    PlanWindowPair:
+      type: object
+      description: One exchange of the dialogue tab. The partner's bubble carries its voice and no state; the learner's carries its state and no voice.
+      required: [step, partner, learner]
+      properties:
+        step: { type: integer }
+        partner:
+          oneOf:
+            - type: object
+              required: [text, translation, audio_url]
+              properties:
+                text: { type: string }
+                translation: { type: string }
+                audio_url: { type: [string, 'null'], format: uri }
+            - type: 'null'
+        learner:
+          oneOf:
+            - type: object
+              required: [text, translation, state]
+              properties:
+                text: { type: string }
+                translation: { type: string }
+                state: { $ref: '#/components/schemas/PlanWindowUnitState' }
+            - type: 'null'
+
+    PlanDayWindow:
+      type: object
+      description: >-
+        «Окно дня» (DAY-UI-2, кадры 23-0a…0d): the day's own reading of its cards for the one-screen
+        window — what the plate, the compact header, the three programme tabs and the one button
+        draw. Everything countable is counted here; the client words it.
+      required: [day, stages, day_progress, program, allowed_action]
+      properties:
+        day:
+          type: object
+          required: [index, type, title_native, title_target, image, image_tone, status, minutes_estimate, minutes_spent, goals]
+          properties:
+            index: { type: integer, description: 'The day''s number' }
+            type: { type: string, enum: [scene, review, rehearsal] }
+            title_native: { type: [string, 'null'], description: 'The scene''s; null on a review and the rehearsal' }
+            title_target: { type: [string, 'null'] }
+            image:
+              oneOf:
+                - $ref: '#/components/schemas/PlanSceneImage'
+                - type: 'null'
+            image_tone: { type: string, pattern: '^#[0-9A-F]{6}$' }
+            status:
+              type: string
+              enum: [not_started, in_progress, passed, locked]
+              description: >-
+                One word for the day. Day one of a built, unstarted plan is `not_started` («Начать»
+                starts the plan first). `locked` is not a window state: the client refuses to draw it.
+            minutes_estimate: { type: [integer, 'null'], description: 'What the day still asks for — all of it before the start, what is left while walked; null once passed or without cards' }
+            minutes_spent: { type: [integer, 'null'], description: 'A passed day only' }
+            goals:
+              type: array
+              items:
+                type: object
+                required: [text, passed]
+                properties:
+                  text: { type: string }
+                  passed: { type: boolean, description: 'True for every goal of a passed day, false otherwise' }
+        stages:
+          type: array
+          description: The stages the day deals, in walking order
+          items: { $ref: '#/components/schemas/PlanWindowStage' }
+        day_progress: { type: number, minimum: 0, maximum: 1, description: 'The share of stages done — the compact header''s bar' }
+        program:
+          type: object
+          required: [words, phrases, dialogue]
+          properties:
+            words:
+              type: object
+              required: [summary, items]
+              properties:
+                summary: { $ref: '#/components/schemas/PlanWindowSummary' }
+                items: { type: array, items: { $ref: '#/components/schemas/PlanWindowWord' } }
+            phrases:
+              type: object
+              required: [summary, items]
+              properties:
+                summary: { $ref: '#/components/schemas/PlanWindowSummary' }
+                items: { type: array, items: { $ref: '#/components/schemas/PlanWindowPhrase' } }
+            dialogue:
+              type: object
+              required: [summary, items]
+              properties:
+                summary: { $ref: '#/components/schemas/PlanWindowSummary' }
+                items: { type: array, items: { $ref: '#/components/schemas/PlanWindowPair' } }
+        allowed_action:
+          type: [string, 'null']
+          enum: [start, continue, again, null]
+          description: >-
+            The one button: «Начать» (`POST /start` for an unstarted plan, then `…/open`),
+            «Продолжить» (`…/open`), «Ещё раз» — the day's «Говорю сам» once more over
+            `GET …/cards`, answers not sent (not a retake of the day). Null: no button.
 
     PlanDayRoom:
       type: object
-      description: «Кабинет дня».
-      required: [plan_id, day, goals_native, stages, program, sheet_available]
+      description: >-
+        The day: the tab's plate reads `stages`, `metrics` and `program`, the session `day` and
+        `scene`, the day window its own block `window` (DAY-UI-2). The old day room's `goals_native`,
+        `sheet_available`, the unit texts and the first-try/hardest metrics went with that room.
+      required: [plan_id, day, stages, program, window]
       properties:
         plan_id: { type: string }
         day: { $ref: '#/components/schemas/PlanDayRoute' }
@@ -2964,7 +3091,6 @@ components:
           oneOf:
             - $ref: '#/components/schemas/PlanScene'
             - type: 'null'
-        goals_native: { type: array, items: { type: string } }
         stages:
           type: array
           items: { $ref: '#/components/schemas/PlanStageProgress' }
@@ -2979,9 +3105,9 @@ components:
           type: array
           description: >-
             Every unit of the day. Known as soon as the lesson is written — before the day is
-            opened, every unit is `pending` with `cards_done` 0.
+            opened, every unit is `pending`.
           items: { $ref: '#/components/schemas/PlanProgramUnit' }
-        sheet_available: { type: boolean }
+        window: { $ref: '#/components/schemas/PlanDayWindow' }
 
     PlanCard:
       type: object
@@ -3047,40 +3173,6 @@ components:
             - $ref: '#/components/schemas/PlanCard'
             - type: 'null'
           description: The same card dealt again at the end of its stage after a FIRST failure; null otherwise
-
-    PlanTerm:
-      type: object
-      required: [id, scene_id, kind, ref, text_target, text_native, simplified_variants]
-      properties:
-        id: { type: string }
-        scene_id: { type: string }
-        kind: { type: string, enum: [word, chunk, phrase] }
-        ref: { type: string }
-        text_target: { type: string }
-        text_native: { type: string }
-        pronunciation_native: { type: [string, 'null'] }
-        definition_target: { type: [string, 'null'] }
-        example_target: { type: [string, 'null'] }
-        example_native: { type: [string, 'null'] }
-        speaking_key: { type: [string, 'null'] }
-        simplified_variants: { type: array, items: { type: string } }
-        image:
-          oneOf:
-            - $ref: '#/components/schemas/PlanImage'
-            - type: 'null'
-
-    PlanSheet:
-      type: object
-      required: [plan_id, number, words, phrases]
-      properties:
-        plan_id: { type: string }
-        number: { type: integer }
-        words:
-          type: array
-          items: { $ref: '#/components/schemas/PlanTerm' }
-        phrases:
-          type: array
-          items: { $ref: '#/components/schemas/PlanTerm' }
 
     Problem:
       type: object

@@ -16,8 +16,6 @@ use App\Modules\Plan\Application\Query\GetDayCards;
 use App\Modules\Plan\Application\Query\GetDayCardsHandler;
 use App\Modules\Plan\Application\Query\GetDayRoom;
 use App\Modules\Plan\Application\Query\GetDayRoomHandler;
-use App\Modules\Plan\Application\Query\GetDaySheet;
-use App\Modules\Plan\Application\Query\GetDaySheetHandler;
 use App\Modules\Plan\Application\Query\GetPlanTargetLang;
 use App\Modules\Plan\Application\Service\CardViews;
 use App\Modules\Plan\Domain\ValueObject\CardResult;
@@ -32,7 +30,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-/** One day of the plan: the room, the cards, the answers, the closes, the sheet. */
+/** One day of the plan: the room, the cards, the answers, the closes. */
 final class PlanDayController
 {
     public function __construct(
@@ -42,7 +40,6 @@ final class PlanDayController
         private readonly AnswerCardHandler $answer,
         private readonly CloseStageHandler $closeStage,
         private readonly CloseDayHandler $closeDay,
-        private readonly GetDaySheetHandler $sheet,
         private readonly CardViews $cardViews,
         private readonly GetPlanTargetLang $targetLang,
     ) {}
@@ -114,11 +111,6 @@ final class PlanDayController
         ($this->closeDay)(new CloseDay($planId, $number, $actor));
 
         return response()->json(['data' => PlanJson::room(($this->room)(new GetDayRoom($planId, $number, $actor)))]);
-    }
-
-    public function sheet(Request $request, string $id, int $number): JsonResponse
-    {
-        return response()->json(['data' => PlanJson::sheet(($this->sheet)(new GetDaySheet($this->planId($id), $number, $this->actorId($request))))]);
     }
 
     private function cardList(PlanId $planId, int $number, UserId $actor): JsonResponse

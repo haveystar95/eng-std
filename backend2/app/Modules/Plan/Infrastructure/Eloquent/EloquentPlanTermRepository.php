@@ -60,6 +60,19 @@ final class EloquentPlanTermRepository implements PlanTermRepository
             'image_url' => $image->url,
             'image_author' => $image->author,
             'image_author_url' => $image->authorUrl,
+            'image_tone' => $image->tone,
+            'updated_at' => now(),
+        ]);
+    }
+
+    public function markImageMissing(PlanTermId $id, string $tone): void
+    {
+        $normal = Image::normalTone($tone);
+        if ($normal === null) {
+            return;
+        }
+        PlanTermModel::query()->whereKey($id->value)->whereNull('image_url')->update([
+            'image_tone' => $normal,
             'updated_at' => now(),
         ]);
     }
@@ -84,6 +97,7 @@ final class EloquentPlanTermRepository implements PlanTermRepository
             'image_url' => $term->image()?->url,
             'image_author' => $term->image()?->author,
             'image_author_url' => $term->image()?->authorUrl,
+            'image_tone' => $term->imageTone(),
         ];
     }
 
@@ -104,7 +118,8 @@ final class EloquentPlanTermRepository implements PlanTermRepository
             speakingKey: $row->speaking_key,
             simplifiedVariants: array_map('strval', $row->simplified_variants ?? []),
             imagePrompt: $row->image_prompt,
-            image: $row->image_url === null ? null : new Image($row->image_url, $row->image_author, $row->image_author_url),
+            image: $row->image_url === null ? null : new Image($row->image_url, $row->image_author, $row->image_author_url, $row->image_tone),
+            missingImageTone: $row->image_url === null ? $row->image_tone : null,
         );
     }
 }

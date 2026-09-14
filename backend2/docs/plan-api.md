@@ -112,13 +112,46 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 
 | действие | вызов | ответ |
 |---|---|---|
-| кабинет дня | `GET /plans/{id}/days/{n}` | `PlanDayRoom`: `day`, `scene`, `goals_native`, `stages[]` (`locked`/`current`/`done`/`absent`), `metrics`, `program[]` (единицы с состоянием `pending`/`passed`/`failed`), `sheet_available` |
+| день | `GET /plans/{id}/days/{n}` | `PlanDayRoom`: `day`, `scene`, `stages[]` (`locked`/`current`/`done`/`absent`), `metrics` (`cards_total`, `minutes_spent`), `program[]` (`unit_kind`, `source`, `state` `pending`/`passed`/`failed`) — это читают плита таба и сессия; **`window`** — окно дня (ниже) |
 | открыть / продолжить | `POST /plans/{id}/days/{n}/open` | `PlanDayCards` — **весь** список карточек с состоянием; 409 `plan_day_locked` (`meta.blocked_by_day` или `meta.opens_on`), 409 `plan_lesson_not_ready` (`meta.lesson_status`: `building` — подождать, `failed` — предложить `POST …/scenes/{sceneId}/lesson/retry`) |
 | перечитать карточки | `GET /plans/{id}/days/{n}/cards` | `PlanDayCards` |
 | ответить | `POST …/cards/{cardId}/answer` `{result, attempts}` | `{card, requeued}`; `requeued` — та же карточка в конце этапа после первого `failed`; 409 `plan_card_answered` |
 | этап пройден | `POST …/stages/{stage}/close` | `PlanDayRoom`; 409 `plan_stage_incomplete` (`meta.remaining`) |
 | день пройден | `POST …/close` | `PlanDayRoom` с `metrics`; 409 `plan_stage_incomplete`; после этого `Plan.collection_id` заполнен |
-| шит | `GET …/sheet` | `{words[], phrases[]}` (`PlanTerm`) |
+| озвучка реплики или фразы | `GET /plans/audio/{audioId}` | файл голоса (`audio_url` окна, `audio_id` карточки) |
+
+Снято нарядом DAY-UI-2 вместе со старым кабинетом дня: `GET …/sheet` («шит»), `goals_native` и
+`sheet_available` дня, тексты и счётчики единиц программы (`unit_ref`, `scene_id`, `text_target`,
+`text_native`, `cards_total`, `cards_done`), `metrics.cards_done` / `first_try_share` /
+`hardest_unit_*` (и их колонки в `plan_days`) — их читал только старый кабинет.
+
+**Окно дня — `window`** (DAY-UI-2, кадры 23-0a…0d; схема `PlanDayWindow`). Всё, что окно пишет,
+посчитано здесь; клиент складывает слова и не выводит ни одного числа. Нет поля — клиент говорит
+«не загрузилось», а не угадывает.
+
+| поле | что это |
+|---|---|
+| `day` | `index`, `type`, `title_native` / `title_target`, `image` (фото сцены с `tone`, `url_112`/`url_448`) и всегда `image_tone`; `status` — `not_started` / `in_progress` / `passed` (другой запертый день — `locked`: окно его не рисует); `minutes_estimate` — «≈ N минут» до конца дня (null у пройденного); `minutes_spent` — только у пройденного; `goals[{text, passed}]` — `passed` true у всех только у пройденного дня |
+| `stages[5]` | words · phrases · dialogue · listen · speak: `state` `done` / `current` / `locked`; `done_count`, `total`, `minutes_left` — **только у `current`** (у остальных null: цифру клиент не рисует); `share` 0…1 — полоса ряда. У не начатого дня все `locked` |
+| `day_progress` | 0…1 — доля пройденных этапов; полоса компактной шапки |
+| `program.words` | `summary {total, done, returns}` + `items[{ref, term, translation, image, image_tone, state}]`; `state` — `pending` / `done` / `returns_tomorrow` |
+| `program.phrases` | `summary` + `items[{ref, text, translation, audio_url, state}]` |
+| `program.dialogue` | `summary` + `items[{step, partner {text, translation, audio_url}, learner {text, translation, state}}]` — состояние только у реплики ученика, голос только у собеседника |
+| `allowed_action` | `start` / `continue` / `again` / null — одна кнопка. `again` — «Говорю сам» ещё раз по `GET …/cards`, ответы не отправляются (не пересдача дня) |
+
+Минуты — `DayPace` (секунд на карточку этапа: слова 8, фразы 29, диалог 34, слушание 13, речь 41;
+вверх до минуты). Состояние единицы — по её карточкам (`UnitStates`): провал дважды →
+`returns_tomorrow`, все отвечены → `done`. Счётчики брови — `ProgramSummary`.
+
+**Картинка у каждого слова** (DAY-UI-2): лестница запросов фото — `image_prompt`, потом слово без
+контекста, потом тема сцены (`PlanImageLadder`). Не нашлось — `image = null`, а `image_tone` — тон
+из палитры (`ImageTones`): клиент рисует слот тоном, «битой» картинки нет; такое слово помечено и
+не ищется заново после каждого урока; счётчик `image_missing`. Догрузка существующих планов —
+`php artisan plan:images-backfill` (печатает «было пусто / стало»).
+
+**Голос фраз** (DAY-UI-2): `SpeakSceneLinesJob` озвучивает реплики собеседника И фразы урока, строки
+в `plan_line_audios` по ссылке единицы (`x3`, `p2`). Лимит вендора поминутный — job повторяется раз в
+минуту до получаса. Фразы сцен, собранных до наряда, — `php artisan plan:speak-backfill`.
 
 Карточка (`PlanCard`): `stage`, `position`, `kind`, `source` (`today`/`returned`), `unit_kind` /
 `unit_ref`, `payload`, `retry_of`, `result`, `attempts`, `returns`. Состав `payload` по видам
@@ -134,7 +167,8 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 **Счёт дня живой.** `day.cards_done` / `minutes_spent` и `metrics` пересчитываются из карточек дня
 на каждый ответ — тем же калькулятором, которым закрывается день, по тем же строкам. `metrics`
 приходит у открытого дня, не только у закрытого; у неоткрытого — `null`. `cards_total` растёт,
-когда проваленная карточка раздаётся заново.
+когда проваленная карточка раздаётся заново. Окно дня (`window`) читает те же карточки — дня,
+который ещё не открыт, по контуру раздачи.
 
 Клиент оценивает сам по данным пейлоада (варианты с `correct`, `answer`, `expected` + `coverage`,
 `speaking_key` + `variants`) и присылает вердикт: `passed` / `hinted` (зачёт с подсказкой) /
@@ -209,9 +243,9 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 
 ## Что клиенту НЕ надо считать
 
-Дни, слоты, фразу обратного отсчёта, строку маршрута, состав дня, возвраты, метрики, «самое
-трудное». Что клиент считает сам: формат дат и чисел, обрезку длинных заголовков (лимиты промпта —
-ориентир, `char_limits` только считается).
+Дни, слоты, фразу обратного отсчёта, строку маршрута, состав дня, возвраты, метрики, минуты дня и
+этапа, состояния единиц, счётчики бровей окна, действие дня. Что клиент считает сам: формат дат и
+чисел, обрезку длинных заголовков (лимиты промпта — ориентир, `char_limits` только считается).
 
 ## Админка
 

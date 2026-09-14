@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Port;
 
+use App\Modules\Plan\Application\Dto\MissingImageCounts;
 use App\Modules\Plan\Application\Dto\SceneImageRef;
 use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
@@ -24,4 +25,15 @@ interface SceneLocator
      * @return list<SceneImageRef>
      */
     public function scenesWithImages(?PlanId $planId): array;
+
+    /**
+     * The plans that are not deleted and still have a scene, a word or a chunk without a photo — or
+     * just the one plan asked for — for the image backfill (DAY-UI-2).
+     *
+     * @return list<PlanId>
+     */
+    public function plansMissingImages(?PlanId $planId): array;
+
+    /** «Было пусто / стало»: scenes and words/chunks without a photo, of the plans that are not deleted. */
+    public function missingImageCounts(?PlanId $planId): MissingImageCounts;
 }

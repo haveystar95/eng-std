@@ -20,10 +20,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $cards_total
  * @property int $cards_done
  * @property int $minutes_spent
- * @property string|null $first_try_share
- * @property string|null $hardest_unit_kind
- * @property string|null $hardest_unit_ref
- * @property string|null $hardest_unit_text
  */
 final class PlanDayModel extends Model
 {

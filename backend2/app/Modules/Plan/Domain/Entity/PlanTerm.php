@@ -38,6 +38,7 @@ final class PlanTerm
         private readonly array $simplifiedVariants,
         private readonly ?string $imagePrompt,
         private ?Image $image,
+        private ?string $missingImageTone = null,
     ) {}
 
     /**
@@ -76,7 +77,10 @@ final class PlanTerm
         return $out;
     }
 
-    /** @param list<string> $simplifiedVariants */
+    /**
+     * @param  list<string>  $simplifiedVariants
+     * @param  string|null  $missingImageTone  the slot's tone when the whole search ladder found no photo
+     */
     public static function reconstitute(
         PlanTermId $id,
         PlanSceneId $sceneId,
@@ -93,21 +97,46 @@ final class PlanTerm
         array $simplifiedVariants,
         ?string $imagePrompt,
         ?Image $image,
+        ?string $missingImageTone = null,
     ): self {
         return new self(
             $id, $sceneId, $kind, $ref, $position, $textTarget, $textNative, $pronunciationNative, $definitionTarget,
             $exampleTarget, $exampleNative, $speakingKey, $simplifiedVariants, $imagePrompt, $image,
+            $image === null ? Image::normalTone($missingImageTone) : null,
         );
     }
 
     public function attachImage(Image $image): void
     {
         $this->image ??= $image;
+        $this->missingImageTone = null;
     }
 
+    /**
+     * The search ladder ran and found nothing: the card keeps no photo and is painted with [$tone].
+     * The tone is also the mark that the question was asked — the photo job does not ask it again
+     * after every lesson of the plan (only `plan:images-backfill` retries it).
+     */
+    public function markImageMissing(string $tone): void
+    {
+        if ($this->image === null) {
+            $this->missingImageTone = Image::normalTone($tone);
+        }
+    }
+
+    /**
+     * A word or a chunk with no photo that the ladder has not been asked about yet. A phrase has no
+     * photo by design — the day window shows phrases as lines, not cards.
+     */
     public function needsImage(): bool
     {
-        return $this->image === null && $this->imagePrompt !== null && trim($this->imagePrompt) !== '';
+        return $this->kind !== TermKind::Phrase && $this->image === null && $this->missingImageTone === null;
+    }
+
+    /** The tone of the card's photo slot: the photo's own, or the one it was painted with for lack of one. */
+    public function imageTone(): ?string
+    {
+        return $this->image->tone ?? $this->missingImageTone;
     }
 
     private static function messageNaming(Lesson $lesson, VocabularyItem $item): ?Message

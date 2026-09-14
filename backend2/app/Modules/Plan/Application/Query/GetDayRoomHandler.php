@@ -10,13 +10,13 @@ use App\Modules\Plan\Application\Dto\ProgramUnitView;
 use App\Modules\Plan\Application\Dto\StageProgressView;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Service\DayDealer;
+use App\Modules\Plan\Application\Service\DayWindowViews;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Application\Service\PlanViews;
-use App\Modules\Plan\Application\Service\UnitNames;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\ValueObject\CardResult;
-use App\Modules\Plan\Domain\ValueObject\DayType;
+use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Shared\Domain\Service\Clock;
 
@@ -36,6 +36,7 @@ final readonly class GetDayRoomHandler
         private DayCardRepository $cards,
         private DayDealer $dealer,
         private PlanViews $views,
+        private DayWindowViews $windows,
         private LearnerCalendar $calendar,
         private Clock $clock,
     ) {}
@@ -48,22 +49,20 @@ final readonly class GetDayRoomHandler
         $scene = $plan->sceneOf($day);
         $cards = $day->openedAt() === null ? $this->dealer->outline($plan, $day) : $this->cards->forDay($day->id());
         $metrics = $day->metrics();
+        $route = $this->views->day($plan, $day, $today, null, $cards);
+        $sceneView = $scene === null ? null : $this->views->scene($plan, $scene);
 
         return new DayRoomView(
             planId: $plan->id()->value,
-            day: $this->views->day($plan, $day, $today, null, $cards),
-            scene: $scene === null ? null : $this->views->scene($plan, $scene),
-            goalsNative: $scene?->goalsNative() ?? [],
+            day: $route,
+            scene: $sceneView,
             stages: $this->stages($cards),
             // The numbers of a day that is being walked, not only of one that is over: they are
             // refreshed on every answer, and «сколько уже сделано» is the question of a day in
             // progress. A day not yet opened has nothing to count.
-            metrics: $day->openedAt() === null ? null : new DayMetricsView(
-                $metrics->cardsTotal, $metrics->cardsDone, $metrics->minutesSpent, $metrics->firstTryShare,
-                $metrics->hardestUnitKind?->value, $metrics->hardestUnitRef, $metrics->hardestUnitText,
-            ),
+            metrics: $day->openedAt() === null ? null : new DayMetricsView($metrics->cardsTotal, $metrics->minutesSpent),
             program: $this->program($cards),
-            sheetAvailable: $day->type() === DayType::Scene && $scene !== null && $scene->isReady(),
+            window: $this->windows->of($plan, $day, DayStatus::from($route->status), $sceneView, $cards),
         );
     }
 
@@ -105,7 +104,7 @@ final readonly class GetDayRoomHandler
     }
 
     /**
-     * The program: one line per unit (word, phrase, exchange) with how far its cards have gone.
+     * The program: one line per unit (word, phrase, exchange) with where its cards have gone.
      *
      * @param  list<DayCard>  $cards
      * @return list<ProgramUnitView>
@@ -114,24 +113,9 @@ final readonly class GetDayRoomHandler
     {
         $units = [];
         foreach ($cards as $card) {
-            $payload = $card->payload();
-            $sceneId = is_string($payload['scene_id'] ?? null) ? $payload['scene_id'] : '';
-            $key = $sceneId.':'.$card->unitKind()->value.':'.$card->unitRef();
-            if (! isset($units[$key])) {
-                $units[$key] = [
-                    'kind' => $card->unitKind()->value,
-                    'ref' => $card->unitRef(),
-                    'scene' => $sceneId,
-                    'text_target' => UnitNames::of($card),
-                    'text_native' => is_string($payload['text_native'] ?? null)
-                        ? $payload['text_native']
-                        : (is_string($payload['task_native'] ?? null) ? $payload['task_native'] : (is_string($payload['prompt_native'] ?? null) ? $payload['prompt_native'] : null)),
-                    'source' => $card->source()->value,
-                    'total' => 0,
-                    'done' => 0,
-                    'failed' => false,
-                ];
-            }
+            $sceneId = $card->payload()['scene_id'] ?? null;
+            $key = (is_string($sceneId) ? $sceneId : '').':'.$card->unitKind()->value.':'.$card->unitRef();
+            $units[$key] ??= ['kind' => $card->unitKind()->value, 'source' => $card->source()->value, 'total' => 0, 'done' => 0, 'failed' => false];
             $units[$key]['total']++;
             if ($card->isAnswered()) {
                 $units[$key]['done']++;
@@ -143,13 +127,7 @@ final readonly class GetDayRoomHandler
 
         return array_values(array_map(static fn (array $u): ProgramUnitView => new ProgramUnitView(
             unitKind: $u['kind'],
-            unitRef: $u['ref'],
-            sceneId: $u['scene'],
-            textTarget: $u['text_target'],
-            textNative: $u['text_native'],
             source: $u['source'],
-            cardsTotal: $u['total'],
-            cardsDone: $u['done'],
             state: match (true) {
                 $u['failed'] => ProgramUnitView::FAILED,
                 $u['done'] >= $u['total'] => ProgramUnitView::PASSED,

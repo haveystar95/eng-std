@@ -131,7 +131,7 @@ it('counts the day while it is being walked, not only when it closes', function 
         ->and($room['day']['cards_total'])->toBe(count($cards))
         ->and($room['day']['minutes_spent'])->toBeGreaterThan(0)
         ->and($room['metrics'])->not->toBeNull()
-        ->and($room['metrics']['cards_done'])->toBe($answered)
+        ->and($room['metrics']['cards_total'])->toBe(count($cards))
         ->and($room['metrics']['minutes_spent'])->toBeGreaterThan(0);
 
     // The tab shows the same live count without opening the room.

@@ -299,25 +299,21 @@ it('deals the same day twice: tiles and options are shuffled by the card address
     expect($strip($first))->toBe($strip($second));
 });
 
-it('computes the day metrics from the cards: done, minutes, first-try share and the hardest unit', function () {
+it('computes the day metrics from the cards: dealt, done, minutes without the long pauses', function () {
     $cards = asmDeal(asmPayload(), PlanLevel::Beginner);
     $t = new DateTimeImmutable('2026-09-10T10:00:00Z');
-    $graded = 0;
     foreach ($cards as $i => $card) {
         if ($i >= 20) {
             break;
         }
-        $graded += $card->isGraded() ? 1 : 0;
-        $attempts = $card->unitRef() === 'v2' && $card->isGraded() ? 3 : 1;
-        $card->answer($attempts > 1 ? CardResult::Failed : CardResult::Passed, $attempts, $t->modify('+'.($i * 30).' seconds'));
+        // A pause of an hour before the eleventh answer is not time spent on the day.
+        $at = $t->modify('+'.($i * 30 + ($i >= 10 ? 3600 : 0)).' seconds');
+        $card->answer(CardResult::Passed, 1, $at);
     }
 
-    $metrics = (new DayMetricsCalculator)->calculate($cards, static fn (DayCard $c): ?string => $c->unitRef());
+    $metrics = (new DayMetricsCalculator)->calculate($cards);
 
     expect($metrics->cardsTotal)->toBe(count($cards))
         ->and($metrics->cardsDone)->toBe(20)
-        ->and($metrics->minutesSpent)->toBe(10)
-        ->and($metrics->hardestUnitRef)->toBe('v2')
-        ->and($metrics->firstTryShare)->toBeLessThan(1.0)
-        ->and($metrics->firstTryShare)->toBeGreaterThan(0.0);
+        ->and($metrics->minutesSpent)->toBe(9);
 });

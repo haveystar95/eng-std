@@ -6,10 +6,10 @@ namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Dto\CardView;
 use App\Modules\Plan\Application\Dto\LineAudioRow;
-use App\Modules\Plan\Application\Dto\TermView;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
 use App\Modules\Plan\Domain\Entity\DayCard;
+use App\Modules\Plan\Domain\Assembly\CardPayloads;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
@@ -68,12 +68,12 @@ final readonly class CardViews
         $sceneId = $payload['scene_id'] ?? null;
         $step = $payload['exchange_step'] ?? null;
         if (is_string($sceneId) && is_int($step)) {
-            $payload['audio_id'] = $audios[$sceneId.':'.$step]->id ?? null;
+            $payload['audio_id'] = $audios[$sceneId.':'.CardPayloads::exchangeRef($step)]->id ?? null;
         }
         if (is_string($sceneId) && is_array($payload['exchanges'] ?? null)) {
             $payload['exchanges'] = array_map(static function (mixed $exchange) use ($audios, $sceneId): mixed {
                 if (is_array($exchange) && is_int($exchange['step'] ?? null)) {
-                    $exchange['audio_id'] = $audios[$sceneId.':'.$exchange['step']]->id ?? null;
+                    $exchange['audio_id'] = $audios[$sceneId.':'.CardPayloads::exchangeRef($exchange['step'])]->id ?? null;
                 }
 
                 return $exchange;
@@ -95,25 +95,6 @@ final readonly class CardViews
             attempts: $card->attempts(),
             answeredAt: $card->answeredAt()?->format(DATE_ATOM),
             returns: $card->returns(),
-        );
-    }
-
-    public static function term(PlanTerm $term): TermView
-    {
-        return new TermView(
-            id: $term->id()->value,
-            sceneId: $term->sceneId()->value,
-            kind: $term->kind()->value,
-            ref: $term->ref(),
-            textTarget: $term->textTarget(),
-            textNative: $term->textNative(),
-            pronunciationNative: $term->pronunciationNative(),
-            definitionTarget: $term->definitionTarget(),
-            exampleTarget: $term->exampleTarget(),
-            exampleNative: $term->exampleNative(),
-            speakingKey: $term->speakingKey(),
-            simplifiedVariants: $term->simplifiedVariants(),
-            image: $term->image()?->toArray(),
         );
     }
 }

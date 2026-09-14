@@ -4,39 +4,62 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Infrastructure\Console;
 
+use App\Modules\Generation\Application\Port\TransientImageSearchError;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Plan\Application\Command\BackfillSceneImages;
 use App\Modules\Plan\Application\Command\BackfillSceneImagesHandler;
+use App\Modules\Plan\Application\Command\FillMissingImages;
+use App\Modules\Plan\Application\Command\FillMissingImagesHandler;
+use App\Modules\Plan\Application\Dto\MissingImageCounts;
 use App\Modules\Plan\Application\Dto\SceneImageBackfillReport;
+use App\Modules\Plan\Application\Port\SceneLocator;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Console\Command;
 
 /**
- * `plan:images-backfill {--plan=}` — the tone and the two square copies for scene photos stored
- * before PLAN-UI-3. Idempotent; safe to run again after a rate limit. Every vendor call is
- * labelled `images` in the outbound log. Writes one column (`plan_scenes.image_tone`) and files on
- * `plan.image_disk` — take the database backup first, as for any write to the dev database.
+ * `plan:images-backfill {--plan=}` — the photos existing plans still lack, and what scene photos
+ * stored before PLAN-UI-3 lack. Two steps, both idempotent and safe to run again after a rate limit:
+ *
+ * 1. (DAY-UI-2) every scene, word and chunk without a photo is asked the search ladder
+ *    (`FillMissingImagesHandler`), and the run prints «было пусто / стало»;
+ * 2. (PLAN-UI-3) scene photos get their tone and their two square copies.
+ *
+ * Every vendor call is labelled `images` in the outbound log. Writes photo columns of
+ * `plan_scenes` / `plan_terms` and files on `plan.image_disk` — take the database backup first, as
+ * for any write to the dev database.
  */
 final class PlanImagesBackfillCommand extends Command
 {
     protected $signature = 'plan:images-backfill {--plan= : only this plan id}';
 
-    protected $description = 'Fill scene photo tones (Pexels avg_color) and pre-fetch the 112/448 square copies';
+    protected $description = 'Find the photos plans still lack (the search ladder), then fill scene photo tones and pre-fetch their 112/448 square copies';
 
-    public function handle(BackfillSceneImagesHandler $handler, OutboundCallContext $context): int
-    {
-        $plan = $this->option('plan');
-        if (is_string($plan) && $plan !== '' && ! Ulid::isValid($plan)) {
-            $this->error("Not a plan id: {$plan}");
+    public function handle(
+        FillMissingImagesHandler $fill,
+        BackfillSceneImagesHandler $handler,
+        SceneLocator $scenes,
+        OutboundCallContext $context,
+    ): int {
+        $option = $this->option('plan');
+        if (is_string($option) && $option !== '' && ! Ulid::isValid($option)) {
+            $this->error("Not a plan id: {$option}");
 
             return self::FAILURE;
         }
+        $plan = is_string($option) && $option !== '' ? PlanId::fromString($option) : null;
+
+        $before = $scenes->missingImageCounts($plan);
+        try {
+            $context->run('images', null, fn () => $fill(new FillMissingImages($plan)));
+        } catch (TransientImageSearchError $e) {
+            $this->warn('The photo search stopped on a vendor limit — run the command again later: '.$e->getMessage());
+        }
+        $after = $scenes->missingImageCounts($plan);
+        $this->info('Without a photo — before: '.self::counts($before).' · after: '.self::counts($after));
 
         /** @var SceneImageBackfillReport $report */
-        $report = $context->run('images', null, fn (): SceneImageBackfillReport => $handler(new BackfillSceneImages(
-            is_string($plan) && $plan !== '' ? PlanId::fromString($plan) : null,
-        )));
+        $report = $context->run('images', null, fn (): SceneImageBackfillReport => $handler(new BackfillSceneImages($plan)));
 
         $this->info(sprintf(
             'Scenes with a photo: %d · tones written: %d, still without a tone: %d · copies fetched: %d, still missing: %d',
@@ -44,5 +67,10 @@ final class PlanImagesBackfillCommand extends Command
         ));
 
         return self::SUCCESS;
+    }
+
+    private static function counts(MissingImageCounts $counts): string
+    {
+        return "scenes {$counts->scenes}, words and chunks {$counts->terms}";
     }
 }

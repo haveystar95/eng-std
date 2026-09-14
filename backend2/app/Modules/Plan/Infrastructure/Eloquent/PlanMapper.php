@@ -21,7 +21,6 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\PlanStatus;
 use App\Modules\Plan\Domain\ValueObject\SceneKind;
-use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -134,10 +133,6 @@ final class PlanMapper
                 cardsTotal: $row->cards_total,
                 cardsDone: $row->cards_done,
                 minutesSpent: $row->minutes_spent,
-                firstTryShare: $row->first_try_share === null ? null : (float) $row->first_try_share,
-                hardestUnitKind: $row->hardest_unit_kind === null ? null : UnitKind::from($row->hardest_unit_kind),
-                hardestUnitRef: $row->hardest_unit_ref,
-                hardestUnitText: $row->hardest_unit_text,
             ),
         );
     }
@@ -260,10 +255,6 @@ final class PlanMapper
             'cards_total' => $m->cardsTotal,
             'cards_done' => $m->cardsDone,
             'minutes_spent' => $m->minutesSpent,
-            'first_try_share' => $m->firstTryShare,
-            'hardest_unit_kind' => $m->hardestUnitKind?->value,
-            'hardest_unit_ref' => $m->hardestUnitRef,
-            'hardest_unit_text' => $m->hardestUnitText,
         ];
     }
 

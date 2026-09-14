@@ -31,10 +31,10 @@
 |---|---|---|
 | `plans` | план | `status` building·unclear·failed·ready·active·finished·overdue·deleted, `days_total`/`days_requested`, `event_date`, `level`, заголовки из промпта (`title_*`, `event_native`, `until_phrase_native`, `overdue_native`, роли), обложка, `prompt_version_plan`, `build_version`, `model_plan`, `cost_usd_plan`, `latency_ms_plan`, `attempts_plan`, `checks_json`, `collection_id`, `build_started_at` |
 | `plan_scenes` | сцены плана | `order`, `kind` situation·variant, `priority` (1 = ядро), `title_native` ≤18 / `title_target`, `teaches_native` ≤34, `goals_native` 3–4×≤30, роли, `topic_description` (бриф урока), `image_prompt`+фото, `lesson_json` (ответ модели как есть), `lesson_status` pending·building·ready·failed, `prompt_version_lesson`, `build_version`, `model_lesson`, `cost_usd_lesson`, `latency_ms_lesson`, `attempts_lesson`, `checks_json`, `generated_at` |
-| `plan_days` | календарь | `number`, `type` scene·review·rehearsal, `scene_id`, `status` locked·open·in_progress·closed, `opens_on`, `opened_at`, `closed_at`, метрики (`cards_total`, `cards_done`, `minutes_spent`, `first_try_share`, `hardest_unit_*`) |
+| `plan_days` | календарь | `number`, `type` scene·review·rehearsal, `scene_id`, `status` locked·open·in_progress·closed, `opens_on`, `opened_at`, `closed_at`, метрики (`cards_total`, `cards_done`, `minutes_spent`; `first_try_share` и `hardest_unit_*` сняты нарядом DAY-UI-2 — их читал только старый кабинет) |
 | `day_cards` | карточки дня | `stage`, `position`, `kind` (13 видов), `payload` jsonb, `source` today·returned, `source_day_id`, `unit_kind`/`unit_ref`, `retry_of`, `result` null·passed·hinted·failed·skipped, `attempts`, `answered_at`, `returns` |
-| `plan_terms` | слова/связки/фразы сцены | `kind` word·chunk·phrase, `ref` (`v3`/`p1`), тексты, чтение, определение, пример из диалога, `speaking_key`, `simplified_variants`, фото |
-| `plan_line_audios` | озвучка реплик собеседника | `(scene_id, step, voice_key)` уникально, файл на приватном диске |
+| `plan_terms` | слова/связки/фразы сцены | `kind` word·chunk·phrase, `ref` (`v3`/`p1`), тексты, чтение, определение, пример из диалога, `speaking_key`, `simplified_variants`, фото, `image_tone` (тон фото или тон слота, когда лестница фото не нашла, DAY-UI-2) |
+| `plan_line_audios` | озвучка реплик собеседника и фраз | `(scene_id, line_ref, voice_key)` уникально (`x3` — реплика собеседника обмена 3, `p2` — фраза 2; DAY-UI-2), файл на приватном диске |
 | `plan_check_counters` | счётчики проверок | `(prompt_version, check_name, action)` → `hits` |
 
 Слова и фразы дня после закрытия дня уходят в коллекцию плана (`plans.collection_id`,
@@ -167,22 +167,33 @@
   как есть; второе сообщение с «?» → обычный обмен; фраза не в репликах → только в этапе фраз;
   id слова не в тексте → без подсветки; обмен с одним сообщением → не попадает в слушание и речь
   (в диалоге остаётся).
-- **Метрики** (`DayMetricsCalculator`): `cards_done`, `minutes_spent` (по `answered_at`, паузы >
-  10 мин не считаются), «верно с первого раза» = passed без подсказки и attempts ≤ 1 среди
-  оцениваемых карточек, «самое трудное» = единица с максимумом попыток.
+- **Метрики** (`DayMetricsCalculator`): `cards_total`, `cards_done`, `minutes_spent` (по
+  `answered_at`, паузы > 10 мин не считаются). «Верно с первого раза» и «самое трудное» сняты
+  нарядом DAY-UI-2: окно дня (кадр 23-0c) вычло подвал с процентами, других читателей не было.
+- **Окно дня** (DAY-UI-2, блок `window` в `GET …/days/{n}`, `DayWindowViews`): статус дня
+  (`WindowStatus`), ряды этапов с цифрой только у текущего (`DayWindowStages`), минуты по темпу
+  этапа (`DayPace`: секунд на карточку — слова 8, фразы 29, диалог 34, слушание 13, речь 41),
+  состояния единиц по их карточкам (`UnitStates`: провал дважды — `returns_tomorrow`) и счётчики
+  бровей (`ProgramSummary`), одно действие (`WindowAction`: start · continue · again).
 
 ## 7. Фоновые работы
 
 - **Фото** (`AttachPlanImagesJob`, `PexelsPlanImageFinder` → `ImageSearchPort`): обложка плана по
-  `cover_image_prompt`, сцены по `image_prompt`, слова/связки по `image_prompt` (null = без фото).
-  Best effort, ретрай только на transient; день не ждёт. Вместе с фото пишется его тон
+  `cover_image_prompt`; сцены и слова/связки — лестницей запросов (`PlanImageLadder`, DAY-UI-2):
+  `image_prompt` → слово без контекста → тема сцены. Пусто на всех ступенях — фото нет, у слова
+  пишется тон слота из палитры (`ImageTones`), и оно больше не ищется после каждого урока
+  (счётчик `image_missing`). Best effort, ретрай только на transient; день не ждёт.
+  `plan:images-backfill` догружает существующие планы и печатает «было пусто / стало». Вместе с фото пишется его тон
   (`avg_color` → `image_tone` / `cover_image_tone`), а у сцены с фото job кладёт две квадратные копии
   (112 и 448, кроп CDN Pexels) на `plan.image_disk`; не скачалось — копию добудет
   `GET /plans/images/{scene}/{size}` при первом запросе (PLAN-UI-3).
 - **Озвучка** (`SpeakSceneLinesJob`, `GenerationLineSpeaker` → `SpeechSynthesizerPort` +
-  `VoiceCatalog`): реплики A премиум-голосом языкового пакета, если `SPEECH_ENABLED`; слова, фразы,
-  реплики B — системный голос телефона. Файл один на (сцена, шаг, голос); отдаётся
-  `GET /plans/audio/{id}`. Ничего не блокирует.
+  `VoiceCatalog`): реплики A и фразы урока (с DAY-UI-2 — «прослушать» окна дня) премиум-голосом
+  языкового пакета, если `SPEECH_ENABLED`; слова и реплики B — системный голос телефона. Файл один
+  на (сцена, ссылка единицы `x3`/`p2`, голос); отдаётся `GET /plans/audio/{id}`. Лимит вендора
+  поминутный (Gemini TTS — 10 запросов в минуту), job повторяется раз в минуту до получаса и
+  покупает только недостающее. `plan:speak-backfill` — недостающие строки существующих сцен.
+  Ничего не блокирует.
 
 ## 8. Строки
 
@@ -201,6 +212,8 @@
 
 - `php artisan plan:shift-day {plan} --days=N` — сдвинуть даты плана в прошлое (симулятор
   «наступил следующий день»); на `wordtrainer` отказывает без `--force`.
+- `php artisan plan:images-backfill {--plan=}` / `plan:speak-backfill {--plan=}` — догрузка фото и
+  голоса существующим планам (DAY-UI-2), обе идемпотентны и печатают «было / стало».
 - `php artisan plan:seed-load {user} --plans=50` — синтетическая нагрузка для EXPLAIN (только на
   тестовой базе).
 - `FakePlanModel` — валидные план/урок без сети; замыкание в конструкторе даёт сломанный ответ.

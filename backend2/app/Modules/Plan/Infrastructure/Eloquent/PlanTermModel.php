@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $image_url
  * @property string|null $image_author
  * @property string|null $image_author_url
+ * @property string|null $image_tone the photo's tone, or — with no photo — the tone the ladder painted the card with
  */
 final class PlanTermModel extends Model
 {

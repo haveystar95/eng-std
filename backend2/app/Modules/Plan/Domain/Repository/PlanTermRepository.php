@@ -23,6 +23,9 @@ interface PlanTermRepository
     /** @param list<PlanTerm> $terms replaces the scene's terms wholesale */
     public function replaceForScene(PlanSceneId $sceneId, array $terms): void;
 
-    /** The term's photo into its own columns, only while it has none — see {@see PlanRepository}. */
+    /** The term's photo and its tone into their own columns, only while it has no photo — see {@see PlanRepository}. */
     public function attachImage(PlanTermId $id, Image $image): void;
+
+    /** The ladder found nothing: the tone the card is painted with, only while it has no photo. */
+    public function markImageMissing(PlanTermId $id, string $tone): void;
 }

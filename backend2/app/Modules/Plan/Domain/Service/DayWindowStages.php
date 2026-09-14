@@ -1,0 +1,92 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Plan\Domain\Service;
+
+use App\Modules\Plan\Domain\Entity\DayCard;
+use App\Modules\Plan\Domain\ValueObject\Stage;
+use App\Modules\Plan\Domain\ValueObject\StageState;
+use App\Modules\Plan\Domain\ValueObject\WindowStage;
+use App\Modules\Plan\Domain\ValueObject\WindowStatus;
+
+/**
+ * THE STAGES OF A DAY IN ITS WINDOW (DAY-UI-2, кадры 23-0a…0c) — and the two numbers made of them.
+ *
+ * The rows are the stages the day deals, in walking order (a stage with no card is not a row); a
+ * day with no card yet — its lesson is not written — has the stages its type deals. Where each row
+ * stands is the window's own reading:
+ *
+ * - not started: every stage `locked`, the first one too — the frame says «впереди» five times and
+ *   prints no number, because nothing is being walked yet (the route's first node may be current:
+ *   there it says «start here», here the button says it);
+ * - in progress: a stage with every card answered is `done`, the first one that is not is
+ *   `current`, the rest `locked`;
+ * - passed: every stage `done`.
+ */
+final class DayWindowStages
+{
+    /**
+     * @param  list<DayCard>  $cards  the day's cards — dealt, or the dealer's outline of a day not opened
+     * @param  list<Stage>  $withoutCards  what the day's type deals, for a day with no card yet
+     * @return list<WindowStage>
+     */
+    public static function of(array $cards, array $withoutCards, WindowStatus $status): array
+    {
+        $tallies = RouteStages::tally($cards);
+        $out = [];
+        $currentFound = false;
+        foreach ($cards === [] ? $withoutCards : RouteStages::stagesOf($cards) as $stage) {
+            $total = $tallies[$stage->value]['total'] ?? 0;
+            $answered = $tallies[$stage->value]['answered'] ?? 0;
+            $row = match (true) {
+                $status === WindowStatus::Passed => WindowStage::done($stage),
+                $status !== WindowStatus::InProgress => WindowStage::locked($stage),
+                $total > 0 && $answered >= $total => WindowStage::done($stage),
+                $currentFound => WindowStage::locked($stage),
+                default => WindowStage::current($stage, $answered, $total),
+            };
+            $currentFound = $currentFound || $row->state === StageState::Current;
+            $out[] = $row;
+        }
+
+        return $out;
+    }
+
+    /**
+     * The share of the day's stages that are walked — the compact header's bar: empty before the
+     * start, three of five while walked, full once passed.
+     *
+     * @param  list<WindowStage>  $stages
+     */
+    public static function progress(array $stages): float
+    {
+        if ($stages === []) {
+            return 0.0;
+        }
+        $done = count(array_filter($stages, static fn (WindowStage $s): bool => $s->state === StageState::Done));
+
+        return round($done / count($stages), 2);
+    }
+
+    /**
+     * The minutes the day still asks for: all of it before the start, what is left while it is
+     * walked; a passed day asks for none (it says how long it took instead), and a day with no
+     * cards cannot be estimated.
+     *
+     * @param  list<DayCard>  $cards
+     */
+    public static function minutesEstimate(array $cards, WindowStatus $status): ?int
+    {
+        if ($cards === [] || ! in_array($status, [WindowStatus::NotStarted, WindowStatus::InProgress], true)) {
+            return null;
+        }
+        $seconds = 0;
+        foreach (RouteStages::tally($cards) as $stage => $tally) {
+            $left = $status === WindowStatus::NotStarted ? $tally['total'] : $tally['total'] - $tally['answered'];
+            $seconds += DayPace::seconds(Stage::from($stage), $left);
+        }
+
+        return DayPace::minutes($seconds);
+    }
+}

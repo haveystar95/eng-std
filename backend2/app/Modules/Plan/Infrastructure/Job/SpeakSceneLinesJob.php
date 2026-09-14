@@ -7,27 +7,37 @@ namespace App\Modules\Plan\Infrastructure\Job;
 use App\Modules\Plan\Application\Command\SpeakSceneLines;
 use App\Modules\Plan\Application\Command\SpeakSceneLinesHandler;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
+use DateTimeImmutable;
+use DateTimeInterface;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * The partner's lines of one scene, spoken by the language pack's voice. Retried on a transient
- * vendor error with what was already bought kept (the store is idempotent per line and voice).
+ * The partner's lines and the phrases of one scene, spoken by the language pack's voice. Retried on a
+ * transient vendor error with what was already bought kept (the store is idempotent per line and voice).
+ *
+ * The vendor's limit is PER MINUTE (Gemini TTS: 10 requests a minute per model, seen 14.09) and a
+ * scene is fourteen lines since the phrases are voiced too (DAY-UI-2) — two lessons written at once
+ * are twenty-eight. Three tries gave up with half the lines bought and nothing asked again, so the
+ * job retries a minute apart for half an hour instead: every attempt buys only what is missing.
  */
 final class SpeakSceneLinesJob implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries = 3;
-
     public int $timeout = 600;
 
-    /** @var list<int> */
-    public array $backoff = [15, 60, 120];
+    /** @var list<int> the last value repeats for every later attempt */
+    public array $backoff = [15, 60];
 
     public function __construct(private readonly string $sceneId) {}
+
+    public function retryUntil(): DateTimeInterface
+    {
+        return new DateTimeImmutable('+30 minutes');
+    }
 
     public function handle(SpeakSceneLinesHandler $handler): void
     {

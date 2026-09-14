@@ -42,5 +42,4 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::post('/plans/{id}/days/{number}/cards/{cardId}/answer', [PlanDayController::class, 'answer'])->whereNumber('number');
     Route::post('/plans/{id}/days/{number}/stages/{stage}/close', [PlanDayController::class, 'closeStage'])->whereNumber('number');
     Route::post('/plans/{id}/days/{number}/close', [PlanDayController::class, 'close'])->whereNumber('number');
-    Route::get('/plans/{id}/days/{number}/sheet', [PlanDayController::class, 'sheet'])->whereNumber('number');
 });
