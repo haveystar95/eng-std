@@ -25,7 +25,8 @@ use Illuminate\Console\Command;
  *
  * 1. (DAY-UI-2, the DAY-UI-3 ladder) every scene, word and chunk without a photo is asked the search
  *    ladder (`FillMissingImagesHandler`), and the run prints «было пусто / стало»; with `--requery`
- *    the words whose photo the bare word found are asked again and a new answer replaces the photo;
+ *    the words whose photo the bare word found, and the words repeating a picture their day already
+ *    shows, are asked again and a new answer replaces the photo;
  * 2. (PLAN-UI-3) scene photos get their tone and their two square copies.
  *
  * Every vendor call is labelled `images` in the outbound log. Writes photo columns of
@@ -34,7 +35,7 @@ use Illuminate\Console\Command;
  */
 final class PlanImagesBackfillCommand extends Command
 {
-    protected $signature = 'plan:images-backfill {--plan= : only this plan id} {--requery : re-ask the words whose photo the bare word found}';
+    protected $signature = 'plan:images-backfill {--plan= : only this plan id} {--requery : re-ask the words whose photo the bare word found or their day already shows}';
 
     protected $description = 'Find the photos plans still lack (the search ladder), then fill scene photo tones and pre-fetch their 112/448 square copies';
 
@@ -56,6 +57,7 @@ final class PlanImagesBackfillCommand extends Command
 
         $before = $scenes->missingImageCounts($plan);
         $bare = $requery ? array_sum(array_map('count', $terms->photographedWithoutPrompt($plan))) : 0;
+        $repeats = $requery ? array_sum(array_map('count', $terms->repeatingDayPhotos($plan))) : 0;
         try {
             $context->run('images', null, fn () => $fill(new FillMissingImages($plan, $requery)));
         } catch (TransientImageSearchError $e) {
@@ -64,7 +66,7 @@ final class PlanImagesBackfillCommand extends Command
         $after = $scenes->missingImageCounts($plan);
         $this->info('Without a photo — before: '.self::counts($before).' · after: '.self::counts($after));
         if ($requery) {
-            $this->info("Words and chunks photographed by the bare word, asked the new ladder: {$bare}");
+            $this->info("Asked the new ladder — words and chunks photographed by the bare word: {$bare}, repeating a picture of their day: {$repeats}");
         }
 
         /** @var SceneImageBackfillReport $report */

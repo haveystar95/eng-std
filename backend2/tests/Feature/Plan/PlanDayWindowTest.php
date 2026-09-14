@@ -457,7 +457,9 @@ it('paints a word nothing was found for with its scene’s tone, counts image_mi
         ->and($word['image_tone'])->toBe($scene['image']['tone']);
 });
 
-it('backfills what the plans still lack and says «было пусто / стало»; --requery re-asks the words the bare word photographed', function () {
+// Canon (DAY-UI-3): «бэкфилл существующих планов командой; «было пусто / стало»». Catches old days left with a
+// supermarket for «marketing», and with the same picture on two words or on a word and its plate.
+it('backfills what the plans still lack and says «было пусто / стало»; --requery re-asks the bare word’s photos and a day’s repeats', function () {
     [, $token] = planLearner();
     planCreate($this, $token, ['days_total' => 2]);
     DB::table('plan_terms')->whereIn('text_target', ['sharp', 'numbness'])->update(['image_url' => null, 'image_tone' => '#978E82']);
@@ -469,9 +471,20 @@ it('backfills what the plans still lack and says «было пусто / ста�
 
     // A photo the bare word found before DAY-UI-3 («marketing» → a supermarket): asked the new ladder, replaced.
     DB::table('plan_terms')->where('text_target', 'sharp')->update(['image_url' => 'https://images.pexels.test/supermarket.jpg']);
+    // Two words the old ladder gave one picture, and a word showing the day's plate: the first holder keeps its
+    // picture, the others are asked again.
+    $sceneId = (string) DB::table('plan_terms')->where('text_target', 'sharp')->value('scene_id');
+    $plate = (string) DB::table('plan_scenes')->where('id', $sceneId)->value('image_url');
+    $words = DB::table('plan_terms')->where('scene_id', $sceneId)->whereIn('kind', ['word', 'chunk'])->whereNotNull('image_prompt')
+        ->where('image_prompt', '<>', '')->orderBy('position')->pluck('text_target')->all();
+    DB::table('plan_terms')->where('scene_id', $sceneId)->whereIn('text_target', [$words[0], $words[1]])->update(['image_url' => 'https://images.pexels.test/same.jpg']);
+    DB::table('plan_terms')->where('scene_id', $sceneId)->where('text_target', $words[2])->update(['image_url' => $plate]);
     Artisan::call('plan:images-backfill', ['--requery' => true]);
-    expect(Artisan::output())->toContain('photographed by the bare word, asked the new ladder: 2')
-        ->and(DB::table('plan_terms')->where('text_target', 'sharp')->value('image_url'))->not->toBe('https://images.pexels.test/supermarket.jpg');
+    expect(Artisan::output())->toContain('photographed by the bare word: 2, repeating a picture of their day: 2')
+        ->and(DB::table('plan_terms')->where('text_target', 'sharp')->value('image_url'))->not->toBe('https://images.pexels.test/supermarket.jpg')
+        ->and(DB::table('plan_terms')->where('scene_id', $sceneId)->where('text_target', $words[0])->value('image_url'))->toBe('https://images.pexels.test/same.jpg')
+        ->and(DB::table('plan_terms')->where('scene_id', $sceneId)->where('text_target', $words[1])->value('image_url'))->not->toBe('https://images.pexels.test/same.jpg')
+        ->and(DB::table('plan_terms')->where('scene_id', $sceneId)->where('text_target', $words[2])->value('image_url'))->not->toBe($plate);
 });
 
 // Live check 14.09: the vendor answers «appointment, doctor's office» and «dizzy, doctor's office» with one photo.

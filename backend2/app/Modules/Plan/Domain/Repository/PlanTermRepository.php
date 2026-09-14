@@ -32,7 +32,8 @@ interface PlanTermRepository
 
     /**
      * The term's photo written OVER the one it has — only for the backfill's re-ask of the photos the
-     * bare word found before DAY-UI-3 («marketing» → a supermarket). Nothing else rewrites a photo.
+     * old ladder gave: the bare word's («marketing» → a supermarket) and a picture its day already
+     * shows (DAY-UI-3). Nothing else rewrites a photo.
      */
     public function replaceImage(PlanTermId $id, Image $image): void;
 
@@ -43,4 +44,14 @@ interface PlanTermRepository
      * @return array<string, list<PlanTerm>>
      */
     public function photographedWithoutPrompt(?PlanId $planId): array;
+
+    /**
+     * The words and chunks of the plans that are not deleted whose photo repeats a picture their day
+     * already shows — the scene's plate, or a word or chunk earlier in the scene — for the same re-ask
+     * (DAY-UI-3: a day does not show one picture twice). The first holder of a picture keeps it. Keyed
+     * by scene id.
+     *
+     * @return array<string, list<PlanTerm>>
+     */
+    public function repeatingDayPhotos(?PlanId $planId): array;
 }

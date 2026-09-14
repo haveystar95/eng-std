@@ -113,6 +113,38 @@ final class EloquentPlanTermRepository implements PlanTermRepository
         return $out;
     }
 
+    public function repeatingDayPhotos(?PlanId $planId): array
+    {
+        $photographed = [TermKind::Word->value, TermKind::Chunk->value];
+        $rows = PlanTermModel::query()
+            ->select('plan_terms.*')
+            ->join('plan_scenes', 'plan_scenes.id', '=', 'plan_terms.scene_id')
+            ->join('plans', 'plans.id', '=', 'plan_scenes.plan_id')
+            ->where('plans.status', '<>', PlanStatus::Deleted->value)
+            ->when($planId !== null, static fn ($q) => $q->where('plans.id', $planId?->value))
+            ->whereIn('plan_terms.kind', $photographed)
+            ->whereNotNull('plan_terms.image_url')
+            ->where(static fn ($q) => $q
+                ->whereColumn('plan_terms.image_url', 'plan_scenes.image_url')
+                ->orWhereExists(static fn ($earlier) => $earlier
+                    ->selectRaw('1')
+                    ->from('plan_terms as earlier')
+                    ->whereColumn('earlier.scene_id', 'plan_terms.scene_id')
+                    ->whereIn('earlier.kind', $photographed)
+                    ->whereColumn('earlier.image_url', 'plan_terms.image_url')
+                    ->whereColumn('earlier.position', '<', 'plan_terms.position')))
+            ->orderBy('plan_terms.scene_id')
+            ->orderBy('plan_terms.position')
+            ->get();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[$row->scene_id][] = $this->toDomain($row);
+        }
+
+        return $out;
+    }
+
     /** @return array<string, mixed> */
     private function columns(PlanTerm $term): array
     {

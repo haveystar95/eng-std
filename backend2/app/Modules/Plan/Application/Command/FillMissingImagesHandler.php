@@ -21,10 +21,12 @@ use App\Modules\Plan\Domain\ValueObject\TermKind;
  *
  * Every scene, word and chunk without a photo is asked the whole ladder again, the words the photo
  * job already painted with a tone too: a vendor that had nothing on one day may have it on another,
- * and a human running this command is asking exactly that. With `--requery` the words whose photo the
- * BARE WORD found (no description of their own — «marketing» → a supermarket) are asked the new
- * ladder, and a new answer replaces the old photo. A transient vendor error (a rate limit) propagates,
- * and the run is simply started again.
+ * and a human running this command is asking exactly that. With `--requery` the photos the old ladder
+ * gave are asked the new one, and a new answer replaces the old photo: the words whose photo the BARE
+ * WORD found (no description of their own — «marketing» → a supermarket), and the words whose photo
+ * repeats a picture their day already shows — its plate or an earlier word (a day does not show one
+ * picture twice; the first holder keeps it). A transient vendor error (a rate limit) propagates, and the
+ * run is simply started again.
  */
 final readonly class FillMissingImagesHandler
 {
@@ -58,16 +60,27 @@ final readonly class FillMissingImagesHandler
             }
         }
 
-        if ($command->requeryBareWords) {
+        if ($command->requeryOldPhotos) {
             $this->requery($command->planId);
         }
     }
 
     private function requery(?PlanId $only): void
     {
+        /** @var array<string, array<string, PlanTerm>> $asked scene id → term id → term */
+        $asked = [];
+        foreach ([$this->terms->photographedWithoutPrompt($only), $this->terms->repeatingDayPhotos($only)] as $found) {
+            foreach ($found as $sceneId => $terms) {
+                foreach ($terms as $term) {
+                    $asked[(string) $sceneId][$term->id()->value] = $term;
+                }
+            }
+        }
+
         /** @var array<string, Plan|null> $plans */
         $plans = [];
-        foreach ($this->terms->photographedWithoutPrompt($only) as $sceneId => $terms) {
+        foreach ($asked as $sceneId => $byId) {
+            $terms = array_values($byId);
             $id = PlanSceneId::fromString($sceneId);
             $planId = $this->scenes->planIdOf($id);
             if ($planId === null) {
