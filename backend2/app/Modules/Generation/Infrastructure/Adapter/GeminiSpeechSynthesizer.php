@@ -25,11 +25,19 @@ use RuntimeException;
  * ## Сценарий — ОДИН вызов (DAY-UI-3)
  *
  * Бесплатный тариф режет ЗАПРОСЫ: 10 в минуту и 100 в сутки на модель. Поэтому диалог дня уходит
- * одним запросом с двумя говорящими (`multiSpeakerVoiceConfig`), а пачка слов или фраз — одним запросом
- * одним голосом со строкой на строку. Вендор отвечает ОДНИМ куском PCM без таймкодов строк; кусок
- * режется по паузам ({@see PcmTurnCutter}). Не разрезался — ещё ОДИН запрос (у синтезатора каждый
- * ответ свой), дальше {@see SpeechNotCut}: неверно разрезанный звук играл бы чужую строку. Цена строк —
- * сумма всех попыток, разложенная по длительности кусков.
+ * одним запросом с двумя говорящими (`multiSpeakerVoiceConfig`), и пачка слов или фраз — тоже одним
+ * запросом. Вендор отвечает ОДНИМ куском PCM без таймкодов строк; кусок режется по паузам
+ * ({@see PcmTurnCutter}). Не разрезался — ещё ОДИН запрос (у синтезатора каждый ответ свой), дальше
+ * {@see SpeechNotCut}: неверно разрезанный звук играл бы чужую строку. Цена строк — сумма всех попыток,
+ * разложенная по длительности кусков.
+ *
+ * ## Пачка — репликами двух чтецов одним голосом
+ *
+ * Пачка уходит той же формой, что и диалог: строки — реплики Alex и Sam по очереди, у обоих голос пачки.
+ * Разговор вендор читает целиком и между репликами держит паузу смены говорящего — по ней и режется
+ * (живьём 14.09: диалог из 16 реплик разрезан 16 из 16, а шесть фраз одним голосом «строка на строку»
+ * вернулись 2,2 секундами — одной фразой). Вторая попытка пачки — прежний список одним голосом: форма,
+ * которую вендор не принял (400) или чей звук не разрезался, получает другую форму, а не ту же ещё раз.
  *
  * ## Формат: mp3; WAV — только если кодировщика нет
  *
@@ -78,7 +86,15 @@ final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
         $costs = '0.000000';
         $lastCut = null;
         for ($attempt = 1; $attempt <= self::ATTEMPTS; $attempt++) {
-            [$pcm, $rate] = $this->call($script, $model);
+            // A dialogue is always turns; a batch is turns first, then the plain one-voice list.
+            $asTurns = ! $script->isBatch() || $attempt === 1;
+            $sound = $this->call($script, $model, $asTurns);
+            if ($sound === null) {
+                $lastCut = SpeechNotCut::because('the vendor refused a batch read as turns');
+
+                continue;
+            }
+            [$pcm, $rate] = $sound;
             $durationMs = (int) round(strlen($pcm) / ($rate * 2) * 1000);
             $costs = self::add($costs, SpeechCost::estimate($model, $script->characters(), $durationMs));
 
@@ -96,8 +112,11 @@ final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
         throw $lastCut ?? SpeechNotCut::because('no attempt');
     }
 
-    /** @return array{0: string, 1: int} raw PCM and its sample rate */
-    private function call(SpeechScript $script, string $model): array
+    /**
+     * @return array{0: string, 1: int}|null raw PCM and its sample rate; null — the vendor refused a batch
+     *                                       read as turns (400), and the other form is worth its request
+     */
+    private function call(SpeechScript $script, string $model, bool $asTurns): ?array
     {
         $url = rtrim($this->baseUrl, '/').'/models/'.$model.':generateContent';
 
@@ -107,10 +126,10 @@ final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
             ])
                 ->timeout($this->timeout)
                 ->post($url, [
-                    'contents' => [['parts' => [['text' => self::prompt($script)]]]],
+                    'contents' => [['parts' => [['text' => self::prompt($script, $asTurns)]]]],
                     'generationConfig' => [
                         'responseModalities' => ['AUDIO'],
-                        'speechConfig' => self::speechConfig($script),
+                        'speechConfig' => self::speechConfig($script, $asTurns),
                     ],
                 ]));
         } catch (ConnectionException $e) {
@@ -122,6 +141,9 @@ final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
         }
         if ($response->serverError()) {
             throw TransientSpeechError::upstream('gemini', $response->status());
+        }
+        if ($response->status() === 400 && $script->isBatch() && $asTurns) {
+            return null;
         }
         if ($response->failed()) {
             throw new RuntimeException('Gemini speech error: '.$response->status().' '.$response->body());
@@ -164,9 +186,21 @@ final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
         return $out;
     }
 
-    private static function prompt(SpeechScript $script): string
+    private static function prompt(SpeechScript $script, bool $asTurns): string
     {
         $pace = self::pace(array_values($script->voices)[0]);
+        if ($script->isBatch() && $asTurns) {
+            $lines = implode("\n", array_map(
+                static fn (SpeechTurn $t, int $i): string => self::SPEAKER_NAMES[$i % 2].': '.trim($t->text),
+                $script->turns,
+                array_keys($script->turns),
+            ));
+
+            return 'TTS the following cards, read aloud by '.implode(' and ', self::SPEAKER_NAMES).' in turns — one card '
+                ."per turn, each card read once exactly as written, warm and natural, not announcers. {$pace}. "
+                ."Leave a clear pause between turns.\n\n"
+                .$lines;
+        }
         if ($script->isBatch()) {
             $lines = implode("\n", array_map(static fn (SpeechTurn $t): string => trim($t->text), $script->turns));
 
@@ -187,10 +221,18 @@ final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
     }
 
     /** @return array<string, mixed> */
-    private static function speechConfig(SpeechScript $script): array
+    private static function speechConfig(SpeechScript $script, bool $asTurns): array
     {
         if ($script->isBatch()) {
-            return ['voiceConfig' => ['prebuiltVoiceConfig' => ['voiceName' => array_values($script->voices)[0]->voice]]];
+            $voice = ['voiceConfig' => ['prebuiltVoiceConfig' => ['voiceName' => array_values($script->voices)[0]->voice]]];
+
+            // Turns: both readers speak in the batch's one voice.
+            return $asTurns
+                ? ['multiSpeakerVoiceConfig' => ['speakerVoiceConfigs' => array_map(
+                    static fn (string $name): array => ['speaker' => $name, ...$voice],
+                    self::SPEAKER_NAMES,
+                )]]
+                : $voice;
         }
         $names = self::names($script);
         $configs = [];

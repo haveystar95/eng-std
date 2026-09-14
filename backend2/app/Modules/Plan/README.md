@@ -124,7 +124,7 @@ reads plan tables.
 - Every check ships in `observe`; modes are flipped in `config/plan.php`, never in code.
 - QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN).
 - Ops: `plan:images-backfill {--plan=} {--requery}` — first the photos plans still lack, asked the search
-  ladder (prints «было пусто / стало»; `--requery` re-asks the words the bare word photographed), then tones and square copies for scene photos
+  ladder (prints «было пусто / стало»; `--requery` re-asks the words the bare word photographed and the words repeating a picture of their day), then tones and square copies for scene photos
   stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a
   missing copy on its own, so the copies part is an optimisation; the tones only come from here.
 - Ops: `plan:speak-backfill {--plan=} {--count}` (DAY-UI-3) — what scenes still do not say in the

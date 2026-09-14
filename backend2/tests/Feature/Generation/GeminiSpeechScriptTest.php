@@ -89,6 +89,50 @@ it('speaks a dialogue in one request with both voices and cuts the answer into i
         ->and($lines[0]->durationMs)->toBeGreaterThan($lines[1]->durationMs);
 });
 
+function geminiWords(): SpeechScript
+{
+    $male = new LineVoice('gemini', 'gemini-2.5-flash-preview-tts', 'Puck', 0.9);
+
+    return new SpeechScript('en', array_map(static fn (string $w): SpeechTurn => new SpeechTurn('male', $w), ['leg', 'worse', 'numbness', 'muscle strain']), ['male' => $male]);
+}
+
+function geminiAudio(array $lines): array
+{
+    return ['candidates' => [['content' => ['parts' => [['inlineData' => [
+        'mimeType' => 'audio/L16;codec=pcm;rate=24000',
+        'data' => base64_encode(geminiSound($lines)),
+    ]]]]]]];
+}
+
+// Live 14.09: six phrases sent as a one-voice list came back as 2.2 s — one phrase. Catches a batch sent in the form
+// the vendor cuts short, and a second attempt that repeats the form that just failed.
+it('reads a batch as turns of two readers in the batch’s one voice, and asks the plain list once when turns are refused', function () {
+    $words = ['leg', 'worse', 'numbness', 'muscle strain'];
+    Http::fake(['gemini.test/*' => Http::sequence()
+        ->push(['error' => ['code' => 400, 'message' => 'speakers must differ']], 400)
+        ->push(geminiAudio($words))]);
+
+    $lines = geminiVendor()->speakScript(geminiWords());
+
+    expect($lines)->toHaveCount(4);
+    $sent = Http::recorded()->map(static fn (array $pair): Request => $pair[0])->values();
+    expect($sent)->toHaveCount(2);
+    $turns = $sent[0]['generationConfig']['speechConfig']['multiSpeakerVoiceConfig']['speakerVoiceConfigs'] ?? [];
+    expect(array_column($turns, 'speaker'))->toBe(['Alex', 'Sam'])
+        ->and(array_column(array_column($turns, 'voiceConfig'), 'prebuiltVoiceConfig'))->toBe([['voiceName' => 'Puck'], ['voiceName' => 'Puck']])
+        ->and((string) $sent[0]['contents'][0]['parts'][0]['text'])->toContain("Alex: leg\nSam: worse\nAlex: numbness\nSam: muscle strain")
+        ->and($sent[1]['generationConfig']['speechConfig']['voiceConfig']['prebuiltVoiceConfig']['voiceName'] ?? null)->toBe('Puck')
+        ->and((string) $sent[1]['contents'][0]['parts'][0]['text'])->toContain("leg\nworse\nnumbness\nmuscle strain");
+});
+
+it('buys a batch the vendor reads as turns in one request', function () {
+    Http::fake(['gemini.test/*' => Http::response(geminiAudio(['leg', 'worse', 'numbness', 'muscle strain']))]);
+
+    expect(geminiVendor()->speakScript(geminiWords()))->toHaveCount(4);
+    Http::assertSentCount(1);
+    Http::assertSent(static fn (Request $r): bool => isset($r['generationConfig']['speechConfig']['multiSpeakerVoiceConfig']));
+});
+
 // Catches a sound that did not cut being stored under the wrong lines — and a second chance never taken.
 it('asks once more when the sound does not cut, then gives up without a wrong cut', function () {
     Http::fake(['gemini.test/*' => Http::response(['candidates' => [['content' => ['parts' => [['inlineData' => [
