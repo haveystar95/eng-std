@@ -53,18 +53,17 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
 
   DayVoice get _voiceNow => _voice ??= DayVoice(lines: ref.read(lineAudioCacheProvider), targetLang: _plan.targetLang)..warmUp();
 
-  /// Голос фраз и реплик собеседника — докачка файлов сервера, как только окно их узнало.
+  /// Голос реплик собеседника — докачка файлов сервера, как только окно их узнало. Фразы ученика
+  /// сервер не озвучивает: премиум-голос — реплики роли, фразу читает телефон.
   void _prepareVoice(DayWindow window) {
     final lines = <LineAudioRef>[
-      for (final p in window.program.phrases)
-        if (p.audioUrl case final url?) (text: p.text, url: url),
       for (final pair in window.program.dialogue)
         if (pair.partner?.audioUrl case final url?) (text: pair.partner!.text, url: url),
     ];
     if (lines.isNotEmpty) unawaited(_voiceNow.preload(lines));
   }
 
-  void _listen(String text, String? audioUrl, {required bool partner}) {
+  void _listen(String text, {required bool partner}) {
     final voice = _voiceNow;
     unawaited(partner ? voice.speakLine(text) : voice.speak(text));
   }

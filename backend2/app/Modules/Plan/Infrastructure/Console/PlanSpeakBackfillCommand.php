@@ -7,26 +7,28 @@ namespace App\Modules\Plan\Infrastructure\Console;
 use App\Modules\Generation\Application\Port\TransientSpeechError;
 use App\Modules\Plan\Application\Command\SpeakSceneLines;
 use App\Modules\Plan\Application\Command\SpeakSceneLinesHandler;
+use App\Modules\Plan\Application\Service\RoleLineQueue;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
- * `plan:speak-backfill {--plan=}` — the voiced lines existing scenes still lack (DAY-UI-2): the phrases
- * the day window's «прослушать» plays were never spoken before this order, and a line lost to a
- * vendor limit stayed missing once its job gave up. Runs the queue's own idempotent handler (only
- * missing lines are bought), scene by scene, and waits the vendor's per-minute limit out instead of
- * failing. Prints «было / стало» — the lines stored before and after.
+ * `plan:speak-backfill {--plan=} {--count}` — the partner's lines existing scenes still lack: a line
+ * lost to a vendor limit stays missing once its job gives up. Only the ROLE's lines — the premium
+ * voice is theirs; the learner's phrases and the words are the phone's voice (owner, closing
+ * DAY-UI-2). Runs the queue's own idempotent handler scene by scene, waits the vendor's per-minute
+ * limit out instead of failing, and prints how many role lines are still not voiced, before and
+ * after. `--count` only counts: nothing is bought.
  *
  * Writes `plan_line_audios` and files on `plan.audio_disk` — take the database backup first, as for
  * any write to the dev database.
  */
 final class PlanSpeakBackfillCommand extends Command
 {
-    protected $signature = 'plan:speak-backfill {--plan= : only this plan id}';
+    protected $signature = 'plan:speak-backfill {--plan= : only this plan id} {--count : only count the role lines not voiced yet}';
 
-    protected $description = 'Speak the lines plan scenes still lack (phrases, partner lines), waiting out the vendor rate limit';
+    protected $description = 'Voice the partner lines plan scenes still lack (the role\'s lines only), waiting out the vendor rate limit';
 
     /**
      * Waits in a row on one scene, a minute each. A scene finished resets the count: the vendor lets
@@ -35,7 +37,7 @@ final class PlanSpeakBackfillCommand extends Command
      */
     private const MAX_WAITS = 10;
 
-    public function handle(SpeakSceneLinesHandler $handler): int
+    public function handle(SpeakSceneLinesHandler $handler, RoleLineQueue $queue): int
     {
         $option = $this->option('plan');
         if (is_string($option) && $option !== '' && ! Ulid::isValid($option)) {
@@ -53,8 +55,21 @@ final class PlanSpeakBackfillCommand extends Command
             ->orderBy('plan_scenes.id')
             ->pluck('plan_scenes.id')
             ->all();
-        $stored = static fn (): int => $scenes === [] ? 0 : DB::table('plan_line_audios')->whereIn('scene_id', $scenes)->count();
-        $before = $stored();
+        $owed = static function () use ($scenes, $queue): int {
+            $count = 0;
+            foreach ($scenes as $sceneId) {
+                $count += count($queue->owed(PlanSceneId::fromString($sceneId))->lines ?? []);
+            }
+
+            return $count;
+        };
+
+        $before = $owed();
+        if ($this->option('count') === true) {
+            $this->info(sprintf('Role lines not voiced yet, %d scenes: %d', count($scenes), $before));
+
+            return self::SUCCESS;
+        }
 
         foreach ($scenes as $sceneId) {
             $waits = 0;
@@ -73,7 +88,7 @@ final class PlanSpeakBackfillCommand extends Command
             }
         }
 
-        $this->info(sprintf('Voiced lines of %d scenes — before: %d · after: %d', count($scenes), $before, $stored()));
+        $this->info(sprintf('Role lines not voiced yet, %d scenes — before: %d · after: %d', count($scenes), $before, $owed()));
 
         return self::SUCCESS;
     }

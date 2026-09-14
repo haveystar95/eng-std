@@ -10,7 +10,9 @@ Tables: `plans`, `plan_scenes`, `plan_days`, `day_cards`, `plan_terms`, `plan_li
 (`#RRGGBB`, written in the same conditional UPDATE as the photo); `plan_terms.image_tone` (DAY-UI-2)
 — the tone of a word's photo, or of its slot when the search ladder found none (which is also the
 mark that the ladder was asked). `plan_line_audios` rows are named by the unit reference
-(`line_ref`: `x3` — the partner's line of exchange 3, `p2` — phrase 2). Files on disks, not tables:
+(`line_ref`: `x3` — the partner's line of exchange 3). The server voices the role's lines only; the
+learner's phrases and the words are the phone's voice (`p*` rows voiced on 14.09 before that canon
+stay, unread). Files on disks, not tables:
 spoken lines (`plan.audio_disk`, `plan-audio/…`) and the square copies of scene photos
 (`plan.image_disk`, `plan-images/<scene>/<112|448>.jpg`).
 
@@ -117,10 +119,11 @@ reads plan tables.
   ladder (DAY-UI-2; prints «было пусто / стало»), then tones and square copies for scene photos
   stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a
   missing copy on its own, so the copies part is an optimisation; the tones only come from here.
-- Ops: `plan:speak-backfill {--plan=}` (DAY-UI-2) — the spoken lines scenes still lack (the phrases
-  were never voiced before DAY-UI-2), through the queue's own idempotent handler, waiting out the
-  vendor's per-minute limit; prints the stored lines before and after. `SpeakSceneLinesJob` itself
-  retries a minute apart for half an hour for the same reason.
+- Ops: `plan:speak-backfill {--plan=} {--count}` (DAY-UI-2) — the partner's lines scenes still lack
+  (`RoleLineQueue` — the role's lines only), through the queue's own idempotent handler, waiting out
+  the vendor's per-minute limit; prints how many role lines are not voiced yet, before and after
+  (`--count` only counts). `SpeakSceneLinesJob` itself retries a minute apart for half an hour for
+  the same reason.
 - The plan languages are the server's list (`plan.languages`, `GET /plans/languages`), and
   `POST /plans` validates against it.
 - Notifications: `plan:notify-tick` (Presentation/Console, every 15 min in `routes/console.php`, run

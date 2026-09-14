@@ -135,7 +135,7 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 | `stages[5]` | words · phrases · dialogue · listen · speak: `state` `done` / `current` / `locked`; `done_count`, `total`, `minutes_left` — **только у `current`** (у остальных null: цифру клиент не рисует); `share` 0…1 — полоса ряда. У не начатого дня все `locked` |
 | `day_progress` | 0…1 — доля пройденных этапов; полоса компактной шапки |
 | `program.words` | `summary {total, done, returns}` + `items[{ref, term, translation, image, image_tone, state}]`; `state` — `pending` / `done` / `returns_tomorrow` |
-| `program.phrases` | `summary` + `items[{ref, text, translation, audio_url, state}]` |
+| `program.phrases` | `summary` + `items[{ref, text, translation, state}]` — голоса сервера нет: «прослушать» читает телефон |
 | `program.dialogue` | `summary` + `items[{step, partner {text, translation, audio_url}, learner {text, translation, state}}]` — состояние только у реплики ученика, голос только у собеседника |
 | `allowed_action` | `start` / `continue` / `again` / null — одна кнопка. `again` — «Говорю сам» ещё раз по `GET …/cards`, ответы не отправляются (не пересдача дня) |
 
@@ -149,9 +149,12 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 не ищется заново после каждого урока; счётчик `image_missing`. Догрузка существующих планов —
 `php artisan plan:images-backfill` (печатает «было пусто / стало»).
 
-**Голос фраз** (DAY-UI-2): `SpeakSceneLinesJob` озвучивает реплики собеседника И фразы урока, строки
-в `plan_line_audios` по ссылке единицы (`x3`, `p2`). Лимит вендора поминутный — job повторяется раз в
-минуту до получаса. Фразы сцен, собранных до наряда, — `php artisan plan:speak-backfill`.
+**Голос сервера — только реплики роли** (канон владельца при закрытии DAY-UI-2): `SpeakSceneLinesJob`
+озвучивает реплику собеседника каждого обмена (`RoleLineQueue`), строки в `plan_line_audios` по ссылке
+единицы (`x3`). Фразы ученика и слова — голос телефона. Лимит вендора — 10 запросов в минуту и 100 в
+сутки: job повторяется раз в минуту до получаса. Недостающие реплики роли существующих сцен —
+`php artisan plan:speak-backfill` (печатает, сколько реплик роли не озвучено, до и после; `--count` —
+только посчитать).
 
 Карточка (`PlanCard`): `stage`, `position`, `kind`, `source` (`today`/`returned`), `unit_kind` /
 `unit_ref`, `payload`, `retry_of`, `result`, `attempts`, `returns`. Состав `payload` по видам

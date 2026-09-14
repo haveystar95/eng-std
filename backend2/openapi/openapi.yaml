@@ -1928,8 +1928,8 @@ paths:
       tags: [Plans]
       summary: A spoken line of a scene as an audio file
       description: >-
-        The partner's line of an exchange or a phrase (DAY-UI-2) — the id a card's `audio_id` (and
-        a dialogue exchange's `audio_id`) names, and the file the day window's `audio_url` points at.
+        The partner's line of an exchange — the only lines the server voices — named by a card's
+        `audio_id` (and a dialogue exchange's `audio_id`); the day window's partner `audio_url` points here.
         `audio/mpeg` normally, `audio/wav` when the build had no encoder. Immutable — cache it forever.
       parameters:
         - name: audioId
@@ -2972,12 +2972,12 @@ components:
 
     PlanWindowPhrase:
       type: object
-      required: [ref, text, translation, audio_url, state]
+      description: A phrase of the phrases tab. No server voice — «прослушать» reads it with the phone's voice; the premium voice is the role's lines only.
+      required: [ref, text, translation, state]
       properties:
         ref: { type: string, description: '`p2`' }
         text: { type: string }
         translation: { type: string }
-        audio_url: { type: [string, 'null'], format: uri, description: 'The server''s voice of the phrase (`GET /plans/audio/{id}`); null when the scene has none — the phone reads it' }
         state: { $ref: '#/components/schemas/PlanWindowUnitState' }
 
     PlanWindowPair:

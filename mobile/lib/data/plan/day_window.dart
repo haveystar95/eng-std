@@ -157,19 +157,18 @@ class WindowWord {
   final WindowUnitState state;
 }
 
+/// Фраза ученика. Голоса сервера у неё нет: премиум-голос — реплики роли, фразу читает телефон.
 class WindowPhrase {
   const WindowPhrase({
     required this.ref,
     required this.text,
     required this.translation,
     required this.state,
-    this.audioUrl,
   });
 
   final String ref;
   final String text;
   final String translation;
-  final String? audioUrl;
   final WindowUnitState state;
 }
 
@@ -291,7 +290,6 @@ class DayWindow {
     ref: _string(p['ref'], 'phrase.ref'),
     text: _string(p['text'], 'phrase.text'),
     translation: _string(p['translation'], 'phrase.translation'),
-    audioUrl: p['audio_url'] as String?,
     state: WindowUnitState.fromWire(p['state']),
   );
 

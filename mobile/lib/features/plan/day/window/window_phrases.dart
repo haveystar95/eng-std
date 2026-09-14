@@ -7,11 +7,12 @@ import 'package:eng_std/ui/ui.dart';
 import '../../../../data/plan/day_window.dart';
 import 'window_bits.dart';
 
-/// Сказать строку: текст, адрес серверного голоса (или null — читает телефон), чья это реплика.
-typedef WindowListen = void Function(String text, String? audioUrl, {required bool partner});
+/// Сказать строку: текст и чья она — реплика собеседника звучит голосом сервера, если файл докачан,
+/// фраза ученика — голосом телефона.
+typedef WindowListen = void Function(String text, {required bool partner});
 
 /// ВКЛАДКА «ФРАЗЫ» (кадр 23-0d): маркер 14 у левой кромки, карточка бумаги со скруглением 16 —
-/// фраза Literata 17, перевод второй строкой и «прослушать» 28 справа.
+/// фраза Literata 17, перевод второй строкой и «прослушать» 28 справа (голос телефона).
 class WindowPhrases extends StatelessWidget {
   const WindowPhrases({super.key, required this.phrases, required this.onListen});
 
@@ -64,7 +65,7 @@ class _PhraseRow extends StatelessWidget {
               PlayCircle(
                 size: 28,
                 label: AppLocalizations.of(context).planWindowListen,
-                onTap: () => onListen(phrase.text, phrase.audioUrl, partner: false),
+                onTap: () => onListen(phrase.text, partner: false),
               ),
             ],
           ),

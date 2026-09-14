@@ -44,8 +44,8 @@ use App\Modules\Plan\Domain\ValueObject\WindowStatus;
  * The cards are the day's truth — dealt ones for an opened day, the dealer's outline for a day not
  * opened yet — so the programme lists exactly what the day deals, returned units included, and a
  * unit's state is its cards'. Two more reads for any number of cards: the terms of the scenes the
- * cards touch (a word's photo and tone) and the spoken lines of those scenes (the phrases' and the
- * partner's voice). Stages, minutes, states and summaries are the Domain's rules
+ * cards touch (a word's photo and tone) and the spoken lines of those scenes (the partner's voice —
+ * the only lines the server voices). Stages, minutes, states and summaries are the Domain's rules
  * (`DayWindowStages`, `DayPace`, `UnitStates`, `ProgramSummary`); this class only puts them side by
  * side.
  */
@@ -82,7 +82,7 @@ final readonly class DayWindowViews
         }
 
         [$words, $wordStates] = $this->words($plan, $cards, $states, $sceneTones, $sceneIds);
-        [$phrases, $phraseStates] = $this->phrases($cards, $states, $audioOf);
+        [$phrases, $phraseStates] = $this->phrases($cards, $states);
         [$dialogue, $lineStates] = $this->dialogue($cards, $states, $audioOf);
 
         $ownScene = $plan->sceneOf($day);
@@ -163,12 +163,14 @@ final readonly class DayWindowViews
     }
 
     /**
+     * The phrases carry no server voice: the premium voice is the role's lines, a phrase is read by
+     * the phone.
+     *
      * @param  list<DayCard>  $cards
      * @param  array<string, UnitState>  $states
-     * @param  callable(string, string): ?string  $audioOf
      * @return array{0: list<WindowPhraseView>, 1: list<UnitState>}
      */
-    private function phrases(array $cards, array $states, callable $audioOf): array
+    private function phrases(array $cards, array $states): array
     {
         $out = [];
         $unitStates = [];
@@ -187,7 +189,6 @@ final readonly class DayWindowViews
                 ref: $card->unitRef(),
                 text: self::text($payload, 'text_target'),
                 translation: self::text($payload, 'text_native'),
-                audioId: $audioOf($sceneId, $card->unitRef()),
                 state: $state->value,
             );
             $unitStates[] = $state;

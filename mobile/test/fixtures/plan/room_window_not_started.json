@@ -427,42 +427,36 @@
       "ref": "p1",
       "text": "My lower back hurts.",
       "translation": "У меня болит поясница.",
-      "audio_url": null,
       "state": "pending"
      },
      {
       "ref": "p2",
       "text": "It started three days ago.",
       "translation": "Это началось три дня назад.",
-      "audio_url": null,
       "state": "pending"
      },
      {
       "ref": "p3",
       "text": "It gets worse when I bend.",
       "translation": "Становится хуже, когда я наклоняюсь.",
-      "audio_url": null,
       "state": "pending"
      },
      {
       "ref": "p4",
       "text": "I don't have numbness or a fever.",
       "translation": "У меня нет онемения и температуры.",
-      "audio_url": null,
       "state": "pending"
      },
      {
       "ref": "p5",
       "text": "I'll rest for two days.",
       "translation": "Я буду отдыхать два дня.",
-      "audio_url": null,
       "state": "pending"
      },
      {
       "ref": "p6",
       "text": "Should I take any medicine?",
       "translation": "Мне нужно принимать какое-нибудь лекарство?",
-      "audio_url": null,
       "state": "pending"
      }
     ]

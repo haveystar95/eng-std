@@ -52,7 +52,7 @@ class _PartnerRow extends StatelessWidget {
         child: PlayCircle(
           size: 28,
           label: AppLocalizations.of(context).planWindowListen,
-          onTap: () => onListen(line.text, line.audioUrl, partner: true),
+          onTap: () => onListen(line.text, partner: true),
         ),
       ),
     ],

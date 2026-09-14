@@ -275,7 +275,6 @@ final class PlanJson
                         'ref' => $v->ref,
                         'text' => $v->text,
                         'translation' => $v->translation,
-                        'audio_url' => $audio($v->audioId),
                         'state' => $v->state,
                     ], $w->program->phrases),
                 ],

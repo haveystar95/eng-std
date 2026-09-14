@@ -163,8 +163,10 @@ it('refuses the window of a locked day: no «не начат», no button — ca
     expect($window['day']['status'])->toBe('locked')->and($window['allowed_action'])->toBeNull();
 });
 
-it('voices every phrase and the partner’s line, and marks the learner’s line instead — catches a marker on the partner’s bubble', function () {
-    $speaker = new class implements LineSpeaker
+/** A voice that says every line it is asked, and remembers which. */
+function windowSpeaker(): LineSpeaker
+{
+    return new class implements LineSpeaker
     {
         /** @var list<string> */
         public array $said = [];
@@ -181,6 +183,13 @@ it('voices every phrase and the partner’s line, and marks the learner’s line
             return 'test:aoede:p90';
         }
     };
+}
+
+// Canon (owner, closing DAY-UI-2): the premium voice is the role's lines; the learner's phrases and
+// the words are the phone's voice. Catches a phrase bought from the vendor, and a marker on the
+// partner's bubble.
+it('voices the partner’s lines only: the phrases stay on the phone’s voice, the learner’s line carries its state', function () {
+    $speaker = windowSpeaker();
     app()->instance(LineSpeaker::class, $speaker);
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 2])['id'];
@@ -189,17 +198,39 @@ it('voices every phrase and the partner’s line, and marks the learner’s line
     $phrases = $window['program']['phrases']['items'];
     $pair = $window['program']['dialogue']['items'][0];
 
-    expect(array_filter(array_column($phrases, 'audio_url'), static fn ($u): bool => ! is_string($u) || ! str_contains($u, '/api/v1/plans/audio/')))->toBe([])
+    expect($phrases)->not->toBeEmpty()
+        ->and(array_filter($phrases, static fn (array $p): bool => array_key_exists('audio_url', $p)))->toBe([])
         ->and($pair['partner'])->toHaveKeys(['text', 'translation', 'audio_url'])->not->toHaveKey('state')
         ->and($pair['partner']['audio_url'])->toContain('/api/v1/plans/audio/')
         ->and($pair['learner'])->toHaveKeys(['text', 'translation', 'state'])->not->toHaveKey('audio_url')
-        ->and(DB::table('plan_line_audios')->where('line_ref', 'like', 'p%')->count())->toBe(6)
-        ->and(DB::table('plan_line_audios')->where('line_ref', 'like', 'x%')->count())->toBe(8);
+        ->and(DB::table('plan_line_audios')->where('line_ref', 'like', 'p%')->count())->toBe(0)
+        ->and(DB::table('plan_line_audios')->where('line_ref', 'like', 'x%')->count())->toBe(8)
+        ->and(array_intersect($speaker->said, array_column($phrases, 'text')))->toBe([]);
 
-    // The phrase's file is the one the address names.
-    $path = parse_url((string) $phrases[0]['audio_url'], PHP_URL_PATH);
+    // The partner's file is the one the address names.
+    $path = parse_url((string) $pair['partner']['audio_url'], PHP_URL_PATH);
     $bytes = $this->withHeader('Authorization', "Bearer {$token}")->get((string) $path)->assertOk()->getContent();
-    expect($bytes)->toBe('mp3:'.$phrases[0]['text']);
+    expect($bytes)->toBe('mp3:'.$pair['partner']['text']);
+});
+
+// Catches a backfill that buys the learner's phrases again, and one that cannot say what is left.
+it('backfills the role’s lines a scene still lacks, never a phrase, and counts the role lines not voiced yet', function () {
+    $speaker = windowSpeaker();
+    app()->instance(LineSpeaker::class, $speaker);
+    [, $token] = planLearner();
+    planCreate($this, $token, ['days_total' => 2]);
+    DB::table('plan_line_audios')->whereIn('line_ref', ['x1', 'x2', 'x3'])->delete();
+    $speaker->said = [];
+
+    Artisan::call('plan:speak-backfill', ['--count' => true]);
+    expect(Artisan::output())->toContain('Role lines not voiced yet, 1 scenes: 3')
+        ->and($speaker->said)->toBe([]);
+
+    Artisan::call('plan:speak-backfill');
+    expect(Artisan::output())->toContain('before: 3 · after: 0')
+        ->and($speaker->said)->toHaveCount(3)
+        ->and(DB::table('plan_line_audios')->where('line_ref', 'like', 'x%')->count())->toBe(8)
+        ->and(DB::table('plan_line_audios')->where('line_ref', 'like', 'p%')->count())->toBe(0);
 });
 
 it('finds a photo for a word the lesson gave no description — by the word itself (находка PHONE-RUN-1 №4)', function () {

@@ -8,9 +8,10 @@ use App\Modules\Plan\Application\Dto\LineAudioRow;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 
 /**
- * The audio files of a scene's spoken lines — the partner's line of each exchange and, since
- * DAY-UI-2, each phrase: bytes on a disk, one row per (scene, line reference, voice). The row is
- * what a reader resolves an address from; the file is read only on download.
+ * The audio files of a scene's spoken lines — the partner's line of each exchange (the premium voice is
+ * the role's lines; the learner's phrases and the words are the phone's): bytes on a disk, one row per
+ * (scene, line reference, voice). The row is what a reader resolves an address from; the file is read
+ * only on download.
  */
 interface LineAudioStore
 {
