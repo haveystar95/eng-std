@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -127,6 +130,47 @@ void main() {
       expect(s.nextStage, isNull);
     });
   });
+
+  // «ЕЩЁ РАЗ» У ПРОЙДЕННОГО ДНЯ (наряд DAY-UI-2 §1): повторный «Говорю сам», не пересдача дня.
+  // Карточки — живой ответ `GET …/cards` пройденного дня (`test/fixtures/plan/cards_window_passed.json`).
+  group('«Ещё раз»', () {
+    List<DayCard> passedDay() {
+      final json = jsonDecode(File('test/fixtures/plan/cards_window_passed.json').readAsStringSync()) as Map<String, dynamic>;
+
+      return [for (final c in (json['cards'] as List).cast<Map<String, dynamic>>()) ?DayCard.fromJson(c)];
+    }
+
+    // ЛОВИТ: «Ещё раз», открывающий весь день заново, или «Говорю сам» с ответами и повторами
+    // прошлого прохода — человек увидел бы уже закрытые карточки.
+    test('только «Говорю сам», по разу на обмен, ни одной отвеченной', () {
+      final cards = passedDay();
+      final again = DaySession.rehearsalOf(cards);
+
+      expect(again, isNotEmpty);
+      expect(again.map((c) => c.stage).toSet(), {PlanStage.speak});
+      expect(again.where((c) => c.retryOf != null || c.isAnswered), isEmpty);
+      expect(again.length, cards.where((c) => c.stage == PlanStage.speak && c.retryOf == null).length);
+    });
+
+    // ЛОВИТ: пересдачу — ответы повтора ушли бы на сервер поверх пройденного дня, этап и день
+    // закрылись бы второй раз.
+    test('ответы не уходят на сервер, этап и день не закрываются', () async {
+      final api = _Api();
+      final s = DaySession(api: api, planId: 'p', number: 1, returnDay: 2, cards: DaySession.rehearsalOf(passedDay()), rehearsal: true)
+        ..startStage();
+      while (s.phase == DayPhase.card) {
+        await s.answer(s.current!, DayCardResult.failed, attempts: 2);
+        s.next();
+      }
+      await s.closeStage();
+      await s.closeDay();
+
+      expect(s.phase, DayPhase.dayDone);
+      expect(api.answers, isEmpty);
+      expect(api.closedStages, isEmpty);
+      expect(api.closedDays, 0);
+    });
+  });
 }
 
 DayCard _card(String id, PlanStage stage, DayCardKind kind, int position, {DayCardResult? result, String? retryOf, bool returns = false}) => DayCard(
@@ -216,15 +260,19 @@ class _Api extends ApiClient {
     return _room();
   }
 
+  int closedDays = 0;
+
   @override
-  Future<PlanDayRoom> closeDay(String planId, int number) async => _room();
+  Future<PlanDayRoom> closeDay(String planId, int number) async {
+    closedDays++;
+
+    return _room();
+  }
 
   PlanDayRoom _room() => PlanDayRoom(
     planId: 'p',
     day: PlanDayRoute.fromJson(const {'id': 'd1', 'number': 1, 'type': 'scene', 'status': 'in_progress'}),
-    goalsNative: const [],
     stages: const [],
     program: const [],
-    sheetAvailable: false,
   );
 }

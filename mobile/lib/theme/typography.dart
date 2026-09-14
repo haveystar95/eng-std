@@ -695,136 +695,6 @@ abstract final class AppTextExercise {
 /// Literata — всё на изучаемом языке и названия дней; Inter — русский UI, числа и лейблы.
 /// Табличные цифры там, где числа стоят колонкой (счётчики этапов, числа плиты).
 abstract final class AppTextDay {
-  /// Лейбл плиты «ДЕНЬ N» — латунь 11/700/.14em.
-  static const plateLabel = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w700,
-    fontSize: 11,
-    letterSpacing: 1.54,
-    color: AppColors.brass,
-  );
-
-  /// Название дня на плите — Literata 30/500/1.1 · −.02em.
-  static const plateTitle = TextStyle(
-    fontFamily: AppFonts.literata,
-    fontWeight: FontWeight.w500,
-    fontSize: 30,
-    height: 1.1,
-    letterSpacing: -0.6,
-    color: AppColors.paper,
-  );
-
-  /// Состав «75 карточек · ≈ 20 минут · Начинающий» — 15, бумага .72.
-  static const plateMeta = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w400,
-    fontSize: 15,
-    color: AppColors.paper72,
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
-
-  /// Строка «научишься» — 15, бумага .9.
-  static const plateGoal = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w400,
-    fontSize: 15,
-    height: 1.3,
-    color: AppColors.paper90,
-  );
-
-  /// Имя этапа — 15/400; текущий — 17/600.
-  static const plateStage = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w400,
-    fontSize: 15,
-    color: AppColors.paper,
-  );
-  static const plateStageCurrent = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w600,
-    fontSize: 17,
-    color: AppColors.paper,
-  );
-
-  /// Вторая строка текущего этапа — 14, бумага .65.
-  static const plateStageSub = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w400,
-    fontSize: 14,
-    color: AppColors.paper65,
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
-
-  /// Счётчик этапа в колонке 64 — 15/600 tabular.
-  static const plateCount = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w600,
-    fontSize: 15,
-    color: AppColors.paper,
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
-
-  /// Три числа идущего дня — Literata 26/400.
-  static const plateNumber = TextStyle(
-    fontFamily: AppFonts.literata,
-    fontWeight: FontWeight.w400,
-    fontSize: 26,
-    height: 1,
-    letterSpacing: -0.26,
-    color: AppColors.paper,
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
-
-  /// Три числа закрытого дня — Literata 56/400/.9 · −.04em; «%» — 28.
-  static const plateNumberBig = TextStyle(
-    fontFamily: AppFonts.literata,
-    fontWeight: FontWeight.w400,
-    fontSize: 56,
-    height: 0.9,
-    letterSpacing: -2.24,
-    color: AppColors.paper,
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
-  static const plateNumberBigUnit = TextStyle(
-    fontFamily: AppFonts.literata,
-    fontWeight: FontWeight.w400,
-    fontSize: 28,
-    height: 0.9,
-    color: AppColors.paper,
-  );
-  static const plateNumberUnit = TextStyle(
-    fontFamily: AppFonts.literata,
-    fontWeight: FontWeight.w400,
-    fontSize: 16,
-    height: 1,
-    color: AppColors.paper,
-  );
-
-  /// Лейблы чисел — латунь 11/700/.12em caps.
-  static const plateNumberLabel = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w700,
-    fontSize: 11,
-    letterSpacing: 1.32,
-    color: AppColors.brass,
-  );
-
-  /// «День N закрыт» — Literata 23/500.
-  static const plateClosedTitle = TextStyle(
-    fontFamily: AppFonts.literata,
-    fontWeight: FontWeight.w500,
-    fontSize: 23,
-    letterSpacing: -0.23,
-    color: AppColors.paper,
-  );
-
-  /// Бумажная кнопка на плите — 17/700 ink.
-  static const plateButton = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w700,
-    fontSize: 17,
-    color: AppColors.ink,
-  );
 
   /// Лейбл секции на бумаге — 11/700/.14em tertiary caps («СЛОВА · 8», «НАУЧИШЬСЯ»).
   static const sectionLabel = TextStyle(
@@ -852,22 +722,7 @@ abstract final class AppTextDay {
     color: AppColors.paper,
   );
 
-  /// Слово в сетке программы — Literata 18/500/1.2.
-  static const gridWord = TextStyle(
-    fontFamily: AppFonts.literata,
-    fontWeight: FontWeight.w500,
-    fontSize: 18,
-    height: 1.2,
-    color: AppColors.ink,
-  );
-
-  /// Перевод в сетке — 14 secondary; в строке фразы — 15.
-  static const gridTranslation = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w400,
-    fontSize: 14,
-    color: AppColors.secondary,
-  );
+  /// Перевод строкой под словом во входе в этап — 15 secondary.
   static const rowTranslation = TextStyle(
     fontFamily: AppFonts.inter,
     fontWeight: FontWeight.w400,
@@ -1172,30 +1027,6 @@ abstract final class AppTextDay {
     color: AppColors.ink,
   );
 
-  /// Шит термина: слово Literata 28/500; перевод 16 secondary; чтение 15; определение italic 15.
-  static const sheetWord = TextStyle(
-    fontFamily: AppFonts.literata,
-    fontWeight: FontWeight.w500,
-    fontSize: 28,
-    height: 1.1,
-    letterSpacing: -0.56,
-    color: AppColors.ink,
-  );
-  static const sheetDefinition = TextStyle(
-    fontFamily: AppFonts.literata,
-    fontStyle: FontStyle.italic,
-    fontWeight: FontWeight.w400,
-    fontSize: 15,
-    height: 1.45,
-    color: AppColors.inkBody,
-  );
-  static const sheetState = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w600,
-    fontSize: 14,
-    color: AppColors.verdictKnown,
-  );
-
   /// Заголовок диалога «Весь разговор» — Literata 26/500; подзаголовок 14 secondary.
   static const dialogueTitle = TextStyle(
     fontFamily: AppFonts.literata,
@@ -1206,24 +1037,148 @@ abstract final class AppTextDay {
     color: AppColors.ink,
   );
 
-  /// Карточки закрытого дня: «Далось труднее всего» — Literata 18/500 + «3 попытки» 14 tertiary;
-  /// «В работе» — 16 ink; «Вернутся в день 3 · 3 карточки» — 15/600 терракота.
-  static const hardest = TextStyle(
+}
+
+/// ОКНО ДНЯ — кадры 23-0a … 23-0d канвы plan-canvas (наряд DAY-UI-2). Кегли только из кадров:
+/// 11 лейблы caps, 13 статусы, 15 текст и вкладки, 17 слова и фразы на изучаемом языке, 44 название
+/// дня. Литеры — Literata у изучаемого языка и названия, Inter у всего остального.
+abstract final class AppTextWindow {
+  /// Бровь «ДЕНЬ 2» — 13/600, .08em, строка 18, светлая латунь.
+  static const brow = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w600,
+    fontSize: 13,
+    height: 18 / 13,
+    letterSpacing: 1.04,
+    color: AppColors.windowBrow,
+  );
+
+  /// Название дня — Literata 44/500, строка 48, −.02em.
+  static const title = TextStyle(
     fontFamily: AppFonts.literata,
     fontWeight: FontWeight.w500,
-    fontSize: 18,
-    color: AppColors.ink,
+    fontSize: 44,
+    height: 48 / 44,
+    letterSpacing: -0.88,
+    color: AppColors.paper,
   );
-  static const inWork = TextStyle(
+
+  /// «не начат · ≈ 20 минут» — 13, строка 18.
+  static const status = TextStyle(
     fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w400,
-    fontSize: 16,
-    color: AppColors.ink,
+    fontSize: 13,
+    height: 18 / 13,
+    color: AppColors.windowStatus,
   );
-  static const willReturn = TextStyle(
+
+  /// «НАУЧИШЬСЯ» — 11/600, .08em, строка 14.
+  static const label = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w600,
+    fontSize: 11,
+    height: 14 / 11,
+    letterSpacing: 0.88,
+    color: AppColors.windowAhead,
+  );
+
+  /// Цель — 15, строка 20, бумага.
+  static const goal = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontSize: 15,
+    height: 20 / 15,
+    color: AppColors.paper,
+  );
+
+  /// Имя этапа — 15/500 (текущий 600), строка 20.
+  static const stage = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w500,
+    fontSize: 15,
+    height: 20 / 15,
+    color: AppColors.paper,
+  );
+
+  /// Слово состояния этапа — 13.
+  static const stageState = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontSize: 13,
+    height: 20 / 13,
+    color: AppColors.windowAhead,
+  );
+
+  /// «6 / 16» у текущего этапа — 15/600, табличные цифры.
+  static const stageCount = TextStyle(
     fontFamily: AppFonts.inter,
     fontWeight: FontWeight.w600,
     fontSize: 15,
-    color: AppColors.destructiveText,
+    height: 20 / 15,
+    color: AppColors.paper,
+    fontFeatures: _tabular,
+  );
+
+  /// «День пройден · 19 минут» — 17/600.
+  static const passed = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w600,
+    fontSize: 17,
+    height: 20 / 17,
+    color: AppColors.paper,
+  );
+
+  /// Компактная шапка: «День 2 · Приём у врача» 15/600 и «≈ 20 мин» 13 tertiary.
+  static const compactTitle = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w600,
+    fontSize: 15,
+    height: 20 / 15,
+    color: AppColors.ink,
+  );
+  static const compactMinutes = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontSize: 13,
+    color: AppColors.tertiary,
+  );
+
+  /// Вкладка — 15/600: активная ink, остальные secondary.
+  static const tab = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w600,
+    fontSize: 15,
+    color: AppColors.secondary,
+  );
+
+  /// Бровь вкладки «СЛОВА · 8 · 5 ПРОЙДЕНО» — 11/600, .08em, строка 14, tertiary.
+  static const tabBrow = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w600,
+    fontSize: 11,
+    height: 14 / 11,
+    letterSpacing: 0.88,
+    color: AppColors.tertiary,
+  );
+
+  /// Слово, фраза, реплика — Literata 17/500, строка 24.
+  static const target = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w500,
+    fontSize: 17,
+    height: 24 / 17,
+    color: AppColors.ink,
+  );
+
+  /// Перевод второй строкой — 15, строка 20, secondary.
+  static const translation = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontSize: 15,
+    height: 20 / 15,
+    color: AppColors.secondary,
+  );
+
+  /// Кнопка главного действия — 17/600 бумагой.
+  static const action = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w600,
+    fontSize: 17,
+    color: AppColors.paper,
   );
 }

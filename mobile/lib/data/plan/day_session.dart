@@ -34,6 +34,7 @@ class DaySession extends ChangeNotifier {
     required this.number,
     required List<DayCard> cards,
     required this.returnDay,
+    this.rehearsal = false,
   }) : _cards = List.of(cards) {
     _stages = [
       for (final s in PlanStage.known)
@@ -48,6 +49,18 @@ class DaySession extends ChangeNotifier {
 
   /// Номер дня, в который вернётся неудавшаяся карточка — «Вернётся в день N».
   final int returnDay;
+
+  /// «ЕЩЁ РАЗ» У ПРОЙДЕННОГО ДНЯ (наряд DAY-UI-2): «Говорю сам» заново по карточкам, которые у дня
+  /// уже есть. Не пересдача: ответы не уходят на сервер, повторов в конце этапа нет, этап и день не
+  /// закрываются — пройденный день остаётся тем, чем его закрыли.
+  final bool rehearsal;
+
+  /// Карточки «Говорю сам» пройденного дня, чистые — без ответов и без повторов, которые сервер
+  /// ставил в конец этапа.
+  static List<DayCard> rehearsalOf(List<DayCard> cards) => [
+    for (final c in cards)
+      if (c.stage == PlanStage.speak && c.retryOf == null) c.fresh(),
+  ];
 
   final List<DayCard> _cards;
   late List<PlanStage> _stages;
@@ -219,6 +232,13 @@ class DaySession extends ChangeNotifier {
     _error = null;
     _attempts[card.id] = attempts;
     if (spokenText != null) _spoken[card.id] = spokenText;
+    if (rehearsal) {
+      _replace(card.copyWith(result: result, attempts: attempts));
+      _busy = false;
+      notifyListeners();
+
+      return;
+    }
     notifyListeners();
     try {
       final outcome = await api.answerDayCard(planId, number, card.id, result: result, attempts: attempts);
@@ -260,7 +280,7 @@ class DaySession extends ChangeNotifier {
     notifyListeners();
     PlanDayRoom? room;
     try {
-      room = await api.closeStage(planId, number, s);
+      if (!rehearsal) room = await api.closeStage(planId, number, s);
     } catch (e) {
       // Этап, который сервер уже считает закрытым, — не ошибка; всё остальное — показать и дать
       // повторить.
@@ -287,11 +307,29 @@ class DaySession extends ChangeNotifier {
     return room;
   }
 
-  /// Закрыть день — кабинет с метриками.
-  Future<PlanDayRoom> closeDay() => api.closeDay(planId, number);
+  /// Закрыть день. У «Ещё раз» закрывать нечего — день уже пройден.
+  Future<void> closeDay() async {
+    if (rehearsal) return;
+    await api.closeDay(planId, number);
+  }
 }
 
 extension on DayCard {
+  /// Та же карточка, ещё не отвеченная.
+  DayCard fresh() => DayCard(
+    id: id,
+    stage: stage,
+    position: position,
+    kind: kind,
+    source: source,
+    sourceDayId: sourceDayId,
+    unitKind: unitKind,
+    unitRef: unitRef,
+    payload: payload,
+    attempts: 0,
+    returns: false,
+  );
+
   DayCard copyWith({DayCardResult? result, int? attempts}) => DayCard(
     id: id,
     stage: stage,

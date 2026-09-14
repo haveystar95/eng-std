@@ -2069,47 +2069,84 @@
   },
   "planEntryOffline": "The plan cannot be built without a network",
   "@planEntryOffline": {},
+  "planWindowBack": "Back",
+  "planWindowStateNotStarted": "not started",
+  "planWindowStateInProgress": "in progress",
+  "planWindowStatePassed": "passed",
+  "planWindowApprox": "≈ {minutes}",
+  "@planWindowApprox": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "planWindowJoin": "{first} · {second}",
+  "@planWindowJoin": {
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "planWindowGoalsLabel": "you will learn to",
+  "planWindowStageCount": "{done} / {total}",
+  "@planWindowStageCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "planWindowPassedLine": "Day passed · {minutes}",
+  "@planWindowPassedLine": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "planWindowBrowDone": "{n} passed",
+  "@planWindowBrowDone": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planWindowBrowReturns": "{n, plural, one{{n} returns tomorrow} other{{n} return tomorrow}}",
+  "@planWindowBrowReturns": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planWindowCtaAgain": "Once more",
+  "planWindowListen": "Listen",
   "profileRowSounds": "Sounds",
   "@profileRowSounds": {},
   "profileSoundsHint": "Correct · wrong · stage closed · day closed",
   "@profileSoundsHint": {},
-  "dayLabel": "Day {n}",
   "dayCards": "{n, plural, one{{n} card} other{{n} cards}}",
   "dayMinutes": "{n, plural, one{{n} minute} other{{n} minutes}}",
   "dayApproxMinutes": "≈ {n, plural, one{{n} minute} other{{n} minutes}}",
   "dayApproxMin": "≈ {n} min",
-  "dayLevelBeginner": "Beginner",
-  "dayLevelIntermediate": "Intermediate",
-  "dayGoalLabel": "You will learn to",
   "dayStageWords": "Words",
   "dayStagePhrases": "Phrases",
   "dayStageDialogue": "Dialogue",
   "dayStageListen": "Listen and answer",
   "dayStageSpeak": "Speak myself",
-  "dayStageCount": "{done} / {total}",
-  "dayNewWords": "{n, plural, one{{n} new word} other{{n} new words}}",
-  "dayStageSubStart": "start here · {what}",
-  "dayStageSubUnfinished": "unfinished · {cards} · {minutes}",
-  "dayStageSubHinted": "{n} with a hint",
-  "dayCtaStart": "Start",
-  "dayCtaContinue": "Continue · {n} left",
-  "dayCtaPlan": "To the plan",
-  "dayClosedTitle": "Day {n} closed",
-  "dayNumCards": "{n, plural, one{card} other{cards}}",
-  "dayNumMinutes": "{n, plural, one{minute} other{minutes}}",
-  "dayNumFirstTry": "first try",
-  "daySectionWords": "Words · {n}",
-  "daySectionPhrases": "Phrases · {n}",
-  "daySectionTalk": "Conversation · {n, plural, one{{n} exchange} other{{n} exchanges}}",
   "dayFromDay": "from day {n}",
-  "dayWordsExtra": "+ {n} from day {d}",
-  "dayHardest": "Hardest of all",
-  "dayTries": "{n, plural, one{{n} try} other{{n} tries}}",
-  "dayInWork": "In progress",
   "dayWordsCount": "{n, plural, one{{n} word} other{{n} words}}",
   "dayPhrasesCount": "{n, plural, one{{n} phrase} other{{n} phrases}}",
   "dayExchangesCount": "{n, plural, one{{n} exchange} other{{n} exchanges}}",
-  "dayWillReturn": "{k, plural, one{Returns on day {n} · {k} card} other{Return on day {n} · {k} cards}}",
   "dayShellCounter": "{stage} · {done} of {total}",
   "dayEntryLabel": "Stage {n} of 5",
   "dayEntryLine": "{units} · {cards} · {minutes}",
@@ -2124,7 +2161,6 @@
   "dayEntryCta": "Start",
   "dayEntryResumeCta": "Continue",
   "dayIntroBadgeNew": "new word",
-  "dayIntroBadgeRepeat": "review",
   "dayIntroCta": "Got it",
   "dayReturnedBadge": "Returned from day {n}",
   "dayPhraseBadgeNew": "new phrase",
@@ -2173,18 +2209,10 @@
   "dayExitBody": "You are on {stage} · {done} of {total}. Your progress is saved",
   "dayExitStay": "Stay",
   "dayExitLeave": "Leave",
-  "daySheetStatePassed": "passed · day {n}",
-  "daySheetStateHinted": "with a hint · day {n}",
-  "daySheetStateReturns": "returns on day {n}",
-  "daySheetInTalk": "In the conversation",
-  "daySheetRoleYou": "You:",
   "dayNoVoice": "no recording — the phone reads it",
   "dayLockedByDay": "Finish day {n} first",
   "dayLockedUntil": "Opens {date}",
   "dayLessonBuilding": "Building the day · about a minute",
   "dayLessonFailed": "The day did not build",
-  "dayLessonRetry": "Retry",
-  "dayBack": "Back",
-  "dayTabTitle": "Plan",
-  "dayTabRoute": "Route"
+  "dayLessonRetry": "Retry"
 }

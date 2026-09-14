@@ -159,17 +159,4 @@ abstract final class DayRules {
 
   /// Оценка «≈ N минут» для входа в этап: у сервера минут на этап нет, клиент считает грубо.
   static int estimateMinutes(int cards) => cards <= 0 ? 0 : ((cards * 13) / 60).ceil();
-
-  /// Процент «с первого раза» по карточкам: оценённые (не intro) карточки без повторов,
-  /// закрытые `passed` с первой попытки, ÷ все оценённые. Null без оценённых. Для идущего дня —
-  /// у сервера метрик ещё нет; закрытый день показывает СЕРВЕРНЫЙ `first_try_share`.
-  static int? firstTryPercent(List<DayCard> cards) {
-    var graded = 0, first = 0;
-    for (final c in cards) {
-      if (c.kind.isIntro || c.result == null || c.retryOf != null) continue;
-      graded++;
-      if (c.result == DayCardResult.passed && c.attempts <= 1) first++;
-    }
-    return graded == 0 ? null : (first * 100 / graded).round();
-  }
 }

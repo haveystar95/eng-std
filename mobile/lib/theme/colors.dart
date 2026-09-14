@@ -155,7 +155,6 @@ abstract final class AppColors {
   /// не читается вовсе, поэтому канва развела два случая по светлоте, а не по alpha.
   static const destructiveOnPlate = Color(0xFFE2A08A);
 
-
   // ── ПЛАН · ДЕНЬ (токен-лист 4к–4о, кадры 23-x) ───────────────────────────
   //
   // Одна краска сверх чернил на карточку: латунь лейбла собеседника, шалфей/охра/терракота
@@ -186,13 +185,6 @@ abstract final class AppColors {
   /// Подложка пустого фото-слота — `#E3DCCF` (4и, 4н).
   static const photoSlot = Color(0xFFE3DCCF);
 
-  /// Материал под размытым снимком шапки кабинета, пока фото не приехало — `#3A312A` (23-0a).
-  static const plateUnderPhoto = Color(0xFF3A312A);
-
-  /// Скрим над снимком шапки: `rgba(51,42,35,.88)` → `rgba(41,34,25,.95)` (4н).
-  static const scrimTop = Color.fromARGB(224, 51, 42, 35);
-  static const scrimBottom = Color.fromARGB(242, 41, 34, 25);
-
   /// Бумага на плите в разных плотностях: подложка полоски `.14`, контур маркера «научишься»
   /// `.35`, вторичные строки `.5 / .65 / .72 / .9`.
   static const paperTrack = Color.fromARGB(36, 246, 243, 236);
@@ -201,9 +193,6 @@ abstract final class AppColors {
   static const paper65 = Color.fromARGB(166, 246, 243, 236);
   static const paper72 = Color.fromARGB(184, 246, 243, 236);
   static const paper90 = Color.fromARGB(230, 246, 243, 236);
-
-  /// Бумажная подложка `.9` под маркером в углу фото карточки слова (4н).
-  static const paperUnderMarker = Color.fromARGB(230, 246, 243, 236);
 
   /// Прозрачная бумага — верх градиента дока, из которого выходит кнопка.
   static const paperClear = Color(0x00F6F3EC);
@@ -254,6 +243,45 @@ abstract final class AppColors {
 
   /// Тень латунного узла дня — `0 2px 10px rgba(140,106,58,.28)`.
   static const routeCurrentGlow = Color.fromARGB(71, 140, 106, 58);
+
+  // ── Окно дня (канва plan-canvas, кадры 23-0a … 23-0d, наряд DAY-UI-2) ──
+
+  /// Плита окна под фото дня — `#2A231D`; им же залита плита, пока фото нет.
+  static const windowPlate = Color(0xFF2A231D);
+
+  /// Слой над фото плиты: `rgba(24,20,16,.86)` → `.82` на 150 → `.90` на 430 → `.96` у низа.
+  static const windowScrimTop = Color.fromARGB(219, 24, 20, 16);
+  static const windowScrimHigh = Color.fromARGB(209, 24, 20, 16);
+  static const windowScrimLow = Color.fromARGB(230, 24, 20, 16);
+  static const windowScrimBottom = Color.fromARGB(245, 24, 20, 16);
+
+  /// Тень плиты — `0 14px 30px rgba(24,20,16,.22)`.
+  static const windowPlateShadow = Color.fromARGB(56, 24, 20, 16);
+
+  /// Бровь «ДЕНЬ 2» светлой латунью — `#EFD9B4`.
+  static const windowBrow = Color(0xFFEFD9B4);
+
+  /// Строка статуса под названием — `#C8C0B4`.
+  static const windowStatus = Color(0xFFC8C0B4);
+
+  /// Лейбл «научишься», кружок цели, запертый этап — `#BDB6AC`.
+  static const windowAhead = Color(0xFFBDB6AC);
+
+  /// Пройденный этап на плите: значок и слово «пройдено» — `#9DB89F`, полоса — `#7FA184`.
+  static const windowDone = Color(0xFF9DB89F);
+  static const windowDoneBar = Color(0xFF7FA184);
+
+  /// «идёт · ≈ 8 мин» у текущего этапа — `#E3C08A`.
+  static const windowCurrent = Color(0xFFE3C08A);
+
+  /// Подложка полосы и хайрлайн на плите — `rgba(246,243,236,.16)`.
+  static const windowPaperLine = Color.fromARGB(41, 246, 243, 236);
+
+  /// Кнопка главного действия и своя реплика в диалоге — `#1B1A18`.
+  static const windowInk = Color(0xFF1B1A18);
+
+  /// Тень примагниченных вкладок — `0 8px 18px rgba(46,38,32,.07)`.
+  static const windowTabsShadow = Color.fromARGB(18, _inkR, _inkG, _inkB);
 
   /// Доминантный тон картинки с провода (`image.tone`, `#RRGGBB`) — заливка круга, пока картинка
   /// в пути (наряд PLAN-UI-3). Не цвет палитры, а цвет фотографии: поэтому он приходит с сервера и

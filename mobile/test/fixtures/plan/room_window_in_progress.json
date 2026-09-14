@@ -1,0 +1,589 @@
+{
+ "plan_id": "01M2FHN9Y6HRN80KSE1737ZDMZ",
+ "day": {
+  "id": "01M2FHN9Y7JC83Z7ZEN3MEDRPY",
+  "number": 1,
+  "type": "scene",
+  "status": "in_progress",
+  "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+  "title_native": "Приём у врача",
+  "title_target": "Doctor visit",
+  "teaches_native": "описать боль, понять назначения",
+  "lesson_status": "ready",
+  "opens_on": "2026-09-14",
+  "slot": {
+   "code": "today",
+   "date": "2026-09-14",
+   "label_native": "сегодня"
+  },
+  "cards_total": 77,
+  "cards_done": 59,
+  "minutes_spent": 1,
+  "opened_at": "2026-09-14T08:52:39+00:00",
+  "closed_at": null,
+  "stages": [
+   {
+    "stage": "words",
+    "state": "done"
+   },
+   {
+    "stage": "phrases",
+    "state": "done"
+   },
+   {
+    "stage": "dialogue",
+    "state": "done"
+   },
+   {
+    "stage": "listen",
+    "state": "current"
+   },
+   {
+    "stage": "speak",
+    "state": "locked"
+   }
+  ]
+ },
+ "scene": {
+  "id": "01M2FHNJY266RZAFP3FBJT2JH1",
+  "order": 1,
+  "kind": "situation",
+  "priority": 1,
+  "title_native": "Приём у врача",
+  "title_target": "Doctor visit",
+  "teaches_native": "описать боль, понять назначения",
+  "goals_native": [
+   "описать, где болит",
+   "сказать, как долго болит",
+   "ответить на вопросы врача",
+   "понять назначения врача"
+  ],
+  "learner_role_target": "Patient",
+  "learner_role_native": "Пациент",
+  "partner_role_target": "Doctor",
+  "partner_role_native": "Врач",
+  "image": {
+   "url": "https://images.pexels.com/photos/8460095/pexels-photo-8460095.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+   "author": "Los Muertos Crew",
+   "author_url": "https://www.pexels.com/@cristian-rojas",
+   "tone": "#A69897",
+   "url_112": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/112?v=275287d8382d",
+   "url_448": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/448?v=275287d8382d"
+  },
+  "lesson_status": "ready",
+  "lesson_fail_reason": null,
+  "day_number": 1,
+  "cost_usd": "0.080015",
+  "latency_ms": 24195,
+  "prompt_version": "lesson-v3"
+ },
+ "stages": [
+  {
+   "stage": "words",
+   "total": 34,
+   "done": 34,
+   "state": "done"
+  },
+  {
+   "stage": "phrases",
+   "total": 18,
+   "done": 18,
+   "state": "done"
+  },
+  {
+   "stage": "dialogue",
+   "total": 1,
+   "done": 1,
+   "state": "done"
+  },
+  {
+   "stage": "listen",
+   "total": 16,
+   "done": 6,
+   "state": "current"
+  },
+  {
+   "stage": "speak",
+   "total": 8,
+   "done": 0,
+   "state": "locked"
+  }
+ ],
+ "metrics": {
+  "cards_total": 77,
+  "minutes_spent": 1
+ },
+ "program": [
+  {
+   "unit_kind": "word",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "source": "today",
+   "state": "failed"
+  },
+  {
+   "unit_kind": "word",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "word",
+   "source": "today",
+   "state": "failed"
+  },
+  {
+   "unit_kind": "word",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "phrase",
+   "source": "today",
+   "state": "passed"
+  },
+  {
+   "unit_kind": "exchange",
+   "source": "today",
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "source": "today",
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "source": "today",
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "source": "today",
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "source": "today",
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "source": "today",
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "source": "today",
+   "state": "pending"
+  },
+  {
+   "unit_kind": "exchange",
+   "source": "today",
+   "state": "pending"
+  }
+ ],
+ "window": {
+  "day": {
+   "index": 1,
+   "type": "scene",
+   "title_native": "Приём у врача",
+   "title_target": "Doctor visit",
+   "image": {
+    "url": "https://images.pexels.com/photos/8460095/pexels-photo-8460095.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Los Muertos Crew",
+    "author_url": "https://www.pexels.com/@cristian-rojas",
+    "tone": "#A69897",
+    "url_112": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/112?v=275287d8382d",
+    "url_448": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/448?v=275287d8382d"
+   },
+   "image_tone": "#A69897",
+   "status": "in_progress",
+   "minutes_estimate": 8,
+   "minutes_spent": null,
+   "goals": [
+    {
+     "text": "описать, где болит",
+     "passed": false
+    },
+    {
+     "text": "сказать, как долго болит",
+     "passed": false
+    },
+    {
+     "text": "ответить на вопросы врача",
+     "passed": false
+    },
+    {
+     "text": "понять назначения врача",
+     "passed": false
+    }
+   ]
+  },
+  "stages": [
+   {
+    "stage": "words",
+    "state": "done",
+    "done_count": null,
+    "total": null,
+    "minutes_left": null,
+    "share": 1
+   },
+   {
+    "stage": "phrases",
+    "state": "done",
+    "done_count": null,
+    "total": null,
+    "minutes_left": null,
+    "share": 1
+   },
+   {
+    "stage": "dialogue",
+    "state": "done",
+    "done_count": null,
+    "total": null,
+    "minutes_left": null,
+    "share": 1
+   },
+   {
+    "stage": "listen",
+    "state": "current",
+    "done_count": 6,
+    "total": 16,
+    "minutes_left": 3,
+    "share": 0.38
+   },
+   {
+    "stage": "speak",
+    "state": "locked",
+    "done_count": null,
+    "total": null,
+    "minutes_left": null,
+    "share": 0
+   }
+  ],
+  "day_progress": 0.6,
+  "program": {
+   "words": {
+    "summary": {
+     "total": 8,
+     "done": 6,
+     "returns": 2
+    },
+    "items": [
+     {
+      "ref": "v1",
+      "term": "lower back",
+      "translation": "поясница",
+      "image": {
+       "url": "https://images.pexels.com/photos/7298613/pexels-photo-7298613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Kindel Media",
+       "author_url": "https://www.pexels.com/@kindelmedia",
+       "tone": "#AD937B"
+      },
+      "image_tone": "#AD937B",
+      "state": "done"
+     },
+     {
+      "ref": "v2",
+      "term": "pain",
+      "translation": "боль",
+      "image": {
+       "url": "https://images.pexels.com/photos/5938365/pexels-photo-5938365.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Sora Shimazaki",
+       "author_url": "https://www.pexels.com/@sora-shimazaki",
+       "tone": "#7A726C"
+      },
+      "image_tone": "#7A726C",
+      "state": "done"
+     },
+     {
+      "ref": "v3",
+      "term": "numbness",
+      "translation": "онемение",
+      "image": {
+       "url": "https://images.pexels.com/photos/7298854/pexels-photo-7298854.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Kindel Media",
+       "author_url": "https://www.pexels.com/@kindelmedia",
+       "tone": "#695347"
+      },
+      "image_tone": "#695347",
+      "state": "returns_tomorrow"
+     },
+     {
+      "ref": "v4",
+      "term": "fever",
+      "translation": "температура",
+      "image": {
+       "url": "https://images.pexels.com/photos/8670205/pexels-photo-8670205.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Mikhail Nilov",
+       "author_url": "https://www.pexels.com/@mikhail-nilov",
+       "tone": "#C3C6B3"
+      },
+      "image_tone": "#C3C6B3",
+      "state": "done"
+     },
+     {
+      "ref": "v5",
+      "term": "muscle strain",
+      "translation": "растяжение мышцы",
+      "image": {
+       "url": "https://images.pexels.com/photos/7298634/pexels-photo-7298634.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Kindel Media",
+       "author_url": "https://www.pexels.com/@kindelmedia",
+       "tone": "#C0A68E"
+      },
+      "image_tone": "#C0A68E",
+      "state": "done"
+     },
+     {
+      "ref": "v6",
+      "term": "heating pad",
+      "translation": "грелка",
+      "image": {
+       "url": "https://images.pexels.com/photos/8947496/pexels-photo-8947496.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "https://kaboompics.com/",
+       "author_url": "https://www.pexels.com/@karola-g",
+       "tone": "#A8A499"
+      },
+      "image_tone": "#A8A499",
+      "state": "done"
+     },
+     {
+      "ref": "v7",
+      "term": "medicine",
+      "translation": "лекарство",
+      "image": {
+       "url": "https://images.pexels.com/photos/4058367/pexels-photo-4058367.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Castorly Stock",
+       "author_url": "https://www.pexels.com/@castorlystock",
+       "tone": "#B3AEAB"
+      },
+      "image_tone": "#B3AEAB",
+      "state": "returns_tomorrow"
+     },
+     {
+      "ref": "v8",
+      "term": "anti-inflammatory",
+      "translation": "противовоспалительное",
+      "image": {
+       "url": "https://images.pexels.com/photos/5407246/pexels-photo-5407246.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Tima Miroshnichenko",
+       "author_url": "https://www.pexels.com/@tima-miroshnichenko",
+       "tone": "#8D7D6D"
+      },
+      "image_tone": "#8D7D6D",
+      "state": "done"
+     }
+    ]
+   },
+   "phrases": {
+    "summary": {
+     "total": 6,
+     "done": 6,
+     "returns": 0
+    },
+    "items": [
+     {
+      "ref": "p1",
+      "text": "My lower back hurts.",
+      "translation": "У меня болит поясница.",
+      "audio_url": null,
+      "state": "done"
+     },
+     {
+      "ref": "p2",
+      "text": "It started three days ago.",
+      "translation": "Это началось три дня назад.",
+      "audio_url": null,
+      "state": "done"
+     },
+     {
+      "ref": "p3",
+      "text": "It gets worse when I bend.",
+      "translation": "Становится хуже, когда я наклоняюсь.",
+      "audio_url": null,
+      "state": "done"
+     },
+     {
+      "ref": "p4",
+      "text": "I don't have numbness or a fever.",
+      "translation": "У меня нет онемения и температуры.",
+      "audio_url": null,
+      "state": "done"
+     },
+     {
+      "ref": "p5",
+      "text": "I'll rest for two days.",
+      "translation": "Я буду отдыхать два дня.",
+      "audio_url": null,
+      "state": "done"
+     },
+     {
+      "ref": "p6",
+      "text": "Should I take any medicine?",
+      "translation": "Мне нужно принимать какое-нибудь лекарство?",
+      "audio_url": null,
+      "state": "done"
+     }
+    ]
+   },
+   "dialogue": {
+    "summary": {
+     "total": 8,
+     "done": 0,
+     "returns": 0
+    },
+    "items": [
+     {
+      "step": 1,
+      "partner": {
+       "text": "What seems to be the problem today?",
+       "translation": "Что вас сегодня беспокоит?",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHPF2YD9NN0R3FHBFT6JFW"
+      },
+      "learner": {
+       "text": "My lower back hurts.",
+       "translation": "У меня болит поясница.",
+       "state": "pending"
+      }
+     },
+     {
+      "step": 2,
+      "partner": {
+       "text": "Is the pain on the left, right, or middle?",
+       "translation": "Боль слева, справа или посередине?",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHPK33RM1K888HTQ6V9ZVE"
+      },
+      "learner": {
+       "text": "It's in the middle.",
+       "translation": "Она посередине.",
+       "state": "pending"
+      }
+     },
+     {
+      "step": 3,
+      "partner": {
+       "text": "Did it start today, or three days ago?",
+       "translation": "Это началось сегодня или три дня назад?",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHPP6THD8AG83DY72QX778"
+      },
+      "learner": {
+       "text": "It started three days ago.",
+       "translation": "Это началось три дня назад.",
+       "state": "pending"
+      }
+     },
+     {
+      "step": 4,
+      "partner": {
+       "text": "Does it get worse when you bend or sit?",
+       "translation": "Становится хуже, когда вы наклоняетесь или сидите?",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHQXE6BR7M0MPHP5CRDT01"
+      },
+      "learner": {
+       "text": "It gets worse when I bend.",
+       "translation": "Становится хуже, когда я наклоняюсь.",
+       "state": "pending"
+      }
+     },
+     {
+      "step": 5,
+      "partner": {
+       "text": "Do you have numbness in your legs or a fever?",
+       "translation": "У вас есть онемение в ногах или температура?",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHR1WNPQRPBR12PDC8RBDX"
+      },
+      "learner": {
+       "text": "No, I don't have either.",
+       "translation": "Нет, у меня нет ни того, ни другого.",
+       "state": "pending"
+      }
+     },
+     {
+      "step": 6,
+      "partner": {
+       "text": "This looks like a muscle strain.",
+       "translation": "Это похоже на растяжение мышцы.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHSX6XKPZB7FQSB2GM5SPD"
+      },
+      "learner": {
+       "text": "Okay, that helps.",
+       "translation": "Хорошо, это помогает понять.",
+       "state": "pending"
+      }
+     },
+     {
+      "step": 7,
+      "partner": {
+       "text": "Use a heating pad and rest for two days.",
+       "translation": "Используйте грелку и отдыхайте два дня.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHXRNBQX3KCY6Z2K3CZ196"
+      },
+      "learner": {
+       "text": "I'll rest for two days.",
+       "translation": "Я буду отдыхать два дня.",
+       "state": "pending"
+      }
+     },
+     {
+      "step": 8,
+      "partner": {
+       "text": "Yes, take this anti-inflammatory after meals.",
+       "translation": "Да, принимайте это противовоспалительное после еды.",
+       "audio_url": null
+      },
+      "learner": {
+       "text": "Should I take any medicine?",
+       "translation": "Мне нужно принимать какое-нибудь лекарство?",
+       "state": "pending"
+      }
+     }
+    ]
+   }
+  },
+  "allowed_action": "continue"
+ }
+}

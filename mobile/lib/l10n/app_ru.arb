@@ -3486,7 +3486,7 @@
   },
   "planPlateLabel": "День {n}",
   "@planPlateLabel": {
-    "description": "Плита дня, лейбл латунью (plan.plate.label).",
+    "description": "Плита дня, лейбл латунью (plan.plate.label); окно дня — бровь «ДЕНЬ 2» светлой латунью на плите (23-0a…0c).",
     "placeholders": {
       "n": {
         "type": "int"
@@ -3504,7 +3504,7 @@
   },
   "planMinutesCount": "{n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}}",
   "@planMinutesCount": {
-    "description": "Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta).",
+    "description": "Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta); окно дня — «≈ 20 минут» не начатого, «19 минут» пройденного (23-0a, 23-0c).",
     "placeholders": {
       "n": {
         "type": "int"
@@ -3513,35 +3513,35 @@
   },
   "planPlateStageWords": "Слова",
   "@planPlateStageWords": {
-    "description": "Плита дня, этап (plan.plate.stage.words)."
+    "description": "Плита дня, этап (plan.plate.stage.words); окно дня — ряд этапа на плите и вкладка «Слова» с бровью (23-0a…0d)."
   },
   "planPlateStagePhrases": "Фразы",
   "@planPlateStagePhrases": {
-    "description": "Плита дня, этап (plan.plate.stage.phrases)."
+    "description": "Плита дня, этап (plan.plate.stage.phrases); окно дня — ряд этапа на плите и вкладка «Фразы» с бровью (23-0a…0d)."
   },
   "planPlateStageDialog": "Диалог",
   "@planPlateStageDialog": {
-    "description": "Плита дня, этап (plan.plate.stage.dialog)."
+    "description": "Плита дня, этап (plan.plate.stage.dialog); окно дня — ряд этапа на плите и вкладка «Диалог» с бровью (23-0a…0d)."
   },
   "planPlateStageListen": "Слушаю и отвечаю",
   "@planPlateStageListen": {
-    "description": "Плита дня, этап (plan.plate.stage.listen)."
+    "description": "Плита дня, этап (plan.plate.stage.listen); окно дня — ряд этапа на плите (23-0a…0c)."
   },
   "planPlateStageSpeak": "Говорю сам",
   "@planPlateStageSpeak": {
-    "description": "Плита дня, этап (plan.plate.stage.speak)."
+    "description": "Плита дня, этап (plan.plate.stage.speak); окно дня — ряд этапа на плите (23-0a…0c)."
   },
   "planPlateStateDone": "пройдено",
   "@planPlateStateDone": {
-    "description": "Плита дня (21-2 … 21-4): состояние этапа словами справа — этап пройден."
+    "description": "Плита дня (21-2 … 21-4) и окно дня (23-0b, 23-0c): состояние этапа словами справа — этап пройден."
   },
   "planPlateStateCurrent": "идёт",
   "@planPlateStateCurrent": {
-    "description": "Плита дня (21-2, 21-3): состояние текущего этапа словами справа."
+    "description": "Плита дня (21-2, 21-3) и окно дня (23-0b, «идёт · ≈ 8 мин»): состояние текущего этапа словами справа."
   },
   "planPlateStateAhead": "впереди",
   "@planPlateStateAhead": {
-    "description": "Плита дня (21-2): состояние этапа, до которого ещё не дошли."
+    "description": "Плита дня (21-2) и окно дня (23-0a, 23-0b): состояние этапа, до которого ещё не дошли."
   },
   "planNewWordsCount": "{n, plural, one{{n} новое слово} few{{n} новых слова} many{{n} новых слов} other{{n} новых слова}}",
   "@planNewWordsCount": {
@@ -3572,7 +3572,7 @@
   },
   "planPlateCtaStart": "Начать",
   "@planPlateCtaStart": {
-    "description": "Плита дня, кнопка (plan.plate.cta.start)."
+    "description": "Плита дня, кнопка (plan.plate.cta.start); окно дня — одна кнопка внизу у не начатого дня (allowed_action = start, 23-0a)."
   },
   "planPlateBuildingTitle": "Собираем день {n}",
   "@planPlateBuildingTitle": {
@@ -3606,7 +3606,7 @@
   },
   "planPlateCtaContinue": "Продолжить",
   "@planPlateCtaContinue": {
-    "description": "Плита дня, кнопка (plan.plate.cta.continue)."
+    "description": "Плита дня, кнопка (plan.plate.cta.continue); окно дня — одна кнопка внизу у идущего дня (allowed_action = continue, 23-0b)."
   },
   "planClosedTitle": "День {n} закрыт",
   "@planClosedTitle": {
@@ -3688,7 +3688,7 @@
   },
   "planRouteDayTitle": "День {n} · {title}",
   "@planRouteDayTitle": {
-    "description": "Заголовок дня на маршруте (кадры 21-2b, 22-4b): номер дня и название; мета стоит строкой ниже.",
+    "description": "Заголовок дня на маршруте (кадры 21-2b, 22-4b): номер дня и название; мета стоит строкой ниже. Окно дня — строка компактной шапки 56 «День 2 · Приём у врача» (23-0a…0d, прокручено).",
     "placeholders": {
       "n": {
         "type": "int"
@@ -3700,11 +3700,11 @@
   },
   "planRouteDayReview": "Повторение",
   "@planRouteDayReview": {
-    "description": "Название дня повторения на маршруте (кадры 21-2b, 22-4b)."
+    "description": "Название дня повторения на маршруте (кадры 21-2b, 22-4b) и в окне дня повторения вместо названия сцены."
   },
   "planRouteDayRehearsal": "Репетиция",
   "@planRouteDayRehearsal": {
-    "description": "Строка маршрута, tertiary (plan.route.day.rehearsal)."
+    "description": "Строка маршрута, tertiary (plan.route.day.rehearsal); окно дня репетиции — название вместо названия сцены."
   },
   "planRouteDayRehearsalSub": "весь маршрут вслух",
   "@planRouteDayRehearsalSub": {
@@ -3716,7 +3716,7 @@
   },
   "planMinutesShort": "{n} мин",
   "@planMinutesShort": {
-    "description": "Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes).",
+    "description": "Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes); окно дня — «≈ 12 мин» идущего дня, текущего этапа и компактной шапки (23-0b).",
     "placeholders": {
       "n": {
         "type": "int"
@@ -4334,6 +4334,94 @@
   "@planEntryOffline": {
     "description": "Вход офлайн (§6): нельзя начать сборку. Строки в таблице нет — добавлена нарядом PLAN-UI."
   },
+  "planWindowBack": "Назад",
+  "@planWindowBack": {
+    "description": "Окно дня (23-0a…0c): подпись стрелки назад на плите для читалки экрана."
+  },
+  "planWindowStateNotStarted": "не начат",
+  "@planWindowStateNotStarted": {
+    "description": "Окно дня, плита (23-0a): слово состояния дня под названием — «не начат · ≈ 20 минут»."
+  },
+  "planWindowStateInProgress": "идёт",
+  "@planWindowStateInProgress": {
+    "description": "Окно дня, плита (23-0b): слово состояния дня под названием — «идёт · ≈ 12 мин»."
+  },
+  "planWindowStatePassed": "пройден",
+  "@planWindowStatePassed": {
+    "description": "Окно дня, плита (23-0c): слово состояния дня под названием — «пройден · 19 минут»."
+  },
+  "planWindowApprox": "≈ {minutes}",
+  "@planWindowApprox": {
+    "description": "Окно дня: оценка минут сервера (minutes_estimate, minutes_left) — «≈ 20 минут» на плите не начатого дня, «≈ 12 мин» у идущего, у текущего этапа и в компактной шапке; minutes — planMinutesCount или planMinutesShort.",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "planWindowJoin": "{first} · {second}",
+  "@planWindowJoin": {
+    "description": "Окно дня: две части строки через точку — «не начат · ≈ 20 минут», «идёт · ≈ 8 мин» у текущего этапа, «СЛОВА · 8 · 5 ПРОЙДЕНО» в брови вкладки.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "planWindowGoalsLabel": "научишься",
+  "@planWindowGoalsLabel": {
+    "description": "Окно дня, плита (23-0a…0c): лейбл caps над целями дня; галки у целей — только у пройденного дня."
+  },
+  "planWindowStageCount": "{done} / {total}",
+  "@planWindowStageCount": {
+    "description": "Окно дня, плита (23-0b): цифра ТОЛЬКО у текущего этапа — «6 / 16»; у остальных рядов цифры нет (done_count и total сервера — null).",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "planWindowPassedLine": "День пройден · {minutes}",
+  "@planWindowPassedLine": {
+    "description": "Окно дня, плита пройденного дня (23-0c): строка итога вместо цифр — «День пройден · 19 минут»; minutes — planMinutesCount(minutes_spent).",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "planWindowBrowDone": "{n} пройдено",
+  "@planWindowBrowDone": {
+    "description": "Окно дня, бровь вкладки (23-0b…0d): часть «5 пройдено» — summary.done сервера; при нуле части нет.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planWindowBrowReturns": "{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}",
+  "@planWindowBrowReturns": {
+    "description": "Окно дня, бровь вкладки (23-0c, 23-0d): часть «2 вернутся завтра» — summary.returns сервера; при нуле части нет.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planWindowCtaAgain": "Ещё раз",
+  "@planWindowCtaAgain": {
+    "description": "Окно дня, кнопка пройденного дня (23-0c, allowed_action = again): «Говорю сам» ещё раз по карточкам дня, без записи ответов — не пересдача дня."
+  },
+  "planWindowListen": "Прослушать",
+  "@planWindowListen": {
+    "description": "Окно дня, вкладки «Фразы» и «Диалог» (23-0d): подпись кружка воспроизведения 28 для читалки экрана."
+  },
   "profileRowSounds": "Звуки",
   "@profileRowSounds": {
     "description": "Строка профиля: выключатель звуков (токен-лист 4к-3)."
@@ -4341,15 +4429,6 @@
   "profileSoundsHint": "Верно · неверно · этап закрыт · день закрыт",
   "@profileSoundsHint": {
     "description": "Подпись выключателя «Звуки» — четыре события 4к-3."
-  },
-  "dayLabel": "День {n}",
-  "@dayLabel": {
-    "description": "Латунный лейбл плиты дня.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
   },
   "dayCards": "{n, plural, one{{n} карточка} few{{n} карточки} other{{n} карточек}}",
   "@dayCards": {
@@ -4383,119 +4462,11 @@
       }
     }
   },
-  "dayLevelBeginner": "Начинающий",
-  "dayLevelIntermediate": "Средний",
-  "dayGoalLabel": "Научишься",
   "dayStageWords": "Слова",
   "dayStagePhrases": "Фразы",
   "dayStageDialogue": "Диалог",
   "dayStageListen": "Слушаю и отвечаю",
   "dayStageSpeak": "Говорю сам",
-  "dayStageCount": "{done} / {total}",
-  "@dayStageCount": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "dayNewWords": "{n, plural, one{{n} новое слово} few{{n} новых слова} other{{n} новых слов}}",
-  "@dayNewWords": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayStageSubStart": "начни отсюда · {what}",
-  "@dayStageSubStart": {
-    "placeholders": {
-      "what": {
-        "type": "String"
-      }
-    }
-  },
-  "dayStageSubUnfinished": "не закончен · {cards} · {minutes}",
-  "@dayStageSubUnfinished": {
-    "placeholders": {
-      "cards": {
-        "type": "String"
-      },
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
-  "dayStageSubHinted": "{n} с подсказкой",
-  "@dayStageSubHinted": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayCtaStart": "Начать",
-  "dayCtaContinue": "Продолжить · осталось {n}",
-  "@dayCtaContinue": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayCtaPlan": "К плану",
-  "dayClosedTitle": "День {n} закрыт",
-  "@dayClosedTitle": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayNumCards": "{n, plural, one{карточка} few{карточки} other{карточек}}",
-  "@dayNumCards": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayNumMinutes": "{n, plural, one{минута} few{минуты} other{минут}}",
-  "@dayNumMinutes": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayNumFirstTry": "с первого раза",
-  "daySectionWords": "Слова · {n}",
-  "@daySectionWords": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "daySectionPhrases": "Фразы · {n}",
-  "@daySectionPhrases": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "daySectionTalk": "Разговор · {n, plural, one{{n} обмен} few{{n} обмена} other{{n} обменов}}",
-  "@daySectionTalk": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "dayFromDay": "из дня {n}",
   "@dayFromDay": {
     "placeholders": {
@@ -4504,27 +4475,6 @@
       }
     }
   },
-  "dayWordsExtra": "+ {n} из дня {d}",
-  "@dayWordsExtra": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "d": {
-        "type": "int"
-      }
-    }
-  },
-  "dayHardest": "Далось труднее всего",
-  "dayTries": "{n, plural, one{{n} попытка} few{{n} попытки} other{{n} попыток}}",
-  "@dayTries": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayInWork": "В работе",
   "dayWordsCount": "{n, plural, one{{n} слово} few{{n} слова} other{{n} слов}}",
   "@dayWordsCount": {
     "placeholders": {
@@ -4545,17 +4495,6 @@
   "@dayExchangesCount": {
     "placeholders": {
       "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayWillReturn": "{k, plural, one{Вернётся в день {n} · {k} карточка} few{Вернутся в день {n} · {k} карточки} other{Вернутся в день {n} · {k} карточек}}",
-  "@dayWillReturn": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "k": {
         "type": "int"
       }
     }
@@ -4637,7 +4576,6 @@
   "dayEntryCta": "Начать",
   "dayEntryResumeCta": "Продолжить",
   "dayIntroBadgeNew": "новое слово",
-  "dayIntroBadgeRepeat": "повторение",
   "dayIntroCta": "Понятно",
   "dayReturnedBadge": "Вернулось из дня {n}",
   "@dayReturnedBadge": {
@@ -4821,32 +4759,6 @@
   },
   "dayExitStay": "Остаться",
   "dayExitLeave": "Выйти",
-  "daySheetStatePassed": "сдал · день {n}",
-  "@daySheetStatePassed": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "daySheetStateHinted": "с подсказкой · день {n}",
-  "@daySheetStateHinted": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "daySheetStateReturns": "вернётся в день {n}",
-  "@daySheetStateReturns": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "daySheetInTalk": "В разговоре",
-  "daySheetRoleYou": "Ты:",
   "dayNoVoice": "без озвучки — читает телефон",
   "dayLockedByDay": "Сначала закончи день {n}",
   "@dayLockedByDay": {
@@ -4866,8 +4778,5 @@
   },
   "dayLessonBuilding": "Собираем день · около минуты",
   "dayLessonFailed": "День не собрался",
-  "dayLessonRetry": "Повторить",
-  "dayBack": "Назад",
-  "dayTabTitle": "План",
-  "dayTabRoute": "Маршрут"
+  "dayLessonRetry": "Повторить"
 }

@@ -140,7 +140,6 @@ void main() {
       'plan_id': 'plan',
       'day': day(number: 2, status: 'in_progress', slot: 'today'),
       'scene': null,
-      'goals_native': const [],
       'stages': [
         {'stage': 'words', 'total': 32, 'done': 32, 'state': 'done'},
         {'stage': 'phrases', 'total': 18, 'done': 6, 'state': 'current'},
@@ -150,12 +149,11 @@ void main() {
       ],
       'metrics': null,
       'program': [
-        {'unit_kind': 'word', 'unit_ref': 'v1', 'scene_id': 's', 'source': 'today', 'cards_total': 4, 'cards_done': 4, 'state': 'passed'},
-        {'unit_kind': 'word', 'unit_ref': 'v2', 'scene_id': 's', 'source': 'today', 'cards_total': 4, 'cards_done': 4, 'state': 'failed'},
-        {'unit_kind': 'word', 'unit_ref': 'v3', 'scene_id': 's', 'source': 'returned', 'cards_total': 4, 'cards_done': 0, 'state': 'pending'},
-        {'unit_kind': 'phrase', 'unit_ref': 'p1', 'scene_id': 's', 'source': 'today', 'cards_total': 3, 'cards_done': 0, 'state': 'failed'},
+        {'unit_kind': 'word', 'source': 'today', 'state': 'passed'},
+        {'unit_kind': 'word', 'source': 'today', 'state': 'failed'},
+        {'unit_kind': 'word', 'source': 'returned', 'state': 'pending'},
+        {'unit_kind': 'phrase', 'source': 'today', 'state': 'failed'},
       ],
-      'sheet_available': false,
     });
 
     test('новые слова — только сегодняшние слова, вернувшиеся не в счёт', () {
@@ -166,8 +164,7 @@ void main() {
       expect(room.returningUnits, 2);
     });
 
-    test('остаток дня — сумма остатков этапов', () {
-      expect(room.cardsLeft, 12 + 1 + 8);
+    test('текущий этап — первый незакрытый', () {
       expect(room.stages[1].state, PlanStageState.current);
     });
   });

@@ -1,0 +1,298 @@
+{
+ "id": "01M2FHN9Y6HRN80KSE1737ZDMZ",
+ "status": "active",
+ "goal_text": "Иду к врачу: болит спина, нужно описать боль и понять назначения",
+ "target_lang": "en",
+ "native_lang": "ru",
+ "level": "beginner",
+ "days_total": 3,
+ "days_requested": 3,
+ "days_shortened_from": null,
+ "event_date": null,
+ "days_left": null,
+ "title_native": "Приём у врача",
+ "title_target": "Doctor's appointment",
+ "event_native": "Приём",
+ "until_phrase": null,
+ "overdue_native": null,
+ "route_summary": "3 дня · 2 ситуации, репетиция",
+ "summary": "Приём у врача, повторный приём. Скажешь всё это сам",
+ "reminder_hour": 19,
+ "learner_role_target": "Patient",
+ "learner_role_native": "Пациент",
+ "cover_image": {
+  "url": "https://images.pexels.com/photos/8460095/pexels-photo-8460095.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+  "author": "Los Muertos Crew",
+  "author_url": "https://www.pexels.com/@cristian-rojas",
+  "tone": "#A69897"
+ },
+ "collection_id": "01M2FHY4PTVJN91STXYYNQM01M",
+ "unclear_reason": null,
+ "fail_reason": null,
+ "current_day": {
+  "id": "01M2FHN9Y7P0GSREA6BSZXP7RK",
+  "number": 2,
+  "type": "scene",
+  "status": "locked",
+  "scene_id": "01M2FHNJY3KTC0T36XSNY8CY96",
+  "title_native": "Повторный приём",
+  "title_target": "Follow-up visit",
+  "teaches_native": "сказать, что лечение не помогло",
+  "lesson_status": "ready",
+  "opens_on": "2026-09-15",
+  "slot": {
+   "code": "tomorrow",
+   "date": "2026-09-15",
+   "label_native": "завтра"
+  },
+  "cards_total": 0,
+  "cards_done": 0,
+  "minutes_spent": 0,
+  "opened_at": null,
+  "closed_at": null,
+  "stages": [
+   {
+    "stage": "words",
+    "state": "locked"
+   },
+   {
+    "stage": "phrases",
+    "state": "locked"
+   },
+   {
+    "stage": "dialogue",
+    "state": "locked"
+   },
+   {
+    "stage": "listen",
+    "state": "locked"
+   },
+   {
+    "stage": "speak",
+    "state": "locked"
+   }
+  ]
+ },
+ "days": [
+  {
+   "id": "01M2FHN9Y7JC83Z7ZEN3MEDRPY",
+   "number": 1,
+   "type": "scene",
+   "status": "closed",
+   "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+   "title_native": "Приём у врача",
+   "title_target": "Doctor visit",
+   "teaches_native": "описать боль, понять назначения",
+   "lesson_status": "ready",
+   "opens_on": "2026-09-14",
+   "slot": {
+    "code": "past",
+    "date": "2026-09-14",
+    "label_native": null
+   },
+   "cards_total": 77,
+   "cards_done": 77,
+   "minutes_spent": 1,
+   "opened_at": "2026-09-14T08:52:39+00:00",
+   "closed_at": "2026-09-14T08:53:28+00:00",
+   "stages": [
+    {
+     "stage": "words",
+     "state": "done"
+    },
+    {
+     "stage": "phrases",
+     "state": "done"
+    },
+    {
+     "stage": "dialogue",
+     "state": "done"
+    },
+    {
+     "stage": "listen",
+     "state": "done"
+    },
+    {
+     "stage": "speak",
+     "state": "done"
+    }
+   ]
+  },
+  {
+   "id": "01M2FHN9Y7P0GSREA6BSZXP7RK",
+   "number": 2,
+   "type": "scene",
+   "status": "locked",
+   "scene_id": "01M2FHNJY3KTC0T36XSNY8CY96",
+   "title_native": "Повторный приём",
+   "title_target": "Follow-up visit",
+   "teaches_native": "сказать, что лечение не помогло",
+   "lesson_status": "ready",
+   "opens_on": "2026-09-15",
+   "slot": {
+    "code": "tomorrow",
+    "date": "2026-09-15",
+    "label_native": "завтра"
+   },
+   "cards_total": 0,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": null,
+   "closed_at": null,
+   "stages": [
+    {
+     "stage": "words",
+     "state": "locked"
+    },
+    {
+     "stage": "phrases",
+     "state": "locked"
+    },
+    {
+     "stage": "dialogue",
+     "state": "locked"
+    },
+    {
+     "stage": "listen",
+     "state": "locked"
+    },
+    {
+     "stage": "speak",
+     "state": "locked"
+    }
+   ]
+  },
+  {
+   "id": "01M2FHN9Y7Q6EAVBDFK64HCV8V",
+   "number": 3,
+   "type": "rehearsal",
+   "status": "locked",
+   "scene_id": null,
+   "title_native": null,
+   "title_target": null,
+   "teaches_native": null,
+   "lesson_status": null,
+   "opens_on": null,
+   "slot": {
+    "code": "date",
+    "date": "2026-09-16",
+    "label_native": null
+   },
+   "cards_total": 0,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": null,
+   "closed_at": null,
+   "stages": [
+    {
+     "stage": "speak",
+     "state": "locked"
+    }
+   ]
+  }
+ ],
+ "scenes": [
+  {
+   "id": "01M2FHNJY266RZAFP3FBJT2JH1",
+   "order": 1,
+   "kind": "situation",
+   "priority": 1,
+   "title_native": "Приём у врача",
+   "title_target": "Doctor visit",
+   "teaches_native": "описать боль, понять назначения",
+   "goals_native": [
+    "описать, где болит",
+    "сказать, как долго болит",
+    "ответить на вопросы врача",
+    "понять назначения врача"
+   ],
+   "learner_role_target": "Patient",
+   "learner_role_native": "Пациент",
+   "partner_role_target": "Doctor",
+   "partner_role_native": "Врач",
+   "image": {
+    "url": "https://images.pexels.com/photos/8460095/pexels-photo-8460095.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Los Muertos Crew",
+    "author_url": "https://www.pexels.com/@cristian-rojas",
+    "tone": "#A69897",
+    "url_112": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/112?v=275287d8382d",
+    "url_448": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/448?v=275287d8382d"
+   },
+   "lesson_status": "ready",
+   "lesson_fail_reason": null,
+   "day_number": 1,
+   "cost_usd": "0.080015",
+   "latency_ms": 24195,
+   "prompt_version": "lesson-v3"
+  },
+  {
+   "id": "01M2FHNJY3KTC0T36XSNY8CY96",
+   "order": 2,
+   "kind": "variant",
+   "priority": 2,
+   "title_native": "Повторный приём",
+   "title_target": "Follow-up visit",
+   "teaches_native": "сказать, что лечение не помогло",
+   "goals_native": [
+    "сказать, что боль осталась",
+    "описать изменения боли",
+    "сказать о побочных действиях",
+    "уточнить новые назначения"
+   ],
+   "learner_role_target": "Patient",
+   "learner_role_native": "Пациент",
+   "partner_role_target": "Doctor",
+   "partner_role_native": "Врач",
+   "image": {
+    "url": "https://images.pexels.com/photos/7659869/pexels-photo-7659869.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Thirdman",
+    "author_url": "https://www.pexels.com/@thirdman",
+    "tone": "#BE9AA6",
+    "url_112": "http://localhost:8001/api/v1/plans/images/01M2FHNJY3KTC0T36XSNY8CY96/112?v=2846554787a9",
+    "url_448": "http://localhost:8001/api/v1/plans/images/01M2FHNJY3KTC0T36XSNY8CY96/448?v=2846554787a9"
+   },
+   "lesson_status": "ready",
+   "lesson_fail_reason": null,
+   "day_number": 2,
+   "cost_usd": "0.081780",
+   "latency_ms": 26462,
+   "prompt_version": "lesson-v3"
+  }
+ ],
+ "rescue_kit": [
+  {
+   "text_target": "Could you speak more slowly, please?",
+   "text_native": "Помедленнее, пожалуйста.",
+   "pronunciation_native": "куд ю спик мор слоули плиз"
+  },
+  {
+   "text_target": "Could you write it down, please?",
+   "text_native": "Напишите, пожалуйста.",
+   "pronunciation_native": "куд ю райт ит даун плиз"
+  },
+  {
+   "text_target": "Could you repeat that, please?",
+   "text_native": "Повторите ещё раз, пожалуйста.",
+   "pronunciation_native": "куд ю рипит зэт плиз"
+  },
+  {
+   "text_target": "How much is it?",
+   "text_native": "Сколько это стоит?",
+   "pronunciation_native": "хау мач из ит"
+  },
+  {
+   "text_target": "One moment, let me check.",
+   "text_native": "Секунду, я проверю.",
+   "pronunciation_native": "уан моумент лет ми чек"
+  }
+ ],
+ "cost_usd": "0.180093",
+ "versions": {
+  "build": "beaa99fa",
+  "prompt_plan": "plan-builder-v2",
+  "prompt_lesson": "lesson-v3"
+ },
+ "started_at": "2026-09-14T08:49:16+00:00",
+ "finished_at": null,
+ "created_at": "2026-09-14T08:48:39+00:00"
+}

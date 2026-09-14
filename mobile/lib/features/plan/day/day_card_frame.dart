@@ -130,26 +130,6 @@ class OutlineBadge extends StatelessWidget {
   );
 }
 
-/// Секционный лейбл на бумаге — «СЛОВА · 8» с необязательной латунной строкой справа.
-class DaySectionLabel extends StatelessWidget {
-  const DaySectionLabel(this.text, {super.key, this.trailing});
-  final String text;
-  final String? trailing;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(0, 16, 0, 10),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Expanded(child: Text(text.toUpperCase(), style: AppTextDay.sectionLabel)),
-        if (trailing case final t?) Text(t, style: AppTextDay.brassNote),
-      ],
-    ),
-  );
-}
-
 /// Кружок «назад» / «крестик» в шапке сессии — 20, stroke 2, secondary.
 class DayCloseButton extends StatelessWidget {
   const DayCloseButton({super.key, required this.onTap, required this.label, this.icon = LucideIcons.x});

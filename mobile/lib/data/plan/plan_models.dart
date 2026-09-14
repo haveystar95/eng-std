@@ -747,102 +747,61 @@ class PlanStageProgress {
   );
 }
 
-/// `PlanProgramUnit` — one unit of the day's program and where it stands.
+/// `PlanProgramUnit` — one unit of the day's program and where it stands. The tab's plate reads the
+/// kind and the source («начни отсюда · 8 новых слов») and the state («K карточек вернутся»); the
+/// words of the programme are the day window's (`day_window.dart`).
 class PlanProgramUnit {
-  const PlanProgramUnit({
-    required this.unitKind,
-    required this.unitRef,
-    this.sceneId = '',
-    required this.source,
-    required this.state,
-    required this.cardsTotal,
-    required this.cardsDone,
-    this.textTarget,
-    this.textNative,
-  });
+  const PlanProgramUnit({required this.unitKind, required this.source, required this.state});
 
   final PlanUnitKind unitKind;
-  final String unitRef;
-
-  /// Сцена, которой единица принадлежит, — по ней шит находит термин (наряд DAY-UI).
-  final String sceneId;
   final PlanUnitSource source;
   final PlanUnitState state;
-  final int cardsTotal;
-  final int cardsDone;
-  final String? textTarget;
-  final String? textNative;
 
   factory PlanProgramUnit.fromJson(Map<String, dynamic> j) => PlanProgramUnit(
     unitKind: PlanUnitKind.fromWire(j['unit_kind'] as String?),
-    unitRef: (j['unit_ref'] as String?) ?? '',
-    sceneId: (j['scene_id'] as String?) ?? '',
     source: PlanUnitSource.fromWire(j['source'] as String?),
     state: PlanUnitState.fromWire(j['state'] as String?),
-    cardsTotal: (j['cards_total'] as num?)?.toInt() ?? 0,
-    cardsDone: (j['cards_done'] as num?)?.toInt() ?? 0,
-    textTarget: j['text_target'] as String?,
-    textNative: j['text_native'] as String?,
   );
 }
 
-/// `PlanDayMetrics` — filled once the day is closed.
+/// `PlanDayMetrics` — the day's count and minutes, live from the first answer; the plate of a closed
+/// day reads «75 карточек · 19 минут» from it (кадр 21-4).
 class PlanDayMetrics {
-  const PlanDayMetrics({
-    required this.cardsTotal,
-    required this.cardsDone,
-    required this.minutesSpent,
-    this.firstTryShare,
-    this.hardestUnitText,
-    this.hardestUnitKind,
-    this.hardestUnitRef,
-  });
+  const PlanDayMetrics({required this.cardsTotal, required this.minutesSpent});
 
   final int cardsTotal;
-  final int cardsDone;
   final int minutesSpent;
-  final double? firstTryShare;
-  final String? hardestUnitText;
-
-  /// Какая именно единица далась труднее всего — по ней кабинет считает попытки (23-0c).
-  final PlanUnitKind? hardestUnitKind;
-  final String? hardestUnitRef;
 
   factory PlanDayMetrics.fromJson(Map<String, dynamic> j) => PlanDayMetrics(
     cardsTotal: (j['cards_total'] as num?)?.toInt() ?? 0,
-    cardsDone: (j['cards_done'] as num?)?.toInt() ?? 0,
     minutesSpent: (j['minutes_spent'] as num?)?.toInt() ?? 0,
-    firstTryShare: (j['first_try_share'] as num?)?.toDouble(),
-    hardestUnitText: j['hardest_unit_text'] as String?,
-    hardestUnitKind: j['hardest_unit_kind'] == null
-        ? null
-        : PlanUnitKind.fromWire(j['hardest_unit_kind'] as String?),
-    hardestUnitRef: j['hardest_unit_ref'] as String?,
   );
 }
 
-/// `PlanDayRoom` — «Кабинет дня»: the tab reads it for the plate's stage rows (кадр 21-2) and
-/// the closed-day card (21-4); the room itself is DAY-UI's.
+/// `PlanDayRoom` — the day: the tab reads it for the plate's stage rows (кадр 21-2) and the closed
+/// day (21-4), the session for its header and scene, and the day window its own block (`window`).
 class PlanDayRoom {
   const PlanDayRoom({
     required this.planId,
     required this.day,
-    required this.goalsNative,
     required this.stages,
     required this.program,
-    required this.sheetAvailable,
     this.scene,
     this.metrics,
+    this.windowJson,
   });
 
   final String planId;
   final PlanDayRoute day;
   final PlanScene? scene;
-  final List<String> goalsNative;
   final List<PlanStageProgress> stages;
   final PlanDayMetrics? metrics;
   final List<PlanProgramUnit> program;
-  final bool sheetAvailable;
+
+  /// «Окно дня» как пришло (наряд DAY-UI-2). Разбирает его само окно (`DayWindow.fromJson`,
+  /// `day_window.dart`): разбор закрытый, и ошибка контракта окна не должна ронять плиту таба,
+  /// которая читает эту же комнату.
+  final Object? windowJson;
 
   factory PlanDayRoom.fromJson(Map<String, dynamic> j) => PlanDayRoom(
     planId: (j['plan_id'] as String?) ?? '',
@@ -850,7 +809,6 @@ class PlanDayRoom {
     scene: j['scene'] is Map<String, dynamic>
         ? PlanScene.fromJson(j['scene'] as Map<String, dynamic>)
         : null,
-    goalsNative: [for (final g in (j['goals_native'] as List?) ?? const []) g.toString()],
     stages: [
       for (final s in (j['stages'] as List?) ?? const [])
         if (s is Map<String, dynamic>) PlanStageProgress.fromJson(s),
@@ -862,7 +820,7 @@ class PlanDayRoom {
       for (final u in (j['program'] as List?) ?? const [])
         if (u is Map<String, dynamic>) PlanProgramUnit.fromJson(u),
     ],
-    sheetAvailable: j['sheet_available'] == true,
+    windowJson: j['window'],
   );
 
   /// Today's own NEW words — «начни отсюда · 8 новых слов» (plan.plate.stage.sub.start).
@@ -872,7 +830,4 @@ class PlanDayRoom {
 
   /// Units that failed twice and RETURN on the next content day — «Вернутся в день N · K карточки».
   int get returningUnits => program.where((u) => u.state == PlanUnitState.failed).length;
-
-  /// Cards the day still owes — every stage's remainder.
-  int get cardsLeft => stages.fold(0, (sum, s) => sum + (s.total - s.done));
 }

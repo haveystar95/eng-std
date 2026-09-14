@@ -9,12 +9,12 @@ import '../../../data/providers.dart';
 import '../plan_providers.dart';
 import '../route/plan_route.dart';
 import '../route/route_view.dart';
-import 'day_room_screen.dart';
+import 'day_window_screen.dart';
 
-/// ОДНА ДВЕРЬ В КАБИНЕТ ДНЯ — с плиты таба «План», из уведомления и по ссылке `engstd://…`.
+/// ОДНА ДВЕРЬ В ОКНО ДНЯ — с плиты таба «План», из уведомления и по ссылке `engstd://…`.
 ///
-/// Открывает [DayRoomScreen] дня [number] (по умолчанию — текущего дня плана). По возвращении
-/// перечитывает состояние таба: кабинет мог закрыть день, и плита обязана показать это тем же
+/// Открывает [DayWindowScreen] дня [number] (по умолчанию — текущего дня плана). По возвращении
+/// перечитывает состояние таба: окно могло закрыть день, и плита обязана показать это тем же
 /// движением, а не при следующем заходе.
 Future<void> openDayRoom(BuildContext context, WidgetRef ref, {Plan? plan, int? number}) async {
   final p = plan ?? await _plan(ref);
@@ -31,7 +31,7 @@ Future<void> openDayRoom(BuildContext context, WidgetRef ref, {Plan? plan, int? 
   }
   AppHaptics.light();
   await Navigator.of(context).push(
-    MaterialPageRoute(builder: (_) => DayRoomScreen(plan: p, number: n)),
+    MaterialPageRoute(builder: (_) => DayWindowScreen(plan: p, number: n)),
   );
   if (!context.mounted) return;
   await ref.read(planTabProvider.notifier).refresh();

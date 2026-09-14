@@ -1,8 +1,8 @@
 /// СОСТОЯНИЯ ДНЯ ПО КАДРАМ — golden-тесты наряда DAY-UI: «ответ сервера → экран».
 ///
-/// Каждый тест — одно состояние из наряда: кадр канвы «План» (23-x) или правка «Базы» (12a, 12b,
-/// 12i, 16a). Вход — сохранённые ответы backend2 (`fixtures/`), выход — `test/goldens/<кадр>.png`.
-/// Таблица «кадр → снимок → расхождения» отчёта собрана по этим файлам.
+/// Каждый тест — одно состояние сессии дня: кадр канвы «План» (23-1 … 23-13) или правка «Базы» (12a,
+/// 12b, 12i, 16a). Окно дня (23-0a…0d) снимает `test/features/plan/day_window_golden_test.dart`.
+/// Вход — сохранённые ответы backend2 (`fixtures/`), выход — `test/goldens/<кадр>.png`.
 library;
 
 import 'dart:io';
@@ -13,9 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/day_contract.dart';
 import 'package:eng_std/features/plan/day/day_card_frame.dart';
-import 'package:eng_std/features/plan/day/day_room_screen.dart';
 import 'package:eng_std/features/plan/day/day_session_screen.dart';
-import 'package:eng_std/features/plan/day/term_sheet.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import 'golden_support.dart';
@@ -36,11 +34,7 @@ void main() {
   });
 
   final planI = Plan.fromJson(fixture('plan-intermediate'));
-  final planB = Plan.fromJson(fixture('plan-beginner'));
   PlanDayRoom roomI() => PlanDayRoom.fromJson(fixture('room-intermediate-d1-in-progress'));
-  PlanDayRoom roomB() => PlanDayRoom.fromJson(fixture('room-beginner-d1-open'));
-  DaySheet sheetI() => DaySheet.fromJson(fixture('sheet-intermediate-d1'));
-  DaySheet sheetB() => DaySheet.fromJson(fixture('sheet-beginner-d1'));
   List<Map<String, dynamic>> cardsJson() =>
       (fixture('cards-intermediate-d1')['cards'] as List).cast<Map<String, dynamic>>();
   List<DayCard> parseCards(List<Map<String, dynamic>> list) => [
@@ -48,20 +42,11 @@ void main() {
   ];
   List<DayCard> cardsI() => parseCards(cardsJson());
 
-  /// Кабинет дня против [api], снятый целиком (страница выше экрана).
-  Future<GoldenApi> pumpRoom(WidgetTester tester, GoldenApi api, {Plan? plan, double height = 1900}) async {
-    await setFrame(tester, height: height);
-    muteNativeChannels(tester);
-    await tester.pumpWidget(goldenApp(home: DayRoomScreen(plan: plan ?? planI, number: 1), api: api, recognizer: mic, audioDir: audioDir));
-    await settle(tester, frames: 8);
-    return api;
-  }
-
   /// Сессия дня, открытая на первой неотвеченной карточке из [cards].
   Future<GoldenApi> pumpSession(WidgetTester tester, List<DayCard> cards, {bool start = true}) async {
     await setFrame(tester);
     muteNativeChannels(tester);
-    final api = GoldenApi(plan: planI, room: roomI(), cards: cards, sheet: sheetI());
+    final api = GoldenApi(plan: planI, room: roomI(), cards: cards);
     await tester.pumpWidget(goldenApp(home: DaySessionScreen(plan: planI, room: roomI()), api: api, recognizer: mic, audioDir: audioDir));
     await settle(tester);
     if (start) {
@@ -114,119 +99,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
   }
 
-  group('кабинет дня (23-0x)', () {
-    testWidgets('23-0a — не начат: пять этапов без счётчиков, программа из шита', (tester) async {
-      await pumpRoom(tester, GoldenApi(plan: planB, room: roomB(), cards: [], sheet: sheetB()), plan: planB);
-      await expectGolden(tester, '23-0a-room-open');
-    });
-
-    testWidgets('23-0b · 23-0d — идёт, брошен на «Слова»: три цвета полосок, маркеры, стык секций', (tester) async {
-      final json = cardsJson();
-      final words = json.where((c) => c['stage'] == 'words').toList()..sort((a, b) => (a['position'] as int).compareTo(b['position'] as int));
-      for (var i = 0; i < 12; i++) {
-        words[i]['result'] = i == 5 ? 'failed' : (i == 9 ? 'hinted' : 'passed');
-        words[i]['attempts'] = i == 5 ? 2 : 1;
-        words[i]['returns'] = i == 5;
-      }
-      final room = fixture('room-intermediate-d1-in-progress');
-      (room['stages'] as List)[0]['done'] = 12;
-      room['day']['cards_done'] = 12;
-      room['day']['minutes_spent'] = 4;
-      await pumpRoom(tester, GoldenApi(plan: planI, room: PlanDayRoom.fromJson(room), cards: parseCards(json), sheet: sheetI()), height: 2400);
-      await expectGolden(tester, '23-0b-room-in-progress');
-    });
-
-    testWidgets('23-0c — закрыт: галка, три числа Literata 56, «Далось труднее всего», «В работе»', (tester) async {
-      final json = cardsJson();
-      var n = 0;
-      for (final c in json) {
-        n++;
-        c['result'] = n % 11 == 0 ? 'failed' : (n % 7 == 0 ? 'hinted' : 'passed');
-        c['attempts'] = n % 11 == 0 ? 2 : 1;
-        c['returns'] = n % 11 == 0;
-      }
-      final room = fixture('room-intermediate-d1-in-progress');
-      room['day']['status'] = 'closed';
-      room['day']['cards_done'] = 75;
-      room['day']['minutes_spent'] = 19;
-      for (final s in room['stages'] as List) {
-        s['done'] = s['total'];
-        s['state'] = 'done';
-      }
-      room['metrics'] = {
-        'cards_total': 75,
-        'cards_done': 75,
-        'minutes_spent': 19,
-        'first_try_share': 0.84,
-        'hardest_unit_kind': 'phrase',
-        'hardest_unit_ref': 'p4',
-        'hardest_unit_text': 'How much is the deposit?',
-      };
-      for (final u in room['program'] as List) {
-        u['cards_done'] = u['cards_total'];
-        u['state'] = 'passed';
-      }
-      await pumpRoom(tester, GoldenApi(plan: planI, room: PlanDayRoom.fromJson(room), cards: parseCards(json), sheet: sheetI()), height: 2600);
-      await expectGolden(tester, '23-0c-room-closed');
-    });
-
-    testWidgets('23-14 — шит слова', (tester) async {
-      await setFrame(tester);
-      muteNativeChannels(tester);
-      final term = sheetI().words.first;
-      await tester.pumpWidget(goldenApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                showTermSheet(context, term: term, state: SheetTermState.passed, dayNumber: 1, returnDay: 2, targetLang: 'en', partnerRole: 'Агент');
-              });
-              return const SizedBox.expand();
-            },
-          ),
-        ),
-        api: GoldenApi(plan: planI, room: roomI(), cards: cardsI()),
-        recognizer: mic,
-        audioDir: audioDir,
-      ));
-      await settle(tester);
-      await expectGolden(tester, '23-14-sheet-word');
-    });
-
-    testWidgets('23-15 — шит фразы: ключ подчёркнут, «В разговоре», «с подсказкой» охрой', (tester) async {
-      await setFrame(tester);
-      muteNativeChannels(tester);
-      final term = sheetI().phrases.first;
-      await tester.pumpWidget(goldenApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                showTermSheet(
-                  context,
-                  term: term,
-                  state: SheetTermState.hinted,
-                  dayNumber: 1,
-                  returnDay: 2,
-                  targetLang: 'en',
-                  partnerRole: 'Агент',
-                  inTalkPartner: "Yes, it is. It's on King Street.",
-                  inTalkOwn: term.textTarget,
-                );
-              });
-              return const SizedBox.expand();
-            },
-          ),
-        ),
-        api: GoldenApi(plan: planI, room: roomI(), cards: cardsI()),
-        recognizer: mic,
-        audioDir: audioDir,
-      ));
-      await settle(tester);
-      await expectGolden(tester, '23-15-sheet-phrase');
-    });
-  });
-
   group('каркас сессии (23-2, 23-9, 23-11)', () {
     testWidgets('23-2a — вход в этап «Слова»', (tester) async {
       await pumpSession(tester, cardsI(), start: false);
@@ -257,6 +129,39 @@ void main() {
         await tapText(tester, 'Дальше');
       }
       await expectGolden(tester, '23-9-stage-done');
+    });
+
+    // ПРАВИЛО (наряд DAY-UI-2 §1): «Ещё раз» — «Говорю сам» заново без записи ответов.
+    // ЛОВИТ (живой прогон 14.09): выход из повтора через «Продолжить позже? … Прогресс сохранится» —
+    // сохранять нечего, и обещание было неправдой.
+    testWidgets('«Ещё раз»: выход сразу, без «Прогресс сохранится»', (tester) async {
+      await setFrame(tester);
+      muteNativeChannels(tester);
+      final api = GoldenApi(plan: planI, room: roomI(), cards: cardsI());
+      await tester.pumpWidget(
+        goldenApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => DaySessionScreen(plan: planI, room: roomI(), rehearsal: true)),
+              ),
+              child: const Text('again'),
+            ),
+          ),
+          api: api,
+          recognizer: mic,
+          audioDir: audioDir,
+        ),
+      );
+      await tester.tap(find.text('again'));
+      await settle(tester);
+      expect(find.byType(DayCloseButton), findsOneWidget);
+
+      await tester.tap(find.byType(DayCloseButton));
+      await settle(tester);
+
+      expect(find.byType(CenterAlert), findsNothing);
+      expect(find.byType(DaySessionScreen), findsNothing);
     });
 
     testWidgets('23-11 — «Продолжить позже?»', (tester) async {

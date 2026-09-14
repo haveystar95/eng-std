@@ -4125,7 +4125,7 @@ abstract class AppLocalizations {
   /// **'План · день {n} из {total}'**
   String planHeaderBrow(int n, int total);
 
-  /// Плита дня, лейбл латунью (plan.plate.label).
+  /// Плита дня, лейбл латунью (plan.plate.label); окно дня — бровь «ДЕНЬ 2» светлой латунью на плите (23-0a…0c).
   ///
   /// In ru, this message translates to:
   /// **'День {n}'**
@@ -4137,55 +4137,55 @@ abstract class AppLocalizations {
   /// **'{n, plural, one{{n} карточка} few{{n} карточки} many{{n} карточек} other{{n} карточки}}'**
   String planCardsCount(int n);
 
-  /// Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta).
+  /// Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta); окно дня — «≈ 20 минут» не начатого, «19 минут» пройденного (23-0a, 23-0c).
   ///
   /// In ru, this message translates to:
   /// **'{n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}}'**
   String planMinutesCount(int n);
 
-  /// Плита дня, этап (plan.plate.stage.words).
+  /// Плита дня, этап (plan.plate.stage.words); окно дня — ряд этапа на плите и вкладка «Слова» с бровью (23-0a…0d).
   ///
   /// In ru, this message translates to:
   /// **'Слова'**
   String get planPlateStageWords;
 
-  /// Плита дня, этап (plan.plate.stage.phrases).
+  /// Плита дня, этап (plan.plate.stage.phrases); окно дня — ряд этапа на плите и вкладка «Фразы» с бровью (23-0a…0d).
   ///
   /// In ru, this message translates to:
   /// **'Фразы'**
   String get planPlateStagePhrases;
 
-  /// Плита дня, этап (plan.plate.stage.dialog).
+  /// Плита дня, этап (plan.plate.stage.dialog); окно дня — ряд этапа на плите и вкладка «Диалог» с бровью (23-0a…0d).
   ///
   /// In ru, this message translates to:
   /// **'Диалог'**
   String get planPlateStageDialog;
 
-  /// Плита дня, этап (plan.plate.stage.listen).
+  /// Плита дня, этап (plan.plate.stage.listen); окно дня — ряд этапа на плите (23-0a…0c).
   ///
   /// In ru, this message translates to:
   /// **'Слушаю и отвечаю'**
   String get planPlateStageListen;
 
-  /// Плита дня, этап (plan.plate.stage.speak).
+  /// Плита дня, этап (plan.plate.stage.speak); окно дня — ряд этапа на плите (23-0a…0c).
   ///
   /// In ru, this message translates to:
   /// **'Говорю сам'**
   String get planPlateStageSpeak;
 
-  /// Плита дня (21-2 … 21-4): состояние этапа словами справа — этап пройден.
+  /// Плита дня (21-2 … 21-4) и окно дня (23-0b, 23-0c): состояние этапа словами справа — этап пройден.
   ///
   /// In ru, this message translates to:
   /// **'пройдено'**
   String get planPlateStateDone;
 
-  /// Плита дня (21-2, 21-3): состояние текущего этапа словами справа.
+  /// Плита дня (21-2, 21-3) и окно дня (23-0b, «идёт · ≈ 8 мин»): состояние текущего этапа словами справа.
   ///
   /// In ru, this message translates to:
   /// **'идёт'**
   String get planPlateStateCurrent;
 
-  /// Плита дня (21-2): состояние этапа, до которого ещё не дошли.
+  /// Плита дня (21-2) и окно дня (23-0a, 23-0b): состояние этапа, до которого ещё не дошли.
   ///
   /// In ru, this message translates to:
   /// **'впереди'**
@@ -4209,7 +4209,7 @@ abstract class AppLocalizations {
   /// **'не закончен · {cards}'**
   String planPlateStageSubUnfinished(String cards);
 
-  /// Плита дня, кнопка (plan.plate.cta.start).
+  /// Плита дня, кнопка (plan.plate.cta.start); окно дня — одна кнопка внизу у не начатого дня (allowed_action = start, 23-0a).
   ///
   /// In ru, this message translates to:
   /// **'Начать'**
@@ -4245,7 +4245,7 @@ abstract class AppLocalizations {
   /// **'Повторить'**
   String get planPlateCtaRetry;
 
-  /// Плита дня, кнопка (plan.plate.cta.continue).
+  /// Плита дня, кнопка (plan.plate.cta.continue); окно дня — одна кнопка внизу у идущего дня (allowed_action = continue, 23-0b).
   ///
   /// In ru, this message translates to:
   /// **'Продолжить'**
@@ -4293,19 +4293,19 @@ abstract class AppLocalizations {
   /// **'слова и фразы дня {a}'**
   String planRouteDayRepeatSubOne(int a);
 
-  /// Заголовок дня на маршруте (кадры 21-2b, 22-4b): номер дня и название; мета стоит строкой ниже.
+  /// Заголовок дня на маршруте (кадры 21-2b, 22-4b): номер дня и название; мета стоит строкой ниже. Окно дня — строка компактной шапки 56 «День 2 · Приём у врача» (23-0a…0d, прокручено).
   ///
   /// In ru, this message translates to:
   /// **'День {n} · {title}'**
   String planRouteDayTitle(int n, String title);
 
-  /// Название дня повторения на маршруте (кадры 21-2b, 22-4b).
+  /// Название дня повторения на маршруте (кадры 21-2b, 22-4b) и в окне дня повторения вместо названия сцены.
   ///
   /// In ru, this message translates to:
   /// **'Повторение'**
   String get planRouteDayReview;
 
-  /// Строка маршрута, tertiary (plan.route.day.rehearsal).
+  /// Строка маршрута, tertiary (plan.route.day.rehearsal); окно дня репетиции — название вместо названия сцены.
   ///
   /// In ru, this message translates to:
   /// **'Репетиция'**
@@ -4323,7 +4323,7 @@ abstract class AppLocalizations {
   /// **'пройден'**
   String get planRouteMetaPassed;
 
-  /// Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes).
+  /// Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes); окно дня — «≈ 12 мин» идущего дня, текущего этапа и компактной шапки (23-0b).
   ///
   /// In ru, this message translates to:
   /// **'{n} мин'**
@@ -5007,6 +5007,84 @@ abstract class AppLocalizations {
   /// **'Без сети план не собрать'**
   String get planEntryOffline;
 
+  /// Окно дня (23-0a…0c): подпись стрелки назад на плите для читалки экрана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Назад'**
+  String get planWindowBack;
+
+  /// Окно дня, плита (23-0a): слово состояния дня под названием — «не начат · ≈ 20 минут».
+  ///
+  /// In ru, this message translates to:
+  /// **'не начат'**
+  String get planWindowStateNotStarted;
+
+  /// Окно дня, плита (23-0b): слово состояния дня под названием — «идёт · ≈ 12 мин».
+  ///
+  /// In ru, this message translates to:
+  /// **'идёт'**
+  String get planWindowStateInProgress;
+
+  /// Окно дня, плита (23-0c): слово состояния дня под названием — «пройден · 19 минут».
+  ///
+  /// In ru, this message translates to:
+  /// **'пройден'**
+  String get planWindowStatePassed;
+
+  /// Окно дня: оценка минут сервера (minutes_estimate, minutes_left) — «≈ 20 минут» на плите не начатого дня, «≈ 12 мин» у идущего, у текущего этапа и в компактной шапке; minutes — planMinutesCount или planMinutesShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'≈ {minutes}'**
+  String planWindowApprox(String minutes);
+
+  /// Окно дня: две части строки через точку — «не начат · ≈ 20 минут», «идёт · ≈ 8 мин» у текущего этапа, «СЛОВА · 8 · 5 ПРОЙДЕНО» в брови вкладки.
+  ///
+  /// In ru, this message translates to:
+  /// **'{first} · {second}'**
+  String planWindowJoin(String first, String second);
+
+  /// Окно дня, плита (23-0a…0c): лейбл caps над целями дня; галки у целей — только у пройденного дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'научишься'**
+  String get planWindowGoalsLabel;
+
+  /// Окно дня, плита (23-0b): цифра ТОЛЬКО у текущего этапа — «6 / 16»; у остальных рядов цифры нет (done_count и total сервера — null).
+  ///
+  /// In ru, this message translates to:
+  /// **'{done} / {total}'**
+  String planWindowStageCount(int done, int total);
+
+  /// Окно дня, плита пройденного дня (23-0c): строка итога вместо цифр — «День пройден · 19 минут»; minutes — planMinutesCount(minutes_spent).
+  ///
+  /// In ru, this message translates to:
+  /// **'День пройден · {minutes}'**
+  String planWindowPassedLine(String minutes);
+
+  /// Окно дня, бровь вкладки (23-0b…0d): часть «5 пройдено» — summary.done сервера; при нуле части нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n} пройдено'**
+  String planWindowBrowDone(int n);
+
+  /// Окно дня, бровь вкладки (23-0c, 23-0d): часть «2 вернутся завтра» — summary.returns сервера; при нуле части нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}'**
+  String planWindowBrowReturns(int n);
+
+  /// Окно дня, кнопка пройденного дня (23-0c, allowed_action = again): «Говорю сам» ещё раз по карточкам дня, без записи ответов — не пересдача дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ещё раз'**
+  String get planWindowCtaAgain;
+
+  /// Окно дня, вкладки «Фразы» и «Диалог» (23-0d): подпись кружка воспроизведения 28 для читалки экрана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Прослушать'**
+  String get planWindowListen;
+
   /// Строка профиля: выключатель звуков (токен-лист 4к-3).
   ///
   /// In ru, this message translates to:
@@ -5018,12 +5096,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Верно · неверно · этап закрыт · день закрыт'**
   String get profileSoundsHint;
-
-  /// Латунный лейбл плиты дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'День {n}'**
-  String dayLabel(int n);
 
   /// No description provided for @dayCards.
   ///
@@ -5048,24 +5120,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'≈ {n} мин'**
   String dayApproxMin(int n);
-
-  /// No description provided for @dayLevelBeginner.
-  ///
-  /// In ru, this message translates to:
-  /// **'Начинающий'**
-  String get dayLevelBeginner;
-
-  /// No description provided for @dayLevelIntermediate.
-  ///
-  /// In ru, this message translates to:
-  /// **'Средний'**
-  String get dayLevelIntermediate;
-
-  /// No description provided for @dayGoalLabel.
-  ///
-  /// In ru, this message translates to:
-  /// **'Научишься'**
-  String get dayGoalLabel;
 
   /// No description provided for @dayStageWords.
   ///
@@ -5097,125 +5151,11 @@ abstract class AppLocalizations {
   /// **'Говорю сам'**
   String get dayStageSpeak;
 
-  /// No description provided for @dayStageCount.
-  ///
-  /// In ru, this message translates to:
-  /// **'{done} / {total}'**
-  String dayStageCount(int done, int total);
-
-  /// No description provided for @dayNewWords.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} новое слово} few{{n} новых слова} other{{n} новых слов}}'**
-  String dayNewWords(int n);
-
-  /// No description provided for @dayStageSubStart.
-  ///
-  /// In ru, this message translates to:
-  /// **'начни отсюда · {what}'**
-  String dayStageSubStart(String what);
-
-  /// No description provided for @dayStageSubUnfinished.
-  ///
-  /// In ru, this message translates to:
-  /// **'не закончен · {cards} · {minutes}'**
-  String dayStageSubUnfinished(String cards, String minutes);
-
-  /// No description provided for @dayStageSubHinted.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n} с подсказкой'**
-  String dayStageSubHinted(int n);
-
-  /// No description provided for @dayCtaStart.
-  ///
-  /// In ru, this message translates to:
-  /// **'Начать'**
-  String get dayCtaStart;
-
-  /// No description provided for @dayCtaContinue.
-  ///
-  /// In ru, this message translates to:
-  /// **'Продолжить · осталось {n}'**
-  String dayCtaContinue(int n);
-
-  /// No description provided for @dayCtaPlan.
-  ///
-  /// In ru, this message translates to:
-  /// **'К плану'**
-  String get dayCtaPlan;
-
-  /// No description provided for @dayClosedTitle.
-  ///
-  /// In ru, this message translates to:
-  /// **'День {n} закрыт'**
-  String dayClosedTitle(int n);
-
-  /// No description provided for @dayNumCards.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{карточка} few{карточки} other{карточек}}'**
-  String dayNumCards(int n);
-
-  /// No description provided for @dayNumMinutes.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{минута} few{минуты} other{минут}}'**
-  String dayNumMinutes(int n);
-
-  /// No description provided for @dayNumFirstTry.
-  ///
-  /// In ru, this message translates to:
-  /// **'с первого раза'**
-  String get dayNumFirstTry;
-
-  /// No description provided for @daySectionWords.
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова · {n}'**
-  String daySectionWords(int n);
-
-  /// No description provided for @daySectionPhrases.
-  ///
-  /// In ru, this message translates to:
-  /// **'Фразы · {n}'**
-  String daySectionPhrases(int n);
-
-  /// No description provided for @daySectionTalk.
-  ///
-  /// In ru, this message translates to:
-  /// **'Разговор · {n, plural, one{{n} обмен} few{{n} обмена} other{{n} обменов}}'**
-  String daySectionTalk(int n);
-
   /// No description provided for @dayFromDay.
   ///
   /// In ru, this message translates to:
   /// **'из дня {n}'**
   String dayFromDay(int n);
-
-  /// No description provided for @dayWordsExtra.
-  ///
-  /// In ru, this message translates to:
-  /// **'+ {n} из дня {d}'**
-  String dayWordsExtra(int n, int d);
-
-  /// No description provided for @dayHardest.
-  ///
-  /// In ru, this message translates to:
-  /// **'Далось труднее всего'**
-  String get dayHardest;
-
-  /// No description provided for @dayTries.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} попытка} few{{n} попытки} other{{n} попыток}}'**
-  String dayTries(int n);
-
-  /// No description provided for @dayInWork.
-  ///
-  /// In ru, this message translates to:
-  /// **'В работе'**
-  String get dayInWork;
 
   /// No description provided for @dayWordsCount.
   ///
@@ -5234,12 +5174,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{n, plural, one{{n} обмен} few{{n} обмена} other{{n} обменов}}'**
   String dayExchangesCount(int n);
-
-  /// No description provided for @dayWillReturn.
-  ///
-  /// In ru, this message translates to:
-  /// **'{k, plural, one{Вернётся в день {n} · {k} карточка} few{Вернутся в день {n} · {k} карточки} other{Вернутся в день {n} · {k} карточек}}'**
-  String dayWillReturn(int n, int k);
 
   /// No description provided for @dayShellCounter.
   ///
@@ -5324,12 +5258,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'новое слово'**
   String get dayIntroBadgeNew;
-
-  /// No description provided for @dayIntroBadgeRepeat.
-  ///
-  /// In ru, this message translates to:
-  /// **'повторение'**
-  String get dayIntroBadgeRepeat;
 
   /// No description provided for @dayIntroCta.
   ///
@@ -5619,36 +5547,6 @@ abstract class AppLocalizations {
   /// **'Выйти'**
   String get dayExitLeave;
 
-  /// No description provided for @daySheetStatePassed.
-  ///
-  /// In ru, this message translates to:
-  /// **'сдал · день {n}'**
-  String daySheetStatePassed(int n);
-
-  /// No description provided for @daySheetStateHinted.
-  ///
-  /// In ru, this message translates to:
-  /// **'с подсказкой · день {n}'**
-  String daySheetStateHinted(int n);
-
-  /// No description provided for @daySheetStateReturns.
-  ///
-  /// In ru, this message translates to:
-  /// **'вернётся в день {n}'**
-  String daySheetStateReturns(int n);
-
-  /// No description provided for @daySheetInTalk.
-  ///
-  /// In ru, this message translates to:
-  /// **'В разговоре'**
-  String get daySheetInTalk;
-
-  /// No description provided for @daySheetRoleYou.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ты:'**
-  String get daySheetRoleYou;
-
   /// No description provided for @dayNoVoice.
   ///
   /// In ru, this message translates to:
@@ -5684,24 +5582,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Повторить'**
   String get dayLessonRetry;
-
-  /// No description provided for @dayBack.
-  ///
-  /// In ru, this message translates to:
-  /// **'Назад'**
-  String get dayBack;
-
-  /// No description provided for @dayTabTitle.
-  ///
-  /// In ru, this message translates to:
-  /// **'План'**
-  String get dayTabTitle;
-
-  /// No description provided for @dayTabRoute.
-  ///
-  /// In ru, this message translates to:
-  /// **'Маршрут'**
-  String get dayTabRoute;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

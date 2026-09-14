@@ -108,35 +108,7 @@ void main() {
     });
   });
 
-  group('метрики дня', () {
-    DayCard card(String id, DayCardKind kind, {DayCardResult? result, int attempts = 0, String? retryOf}) => DayCard(
-      id: id,
-      stage: PlanStage.words,
-      position: 0,
-      kind: kind,
-      source: DayCardSource.today,
-      unitKind: PlanUnitKind.word,
-      unitRef: id,
-      payload: const {},
-      result: result,
-      attempts: attempts,
-      retryOf: retryOf,
-      returns: false,
-    );
-
-    test('«с первого раза» — оценённые карточки, сданные с первой попытки; знакомства не считаются', () {
-      final cards = [
-        card('a', DayCardKind.wordIntro, result: DayCardResult.passed, attempts: 1),
-        card('b', DayCardKind.wordChoose, result: DayCardResult.passed, attempts: 1),
-        card('c', DayCardKind.wordChoose, result: DayCardResult.failed, attempts: 1),
-        card('c2', DayCardKind.wordChoose, result: DayCardResult.passed, attempts: 1, retryOf: 'c'),
-        card('d', DayCardKind.wordSay, result: DayCardResult.passed, attempts: 2),
-      ];
-      // b — да; c — нет; c2 — повтор, не считается; d — со второй попытки. 1 из 3.
-      expect(DayRules.firstTryPercent(cards), 33);
-      expect(DayRules.firstTryPercent([card('a', DayCardKind.wordIntro)]), isNull);
-    });
-
+  group('минуты входа в этап', () {
     test('оценка минут этапа — по числу карточек', () {
       expect(DayRules.estimateMinutes(0), 0);
       expect(DayRules.estimateMinutes(32), 7);

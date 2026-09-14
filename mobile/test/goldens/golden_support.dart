@@ -78,12 +78,11 @@ void muteNativeChannels(WidgetTester tester) {
 /// СЕРВЕР ДНЯ ИЗ ФИКСТУР. Ответы на карточки — как у backend2: первый `failed` возвращает повтор
 /// в конец этапа, `failed` у повтора помечает «вернётся».
 class GoldenApi extends ApiClient {
-  GoldenApi({required Plan plan, required this.room, required this.cards, this.sheet}) : current = plan, super(TokenStore());
+  GoldenApi({required Plan plan, required this.room, required this.cards}) : current = plan, super(TokenStore());
 
   Plan current;
   PlanDayRoom room;
   List<DayCard> cards;
-  DaySheet? sheet;
   int _position = 1000;
 
   @override
@@ -100,9 +99,6 @@ class GoldenApi extends ApiClient {
 
   @override
   Future<DayCards> dayCards(String planId, int number) async => DayCards(planId: planId, dayId: room.day.id, number: number, status: room.day.status, cards: cards);
-
-  @override
-  Future<DaySheet> daySheet(String planId, int number) async => sheet ?? DaySheet(planId: planId, number: number, words: const [], phrases: const []);
 
   @override
   Future<DayAnswerOutcome> answerDayCard(String planId, int number, String cardId, {required DayCardResult result, required int attempts}) async {

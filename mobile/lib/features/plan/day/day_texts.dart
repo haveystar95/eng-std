@@ -30,11 +30,6 @@ abstract final class DayTexts {
     PlanStage.speak || PlanStage.unknown => l.dayEntrySpeakSteps,
   };
 
-  static String level(AppLocalizations l, PlanLevel level) => switch (level) {
-    PlanLevel.beginner => l.dayLevelBeginner,
-    PlanLevel.intermediate => l.dayLevelIntermediate,
-  };
-
   /// «по-английски» — наречие языка плана для «Скажи …» / «Ответь …» / «Собери …».
   static String adverb(AppLocalizations l, String targetLang) =>
       languageAdverbFor(targetLang, l.localeName);

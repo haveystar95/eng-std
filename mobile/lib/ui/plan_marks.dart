@@ -37,30 +37,47 @@ enum PlanStageMarkKind {
 /// Состояние этапа — оно же вся его тонировка.
 enum PlanStageMarkState { done, current, locked }
 
-/// ЗНАЧОК ЭТАПА 20 × 20 (кадры 21-2, 21-3, 21-4, 21-8, 22-5b).
+/// Где стоит значок: плита таба (21-x) или плита окна дня на фото (23-0a…0c) — у окна свои тона
+/// из кадров: пройденный `#9DB89F`, запертый `#BDB6AC` без прозрачности, бейдж на 3 за краем.
+enum PlanStageMarkTone { plate, window }
+
+/// ЗНАЧОК ЭТАПА 20 × 20 (кадры 21-2, 21-3, 21-4, 21-8, 22-5b, 23-0a…0c).
 ///
 /// [onDark] — плита: тёмная (текущий этап paper) или светлая бумага закрытого дня (текущий ink).
+/// [popBadge] — галка-бейдж только что закрытого этапа появляется `om-check-pop` (окно дня).
 class PlanStageMark extends StatelessWidget {
   const PlanStageMark({
     super.key,
     required this.kind,
     required this.state,
     this.onDark = true,
+    this.tone = PlanStageMarkTone.plate,
+    this.popBadge = false,
   });
 
   final PlanStageMarkKind kind;
   final PlanStageMarkState state;
   final bool onDark;
+  final PlanStageMarkTone tone;
+  final bool popBadge;
 
   @override
   Widget build(BuildContext context) {
     // «пройден — шалфей с галкой 10, текущий — paper на тёмной и ink на светлой, заперт — 35 %».
     final base = onDark ? AppColors.paper : AppColors.ink;
+    final window = tone == PlanStageMarkTone.window;
     final (color, opacity) = switch (state) {
-      PlanStageMarkState.done => (AppColors.verdictKnown, 1.0),
+      PlanStageMarkState.done => (window ? AppColors.windowDone : AppColors.verdictKnown, 1.0),
       PlanStageMarkState.current => (base, 1.0),
-      PlanStageMarkState.locked => (base, .35),
+      PlanStageMarkState.locked => window ? (AppColors.windowAhead, 1.0) : (base, .35),
     };
+    final badge = Container(
+      width: 10,
+      height: 10,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.verdictKnown),
+      child: Icon(LucideIcons.check, size: window ? 6 : 7, color: AppColors.paper),
+    );
 
     final glyph = SizedBox(
       width: 20,
@@ -102,24 +119,39 @@ class PlanStageMark extends StatelessWidget {
           // не просто галка поверх значка, иначе она теряется на самом рисунке.
           if (state == PlanStageMarkState.done)
             Positioned(
-              right: -2,
-              bottom: -2,
-              child: Container(
-                width: 10,
-                height: 10,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.verdictKnown,
-                ),
-                child: const Icon(LucideIcons.check, size: 7, color: AppColors.paper),
-              ),
+              right: window ? -3 : -2,
+              bottom: window ? -3 : -2,
+              child: popBadge ? CheckPop(child: badge) : badge,
             ),
         ],
       ),
     );
 
     return glyph;
+  }
+}
+
+/// ГАЛКА ПОЯВЛЯЕТСЯ — `@keyframes om-check-pop` канвы: масштаб 0 → 1 за 180 мс с задержкой 300,
+/// `cubic-bezier(.34,1.4,.5,1)` (таблица «Тайминг · серия 23»). Под «уменьшением движения» галка
+/// стоит сразу.
+class CheckPop extends StatelessWidget {
+  const CheckPop({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.of(context).disableAnimations) return child;
+    final delay = AppMotion.windowStageCheckDelay.inMilliseconds;
+    final total = delay + AppMotion.windowStageCheck.inMilliseconds;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: total),
+      curve: Interval(delay / total, 1, curve: AppMotion.windowStageCheckCurve),
+      builder: (_, scale, child) => Transform.scale(scale: scale, child: child),
+      child: child,
+    );
   }
 }
 

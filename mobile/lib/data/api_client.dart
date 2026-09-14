@@ -710,12 +710,6 @@ class ApiClient {
     return PlanDayRoom.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  Future<DaySheet> daySheet(String planId, int number) async {
-    final r = await _dio.get('/plans/$planId/days/$number/sheet');
-
-    return DaySheet.fromJson(_data(r) as Map<String, dynamic>);
-  }
-
   /// Адрес файла озвучки реплики — `GET /plans/audio/{audioId}`; качает [LineAudioCache] с
   /// токеном.
   static String planAudioUrl(String audioId) => '${AppConfig.apiBaseUrl}/api/v1/plans/audio/$audioId';

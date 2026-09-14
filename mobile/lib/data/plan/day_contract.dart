@@ -1,9 +1,9 @@
 /// КАРТОЧКИ ДНЯ — `docs/plan-api.md`, OpenAPI тег `Plans` (наряды PLAN-GEN → DAY-UI).
 ///
-/// Сам план, маршрут, сцены и кабинет дня читает `plan_models.dart` — он один на таб и на день.
-/// Здесь ровно то, чего там нет: состав дня карточками (`POST …/open`, `GET …/cards`), вердикт по
-/// карточке и шит термина. Ни одного поля, которого нет на проводе, и ни одного числа, посчитанного
-/// на телефоне: то, что считает клиент (проценты и минуты идущего дня), живёт в `day_rules.dart`.
+/// Сам план, маршрут, сцены и день читает `plan_models.dart` — он один на таб и на день; окно дня —
+/// `day_window.dart`. Здесь ровно то, чего там нет: состав дня карточками (`POST …/open`, `GET
+/// …/cards`) и вердикт по карточке. Ни одного поля, которого нет на проводе; то, что сессия считает
+/// сама (минуты входа в этап), живёт в `day_rules.dart`.
 library;
 
 import 'plan_models.dart';
@@ -304,124 +304,8 @@ class DayAnswerOutcome {
   );
 }
 
-/// Термин шита — `PlanTerm` (`GET …/sheet`).
-class DayTerm {
-  const DayTerm({
-    required this.id,
-    required this.sceneId,
-    required this.kind,
-    required this.ref,
-    required this.textTarget,
-    required this.textNative,
-    required this.simplifiedVariants,
-    this.pronunciationNative,
-    this.definitionTarget,
-    this.exampleTarget,
-    this.exampleNative,
-    this.speakingKey,
-    this.image,
-  });
-
-  final String id;
-  final String sceneId;
-
-  /// `word` | `chunk` | `phrase`.
-  final String kind;
-  final String ref;
-  final String textTarget;
-  final String textNative;
-  final String? pronunciationNative;
-  final String? definitionTarget;
-  final String? exampleTarget;
-  final String? exampleNative;
-  final String? speakingKey;
-  final List<String> simplifiedVariants;
-  final PlanImage? image;
-
-  factory DayTerm.fromJson(Map<String, dynamic> j) => DayTerm(
-    id: (j['id'] as String?) ?? '',
-    sceneId: (j['scene_id'] as String?) ?? '',
-    kind: (j['kind'] as String?) ?? 'word',
-    ref: (j['ref'] as String?) ?? '',
-    textTarget: (j['text_target'] as String?) ?? '',
-    textNative: (j['text_native'] as String?) ?? '',
-    pronunciationNative: j['pronunciation_native'] as String?,
-    definitionTarget: j['definition_target'] as String?,
-    exampleTarget: j['example_target'] as String?,
-    exampleNative: j['example_native'] as String?,
-    speakingKey: j['speaking_key'] as String?,
-    simplifiedVariants: _strings(j['simplified_variants']),
-    image: PlanImage.fromJson(j['image'] as Map<String, dynamic>?),
-  );
-}
-
-class DaySheet {
-  const DaySheet({required this.planId, required this.number, required this.words, required this.phrases});
-
-  final String planId;
-  final int number;
-  final List<DayTerm> words;
-  final List<DayTerm> phrases;
-
-  factory DaySheet.fromJson(Map<String, dynamic> j) => DaySheet(
-    planId: (j['plan_id'] as String?) ?? '',
-    number: (j['number'] as num?)?.toInt() ?? 1,
-    words: _list(j['words'], DayTerm.fromJson),
-    phrases: _list(j['phrases'], DayTerm.fromJson),
-  );
-
-  DayTerm? byRef(String ref) {
-    for (final t in [...words, ...phrases]) {
-      if (t.ref == ref) return t;
-    }
-    return null;
-  }
-}
-
 List<String> _strings(Object? v) =>
     [for (final e in (v as List?) ?? const []) if (e is String && e.trim().isNotEmpty) e];
 
 List<T> _list<T>(Object? v, T Function(Map<String, dynamic>) f) =>
     [for (final e in (v as List?) ?? const []) if (e is Map<String, dynamic>) f(e)];
-
-/// ЧТО КАБИНЕТ ДНЯ ЧИТАЕТ У КОМНАТЫ сверх того, что нужно плите на табе (наряд DAY-UI).
-///
-/// Живёт расширением, а не полями [PlanDayRoom]: это выборки по уже приехавшим спискам, и
-/// вычислять их в конструкторе значило бы считать то, что экрану может не понадобиться.
-extension DayRoomProgram on PlanDayRoom {
-  Iterable<PlanProgramUnit> get words => program.where((u) => u.unitKind == PlanUnitKind.word);
-  Iterable<PlanProgramUnit> get phrases => program.where((u) => u.unitKind == PlanUnitKind.phrase);
-  Iterable<PlanProgramUnit> get exchanges => program.where((u) => u.unitKind == PlanUnitKind.exchange);
-
-  /// Этап дня по имени, или null — сервер присылает только те, что есть у этого дня.
-  PlanStageProgress? stageOf(PlanStage stage) {
-    for (final s in stages) {
-      if (s.stage == stage) return s;
-    }
-
-    return null;
-  }
-
-  /// Этап, на котором стоит день, — первый `current`.
-  PlanStageProgress? get currentStage {
-    for (final s in stages) {
-      if (s.state == PlanStageState.current) return s;
-    }
-
-    return null;
-  }
-
-  int get cardsTotal => stages.fold(0, (n, s) => n + s.total);
-  int get cardsDone => stages.fold(0, (n, s) => n + s.done);
-  int get cardsRemaining => cardsTotal - cardsDone;
-}
-
-/// Сколько карточек этапу осталось — вторая строка брошенного этапа на плите (23-0b).
-extension DayStageRemaining on PlanStageProgress {
-  int get remaining => (total - done).clamp(0, total);
-}
-
-/// «84 %» в подвале закрытого дня — доля сервера, приведённая к целому (23-0c).
-extension DayMetricsPercent on PlanDayMetrics {
-  int? get firstTryPercent => firstTryShare == null ? null : (firstTryShare! * 100).round();
-}

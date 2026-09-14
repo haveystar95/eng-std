@@ -76,27 +76,27 @@ python3 docs/plan-ui-glossary.py
 | `planFinishedTitle` | Завершённые планы | Кадры 21-1, 21-2b (plan.finished.title). |
 | `planFinishedItemDate` | завершён {date} | Кадры 21-1, 21-2b; дата по локали (plan.finished.item.date). |
 | `planHeaderBrow` | План · день {n} из {total} | Бровь шапки плана, 11/700 caps (кадр 21-2, plan.header.brow). |
-| `planPlateLabel` | День {n} | Плита дня, лейбл латунью (plan.plate.label). |
+| `planPlateLabel` | День {n} | Плита дня, лейбл латунью (plan.plate.label); окно дня — бровь «ДЕНЬ 2» светлой латунью на плите (23-0a…0c). |
 | `planCardsCount` | {n, plural, one{{n} карточка} few{{n} карточки} many{{n} карточек} other{{n} карточки}} | Счётные формы карточек: 1 карточка / 2 карточки / 5 карточек (plan.plate.meta, plan.closed.meta, plan.closed.return). |
-| `planMinutesCount` | {n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}} | Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta). |
-| `planPlateStageWords` | Слова | Плита дня, этап (plan.plate.stage.words). |
-| `planPlateStagePhrases` | Фразы | Плита дня, этап (plan.plate.stage.phrases). |
-| `planPlateStageDialog` | Диалог | Плита дня, этап (plan.plate.stage.dialog). |
-| `planPlateStageListen` | Слушаю и отвечаю | Плита дня, этап (plan.plate.stage.listen). |
-| `planPlateStageSpeak` | Говорю сам | Плита дня, этап (plan.plate.stage.speak). |
-| `planPlateStateDone` | пройдено | Плита дня (21-2 … 21-4): состояние этапа словами справа — этап пройден. |
-| `planPlateStateCurrent` | идёт | Плита дня (21-2, 21-3): состояние текущего этапа словами справа. |
-| `planPlateStateAhead` | впереди | Плита дня (21-2): состояние этапа, до которого ещё не дошли. |
+| `planMinutesCount` | {n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}} | Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta); окно дня — «≈ 20 минут» не начатого, «19 минут» пройденного (23-0a, 23-0c). |
+| `planPlateStageWords` | Слова | Плита дня, этап (plan.plate.stage.words); окно дня — ряд этапа на плите и вкладка «Слова» с бровью (23-0a…0d). |
+| `planPlateStagePhrases` | Фразы | Плита дня, этап (plan.plate.stage.phrases); окно дня — ряд этапа на плите и вкладка «Фразы» с бровью (23-0a…0d). |
+| `planPlateStageDialog` | Диалог | Плита дня, этап (plan.plate.stage.dialog); окно дня — ряд этапа на плите и вкладка «Диалог» с бровью (23-0a…0d). |
+| `planPlateStageListen` | Слушаю и отвечаю | Плита дня, этап (plan.plate.stage.listen); окно дня — ряд этапа на плите (23-0a…0c). |
+| `planPlateStageSpeak` | Говорю сам | Плита дня, этап (plan.plate.stage.speak); окно дня — ряд этапа на плите (23-0a…0c). |
+| `planPlateStateDone` | пройдено | Плита дня (21-2 … 21-4) и окно дня (23-0b, 23-0c): состояние этапа словами справа — этап пройден. |
+| `planPlateStateCurrent` | идёт | Плита дня (21-2, 21-3) и окно дня (23-0b, «идёт · ≈ 8 мин»): состояние текущего этапа словами справа. |
+| `planPlateStateAhead` | впереди | Плита дня (21-2) и окно дня (23-0a, 23-0b): состояние этапа, до которого ещё не дошли. |
 | `planNewWordsCount` | {n, plural, one{{n} новое слово} few{{n} новых слова} many{{n} новых слов} other{{n} новых слова}} | Формы «1 новое слово / 2 новых слова / 5 новых слов» (plan.plate.stage.sub.start). |
 | `planPlateStageSubStart` | начни отсюда · {words} | Плита дня, вторая строка текущего этапа (plan.plate.stage.sub.start); words — planNewWordsCount. |
 | `planPlateStageSubUnfinished` | не закончен · {cards} | Плита дня, вторая строка брошенного этапа (plan.plate.stage.sub.unfinished); cards — planCardsCount. Оценки минут в контракте нет — часть «≈ N мин» не рисуется, как и вся строка plan.plate.meta «{n} карточек · ≈ {min} минут» (вопрос архитектору). |
-| `planPlateCtaStart` | Начать | Плита дня, кнопка (plan.plate.cta.start). |
+| `planPlateCtaStart` | Начать | Плита дня, кнопка (plan.plate.cta.start); окно дня — одна кнопка внизу у не начатого дня (allowed_action = start, 23-0a). |
 | `planPlateBuildingTitle` | Собираем день {n} | Строка вместо этапов, пока день пишется (кадр 22-5a, plan.plate.building.title). |
 | `planPlateBuildingSub` | около минуты · можно закрыть приложение | Подпись под «Собираем день N»: срок назван, уходить разрешено (кадр 22-5a, plan.plate.building.sub). |
 | `planPlateFailedTitle` | День не собрался | Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title). |
 | `planPlateFailedSub` | Сеть пропала. Маршрут на месте, пропал только день {n} | Подпись под «День не собрался» (кадр 22-5c, plan.plate.failed.sub). |
 | `planPlateCtaRetry` | Повторить | Кнопка плиты у несобравшегося дня (кадр 22-5c, plan.plate.cta.retry). |
-| `planPlateCtaContinue` | Продолжить | Плита дня, кнопка (plan.plate.cta.continue). |
+| `planPlateCtaContinue` | Продолжить | Плита дня, кнопка (plan.plate.cta.continue); окно дня — одна кнопка внизу у идущего дня (allowed_action = continue, 23-0b). |
 | `planClosedTitle` | День {n} закрыт | Кадр 21-4 (plan.closed.title). |
 | `planClosedCount` | {cards} · {minutes} | Счёт закрытого дня в шапке плиты: «75 карточек · 19 минут» (кадр 21-4, plan.closed.count). |
 | `planClosedNextTomorrow` | День {n} откроется завтра, {date} | Первая строка подвала закрытого дня (кадр 21-4, plan.closed.next.tomorrow). |
@@ -104,12 +104,12 @@ python3 docs/plan-ui-glossary.py
 | `planClosedReturn` | {k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}} | Вторая строка подвала закрытого дня, терракотой (кадр 21-4, plan.closed.return). |
 | `planRouteDayRepeatSub` | слова и фразы дней {a}–{b} | Строка маршрута (plan.route.day.repeat.sub). |
 | `planRouteDayRepeatSubOne` | слова и фразы дня {a} | Строка маршрута, когда повторению предшествует один день ситуации (день 1 → повторение день 2). |
-| `planRouteDayTitle` | День {n} · {title} | Заголовок дня на маршруте (кадры 21-2b, 22-4b): номер дня и название; мета стоит строкой ниже. |
-| `planRouteDayReview` | Повторение | Название дня повторения на маршруте (кадры 21-2b, 22-4b). |
-| `planRouteDayRehearsal` | Репетиция | Строка маршрута, tertiary (plan.route.day.rehearsal). |
+| `planRouteDayTitle` | День {n} · {title} | Заголовок дня на маршруте (кадры 21-2b, 22-4b): номер дня и название; мета стоит строкой ниже. Окно дня — строка компактной шапки 56 «День 2 · Приём у врача» (23-0a…0d, прокручено). |
+| `planRouteDayReview` | Повторение | Название дня повторения на маршруте (кадры 21-2b, 22-4b) и в окне дня повторения вместо названия сцены. |
+| `planRouteDayRehearsal` | Репетиция | Строка маршрута, tertiary (plan.route.day.rehearsal); окно дня репетиции — название вместо названия сцены. |
 | `planRouteDayRehearsalSub` | весь маршрут вслух | Строка маршрута (plan.route.day.rehearsal.sub). |
 | `planRouteMetaPassed` | пройден | Мета-строка пройденного дня маршрута (кадр 21-2b, plan.route.meta.passed). |
-| `planMinutesShort` | {n} мин | Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes). |
+| `planMinutesShort` | {n} мин | Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes); окно дня — «≈ 12 мин» идущего дня, текущего этапа и компактной шапки (23-0b). |
 | `planRouteMetaOpensAfter` | откроется после дня {n} | Мета-строка ПЕРВОГО запертого дня маршрута (кадр 21-2b, plan.route.meta.opens.after). |
 | `planRouteMetaOpensTomorrow` | откроется завтра | Мета-строка первого запертого дня, когда предыдущий уже пройден (кадр 21-4, plan.route.meta.opens.tomorrow). |
 | `planRouteEventNoDate` | указать дату | Мишень события без даты — пунктирный узел маршрута (кадр 21-2b, plan.route.event.nodate). |
@@ -223,3 +223,16 @@ python3 docs/plan-ui-glossary.py
 | `planBannerNow` | сейчас | Баннер уведомления в приложении (вид кадра 22-6): время справа от заголовка. |
 | `planBannerAppMark` | С | Баннер уведомления в приложении (кадр 22-6): буква-значок приложения «Слова» в квадрате 34. |
 | `planEntryOffline` | Без сети план не собрать | Вход офлайн (§6): нельзя начать сборку. Строки в таблице нет — добавлена нарядом PLAN-UI. |
+| `planWindowBack` | Назад | Окно дня (23-0a…0c): подпись стрелки назад на плите для читалки экрана. |
+| `planWindowStateNotStarted` | не начат | Окно дня, плита (23-0a): слово состояния дня под названием — «не начат · ≈ 20 минут». |
+| `planWindowStateInProgress` | идёт | Окно дня, плита (23-0b): слово состояния дня под названием — «идёт · ≈ 12 мин». |
+| `planWindowStatePassed` | пройден | Окно дня, плита (23-0c): слово состояния дня под названием — «пройден · 19 минут». |
+| `planWindowApprox` | ≈ {minutes} | Окно дня: оценка минут сервера (minutes_estimate, minutes_left) — «≈ 20 минут» на плите не начатого дня, «≈ 12 мин» у идущего, у текущего этапа и в компактной шапке; minutes — planMinutesCount или planMinutesShort. |
+| `planWindowJoin` | {first} · {second} | Окно дня: две части строки через точку — «не начат · ≈ 20 минут», «идёт · ≈ 8 мин» у текущего этапа, «СЛОВА · 8 · 5 ПРОЙДЕНО» в брови вкладки. |
+| `planWindowGoalsLabel` | научишься | Окно дня, плита (23-0a…0c): лейбл caps над целями дня; галки у целей — только у пройденного дня. |
+| `planWindowStageCount` | {done} / {total} | Окно дня, плита (23-0b): цифра ТОЛЬКО у текущего этапа — «6 / 16»; у остальных рядов цифры нет (done_count и total сервера — null). |
+| `planWindowPassedLine` | День пройден · {minutes} | Окно дня, плита пройденного дня (23-0c): строка итога вместо цифр — «День пройден · 19 минут»; minutes — planMinutesCount(minutes_spent). |
+| `planWindowBrowDone` | {n} пройдено | Окно дня, бровь вкладки (23-0b…0d): часть «5 пройдено» — summary.done сервера; при нуле части нет. |
+| `planWindowBrowReturns` | {n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}} | Окно дня, бровь вкладки (23-0c, 23-0d): часть «2 вернутся завтра» — summary.returns сервера; при нуле части нет. |
+| `planWindowCtaAgain` | Ещё раз | Окно дня, кнопка пройденного дня (23-0c, allowed_action = again): «Говорю сам» ещё раз по карточкам дня, без записи ответов — не пересдача дня. |
+| `planWindowListen` | Прослушать | Окно дня, вкладки «Фразы» и «Диалог» (23-0d): подпись кружка воспроизведения 28 для читалки экрана. |

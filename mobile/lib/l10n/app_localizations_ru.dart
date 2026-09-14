@@ -3390,15 +3390,69 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planEntryOffline => 'Без сети план не собрать';
 
   @override
+  String get planWindowBack => 'Назад';
+
+  @override
+  String get planWindowStateNotStarted => 'не начат';
+
+  @override
+  String get planWindowStateInProgress => 'идёт';
+
+  @override
+  String get planWindowStatePassed => 'пройден';
+
+  @override
+  String planWindowApprox(String minutes) {
+    return '≈ $minutes';
+  }
+
+  @override
+  String planWindowJoin(String first, String second) {
+    return '$first · $second';
+  }
+
+  @override
+  String get planWindowGoalsLabel => 'научишься';
+
+  @override
+  String planWindowStageCount(int done, int total) {
+    return '$done / $total';
+  }
+
+  @override
+  String planWindowPassedLine(String minutes) {
+    return 'День пройден · $minutes';
+  }
+
+  @override
+  String planWindowBrowDone(int n) {
+    return '$n пройдено';
+  }
+
+  @override
+  String planWindowBrowReturns(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n вернутся завтра',
+      many: '$n вернутся завтра',
+      few: '$n вернутся завтра',
+      one: '$n вернётся завтра',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planWindowCtaAgain => 'Ещё раз';
+
+  @override
+  String get planWindowListen => 'Прослушать';
+
+  @override
   String get profileRowSounds => 'Звуки';
 
   @override
   String get profileSoundsHint => 'Верно · неверно · этап закрыт · день закрыт';
-
-  @override
-  String dayLabel(int n) {
-    return 'День $n';
-  }
 
   @override
   String dayCards(int n) {
@@ -3442,15 +3496,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get dayLevelBeginner => 'Начинающий';
-
-  @override
-  String get dayLevelIntermediate => 'Средний';
-
-  @override
-  String get dayGoalLabel => 'Научишься';
-
-  @override
   String get dayStageWords => 'Слова';
 
   @override
@@ -3466,129 +3511,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dayStageSpeak => 'Говорю сам';
 
   @override
-  String dayStageCount(int done, int total) {
-    return '$done / $total';
-  }
-
-  @override
-  String dayNewWords(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n новых слов',
-      few: '$n новых слова',
-      one: '$n новое слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String dayStageSubStart(String what) {
-    return 'начни отсюда · $what';
-  }
-
-  @override
-  String dayStageSubUnfinished(String cards, String minutes) {
-    return 'не закончен · $cards · $minutes';
-  }
-
-  @override
-  String dayStageSubHinted(int n) {
-    return '$n с подсказкой';
-  }
-
-  @override
-  String get dayCtaStart => 'Начать';
-
-  @override
-  String dayCtaContinue(int n) {
-    return 'Продолжить · осталось $n';
-  }
-
-  @override
-  String get dayCtaPlan => 'К плану';
-
-  @override
-  String dayClosedTitle(int n) {
-    return 'День $n закрыт';
-  }
-
-  @override
-  String dayNumCards(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: 'карточек',
-      few: 'карточки',
-      one: 'карточка',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String dayNumMinutes(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: 'минут',
-      few: 'минуты',
-      one: 'минута',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get dayNumFirstTry => 'с первого раза';
-
-  @override
-  String daySectionWords(int n) {
-    return 'Слова · $n';
-  }
-
-  @override
-  String daySectionPhrases(int n) {
-    return 'Фразы · $n';
-  }
-
-  @override
-  String daySectionTalk(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n обменов',
-      few: '$n обмена',
-      one: '$n обмен',
-    );
-    return 'Разговор · $_temp0';
-  }
-
-  @override
   String dayFromDay(int n) {
     return 'из дня $n';
   }
-
-  @override
-  String dayWordsExtra(int n, int d) {
-    return '+ $n из дня $d';
-  }
-
-  @override
-  String get dayHardest => 'Далось труднее всего';
-
-  @override
-  String dayTries(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n попыток',
-      few: '$n попытки',
-      one: '$n попытка',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get dayInWork => 'В работе';
 
   @override
   String dayWordsCount(int n) {
@@ -3622,18 +3547,6 @@ class AppLocalizationsRu extends AppLocalizations {
       other: '$n обменов',
       few: '$n обмена',
       one: '$n обмен',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String dayWillReturn(int n, int k) {
-    String _temp0 = intl.Intl.pluralLogic(
-      k,
-      locale: localeName,
-      other: 'Вернутся в день $n · $k карточек',
-      few: 'Вернутся в день $n · $k карточки',
-      one: 'Вернётся в день $n · $k карточка',
     );
     return '$_temp0';
   }
@@ -3705,9 +3618,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dayIntroBadgeNew => 'новое слово';
-
-  @override
-  String get dayIntroBadgeRepeat => 'повторение';
 
   @override
   String get dayIntroCta => 'Понятно';
@@ -3915,27 +3825,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dayExitLeave => 'Выйти';
 
   @override
-  String daySheetStatePassed(int n) {
-    return 'сдал · день $n';
-  }
-
-  @override
-  String daySheetStateHinted(int n) {
-    return 'с подсказкой · день $n';
-  }
-
-  @override
-  String daySheetStateReturns(int n) {
-    return 'вернётся в день $n';
-  }
-
-  @override
-  String get daySheetInTalk => 'В разговоре';
-
-  @override
-  String get daySheetRoleYou => 'Ты:';
-
-  @override
   String get dayNoVoice => 'без озвучки — читает телефон';
 
   @override
@@ -3956,13 +3845,4 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dayLessonRetry => 'Повторить';
-
-  @override
-  String get dayBack => 'Назад';
-
-  @override
-  String get dayTabTitle => 'План';
-
-  @override
-  String get dayTabRoute => 'Маршрут';
 }

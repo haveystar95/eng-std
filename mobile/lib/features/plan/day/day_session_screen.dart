@@ -44,10 +44,14 @@ enum DaySessionExit {
 /// Открывает день (`POST …/open` — сервер раздаёт карточки на первый вызов), держит [DaySession]
 /// и [DayVoice] на всю посадку; уходит в кабинет по крестику или по закрытию последнего этапа.
 class DaySessionScreen extends ConsumerStatefulWidget {
-  const DaySessionScreen({super.key, required this.plan, required this.room});
+  const DaySessionScreen({super.key, required this.plan, required this.room, this.rehearsal = false});
 
   final Plan plan;
   final PlanDayRoom room;
+
+  /// «Ещё раз» пройденного дня: «Говорю сам» по уже розданным карточкам (`GET …/cards`), без записи
+  /// ответов и без закрытий ([DaySession.rehearsal]).
+  final bool rehearsal;
 
   @override
   ConsumerState<DaySessionScreen> createState() => _DaySessionScreenState();
@@ -84,17 +88,22 @@ class _DaySessionScreenState extends ConsumerState<DaySessionScreen> {
   Future<void> _open() async {
     final api = ref.read(apiClientProvider);
     try {
-      final cards = await api.openDay(widget.plan.id, widget.room.day.number);
+      final rehearsal = widget.rehearsal;
+      final dealt = rehearsal
+          ? await api.dayCards(widget.plan.id, widget.room.day.number)
+          : await api.openDay(widget.plan.id, widget.room.day.number);
+      final cards = rehearsal ? DaySession.rehearsalOf(dealt.cards) : dealt.cards;
       if (!mounted) return;
       final voice = DayVoice(lines: ref.read(lineAudioCacheProvider), targetLang: widget.plan.targetLang);
       unawaited(voice.warmUp());
-      unawaited(voice.prepare(cards.cards));
+      unawaited(voice.prepare(cards));
       final session = DaySession(
         api: api,
         planId: widget.plan.id,
         number: widget.room.day.number,
-        cards: cards.cards,
+        cards: cards,
         returnDay: widget.room.day.number + 1,
+        rehearsal: rehearsal,
       )..addListener(_onSession);
       setState(() {
         _voice = voice;
@@ -147,8 +156,11 @@ class _DaySessionScreenState extends ConsumerState<DaySessionScreen> {
   Future<void> _close() async {
     final l = AppLocalizations.of(context);
     final s = _session;
-    if (s == null || s.stage == null || s.phase == DayPhase.dayDone) {
-      Navigator.of(context).pop(DaySessionExit.left);
+    // «Ещё раз» ничего не записывает (DAY-UI-2): спрашивать «Продолжить позже? … Прогресс
+    // сохранится» было бы обещанием, которого повтор не выполняет, — из него выходят сразу.
+    if (s == null || s.stage == null || s.phase == DayPhase.dayDone || s.rehearsal) {
+      await _voice?.stop();
+      if (mounted) Navigator.of(context).pop(DaySessionExit.left);
       return;
     }
     final stage = s.stage!;
@@ -176,9 +188,9 @@ class _DaySessionScreenState extends ConsumerState<DaySessionScreen> {
       try {
         await s.closeDay();
       } catch (_) {
-        // Кабинет перечитает день; закрытие на сервере идемпотентно.
+        // Окно перечитает день; закрытие на сервере идемпотентно.
       }
-      if (mounted) Navigator.of(context).pop(DaySessionExit.dayClosed);
+      if (mounted) Navigator.of(context).pop(s.rehearsal ? DaySessionExit.left : DaySessionExit.dayClosed);
     }
   }
 

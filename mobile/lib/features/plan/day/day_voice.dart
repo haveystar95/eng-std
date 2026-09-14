@@ -54,6 +54,13 @@ class DayVoice {
     unawaited(_lines.preload(refs).catchError((Object e) => debugPrint('[day-voice] preload: $e')));
   }
 
+  /// Строки окна дня с адресами серверного голоса — фразы и реплики собеседника (наряд DAY-UI-2):
+  /// запомнить и докачать. Ничего не ждёт: «прослушать» без файла читает телефон.
+  Future<void> preload(Iterable<LineAudioRef> lines) async {
+    _lines.note(lines.map((l) => l.text));
+    await _lines.preload(lines).catchError((Object e) => debugPrint('[day-voice] preload: $e'));
+  }
+
   /// Есть ли у реплики файл сервера (иначе читает телефон — тихая строка на карточке).
   bool hasFile(String text) => _lines.fileFor(text) != null;
 

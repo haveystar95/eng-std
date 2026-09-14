@@ -3246,15 +3246,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEntryOffline => 'The plan cannot be built without a network';
 
   @override
+  String get planWindowBack => 'Back';
+
+  @override
+  String get planWindowStateNotStarted => 'not started';
+
+  @override
+  String get planWindowStateInProgress => 'in progress';
+
+  @override
+  String get planWindowStatePassed => 'passed';
+
+  @override
+  String planWindowApprox(String minutes) {
+    return '≈ $minutes';
+  }
+
+  @override
+  String planWindowJoin(String first, String second) {
+    return '$first · $second';
+  }
+
+  @override
+  String get planWindowGoalsLabel => 'you will learn to';
+
+  @override
+  String planWindowStageCount(int done, int total) {
+    return '$done / $total';
+  }
+
+  @override
+  String planWindowPassedLine(String minutes) {
+    return 'Day passed · $minutes';
+  }
+
+  @override
+  String planWindowBrowDone(int n) {
+    return '$n passed';
+  }
+
+  @override
+  String planWindowBrowReturns(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n return tomorrow',
+      one: '$n returns tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planWindowCtaAgain => 'Once more';
+
+  @override
+  String get planWindowListen => 'Listen';
+
+  @override
   String get profileRowSounds => 'Sounds';
 
   @override
   String get profileSoundsHint => 'Correct · wrong · stage closed · day closed';
-
-  @override
-  String dayLabel(int n) {
-    return 'Day $n';
-  }
 
   @override
   String dayCards(int n) {
@@ -3290,15 +3342,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get dayLevelBeginner => 'Beginner';
-
-  @override
-  String get dayLevelIntermediate => 'Intermediate';
-
-  @override
-  String get dayGoalLabel => 'You will learn to';
-
-  @override
   String get dayStageWords => 'Words';
 
   @override
@@ -3314,109 +3357,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dayStageSpeak => 'Speak myself';
 
   @override
-  String dayStageCount(int done, int total) {
-    return '$done / $total';
-  }
-
-  @override
-  String dayNewWords(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n new words',
-      one: '$n new word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String dayStageSubStart(String what) {
-    return 'start here · $what';
-  }
-
-  @override
-  String dayStageSubUnfinished(String cards, String minutes) {
-    return 'unfinished · $cards · $minutes';
-  }
-
-  @override
-  String dayStageSubHinted(int n) {
-    return '$n with a hint';
-  }
-
-  @override
-  String get dayCtaStart => 'Start';
-
-  @override
-  String dayCtaContinue(int n) {
-    return 'Continue · $n left';
-  }
-
-  @override
-  String get dayCtaPlan => 'To the plan';
-
-  @override
-  String dayClosedTitle(int n) {
-    return 'Day $n closed';
-  }
-
-  @override
-  String dayNumCards(int n) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: 'cards', one: 'card');
-    return '$_temp0';
-  }
-
-  @override
-  String dayNumMinutes(int n) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: 'minutes', one: 'minute');
-    return '$_temp0';
-  }
-
-  @override
-  String get dayNumFirstTry => 'first try';
-
-  @override
-  String daySectionWords(int n) {
-    return 'Words · $n';
-  }
-
-  @override
-  String daySectionPhrases(int n) {
-    return 'Phrases · $n';
-  }
-
-  @override
-  String daySectionTalk(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n exchanges',
-      one: '$n exchange',
-    );
-    return 'Conversation · $_temp0';
-  }
-
-  @override
   String dayFromDay(int n) {
     return 'from day $n';
   }
-
-  @override
-  String dayWordsExtra(int n, int d) {
-    return '+ $n from day $d';
-  }
-
-  @override
-  String get dayHardest => 'Hardest of all';
-
-  @override
-  String dayTries(int n) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n tries', one: '$n try');
-    return '$_temp0';
-  }
-
-  @override
-  String get dayInWork => 'In progress';
 
   @override
   String dayWordsCount(int n) {
@@ -3442,17 +3385,6 @@ class AppLocalizationsEn extends AppLocalizations {
       locale: localeName,
       other: '$n exchanges',
       one: '$n exchange',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String dayWillReturn(int n, int k) {
-    String _temp0 = intl.Intl.pluralLogic(
-      k,
-      locale: localeName,
-      other: 'Return on day $n · $k cards',
-      one: 'Returns on day $n · $k card',
     );
     return '$_temp0';
   }
@@ -3518,9 +3450,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dayIntroBadgeNew => 'new word';
-
-  @override
-  String get dayIntroBadgeRepeat => 'review';
 
   @override
   String get dayIntroCta => 'Got it';
@@ -3725,27 +3654,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dayExitLeave => 'Leave';
 
   @override
-  String daySheetStatePassed(int n) {
-    return 'passed · day $n';
-  }
-
-  @override
-  String daySheetStateHinted(int n) {
-    return 'with a hint · day $n';
-  }
-
-  @override
-  String daySheetStateReturns(int n) {
-    return 'returns on day $n';
-  }
-
-  @override
-  String get daySheetInTalk => 'In the conversation';
-
-  @override
-  String get daySheetRoleYou => 'You:';
-
-  @override
   String get dayNoVoice => 'no recording — the phone reads it';
 
   @override
@@ -3766,13 +3674,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dayLessonRetry => 'Retry';
-
-  @override
-  String get dayBack => 'Back';
-
-  @override
-  String get dayTabTitle => 'Plan';
-
-  @override
-  String get dayTabRoute => 'Route';
 }

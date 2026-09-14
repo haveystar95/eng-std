@@ -72,20 +72,7 @@ abstract final class AppMotion {
   static const nextTaskLeave = Duration(milliseconds: 180); // ease-in, −24
   static const nextTaskEnter = Duration(milliseconds: 220); // ease-out, +24
 
-
   // ── §4о — день плана ──
-
-  /// Числа 26 на плите гаснут; кнопка уходит вниз.
-  static const plateNumbersFade = Duration(milliseconds: 120);
-  static const plateButtonLeave = Duration(milliseconds: 180);
-
-  /// Числа 56 набираются.
-  static const plateNumbersCount = Duration(milliseconds: 420);
-
-  /// Галка «день закрыт» — 220 с задержкой 120; маркеры «научишься» — 220 с задержкой 260.
-  static const plateCheck = Duration(milliseconds: 220);
-  static const plateCheckDelay = Duration(milliseconds: 120);
-  static const plateMarkersDelay = Duration(milliseconds: 260);
 
   /// «Думаем» после записи — столбики гаснут, потом вердикт.
   static const speechThinking = Duration(milliseconds: 300);
@@ -101,6 +88,27 @@ abstract final class AppMotion {
 
   /// Пульс кружка воспроизведения перед волной.
   static const wavePulse = Duration(milliseconds: 240);
+
+  // ── Окно дня — таблица «Тайминг · серия 23» канвы, одна константа на элемент (DAY-UI-2) ──
+
+  /// Плита сжимается в строку 56 — по прокрутке, ease-out.
+  static const windowPlateCollapse = Duration(milliseconds: 240);
+
+  /// Вкладки примагничиваются под шапку — по достижении шапки, ease-out.
+  static const windowTabsSnap = Duration(milliseconds: 160);
+
+  /// Смена вкладки — по тапу или свайпу, ease-out.
+  static const windowTabSwitch = Duration(milliseconds: 220);
+
+  /// Содержимое вкладки — `om-cab-in` (прозрачность 0 → 1, сдвиг 8 → 0), ease-out, с задержкой 80.
+  static const windowTabContent = Duration(milliseconds: 200);
+  static const windowTabContentDelay = Duration(milliseconds: 80);
+  static const windowTabContentRise = 8.0;
+
+  /// Галка на закрытом этапе — `om-check-pop` (масштаб 0 → 1), с задержкой 300.
+  static const windowStageCheck = Duration(milliseconds: 180);
+  static const windowStageCheckDelay = Duration(milliseconds: 300);
+  static const windowStageCheckCurve = Cubic(.34, 1.4, .5, 1);
 
   /// Ни одна анимация не длиннее этого.
   static const maxDuration = Duration(milliseconds: 420);
