@@ -1,0 +1,22 @@
+<!doctype html>
+<!--
+  One frame of the plan canvas, alone in a 390 × 844 window — for comparing a live screenshot with
+  the frame's own code (DAY-UI-2). The canvas is loaded into an iframe and shifted so that the
+  element `[data-screen-label="<hash>"]` sits at the window's origin. Render with render_frames.py.
+-->
+<html>
+<body style="margin:0;overflow:hidden;background:#fff">
+<iframe id="f" src="../../../design/plan-canvas.dc.html" style="position:absolute;left:0;top:0;border:0;width:9000px;height:90000px"></iframe>
+<script>
+  const label = decodeURIComponent(location.hash.slice(1));
+  const f = document.getElementById('f');
+  f.onload = () => {
+    const el = f.contentDocument.querySelector('[data-screen-label="' + label + '"]');
+    if (!el) { document.body.innerHTML = '<h1>no frame ' + label + '</h1>'; return; }
+    const r = el.getBoundingClientRect();
+    f.style.left = (-r.left) + 'px';
+    f.style.top = (-r.top) + 'px';
+  };
+</script>
+</body>
+</html>

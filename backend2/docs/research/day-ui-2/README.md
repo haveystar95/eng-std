@@ -51,3 +51,312 @@
 `metrics.hardest_unit_*` — их читал только старый кабинет. Плита таба читает `day`, `stages[]`,
 `metrics.cards_total/minutes_spent`, `program[].unit_kind/source/state`; сессия — `day`, `stages[]`,
 `scene` — остаются.
+
+## Ч.2 — контракт `GET /plans/{id}/days/{n}` после наряда
+
+Новое — блок **`window`** (схема `PlanDayWindow`, описание — `docs/plan-api.md` «Окно дня»). Старые ключи
+не переименованы: плита таба и сессия читают их как раньше. Всё, что окно пишет, считает сервер:
+
+| поле | правило (где живёт) |
+|---|---|
+| `day.status` | `WindowStatus::of` — `not_started` (не открыт; день 1 собранного, но не запущенного плана — тоже), `in_progress`, `passed`; другой запертый день — `locked`, клиент такое окно не рисует |
+| `day.minutes_estimate` / `minutes_spent` | `DayPace` — секунд на карточку этапа: слова 8, фразы 29, диалог 34, слушание 13, речь 41 (вверх до минуты) по неотвеченным карточкам; `minutes_spent` — метрика дня, только у пройденного |
+| `day.goals[{text, passed}]` | цели сцены; `passed` true у всех — только у пройденного дня |
+| `day.image` + `image_tone` | фото сцены с копиями 112/448; тон — всегда (`ImageTones::first`: тон фото → тон обложки → тон темы `#E3DCCF`) |
+| `stages[5]` | `DayWindowStages` — `done` / `current` / `locked`; `done_count`, `total`, `minutes_left` не null **только** у `current`; `share` 0…1; у не начатого все `locked` |
+| `day_progress` | доля пройденных этапов — полоса компактной шапки |
+| `program.words/phrases/dialogue` | карточки дня (у не открытого — контур раздачи): состояние единицы по её карточкам (`UnitStates`: провал дважды → `returns_tomorrow`, все отвечены → `done`; чтение диалога обмен не проходит); `summary {total, done, returns}` — `ProgramSummary`; у реплики собеседника — `audio_url`, у реплики ученика — `state` |
+| `allowed_action` | `WindowStatus::action` — `start` / `continue` / `again` (только если у дня есть «Говорю сам») |
+
+«Ещё раз» — не пересдача: клиент берёт `GET …/cards` пройденного дня, оставляет «Говорю сам» без
+повторов и ответов (`DaySession.rehearsalOf`) и ничего не отправляет — ни ответов, ни закрытий.
+
+**Снято как мёртвое** (читал только старый кабинет): `goals_native`, `sheet_available`,
+`program[].unit_ref/scene_id/text_target/text_native/cards_total/cards_done`,
+`metrics.cards_done/first_try_share/hardest_unit_*`, **`GET …/sheet`** целиком. В домене вместе с ними —
+`DayMetrics::firstTryShare/hardestUnit*`, расчёт «с первого раза» и «самое трудное» в
+`DayMetricsCalculator`, `UnitNames`, колонки `plan_days.first_try_share/hardest_unit_kind/ref/text`
+(миграция `2026_09_14_100200_drop_unread_day_metrics_from_plan_days`). Кадр 23-0c вычел подвал с
+процентами — других читателей у этих чисел не было (проверено `git grep` по backend2, mobile, admin).
+
+Тесты: `tests/Unit/Plan/DayWindowTest.php` (11), `tests/Feature/Plan/PlanDayWindowTest.php` (8); старые
+`PlanApiTest` / `PlanContractTest` / `DayAssemblyTest` переписаны с мёртвых полей на `window`.
+
+## Ч.3 — картинка у каждой карточки (находка PHONE-RUN-1)
+
+- **Лестница запросов** (`PlanImageLadder`, запросы — `Domain/Service/ImageQueries`): сцена — `image_prompt`
+  → название сцены; слово/связка — `image_prompt` → слово без контекста → тема сцены. Фраза фото не ищет.
+- **Не нашлось ничего** — `image = null`, в `plan_terms.image_tone` пишется тон слота
+  (`ImageTones`: тон фото сцены → обложки → тон темы). Это же — пометка «лестницу уже спрашивали»:
+  слово не ищется заново после каждого урока (`PlanTerm::needsImage`). Счётчик `image_missing`
+  (`plan_check_counters`, по версии промпта урока) растёт один раз на слово. Клиент рисует слот тоном,
+  «битой» картинки нет.
+- **Догрузка существующих планов** — `php artisan plan:images-backfill` (миграция
+  `2026_09_14_100000_add_image_tone_to_plan_terms`, бэкап перед записью —
+  `storage/db-backups/wordtrainer-20260914-110554.sql.gz`). Живой вывод на `wordtrainer`:
+
+  > Without a photo — before: scenes 0, words and chunks 45 · after: scenes 0, words and chunks 0
+
+  **Было пусто 45 слов/связок, стало 0** (все 45 нашлись лестницей, ни одно не осталось тоном).
+  В Ч.1 стояло «69 из 232» — это вместе с удалёнными планами (24 слова); команда их не трогает.
+  Сейчас на планах в статусах `active/ready/finished`: 208 слов/связок, без фото 0, сцен без фото 0;
+  строк `image_missing` нет.
+
+## Ч.4 — голос фраз («прослушать» 28)
+
+- Фразы урока озвучиваются тем же голосом, что реплики собеседника: `SpeakSceneLinesHandler` покупает
+  недостающие строки (`x3` — реплика обмена 3, `p2` — фраза 2), `plan_line_audios` ключуется по
+  `line_ref` (миграция `2026_09_14_100100_key_plan_line_audios_by_line_ref`, старые строки стали `x<step>`).
+- **Лимит вендора — поминутный и суточный.** Gemini TTS отвечает 429 `GenerateRequestsPerMinutePerProjectPerModel`
+  (10 в минуту) и `GenerateRequestsPerDayPerProjectPerModel` (**100 в сутки**). Сцена теперь 14 строк
+  вместо 8, два урока подряд — 28. Три попытки job'а с паузами 15/60/120 с сдавались на полпути —
+  `SpeakSceneLinesJob` теперь повторяется раз в минуту до получаса (`retryUntil`), каждая попытка
+  покупает только недостающее.
+- **Догрузка** — `php artisan plan:speak-backfill` (бэкап `wordtrainer-20260914-115714.sql.gz`): синхронно,
+  сцена за сценой, ждёт поминутный лимит. Живьём: первый прогон **184 → 227** строк у 24 сцен, второй
+  **228 → 228** — суточные 100 запросов кончились (10 отказов подряд, команда остановилась сама).
+  Недостающие фразы звучат системным голосом телефона, пока команду не прогнать в следующие дни.
+  Вопрос владельцу — Ч.13 п. 1.
+
+## Ч.5 — клиент: окно дня
+
+`lib/features/plan/day/day_window_screen.dart` + `window/` (плита, ряд этапа, компактная шапка,
+вкладки, слова, фразы, диалог, кнопка, лента), модель `lib/data/plan/day_window.dart` (разбор
+закрытый: нет поля или чужое слово — `PlanContractError`, окно говорит «не загрузилось»).
+Тайминги — `AppMotion.window*`, по одной константе на строку таблицы «Тайминг · серия 23»:
+плита → строка 56 — 240 мс ease-out; вкладки примагничиваются — 160 мс; смена вкладки — 220 мс;
+содержимое вкладки `om-cab-in` — 200 мс с задержкой 80; галка закрытого этапа `om-check-pop` —
+180 мс с задержкой 300, `cubic-bezier(.34,1.4,.5,1)`. Под «уменьшением движения» — сразу.
+
+Сверка с кодом кадров (не с описанием): чтение канвы скриптом сначала пропускало `padding-top`
+(белый список свойств) — отступы 24 под хайрлайном этапов и 20 над строкой итога нашлись при
+сравнении живого снимка с кадром, отрисованным headless Chrome; скрипт теперь читает все свойства,
+других пропусков в 23-0a…0d нет (`box-sizing`, `min-width:0`, `text-wrap:balance` — поведение CSS,
+цифры `tabular-nums` уже были). Отклонения, оставленные сознательно, — Ч.0 и Ч.13.
+
+## Ч.6 — снимки (golden) и канон
+
+**Golden** — `test/features/plan/day_window_golden_test.dart`, 12 PNG в `test/goldens/plan/`:
+`23-0a-not-started`, `23-0b-in-progress`, `23-0c-passed` и `23-0d-{not-started,in-progress,passed}-{words,phrases,dialogue}`.
+Проверки таблицы «что проверяет golden» — утверждениями в тех же тестах: нет «N / M» у не начатого и
+«Слова · 8» (23-0a); «6 / 16» в ряду «Слушаю и отвечаю», легенды нет (23-0b); «Ещё раз» и «2 вернутся
+завтра» в брови (23-0c); одна кнопка у нижнего края и ни одной строки, упёршейся в предел (23-0d).
+Фикстуры — живой план `01M2FHN9Y6HRN80KSE1737ZDMZ` (`qa-dayui2-fx@wt.test`), пройденный по API
+скриптом (`room_window_not_started/in_progress/passed.json`, `cards_window_passed.json`, `plan_window.json`).
+
+**Тест → что ловит.** Канон — `test/features/plan/day_window_canon_test.dart` (15),
+`test/data/plan/day_session_test.dart` («Ещё раз», 2), `test/goldens/day_ui_golden_test.dart` (выход из
+«Ещё раз»). Каждый проверен **мутацией** — дефект вносился в код, тест падал, код возвращался.
+
+| Тест (правило) | Дефект, который ловит | мутация |
+|---|---|---|
+| идущий день — одна цифра, в ряду текущего этапа | счёт в каждом ряду, как у старого кабинета | — |
+| счёт, присланный пройденному ряду, не рисуется | клиент рисует цифру везде, где сервер её прислал | `stageCount` без проверки `current` → падает |
+| не начатый и пройденный дни — цифр нет | «0 / 16» у не начатого, «16 / 16» у пройденного | — |
+| start / continue / again → «Начать» / «Продолжить» / «Ещё раз», одна кнопка, у нижнего края | вторая кнопка на плите; слово по статусу дня, а не по `allowed_action` | — |
+| действия нет — кнопки нет | кнопка-заглушка без действия сервера | — |
+| summary расходится с маркерами — бровь по summary | бровь, посчитанная телефоном | бровь с числом не из summary → падает |
+| нулевые части брови не пишутся | «0 пройдено», «0 вернутся завтра» | — |
+| нет summary — «не загрузилось» | пересчёт брови телефоном или «0» | — |
+| маркер у реплики ученика, «прослушать» у собеседника | маркер у пузыря собеседника | маркер в ряд собеседника → падает |
+| прокрутка: строка 56 встаёт за 240 мс, тяга вниз возвращает плиту | плита уезжает без шапки; строка без перехода; плиту не вернуть | порог сжатия недостижим → падает |
+| отпущенная на полпути лента доезжает до шапки и обратно (семантика выключена) | **живой дефект**: доводка ждала следующего кадра, которого после медленного отпускания нет | доводка без заказа кадра → падает |
+| второй вход в окно — свежий день | **живой дефект**: окно рисовало ответ первого входа | провайдер без `autoDispose` → падает |
+| запертый день — ошибка загрузки | нарисованное «запертое» состояние | — |
+| «Ещё раз»: только «Говорю сам», без повторов и ответов (живые карточки) | весь день заново или карточки прошлого прохода | — |
+| «Ещё раз»: ответы не уходят, этап и день не закрываются | пересдача поверх пройденного дня | ответ уходит на сервер → падает |
+| «Ещё раз»: выход сразу, без «Прогресс сохранится» | **живой дефект**: обещание сохранить то, что не сохраняется | алерт в повторе → падает |
+
+Бэкенд — `DayWindowTest` / `PlanDayWindowTest` называют правило и дефект в имени теста (например,
+«puts the count, the minutes left and a partial bar on the current row only — catches a number on
+every row (23-0b)», «asks for a photo by the description, then the word alone, then the scene’s title —
+catches a word without a description never searched»).
+
+## Ч.7 — EXPLAIN (ANALYZE, BUFFERS)
+
+База `wordtrainer_e2e_test` (`migrate:fresh`), нагрузка `plan:seed-load`: 50 планов ученика + 200
+соседа — 250 планов, 1 000 сцен, 1 500 дней, **100 500 карточек**, 14 000 терминов, 14 000 строк голоса
+(сид строк голоса и `opened_at` дней — `docs/research/day-ui-2/tools/explain.php seed`), `ANALYZE`.
+Каждый ответ — через HTTP-ядро с журналом запросов; число запросов не зависит от числа карточек.
+
+| форма дня | запросов (без аутентификации) | время |
+|---|---|---|
+| пройден (день 1) | 8: план, сцены, дни, пользователь + профиль (часы ученика), карточки дня, голос, термины | 73 мс (первый в процессе) |
+| идёт (день 2) | 6 (пользователь и профиль уже прочитаны процессом) | 8 мс |
+| не открыт (контур раздачи) | 8: вместо карточек дня — возвраты двух прошлых дней, термины дважды (раздатчик и окно), голос | 10 мс |
+
+Планы новых чтений окна:
+
+```
+select * from "day_cards" where "day_id" = ? order by CASE stage … END, "position"
+  Index Scan using day_cards_position_uidx on day_cards (actual rows=67 loops=1)
+  Buffers: shared hit=18 · Execution Time: 0.113 ms
+
+select * from "plan_line_audios" where "scene_id" in (?) and "voice_key" = ?
+  Index Scan using plan_line_audios_uidx on plan_line_audios (actual rows=14 loops=1)
+    Index Cond: (scene_id = … AND voice_key = 'gemini:gemini-2.5-flash-preview-tts:Aoede:p90')
+  Buffers: shared hit=3 · Execution Time: 0.022 ms
+
+select * from "plan_terms" where "scene_id" in (?, ?) order by "scene_id", "position"
+  Index Scan using plan_terms_scene_position_idx on plan_terms (actual rows=28 loops=1)
+  Buffers: shared hit=3 · Execution Time: 0.017 ms
+
+select * from "day_cards" where "day_id" = ? and "returns" = ? …   (контур: возвраты прошлого дня)
+  Index Scan using day_cards_returns_idx on day_cards (actual rows=8 loops=1)
+  Buffers: shared hit=5 · Execution Time: 0.030 ms
+```
+
+Индексы по факту: `day_cards_position_uidx (day_id, stage, position)`, `day_cards_returns_idx`,
+`plan_line_audios_uidx (scene_id, line_ref, voice_key)` — уникальный ключ, перенесённый миграцией на
+`line_ref`, он же индекс чтения; `plan_terms_scene_position_idx`; `plan_days_number_uidx`,
+`plan_scenes_order_uidx`, `plans_pkey`. Новых индексов не понадобилось. Замечание: у не открытого дня
+термины сцены читаются дважды (раздатчик контура и окно) — 2 запроса по 0.3 мс, не N+1; общий кэш
+терминов на запрос — кандидат на потом.
+
+## Ч.8 — живой прогон на симуляторе
+
+Симулятор **PlanUI3 iPhone 17** (iOS 26.5), `flutter run --debug --dart-define=API_BASE_URL=http://localhost:8001
+--dart-define=DEV_LOGIN_EMAIL=qa-dayui2-live@wt.test`, связка ключей сброшена; свежий план
+`01M2FJYJG4PZS1YQCAQGK30QPF` («Иду к врачу…», 3 дня, начальный) собран живой генерацией и оставлен
+`ready`. Тапы — maestro по координатам, снимки — `simctl io screenshot`; кадр канвы отрисован из
+`plan-canvas.dc.html` headless Chrome и стоит слева. Снимки — `shots/`. Инструменты — `tools/`:
+`render_frames.py` + `frame.html` (кадр канвы в PNG), `compose.swift` (кадр рядом со снимком),
+`snap_window.py` (фикстуры окна живым планом по API), `explain.php` (Ч.7).
+
+| шаг | снимок |
+|---|---|
+| таб: день 1 не запущенного плана, «Начать» на плите | `01-tab-day1-start.png` |
+| «Начать» → **окно · не начат** — фото под слоем, пять рядов «впереди», бровь «Слова · 8», «Начать» внизу | `02-23-0a-not-started.png` (слева 23-0a) |
+| прокрутка → **компактная шапка 56**, вкладки под ней, сетка слов с фото | `03-23-0a-scrolled-words.png` (23-0a · прокручено) |
+| вкладки тапом: «Фразы · 6» с «прослушать» 28, «Диалог» с маркерами у своих реплик | `04-…-phrases.png`, `05-…-dialogue.png` (23-0d · не начата) |
+| горизонтальный свайп из «Диалога» — «Фразы» | `06-swipe-back-phrases.png` |
+| тяга вниз с верха вкладки — плита вернулась | `07-pull-down-plate-back.png` |
+| «Начать» в окне → план запущен (`POST /start`), вход в этап «Слова · 0 из 32» | `08-start-session.png` |
+| выход из сессии → окно «идёт», текущий — «Слова 0 / 32» | `09-window-opened-words-current.png` |
+| «Слова» пройдены (API, 32 карточки) → таб: «Слова пройдено, Фразы идёт» | `10-tab-after-words.png` |
+| **окно · идёт — цифра только у «Фразы» (0 / 18)**, «Слова» галкой, бровь «Слова · 8 · 8 пройдено», «Продолжить» | `11-23-0b-in-progress-phrases-current.png` (23-0b) |
+| прокручено: полоса дня 1/5, «≈ 19 мин» | `12-23-0d-in-progress-words.png` (23-0b · прокручено) |
+| день пройден (API) → таб «День 1 закрыт · 75 карточек · 6 минут» | `13-tab-day1-closed.png` |
+| **окно · пройден** — цели галками, пять рядов «пройдено», «День пройден · 6 минут», «Ещё раз» | `14-23-0c-passed-again.png` (23-0c) |
+| прокручено; «Диалог · 8 пройдено», маркеры у своих реплик | `17-23-0c-scrolled.png`, `18-23-0d-passed-dialogue.png` |
+| «Ещё раз» → «Говорю сам · 0 из 8», этап 5 из 5 | `15-again-speak-rehearsal.png` |
+| крестик — сразу в окно, день по-прежнему пройден | `16-again-exit-no-alert.png` |
+
+**Что прогон нашёл и что починено в этой же сессии** (у каждого — тест, проверенный мутацией, Ч.6):
+1. отпущенная на полпути лента **не доводилась** до шапки — полоса плиты торчала из-под строки 56:
+   доводка ждала кадра, а после медленного отпускания кадров нет (в тестах кадр заказывала включённая
+   семантика, поэтому снимки и поведенческие тесты этого не видели);
+2. **второй вход в окно рисовал старый день** («Слова · идёт · 0 / 32» после пройденных слов) —
+   провайдер дня жил дольше окна; теперь `autoDispose`, каждый вход читает сервер;
+3. выход из «Ещё раз» спрашивал «Продолжить позже? … Прогресс сохранится» — повтор ничего не сохраняет;
+   теперь выходит сразу;
+4. отступы 24 / 20 под хайрлайнами плиты (пропущены при чтении канвы, Ч.5).
+
+## Ч.9 — список удалённого (удалено, не выключено; флагов и `old/` нет)
+
+**Клиент — файлы:** `lib/features/plan/day/day_room_screen.dart` (кабинет: `DayRoomScreen`, `_Room`,
+`_WordCard`, `_PhraseRow`, `_ExchangeRow`), `lib/features/plan/day/term_sheet.dart` (шит: `_TermSheet`,
+`SheetTermState`), `test/features/plan/day_room_unstarted_plan_test.dart`, снимки `test/goldens/23-0a-room-open.png`,
+`23-0b-room-in-progress.png`, `23-0c-room-closed.png`, `23-14-sheet-word.png`, `23-15-sheet-phrase.png`,
+фикстуры `test/goldens/fixtures/plan-beginner.json`, `room-beginner-d1-open.json`, `sheet-beginner-d1.json`,
+`sheet-intermediate-d1.json`.
+
+**Клиент — код:** шапка кабинета в `lib/ui/day_plate.dart` — `DayRoomPlate`, `DayRoomStage`, `DayRoomNumber`,
+подвалы `DayRoomStart/Progress/Closed` (тёмная шапка «начни отсюда», числа Literata 56 и проценты,
+«Продолжить · осталось N»), `_BlurredPhoto`, `_Goals`, `_RoomStageRow`, `_Footer`, `_RoomPaperButton`,
+`_ClosedCheck`, `_Number`; `DaySectionLabel` (легенда и лейблы секций); `ApiClient.daySheet`; `DayTerm`,
+`DaySheet`, расширения `DayRoomProgram`, `DayStageRemaining`, `DayMetricsPercent`; `DayRules.firstTryPercent`;
+`DayTexts.level`; поля `PlanDayRoom.goalsNative/sheetAvailable`, тексты единиц программы; токены
+цветов и типографики старой плиты; **33 строки ARB** — `dayBack`, `dayClosedTitle`, `dayCtaContinue`,
+`dayCtaPlan`, `dayCtaStart`, `dayGoalLabel`, `dayHardest`, `dayInWork`, `dayIntroBadgeRepeat`,
+`dayLabel`, `dayLevelBeginner`, `dayLevelIntermediate`, `dayNewWords`, `dayNumCards`, `dayNumFirstTry`,
+`dayNumMinutes`, `daySectionPhrases`, `daySectionTalk`, `daySectionWords`, `daySheetInTalk`,
+`daySheetRoleYou`, `daySheetStateHinted`, `daySheetStatePassed`, `daySheetStateReturns`,
+`dayStageCount`, `dayStageSubHinted`, `dayStageSubStart`, `dayStageSubUnfinished`, `dayTabRoute`,
+`dayTabTitle`, `dayTries`, `dayWillReturn`, `dayWordsExtra`; тест `DayRules.firstTryPercent`.
+
+**Сервер:** `GET /plans/{id}/days/{n}/sheet` (маршрут, `PlanDayController::sheet`, `GetDaySheet`,
+`GetDaySheetHandler`, `SheetView`, `TermView`, `CardViews::term`, `PlanJson::sheet/term`, схемы OpenAPI
+`PlanSheet`, `PlanTerm`); поля ответа из Ч.2; `DayRoomView.goalsNative/sheetAvailable`,
+`ProgramUnitView` без текстов и счётчиков, `DayMetricsView` из двух чисел; `UnitNames`; «с первого
+раза» и «самое трудное» в домене и четыре колонки `plan_days`.
+
+## Ч.10 — новые подписи для глоссария
+
+`docs/plan-ui-glossary.md` перегенерирован (212 строк). Новые ключи (13): `planWindowBack` «Назад»,
+`planWindowStateNotStarted` «не начат», `planWindowStateInProgress` «идёт», `planWindowStatePassed`
+«пройден», `planWindowApprox` «≈ {minutes}», `planWindowJoin` «{first} · {second}», `planWindowGoalsLabel`
+«научишься», `planWindowStageCount` «{done} / {total}», `planWindowPassedLine` «День пройден · {minutes}»,
+`planWindowBrowDone` «{n} пройдено», `planWindowBrowReturns` «{n} вернётся/вернутся завтра»,
+`planWindowCtaAgain` «Ещё раз», `planWindowListen` «Прослушать». Переиспользованы со своими словами
+(описания дополнены окном дня): `planPlateLabel`, `planPlateStage*`, `planPlateState*`,
+`planPlateCtaStart/Continue`, `planMinutesCount/Short`, `planRouteDayTitle/Review/Rehearsal`.
+
+## Ч.11 — коммиты и ворота
+
+| коммит | что |
+|---|---|
+| `d9547324` | канва серии 23 (архитектор) и Ч.0–Ч.1 этого отчёта — список недостающего до правок |
+| `c870df2d` | бэкенд: `window` в GET дня, лестница фото и `plan:images-backfill`, голос фраз и `plan:speak-backfill`, снос шита и мёртвых полей, три миграции, тесты, OpenAPI, `plan-api.md`, `plan-v2.md`, README модуля |
+| `dc819ef3` | клиент: окно дня, снос старого кабинета и шита, снимки, канон, фикстуры, ARB, словарь плана |
+| следующий | отчёт со снимками прогона, инструмент EXPLAIN, `design-map.md`, `session-handoff.md`, ROADMAP, `mobile/CLAUDE.md` |
+
+**Ворота** (полный прогон перед коммитами и хук на каждом коммите): `composer check` — deptrac 0
+нарушений, PHPStan L8 0 ошибок, **Pest 2002 passed** (10 221 проверка, параллельно, 51 с);
+`flutter analyze` — 0; **`flutter test` — 1389 passed**. Откат миграций — `migrate:fresh` →
+`migrate:rollback --step=3` → `migrate` на `wordtrainer_test`, зелёные. `invariant-reviewer` — чисто, с
+одним вопросом (Ч.13 п. 3).
+
+**Бэкапы перед записью в `wordtrainer`:** `storage/db-backups/wordtrainer-20260914-110554.sql.gz`
+(миграции `image_tone`, `line_ref`, догрузка фото), `wordtrainer-20260914-114653.sql.gz` (снос колонок
+метрик), `wordtrainer-20260914-115714.sql.gz` (догрузка голоса). Horizon перезапущен после каждой
+правки job'ов.
+
+**Стоимость живой генерации:** план фикстур первого захода (удалён при переснятии) $0.2031, план
+фикстур $0.1994, план прогона $0.1447 (план + уроки + голос каждого), догрузка голоса старых сцен
+$0.0273; фото Pexels бесплатны — **≈ $0.575 из $2**.
+
+## Ч.12 — сборка на телефон
+
+- `flutter clean` → `flutter build ios --release --dart-define=BUILD_SHA=dc819ef3
+  --dart-define=BUILD_AT=2026-09-14T13:10+03:00`, `DEVELOPER_DIR=…/privar_sert/Xcode-beta.app`;
+- автоподпись: `Automatically signing iOS for device deployment using specified development team … 7A5U4R66CB`;
+- `pod install` 3.5 с, **`Xcode build done. 102.7s`**;
+- **`✓ Built build/ios/iphoneos/Runner.app (49.8MB)`, бинарь `Runner` 810 576 байт, Runner.app — 13:12:56 14.09.2026**;
+- штамп сервера: `scripts/stamp-build.sh` → `dc819ef3`;
+- **установка не выполнена:** `flutter install --release -d 00008110-000A7CCC3492801E` → «No target device
+  found»; `devicectl` видит «iPhone (Denis)» как `unavailable` — телефон не подключён кабелем
+  (`mobile/CLAUDE.md`, «Plug the cable in»). Сборка лежит в `mobile/build/ios/iphoneos/Runner.app`;
+  установить — `flutter install --release -d 00008110-000A7CCC3492801E` с подключённым телефоном
+  (установка сносит данные приложения — нужен вход).
+
+## Ч.13 — что не проверено живьём и открытые вопросы
+
+**Не проверено живьём:**
+- «прослушать» серверным голосом: у фраз плана прогона файлов нет (суточный лимит Gemini TTS кончился
+  раньше), кнопку в прогоне не нажимали; дорога файла проверена тестом `PlanDayWindowTest` и
+  докачкой `LineAudioCache` (DAY-UI);
+- `om-check-pop` галки этапа при возврате из сессии — этапы в прогоне закрывались по API, не в сессии;
+- растворение фото 200 мс, тень примагниченных вкладок 160 мс, `om-cab-in` — видны глазом на
+  симуляторе, длительности живьём не мерились (в коде — константы `AppMotion.window*`, в тестах — 240 мс
+  сжатия плиты);
+- «прокрутка вкладки помнится» (`PageStorageKey`) — отдельным шагом не проверялась;
+- «уменьшение движения» на устройстве; хаптика;
+- сама карточка «Говорю сам» в «Ещё раз» — на симуляторе нет микрофона (вход в этап и выход — проверены);
+- установка на телефон — Ч.12.
+
+**Вопросы архитектору / владельцу:**
+1. **Голос фраз против суточного лимита.** Gemini TTS — 100 запросов в сутки на проект и модель; сцена
+   теперь 14 строк. Старые планы догружаются несколько дней, новые уроки делят лимит с догрузкой.
+   Платный уровень, другой голос для фраз или фразы системным голосом телефона?
+2. **Отклонения от кадров, взятые сознательно** (Ч.0): название 44/48 по коду кадров (наряд — 30);
+   «прослушать» 28 и у фраз (в картинке 30); бровь диалога без общего числа. Карточка фразы — `min-height
+   102` из кадра — у короткой фразы оставляет пустоту снизу. Длинное русское слово в колонке 165
+   переносится по буквам; `text-wrap: balance` у названия во Flutter нет.
+3. **Правило «экран читает локальную базу»** (`invariant-reviewer`): окно дня, как и старый кабинет,
+   читает сеть и копии для офлайна не держит; теперь — на каждом входе. Считать план исключением или
+   класть ответ дня в `sync_meta`, как таб?
+4. Вход в этап 23-2a (сессия DAY-UI) режет длинную реплику собеседника троеточием — это вне кадров
+   23-0x, но против «ellipsis 0».
+5. Job голоса не отличает суточный отказ вендора от поминутного — адаптер Generation отдаёт один
+   `rateLimited`; различать — правка модуля Generation.

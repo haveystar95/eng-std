@@ -7,67 +7,63 @@
 > Канон плана: **`docs/plan-v2.md`**; контракт: **`docs/plan-api.md`** + `openapi/openapi.yaml`
 > (теги `Plans`, `Devices`); модуль: `app/Modules/Plan/README.md`.
 
-Branch: `main`. Last updated: 2026-09-13 (наряд PLAN-UI-3 + доработка). Отчёт — `docs/research/plan-ui-3/README.md`.
+Branch: `main`. Last updated: 2026-09-14 (наряд DAY-UI-2). Отчёт — `docs/research/day-ui-2/README.md`.
 
 ---
 
-## ПЕРВОЕ: PLAN-UI-3 — маршрут по канве PLAN-DES-3, картинки, события и уведомления
+## ПЕРВОЕ: DAY-UI-2 — окно дня по кадрам 23-0a…0d + бэкенд под него
 
-Коммиты: канва `63bc358f`, бэкенд `c265ebc1`, клиент `8acb7755`, отчёт — следующий.
+Коммиты — отчёт Ч.11. Канва — `docs/design/plan-canvas.dc.html`, серия 23 (архитектор, коммит `d9547324`).
 
-**Решения владельца 12.09 (при постановке, в сессии) — не «чинить» обратно по канве:**
-1. На линии маршрута **пять этапов, как на сервере** (`days[].stages`, `done/current/locked`), у
-   повторения / репетиции — сколько отдал сервер. Канва с тремя узлами и «Повторить ошибки»
-   расходится с продуктом, архитектор перерисует кадры; «Повторить ошибки» — функции нет.
-2. **Push без entitlement** (бесплатная Personal Team): токен не выдаётся, регистрация пишет в лог;
-   напоминание / «ждёт со вчера» / «сегодня событие» телефон ставит **локально** по датам плана —
-   только пока `PUT /devices/push-token` отвечает `push_enabled: false` (true = ключ .p8 задан →
-   локальные снимаются, `PlanReminderScheduler` заменяет расписание целиком);
-   «план готов» / «день собран» — баннер в приложении при возврате. Сервер шлёт в сухом режиме.
-3. **`plan.summary` — без модели**, считается в ресурсе: три сцены + «К <дате> скажешь всё это сам».
-4. **Языки плана — `GET /plans/languages`** (`PLAN_LANGUAGES`, сегодня en, de); `POST /plans` сверяет.
+**Сервер** (подробно — отчёт Ч.2–Ч.4, `docs/plan-api.md` «Окно дня»):
+- `GET /plans/{id}/days/{n}` отдаёт блок **`window`** (`DayWindowViews` + доменные `DayWindowStages`,
+  `DayPace`, `UnitStates`, `ImageTones`, `WindowStatus`, `ProgramSummary`): статус словами, цифра
+  только у текущего этапа, минуты, состояния единиц и счётчики бровей, `allowed_action`;
+- сняты мёртвые поля старого кабинета и **`GET …/sheet`**, колонки `plan_days.first_try_share` /
+  `hardest_unit_*` удалены;
+- фото у каждого слова — лестница запросов + тон слота + `image_missing`; `plan:images-backfill`;
+- голос фраз — `plan_line_audios.line_ref` (`x3`, `p2`); `SpeakSceneLinesJob` повторяется до получаса;
+  `plan:speak-backfill`.
 
-**Что появилось на сервере** (подробно `docs/research/plan-ui-3/backend-a.md`, `backend-b.md`):
-- `RouteStages` (Domain) — этапы дня маршрута одной сгруппированной выборкой;
-- картинки сцен: `image.tone` (avg_color Pexels), `url_112` / `url_448` → `GET
-  /plans/images/{scene}/{size}` (immutable + ETag, самолечение копии), `plan:images-backfill`;
-- журнал `plan_events` (append-only), `plan_notifications` (≤ 1 напоминания в сутки), Identity:
-  `device_push_tokens`, `user_visits`, `PUT/DELETE /devices/push-token`, `POST /devices/visit`;
-- `PushSender`: `ApnsPushSender` при `APNS_KEY_P8` (+ `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_TOPIC`,
-  `APNS_ENV`), иначе `DryRunPushSender` (лог `plan push (dry run)`, `not_sent`);
-- **час напоминаний — одно правило** `Identity/Domain/Service/UsualVisitTime` (медиана 7 заходов,
-  вниз до часа, не раньше 08:00, дефолт 19:00); и напоминание, и `event_today` — в этот час;
-  клиент получает его в плане (`reminder_hour`) и своих заходов не считает;
-- **nginx `web` (`wt_web`) перед `app`**: :8001 и ngrok идут в nginx; `/api/v1/plans/images/{scene}/{112|448}`
-  — статика с диска (`immutable`, вне троттла 120/мин, без проверки владельца), нет файла → Laravel;
-- `plan:notify-tick` каждые 15 мин — **сервис `scheduler` в compose** (поднят); `plan:notify-test`.
+**Боевая база `wordtrainer`:** три миграции `2026_09_14_*` применены (бэкапы
+`wordtrainer-20260914-110554.sql.gz` — перед `image_tone` и `line_ref`, `wordtrainer-20260914-114653.sql.gz` —
+перед сносом колонок метрик, `wordtrainer-20260914-115714.sql.gz` — перед догрузкой голоса); horizon
+перезапущен; фото: было пусто 45 → 0; голос: 184 → 228 строк, **суточный лимит Gemini TTS (100) исчерпан** —
+`plan:speak-backfill` догонять в следующие дни.
 
-**Боевая база `wordtrainer`:** 5 миграций `2026_09_12_*` применены после бэкапа
-`storage/db-backups/wordtrainer-20260912-222456.sql.gz`; horizon перезапущен; backfill: 31 сцена.
+**Клиент** (`mobile/lib/features/plan/day/day_window_screen.dart`, `window/`, `data/plan/day_window.dart`):
+- одна лента: плита на фото → строка 56 (240 мс), вкладки Слова · Фразы · Диалог (тап и свайп),
+  одна кнопка по `allowed_action`; «Ещё раз» — «Говорю сам» без записи ответов (`DaySession.rehearsal`);
+- старый кабинет (`day_room_screen.dart`, `DayRoomPlate`, шит `term_sheet.dart`) снесён с тестами,
+  снимками, фикстурами и 33 строками ARB;
+- снимки — `test/features/plan/day_window_golden_test.dart` (12 PNG `test/goldens/plan/23-0*`), канон —
+  `day_window_canon_test.dart` (15), «Ещё раз» — `day_session_test.dart`, `day_ui_golden_test.dart`;
+  харнесс — `test/support/day_window_harness.dart`;
+- **живой прогон нашёл и починил**: доводку ленты без кадра (тест с выключенной семантикой), кэш дня
+  между входами в окно (`autoDispose`), «Прогресс сохранится» в «Ещё раз».
 
-**Клиент** (`mobile/lib/features/plan/route/`, `lib/ui/plan_preloader.dart`, `lib/ui/scene_circle.dart`,
-`lib/data/image_loader.dart`, `lib/data/plan/plan_notifications.dart` + `plan_reminder_rules.dart`,
-`features/plan/plan_notifications_host.dart`, `entry/goal_dictation.dart`):
-- один виджет маршрута для таба, превью и витрины; запертый день не открывается ни с одной двери
-  (`planExplainDayProvider`); тап по уведомлению — таб на нужном дне (`planFocusDayProvider`);
-- `ImageLoader` — единственная дорога байтов картинок (6 параллельных, диск, повторы, bearer для API);
-- канон — `test/features/plan/plan_canon_test.dart`, `plan_rules_canon_test.dart`; фикстуры сняты
-  живым прогоном (`qa-planui3@wt.test`), новые: `current_started`, `current_day2`, `room_day2`.
+Ворота — отчёт Ч.11: Pest 2002, deptrac 0, PHPStan 0, `flutter analyze` 0, `flutter test` 1389.
+Телефон: release `dc819ef3` собран (Runner.app 13:12 14.09), **не установлен** — «iPhone (Denis)»
+не подключён (`unavailable`); установить `flutter install --release -d 00008110-000A7CCC3492801E` по кабелю.
 
-Ворота (после доработки 13.09, раздел «Доработка» в отчёте): `composer check` — deptrac 0, PHPStan 0, Pest 1983; `flutter analyze` 0; `flutter test` 1371.
-Телефон: release `8acb7755` установлен на iPhone (Denis) — установка снесла данные, нужен вход.
+**Не проверено живьём:** «прослушать» серверным голосом (фразы свежих планов не озвучены — суточный
+лимит); `om-check-pop` галки после возврата из сессии; растворение фото 200 мс на устройстве;
+«прокрутка вкладки помнится» отдельно не проверялась. Открытые вопросы — отчёт Ч.13.
 
-**Не проверено живьём:** APNs (нет ключа), голос (нет микрофона на симуляторе), баннер «день
-собран» при возврате, срабатывание локальных уведомлений. Открытые вопросы — отчёт §11.
-
-## Контекст, который остаётся верным (PLAN-GEN, DAY-UI)
+## Контекст, который остаётся верным (PLAN-GEN, PLAN-UI-3, DAY-UI)
 
 - План — модуль `Plan`, два замороженных промпта (`plan-builder-v2`, `lesson-v3`), проверки в
   `observe`; дни открываются по одному в календарный день зоны; `plan:shift-day {plan} --days=N
   --force` вместо QA-часов. Урок дня N+1 пишется при открытии дня N.
-- Клиент: одна дверь в кабинет — `openDayRoom`; кабинет и сессия дня — наряд DAY-UI (23-x по
-  `plan.dc.html`); состояния — golden-тесты `mobile/test/goldens/plan/` из живых фикстур.
+- Решения владельца 12.09 (PLAN-UI-3): пять этапов на линии маршрута; push без entitlement —
+  напоминания локально, пока `push_enabled: false`; `plan.summary` без модели; языки — `GET /plans/languages`.
+- Клиент: одна дверь в окно дня — `openDayRoom`; сессия дня — наряд DAY-UI (23-1…23-13); состояния —
+  golden-тесты из живых фикстур, канон — утверждениями, проверенными мутацией.
 - Стенд: симулятор **PlanUI3 iPhone 17** (`1E947E83-6285-4739-9238-5A7B72F9E329`), `flutter run
   --debug --dart-define=API_BASE_URL=http://localhost:8001 --dart-define=DEV_LOGIN_EMAIL=qa-…@wt.test`;
-  maestro — только целые проценты в `point`; `simctl launch` на свежем симуляторе виснет (индексация) —
-  запускать через `flutter run`.
+  перед сменой аккаунта — `xcrun simctl keychain <udid> reset`; maestro — только целые проценты в
+  `point`; горячий перезапуск запущенного `flutter run` — `kill -USR2 <pid flutter_tools>`, файлы,
+  правленные до конца первой сборки, нужно `touch`, иначе перезапуск их не видит.
+- Канву читать скриптом **со всеми свойствами** (белый список свойств терял `padding-top`); кадр для
+  сверки рисуется headless Chrome (`--allow-file-access-from-files`, iframe канвы, сдвиг к
+  `[data-screen-label]`).
