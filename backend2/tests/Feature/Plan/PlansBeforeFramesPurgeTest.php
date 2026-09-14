@@ -30,8 +30,9 @@ it('drops every plan with all that hangs on it, tombstones its collection and de
     Storage::disk('local')->put("plan-audio/{$sceneId}/x1-abc.wav", 'voice');
     Storage::disk('local')->put("plan-images/{$sceneId}/112.jpg", 'photo');
     DB::table('plan_check_counters')->insert([
-        ['id' => '01M2PURGECOUNTER0000000001', 'prompt_version' => 'lesson-v3', 'check_name' => 'speaking_key_substring', 'action' => 'counted', 'hits' => 4, 'updated_at' => now()],
+        ['id' => '01M2PURGECOUNTER0000000001', 'prompt_version' => 'retired-lesson', 'check_name' => 'retired_check', 'action' => 'counted', 'hits' => 4, 'updated_at' => now()],
         ['id' => '01M2PURGECOUNTER0000000002', 'prompt_version' => 'plan-builder-v2', 'check_name' => 'char_limits', 'action' => 'counted', 'hits' => 2, 'updated_at' => now()],
+        ['id' => '01M2PURGECOUNTER0000000003', 'prompt_version' => 'lesson_day.v4.4', 'check_name' => 'line.ne_frame', 'action' => 'counted', 'hits' => 1, 'updated_at' => now()],
     ]);
     expect(DB::table('day_cards')->count())->toBeGreaterThan(0)
         ->and(DB::table('plan_events')->where('plan_id', $id)->count())->toBeGreaterThan(0);
@@ -41,7 +42,7 @@ it('drops every plan with all that hangs on it, tombstones its collection and de
     foreach (['plans', 'plan_scenes', 'plan_days', 'day_cards', 'plan_terms', 'plan_line_audios', 'plan_events', 'plan_notifications'] as $table) {
         expect(DB::table($table)->count())->toBe(0, $table);
     }
-    expect(DB::table('plan_check_counters')->pluck('prompt_version')->all())->toBe(['plan-builder-v2'])
+    expect(DB::table('plan_check_counters')->orderBy('prompt_version')->pluck('prompt_version')->all())->toBe(['lesson_day.v4.4', 'plan-builder-v2'])
         ->and(DB::table('collections')->where('id', $collectionId)->value('deleted_at'))->not->toBeNull()
         ->and(DB::table('collection_items')->where('collection_id', $collectionId)->count())->toBeGreaterThan(0)
         ->and(Storage::disk('local')->directoryExists("plan-audio/{$sceneId}"))->toBeFalse()

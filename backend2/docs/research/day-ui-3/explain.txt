@@ -196,7 +196,7 @@ tables: plans=250 scenes=1000 days=1500 cards=100500 terms=14000 line_audios=300
         ->  Index Scan using plan_scenes_pkey on plan_scenes  (cost=0.28..8.29 rows=1 width=64)
         Index Cond: (id = '01M2GJ2MXYAM1BBB1WGHY5FPJN'::bpchar)
 
-=== voice job — castSceneVoices (conditional UPDATE) → 1 ms, 1 statements; changed false
+=== voice job — запись каста сцены (conditional UPDATE; метод снят нарядом GEN-2a) → 1 ms, 1 statements; changed false
   [1] 0.7 ms  update "plan_scenes" set "partner_voice_gender" = ?, "updated_at" = ? where "plan_scenes"."id" = ? and "partner_voice_gender" is null
         Update on plan_scenes  (cost=0.28..8.29 rows=0 width=0)
         ->  Index Scan using plan_scenes_pkey on plan_scenes  (cost=0.28..8.29 rows=1 width=42)

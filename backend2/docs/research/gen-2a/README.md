@@ -1,0 +1,317 @@
+# GEN-2a · урок `lesson_day.v4.4` «каркасы» в конвейере, снос урока первой формы
+
+Наряд 15.09.2026. Канон — `docs/plan-v2.md` §2 (входы), §3а (служащий урок), §4 (валидатор); контракт —
+`docs/plan-api.md`; реестр промтов — `docs/prompts/REGISTRY.md` (строки LESSON и P2R); решения — `docs/DECISIONS.md`
+пп. 311–316.
+
+## §1. Итог
+
+- Промт принят из incoming байт-в-байт как `lesson_day.v4.3`, правка владельца — `lesson_day.v4.4`: заказанного числа
+  каркасов нет, модель выводит его из диалога; каждая реплика ученика в answer/ask стоит на каркасе; каркас может стоять
+  в двух обменах с разными наполнениями.
+- Строгая схема (enum видов, инициаторов, ссылок на каркасы и реплики; без длин списков, п. 202) принята вендором:
+  **8 из 8 живых уроков — с первой попытки**.
+- Хранится ответ модели как есть; служащий урок собирает сервер: реплика ученика — каркас с её наполнением, места
+  верных ответов `check` и `listening` перемешаны с зерном по сцене и адресу.
+- Валидатор — только счётчики: 47 кодов с адресом карточки; на 6 днях — **87 находок**, из них фатальными по
+  предложению §4 были бы 6 (2 дня из 6).
+- P2R — одна карточка по адресу и коду, только командой: вживую 2 из 2 карточек починены ($0,022 и $0,018, 2,5–2,9 с).
+- Клиент не менялся: день 1 свежего плана открылся на симуляторе, этапы пройдены через API, окно показывает слова,
+  фразы и диалог v4.4; голос диалога — двумя голосами, каждый кусок слышит свою реплику (§8).
+- Урок первой формы снесён без остатка: код, тесты, конфиг, данные на `wordtrainer` и `wordtrainer_e2e_test` (§2);
+  grep по старым именам — 0 (§11).
+
+## §2. Снесено
+
+Имена удалённых классов и методов — в сообщениях коммитов наряда и в отчёте наряда: в `docs/` их нет намеренно (правило
+«в доках ни одного упоминания структуры, которой нет в коде»). Здесь — что и сколько.
+
+**Код** (`backend2/app`, против `51840d82`): удалено **17 файлов**, переименовано с новым содержанием 2, изменено 56,
+добавлено 41.
+
+| что | сколько |
+|---|---|
+| классы проверок урока первой формы (по одной на правило, с режимами `observe/drop/gate`) | 12 файлов |
+| интерфейс проверки, исполнитель проверок, контекст проверок | 3 файла |
+| сервис «фраза в сообщении» (правило «клей + местоимение») | 1 файл |
+| файл промта урока первой формы | 1 файл |
+| вопрос на обмене и его вариант старой формы → `ExchangeCheck`, `CheckOption` (переписаны под `check`) | 2 класса |
+| методы, жившие только для первой формы: метки фраз и слов на сообщении (2), «без чтения» для режима `drop` (3), каст голосов сцены без пола — в репозитории и его Eloquent-реализации, в строках голоса, в долге голоса (4 и флаг «каст новый») | 9 методов, 1 поле |
+| конфиг плана: режимы проверок урока (10 ключей, у каждого своя переменная env) и счётчик фраз по уровням (2) | 12 ключей |
+| вход промта — счётчик фраз | 1 |
+
+**Тесты:** удалено **23** теста первой формы в 5 файлах (файл проверок урока — целиком, 5; сборка дня — 10; строки голоса
+— 5; API плана — 2; окно дня — 1: каст сцены). Не переписывались «по мотивам»: **39** тестов написаны от канона в 10 файлах
+(`LessonValidatorTest` 5, `LessonAssemblyTest` 5, `LessonCardTest` 3, `DayAssemblyTest` 8, `SpokenLinesTest` 3,
+`LessonObservationTest` 5, `LessonRepairTest` 5, `DayClientContractTest` 3, `PlansBeforeFramesPurgeTest` 1,
+`ProfileGenderTest` 1).
+
+**Схема:** таблиц и колонок не удалено — урок первой формы жил в `plan_scenes.lesson_json` и строках `plan_terms`, то
+есть в данных. Проверено: каждая колонка `plan_*`, `day_cards`, `profiles` читается или пишется кодом `app/` (вне
+миграций) — несвязанных 0. Добавлено (аддитивно, после бэкапа): `plan_terms` — `frame_target`, `frame_native`,
+`frame_pronunciation_native`, `frame_kind` (CHECK `answer|ask`), `slot` jsonb, `used_in` jsonb; `profiles.gender`
+(CHECK `female|male`). Одностороння миграция данных — `2026_09_15_110000_drop_plans_built_before_frames`.
+
+**Данные** (миграция выше; каскады + коллекции планов надгробием + файлы голоса и фото):
+
+| база | планы | сцены | дни | карточки | термины | голос | события | уведомления | счётчики | коллекции | файлы |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `wordtrainer` | 24 | 57 | 91 | 1 228 | 546 | 321 | 41 | 35 | 13 | 10 надгробий | 435 (+4 пустые папки) |
+| `wordtrainer_e2e_test` | 250 | 1 000 | 1 500 | 100 500 | 14 000 | 30 000 | — | — | — | — | — |
+
+План второго пользователя на `wordtrainer` — снесён без пересоздания (решение владельца); план Дена — пересоздаётся на
+`v4.4` после сдачи. Очередь: 4 отложенных `VoiceSceneJob` по старым сценам сняты из `queues:default:delayed` до сноса,
+horizon перезапущен. Бэкапы: `storage/db-backups/wordtrainer-20260915-014826.sql.gz`,
+`wordtrainer_e2e_test-20260915-013644.sql.gz`, файлы — `plan-files-before-frames-20260915-014831.tar.gz`.
+
+**Документы:** `plan-v2.md` (§2, §3а, §4 — таблица кодов), `plan-api.md`, `openapi.yaml`, README модуля, `REGISTRY.md`,
+`ROADMAP.md`, `DECISIONS.md` (пп. 305, 306, 309 поправлены; 311–316 новые), отчёты `plan-gen`, `day-ui-3` — переписаны
+под то, что есть в коде.
+
+## §3. Валидатор на 6 днях — код → сколько раз → примеры
+
+Дни: собеседование, аренда — средний; банк, ресторан, аэропорт — начальный; врач с ребёнком — средний. Один вызов на
+день, без ретраев и починок; валидатор — по сохранённому ответу модели кодом на момент сдачи
+(`tools/export.php` → `validator.json`). Находок: врач 13, собеседование 7, аренда 21, банк 21, ресторан 12, аэропорт 13.
+
+| код | 6 дней | по дням | примеры (день · адрес: причина) |
+|---|---|---|---|
+| `dialogue.count` | 0 | — | — |
+| `vocab.count` | 0 | — | — |
+| `exchange.shape` | 0 | — | — |
+| `exchange.second_question` | 2 | rent 2 | rent B1: the closing message «What about electricity?» ends with a question mark · rent B2: the closing message «How much is the deposit?» ends with a question mark |
+| `check.shape` | 0 | — | — |
+| `listening.shape` | 0 | — | — |
+| `pronunciation.script` | 3 | bank 3 | bank p2.f1: the reading «май пáспорт» leaves the native script · bank v2: the reading «пáспорт» leaves the native script |
+| `frame.count` | 0 | — | — |
+| `frame.unused` | 0 | — | — |
+| `frame.too_long` | 0 | — | — |
+| `frame.no_slot_share` | 0 | — | — |
+| `frame.native_alternatives` | 3 | bank 2, restaurant 1 | bank p2: «Вот мой/моё ___.» writes alternatives inside the frame · bank p4: «Какая/какой ___?» writes alternatives inside the frame |
+| `frame.native_punct` | 0 | — | — |
+| `filler.count` | 0 | — | — |
+| `filler.ungrammatical` | 3 | bank 3 | bank p2.f1: «Here is my my passport.»: a word is doubled at the seam · bank p2.f2: «Here is my my rental letter.»: a word is doubled at the seam |
+| `filler.one_in_dialogue` | 3 | rent 3 | rent p2: exchanges 2 and 8 say p2 with the same filler «the deposit» · rent B3: «one year» is not one of p3's fillers |
+| `line.ne_frame` | 3 | rent 1, bank 2 | rent B3: «I need a one-year contract.» is not «I need a ___ contract.» with «one year»; served as «I need a one year contract.» · bank B2: «Here is my passport.» is not «Here is my ___.» with «my passport»; served as «Here is my my passport.» |
+| `line.too_long` | 0 | — | — |
+| `line.no_frame` | 0 | — | — |
+| `key.not_in_line` | 2 | interview 1, rent 1 | interview B1: the key «have of experience» is not in «I have five years of experience.» · rent B3: the key «need a contract» is not in «I need a one year contract.» |
+| `key.contains_filler` | 12 | doctor 2, interview 1, rent 2, bank 3, airport 4 | doctor B1: the key «son has a» takes words of the filler «a fever» · doctor B4: the key «also has a» takes words of the filler «a sore throat» |
+| `key.no_content_word` | 15 | doctor 2, rent 2, bank 5, restaurant 3, airport 3 | doctor B2: the key «has had it» has no content word · doctor B4: the key «also has a» has no content word |
+| `key.too_long` | 2 | doctor 2 | doctor B7: the key «How often should I give» has 5 words (1–4) · doctor B8: the key «When should we come back» has 5 words (1–4) |
+| `variant.longer` | 5 | interview 1, rent 1, bank 1, restaurant 1, airport 1 | interview B1: the variant «I have five years in project management.» has 7 words, the line 6 · rent B6: the variant «Can I keep a cat?» has 5 words, the line 4 |
+| `kind.ask_count` | 0 | — | — |
+| `kind.rescue_count` | 0 | — | — |
+| `rescue.not_first` | 0 | — | — |
+| `rescue.new_fact` | 0 | — | — |
+| `rescue.no_prev` | 0 | — | — |
+| `partner.two_questions` | 0 | — | — |
+| `partner.too_long` | 0 | — | — |
+| `partner.closer` | 0 | — | — |
+| `check.about_learner` | 0 | — | — |
+| `check.verbatim` | 13 | doctor 3, interview 3, rent 4, restaurant 2, airport 1 | doctor x1.check: the right option «The child's main problem today» repeats «problem today» of the partner's line · doctor x5.check: the right option «At home, not outside» repeats «at home» of the partner's line |
+| `check.listed_alternative_as_wrong` | 0 | — | — |
+| `listening.count` | 0 | — | — |
+| `listening.same_exchange` | 1 | restaurant 1 | restaurant L3: L2 and this question are both about exchange 6 |
+| `listening.no_learner_value` | 1 | rent 1 | rent lesson: no question asks for a value the learner gave (a filler said in the dialogue) |
+| `listening.distractor_not_filler` | 11 | doctor 3, interview 1, bank 2, restaurant 3, airport 2 | doctor L1: the question asks p1's slot («температура»), but 1 of its wrong options are p1's other fillers (expected 2) · doctor L2: the question asks p2's slot («уже три дня»), but 0 of its wrong options are p2's other fillers (expected 2) |
+| `vocab.free_combination` | 2 | doctor 1, rent 1 | doctor v7: «every six hours» is a free combination of ordinary words · rent v6: «work from home» is a free combination of ordinary words |
+| `vocab.everyday_word` | 0 | — | — |
+| `vocab.used_in_wrong` | 4 | rent 2, airport 2 | rent v1: «deposit» is not in the partner's line of exchange 8 · rent v5: «fixed-term» is not in the partner's line of exchange 4 |
+| `vocab.learner_share` | 0 | — | — |
+| `vocab.nested` | 0 | — | — |
+| `native.gendered_past` | 0 | — | — |
+| `image_prompt.rule_text` | 0 | — | — |
+| `answer.index_skew` | 2 | rent 1, restaurant 1 | rent lesson: the right answer stands at index 1 in 9 of 12 questions (75 %) · restaurant lesson: the right answer stands at index 1 in 8 of 12 questions (67 %) |
+
+18 кодов из 47 сработали хотя бы раз; 29 — ни разу. Все находки по каждому дню — в выгрузках `<тема>.md`.
+
+**Уточнения эвристик до замера** (ложные срабатывания, найденные на этих же днях и снятые до таблицы; канон §4
+описывает правило после них): `check.verbatim` не считает пару из двух служебных слов («in the»); `vocab.used_in_wrong`
+ищет термин и в каркасе, собранном с каждым наполнением; `___ .` в каркасе собирается без пробела перед знаком.
+
+## §4. Предложение: фатально / предупреждение / снять
+
+«Фатально» здесь — день не раздаётся, пока P2R не починит карточку по адресу (одна карточка ≈ $0,02 и 3 с), а не
+отказ урока целиком. Решение — за архитектором (п. 313); коды и пороги в коде сейчас не менялись.
+
+**Фатально — 5 кодов; на 6 днях: 6 находок, 2 дня (аренда 1, банк 5).** Ученик получает неверную карточку.
+
+| код | 6 дней | почему |
+|---|---|---|
+| `line.ne_frame` | 3 | служит каркас с наполнением, а не текст модели: 2 из 3 служащих реплик сломаны («Here is my my passport.», «I need a one year contract.») |
+| `filler.ungrammatical` | 3 | фраза дня и реплика собираются из этого каркаса: все три наполнения банка дают «my my» |
+| `check.shape` | 0 | меньше/больше 3 вариантов или индекс мимо — карточку не раздать; длины схемой не держатся (п. 202) |
+| `listening.shape` | 0 | то же для вопроса listening |
+| `exchange.shape` | 0 | реплики не того говорящего — ломается «кто начал» (выбор или сборка ответа, порядок голоса) |
+
+Банк чинится одним вызовом P2R каркаса `p2` (показано вживую, §7), аренда — одним вызовом каркаса `p3`.
+
+**Предупреждение — 41 код; 79 находок.** Карточка верна по механике, качество — дело оценщика.
+
+- Ключ реплики: `key.no_content_word` 15, `key.contains_filler` 12, `key.not_in_line` 2, `key.too_long` 2. **19 из 27
+  находок `no_content_word`/`contains_filler` стоят на каркасах, где вне окна нет ни одного знаменательного слова**
+  («Here is ___.», «What is ___?», «I have ___.», «Does it have ___?»): правило промта «ключ только из каркаса, со
+  знаменательным словом» на них невыполнимо — это конфликт правил промта, а не промах модели. Сам пример промта «pain
+  in my» кончается служебным словом, что запрещено строкой выше. Кандидат в правку промта (v4.5): или каркас обязан
+  нести знаменательное слово вне окна, или такой ключ разрешён.
+- `check.verbatim` 13 — 5 из 13 называют предмет или число, у которого нет пересказа («The pasta», «Forty pounds»,
+  «2,400 euros», «Water and heating», «Electricity and internet»); если это норма, сузить код до ответов длиннее двух
+  слов без чисел — останется 8.
+- `listening.distractor_not_filler` 11 — буквальное правило промта («неверные — другие наполнения того же каркаса»);
+  модель в 5 днях из 6 даёт правдоподобные значения того же рода, но не из списка каркаса.
+- `variant.longer` 5, `vocab.used_in_wrong` 4 (карточка слова берёт пример из первой реплики с термином),
+  `pronunciation.script` 3 (латинская «á» в русском чтении — кандидат в детерминированную замену на «а́»),
+  `frame.native_alternatives` 3 («мой/моё», «хотел(а)» — последнее уйдёт с полом из профиля), `filler.one_in_dialogue`
+  3 (подслучай «наполнение не из списка» совпадает с `line.ne_frame` в rent B3), `exchange.second_question` 2,
+  `vocab.free_combination` 2, `listening.same_exchange` 1, `listening.no_learner_value` 1.
+- Остальные 26 кодов — 0 на 6 днях; считать дальше ничего не стоит, фатальными их делать нет данных.
+
+**Снять — 1 код; 2 находки.** `answer.index_skew` (аренда 75 %, ресторан 67 %): сервер перемешивает места верных ответов
+при сборке, ученик позиции модели не видит — код меряет привычку модели, от которой ничего не зависит.
+
+## §5. Каркасов на день
+
+`tools/frames.php`: обмены по видам, каркасы, границы v4.4 (от половины до всех answer/ask), каркасы в двух обменах и
+больше, каркасы без окна, реплики answer/ask без каркаса.
+
+| день | answer | ask | rescue | каркасов | границы v4.4 | каркас в 2+ обменах | без окна | реплик без каркаса |
+|---|---|---|---|---|---|---|---|---|
+| doctor | 5 | 2 | 1 | 7 | 4…7 | 0 | 0 | 0 |
+| interview | 6 | 2 | 0 | 8 | 4…8 | 0 | 0 | 0 |
+| rent | 4 | 4 | 0 | 7 | 4…8 | 1 | 0 | 0 |
+| bank | 4 | 3 | 1 | 6 | 4…7 | 1 | 0 | 0 |
+| restaurant | 4 | 4 | 0 | 8 | 4…8 | 0 | 0 | 0 |
+| airport | 4 | 3 | 1 | 7 | 4…7 | 0 | 0 | 0 |
+| симулятор: Приём у врача | 5 | 2 | 1 | 6 | 4…7 | 1 | 0 | 0 |
+| симулятор: Аптека | 2 | 5 | 1 | 7 | 4…7 | 0 | 0 | 0 |
+
+Модель держит каркасов у верхней границы (6–8 на 7–8 answer/ask): повтор каркаса — в 3 днях из 8, по одному; `line.no_frame`
+и `frame.count` — 0, как и ожидалось.
+
+## §6. Цена и время: урок первой формы → `lesson_day.v4.4`
+
+Первая форма — три последних урока до сноса (все начальный уровень, те же `gpt-5.4`, строгая схема); v4.4 — шесть дней
+§3 (три средних, три начальных) и два дня симулятора. Цена — по токенам без скидки кэша, как её пишет код.
+
+| | уроков | цена урока, $ | время, с | токены вход | токены выход |
+|---|---|---|---|---|---|
+| первая форма | 3 | 0,0815 · 0,0808 · 0,0607 — **0,0743** | 31,1 · 28,0 · 21,0 — **26,7** | 7 031 · 7 040 · 7 052 — **7 041** | 4 261 · 4 211 · 2 874 — **3 782** |
+| v4.4, 6 дней | 6 | 0,0785 · 0,0835 · 0,0765 · 0,0755 · 0,0733 · 0,0760 — **0,0772** | 32,2 · 33,3 · 29,1 · 28,9 · 24,6 · 25,5 — **28,9** | **6 635** (6 611…6 651) | **4 041** (3 781…4 460) |
+| v4.4, симулятор | 2 | 0,0719 · 0,0757 | 27,1 · 26,4 | — | — |
+
+Вход короче на ~400 токенов (промт v4.4 короче), выход длиннее на ~260 (каркасы с 2–3 наполнениями и listening):
+урок **+3,9 %** к среднему первой формы, **−4,8 %** к двум её полным урокам (третий короткий — 2 874 токена выхода).
+Время +2,2 с. Попыток — 1,0 у всех восьми.
+
+## §7. P2R вживую — одна карточка, без `--apply`
+
+| день · карточка | находки у карточки до | после | урок: находок | цена · время |
+|---|---|---|---|---|
+| банк · `p2` (каркас) | `filler.ungrammatical` ×3, `frame.native_alternatives`, `pronunciation.script` | 0: «Here is ___.» / «Вот ___.», чтение без латиницы | 21 → 16 | $0,022070 · 2,5 с |
+| врач · `L2` (listening) | `listening.distractor_not_filler` | 0: неверные — «Со вчера», «С сегодняшнего утра» | 13 → 12 | $0,018303 · 2,9 с |
+
+Цена починки банка: ключи «Here is my» теперь задевают наполнение «my passport» (+2 `key.contains_filler`) — те самые
+ключи §4, которым каркас без знаменательного слова не оставляет хорошего варианта. `--apply` вживую не запускался;
+запись, отказ после раздачи дня и сохранность id/фото терминов — `LessonRepairTest`.
+
+## §8. Живой прогон на симуляторе и голос
+
+Стек `:8001` + horizon, база `wordtrainer`, QA `qa-dayui3@wt.test`, клиент без изменений (сборка `bca543ce`).
+`tools/sim_plan.py create` → план «к врачу с сыном» (2 дня, начальный): сборка $0,018338, день 1 — v4.4 с первой попытки
+($0,071863, 27,1 с, 14 находок), `start` 200; `walk … words phrases` → этапы закрыты через API; приложение → таб «План» →
+плита → окно дня; `close` → остальные этапы и день закрыты (75 карточек, 9 минут); день 2 «Аптека» — v4.4 с первой
+попытки ($0,075658, 26,4 с, 8 находок). `failed_jobs` новых — 0.
+
+| снимок | что видно |
+|---|---|
+| `screens/01-plan-day1.png` | таб «План»: день 1 «Приём у врача», слова и фразы пройдены, диалог идёт |
+| `screens/02-window.png` | окно дня: цели, пять этапов, вкладки |
+| `screens/03-words.png` | «Слова» v4.4: фото, чтение, перевод, «прослушать» |
+| `screens/04-phrases.png` | «Фразы»: 6 фраз — каркас с наполнением первой реплики («My son has a fever.») |
+| `screens/05-dialogue.png`, `06-dialogue-answers.png`, `07-dialogue-ask-rescue.png` | «Диалог»: 8 обменов, реплики ученика — служащие (из каркасов) |
+| `screens/08-day-closed.png` | день закрыт: 5 этапов пройдено, «День 2 откроется завтра» |
+
+**Голос дня «врач»** (сцена `01M2H35D29TS4VPFNVSE4E6D0W`, живой день 1 симулятора — тот же промт и та же тема, что день
+«врач» §3, и его слушает клиент): диалог — один вызов Gemini, два голоса (собеседник Aoede, ученик Puck), нарезка по паузам
+16/16; `docs/research/day-ui-3/tools/verify_cut.php` — каждый кусок слышит свою реплику, худший 89 % (x7: голос съел
+«use»); порядок ask/rescue — ученик первым, как в уроке. `GET` дня: `audio_url` у 8 реплик собеседника и 8 реплик ученика,
+у 8 употреблений слов. Стоимость голоса диалога — $0,009684. Фразы и слова (пачка) — суточная квота Gemini исчерпана
+14.09; отложенные `VoiceSceneJob` обеих сцен стоят на 07:00:09–07:00:10 UTC 15.09.
+
+## §9. Индексы и EXPLAIN
+
+Новых путей чтения нет: окно дня читает те же строки с новыми колонками. Новое — две записи и одно чтение, каждое на
+существующем индексе (`tools/explain.php`, база `wordtrainer_test`: 250 планов, 1 000 сцен, 100 500 карточек, 14 000
+терминов с каркасами, 30 000 строк голоса, 3 001 профиль; полный вывод — `explain.txt`):
+
+| путь | план |
+|---|---|
+| GET дня (пройден / идёт / не открыт) — 19 / 12 / 14 операторов, 93 / 12 / 15 мс | `plans_pkey`, `plan_scenes_order_uidx`, `plan_days_number_uidx`, `day_cards_position_uidx` / `day_cards_returns_idx`, `plan_line_audios_uidx`, `plan_terms_scene_position_idx`; фраз с каркасом в окне 6, listening 3 |
+| пол ученика: `/auth/me` и урок | Index Scan `profiles_user_id_unique` |
+| P2R `--apply`: тексты терминов по `(scene_id, ref)` | Index Scan `plan_terms_ref_uidx` |
+| счётчики валидатора: upsert на код | Conflict Arbiter `plan_check_counters_uidx` |
+
+Seq Scan — 0. Индексов наряд не добавлял.
+
+## §10. Тесты канона — каждый проверен дефектом
+
+| правило | тест | дефект (мутация в коде) | под дефектом | после отката |
+|---|---|---|---|---|
+| реплика собирается из каркаса | `LessonAssemblyTest` «puts a learner line together…» | `LessonAssembly` отдаёт реплику модели как есть | упал: строки не равны | зелёный |
+| ровно одно наполнение в диалоге (v4.4: по одному на обмен) | `LessonAssemblyTest` «marks in the dialogue exactly…» | `FillerRules` не видит отмеченное и не сказанное | упал: адреса не равны | зелёный |
+| индексы перемешаны | `LessonAssemblyTest` «moves every right answer…» | `LessonAssembly` оставляет места ответов модели | упал | зелёный |
+| валидатор считает, не бракует | `LessonObservationTest` «counts what a lesson breaks…» | `LessonBuildService` отказывает уроку с находками | упал: 409 вместо 200 | зелёный |
+| GET дня совместим с клиентом | `DayClientContractTest` «gives the day read every key…» | `PlanJson` не отдаёт `pronunciation` фразы | упал: недостающий ключ назван | зелёный |
+
+Сверка контракта — по клиентским фикстурам `mobile/test/fixtures/plan/*` (коммит клиента `4816a034`), копия в
+`tests/Fixtures/plan-client/`: ключи и роды значений; в копии одно значение — `scene.prompt_version`.
+
+## §11. Grep «снос без остатка»
+
+По старым именам полей, классов, проверок, методов каста, конфига и файла промта (метки фраз и слов на сообщениях,
+вопрос старой формы, 12 проверок и их ключи конфига, исполнитель проверок, «фраза в сообщении», каст сцены, счётчик
+фраз, имя старого промта) в `app/`, `tests/`, `docs/`, `openapi/`, `config/` — **0**, кроме одного места, которое трогать
+нельзя: английское слово старого поля вопроса встречается в тексте промта `lesson_day.v4.4.md` (раздел LISTENING, про
+проверку на слух) — это правило промта владельца, не поле. Поправлены по пути: имя метода этапа «Слушаю и отвечаю», два
+комментария в Plan и один в Learning (то же слово в обычном английском), значение `prompt_version` в копии клиентской
+фикстуры. `docs/session-handoff.md` переписан под GEN-2b. Мёртвых ссылок deptrac и PHPStan не находят — ворота финального
+коммита наряда.
+
+## §12. Стоимость наряда
+
+| что | $ |
+|---|---|
+| 6 планов и 6 уроков §3 (`wordtrainer_e2e_test`) | 0,085011 + 0,463242 |
+| P2R, 2 карточки | 0,040373 |
+| план симулятора и 2 урока (`wordtrainer`) | 0,018338 + 0,147521 |
+| голос диалога дня «врач» (Gemini) | 0,009684 |
+| транскрипция нарезки (16 кусков, 38 с) | ≈ 0,002 |
+| **итого на момент отчёта** | **≈ 0,766** (лимит $4) |
+
+Не входит: 4 вызова playground 14.09 21:11–21:25 UTC (черновики промта v4 → v4.3 до наряда), пересоздание плана Дена и
+голос фраз/слов после квоты (оценка ≈ $0,12).
+
+## §13. Что не проверено и что замечено
+
+- **Голос фраз и слов** (пачка) на сценах v4.4 — ждёт суточной квоты Gemini (07:00 UTC); диалог проверен (§8).
+- **Телефон Дена** не пересобирался и не открывался: клиент не менялся; план Дена пересоздаётся после сдачи.
+- **Сессия дня в приложении** (карточки диалога, слушания, речи на уроке v4.4) не проходилась руками — этапы закрыты
+  через API, в приложении смотрелось окно дня и закрытый день.
+- `--apply` P2R вживую не запускался (Pest — да); LEARNER_GENDER с известным полом вживую не генерировался (у QA-аккаунтов
+  пола нет; Pest — да); урок с языком цели не `en` не генерировался (английские списки валидатора только для `en`).
+- Оценка человеком — колонка «оценка» в 6 выгрузках пуста, для Дена.
+- **Замечено в клиенте (не трогался):** окно рисует собеседника первым и в обменах ask/rescue, где ученик говорит первым
+  (так было и в уроке первой формы — инициатор B был и там); у пары окна теперь есть `kind`, клиент может ставить ученика
+  первым. Перевод реплики ученика в диалоге — перевод модели в контексте и может расходиться с переводом фразы, собранным
+  из каркаса («Она у него уже три дня.» против «У него это уже три дня.»); ни один код этого не считает. Длинное слово
+  перевода на карточке слова переносится посреди слова («жаропонижающе / е»).
+- **Промт:** пример ключа «pain in my» противоречит правилу «never end on a function word»; правило ключа невыполнимо на
+  каркасах без знаменательного слова (§4).
+
+## §14. Файлы
+
+- `runs.json` — 6 прогонов (план, сцена, цена, токены, время); `<тема>.md` — выгрузки дней с пустой колонкой оценки
+  (`doctor`, `interview`, `rent`, `bank`, `restaurant`, `airport`); `validator.json` — таблица §3.
+- `tools/live-run.php` — 6 дней на `wordtrainer_e2e_test`, один вызов на день; `tools/export.php` — выгрузки и таблица;
+  `tools/frames.php` — §5; `tools/explain.php` → `explain.txt` — §9; `tools/sim_plan.py` + `sim-plan.json` — §8; `screens/`.

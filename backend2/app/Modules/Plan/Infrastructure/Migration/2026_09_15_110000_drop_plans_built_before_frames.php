@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -24,8 +25,9 @@ return new class extends Migration
      *
      *  - `plans` — deleted; `plan_scenes`, `plan_days`, `day_cards`, `plan_terms`, `plan_line_audios`,
      *    `plan_events` and `plan_notifications` go with them by their cascading foreign keys.
-     *  - `plan_check_counters` — the rows counted under the old lesson versions (`lesson-v3`,
-     *    `lesson-v4`): they name checks that no longer exist.
+     *  - `plan_check_counters` — every row counted under a prompt version that no longer exists: all but
+     *    the plan builder's (`plan-builder-*`) and the frames lesson's (`lesson_day.*`) — their names are
+     *    checks that no longer exist.
      *  - `collections` — a plan's collection is SOFT-deleted (tombstones for the phone's mirror, the way
      *    PLAN-GEN retired the first plan's collections); the global terms stay.
      *  - files — each dropped scene's voice (`plan-audio/<scene>/` on `plan.audio_disk`) and the square
@@ -34,8 +36,6 @@ return new class extends Migration
      * No `down()`: the rows are content of a lesson that no longer exists; the way back is the database
      * backup taken before `migrate` (`scripts/db-backup.sh`), and the owner allowed this one-way step.
      */
-    private const OLD_LESSON_VERSIONS = ['lesson-v3', 'lesson-v4'];
-
     public function up(): void
     {
         $plans = DB::table('plans')->pluck('id')->all();
@@ -51,7 +51,7 @@ return new class extends Migration
             'plan_line_audios' => $scenes === [] ? 0 : DB::table('plan_line_audios')->whereIn('scene_id', $scenes)->count(),
             'plan_events' => $plans === [] ? 0 : DB::table('plan_events')->whereIn('plan_id', $plans)->count(),
             'plan_notifications' => $plans === [] ? 0 : DB::table('plan_notifications')->whereIn('plan_id', $plans)->count(),
-            'plan_check_counters' => DB::table('plan_check_counters')->whereIn('prompt_version', self::OLD_LESSON_VERSIONS)->count(),
+            'plan_check_counters' => self::retiredCounters()->count(),
             'collections_tombstoned' => $collections === [] ? 0 : DB::table('collections')->whereIn('id', $collections)->whereNull('deleted_at')->count(),
         ];
 
@@ -63,7 +63,7 @@ return new class extends Migration
             foreach (array_chunk($plans, 500) as $chunk) {
                 DB::table('plans')->whereIn('id', $chunk)->delete();
             }
-            DB::table('plan_check_counters')->whereIn('prompt_version', self::OLD_LESSON_VERSIONS)->delete();
+            self::retiredCounters()->delete();
         });
 
         $files = 0;
@@ -85,5 +85,13 @@ return new class extends Migration
     public function down(): void
     {
         // One-way by design — see the class docblock.
+    }
+
+    /** The counters of prompt versions that no longer exist: neither the plan builder's nor the frames lesson's. */
+    private static function retiredCounters(): Builder
+    {
+        return DB::table('plan_check_counters')
+            ->where('prompt_version', 'not like', 'plan-builder-%')
+            ->where('prompt_version', 'not like', 'lesson\_day.%');
     }
 };

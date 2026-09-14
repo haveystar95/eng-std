@@ -47,14 +47,23 @@ their own columns instead (`saveScene` — never the photo columns, `attachScene
 11.09 a lesson job and a photo job put their pre-start snapshot back over a started plan, and the
 plan fell to `ready` with no start date and day 1 locked again (`docs/research/plan-api-fix-1/`).
 | `DayCard` | answered once; first failure requeues, second returns the unit tomorrow; a skip has no consequence |
-| `PlanTerm` | written once from the lesson (`fromLesson`), refs `v*`/`p*` are how cards point at terms |
+| `PlanTerm` | written once from the served lesson (`fromLesson`), refs `v*`/`p*` are how cards point at terms; a phrase keeps its frame (`frame_*`, `slot`) and reads as the frame said with its dialogue filler, a word keeps `used_in`; a P2R `--apply` rewrites the texts by ref, never the row or its photo |
 | `PlanEvent` | a journal line, written once and never changed (no mutator; `PlanEventRepository` has `append`/`has`/`forPlan` only); a day event names its day; a rebuild carries `{from, to}` with `to < from`. Written inside the transaction of the handler whose change it records (`BuildPlanHandler`, `BuildLessonHandler`, `CloseDayHandler`, `ReschedulePlanHandler`) or by the tick; the letter is queued after the commit |
+
+The lesson (`Domain/Lesson`, `lesson_day.v4.4`): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
+`check`), phrases as frames (`Phrase` + `Slot` + `Filler`), the listening (`ListeningQuestion`, the lesson's own,
+not an exchange's), vocabulary with `used_in`; `LessonParser` (shape only); `LessonAssembly` — the SERVED lesson
+every reader deals from: a framed learner line is the server's assembly of frame and filler (`FrameText`), the
+right answers of checks and listening stand at seeded shuffled places; `LessonCard` — one repairable card by its
+address (P2R). A scene keeps the model's answer (stored, validated, repaired) and serves the assembled lesson.
 
 Pure services: `PlanCalendar` (layout 1…10, days until the event), `DayAssembler` + stages (the
 day, dealt deterministically), `RouteStages` (which stages a day on the route has and where each
-stands — from card tallies, the dealer's outline or the day type), `LessonChecker` / `BlueprintChecker` (the §5 checks in
-observe/drop/gate), `Words` / `PhraseInMessage` / `NativeScript` (the text rules the checks and
-the assembly share), `DayMetricsCalculator`, `NativeStrings`, `Shuffle`.
+stands — from card tallies, the dealer's outline or the day type), `BlueprintChecker` (the plan
+checks in observe/drop/gate), `LessonValidator` + `Check/Lesson/*Rules` (the lesson's codes, each with its
+card's address — observation only, nothing refused, `LessonCodes`), `Words` / `FrameText` / `EnglishWords` /
+`NativeWords` / `NativeScript` (the text rules the validator and the assembly share), `DayMetricsCalculator`,
+`NativeStrings`, `Shuffle`.
 The day window (DAY-UI-2, `window` of the day read, put together by `Application/Service/DayWindowViews`):
 `DayWindowStages` (the five rows — a number only on the current one — and the day's progress),
 `DayPace` (minutes by the stage's pace per card), `UnitStates` (a unit's state from its cards),
@@ -62,10 +71,13 @@ The day window (DAY-UI-2, `window` of the day read, put together by `Application
 queries); value objects `WindowStatus`, `WindowStage`, `WindowAction`, `UnitState`, `ProgramSummary`.
 Application: `PlanImageLadder` (every missing photo's ladder climbed together, one finder batch per rung —
 image_prompt → «term, scene theme» → the theme on a page of its own; never the bare word, DAY-UI-3).
-The voice (DAY-UI-3): `SpokenLines` (what a day says out loud, the file names, whose voice each is, the
-cast of a scene written before voices had genders), `VoiceCast`; `SceneVoiceQueue` (what a scene still
+The voice (DAY-UI-3): `SpokenLines` (what a day says out loud, the file names, whose voice each is), `VoiceCast`;
+`SceneVoiceQueue` (what a scene still
 owes, as ≤ 4 calls), `SceneVoices` + `SceneAudioIndex` (a reader's lookup in the speaker's voice).
-`WordUsage` (the line of the day a word is said in, and its place in it — sheet 23-0e).
+`WordUsage` (the line of the day a word is said in — by the lesson's `used_in` — and its place in it, sheet 23-0e).
+Application: `LessonBuildService` (the lesson call, one retry only for an answer off the schema, the validator's
+findings counted by code) and `LessonCardRepairer` + `ReviseLesson` (P2R: one card repaired by the model for what the
+validator finds at it; written only on an explicit `--apply`, only before the day is dealt).
 `SceneReadiness` (`illustrating` → `ready` + the `day_ready` line).
 Notifications: `PlanEventRules` (which reschedule is a rebuild; what the calendar owes on and after
 the event date, `event_today` not before 08:00), `NotificationRules` (which fact is a letter —
@@ -86,7 +98,7 @@ reads plan tables.
 | Module | How | Why |
 |---|---|---|
 | `Generation` | `ContentModelCatalog` → `ContentModelPort` (purpose `plan`, own timeout); `ImageSearchPort`; `SpeechSynthesizerPort` | the two model calls, the photos (`searchMany`), the day's voice (`speakScript`) |
-| `Identity` | `UserReader`; `GetPushTokens` + `RemovePushToken`; `GetUsualVisitTime` | the learner's timezone and native language; the device addresses a letter goes to (and forgetting a dead one); when the daily reminder is due |
+| `Identity` | `UserReader`; `GetPushTokens` + `RemovePushToken`; `GetUsualVisitTime` | the learner's timezone, native language and gender (the lesson's LEARNER_GENDER); the device addresses a letter goes to (and forgetting a dead one); when the daily reminder is due |
 | `Vocabulary` | `ImportTerm`; `NativeDistractorReader` | a closed day's words and phrases become terms (dedup, provenance); catalogue translations as wrong options for a thin Beginner choice |
 | `Collections` | `CreateGeneratedCollection` (origin `plan`), `AddTermToCollection` | the plan's collection |
 | `Observability` | `OutboundCallContext` | the image job, the photo-copy fetch and the backfill label their calls |
@@ -95,9 +107,10 @@ reads plan tables.
 
 | Port | Implementations |
 |---|---|
-| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`) |
+| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson and the P2R card repair), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`) |
 | `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice, waiting out the vendor's window) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
+| `LearnerGender` | `IdentityLearnerGender` (the profile's gender, read when a lesson is written) |
 | `BuildVersion` | `StampedBuildVersion` (`APP_COMMIT` / `storage/app/commit`) |
 | `PlanImageFinder` | `PexelsPlanImageFinder` (search → photo + tone; `findMany` — a batch, six on the wire, over Generation's `searchMany`; `tone(url)` → Pexels `GET /photos/{id}` for the backfill) |
 | `SceneImageStore` | `CdnSceneImageStore` (disk `plan.image_disk`; fetches the 112/448 square crops from the photo's CDN, labelled `images`; fetches nothing under the fake image driver) |
@@ -117,12 +130,15 @@ reads plan tables.
 
 ## Notes
 
-- The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name. The
-  loader cuts the `TEST INPUT` section and sends the real inputs as the user message.
-- The lesson is stored as the model wrote it (`plan_scenes.lesson_json`) and re-parsed on read;
-  a check in `drop` mode stores the corrected lesson.
-- Every check ships in `observe`; modes are flipped in `config/plan.php`, never in code.
-- QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN).
+- The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
+  (`plan-builder-v2`, `lesson_day.v4.4`, `lesson_card_repair.v1`). The loader cuts the lesson's `TEST INPUT`
+  section and sends the real inputs as the user message; the repair wrapper quotes the lesson prompt's own
+  sections for the card's kind.
+- The lesson is stored as the model wrote it (`plan_scenes.lesson_json`), re-parsed on read and served assembled.
+- Every plan check ships in `observe`; modes are flipped in `config/plan.php`, never in code. The lesson validator
+  has no modes: it counts (`checks_json` of the scene, `plan_check_counters` by code).
+- QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN), `plan:repair-card`
+  (P2R by hand — Presentation/Console).
 - Ops: `plan:images-backfill {--plan=} {--requery}` — first the photos plans still lack, asked the search
   ladder (prints «было пусто / стало»; `--requery` re-asks the words the bare word photographed and the words repeating a picture of their day), then tones and square copies for scene photos
   stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a

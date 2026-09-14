@@ -155,6 +155,7 @@ paths:
                 daily_goal: { type: integer, minimum: 0, maximum: 100 }
                 timezone: { type: string, description: "Device IANA timezone (e.g. Europe/Kyiv); the scheduler floors day-scale due dates to the start of the user's day in it (F19). Send it at login and whenever the device zone changes. Validated as an IANA zone." }
                 onboarded: { type: boolean, description: "Send true on the onboarding-finish call to stamp profiles.onboarded_at once (never overwritten). Regular edits omit it." }
+                gender: { type: [string, 'null'], enum: [female, male, null], description: "The learner's gender (GEN-2a), optional. The lesson of a plan day is written with it (LEARNER_GENDER — the grammar of the learner's own lines in their language); null clears it and the lesson hears «unknown»." }
       responses:
         '200':
           description: OK
@@ -2668,7 +2669,7 @@ components:
       properties:
         build: { type: string, description: 'The server build (commit), `unknown` when not stamped' }
         prompt_plan: { type: string, description: 'The plan builder prompt file''s version, e.g. `plan-builder-v2`' }
-        prompt_lesson: { type: string, description: 'The lesson prompt file''s version, e.g. `lesson-v4`' }
+        prompt_lesson: { type: string, description: 'The lesson prompt file''s version, e.g. `lesson_day.v4.4`' }
 
     PlanBuild:
       type: object
@@ -2962,7 +2963,7 @@ components:
         A word or chunk card of the words tab and its sheet (23-0e, DAY-UI-3). Everything the sheet
         shows is here — how the word reads, what it means, its voice, the line of the day it is said
         in and the day it comes back on; the client derives none of it.
-      required: [ref, term, translation, pronunciation, definition, image, image_tone, audio_url, usage, state, returns_day]
+      required: [ref, term, translation, pronunciation, definition, image, image_tone, audio_url, usage, state, returns_day, used_in]
       properties:
         ref: { type: string, description: 'The lesson''s own id — `v3`' }
         term: { type: string }
@@ -2981,14 +2982,19 @@ components:
             - type: 'null'
         state: { $ref: '#/components/schemas/PlanWindowUnitState' }
         returns_day: { type: [integer, 'null'], description: 'On `returns_tomorrow`: the number of the day it comes back on («вернётся в день 3»); null otherwise, and after the last day that deals returns' }
+        used_in:
+          type: array
+          items: { type: string }
+          description: 'Where the lesson says the word (GEN-2a, additive — the client does not read it yet): frame ids `p3` (the frame or one of its fillers) and partner lines `A3` (the partner''s message of exchange 3)'
 
     PlanWindowUsage:
       type: object
       description: >-
-        «В разговоре» (23-0e): the line of the day a word is said in — the first message that names it
-        by id and contains it, else the first that contains it — with the word's place in it, in
-        characters (Unicode code points) of `text`, for the highlight, and the line's own voice.
-        A word the dialogue never says has no usage.
+        «В разговоре» (23-0e): the line of the day a word is said in — by the lesson's `used_in`, the first
+        named place that contains it (a frame id names the learner lines on that frame), else the first
+        line of the visit that contains it — with the word's place in it, in characters (Unicode code
+        points) of `text`, for the highlight, and the line's own voice. A word the dialogue never says (a
+        filler no line uses) has no usage.
       required: [text, translation, offset, length, audio_url]
       properties:
         text: { type: string }
@@ -2999,8 +3005,12 @@ components:
 
     PlanWindowPhrase:
       type: object
-      description: A phrase of the phrases tab — the phrase, how it reads, its translation and its voice (the learner's of the scene, DAY-UI-3).
-      required: [ref, text, translation, pronunciation, audio_url, state]
+      description: >-
+        A phrase of the phrases tab — the phrase, how it reads, its translation and its voice (the learner's of
+        the scene, DAY-UI-3). A phrase is a frame (`lesson_day.v4.4`): `text`, `translation` and `pronunciation`
+        are the frame said with the filler of its first dialogue line; `frame` is the frame itself (GEN-2a,
+        additive — the client does not read it yet).
+      required: [ref, text, translation, pronunciation, audio_url, state, frame]
       properties:
         ref: { type: string, description: '`p2`' }
         text: { type: string }
@@ -3008,16 +3018,50 @@ components:
         pronunciation: { type: [string, 'null'] }
         audio_url: { type: [string, 'null'], format: uri, description: 'Null until voiced — the phone reads it meanwhile' }
         state: { $ref: '#/components/schemas/PlanWindowUnitState' }
+        frame:
+          oneOf:
+            - $ref: '#/components/schemas/PlanWindowFrame'
+            - type: 'null'
+
+    PlanWindowFrame:
+      type: object
+      description: 'The frame behind a phrase (`lesson_day.v4.4`, GEN-2a): the pattern with its `___`, in both languages and read aloud, its kind, and its slot — null for a frame without one.'
+      required: [target, native, pronunciation, kind, slot]
+      properties:
+        target: { type: string, description: '«It hurts in his ___.»' }
+        native: { type: string, description: '«У него болит ___.»' }
+        pronunciation: { type: string }
+        kind: { type: string, enum: [answer, ask] }
+        slot:
+          oneOf:
+            - type: object
+              required: [hint, fillers]
+              properties:
+                hint: { type: string, description: 'What goes into the slot, in the learner''s language' }
+                fillers:
+                  type: array
+                  items:
+                    type: object
+                    required: [target, native, pronunciation, in_dialogue]
+                    properties:
+                      target: { type: string }
+                      native: { type: string }
+                      pronunciation: { type: string }
+                      in_dialogue: { type: boolean, description: 'The dialogue says the frame with this filler — one per exchange that uses the frame' }
+            - type: 'null'
 
     PlanWindowPair:
       type: object
       description: >-
         One exchange of the dialogue tab. Both bubbles carry their voice (DAY-UI-3: every line is
         voiced, the partner's in the partner's voice, the learner's in the learner's — two voices of
-        different gender); the learner's also carries its state.
-      required: [step, partner, learner]
+        different gender); the learner's also carries its state. The learner's line is the server's
+        assembly of its frame and filler (`lesson_day.v4.4`). `kind`, `phrase_ref` and `filler` are
+        additive (GEN-2a) — the client does not read them yet.
+      required: [step, kind, partner, learner]
       properties:
         step: { type: integer }
+        kind: { type: [string, 'null'], enum: [answer, ask, rescue, null], description: 'The exchange''s kind; null when the scene''s lesson is not at hand' }
         partner:
           oneOf:
             - type: object
@@ -3030,12 +3074,14 @@ components:
         learner:
           oneOf:
             - type: object
-              required: [text, translation, audio_url, state]
+              required: [text, translation, audio_url, state, phrase_ref, filler]
               properties:
                 text: { type: string }
                 translation: { type: string }
                 audio_url: { type: [string, 'null'], format: uri }
                 state: { $ref: '#/components/schemas/PlanWindowUnitState' }
+                phrase_ref: { type: [string, 'null'], description: 'The frame the line stands on — `p3`; null for a rescue line' }
+                filler: { type: [string, 'null'], description: 'The filler the line says the frame with' }
             - type: 'null'
 
     PlanDayWindow:
@@ -3044,7 +3090,7 @@ components:
         «Окно дня» (DAY-UI-2, DAY-UI-3, кадры 23-0a…0e): the day's own reading of its cards for the one-screen
         window — what the plate, the compact header, the three programme tabs and the one button
         draw. Everything countable is counted here; the client words it.
-      required: [day, stages, day_progress, program, allowed_action]
+      required: [day, stages, day_progress, program, allowed_action, listening]
       properties:
         day:
           type: object
@@ -3109,6 +3155,26 @@ components:
             The one button: «Начать» (`POST /start` for an unstarted plan, then `…/open`),
             «Продолжить» (`…/open`), «Ещё раз» — the day's «Говорю сам» once more over
             `GET …/cards`, answers not sent (not a retake of the day). Null: no button.
+        listening:
+          type: array
+          description: >-
+            The questions about the day's whole visit, heard once without text (`lesson_day.v4.4`, LISTENING):
+            in the learner's language, three options, the right one marked where the server shuffled it. Empty
+            on a review and the rehearsal. Additive (GEN-2a) — the client does not read it yet.
+          items:
+            type: object
+            required: [question, options, explanation_native]
+            properties:
+              question: { type: string }
+              options:
+                type: array
+                items:
+                  type: object
+                  required: [text, correct]
+                  properties:
+                    text: { type: string }
+                    correct: { type: boolean }
+              explanation_native: { type: string }
 
     PlanDayRoom:
       type: object
@@ -3269,6 +3335,7 @@ components:
         tier: { type: string, enum: [free, premium], description: Subscription tier; drives the generation quota and premium-store access. }
         timezone: { type: string, description: "The user's IANA timezone; UTC until the client sends one. Drives calendar-day due rounding (F19)." }
         onboarded_at: { type: string, format: date-time, nullable: true, description: "Instant first-run onboarding finished, or null if never. The client's onboarding gate keys on this (server truth, survives reinstall)." }
+        gender: { type: [string, 'null'], enum: [female, male, null], description: "The learner's gender when they said it (GEN-2a); null — not said." }
 
     StoreCollection:
       type: object

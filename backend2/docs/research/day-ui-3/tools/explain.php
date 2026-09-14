@@ -12,7 +12,7 @@ declare(strict_types=1);
  * real rows. Then, with the query log on:
  * - GET day in its three shapes (passed, in progress, not opened) — statements per call, EXPLAIN;
  * - the voice job's read of what a scene still owes (`SceneVoiceQueue::owed`);
- * - the photo job's writes and reads: `finishIllustration`, `castSceneVoices` (plain EXPLAIN — they write),
+ * - the photo job's writes and reads: `finishIllustration` (plain EXPLAIN — it writes),
  *   and the backfills' `photographedWithoutPrompt`, `repeatingDayPhotos` and scene list.
  *
  *   docker compose exec -T -e DB_DATABASE=wordtrainer_e2e_test app php artisan migrate:fresh --force
@@ -146,10 +146,6 @@ $measure('voice job — what the scene still owes (SceneVoiceQueue::owed)', stat
 
 $measure('photo job end — finishIllustration (conditional UPDATE)', static function () use ($app, $sceneId): string {
     return 'changed '.var_export($app->make(PlanRepository::class)->finishIllustration($sceneId), true);
-});
-
-$measure('voice job — castSceneVoices (conditional UPDATE)', static function () use ($app, $sceneId): string {
-    return 'changed '.var_export($app->make(PlanRepository::class)->castSceneVoices($sceneId, VoiceGender::Female), true);
 });
 
 $measure('images backfill --requery — photographedWithoutPrompt (all plans)', static function () use ($app): string {

@@ -407,7 +407,7 @@ final readonly class DayWindowViews
 
     /**
      * The learner's line as an exchange card carries it: what is said aloud, what is assembled, the
-     * right option of a choice. The comprehension cards are about the partner's line and carry none.
+     * right option of a choice. The cards about the partner's line (the exchange's check) carry none.
      *
      * @return array{0: string, 1: string}|null
      */

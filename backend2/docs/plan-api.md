@@ -134,10 +134,11 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 | `day` | `index`, `type`, `title_native` / `title_target`, `image` (фото сцены с `tone`, `url_112`/`url_448`) и всегда `image_tone`; `status` — `not_started` / `in_progress` / `passed` (другой запертый день — `locked`: окно его не рисует); `minutes_estimate` — «≈ N минут» до конца дня (null у пройденного); `minutes_spent` — только у пройденного; `goals[{text, passed}]` — `passed` true у всех только у пройденного дня |
 | `stages[5]` | words · phrases · dialogue · listen · speak: `state` `done` / `current` / `locked`; `done_count`, `total`, `minutes_left` — **только у `current`** (у остальных null: цифру клиент не рисует); `share` 0…1 — полоса ряда. У не начатого дня все `locked` |
 | `day_progress` | 0…1 — доля пройденных этапов; полоса компактной шапки |
-| `program.words` | `summary {total, done, returns}` + `items[{ref, term, translation, pronunciation, definition, image, image_tone, audio_url, usage, state, returns_day}]`; `state` — `pending` / `done` / `returns_tomorrow`; `usage {text, translation, offset, length, audio_url}` — реплика дня, где слово звучит, и место слова в ней в символах (подсветка шита 23-0e; слова нет в диалоге — `null`); `returns_day` — номер дня возврата у `returns_tomorrow` («вернётся в день 3») |
-| `program.phrases` | `summary` + `items[{ref, text, translation, pronunciation, audio_url, state}]` — голос ученика сцены |
-| `program.dialogue` | `summary` + `items[{step, partner {text, translation, audio_url}, learner {text, translation, audio_url, state}}]` — голос у обеих реплик (каждая голосом своего говорящего), состояние — у реплики ученика |
+| `program.words` | `summary {total, done, returns}` + `items[{ref, term, translation, pronunciation, definition, image, image_tone, audio_url, usage, state, returns_day, used_in}]`; `state` — `pending` / `done` / `returns_tomorrow`; `usage {text, translation, offset, length, audio_url}` — реплика дня, где слово звучит (по `used_in` урока, иначе первая реплика визита со словом), и место слова в ней в символах (подсветка шита 23-0e; слова нет в диалоге — `null`); `returns_day` — номер дня возврата у `returns_tomorrow` («вернётся в день 3»); `used_in` — где урок говорит слово (`p3` каркас или его наполнение, `A3` реплика собеседника), аддитивно GEN-2a |
+| `program.phrases` | `summary` + `items[{ref, text, translation, pronunciation, audio_url, state, frame}]` — голос ученика сцены. Фраза — каркас (`lesson_day.v4.4`): `text`/`translation`/`pronunciation` — каркас с наполнением его первой реплики диалога; `frame {target, native, pronunciation, kind, slot {hint, fillers[{target, native, pronunciation, in_dialogue}]} \| null}` — сам каркас, аддитивно GEN-2a |
+| `program.dialogue` | `summary` + `items[{step, kind, partner {text, translation, audio_url}, learner {text, translation, audio_url, state, phrase_ref, filler}}]` — голос у обеих реплик (каждая голосом своего говорящего), состояние — у реплики ученика; реплика ученика — собранная сервером из каркаса и наполнения; `kind` (answer / ask / rescue), `phrase_ref`, `filler` — аддитивно GEN-2a |
 | `allowed_action` | `start` / `continue` / `again` / null — одна кнопка. `again` — «Говорю сам» ещё раз по `GET …/cards`, ответы не отправляются (не пересдача дня) |
+| `listening` | вопросы обо всём визите дня (`lesson_day.v4.4`): `[{question, options[{text, correct}], explanation_native}]` на родном языке, верный — на перемешанном сервером месте; у повторения и репетиции — `[]`; аддитивно GEN-2a, клиент пока не читает |
 
 Минуты — `DayPace` (секунд на карточку этапа: слова 8, фразы 29, диалог 34, слушание 13, речь 41;
 вверх до минуты). Состояние единицы — по её карточкам (`UnitStates`): провал дважды →
@@ -157,7 +158,7 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 
 **Голос сервера — всё, двумя голосами** (канон владельца, DAY-UI-3; отменяет «только реплики роли»
 DAY-UI-2): озвучены реплики собеседника (`x3`) и ученика (`x3b`), фразы (`p2`) и слова (`v5`). У сцены
-два голоса разного пола: пол собеседника — `role_gender` урока (`lesson-v4`), по умолчанию собеседник
+два голоса разного пола: пол собеседника — `role_gender` урока, по умолчанию собеседник
 женский, ученик мужской; голос ученика читает и его реплики, и фразы, и слова
 (`plan_scenes.partner_voice_gender`). `VoiceSceneJob` ставится вместе с фото и **день не ждёт**: диалог —
 **один** вызов Gemini TTS с двумя говорящими, разрезанный по паузам (`PcmTurnCutter`), фразы — один

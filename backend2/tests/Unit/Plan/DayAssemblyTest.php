@@ -26,7 +26,7 @@ use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 /**
  * THE DAY, DEALT FROM A SERVED `lesson_day.v4.4` LESSON (docs/plan-v2.md §6): the five stages and their cards
  * per level, the learner's own line (the frame said with its filler) as what is chosen, assembled and said,
- * the check as the comprehension card, returns, review and rehearsal, and the same deal twice.
+ * the exchange's check as the card about the partner's line, returns, review and rehearsal, and the same deal twice.
  */
 
 function daMaterial(PlanLevel $level = PlanLevel::Beginner, ?PlanSceneId $sceneId = null, ?Closure $edit = null): SceneMaterial

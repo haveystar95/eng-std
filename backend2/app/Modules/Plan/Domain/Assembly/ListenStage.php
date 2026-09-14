@@ -31,7 +31,7 @@ final class ListenStage
         $dayWords = array_map(static fn (PlanTerm $t): string => $t->textTarget(), $scene->vocabulary());
         $out = [];
         foreach ($exchanges as $exchange) {
-            $out[] = $this->comprehension($scene, $exchange, $level, $dayWords);
+            $out[] = $this->partnerCard($scene, $exchange, $level, $dayWords);
             $out[] = $this->reply($scene, $exchange, $exchanges, $dayWords);
         }
 
@@ -39,7 +39,7 @@ final class ListenStage
     }
 
     /** @param list<string> $dayWords */
-    private function comprehension(SceneMaterial $scene, Exchange $exchange, PlanLevel $level, array $dayWords): CardDraft
+    private function partnerCard(SceneMaterial $scene, Exchange $exchange, PlanLevel $level, array $dayWords): CardDraft
     {
         $ref = CardPayloads::exchangeRef($exchange->step);
         $seed = $scene->sceneId->value.':'.$ref.':listen';

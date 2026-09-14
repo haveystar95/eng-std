@@ -1,5 +1,7 @@
 # Наряд PLAN-GEN — отчёт (2026-09-10)
 
+> **15.09, наряд GEN-2a:** урок первой формы, его проверки и поля, описанные в этом отчёте, снесены вместе с кодом; имена снятых проверок, полей и файлов заменены здесь описаниями (точные — в git до `f843f607`). Действующий урок — `lesson_day.v4.4`, канон — `docs/plan-v2.md`.
+
 Коммит: `5b2809c1` (ворота хука пройдены).
 
 Бэкенд нового плана: два промта, проверки в коде, сборка дня, снос старого. Канон —
@@ -17,7 +19,7 @@
 | `Collections` | `UserCollectionTermsReader::joinedAtForCollection()` | удалено; `CollectionOrigin::Plan` оставлен (папка плана скрыта из списка) |
 | тесты (~100 файлов) | `Plan*Test`, `tests/Fixtures/plan/`, дубли `RecordingPlanDefectReporter`, `ScriptedPlanModel`, `fakePlanModel()` и хелперы в `Pest.php`, `TranslationKeyPresenceTest`, `DistractorFamilyTest`, `DifficultyScorerTest`, … | удалено; 8 тестов с `scope='global'` / `say_as` / `PlanOutlinePort` поправлены под новую схему |
 | docs | `docs/prompts/plan/`, `plan-model.md`, `plan-dialogue.md`, `plan-map.md`, `p1.*`, `p2.*`, `p-listen.*`, `plan-1a-run.md`, `plan-1b-run.md`, `docs/research/gen-1/tools/` | удалено; `docs/research/*` (отчёты прогонов) и корневой `docs/plan-ui-glossary.md` (мобильный) оставлены как история |
-| промты | `docs/prompts/plan-builder-v2.md`, `docs/prompts/lesson-v3.md` | перенесены байт-в-байт в `app/Modules/Plan/Infrastructure/Prompt/`; **не редактировались** |
+| промты | `docs/prompts/plan-builder-v2.md`, промт урока первой формы | перенесены байт-в-байт в `app/Modules/Plan/Infrastructure/Prompt/`; **не редактировались** |
 | БД (миграции) | `learning_plan_*` (7 таблиц), `plan_skills`, `plan_conversations`, `term_audios`; колонки `terms.{is_line, difficulty_score, kind, frame, speaker, filler, shelf, tier, skill_ref, number_value, speaking_key, speaking_keys, topical}`, `term_examples.scope_collection_id`, `learning_mode_settings.{scope, level, knobs}`, `generation_requests.plan_id`; ситуативные `reviews` | три миграции-сноса (`2026_09_10_100000`, `…100100`, `…100200`), одна миграция создания (`…110000`). **На `wordtrainer` не применялись — см. §6** |
 
 Всего удалено 403 файла (`git status`). Grep старых имён (`PlanOutline`, `PlanDayComposer`, `plan_day`,
@@ -31,7 +33,7 @@
 `docs/design/design-map.md` (мобильный) и `docs/research/*` — история, не код.
 
 **Папки промтов после наряда.** `app/Modules/Plan/Infrastructure/Prompt/`: `plan-builder-v2.md`
-(читает `PlanPromptFiles::planSystem()`), `lesson-v3.md` (`lessonSystem()`).
+(читает `PlanPromptFiles::planSystem()`), промт урока первой формы (`lessonSystem()`).
 `app/Modules/Generation/Infrastructure/Prompt/`: `generate_collection.v1…v9.md`
 (`OpenAiCollectionGenerator`, по `GENERATION_CORE_PROMPT_VERSION` при `GENERATION_STACK=v1`),
 `v10…v15.2/` (`PromptLibrary`, составные), `enrich_pack.v1/v2.md` (`OpenAiEnrichmentPacker`),
@@ -107,11 +109,11 @@
 итого за все прогоны ≈ $1.03 (6 планов, 11 уроков).
 Все попытки — первые; `gate` ни разу не сработал (все проверки в `observe`).
 
-**Счётчики проверок** (`plan_check_counters`, 11 уроков + 6 планов): `vocabulary_id_absent` 25,
-`phrase_id_absent` 10, `phrase_unused` 10, `second_message_question` 9, `pronunciation_script` 2,
-`vocabulary_contained` 2, `counts` 1 (9 обменов вместо 8), `exchange_shape` 1, `variant_length` 1,
+**Счётчики проверок** (`plan_check_counters`, 11 уроков + 6 планов): «метка слова на реплике без слова» 25,
+«метка фразы на реплике без фразы» 10, «фраза ни в одной реплике» 10, «второе сообщение с вопросом» 9, «чтение чужим алфавитом» 2,
+«слово внутри другого» 2, «число единиц» 1 (9 обменов вместо 8), «форма обмена» 1, «вариант длиннее реплики» 1,
 план: `char_limits` 1. Все `counted`; ни один урок не отбит; сборка дня прошла на каждом.
-Наблюдения по промту (не правки — промт заморожен): модель ставит `vocabulary_ids` на реплику,
+Наблюдения по промту (не правки — промт заморожен): модель ставит метки слов на реплику,
 где слова нет (18 из ~130 меток), даёт фразы, которых ученик не говорит, и закрывает обмен
 вопросом («Is this the first visit to our clinic?»); в 10-дневном плане ядром назначено
 «Заселение» (p1) при «Регистрации» p4; порядок сцен аренды на intermediate — просмотр раньше
@@ -171,7 +173,7 @@ seq scan после статистики — таблица `plans` на 55 ст
    `PlanDay::clearScene()`, дни после пройденных раздаются заново.
 3. Даты сравнивались как моменты в разных зонах (`opens_on` UTC против «сегодня» в Kyiv) — день 2
    не открывался; `PlanCalendar::calendarDaysBetween`, сравнение по `Y-m-d`.
-4. `LessonBuildService` передавал в `LessonContext` название языка («Russian»), проверка
+4. `LessonBuildService` передавал в контекст проверок урока название языка («Russian»), проверка
    письменности молчала; в `LessonRequest` добавлены коды языков.
 5. `FakePlanModel`: `v5` стоял на реплике без слова — фейк не проходил собственную проверку.
 6. `EloquentNativeDistractorSource` читал таблицы Vocabulary напрямую (находка invariant-reviewer)
@@ -224,7 +226,7 @@ seq scan после статистики — таблица `plans` на 55 ст
 теперь агрегат сам нумерует добавленные сцены после последней существующей и присваивает
 приоритеты после старшего — второго ядра не бывает (тест «appends extension scenes after the
 existing ones whatever the model numbered them»). Озвучка нашла второй: у урока два обмена со
-`step` 6 — проверка `exchange_shape` теперь считает повтор номера, а `SpeakSceneLinesHandler` не
+`step` 6 — проверка формы обмена теперь считает повтор номера, а `SpeakSceneLinesHandler` не
 покупает вторую реплику того же шага (файл на неё хранить негде). Третий, в Observability:
 `GET /plans/audio/{id}` отдаёт mp3, и лог входящих запросов падал на не-UTF-8 срезе тела
 (`api log write failed`) — бинарный ответ теперь пишется как `{binary: true, bytes}`.

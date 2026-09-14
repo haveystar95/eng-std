@@ -48,7 +48,9 @@ foreach ($runs as $run) {
     }
     $answer = (new LessonParser)->parse(json_decode((string) $scene->lesson_json, true));
     $served = LessonAssembly::serve($answer, (string) $scene->id);
-    $findings = (new LessonValidator)->run($answer, new LessonValidationContext(count($answer->vocabulary), count($answer->exchanges), 'ru', 'en', null));
+    // The counts the day ordered (config by level), the learner's gender as it was: the QA account has none.
+    $ordered = (array) config("plan.counts.{$run['level']}");
+    $findings = (new LessonValidator)->run($answer, new LessonValidationContext((int) $ordered['vocabulary'], (int) $ordered['dialogue'], 'ru', 'en', null));
     foreach ($findings as $f) {
         $table[$f->code]['total']++;
         $table[$f->code]['days'][$run['slug']] = ($table[$f->code]['days'][$run['slug']] ?? 0) + 1;

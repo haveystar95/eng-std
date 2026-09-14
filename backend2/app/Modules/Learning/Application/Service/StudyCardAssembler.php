@@ -60,7 +60,7 @@ final readonly class StudyCardAssembler
     /**
      * `pick_correct` shows three sentences: the example plus two wrong ones. Three rather than
      * multiple_choice's four because each option is a whole sentence to read — a fourth turns the card
-     * into a reading comprehension test.
+     * into a reading test.
      */
     private const PICK_CORRECT_WRONG_OPTIONS = 2;
 

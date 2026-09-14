@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Plan\Infrastructure\Prompt\PlanSchemas;
@@ -80,9 +78,9 @@ it('asks once more only for an answer off the schema, fails the lesson on the se
     expect($fake->lessonCalls)->toBe(4);
 });
 
-// Canon: «LEARNER_GENDER из профиля, unknown по умолчанию; факты о ученике из цели плана — в TOPIC_DESCRIPTION; PHRASES_COUNT
-// из входов убран» (v4.4). Catches a gender read once and cached, the learner's facts left out of the brief, a count of
-// frames sent to a prompt that no longer has one.
+// Canon: «LEARNER_GENDER из профиля, unknown по умолчанию; факты о ученике из цели плана — в TOPIC_DESCRIPTION»; the
+// inputs are exactly the prompt's INPUTS (v4.4: the model takes the number of frames from the dialogue). Catches a
+// gender read once and cached, the learner's facts left out of the brief, an input the prompt does not name.
 it('writes a lesson with the learner\'s gender as the profile says it now and the learner\'s own words beside the brief', function () {
     [$user, $token] = planLearner();
     $fake = new FakePlanModel;
@@ -102,7 +100,8 @@ it('writes a lesson with the learner\'s gender as the profile says it now and th
         ->and($second->learnerGender)->toBe(VoiceGender::Female)
         ->and($first->topicDescription)->toEndWith("\n\nAbout the learner, in their own words: Собеседование в пятницу. У меня пять лет опыта в продажах")
         ->and($user)->toContain("LEARNER_GENDER: unknown\n")
-        ->and($user)->not->toContain('PHRASES_COUNT')
+        ->and(array_values(array_map(static fn (string $line): string => explode(':', $line, 2)[0], preg_grep('/^[A-Z_]+: /', explode("\n", $user)) ?: [])))
+        ->toBe(['TOPIC', 'TOPIC_DESCRIPTION', 'TARGET_LANGUAGE', 'NATIVE_LANGUAGE', 'LEVEL', 'LEARNER_GENDER', 'VOCABULARY_COUNT', 'DIALOGUE_COUNT'])
         ->and($prompts->lessonUser($second))->toContain('LEARNER_GENDER: female')
         ->and($prompts->lessonVersion())->toBe('lesson_day.v4.4')
         ->and($prompts->lessonSystem())->not->toContain('TEST INPUT')

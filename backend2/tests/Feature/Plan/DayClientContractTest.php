@@ -16,7 +16,8 @@ beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
  *
  * What the phone reads is its own fixtures, captured from the server and parsed by its golden tests:
  * `mobile/test/fixtures/plan/room_window_in_progress.json` and `cards_window_passed.json` (client commit `4816a034`),
- * copied as they are into `tests/Fixtures/plan-client/` — the backend container does not see the client's tree.
+ * copied into `tests/Fixtures/plan-client/` — the backend container does not see the client's tree. The copy
+ * changes one value, never a key: `scene.prompt_version` names the current prompt (only kinds are compared).
  * Catches a key renamed or dropped by the new lesson (a phrase without `pronunciation`, a learner line without
  * `state`, a check card without `options`), and a key whose value changed its kind.
  */

@@ -14,6 +14,8 @@ declare(strict_types=1);
  * of the line's words heard (`Words::coverage`). A cut is right when every piece hears its own line.
  */
 
+use App\Modules\Plan\Domain\Lesson\LessonAssembly;
+use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\Service\Words;
 use Illuminate\Contracts\Console\Kernel;
@@ -31,7 +33,8 @@ if ($scene === null) {
     fwrite(STDERR, "no scene {$sceneId}\n");
     exit(1);
 }
-$lesson = (new App\Modules\Plan\Domain\Lesson\LessonParser())->parse(json_decode((string) $scene->lesson_json, true));
+// The voice says the served lesson (learner lines assembled from their frames), not the stored answer.
+$lesson = LessonAssembly::serve((new LessonParser())->parse(json_decode((string) $scene->lesson_json, true)), $sceneId);
 $expected = [];
 foreach (SpokenLines::dialogue($lesson) as $line) {
     $expected[$line['ref']] = $line['text'];

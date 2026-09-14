@@ -48,6 +48,8 @@ final class PlanSeedLoadCommand extends Command
         $now = now();
         $daysTotal = 6;
         $created = ['plans' => 0, 'days' => 0, 'cards' => 0, 'terms' => 0];
+        /** @var array<string, list<string>> $phraseTermIds scene id → its phrase terms p1…p6 */
+        $phraseTermIds = [];
         // A real lesson shape: the mapper re-parses every stored lesson, and a stub would be a 500.
         $lessonJson = json_encode(FakePlanModel::lessonPayload(new LessonRequest('Сцена', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8)), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
 
@@ -89,15 +91,25 @@ final class PlanSeedLoadCommand extends Command
                     ]);
                     $terms = [];
                     for ($t = 0; $t < 14; $t++) {
+                        // A phrase carries its frame and slot, a word the cards it stands in — the v4.4 columns.
+                        $phrase = $t >= 8;
                         $terms[] = [
                             'id' => Ulid::generate(), 'scene_id' => $sceneId, 'user_id' => $userId,
-                            'kind' => $t < 8 ? 'word' : 'phrase', 'ref' => ($t < 8 ? 'v' : 'p').($t < 8 ? $t + 1 : $t - 7),
+                            'kind' => $phrase ? 'phrase' : 'word', 'ref' => ($phrase ? 'p'.($t - 7) : 'v'.($t + 1)),
                             'position' => $t, 'text_target' => "term {$t}", 'text_native' => "термин {$t}",
                             'simplified_variants' => '[]', 'created_at' => $now, 'updated_at' => $now,
+                            'frame_target' => $phrase ? 'I have ___.' : null, 'frame_native' => $phrase ? 'У меня ___.' : null,
+                            'frame_pronunciation_native' => $phrase ? 'ай хэв ___' : null, 'frame_kind' => $phrase ? 'answer' : null,
+                            'slot' => $phrase ? json_encode(['hint_native' => 'что', 'fillers' => [
+                                ['target' => "term {$t}", 'native' => "термин {$t}", 'pronunciation_native' => 'тёрм', 'in_dialogue' => true],
+                                ['target' => 'a cough', 'native' => 'кашель', 'pronunciation_native' => 'э коф', 'in_dialogue' => false],
+                            ]], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) : null,
+                            'used_in' => $phrase ? null : json_encode(['p1'], JSON_THROW_ON_ERROR),
                         ];
                     }
                     DB::table('plan_terms')->insert($terms);
                     $created['terms'] += count($terms);
+                    $phraseTermIds[$sceneId] = array_column(array_slice($terms, 8), 'id');
                 }
                 $dayStatus = $index === 0 ? 'closed' : ($index === 1 ? 'in_progress' : 'locked');
                 DB::table('plan_days')->insert([
@@ -114,12 +126,21 @@ final class PlanSeedLoadCommand extends Command
                     $kind = self::KINDS[$stage][$c % count(self::KINDS[$stage])];
                     $position[$stage] = ($position[$stage] ?? 0) + 1;
                     $answered = $index === 0;
+                    $cardScene = $sceneId ?? $sceneIds[0] ?? '';
+                    $payload = ['scene_id' => $cardScene, 'text_target' => "card {$c}"];
+                    $unitRef = 'u'.($c % 8);
+                    if ($stage === 'phrases' && isset($phraseTermIds[$cardScene])) {
+                        // A phrase card points at its term, the way the dealer writes it: the window reads the frame there.
+                        $at = ($position[$stage] - 1) % count($phraseTermIds[$cardScene]);
+                        $payload['plan_term_id'] = $phraseTermIds[$cardScene][$at];
+                        $unitRef = 'p'.($at + 1);
+                    }
                     $cards[] = [
                         'id' => Ulid::generate(), 'day_id' => $dayId, 'user_id' => $userId, 'stage' => $stage,
                         'position' => $position[$stage], 'kind' => $kind,
-                        'payload' => json_encode(['scene_id' => $sceneId ?? $sceneIds[0] ?? '', 'text_target' => "card {$c}"], JSON_THROW_ON_ERROR),
+                        'payload' => json_encode($payload, JSON_THROW_ON_ERROR),
                         'source' => 'today', 'unit_kind' => $stage === 'words' ? 'word' : ($stage === 'phrases' ? 'phrase' : 'exchange'),
-                        'unit_ref' => 'u'.($c % 8), 'result' => $answered ? ($c % 9 === 0 ? 'failed' : 'passed') : null,
+                        'unit_ref' => $unitRef, 'result' => $answered ? ($c % 9 === 0 ? 'failed' : 'passed') : null,
                         'attempts' => $answered ? 1 : 0, 'answered_at' => $answered ? $now : null,
                         'returns' => $answered && $c % 9 === 0, 'created_at' => $now, 'updated_at' => $now,
                     ];
