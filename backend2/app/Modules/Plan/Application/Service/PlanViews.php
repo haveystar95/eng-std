@@ -154,7 +154,8 @@ final readonly class PlanViews
             partnerRoleTarget: $scene->partnerRoleTarget(),
             partnerRoleNative: $scene->partnerRoleNative(),
             image: self::imageArray($scene->image()),
-            lessonStatus: $scene->lessonStatus()->value,
+            // `illustrating` is `building` on the wire: the day is still being put together (DAY-UI-3).
+            lessonStatus: $scene->lessonStatus()->wire(),
             lessonFailReason: $scene->failReason(),
             dayNumber: $dayNumber,
             costUsd: $scene->lessonCall()?->costUsd,
@@ -212,7 +213,7 @@ final readonly class PlanViews
             titleNative: $scene?->titleNative(),
             titleTarget: $scene?->titleTarget(),
             teachesNative: $scene?->teachesNative(),
-            lessonStatus: $scene?->lessonStatus()->value,
+            lessonStatus: $scene?->lessonStatus()->wire(),
             opensOn: $day->opensOn()?->format('Y-m-d'),
             slot: $this->slot($plan, $day, $today, $strings),
             cardsTotal: $metrics->cardsTotal,

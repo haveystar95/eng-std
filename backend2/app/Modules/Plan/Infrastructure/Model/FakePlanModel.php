@@ -41,7 +41,7 @@ final class FakePlanModel implements PlanModelPort
         private readonly ?Closure $plan = null,
         private readonly ?Closure $lesson = null,
         private readonly string $planVersion = 'plan-builder-v2',
-        private readonly string $lessonVersion = 'lesson-v3',
+        private readonly string $lessonVersion = 'lesson-v4',
     ) {}
 
     public function buildPlan(PlanRequest $request): ModelReply
@@ -230,6 +230,7 @@ final class FakePlanModel implements PlanModelPort
                 'description_native' => 'Описать боль в спине врачу и понять назначения.',
             ],
             'learner_role' => ['role_target' => 'Parent', 'role_native' => 'Родитель'],
+            'role_gender' => 'male',
             'dialogue' => $dialogue,
             'phrases' => $phrases,
             'vocabulary' => $items,

@@ -93,8 +93,9 @@ final readonly class BuildPlanHandler
         });
 
         if ($built !== null && $built->status() === PlanStatus::Ready) {
-            $this->queueFirstLesson($built);
+            // The route's pictures first: day 1's own job then finds its scene photographed already.
             $this->dispatcher->attachImages($built->id());
+            $this->queueFirstLesson($built);
             $this->notifier->notify($ready);
         }
     }

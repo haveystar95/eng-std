@@ -7,7 +7,9 @@ namespace App\Modules\Plan\Infrastructure\Eloquent;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
+use App\Modules\Plan\Domain\ValueObject\PlanStatus;
 use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
 use Illuminate\Support\Facades\DB;
@@ -75,6 +77,40 @@ final class EloquentPlanTermRepository implements PlanTermRepository
             'image_tone' => $normal,
             'updated_at' => now(),
         ]);
+    }
+
+    public function replaceImage(PlanTermId $id, Image $image): void
+    {
+        PlanTermModel::query()->whereKey($id->value)->update([
+            'image_url' => $image->url,
+            'image_author' => $image->author,
+            'image_author_url' => $image->authorUrl,
+            'image_tone' => $image->tone,
+            'updated_at' => now(),
+        ]);
+    }
+
+    public function photographedWithoutPrompt(?PlanId $planId): array
+    {
+        $rows = PlanTermModel::query()
+            ->select('plan_terms.*')
+            ->join('plan_scenes', 'plan_scenes.id', '=', 'plan_terms.scene_id')
+            ->join('plans', 'plans.id', '=', 'plan_scenes.plan_id')
+            ->where('plans.status', '<>', PlanStatus::Deleted->value)
+            ->when($planId !== null, static fn ($q) => $q->where('plans.id', $planId?->value))
+            ->whereIn('plan_terms.kind', [TermKind::Word->value, TermKind::Chunk->value])
+            ->whereNotNull('plan_terms.image_url')
+            ->where(static fn ($q) => $q->whereNull('plan_terms.image_prompt')->orWhere('plan_terms.image_prompt', ''))
+            ->orderBy('plan_terms.scene_id')
+            ->orderBy('plan_terms.position')
+            ->get();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[$row->scene_id][] = $this->toDomain($row);
+        }
+
+        return $out;
     }
 
     /** @return array<string, mixed> */

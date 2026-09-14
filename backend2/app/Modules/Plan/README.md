@@ -2,7 +2,7 @@
 
 **Owns:** the learning plan — a preparation for one event over 1–10 days: the plan and its scenes
 (the model's briefs and lessons), the calendar of days, the dealt cards of a day, the terms of a
-scene, the partner-line audio, the check counters. Canon: `docs/plan-v2.md`; contract:
+scene, the spoken audio of a day (both speakers' lines, phrases, words), the check counters. Canon: `docs/plan-v2.md`; contract:
 `docs/plan-api.md` + `openapi/openapi.yaml` (tag `Plans`).
 
 Tables: `plans`, `plan_scenes`, `plan_days`, `day_cards`, `plan_terms`, `plan_line_audios`,
@@ -10,9 +10,11 @@ Tables: `plans`, `plan_scenes`, `plan_days`, `day_cards`, `plan_terms`, `plan_li
 (`#RRGGBB`, written in the same conditional UPDATE as the photo); `plan_terms.image_tone` (DAY-UI-2)
 — the tone of a word's photo, or of its slot when the search ladder found none (which is also the
 mark that the ladder was asked). `plan_line_audios` rows are named by the unit reference
-(`line_ref`: `x3` — the partner's line of exchange 3). The server voices the role's lines only; the
-learner's phrases and the words are the phone's voice (`p*` rows voiced on 14.09 before that canon
-stay, unread). Files on disks, not tables:
+(`line_ref`: `x3` — the partner's line of exchange 3, `x3b` — the learner's, `p2` — a phrase, `v5` — a
+word or chunk). Since DAY-UI-3 the server voices everything a day says, in two voices of different
+gender per scene: the partner's gender is `plan_scenes.partner_voice_gender` (from the lesson's
+`role_gender`), the learner's lines, phrases and words take the other. A lesson written is
+`illustrating` (the wire says `building`) until its photos are found, then `ready`. Files on disks, not tables:
 spoken lines (`plan.audio_disk`, `plan-audio/…`) and the square copies of scene photos
 (`plan.image_disk`, `plan-images/<scene>/<112|448>.jpg`).
 
@@ -58,7 +60,13 @@ The day window (DAY-UI-2, `window` of the day read, put together by `Application
 `DayPace` (minutes by the stage's pace per card), `UnitStates` (a unit's state from its cards),
 `ImageTones` (the slot tone when there is no photo), `ImageQueries` (the photo search ladder's
 queries); value objects `WindowStatus`, `WindowStage`, `WindowAction`, `UnitState`, `ProgramSummary`.
-Application: `PlanImageLadder` (image_prompt → the bare word → the scene's theme).
+Application: `PlanImageLadder` (every missing photo's ladder climbed together, one finder batch per rung —
+image_prompt → «term, scene theme» → the theme on a page of its own; never the bare word, DAY-UI-3).
+The voice (DAY-UI-3): `SpokenLines` (what a day says out loud, the file names, whose voice each is, the
+cast of a scene written before voices had genders), `VoiceCast`; `SceneVoiceQueue` (what a scene still
+owes, as ≤ 4 calls), `SceneVoices` + `SceneAudioIndex` (a reader's lookup in the speaker's voice).
+`WordUsage` (the line of the day a word is said in, and its place in it — sheet 23-0e).
+`SceneReadiness` (`illustrating` → `ready` + the `day_ready` line).
 Notifications: `PlanEventRules` (which reschedule is a rebuild; what the calendar owes on and after
 the event date, `event_today` not before 08:00), `NotificationRules` (which fact is a letter —
 `day_ready` only for day ≥ 2; which plan status still gets it; the 15-minute reminder window),
@@ -77,7 +85,7 @@ reads plan tables.
 
 | Module | How | Why |
 |---|---|---|
-| `Generation` | `ContentModelCatalog` → `ContentModelPort` (purpose `plan`, own timeout); `ImageSearchPort`; `SpeechSynthesizerPort` | the two model calls, the photos, the partner-line audio |
+| `Generation` | `ContentModelCatalog` → `ContentModelPort` (purpose `plan`, own timeout); `ImageSearchPort`; `SpeechSynthesizerPort` | the two model calls, the photos (`searchMany`), the day's voice (`speakScript`) |
 | `Identity` | `UserReader`; `GetPushTokens` + `RemovePushToken`; `GetUsualVisitTime` | the learner's timezone and native language; the device addresses a letter goes to (and forgetting a dead one); when the daily reminder is due |
 | `Vocabulary` | `ImportTerm`; `NativeDistractorReader` | a closed day's words and phrases become terms (dedup, provenance); catalogue translations as wrong options for a thin Beginner choice |
 | `Collections` | `CreateGeneratedCollection` (origin `plan`), `AddTermToCollection` | the plan's collection |
@@ -88,12 +96,12 @@ reads plan tables.
 | Port | Implementations |
 |---|---|
 | `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`) |
-| `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob`, `SpeakSceneLinesJob`) |
+| `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice, waiting out the vendor's window) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
 | `BuildVersion` | `StampedBuildVersion` (`APP_COMMIT` / `storage/app/commit`) |
-| `PlanImageFinder` | `PexelsPlanImageFinder` (search → photo + tone; `tone(url)` → Pexels `GET /photos/{id}` for the backfill) |
+| `PlanImageFinder` | `PexelsPlanImageFinder` (search → photo + tone; `findMany` — a batch, six on the wire, over Generation's `searchMany`; `tone(url)` → Pexels `GET /photos/{id}` for the backfill) |
 | `SceneImageStore` | `CdnSceneImageStore` (disk `plan.image_disk`; fetches the 112/448 square crops from the photo's CDN, labelled `images`; fetches nothing under the fake image driver) |
-| `LineSpeaker` | `GenerationLineSpeaker` (off when `SPEECH_ENABLED=false`) |
+| `LineSpeaker` | `GenerationLineSpeaker` — one script per vendor call in the pack's two voices (`SpeechSynthesizerPort::speakScript`); off when `SPEECH_ENABLED=false` |
 | `LineAudioStore` | `EloquentLineAudioStore` (private disk `plan.audio_disk`) |
 | `PlanCollectionWriter` | `VocabularyPlanCollectionWriter` |
 | `NativeDistractorSource` | `VocabularyNativeDistractorSource` (over Vocabulary's `NativeDistractorReader` — catalogue translations for a thin Beginner choice) |
@@ -115,15 +123,15 @@ reads plan tables.
   a check in `drop` mode stores the corrected lesson.
 - Every check ships in `observe`; modes are flipped in `config/plan.php`, never in code.
 - QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN).
-- Ops: `plan:images-backfill {--plan=}` — first the photos plans still lack, asked the search
-  ladder (DAY-UI-2; prints «было пусто / стало»), then tones and square copies for scene photos
+- Ops: `plan:images-backfill {--plan=} {--requery}` — first the photos plans still lack, asked the search
+  ladder (prints «было пусто / стало»; `--requery` re-asks the words the bare word photographed), then tones and square copies for scene photos
   stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a
   missing copy on its own, so the copies part is an optimisation; the tones only come from here.
-- Ops: `plan:speak-backfill {--plan=} {--count}` (DAY-UI-2) — the partner's lines scenes still lack
-  (`RoleLineQueue` — the role's lines only), through the queue's own idempotent handler, waiting out
-  the vendor's per-minute limit; prints how many role lines are not voiced yet, before and after
-  (`--count` only counts). `SpeakSceneLinesJob` itself retries a minute apart for half an hour for
-  the same reason.
+- Ops: `plan:speak-backfill {--plan=} {--count}` (DAY-UI-3) — what scenes still do not say in the
+  server's voice (`SceneVoiceQueue`: both speakers' lines, phrases, words), through the queue's own
+  idempotent handler, newest plans first; waits out the vendor's per-minute limit and stops on the daily
+  one, naming the window; prints what is not voiced yet by kind, before and after (`--count` only
+  counts). `VoiceSceneJob` itself goes back on the queue for exactly the window the vendor names.
 - The plan languages are the server's list (`plan.languages`, `GET /plans/languages`), and
   `POST /plans` validates against it.
 - Notifications: `plan:notify-tick` (Presentation/Console, every 15 min in `routes/console.php`, run

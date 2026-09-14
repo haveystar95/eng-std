@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Application\Port;
 
 use App\Modules\Generation\Application\Dto\ImageResult;
+use App\Modules\Generation\Application\Dto\ImageSearchQuery;
 
 /**
  * Finds one stock photo for a short search query. The implementation (Pexels) lives in
@@ -22,6 +23,19 @@ interface ImageSearchPort
      * @throws TransientImageSearchError on a retryable failure (rate limit / upstream 5xx / network)
      */
     public function search(string $query): ?ImageResult;
+
+    /**
+     * Many searches at once — at most `$concurrency` on the wire (DAY-UI-3: a day's photos are asked
+     * together, not one after another). One answer per query, in order; a query that stays transient
+     * after the adapter's own retries throws {@see TransientImageSearchError} for the whole batch, so
+     * the caller's job retries it with what was already written kept.
+     *
+     * @param  list<ImageSearchQuery>  $queries
+     * @return list<ImageResult|null>
+     *
+     * @throws TransientImageSearchError
+     */
+    public function searchMany(array $queries, int $concurrency = 6): array;
 
     /**
      * One photo by the vendor's own id — for a photo found earlier whose details (the average

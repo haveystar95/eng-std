@@ -12,6 +12,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
  * The plan aggregate — plan row, scenes and days together.
@@ -67,6 +68,19 @@ interface PlanRepository
      * Written only while the scene has no tone and still has exactly this photo.
      */
     public function attachSceneImageTone(PlanSceneId $id, string $imageUrl, string $tone): bool;
+
+    /**
+     * The scene's photos are in: `illustrating` → `ready`, in one conditional write (DAY-UI-3).
+     *
+     * @return bool whether THIS call made the scene ready (false: it was not illustrating — another worker was first)
+     */
+    public function finishIllustration(PlanSceneId $id): bool;
+
+    /**
+     * The cast of a scene written before voices had genders — only while it has none, so two voice
+     * jobs cannot give one scene two casts (DAY-UI-3).
+     */
+    public function castSceneVoices(PlanSceneId $id, VoiceGender $partner): bool;
 
     public function save(Plan $plan): void;
 }

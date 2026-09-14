@@ -19,9 +19,12 @@ interface PlanDispatcher
 
     public function buildLesson(PlanSceneId $sceneId): void;
 
-    /** Photos for the plan's cover, its scenes and its terms — best effort, never blocking. */
+    /** Photos for the plan's cover and its scenes — the route's pictures, before any lesson is written. */
     public function attachImages(PlanId $planId): void;
 
-    /** Audio for the partner's lines of one scene — best effort, never blocking. */
-    public function speakScene(PlanSceneId $sceneId): void;
+    /** The day's pictures — its scene's and every word's — right after its lesson; the day is ready after them (DAY-UI-3). */
+    public function illustrateScene(PlanSceneId $sceneId): void;
+
+    /** The server's voice for everything a scene says out loud — never holding the day back (DAY-UI-3). */
+    public function voiceScene(PlanSceneId $sceneId): void;
 }

@@ -5,27 +5,25 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Dto\CardView;
-use App\Modules\Plan\Application\Dto\LineAudioRow;
-use App\Modules\Plan\Application\Port\LineAudioStore;
-use App\Modules\Plan\Application\Port\LineSpeaker;
+use App\Modules\Plan\Application\Port\SceneLocator;
 use App\Modules\Plan\Domain\Entity\DayCard;
-use App\Modules\Plan\Domain\Assembly\CardPayloads;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
+use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 
 /**
  * Cards for the wire: the stored payload plus what is resolved at READ time — the photo of the
- * term a card is about and the audio id of the partner's line — so a photo or a voice that
- * arrived after the day was dealt is on the card the next time it is read. Two queries for any
- * number of cards.
+ * term a card is about and the audio id of the partner's line (in the partner's voice of that scene,
+ * DAY-UI-3) — so a photo or a voice that arrived after the day was dealt is on the card the next time
+ * it is read. Three queries for any number of cards.
  */
 final readonly class CardViews
 {
     public function __construct(
         private PlanTermRepository $terms,
-        private LineAudioStore $audios,
-        private LineSpeaker $speaker,
+        private SceneLocator $scenes,
+        private SceneVoices $voices,
     ) {}
 
     /**
@@ -48,17 +46,13 @@ final readonly class CardViews
                 $termsById[$term->id()->value] = $term;
             }
         }
-        $voice = $this->speaker->voiceKeyFor($targetLang);
-        $audios = $voice === null ? [] : $this->audios->forScenes(array_keys($sceneIds), $voice);
+        $audio = $this->voices->index($targetLang, $this->scenes->voiceCastsOf(array_map('strval', array_keys($sceneIds))));
 
-        return array_map(fn (DayCard $c): CardView => $this->card($c, $termsById, $audios), $cards);
+        return array_map(fn (DayCard $c): CardView => $this->card($c, $termsById, $audio), $cards);
     }
 
-    /**
-     * @param  array<string, PlanTerm>  $termsById
-     * @param  array<string, LineAudioRow>  $audios
-     */
-    private function card(DayCard $card, array $termsById, array $audios): CardView
+    /** @param array<string, PlanTerm> $termsById */
+    private function card(DayCard $card, array $termsById, SceneAudioIndex $audio): CardView
     {
         $payload = $card->payload();
         $termId = $payload['plan_term_id'] ?? null;
@@ -68,12 +62,12 @@ final readonly class CardViews
         $sceneId = $payload['scene_id'] ?? null;
         $step = $payload['exchange_step'] ?? null;
         if (is_string($sceneId) && is_int($step)) {
-            $payload['audio_id'] = $audios[$sceneId.':'.CardPayloads::exchangeRef($step)]->id ?? null;
+            $payload['audio_id'] = $audio->idOf($sceneId, SpokenLines::partnerRef($step));
         }
         if (is_string($sceneId) && is_array($payload['exchanges'] ?? null)) {
-            $payload['exchanges'] = array_map(static function (mixed $exchange) use ($audios, $sceneId): mixed {
+            $payload['exchanges'] = array_map(static function (mixed $exchange) use ($audio, $sceneId): mixed {
                 if (is_array($exchange) && is_int($exchange['step'] ?? null)) {
-                    $exchange['audio_id'] = $audios[$sceneId.':'.CardPayloads::exchangeRef($exchange['step'])]->id ?? null;
+                    $exchange['audio_id'] = $audio->idOf($sceneId, SpokenLines::partnerRef($exchange['step']));
                 }
 
                 return $exchange;

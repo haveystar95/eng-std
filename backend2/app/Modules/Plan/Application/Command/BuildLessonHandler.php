@@ -9,14 +9,10 @@ use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\LessonBuildService;
-use App\Modules\Plan\Application\Service\PlanEventJournal;
-use App\Modules\Plan\Application\Service\PlanNotifier;
-use App\Modules\Plan\Domain\Entity\PlanEvent;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
-use App\Modules\Plan\Domain\ValueObject\PlanEventKind;
 use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\LanguageName;
@@ -26,7 +22,10 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * Runs the lesson call for one scene. Idempotent: the scene is CLAIMED (`building`) inside a
  * transaction before the model is asked, so a second job for the same scene finds it claimed and
  * stops; a stale claim (a worker that died mid-call) is re-claimable after the configured window.
- * On success the terms are written from the lesson and the photos and audio are queued.
+ * On success the terms are written from the lesson and the scene waits for its photos
+ * (`illustrating`): the photo job and the voice job are queued together and run side by side. The
+ * photo job makes the day ready — and writes its `day_ready` line — when the pictures are in
+ * ({@see IllustrateSceneHandler}); the voice never holds the day back (DAY-UI-3).
  *
  * THE SCENE ROW IS THE ONLY THING THIS JOB LOCKS AND THE ONLY THING IT WRITES. The model call
  * takes half a minute, and «Начать» is legal all the way through it: a job that came back holding
@@ -34,10 +33,6 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * over a plan the learner had already started (11.09 on the stand — the plan fell back to `ready`
  * with no start date and day 1 locked again). The plan is re-read after the claim, for the level
  * and the languages the request needs, and never written.
- *
- * A lesson written successfully is a `day_ready` journal line for the day the scene stands on —
- * read again inside the writing transaction, because a reschedule during the model call may have
- * moved the scene (or dropped it: then there is no day and no line). The letter follows the commit.
  */
 final readonly class BuildLessonHandler
 {
@@ -49,8 +44,6 @@ final readonly class BuildLessonHandler
         private PlanConfig $config,
         private Clock $clock,
         private TransactionManager $tx,
-        private PlanEventJournal $journal,
-        private PlanNotifier $notifier,
     ) {}
 
     public function __invoke(BuildLesson $command): void
@@ -104,9 +97,7 @@ final readonly class BuildLessonHandler
             return;
         }
 
-        /** @var PlanEvent|null $ready */
-        $ready = null;
-        $this->tx->run(function () use ($scene, $outcome, $now, &$ready): void {
+        $this->tx->run(function () use ($scene, $outcome, $now): void {
             if ($outcome->lesson === null || $outcome->call === null) {
                 $scene->failLesson($outcome->failReason ?? 'unknown', $outcome->call, $outcome->findings);
                 $this->plans->saveScene($scene);
@@ -119,23 +110,12 @@ final readonly class BuildLessonHandler
                 $scene->id(),
                 PlanTerm::fromLesson($scene->id(), $outcome->lesson, static fn (): PlanTermId => PlanTermId::generate()),
             );
-
-            $current = $this->plans->findById($scene->planId());
-            foreach ($current?->days() ?? [] as $day) {
-                if ($current !== null && $day->sceneId()?->equals($scene->id()) === true) {
-                    $ready = $this->journal->record(
-                        $current->id(), $current->userId(), PlanEventKind::DayReady,
-                        $day->id(), $day->number(), ['scene_id' => $scene->id()->value],
-                    );
-                    break;
-                }
-            }
         });
 
-        if ($scene->isReady()) {
-            $this->dispatcher->attachImages($scene->planId());
-            $this->dispatcher->speakScene($scene->id());
-            $this->notifier->notify($ready);
+        if ($scene->hasLesson()) {
+            // The voice first: it may wait for the vendor's window, the photos never hold it up.
+            $this->dispatcher->voiceScene($scene->id());
+            $this->dispatcher->illustrateScene($scene->id());
         }
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Infrastructure\Adapter;
 
+use App\Modules\Generation\Application\Dto\SpeechScript;
+use App\Modules\Generation\Application\Dto\SpeechTurn;
 use App\Modules\Generation\Application\Dto\SpokenLine;
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Application\Port\TransientSpeechError;
@@ -15,9 +17,13 @@ use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 /**
- * `POST /v1/audio/speech` — озвучка одной реплики голосом OpenAI. Отдаёт mp3 БАЙТАМИ, что и
- * решило выбор трубы в замере TTS-1: у второго кандидата (Gemini) ответ — сырой PCM в base64, и
- * ему нужен кодировщик, которого в контейнере нет.
+ * `POST /v1/audio/speech` — озвучка голосом OpenAI. Отдаёт mp3 БАЙТАМИ.
+ *
+ * ## Сценарий — строка за строкой
+ *
+ * Говорящих в одном вызове у вендора нет, поэтому сценарий (DAY-UI-3) говорится строкой на вызов, в
+ * порядке сценария. Резать нечего — у каждой строки свой файл. У OpenAI платный тариф без суточного
+ * лимита запросов, и правило «вызов на сценарий» — правило бесплатного Gemini, а не порта.
  *
  * ## Две модели, две ручки темпа, и это не наша прихоть
  *
@@ -35,7 +41,15 @@ final class OpenAiSpeechSynthesizer implements SpeechSynthesizerPort
         private readonly string $baseUrl = 'https://api.openai.com/v1',
     ) {}
 
-    public function speak(string $text, string $lang, LineVoice $voice): SpokenLine
+    public function speakScript(SpeechScript $script): array
+    {
+        return array_map(
+            fn (SpeechTurn $turn): SpokenLine => $this->speak($turn->text, $script->voices[$turn->speaker]),
+            $script->turns,
+        );
+    }
+
+    private function speak(string $text, LineVoice $voice): SpokenLine
     {
         $line = trim($text);
         if ($line === '') {

@@ -10,7 +10,8 @@ use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Infrastructure\Job\AttachPlanImagesJob;
 use App\Modules\Plan\Infrastructure\Job\BuildLessonJob;
 use App\Modules\Plan\Infrastructure\Job\BuildPlanJob;
-use App\Modules\Plan\Infrastructure\Job\SpeakSceneLinesJob;
+use App\Modules\Plan\Infrastructure\Job\IllustrateSceneJob;
+use App\Modules\Plan\Infrastructure\Job\VoiceSceneJob;
 
 final class QueuedPlanDispatcher implements PlanDispatcher
 {
@@ -29,8 +30,13 @@ final class QueuedPlanDispatcher implements PlanDispatcher
         AttachPlanImagesJob::dispatch($planId->value);
     }
 
-    public function speakScene(PlanSceneId $sceneId): void
+    public function illustrateScene(PlanSceneId $sceneId): void
     {
-        SpeakSceneLinesJob::dispatch($sceneId->value);
+        IllustrateSceneJob::dispatch($sceneId->value);
+    }
+
+    public function voiceScene(PlanSceneId $sceneId): void
+    {
+        VoiceSceneJob::dispatch($sceneId->value);
     }
 }

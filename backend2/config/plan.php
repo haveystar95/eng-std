@@ -86,7 +86,7 @@ return [
     // refuses anything else. Comma-separated codes.
     'languages' => array_values(array_filter(array_map('trim', explode(',', (string) env('PLAN_LANGUAGES', 'en,de'))))),
 
-    // Where the partner-line audio files land — a private disk, served by the plan's own route.
+    // Where the day's audio files land (both speakers, phrases, words) — a private disk, served by the plan's own route.
     'audio_disk' => env('PLAN_AUDIO_DISK', env('SPEECH_DISK', 'local')),
 
     // Where the square copies of scene photos land (`plan-images/<scene>/<112|448>.jpg`) — fetched

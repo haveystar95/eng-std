@@ -2668,7 +2668,7 @@ components:
       properties:
         build: { type: string, description: 'The server build (commit), `unknown` when not stamped' }
         prompt_plan: { type: string, description: 'The plan builder prompt file''s version, e.g. `plan-builder-v2`' }
-        prompt_lesson: { type: string, description: 'The lesson prompt file''s version, e.g. `lesson-v3`' }
+        prompt_lesson: { type: string, description: 'The lesson prompt file''s version, e.g. `lesson-v4`' }
 
     PlanBuild:
       type: object
@@ -2805,7 +2805,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/PlanSceneImage'
             - type: 'null'
-        lesson_status: { type: string, enum: [pending, building, ready, failed] }
+        lesson_status: { type: string, enum: [pending, building, ready, failed], description: '`building` also while the lesson is written and its photos are being found — a day is `ready` with its pictures on it (DAY-UI-3)' }
         lesson_fail_reason: { type: [string, 'null'] }
         day_number: { type: [integer, 'null'], description: 'Which day the scene stands on; null for a scene not (yet) on the route' }
         cost_usd: { type: [string, 'null'] }
@@ -2958,31 +2958,63 @@ components:
 
     PlanWindowWord:
       type: object
-      required: [ref, term, translation, image, image_tone, state]
+      description: >-
+        A word or chunk card of the words tab and its sheet (23-0e, DAY-UI-3). Everything the sheet
+        shows is here — how the word reads, what it means, its voice, the line of the day it is said
+        in and the day it comes back on; the client derives none of it.
+      required: [ref, term, translation, pronunciation, definition, image, image_tone, audio_url, usage, state, returns_day]
       properties:
         ref: { type: string, description: 'The lesson''s own id — `v3`' }
         term: { type: string }
         translation: { type: string }
+        pronunciation: { type: [string, 'null'], description: 'How the word reads in the learner''s alphabet (`pronunciation_native`) — «пэ́йнкилэр»' }
+        definition: { type: [string, 'null'], description: 'What the word means, in the target language (`definition_target`)' }
         image:
           oneOf:
             - $ref: '#/components/schemas/PlanImage'
             - type: 'null'
         image_tone: { type: string, pattern: '^#[0-9A-F]{6}$', description: 'Always: the photo''s tone, else its scene''s, else the plan cover''s, else the theme''s empty slot — paint the slot with it first' }
+        audio_url: { type: [string, 'null'], format: uri, description: 'The word in the learner''s voice of the scene; null until voiced — the phone reads it meanwhile' }
+        usage:
+          oneOf:
+            - $ref: '#/components/schemas/PlanWindowUsage'
+            - type: 'null'
         state: { $ref: '#/components/schemas/PlanWindowUnitState' }
+        returns_day: { type: [integer, 'null'], description: 'On `returns_tomorrow`: the number of the day it comes back on («вернётся в день 3»); null otherwise, and after the last day that deals returns' }
+
+    PlanWindowUsage:
+      type: object
+      description: >-
+        «В разговоре» (23-0e): the line of the day a word is said in — the first message that names it
+        by id and contains it, else the first that contains it — with the word's place in it, in
+        characters (Unicode code points) of `text`, for the highlight, and the line's own voice.
+        A word the dialogue never says has no usage.
+      required: [text, translation, offset, length, audio_url]
+      properties:
+        text: { type: string }
+        translation: { type: string }
+        offset: { type: integer, minimum: 0 }
+        length: { type: integer, minimum: 1 }
+        audio_url: { type: [string, 'null'], format: uri }
 
     PlanWindowPhrase:
       type: object
-      description: A phrase of the phrases tab. No server voice — «прослушать» reads it with the phone's voice; the premium voice is the role's lines only.
-      required: [ref, text, translation, state]
+      description: A phrase of the phrases tab — the phrase, how it reads, its translation and its voice (the learner's of the scene, DAY-UI-3).
+      required: [ref, text, translation, pronunciation, audio_url, state]
       properties:
         ref: { type: string, description: '`p2`' }
         text: { type: string }
         translation: { type: string }
+        pronunciation: { type: [string, 'null'] }
+        audio_url: { type: [string, 'null'], format: uri, description: 'Null until voiced — the phone reads it meanwhile' }
         state: { $ref: '#/components/schemas/PlanWindowUnitState' }
 
     PlanWindowPair:
       type: object
-      description: One exchange of the dialogue tab. The partner's bubble carries its voice and no state; the learner's carries its state and no voice.
+      description: >-
+        One exchange of the dialogue tab. Both bubbles carry their voice (DAY-UI-3: every line is
+        voiced, the partner's in the partner's voice, the learner's in the learner's — two voices of
+        different gender); the learner's also carries its state.
       required: [step, partner, learner]
       properties:
         step: { type: integer }
@@ -2998,17 +3030,18 @@ components:
         learner:
           oneOf:
             - type: object
-              required: [text, translation, state]
+              required: [text, translation, audio_url, state]
               properties:
                 text: { type: string }
                 translation: { type: string }
+                audio_url: { type: [string, 'null'], format: uri }
                 state: { $ref: '#/components/schemas/PlanWindowUnitState' }
             - type: 'null'
 
     PlanDayWindow:
       type: object
       description: >-
-        «Окно дня» (DAY-UI-2, кадры 23-0a…0d): the day's own reading of its cards for the one-screen
+        «Окно дня» (DAY-UI-2, DAY-UI-3, кадры 23-0a…0e): the day's own reading of its cards for the one-screen
         window — what the plate, the compact header, the three programme tabs and the one button
         draw. Everything countable is counted here; the client words it.
       required: [day, stages, day_progress, program, allowed_action]

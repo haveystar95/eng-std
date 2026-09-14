@@ -96,6 +96,40 @@ final class Words
         return null;
     }
 
+    /**
+     * Where the term stands in the text as CHARACTERS (Unicode code points): [offset, length] of the
+     * words {@see positionOfTerm()} matched, in the text's own spelling — «side effects» in «Are there
+     * any side effects?» is [14, 12]. What the word card underlines in its line (23-0e, DAY-UI-3).
+     *
+     * @return array{0: int, 1: int}|null
+     */
+    public static function spanOfTerm(string $needle, string $haystack): ?array
+    {
+        $position = self::positionOfTerm($needle, $haystack);
+        if ($position === null) {
+            return null;
+        }
+        // The same words tokens() makes, with where each stands: a run of letters, digits, apostrophes
+        // and hyphens, trimmed of apostrophes and hyphens at its ends, empty runs dropped.
+        preg_match_all('/[\p{L}\p{N}\'’-]+/u', $haystack, $matches, PREG_OFFSET_CAPTURE);
+        $spans = [];
+        foreach ($matches[0] as [$run, $byte]) {
+            $word = trim($run, "'’-");
+            if ($word === '') {
+                continue;
+            }
+            $lead = mb_strlen($run) - mb_strlen(ltrim($run, "'’-"));
+            $start = mb_strlen(substr($haystack, 0, $byte)) + $lead;
+            $spans[] = [$start, $start + mb_strlen($word)];
+        }
+        [$first, $count] = $position;
+        if (! isset($spans[$first], $spans[$first + $count - 1])) {
+            return null;
+        }
+
+        return [$spans[$first][0], $spans[$first + $count - 1][1] - $spans[$first][0]];
+    }
+
     private static function sameStem(string $a, string $b): bool
     {
         $stem = max(4, min(mb_strlen($a), mb_strlen($b)) - 2);

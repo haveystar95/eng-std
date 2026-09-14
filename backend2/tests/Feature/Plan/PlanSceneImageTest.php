@@ -178,6 +178,11 @@ it('writes the tone with the photo and never overwrites it', function () {
             return new Image('https://other/y.jpg', null, null, '#111111');
         }
 
+        public function findMany(array $queries): array
+        {
+            return array_map(fn (): Image => $this->find(''), $queries);
+        }
+
         public function tone(string $imageUrl): ?string
         {
             return '#222222';

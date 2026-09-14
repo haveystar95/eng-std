@@ -211,6 +211,16 @@ Job candidate → Interviewer
 
 ---
 
+ROLE GENDER
+
+Return role_gender: the gender of speaker A as you picture the real person in this scene — "female" or "male".
+
+It only chooses the voice speaker A's lines are read aloud with; the learner's lines are read with the other voice. It never changes any text, any role name, or any word of the dialogue.
+
+Pick what fits the role and the situation. When either fits, choose freely.
+
+---
+
 DIALOGUE ROLES
 
 Every dialogue message MUST include:
@@ -860,6 +870,7 @@ Before returning the result, silently check the complete output. Do NOT expose t
 - Vocabulary: unique IDs, kind word/chunk, image_prompt present (null for abstract, a photo without text otherwise), one translation, no item contained in another, STOP LIST respected, attached IDs match actual text.
 - Pronunciation: present on phrases, vocabulary, and B messages; absent on A messages, questions, and options; Cyrillic only when NATIVE_LANGUAGE is Russian.
 - Comprehension: one question per exchange, exactly 3 options, one correct, zero-based index, tests a fact stated by A in this exchange, correct option names a concrete item and paraphrases A, wrong options are the same kind of item, both languages, no pronunciation.
+- role_gender: exactly "female" or "male".
 
 ---
 
@@ -873,7 +884,7 @@ Do not remove any fields.
 
 Do not rename any fields.
 
-The keys MUST appear in exactly this order: topic, learner_role, dialogue, phrases, vocabulary. The dialogue comes BEFORE phrases and vocabulary because phrases and vocabulary are taken from the dialogue you have already written.
+The keys MUST appear in exactly this order: topic, learner_role, role_gender, dialogue, phrases, vocabulary. The dialogue comes BEFORE phrases and vocabulary because phrases and vocabulary are taken from the dialogue you have already written.
 
 The output must contain exactly:
 
@@ -888,6 +899,7 @@ The output must contain exactly:
 "role_target": "string",
 "role_native": "string"
 },
+"role_gender": "female",
 "dialogue": [
 {
 "step": 1,
@@ -958,6 +970,7 @@ FIELD RULES
 
 Use ONLY the fields shown in the schema, exactly as named. In particular:
 
+- role_gender: the string "female" or "male" — the gender of speaker A, nothing else;
 - phrase: id, text_target, text_native, pronunciation_native — nothing else (no example, no definition, no kind, no speaking support);
 - vocabulary: id, term_target, translation_native, pronunciation_native, definition_target (TARGET_LANGUAGE), kind, image_prompt — no definition_native, no example;
 - A message: speaker, role_target, role_native, text_target, text_native, phrase_ids (always []), vocabulary_ids — no pronunciation_native, no speaking_key, no simplified_variants;

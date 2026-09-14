@@ -21,7 +21,7 @@ final class PlanPromptFiles
 {
     private const PLAN_FILE = 'plan-builder-v2.md';
 
-    private const LESSON_FILE = 'lesson-v3.md';
+    private const LESSON_FILE = 'lesson-v4.md';
 
     private const TEST_INPUT_MARKER = "\n---\n\nTEST INPUT\n";
 

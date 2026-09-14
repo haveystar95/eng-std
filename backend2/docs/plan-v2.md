@@ -11,15 +11,15 @@
 План — подготовка к одному событию за 1–10 дней. Цель своими словами + язык обучения + уровень
 (`beginner` | `intermediate`) + число дней + (необязательно) дата события.
 
-- **Один день знакомства = одна сцена = один вызов модели** (`lesson-v3`). Сцена — одно реальное
+- **Один день знакомства = одна сцена = один вызов модели** (`lesson-v4`). Сцена — одно реальное
   взаимодействие с одним собеседником.
 - **День = пять этапов** в фиксированном порядке: слова → фразы → диалог → слушаю и отвечаю →
   говорю сам. Состав дня известен заранее и целиком отдаётся клиенту при открытии.
 - **Две модели-вызова на весь план**: строитель плана (`plan-builder-v2`) и генератор урока
-  (`lesson-v3`). Всё остальное — детерминированный код: календарь, проверки, сборка карточек,
+  (`lesson-v4`). Всё остальное — детерминированный код: календарь, проверки, сборка карточек,
   возвраты, метрики, строки.
 - Промпты лежат в `app/Modules/Plan/Infrastructure/Prompt/` и **заморожены**: версия = имя файла
-  (`plan-builder-v2`, `lesson-v3`), правится файл → меняется имя → меняется версия. Сервер вырезает
+  (`plan-builder-v2`, `lesson-v4`), правится файл → меняется имя → меняется версия. Сервер вырезает
   из файла раздел `TEST INPUT` и шлёт реальные входы отдельным сообщением.
 
 ## 1. Модель данных
@@ -30,11 +30,11 @@
 | таблица | что | ключевые поля |
 |---|---|---|
 | `plans` | план | `status` building·unclear·failed·ready·active·finished·overdue·deleted, `days_total`/`days_requested`, `event_date`, `level`, заголовки из промпта (`title_*`, `event_native`, `until_phrase_native`, `overdue_native`, роли), обложка, `prompt_version_plan`, `build_version`, `model_plan`, `cost_usd_plan`, `latency_ms_plan`, `attempts_plan`, `checks_json`, `collection_id`, `build_started_at` |
-| `plan_scenes` | сцены плана | `order`, `kind` situation·variant, `priority` (1 = ядро), `title_native` ≤18 / `title_target`, `teaches_native` ≤34, `goals_native` 3–4×≤30, роли, `topic_description` (бриф урока), `image_prompt`+фото, `lesson_json` (ответ модели как есть), `lesson_status` pending·building·ready·failed, `prompt_version_lesson`, `build_version`, `model_lesson`, `cost_usd_lesson`, `latency_ms_lesson`, `attempts_lesson`, `checks_json`, `generated_at` |
+| `plan_scenes` | сцены плана | `order`, `kind` situation·variant, `priority` (1 = ядро), `title_native` ≤18 / `title_target`, `teaches_native` ≤34, `goals_native` 3–4×≤30, роли, `topic_description` (бриф урока), `image_prompt`+фото, `lesson_json` (ответ модели как есть), `lesson_status` pending·building·illustrating·ready·failed (`illustrating` — урок написан, фото ищутся; на проводе `building`, DAY-UI-3), `partner_voice_gender` (пол голоса собеседника; голос ученика — другой), `prompt_version_lesson`, `build_version`, `model_lesson`, `cost_usd_lesson`, `latency_ms_lesson`, `attempts_lesson`, `checks_json`, `generated_at` |
 | `plan_days` | календарь | `number`, `type` scene·review·rehearsal, `scene_id`, `status` locked·open·in_progress·closed, `opens_on`, `opened_at`, `closed_at`, метрики (`cards_total`, `cards_done`, `minutes_spent`; `first_try_share` и `hardest_unit_*` сняты нарядом DAY-UI-2 — их читал только старый кабинет) |
 | `day_cards` | карточки дня | `stage`, `position`, `kind` (13 видов), `payload` jsonb, `source` today·returned, `source_day_id`, `unit_kind`/`unit_ref`, `retry_of`, `result` null·passed·hinted·failed·skipped, `attempts`, `answered_at`, `returns` |
 | `plan_terms` | слова/связки/фразы сцены | `kind` word·chunk·phrase, `ref` (`v3`/`p1`), тексты, чтение, определение, пример из диалога, `speaking_key`, `simplified_variants`, фото, `image_tone` (тон фото или тон слота, когда лестница фото не нашла, DAY-UI-2) |
-| `plan_line_audios` | озвучка реплик собеседника | `(scene_id, line_ref, voice_key)` уникально (`x3` — реплика собеседника обмена 3; DAY-UI-2), файл на приватном диске. Строки `p*` — фразы, озвученные 14.09 до канона «премиум-голос — только реплики роли»; их больше никто не читает |
+| `plan_line_audios` | озвучка всего, что звучит в дне (DAY-UI-3) | `(scene_id, line_ref, voice_key)` уникально: `x3` — реплика собеседника обмена 3, `x3b` — реплика ученика, `p2` — фраза, `v5` — слово/связка; файл на приватном диске. Строка ищется в голосе своего говорящего в этой сцене |
 | `plan_check_counters` | счётчики проверок | `(prompt_version, check_name, action)` → `hits` |
 
 Слова и фразы дня после закрытия дня уходят в коллекцию плана (`plans.collection_id`,
@@ -49,7 +49,7 @@
 | вызов | входы (как в INPUTS промпта) | схема | таймаут | цена-ориентир |
 |---|---|---|---|---|
 | план (`plan-builder-v2`) | `GOAL`, `TARGET_LANGUAGE`, `NATIVE_LANGUAGE`, `LEVEL`, `SCENES_COUNT` (считает сервер по §5), `EXISTING_SCENES` (только при расширении) | `PlanSchemas::plan()`, strict | 90 с (`PLAN_BUILDER_TIMEOUT`) | ≤ $0.05 |
-| урок (`lesson-v3`) | `TOPIC` = `title_native` сцены, `TOPIC_DESCRIPTION`, языки, `LEVEL`, `PHRASES_COUNT`/`VOCABULARY_COUNT`/`DIALOGUE_COUNT` из `config/plan.php` по уровню (6/8/8; PHRASES ≤ DIALOGUE) | `PlanSchemas::lesson()`, strict, сообщения A/B через `anyOf` | 90 с (`PLAN_LESSON_TIMEOUT`) | ≤ $0.10 |
+| урок (`lesson-v4`) | `TOPIC` = `title_native` сцены, `TOPIC_DESCRIPTION`, языки, `LEVEL`, `PHRASES_COUNT`/`VOCABULARY_COUNT`/`DIALOGUE_COUNT` из `config/plan.php` по уровню (6/8/8; PHRASES ≤ DIALOGUE) | `PlanSchemas::lesson()`, strict, сообщения A/B через `anyOf` | 90 с (`PLAN_LESSON_TIMEOUT`) | ≤ $0.10 |
 
 - Модель и провайдер — `config/plan.php` (`PLAN_MODEL_PROVIDER`, `PLAN_BUILDER_MODEL`,
   `PLAN_LESSON_MODEL`); `PLAN_MODEL_DRIVER=fake` — детерминированный `FakePlanModel` (тесты, офлайн).
@@ -178,23 +178,30 @@
 
 ## 7. Фоновые работы
 
-- **Фото** (`AttachPlanImagesJob`, `PexelsPlanImageFinder` → `ImageSearchPort`): обложка плана по
-  `cover_image_prompt`; сцены и слова/связки — лестницей запросов (`PlanImageLadder`, DAY-UI-2):
-  `image_prompt` → слово без контекста → тема сцены. Пусто на всех ступенях — фото нет, у слова
-  пишется тон слота из палитры (`ImageTones`), и оно больше не ищется после каждого урока
-  (счётчик `image_missing`). Best effort, ретрай только на transient; день не ждёт.
-  `plan:images-backfill` догружает существующие планы и печатает «было пусто / стало». Вместе с фото пишется его тон
-  (`avg_color` → `image_tone` / `cover_image_tone`), а у сцены с фото job кладёт две квадратные копии
-  (112 и 448, кроп CDN Pexels) на `plan.image_disk`; не скачалось — копию добудет
-  `GET /plans/images/{scene}/{size}` при первом запросе (PLAN-UI-3).
-- **Озвучка** (`SpeakSceneLinesJob`, `RoleLineQueue`, `GenerationLineSpeaker` → `SpeechSynthesizerPort` +
-  `VoiceCatalog`): **премиум-голос — только реплики роли** (реплика A каждого обмена) голосом
-  языкового пакета, если `SPEECH_ENABLED`; фразы ученика, слова и реплики B — системный голос
-  телефона (канон владельца, подтверждён при закрытии DAY-UI-2). Файл один на (сцена, ссылка
-  единицы `x3`, голос); отдаётся `GET /plans/audio/{id}`. Лимит вендора — 10 запросов в минуту и 100 в
-  сутки (Gemini TTS): job повторяется раз в минуту до получаса и покупает только недостающее.
-  `plan:speak-backfill` — недостающие реплики роли существующих сцен, со счётчиком оставшихся.
-  Ничего не блокирует.
+- **Фото** (DAY-UI-2 → DAY-UI-3). Обложка плана и фото сцен маршрута — `AttachPlanImagesJob` сразу после
+  сборки плана. **Фото дня — при генерации его урока, все сразу**: урок принят → сцена `illustrating`
+  → `IllustrateSceneJob` ищет фото сцены и всех её слов/связок параллельно (`PlanImageFinder::findMany`,
+  пул 6, повторы на transient) лестницей `ImageQueries`: `image_prompt` → «термин, тема сцены» (тема —
+  место из описания фото сцены, иначе её название) → тема сцены своей страницей ответов на слово.
+  **Голое слово не спрашивается никогда** («marketing» → супермаркет, 14.09). После фото — `ready`
+  (`SceneReadiness`: условная запись + строка `day_ready`); job сдался — `FinishIllustration` делает
+  день `ready` с тем, что нашлось. Пусто на всех ступенях — у слова тон слота (`ImageTones`), счётчик
+  `image_missing`. Вместе с фото пишется тон; у сцены с фото — две квадратные копии (112 и 448) на
+  `plan.image_disk`. `plan:images-backfill` догружает пустое («было пусто / стало»), `--requery`
+  переспрашивает слова без `image_prompt`, чьё фото раньше нашло голое слово.
+- **Озвучка** (`VoiceSceneJob`, `SceneVoiceQueue`, `GenerationLineSpeaker` → `SpeechSynthesizerPort` +
+  `VoiceCatalog`; канон владельца DAY-UI-3): **озвучено всё** — реплики собеседника и ученика, фразы,
+  слова. У сцены два голоса пакета разного пола (`generation.speech.voices.<lang>.{female,male}`):
+  собеседник — по `role_gender` урока, по умолчанию женский; ученик — другой, и его голос читает его
+  реплики, фразы и слова (`plan_scenes.partner_voice_gender`; сцене без пола каст выбирается один раз
+  по голосу уже купленных фраз ученика, иначе по умолчанию). Вызовы — сценариями: **диалог одним
+  вызовом Gemini TTS с двумя говорящими**, разрезанным по паузам (`PcmTurnCutter`: расстановка стыков
+  по паузам с ценой отклонения от места по длине текста; не разрезался — ещё один вызов, потом
+  строки остаются голосом телефона), фразы — одним, слова — одним (≤ 12 в вызове): ≤ 4 вызовов на
+  день. Job ставится вместе с фото и **день не ждёт**. Лимит вендора — 10 запросов в минуту и 100 в
+  сутки: 429 несёт окно (`QuotaFailure.quotaId`, `RetryInfo.retryDelay`), job возвращается в очередь
+  ровно на столько (до 30 ч), не падает. `plan:speak-backfill` — недостающее существующих сцен,
+  «не озвучено» по видам до и после; на суточном лимите останавливается и называет окно.
 
 ## 8. Строки
 

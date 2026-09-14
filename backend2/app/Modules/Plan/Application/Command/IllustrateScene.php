@@ -6,8 +6,8 @@ namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 
-/** Premium audio for the partner's line of every exchange of one scene. Queued, idempotent, best effort. */
-final readonly class SpeakSceneLines
+/** The photos of one scene's day — its own and every word's — found together; then the day is ready (DAY-UI-3). */
+final readonly class IllustrateScene
 {
     public function __construct(public PlanSceneId $sceneId) {}
 }

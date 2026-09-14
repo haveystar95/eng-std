@@ -14,28 +14,28 @@ use Illuminate\Support\Facades\DB;
 /**
  * Bytes on the configured private disk under `plan-audio/<scene>/`, one row per (scene, line
  * reference, voice). The unique constraint is the idempotency: a second `put` for a line this voice
- * already has inserts no row, and its file lands on the very same path (the path is made of the
- * scene, the reference and the voice), so nothing is left behind.
+ * already has inserts no row — and writes no file: the dialogue is bought whole (DAY-UI-3), so the
+ * same line comes back from the vendor again, and the file behind an address a phone already cached
+ * must stay the file it downloaded.
  */
 final class EloquentLineAudioStore implements LineAudioStore
 {
     public function __construct(private readonly Disks $disks, private readonly string $disk) {}
 
-    /** @param list<string> $sceneIds */
-    public function forScenes(array $sceneIds, string $voiceKey): array
+    public function forScenes(array $sceneIds, array $voiceKeys): array
     {
-        if ($sceneIds === []) {
+        if ($sceneIds === [] || $voiceKeys === []) {
             return [];
         }
         $rows = DB::table('plan_line_audios')
             ->whereIn('scene_id', $sceneIds)
-            ->where('voice_key', $voiceKey)
+            ->whereIn('voice_key', $voiceKeys)
             ->get();
 
         $out = [];
         foreach ($rows as $row) {
             $view = self::row((array) $row);
-            $out[$view->sceneId.':'.$view->lineRef] = $view;
+            $out[$view->sceneId.':'.$view->lineRef.':'.$view->voiceKey] = $view;
         }
 
         return $out;
@@ -50,6 +50,12 @@ final class EloquentLineAudioStore implements LineAudioStore
 
     public function put(PlanSceneId $sceneId, string $lineRef, string $voiceKey, string $format, string $bytes, ?int $durationMs, ?string $costUsd): ?LineAudioRow
     {
+        $exists = DB::table('plan_line_audios')
+            ->where('scene_id', $sceneId->value)->where('line_ref', $lineRef)->where('voice_key', $voiceKey)
+            ->exists();
+        if ($exists) {
+            return null;
+        }
         $id = Ulid::generate();
         $path = sprintf('plan-audio/%s/%s-%s.%s', $sceneId->value, $lineRef, substr(sha1($voiceKey), 0, 12), $format);
         $userId = DB::table('plan_scenes')->where('id', $sceneId->value)->value('user_id');

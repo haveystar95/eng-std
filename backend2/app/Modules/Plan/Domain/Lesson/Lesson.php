@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Lesson;
 
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
+
 /**
  * The lesson of one scene as the model wrote it — and as the checks may have corrected it.
  *
@@ -17,6 +19,8 @@ final readonly class Lesson
      * @param  list<Exchange>  $exchanges
      * @param  list<Phrase>  $phrases
      * @param  list<VocabularyItem>  $vocabulary
+     * @param  VoiceGender|null  $roleGender  the partner's gender as the lesson imagines the role (`lesson-v4`); null
+     *                                        for a lesson written before the prompt said it
      */
     public function __construct(
         public string $titleTarget,
@@ -28,6 +32,7 @@ final readonly class Lesson
         public array $exchanges,
         public array $phrases,
         public array $vocabulary,
+        public ?VoiceGender $roleGender = null,
     ) {}
 
     public function phrase(string $id): ?Phrase
@@ -78,6 +83,7 @@ final readonly class Lesson
         return new self(
             $this->titleTarget, $this->titleNative, $this->descriptionTarget, $this->descriptionNative,
             $this->learnerRoleTarget, $this->learnerRoleNative, $exchanges, $this->phrases, $this->vocabulary,
+            $this->roleGender,
         );
     }
 
@@ -87,6 +93,7 @@ final readonly class Lesson
         return new self(
             $this->titleTarget, $this->titleNative, $this->descriptionTarget, $this->descriptionNative,
             $this->learnerRoleTarget, $this->learnerRoleNative, $this->exchanges, $phrases, $this->vocabulary,
+            $this->roleGender,
         );
     }
 
@@ -96,6 +103,7 @@ final readonly class Lesson
         return new self(
             $this->titleTarget, $this->titleNative, $this->descriptionTarget, $this->descriptionNative,
             $this->learnerRoleTarget, $this->learnerRoleNative, $this->exchanges, $this->phrases, $vocabulary,
+            $this->roleGender,
         );
     }
 
@@ -117,6 +125,7 @@ final readonly class Lesson
                 'role_target' => $this->learnerRoleTarget,
                 'role_native' => $this->learnerRoleNative,
             ],
+            ...($this->roleGender === null ? [] : ['role_gender' => $this->roleGender->value]),
             'dialogue' => array_map(static fn (Exchange $e): array => $e->toArray(), $this->exchanges),
             'phrases' => array_map(static fn (Phrase $p): array => $p->toArray(), $this->phrases),
             'vocabulary' => array_map(static fn (VocabularyItem $v): array => $v->toArray(), $this->vocabulary),

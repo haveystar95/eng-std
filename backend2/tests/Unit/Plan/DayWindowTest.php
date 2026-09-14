@@ -18,6 +18,7 @@ use App\Modules\Plan\Domain\ValueObject\CardSource;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\ImageQuery;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
@@ -174,20 +175,38 @@ it('paints a slot with the first tone it knows, and with the theme’s empty slo
         ->and(ImageTones::first())->toBe('#E3DCCF');
 });
 
-it('asks for a photo by the description, then the word alone, then the scene’s title — catches a word without a description never searched', function () {
+// Canon (DAY-UI-3): «промпт фото не по голому слову». Catches the rung «the word alone» — asked
+// «marketing», the vendor answered with a supermarket (phone, 14.09).
+it('asks a word’s photo by its description, then the word WITH the scene’s theme, then the theme on a page of its own — never by the bare word', function () {
     $scene = PlanScene::fromBrief(PlanSceneId::generate(), PlanId::generate(), new SceneBrief(
         1, SceneKind::Situation, 1, 'Приём у врача', 'At the doctor’s', 'описать боль', ['описать боль'],
-        'Patient', 'Пациент', 'Doctor', 'Врач', 'Situation: …', 'doctor’s office with a patient',
+        'Patient', 'Пациент', 'Doctor', 'Врач', 'Situation: …', 'realistic photo of a consultation in a doctor’s office, patient seated',
     ));
-    $term = static fn (?string $prompt, string $text): PlanTerm => PlanTerm::reconstitute(
-        PlanTermId::generate(), $scene->id(), TermKind::Word, 'v1', 0, $text, 'перевод', null, null, null, null, null, [], $prompt, null,
+    $term = static fn (?string $prompt, string $text, int $position = 0): PlanTerm => PlanTerm::reconstitute(
+        PlanTermId::generate(), $scene->id(), TermKind::Word, 'v1', $position, $text, 'перевод', null, null, null, null, null, [], $prompt, null,
     );
     $titles = new PlanTitles('Врач', 'Doctor', 'Приём', 'До приёма', 'Приём был', 'clinic corridor', 'Patient', 'Пациент');
+    $asked = static fn (PlanTerm $t): array => array_map(
+        static fn (ImageQuery $q): string => $q->page === 1 ? $q->text : "{$q->text} #{$q->page}",
+        ImageQueries::forTerm($t, $scene),
+    );
 
-    expect(ImageQueries::forTerm($term('a thermometer', 'fever'), $scene))->toBe(['a thermometer', 'fever', 'At the doctor’s'])
-        ->and(ImageQueries::forTerm($term(null, 'in progress'), $scene))->toBe(['in progress', 'At the doctor’s'])
-        ->and(ImageQueries::forTerm($term('  ', 'At the doctor’s'), $scene))->toBe(['At the doctor’s'])
-        ->and(ImageQueries::forScene($scene, $titles))->toBe(['doctor’s office with a patient', 'At the doctor’s', 'clinic corridor']);
+    expect($asked($term('a thermometer', 'fever')))->toBe(['a thermometer', 'fever, doctor’s office', 'doctor’s office #2'])
+        ->and($asked($term(null, 'marketing', 3)))->toBe(['marketing, doctor’s office', 'doctor’s office #5'])
+        ->and(array_map(static fn (ImageQuery $q): string => $q->text, ImageQueries::forTerm($term(null, 'marketing'), $scene)))->not->toContain('marketing')
+        ->and(array_map(static fn (ImageQuery $q): string => $q->text, ImageQueries::forScene($scene, $titles)))
+        ->toBe(['realistic photo of a consultation in a doctor’s office, patient seated', 'At the doctor’s', 'clinic corridor']);
+});
+
+it('names a scene’s theme by the place its photo description names, else by its title', function () {
+    $scene = static fn (string $prompt): PlanScene => PlanScene::fromBrief(PlanSceneId::generate(), PlanId::generate(), new SceneBrief(
+        1, SceneKind::Situation, 1, 'Условия', 'Job Terms', 'обсудить', ['обсудить'], 'Candidate', 'Кандидат', 'Recruiter', 'Рекрутер', 'Situation: …', $prompt,
+    ));
+
+    expect(ImageQueries::theme($scene('realistic photo of a doctor speaking with a patient in a simple clinic office')))->toBe('simple clinic office')
+        ->and(ImageQueries::theme($scene('a business interview discussion in a meeting room, two people')))->toBe('meeting room')
+        ->and(ImageQueries::theme($scene('a small clinic reception desk with a patient checking in')))->toBe('Job Terms')
+        ->and(ImageQueries::theme($scene('a person discussing job terms on a laptop video call')))->toBe('Job Terms');
 });
 
 it('asks the ladder once for a word: a found-nothing tone marks it asked, a photo clears the mark, a phrase is never asked', function () {

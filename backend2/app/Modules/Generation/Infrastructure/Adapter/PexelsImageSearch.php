@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Infrastructure\Adapter;
 
 use App\Modules\Generation\Application\Dto\ImageResult;
+use App\Modules\Generation\Application\Dto\ImageSearchQuery;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Application\Port\TransientImageSearchError;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -22,6 +25,11 @@ use RuntimeException;
  */
 final class PexelsImageSearch implements ImageSearchPort
 {
+    /** Re-asks of the transient queries of a batch, after the first round. */
+    private const BATCH_RETRIES = 2;
+
+    private const BATCH_BACKOFF_MS = 700;
+
     public function __construct(
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
@@ -73,6 +81,73 @@ final class PexelsImageSearch implements ImageSearchPort
         }
 
         return $this->result($photo);
+    }
+
+    /**
+     * The day's photos together (DAY-UI-3): one pool of requests, `$concurrency` on the wire at once.
+     * A 429, a 5xx or a dropped connection is asked again — only those queries — twice, with backoff;
+     * what is still transient after that fails the batch as {@see TransientImageSearchError}.
+     */
+    public function searchMany(array $queries, int $concurrency = 6): array
+    {
+        $results = array_fill(0, count($queries), null);
+        /** @var array<int, ImageSearchQuery> $pending */
+        $pending = array_filter($queries, static fn (ImageSearchQuery $q): bool => trim($q->query) !== '');
+
+        for ($attempt = 0; $pending !== []; $attempt++) {
+            $responses = $this->context->run('images', null, fn (): array => Http::pool(function (Pool $pool) use ($pending): array {
+                $requests = [];
+                foreach ($pending as $i => $q) {
+                    $requests[] = $pool->as('q'.$i)
+                        ->withHeaders(['Authorization' => $this->apiKey])
+                        ->timeout($this->timeoutSeconds)
+                        ->get(rtrim($this->baseUrl, '/').'/search', [
+                            'query' => trim($q->query),
+                            'per_page' => 1,
+                            'page' => max(1, $q->page),
+                            'orientation' => 'landscape',
+                        ]);
+                }
+
+                return $requests;
+            }, max(1, $concurrency)));
+
+            $again = [];
+            $transient = null;
+            foreach ($pending as $i => $q) {
+                $response = $responses['q'.$i] ?? null;
+                if (! $response instanceof Response) {
+                    $again[$i] = $q;
+                    $transient = TransientImageSearchError::network($response instanceof \Throwable ? $response->getMessage() : 'no response');
+
+                    continue;
+                }
+                if ($response->status() === 429 || $response->serverError()) {
+                    $again[$i] = $q;
+                    $transient = $response->status() === 429
+                        ? TransientImageSearchError::rateLimited($this->retryAfter($response))
+                        : TransientImageSearchError::upstream($response->status());
+
+                    continue;
+                }
+                if (! $response->successful()) {
+                    throw new RuntimeException('Pexels API error: '.$response->status().' '.$response->body());
+                }
+                $photo = $response->json('photos.0');
+                $results[$i] = is_array($photo) ? $this->result($photo) : null;
+            }
+
+            if ($again === []) {
+                break;
+            }
+            if ($attempt >= self::BATCH_RETRIES) {
+                throw $transient ?? TransientImageSearchError::network('no response');
+            }
+            usleep(self::BATCH_BACKOFF_MS * (2 ** $attempt) * 1000);
+            $pending = $again;
+        }
+
+        return array_values($results);
     }
 
     public function photo(string $photoId): ?ImageResult
@@ -141,7 +216,7 @@ final class PexelsImageSearch implements ImageSearchPort
         return null;
     }
 
-    private function retryAfter(\Illuminate\Http\Client\Response $response): ?int
+    private function retryAfter(Response $response): ?int
     {
         $header = $response->header('Retry-After');
 

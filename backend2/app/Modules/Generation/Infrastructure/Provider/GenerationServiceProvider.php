@@ -476,7 +476,8 @@ final class GenerationServiceProvider extends ServiceProvider
                     context: $this->app->make(OutboundCallContext::class),
                     apiKey: (string) config('services.gemini.api_key'),
                     encoder: $this->app->make(SpeechEncoder::class),
-                    timeout: $timeout,
+                    // A script is the whole dialogue of a day in one call — minutes of sound, not a line.
+                    timeout: (int) config('generation.speech.script_timeout', 180),
                 )
                 : new OpenAiSpeechSynthesizer(
                     context: $this->app->make(OutboundCallContext::class),

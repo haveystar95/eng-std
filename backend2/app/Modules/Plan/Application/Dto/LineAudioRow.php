@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Dto;
 
 /**
- * One spoken line on the disk: `lineRef` is the unit it voices — `x3`, the partner's line of exchange 3.
- * (`p2` rows — phrases voiced on 14.09 before the canon «premium voice for the role's lines only» —
- * stay in the table; nothing names them any more.)
+ * One spoken line on the disk: `lineRef` is the unit it voices — `x3` the partner's line of exchange 3,
+ * `x3b` the learner's, `p2` a phrase, `v5` a word or chunk (DAY-UI-3) — and `voiceKey` whose voice it is.
  */
 final readonly class LineAudioRow
 {

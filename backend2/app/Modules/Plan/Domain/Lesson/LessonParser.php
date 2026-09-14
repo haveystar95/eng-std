@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
  * The model's JSON → a {@see Lesson}. Strict about SHAPE only: a missing key, a wrong type or an
@@ -64,6 +65,10 @@ final class LessonParser
             exchanges: $exchanges,
             phrases: $phrases,
             vocabulary: $vocabulary,
+            // `lesson-v4` says whose voice the role has. A lesson written before (`lesson-v3`) has no
+            // such key, and an odd word is not a reason to refuse a paid lesson: both are «not said»,
+            // and the scene speaks with the default cast.
+            roleGender: VoiceGender::tryFromAny($payload['role_gender'] ?? null),
         );
     }
 

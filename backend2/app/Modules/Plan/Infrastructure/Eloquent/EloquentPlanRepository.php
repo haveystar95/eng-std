@@ -14,11 +14,14 @@ use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\ValueObject\DayMetrics;
 use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\LessonStatus;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\PlanStatus;
+use App\Modules\Plan\Domain\ValueObject\VoiceCast;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -153,6 +156,33 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
             ->where('image_url', $imageUrl)
             ->whereNull('image_tone')
             ->update(['image_tone' => $tone, 'updated_at' => now()]) > 0;
+    }
+
+    public function finishIllustration(PlanSceneId $id): bool
+    {
+        return PlanSceneModel::query()->whereKey($id->value)
+            ->where('lesson_status', LessonStatus::Illustrating->value)
+            ->update(['lesson_status' => LessonStatus::Ready->value, 'updated_at' => now()]) > 0;
+    }
+
+    public function castSceneVoices(PlanSceneId $id, VoiceGender $partner): bool
+    {
+        return PlanSceneModel::query()->whereKey($id->value)
+            ->whereNull('partner_voice_gender')
+            ->update(['partner_voice_gender' => $partner->value, 'updated_at' => now()]) > 0;
+    }
+
+    public function voiceCastsOf(array $sceneIds): array
+    {
+        if ($sceneIds === []) {
+            return [];
+        }
+        $out = [];
+        foreach (PlanSceneModel::query()->whereKey($sceneIds)->get(['id', 'partner_voice_gender']) as $row) {
+            $out[(string) $row->id] = VoiceCast::of(VoiceGender::tryFromAny($row->partner_voice_gender));
+        }
+
+        return $out;
     }
 
     /** One row by primary key, the owner in the same predicate — a stranger's scene is simply not found. */

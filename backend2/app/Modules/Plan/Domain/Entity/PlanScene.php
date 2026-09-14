@@ -12,14 +12,22 @@ use App\Modules\Plan\Domain\ValueObject\ModelCall;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\SceneKind;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use DateTimeImmutable;
 
 /**
  * One scene of the plan: the brief the plan builder wrote, and — once the lesson generator has
  * answered — the lesson itself with the cost and version it was written at.
+ *
+ * A lesson written is not yet a ready day (DAY-UI-3): the scene is `illustrating` until its photos
+ * are found, and only then `ready` — a day opens with its pictures on it. The partner's voice
+ * gender is the cast of the scene's two voices ({@see partnerVoiceGender()}).
  */
 final class PlanScene
 {
+    /** «По умолчанию собеседник женский, ученик мужской» (owner, DAY-UI-3). */
+    public const DEFAULT_PARTNER_VOICE = VoiceGender::Female;
+
     /**
      * @param  list<string>  $goalsNative
      * @param  list<array{check: string, mode: string, action: string, detail: string}>  $findings
@@ -48,6 +56,7 @@ final class PlanScene
         private ?string $failReason,
         private ?DateTimeImmutable $buildStartedAt,
         private ?DateTimeImmutable $generatedAt,
+        private ?VoiceGender $partnerVoiceGender = null,
     ) {}
 
     public static function fromBrief(PlanSceneId $id, PlanId $planId, SceneBrief $brief): self
@@ -56,7 +65,7 @@ final class PlanScene
             $id, $planId, $brief->order, $brief->kind, $brief->priority, $brief->titleNative, $brief->titleTarget,
             $brief->teachesNative, $brief->goalsNative, $brief->learnerRoleTarget, $brief->learnerRoleNative,
             $brief->partnerRoleTarget, $brief->partnerRoleNative, $brief->topicDescription, $brief->imagePrompt,
-            null, null, LessonStatus::Pending, null, [], null, null, null,
+            null, null, LessonStatus::Pending, null, [], null, null, null, null,
         );
     }
 
@@ -88,11 +97,13 @@ final class PlanScene
         ?string $failReason,
         ?DateTimeImmutable $buildStartedAt,
         ?DateTimeImmutable $generatedAt,
+        ?VoiceGender $partnerVoiceGender = null,
     ): self {
         return new self(
             $id, $planId, $order, $kind, $priority, $titleNative, $titleTarget, $teachesNative, $goalsNative,
             $learnerRoleTarget, $learnerRoleNative, $partnerRoleTarget, $partnerRoleNative, $topicDescription,
             $imagePrompt, $image, $lesson, $lessonStatus, $lessonCall, $findings, $failReason, $buildStartedAt, $generatedAt,
+            $partnerVoiceGender,
         );
     }
 
@@ -104,15 +115,29 @@ final class PlanScene
         $this->failReason = null;
     }
 
-    /** @param list<array{check: string, mode: string, action: string, detail: string}> $findings */
+    /**
+     * The lesson is written: the scene waits for its photos (`illustrating`) and knows its voices — the
+     * partner's gender the lesson imagined for the role, the default when it said none.
+     *
+     * @param list<array{check: string, mode: string, action: string, detail: string}> $findings
+     */
     public function acceptLesson(Lesson $lesson, ModelCall $call, array $findings, DateTimeImmutable $now): void
     {
         $this->lesson = $lesson;
-        $this->lessonStatus = LessonStatus::Ready;
+        $this->lessonStatus = LessonStatus::Illustrating;
         $this->lessonCall = $call;
         $this->findings = $findings;
         $this->failReason = null;
         $this->generatedAt = $now;
+        $this->partnerVoiceGender = $lesson->roleGender ?? self::DEFAULT_PARTNER_VOICE;
+    }
+
+    /** The photos are in (or every search came back empty and the slots got their tones): the day is ready. */
+    public function finishIllustration(): void
+    {
+        if ($this->lessonStatus === LessonStatus::Illustrating) {
+            $this->lessonStatus = LessonStatus::Ready;
+        }
     }
 
     /** @param list<array{check: string, mode: string, action: string, detail: string}> $findings */
@@ -145,6 +170,28 @@ final class PlanScene
     public function isReady(): bool
     {
         return $this->lessonStatus === LessonStatus::Ready && $this->lesson !== null;
+    }
+
+    /** The lesson is written — ready, or still waiting for its photos. */
+    public function hasLesson(): bool
+    {
+        return ($this->lessonStatus === LessonStatus::Ready || $this->lessonStatus === LessonStatus::Illustrating)
+            && $this->lesson !== null;
+    }
+
+    public function isIllustrating(): bool
+    {
+        return $this->lessonStatus === LessonStatus::Illustrating;
+    }
+
+    /**
+     * Whose voice the partner's lines are read with; the learner's lines, phrases and words take the
+     * other. Stored when the lesson was written (or cast by the voice queue for a scene written before
+     * voices had genders); a scene with none speaks with the default cast.
+     */
+    public function partnerVoiceGender(): ?VoiceGender
+    {
+        return $this->partnerVoiceGender;
     }
 
     /** A build that started and never finished within `$staleAfterSeconds` counts as dead. */

@@ -118,14 +118,14 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 | ответить | `POST …/cards/{cardId}/answer` `{result, attempts}` | `{card, requeued}`; `requeued` — та же карточка в конце этапа после первого `failed`; 409 `plan_card_answered` |
 | этап пройден | `POST …/stages/{stage}/close` | `PlanDayRoom`; 409 `plan_stage_incomplete` (`meta.remaining`) |
 | день пройден | `POST …/close` | `PlanDayRoom` с `metrics`; 409 `plan_stage_incomplete`; после этого `Plan.collection_id` заполнен |
-| озвучка реплики или фразы | `GET /plans/audio/{audioId}` | файл голоса (`audio_url` окна, `audio_id` карточки) |
+| озвучка реплики, фразы или слова | `GET /plans/audio/{audioId}` | файл голоса (`audio_url` окна, `audio_id` карточки) |
 
 Снято нарядом DAY-UI-2 вместе со старым кабинетом дня: `GET …/sheet` («шит»), `goals_native` и
 `sheet_available` дня, тексты и счётчики единиц программы (`unit_ref`, `scene_id`, `text_target`,
 `text_native`, `cards_total`, `cards_done`), `metrics.cards_done` / `first_try_share` /
 `hardest_unit_*` (и их колонки в `plan_days`) — их читал только старый кабинет.
 
-**Окно дня — `window`** (DAY-UI-2, кадры 23-0a…0d; схема `PlanDayWindow`). Всё, что окно пишет,
+**Окно дня — `window`** (DAY-UI-2, DAY-UI-3, кадры 23-0a…0e; схема `PlanDayWindow`). Всё, что окно пишет,
 посчитано здесь; клиент складывает слова и не выводит ни одного числа. Нет поля — клиент говорит
 «не загрузилось», а не угадывает.
 
@@ -134,27 +134,36 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 | `day` | `index`, `type`, `title_native` / `title_target`, `image` (фото сцены с `tone`, `url_112`/`url_448`) и всегда `image_tone`; `status` — `not_started` / `in_progress` / `passed` (другой запертый день — `locked`: окно его не рисует); `minutes_estimate` — «≈ N минут» до конца дня (null у пройденного); `minutes_spent` — только у пройденного; `goals[{text, passed}]` — `passed` true у всех только у пройденного дня |
 | `stages[5]` | words · phrases · dialogue · listen · speak: `state` `done` / `current` / `locked`; `done_count`, `total`, `minutes_left` — **только у `current`** (у остальных null: цифру клиент не рисует); `share` 0…1 — полоса ряда. У не начатого дня все `locked` |
 | `day_progress` | 0…1 — доля пройденных этапов; полоса компактной шапки |
-| `program.words` | `summary {total, done, returns}` + `items[{ref, term, translation, image, image_tone, state}]`; `state` — `pending` / `done` / `returns_tomorrow` |
-| `program.phrases` | `summary` + `items[{ref, text, translation, state}]` — голоса сервера нет: «прослушать» читает телефон |
-| `program.dialogue` | `summary` + `items[{step, partner {text, translation, audio_url}, learner {text, translation, state}}]` — состояние только у реплики ученика, голос только у собеседника |
+| `program.words` | `summary {total, done, returns}` + `items[{ref, term, translation, pronunciation, definition, image, image_tone, audio_url, usage, state, returns_day}]`; `state` — `pending` / `done` / `returns_tomorrow`; `usage {text, translation, offset, length, audio_url}` — реплика дня, где слово звучит, и место слова в ней в символах (подсветка шита 23-0e; слова нет в диалоге — `null`); `returns_day` — номер дня возврата у `returns_tomorrow` («вернётся в день 3») |
+| `program.phrases` | `summary` + `items[{ref, text, translation, pronunciation, audio_url, state}]` — голос ученика сцены |
+| `program.dialogue` | `summary` + `items[{step, partner {text, translation, audio_url}, learner {text, translation, audio_url, state}}]` — голос у обеих реплик (каждая голосом своего говорящего), состояние — у реплики ученика |
 | `allowed_action` | `start` / `continue` / `again` / null — одна кнопка. `again` — «Говорю сам» ещё раз по `GET …/cards`, ответы не отправляются (не пересдача дня) |
 
 Минуты — `DayPace` (секунд на карточку этапа: слова 8, фразы 29, диалог 34, слушание 13, речь 41;
 вверх до минуты). Состояние единицы — по её карточкам (`UnitStates`): провал дважды →
 `returns_tomorrow`, все отвечены → `done`. Счётчики брови — `ProgramSummary`.
 
-**Картинка у каждого слова** (DAY-UI-2): лестница запросов фото — `image_prompt`, потом слово без
-контекста, потом тема сцены (`PlanImageLadder`). Не нашлось — `image = null`, а `image_tone` — тон
-из палитры (`ImageTones`): клиент рисует слот тоном, «битой» картинки нет; такое слово помечено и
-не ищется заново после каждого урока; счётчик `image_missing`. Догрузка существующих планов —
-`php artisan plan:images-backfill` (печатает «было пусто / стало»).
+**Картинки — при генерации дня, все сразу** (DAY-UI-2 → DAY-UI-3). Урок сцены написан — сцена
+`illustrating` (на проводе `lesson_status: building`), и `IllustrateSceneJob` сразу ищет фото сцены и
+всех её слов **параллельно** (пул 6 запросов, повторы на 429/5xx) — лестница запросов (`ImageQueries`):
+`image_prompt` → «термин, тема сцены» («appointment, doctor's office»; тема — место из описания фото
+сцены или её название) → тема сцены, своя страница ответов на слово. **Никогда не голое слово**
+(«marketing» → супермаркет, телефон 14.09). Только после фото сцена `ready`: день приходит с
+картинками, `day_ready` пишется тогда же. Не нашлось — `image = null`, `image_tone` из палитры,
+счётчик `image_missing`; job сдался — день всё равно `ready` (`FinishIllustration`). Догрузка —
+`php artisan plan:images-backfill` («было пусто / стало»; `--requery` — переспросить слова, чьё фото
+нашло голое слово).
 
-**Голос сервера — только реплики роли** (канон владельца при закрытии DAY-UI-2): `SpeakSceneLinesJob`
-озвучивает реплику собеседника каждого обмена (`RoleLineQueue`), строки в `plan_line_audios` по ссылке
-единицы (`x3`). Фразы ученика и слова — голос телефона. Лимит вендора — 10 запросов в минуту и 100 в
-сутки: job повторяется раз в минуту до получаса. Недостающие реплики роли существующих сцен —
-`php artisan plan:speak-backfill` (печатает, сколько реплик роли не озвучено, до и после; `--count` —
-только посчитать).
+**Голос сервера — всё, двумя голосами** (канон владельца, DAY-UI-3; отменяет «только реплики роли»
+DAY-UI-2): озвучены реплики собеседника (`x3`) и ученика (`x3b`), фразы (`p2`) и слова (`v5`). У сцены
+два голоса разного пола: пол собеседника — `role_gender` урока (`lesson-v4`), по умолчанию собеседник
+женский, ученик мужской; голос ученика читает и его реплики, и фразы, и слова
+(`plan_scenes.partner_voice_gender`). `VoiceSceneJob` ставится вместе с фото и **день не ждёт**: диалог —
+**один** вызов Gemini TTS с двумя говорящими, разрезанный по паузам (`PcmTurnCutter`), фразы — один
+вызов, слова — один (≤ 4 вызовов на день). 429 поминутный — job ждёт минуту, суточный — до окна
+вендора (`RetryInfo.retryDelay`), не падает; телефон тем временем читает своим голосом. Недостающее
+существующих сцен — `php artisan plan:speak-backfill` (печатает «не озвучено» по видам до и после;
+`--count` — только посчитать; на суточном лимите останавливается и говорит, когда окно).
 
 Карточка (`PlanCard`): `stage`, `position`, `kind`, `source` (`today`/`returned`), `unit_kind` /
 `unit_ref`, `payload`, `retry_of`, `result`, `attempts`, `returns`. Состав `payload` по видам

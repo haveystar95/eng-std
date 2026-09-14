@@ -13,16 +13,19 @@ use App\Modules\Plan\Application\Command\FillMissingImagesHandler;
 use App\Modules\Plan\Application\Dto\MissingImageCounts;
 use App\Modules\Plan\Application\Dto\SceneImageBackfillReport;
 use App\Modules\Plan\Application\Port\SceneLocator;
+use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Console\Command;
 
 /**
- * `plan:images-backfill {--plan=}` — the photos existing plans still lack, and what scene photos
- * stored before PLAN-UI-3 lack. Two steps, both idempotent and safe to run again after a rate limit:
+ * `plan:images-backfill {--plan=} {--requery}` — the photos existing plans still lack, and what scene
+ * photos stored before PLAN-UI-3 lack. Two steps, both idempotent and safe to run again after a rate
+ * limit:
  *
- * 1. (DAY-UI-2) every scene, word and chunk without a photo is asked the search ladder
- *    (`FillMissingImagesHandler`), and the run prints «было пусто / стало»;
+ * 1. (DAY-UI-2, the DAY-UI-3 ladder) every scene, word and chunk without a photo is asked the search
+ *    ladder (`FillMissingImagesHandler`), and the run prints «было пусто / стало»; with `--requery`
+ *    the words whose photo the bare word found are asked again and a new answer replaces the photo;
  * 2. (PLAN-UI-3) scene photos get their tone and their two square copies.
  *
  * Every vendor call is labelled `images` in the outbound log. Writes photo columns of
@@ -31,7 +34,7 @@ use Illuminate\Console\Command;
  */
 final class PlanImagesBackfillCommand extends Command
 {
-    protected $signature = 'plan:images-backfill {--plan= : only this plan id}';
+    protected $signature = 'plan:images-backfill {--plan= : only this plan id} {--requery : re-ask the words whose photo the bare word found}';
 
     protected $description = 'Find the photos plans still lack (the search ladder), then fill scene photo tones and pre-fetch their 112/448 square copies';
 
@@ -39,6 +42,7 @@ final class PlanImagesBackfillCommand extends Command
         FillMissingImagesHandler $fill,
         BackfillSceneImagesHandler $handler,
         SceneLocator $scenes,
+        PlanTermRepository $terms,
         OutboundCallContext $context,
     ): int {
         $option = $this->option('plan');
@@ -48,15 +52,20 @@ final class PlanImagesBackfillCommand extends Command
             return self::FAILURE;
         }
         $plan = is_string($option) && $option !== '' ? PlanId::fromString($option) : null;
+        $requery = $this->option('requery') === true;
 
         $before = $scenes->missingImageCounts($plan);
+        $bare = $requery ? array_sum(array_map('count', $terms->photographedWithoutPrompt($plan))) : 0;
         try {
-            $context->run('images', null, fn () => $fill(new FillMissingImages($plan)));
+            $context->run('images', null, fn () => $fill(new FillMissingImages($plan, $requery)));
         } catch (TransientImageSearchError $e) {
             $this->warn('The photo search stopped on a vendor limit — run the command again later: '.$e->getMessage());
         }
         $after = $scenes->missingImageCounts($plan);
         $this->info('Without a photo — before: '.self::counts($before).' · after: '.self::counts($after));
+        if ($requery) {
+            $this->info("Words and chunks photographed by the bare word, asked the new ladder: {$bare}");
+        }
 
         /** @var SceneImageBackfillReport $report */
         $report = $context->run('images', null, fn (): SceneImageBackfillReport => $handler(new BackfillSceneImages($plan)));

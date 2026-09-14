@@ -24,6 +24,7 @@ use App\Modules\Plan\Domain\ValueObject\SceneKind;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use DateTimeImmutable;
 use DateTimeInterface;
 
@@ -114,6 +115,7 @@ final class PlanMapper
             failReason: $row->fail_reason,
             buildStartedAt: self::instant($row->build_started_at),
             generatedAt: self::instant($row->generated_at),
+            partnerVoiceGender: VoiceGender::tryFromAny($row->partner_voice_gender),
         );
     }
 
@@ -222,6 +224,7 @@ final class PlanMapper
             'fail_reason' => $scene->failReason(),
             'build_started_at' => $scene->buildStartedAt()?->format(DATE_ATOM),
             'generated_at' => $scene->generatedAt()?->format(DATE_ATOM),
+            'partner_voice_gender' => $scene->partnerVoiceGender()?->value,
         ];
     }
 

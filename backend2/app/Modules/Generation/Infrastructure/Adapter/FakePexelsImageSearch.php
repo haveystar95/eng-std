@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Infrastructure\Adapter;
 
 use App\Modules\Generation\Application\Dto\ImageResult;
+use App\Modules\Generation\Application\Dto\ImageSearchQuery;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Application\Port\TransientImageSearchError;
 
@@ -44,6 +45,29 @@ final class FakePexelsImageSearch implements ImageSearchPort
                 avgColor: '#' . strtoupper(substr(md5($q), 0, 6)),
             ),
         };
+    }
+
+    /** @var list<ImageSearchQuery> every query asked in a batch, in order — what the ladder tests read */
+    public array $asked = [];
+
+    /** Batches asked — the parallel photo job asks one per rung of its ladder. */
+    public int $batches = 0;
+
+    public function searchMany(array $queries, int $concurrency = 6): array
+    {
+        $this->batches++;
+
+        return array_map(function (ImageSearchQuery $q): ?ImageResult {
+            $this->asked[] = $q;
+            $found = $this->search($q->query);
+
+            return $found === null || $q->page <= 1 ? $found : new ImageResult(
+                url: str_replace('.jpg', "-p{$q->page}.jpg", $found->url),
+                author: $found->author,
+                authorUrl: $found->authorUrl,
+                avgColor: $found->avgColor,
+            );
+        }, $queries);
     }
 
     public function photo(string $photoId): ?ImageResult

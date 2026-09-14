@@ -89,6 +89,8 @@ final class PlanSchemas
                 'role_target' => $string,
                 'role_native' => $string,
             ]),
+            // `lesson-v4` (DAY-UI-3): the gender of speaker A — which of the pack's voices reads the role.
+            'role_gender' => ['type' => 'string', 'enum' => ['female', 'male']],
             'dialogue' => [
                 'type' => 'array',
                 'items' => self::object([

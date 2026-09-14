@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Infrastructure\Adapter;
 
+use App\Modules\Generation\Application\Dto\ImageResult;
+use App\Modules\Generation\Application\Dto\ImageSearchQuery;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Application\Port\TransientImageSearchError;
 use App\Modules\Plan\Application\Port\PlanImageFinder;
 use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\ImageQuery;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -21,6 +24,9 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class PexelsPlanImageFinder implements PlanImageFinder
 {
+    /** «Параллельно (пул 6)» — six requests on the wire at once, the rest wait their turn. */
+    public const PARALLEL = 6;
+
     public function __construct(private ImageSearchPort $images) {}
 
     public function find(string $prompt): ?Image
@@ -28,6 +34,19 @@ final readonly class PexelsPlanImageFinder implements PlanImageFinder
         $found = $this->images->search($prompt);
 
         return $found === null ? null : new Image($found->url, $found->author, $found->authorUrl, $found->avgColor);
+    }
+
+    public function findMany(array $queries): array
+    {
+        $found = $this->images->searchMany(
+            array_map(static fn (ImageQuery $q): ImageSearchQuery => new ImageSearchQuery($q->text, $q->page), $queries),
+            self::PARALLEL,
+        );
+
+        return array_map(
+            static fn (?ImageResult $r): ?Image => $r === null ? null : new Image($r->url, $r->author, $r->authorUrl, $r->avgColor),
+            $found,
+        );
     }
 
     public function tone(string $imageUrl): ?string

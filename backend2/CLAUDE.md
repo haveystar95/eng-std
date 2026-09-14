@@ -30,7 +30,7 @@ Then, depending on the task:
 | `Learning` | progress, SRS scheduling, sessions, reviews, statistics |
 | `Generation` | AI collection generation: requests, prompts, quotas, cost |
 | `Observability` | API request/response log — inbound requests + outbound (external) calls, with secret redaction |
-| `Plan` | the learning plan: plans, scenes (the model's briefs and lessons), the calendar of days, dealt cards, plan terms, partner-line audio, check counters. Two frozen prompt files, code-only checks, deterministic day assembly — canon `docs/plan-v2.md`, contract `docs/plan-api.md` |
+| `Plan` | the learning plan: plans, scenes (the model's briefs and lessons), the calendar of days, dealt cards, plan terms, the spoken audio of a day (both speakers, phrases, words), check counters. Two frozen prompt files, code-only checks, deterministic day assembly — canon `docs/plan-v2.md`, contract `docs/plan-api.md` |
 | `Admin` | back-office panel API (`/admin/api/*`): separate admin auth, read-only projections across all data, the day-plan simulator, and the tier mutation with an audit log. Reads other modules as reporting projections; owns only `admins` + `admin_audit_log` |
 
 Details per module: `app/Modules/<Context>/README.md`. Boundaries: `deptrac.yaml`.

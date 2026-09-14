@@ -23,7 +23,7 @@ it('builds the plan and day one at creation, and reports the versions on every a
         ->and($build['attempts'])->toBe(1)
         ->and($build['cost_usd'])->toBe('0.000000')
         ->and($build['versions']['prompt_plan'])->toBe('plan-builder-v2')
-        ->and($build['versions']['prompt_lesson'])->toBe('lesson-v3')
+        ->and($build['versions']['prompt_lesson'])->toBe('lesson-v4')
         ->and($build['versions']['build'])->not->toBe('');
 
     $plan = planRead($this, $token, $build['id']);
@@ -43,7 +43,7 @@ it('builds the plan and day one at creation, and reports the versions on every a
     $row = DB::table('plans')->where('id', $build['id'])->first();
     expect($row->prompt_version_plan)->toBe('plan-builder-v2')
         ->and($row->build_version)->not->toBeNull()
-        ->and(DB::table('plan_scenes')->where('plan_id', $build['id'])->where('lesson_status', 'ready')->value('prompt_version_lesson'))->toBe('lesson-v3')
+        ->and(DB::table('plan_scenes')->where('plan_id', $build['id'])->where('lesson_status', 'ready')->value('prompt_version_lesson'))->toBe('lesson-v4')
         ->and(DB::table('plan_terms')->where('user_id', $user->id)->count())->toBe(14);
 
     $versions = $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/plans/versions')->assertOk()->json('data');
@@ -320,7 +320,7 @@ it('counts a check in observe and shows the counters to the admin by prompt vers
 
     [, $admin] = adminActor();
     $rows = $this->withHeader('Authorization', "Bearer {$admin}")->getJson('/admin/api/plans/checks')->assertOk()->json('data');
-    expect($rows)->toBe([['prompt_version' => 'lesson-v3', 'check' => 'speaking_key_substring', 'action' => 'counted', 'hits' => 1]]);
+    expect($rows)->toBe([['prompt_version' => 'lesson-v4', 'check' => 'speaking_key_substring', 'action' => 'counted', 'hits' => 1]]);
 
     $checks = DB::table('plan_scenes')->where('plan_id', $build['id'])->value('checks_json');
     expect(json_decode((string) $checks, true)[0]['check'])->toBe('speaking_key_substring');

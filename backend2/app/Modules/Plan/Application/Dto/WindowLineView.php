@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Dto;
 
 /**
- * One bubble. The partner's carries its voice and no state; the learner's carries its state and no
- * voice — the marker stands at the learner's line, «прослушать» at the partner's.
+ * One bubble. Both carry their voice (DAY-UI-3: every line is voiced, in its speaker's voice); the
+ * learner's also carries its state — the marker stands at the learner's line.
  */
 final readonly class WindowLineView
 {

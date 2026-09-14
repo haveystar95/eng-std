@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Repository;
 
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 
@@ -28,4 +29,18 @@ interface PlanTermRepository
 
     /** The ladder found nothing: the tone the card is painted with, only while it has no photo. */
     public function markImageMissing(PlanTermId $id, string $tone): void;
+
+    /**
+     * The term's photo written OVER the one it has — only for the backfill's re-ask of the photos the
+     * bare word found before DAY-UI-3 («marketing» → a supermarket). Nothing else rewrites a photo.
+     */
+    public function replaceImage(PlanTermId $id, Image $image): void;
+
+    /**
+     * The words and chunks of the plans that are not deleted whose photo was asked by the bare word —
+     * no description of their own — for that re-ask (DAY-UI-3). Keyed by scene id.
+     *
+     * @return array<string, list<PlanTerm>>
+     */
+    public function photographedWithoutPrompt(?PlanId $planId): array;
 }

@@ -24,6 +24,7 @@ use App\Modules\Plan\Application\Dto\WindowPairView;
 use App\Modules\Plan\Application\Dto\WindowPhraseView;
 use App\Modules\Plan\Application\Dto\WindowStageView;
 use App\Modules\Plan\Application\Dto\WindowSummaryView;
+use App\Modules\Plan\Application\Dto\WindowUsageView;
 use App\Modules\Plan\Application\Dto\WindowWordView;
 use App\Modules\Plan\Domain\ValueObject\SceneImageSize;
 
@@ -219,8 +220,8 @@ final class PlanJson
     }
 
     /**
-     * «Окно дня» (DAY-UI-2). Counts, minutes and shares are the server's; the voice of a line is an
-     * absolute address built from the request, like the photo crops.
+     * «Окно дня» (DAY-UI-2, DAY-UI-3). Counts, minutes and shares are the server's; the voice of a
+     * line, a phrase or a word is an absolute address built from the request, like the photo crops.
      *
      * @return array<string, mixed>
      */
@@ -231,7 +232,15 @@ final class PlanJson
         $line = static fn (?WindowLineView $l): ?array => $l === null ? null : [
             'text' => $l->text,
             'translation' => $l->translation,
-            ...($l->state === null ? ['audio_url' => $audio($l->audioId)] : ['state' => $l->state]),
+            'audio_url' => $audio($l->audioId),
+            ...($l->state === null ? [] : ['state' => $l->state]),
+        ];
+        $usage = static fn (?WindowUsageView $u): ?array => $u === null ? null : [
+            'text' => $u->text,
+            'translation' => $u->translation,
+            'offset' => $u->offset,
+            'length' => $u->length,
+            'audio_url' => $audio($u->audioId),
         ];
         $scene = $w->day->scene;
 
@@ -264,9 +273,14 @@ final class PlanJson
                         'ref' => $v->ref,
                         'term' => $v->term,
                         'translation' => $v->translation,
+                        'pronunciation' => $v->pronunciation,
+                        'definition' => $v->definition,
                         'image' => $v->image,
                         'image_tone' => $v->imageTone,
+                        'audio_url' => $audio($v->audioId),
+                        'usage' => $usage($v->usage),
                         'state' => $v->state,
+                        'returns_day' => $v->returnsDay,
                     ], $w->program->words),
                 ],
                 'phrases' => [
@@ -275,6 +289,8 @@ final class PlanJson
                         'ref' => $v->ref,
                         'text' => $v->text,
                         'translation' => $v->translation,
+                        'pronunciation' => $v->pronunciation,
+                        'audio_url' => $audio($v->audioId),
                         'state' => $v->state,
                     ], $w->program->phrases),
                 ],
