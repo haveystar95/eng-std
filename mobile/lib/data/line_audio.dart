@@ -352,6 +352,8 @@ class LineAudioCache {
     }
     try {
       await _channel.invokeMethod<void>('play', {'path': path});
+      // Какой файл прозвучал — видно в логе устройства: живой прогон иначе не отличит голос сервера от телефона.
+      debugPrint('[line-audio] play «$text» ${p.basename(path)}');
 
       return true;
     } on PlatformException catch (e) {
