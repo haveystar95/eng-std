@@ -79,42 +79,13 @@ class PlanStageMark extends StatelessWidget {
       child: Icon(LucideIcons.check, size: window ? 6 : 7, color: AppColors.paper),
     );
 
-    final glyph = SizedBox(
+    return SizedBox(
       width: 20,
       height: 20,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Opacity(
-            opacity: opacity,
-            child: SvgPicture.asset(
-              kind.asset,
-              width: 20,
-              height: 20,
-              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-            ),
-          ),
-          // «Aa» ВНУТРИ РАМКИ ЭТАПА «СЛОВА» — буквами Inter, а не контуром в svg: `<text>` в svg
-          // рисуется чужим шрифтом и в снимок попадает по-разному, а рамка без букв читается как
-          // пустая карточка. В файле остаётся рамка, буквы ставит этот виджет.
-          if (kind == PlanStageMarkKind.words)
-            Positioned.fill(
-              child: Opacity(
-                opacity: opacity,
-                child: Center(
-                  child: Text(
-                    'Aa',
-                    style: TextStyle(
-                      fontFamily: AppFonts.inter,
-                      fontSize: 7.5,
-                      fontWeight: FontWeight.w600,
-                      height: 1,
-                      color: color,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          Opacity(opacity: opacity, child: PlanStageGlyph(kind: kind, color: color)),
           // ГАЛКА-БЕЙДЖ 10 у пройденного (21-3, 21-4): шалфейный кружок 10 с галкой 6 бумагой —
           // не просто галка поверх значка, иначе она теряется на самом рисунке.
           if (state == PlanStageMarkState.done)
@@ -126,9 +97,44 @@ class PlanStageMark extends StatelessWidget {
         ],
       ),
     );
-
-    return glyph;
   }
+}
+
+/// РИСУНОК ЭТАПА ЛЮБОГО РАЗМЕРА ОДНИМ ЦВЕТОМ — 20 в ряду этапа, 16 в сегменте пилюли вкладок окна
+/// (23-0d: «Aa · ff · пузыри»). «Aa» внутри рамки «Слов» — буквами Inter, а не svg-текстом: `<text>`
+/// в svg рисуется чужим шрифтом и в снимок попадает по-разному.
+class PlanStageGlyph extends StatelessWidget {
+  const PlanStageGlyph({super.key, required this.kind, required this.color, this.size = 20});
+
+  final PlanStageMarkKind kind;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: size,
+    height: size,
+    child: Stack(
+      children: [
+        SvgPicture.asset(kind.asset, width: size, height: size, colorFilter: ColorFilter.mode(color, BlendMode.srcIn)),
+        if (kind == PlanStageMarkKind.words)
+          Positioned.fill(
+            child: Center(
+              child: Text(
+                'Aa',
+                style: TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 7.5 * size / 20,
+                  fontWeight: FontWeight.w600,
+                  height: 1,
+                  color: color,
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
 }
 
 /// ГАЛКА ПОЯВЛЯЕТСЯ — `@keyframes om-check-pop` канвы: масштаб 0 → 1 за 180 мс с задержкой 300,

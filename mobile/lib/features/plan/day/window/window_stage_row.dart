@@ -10,7 +10,7 @@ import 'window_bits.dart';
 import 'window_texts.dart';
 
 /// РЯД ЭТАПА НА ПЛИТЕ ОКНА (кадры 23-0a…0c): значок 20 · 12 · слово · состояние словами · цифра —
-/// только у текущего — и полоса 4 под ним. Запертый ряд серый, текущий — 600 и латунное «идёт».
+/// только у текущего — и через 8 полоса 3 под ним. Запертый ряд серый, текущий — 600 и латунное «идёт».
 class WindowStageRow extends StatelessWidget {
   const WindowStageRow({super.key, required this.stage, this.popCheck = false});
 
@@ -71,7 +71,7 @@ class WindowStageRow extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        WindowBar(share: stage.share, track: AppColors.windowPaperLine, fill: AppColors.windowDoneBar),
+        WindowBar(share: stage.share, track: AppColors.windowPaperLine, fill: AppColors.windowDoneBar, height: 3),
       ],
     );
   }

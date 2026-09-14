@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 
-import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
-import 'package:eng_std/ui/ui.dart';
 
 import '../../../../data/plan/day_window.dart';
 import 'window_bits.dart';
 
-/// Сказать строку: текст и чья она — реплика собеседника звучит голосом сервера, если файл докачан,
-/// фраза ученика — голосом телефона.
-typedef WindowListen = void Function(String text, {required bool partner});
-
-/// ВКЛАДКА «ФРАЗЫ» (кадр 23-0d): маркер 14 у левой кромки, карточка бумаги со скруглением 16 —
-/// фраза Literata 17, перевод второй строкой и «прослушать» 28 справа (голос телефона).
+/// ВКЛАДКА «ФРАЗЫ» (кадр 23-0d): маркер 14 у левой кромки, через 12 карточка бумаги со скруглением 16 и
+/// полями 14 — фраза Literata 22, через 4 чтение кириллицей 13, через 4 перевод 15; справа «прослушать» 28
+/// голосом ученика сцены (DAY-UI-3: у фраз есть голос сервера; нет файла — читает телефон).
 class WindowPhrases extends StatelessWidget {
   const WindowPhrases({super.key, required this.phrases, required this.onListen});
 
@@ -41,11 +36,10 @@ class _PhraseRow extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Padding(padding: const EdgeInsets.only(top: 19), child: WindowUnitMarker(state: phrase.state)),
+      Padding(padding: const EdgeInsets.only(top: 21), child: WindowUnitMarker(state: phrase.state)),
       const SizedBox(width: 12),
       Expanded(
         child: Container(
-          constraints: const BoxConstraints(minHeight: 102),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16)),
           child: Row(
@@ -56,17 +50,17 @@ class _PhraseRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(phrase.text, style: AppTextWindow.target),
-                    const SizedBox(height: 6),
+                    if (phrase.pronunciation case final reading?) ...[
+                      const SizedBox(height: 4),
+                      Text(reading, style: AppTextWindow.reading),
+                    ],
+                    const SizedBox(height: 4),
                     Text(phrase.translation, style: AppTextWindow.translation),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              PlayCircle(
-                size: 28,
-                label: AppLocalizations.of(context).planWindowListen,
-                onTap: () => onListen(phrase.text, partner: false),
-              ),
+              WindowListenButton(onTap: () => onListen(phrase.text, phrase.audioUrl)),
             ],
           ),
         ),

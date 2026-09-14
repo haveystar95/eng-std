@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -14,24 +14,27 @@ import 'window_bits.dart';
 import 'window_compact_header.dart';
 import 'window_dialogue.dart';
 import 'window_phrases.dart';
+import 'window_pill.dart';
 import 'window_plate.dart';
-import 'window_tabs.dart';
 import 'window_texts.dart';
 import 'window_words.dart';
 
-/// ЛЕНТА ОКНА ДНЯ — одна: плита, под ней вкладки и их содержимое (наряд DAY-UI-2, «Прокрутка»).
+/// ЛЕНТА ОКНА ДНЯ — одна (DAY-UI-3, «Тайминг · серия 23»).
 ///
-/// Плита и вкладки — одна прижатая шапка ленты. По прокрутке плита уезжает вверх, а когда от неё
-/// остаётся полоса шапки, на её место за 240 мс ease-out встаёт компактная строка 56; вкладки
-/// доезжают под неё и примагничиваются тенью за 160 мс. Отпущенная на полпути лента доводится до
-/// одного из двух положений тем же движением 240 мс — в сторону, куда её тянули, — поэтому тяга
-/// вниз с верха вкладки возвращает плиту целиком. У каждой вкладки своя прокрутка, и она
-/// помнится при смене вкладки тапом или свайпом.
+/// Плита, пилюля и компактная шапка — прижатая шапка ленты, и всё, что в ней движется, — ФУНКЦИЯ
+/// ПОЗИЦИИ ПРОКРУТКИ, а не анимация: плита едет вверх вместе с лентой, пилюля стоит на её шве и едет с
+/// ней, пока не встанет под строкой 56, а сама строка проявляется на последних 160 px пути плиты
+/// ([WindowHeaderMath.progress]). Отпущенная на полпути лента доводится ОДНИМ `animateTo` — 260 мс
+/// ease-out-cubic к тому краю, куда её тянули, — и шапка просто следует за позицией. Ни контроллера
+/// сжатия, ни порогов: в DAY-UI-2 сжатие и доводка были двумя анимациями одной вещи, и они спорили.
+///
+/// У каждой вкладки своя прокрутка, и она помнится при смене вкладки тапом или свайпом.
 class WindowScroll extends StatefulWidget {
   const WindowScroll({
     super.key,
     required this.window,
     required this.onListen,
+    required this.onOpenWord,
     required this.bottomCover,
     this.onBack,
     this.poppedStages = const {},
@@ -39,6 +42,7 @@ class WindowScroll extends StatefulWidget {
 
   final DayWindow window;
   final WindowListen onListen;
+  final ValueChanged<WindowWord> onOpenWord;
 
   /// Сколько снизу закрывает кнопка — лента оставляет столько пустым под последней строкой.
   final double bottomCover;
@@ -49,59 +53,58 @@ class WindowScroll extends StatefulWidget {
   State<WindowScroll> createState() => _WindowScrollState();
 }
 
-class _WindowScrollState extends State<WindowScroll> with TickerProviderStateMixin {
+/// ГЕОМЕТРИЯ ШАПКИ — чистые функции позиции, их проверяет канон («плита — функция прокрутки»).
+abstract final class WindowHeaderMath {
+  /// Насколько плита перешла в компактную шапку, 0…1: линейно по позиции на последних
+  /// `windowPlateToHeaderSpan` px пути. [shrink] — сколько шапка уже уехала, [range] — весь её путь.
+  static double progress(double shrink, double range) {
+    if (range <= 0) return 1;
+    final span = math.min(AppMotion.windowPlateToHeaderSpan, range);
+
+    return ((shrink - (range - span)) / span).clamp(0.0, 1.0);
+  }
+
+  /// Куда доводится лента, отпущенная между плитой и шапкой: туда, куда тянули; без направления — к
+  /// ближнему краю. Null — лента уже на краю, доводить нечего.
+  static double? snapTarget(double offset, double range, ScrollDirection direction) {
+    if (offset <= 0 || offset >= range) return null;
+
+    return switch (direction) {
+      ScrollDirection.reverse => range,
+      ScrollDirection.forward => 0,
+      ScrollDirection.idle => offset >= range / 2 ? range : 0,
+    };
+  }
+}
+
+class _WindowScrollState extends State<WindowScroll> with SingleTickerProviderStateMixin {
   final _outer = ScrollController();
   late final TabController _tabs = TabController(
     length: WindowTab.values.length,
     vsync: this,
-    animationDuration: AppMotion.windowTabSwitch,
+    animationDuration: AppMotion.windowTabContent,
   );
-  late final AnimationController _collapse = AnimationController(vsync: this, duration: AppMotion.windowPlateCollapse);
-  late final Animation<double> _collapseCurve = CurvedAnimation(parent: _collapse, curve: AppMotion.easeOut);
 
   double? _plateHeight;
   ScrollDirection _direction = ScrollDirection.idle;
   bool _snapping = false;
 
-  /// Бумага между плитой и вкладками: отступ 24 минус заход плиты 6.
-  static const _gap = 24.0 - WindowPlate.overlap;
-
-  /// Компактная строка встаёт, когда лента прошла эту долю пути плиты, и уходит ниже второй.
-  static const _collapseAt = .85;
-  static const _expandAt = .6;
-
-  @override
-  void initState() {
-    super.initState();
-    _outer.addListener(_onScroll);
-  }
-
   @override
   void dispose() {
     _outer.dispose();
     _tabs.dispose();
-    _collapse.dispose();
     super.dispose();
   }
 
-  double get _compactExtent => MediaQuery.paddingOf(context).top + WindowCompactHeader.height;
+  /// Прижатая шапка: статус-бар, строка 56 и под ней пилюля.
+  double get _minExtent => MediaQuery.paddingOf(context).top + WindowCompactHeader.height + WindowPill.height;
 
-  double _range(double plate) => math.max(0, plate + _gap - _compactExtent);
+  /// Развёрнутая шапка: плита и нижняя половина пилюли под её швом.
+  double _maxExtent(double plate) => math.max(plate + WindowPlate.pillOverlap, _minExtent);
+
+  double _range(double plate) => _maxExtent(plate) - _minExtent;
 
   bool get _reduce => MediaQuery.of(context).disableAnimations;
-
-  void _onScroll() {
-    final plate = _plateHeight;
-    if (plate == null || !_outer.hasClients) return;
-    final range = _range(plate);
-    final t = range == 0 ? 1.0 : (_outer.offset / range).clamp(0.0, 1.0);
-    final collapsing = _collapse.status == AnimationStatus.forward || _collapse.status == AnimationStatus.completed;
-    if (t >= _collapseAt && !collapsing) {
-      _reduce ? _collapse.value = 1 : _collapse.forward();
-    } else if (t <= _expandAt && collapsing) {
-      _reduce ? _collapse.value = 0 : _collapse.reverse();
-    }
-  }
 
   bool _onNotification(ScrollNotification n) {
     // Свайп страниц вкладок — горизонтальная лента; доводку плиты решает только вертикаль.
@@ -109,7 +112,7 @@ class _WindowScrollState extends State<WindowScroll> with TickerProviderStateMix
     if (n is UserScrollNotification && n.direction != ScrollDirection.idle) _direction = n.direction;
     // Доводка — после кадра, в котором закончили движение и внешняя лента, и лента вкладки (у каждой
     // свой конец движения), и кадр заказывается явно: после медленно отпущенной ленты других кадров
-    // нет, и доводка ждала бы случайного (живой прогон 14.09 — плита торчала из-под шапки).
+    // нет, и доводка ждала бы случайного (живой прогон DAY-UI-2 — плита торчала из-под шапки).
     if (n is ScrollEndNotification && !_snapping) {
       WidgetsBinding.instance
         ..addPostFrameCallback((_) => _snap())
@@ -119,30 +122,23 @@ class _WindowScrollState extends State<WindowScroll> with TickerProviderStateMix
     return false;
   }
 
-  /// Лента не останавливается между плитой и шапкой: её доводит туда, куда тянули.
   void _snap() {
     final plate = _plateHeight;
     if (!mounted || plate == null || !_outer.hasClients) return;
-    final range = _range(plate);
-    final offset = _outer.offset;
-    if (offset <= 0 || offset >= range) return;
-    final collapse = switch (_direction) {
-      ScrollDirection.reverse => true,
-      ScrollDirection.forward => false,
-      ScrollDirection.idle => offset >= range / 2,
-    };
-    final target = collapse ? range : 0.0;
+    final target = WindowHeaderMath.snapTarget(_outer.offset, _range(plate), _direction);
+    if (target == null) return;
     if (_reduce) {
       _outer.jumpTo(target);
-    } else {
-      // Конец самой доводки — тоже конец движения; второй доводки он не заказывает.
-      _snapping = true;
-      unawaited(
-        _outer
-            .animateTo(target, duration: AppMotion.windowPlateCollapse, curve: AppMotion.easeOut)
-            .whenComplete(() => _snapping = false),
-      );
+
+      return;
     }
+    // Конец самой доводки — тоже конец движения; второй доводки он не заказывает.
+    _snapping = true;
+    unawaited(
+      _outer
+          .animateTo(target, duration: AppMotion.windowSnap, curve: AppMotion.windowEaseOutCubic)
+          .whenComplete(() => _snapping = false),
+    );
   }
 
   void _measured(double height) {
@@ -156,62 +152,54 @@ class _WindowScrollState extends State<WindowScroll> with TickerProviderStateMix
     final plateHeight = _plateHeight;
     final plate = WindowPlate(window: widget.window, onBack: widget.onBack, poppedStages: widget.poppedStages);
 
-    return AnimatedBuilder(
-      animation: _collapseCurve,
-      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
-        value: _collapseCurve.value < .5 ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-        child: child!,
-      ),
-      child: Stack(
-        children: [
-          // Высота плиты зависит от названия, целей и этапов — её меряет невидимая копия.
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            child: Offstage(child: _Measure(onHeight: _measured, child: plate)),
-          ),
-          if (plateHeight != null)
-            NotificationListener<ScrollNotification>(
-              onNotification: _onNotification,
-              child: NestedScrollView(
-                controller: _outer,
-                headerSliverBuilder: (context, _) => [
-                  SliverOverlapAbsorber(
-                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                    sliver: SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _Header(
-                        max: plateHeight + _gap + WindowTabBar.height,
-                        min: _compactExtent + WindowTabBar.height,
-                        plate: plate,
-                        compact: WindowCompactHeader(window: widget.window),
-                        collapse: _collapseCurve,
-                        tabs: _tabs,
-                      ),
+    return Stack(
+      children: [
+        // Высота плиты зависит от названия, целей и этапов — её меряет невидимая копия.
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          child: Offstage(child: _Measure(onHeight: _measured, child: plate)),
+        ),
+        if (plateHeight != null)
+          NotificationListener<ScrollNotification>(
+            onNotification: _onNotification,
+            child: NestedScrollView(
+              controller: _outer,
+              headerSliverBuilder: (context, _) => [
+                SliverOverlapAbsorber(
+                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                  sliver: SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _Header(
+                      max: _maxExtent(plateHeight),
+                      min: _minExtent,
+                      plate: plate,
+                      compact: WindowCompactHeader(window: widget.window),
+                      tabs: _tabs,
                     ),
                   ),
-                ],
-                body: TabBarView(
-                  controller: _tabs,
-                  children: [
-                    for (final tab in WindowTab.values)
-                      _Page(
-                        tab: tab,
-                        brow: WindowTexts.brow(l, tab, _summaryOf(tab)),
-                        bottom: widget.bottomCover,
-                        child: switch (tab) {
-                          WindowTab.words => WindowWords(words: widget.window.program.words),
-                          WindowTab.phrases => WindowPhrases(phrases: widget.window.program.phrases, onListen: widget.onListen),
-                          WindowTab.dialogue => WindowDialogue(pairs: widget.window.program.dialogue, onListen: widget.onListen),
-                        },
-                      ),
-                  ],
                 ),
+              ],
+              body: TabBarView(
+                controller: _tabs,
+                children: [
+                  for (final tab in WindowTab.values)
+                    _Page(
+                      tab: tab,
+                      brow: WindowTexts.brow(l, tab, _summaryOf(tab)),
+                      bottom: widget.bottomCover,
+                      child: switch (tab) {
+                        WindowTab.words => WindowWords(words: widget.window.program.words, onListen: widget.onListen, onOpen: widget.onOpenWord),
+                        WindowTab.phrases => WindowPhrases(phrases: widget.window.program.phrases, onListen: widget.onListen),
+                        WindowTab.dialogue => WindowDialogue(pairs: widget.window.program.dialogue, onListen: widget.onListen),
+                      },
+                    ),
+                ],
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
@@ -222,23 +210,17 @@ class _WindowScrollState extends State<WindowScroll> with TickerProviderStateMix
   };
 }
 
-/// Прижатая шапка ленты: плита, уезжающая вверх; компактная строка, встающая на её место; вкладки
-/// у нижнего края.
+/// Прижатая шапка ленты. Всё в ней — функция [shrinkOffset]: плита сдвинута на него вверх, компактная
+/// строка проявлена на [WindowHeaderMath.progress], пилюля стоит у нижнего края шапки (на шве плиты,
+/// пока плита видна, и под строкой 56, когда шапка прижата), статус-бар светлый над тёмным и тёмный над
+/// бумагой.
 class _Header extends SliverPersistentHeaderDelegate {
-  _Header({
-    required this.max,
-    required this.min,
-    required this.plate,
-    required this.compact,
-    required this.collapse,
-    required this.tabs,
-  });
+  _Header({required this.max, required this.min, required this.plate, required this.compact, required this.tabs});
 
   final double max;
   final double min;
   final Widget plate;
   final Widget compact;
-  final Animation<double> collapse;
   final TabController tabs;
 
   @override
@@ -248,32 +230,47 @@ class _Header extends SliverPersistentHeaderDelegate {
   double get minExtent => math.min(min, max);
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => Stack(
-    children: [
-      const Positioned.fill(child: ColoredBox(color: AppColors.ground)),
-      Positioned(top: -shrinkOffset, left: 0, right: 0, child: plate),
-      Positioned(
-        top: 0,
-        left: 0,
-        right: 0,
-        child: IgnorePointer(child: FadeTransition(opacity: collapse, child: compact)),
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final t = WindowHeaderMath.progress(shrinkOffset, maxExtent - minExtent);
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: t < .5 ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: Stack(
+        children: [
+          const Positioned.fill(child: ColoredBox(color: AppColors.ground)),
+          Positioned(top: -shrinkOffset, left: 0, right: 0, child: plate),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: minExtent,
+            child: IgnorePointer(
+              child: Opacity(
+                key: const ValueKey('window-compact'),
+                opacity: t,
+                child: ColoredBox(color: AppColors.ground, child: Align(alignment: Alignment.topCenter, child: compact)),
+              ),
+            ),
+          ),
+          Positioned(
+            left: WindowPill.inset,
+            right: WindowPill.inset,
+            bottom: 0,
+            height: WindowPill.height,
+            child: WindowPill(controller: tabs),
+          ),
+        ],
       ),
-      Positioned(
-        left: 0,
-        right: 0,
-        bottom: 0,
-        child: WindowTabBar(controller: tabs, pinned: shrinkOffset >= maxExtent - minExtent - .5),
-      ),
-    ],
-  );
+    );
+  }
 
   @override
   bool shouldRebuild(covariant _Header old) =>
       old.max != max || old.min != min || old.plate != plate || old.compact != compact || old.tabs != tabs;
 }
 
-/// Страница вкладки: своя прокрутка (её помнит `PageStorageKey`), бровь и содержимое, которое
-/// появляется `om-cab-in`.
+/// Страница вкладки: своя прокрутка (её помнит `PageStorageKey`), 24 от пилюли до брови, бровь и
+/// через 14 содержимое.
 class _Page extends StatelessWidget {
   const _Page({required this.tab, required this.brow, required this.bottom, required this.child});
 
@@ -289,17 +286,15 @@ class _Page extends StatelessWidget {
       slivers: [
         SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(24, 14, 24, bottom + 24),
+          padding: EdgeInsets.fromLTRB(24, 24, 24, bottom + 24),
           sliver: SliverToBoxAdapter(
-            child: CabIn(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(brow.toUpperCase(), style: AppTextWindow.tabBrow),
-                  const SizedBox(height: 14),
-                  child,
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(brow.toUpperCase(), style: AppTextWindow.tabBrow),
+                const SizedBox(height: 14),
+                child,
+              ],
             ),
           ),
         ),

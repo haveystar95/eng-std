@@ -1,4 +1,4 @@
-/// «ОКНО ДНЯ» — `PlanDayRoom.window` (наряд DAY-UI-2, кадры 23-0a…0d; схема `PlanDayWindow`).
+/// «ОКНО ДНЯ» — `PlanDayRoom.window` (наряды DAY-UI-2, DAY-UI-3, кадры 23-0a…0e; схема `PlanDayWindow`).
 ///
 /// Всё, что окно рисует, СЧИТАЕТ СЕРВЕР: слово состояния дня, ряды этапов с цифрой только у
 /// текущего, минуты, полосу компактной шапки, состояния единиц программы и счётчики бровей, одно
@@ -139,6 +139,8 @@ class WindowSummary {
   final int returns;
 }
 
+/// Слово или связка — карточка сетки и её шит 23-0e. Всё, что шит пишет, пришло с сервера: как слово
+/// читается, что значит, его голос, реплика дня, где оно звучит, и день, когда оно вернётся.
 class WindowWord {
   const WindowWord({
     required this.ref,
@@ -147,6 +149,11 @@ class WindowWord {
     required this.imageTone,
     required this.state,
     this.image,
+    this.pronunciation,
+    this.definition,
+    this.audioUrl,
+    this.usage,
+    this.returnsDay,
   });
 
   final String ref;
@@ -155,24 +162,61 @@ class WindowWord {
   final PlanImage? image;
   final String imageTone;
   final WindowUnitState state;
+
+  /// Чтение кириллицей — «эпо́йнтмэнт».
+  final String? pronunciation;
+
+  /// Определение на изучаемом языке.
+  final String? definition;
+
+  /// Голос слова (голос ученика сцены); null — ещё не озвучено, читает телефон.
+  final String? audioUrl;
+
+  /// «В разговоре» — реплика дня со словом; null — слова в диалоге нет, блока нет.
+  final WindowUsage? usage;
+
+  /// «вернётся в день N» — только у `returnsTomorrow`.
+  final int? returnsDay;
 }
 
-/// Фраза ученика. Голоса сервера у неё нет: премиум-голос — реплики роли, фразу читает телефон.
+/// Реплика дня, где звучит слово: где слово стоит в ней — [offset]/[length] в символах (кодовых
+/// точках) [text] — и голос самой реплики.
+class WindowUsage {
+  const WindowUsage({
+    required this.text,
+    required this.translation,
+    required this.offset,
+    required this.length,
+    this.audioUrl,
+  });
+
+  final String text;
+  final String translation;
+  final int offset;
+  final int length;
+  final String? audioUrl;
+}
+
+/// Фраза ученика: чтение и голос ученика сцены (DAY-UI-3: озвучено всё).
 class WindowPhrase {
   const WindowPhrase({
     required this.ref,
     required this.text,
     required this.translation,
     required this.state,
+    this.pronunciation,
+    this.audioUrl,
   });
 
   final String ref;
   final String text;
   final String translation;
   final WindowUnitState state;
+  final String? pronunciation;
+  final String? audioUrl;
 }
 
-/// Пузырь реплики. У собеседника — голос и нет состояния, у ученика — состояние и нет голоса.
+/// Пузырь реплики. Голос — у обеих, каждой голосом своего говорящего; состояние — у реплики ученика.
 class WindowLine {
   const WindowLine({required this.text, required this.translation, this.audioUrl, this.state});
 
@@ -277,13 +321,30 @@ class DayWindow {
     );
   }
 
-  static WindowWord _word(Map<String, dynamic> w) => WindowWord(
-    ref: _string(w['ref'], 'word.ref'),
-    term: _string(w['term'], 'word.term'),
-    translation: _string(w['translation'], 'word.translation'),
-    image: PlanImage.fromJson(w['image'] as Map<String, dynamic>?),
-    imageTone: _string(w['image_tone'], 'word.image_tone'),
-    state: WindowUnitState.fromWire(w['state']),
+  static WindowWord _word(Map<String, dynamic> w) {
+    final usage = w['usage'];
+
+    return WindowWord(
+      ref: _string(w['ref'], 'word.ref'),
+      term: _string(w['term'], 'word.term'),
+      translation: _string(w['translation'], 'word.translation'),
+      image: PlanImage.fromJson(w['image'] as Map<String, dynamic>?),
+      imageTone: _string(w['image_tone'], 'word.image_tone'),
+      state: WindowUnitState.fromWire(w['state']),
+      pronunciation: _text(w['pronunciation']),
+      definition: _text(w['definition']),
+      audioUrl: _text(w['audio_url']),
+      usage: usage == null ? null : _usage(_map(usage, 'word.usage')),
+      returnsDay: (w['returns_day'] as num?)?.toInt(),
+    );
+  }
+
+  static WindowUsage _usage(Map<String, dynamic> u) => WindowUsage(
+    text: _string(u['text'], 'usage.text'),
+    translation: _string(u['translation'], 'usage.translation'),
+    offset: _int(u['offset'], 'usage.offset'),
+    length: _int(u['length'], 'usage.length'),
+    audioUrl: _text(u['audio_url']),
   );
 
   static WindowPhrase _phrase(Map<String, dynamic> p) => WindowPhrase(
@@ -291,6 +352,8 @@ class DayWindow {
     text: _string(p['text'], 'phrase.text'),
     translation: _string(p['translation'], 'phrase.translation'),
     state: WindowUnitState.fromWire(p['state']),
+    pronunciation: _text(p['pronunciation']),
+    audioUrl: _text(p['audio_url']),
   );
 
   static WindowPair _pair(Map<String, dynamic> d) {
@@ -311,6 +374,7 @@ class DayWindow {
           : WindowLine(
               text: _string(_map(learner, 'learner')['text'], 'learner.text'),
               translation: _string(_map(learner, 'learner')['translation'], 'learner.translation'),
+              audioUrl: _map(learner, 'learner')['audio_url'] as String?,
               state: WindowUnitState.fromWire(_map(learner, 'learner')['state']),
             ),
     );
@@ -336,6 +400,9 @@ Map<String, dynamic> _map(Object? v, String what) =>
 List<Object?> _list(Object? v, String what) => v is List ? v : throw PlanContractError('$what is missing');
 
 String _string(Object? v, String what) => v is String ? v : throw PlanContractError('$what is missing');
+
+/// Необязательный текст: пустая строка — то же, что его нет.
+String? _text(Object? v) => v is String && v.trim().isNotEmpty ? v : null;
 
 int _int(Object? v, String what) => v is num ? v.toInt() : throw PlanContractError('$what is missing');
 

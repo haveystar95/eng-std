@@ -1,11 +1,11 @@
 {
- "plan_id": "01M2FHN9Y6HRN80KSE1737ZDMZ",
- "day_id": "01M2FHN9Y7JC83Z7ZEN3MEDRPY",
+ "plan_id": "01M2GF2MKQ5FKS586K1EFCM5AZ",
+ "day_id": "01M2GF2MKVBMMM5Y92WSF45E9D",
  "number": 1,
  "status": "closed",
  "cards": [
   {
-   "id": "01M2FHWMT0H6SFKTZRGP8BHKNP",
+   "id": "01M2GF3RSSWV6HYTXZYV2GACJF",
    "stage": "words",
    "position": 1,
    "kind": "word_intro",
@@ -15,10 +15,10 @@
    "unit_ref": "v1",
    "payload": {
     "kind": "chunk",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "поясница",
     "text_target": "lower back",
-    "plan_term_id": "01M2FHPAM7PZAVC1PKAYGGSE7C",
+    "plan_term_id": "01M2GF3MQRS20FZ0GW02RZ85RE",
     "example_native": "У меня болит поясница.",
     "example_target": "My lower back hurts.",
     "definition_target": "the part of the back above the hips",
@@ -32,11 +32,11 @@
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:39+00:00",
+   "answered_at": "2026-09-14T17:23:22+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0Z1KJ9EH5QMJWGC61",
+   "id": "01M2GF3RSSF8C4TGZ3PTEDA8ZE",
    "stage": "words",
    "position": 2,
    "kind": "word_intro",
@@ -46,28 +46,28 @@
    "unit_ref": "v2",
    "payload": {
     "kind": "word",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "боль",
-    "text_target": "pain",
-    "plan_term_id": "01M2FHPAM7GPH9VQ4J16D8350Q",
-    "example_native": "Боль слева, справа или посередине?",
-    "example_target": "Is the pain on the left, right, or middle?",
-    "definition_target": "an uncomfortable physical feeling",
-    "pronunciation_native": "пейн",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "нога",
+    "text_target": "leg",
+    "plan_term_id": "01M2GF3MQSQH074PCCFAX031VA",
+    "example_native": "Боль остаётся там или отдаёт в ногу?",
+    "example_target": "Does the pain stay there, or go down your leg?",
+    "definition_target": "the limb you stand and walk on",
+    "pronunciation_native": "лэг",
     "image": {
-     "url": "https://images.pexels.com/photos/5938365/pexels-photo-5938365.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Sora Shimazaki",
-     "author_url": "https://www.pexels.com/@sora-shimazaki"
+     "url": "https://images.pexels.com/photos/93834/pexels-photo-93834.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Stefan Stefancik",
+     "author_url": "https://www.pexels.com/@stefanstefancik"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:40+00:00",
+   "answered_at": "2026-09-14T17:23:22+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT05D9V3GX8MPMHFX5X",
+   "id": "01M2GF3RSSCVDFQ5BTEJ8TY0XE",
    "stage": "words",
    "position": 3,
    "kind": "word_say",
@@ -79,10 +79,10 @@
     "kind": "chunk",
     "coverage": 1,
     "expected": "lower back",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "поясница",
     "text_target": "lower back",
-    "plan_term_id": "01M2FHPAM7PZAVC1PKAYGGSE7C",
+    "plan_term_id": "01M2GF3MQRS20FZ0GW02RZ85RE",
     "pronunciation_native": "лоуэр бэк",
     "image": {
      "url": "https://images.pexels.com/photos/7298613/pexels-photo-7298613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -93,11 +93,11 @@
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:41+00:00",
+   "answered_at": "2026-09-14T17:23:23+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0P4WFTR9864PDRXYY",
+   "id": "01M2GF3RSS66W7MY23Q9JSRJG0",
    "stage": "words",
    "position": 4,
    "kind": "word_intro",
@@ -107,28 +107,28 @@
    "unit_ref": "v3",
    "payload": {
     "kind": "word",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "онемение",
-    "text_target": "numbness",
-    "plan_term_id": "01M2FHPAM7MX6R00QGAEH51ATD",
-    "example_native": "У вас есть онемение в ногах или температура?",
-    "example_target": "Do you have numbness in your legs or a fever?",
-    "definition_target": "loss of feeling in part of the body",
-    "pronunciation_native": "намбнэс",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "хуже",
+    "text_target": "worse",
+    "plan_term_id": "01M2GF3MQSDWXEFZX5WK5GE7AX",
+    "example_native": "Становится хуже, когда я долго сижу.",
+    "example_target": "It gets worse when I sit long.",
+    "definition_target": "more painful or more difficult than before",
+    "pronunciation_native": "вёрс",
     "image": {
-     "url": "https://images.pexels.com/photos/7298854/pexels-photo-7298854.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Kindel Media",
-     "author_url": "https://www.pexels.com/@kindelmedia"
+     "url": "https://images.pexels.com/photos/6235011/pexels-photo-6235011.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Tima Miroshnichenko",
+     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:41+00:00",
+   "answered_at": "2026-09-14T17:23:24+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0GDA64BBKYAR9HPZ1",
+   "id": "01M2GF3RSSQVYVRJ784ME7JVA7",
    "stage": "words",
    "position": 5,
    "kind": "word_say",
@@ -139,26 +139,26 @@
    "payload": {
     "kind": "word",
     "coverage": 1,
-    "expected": "pain",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "боль",
-    "text_target": "pain",
-    "plan_term_id": "01M2FHPAM7GPH9VQ4J16D8350Q",
-    "pronunciation_native": "пейн",
+    "expected": "leg",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "нога",
+    "text_target": "leg",
+    "plan_term_id": "01M2GF3MQSQH074PCCFAX031VA",
+    "pronunciation_native": "лэг",
     "image": {
-     "url": "https://images.pexels.com/photos/5938365/pexels-photo-5938365.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Sora Shimazaki",
-     "author_url": "https://www.pexels.com/@sora-shimazaki"
+     "url": "https://images.pexels.com/photos/93834/pexels-photo-93834.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Stefan Stefancik",
+     "author_url": "https://www.pexels.com/@stefanstefancik"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:42+00:00",
+   "answered_at": "2026-09-14T17:23:24+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT05Z9DJMQP6VWWD2WZ",
+   "id": "01M2GF3RSSH17FEMFJ4PWH069C",
    "stage": "words",
    "position": 6,
    "kind": "word_choose",
@@ -172,26 +172,26 @@
     "prompt": "lower back",
     "options": [
      {
+      "text": "поясница",
+      "correct": true
+     },
+     {
       "text": "онемение",
       "correct": false
      },
      {
-      "text": "температура",
+      "text": "хуже",
       "correct": false
      },
      {
-      "text": "боль",
+      "text": "нога",
       "correct": false
-     },
-     {
-      "text": "поясница",
-      "correct": true
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "поясница",
     "text_target": "lower back",
-    "plan_term_id": "01M2FHPAM7PZAVC1PKAYGGSE7C",
+    "plan_term_id": "01M2GF3MQRS20FZ0GW02RZ85RE",
     "pronunciation_native": "лоуэр бэк",
     "image": {
      "url": "https://images.pexels.com/photos/7298613/pexels-photo-7298613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -202,11 +202,11 @@
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:43+00:00",
+   "answered_at": "2026-09-14T17:23:25+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0MQBZKSBSRCZZ7WWV",
+   "id": "01M2GF3RSSRGHB608M0SBGHM1P",
    "stage": "words",
    "position": 7,
    "kind": "word_intro",
@@ -216,28 +216,28 @@
    "unit_ref": "v4",
    "payload": {
     "kind": "word",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "температура",
-    "text_target": "fever",
-    "plan_term_id": "01M2FHPAM7FZ7R30R4EDGQTYF6",
-    "example_native": "У вас есть онемение в ногах или температура?",
-    "example_target": "Do you have numbness in your legs or a fever?",
-    "definition_target": "a high body temperature when you are sick",
-    "pronunciation_native": "фивэр",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "онемение",
+    "text_target": "numbness",
+    "plan_term_id": "01M2GF3MQSTTK6QP485KKX006J",
+    "example_native": "У вас есть онемение или температура?",
+    "example_target": "Do you have numbness or a fever?",
+    "definition_target": "a loss of normal feeling in part of the body",
+    "pronunciation_native": "намбнэс",
     "image": {
-     "url": "https://images.pexels.com/photos/8670205/pexels-photo-8670205.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Mikhail Nilov",
-     "author_url": "https://www.pexels.com/@mikhail-nilov"
+     "url": "https://images.pexels.com/photos/7789616/pexels-photo-7789616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Ivan Babydov",
+     "author_url": "https://www.pexels.com/@babydov"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:43+00:00",
+   "answered_at": "2026-09-14T17:23:25+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT02F6ZHT9WVCCFS31N",
+   "id": "01M2GF3RSS82R8DBG1T9T8AFQJ",
    "stage": "words",
    "position": 8,
    "kind": "word_say",
@@ -248,26 +248,26 @@
    "payload": {
     "kind": "word",
     "coverage": 1,
-    "expected": "numbness",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "онемение",
-    "text_target": "numbness",
-    "plan_term_id": "01M2FHPAM7MX6R00QGAEH51ATD",
-    "pronunciation_native": "намбнэс",
+    "expected": "worse",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "хуже",
+    "text_target": "worse",
+    "plan_term_id": "01M2GF3MQSDWXEFZX5WK5GE7AX",
+    "pronunciation_native": "вёрс",
     "image": {
-     "url": "https://images.pexels.com/photos/7298854/pexels-photo-7298854.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Kindel Media",
-     "author_url": "https://www.pexels.com/@kindelmedia"
+     "url": "https://images.pexels.com/photos/6235011/pexels-photo-6235011.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Tima Miroshnichenko",
+     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:44+00:00",
+   "answered_at": "2026-09-14T17:23:26+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0Y9Q0VHS6H4Q30PYJ",
+   "id": "01M2GF3RSSEX2QSFP8V99JWQMC",
    "stage": "words",
    "position": 9,
    "kind": "word_choose",
@@ -278,14 +278,10 @@
    "payload": {
     "kind": "word",
     "mode": "translation",
-    "prompt": "pain",
+    "prompt": "leg",
     "options": [
      {
-      "text": "боль",
-      "correct": true
-     },
-     {
-      "text": "температура",
+      "text": "хуже",
       "correct": false
      },
      {
@@ -295,27 +291,31 @@
      {
       "text": "поясница",
       "correct": false
+     },
+     {
+      "text": "нога",
+      "correct": true
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "боль",
-    "text_target": "pain",
-    "plan_term_id": "01M2FHPAM7GPH9VQ4J16D8350Q",
-    "pronunciation_native": "пейн",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "нога",
+    "text_target": "leg",
+    "plan_term_id": "01M2GF3MQSQH074PCCFAX031VA",
+    "pronunciation_native": "лэг",
     "image": {
-     "url": "https://images.pexels.com/photos/5938365/pexels-photo-5938365.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Sora Shimazaki",
-     "author_url": "https://www.pexels.com/@sora-shimazaki"
+     "url": "https://images.pexels.com/photos/93834/pexels-photo-93834.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Stefan Stefancik",
+     "author_url": "https://www.pexels.com/@stefanstefancik"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:44+00:00",
+   "answered_at": "2026-09-14T17:23:27+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0Z2F9HHPMPF70BHSP",
+   "id": "01M2GF3RSSG670KAVEAV0VDWK9",
    "stage": "words",
    "position": 10,
    "kind": "word_cloze",
@@ -328,26 +328,26 @@
     "answer": "lower back",
     "options": [
      {
+      "text": "lower back",
+      "correct": true
+     },
+     {
+      "text": "worse",
+      "correct": false
+     },
+     {
       "text": "numbness",
       "correct": false
      },
      {
-      "text": "fever",
+      "text": "leg",
       "correct": false
-     },
-     {
-      "text": "pain",
-      "correct": false
-     },
-     {
-      "text": "lower back",
-      "correct": true
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "поясница",
     "text_target": "lower back",
-    "plan_term_id": "01M2FHPAM7PZAVC1PKAYGGSE7C",
+    "plan_term_id": "01M2GF3MQRS20FZ0GW02RZ85RE",
     "sentence_native": "У меня болит поясница.",
     "sentence_target": "My ___ hurts",
     "pronunciation_native": "лоуэр бэк",
@@ -360,11 +360,11 @@
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:45+00:00",
+   "answered_at": "2026-09-14T17:23:27+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0BCB84HG341WV7GGH",
+   "id": "01M2GF3RSSDBYNVXGCA2Y3RV6D",
    "stage": "words",
    "position": 11,
    "kind": "word_intro",
@@ -373,29 +373,29 @@
    "unit_kind": "word",
    "unit_ref": "v5",
    "payload": {
-    "kind": "chunk",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "растяжение мышцы",
-    "text_target": "muscle strain",
-    "plan_term_id": "01M2FHPAM71MB2E388HXT5EQR8",
-    "example_native": "Это похоже на растяжение мышцы.",
-    "example_target": "This looks like a muscle strain.",
-    "definition_target": "an injury caused by stretching a muscle too much",
-    "pronunciation_native": "масэл стрейн",
+    "kind": "word",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "температура",
+    "text_target": "fever",
+    "plan_term_id": "01M2GF3MQSMV2496X6FK75VKB2",
+    "example_native": "У вас есть онемение или температура?",
+    "example_target": "Do you have numbness or a fever?",
+    "definition_target": "a body temperature that is higher than normal",
+    "pronunciation_native": "фивэр",
     "image": {
-     "url": "https://images.pexels.com/photos/7298634/pexels-photo-7298634.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Kindel Media",
-     "author_url": "https://www.pexels.com/@kindelmedia"
+     "url": "https://images.pexels.com/photos/8670205/pexels-photo-8670205.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Mikhail Nilov",
+     "author_url": "https://www.pexels.com/@mikhail-nilov"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:46+00:00",
+   "answered_at": "2026-09-14T17:23:28+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT04SHG1354ZPV8VV6T",
+   "id": "01M2GF3RSSMK27BBXGWWDEXP7X",
    "stage": "words",
    "position": 12,
    "kind": "word_say",
@@ -406,26 +406,26 @@
    "payload": {
     "kind": "word",
     "coverage": 1,
-    "expected": "fever",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "температура",
-    "text_target": "fever",
-    "plan_term_id": "01M2FHPAM7FZ7R30R4EDGQTYF6",
-    "pronunciation_native": "фивэр",
+    "expected": "numbness",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "онемение",
+    "text_target": "numbness",
+    "plan_term_id": "01M2GF3MQSTTK6QP485KKX006J",
+    "pronunciation_native": "намбнэс",
     "image": {
-     "url": "https://images.pexels.com/photos/8670205/pexels-photo-8670205.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Mikhail Nilov",
-     "author_url": "https://www.pexels.com/@mikhail-nilov"
+     "url": "https://images.pexels.com/photos/7789616/pexels-photo-7789616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Ivan Babydov",
+     "author_url": "https://www.pexels.com/@babydov"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:46+00:00",
+   "answered_at": "2026-09-14T17:23:29+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0K6NKEFRNP1FFFPY6",
+   "id": "01M2GF3RSS494TBKGAD2PEG4DH",
    "stage": "words",
    "position": 13,
    "kind": "word_choose",
@@ -436,44 +436,44 @@
    "payload": {
     "kind": "word",
     "mode": "translation",
-    "prompt": "numbness",
+    "prompt": "worse",
     "options": [
-     {
-      "text": "онемение",
-      "correct": true
-     },
-     {
-      "text": "боль",
-      "correct": false
-     },
      {
       "text": "поясница",
       "correct": false
      },
      {
-      "text": "температура",
+      "text": "хуже",
+      "correct": true
+     },
+     {
+      "text": "онемение",
+      "correct": false
+     },
+     {
+      "text": "нога",
       "correct": false
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "онемение",
-    "text_target": "numbness",
-    "plan_term_id": "01M2FHPAM7MX6R00QGAEH51ATD",
-    "pronunciation_native": "намбнэс",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "хуже",
+    "text_target": "worse",
+    "plan_term_id": "01M2GF3MQSDWXEFZX5WK5GE7AX",
+    "pronunciation_native": "вёрс",
     "image": {
-     "url": "https://images.pexels.com/photos/7298854/pexels-photo-7298854.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Kindel Media",
-     "author_url": "https://www.pexels.com/@kindelmedia"
+     "url": "https://images.pexels.com/photos/6235011/pexels-photo-6235011.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Tima Miroshnichenko",
+     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
     }
    },
    "retry_of": null,
    "result": "failed",
    "attempts": 2,
-   "answered_at": "2026-09-14T08:52:47+00:00",
+   "answered_at": "2026-09-14T17:23:29+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0GYNXN9DDGKEGVY9C",
+   "id": "01M2GF3RSSE0A3C8425CZHM2MQ",
    "stage": "words",
    "position": 14,
    "kind": "word_cloze",
@@ -483,12 +483,8 @@
    "unit_ref": "v2",
    "payload": {
     "kind": "word",
-    "answer": "pain",
+    "answer": "leg",
     "options": [
-     {
-      "text": "pain",
-      "correct": true
-     },
      {
       "text": "lower back",
       "correct": false
@@ -498,31 +494,35 @@
       "correct": false
      },
      {
-      "text": "fever",
+      "text": "leg",
+      "correct": true
+     },
+     {
+      "text": "worse",
       "correct": false
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "боль",
-    "text_target": "pain",
-    "plan_term_id": "01M2FHPAM7GPH9VQ4J16D8350Q",
-    "sentence_native": "Боль слева, справа или посередине?",
-    "sentence_target": "Is the ___ on the left right or middle",
-    "pronunciation_native": "пейн",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "нога",
+    "text_target": "leg",
+    "plan_term_id": "01M2GF3MQSQH074PCCFAX031VA",
+    "sentence_native": "Боль остаётся там или отдаёт в ногу?",
+    "sentence_target": "Does the pain stay there or go down your ___",
+    "pronunciation_native": "лэг",
     "image": {
-     "url": "https://images.pexels.com/photos/5938365/pexels-photo-5938365.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Sora Shimazaki",
-     "author_url": "https://www.pexels.com/@sora-shimazaki"
+     "url": "https://images.pexels.com/photos/93834/pexels-photo-93834.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Stefan Stefancik",
+     "author_url": "https://www.pexels.com/@stefanstefancik"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:48+00:00",
+   "answered_at": "2026-09-14T17:23:30+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0D8G5T67ZY75ZG883",
+   "id": "01M2GF3RSSRSYERR2KTVM4XHJN",
    "stage": "words",
    "position": 15,
    "kind": "word_intro",
@@ -532,28 +532,28 @@
    "unit_ref": "v6",
    "payload": {
     "kind": "chunk",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "грелка",
-    "text_target": "heating pad",
-    "plan_term_id": "01M2FHPAM703MZ2W6MP6FDTJ80",
-    "example_native": "Используйте грелку и отдыхайте два дня.",
-    "example_target": "Use a heating pad and rest for two days.",
-    "definition_target": "a warm pad used to help pain",
-    "pronunciation_native": "хитинг пэд",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "растяжение мышцы",
+    "text_target": "muscle strain",
+    "plan_term_id": "01M2GF3MQSP8SQ3D7BEYMP39WG",
+    "example_native": "Похоже, это растяжение мышцы.",
+    "example_target": "This looks like a muscle strain.",
+    "definition_target": "an injury caused by stretching or tearing a muscle",
+    "pronunciation_native": "масэл стрейн",
     "image": {
-     "url": "https://images.pexels.com/photos/8947496/pexels-photo-8947496.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "https://kaboompics.com/",
-     "author_url": "https://www.pexels.com/@karola-g"
+     "url": "https://images.pexels.com/photos/7298431/pexels-photo-7298431.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kindel Media",
+     "author_url": "https://www.pexels.com/@kindelmedia"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:48+00:00",
+   "answered_at": "2026-09-14T17:23:30+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT02XHKD4VTEREBCSR8",
+   "id": "01M2GF3RSSMPEY5T6M9NF4WC5E",
    "stage": "words",
    "position": 16,
    "kind": "word_say",
@@ -562,61 +562,13 @@
    "unit_kind": "word",
    "unit_ref": "v5",
    "payload": {
-    "kind": "chunk",
-    "coverage": 1,
-    "expected": "muscle strain",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "растяжение мышцы",
-    "text_target": "muscle strain",
-    "plan_term_id": "01M2FHPAM71MB2E388HXT5EQR8",
-    "pronunciation_native": "масэл стрейн",
-    "image": {
-     "url": "https://images.pexels.com/photos/7298634/pexels-photo-7298634.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Kindel Media",
-     "author_url": "https://www.pexels.com/@kindelmedia"
-    }
-   },
-   "retry_of": null,
-   "result": "passed",
-   "attempts": 1,
-   "answered_at": "2026-09-14T08:52:49+00:00",
-   "returns": false
-  },
-  {
-   "id": "01M2FHWMT0YTF2NR5H7VNTF70S",
-   "stage": "words",
-   "position": 17,
-   "kind": "word_choose",
-   "source": "today",
-   "source_day_id": null,
-   "unit_kind": "word",
-   "unit_ref": "v4",
-   "payload": {
     "kind": "word",
-    "mode": "translation",
-    "prompt": "fever",
-    "options": [
-     {
-      "text": "боль",
-      "correct": false
-     },
-     {
-      "text": "онемение",
-      "correct": false
-     },
-     {
-      "text": "поясница",
-      "correct": false
-     },
-     {
-      "text": "температура",
-      "correct": true
-     }
-    ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "coverage": 1,
+    "expected": "fever",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "температура",
     "text_target": "fever",
-    "plan_term_id": "01M2FHPAM7FZ7R30R4EDGQTYF6",
+    "plan_term_id": "01M2GF3MQSMV2496X6FK75VKB2",
     "pronunciation_native": "фивэр",
     "image": {
      "url": "https://images.pexels.com/photos/8670205/pexels-photo-8670205.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -627,11 +579,59 @@
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:49+00:00",
+   "answered_at": "2026-09-14T17:23:31+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0VD1ZX9YG6EN300XR",
+   "id": "01M2GF3RSSPB6P2AVCRWZ90SCV",
+   "stage": "words",
+   "position": 17,
+   "kind": "word_choose",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v4",
+   "payload": {
+    "kind": "word",
+    "mode": "translation",
+    "prompt": "numbness",
+    "options": [
+     {
+      "text": "нога",
+      "correct": false
+     },
+     {
+      "text": "хуже",
+      "correct": false
+     },
+     {
+      "text": "онемение",
+      "correct": true
+     },
+     {
+      "text": "поясница",
+      "correct": false
+     }
+    ],
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "онемение",
+    "text_target": "numbness",
+    "plan_term_id": "01M2GF3MQSTTK6QP485KKX006J",
+    "pronunciation_native": "намбнэс",
+    "image": {
+     "url": "https://images.pexels.com/photos/7789616/pexels-photo-7789616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Ivan Babydov",
+     "author_url": "https://www.pexels.com/@babydov"
+    }
+   },
+   "retry_of": null,
+   "result": "passed",
+   "attempts": 1,
+   "answered_at": "2026-09-14T17:23:32+00:00",
+   "returns": false
+  },
+  {
+   "id": "01M2GF3RSS3KNHWCZJT21VT7Z4",
    "stage": "words",
    "position": 18,
    "kind": "word_cloze",
@@ -641,46 +641,46 @@
    "unit_ref": "v3",
    "payload": {
     "kind": "word",
-    "answer": "numbness",
+    "answer": "worse",
     "options": [
-     {
-      "text": "numbness",
-      "correct": true
-     },
      {
       "text": "lower back",
       "correct": false
      },
      {
-      "text": "pain",
+      "text": "worse",
+      "correct": true
+     },
+     {
+      "text": "numbness",
       "correct": false
      },
      {
-      "text": "fever",
+      "text": "leg",
       "correct": false
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "онемение",
-    "text_target": "numbness",
-    "plan_term_id": "01M2FHPAM7MX6R00QGAEH51ATD",
-    "sentence_native": "У вас есть онемение в ногах или температура?",
-    "sentence_target": "Do you have ___ in your legs or a fever",
-    "pronunciation_native": "намбнэс",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "хуже",
+    "text_target": "worse",
+    "plan_term_id": "01M2GF3MQSDWXEFZX5WK5GE7AX",
+    "sentence_native": "Становится хуже, когда я долго сижу.",
+    "sentence_target": "It gets ___ when I sit long",
+    "pronunciation_native": "вёрс",
     "image": {
-     "url": "https://images.pexels.com/photos/7298854/pexels-photo-7298854.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Kindel Media",
-     "author_url": "https://www.pexels.com/@kindelmedia"
+     "url": "https://images.pexels.com/photos/6235011/pexels-photo-6235011.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Tima Miroshnichenko",
+     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:50+00:00",
+   "answered_at": "2026-09-14T17:23:32+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0E761DEGCAX31YTZD",
+   "id": "01M2GF3RSS5P4QR0WBSRBWAGM5",
    "stage": "words",
    "position": 19,
    "kind": "word_intro",
@@ -690,28 +690,28 @@
    "unit_ref": "v7",
    "payload": {
     "kind": "word",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "лекарство",
-    "text_target": "medicine",
-    "plan_term_id": "01M2FHPAM7924Z8963BDC0GH1J",
-    "example_native": "Мне нужно принимать какое-нибудь лекарство?",
-    "example_target": "Should I take any medicine?",
-    "definition_target": "a substance you take to treat illness or pain",
-    "pronunciation_native": "мэдисин",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "отдых",
+    "text_target": "rest",
+    "plan_term_id": "01M2GF3MQSDGDCNX62GH86P0YZ",
+    "example_native": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+    "example_target": "Rest, use heat, and take this medicine twice a day.",
+    "definition_target": "time without much activity so the body can recover",
+    "pronunciation_native": "рэст",
     "image": {
-     "url": "https://images.pexels.com/photos/4058367/pexels-photo-4058367.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Castorly Stock",
-     "author_url": "https://www.pexels.com/@castorlystock"
+     "url": "https://images.pexels.com/photos/11326529/pexels-photo-11326529.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Sergey  Meshkov",
+     "author_url": "https://www.pexels.com/@19x14"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:51+00:00",
+   "answered_at": "2026-09-14T17:23:33+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0996DX9G8ZV4KBYGF",
+   "id": "01M2GF3RSSDB664C1TXQWC37W1",
    "stage": "words",
    "position": 20,
    "kind": "word_say",
@@ -722,26 +722,26 @@
    "payload": {
     "kind": "chunk",
     "coverage": 1,
-    "expected": "heating pad",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "грелка",
-    "text_target": "heating pad",
-    "plan_term_id": "01M2FHPAM703MZ2W6MP6FDTJ80",
-    "pronunciation_native": "хитинг пэд",
+    "expected": "muscle strain",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "растяжение мышцы",
+    "text_target": "muscle strain",
+    "plan_term_id": "01M2GF3MQSP8SQ3D7BEYMP39WG",
+    "pronunciation_native": "масэл стрейн",
     "image": {
-     "url": "https://images.pexels.com/photos/8947496/pexels-photo-8947496.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "https://kaboompics.com/",
-     "author_url": "https://www.pexels.com/@karola-g"
+     "url": "https://images.pexels.com/photos/7298431/pexels-photo-7298431.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kindel Media",
+     "author_url": "https://www.pexels.com/@kindelmedia"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:51+00:00",
+   "answered_at": "2026-09-14T17:23:34+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0MVX12YRJN1HY8666",
+   "id": "01M2GF3RSS4SQA0K07PKQ5ZQVA",
    "stage": "words",
    "position": 21,
    "kind": "word_choose",
@@ -750,80 +750,31 @@
    "unit_kind": "word",
    "unit_ref": "v5",
    "payload": {
-    "kind": "chunk",
+    "kind": "word",
     "mode": "translation",
-    "prompt": "muscle strain",
+    "prompt": "fever",
     "options": [
      {
-      "text": "онемение",
-      "correct": false
+      "text": "температура",
+      "correct": true
      },
      {
-      "text": "растяжение мышцы",
-      "correct": true
+      "text": "нога",
+      "correct": false
      },
      {
       "text": "поясница",
       "correct": false
      },
      {
-      "text": "боль",
+      "text": "хуже",
       "correct": false
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "растяжение мышцы",
-    "text_target": "muscle strain",
-    "plan_term_id": "01M2FHPAM71MB2E388HXT5EQR8",
-    "pronunciation_native": "масэл стрейн",
-    "image": {
-     "url": "https://images.pexels.com/photos/7298634/pexels-photo-7298634.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Kindel Media",
-     "author_url": "https://www.pexels.com/@kindelmedia"
-    }
-   },
-   "retry_of": null,
-   "result": "passed",
-   "attempts": 1,
-   "answered_at": "2026-09-14T08:52:52+00:00",
-   "returns": false
-  },
-  {
-   "id": "01M2FHWMT03N2TYA0ZRWT0G9NV",
-   "stage": "words",
-   "position": 22,
-   "kind": "word_cloze",
-   "source": "today",
-   "source_day_id": null,
-   "unit_kind": "word",
-   "unit_ref": "v4",
-   "payload": {
-    "kind": "word",
-    "answer": "fever",
-    "options": [
-     {
-      "text": "fever",
-      "correct": true
-     },
-     {
-      "text": "pain",
-      "correct": false
-     },
-     {
-      "text": "numbness",
-      "correct": false
-     },
-     {
-      "text": "lower back",
-      "correct": false
-     }
-    ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "температура",
     "text_target": "fever",
-    "plan_term_id": "01M2FHPAM7FZ7R30R4EDGQTYF6",
-    "sentence_native": "У вас есть онемение в ногах или температура?",
-    "sentence_target": "Do you have numbness in your legs or a ___",
+    "plan_term_id": "01M2GF3MQSMV2496X6FK75VKB2",
     "pronunciation_native": "фивэр",
     "image": {
      "url": "https://images.pexels.com/photos/8670205/pexels-photo-8670205.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -834,11 +785,60 @@
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:53+00:00",
+   "answered_at": "2026-09-14T17:23:34+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0BF0JWD7SAAMEZ6VX",
+   "id": "01M2GF3RSSDCEGQMCHB554662T",
+   "stage": "words",
+   "position": 22,
+   "kind": "word_cloze",
+   "source": "today",
+   "source_day_id": null,
+   "unit_kind": "word",
+   "unit_ref": "v4",
+   "payload": {
+    "kind": "word",
+    "answer": "numbness",
+    "options": [
+     {
+      "text": "lower back",
+      "correct": false
+     },
+     {
+      "text": "worse",
+      "correct": false
+     },
+     {
+      "text": "leg",
+      "correct": false
+     },
+     {
+      "text": "numbness",
+      "correct": true
+     }
+    ],
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "онемение",
+    "text_target": "numbness",
+    "plan_term_id": "01M2GF3MQSTTK6QP485KKX006J",
+    "sentence_native": "У вас есть онемение или температура?",
+    "sentence_target": "Do you have ___ or a fever",
+    "pronunciation_native": "намбнэс",
+    "image": {
+     "url": "https://images.pexels.com/photos/7789616/pexels-photo-7789616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Ivan Babydov",
+     "author_url": "https://www.pexels.com/@babydov"
+    }
+   },
+   "retry_of": null,
+   "result": "passed",
+   "attempts": 1,
+   "answered_at": "2026-09-14T17:23:35+00:00",
+   "returns": false
+  },
+  {
+   "id": "01M2GF3RSSS0YBA0XDXEV10P75",
    "stage": "words",
    "position": 23,
    "kind": "word_intro",
@@ -848,28 +848,28 @@
    "unit_ref": "v8",
    "payload": {
     "kind": "word",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "противовоспалительное",
-    "text_target": "anti-inflammatory",
-    "plan_term_id": "01M2FHPAM7XTZTJVSEYCW603M8",
-    "example_native": "Да, принимайте это противовоспалительное после еды.",
-    "example_target": "Yes, take this anti-inflammatory after meals.",
-    "definition_target": "medicine that reduces pain and swelling",
-    "pronunciation_native": "энти-инфлэмэтори",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "лекарство",
+    "text_target": "medicine",
+    "plan_term_id": "01M2GF3MQSVAVTPPEEV8A3BN38",
+    "example_native": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+    "example_target": "Rest, use heat, and take this medicine twice a day.",
+    "definition_target": "a drug used to treat an illness or pain",
+    "pronunciation_native": "мэдисин",
     "image": {
-     "url": "https://images.pexels.com/photos/5407246/pexels-photo-5407246.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Tima Miroshnichenko",
-     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
+     "url": "https://images.pexels.com/photos/8900031/pexels-photo-8900031.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "SHVETS production",
+     "author_url": "https://www.pexels.com/@shvets-production"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:53+00:00",
+   "answered_at": "2026-09-14T17:23:36+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0XW7H85P0CFWAMEDR",
+   "id": "01M2GF3RSSH824XT9VKSX1GD0E",
    "stage": "words",
    "position": 24,
    "kind": "word_say",
@@ -880,26 +880,26 @@
    "payload": {
     "kind": "word",
     "coverage": 1,
-    "expected": "medicine",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "лекарство",
-    "text_target": "medicine",
-    "plan_term_id": "01M2FHPAM7924Z8963BDC0GH1J",
-    "pronunciation_native": "мэдисин",
+    "expected": "rest",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "отдых",
+    "text_target": "rest",
+    "plan_term_id": "01M2GF3MQSDGDCNX62GH86P0YZ",
+    "pronunciation_native": "рэст",
     "image": {
-     "url": "https://images.pexels.com/photos/4058367/pexels-photo-4058367.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Castorly Stock",
-     "author_url": "https://www.pexels.com/@castorlystock"
+     "url": "https://images.pexels.com/photos/11326529/pexels-photo-11326529.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Sergey  Meshkov",
+     "author_url": "https://www.pexels.com/@19x14"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:54+00:00",
+   "answered_at": "2026-09-14T17:23:36+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0TMS1DSAYB4XF2831",
+   "id": "01M2GF3RSSGV06A1TBFNA3QRM6",
    "stage": "words",
    "position": 25,
    "kind": "word_choose",
@@ -910,44 +910,44 @@
    "payload": {
     "kind": "chunk",
     "mode": "translation",
-    "prompt": "heating pad",
+    "prompt": "muscle strain",
     "options": [
-     {
-      "text": "грелка",
-      "correct": true
-     },
-     {
-      "text": "боль",
-      "correct": false
-     },
      {
       "text": "поясница",
       "correct": false
      },
      {
-      "text": "онемение",
+      "text": "растяжение мышцы",
+      "correct": true
+     },
+     {
+      "text": "хуже",
+      "correct": false
+     },
+     {
+      "text": "нога",
       "correct": false
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "грелка",
-    "text_target": "heating pad",
-    "plan_term_id": "01M2FHPAM703MZ2W6MP6FDTJ80",
-    "pronunciation_native": "хитинг пэд",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "растяжение мышцы",
+    "text_target": "muscle strain",
+    "plan_term_id": "01M2GF3MQSP8SQ3D7BEYMP39WG",
+    "pronunciation_native": "масэл стрейн",
     "image": {
-     "url": "https://images.pexels.com/photos/8947496/pexels-photo-8947496.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "https://kaboompics.com/",
-     "author_url": "https://www.pexels.com/@karola-g"
+     "url": "https://images.pexels.com/photos/7298431/pexels-photo-7298431.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kindel Media",
+     "author_url": "https://www.pexels.com/@kindelmedia"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:54+00:00",
+   "answered_at": "2026-09-14T17:23:37+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT01PHKPYND9JK5H98K",
+   "id": "01M2GF3RSSEPSDN21YT5XHDCJF",
    "stage": "words",
    "position": 26,
    "kind": "word_cloze",
@@ -956,47 +956,47 @@
    "unit_kind": "word",
    "unit_ref": "v5",
    "payload": {
-    "kind": "chunk",
-    "answer": "muscle strain",
+    "kind": "word",
+    "answer": "fever",
     "options": [
-     {
-      "text": "muscle strain",
-      "correct": true
-     },
-     {
-      "text": "pain",
-      "correct": false
-     },
-     {
-      "text": "numbness",
-      "correct": false
-     },
      {
       "text": "lower back",
       "correct": false
+     },
+     {
+      "text": "worse",
+      "correct": false
+     },
+     {
+      "text": "leg",
+      "correct": false
+     },
+     {
+      "text": "fever",
+      "correct": true
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "растяжение мышцы",
-    "text_target": "muscle strain",
-    "plan_term_id": "01M2FHPAM71MB2E388HXT5EQR8",
-    "sentence_native": "Это похоже на растяжение мышцы.",
-    "sentence_target": "This looks like a ___",
-    "pronunciation_native": "масэл стрейн",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "температура",
+    "text_target": "fever",
+    "plan_term_id": "01M2GF3MQSMV2496X6FK75VKB2",
+    "sentence_native": "У вас есть онемение или температура?",
+    "sentence_target": "Do you have numbness or a ___",
+    "pronunciation_native": "фивэр",
     "image": {
-     "url": "https://images.pexels.com/photos/7298634/pexels-photo-7298634.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Kindel Media",
-     "author_url": "https://www.pexels.com/@kindelmedia"
+     "url": "https://images.pexels.com/photos/8670205/pexels-photo-8670205.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Mikhail Nilov",
+     "author_url": "https://www.pexels.com/@mikhail-nilov"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:55+00:00",
+   "answered_at": "2026-09-14T17:23:37+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0PBVF6Q11JTYH2CXV",
+   "id": "01M2GF3RSSE7MC8MNT1TRD7DEA",
    "stage": "words",
    "position": 27,
    "kind": "word_say",
@@ -1007,26 +1007,26 @@
    "payload": {
     "kind": "word",
     "coverage": 1,
-    "expected": "anti-inflammatory",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "противовоспалительное",
-    "text_target": "anti-inflammatory",
-    "plan_term_id": "01M2FHPAM7XTZTJVSEYCW603M8",
-    "pronunciation_native": "энти-инфлэмэтори",
+    "expected": "medicine",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "лекарство",
+    "text_target": "medicine",
+    "plan_term_id": "01M2GF3MQSVAVTPPEEV8A3BN38",
+    "pronunciation_native": "мэдисин",
     "image": {
-     "url": "https://images.pexels.com/photos/5407246/pexels-photo-5407246.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Tima Miroshnichenko",
-     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
+     "url": "https://images.pexels.com/photos/8900031/pexels-photo-8900031.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "SHVETS production",
+     "author_url": "https://www.pexels.com/@shvets-production"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:56+00:00",
+   "answered_at": "2026-09-14T17:23:38+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT05Z1XAZHZ6E9NKJ1E",
+   "id": "01M2GF3RSSKK79YRQEBTGSFT0R",
    "stage": "words",
    "position": 28,
    "kind": "word_choose",
@@ -1037,44 +1037,44 @@
    "payload": {
     "kind": "word",
     "mode": "translation",
-    "prompt": "medicine",
+    "prompt": "rest",
     "options": [
      {
-      "text": "лекарство",
-      "correct": true
-     },
-     {
-      "text": "онемение",
+      "text": "нога",
       "correct": false
      },
      {
-      "text": "боль",
+      "text": "хуже",
       "correct": false
      },
      {
       "text": "поясница",
       "correct": false
+     },
+     {
+      "text": "отдых",
+      "correct": true
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "лекарство",
-    "text_target": "medicine",
-    "plan_term_id": "01M2FHPAM7924Z8963BDC0GH1J",
-    "pronunciation_native": "мэдисин",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "отдых",
+    "text_target": "rest",
+    "plan_term_id": "01M2GF3MQSDGDCNX62GH86P0YZ",
+    "pronunciation_native": "рэст",
     "image": {
-     "url": "https://images.pexels.com/photos/4058367/pexels-photo-4058367.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Castorly Stock",
-     "author_url": "https://www.pexels.com/@castorlystock"
+     "url": "https://images.pexels.com/photos/11326529/pexels-photo-11326529.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Sergey  Meshkov",
+     "author_url": "https://www.pexels.com/@19x14"
     }
    },
    "retry_of": null,
    "result": "failed",
    "attempts": 2,
-   "answered_at": "2026-09-14T08:52:56+00:00",
+   "answered_at": "2026-09-14T17:23:39+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0CHVZVKJFFYE4JHBC",
+   "id": "01M2GF3RSSY2Z655H3BX17CH44",
    "stage": "words",
    "position": 29,
    "kind": "word_cloze",
@@ -1084,46 +1084,46 @@
    "unit_ref": "v6",
    "payload": {
     "kind": "chunk",
-    "answer": "heating pad",
+    "answer": "muscle strain",
     "options": [
      {
-      "text": "numbness",
+      "text": "leg",
       "correct": false
-     },
-     {
-      "text": "heating pad",
-      "correct": true
      },
      {
       "text": "lower back",
       "correct": false
      },
      {
-      "text": "pain",
+      "text": "muscle strain",
+      "correct": true
+     },
+     {
+      "text": "worse",
       "correct": false
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "грелка",
-    "text_target": "heating pad",
-    "plan_term_id": "01M2FHPAM703MZ2W6MP6FDTJ80",
-    "sentence_native": "Используйте грелку и отдыхайте два дня.",
-    "sentence_target": "Use a ___ and rest for two days",
-    "pronunciation_native": "хитинг пэд",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "растяжение мышцы",
+    "text_target": "muscle strain",
+    "plan_term_id": "01M2GF3MQSP8SQ3D7BEYMP39WG",
+    "sentence_native": "Похоже, это растяжение мышцы.",
+    "sentence_target": "This looks like a ___",
+    "pronunciation_native": "масэл стрейн",
     "image": {
-     "url": "https://images.pexels.com/photos/8947496/pexels-photo-8947496.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "https://kaboompics.com/",
-     "author_url": "https://www.pexels.com/@karola-g"
+     "url": "https://images.pexels.com/photos/7298431/pexels-photo-7298431.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Kindel Media",
+     "author_url": "https://www.pexels.com/@kindelmedia"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:57+00:00",
+   "answered_at": "2026-09-14T17:23:39+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0P0HFCPVBZYVHKJV6",
+   "id": "01M2GF3RSS2F0BKXTAT4SEGQ0B",
    "stage": "words",
    "position": 30,
    "kind": "word_choose",
@@ -1134,44 +1134,44 @@
    "payload": {
     "kind": "word",
     "mode": "translation",
-    "prompt": "anti-inflammatory",
+    "prompt": "medicine",
     "options": [
-     {
-      "text": "боль",
-      "correct": false
-     },
-     {
-      "text": "онемение",
-      "correct": false
-     },
-     {
-      "text": "противовоспалительное",
-      "correct": true
-     },
      {
       "text": "поясница",
       "correct": false
+     },
+     {
+      "text": "хуже",
+      "correct": false
+     },
+     {
+      "text": "нога",
+      "correct": false
+     },
+     {
+      "text": "лекарство",
+      "correct": true
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "противовоспалительное",
-    "text_target": "anti-inflammatory",
-    "plan_term_id": "01M2FHPAM7XTZTJVSEYCW603M8",
-    "pronunciation_native": "энти-инфлэмэтори",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "лекарство",
+    "text_target": "medicine",
+    "plan_term_id": "01M2GF3MQSVAVTPPEEV8A3BN38",
+    "pronunciation_native": "мэдисин",
     "image": {
-     "url": "https://images.pexels.com/photos/5407246/pexels-photo-5407246.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Tima Miroshnichenko",
-     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
+     "url": "https://images.pexels.com/photos/8900031/pexels-photo-8900031.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "SHVETS production",
+     "author_url": "https://www.pexels.com/@shvets-production"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:58+00:00",
+   "answered_at": "2026-09-14T17:23:40+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT03YP816HKHXV5Z1CG",
+   "id": "01M2GF3RSS533NZJH142QMZR96",
    "stage": "words",
    "position": 31,
    "kind": "word_cloze",
@@ -1181,46 +1181,46 @@
    "unit_ref": "v7",
    "payload": {
     "kind": "word",
-    "answer": "medicine",
+    "answer": "Rest",
     "options": [
+     {
+      "text": "leg",
+      "correct": false
+     },
      {
       "text": "lower back",
       "correct": false
      },
      {
-      "text": "numbness",
-      "correct": false
-     },
-     {
-      "text": "medicine",
+      "text": "Rest",
       "correct": true
      },
      {
-      "text": "pain",
+      "text": "worse",
       "correct": false
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "лекарство",
-    "text_target": "medicine",
-    "plan_term_id": "01M2FHPAM7924Z8963BDC0GH1J",
-    "sentence_native": "Мне нужно принимать какое-нибудь лекарство?",
-    "sentence_target": "Should I take any ___",
-    "pronunciation_native": "мэдисин",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "отдых",
+    "text_target": "rest",
+    "plan_term_id": "01M2GF3MQSDGDCNX62GH86P0YZ",
+    "sentence_native": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+    "sentence_target": "___ use heat and take this medicine twice a day",
+    "pronunciation_native": "рэст",
     "image": {
-     "url": "https://images.pexels.com/photos/4058367/pexels-photo-4058367.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Castorly Stock",
-     "author_url": "https://www.pexels.com/@castorlystock"
+     "url": "https://images.pexels.com/photos/11326529/pexels-photo-11326529.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Sergey  Meshkov",
+     "author_url": "https://www.pexels.com/@19x14"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:58+00:00",
+   "answered_at": "2026-09-14T17:23:41+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0A1MR1QCSK2BGAAZD",
+   "id": "01M2GF3RSSY7Y04R5ZS8CYR69B",
    "stage": "words",
    "position": 32,
    "kind": "word_cloze",
@@ -1230,46 +1230,46 @@
    "unit_ref": "v8",
    "payload": {
     "kind": "word",
-    "answer": "anti-inflammatory",
+    "answer": "medicine",
     "options": [
      {
-      "text": "anti-inflammatory",
-      "correct": true
-     },
-     {
-      "text": "numbness",
+      "text": "leg",
       "correct": false
      },
      {
-      "text": "pain",
+      "text": "worse",
       "correct": false
      },
      {
       "text": "lower back",
       "correct": false
+     },
+     {
+      "text": "medicine",
+      "correct": true
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "противовоспалительное",
-    "text_target": "anti-inflammatory",
-    "plan_term_id": "01M2FHPAM7XTZTJVSEYCW603M8",
-    "sentence_native": "Да, принимайте это противовоспалительное после еды.",
-    "sentence_target": "Yes take this ___ after meals",
-    "pronunciation_native": "энти-инфлэмэтори",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "лекарство",
+    "text_target": "medicine",
+    "plan_term_id": "01M2GF3MQSVAVTPPEEV8A3BN38",
+    "sentence_native": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+    "sentence_target": "Rest use heat and take this ___ twice a day",
+    "pronunciation_native": "мэдисин",
     "image": {
-     "url": "https://images.pexels.com/photos/5407246/pexels-photo-5407246.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Tima Miroshnichenko",
-     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
+     "url": "https://images.pexels.com/photos/8900031/pexels-photo-8900031.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "SHVETS production",
+     "author_url": "https://www.pexels.com/@shvets-production"
     }
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:52:59+00:00",
+   "answered_at": "2026-09-14T17:23:41+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWW6QJQ3CXB1SV56F0D38",
+   "id": "01M2GF408XANB7C8GS0XHWDJCP",
    "stage": "words",
    "position": 33,
    "kind": "word_choose",
@@ -1280,44 +1280,44 @@
    "payload": {
     "kind": "word",
     "mode": "translation",
-    "prompt": "numbness",
+    "prompt": "worse",
     "options": [
-     {
-      "text": "онемение",
-      "correct": true
-     },
-     {
-      "text": "боль",
-      "correct": false
-     },
      {
       "text": "поясница",
       "correct": false
      },
      {
-      "text": "температура",
+      "text": "хуже",
+      "correct": true
+     },
+     {
+      "text": "онемение",
+      "correct": false
+     },
+     {
+      "text": "нога",
       "correct": false
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "онемение",
-    "text_target": "numbness",
-    "plan_term_id": "01M2FHPAM7MX6R00QGAEH51ATD",
-    "pronunciation_native": "намбнэс",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "хуже",
+    "text_target": "worse",
+    "plan_term_id": "01M2GF3MQSDWXEFZX5WK5GE7AX",
+    "pronunciation_native": "вёрс",
     "image": {
-     "url": "https://images.pexels.com/photos/7298854/pexels-photo-7298854.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Kindel Media",
-     "author_url": "https://www.pexels.com/@kindelmedia"
+     "url": "https://images.pexels.com/photos/6235011/pexels-photo-6235011.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Tima Miroshnichenko",
+     "author_url": "https://www.pexels.com/@tima-miroshnichenko"
     }
    },
-   "retry_of": "01M2FHWMT0K6NKEFRNP1FFFPY6",
+   "retry_of": "01M2GF3RSS494TBKGAD2PEG4DH",
    "result": "failed",
    "attempts": 2,
-   "answered_at": "2026-09-14T08:53:00+00:00",
+   "answered_at": "2026-09-14T17:23:42+00:00",
    "returns": true
   },
   {
-   "id": "01M2FHX5CT7ZQMH5F85XF0VEV7",
+   "id": "01M2GF49GTDTX11AHGH416EWDV",
    "stage": "words",
    "position": 34,
    "kind": "word_choose",
@@ -1328,44 +1328,44 @@
    "payload": {
     "kind": "word",
     "mode": "translation",
-    "prompt": "medicine",
+    "prompt": "rest",
     "options": [
      {
-      "text": "лекарство",
-      "correct": true
-     },
-     {
-      "text": "онемение",
+      "text": "нога",
       "correct": false
      },
      {
-      "text": "боль",
+      "text": "хуже",
       "correct": false
      },
      {
       "text": "поясница",
       "correct": false
+     },
+     {
+      "text": "отдых",
+      "correct": true
      }
     ],
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "лекарство",
-    "text_target": "medicine",
-    "plan_term_id": "01M2FHPAM7924Z8963BDC0GH1J",
-    "pronunciation_native": "мэдисин",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "отдых",
+    "text_target": "rest",
+    "plan_term_id": "01M2GF3MQSDGDCNX62GH86P0YZ",
+    "pronunciation_native": "рэст",
     "image": {
-     "url": "https://images.pexels.com/photos/4058367/pexels-photo-4058367.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-     "author": "Castorly Stock",
-     "author_url": "https://www.pexels.com/@castorlystock"
+     "url": "https://images.pexels.com/photos/11326529/pexels-photo-11326529.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+     "author": "Sergey  Meshkov",
+     "author_url": "https://www.pexels.com/@19x14"
     }
    },
-   "retry_of": "01M2FHWMT05Z1XAZHZ6E9NKJ1E",
+   "retry_of": "01M2GF3RSSKK79YRQEBTGSFT0R",
    "result": "failed",
    "attempts": 2,
-   "answered_at": "2026-09-14T08:53:00+00:00",
+   "answered_at": "2026-09-14T17:23:42+00:00",
    "returns": true
   },
   {
-   "id": "01M2FHWMT0X1F8MAFWMCQQQG1N",
+   "id": "01M2GF3RSS4PXT4MNSJTNAB78B",
    "stage": "phrases",
    "position": 1,
    "kind": "phrase_intro",
@@ -1374,24 +1374,24 @@
    "unit_kind": "phrase",
    "unit_ref": "p1",
    "payload": {
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "У меня болит поясница.",
     "text_target": "My lower back hurts.",
-    "plan_term_id": "01M2FHPAM7SJY3RG30GJ8EQ2D2",
+    "plan_term_id": "01M2GF3MQSDWQZ1RE0S98BP7R2",
     "speaking_key": "lower back hurts",
     "example_native": "У меня болит поясница.",
     "example_target": "My lower back hurts.",
-    "pronunciation_native": "Май ლоуэр бэк хёртс.",
+    "pronunciation_native": "Май лоуэр бэк хёртс.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:01+00:00",
+   "answered_at": "2026-09-14T17:23:43+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT00MPBCFATXQG46MMK",
+   "id": "01M2GF3RSSXXBBDFC94CNX77VS",
    "stage": "phrases",
    "position": 2,
    "kind": "phrase_intro",
@@ -1400,10 +1400,10 @@
    "unit_kind": "phrase",
    "unit_ref": "p2",
    "payload": {
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "Это началось три дня назад.",
     "text_target": "It started three days ago.",
-    "plan_term_id": "01M2FHPAM7R4NY92XV545WZTTA",
+    "plan_term_id": "01M2GF3MQSB47SNQQ02JQ3N1ZA",
     "speaking_key": "three days ago",
     "example_native": "Это началось три дня назад.",
     "example_target": "It started three days ago.",
@@ -1413,11 +1413,11 @@
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:02+00:00",
+   "answered_at": "2026-09-14T17:23:44+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT071TXP10D8SYXZ5XT",
+   "id": "01M2GF3RSSYS00XDA8A6GGNQ3G",
    "stage": "phrases",
    "position": 3,
    "kind": "phrase_repeat",
@@ -1428,21 +1428,21 @@
    "payload": {
     "coverage": 0.9,
     "expected": "My lower back hurts.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "У меня болит поясница.",
     "text_target": "My lower back hurts.",
-    "plan_term_id": "01M2FHPAM7SJY3RG30GJ8EQ2D2",
-    "pronunciation_native": "Май ლоуэр бэк хёртс.",
+    "plan_term_id": "01M2GF3MQSDWQZ1RE0S98BP7R2",
+    "pronunciation_native": "Май лоуэр бэк хёртс.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:02+00:00",
+   "answered_at": "2026-09-14T17:23:45+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT02TQ5J37TP9QGF2VV",
+   "id": "01M2GF3RSSM46SF4XDH6E95K9Z",
    "stage": "phrases",
    "position": 4,
    "kind": "phrase_intro",
@@ -1451,24 +1451,24 @@
    "unit_kind": "phrase",
    "unit_ref": "p3",
    "payload": {
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "Становится хуже, когда я наклоняюсь.",
-    "text_target": "It gets worse when I bend.",
-    "plan_term_id": "01M2FHPAM711JMX7BNZ7MFFRM2",
-    "speaking_key": "worse when I bend",
-    "example_native": "Становится хуже, когда я наклоняюсь.",
-    "example_target": "It gets worse when I bend.",
-    "pronunciation_native": "Ит гетс вёрс уэн ай бэнд.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "Становится хуже, когда я долго сижу.",
+    "text_target": "It gets worse when I sit long.",
+    "plan_term_id": "01M2GF3MQSDJ7EBGXK081THYB1",
+    "speaking_key": "sit long",
+    "example_native": "Становится хуже, когда я долго сижу.",
+    "example_target": "It gets worse when I sit long.",
+    "pronunciation_native": "Ит гетс вёрс уэн ай сит лонг.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:03+00:00",
+   "answered_at": "2026-09-14T17:23:45+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0K6HF36PX5BW3ZH3Q",
+   "id": "01M2GF3RSSXF9VPBM9NZF9TZPX",
    "stage": "phrases",
    "position": 5,
    "kind": "phrase_repeat",
@@ -1479,21 +1479,21 @@
    "payload": {
     "coverage": 0.9,
     "expected": "It started three days ago.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "Это началось три дня назад.",
     "text_target": "It started three days ago.",
-    "plan_term_id": "01M2FHPAM7R4NY92XV545WZTTA",
+    "plan_term_id": "01M2GF3MQSB47SNQQ02JQ3N1ZA",
     "pronunciation_native": "Ит стартед сри дэйз эгоу.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:03+00:00",
+   "answered_at": "2026-09-14T17:23:46+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0AF5RG6NASSVQN3G9",
+   "id": "01M2GF3RSSM1MVS64J611XC8YB",
    "stage": "phrases",
    "position": 6,
    "kind": "phrase_assemble",
@@ -1503,29 +1503,29 @@
    "unit_ref": "p1",
    "payload": {
     "tiles": [
+     "hurts",
      "My",
+     "numbness",
      "back",
-     "lower",
-     "muscle",
-     "hurts"
+     "lower"
     ],
     "answer": "My lower back hurts.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "У меня болит поясница.",
     "text_target": "My lower back hurts.",
-    "plan_term_id": "01M2FHPAM7SJY3RG30GJ8EQ2D2",
+    "plan_term_id": "01M2GF3MQSDWQZ1RE0S98BP7R2",
     "prompt_native": "У меня болит поясница.",
-    "pronunciation_native": "Май ლоуэр бэк хёртс.",
+    "pronunciation_native": "Май лоуэр бэк хёртс.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:04+00:00",
+   "answered_at": "2026-09-14T17:23:46+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0CH4YNYC48YD24979",
+   "id": "01M2GF3RSSA72135XH47P9F8TY",
    "stage": "phrases",
    "position": 7,
    "kind": "phrase_intro",
@@ -1534,12 +1534,12 @@
    "unit_kind": "phrase",
    "unit_ref": "p4",
    "payload": {
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "У меня нет онемения и температуры.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "У меня нет онемения или температуры.",
     "text_target": "I don't have numbness or a fever.",
-    "plan_term_id": "01M2FHPAM7GTNMJM9K2SYJS0VF",
+    "plan_term_id": "01M2GF3MQSBCG4735KVKC17DDT",
     "speaking_key": "don't have either",
-    "example_native": "Нет, у меня нет ни того, ни другого.",
+    "example_native": "Нет, у меня нет ни того ни другого.",
     "example_target": "No, I don't have either.",
     "pronunciation_native": "Ай доунт хэв намбнэс ор э фивэр.",
     "image": null
@@ -1547,11 +1547,11 @@
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:05+00:00",
+   "answered_at": "2026-09-14T17:23:47+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0WQVS55EJ6PNFAC5Y",
+   "id": "01M2GF3RSSSZNTMVYYGRVVSY0P",
    "stage": "phrases",
    "position": 8,
    "kind": "phrase_repeat",
@@ -1561,22 +1561,22 @@
    "unit_ref": "p3",
    "payload": {
     "coverage": 0.9,
-    "expected": "It gets worse when I bend.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "Становится хуже, когда я наклоняюсь.",
-    "text_target": "It gets worse when I bend.",
-    "plan_term_id": "01M2FHPAM711JMX7BNZ7MFFRM2",
-    "pronunciation_native": "Ит гетс вёрс уэн ай бэнд.",
+    "expected": "It gets worse when I sit long.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "Становится хуже, когда я долго сижу.",
+    "text_target": "It gets worse when I sit long.",
+    "plan_term_id": "01M2GF3MQSDJ7EBGXK081THYB1",
+    "pronunciation_native": "Ит гетс вёрс уэн ай сит лонг.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:05+00:00",
+   "answered_at": "2026-09-14T17:23:48+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT07J2FJG9AXJK3MYZR",
+   "id": "01M2GF3RSSN2TYGD6SQBDT5WWF",
    "stage": "phrases",
    "position": 9,
    "kind": "phrase_assemble",
@@ -1586,18 +1586,18 @@
    "unit_ref": "p2",
    "payload": {
     "tiles": [
-     "It",
+     "started",
+     "lower",
      "days",
      "three",
      "ago",
-     "started",
-     "numbness"
+     "It"
     ],
     "answer": "It started three days ago.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "text_native": "Это началось три дня назад.",
     "text_target": "It started three days ago.",
-    "plan_term_id": "01M2FHPAM7R4NY92XV545WZTTA",
+    "plan_term_id": "01M2GF3MQSB47SNQQ02JQ3N1ZA",
     "prompt_native": "Это началось три дня назад.",
     "pronunciation_native": "Ит стартед сри дэйз эгоу.",
     "image": null
@@ -1605,11 +1605,11 @@
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:06+00:00",
+   "answered_at": "2026-09-14T17:23:48+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0D1KKHKR1BSTKZBNW",
+   "id": "01M2GF3RSS259CAFNSRRASMTSQ",
    "stage": "phrases",
    "position": 10,
    "kind": "phrase_intro",
@@ -1618,24 +1618,24 @@
    "unit_kind": "phrase",
    "unit_ref": "p5",
    "payload": {
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "Я буду отдыхать два дня.",
-    "text_target": "I'll rest for two days.",
-    "plan_term_id": "01M2FHPAM76MFSKSBDJPQ2QMPV",
-    "speaking_key": "rest for two days",
-    "example_native": "Я буду отдыхать два дня.",
-    "example_target": "I'll rest for two days.",
-    "pronunciation_native": "Айл рест фор ту дэйз.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "Я буду принимать лекарство два раза в день.",
+    "text_target": "I'll take the medicine twice a day.",
+    "plan_term_id": "01M2GF3MQS5W004CQEN4XMWCHV",
+    "speaking_key": "twice a day",
+    "example_native": "Я буду принимать лекарство два раза в день.",
+    "example_target": "I'll take the medicine twice a day.",
+    "pronunciation_native": "Айл тэйк зэ мэдисин твайс э дэй.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:07+00:00",
+   "answered_at": "2026-09-14T17:23:49+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT07XG8KJ45B60KBSJ9",
+   "id": "01M2GF3RSS93GA538RPQ26B6AS",
    "stage": "phrases",
    "position": 11,
    "kind": "phrase_repeat",
@@ -1646,21 +1646,21 @@
    "payload": {
     "coverage": 0.9,
     "expected": "I don't have numbness or a fever.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "У меня нет онемения и температуры.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "У меня нет онемения или температуры.",
     "text_target": "I don't have numbness or a fever.",
-    "plan_term_id": "01M2FHPAM7GTNMJM9K2SYJS0VF",
+    "plan_term_id": "01M2GF3MQSBCG4735KVKC17DDT",
     "pronunciation_native": "Ай доунт хэв намбнэс ор э фивэр.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:07+00:00",
+   "answered_at": "2026-09-14T17:23:50+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT019TWPMXD564RJBS8",
+   "id": "01M2GF3RSS27KBKERFT2RP1KA6",
    "stage": "phrases",
    "position": 12,
    "kind": "phrase_assemble",
@@ -1670,31 +1670,32 @@
    "unit_ref": "p3",
    "payload": {
     "tiles": [
-     "gets",
-     "when",
-     "bend",
-     "It",
-     "fever",
      "I",
+     "sit",
+     "gets",
+     "long",
+     "when",
+     "It",
+     "rest",
      "worse"
     ],
-    "answer": "It gets worse when I bend.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "Становится хуже, когда я наклоняюсь.",
-    "text_target": "It gets worse when I bend.",
-    "plan_term_id": "01M2FHPAM711JMX7BNZ7MFFRM2",
-    "prompt_native": "Становится хуже, когда я наклоняюсь.",
-    "pronunciation_native": "Ит гетс вёрс уэн ай бэнд.",
+    "answer": "It gets worse when I sit long.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "Становится хуже, когда я долго сижу.",
+    "text_target": "It gets worse when I sit long.",
+    "plan_term_id": "01M2GF3MQSDJ7EBGXK081THYB1",
+    "prompt_native": "Становится хуже, когда я долго сижу.",
+    "pronunciation_native": "Ит гетс вёрс уэн ай сит лонг.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:08+00:00",
+   "answered_at": "2026-09-14T17:23:50+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT07B9CVY364347375E",
+   "id": "01M2GF3RSS0C2B3NSMXAN2FNN6",
    "stage": "phrases",
    "position": 13,
    "kind": "phrase_intro",
@@ -1703,24 +1704,24 @@
    "unit_kind": "phrase",
    "unit_ref": "p6",
    "payload": {
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "Мне нужно принимать какое-нибудь лекарство?",
-    "text_target": "Should I take any medicine?",
-    "plan_term_id": "01M2FHPAM7W8NB7WW91MN6GQZ1",
-    "speaking_key": "take any medicine",
-    "example_native": "Мне нужно принимать какое-нибудь лекарство?",
-    "example_target": "Should I take any medicine?",
-    "pronunciation_native": "Шуд ай тейк эни мэдисин?",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "Мне нужно прийти снова, если станет хуже?",
+    "text_target": "Should I come back if it gets worse?",
+    "plan_term_id": "01M2GF3MQSJ0K4QCAD3498K4S7",
+    "speaking_key": "come back",
+    "example_native": "Мне нужно прийти снова, если станет хуже?",
+    "example_target": "Should I come back if it gets worse?",
+    "pronunciation_native": "Шуд ай кам бэк иф ит гетс вёрс?",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:08+00:00",
+   "answered_at": "2026-09-14T17:23:51+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0S41AYBJPD1K4M1ET",
+   "id": "01M2GF3RSSY9NJ752E1E0E1FHY",
    "stage": "phrases",
    "position": 14,
    "kind": "phrase_repeat",
@@ -1730,22 +1731,22 @@
    "unit_ref": "p5",
    "payload": {
     "coverage": 0.9,
-    "expected": "I'll rest for two days.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "Я буду отдыхать два дня.",
-    "text_target": "I'll rest for two days.",
-    "plan_term_id": "01M2FHPAM76MFSKSBDJPQ2QMPV",
-    "pronunciation_native": "Айл рест фор ту дэйз.",
+    "expected": "I'll take the medicine twice a day.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "Я буду принимать лекарство два раза в день.",
+    "text_target": "I'll take the medicine twice a day.",
+    "plan_term_id": "01M2GF3MQS5W004CQEN4XMWCHV",
+    "pronunciation_native": "Айл тэйк зэ мэдисин твайс э дэй.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:09+00:00",
+   "answered_at": "2026-09-14T17:23:52+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT048BPX84M5MCSHMFY",
+   "id": "01M2GF3RSSP17WGKSB7B537ZFS",
    "stage": "phrases",
    "position": 15,
    "kind": "phrase_assemble",
@@ -1755,32 +1756,32 @@
    "unit_ref": "p4",
    "payload": {
     "tiles": [
-     "don't",
-     "or",
+     "fever",
      "numbness",
-     "lower",
      "I",
+     "or",
+     "worse",
+     "don't",
      "have",
-     "a",
-     "fever"
+     "a"
     ],
     "answer": "I don't have numbness or a fever.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "У меня нет онемения и температуры.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "У меня нет онемения или температуры.",
     "text_target": "I don't have numbness or a fever.",
-    "plan_term_id": "01M2FHPAM7GTNMJM9K2SYJS0VF",
-    "prompt_native": "У меня нет онемения и температуры.",
+    "plan_term_id": "01M2GF3MQSBCG4735KVKC17DDT",
+    "prompt_native": "У меня нет онемения или температуры.",
     "pronunciation_native": "Ай доунт хэв намбнэс ор э фивэр.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:10+00:00",
+   "answered_at": "2026-09-14T17:23:52+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT058QBQZG0SAG3SK7F",
+   "id": "01M2GF3RSSEF9F1JGB3CVA97SD",
    "stage": "phrases",
    "position": 16,
    "kind": "phrase_repeat",
@@ -1790,22 +1791,22 @@
    "unit_ref": "p6",
    "payload": {
     "coverage": 0.9,
-    "expected": "Should I take any medicine?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "Мне нужно принимать какое-нибудь лекарство?",
-    "text_target": "Should I take any medicine?",
-    "plan_term_id": "01M2FHPAM7W8NB7WW91MN6GQZ1",
-    "pronunciation_native": "Шуд ай тейк эни мэдисин?",
+    "expected": "Should I come back if it gets worse?",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "Мне нужно прийти снова, если станет хуже?",
+    "text_target": "Should I come back if it gets worse?",
+    "plan_term_id": "01M2GF3MQSJ0K4QCAD3498K4S7",
+    "pronunciation_native": "Шуд ай кам бэк иф ит гетс вёрс?",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:10+00:00",
+   "answered_at": "2026-09-14T17:23:53+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0XR0NH4VTZEJ9SJHN",
+   "id": "01M2GF3RSSE5Q3JM9EPDN9PZ82",
    "stage": "phrases",
    "position": 17,
    "kind": "phrase_assemble",
@@ -1815,30 +1816,32 @@
    "unit_ref": "p5",
    "payload": {
     "tiles": [
-     "two",
+     "day",
+     "the",
+     "take",
+     "twice",
+     "leg",
+     "a",
      "I'll",
-     "rest",
-     "muscle",
-     "for",
-     "days"
+     "medicine"
     ],
-    "answer": "I'll rest for two days.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "Я буду отдыхать два дня.",
-    "text_target": "I'll rest for two days.",
-    "plan_term_id": "01M2FHPAM76MFSKSBDJPQ2QMPV",
-    "prompt_native": "Я буду отдыхать два дня.",
-    "pronunciation_native": "Айл рест фор ту дэйз.",
+    "answer": "I'll take the medicine twice a day.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "Я буду принимать лекарство два раза в день.",
+    "text_target": "I'll take the medicine twice a day.",
+    "plan_term_id": "01M2GF3MQS5W004CQEN4XMWCHV",
+    "prompt_native": "Я буду принимать лекарство два раза в день.",
+    "pronunciation_native": "Айл тэйк зэ мэдисин твайс э дэй.",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:11+00:00",
+   "answered_at": "2026-09-14T17:23:54+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0QN3TSY5M2121T1HD",
+   "id": "01M2GF3RSS51Z0KN53FA9YP1TB",
    "stage": "phrases",
    "position": 18,
    "kind": "phrase_assemble",
@@ -1848,30 +1851,33 @@
    "unit_ref": "p6",
    "payload": {
     "tiles": [
-     "Should",
-     "take",
-     "medicine",
-     "any",
+     "leg",
+     "gets",
+     "come",
+     "if",
+     "it",
+     "back",
      "I",
-     "heating"
+     "worse",
+     "Should"
     ],
-    "answer": "Should I take any medicine?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
-    "text_native": "Мне нужно принимать какое-нибудь лекарство?",
-    "text_target": "Should I take any medicine?",
-    "plan_term_id": "01M2FHPAM7W8NB7WW91MN6GQZ1",
-    "prompt_native": "Мне нужно принимать какое-нибудь лекарство?",
-    "pronunciation_native": "Шуд ай тейк эни мэдисин?",
+    "answer": "Should I come back if it gets worse?",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
+    "text_native": "Мне нужно прийти снова, если станет хуже?",
+    "text_target": "Should I come back if it gets worse?",
+    "plan_term_id": "01M2GF3MQSJ0K4QCAD3498K4S7",
+    "prompt_native": "Мне нужно прийти снова, если станет хуже?",
+    "pronunciation_native": "Шуд ай кам бэк иф ит гетс вёрс?",
     "image": null
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:12+00:00",
+   "answered_at": "2026-09-14T17:23:54+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0T6DDCBKBHHD90YPR",
+   "id": "01M2GF3RSSTKYF09KMK3ZVC9HD",
    "stage": "dialogue",
    "position": 1,
    "kind": "dialogue_read",
@@ -1880,7 +1886,7 @@
    "unit_kind": "exchange",
    "unit_ref": "x1",
    "payload": {
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "exchanges": [
      {
       "step": 1,
@@ -1901,11 +1907,11 @@
         "text_native": "У меня болит поясница.",
         "text_target": "My lower back hurts.",
         "speaking_key": "lower back hurts",
-        "pronunciation_native": "Май ლоуэр бэк хёртс."
+        "pronunciation_native": "Май лоуэр бэк хёртс."
        }
       ],
       "initiator": "A",
-      "audio_id": "01M2FHPF2YD9NN0R3FHBFT6JFW"
+      "audio_id": "01M2GF4ENGTB7HZMBEFE7CP3MZ"
      },
      {
       "step": 2,
@@ -1914,33 +1920,8 @@
         "speaker": "A",
         "role_native": "Врач",
         "role_target": "Doctor",
-        "text_native": "Боль слева, справа или посередине?",
-        "text_target": "Is the pain on the left, right, or middle?",
-        "speaking_key": null,
-        "pronunciation_native": null
-       },
-       {
-        "speaker": "B",
-        "role_native": "Пациент",
-        "role_target": "Patient",
-        "text_native": "Она посередине.",
-        "text_target": "It's in the middle.",
-        "speaking_key": "the middle",
-        "pronunciation_native": "Итс ин зэ мидл."
-       }
-      ],
-      "initiator": "A",
-      "audio_id": "01M2FHPK33RM1K888HTQ6V9ZVE"
-     },
-     {
-      "step": 3,
-      "messages": [
-       {
-        "speaker": "A",
-        "role_native": "Врач",
-        "role_target": "Doctor",
-        "text_native": "Это началось сегодня или три дня назад?",
-        "text_target": "Did it start today, or three days ago?",
+        "text_native": "Это началось сегодня или несколько дней назад?",
+        "text_target": "Did it start today, or a few days ago?",
         "speaking_key": null,
         "pronunciation_native": null
        },
@@ -1955,7 +1936,32 @@
        }
       ],
       "initiator": "A",
-      "audio_id": "01M2FHPP6THD8AG83DY72QX778"
+      "audio_id": "01M2GF4EPD5A0DZ45G9XYSHM2X"
+     },
+     {
+      "step": 3,
+      "messages": [
+       {
+        "speaker": "A",
+        "role_native": "Врач",
+        "role_target": "Doctor",
+        "text_native": "Боль остаётся там или отдаёт в ногу?",
+        "text_target": "Does the pain stay there, or go down your leg?",
+        "speaking_key": null,
+        "pronunciation_native": null
+       },
+       {
+        "speaker": "B",
+        "role_native": "Пациент",
+        "role_target": "Patient",
+        "text_native": "Она остаётся в пояснице.",
+        "text_target": "It stays in my lower back.",
+        "speaking_key": "my lower back",
+        "pronunciation_native": "Ит стэйз ин май лоуэр бэк."
+       }
+      ],
+      "initiator": "A",
+      "audio_id": "01M2GF4EPS3S897JYFR49F3WAX"
      },
      {
       "step": 4,
@@ -1964,8 +1970,8 @@
         "speaker": "A",
         "role_native": "Врач",
         "role_target": "Doctor",
-        "text_native": "Становится хуже, когда вы наклоняетесь или сидите?",
-        "text_target": "Does it get worse when you bend or sit?",
+        "text_native": "Боль сильнее, когда вы наклоняетесь или долго сидите?",
+        "text_target": "Is it worse when you bend or sit long?",
         "speaking_key": null,
         "pronunciation_native": null
        },
@@ -1973,14 +1979,14 @@
         "speaker": "B",
         "role_native": "Пациент",
         "role_target": "Patient",
-        "text_native": "Становится хуже, когда я наклоняюсь.",
-        "text_target": "It gets worse when I bend.",
-        "speaking_key": "worse when I bend",
-        "pronunciation_native": "Ит гетс вёрс уэн ай бэнд."
+        "text_native": "Становится хуже, когда я долго сижу.",
+        "text_target": "It gets worse when I sit long.",
+        "speaking_key": "sit long",
+        "pronunciation_native": "Ит гетс вёрс уэн ай сит лонг."
        }
       ],
       "initiator": "A",
-      "audio_id": "01M2FHQXE6BR7M0MPHP5CRDT01"
+      "audio_id": "01M2GF4EQ4GK73JN40TH9ZFN6R"
      },
      {
       "step": 5,
@@ -1989,8 +1995,8 @@
         "speaker": "A",
         "role_native": "Врач",
         "role_target": "Doctor",
-        "text_native": "У вас есть онемение в ногах или температура?",
-        "text_target": "Do you have numbness in your legs or a fever?",
+        "text_native": "У вас есть онемение или температура?",
+        "text_target": "Do you have numbness or a fever?",
         "speaking_key": null,
         "pronunciation_native": null
        },
@@ -1998,14 +2004,14 @@
         "speaker": "B",
         "role_native": "Пациент",
         "role_target": "Patient",
-        "text_native": "Нет, у меня нет ни того, ни другого.",
+        "text_native": "Нет, у меня нет ни того ни другого.",
         "text_target": "No, I don't have either.",
         "speaking_key": "don't have either",
         "pronunciation_native": "Ноу, ай доунт хэв изэр."
        }
       ],
       "initiator": "A",
-      "audio_id": "01M2FHR1WNPQRPBR12PDC8RBDX"
+      "audio_id": "01M2GF4EQC9B8HCHS73CJC8Y3A"
      },
      {
       "step": 6,
@@ -2014,7 +2020,7 @@
         "speaker": "A",
         "role_native": "Врач",
         "role_target": "Doctor",
-        "text_native": "Это похоже на растяжение мышцы.",
+        "text_native": "Похоже, это растяжение мышцы.",
         "text_target": "This looks like a muscle strain.",
         "speaking_key": null,
         "pronunciation_native": null
@@ -2023,14 +2029,14 @@
         "speaker": "B",
         "role_native": "Пациент",
         "role_target": "Patient",
-        "text_native": "Хорошо, это помогает понять.",
-        "text_target": "Okay, that helps.",
-        "speaking_key": "that helps",
-        "pronunciation_native": "Оукей, зэт хэлпс."
+        "text_native": "Хорошо, это не слишком серьёзно.",
+        "text_target": "Okay, that's not too serious.",
+        "speaking_key": "not too serious",
+        "pronunciation_native": "Окэй, зэтс нот ту сириэс."
        }
       ],
       "initiator": "A",
-      "audio_id": "01M2FHSX6XKPZB7FQSB2GM5SPD"
+      "audio_id": "01M2GF4EQMYBAVQQKCX2FZWHDD"
      },
      {
       "step": 7,
@@ -2039,8 +2045,8 @@
         "speaker": "A",
         "role_native": "Врач",
         "role_target": "Doctor",
-        "text_native": "Используйте грелку и отдыхайте два дня.",
-        "text_target": "Use a heating pad and rest for two days.",
+        "text_native": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+        "text_target": "Rest, use heat, and take this medicine twice a day.",
         "speaking_key": null,
         "pronunciation_native": null
        },
@@ -2048,14 +2054,14 @@
         "speaker": "B",
         "role_native": "Пациент",
         "role_target": "Patient",
-        "text_native": "Я буду отдыхать два дня.",
-        "text_target": "I'll rest for two days.",
-        "speaking_key": "rest for two days",
-        "pronunciation_native": "Айл рест фор ту дэйз."
+        "text_native": "Я буду принимать лекарство два раза в день.",
+        "text_target": "I'll take the medicine twice a day.",
+        "speaking_key": "twice a day",
+        "pronunciation_native": "Айл тэйк зэ мэдисин твайс э дэй."
        }
       ],
       "initiator": "A",
-      "audio_id": "01M2FHXRNBQX3KCY6Z2K3CZ196"
+      "audio_id": "01M2GF4EQZGSBXVYZNBBAC8MQ5"
      },
      {
       "step": 8,
@@ -2064,23 +2070,23 @@
         "speaker": "B",
         "role_native": "Пациент",
         "role_target": "Patient",
-        "text_native": "Мне нужно принимать какое-нибудь лекарство?",
-        "text_target": "Should I take any medicine?",
-        "speaking_key": "take any medicine",
-        "pronunciation_native": "Шуд ай тейк эни мэдисин?"
+        "text_native": "Мне нужно прийти снова, если станет хуже?",
+        "text_target": "Should I come back if it gets worse?",
+        "speaking_key": "come back",
+        "pronunciation_native": "Шуд ай кам бэк иф ит гетс вёрс?"
        },
        {
         "speaker": "A",
         "role_native": "Врач",
         "role_target": "Doctor",
-        "text_native": "Да, принимайте это противовоспалительное после еды.",
-        "text_target": "Yes, take this anti-inflammatory after meals.",
+        "text_native": "Да. Приходите через неделю, если не станет лучше.",
+        "text_target": "Yes. Come back in a week if it doesn't improve.",
         "speaking_key": null,
         "pronunciation_native": null
        }
       ],
       "initiator": "B",
-      "audio_id": "01M2FHY4SY4RXHVH0SJCQYQ3R2"
+      "audio_id": "01M2GF4ERER2FMT3085QYD451R"
      }
     ],
     "translations_collapsed": false
@@ -2088,11 +2094,11 @@
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:12+00:00",
+   "answered_at": "2026-09-14T17:23:55+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT05SZP25SVNWZE3625",
+   "id": "01M2GF3RSS04F3VA7PSNX8V86F",
    "stage": "listen",
    "position": 1,
    "kind": "listen_question",
@@ -2103,11 +2109,11 @@
    "payload": {
     "options": [
      {
-      "text": "Работу пациента",
+      "text": "Адрес пациента",
       "correct": false
      },
      {
-      "text": "Адрес пациента",
+      "text": "Что пациент ел на завтрак",
       "correct": false
      },
      {
@@ -2126,20 +2132,20 @@
     },
     "language": "native",
     "question": "Что хочет узнать врач?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 1,
     "explanation_native": "Врач спрашивает, в чём состоит сегодняшняя проблема пациента.",
-    "audio_id": "01M2FHPF2YD9NN0R3FHBFT6JFW"
+    "audio_id": "01M2GF4ENGTB7HZMBEFE7CP3MZ"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:13+00:00",
+   "answered_at": "2026-09-14T17:23:56+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT00T3K7JC2V82AYDH9",
+   "id": "01M2GF3RSSTEDXH9CZP1GGZ5HX",
    "stage": "listen",
    "position": 2,
    "kind": "answer_choose",
@@ -2151,18 +2157,18 @@
     "options": [
      {
       "correct": false,
-      "text_native": "Она посередине.",
-      "text_target": "It's in the middle."
-     },
-     {
-      "correct": true,
-      "text_native": "У меня болит поясница.",
-      "text_target": "My lower back hurts."
+      "text_native": "Становится хуже, когда я долго сижу.",
+      "text_target": "It gets worse when I sit long."
      },
      {
       "correct": false,
       "text_native": "Это началось три дня назад.",
       "text_target": "It started three days ago."
+     },
+     {
+      "correct": true,
+      "text_native": "У меня болит поясница.",
+      "text_target": "My lower back hurts."
      }
     ],
     "partner": {
@@ -2174,19 +2180,19 @@
      "speaking_key": null,
      "pronunciation_native": null
     },
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 1,
-    "audio_id": "01M2FHPF2YD9NN0R3FHBFT6JFW"
+    "audio_id": "01M2GF4ENGTB7HZMBEFE7CP3MZ"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:14+00:00",
+   "answered_at": "2026-09-14T17:23:57+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT06ET74KBKFW1JDYYF",
+   "id": "01M2GF3RSSHZEGKJYHCKDR8Z4P",
    "stage": "listen",
    "position": 3,
    "kind": "listen_question",
@@ -2197,15 +2203,15 @@
    "payload": {
     "options": [
      {
-      "text": "Плечи, шея или рука",
+      "text": "В прошлом месяце или в прошлом году",
       "correct": false
      },
      {
-      "text": "Грудь, живот или нога",
+      "text": "Этим утром или прошлой ночью",
       "correct": false
      },
      {
-      "text": "Слева, справа или посередине",
+      "text": "Сегодня или несколькими днями раньше",
       "correct": true
      }
     ],
@@ -2213,27 +2219,27 @@
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Боль слева, справа или посередине?",
-     "text_target": "Is the pain on the left, right, or middle?",
+     "text_native": "Это началось сегодня или несколько дней назад?",
+     "text_target": "Did it start today, or a few days ago?",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "language": "native",
-    "question": "О каком расположении спрашивает врач?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "question": "Какой период времени врач упоминает?",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 2,
-    "explanation_native": "Врач уточняет, где находится боль: слева, справа или посередине.",
-    "audio_id": "01M2FHPK33RM1K888HTQ6V9ZVE"
+    "explanation_native": "Врач спрашивает, началось ли это сегодня или несколько дней назад.",
+    "audio_id": "01M2GF4EPD5A0DZ45G9XYSHM2X"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:14+00:00",
+   "answered_at": "2026-09-14T17:23:57+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT03FHQGA906TV7YF4Q",
+   "id": "01M2GF3RSS62X4B85B7RZA1DYA",
    "stage": "listen",
    "position": 4,
    "kind": "answer_choose",
@@ -2244,43 +2250,43 @@
    "payload": {
     "options": [
      {
-      "correct": true,
-      "text_native": "Она посередине.",
-      "text_target": "It's in the middle."
-     },
-     {
       "correct": false,
       "text_native": "У меня болит поясница.",
       "text_target": "My lower back hurts."
      },
      {
-      "correct": false,
+      "correct": true,
       "text_native": "Это началось три дня назад.",
       "text_target": "It started three days ago."
+     },
+     {
+      "correct": false,
+      "text_native": "Нет, у меня нет ни того ни другого.",
+      "text_target": "No, I don't have either."
      }
     ],
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Боль слева, справа или посередине?",
-     "text_target": "Is the pain on the left, right, or middle?",
+     "text_native": "Это началось сегодня или несколько дней назад?",
+     "text_target": "Did it start today, or a few days ago?",
      "speaking_key": null,
      "pronunciation_native": null
     },
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 2,
-    "audio_id": "01M2FHPK33RM1K888HTQ6V9ZVE"
+    "audio_id": "01M2GF4EPD5A0DZ45G9XYSHM2X"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:15+00:00",
+   "answered_at": "2026-09-14T17:23:58+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0MGVKEH8WR64867QM",
+   "id": "01M2GF3RSS5JA7K81AWTBYNMDB",
    "stage": "listen",
    "position": 5,
    "kind": "listen_question",
@@ -2291,43 +2297,43 @@
    "payload": {
     "options": [
      {
-      "text": "Сегодня утром или прошлой ночью",
+      "text": "В плечо",
       "correct": false
      },
      {
-      "text": "Неделю или месяц назад",
-      "correct": false
-     },
-     {
-      "text": "Сегодня или три дня назад",
+      "text": "В ногу",
       "correct": true
+     },
+     {
+      "text": "В живот",
+      "correct": false
      }
     ],
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Это началось сегодня или три дня назад?",
-     "text_target": "Did it start today, or three days ago?",
+     "text_native": "Боль остаётся там или отдаёт в ногу?",
+     "text_target": "Does the pain stay there, or go down your leg?",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "language": "native",
-    "question": "Какой срок упоминает врач?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "question": "Куда может отдавать боль?",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 3,
-    "explanation_native": "Врач спрашивает, началось ли это сегодня или три дня назад.",
-    "audio_id": "01M2FHPP6THD8AG83DY72QX778"
+    "explanation_native": "Врач спрашивает, остаётся ли боль на месте или отдаёт в ногу.",
+    "audio_id": "01M2GF4EPS3S897JYFR49F3WAX"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:16+00:00",
+   "answered_at": "2026-09-14T17:23:58+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0CNWXHP5NK33WNNRS",
+   "id": "01M2GF3RSS5RF1TM5NJ1AYBGED",
    "stage": "listen",
    "position": 6,
    "kind": "answer_choose",
@@ -2338,43 +2344,43 @@
    "payload": {
     "options": [
      {
+      "correct": false,
+      "text_native": "Хорошо, это не слишком серьёзно.",
+      "text_target": "Okay, that's not too serious."
+     },
+     {
       "correct": true,
-      "text_native": "Это началось три дня назад.",
-      "text_target": "It started three days ago."
+      "text_native": "Она остаётся в пояснице.",
+      "text_target": "It stays in my lower back."
      },
      {
       "correct": false,
-      "text_native": "Она посередине.",
-      "text_target": "It's in the middle."
-     },
-     {
-      "correct": false,
-      "text_native": "У меня болит поясница.",
-      "text_target": "My lower back hurts."
+      "text_native": "Нет, у меня нет ни того ни другого.",
+      "text_target": "No, I don't have either."
      }
     ],
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Это началось сегодня или три дня назад?",
-     "text_target": "Did it start today, or three days ago?",
+     "text_native": "Боль остаётся там или отдаёт в ногу?",
+     "text_target": "Does the pain stay there, or go down your leg?",
      "speaking_key": null,
      "pronunciation_native": null
     },
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 3,
-    "audio_id": "01M2FHPP6THD8AG83DY72QX778"
+    "audio_id": "01M2GF4EPS3S897JYFR49F3WAX"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:16+00:00",
+   "answered_at": "2026-09-14T17:23:59+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT06G130QC0QCPFAW84",
+   "id": "01M2GF3RSSYPH55VKH5WQDQB15",
    "stage": "listen",
    "position": 7,
    "kind": "listen_question",
@@ -2385,15 +2391,15 @@
    "payload": {
     "options": [
      {
-      "text": "Сон или еда",
+      "text": "Еда или сон",
       "correct": false
      },
      {
-      "text": "Наклон или сидение",
+      "text": "Наклоны или долгое сидение",
       "correct": true
      },
      {
-      "text": "Ходьба или бег",
+      "text": "Ходьба или плавание",
       "correct": false
      }
     ],
@@ -2401,27 +2407,27 @@
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Становится хуже, когда вы наклоняетесь или сидите?",
-     "text_target": "Does it get worse when you bend or sit?",
+     "text_native": "Боль сильнее, когда вы наклоняетесь или долго сидите?",
+     "text_target": "Is it worse when you bend or sit long?",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "language": "native",
-    "question": "О каких движениях спрашивает врач?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "question": "О каких действиях спрашивает врач?",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 4,
-    "explanation_native": "Врач спрашивает, усиливается ли боль при наклоне или сидении.",
-    "audio_id": "01M2FHQXE6BR7M0MPHP5CRDT01"
+    "explanation_native": "Врач спрашивает, усиливается ли боль при наклонах или долгом сидении.",
+    "audio_id": "01M2GF4EQ4GK73JN40TH9ZFN6R"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:17+00:00",
+   "answered_at": "2026-09-14T17:24:00+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT01MZH1AS8JC8DSV8B",
+   "id": "01M2GF3RSSS89EYRQHP48Z8VPC",
    "stage": "listen",
    "position": 8,
    "kind": "answer_choose",
@@ -2432,43 +2438,43 @@
    "payload": {
     "options": [
      {
-      "correct": true,
-      "text_native": "Становится хуже, когда я наклоняюсь.",
-      "text_target": "It gets worse when I bend."
-     },
-     {
       "correct": false,
       "text_native": "У меня болит поясница.",
       "text_target": "My lower back hurts."
      },
      {
+      "correct": true,
+      "text_native": "Становится хуже, когда я долго сижу.",
+      "text_target": "It gets worse when I sit long."
+     },
+     {
       "correct": false,
-      "text_native": "Она посередине.",
-      "text_target": "It's in the middle."
+      "text_native": "Хорошо, это не слишком серьёзно.",
+      "text_target": "Okay, that's not too serious."
      }
     ],
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Становится хуже, когда вы наклоняетесь или сидите?",
-     "text_target": "Does it get worse when you bend or sit?",
+     "text_native": "Боль сильнее, когда вы наклоняетесь или долго сидите?",
+     "text_target": "Is it worse when you bend or sit long?",
      "speaking_key": null,
      "pronunciation_native": null
     },
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 4,
-    "audio_id": "01M2FHQXE6BR7M0MPHP5CRDT01"
+    "audio_id": "01M2GF4EQ4GK73JN40TH9ZFN6R"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:18+00:00",
+   "answered_at": "2026-09-14T17:24:01+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0ADZWYHNH18Q1FJZW",
+   "id": "01M2GF3RSSTD0PQMJWV11S0YGR",
    "stage": "listen",
    "position": 9,
    "kind": "listen_question",
@@ -2479,15 +2485,15 @@
    "payload": {
     "options": [
      {
-      "text": "Кашель и боль в горле",
+      "text": "Сыпь и тошнота",
       "correct": false
      },
      {
-      "text": "Головная боль и тошнота",
+      "text": "Кашель и головная боль",
       "correct": false
      },
      {
-      "text": "Онемение в ногах и температура",
+      "text": "Онемение и температура",
       "correct": true
      }
     ],
@@ -2495,27 +2501,27 @@
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "У вас есть онемение в ногах или температура?",
-     "text_target": "Do you have numbness in your legs or a fever?",
+     "text_native": "У вас есть онемение или температура?",
+     "text_target": "Do you have numbness or a fever?",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "language": "native",
     "question": "О каких симптомах спрашивает врач?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 5,
-    "explanation_native": "Врач спрашивает именно про онемение в ногах и температуру.",
-    "audio_id": "01M2FHR1WNPQRPBR12PDC8RBDX"
+    "explanation_native": "Врач спрашивает, есть ли онемение или температура.",
+    "audio_id": "01M2GF4EQC9B8HCHS73CJC8Y3A"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:18+00:00",
+   "answered_at": "2026-09-14T17:24:01+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0SKD8XH75HAVXMYXY",
+   "id": "01M2GF3RSSB9ZAMY4E4GHJVT8A",
    "stage": "listen",
    "position": 10,
    "kind": "answer_choose",
@@ -2526,43 +2532,43 @@
    "payload": {
     "options": [
      {
-      "correct": true,
-      "text_native": "Нет, у меня нет ни того, ни другого.",
-      "text_target": "No, I don't have either."
-     },
-     {
       "correct": false,
       "text_native": "У меня болит поясница.",
       "text_target": "My lower back hurts."
      },
      {
       "correct": false,
-      "text_native": "Она посередине.",
-      "text_target": "It's in the middle."
+      "text_native": "Это началось три дня назад.",
+      "text_target": "It started three days ago."
+     },
+     {
+      "correct": true,
+      "text_native": "Нет, у меня нет ни того ни другого.",
+      "text_target": "No, I don't have either."
      }
     ],
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "У вас есть онемение в ногах или температура?",
-     "text_target": "Do you have numbness in your legs or a fever?",
+     "text_native": "У вас есть онемение или температура?",
+     "text_target": "Do you have numbness or a fever?",
      "speaking_key": null,
      "pronunciation_native": null
     },
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 5,
-    "audio_id": "01M2FHR1WNPQRPBR12PDC8RBDX"
+    "audio_id": "01M2GF4EQC9B8HCHS73CJC8Y3A"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:19+00:00",
+   "answered_at": "2026-09-14T17:24:02+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT05JWKAVAD34GRESDE",
+   "id": "01M2GF3RSSZRDMASYD742VCSQP",
    "stage": "listen",
    "position": 11,
    "kind": "listen_question",
@@ -2589,27 +2595,27 @@
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Это похоже на растяжение мышцы.",
+     "text_native": "Похоже, это растяжение мышцы.",
      "text_target": "This looks like a muscle strain.",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "language": "native",
     "question": "Что, по мнению врача, это такое?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 6,
     "explanation_native": "Врач говорит, что это похоже на растяжение мышцы.",
-    "audio_id": "01M2FHSX6XKPZB7FQSB2GM5SPD"
+    "audio_id": "01M2GF4EQMYBAVQQKCX2FZWHDD"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:19+00:00",
+   "answered_at": "2026-09-14T17:24:02+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0Q329QWVW77NB62S9",
+   "id": "01M2GF3RSSF2ZVXH9T96ANGVA3",
    "stage": "listen",
    "position": 12,
    "kind": "answer_choose",
@@ -2620,43 +2626,43 @@
    "payload": {
     "options": [
      {
+      "correct": true,
+      "text_native": "Хорошо, это не слишком серьёзно.",
+      "text_target": "Okay, that's not too serious."
+     },
+     {
+      "correct": false,
+      "text_native": "Это началось три дня назад.",
+      "text_target": "It started three days ago."
+     },
+     {
       "correct": false,
       "text_native": "У меня болит поясница.",
       "text_target": "My lower back hurts."
-     },
-     {
-      "correct": false,
-      "text_native": "Она посередине.",
-      "text_target": "It's in the middle."
-     },
-     {
-      "correct": true,
-      "text_native": "Хорошо, это помогает понять.",
-      "text_target": "Okay, that helps."
      }
     ],
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Это похоже на растяжение мышцы.",
+     "text_native": "Похоже, это растяжение мышцы.",
      "text_target": "This looks like a muscle strain.",
      "speaking_key": null,
      "pronunciation_native": null
     },
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 6,
-    "audio_id": "01M2FHSX6XKPZB7FQSB2GM5SPD"
+    "audio_id": "01M2GF4EQMYBAVQQKCX2FZWHDD"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:20+00:00",
+   "answered_at": "2026-09-14T17:24:03+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0MRY9S0CEHYHS7J2M",
+   "id": "01M2GF3RSS1NGRTJ38T8XWBDPG",
    "stage": "listen",
    "position": 13,
    "kind": "listen_question",
@@ -2667,15 +2673,15 @@
    "payload": {
     "options": [
      {
-      "text": "Холодный душ и упражнения",
-      "correct": false
-     },
-     {
-      "text": "Грелку и два дня отдыха",
+      "text": "Два раза в день",
       "correct": true
      },
      {
-      "text": "Повязку и не спать",
+      "text": "Один раз в неделю",
+      "correct": false
+     },
+     {
+      "text": "Три раза в день",
       "correct": false
      }
     ],
@@ -2683,27 +2689,27 @@
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Используйте грелку и отдыхайте два дня.",
-     "text_target": "Use a heating pad and rest for two days.",
+     "text_native": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+     "text_target": "Rest, use heat, and take this medicine twice a day.",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "language": "native",
-    "question": "Что рекомендует врач?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "question": "Как часто пациенту нужно принимать лекарство?",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 7,
-    "explanation_native": "Врач советует использовать грелку и отдыхать два дня.",
-    "audio_id": "01M2FHXRNBQX3KCY6Z2K3CZ196"
+    "explanation_native": "Врач говорит принимать лекарство два раза в день.",
+    "audio_id": "01M2GF4EQZGSBXVYZNBBAC8MQ5"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:21+00:00",
+   "answered_at": "2026-09-14T17:24:04+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0SVZW6SPJNYT1X9A5",
+   "id": "01M2GF3RSSNNW407CMZQP94JY2",
    "stage": "listen",
    "position": 14,
    "kind": "answer_choose",
@@ -2714,43 +2720,43 @@
    "payload": {
     "options": [
      {
+      "correct": true,
+      "text_native": "Я буду принимать лекарство два раза в день.",
+      "text_target": "I'll take the medicine twice a day."
+     },
+     {
       "correct": false,
       "text_native": "У меня болит поясница.",
       "text_target": "My lower back hurts."
      },
      {
       "correct": false,
-      "text_native": "Она посередине.",
-      "text_target": "It's in the middle."
-     },
-     {
-      "correct": true,
-      "text_native": "Я буду отдыхать два дня.",
-      "text_target": "I'll rest for two days."
+      "text_native": "Это началось три дня назад.",
+      "text_target": "It started three days ago."
      }
     ],
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Используйте грелку и отдыхайте два дня.",
-     "text_target": "Use a heating pad and rest for two days.",
+     "text_native": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+     "text_target": "Rest, use heat, and take this medicine twice a day.",
      "speaking_key": null,
      "pronunciation_native": null
     },
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "A",
     "exchange_step": 7,
-    "audio_id": "01M2FHXRNBQX3KCY6Z2K3CZ196"
+    "audio_id": "01M2GF4EQZGSBXVYZNBBAC8MQ5"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:21+00:00",
+   "answered_at": "2026-09-14T17:24:04+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT061XM2AH43CQJ4JRP",
+   "id": "01M2GF3RSSGVSYJZKXBTJAYNHP",
    "stage": "listen",
    "position": 15,
    "kind": "listen_question",
@@ -2761,15 +2767,15 @@
    "payload": {
     "options": [
      {
-      "text": "После еды",
+      "text": "Через неделю, если не станет лучше",
       "correct": true
      },
      {
-      "text": "Перед сном",
+      "text": "Только через месяц",
       "correct": false
      },
      {
-      "text": "Натощак",
+      "text": "Завтра утром до завтрака",
       "correct": false
      }
     ],
@@ -2777,27 +2783,27 @@
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Да, принимайте это противовоспалительное после еды.",
-     "text_target": "Yes, take this anti-inflammatory after meals.",
+     "text_native": "Да. Приходите через неделю, если не станет лучше.",
+     "text_target": "Yes. Come back in a week if it doesn't improve.",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "language": "native",
-    "question": "Когда врач говорит принимать лекарство?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "question": "Когда врач говорит прийти снова?",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "B",
     "exchange_step": 8,
-    "explanation_native": "Врач говорит принимать лекарство после еды.",
-    "audio_id": "01M2FHY4SY4RXHVH0SJCQYQ3R2"
+    "explanation_native": "Врач говорит прийти через неделю, если улучшения не будет.",
+    "audio_id": "01M2GF4ERER2FMT3085QYD451R"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:22+00:00",
+   "answered_at": "2026-09-14T17:24:05+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0KW56RRNX28N2YWFV",
+   "id": "01M2GF3RSSJ09D0BMK1P4RFZZZ",
    "stage": "listen",
    "position": 16,
    "kind": "answer_assemble",
@@ -2807,37 +2813,40 @@
    "unit_ref": "x8",
    "payload": {
     "tiles": [
-     "any",
-     "Should",
      "I",
-     "medicine",
-     "pain",
-     "take"
+     "if",
+     "back",
+     "come",
+     "lower",
+     "Should",
+     "it",
+     "gets",
+     "worse"
     ],
-    "answer": "Should I take any medicine?",
+    "answer": "Should I come back if it gets worse?",
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Да, принимайте это противовоспалительное после еды.",
-     "text_target": "Yes, take this anti-inflammatory after meals.",
+     "text_native": "Да. Приходите через неделю, если не станет лучше.",
+     "text_target": "Yes. Come back in a week if it doesn't improve.",
      "speaking_key": null,
      "pronunciation_native": null
     },
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "initiator": "B",
     "exchange_step": 8,
-    "prompt_native": "Мне нужно принимать какое-нибудь лекарство?",
-    "audio_id": "01M2FHY4SY4RXHVH0SJCQYQ3R2"
+    "prompt_native": "Мне нужно прийти снова, если станет хуже?",
+    "audio_id": "01M2GF4ERER2FMT3085QYD451R"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:23+00:00",
+   "answered_at": "2026-09-14T17:24:06+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT095BP52P7J63WGD09",
+   "id": "01M2GF3RSSFRMWCF1V63BV3W4R",
    "stage": "speak",
    "position": 1,
    "kind": "speak",
@@ -2861,7 +2870,7 @@
     },
     "coverage": 0.7,
     "expected": "My lower back hurts.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "variants": [
      "My back hurts."
     ],
@@ -2869,16 +2878,16 @@
     "task_native": "У меня болит поясница.",
     "speaking_key": "lower back hurts",
     "exchange_step": 1,
-    "audio_id": "01M2FHPF2YD9NN0R3FHBFT6JFW"
+    "audio_id": "01M2GF4ENGTB7HZMBEFE7CP3MZ"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:23+00:00",
+   "answered_at": "2026-09-14T17:24:06+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0C505NHKMRAPA4233",
+   "id": "01M2GF3RSS7S6T1J2CEM6ETAZV",
    "stage": "speak",
    "position": 2,
    "kind": "speak",
@@ -2888,38 +2897,38 @@
    "unit_ref": "x2",
    "payload": {
     "hints": {
-     "key": "the middle",
-     "text": "It's in the middle."
+     "key": "three days ago",
+     "text": "It started three days ago."
     },
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Боль слева, справа или посередине?",
-     "text_target": "Is the pain on the left, right, or middle?",
+     "text_native": "Это началось сегодня или несколько дней назад?",
+     "text_target": "Did it start today, or a few days ago?",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "coverage": 0.7,
-    "expected": "It's in the middle.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "expected": "It started three days ago.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "variants": [
-     "In the middle."
+     "It started days ago."
     ],
     "initiator": "A",
-    "task_native": "Она посередине.",
-    "speaking_key": "the middle",
+    "task_native": "Это началось три дня назад.",
+    "speaking_key": "three days ago",
     "exchange_step": 2,
-    "audio_id": "01M2FHPK33RM1K888HTQ6V9ZVE"
+    "audio_id": "01M2GF4EPD5A0DZ45G9XYSHM2X"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:24+00:00",
+   "answered_at": "2026-09-14T17:24:07+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0V00AMJ4MK6A2EGAS",
+   "id": "01M2GF3RSS34AHH72241TMYH1S",
    "stage": "speak",
    "position": 3,
    "kind": "speak",
@@ -2929,38 +2938,38 @@
    "unit_ref": "x3",
    "payload": {
     "hints": {
-     "key": "three days ago",
-     "text": "It started three days ago."
+     "key": "my lower back",
+     "text": "It stays in my lower back."
     },
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Это началось сегодня или три дня назад?",
-     "text_target": "Did it start today, or three days ago?",
+     "text_native": "Боль остаётся там или отдаёт в ногу?",
+     "text_target": "Does the pain stay there, or go down your leg?",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "coverage": 0.7,
-    "expected": "It started three days ago.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "expected": "It stays in my lower back.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "variants": [
-     "It started earlier."
+     "It stays in my back."
     ],
     "initiator": "A",
-    "task_native": "Это началось три дня назад.",
-    "speaking_key": "three days ago",
+    "task_native": "Она остаётся в пояснице.",
+    "speaking_key": "my lower back",
     "exchange_step": 3,
-    "audio_id": "01M2FHPP6THD8AG83DY72QX778"
+    "audio_id": "01M2GF4EPS3S897JYFR49F3WAX"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:25+00:00",
+   "answered_at": "2026-09-14T17:24:08+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0WJ1KP38V1EFRW1H7",
+   "id": "01M2GF3RSS2S9WPD6NM9C6G44N",
    "stage": "speak",
    "position": 4,
    "kind": "speak",
@@ -2970,38 +2979,38 @@
    "unit_ref": "x4",
    "payload": {
     "hints": {
-     "key": "worse when I bend",
-     "text": "It gets worse when I bend."
+     "key": "sit long",
+     "text": "It gets worse when I sit long."
     },
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Становится хуже, когда вы наклоняетесь или сидите?",
-     "text_target": "Does it get worse when you bend or sit?",
+     "text_native": "Боль сильнее, когда вы наклоняетесь или долго сидите?",
+     "text_target": "Is it worse when you bend or sit long?",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "coverage": 0.7,
-    "expected": "It gets worse when I bend.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "expected": "It gets worse when I sit long.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "variants": [
-     "It's worse when I bend."
+     "It's worse when I sit."
     ],
     "initiator": "A",
-    "task_native": "Становится хуже, когда я наклоняюсь.",
-    "speaking_key": "worse when I bend",
+    "task_native": "Становится хуже, когда я долго сижу.",
+    "speaking_key": "sit long",
     "exchange_step": 4,
-    "audio_id": "01M2FHQXE6BR7M0MPHP5CRDT01"
+    "audio_id": "01M2GF4EQ4GK73JN40TH9ZFN6R"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:25+00:00",
+   "answered_at": "2026-09-14T17:24:08+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT05A1H4VXY45EJ9DB0",
+   "id": "01M2GF3RSSN1JR3FC4YW9H00YQ",
    "stage": "speak",
    "position": 5,
    "kind": "speak",
@@ -3018,31 +3027,31 @@
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "У вас есть онемение в ногах или температура?",
-     "text_target": "Do you have numbness in your legs or a fever?",
+     "text_native": "У вас есть онемение или температура?",
+     "text_target": "Do you have numbness or a fever?",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "coverage": 0.7,
     "expected": "No, I don't have either.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "variants": [
-     "No, I don't."
+     "I don't have them."
     ],
     "initiator": "A",
-    "task_native": "Нет, у меня нет ни того, ни другого.",
+    "task_native": "Нет, у меня нет ни того ни другого.",
     "speaking_key": "don't have either",
     "exchange_step": 5,
-    "audio_id": "01M2FHR1WNPQRPBR12PDC8RBDX"
+    "audio_id": "01M2GF4EQC9B8HCHS73CJC8Y3A"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:26+00:00",
+   "answered_at": "2026-09-14T17:24:09+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT0G0SMN9AB4B926WAX",
+   "id": "01M2GF3RSSDES5WKZ6GN3EM3V1",
    "stage": "speak",
    "position": 6,
    "kind": "speak",
@@ -3052,38 +3061,38 @@
    "unit_ref": "x6",
    "payload": {
     "hints": {
-     "key": "that helps",
-     "text": "Okay, that helps."
+     "key": "not too serious",
+     "text": "Okay, that's not too serious."
     },
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Это похоже на растяжение мышцы.",
+     "text_native": "Похоже, это растяжение мышцы.",
      "text_target": "This looks like a muscle strain.",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "coverage": 0.7,
-    "expected": "Okay, that helps.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "expected": "Okay, that's not too serious.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "variants": [
-     "Okay, I see."
+     "It's not serious."
     ],
     "initiator": "A",
-    "task_native": "Хорошо, это помогает понять.",
-    "speaking_key": "that helps",
+    "task_native": "Хорошо, это не слишком серьёзно.",
+    "speaking_key": "not too serious",
     "exchange_step": 6,
-    "audio_id": "01M2FHSX6XKPZB7FQSB2GM5SPD"
+    "audio_id": "01M2GF4EQMYBAVQQKCX2FZWHDD"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:26+00:00",
+   "answered_at": "2026-09-14T17:24:09+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT044VH8CF3GH6NSEFZ",
+   "id": "01M2GF3RSSQXZWNYR4F0HHXMW6",
    "stage": "speak",
    "position": 7,
    "kind": "speak",
@@ -3093,38 +3102,38 @@
    "unit_ref": "x7",
    "payload": {
     "hints": {
-     "key": "rest for two days",
-     "text": "I'll rest for two days."
+     "key": "twice a day",
+     "text": "I'll take the medicine twice a day."
     },
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Используйте грелку и отдыхайте два дня.",
-     "text_target": "Use a heating pad and rest for two days.",
+     "text_native": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+     "text_target": "Rest, use heat, and take this medicine twice a day.",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "coverage": 0.7,
-    "expected": "I'll rest for two days.",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "expected": "I'll take the medicine twice a day.",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "variants": [
-     "I'll rest."
+     "I'll take it twice a day."
     ],
     "initiator": "A",
-    "task_native": "Я буду отдыхать два дня.",
-    "speaking_key": "rest for two days",
+    "task_native": "Я буду принимать лекарство два раза в день.",
+    "speaking_key": "twice a day",
     "exchange_step": 7,
-    "audio_id": "01M2FHXRNBQX3KCY6Z2K3CZ196"
+    "audio_id": "01M2GF4EQZGSBXVYZNBBAC8MQ5"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:27+00:00",
+   "answered_at": "2026-09-14T17:24:10+00:00",
    "returns": false
   },
   {
-   "id": "01M2FHWMT08XQ269WRJD8JRV3R",
+   "id": "01M2GF3RSSTMYES8VD44TDVFKY",
    "stage": "speak",
    "position": 8,
    "kind": "speak",
@@ -3134,34 +3143,34 @@
    "unit_ref": "x8",
    "payload": {
     "hints": {
-     "key": "take any medicine",
-     "text": "Should I take any medicine?"
+     "key": "come back",
+     "text": "Should I come back if it gets worse?"
     },
     "partner": {
      "speaker": "A",
      "role_native": "Врач",
      "role_target": "Doctor",
-     "text_native": "Да, принимайте это противовоспалительное после еды.",
-     "text_target": "Yes, take this anti-inflammatory after meals.",
+     "text_native": "Да. Приходите через неделю, если не станет лучше.",
+     "text_target": "Yes. Come back in a week if it doesn't improve.",
      "speaking_key": null,
      "pronunciation_native": null
     },
     "coverage": 0.7,
-    "expected": "Should I take any medicine?",
-    "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+    "expected": "Should I come back if it gets worse?",
+    "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
     "variants": [
-     "Do I need medicine?"
+     "Should I come back if it's worse?"
     ],
     "initiator": "B",
-    "task_native": "Мне нужно принимать какое-нибудь лекарство?",
-    "speaking_key": "take any medicine",
+    "task_native": "Мне нужно прийти снова, если станет хуже?",
+    "speaking_key": "come back",
     "exchange_step": 8,
-    "audio_id": "01M2FHY4SY4RXHVH0SJCQYQ3R2"
+    "audio_id": "01M2GF4ERER2FMT3085QYD451R"
    },
    "retry_of": null,
    "result": "passed",
    "attempts": 1,
-   "answered_at": "2026-09-14T08:53:28+00:00",
+   "answered_at": "2026-09-14T17:24:11+00:00",
    "returns": false
   }
  ]

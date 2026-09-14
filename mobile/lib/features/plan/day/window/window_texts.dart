@@ -7,7 +7,7 @@ import '../../plan_stage_text.dart';
 /// Вкладки программы окна — в порядке кадра 23-0d.
 enum WindowTab { words, phrases, dialogue }
 
-/// СЛОВА ОКНА ДНЯ — всё из словаря плана (`docs/plan-ui-glossary.md`), числа — из ответа сервера.
+/// СЛОВА ОКНА ДНЯ И ШИТА СЛОВА — всё из словаря плана (`docs/plan-ui-glossary.md`), числа — из ответа сервера.
 /// Здесь только выбор ключа и склейка частей; ни одного числа, посчитанного на телефоне.
 abstract final class WindowTexts {
   /// Название на плите и в компактной шапке: сцена дня, у повторения и репетиции — имя дня.
@@ -17,13 +17,13 @@ abstract final class WindowTexts {
     _ => day.titleNative ?? '',
   };
 
-  /// «не начат · ≈ 20 минут» / «идёт · ≈ 12 мин» / «пройден · 19 минут» (23-0a…0c). Без минут от
-  /// сервера — одно слово.
+  /// «не начат · ≈ 20 минут» / «идёт · ≈ 12 мин» (23-0a, 23-0b); у пройденного дня на месте статуса —
+  /// строка итога «День пройден · 19 минут» (23-0c). Без минут от сервера — одно слово.
   static String status(AppLocalizations l, WindowDay day) {
+    if (day.status == WindowDayStatus.passed) return l.planWindowPassedLine(l.planMinutesCount(day.minutesSpent ?? 0));
     final (word, minutes) = switch (day.status) {
       WindowDayStatus.notStarted => (l.planWindowStateNotStarted, _approx(l, day.minutesEstimate, long: true)),
-      WindowDayStatus.inProgress => (l.planWindowStateInProgress, _approx(l, day.minutesEstimate, long: false)),
-      WindowDayStatus.passed => (l.planWindowStatePassed, day.minutesSpent == null ? null : l.planMinutesCount(day.minutesSpent!)),
+      _ => (l.planWindowStateInProgress, _approx(l, day.minutesEstimate, long: false)),
     };
 
     return minutes == null ? word : l.planWindowJoin(word, minutes);
@@ -66,6 +66,32 @@ abstract final class WindowTexts {
 
     return line;
   }
+
+  /// ЦЕЛИ ОДНИМ ПРЕДЛОЖЕНИЕМ (23-0a…0c): «описать, где болит, ответить на вопросы врача и спросить про
+  /// ограничения» — части через запятую, последняя через «и». Цели — сервера, склейка — словаря.
+  static String goalsList(AppLocalizations l, List<WindowGoal> goals) {
+    final parts = [for (final g in goals) if (g.text.trim().isNotEmpty) _lowerFirst(g.text.trim())];
+    if (parts.isEmpty) return '';
+    var line = parts.first;
+    for (var i = 1; i < parts.length; i++) {
+      line = i == parts.length - 1 ? l.planWindowGoalsJoinLast(line, parts[i]) : l.planWindowGoalsJoin(line, parts[i]);
+    }
+
+    return line;
+  }
+
+  /// Строка состояния шита слова (23-0e): «не начато» / «пройдено» / «пройдено · вернётся в день 3».
+  static String sheetState(AppLocalizations l, WindowWord word) => switch (word.state) {
+    WindowUnitState.pending => l.planWindowSheetNotStarted,
+    WindowUnitState.done => l.planPlateStateDone,
+    WindowUnitState.returnsTomorrow => l.planWindowJoin(
+      l.planPlateStateDone,
+      word.returnsDay == null ? l.planWindowSheetReturnsTomorrow : l.planWindowSheetReturnsOn(word.returnsDay!),
+    ),
+  };
+
+  static String _lowerFirst(String s) =>
+      s.length > 1 && s[0].toUpperCase() == s[0] && s[1].toLowerCase() == s[1] ? s[0].toLowerCase() + s.substring(1) : s;
 
   static String action(AppLocalizations l, WindowAction action) => switch (action) {
     WindowAction.start => l.planPlateCtaStart,

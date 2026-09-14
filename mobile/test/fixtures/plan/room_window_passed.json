@@ -1,11 +1,11 @@
 {
- "plan_id": "01M2FHN9Y6HRN80KSE1737ZDMZ",
+ "plan_id": "01M2GF2MKQ5FKS586K1EFCM5AZ",
  "day": {
-  "id": "01M2FHN9Y7JC83Z7ZEN3MEDRPY",
+  "id": "01M2GF2MKVBMMM5Y92WSF45E9D",
   "number": 1,
   "type": "scene",
   "status": "closed",
-  "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+  "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
   "title_native": "Приём у врача",
   "title_target": "Doctor visit",
   "teaches_native": "описать боль, понять назначения",
@@ -19,8 +19,8 @@
   "cards_total": 77,
   "cards_done": 77,
   "minutes_spent": 1,
-  "opened_at": "2026-09-14T08:52:39+00:00",
-  "closed_at": "2026-09-14T08:53:28+00:00",
+  "opened_at": "2026-09-14T17:23:22+00:00",
+  "closed_at": "2026-09-14T17:24:11+00:00",
   "stages": [
    {
     "stage": "words",
@@ -45,7 +45,7 @@
   ]
  },
  "scene": {
-  "id": "01M2FHNJY266RZAFP3FBJT2JH1",
+  "id": "01M2GF2Y18JT5JKPMK286EQ6JS",
   "order": 1,
   "kind": "situation",
   "priority": 1,
@@ -63,19 +63,19 @@
   "partner_role_target": "Doctor",
   "partner_role_native": "Врач",
   "image": {
-   "url": "https://images.pexels.com/photos/8460095/pexels-photo-8460095.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-   "author": "Los Muertos Crew",
-   "author_url": "https://www.pexels.com/@cristian-rojas",
-   "tone": "#A69897",
-   "url_112": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/112?v=275287d8382d",
-   "url_448": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/448?v=275287d8382d"
+   "url": "https://images.pexels.com/photos/7789616/pexels-photo-7789616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+   "author": "Ivan Babydov",
+   "author_url": "https://www.pexels.com/@babydov",
+   "tone": "#C5C0BC",
+   "url_112": "http://localhost:8001/api/v1/plans/images/01M2GF2Y18JT5JKPMK286EQ6JS/112?v=d8f73c35a09c",
+   "url_448": "http://localhost:8001/api/v1/plans/images/01M2GF2Y18JT5JKPMK286EQ6JS/448?v=d8f73c35a09c"
   },
   "lesson_status": "ready",
   "lesson_fail_reason": null,
   "day_number": 1,
-  "cost_usd": "0.080015",
-  "latency_ms": 24195,
-  "prompt_version": "lesson-v3"
+  "cost_usd": "0.062172",
+  "latency_ms": 22482,
+  "prompt_version": "lesson-v4"
  },
  "stages": [
   {
@@ -232,14 +232,14 @@
    "title_native": "Приём у врача",
    "title_target": "Doctor visit",
    "image": {
-    "url": "https://images.pexels.com/photos/8460095/pexels-photo-8460095.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-    "author": "Los Muertos Crew",
-    "author_url": "https://www.pexels.com/@cristian-rojas",
-    "tone": "#A69897",
-    "url_112": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/112?v=275287d8382d",
-    "url_448": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/448?v=275287d8382d"
+    "url": "https://images.pexels.com/photos/7789616/pexels-photo-7789616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Ivan Babydov",
+    "author_url": "https://www.pexels.com/@babydov",
+    "tone": "#C5C0BC",
+    "url_112": "http://localhost:8001/api/v1/plans/images/01M2GF2Y18JT5JKPMK286EQ6JS/112?v=d8f73c35a09c",
+    "url_448": "http://localhost:8001/api/v1/plans/images/01M2GF2Y18JT5JKPMK286EQ6JS/448?v=d8f73c35a09c"
    },
-   "image_tone": "#A69897",
+   "image_tone": "#C5C0BC",
    "status": "passed",
    "minutes_estimate": null,
    "minutes_spent": 1,
@@ -317,6 +317,8 @@
       "ref": "v1",
       "term": "lower back",
       "translation": "поясница",
+      "pronunciation": "лоуэр бэк",
+      "definition": "the part of the back above the hips",
       "image": {
        "url": "https://images.pexels.com/photos/7298613/pexels-photo-7298613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
        "author": "Kindel Media",
@@ -324,38 +326,95 @@
        "tone": "#AD937B"
       },
       "image_tone": "#AD937B",
-      "state": "done"
+      "audio_url": null,
+      "usage": {
+       "text": "My lower back hurts.",
+       "translation": "У меня болит поясница.",
+       "offset": 3,
+       "length": 10,
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EPAVDH7BQA005W4QF2C"
+      },
+      "state": "done",
+      "returns_day": null
      },
      {
       "ref": "v2",
-      "term": "pain",
-      "translation": "боль",
+      "term": "leg",
+      "translation": "нога",
+      "pronunciation": "лэг",
+      "definition": "the limb you stand and walk on",
       "image": {
-       "url": "https://images.pexels.com/photos/5938365/pexels-photo-5938365.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-       "author": "Sora Shimazaki",
-       "author_url": "https://www.pexels.com/@sora-shimazaki",
-       "tone": "#7A726C"
+       "url": "https://images.pexels.com/photos/93834/pexels-photo-93834.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Stefan Stefancik",
+       "author_url": "https://www.pexels.com/@stefanstefancik",
+       "tone": "#3A3E44"
       },
-      "image_tone": "#7A726C",
-      "state": "done"
+      "image_tone": "#3A3E44",
+      "audio_url": null,
+      "usage": {
+       "text": "Does the pain stay there, or go down your leg?",
+       "translation": "Боль остаётся там или отдаёт в ногу?",
+       "offset": 42,
+       "length": 3,
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EPS3S897JYFR49F3WAX"
+      },
+      "state": "done",
+      "returns_day": null
      },
      {
       "ref": "v3",
-      "term": "numbness",
-      "translation": "онемение",
+      "term": "worse",
+      "translation": "хуже",
+      "pronunciation": "вёрс",
+      "definition": "more painful or more difficult than before",
       "image": {
-       "url": "https://images.pexels.com/photos/7298854/pexels-photo-7298854.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-       "author": "Kindel Media",
-       "author_url": "https://www.pexels.com/@kindelmedia",
-       "tone": "#695347"
+       "url": "https://images.pexels.com/photos/6235011/pexels-photo-6235011.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Tima Miroshnichenko",
+       "author_url": "https://www.pexels.com/@tima-miroshnichenko",
+       "tone": "#676F6E"
       },
-      "image_tone": "#695347",
-      "state": "returns_tomorrow"
+      "image_tone": "#676F6E",
+      "audio_url": null,
+      "usage": {
+       "text": "It gets worse when I sit long.",
+       "translation": "Становится хуже, когда я долго сижу.",
+       "offset": 8,
+       "length": 5,
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQ83RVDH9SQNECZEZEG"
+      },
+      "state": "returns_tomorrow",
+      "returns_day": 2
      },
      {
       "ref": "v4",
+      "term": "numbness",
+      "translation": "онемение",
+      "pronunciation": "намбнэс",
+      "definition": "a loss of normal feeling in part of the body",
+      "image": {
+       "url": "https://images.pexels.com/photos/7789616/pexels-photo-7789616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Ivan Babydov",
+       "author_url": "https://www.pexels.com/@babydov",
+       "tone": "#C5C0BC"
+      },
+      "image_tone": "#C5C0BC",
+      "audio_url": null,
+      "usage": {
+       "text": "Do you have numbness or a fever?",
+       "translation": "У вас есть онемение или температура?",
+       "offset": 12,
+       "length": 8,
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQC9B8HCHS73CJC8Y3A"
+      },
+      "state": "done",
+      "returns_day": null
+     },
+     {
+      "ref": "v5",
       "term": "fever",
       "translation": "температура",
+      "pronunciation": "фивэр",
+      "definition": "a body temperature that is higher than normal",
       "image": {
        "url": "https://images.pexels.com/photos/8670205/pexels-photo-8670205.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
        "author": "Mikhail Nilov",
@@ -363,59 +422,88 @@
        "tone": "#C3C6B3"
       },
       "image_tone": "#C3C6B3",
-      "state": "done"
-     },
-     {
-      "ref": "v5",
-      "term": "muscle strain",
-      "translation": "растяжение мышцы",
-      "image": {
-       "url": "https://images.pexels.com/photos/7298634/pexels-photo-7298634.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-       "author": "Kindel Media",
-       "author_url": "https://www.pexels.com/@kindelmedia",
-       "tone": "#C0A68E"
+      "audio_url": null,
+      "usage": {
+       "text": "Do you have numbness or a fever?",
+       "translation": "У вас есть онемение или температура?",
+       "offset": 26,
+       "length": 5,
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQC9B8HCHS73CJC8Y3A"
       },
-      "image_tone": "#C0A68E",
-      "state": "done"
+      "state": "done",
+      "returns_day": null
      },
      {
       "ref": "v6",
-      "term": "heating pad",
-      "translation": "грелка",
+      "term": "muscle strain",
+      "translation": "растяжение мышцы",
+      "pronunciation": "масэл стрейн",
+      "definition": "an injury caused by stretching or tearing a muscle",
       "image": {
-       "url": "https://images.pexels.com/photos/8947496/pexels-photo-8947496.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-       "author": "https://kaboompics.com/",
-       "author_url": "https://www.pexels.com/@karola-g",
-       "tone": "#A8A499"
+       "url": "https://images.pexels.com/photos/7298431/pexels-photo-7298431.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Kindel Media",
+       "author_url": "https://www.pexels.com/@kindelmedia",
+       "tone": "#9E8B79"
       },
-      "image_tone": "#A8A499",
-      "state": "done"
+      "image_tone": "#9E8B79",
+      "audio_url": null,
+      "usage": {
+       "text": "This looks like a muscle strain.",
+       "translation": "Похоже, это растяжение мышцы.",
+       "offset": 18,
+       "length": 13,
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQMYBAVQQKCX2FZWHDD"
+      },
+      "state": "done",
+      "returns_day": null
      },
      {
       "ref": "v7",
-      "term": "medicine",
-      "translation": "лекарство",
+      "term": "rest",
+      "translation": "отдых",
+      "pronunciation": "рэст",
+      "definition": "time without much activity so the body can recover",
       "image": {
-       "url": "https://images.pexels.com/photos/4058367/pexels-photo-4058367.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-       "author": "Castorly Stock",
-       "author_url": "https://www.pexels.com/@castorlystock",
-       "tone": "#B3AEAB"
+       "url": "https://images.pexels.com/photos/11326529/pexels-photo-11326529.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "Sergey  Meshkov",
+       "author_url": "https://www.pexels.com/@19x14",
+       "tone": "#5D5143"
       },
-      "image_tone": "#B3AEAB",
-      "state": "returns_tomorrow"
+      "image_tone": "#5D5143",
+      "audio_url": null,
+      "usage": {
+       "text": "Rest, use heat, and take this medicine twice a day.",
+       "translation": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+       "offset": 0,
+       "length": 4,
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQZGSBXVYZNBBAC8MQ5"
+      },
+      "state": "returns_tomorrow",
+      "returns_day": 2
      },
      {
       "ref": "v8",
-      "term": "anti-inflammatory",
-      "translation": "противовоспалительное",
+      "term": "medicine",
+      "translation": "лекарство",
+      "pronunciation": "мэдисин",
+      "definition": "a drug used to treat an illness or pain",
       "image": {
-       "url": "https://images.pexels.com/photos/5407246/pexels-photo-5407246.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-       "author": "Tima Miroshnichenko",
-       "author_url": "https://www.pexels.com/@tima-miroshnichenko",
-       "tone": "#8D7D6D"
+       "url": "https://images.pexels.com/photos/8900031/pexels-photo-8900031.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+       "author": "SHVETS production",
+       "author_url": "https://www.pexels.com/@shvets-production",
+       "tone": "#302F2D"
       },
-      "image_tone": "#8D7D6D",
-      "state": "done"
+      "image_tone": "#302F2D",
+      "audio_url": null,
+      "usage": {
+       "text": "Rest, use heat, and take this medicine twice a day.",
+       "translation": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+       "offset": 30,
+       "length": 8,
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQZGSBXVYZNBBAC8MQ5"
+      },
+      "state": "done",
+      "returns_day": null
      }
     ]
    },
@@ -430,36 +518,48 @@
       "ref": "p1",
       "text": "My lower back hurts.",
       "translation": "У меня болит поясница.",
+      "pronunciation": "Май лоуэр бэк хёртс.",
+      "audio_url": null,
       "state": "done"
      },
      {
       "ref": "p2",
       "text": "It started three days ago.",
       "translation": "Это началось три дня назад.",
+      "pronunciation": "Ит стартед сри дэйз эгоу.",
+      "audio_url": null,
       "state": "done"
      },
      {
       "ref": "p3",
-      "text": "It gets worse when I bend.",
-      "translation": "Становится хуже, когда я наклоняюсь.",
+      "text": "It gets worse when I sit long.",
+      "translation": "Становится хуже, когда я долго сижу.",
+      "pronunciation": "Ит гетс вёрс уэн ай сит лонг.",
+      "audio_url": null,
       "state": "done"
      },
      {
       "ref": "p4",
       "text": "I don't have numbness or a fever.",
-      "translation": "У меня нет онемения и температуры.",
+      "translation": "У меня нет онемения или температуры.",
+      "pronunciation": "Ай доунт хэв намбнэс ор э фивэр.",
+      "audio_url": null,
       "state": "done"
      },
      {
       "ref": "p5",
-      "text": "I'll rest for two days.",
-      "translation": "Я буду отдыхать два дня.",
+      "text": "I'll take the medicine twice a day.",
+      "translation": "Я буду принимать лекарство два раза в день.",
+      "pronunciation": "Айл тэйк зэ мэдисин твайс э дэй.",
+      "audio_url": null,
       "state": "done"
      },
      {
       "ref": "p6",
-      "text": "Should I take any medicine?",
-      "translation": "Мне нужно принимать какое-нибудь лекарство?",
+      "text": "Should I come back if it gets worse?",
+      "translation": "Мне нужно прийти снова, если станет хуже?",
+      "pronunciation": "Шуд ай кам бэк иф ит гетс вёрс?",
+      "audio_url": null,
       "state": "done"
      }
     ]
@@ -476,63 +576,68 @@
       "partner": {
        "text": "What seems to be the problem today?",
        "translation": "Что вас сегодня беспокоит?",
-       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHPF2YD9NN0R3FHBFT6JFW"
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4ENGTB7HZMBEFE7CP3MZ"
       },
       "learner": {
        "text": "My lower back hurts.",
        "translation": "У меня болит поясница.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EPAVDH7BQA005W4QF2C",
        "state": "done"
       }
      },
      {
       "step": 2,
       "partner": {
-       "text": "Is the pain on the left, right, or middle?",
-       "translation": "Боль слева, справа или посередине?",
-       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHPK33RM1K888HTQ6V9ZVE"
+       "text": "Did it start today, or a few days ago?",
+       "translation": "Это началось сегодня или несколько дней назад?",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EPD5A0DZ45G9XYSHM2X"
       },
       "learner": {
-       "text": "It's in the middle.",
-       "translation": "Она посередине.",
+       "text": "It started three days ago.",
+       "translation": "Это началось три дня назад.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EPK6PYWBJDSHKRP1RZJ",
        "state": "done"
       }
      },
      {
       "step": 3,
       "partner": {
-       "text": "Did it start today, or three days ago?",
-       "translation": "Это началось сегодня или три дня назад?",
-       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHPP6THD8AG83DY72QX778"
+       "text": "Does the pain stay there, or go down your leg?",
+       "translation": "Боль остаётся там или отдаёт в ногу?",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EPS3S897JYFR49F3WAX"
       },
       "learner": {
-       "text": "It started three days ago.",
-       "translation": "Это началось три дня назад.",
+       "text": "It stays in my lower back.",
+       "translation": "Она остаётся в пояснице.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQ0JPTMHDHH5C06X04W",
        "state": "done"
       }
      },
      {
       "step": 4,
       "partner": {
-       "text": "Does it get worse when you bend or sit?",
-       "translation": "Становится хуже, когда вы наклоняетесь или сидите?",
-       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHQXE6BR7M0MPHP5CRDT01"
+       "text": "Is it worse when you bend or sit long?",
+       "translation": "Боль сильнее, когда вы наклоняетесь или долго сидите?",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQ4GK73JN40TH9ZFN6R"
       },
       "learner": {
-       "text": "It gets worse when I bend.",
-       "translation": "Становится хуже, когда я наклоняюсь.",
+       "text": "It gets worse when I sit long.",
+       "translation": "Становится хуже, когда я долго сижу.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQ83RVDH9SQNECZEZEG",
        "state": "done"
       }
      },
      {
       "step": 5,
       "partner": {
-       "text": "Do you have numbness in your legs or a fever?",
-       "translation": "У вас есть онемение в ногах или температура?",
-       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHR1WNPQRPBR12PDC8RBDX"
+       "text": "Do you have numbness or a fever?",
+       "translation": "У вас есть онемение или температура?",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQC9B8HCHS73CJC8Y3A"
       },
       "learner": {
        "text": "No, I don't have either.",
-       "translation": "Нет, у меня нет ни того, ни другого.",
+       "translation": "Нет, у меня нет ни того ни другого.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQG1EBWZE8BF4X9M82J",
        "state": "done"
       }
      },
@@ -540,38 +645,41 @@
       "step": 6,
       "partner": {
        "text": "This looks like a muscle strain.",
-       "translation": "Это похоже на растяжение мышцы.",
-       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHSX6XKPZB7FQSB2GM5SPD"
+       "translation": "Похоже, это растяжение мышцы.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQMYBAVQQKCX2FZWHDD"
       },
       "learner": {
-       "text": "Okay, that helps.",
-       "translation": "Хорошо, это помогает понять.",
+       "text": "Okay, that's not too serious.",
+       "translation": "Хорошо, это не слишком серьёзно.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQV7H7J1PSS750GQ9E7",
        "state": "done"
       }
      },
      {
       "step": 7,
       "partner": {
-       "text": "Use a heating pad and rest for two days.",
-       "translation": "Используйте грелку и отдыхайте два дня.",
-       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHXRNBQX3KCY6Z2K3CZ196"
+       "text": "Rest, use heat, and take this medicine twice a day.",
+       "translation": "Отдыхайте, используйте тепло и принимайте это лекарство два раза в день.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4EQZGSBXVYZNBBAC8MQ5"
       },
       "learner": {
-       "text": "I'll rest for two days.",
-       "translation": "Я буду отдыхать два дня.",
+       "text": "I'll take the medicine twice a day.",
+       "translation": "Я буду принимать лекарство два раза в день.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4ER5PZHZDZWMJK27B2GH",
        "state": "done"
       }
      },
      {
       "step": 8,
       "partner": {
-       "text": "Yes, take this anti-inflammatory after meals.",
-       "translation": "Да, принимайте это противовоспалительное после еды.",
-       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2FHY4SY4RXHVH0SJCQYQ3R2"
+       "text": "Yes. Come back in a week if it doesn't improve.",
+       "translation": "Да. Приходите через неделю, если не станет лучше.",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4ERER2FMT3085QYD451R"
       },
       "learner": {
-       "text": "Should I take any medicine?",
-       "translation": "Мне нужно принимать какое-нибудь лекарство?",
+       "text": "Should I come back if it gets worse?",
+       "translation": "Мне нужно прийти снова, если станет хуже?",
+       "audio_url": "http://localhost:8001/api/v1/plans/audio/01M2GF4ERAAVVSC5E641JMJTS1",
        "state": "done"
       }
      }

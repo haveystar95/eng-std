@@ -89,26 +89,43 @@ abstract final class AppMotion {
   /// Пульс кружка воспроизведения перед волной.
   static const wavePulse = Duration(milliseconds: 240);
 
-  // ── Окно дня — таблица «Тайминг · серия 23» канвы, одна константа на элемент (DAY-UI-2) ──
+  // ── Окно дня — таблица «Тайминг · серия 23» канвы (DAY-UI-3): одна константа на строку таблицы, ──
+  // ── имя — как у строки. Ничего не анимируется двумя правилами сразу: у плиты и пилюли — только   ──
+  // ── позиция прокрутки, у чипа — только сдвиг к сегменту, у шита — подъём, у фона — затемнение.  ──
 
-  /// Плита сжимается в строку 56 — по прокрутке, ease-out.
-  static const windowPlateCollapse = Duration(milliseconds: 240);
+  /// «плита → компактная шапка (пилюля едет вместе)» — НЕ анимация, а функция прокрутки: последние
+  /// 160 px пути плиты она переходит в шапку 56 (`linear по позиции`).
+  static const windowPlateToHeaderSpan = 160.0;
 
-  /// Вкладки примагничиваются под шапку — по достижении шапки, ease-out.
-  static const windowTabsSnap = Duration(milliseconds: 160);
+  /// «примагничивание в точке отпускания» — 260 мс, ease-out-cubic: один `animateTo` ленты.
+  static const windowSnap = Duration(milliseconds: 260);
 
-  /// Смена вкладки — по тапу или свайпу, ease-out.
-  static const windowTabSwitch = Duration(milliseconds: 220);
+  /// «смена вкладки · чип скользит к сегменту» — 220 мс по тапу или свайпу, ease-out-cubic.
+  static const windowTabChip = Duration(milliseconds: 220);
 
-  /// Содержимое вкладки — `om-cab-in` (прозрачность 0 → 1, сдвиг 8 → 0), ease-out, с задержкой 80.
-  static const windowTabContent = Duration(milliseconds: 200);
-  static const windowTabContentDelay = Duration(milliseconds: 80);
-  static const windowTabContentRise = 8.0;
+  /// «смена вкладки · содержимое сдвигается по горизонтали» — 220 мс, тем же контроллером, что и чип.
+  static const windowTabContent = Duration(milliseconds: 220);
 
-  /// Галка на закрытом этапе — `om-check-pop` (масштаб 0 → 1), с задержкой 300.
+  /// «23-0e · шит поднимается» — 320 мс, ease-out-cubic.
+  static const windowSheetRise = Duration(milliseconds: 320);
+
+  /// «23-0e · фон затемняется до 40 %» — 320 мс, ease-out-cubic, вместе с подъёмом.
+  static const windowSheetScrim = Duration(milliseconds: 320);
+
+  /// «23-0e · закрытие („Закрыть“ или тяга вниз)» — 260 мс, ease-out-cubic.
+  static const windowSheetClose = Duration(milliseconds: 260);
+
+  /// ease-out-cubic таблицы — `cubic-bezier(.33,1,.68,1)` у всех строк выше.
+  static const windowEaseOutCubic = Cubic(.33, 1, .68, 1);
+
+  /// Галка этапа, закрытого в сессии, — при возврате в окно через 300 мс (`om-check-pop`: масштаб
+  /// 0 → 1 за 180 мс, `cubic-bezier(.34,1.4,.5,1)`).
   static const windowStageCheck = Duration(milliseconds: 180);
   static const windowStageCheckDelay = Duration(milliseconds: 300);
   static const windowStageCheckCurve = Cubic(.34, 1.4, .5, 1);
+
+  /// Фото: тон → картинка растворением 200 мс (слоты слов, плита, шит, круг компактной шапки).
+  static const windowPhotoFade = Duration(milliseconds: 200);
 
   /// Ни одна анимация не длиннее этого.
   static const maxDuration = Duration(milliseconds: 420);

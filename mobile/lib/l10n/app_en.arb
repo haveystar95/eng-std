@@ -2072,7 +2072,6 @@
   "planWindowBack": "Back",
   "planWindowStateNotStarted": "not started",
   "planWindowStateInProgress": "in progress",
-  "planWindowStatePassed": "passed",
   "planWindowApprox": "≈ {minutes}",
   "@planWindowApprox": {
     "placeholders": {
@@ -2092,7 +2091,6 @@
       }
     }
   },
-  "planWindowGoalsLabel": "you will learn to",
   "planWindowStageCount": "{done} / {total}",
   "@planWindowStageCount": {
     "placeholders": {
@@ -2130,6 +2128,15 @@
   },
   "planWindowCtaAgain": "Once more",
   "planWindowListen": "Listen",
+  "planWindowGoalsLearn": "You will learn to {goals}",
+  "planWindowGoalsLearned": "Learned:",
+  "planWindowGoalsJoin": "{head}, {next}",
+  "planWindowGoalsJoinLast": "{head} and {last}",
+  "planWindowSheetTalk": "In the conversation",
+  "planWindowSheetNotStarted": "not started",
+  "planWindowSheetReturnsOn": "comes back on day {n}",
+  "planWindowSheetReturnsTomorrow": "comes back tomorrow",
+  "planWindowSheetClose": "Close",
   "profileRowSounds": "Sounds",
   "@profileRowSounds": {},
   "profileSoundsHint": "Correct · wrong · stage closed · day closed",

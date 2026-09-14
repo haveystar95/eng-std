@@ -4346,10 +4346,6 @@
   "@planWindowStateInProgress": {
     "description": "Окно дня, плита (23-0b): слово состояния дня под названием — «идёт · ≈ 12 мин»."
   },
-  "planWindowStatePassed": "пройден",
-  "@planWindowStatePassed": {
-    "description": "Окно дня, плита (23-0c): слово состояния дня под названием — «пройден · 19 минут»."
-  },
   "planWindowApprox": "≈ {minutes}",
   "@planWindowApprox": {
     "description": "Окно дня: оценка минут сервера (minutes_estimate, minutes_left) — «≈ 20 минут» на плите не начатого дня, «≈ 12 мин» у идущего, у текущего этапа и в компактной шапке; minutes — planMinutesCount или planMinutesShort.",
@@ -4370,10 +4366,6 @@
         "type": "String"
       }
     }
-  },
-  "planWindowGoalsLabel": "научишься",
-  "@planWindowGoalsLabel": {
-    "description": "Окно дня, плита (23-0a…0c): лейбл caps над целями дня; галки у целей — только у пройденного дня."
   },
   "planWindowStageCount": "{done} / {total}",
   "@planWindowStageCount": {
@@ -4420,7 +4412,69 @@
   },
   "planWindowListen": "Прослушать",
   "@planWindowListen": {
-    "description": "Окно дня, вкладки «Фразы» и «Диалог» (23-0d): подпись кружка воспроизведения 28 для читалки экрана."
+    "description": "Окно дня и шит слова (23-0a…0e): подпись кружка «прослушать» — у слова, фразы, обеих реплик диалога, реплики «В разговоре» и слова в шите — для читалки экрана."
+  },
+  "planWindowGoalsLearn": "Научишься {goals}",
+  "@planWindowGoalsLearn": {
+    "description": "Окно дня, плита не пройденного дня (23-0a, 23-0b): цели ОДНИМ предложением — «Научишься описать, где и как болит, ответить на вопросы врача и спросить про ограничения»; goals — цели сервера, склеенные planWindowGoalsJoin / planWindowGoalsJoinLast.",
+    "placeholders": {
+      "goals": {
+        "type": "String"
+      }
+    }
+  },
+  "planWindowGoalsLearned": "Научился:",
+  "@planWindowGoalsLearned": {
+    "description": "Окно дня, плита пройденного дня (23-0c): начало предложения целей шалфеем с галкой 14 — «Научился: описать, где и как болит, …»."
+  },
+  "planWindowGoalsJoin": "{head}, {next}",
+  "@planWindowGoalsJoin": {
+    "description": "Окно дня, предложение целей (23-0a…0c): цель через запятую — «описать, где болит, ответить на вопросы врача».",
+    "placeholders": {
+      "head": {
+        "type": "String"
+      },
+      "next": {
+        "type": "String"
+      }
+    }
+  },
+  "planWindowGoalsJoinLast": "{head} и {last}",
+  "@planWindowGoalsJoinLast": {
+    "description": "Окно дня, предложение целей (23-0a…0c): последняя цель через «и» — «… и спросить про ограничения».",
+    "placeholders": {
+      "head": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "planWindowSheetTalk": "В разговоре",
+  "@planWindowSheetTalk": {
+    "description": "Шит слова (23-0e): лейбл caps над репликой дня, где звучит слово (usage сервера), слово в реплике латунью."
+  },
+  "planWindowSheetNotStarted": "не начато",
+  "@planWindowSheetNotStarted": {
+    "description": "Шит слова (23-0e): строка состояния слова, которое ещё не проходили (state = pending) — форма среднего рода от «не начат»."
+  },
+  "planWindowSheetReturnsOn": "вернётся в день {n}",
+  "@planWindowSheetReturnsOn": {
+    "description": "Шит слова (23-0e): часть строки состояния слова, проваленного дважды — «пройдено · вернётся в день 3»; n — returns_day сервера.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planWindowSheetReturnsTomorrow": "вернётся завтра",
+  "@planWindowSheetReturnsTomorrow": {
+    "description": "Шит слова (23-0e): часть строки состояния, когда сервер не назвал день возврата (returns_day = null)."
+  },
+  "planWindowSheetClose": "Закрыть",
+  "@planWindowSheetClose": {
+    "description": "Шит слова (23-0e): единственная кнопка — текстовая, латунью; шит закрывается и тягой вниз."
   },
   "profileRowSounds": "Звуки",
   "@profileRowSounds": {

@@ -3399,9 +3399,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planWindowStateInProgress => 'идёт';
 
   @override
-  String get planWindowStatePassed => 'пройден';
-
-  @override
   String planWindowApprox(String minutes) {
     return '≈ $minutes';
   }
@@ -3410,9 +3407,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String planWindowJoin(String first, String second) {
     return '$first · $second';
   }
-
-  @override
-  String get planWindowGoalsLabel => 'научишься';
 
   @override
   String planWindowStageCount(int done, int total) {
@@ -3447,6 +3441,41 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planWindowListen => 'Прослушать';
+
+  @override
+  String planWindowGoalsLearn(String goals) {
+    return 'Научишься $goals';
+  }
+
+  @override
+  String get planWindowGoalsLearned => 'Научился:';
+
+  @override
+  String planWindowGoalsJoin(String head, String next) {
+    return '$head, $next';
+  }
+
+  @override
+  String planWindowGoalsJoinLast(String head, String last) {
+    return '$head и $last';
+  }
+
+  @override
+  String get planWindowSheetTalk => 'В разговоре';
+
+  @override
+  String get planWindowSheetNotStarted => 'не начато';
+
+  @override
+  String planWindowSheetReturnsOn(int n) {
+    return 'вернётся в день $n';
+  }
+
+  @override
+  String get planWindowSheetReturnsTomorrow => 'вернётся завтра';
+
+  @override
+  String get planWindowSheetClose => 'Закрыть';
 
   @override
   String get profileRowSounds => 'Звуки';

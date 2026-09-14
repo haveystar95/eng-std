@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 
-import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
-import 'package:eng_std/ui/ui.dart';
 
 import '../../../../data/plan/day_window.dart';
 import 'window_bits.dart';
-import 'window_phrases.dart' show WindowListen;
 
-/// ВКЛАДКА «ДИАЛОГ» (кадр 23-0d): пары пузырей. Собеседник — бумага у левой кромки и «прослушать»
-/// 28 справа от пузыря; ученик — тёмный пузырь справа, и маркер состояния стоит у НЕГО, а не у
-/// собеседника: состояние у своей реплики, голос у чужой.
+/// ВКЛАДКА «ДИАЛОГ» (кадр 23-0d): пары пузырей через 12, в паре — через 8. Собеседник — бумага у левой
+/// кромки и через 10 «прослушать» 28; ученик — тёмный пузырь у правой кромки, и маркер состояния стоит у
+/// НЕГО. «Прослушать» — у обеих реплик (DAY-UI-3: у всех реплик есть голос, каждая звучит голосом своего
+/// говорящего); у своей реплики кружок стоит слева от пузыря, маркер — левее кружка.
 class WindowDialogue extends StatelessWidget {
   const WindowDialogue({super.key, required this.pairs, required this.onListen});
 
@@ -27,7 +25,7 @@ class WindowDialogue extends StatelessWidget {
         if (i > 0) const SizedBox(height: 12),
         if (pair.partner case final partner?) _PartnerRow(line: partner, onListen: onListen),
         if (pair.partner != null && pair.learner != null) const SizedBox(height: 8),
-        if (pair.learner case final learner?) _LearnerRow(line: learner),
+        if (pair.learner case final learner?) _LearnerRow(line: learner, onListen: onListen),
       ],
     ],
   );
@@ -48,29 +46,32 @@ class _PartnerRow extends StatelessWidget {
       ),
       const SizedBox(width: 10),
       Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: PlayCircle(
-          size: 28,
-          label: AppLocalizations.of(context).planWindowListen,
-          onTap: () => onListen(line.text, partner: true),
-        ),
+        padding: const EdgeInsets.only(top: 12),
+        child: WindowListenButton(onTap: () => onListen(line.text, line.audioUrl)),
       ),
     ],
   );
 }
 
 class _LearnerRow extends StatelessWidget {
-  const _LearnerRow({required this.line});
+  const _LearnerRow({required this.line, required this.onListen});
 
   final WindowLine line;
+  final WindowListen onListen;
 
   @override
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: MainAxisAlignment.end,
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      if (line.state case final state?)
-        Padding(padding: const EdgeInsets.only(top: 17), child: WindowUnitMarker(state: state)),
+      if (line.state case final state?) ...[
+        Padding(padding: const EdgeInsets.only(top: 19), child: WindowUnitMarker(state: state)),
+        const SizedBox(width: 10),
+      ],
+      Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: WindowListenButton(onTap: () => onListen(line.text, line.audioUrl)),
+      ),
       const SizedBox(width: 10),
       Flexible(
         child: _Bubble(

@@ -2,7 +2,9 @@
 ///
 /// Канон `../backend2/docs/plan-dialogue.md` §7: ярус «понимаю», такт 1, прогон и разогрев стоят на
 /// слушании, темп реплик ниже темпа слов, и «никакая реплика не подаётся на слух, пока озвучка не
-/// готова». Системный синтез остаётся голосом СЛОВ и связок; реплики играет файл.
+/// готова». С DAY-UI-3 сервер озвучивает всё, что звучит в дне: реплики обоих, фразы и слова — у
+/// каждой строки свой файл, а системный синтез — временная замена, пока файла нет. Докачивает общий
+/// [AudioLoader] (шесть параллельно, диск, повторы).
 ///
 /// ## Ключ — ТЕКСТ, а не карточка, и это несущее решение
 ///
@@ -32,6 +34,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'audio_loader.dart';
 import 'config.dart';
 
 /// One line the server can play from a file: what it says, and where the file is.
@@ -57,11 +60,14 @@ class LineAudioCache {
     MethodChannel? channel,
     Directory? directory,
     String? Function()? bearer,
+    Duration? retryBackoff,
   }) : _http = http ?? Dio(),
        _channel = channel ?? const MethodChannel('com.denis.engstd/line_audio'),
        _given = directory,
        // ignore: prefer_initializing_formals
-       _bearer = bearer;
+       _bearer = bearer,
+       // ignore: prefer_initializing_formals
+       _retryBackoff = retryBackoff;
 
   final Dio _http;
   final MethodChannel _channel;
@@ -111,8 +117,15 @@ class LineAudioCache {
   Directory? _dir;
   Future<void>? _loading;
 
-  /// Скачивания, идущие прямо сейчас, — чтобы вход в день дважды не качал один файл дважды.
-  final Set<String> _inFlight = {};
+  /// Пауза перед повтором упавшей докачки (тесты ставят ноль).
+  final Duration? _retryBackoff;
+
+  /// ОБЩИЙ ЗАГРУЗЧИК ЗВУКА (DAY-UI-3): шесть докачек параллельно, диск, повторы на обрыв и 5xx, одна
+  /// докачка на адрес. Поднимается вместе с каталогом в [load]; до этого докачивать некуда.
+  AudioLoader? _loader;
+
+  /// Загрузчик — для замера холодного и тёплого входа в день (`timings`).
+  AudioLoader? get loader => _loader;
 
   int _downloadFailures = 0;
   int _silentFallbacks = 0;
@@ -159,11 +172,7 @@ class LineAudioCache {
 
   /// Имя файла — id строки озвучки из URL. Смена голоса даёт новый id, поэтому новый файл встаёт
   /// рядом со старым, а не поверх него: «старый кэш не играется за новый голос» держится именем.
-  static String fileNameOf(String url) {
-    final name = p.basename(Uri.parse(url).path);
-
-    return name.contains('.') ? name : '$name.mp3';
-  }
+  static String fileNameOf(String url) => AudioLoader.fileNameOf(url);
 
   /// Известна ли эта строка КАК РЕПЛИКА — независимо от того, скачан ли уже файл и будет ли он.
   bool knows(String text) {
@@ -218,6 +227,7 @@ class LineAudioCache {
       final dir = given ?? Directory(p.join((await getApplicationSupportDirectory()).path, 'line_audio'));
       if (!dir.existsSync()) dir.createSync(recursive: true);
       _dir = dir;
+      _loader = AudioLoader(http: _http, directory: dir, bearer: _bearer, firstBackoff: _retryBackoff);
 
       final manifest = File(p.join(dir.path, 'manifest.json'));
       if (!manifest.existsSync()) return;
@@ -296,60 +306,21 @@ class LineAudioCache {
   }
 
   Future<void> _fetch(String key, String url) async {
-    final dir = _dir;
-    if (dir == null || !_inFlight.add(url)) return;
-    // СПРАШИВАЕМ ТОКЕН СЕЙЧАС — см. [_bearer].
-    final bearer = _bearer?.call();
-
-    final name = fileNameOf(url);
-    final target = File(p.join(dir.path, name));
-    try {
-      if (target.existsSync() && target.lengthSync() > 0) {
-        _fileOf[key] = name;
-        _failed.remove(key);
-        await _save();
-
-        return;
-      }
-
-      final response = await _http.get<List<int>>(
-        url,
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: bearer == null ? null : {'Authorization': 'Bearer $bearer'},
-          // 404 здесь — не исключение, а ответ «файла нет»: строка озвучки могла уехать вместе со
-          // сменой голоса между сборкой посадки и докачкой.
-          validateStatus: (code) => code != null && code < 500,
-        ),
-      );
-      final bytes = response.data;
-      if (response.statusCode != 200 || bytes == null || bytes.isEmpty) {
-        _downloadFailures++;
-        _lastReason = 'http ${response.statusCode}';
-        _failed.add(key);
-
-        return;
-      }
-
-      // Пишем во временный файл и переименовываем: оборванная докачка не должна оставить в кэше
-      // половину файла под именем целого.
-      final tmp = File('${target.path}.part');
-      tmp.writeAsBytesSync(bytes, flush: true);
-      tmp.renameSync(target.path);
-
-      _fileOf[key] = name;
+    final loader = _loader;
+    if (loader == null) return;
+    // Токен спрашивается в момент запроса — внутри загрузчика (см. [_bearer]).
+    final result = await loader.load(url);
+    if (result.path != null) {
+      _fileOf[key] = fileNameOf(url);
       _failed.remove(key);
       await _save();
-    } catch (e) {
-      _downloadFailures++;
-      _failed.add(key);
-      // Первая строка причины: у Dio дальше идёт абзац про статус-коды, который в бейдж не влезет
-      // и ничего не добавляет.
-      _lastReason = e.toString().split('\n').first;
-      debugPrint('[line-audio] $url: $e');
-    } finally {
-      _inFlight.remove(url);
+
+      return;
     }
+    _downloadFailures++;
+    _failed.add(key);
+    _lastReason = result.reason;
+    debugPrint('[line-audio] $url: ${result.reason}');
   }
 
   Future<void> _save() async {

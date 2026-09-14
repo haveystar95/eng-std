@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
+import 'package:eng_std/data/audio_loader.dart';
 import 'package:eng_std/data/line_audio.dart';
 
 /// СЕРВЕРНАЯ ОЗВУЧКА РЕПЛИК на телефоне (наряд TTS-1, Ч.2.1).
@@ -34,7 +35,7 @@ void main() {
   }
 
   LineAudioCache cache({Dio? http}) =>
-      LineAudioCache(http: http ?? serving([1, 2, 3]), directory: dir);
+      LineAudioCache(http: http ?? serving([1, 2, 3]), directory: dir, retryBackoff: Duration.zero);
 
   test('a line whose file is still on its way is NOT ready', () async {
     // Кадр DL·08 стоит ровно на этом состоянии: файл ЕДЕТ. «Упал» — состояние другое, и с него
@@ -117,19 +118,22 @@ void main() {
     const line = 'Tell me a little about your background.';
     const url = 'https://x/api/v1/audio/lines/A.mp3';
 
-    // Сеть, которая падает один раз и потом работает, — то, что и происходит на телефоне.
+    // Сеть, которая падает несколько раз и потом работает, — то, что и происходит на телефоне. Обрыв
+    // и 5xx загрузчик повторяет сам (`AudioLoader.retries`, DAY-UI-3); что и после этого не пришло,
+    // повторяет `retryMissing`.
     final asked = <String>[];
     final flaky = Dio();
-    flaky.httpClientAdapter = _FlakyAdapter([1, 2, 3], failFirst: 1, onGet: asked.add);
+    flaky.httpClientAdapter = _FlakyAdapter([1, 2, 3], failFirst: 1 + AudioLoader.retries, onGet: asked.add);
 
     final c = cache(http: flaky);
     await c.preload([(text: line, url: url)]);
     expect(c.fileFor(line), isNull);
     expect(c.trouble.downloads, 1);
+    expect(asked, hasLength(1 + AudioLoader.retries));
 
     await c.retryMissing();
 
-    expect(asked, [url, url]);
+    expect(asked, hasLength(2 + AudioLoader.retries));
     expect(c.fileFor(line), isNotNull);
     expect(c.hasFailed(line), isFalse);
   });

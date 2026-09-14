@@ -1039,9 +1039,10 @@ abstract final class AppTextDay {
 
 }
 
-/// ОКНО ДНЯ — кадры 23-0a … 23-0d канвы plan-canvas (наряд DAY-UI-2). Кегли только из кадров:
-/// 11 лейблы caps, 13 статусы, 15 текст и вкладки, 17 слова и фразы на изучаемом языке, 44 название
-/// дня. Литеры — Literata у изучаемого языка и названия, Inter у всего остального.
+/// ОКНО ДНЯ — кадры 23-0a … 23-0e канвы plan-canvas (наряды DAY-UI-2, DAY-UI-3). Кегли только из
+/// кадров: 11 лейблы caps, 13 статусы и чтение, 15 текст, вкладки и перевод, 17 итог дня, 22 слова,
+/// фразы и реплики на изучаемом языке, 30 название дня (26 при переносе) и слово шита. Литеры —
+/// Literata у изучаемого языка и названия, Inter у всего остального.
 abstract final class AppTextWindow {
   /// Бровь «ДЕНЬ 2» — 13/600, .08em, строка 18, светлая латунь.
   static const brow = TextStyle(
@@ -1053,13 +1054,23 @@ abstract final class AppTextWindow {
     color: AppColors.windowBrow,
   );
 
-  /// Название дня — Literata 44/500, строка 48, −.02em.
+  /// Название дня — Literata 30/500, строка 36, −.01em, в одну строку.
   static const title = TextStyle(
     fontFamily: AppFonts.literata,
     fontWeight: FontWeight.w500,
-    fontSize: 44,
-    height: 48 / 44,
-    letterSpacing: -0.88,
+    fontSize: 30,
+    height: 36 / 30,
+    letterSpacing: -0.3,
+    color: AppColors.paper,
+  );
+
+  /// Название, которое в одну строку не встало, — 26, строка 32, с переносом.
+  static const titleWrapped = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w500,
+    fontSize: 26,
+    height: 32 / 26,
+    letterSpacing: -0.26,
     color: AppColors.paper,
   );
 
@@ -1071,22 +1082,12 @@ abstract final class AppTextWindow {
     color: AppColors.windowStatus,
   );
 
-  /// «НАУЧИШЬСЯ» — 11/600, .08em, строка 14.
-  static const label = TextStyle(
-    fontFamily: AppFonts.inter,
-    fontWeight: FontWeight.w600,
-    fontSize: 11,
-    height: 14 / 11,
-    letterSpacing: 0.88,
-    color: AppColors.windowAhead,
-  );
-
-  /// Цель — 15, строка 20, бумага.
-  static const goal = TextStyle(
+  /// Цели одним предложением — 15, строка 20, бумага .78; «Научился:» у пройденного — шалфеем.
+  static const goals = TextStyle(
     fontFamily: AppFonts.inter,
     fontSize: 15,
     height: 20 / 15,
-    color: AppColors.paper,
+    color: AppColors.windowGoals,
   );
 
   /// Имя этапа — 15/500 (текущий 600), строка 20.
@@ -1116,7 +1117,7 @@ abstract final class AppTextWindow {
     fontFeatures: _tabular,
   );
 
-  /// «День пройден · 19 минут» — 17/600.
+  /// «День пройден · 19 минут» на месте статуса — 17/600, строка 20.
   static const passed = TextStyle(
     fontFamily: AppFonts.inter,
     fontWeight: FontWeight.w600,
@@ -1139,7 +1140,7 @@ abstract final class AppTextWindow {
     color: AppColors.tertiary,
   );
 
-  /// Вкладка — 15/600: активная ink, остальные secondary.
+  /// Сегмент пилюли — 15/600: активный бумагой на чипе чернила, остальные secondary.
   static const tab = TextStyle(
     fontFamily: AppFonts.inter,
     fontWeight: FontWeight.w600,
@@ -1147,7 +1148,7 @@ abstract final class AppTextWindow {
     color: AppColors.secondary,
   );
 
-  /// Бровь вкладки «СЛОВА · 8 · 5 ПРОЙДЕНО» — 11/600, .08em, строка 14, tertiary.
+  /// Бровь вкладки «СЛОВА · 8 · 5 ПРОЙДЕНО» и лейбл «В РАЗГОВОРЕ» — 11/600, .08em, строка 14, tertiary.
   static const tabBrow = TextStyle(
     fontFamily: AppFonts.inter,
     fontWeight: FontWeight.w600,
@@ -1157,21 +1158,70 @@ abstract final class AppTextWindow {
     color: AppColors.tertiary,
   );
 
-  /// Слово, фраза, реплика — Literata 17/500, строка 24.
+  /// Слово, фраза, реплика — Literata 22/500, строка 28.
   static const target = TextStyle(
     fontFamily: AppFonts.literata,
     fontWeight: FontWeight.w500,
-    fontSize: 17,
-    height: 24 / 17,
+    fontSize: 22,
+    height: 28 / 22,
     color: AppColors.ink,
   );
 
-  /// Перевод второй строкой — 15, строка 20, secondary.
+  /// Чтение кириллицей — 13, строка 18, tertiary.
+  static const reading = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontSize: 13,
+    height: 18 / 13,
+    color: AppColors.tertiary,
+  );
+
+  /// Перевод — 15, строка 20, secondary.
   static const translation = TextStyle(
     fontFamily: AppFonts.inter,
     fontSize: 15,
     height: 20 / 15,
     color: AppColors.secondary,
+  );
+
+  /// Шит 23-0e: слово — Literata 30/500, строка 36.
+  static const sheetWord = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w500,
+    fontSize: 30,
+    height: 36 / 30,
+    color: AppColors.ink,
+  );
+
+  /// Шит: чтение — 15, строка 20, tertiary.
+  static const sheetReading = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontSize: 15,
+    height: 20 / 15,
+    color: AppColors.tertiary,
+  );
+
+  /// Шит: перевод — 17, строка 24, ink.
+  static const sheetTranslation = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontSize: 17,
+    height: 24 / 17,
+    color: AppColors.ink,
+  );
+
+  /// Шит: строка состояния словами — 13, строка 18, tertiary.
+  static const sheetState = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontSize: 13,
+    height: 18 / 13,
+    color: AppColors.tertiary,
+  );
+
+  /// Шит: «Закрыть» — 15/500 латунью.
+  static const sheetClose = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w500,
+    fontSize: 15,
+    color: AppColors.brassInk,
   );
 
   /// Кнопка главного действия — 17/600 бумагой.

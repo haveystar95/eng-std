@@ -1,5 +1,5 @@
 {
- "id": "01M2FHN9Y6HRN80KSE1737ZDMZ",
+ "id": "01M2GF2MKQ5FKS586K1EFCM5AZ",
  "status": "active",
  "goal_text": "Иду к врачу: болит спина, нужно описать боль и понять назначения",
  "target_lang": "en",
@@ -21,20 +21,20 @@
  "learner_role_target": "Patient",
  "learner_role_native": "Пациент",
  "cover_image": {
-  "url": "https://images.pexels.com/photos/8460095/pexels-photo-8460095.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-  "author": "Los Muertos Crew",
-  "author_url": "https://www.pexels.com/@cristian-rojas",
-  "tone": "#A69897"
+  "url": "https://images.pexels.com/photos/7789616/pexels-photo-7789616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+  "author": "Ivan Babydov",
+  "author_url": "https://www.pexels.com/@babydov",
+  "tone": "#C5C0BC"
  },
- "collection_id": "01M2FHY4PTVJN91STXYYNQM01M",
+ "collection_id": "01M2GF59HJTKFEE0ZG0AF72KKV",
  "unclear_reason": null,
  "fail_reason": null,
  "current_day": {
-  "id": "01M2FHN9Y7P0GSREA6BSZXP7RK",
+  "id": "01M2GF2MKVDYQ65A1NSNR7ZPSG",
   "number": 2,
   "type": "scene",
   "status": "locked",
-  "scene_id": "01M2FHNJY3KTC0T36XSNY8CY96",
+  "scene_id": "01M2GF2Y19ZTNF4PYK8PPWDK46",
   "title_native": "Повторный приём",
   "title_target": "Follow-up visit",
   "teaches_native": "сказать, что лечение не помогло",
@@ -75,11 +75,11 @@
  },
  "days": [
   {
-   "id": "01M2FHN9Y7JC83Z7ZEN3MEDRPY",
+   "id": "01M2GF2MKVBMMM5Y92WSF45E9D",
    "number": 1,
    "type": "scene",
    "status": "closed",
-   "scene_id": "01M2FHNJY266RZAFP3FBJT2JH1",
+   "scene_id": "01M2GF2Y18JT5JKPMK286EQ6JS",
    "title_native": "Приём у врача",
    "title_target": "Doctor visit",
    "teaches_native": "описать боль, понять назначения",
@@ -93,8 +93,8 @@
    "cards_total": 77,
    "cards_done": 77,
    "minutes_spent": 1,
-   "opened_at": "2026-09-14T08:52:39+00:00",
-   "closed_at": "2026-09-14T08:53:28+00:00",
+   "opened_at": "2026-09-14T17:23:22+00:00",
+   "closed_at": "2026-09-14T17:24:11+00:00",
    "stages": [
     {
      "stage": "words",
@@ -119,11 +119,11 @@
    ]
   },
   {
-   "id": "01M2FHN9Y7P0GSREA6BSZXP7RK",
+   "id": "01M2GF2MKVDYQ65A1NSNR7ZPSG",
    "number": 2,
    "type": "scene",
    "status": "locked",
-   "scene_id": "01M2FHNJY3KTC0T36XSNY8CY96",
+   "scene_id": "01M2GF2Y19ZTNF4PYK8PPWDK46",
    "title_native": "Повторный приём",
    "title_target": "Follow-up visit",
    "teaches_native": "сказать, что лечение не помогло",
@@ -163,7 +163,7 @@
    ]
   },
   {
-   "id": "01M2FHN9Y7Q6EAVBDFK64HCV8V",
+   "id": "01M2GF2MKVJQ3VZFKVK7JW8T11",
    "number": 3,
    "type": "rehearsal",
    "status": "locked",
@@ -193,7 +193,7 @@
  ],
  "scenes": [
   {
-   "id": "01M2FHNJY266RZAFP3FBJT2JH1",
+   "id": "01M2GF2Y18JT5JKPMK286EQ6JS",
    "order": 1,
    "kind": "situation",
    "priority": 1,
@@ -211,22 +211,22 @@
    "partner_role_target": "Doctor",
    "partner_role_native": "Врач",
    "image": {
-    "url": "https://images.pexels.com/photos/8460095/pexels-photo-8460095.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-    "author": "Los Muertos Crew",
-    "author_url": "https://www.pexels.com/@cristian-rojas",
-    "tone": "#A69897",
-    "url_112": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/112?v=275287d8382d",
-    "url_448": "http://localhost:8001/api/v1/plans/images/01M2FHNJY266RZAFP3FBJT2JH1/448?v=275287d8382d"
+    "url": "https://images.pexels.com/photos/7789616/pexels-photo-7789616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Ivan Babydov",
+    "author_url": "https://www.pexels.com/@babydov",
+    "tone": "#C5C0BC",
+    "url_112": "http://localhost:8001/api/v1/plans/images/01M2GF2Y18JT5JKPMK286EQ6JS/112?v=d8f73c35a09c",
+    "url_448": "http://localhost:8001/api/v1/plans/images/01M2GF2Y18JT5JKPMK286EQ6JS/448?v=d8f73c35a09c"
    },
    "lesson_status": "ready",
    "lesson_fail_reason": null,
    "day_number": 1,
-   "cost_usd": "0.080015",
-   "latency_ms": 24195,
-   "prompt_version": "lesson-v3"
+   "cost_usd": "0.062172",
+   "latency_ms": 22482,
+   "prompt_version": "lesson-v4"
   },
   {
-   "id": "01M2FHNJY3KTC0T36XSNY8CY96",
+   "id": "01M2GF2Y19ZTNF4PYK8PPWDK46",
    "order": 2,
    "kind": "variant",
    "priority": 2,
@@ -237,26 +237,26 @@
     "сказать, что боль осталась",
     "описать изменения боли",
     "сказать о побочных действиях",
-    "уточнить новые назначения"
+    "понять новые назначения"
    ],
    "learner_role_target": "Patient",
    "learner_role_native": "Пациент",
    "partner_role_target": "Doctor",
    "partner_role_native": "Врач",
    "image": {
-    "url": "https://images.pexels.com/photos/7659869/pexels-photo-7659869.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-    "author": "Thirdman",
-    "author_url": "https://www.pexels.com/@thirdman",
-    "tone": "#BE9AA6",
-    "url_112": "http://localhost:8001/api/v1/plans/images/01M2FHNJY3KTC0T36XSNY8CY96/112?v=2846554787a9",
-    "url_448": "http://localhost:8001/api/v1/plans/images/01M2FHNJY3KTC0T36XSNY8CY96/448?v=2846554787a9"
+    "url": "https://images.pexels.com/photos/8312841/pexels-photo-8312841.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "RDNE Stock project",
+    "author_url": "https://www.pexels.com/@rdne",
+    "tone": "#D6CECC",
+    "url_112": "http://localhost:8001/api/v1/plans/images/01M2GF2Y19ZTNF4PYK8PPWDK46/112?v=d395e4e4e993",
+    "url_448": "http://localhost:8001/api/v1/plans/images/01M2GF2Y19ZTNF4PYK8PPWDK46/448?v=d395e4e4e993"
    },
    "lesson_status": "ready",
    "lesson_fail_reason": null,
    "day_number": 2,
-   "cost_usd": "0.081780",
-   "latency_ms": 26462,
-   "prompt_version": "lesson-v3"
+   "cost_usd": "0.060740",
+   "latency_ms": 21012,
+   "prompt_version": "lesson-v4"
   }
  ],
  "rescue_kit": [
@@ -286,13 +286,13 @@
    "pronunciation_native": "уан моумент лет ми чек"
   }
  ],
- "cost_usd": "0.180093",
+ "cost_usd": "0.141585",
  "versions": {
-  "build": "beaa99fa",
+  "build": "e0b6d817",
   "prompt_plan": "plan-builder-v2",
-  "prompt_lesson": "lesson-v3"
+  "prompt_lesson": "lesson-v4"
  },
- "started_at": "2026-09-14T08:49:16+00:00",
+ "started_at": "2026-09-14T17:23:21+00:00",
  "finished_at": null,
- "created_at": "2026-09-14T08:48:39+00:00"
+ "created_at": "2026-09-14T17:22:44+00:00"
 }

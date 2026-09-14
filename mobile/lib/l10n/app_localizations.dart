@@ -5025,12 +5025,6 @@ abstract class AppLocalizations {
   /// **'идёт'**
   String get planWindowStateInProgress;
 
-  /// Окно дня, плита (23-0c): слово состояния дня под названием — «пройден · 19 минут».
-  ///
-  /// In ru, this message translates to:
-  /// **'пройден'**
-  String get planWindowStatePassed;
-
   /// Окно дня: оценка минут сервера (minutes_estimate, minutes_left) — «≈ 20 минут» на плите не начатого дня, «≈ 12 мин» у идущего, у текущего этапа и в компактной шапке; minutes — planMinutesCount или planMinutesShort.
   ///
   /// In ru, this message translates to:
@@ -5042,12 +5036,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{first} · {second}'**
   String planWindowJoin(String first, String second);
-
-  /// Окно дня, плита (23-0a…0c): лейбл caps над целями дня; галки у целей — только у пройденного дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'научишься'**
-  String get planWindowGoalsLabel;
 
   /// Окно дня, плита (23-0b): цифра ТОЛЬКО у текущего этапа — «6 / 16»; у остальных рядов цифры нет (done_count и total сервера — null).
   ///
@@ -5079,11 +5067,65 @@ abstract class AppLocalizations {
   /// **'Ещё раз'**
   String get planWindowCtaAgain;
 
-  /// Окно дня, вкладки «Фразы» и «Диалог» (23-0d): подпись кружка воспроизведения 28 для читалки экрана.
+  /// Окно дня и шит слова (23-0a…0e): подпись кружка «прослушать» — у слова, фразы, обеих реплик диалога, реплики «В разговоре» и слова в шите — для читалки экрана.
   ///
   /// In ru, this message translates to:
   /// **'Прослушать'**
   String get planWindowListen;
+
+  /// Окно дня, плита не пройденного дня (23-0a, 23-0b): цели ОДНИМ предложением — «Научишься описать, где и как болит, ответить на вопросы врача и спросить про ограничения»; goals — цели сервера, склеенные planWindowGoalsJoin / planWindowGoalsJoinLast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Научишься {goals}'**
+  String planWindowGoalsLearn(String goals);
+
+  /// Окно дня, плита пройденного дня (23-0c): начало предложения целей шалфеем с галкой 14 — «Научился: описать, где и как болит, …».
+  ///
+  /// In ru, this message translates to:
+  /// **'Научился:'**
+  String get planWindowGoalsLearned;
+
+  /// Окно дня, предложение целей (23-0a…0c): цель через запятую — «описать, где болит, ответить на вопросы врача».
+  ///
+  /// In ru, this message translates to:
+  /// **'{head}, {next}'**
+  String planWindowGoalsJoin(String head, String next);
+
+  /// Окно дня, предложение целей (23-0a…0c): последняя цель через «и» — «… и спросить про ограничения».
+  ///
+  /// In ru, this message translates to:
+  /// **'{head} и {last}'**
+  String planWindowGoalsJoinLast(String head, String last);
+
+  /// Шит слова (23-0e): лейбл caps над репликой дня, где звучит слово (usage сервера), слово в реплике латунью.
+  ///
+  /// In ru, this message translates to:
+  /// **'В разговоре'**
+  String get planWindowSheetTalk;
+
+  /// Шит слова (23-0e): строка состояния слова, которое ещё не проходили (state = pending) — форма среднего рода от «не начат».
+  ///
+  /// In ru, this message translates to:
+  /// **'не начато'**
+  String get planWindowSheetNotStarted;
+
+  /// Шит слова (23-0e): часть строки состояния слова, проваленного дважды — «пройдено · вернётся в день 3»; n — returns_day сервера.
+  ///
+  /// In ru, this message translates to:
+  /// **'вернётся в день {n}'**
+  String planWindowSheetReturnsOn(int n);
+
+  /// Шит слова (23-0e): часть строки состояния, когда сервер не назвал день возврата (returns_day = null).
+  ///
+  /// In ru, this message translates to:
+  /// **'вернётся завтра'**
+  String get planWindowSheetReturnsTomorrow;
+
+  /// Шит слова (23-0e): единственная кнопка — текстовая, латунью; шит закрывается и тягой вниз.
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрыть'**
+  String get planWindowSheetClose;
 
   /// Строка профиля: выключатель звуков (токен-лист 4к-3).
   ///

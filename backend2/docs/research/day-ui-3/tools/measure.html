@@ -1,0 +1,33 @@
+<!doctype html>
+<!--
+  Geometry of a canvas frame (DAY-UI-3): the plate (the block rounded 0 0 28 28), the pill and the sheet of
+  a frame named by `data-screen-label` (hash), measured with getBoundingClientRect relative to the frame and
+  written into <pre id="out"> — read it with `Chrome --headless --dump-dom measure.html#<label>`.
+-->
+<html>
+<body style="margin:0">
+<pre id="out"></pre>
+<iframe id="f" src="../../../design/plan-canvas.dc.html" style="position:absolute;left:0;top:0;border:0;width:9000px;height:90000px"></iframe>
+<script>
+  const label = decodeURIComponent(location.hash.slice(1));
+  const f = document.getElementById('f');
+  f.onload = () => {
+    const doc = f.contentDocument;
+    const frame = doc.querySelector('[data-screen-label="' + label + '"]');
+    const out = {label};
+    if (!frame) { document.getElementById('out').textContent = JSON.stringify({label, missing: true}); return; }
+    const base = frame.getBoundingClientRect();
+    const rect = (el) => { const r = el.getBoundingClientRect(); return {top: r.top - base.top, bottom: r.bottom - base.top, left: r.left - base.left, right: r.right - base.left, height: r.height, width: r.width}; };
+    const all = [...frame.querySelectorAll('*')];
+    const plate = all.find((el) => (el.getAttribute('style') || '').includes('border-radius:0 0 28px 28px'));
+    if (plate) out.plate = rect(plate);
+    const pill = all.find((el) => { const s = el.getAttribute('style') || ''; return s.includes('height:48px') && s.includes('border-radius:24px'); });
+    if (pill) out.pill = rect(pill);
+    const sheet = all.find((el) => (el.getAttribute('style') || '').includes('border-radius:22px 22px 0 0'));
+    if (sheet) out.sheet = rect(sheet);
+    out.frame = {height: base.height, width: base.width};
+    document.getElementById('out').textContent = JSON.stringify(out);
+  };
+</script>
+</body>
+</html>
