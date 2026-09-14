@@ -128,10 +128,13 @@ reads plan tables.
   stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a
   missing copy on its own, so the copies part is an optimisation; the tones only come from here.
 - Ops: `plan:speak-backfill {--plan=} {--count}` (DAY-UI-3) — what scenes still do not say in the
-  server's voice (`SceneVoiceQueue`: both speakers' lines, phrases, words), through the queue's own
-  idempotent handler, newest plans first; waits out the vendor's per-minute limit and stops on the daily
-  one, naming the window; prints what is not voiced yet by kind, before and after (`--count` only
-  counts). `VoiceSceneJob` itself goes back on the queue for exactly the window the vendor names.
+  server's voice, bought BY KIND IN PACKETS to fit the vendor's ~100 requests a day (`VoiceBackfillQueue` →
+  `BuyVoicePacketHandler`): the dialogues of scenes missing partner lines, then of scenes missing only the
+  learner's (one call a scene, the whole conversation, only the missing lines kept), then phrases, then
+  words — up to twelve a call across scenes, one voice a packet; waits out the vendor's per-minute limit
+  and stops on the daily one, naming the window; prints the packets bought and what is not voiced yet by
+  kind, before and after (`--count` only counts). `VoiceSceneJob` (a fresh day) stays per scene, ≤ 4 calls,
+  and goes back on the queue until the day's quota comes back (midnight Pacific, or the answer's later time).
 - The plan languages are the server's list (`plan.languages`, `GET /plans/languages`), and
   `POST /plans` validates against it.
 - Notifications: `plan:notify-tick` (Presentation/Console, every 15 min in `routes/console.php`, run

@@ -14,9 +14,11 @@ use App\Modules\Generation\Application\Port\TransientSpeechError;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\Service\SpeechCost;
 use App\Modules\Shared\Domain\ValueObject\LineVoice;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 /**
@@ -51,8 +53,11 @@ use RuntimeException;
  *
  * ## Лимит — поминутный или суточный
  *
- * 429 несёт `QuotaFailure.violations[].quotaId` (`…PerMinute…` / `…PerDay…`) и `RetryInfo.retryDelay`
- * («49480s» — до полуночи вендора). Оба уходят в {@see TransientSpeechError}: джоба ждёт ровно столько.
+ * 429 несёт `QuotaFailure.violations[].quotaId` (`…PerMinute…` / `…PerDay…`) и `RetryInfo.retryDelay`; оба уходят в
+ * {@see TransientSpeechError}, и джоба ждёт ровно столько. СУТОЧНЫЙ отказ ждёт позднее из двух: названного ответом и
+ * полуночи по тихоокеанскому времени — по документации Gemini API запросы в сутки (RPD) сбрасываются в полночь
+ * Pacific (07:00 UTC летом, 08:00 зимой), а `retryDelay` суточного отказа живьём 14.09 указывал на 00:00 UTC
+ * (23786 с от 17:23:45 UTC): джоба, поверившая ему, семь часов стучалась бы в закрытое окно.
  */
 final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
 {
@@ -101,10 +106,13 @@ final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
             try {
                 $spans = $this->cutter->spans($pcm, $rate, $texts);
             } catch (SpeechNotCut $e) {
+                Log::warning('gemini speech not cut', ['form' => $asTurns ? 'turns' : 'list', 'voices' => count($script->voices), 'lines' => count($texts), 'attempt' => $attempt, 'sound_ms' => $durationMs, 'reason' => $e->getMessage()]);
                 $lastCut = $e;
 
                 continue;
             }
+            // Где разрезан звук — единственный след нарезки: сам PCM не хранится, только куски.
+            Log::info('gemini speech cut', ['form' => $asTurns ? 'turns' : 'list', 'voices' => count($script->voices), 'lines' => count($texts), 'attempt' => $attempt, 'sound_ms' => $durationMs, 'spans_ms' => $spans]);
 
             return $this->lines($pcm, $rate, $spans, $costs, $model);
         }
@@ -283,7 +291,20 @@ final class GeminiSpeechSynthesizer implements SpeechSynthesizerPort
             }
         }
 
-        return TransientSpeechError::rateLimited('gemini', $retry ?? ($perDay ? null : 60), $perDay);
+        if ($perDay) {
+            // The day's requests come back at midnight Pacific; a sooner delay named by the answer is not believed.
+            return TransientSpeechError::rateLimited('gemini', max($retry ?? 0, self::secondsToPacificMidnight(CarbonImmutable::now())), true);
+        }
+
+        return TransientSpeechError::rateLimited('gemini', $retry ?? 60, false);
+    }
+
+    /** Seconds until the next midnight in America/Los_Angeles — the vendor's daily quota window, summer time included. */
+    public static function secondsToPacificMidnight(CarbonImmutable $now): int
+    {
+        $pacific = $now->setTimezone('America/Los_Angeles');
+
+        return max(1, $pacific->addDay()->startOfDay()->getTimestamp() - $now->getTimestamp());
     }
 
     /** `audio/L16;codec=pcm;rate=24000` → 24000. */

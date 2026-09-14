@@ -345,6 +345,68 @@ it('backfills what scenes still lack by kind — the dialogue whole in one call,
         ->and(DB::table('plan_line_audios')->where('line_ref', 'x1')->first())->toEqual($kept);
 });
 
+// Owner, 14.09: «backfill пакетами, чтобы уложиться в ~100 вызовов: диалоги одним вызовом на сцену, фразы и слова пачками
+// по 10–12; порядок: реплики собеседника → реплики ученика → фразы → слова». Catches a backfill that buys scene by scene
+// (three or four calls a scene), serves phrases before the dialogues, packs past twelve, or — packing across scenes —
+// stores one scene's `p1` under another's.
+it('backfills in packets by kind: partner-owing dialogues, then learner-only dialogues, then phrases and words across scenes, twelve a call', function () {
+    $vendor = windowVoice();
+    [, $tokenA] = planLearner();
+    [, $tokenB] = planLearner();
+    $planA = planCreate($this, $tokenA, ['days_total' => 2])['id'];
+    $planB = planCreate($this, $tokenB, ['days_total' => 2])['id'];
+    $sceneOf = static fn (string $plan): string => (string) DB::table('plan_scenes')->where('plan_id', $plan)->orderBy('order')->value('id');
+    [$sceneA, $sceneB] = [$sceneOf($planA), $sceneOf($planB)];
+    // A lacks a partner line and B only its learner's; both lack every phrase and every word.
+    DB::table('plan_line_audios')->where('scene_id', $sceneB)->whereIn('line_ref', ['x1b', 'x3b'])->delete();
+    DB::table('plan_line_audios')->where('scene_id', $sceneA)->where('line_ref', 'x2')->delete();
+    DB::table('plan_line_audios')->where(static fn ($q) => $q->where('line_ref', 'like', 'p%')->orWhere('line_ref', 'like', 'v%'))->delete();
+    $vendor->calls = 0;
+    $vendor->scripts = [];
+    // Both scenes say the same fake lesson: which scene a call belongs to is read off the refs the speaker is given.
+    $spy = new class(app(LineSpeaker::class)) implements LineSpeaker
+    {
+        /** @var list<list<string>> scene id of every line, per call */
+        public array $scenes = [];
+
+        public function __construct(private readonly LineSpeaker $inner) {}
+
+        public function say(string $lang, array $lines): array
+        {
+            $this->scenes[] = array_values(array_unique(array_map(static fn ($l): string => explode(':', $l->ref)[0], $lines)));
+
+            return $this->inner->say($lang, $lines);
+        }
+
+        public function voiceKeyFor(string $lang, VoiceGender $voice): ?string
+        {
+            return $this->inner->voiceKeyFor($lang, $voice);
+        }
+    };
+    app()->instance(LineSpeaker::class, $spy);
+
+    Artisan::call('plan:speak-backfill');
+    $output = Artisan::output();
+
+    $shape = array_map(static fn ($s): string => count($s->voices).'×'.count($s->turns), $vendor->scripts);
+    // A's dialogue comes first although B's plan is newer (scenes are served newest plan first): partner lines before
+    // the learner's. Phrases and words are packed across both scenes.
+    expect($spy->scenes[0])->toBe([$sceneA])
+        ->and($spy->scenes[1])->toBe([$sceneB])
+        ->and($spy->scenes[2])->toEqualCanonicalizing([$sceneA, $sceneB])
+        ->and($shape)->toBe(['2×16', '2×16', '1×12', '1×12', '1×4'])
+        ->and($vendor->calls)->toBe(5)
+        ->and($output)->toContain('Packets bought: dialogues 2, phrases 1, words 2 (of 5)')
+        ->and($output)->toContain('before: partner lines 1, learner lines 2, phrases 12, words 16 · after: partner lines 0, learner lines 0, phrases 0, words 0');
+    foreach ([$sceneA, $sceneB] as $scene) {
+        expect(DB::table('plan_line_audios')->where('scene_id', $scene)->count())->toBe(30, $scene)
+            ->and(DB::table('plan_line_audios')->where('scene_id', $scene)->where('line_ref', 'like', 'p%')->count())->toBe(6)
+            ->and(DB::table('plan_line_audios')->where('scene_id', $scene)->where('line_ref', 'like', 'v%')->count())->toBe(8);
+    }
+    $partnerFirst = DB::table('plan_line_audios')->where('scene_id', $sceneA)->where('line_ref', 'x2')->first();
+    expect($partnerFirst->voice_key)->toBe(windowVoiceKey('male'));
+});
+
 // Owner, DAY-UI-3: «51 купленная фраза используется». Catches the phrases bought before the two voices bought
 // again in the default learner voice — and a learner whose lines and phrases are two different people.
 it('casts a scene written before voices had genders so the phrases already bought stay the learner’s voice', function () {

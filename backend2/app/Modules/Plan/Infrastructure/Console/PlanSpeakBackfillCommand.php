@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Infrastructure\Console;
 
 use App\Modules\Generation\Application\Port\TransientSpeechError;
-use App\Modules\Plan\Application\Command\VoiceScene;
-use App\Modules\Plan\Application\Command\VoiceSceneHandler;
+use App\Modules\Plan\Application\Command\BuyVoicePacket;
+use App\Modules\Plan\Application\Command\BuyVoicePacketHandler;
+use App\Modules\Plan\Application\Dto\VoicePacket;
 use App\Modules\Plan\Application\Service\SceneVoiceQueue;
+use App\Modules\Plan\Application\Service\VoiceBackfillQueue;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Console\Command;
@@ -15,14 +17,17 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * `plan:speak-backfill {--plan=} {--count}` — everything existing scenes still do not say in the
- * server's voice (DAY-UI-3): the partner's lines, the learner's lines, the phrases, the words. A scene
- * written before voices had genders gets its cast first ({@see SceneVoiceQueue}) — a scene whose
- * phrases were already bought keeps them as the learner's voice.
+ * server's voice (DAY-UI-3): the partner's lines, the learner's lines, the phrases, the words.
  *
- * Runs the queue's own idempotent handler scene by scene — at most four vendor calls a scene — waits
- * the vendor's per-minute limit out, and STOPS on the daily one: the next window is the vendor's
- * midnight, and the command says so instead of sleeping half a day. Prints what is not voiced yet by
- * kind, before and after; `--count` only counts: nothing is bought.
+ * Bought BY KIND IN PACKETS ({@see VoiceBackfillQueue}), to fit the vendor's free day of ~100 requests: the dialogues
+ * of scenes missing partner lines, then the dialogues of scenes missing only the learner's, then phrases, then words —
+ * a dialogue is one call per scene, phrases and words go up to twelve a call across scenes in one voice. A scene
+ * written before voices had genders gets its cast stored before its first packet — a scene whose phrases were already
+ * bought keeps them as the learner's voice.
+ *
+ * Waits the vendor's per-minute limit out, and STOPS on the daily one: the next window is the vendor's midnight, and
+ * the command says so instead of sleeping half a day — what did not fit stays owed for the next run. Prints what is
+ * not voiced yet by kind, before and after, and the packets bought; `--count` only counts: nothing is bought.
  *
  * Writes `plan_line_audios`, `plan_scenes.partner_voice_gender` and files on `plan.audio_disk` — take
  * the database backup first, as for any write to the dev database.
@@ -31,12 +36,12 @@ final class PlanSpeakBackfillCommand extends Command
 {
     protected $signature = 'plan:speak-backfill {--plan= : only this plan id} {--count : only count what is not voiced yet}';
 
-    protected $description = 'Voice what plan scenes still lack — both speakers\' lines, phrases and words — waiting out the per-minute vendor limit';
+    protected $description = 'Voice what plan scenes still lack — dialogues, then phrases and words in packets — waiting out the per-minute vendor limit';
 
-    /** Per-minute refusals in a row on one scene before the command gives up for now. */
+    /** Per-minute refusals in a row on one packet before the command gives up for now. */
     private const MAX_WAITS = 10;
 
-    public function handle(VoiceSceneHandler $handler, SceneVoiceQueue $queue): int
+    public function handle(BuyVoicePacketHandler $buy, VoiceBackfillQueue $backfill, SceneVoiceQueue $queue): int
     {
         $option = $this->option('plan');
         if (is_string($option) && $option !== '' && ! Ulid::isValid($option)) {
@@ -63,11 +68,14 @@ final class PlanSpeakBackfillCommand extends Command
             return self::SUCCESS;
         }
 
-        foreach ($scenes as $sceneId) {
+        $packets = $backfill->packets(array_map(static fn (string $id): PlanSceneId => PlanSceneId::fromString($id), $scenes));
+        $bought = [VoicePacket::DIALOGUE => 0, VoicePacket::PHRASES => 0, VoicePacket::WORDS => 0];
+        foreach ($packets as $packet) {
             $waits = 0;
             while (true) {
                 try {
-                    $handler(new VoiceScene(PlanSceneId::fromString($sceneId)));
+                    $buy(new BuyVoicePacket($packet));
+                    $bought[$packet->kind]++;
                     break;
                 } catch (TransientSpeechError $e) {
                     if ($e->perDay) {
@@ -88,6 +96,10 @@ final class PlanSpeakBackfillCommand extends Command
             }
         }
 
+        $this->info(sprintf(
+            'Packets bought: dialogues %d, phrases %d, words %d (of %d)',
+            $bought[VoicePacket::DIALOGUE], $bought[VoicePacket::PHRASES], $bought[VoicePacket::WORDS], count($packets),
+        ));
         $this->info(sprintf(
             'Not voiced yet, %d scenes — before: %s · after: %s',
             count($scenes), self::words($before), self::words($this->owed($scenes, $queue)),

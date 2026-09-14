@@ -20,9 +20,10 @@ use Throwable;
  *
  * THE VENDOR'S LIMIT IS WAITED OUT, NOT FOUGHT. Gemini TTS on the free tier answers 429 per MINUTE (10
  * requests) and per DAY (100 per model); the answer names which and how long until its window opens
- * again. The job goes back on the queue for exactly that long — a minute, or until the vendor's
- * midnight — and every later attempt buys only what is still missing; nothing fails, and meanwhile
- * the phone reads the lines with its own voice. A day and a quarter is the most it waits.
+ * again. The job goes back on the queue for exactly that long — a minute, or until the day's quota comes
+ * back (midnight Pacific by the vendor's documentation, or the answer's later time — see
+ * `GeminiSpeechSynthesizer`) — and every later attempt buys only what is still missing; nothing fails,
+ * and meanwhile the phone reads the lines with its own voice. A day and a quarter is the most it waits.
  */
 final class VoiceSceneJob implements ShouldQueue
 {

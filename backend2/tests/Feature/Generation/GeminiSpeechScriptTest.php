@@ -10,6 +10,7 @@ use App\Modules\Generation\Application\Port\TransientSpeechError;
 use App\Modules\Generation\Infrastructure\Adapter\GeminiSpeechSynthesizer;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\ValueObject\LineVoice;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -144,21 +145,27 @@ it('asks once more when the sound does not cut, then gives up without a wrong cu
     Http::assertSentCount(2);
 });
 
-// Canon (DAY-UI-3): «при 429 очередь ждёт до следующего окна». Catches a daily refusal read as a minute's.
+// Canon (DAY-UI-3): «при 429 очередь ждёт до следующего окна»; owner 14.09: «время сброса суточной квоты — из ответа 429,
+// не 00:00 UTC; RPD сбрасывается в полночь Pacific». Catches a daily refusal read as a minute's, and a daily wait that
+// believes the answer's 00:00 UTC and knocks on a closed window for seven hours.
 it('reads which window a refusal is — the day’s or the minute’s — and how long the vendor asked to wait', function () {
     $refusal = static fn (string $quota, string $delay): array => ['error' => ['code' => 429, 'status' => 'RESOURCE_EXHAUSTED', 'details' => [
         ['@type' => 'type.googleapis.com/google.rpc.QuotaFailure', 'violations' => [['quotaId' => $quota]]],
         ['@type' => 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay' => $delay],
     ]]];
 
+    // Live 14.09, 17:23:45 UTC: the daily refusal named 23786 s — 00:00 UTC; the quota comes back at midnight Pacific.
+    $this->travelTo(CarbonImmutable::parse('2026-09-14 17:23:45', 'UTC'));
     Http::fake(['gemini.test/*' => Http::sequence()
-        ->push($refusal('GenerateRequestsPerDayPerProjectPerModel', '49480s'), 429)
-        ->push($refusal('GenerateRequestsPerMinutePerProjectPerModel', '37.2s'), 429)]);
+        ->push($refusal('GenerateRequestsPerDayPerProjectPerModel', '23786s'), 429)
+        ->push($refusal('GenerateRequestsPerMinutePerProjectPerModel', '37.2s'), 429)
+        ->push($refusal('GenerateRequestsPerDayPerProjectPerModel', '90000s'), 429)]);
     try {
         geminiVendor()->speakScript(geminiDialogue());
         $this->fail('no refusal');
     } catch (TransientSpeechError $e) {
-        expect($e->perDay)->toBeTrue()->and($e->retryAfterSeconds)->toBe(49481);
+        // 07:00 UTC (PDT midnight) is 13 h 36 min 15 s away — later than the answer's 00:00 UTC.
+        expect($e->perDay)->toBeTrue()->and($e->retryAfterSeconds)->toBe(48975);
     }
 
     try {
@@ -167,4 +174,15 @@ it('reads which window a refusal is — the day’s or the minute’s — and ho
     } catch (TransientSpeechError $e) {
         expect($e->perDay)->toBeFalse()->and($e->retryAfterSeconds)->toBe(38);
     }
+
+    try {
+        geminiVendor()->speakScript(geminiDialogue());
+        $this->fail('no refusal');
+    } catch (TransientSpeechError $e) {
+        // An answer naming a LATER time than midnight Pacific is believed.
+        expect($e->perDay)->toBeTrue()->and($e->retryAfterSeconds)->toBe(90001);
+    }
+
+    // Winter: midnight Pacific is 08:00 UTC.
+    expect(GeminiSpeechSynthesizer::secondsToPacificMidnight(CarbonImmutable::parse('2026-12-01 18:00:00', 'UTC')))->toBe(14 * 3600);
 });

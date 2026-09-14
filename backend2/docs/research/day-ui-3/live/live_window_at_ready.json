@@ -1,0 +1,463 @@
+{
+ "day": {
+  "index": 1,
+  "type": "scene",
+  "title_native": "Приём у врача",
+  "title_target": "Doctor visit",
+  "image": {
+   "url": "https://images.pexels.com/photos/7789616/pexels-photo-7789616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+   "author": "Ivan Babydov",
+   "author_url": "https://www.pexels.com/@babydov",
+   "tone": "#C5C0BC",
+   "url_112": "http://localhost:8001/api/v1/plans/images/01M2GJXC21MVGRTYJ9G529D3BT/112?v=d8f73c35a09c",
+   "url_448": "http://localhost:8001/api/v1/plans/images/01M2GJXC21MVGRTYJ9G529D3BT/448?v=d8f73c35a09c"
+  },
+  "image_tone": "#C5C0BC",
+  "status": "not_started",
+  "minutes_estimate": 23,
+  "minutes_spent": null,
+  "goals": [
+   {
+    "text": "описать, где и как болит",
+    "passed": false
+   },
+   {
+    "text": "сказать, как долго болит",
+    "passed": false
+   },
+   {
+    "text": "ответить на вопросы врача",
+    "passed": false
+   },
+   {
+    "text": "понять назначения врача",
+    "passed": false
+   }
+  ]
+ },
+ "stages": [
+  {
+   "stage": "words",
+   "state": "locked",
+   "done_count": null,
+   "total": null,
+   "minutes_left": null,
+   "share": 0
+  },
+  {
+   "stage": "phrases",
+   "state": "locked",
+   "done_count": null,
+   "total": null,
+   "minutes_left": null,
+   "share": 0
+  },
+  {
+   "stage": "dialogue",
+   "state": "locked",
+   "done_count": null,
+   "total": null,
+   "minutes_left": null,
+   "share": 0
+  },
+  {
+   "stage": "listen",
+   "state": "locked",
+   "done_count": null,
+   "total": null,
+   "minutes_left": null,
+   "share": 0
+  },
+  {
+   "stage": "speak",
+   "state": "locked",
+   "done_count": null,
+   "total": null,
+   "minutes_left": null,
+   "share": 0
+  }
+ ],
+ "day_progress": 0,
+ "program": {
+  "words": {
+   "summary": {
+    "total": 8,
+    "done": 0,
+    "returns": 0
+   },
+   "items": [
+    {
+     "ref": "v1",
+     "term": "lower back",
+     "translation": "поясница",
+     "pronunciation": "лоуэр бэк",
+     "definition": "the part of the back above the hips",
+     "image": {
+      "url": "https://images.pexels.com/photos/7298613/pexels-photo-7298613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Kindel Media",
+      "author_url": "https://www.pexels.com/@kindelmedia",
+      "tone": "#AD937B"
+     },
+     "image_tone": "#AD937B",
+     "audio_url": null,
+     "usage": {
+      "text": "My lower back hurts.",
+      "translation": "У меня болит поясница.",
+      "offset": 3,
+      "length": 10,
+      "audio_url": null
+     },
+     "state": "pending",
+     "returns_day": null
+    },
+    {
+     "ref": "v2",
+     "term": "dull",
+     "translation": "тупой",
+     "pronunciation": "дал",
+     "definition": "not sharp or sudden in feeling",
+     "image": {
+      "url": "https://images.pexels.com/photos/7789610/pexels-photo-7789610.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Ivan Babydov",
+      "author_url": "https://www.pexels.com/@babydov",
+      "tone": "#B2ABA3"
+     },
+     "image_tone": "#B2ABA3",
+     "audio_url": null,
+     "usage": {
+      "text": "Is the pain sharp, or more dull?",
+      "translation": "Боль острая или скорее тупая?",
+      "offset": 27,
+      "length": 4,
+      "audio_url": null
+     },
+     "state": "pending",
+     "returns_day": null
+    },
+    {
+     "ref": "v3",
+     "term": "sharp",
+     "translation": "острый",
+     "pronunciation": "шарп",
+     "definition": "strong and sudden in feeling",
+     "image": {
+      "url": "https://images.pexels.com/photos/39192382/pexels-photo-39192382.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Vitaly Gariev",
+      "author_url": "https://www.pexels.com/@silverkblack",
+      "tone": "#90958F"
+     },
+     "image_tone": "#90958F",
+     "audio_url": null,
+     "usage": {
+      "text": "Is the pain sharp, or more dull?",
+      "translation": "Боль острая или скорее тупая?",
+      "offset": 12,
+      "length": 5,
+      "audio_url": null
+     },
+     "state": "pending",
+     "returns_day": null
+    },
+    {
+     "ref": "v4",
+     "term": "muscle strain",
+     "translation": "растяжение мышцы",
+     "pronunciation": "масл стрейн",
+     "definition": "an injury caused by stretching a muscle too much",
+     "image": {
+      "url": "https://images.pexels.com/photos/5794058/pexels-photo-5794058.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Yan Krukau",
+      "author_url": "https://www.pexels.com/@yankrukov",
+      "tone": "#8A7C70"
+     },
+     "image_tone": "#8A7C70",
+     "audio_url": null,
+     "usage": {
+      "text": "This looks like a muscle strain. Rest for two days.",
+      "translation": "Похоже, это растяжение мышцы. Отдыхайте два дня.",
+      "offset": 18,
+      "length": 13,
+      "audio_url": null
+     },
+     "state": "pending",
+     "returns_day": null
+    },
+    {
+     "ref": "v5",
+     "term": "rest",
+     "translation": "отдыхать",
+     "pronunciation": "рэст",
+     "definition": "to stop activity and relax so the body can heal",
+     "image": {
+      "url": "https://images.pexels.com/photos/6788686/pexels-photo-6788686.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Ivan S",
+      "author_url": "https://www.pexels.com/@ivan-s",
+      "tone": "#93928F"
+     },
+     "image_tone": "#93928F",
+     "audio_url": null,
+     "usage": {
+      "text": "This looks like a muscle strain. Rest for two days.",
+      "translation": "Похоже, это растяжение мышцы. Отдыхайте два дня.",
+      "offset": 33,
+      "length": 4,
+      "audio_url": null
+     },
+     "state": "pending",
+     "returns_day": null
+    },
+    {
+     "ref": "v6",
+     "term": "medicine",
+     "translation": "лекарство",
+     "pronunciation": "мэдисин",
+     "definition": "a substance you take to help treat a health problem",
+     "image": {
+      "url": "https://images.pexels.com/photos/8376247/pexels-photo-8376247.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Tima Miroshnichenko",
+      "author_url": "https://www.pexels.com/@tima-miroshnichenko",
+      "tone": "#928E85"
+     },
+     "image_tone": "#928E85",
+     "audio_url": null,
+     "usage": {
+      "text": "Take this medicine twice a day after meals.",
+      "translation": "Принимайте это лекарство два раза в день после еды.",
+      "offset": 10,
+      "length": 8,
+      "audio_url": null
+     },
+     "state": "pending",
+     "returns_day": null
+    },
+    {
+     "ref": "v7",
+     "term": "after meals",
+     "translation": "после еды",
+     "pronunciation": "афтер милз",
+     "definition": "after eating food",
+     "image": {
+      "url": "https://images.pexels.com/photos/8089102/pexels-photo-8089102.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Yaroslav Shuraev",
+      "author_url": "https://www.pexels.com/@yaroslav-shuraev",
+      "tone": "#BDB19B"
+     },
+     "image_tone": "#BDB19B",
+     "audio_url": null,
+     "usage": {
+      "text": "Take this medicine twice a day after meals.",
+      "translation": "Принимайте это лекарство два раза в день после еды.",
+      "offset": 31,
+      "length": 11,
+      "audio_url": null
+     },
+     "state": "pending",
+     "returns_day": null
+    },
+    {
+     "ref": "v8",
+     "term": "heavy lifting",
+     "translation": "поднятие тяжестей",
+     "pronunciation": "хэви лифтинг",
+     "definition": "lifting heavy objects",
+     "image": {
+      "url": "https://images.pexels.com/photos/4246102/pexels-photo-4246102.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Ketut Subiyanto",
+      "author_url": "https://www.pexels.com/@ketut-subiyanto",
+      "tone": "#9C8F7C"
+     },
+     "image_tone": "#9C8F7C",
+     "audio_url": null,
+     "usage": {
+      "text": "Should I avoid heavy lifting?",
+      "translation": "Мне нужно избегать поднятия тяжестей?",
+      "offset": 15,
+      "length": 13,
+      "audio_url": null
+     },
+     "state": "pending",
+     "returns_day": null
+    }
+   ]
+  },
+  "phrases": {
+   "summary": {
+    "total": 6,
+    "done": 0,
+    "returns": 0
+   },
+   "items": [
+    {
+     "ref": "p1",
+     "text": "My lower back hurts.",
+     "translation": "У меня болит поясница.",
+     "pronunciation": "Май лоуэр бэк хёртс.",
+     "audio_url": null,
+     "state": "pending"
+    },
+    {
+     "ref": "p2",
+     "text": "It started three days ago.",
+     "translation": "Это началось три дня назад.",
+     "pronunciation": "Ит стартед сри дэйз эгоу.",
+     "audio_url": null,
+     "state": "pending"
+    },
+    {
+     "ref": "p3",
+     "text": "It's a dull pain.",
+     "translation": "Это тупая боль.",
+     "pronunciation": "Итс э дал пэйн.",
+     "audio_url": null,
+     "state": "pending"
+    },
+    {
+     "ref": "p4",
+     "text": "It gets worse when I bend.",
+     "translation": "Становится хуже, когда я наклоняюсь.",
+     "pronunciation": "Ит гетс вёрс уэн ай бэнд.",
+     "audio_url": null,
+     "state": "pending"
+    },
+    {
+     "ref": "p5",
+     "text": "I'll rest for two days.",
+     "translation": "Я буду отдыхать два дня.",
+     "pronunciation": "Айл рэст фор ту дэйз.",
+     "audio_url": null,
+     "state": "pending"
+    },
+    {
+     "ref": "p6",
+     "text": "Should I avoid heavy lifting?",
+     "translation": "Мне нужно избегать поднятия тяжестей?",
+     "pronunciation": "Шуд ай эвойд хэви лифтинг?",
+     "audio_url": null,
+     "state": "pending"
+    }
+   ]
+  },
+  "dialogue": {
+   "summary": {
+    "total": 8,
+    "done": 0,
+    "returns": 0
+   },
+   "items": [
+    {
+     "step": 1,
+     "partner": {
+      "text": "What seems to be the problem today?",
+      "translation": "Что вас беспокоит сегодня?",
+      "audio_url": null
+     },
+     "learner": {
+      "text": "My lower back hurts.",
+      "translation": "У меня болит поясница.",
+      "audio_url": null,
+      "state": "pending"
+     }
+    },
+    {
+     "step": 2,
+     "partner": {
+      "text": "Did it start today, or earlier this week?",
+      "translation": "Это началось сегодня или раньше на этой неделе?",
+      "audio_url": null
+     },
+     "learner": {
+      "text": "It started three days ago.",
+      "translation": "Это началось три дня назад.",
+      "audio_url": null,
+      "state": "pending"
+     }
+    },
+    {
+     "step": 3,
+     "partner": {
+      "text": "Is the pain sharp, or more dull?",
+      "translation": "Боль острая или скорее тупая?",
+      "audio_url": null
+     },
+     "learner": {
+      "text": "It's a dull pain.",
+      "translation": "Это тупая боль.",
+      "audio_url": null,
+      "state": "pending"
+     }
+    },
+    {
+     "step": 4,
+     "partner": {
+      "text": "Does it get worse when you bend or walk?",
+      "translation": "Становится хуже, когда вы наклоняетесь или ходите?",
+      "audio_url": null
+     },
+     "learner": {
+      "text": "It gets worse when I bend.",
+      "translation": "Становится хуже, когда я наклоняюсь.",
+      "audio_url": null,
+      "state": "pending"
+     }
+    },
+    {
+     "step": 5,
+     "partner": {
+      "text": "Does the pain stop you from sleeping?",
+      "translation": "Боль мешает вам спать?",
+      "audio_url": null
+     },
+     "learner": {
+      "text": "Yes, I wake up at night.",
+      "translation": "Да, я просыпаюсь ночью.",
+      "audio_url": null,
+      "state": "pending"
+     }
+    },
+    {
+     "step": 6,
+     "partner": {
+      "text": "This looks like a muscle strain. Rest for two days.",
+      "translation": "Похоже, это растяжение мышцы. Отдыхайте два дня.",
+      "audio_url": null
+     },
+     "learner": {
+      "text": "Okay, I'll rest for two days.",
+      "translation": "Хорошо, я буду отдыхать два дня.",
+      "audio_url": null,
+      "state": "pending"
+     }
+    },
+    {
+     "step": 7,
+     "partner": {
+      "text": "Take this medicine twice a day after meals.",
+      "translation": "Принимайте это лекарство два раза в день после еды.",
+      "audio_url": null
+     },
+     "learner": {
+      "text": "I'll take it after meals.",
+      "translation": "Я буду принимать это после еды.",
+      "audio_url": null,
+      "state": "pending"
+     }
+    },
+    {
+     "step": 8,
+     "partner": {
+      "text": "Yes, avoid heavy lifting for one week.",
+      "translation": "Да, избегайте поднятия тяжестей одну неделю.",
+      "audio_url": null
+     },
+     "learner": {
+      "text": "Should I avoid heavy lifting?",
+      "translation": "Мне нужно избегать поднятия тяжестей?",
+      "audio_url": null,
+      "state": "pending"
+     }
+    }
+   ]
+  }
+ },
+ "allowed_action": "start"
+}
