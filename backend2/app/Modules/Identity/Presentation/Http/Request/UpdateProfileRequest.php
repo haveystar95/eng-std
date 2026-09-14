@@ -24,6 +24,7 @@ final class UpdateProfileRequest extends FormRequest
             'daily_goal' => ['sometimes', 'integer', 'min:0', 'max:100'], // 0 = introduce no new terms
             'timezone' => ['sometimes', 'timezone:all_with_bc'], // IANA zone for calendar-day due rounding (F19); legacy aliases allowed — see GoogleLoginRequest
             'onboarded' => ['sometimes', 'boolean'], // onboarding-finish flag → server stamps onboarded_at (F1)
+            'gender' => ['sometimes', 'nullable', 'in:female,male'], // the learner's lines in their language (GEN-2a); null clears
         ];
     }
 }

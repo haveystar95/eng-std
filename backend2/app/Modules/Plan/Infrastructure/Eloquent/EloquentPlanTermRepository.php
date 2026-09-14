@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Infrastructure\Eloquent;
 
 use App\Modules\Plan\Domain\Entity\PlanTerm;
+use App\Modules\Plan\Domain\Lesson\Filler;
+use App\Modules\Plan\Domain\Lesson\Phrase;
+use App\Modules\Plan\Domain\Lesson\Slot;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
+use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
@@ -52,6 +56,17 @@ final class EloquentPlanTermRepository implements PlanTermRepository
             }
             if ($rows !== []) {
                 PlanTermModel::query()->insert($rows);
+            }
+        });
+    }
+
+    public function rewriteTexts(PlanSceneId $sceneId, array $terms): void
+    {
+        DB::transaction(function () use ($sceneId, $terms): void {
+            foreach ($terms as $term) {
+                $columns = $this->columns($term);
+                unset($columns['scene_id'], $columns['kind'], $columns['ref'], $columns['position'], $columns['image_url'], $columns['image_author'], $columns['image_author_url'], $columns['image_tone']);
+                PlanTermModel::query()->where('scene_id', $sceneId->value)->where('ref', $term->ref())->update([...$columns, 'updated_at' => now()]);
             }
         });
     }
@@ -166,6 +181,12 @@ final class EloquentPlanTermRepository implements PlanTermRepository
             'image_author' => $term->image()?->author,
             'image_author_url' => $term->image()?->authorUrl,
             'image_tone' => $term->imageTone(),
+            'frame_target' => $term->frame()?->frameTarget,
+            'frame_native' => $term->frame()?->frameNative,
+            'frame_pronunciation_native' => $term->frame()?->pronunciationNative,
+            'frame_kind' => $term->frame()?->kind->value,
+            'slot' => ($slot = $term->frame()?->slot) === null ? null : json_encode($slot->toArray(), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+            'used_in' => $term->kind() === TermKind::Phrase ? null : json_encode($term->usedIn(), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
         ];
     }
 
@@ -188,6 +209,34 @@ final class EloquentPlanTermRepository implements PlanTermRepository
             imagePrompt: $row->image_prompt,
             image: $row->image_url === null ? null : new Image($row->image_url, $row->image_author, $row->image_author_url, $row->image_tone),
             missingImageTone: $row->image_url === null ? $row->image_tone : null,
+            frame: self::frame($row),
+            usedIn: array_map('strval', $row->used_in ?? []),
         );
+    }
+
+    /** The frame a phrase row keeps — null for a word or a chunk, or a row with no frame kind. */
+    private static function frame(PlanTermModel $row): ?Phrase
+    {
+        $kind = $row->frame_kind === null ? null : ExchangeKind::tryFrom($row->frame_kind);
+        if ($kind === null || $row->frame_target === null) {
+            return null;
+        }
+        $slot = null;
+        if (is_array($row->slot)) {
+            $fillers = [];
+            foreach (is_array($row->slot['fillers'] ?? null) ? $row->slot['fillers'] : [] as $filler) {
+                if (is_array($filler)) {
+                    $fillers[] = new Filler(
+                        (string) ($filler['target'] ?? ''),
+                        (string) ($filler['native'] ?? ''),
+                        (string) ($filler['pronunciation_native'] ?? ''),
+                        (bool) ($filler['in_dialogue'] ?? false),
+                    );
+                }
+            }
+            $slot = new Slot((string) ($row->slot['hint_native'] ?? ''), $fillers);
+        }
+
+        return new Phrase($row->ref, $kind, $row->frame_target, (string) $row->frame_native, (string) $row->frame_pronunciation_native, $slot);
     }
 }

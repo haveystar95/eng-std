@@ -6,22 +6,31 @@ namespace App\Modules\Plan\Domain\Entity;
 
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\Message;
+use App\Modules\Plan\Domain\Lesson\Phrase;
 use App\Modules\Plan\Domain\Lesson\VocabularyItem;
-use App\Modules\Plan\Domain\Service\PhraseInMessage;
-use App\Modules\Plan\Domain\Service\Words;
+use App\Modules\Plan\Domain\Service\FrameText;
+use App\Modules\Plan\Domain\Service\WordUsage;
 use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
 
 /**
- * A word, a chunk or a phrase of a scene as ONE unit — what the sheet lists, the program names
- * and the collection receives when the day is closed. Written once from the lesson; its `ref`
+ * A word, a chunk or a phrase of a scene as ONE unit — what the window lists, the program names
+ * and the collection receives when the day is closed. Written once from the SERVED lesson; its `ref`
  * (`v3`, `p1`) is how the cards point at it.
+ *
+ * A phrase is a frame (`lesson_day.v4.4`): the unit keeps the frame itself — both renderings, the
+ * reading, the kind and the slot with its fillers — and its text is the frame said with the filler of
+ * its first dialogue line, which is what the phrase cards, the voice and the collection use. A word
+ * keeps where the lesson says it (`used_in`).
  */
 final class PlanTerm
 {
-    /** @param list<string> $simplifiedVariants */
+    /**
+     * @param  list<string>  $simplifiedVariants
+     * @param  list<string>  $usedIn
+     */
     private function __construct(
         private readonly PlanTermId $id,
         private readonly PlanSceneId $sceneId,
@@ -39,13 +48,17 @@ final class PlanTerm
         private readonly ?string $imagePrompt,
         private ?Image $image,
         private ?string $missingImageTone = null,
+        private readonly ?Phrase $frame = null,
+        private readonly array $usedIn = [],
     ) {}
 
     /**
-     * The units of a lesson, words and chunks first, phrases after.
+     * The units of a served lesson, words and chunks first, phrases after.
      *
-     * A word's example is the dialogue message that names it; a phrase's example is the learner
-     * message it stands in, which also lends the phrase its speaking key and variants.
+     * A word's example is the line of the day it is said in ({@see WordUsage}). A phrase's text is its
+     * frame with the filler of its first dialogue line — or, for a frame no line says, its first
+     * in-dialogue filler, then its first filler; the translation and the reading are put together the
+     * same way; the line lends the phrase its speaking key, variants and example.
      *
      * @param  callable(): PlanTermId  $ids
      * @return list<self>
@@ -56,21 +69,23 @@ final class PlanTerm
         $position = 0;
 
         foreach ($lesson->vocabulary as $item) {
-            $example = self::messageNaming($lesson, $item);
+            $usage = WordUsage::of($lesson, $item->id, $item->termTarget);
             $out[] = new self(
                 $ids(), $sceneId, $item->kind === VocabularyItem::KIND_CHUNK ? TermKind::Chunk : TermKind::Word,
                 $item->id, $position++, $item->termTarget, $item->translationNative,
                 self::orNull($item->pronunciationNative), self::orNull($item->definitionTarget),
-                $example?->textTarget, $example?->textNative, null, [], $item->imagePrompt, null,
+                $usage['text'] ?? null, $usage['translation'] ?? null, null, [], $item->imagePrompt, null,
+                null, null, $item->usedIn,
             );
         }
 
         foreach ($lesson->phrases as $phrase) {
-            $spoken = self::messageSpeaking($lesson, $phrase->textTarget);
+            $line = $lesson->linesOf($phrase->id)[0]['message'] ?? null;
+            [$text, $native, $reading] = self::said($phrase, $line);
             $out[] = new self(
-                $ids(), $sceneId, TermKind::Phrase, $phrase->id, $position++, $phrase->textTarget, $phrase->textNative,
-                self::orNull($phrase->pronunciationNative), null, $spoken?->textTarget, $spoken?->textNative,
-                $spoken?->speakingKey, $spoken->simplifiedVariants ?? [], null, null,
+                $ids(), $sceneId, TermKind::Phrase, $phrase->id, $position++, $text, $native,
+                self::orNull($reading), null, $line?->textTarget, $line?->textNative,
+                $line?->speakingKey, $line === null ? [] : $line->simplifiedVariants, null, null, null, $phrase,
             );
         }
 
@@ -78,8 +93,43 @@ final class PlanTerm
     }
 
     /**
+     * The frame said with its dialogue filler: [text, translation, reading].
+     *
+     * @return array{0: string, 1: string, 2: string}
+     */
+    private static function said(Phrase $phrase, ?Message $line): array
+    {
+        if (! FrameText::hasSlot($phrase->frameTarget)) {
+            return [trim($phrase->frameTarget), trim($phrase->frameNative), trim($phrase->pronunciationNative)];
+        }
+        $filler = $phrase->filler($line?->filler);
+        if ($filler === null) {
+            foreach ($phrase->fillers() as $candidate) {
+                if ($candidate->inDialogue) {
+                    $filler = $candidate;
+                    break;
+                }
+            }
+            $filler ??= $phrase->fillers()[0] ?? null;
+        }
+        if ($filler === null) {
+            return $line === null
+                ? [trim($phrase->frameTarget), trim($phrase->frameNative), '']
+                : [$line->textTarget, $line->textNative, $line->pronunciationNative ?? ''];
+        }
+
+        return [
+            FrameText::fill($phrase->frameTarget, $filler->target),
+            FrameText::fill($phrase->frameNative, $filler->native),
+            FrameText::fill($phrase->pronunciationNative, $filler->pronunciationNative),
+        ];
+    }
+
+    /**
      * @param  list<string>  $simplifiedVariants
      * @param  string|null  $missingImageTone  the slot's tone when the whole search ladder found no photo
+     * @param  Phrase|null  $frame  the frame of a phrase; null for a word or a chunk
+     * @param  list<string>  $usedIn  where the lesson says a word or a chunk
      */
     public static function reconstitute(
         PlanTermId $id,
@@ -98,11 +148,13 @@ final class PlanTerm
         ?string $imagePrompt,
         ?Image $image,
         ?string $missingImageTone = null,
+        ?Phrase $frame = null,
+        array $usedIn = [],
     ): self {
         return new self(
             $id, $sceneId, $kind, $ref, $position, $textTarget, $textNative, $pronunciationNative, $definitionTarget,
             $exampleTarget, $exampleNative, $speakingKey, $simplifiedVariants, $imagePrompt, $image,
-            $image === null ? Image::normalTone($missingImageTone) : null,
+            $image === null ? Image::normalTone($missingImageTone) : null, $frame, $usedIn,
         );
     }
 
@@ -137,38 +189,6 @@ final class PlanTerm
     public function imageTone(): ?string
     {
         return $this->image->tone ?? $this->missingImageTone;
-    }
-
-    private static function messageNaming(Lesson $lesson, VocabularyItem $item): ?Message
-    {
-        foreach ($lesson->exchanges as $exchange) {
-            foreach ($exchange->messages as $message) {
-                if (in_array($item->id, $message->vocabularyIds, true) && Words::containsTerm($item->termTarget, $message->textTarget)) {
-                    return $message;
-                }
-            }
-        }
-        foreach ($lesson->exchanges as $exchange) {
-            foreach ($exchange->messages as $message) {
-                if (Words::containsTerm($item->termTarget, $message->textTarget)) {
-                    return $message;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private static function messageSpeaking(Lesson $lesson, string $phrase): ?Message
-    {
-        foreach ($lesson->exchanges as $exchange) {
-            $learner = $exchange->learner();
-            if ($learner !== null && PhraseInMessage::matches($phrase, $learner->textTarget)) {
-                return $learner;
-            }
-        }
-
-        return null;
     }
 
     private static function orNull(string $value): ?string
@@ -250,5 +270,17 @@ final class PlanTerm
     public function image(): ?Image
     {
         return $this->image;
+    }
+
+    /** The frame of a phrase — the pattern, both renderings, the reading, the kind and the slot; null for a word or a chunk. */
+    public function frame(): ?Phrase
+    {
+        return $this->frame;
+    }
+
+    /** @return list<string> where the lesson says a word or a chunk: frame ids and partner lines (`p3`, `A3`) */
+    public function usedIn(): array
+    {
+        return $this->usedIn;
     }
 }

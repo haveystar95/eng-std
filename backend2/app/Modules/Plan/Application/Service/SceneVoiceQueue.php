@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Service;
 
-use App\Modules\Plan\Application\Dto\LineAudioRow;
 use App\Modules\Plan\Application\Dto\LineToSay;
 use App\Modules\Plan\Application\Dto\SceneVoiceDebt;
 use App\Modules\Plan\Application\Dto\VoiceBatch;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
 use App\Modules\Plan\Application\Port\SceneLocator;
-use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Service\SpokenLines;
@@ -65,12 +63,7 @@ final readonly class SceneVoiceQueue
         /** @var array<string, string> $keys */
         $have = $this->store->forScenes([$sceneId->value], array_values($keys));
 
-        $cast = VoiceCast::of(SpokenLines::castOf(
-            $scene->partnerVoiceGender(),
-            $lesson->roleGender,
-            self::learnerMaterial($have, $keys),
-            PlanScene::DEFAULT_PARTNER_VOICE,
-        ));
+        $cast = VoiceCast::ofScene($scene);
         $missing = static function (string $ref, Speaker $speaker) use ($have, $keys, $cast, $sceneId): bool {
             return ! isset($have[$sceneId->value.':'.$ref.':'.$keys[$cast->genderOf($speaker)->value]]);
         };
@@ -109,7 +102,6 @@ final readonly class SceneVoiceQueue
         return new SceneVoiceDebt(
             lang: $lang,
             cast: $cast,
-            castIsNew: $scene->partnerVoiceGender() === null,
             batches: $batches,
             partnerLines: $partner,
             learnerLines: $learner,
@@ -129,26 +121,6 @@ final readonly class SceneVoiceQueue
         foreach ($terms as $term) {
             if ($missing($term['ref'], Speaker::Learner)) {
                 $out[] = new LineToSay($term['ref'], $term['text'], $cast->learner());
-            }
-        }
-
-        return $out;
-    }
-
-    /**
-     * How many of the learner's files — their lines, phrases, words — each of the pack's voices holds.
-     *
-     * @param  array<string, LineAudioRow>  $have
-     * @param  array<string, string>  $keys  gender → voice key
-     * @return array<string, int>
-     */
-    private static function learnerMaterial(array $have, array $keys): array
-    {
-        $out = array_fill_keys(array_keys($keys), 0);
-        foreach ($have as $row) {
-            $gender = array_search($row->voiceKey, $keys, true);
-            if ($gender !== false && SpokenLines::speakerOf($row->lineRef) === Speaker::Learner) {
-                $out[$gender]++;
             }
         }
 

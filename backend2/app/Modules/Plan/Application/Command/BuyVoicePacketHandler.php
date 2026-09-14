@@ -8,13 +8,10 @@ use App\Modules\Plan\Application\Dto\LineToSay;
 use App\Modules\Plan\Application\Dto\VoicePacketLine;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
-use App\Modules\Plan\Domain\Repository\PlanRepository;
-use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 
 /**
- * Buys one packet of the voice backfill ({@see \App\Modules\Plan\Application\Service\VoiceBackfillQueue}): stores
- * the casts decided now — conditionally, a cast stored meanwhile wins — says the packet in ONE call, and keeps only
- * the owed lines, each under its own scene.
+ * Buys one packet of the voice backfill ({@see \App\Modules\Plan\Application\Service\VoiceBackfillQueue}): says the
+ * packet in ONE call and keeps only the owed lines, each under its own scene.
  *
  * Refs repeat across scenes (every scene has its `p1`), so the call is keyed by scene and ref; a packet keyed by the
  * ref alone would store one scene's phrase under another's. A call the vendor could not answer stores nothing — the
@@ -25,15 +22,11 @@ final readonly class BuyVoicePacketHandler
     public function __construct(
         private LineSpeaker $speaker,
         private LineAudioStore $store,
-        private PlanRepository $plans,
     ) {}
 
     public function __invoke(BuyVoicePacket $command): void
     {
         $packet = $command->packet;
-        foreach ($packet->casts as $sceneId => $partner) {
-            $this->plans->castSceneVoices(PlanSceneId::fromString((string) $sceneId), $partner);
-        }
 
         /** @var array<string, VoicePacketLine> $byKey */
         $byKey = [];

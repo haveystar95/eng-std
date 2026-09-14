@@ -20,6 +20,12 @@ final readonly class ModelCall
         public int $attempts,
     ) {}
 
+    /** The same call with money spent on it afterwards (a repair of one of its cards) — no new attempt. */
+    public function plusCost(string $costUsd): self
+    {
+        return new self($this->promptVersion, $this->buildVersion, $this->model, self::addCosts($this->costUsd, $costUsd), $this->latencyMs, $this->attempts);
+    }
+
     public static function addCosts(string $a, string $b): string
     {
         return number_format((float) $a + (float) $b, 6, '.', '');

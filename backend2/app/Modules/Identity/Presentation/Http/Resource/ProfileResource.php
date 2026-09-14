@@ -22,6 +22,7 @@ final class ProfileResource extends JsonResource
             'tier' => $this->resource->tier,
             'timezone' => $this->resource->timezone,
             'onboarded_at' => $this->resource->onboardedAt,
+            'gender' => $this->resource->gender,
         ];
     }
 }

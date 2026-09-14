@@ -7,6 +7,7 @@ namespace App\Modules\Plan\Application\Command;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
+use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\LessonBuildService;
 use App\Modules\Plan\Domain\Entity\PlanScene;
@@ -22,7 +23,7 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * Runs the lesson call for one scene. Idempotent: the scene is CLAIMED (`building`) inside a
  * transaction before the model is asked, so a second job for the same scene finds it claimed and
  * stops; a stale claim (a worker that died mid-call) is re-claimable after the configured window.
- * On success the terms are written from the lesson and the scene waits for its photos
+ * On success the terms are written from the served lesson and the scene waits for its photos
  * (`illustrating`): the photo job and the voice job are queued together and run side by side. The
  * photo job makes the day ready — and writes its `day_ready` line — when the pictures are in
  * ({@see IllustrateSceneHandler}); the voice never holds the day back (DAY-UI-3).
@@ -31,8 +32,12 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * takes half a minute, and «Начать» is legal all the way through it: a job that came back holding
  * the aggregate it read before the call would write the plan's old status and the old calendar
  * over a plan the learner had already started (11.09 on the stand — the plan fell back to `ready`
- * with no start date and day 1 locked again). The plan is re-read after the claim, for the level
- * and the languages the request needs, and never written.
+ * with no start date and day 1 locked again). The plan is re-read after the claim, for the level,
+ * the languages and the learner's own words the request needs, and never written.
+ *
+ * The learner's facts travel in TOPIC_DESCRIPTION: the scene's brief, then the plan's goal as the
+ * learner wrote it — a fact that fits a frame's slot (years, field, family) becomes its filler. The
+ * learner's gender is read from the profile now, at the moment the day is written.
  */
 final readonly class BuildLessonHandler
 {
@@ -42,6 +47,7 @@ final readonly class BuildLessonHandler
         private LessonBuildService $builder,
         private PlanDispatcher $dispatcher,
         private PlanConfig $config,
+        private LearnerGender $gender,
         private Clock $clock,
         private TransactionManager $tx,
     ) {}
@@ -75,11 +81,11 @@ final readonly class BuildLessonHandler
 
         $request = new LessonRequest(
             topic: $scene->titleNative(),
-            topicDescription: $scene->topicDescription(),
+            topicDescription: self::topicDescription($scene->topicDescription(), $plan->goalText()),
             targetLanguage: LanguageName::of($plan->targetLang()->value),
             nativeLanguage: LanguageName::of($plan->nativeLang()->value),
             level: $plan->level(),
-            phrasesCount: $counts['phrases'],
+            learnerGender: $this->gender->of($plan->userId()),
             vocabularyCount: $counts['vocabulary'],
             dialogueCount: $counts['dialogue'],
             targetLangCode: $plan->targetLang()->value,
@@ -106,10 +112,13 @@ final readonly class BuildLessonHandler
             }
             $scene->acceptLesson($outcome->lesson, $outcome->call, $outcome->findings, $now);
             $this->plans->saveScene($scene);
-            $this->terms->replaceForScene(
-                $scene->id(),
-                PlanTerm::fromLesson($scene->id(), $outcome->lesson, static fn (): PlanTermId => PlanTermId::generate()),
-            );
+            $served = $scene->lesson();
+            if ($served !== null) {
+                $this->terms->replaceForScene(
+                    $scene->id(),
+                    PlanTerm::fromLesson($scene->id(), $served, static fn (): PlanTermId => PlanTermId::generate()),
+                );
+            }
         });
 
         if ($scene->hasLesson()) {
@@ -117,5 +126,13 @@ final readonly class BuildLessonHandler
             $this->dispatcher->voiceScene($scene->id());
             $this->dispatcher->illustrateScene($scene->id());
         }
+    }
+
+    /** The scene's brief, then the learner's own words — the facts a frame's slot may take. */
+    public static function topicDescription(string $brief, string $goal): string
+    {
+        $goal = trim((string) preg_replace('/\s+/u', ' ', $goal));
+
+        return $goal === '' ? trim($brief) : trim($brief)."\n\nAbout the learner, in their own words: {$goal}";
     }
 }

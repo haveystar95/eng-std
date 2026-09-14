@@ -12,6 +12,7 @@ use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Port\BuildVersion;
 use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
+use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
 use App\Modules\Plan\Application\Port\NativeDistractorSource;
@@ -24,7 +25,6 @@ use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\SceneImageStore;
 use App\Modules\Plan\Application\Port\SceneLocator;
 use App\Modules\Plan\Domain\Check\BlueprintChecker;
-use App\Modules\Plan\Domain\Check\LessonChecker;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
@@ -33,6 +33,7 @@ use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Plan\Infrastructure\Adapter\CdnSceneImageStore;
 use App\Modules\Plan\Infrastructure\Adapter\GenerationLineSpeaker;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerCalendar;
+use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerGender;
 use App\Modules\Plan\Infrastructure\Adapter\PexelsPlanImageFinder;
 use App\Modules\Plan\Infrastructure\Adapter\QueuedPlanDispatcher;
 use App\Modules\Plan\Infrastructure\Adapter\StampedBuildVersion;
@@ -119,6 +120,7 @@ final class PlanServiceProvider extends ServiceProvider
         // Memoised per request: the same learner's zone is asked by the command and by the view.
         $this->app->singleton(IdentityLearnerCalendar::class);
         $this->app->alias(IdentityLearnerCalendar::class, LearnerCalendar::class);
+        $this->app->bind(LearnerGender::class, IdentityLearnerGender::class);
 
         $this->app->singleton(BuildVersion::class, fn (): BuildVersion => new StampedBuildVersion(
             storage_path('app/commit'),
@@ -126,7 +128,7 @@ final class PlanServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(PlanConfig::class, function (): PlanConfig {
-            /** @var array<string, array{phrases: int, vocabulary: int, dialogue: int}> $counts */
+            /** @var array<string, array{vocabulary: int, dialogue: int}> $counts */
             $counts = (array) config('plan.counts', []);
             /** @var list<array{text_target: string, text_native: string, pronunciation_native: string}> $kit */
             $kit = self::rescueKit();
@@ -143,11 +145,8 @@ final class PlanServiceProvider extends ServiceProvider
             );
         });
 
-        // THE CHECKS' MODES come from config and nowhere else: a mode flipped in code is a mode
-        // nobody can flip back without a deploy.
-        $this->app->singleton(LessonChecker::class, fn (): LessonChecker => new LessonChecker(
-            CheckModes::fromArray(array_map('strval', (array) config('plan.checks.lesson', []))),
-        ));
+        // THE PLAN CHECKS' MODES come from config and nowhere else: a mode flipped in code is a mode
+        // nobody can flip back without a deploy. The lesson validator has no modes — it only counts.
         $this->app->singleton(BlueprintChecker::class, fn (): BlueprintChecker => new BlueprintChecker(
             CheckModes::fromArray(array_map('strval', (array) config('plan.checks.plan', []))),
         ));

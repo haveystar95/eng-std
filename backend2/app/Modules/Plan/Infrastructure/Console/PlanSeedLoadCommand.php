@@ -49,7 +49,7 @@ final class PlanSeedLoadCommand extends Command
         $daysTotal = 6;
         $created = ['plans' => 0, 'days' => 0, 'cards' => 0, 'terms' => 0];
         // A real lesson shape: the mapper re-parses every stored lesson, and a stub would be a 500.
-        $lessonJson = json_encode(FakePlanModel::lessonPayload(new LessonRequest('Сцена', 'x', 'English', 'Russian', PlanLevel::Beginner, 6, 8, 8)), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        $lessonJson = json_encode(FakePlanModel::lessonPayload(new LessonRequest('Сцена', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8)), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
 
         // One live plan per learner is a unique index; the seed's first plan is the live one only
         // when the learner has none.
@@ -84,7 +84,7 @@ final class PlanSeedLoadCommand extends Command
                         'learner_role_native' => 'Родитель', 'partner_role_target' => 'Doctor', 'partner_role_native' => 'Врач',
                         'topic_description' => 'Situation: x. Learner: y. Partner: z. Learner must be able to: a. Partner will: b. Not in this scene: c.',
                         'image_prompt' => 'clinic', 'lesson_json' => $lessonJson, 'lesson_status' => 'ready',
-                        'prompt_version_lesson' => 'lesson-v4', 'build_version' => 'seed', 'model_lesson' => 'seed',
+                        'prompt_version_lesson' => 'lesson_day.v4.4', 'build_version' => 'seed', 'model_lesson' => 'seed',
                         'cost_usd_lesson' => '0.050000', 'checks_json' => '[]', 'generated_at' => $now, 'created_at' => $now, 'updated_at' => $now,
                     ]);
                     $terms = [];

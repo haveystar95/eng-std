@@ -14,7 +14,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 final readonly class PlanConfig
 {
     /**
-     * @param  array<string, array{phrases: int, vocabulary: int, dialogue: int}>  $counts  by level
+     * @param  array<string, array{vocabulary: int, dialogue: int}>  $counts  by level
      * @param  list<array{text_target: string, text_native: string, pronunciation_native: string}>  $rescueKit
      * @param  list<string>  $languages  target language codes, in the order the entry screen offers them
      */
@@ -25,13 +25,14 @@ final readonly class PlanConfig
         public array $languages = ['en', 'de'],
     ) {}
 
-    /** @return array{phrases: int, vocabulary: int, dialogue: int} */
+    /**
+     * What a lesson orders at this level. The number of frames is not ordered: the model takes it from
+     * the dialogue it writes (`lesson_day.v4.4`).
+     *
+     * @return array{vocabulary: int, dialogue: int}
+     */
     public function countsFor(PlanLevel $level): array
     {
-        $row = $this->counts[$level->value] ?? ['phrases' => 6, 'vocabulary' => 8, 'dialogue' => 8];
-        // PHRASES_COUNT is never larger than DIALOGUE_COUNT — the prompt's own rule.
-        $row['phrases'] = min($row['phrases'], $row['dialogue']);
-
-        return $row;
+        return $this->counts[$level->value] ?? ['vocabulary' => 8, 'dialogue' => 8];
     }
 }

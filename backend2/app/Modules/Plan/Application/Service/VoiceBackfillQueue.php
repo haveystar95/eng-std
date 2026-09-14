@@ -9,7 +9,6 @@ use App\Modules\Plan\Application\Dto\VoiceBatch;
 use App\Modules\Plan\Application\Dto\VoicePacket;
 use App\Modules\Plan\Application\Dto\VoicePacketLine;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
  * WHAT THE VOICE BACKFILL BUYS, AND IN WHICH ORDER (DAY-UI-3; owner 14.09: «уложиться в ~100 вызовов»).
@@ -36,9 +35,9 @@ final readonly class VoiceBackfillQueue
     {
         $partnerDialogues = [];
         $learnerDialogues = [];
-        /** @var array<string, list<array{line: VoicePacketLine, cast: array<string, VoiceGender>}>> $phrases */
+        /** @var array<string, list<VoicePacketLine>> $phrases */
         $phrases = [];
-        /** @var array<string, list<array{line: VoicePacketLine, cast: array<string, VoiceGender>}>> $words */
+        /** @var array<string, list<VoicePacketLine>> $words */
         $words = [];
 
         foreach ($sceneIds as $sceneId) {
@@ -46,7 +45,6 @@ final readonly class VoiceBackfillQueue
             if ($debt === null) {
                 continue;
             }
-            $cast = $debt->castIsNew ? [$sceneId->value => $debt->cast->partner] : [];
             foreach ($debt->batches as $batch) {
                 $owed = array_flip($batch->owed);
                 $lines = array_map(
@@ -54,7 +52,7 @@ final readonly class VoiceBackfillQueue
                     $batch->lines,
                 );
                 if ($batch->kind === VoiceBatch::DIALOGUE) {
-                    $packet = new VoicePacket(VoicePacket::DIALOGUE, $debt->lang, $lines, $cast);
+                    $packet = new VoicePacket(VoicePacket::DIALOGUE, $debt->lang, $lines);
                     if ($debt->partnerLines > 0) {
                         $partnerDialogues[] = $packet;
                     } else {
@@ -66,9 +64,9 @@ final readonly class VoiceBackfillQueue
                 foreach ($lines as $line) {
                     $group = $debt->lang.'|'.$line->line->voice->value;
                     if ($batch->kind === VoiceBatch::PHRASES) {
-                        $phrases[$group][] = ['line' => $line, 'cast' => $cast];
+                        $phrases[$group][] = $line;
                     } else {
-                        $words[$group][] = ['line' => $line, 'cast' => $cast];
+                        $words[$group][] = $line;
                     }
                 }
             }
@@ -83,20 +81,16 @@ final readonly class VoiceBackfillQueue
     }
 
     /**
-     * @param  array<string, list<array{line: VoicePacketLine, cast: array<string, VoiceGender>}>>  $groups  «lang|voice» → lines
+     * @param  array<string, list<VoicePacketLine>>  $groups  «lang|voice» → lines
      * @return list<VoicePacket>
      */
     private static function pack(string $kind, array $groups): array
     {
         $out = [];
-        foreach ($groups as $group => $entries) {
+        foreach ($groups as $group => $lines) {
             $lang = explode('|', (string) $group, 2)[0];
-            foreach (array_chunk($entries, self::PER_PACKET) as $chunk) {
-                $casts = [];
-                foreach ($chunk as $entry) {
-                    $casts += $entry['cast'];
-                }
-                $out[] = new VoicePacket($kind, $lang, array_column($chunk, 'line'), $casts);
+            foreach (array_chunk($lines, self::PER_PACKET) as $chunk) {
+                $out[] = new VoicePacket($kind, $lang, $chunk);
             }
         }
 

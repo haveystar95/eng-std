@@ -27,6 +27,7 @@ use App\Modules\Plan\Infrastructure\Console\PlanSeedLoadCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanSpeakBackfillCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanShiftDayCommand;
 use App\Modules\Plan\Presentation\Console\PlanNotifyTestCommand;
+use App\Modules\Plan\Presentation\Console\PlanRepairCardCommand;
 use App\Modules\Plan\Presentation\Console\PlanNotifyTickCommand;
 use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
 use App\Modules\Vocabulary\Presentation\Console\RelabelRepairedTranslationsCommand;
@@ -67,6 +68,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Plan notifications (PLAN-UI-3): the 15-minute tick (scheduled in routes/console.php) and
         // the QA «send one letter now».
         PlanNotifyTickCommand::class,
+        // P2R by hand (GEN-2a): one card of a lesson repaired for what the validator finds at it.
+        PlanRepairCardCommand::class,
         PlanNotifyTestCommand::class,
         PlanImagesBackfillCommand::class,
         PlanSpeakBackfillCommand::class,

@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
+use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The model's JSON → a {@see Lesson}. Strict about SHAPE only: a missing key, a wrong type or an
- * empty required string is a reply that is not the requested schema, and that is the model's
- * refusal, not a check ({@see ModelAnswerOffSchema}). Everything about CONTENT — counts, keys,
- * scripts, ids — is a check, and the checks run on the parsed lesson.
+ * The model's JSON → a {@see Lesson} (`lesson_day.v4.4`). Strict about SHAPE only: a missing key, a
+ * wrong type, an unknown kind or speaker, an empty required string is a reply that is not the
+ * requested schema, and that is the model's refusal, not a finding ({@see ModelAnswerOffSchema}).
+ * Everything about CONTENT — counts, frames, fillers, keys, checks, listening — is the validator's,
+ * and the validator runs on the parsed lesson.
  */
 final class LessonParser
 {
@@ -23,35 +25,36 @@ final class LessonParser
 
         $exchanges = [];
         foreach ($this->list($payload, 'dialogue') as $index => $exchange) {
-            $exchanges[] = $this->exchange($this->objectAt($exchange, "dialogue[{$index}]"));
+            $exchanges[] = $this->exchange($this->objectAt($exchange, "dialogue[{$index}]"), "dialogue[{$index}]");
         }
 
         $phrases = [];
         foreach ($this->list($payload, 'phrases') as $index => $phrase) {
-            $row = $this->objectAt($phrase, "phrases[{$index}]");
-            $phrases[] = new Phrase(
-                id: $this->string($row, 'id', 'phrases'),
-                textTarget: $this->string($row, 'text_target', 'phrases'),
-                textNative: $this->string($row, 'text_native', 'phrases'),
-                pronunciationNative: $this->stringOrEmpty($row, 'pronunciation_native'),
-            );
+            $phrases[] = $this->phrase($this->objectAt($phrase, "phrases[{$index}]"), "phrases[{$index}]");
+        }
+
+        $listening = [];
+        foreach ($this->list($this->object($payload, 'listening'), 'questions') as $index => $question) {
+            $listening[] = $this->listeningQuestion($this->objectAt($question, "listening.questions[{$index}]"), "listening.questions[{$index}]");
         }
 
         $vocabulary = [];
         foreach ($this->list($payload, 'vocabulary') as $index => $item) {
-            $row = $this->objectAt($item, "vocabulary[{$index}]");
-            $kind = $this->string($row, 'kind', 'vocabulary');
+            $path = "vocabulary[{$index}]";
+            $row = $this->objectAt($item, $path);
+            $kind = $this->string($row, 'kind', $path);
             if (! in_array($kind, [VocabularyItem::KIND_WORD, VocabularyItem::KIND_CHUNK], true)) {
-                throw ModelAnswerOffSchema::at("vocabulary[{$index}].kind", "unknown kind «{$kind}»");
+                throw ModelAnswerOffSchema::at("{$path}.kind", "unknown kind «{$kind}»");
             }
             $vocabulary[] = new VocabularyItem(
-                id: $this->string($row, 'id', 'vocabulary'),
-                termTarget: $this->string($row, 'term_target', 'vocabulary'),
-                translationNative: $this->string($row, 'translation_native', 'vocabulary'),
+                id: $this->string($row, 'id', $path),
+                termTarget: $this->string($row, 'term_target', $path),
+                translationNative: $this->string($row, 'translation_native', $path),
                 pronunciationNative: $this->stringOrEmpty($row, 'pronunciation_native'),
                 definitionTarget: $this->stringOrEmpty($row, 'definition_target'),
                 kind: $kind,
                 imagePrompt: $this->nullableString($row, 'image_prompt'),
+                usedIn: $this->stringList($row, 'used_in'),
             );
         }
 
@@ -62,86 +65,171 @@ final class LessonParser
             descriptionNative: $this->stringOrEmpty($topic, 'description_native'),
             learnerRoleTarget: $this->stringOrEmpty($role, 'role_target'),
             learnerRoleNative: $this->stringOrEmpty($role, 'role_native'),
+            // The schema holds it to female|male; an odd word is still no reason to refuse a paid lesson —
+            // the scene speaks with the default cast.
+            roleGender: VoiceGender::tryFromAny($payload['role_gender'] ?? null),
             exchanges: $exchanges,
             phrases: $phrases,
+            listening: $listening,
             vocabulary: $vocabulary,
-            // `lesson-v4` says whose voice the role has. A lesson written before (`lesson-v3`) has no
-            // such key, and an odd word is not a reason to refuse a paid lesson: both are «not said»,
-            // and the scene speaks with the default cast.
-            roleGender: VoiceGender::tryFromAny($payload['role_gender'] ?? null),
         );
     }
 
+    /**
+     * One card of a lesson on its own — what a repair answers with: a frame, a learner line, an
+     * exchange's check or a listening question, held to the same shape as inside a whole lesson.
+     *
+     * @param  'frame'|'line'|'check'|'listening'  $kind
+     * @param  array<string, mixed>  $row
+     */
+    public function card(string $kind, array $row): Phrase|Message|ExchangeCheck|ListeningQuestion
+    {
+        return match ($kind) {
+            LessonCard::FRAME => $this->phrase($row, 'card'),
+            LessonCard::LINE => $this->learnerLine($row),
+            LessonCard::CHECK => $this->check($row, 'card'),
+            LessonCard::LISTENING => $this->listeningQuestion($row, 'card'),
+        };
+    }
+
     /** @param array<string, mixed> $row */
-    private function exchange(array $row): Exchange
+    private function learnerLine(array $row): Message
+    {
+        $message = $this->message($row, 'card');
+        if (! $message->isLearner()) {
+            throw ModelAnswerOffSchema::at('card.speaker', 'a learner line is spoken by B');
+        }
+
+        return $message;
+    }
+
+    /** @param array<string, mixed> $row */
+    private function exchange(array $row, string $path): Exchange
     {
         $step = $row['step'] ?? null;
         if (! is_int($step)) {
-            throw ModelAnswerOffSchema::at('dialogue[].step', 'not an integer');
+            throw ModelAnswerOffSchema::at("{$path}.step", 'not an integer');
         }
-        $initiator = $this->string($row, 'initiator', 'dialogue');
-        if (! in_array($initiator, [Message::SPEAKER_PARTNER, Message::SPEAKER_LEARNER], true)) {
-            throw ModelAnswerOffSchema::at("dialogue[{$step}].initiator", "unknown speaker «{$initiator}»");
+        $kind = ExchangeKind::tryFrom($this->string($row, 'kind', $path));
+        if ($kind === null) {
+            throw ModelAnswerOffSchema::at("{$path}.kind", 'not answer, ask or rescue');
         }
+        $initiator = $this->speaker($row, 'initiator', $path);
 
         $messages = [];
         foreach ($this->list($row, 'messages') as $index => $message) {
-            $messages[] = $this->message($this->objectAt($message, "dialogue[{$step}].messages[{$index}]"));
+            $messages[] = $this->message($this->objectAt($message, "{$path}.messages[{$index}]"), "{$path}.messages[{$index}]");
         }
 
         return new Exchange(
             step: $step,
+            kind: $kind,
             initiator: $initiator,
             messages: $messages,
-            question: $this->question($this->object($row, 'question')),
+            check: $this->check($this->object($row, 'check'), "{$path}.check"),
         );
     }
 
     /** @param array<string, mixed> $row */
-    private function message(array $row): Message
+    private function check(array $row, string $path): ExchangeCheck
     {
-        $speaker = $this->string($row, 'speaker', 'messages');
-        if (! in_array($speaker, [Message::SPEAKER_PARTNER, Message::SPEAKER_LEARNER], true)) {
-            throw ModelAnswerOffSchema::at('messages[].speaker', "unknown speaker «{$speaker}»");
+        $options = [];
+        foreach ($this->list($row, 'options') as $index => $option) {
+            $o = $this->objectAt($option, "{$path}.options[{$index}]");
+            $options[] = new CheckOption($this->stringOrEmpty($o, 'text_target'), $this->stringOrEmpty($o, 'text_native'));
+        }
+
+        return new ExchangeCheck(
+            textTarget: $this->stringOrEmpty($row, 'text_target'),
+            textNative: $this->stringOrEmpty($row, 'text_native'),
+            options: $options,
+            correctOptionIndex: $this->int($row, 'correct_option_index', $path),
+            explanationNative: $this->stringOrEmpty($row, 'explanation_native'),
+        );
+    }
+
+    /** @param array<string, mixed> $row */
+    private function message(array $row, string $path): Message
+    {
+        $speaker = $this->speaker($row, 'speaker', $path);
+        $text = $this->string($row, 'text_target', $path);
+        $native = $this->string($row, 'text_native', $path);
+        if ($speaker === Message::SPEAKER_PARTNER) {
+            return new Message($speaker, $this->stringOrEmpty($row, 'role_target'), $this->stringOrEmpty($row, 'role_native'), $text, $native);
         }
 
         return new Message(
             speaker: $speaker,
             roleTarget: $this->stringOrEmpty($row, 'role_target'),
             roleNative: $this->stringOrEmpty($row, 'role_native'),
-            textTarget: $this->string($row, 'text_target', 'messages'),
-            textNative: $this->string($row, 'text_native', 'messages'),
+            textTarget: $text,
+            textNative: $native,
             pronunciationNative: $this->nullableString($row, 'pronunciation_native'),
             speakingKey: $this->nullableString($row, 'speaking_key'),
             simplifiedVariants: $this->stringList($row, 'simplified_variants'),
-            phraseIds: $this->stringList($row, 'phrase_ids'),
-            vocabularyIds: $this->stringList($row, 'vocabulary_ids'),
+            phraseId: $this->nullableString($row, 'phrase_id'),
+            filler: $this->nullableString($row, 'filler'),
         );
     }
 
     /** @param array<string, mixed> $row */
-    private function question(array $row): Question
+    private function phrase(array $row, string $path): Phrase
     {
-        $options = [];
-        foreach ($this->list($row, 'options') as $index => $option) {
-            $o = $this->objectAt($option, "question.options[{$index}]");
-            $options[] = new QuestionOption(
-                $this->stringOrEmpty($o, 'text_target'),
-                $this->stringOrEmpty($o, 'text_native'),
-            );
-        }
-        $correct = $row['correct_option_index'] ?? null;
-        if (! is_int($correct)) {
-            throw ModelAnswerOffSchema::at('question.correct_option_index', 'not an integer');
+        $kind = ExchangeKind::tryFrom($this->string($row, 'kind', $path));
+        if ($kind === null || ! $kind->takesFrame()) {
+            throw ModelAnswerOffSchema::at("{$path}.kind", 'not answer or ask');
         }
 
-        return new Question(
-            textTarget: $this->stringOrEmpty($row, 'text_target'),
-            textNative: $this->stringOrEmpty($row, 'text_native'),
-            options: $options,
-            correctOptionIndex: $correct,
+        $slot = null;
+        if (($row['slot'] ?? null) !== null) {
+            $raw = $this->object($row, 'slot');
+            $fillers = [];
+            foreach ($this->list($raw, 'fillers') as $index => $filler) {
+                $f = $this->objectAt($filler, "{$path}.slot.fillers[{$index}]");
+                $inDialogue = $f['in_dialogue'] ?? null;
+                if (! is_bool($inDialogue)) {
+                    throw ModelAnswerOffSchema::at("{$path}.slot.fillers[{$index}].in_dialogue", 'not a boolean');
+                }
+                $fillers[] = new Filler(
+                    target: $this->string($f, 'target', "{$path}.slot.fillers[{$index}]"),
+                    native: $this->stringOrEmpty($f, 'native'),
+                    pronunciationNative: $this->stringOrEmpty($f, 'pronunciation_native'),
+                    inDialogue: $inDialogue,
+                );
+            }
+            $slot = new Slot($this->stringOrEmpty($raw, 'hint_native'), $fillers);
+        }
+
+        return new Phrase(
+            id: $this->string($row, 'id', $path),
+            kind: $kind,
+            frameTarget: $this->string($row, 'frame_target', $path),
+            frameNative: $this->stringOrEmpty($row, 'frame_native'),
+            pronunciationNative: $this->stringOrEmpty($row, 'pronunciation_native'),
+            slot: $slot,
+        );
+    }
+
+    /** @param array<string, mixed> $row */
+    private function listeningQuestion(array $row, string $path): ListeningQuestion
+    {
+        return new ListeningQuestion(
+            textNative: $this->string($row, 'text_native', $path),
+            optionsNative: $this->stringList($row, 'options_native'),
+            correctOptionIndex: $this->int($row, 'correct_option_index', $path),
             explanationNative: $this->stringOrEmpty($row, 'explanation_native'),
         );
+    }
+
+    /** @param array<string, mixed> $row */
+    private function speaker(array $row, string $key, string $path): string
+    {
+        $speaker = $this->string($row, $key, $path);
+        if (! in_array($speaker, [Message::SPEAKER_PARTNER, Message::SPEAKER_LEARNER], true)) {
+            throw ModelAnswerOffSchema::at("{$path}.{$key}", "unknown speaker «{$speaker}»");
+        }
+
+        return $speaker;
     }
 
     /**
@@ -185,11 +273,22 @@ final class LessonParser
     }
 
     /** @param array<string, mixed> $row */
-    private function string(array $row, string $key, string $where): string
+    private function int(array $row, string $key, string $path): int
+    {
+        $value = $row[$key] ?? null;
+        if (! is_int($value)) {
+            throw ModelAnswerOffSchema::at("{$path}.{$key}", 'not an integer');
+        }
+
+        return $value;
+    }
+
+    /** @param array<string, mixed> $row */
+    private function string(array $row, string $key, string $path): string
     {
         $value = $row[$key] ?? null;
         if (! is_string($value) || trim($value) === '') {
-            throw ModelAnswerOffSchema::at("{$where}.{$key}", 'missing or empty string');
+            throw ModelAnswerOffSchema::at("{$path}.{$key}", 'missing or empty string');
         }
 
         return trim($value);

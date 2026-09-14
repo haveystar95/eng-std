@@ -9,7 +9,6 @@ use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
-use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
  * EVERYTHING A DAY SAYS OUT LOUD, AND WHAT EACH FILE IS CALLED (DAY-UI-3).
@@ -34,7 +33,7 @@ final class SpokenLines
 
     /**
      * The dialogue in its order, both speakers: [ref, speaker, text]. A repeated step (the model's
-     * slip, counted by `exchange_shape`) is one file per ref — the first line keeps it.
+     * slip, counted as `dialogue.count`) is one file per ref — the first line keeps it.
      *
      * @return list<array{ref: string, speaker: Speaker, text: string}>
      */
@@ -84,36 +83,5 @@ final class SpokenLines
     public static function speakerOf(string $ref): Speaker
     {
         return CardPayloads::stepOfRef($ref) !== null ? Speaker::Partner : Speaker::Learner;
-    }
-
-    /**
-     * THE CAST OF A SCENE THAT NEVER HAD ONE — a lesson written before voices had genders.
-     *
-     * The stored gender wins, then the role's gender the lesson named. A scene with neither keeps the
-     * default cast — unless the learner's material (phrases, words, the learner's lines) is already on
-     * the disk in ONE of the pack's voices: then that voice is the learner's. Paid-for files are used
-     * (owner, DAY-UI-3: «51 купленная фраза используется»), and «the learner's voice says their phrases»
-     * still holds. The partner's lines are not a reason: the dialogue is always bought whole, in one call,
-     * so they come again with it.
-     *
-     * @param  array<string, int>  $learnerMaterial  voice gender value → rows of learner material already in that voice
-     */
-    public static function castOf(?VoiceGender $stored, ?VoiceGender $roleGender, array $learnerMaterial, VoiceGender $default): VoiceGender
-    {
-        if ($stored !== null) {
-            return $stored;
-        }
-        if ($roleGender !== null) {
-            return $roleGender;
-        }
-        $voiced = array_keys(array_filter($learnerMaterial, static fn (int $rows): bool => $rows > 0));
-        if (count($voiced) === 1) {
-            $learner = VoiceGender::tryFromAny($voiced[0]);
-            if ($learner !== null) {
-                return $learner->opposite();
-            }
-        }
-
-        return $default;
     }
 }

@@ -10,6 +10,7 @@ use App\Modules\Generation\Application\Port\ContentModelCatalog;
 use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Domain\ValueObject\PromptShape;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
+use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
 use App\Modules\Plan\Application\Dto\PlanRequest;
@@ -19,7 +20,7 @@ use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Plan\Infrastructure\Prompt\PlanSchemas;
 
 /**
- * The two plan calls over Generation's vendor seam: the prompt file is the system side, the inputs
+ * The plan's model calls over Generation's vendor seam: the prompt file is the system side, the inputs
  * are the user side, the schema is enforced by the vendor, and the request log labels the spend
  * `plan`. Each call is built with the plan's own timeout, not the comparison stack's.
  */
@@ -52,12 +53,29 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
         $text = $this->prompts->lessonSystem();
         $prompt = new RenderedPrompt($text, $this->prompts->lessonVersion(), PromptShape::Full, hash('sha256', $text));
 
-        return self::reply($model->complete($prompt, $this->prompts->lessonUser($request), PlanSchemas::lesson()), $prompt->version);
+        $schema = PlanSchemas::lesson($request->dialogueCount, $request->vocabularyCount);
+
+        return self::reply($model->complete($prompt, $this->prompts->lessonUser($request), $schema), $prompt->version);
+    }
+
+    public function repairLessonCard(LessonCardRepairRequest $request): ModelReply
+    {
+        $model = $this->model($this->lessonModel, $this->lessonTimeout);
+        $text = $this->prompts->repairSystem($request->kind);
+        $prompt = new RenderedPrompt($text, $this->prompts->repairVersion(), PromptShape::Full, hash('sha256', $text));
+        $schema = PlanSchemas::lessonCard($request->kind, $request->address, $request->frameIds);
+
+        return self::reply($model->complete($prompt, $this->prompts->repairUser($request), $schema), $prompt->version);
     }
 
     public function planPromptVersion(): string
     {
         return $this->prompts->planVersion();
+    }
+
+    public function repairPromptVersion(): string
+    {
+        return $this->prompts->repairVersion();
     }
 
     public function lessonPromptVersion(): string

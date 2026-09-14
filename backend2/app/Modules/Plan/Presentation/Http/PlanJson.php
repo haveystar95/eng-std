@@ -18,8 +18,10 @@ use App\Modules\Plan\Application\Dto\RouteStageView;
 use App\Modules\Plan\Application\Dto\SceneView;
 use App\Modules\Plan\Application\Dto\StageProgressView;
 use App\Modules\Plan\Application\Dto\VersionsView;
+use App\Modules\Plan\Application\Dto\WindowFrameView;
 use App\Modules\Plan\Application\Dto\WindowGoalView;
 use App\Modules\Plan\Application\Dto\WindowLineView;
+use App\Modules\Plan\Application\Dto\WindowListeningView;
 use App\Modules\Plan\Application\Dto\WindowPairView;
 use App\Modules\Plan\Application\Dto\WindowPhraseView;
 use App\Modules\Plan\Application\Dto\WindowStageView;
@@ -233,7 +235,14 @@ final class PlanJson
             'text' => $l->text,
             'translation' => $l->translation,
             'audio_url' => $audio($l->audioId),
-            ...($l->state === null ? [] : ['state' => $l->state]),
+            ...($l->state === null ? [] : ['state' => $l->state, 'phrase_ref' => $l->phraseRef, 'filler' => $l->filler]),
+        ];
+        $frame = static fn (?WindowFrameView $f): ?array => $f === null ? null : [
+            'target' => $f->target,
+            'native' => $f->native,
+            'pronunciation' => $f->pronunciation,
+            'kind' => $f->kind,
+            'slot' => $f->slot,
         ];
         $usage = static fn (?WindowUsageView $u): ?array => $u === null ? null : [
             'text' => $u->text,
@@ -281,6 +290,7 @@ final class PlanJson
                         'usage' => $usage($v->usage),
                         'state' => $v->state,
                         'returns_day' => $v->returnsDay,
+                        'used_in' => $v->usedIn,
                     ], $w->program->words),
                 ],
                 'phrases' => [
@@ -292,18 +302,25 @@ final class PlanJson
                         'pronunciation' => $v->pronunciation,
                         'audio_url' => $audio($v->audioId),
                         'state' => $v->state,
+                        'frame' => $frame($v->frame),
                     ], $w->program->phrases),
                 ],
                 'dialogue' => [
                     'summary' => $summary($w->program->dialogueSummary),
                     'items' => array_map(static fn (WindowPairView $v): array => [
                         'step' => $v->step,
+                        'kind' => $v->kind,
                         'partner' => $line($v->partner),
                         'learner' => $line($v->learner),
                     ], $w->program->dialogue),
                 ],
             ],
             'allowed_action' => $w->allowedAction,
+            'listening' => array_map(static fn (WindowListeningView $q): array => [
+                'question' => $q->question,
+                'options' => $q->options,
+                'explanation_native' => $q->explanation,
+            ], $w->listening),
         ];
     }
 

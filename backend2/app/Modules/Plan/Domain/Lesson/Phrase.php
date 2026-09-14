@@ -4,29 +4,47 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Lesson;
 
-/** A learner phrase: the core of one of B's messages, made to stand alone. */
+use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
+
+/**
+ * A PHRASE OF THE DAY IS A FRAME (`lesson_day.v4.4`, FRAMES): a reusable sentence pattern with one
+ * slot `___` (or none), its rendering in the learner's language and its reading — both with `___`
+ * kept — and the slot's hint and values. The learner's dialogue lines are the frame said with one of
+ * its fillers; the server puts them together ({@see \App\Modules\Plan\Domain\Service\FrameText}).
+ */
 final readonly class Phrase
 {
     public function __construct(
         public string $id,
-        public string $textTarget,
-        public string $textNative,
+        public ExchangeKind $kind,
+        public string $frameTarget,
+        public string $frameNative,
         public string $pronunciationNative,
+        public ?Slot $slot,
     ) {}
 
-    public function withoutPronunciation(): self
+    /** The filler written as `$target`, when the frame has a slot and the value is one of its fillers. */
+    public function filler(?string $target): ?Filler
     {
-        return new self($this->id, $this->textTarget, $this->textNative, '');
+        return $target === null ? null : $this->slot?->filler($target);
     }
 
-    /** @return array<string, string> */
+    /** @return list<Filler> */
+    public function fillers(): array
+    {
+        return $this->slot->fillers ?? [];
+    }
+
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [
             'id' => $this->id,
-            'text_target' => $this->textTarget,
-            'text_native' => $this->textNative,
+            'kind' => $this->kind->value,
+            'frame_target' => $this->frameTarget,
+            'frame_native' => $this->frameNative,
             'pronunciation_native' => $this->pronunciationNative,
+            'slot' => $this->slot?->toArray(),
         ];
     }
 }

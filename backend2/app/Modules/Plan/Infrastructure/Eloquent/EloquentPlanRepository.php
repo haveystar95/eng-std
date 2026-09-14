@@ -168,13 +168,6 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
             ->update(['lesson_status' => LessonStatus::Ready->value, 'updated_at' => now()]) > 0;
     }
 
-    public function castSceneVoices(PlanSceneId $id, VoiceGender $partner): bool
-    {
-        return PlanSceneModel::query()->whereKey($id->value)
-            ->whereNull('partner_voice_gender')
-            ->update(['partner_voice_gender' => $partner->value, 'updated_at' => now()]) > 0;
-    }
-
     public function voiceCastsOf(array $sceneIds): array
     {
         if ($sceneIds === []) {

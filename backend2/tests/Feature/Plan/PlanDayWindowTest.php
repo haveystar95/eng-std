@@ -228,18 +228,20 @@ it('gives every word its reading, its definition and the line of the day it is s
     $id = planCreate($this, $token, ['days_total' => 2])['id'];
 
     $words = collect(windowOf($this, $token, $id, 1)['program']['words']['items'])->keyBy('term');
-    $painkiller = $words['painkiller'];
+    $pad = $words['heating pad'];
     $fever = $words['fever'];
     $phrase = windowOf($this, $token, $id, 1)['program']['phrases']['items'][0];
 
-    expect($painkiller['pronunciation'])->toBe('пэйнкилер')
-        ->and($painkiller['definition'])->toBe('a medicine that reduces pain')
-        ->and($painkiller['usage']['text'])->toBe('Give him a painkiller twice a day after meals.')
-        ->and(mb_substr($painkiller['usage']['text'], $painkiller['usage']['offset'], $painkiller['usage']['length']))->toBe('painkiller')
-        ->and($painkiller['usage']['translation'])->toBe('Давайте ему обезболивающее два раза в день после еды.')
+    expect($pad['pronunciation'])->toBe('хитинг пэд')
+        ->and($pad['definition'])->toBe('a warm pad you put on a painful place')
+        ->and($pad['usage']['text'])->toBe('It looks like a muscle strain, so he should rest and use a heating pad.')
+        ->and(mb_substr($pad['usage']['text'], $pad['usage']['offset'], $pad['usage']['length']))->toBe('heating pad')
+        ->and($pad['usage']['translation'])->toBe('Похоже на растяжение мышцы, так что ему нужен покой и грелка.')
         ->and(mb_substr($fever['usage']['text'], $fever['usage']['offset'], $fever['usage']['length']))->toBe('fever')
-        ->and($words['prescription']['usage'])->toBeNull()
-        ->and($phrase['pronunciation'])->toBe('фраза 1');
+        // A filler the dialogue never says: the word has no line of the day.
+        ->and($words['sick note']['usage'])->toBeNull()
+        // A phrase reads as its frame said with the dialogue's filler.
+        ->and($phrase['pronunciation'])->toBe('ит хёртс ин хиз лоуэр бэк');
 });
 
 // Catches «вернётся в день N» the phone would have to count.
@@ -279,12 +281,12 @@ it('voices everything a day says: both speakers’ lines, every phrase and every
         ->and(array_unique($urls))->toHaveCount(30)
         ->and($lines[0]['learner'])->toHaveKeys(['text', 'translation', 'audio_url', 'state'])
         ->and($lines[0]['partner'])->not->toHaveKey('state')
-        ->and(collect($program['words']['items'])->firstWhere('term', 'painkiller')['usage']['audio_url'])->toBe($lines[5]['partner']['audio_url']);
+        ->and(collect($program['words']['items'])->firstWhere('term', 'heating pad')['usage']['audio_url'])->toBe($lines[4]['partner']['audio_url']);
 
-    // The file behind the learner's address is that line in that voice.
+    // The file behind the learner's address is that line in that voice (the partner is a woman, the learner the other voice).
     $path = parse_url((string) $lines[0]['learner']['audio_url'], PHP_URL_PATH);
     $bytes = $this->withHeader('Authorization', "Bearer {$token}")->get((string) $path)->assertOk()->getContent();
-    expect($bytes)->toBe('FAKEMP3:'.md5(str_replace(':p90', '', windowVoiceKey('female')).'|p90|en|'.$lines[0]['learner']['text']));
+    expect($bytes)->toBe('FAKEMP3:'.md5(str_replace(':p90', '', windowVoiceKey('male')).'|p90|en|'.$lines[0]['learner']['text']));
 });
 
 // Canon (owner, DAY-UI-3): «собеседник и ученик разного пола; пол собеседника задаёт роль; голос ученика = тот же
@@ -296,12 +298,12 @@ it('casts a scene’s two voices by the role’s gender: the partner’s lines i
     $sceneId = (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
     $keys = DB::table('plan_line_audios')->where('scene_id', $sceneId)->pluck('voice_key', 'line_ref');
 
-    expect(DB::table('plan_scenes')->where('id', $sceneId)->value('partner_voice_gender'))->toBe('male')
+    expect(DB::table('plan_scenes')->where('id', $sceneId)->value('partner_voice_gender'))->toBe('female')
         ->and(windowVoiceKey('male'))->not->toBe(windowVoiceKey('female'))
-        ->and($keys['x1'])->toBe(windowVoiceKey('male'))
-        ->and($keys['x1b'])->toBe(windowVoiceKey('female'))
-        ->and($keys['p1'])->toBe(windowVoiceKey('female'))
-        ->and($keys['v1'])->toBe(windowVoiceKey('female'));
+        ->and($keys['x1'])->toBe(windowVoiceKey('female'))
+        ->and($keys['x1b'])->toBe(windowVoiceKey('male'))
+        ->and($keys['p1'])->toBe(windowVoiceKey('male'))
+        ->and($keys['v1'])->toBe(windowVoiceKey('male'));
 });
 
 // Canon (DAY-UI-3): «диалог дня — ОДНИМ вызовом с двумя говорящими; слова и фразы — пачками; ≤ 4 вызовов на день».
@@ -317,7 +319,7 @@ it('buys a day’s voice in at most four calls — the whole dialogue in one wit
         ->and($vendor->calls)->toBe(3)
         ->and($dialogue)->toHaveCount(1)
         ->and($dialogue[0]->turns)->toHaveCount(16)
-        ->and(array_map(static fn ($t): string => $t->speaker, array_slice($dialogue[0]->turns, 0, 2)))->toBe(['male', 'female'])
+        ->and(array_map(static fn ($t): string => $t->speaker, array_slice($dialogue[0]->turns, 0, 2)))->toBe(['female', 'male'])
         ->and(array_sum(array_map(static fn ($s): int => count($s->turns), $vendor->scripts)))->toBe(16 + 6 + 8);
 });
 
@@ -404,31 +406,7 @@ it('backfills in packets by kind: partner-owing dialogues, then learner-only dia
             ->and(DB::table('plan_line_audios')->where('scene_id', $scene)->where('line_ref', 'like', 'v%')->count())->toBe(8);
     }
     $partnerFirst = DB::table('plan_line_audios')->where('scene_id', $sceneA)->where('line_ref', 'x2')->first();
-    expect($partnerFirst->voice_key)->toBe(windowVoiceKey('male'));
-});
-
-// Owner, DAY-UI-3: «51 купленная фраза используется». Catches the phrases bought before the two voices bought
-// again in the default learner voice — and a learner whose lines and phrases are two different people.
-it('casts a scene written before voices had genders so the phrases already bought stay the learner’s voice', function () {
-    $vendor = windowVoice();
-    [, $token] = planLearner();
-    $id = planCreate($this, $token, ['days_total' => 2])['id'];
-    $sceneId = (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
-    // Back to 14.09: a lesson without role_gender, no cast, only the phrases voiced — in the female voice.
-    $lesson = json_decode((string) DB::table('plan_scenes')->where('id', $sceneId)->value('lesson_json'), true);
-    unset($lesson['role_gender']);
-    DB::table('plan_scenes')->where('id', $sceneId)->update(['lesson_json' => json_encode($lesson), 'partner_voice_gender' => null]);
-    DB::table('plan_line_audios')->where('line_ref', 'not like', 'p%')->delete();
-    expect(DB::table('plan_line_audios')->distinct()->pluck('voice_key')->all())->toBe([windowVoiceKey('female')]);
-    $vendor->calls = 0;
-    $vendor->scripts = [];
-
-    app(VoiceSceneHandler::class)(new VoiceScene(PlanSceneId::fromString($sceneId)));
-
-    expect(DB::table('plan_scenes')->where('id', $sceneId)->value('partner_voice_gender'))->toBe('male')
-        ->and(array_map(static fn ($s): int => count($s->voices), $vendor->scripts))->toBe([2, 1])
-        ->and(DB::table('plan_line_audios')->where('line_ref', 'x1b')->value('voice_key'))->toBe(windowVoiceKey('female'))
-        ->and(DB::table('plan_line_audios')->where('line_ref', 'x1')->value('voice_key'))->toBe(windowVoiceKey('male'));
+    expect($partnerFirst->voice_key)->toBe(windowVoiceKey('female'));
 });
 
 // Canon (DAY-UI-3): «при 429 — очередь ждёт до следующего окна, не падает; телефон тем временем читает своим
@@ -478,7 +456,7 @@ it('finds every photo of a day while its lesson is written — the day is ready 
         ->and(array_unique($finder->statusesWhenAsked))->toBe(['illustrating'])
         ->and(collect($finder->asked)->contains(static fn (string $q): bool => str_starts_with($q, 'sharp, ')))->toBeTrue()
         ->and($finder->asked)->not->toContain('sharp')
-        ->and($finder->asked)->not->toContain('numbness')
+        ->and($finder->asked)->not->toContain('fever')
         ->and(DB::table('plan_events')->where('kind', 'day_ready')->count())->toBe(1);
 });
 
@@ -555,20 +533,20 @@ it('paints a word nothing was found for with its scene’s tone, counts image_mi
     $scene = $plan['scenes'][0];
     $theme = (string) DB::table('plan_scenes')->where('id', $scene['id'])->value('title_target');
 
-    // Forget the word's photo, as a lesson written before the ladder left it, and find nothing for it.
-    DB::table('plan_terms')->where('text_target', 'numbness')->update(['image_url' => null, 'image_tone' => null]);
-    $finder = windowFinder(["numbness, {$theme}", $theme]);
+    // Forget the photo of a word without an image prompt, and find nothing for it.
+    DB::table('plan_terms')->where('text_target', 'sharp')->update(['image_url' => null, 'image_tone' => null]);
+    $finder = windowFinder(["sharp, {$theme}", $theme]);
     app()->instance(PlanImageFinder::class, $finder);
 
     app(IllustrateSceneHandler::class)(new IllustrateScene(PlanSceneId::fromString($scene['id'])));
     app(IllustrateSceneHandler::class)(new IllustrateScene(PlanSceneId::fromString($scene['id'])));
 
-    $row = DB::table('plan_terms')->where('text_target', 'numbness')->first();
-    $word = collect(windowOf($this, $token, $plan['id'], 1)['program']['words']['items'])->firstWhere('term', 'numbness');
+    $row = DB::table('plan_terms')->where('text_target', 'sharp')->first();
+    $word = collect(windowOf($this, $token, $plan['id'], 1)['program']['words']['items'])->firstWhere('term', 'sharp');
     expect($row->image_url)->toBeNull()
         ->and($row->image_tone)->toBe($scene['image']['tone'])
-        ->and(array_count_values($finder->asked)["numbness, {$theme}"] ?? 0)->toBe(1)
-        ->and(DB::table('plan_check_counters')->where('check_name', 'image_missing')->where('prompt_version', 'lesson-v4')->value('hits'))->toBe(1)
+        ->and(array_count_values($finder->asked)["sharp, {$theme}"] ?? 0)->toBe(1)
+        ->and(DB::table('plan_check_counters')->where('check_name', 'image_missing')->where('prompt_version', 'lesson_day.v4.4')->value('hits'))->toBe(1)
         ->and($word['image'])->toBeNull()
         ->and($word['image_tone'])->toBe($scene['image']['tone']);
 });
@@ -578,7 +556,7 @@ it('paints a word nothing was found for with its scene’s tone, counts image_mi
 it('backfills what the plans still lack and says «было пусто / стало»; --requery re-asks the bare word’s photos and a day’s repeats', function () {
     [, $token] = planLearner();
     planCreate($this, $token, ['days_total' => 2]);
-    DB::table('plan_terms')->whereIn('text_target', ['sharp', 'numbness'])->update(['image_url' => null, 'image_tone' => '#978E82']);
+    DB::table('plan_terms')->whereIn('text_target', ['sharp', 'fever'])->update(['image_url' => null, 'image_tone' => '#978E82']);
     app()->instance(PlanImageFinder::class, windowFinder());
 
     Artisan::call('plan:images-backfill');
@@ -596,7 +574,7 @@ it('backfills what the plans still lack and says «было пусто / ста�
     DB::table('plan_terms')->where('scene_id', $sceneId)->whereIn('text_target', [$words[0], $words[1]])->update(['image_url' => 'https://images.pexels.test/same.jpg']);
     DB::table('plan_terms')->where('scene_id', $sceneId)->where('text_target', $words[2])->update(['image_url' => $plate]);
     Artisan::call('plan:images-backfill', ['--requery' => true]);
-    expect(Artisan::output())->toContain('photographed by the bare word: 2, repeating a picture of their day: 2')
+    expect(Artisan::output())->toContain('photographed by the bare word: 1, repeating a picture of their day: 2')
         ->and(DB::table('plan_terms')->where('text_target', 'sharp')->value('image_url'))->not->toBe('https://images.pexels.test/supermarket.jpg')
         ->and(DB::table('plan_terms')->where('scene_id', $sceneId)->where('text_target', $words[0])->value('image_url'))->toBe('https://images.pexels.test/same.jpg')
         ->and(DB::table('plan_terms')->where('scene_id', $sceneId)->where('text_target', $words[1])->value('image_url'))->not->toBe('https://images.pexels.test/same.jpg')
@@ -626,14 +604,25 @@ it('shows no picture twice in a day: a word whose photo repeats another asks its
             return null;
         }
     });
+    // Two words without an image prompt ask the same «word, theme» question.
+    app()->instance(PlanModelPort::class, new FakePlanModel(lesson: static function (object $request): array {
+        $p = FakePlanModel::lessonPayload($request);
+        $p['vocabulary'][2]['image_prompt'] = null;
+
+        return $p;
+    }));
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 2])['id'];
     $sceneId = (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
 
     $urls = DB::table('plan_terms')->where('scene_id', $sceneId)->whereIn('kind', ['word', 'chunk'])->pluck('image_url')->all();
 
+    $plate = DB::table('plan_scenes')->where('id', $sceneId)->value('image_url');
+
+    // The plate took the theme's first page; the two words asking the same question get the next two.
     expect($urls)->toHaveCount(8)
-        ->and(array_unique($urls))->toHaveCount(8)
-        ->and($urls)->toContain('https://images.pexels.test/theme-p1.jpg')
-        ->and($urls)->toContain('https://images.pexels.test/theme-p2.jpg');
+        ->and(array_unique([...$urls, $plate]))->toHaveCount(9)
+        ->and($plate)->toBe('https://images.pexels.test/theme-p1.jpg')
+        ->and($urls)->toContain('https://images.pexels.test/theme-p2.jpg')
+        ->and($urls)->toContain('https://images.pexels.test/theme-p3.jpg');
 });

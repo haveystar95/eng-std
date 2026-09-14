@@ -27,6 +27,8 @@ final class ProfileController
                 dailyGoal: isset($data['daily_goal']) ? (int) $data['daily_goal'] : null,
                 timezone: isset($data['timezone']) ? (string) $data['timezone'] : null,
                 onboarded: isset($data['onboarded']) ? (bool) $data['onboarded'] : null,
+                gender: isset($data['gender']) ? (string) $data['gender'] : null,
+                genderGiven: array_key_exists('gender', $data),
             ),
         );
 

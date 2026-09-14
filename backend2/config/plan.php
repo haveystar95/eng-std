@@ -30,32 +30,21 @@ return [
     // sees `failed` and may ask for a retry. Two attempts × the timeout, plus the writes.
     'build_stale_seconds' => (int) env('PLAN_BUILD_STALE_SECONDS', 240),
 
-    // What a lesson orders, per level. PHRASES_COUNT is never larger than DIALOGUE_COUNT — the
-    // prompt's own rule, and PlanConfig clamps it.
+    // What a lesson orders, per level: VOCABULARY_COUNT and DIALOGUE_COUNT. The number of frames is
+    // not ordered — `lesson_day.v4.4` takes it from the dialogue (half to all of its answer/ask exchanges).
     'counts' => [
-        'beginner' => ['phrases' => 6, 'vocabulary' => 8, 'dialogue' => 8],
-        'intermediate' => ['phrases' => 6, 'vocabulary' => 8, 'dialogue' => 8],
+        'beginner' => ['vocabulary' => 8, 'dialogue' => 8],
+        'intermediate' => ['vocabulary' => 8, 'dialogue' => 8],
     ],
 
     /*
-     * THE CHECKS (docs/plan-v2.md §5): `observe` counts and keeps, `drop` erases the broken mark
+     * THE PLAN CHECKS (docs/plan-v2.md §4): `observe` counts and keeps, `drop` erases the broken mark
      * or field, `gate` refuses the answer and buys one retry. Every check ships as `observe`; the
      * admin panel shows the counters per prompt version, and a mode is switched HERE, after real
-     * lessons, never in code. Checks marked «observe навсегда» in the canon ignore this table.
+     * plans, never in code. Checks marked «observe навсегда» in the canon ignore this table. The
+     * lesson validator has no modes: it only counts (наряд GEN-2a).
      */
     'checks' => [
-        'lesson' => [
-            'counts' => env('PLAN_CHECK_COUNTS', 'observe'),
-            'exchange_shape' => env('PLAN_CHECK_EXCHANGE_SHAPE', 'observe'),
-            'second_message_question' => env('PLAN_CHECK_SECOND_MESSAGE_QUESTION', 'observe'),
-            'speaking_key_substring' => env('PLAN_CHECK_SPEAKING_KEY_SUBSTRING', 'observe'),
-            'pronunciation_script' => env('PLAN_CHECK_PRONUNCIATION_SCRIPT', 'observe'),
-            'variant_length' => env('PLAN_CHECK_VARIANT_LENGTH', 'observe'),
-            'vocabulary_id_absent' => env('PLAN_CHECK_VOCABULARY_ID_ABSENT', 'observe'),
-            'phrase_id_absent' => env('PLAN_CHECK_PHRASE_ID_ABSENT', 'observe'),
-            'phrase_unused' => env('PLAN_CHECK_PHRASE_UNUSED', 'observe'),
-            'vocabulary_contained' => env('PLAN_CHECK_VOCABULARY_CONTAINED', 'observe'),
-        ],
         'plan' => [
             'plan_shape' => env('PLAN_CHECK_PLAN_SHAPE', 'observe'),
             'priorities' => env('PLAN_CHECK_PRIORITIES', 'observe'),

@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Lesson;
 
+use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
+
 /**
- * One exchange of the visit: two messages and the question about what A said. The model may
- * hand back any number of messages; the checks decide what to do with the wrong count, so the
- * value object keeps whatever arrived and offers the two views the day is assembled from.
+ * One exchange of the visit: its kind, who opens it, two messages and the check of what the partner
+ * said. The model may hand back any number of messages; the validator counts a wrong shape, so the
+ * value object keeps whatever arrived and offers the views the day is assembled from.
  */
 final readonly class Exchange
 {
     /** @param list<Message> $messages */
     public function __construct(
         public int $step,
+        public ExchangeKind $kind,
         public string $initiator,
         public array $messages,
-        public Question $question,
+        public ExchangeCheck $check,
     ) {}
 
     public function first(): ?Message
@@ -61,7 +64,12 @@ final readonly class Exchange
     /** @param list<Message> $messages */
     public function withMessages(array $messages): self
     {
-        return new self($this->step, $this->initiator, $messages, $this->question);
+        return new self($this->step, $this->kind, $this->initiator, $messages, $this->check);
+    }
+
+    public function withCheck(ExchangeCheck $check): self
+    {
+        return new self($this->step, $this->kind, $this->initiator, $this->messages, $check);
     }
 
     /** @return array<string, mixed> */
@@ -69,9 +77,10 @@ final readonly class Exchange
     {
         return [
             'step' => $this->step,
+            'kind' => $this->kind->value,
             'initiator' => $this->initiator,
             'messages' => array_map(static fn (Message $m): array => $m->toArray(), $this->messages),
-            'question' => $this->question->toArray(),
+            'check' => $this->check->toArray(),
         ];
     }
 }

@@ -26,6 +26,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $image_author
  * @property string|null $image_author_url
  * @property string|null $image_tone the photo's tone, or — with no photo — the tone the ladder painted the card with
+ * @property string|null $frame_target
+ * @property string|null $frame_native
+ * @property string|null $frame_pronunciation_native
+ * @property string|null $frame_kind
+ * @property array{hint_native?: mixed, fillers?: mixed}|null $slot
+ * @property list<string>|null $used_in
  */
 final class PlanTermModel extends Model
 {
@@ -37,5 +43,5 @@ final class PlanTermModel extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['simplified_variants' => 'array', 'position' => 'int'];
+    protected $casts = ['simplified_variants' => 'array', 'slot' => 'array', 'used_in' => 'array', 'position' => 'int'];
 }

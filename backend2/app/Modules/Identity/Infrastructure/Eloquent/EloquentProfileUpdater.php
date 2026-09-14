@@ -27,6 +27,9 @@ final class EloquentProfileUpdater implements ProfileUpdater
 
         $profile = $user->profile()->firstOrCreate([]);
         $profile->fill($changes);
+        if ($input->genderGiven) {
+            $profile->gender = $input->gender;
+        }
         // Stamp onboarding completion once — never overwrite an earlier onboarding (device-batch F1).
         if ($input->onboarded === true && $profile->onboarded_at === null) {
             $profile->onboarded_at = now();

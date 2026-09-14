@@ -1,0 +1,161 @@
+# GEN-2a · «Заказ в ресторане» — restaurant (начальный)
+
+Цель плана (слова ученика): «Ужин в ресторане с семьёй: заказать еду, спросить про блюда, попросить счёт. У дочки аллергия на орехи»
+
+Сцена: «Заказ в ресторане» / «Ordering at Table» · ученик: Родитель · собеседник: Официант (мужчина)
+
+Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.073318 · 24.6 с · токены вход/выход 6641/3781 · одна попытка: да · находок валидатора: 12
+
+> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках.
+
+## Сценарий диалога
+
+| # | вид обмена | кто | реплика | перевод | каркас · наполнение | оценка |
+|---|---|---|---|---|---|---|
+| 1 | вопрос ученика | Родитель (ученик) | Can we see the menu? | Можно нам меню? | p1 · the menu | |
+| 1 | вопрос ученика | Официант (собеседник) | Of course. Here is the menu. | Конечно. Вот меню. |  | |
+| 2 | ответ | Официант (собеседник) | What would you like to drink? | Что вы хотите пить? |  | |
+| 2 | ответ | Родитель (ученик) | We'd like two waters. | Мы хотим две воды. | p2 · two waters | |
+| 3 | вопрос ученика | Родитель (ученик) | What is in the chicken soup? | Что входит в куриный суп? | p3 · the chicken soup | |
+| 3 | вопрос ученика | Официант (собеседник) | It has chicken, noodles, and carrots. | В нём курица, лапша и морковь. |  | |
+| 4 | вопрос ученика | Родитель (ученик) | Does it have nuts? | В этом есть орехи? | p4 · nuts | |
+| 4 | вопрос ученика | Официант (собеседник) | No, it does not have nuts. | Нет, орехов там нет. |  | |
+| 5 | ответ | Официант (собеседник) | Are you ready to order food? | Вы готовы заказать еду? |  | |
+| 5 | ответ | Родитель (ученик) | I'd like a grilled chicken. | Я бы хотел(а) курицу на гриле. | p5 · a grilled chicken | |
+| 6 | ответ | Официант (собеседник) | For your daughter, the pasta is safe and has no nuts. | Для вашей дочки паста безопасна и без орехов. |  | |
+| 6 | ответ | Родитель (ученик) | We'll take the pasta. | Мы возьмём пасту. | p6 · the pasta | |
+| 7 | вопрос ученика | Родитель (ученик) | Can we have the bill? | Можно нам счёт? | p7 · the bill | |
+| 7 | вопрос ученика | Официант (собеседник) | Sure. I'll bring it right away. | Конечно. Я сейчас его принесу. |  | |
+| 8 | ответ | Официант (собеседник) | The total is forty pounds. | Итого сорок фунтов. |  | |
+| 8 | ответ | Родитель (ученик) | I'll pay by card. | Я заплачу картой. | p8 · by card | |
+
+## Каркасы
+
+### p1 · вопрос ученика — «Can we see ___?»
+
+По-русски: «Можно нам посмотреть ___?» · чтение: «кэн ви си ___?» · окно: «что попросить принести» · звучит в обменах: 1
+
+| наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | оценка |
+|---|---|---|---|---|---|---|
+| the menu | меню | зэ мэнью | да | Can we see the menu? | Можно нам посмотреть меню? | |
+| the dessert menu | меню десертов | зэ дизёрт мэнью | — | Can we see the dessert menu? | Можно нам посмотреть меню десертов? | |
+
+### p2 · ответ — «We'd like ___.»
+
+По-русски: «Мы хотим ___.» · чтение: «вид лайк ___.» · окно: «напиток или заказ» · звучит в обменах: 2
+
+| наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | оценка |
+|---|---|---|---|---|---|---|
+| two waters | две воды | ту уотэрз | да | We'd like two waters. | Мы хотим две воды. | |
+| one juice | один сок | уан джус | — | We'd like one juice. | Мы хотим один сок. | |
+| a tea | чай | э ти | — | We'd like a tea. | Мы хотим чай. | |
+
+### p3 · вопрос ученика — «What is in ___?»
+
+По-русски: «Что входит в ___?» · чтение: «уот из ин ___?» · окно: «какое блюдо спросить» · звучит в обменах: 3
+
+| наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | оценка |
+|---|---|---|---|---|---|---|
+| the chicken soup | куриный суп | зэ чикен суп | да | What is in the chicken soup? | Что входит в куриный суп? | |
+| the salad | салат | зэ салэд | — | What is in the salad? | Что входит в салат? | |
+| the pasta | паста | зэ паста | — | What is in the pasta? | Что входит в паста? | |
+
+### p4 · вопрос ученика — «Does it have ___?»
+
+По-русски: «В этом есть ___?» · чтение: «даз ит хэв ___?» · окно: «ингредиент или аллерген» · звучит в обменах: 4
+
+| наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | оценка |
+|---|---|---|---|---|---|---|
+| nuts | орехи | натс | да | Does it have nuts? | В этом есть орехи? | |
+| cheese | сыр | чиз | — | Does it have cheese? | В этом есть сыр? | |
+| eggs | яйца | эгз | — | Does it have eggs? | В этом есть яйца? | |
+
+### p5 · ответ — «I'd like ___.»
+
+По-русски: «Я бы хотел(а) ___.» · чтение: «айд лайк ___.» · окно: «что заказать» · звучит в обменах: 5
+
+| наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | оценка |
+|---|---|---|---|---|---|---|
+| a grilled chicken | курицу на гриле | э грилд чикен | да | I'd like a grilled chicken. | Я бы хотел(а) курицу на гриле. | |
+| a burger | бургер | э бёргэр | — | I'd like a burger. | Я бы хотел(а) бургер. | |
+| a fish soup | рыбный суп | э фиш суп | — | I'd like a fish soup. | Я бы хотел(а) рыбный суп. | |
+
+### p6 · ответ — «We'll take ___.»
+
+По-русски: «Мы возьмём ___.» · чтение: «уил тэйк ___.» · окно: «блюдо для заказа» · звучит в обменах: 6
+
+| наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | оценка |
+|---|---|---|---|---|---|---|
+| the pasta | пасту | зэ паста | да | We'll take the pasta. | Мы возьмём пасту. | |
+| the salad | салат | зэ салэд | — | We'll take the salad. | Мы возьмём салат. | |
+| the soup | суп | зэ суп | — | We'll take the soup. | Мы возьмём суп. | |
+
+### p7 · вопрос ученика — «Can we have ___?»
+
+По-русски: «Можно нам ___?» · чтение: «кэн ви хэв ___?» · окно: «что попросить принести» · звучит в обменах: 7
+
+| наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | оценка |
+|---|---|---|---|---|---|---|
+| the bill | счёт | зэ бил | да | Can we have the bill? | Можно нам счёт? | |
+| some bread | немного хлеба | сам брэд | — | Can we have some bread? | Можно нам немного хлеба? | |
+
+### p8 · ответ — «I'll pay ___.»
+
+По-русски: «Я заплачу ___.» · чтение: «айл пэй ___.» · окно: «способ оплаты» · звучит в обменах: 8
+
+| наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | оценка |
+|---|---|---|---|---|---|---|
+| by card | картой | бай кард | да | I'll pay by card. | Я заплачу картой. | |
+| in cash | наличными | ин кэш | — | I'll pay in cash. | Я заплачу наличными. | |
+
+## Проверки обменов
+
+| # | вопрос | варианты (✓ — верный) | пояснение | оценка |
+|---|---|---|---|---|
+| 1 | What does the waiter give them? / Что официант им даёт? | ✓ The food list / Меню · A list of desserts / Список десертов · A table number / Номер стола | Официант говорит, что приносит меню. | |
+| 2 | What is the waiter asking about? / О чём спрашивает официант? | ✓ Drinks for the table / Напитки для стола · The total price / Общую сумму · A free table / Свободный стол | Официант спрашивает, что они будут пить. | |
+| 3 | Which ingredient is in the soup? / Какой ингредиент есть в супе? | Rice / Рис · Beans / Фасоль · ✓ Carrots / Морковь | Официант говорит, что в супе есть морковь. | |
+| 4 | What does the waiter say about the dish? / Что официант говорит про блюдо? | It is served cold / Его подают холодным · It is very spicy / Оно очень острое · ✓ It is without nuts / Оно без орехов | Официант говорит, что в блюде нет орехов. | |
+| 5 | What does the waiter want to know? / Что хочет узнать официант? | If they want dessert now / Хотят ли они сейчас десерт · If they need another table / Нужен ли им другой стол · ✓ If they are ready for food / Готовы ли они заказать еду | Официант спрашивает, готовы ли они заказать еду. | |
+| 6 | Which dish does the waiter say is safe? / Какое блюдо официант называет безопасным? | The fish / Рыба · The salad / Салат · ✓ The pasta / Паста | Официант говорит, что паста безопасна для дочки. | |
+| 7 | When will the waiter bring the bill? / Когда официант принесёт счёт? | ✓ Immediately / Сразу · Tomorrow evening / Завтра вечером · In a few minutes after dessert / Через несколько минут после десерта | Официант говорит, что принесёт счёт сразу. | |
+| 8 | How much is the bill? / Сколько составляет счёт? | Fifty pounds / Пятьдесят фунтов · ✓ Forty pounds / Сорок фунтов · Thirty pounds / Тридцать фунтов | Официант называет сумму: сорок фунтов. | |
+
+## Слушаю весь визит (listening)
+
+| # | вопрос | варианты (✓ — верный) | пояснение | оценка |
+|---|---|---|---|---|
+| L1 | Что заказал(а) ученик на питьё в начале? | Два сока · ✓ Два стакана воды · Один чай | Сначала ученик заказывает две воды. | |
+| L2 | Какое блюдо официант назвал безопасным для дочки? | Салат · Рыбу · ✓ Пасту | Официант говорит, что паста безопасна и без орехов. | |
+| L3 | О чём ученик спросил(а) из-за аллергии дочки? | Горячее ли блюдо · Сколько оно стоит · ✓ Есть ли в блюде орехи | Ученик спрашивает, есть ли в блюде орехи. | |
+| L4 | Сколько составил счёт в конце? | ✓ Сорок фунтов · Тридцать фунтов · Пятьдесят фунтов | В конце официант говорит: сорок фунтов. | |
+
+## Словарь
+
+| id | слово | вид | перевод | чтение | определение | где звучит | картинка (запрос) | оценка |
+|---|---|---|---|---|---|---|---|---|
+| v1 | menu | слово | меню | мэнью | a list of food and drinks in a restaurant | p1, A1 | restaurant menu on a dining table | |
+| v2 | chicken soup | связка | куриный суп | чикен суп | a soup made with chicken | p3 | bowl of chicken soup with noodles on a restaurant table | |
+| v3 | noodles | слово | лапша | нудэлз | long thin pieces of pasta in a dish or soup | A3 | noodles in a bowl of soup | |
+| v4 | nuts | слово | орехи | натс | hard dry fruits that can cause allergies | p4, A4, A6 | mixed nuts in a small bowl | |
+| v5 | grilled chicken | связка | курица на гриле | грилд чикен | chicken cooked over direct heat | p5 | grilled chicken served on a restaurant plate | |
+| v6 | safe | слово | безопасный | сэйф | not likely to cause harm or danger | A6 | — | |
+| v7 | bill | слово | счёт | бил | the paper showing how much you must pay | p7 | restaurant bill folder on a table | |
+| v8 | by card | связка | картой | бай кард | using a bank card to pay | p8 | customer paying with a bank card at a restaurant table | |
+
+## Находки валидатора (режим наблюдения — день вышел)
+
+| код | адрес | что |
+|---|---|---|
+| `frame.native_alternatives` | p5 | «Я бы хотел(а) ___.» writes alternatives inside the frame |
+| `key.no_content_word` | B3 | the key «What is in» has no content word |
+| `key.no_content_word` | B4 | the key «Does it have» has no content word |
+| `variant.longer` | B4 | the variant «Are there nuts in it?» has 5 words, the line 4 |
+| `key.no_content_word` | B7 | the key «Can we have» has no content word |
+| `check.verbatim` | x6.check | the right option «The pasta» repeats «the pasta» of the partner's line |
+| `check.verbatim` | x8.check | the right option «Forty pounds» repeats «forty pounds» of the partner's line |
+| `listening.same_exchange` | L3 | L2 and this question are both about exchange 6 |
+| `listening.distractor_not_filler` | L1 | the question asks p2's slot («две воды»), but 1 of its wrong options are p2's other fillers (expected 2) |
+| `listening.distractor_not_filler` | L2 | the question asks p6's slot («пасту»), but 1 of its wrong options are p6's other fillers (expected 2) |
+| `listening.distractor_not_filler` | L3 | the question asks p4's slot («орехи»), but 0 of its wrong options are p4's other fillers (expected 2) |
+| `answer.index_skew` | lesson | the right answer stands at index 1 in 8 of 12 questions (67 %) |

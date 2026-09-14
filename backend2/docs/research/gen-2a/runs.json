@@ -1,0 +1,164 @@
+[
+    {
+        "slug": "doctor",
+        "goal": "Иду к врачу с сыном: у него третий день температура и болит горло. Нужно рассказать симптомы и понять назначения",
+        "level": "intermediate",
+        "plan_id": "01M2H13E1QT6F5D4FKJSEKTAD7",
+        "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+        "scene_title": "Приём у врача",
+        "lesson_status": "ready",
+        "prompt_version": "lesson_day.v4.4",
+        "model": "gpt-5.4-2026-03-05",
+        "plan_cost_usd": "0.014228",
+        "lesson_cost_usd": "0.078488",
+        "lesson_latency_ms": 32170,
+        "lesson_attempts": 1,
+        "lesson_calls": [
+            {
+                "log_id": "01M2H14NVSGJW6AD2W3K0CDV22",
+                "duration_ms": 32140,
+                "tokens_in": 6639,
+                "tokens_out": 4126,
+                "cached": 0
+            }
+        ],
+        "findings": 14,
+        "wall_s": 41.9,
+        "at": "2026-09-14T22:38:27+00:00"
+    },
+    {
+        "slug": "interview",
+        "goal": "Собеседование на позицию менеджера проектов в IT-компании. У меня пять лет опыта, руковожу командой из шести человек",
+        "level": "intermediate",
+        "plan_id": "01M2H15R9R8BJ5S0Y895B2SASW",
+        "scene_id": "01M2H15Y2JMY990RRK1F624BGQ",
+        "scene_title": "Собеседование",
+        "lesson_status": "ready",
+        "prompt_version": "lesson_day.v4.4",
+        "model": "gpt-5.4-2026-03-05",
+        "plan_cost_usd": "0.014355",
+        "lesson_cost_usd": "0.083475",
+        "lesson_latency_ms": 33324,
+        "lesson_attempts": 1,
+        "lesson_calls": [
+            {
+                "log_id": "01M2H170M1X0GRV88JJC14MSVB",
+                "duration_ms": 33305,
+                "tokens_in": 6630,
+                "tokens_out": 4460,
+                "cached": 5888
+            }
+        ],
+        "findings": 12,
+        "wall_s": 42.4,
+        "at": "2026-09-14T22:39:43+00:00"
+    },
+    {
+        "slug": "rent",
+        "goal": "Снимаю квартиру в Берлине на год: смотрю квартиру, спрашиваю про депозит, коммунальные платежи и договор. Работаю удалённо, у меня кошка",
+        "level": "intermediate",
+        "plan_id": "01M2H171NW5PWX89Z90149ARWD",
+        "scene_id": "01M2H175ZWX46TXXNEM1WDCYBA",
+        "scene_title": "Просмотр жилья",
+        "lesson_status": "ready",
+        "prompt_version": "lesson_day.v4.4",
+        "model": "gpt-5.4-2026-03-05",
+        "plan_cost_usd": "0.014255",
+        "lesson_cost_usd": "0.076523",
+        "lesson_latency_ms": 29110,
+        "lesson_attempts": 1,
+        "lesson_calls": [
+            {
+                "log_id": "01M2H184REQ0RY789TZ3NXKTBF",
+                "duration_ms": 29066,
+                "tokens_in": 6651,
+                "tokens_out": 3993,
+                "cached": 5888
+            }
+        ],
+        "findings": 26,
+        "wall_s": 37,
+        "at": "2026-09-14T22:40:20+00:00"
+    },
+    {
+        "slug": "bank",
+        "goal": "Открываю счёт и банковскую карту в банке. Я студент, приехал учиться на год",
+        "level": "beginner",
+        "plan_id": "01M2H185V0PVQR1HXJ5M1T6NHZ",
+        "scene_id": "01M2H18B9WRB628Y1F3BFNT5YN",
+        "scene_title": "Счёт и карта",
+        "lesson_status": "ready",
+        "prompt_version": "lesson_day.v4.4",
+        "model": "gpt-5.4-2026-03-05",
+        "plan_cost_usd": "0.014350",
+        "lesson_cost_usd": "0.075450",
+        "lesson_latency_ms": 28947,
+        "lesson_attempts": 1,
+        "lesson_calls": [
+            {
+                "log_id": "01M2H199TW4YJSAMMWNEQZVNPW",
+                "duration_ms": 28922,
+                "tokens_in": 6636,
+                "tokens_out": 3924,
+                "cached": 5888
+            }
+        ],
+        "findings": 22,
+        "wall_s": 38,
+        "at": "2026-09-14T22:40:58+00:00"
+    },
+    {
+        "slug": "restaurant",
+        "goal": "Ужин в ресторане с семьёй: заказать еду, спросить про блюда, попросить счёт. У дочки аллергия на орехи",
+        "level": "beginner",
+        "plan_id": "01M2H19AXMN63MG6Q198QNQ8CV",
+        "scene_id": "01M2H19FWDH6EF3B04K8G69CXK",
+        "scene_title": "Заказ в ресторане",
+        "lesson_status": "ready",
+        "prompt_version": "lesson_day.v4.4",
+        "model": "gpt-5.4-2026-03-05",
+        "plan_cost_usd": "0.014195",
+        "lesson_cost_usd": "0.073318",
+        "lesson_latency_ms": 24609,
+        "lesson_attempts": 1,
+        "lesson_calls": [
+            {
+                "log_id": "01M2H1AA4HA8F3899JQEX9QAYD",
+                "duration_ms": 24579,
+                "tokens_in": 6641,
+                "tokens_out": 3781,
+                "cached": 5888
+            }
+        ],
+        "findings": 12,
+        "wall_s": 33.2,
+        "at": "2026-09-14T22:41:32+00:00"
+    },
+    {
+        "slug": "airport",
+        "goal": "Регистрация на рейс в аэропорту: паспорт, багаж, место в самолёте. Лечу с одним чемоданом и рюкзаком",
+        "level": "beginner",
+        "plan_id": "01M2H1ABCMNQXQ6YP9C9A3HD6B",
+        "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
+        "scene_title": "Регистрация",
+        "lesson_status": "ready",
+        "prompt_version": "lesson_day.v4.4",
+        "model": "gpt-5.4-2026-03-05",
+        "plan_cost_usd": "0.013628",
+        "lesson_cost_usd": "0.075988",
+        "lesson_latency_ms": 25458,
+        "lesson_attempts": 1,
+        "lesson_calls": [
+            {
+                "log_id": "01M2H1BAE9CRTRXMJ746B7NGJH",
+                "duration_ms": 25410,
+                "tokens_in": 6611,
+                "tokens_out": 3964,
+                "cached": 5888
+            }
+        ],
+        "findings": 13,
+        "wall_s": 33.8,
+        "at": "2026-09-14T22:42:05+00:00"
+    }
+]

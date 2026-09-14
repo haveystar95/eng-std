@@ -11,10 +11,8 @@ return new class extends Migration
      * THE CAST OF A SCENE'S TWO VOICES (DAY-UI-3): the gender of the partner's voice; the learner's
      * lines, phrases and words take the other one.
      *
-     * Written when the lesson is written (the role's gender from `lesson-v4`, the default otherwise),
-     * and — once, conditionally — by the voice queue for a scene written before voices had genders.
-     * Null = not cast yet; readers then use the default cast (the partner female), which is exactly the
-     * voice every partner line bought before this наряд was bought in.
+     * Written when the lesson is written: the role's gender the lesson names, the default otherwise.
+     * Null = no lesson yet; a reader then uses the default cast (the partner female).
      *
      * Nullable, no default: a metadata-only ALTER. No index: read with its row, or by primary key.
      */

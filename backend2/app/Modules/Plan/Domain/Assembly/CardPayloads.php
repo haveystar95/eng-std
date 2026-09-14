@@ -156,23 +156,28 @@ final class CardPayloads
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * The exchange's check as a card: the question and its three options in the learner's language
+     * (Beginner) or the target language, the right one marked.
+     *
+     * @return array<string, mixed>
+     */
     public static function listenQuestion(PlanSceneId $scene, Exchange $exchange, bool $inNative, string $seed): array
     {
-        $question = $exchange->question;
+        $check = $exchange->check;
         $options = [];
-        foreach ($question->options as $index => $option) {
+        foreach ($check->options as $index => $option) {
             $options[] = [
                 'text' => $inNative ? $option->textNative : $option->textTarget,
-                'correct' => $index === $question->correctOptionIndex,
+                'correct' => $index === $check->correctOptionIndex,
             ];
         }
 
         return self::exchange($scene, $exchange) + [
             'language' => $inNative ? 'native' : 'target',
-            'question' => $inNative ? $question->textNative : $question->textTarget,
+            'question' => $inNative ? $check->textNative : $check->textTarget,
             'options' => Shuffle::seeded($seed, $options),
-            'explanation_native' => $question->explanationNative,
+            'explanation_native' => $check->explanationNative,
         ];
     }
 

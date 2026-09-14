@@ -1,0 +1,362 @@
+{
+    "dialogue.count": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "vocab.count": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "exchange.shape": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "exchange.second_question": {
+        "total": 2,
+        "days": {
+            "rent": 2
+        },
+        "examples": [
+            "rent B1: the closing message «What about electricity?» ends with a question mark",
+            "rent B2: the closing message «How much is the deposit?» ends with a question mark"
+        ]
+    },
+    "check.shape": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "listening.shape": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "pronunciation.script": {
+        "total": 3,
+        "days": {
+            "bank": 3
+        },
+        "examples": [
+            "bank p2.f1: the reading «май пáспорт» leaves the native script",
+            "bank v2: the reading «пáспорт» leaves the native script",
+            "bank B2: the reading «Хиэр из май пáспорт.» leaves the native script"
+        ]
+    },
+    "frame.count": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "frame.unused": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "frame.too_long": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "frame.no_slot_share": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "frame.native_alternatives": {
+        "total": 3,
+        "days": {
+            "bank": 2,
+            "restaurant": 1
+        },
+        "examples": [
+            "bank p2: «Вот мой/моё ___.» writes alternatives inside the frame",
+            "bank p4: «Какая/какой ___?» writes alternatives inside the frame",
+            "restaurant p5: «Я бы хотел(а) ___.» writes alternatives inside the frame"
+        ]
+    },
+    "frame.native_punct": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "filler.count": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "filler.ungrammatical": {
+        "total": 3,
+        "days": {
+            "bank": 3
+        },
+        "examples": [
+            "bank p2.f1: «Here is my my passport.»: a word is doubled at the seam",
+            "bank p2.f2: «Here is my my rental letter.»: a word is doubled at the seam",
+            "bank p2.f3: «Here is my my student letter.»: a word is doubled at the seam"
+        ]
+    },
+    "filler.one_in_dialogue": {
+        "total": 3,
+        "days": {
+            "rent": 3
+        },
+        "examples": [
+            "rent p2: exchanges 2 and 8 say p2 with the same filler «the deposit»",
+            "rent B3: «one year» is not one of p3's fillers",
+            "rent p3.f1: «one-year» is marked in_dialogue, but no line says it"
+        ]
+    },
+    "line.ne_frame": {
+        "total": 3,
+        "days": {
+            "rent": 1,
+            "bank": 2
+        },
+        "examples": [
+            "rent B3: «I need a one-year contract.» is not «I need a ___ contract.» with «one year»; served as «I need a one year contract.»",
+            "bank B2: «Here is my passport.» is not «Here is my ___.» with «my passport»; served as «Here is my my passport.»",
+            "bank B3: «Here is my rental letter.» is not «Here is my ___.» with «my rental letter»; served as «Here is my my rental letter.»"
+        ]
+    },
+    "line.too_long": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "line.no_frame": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "key.not_in_line": {
+        "total": 2,
+        "days": {
+            "interview": 1,
+            "rent": 1
+        },
+        "examples": [
+            "interview B1: the key «have of experience» is not in «I have five years of experience.»",
+            "rent B3: the key «need a contract» is not in «I need a one year contract.»"
+        ]
+    },
+    "key.contains_filler": {
+        "total": 12,
+        "days": {
+            "doctor": 2,
+            "interview": 1,
+            "rent": 2,
+            "bank": 3,
+            "airport": 4
+        },
+        "examples": [
+            "doctor B1: the key «son has a» takes words of the filler «a fever»",
+            "doctor B4: the key «also has a» takes words of the filler «a sore throat»",
+            "interview B7: the key «success in this» takes words of the filler «success in this role»"
+        ]
+    },
+    "key.no_content_word": {
+        "total": 15,
+        "days": {
+            "doctor": 2,
+            "rent": 2,
+            "bank": 5,
+            "restaurant": 3,
+            "airport": 3
+        },
+        "examples": [
+            "doctor B2: the key «has had it» has no content word",
+            "doctor B4: the key «also has a» has no content word",
+            "rent B1: the key «What about» has no content word"
+        ]
+    },
+    "key.too_long": {
+        "total": 2,
+        "days": {
+            "doctor": 2
+        },
+        "examples": [
+            "doctor B7: the key «How often should I give» has 5 words (1–4)",
+            "doctor B8: the key «When should we come back» has 5 words (1–4)"
+        ]
+    },
+    "variant.longer": {
+        "total": 5,
+        "days": {
+            "interview": 1,
+            "rent": 1,
+            "bank": 1,
+            "restaurant": 1,
+            "airport": 1
+        },
+        "examples": [
+            "interview B1: the variant «I have five years in project management.» has 7 words, the line 6",
+            "rent B6: the variant «Can I keep a cat?» has 5 words, the line 4",
+            "bank B5: the variant «How much is the monthly fee?» has 6 words, the line 5"
+        ]
+    },
+    "kind.ask_count": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "kind.rescue_count": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "rescue.not_first": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "rescue.new_fact": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "rescue.no_prev": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "partner.two_questions": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "partner.too_long": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "partner.closer": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "check.about_learner": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "check.verbatim": {
+        "total": 13,
+        "days": {
+            "doctor": 3,
+            "interview": 3,
+            "rent": 4,
+            "restaurant": 2,
+            "airport": 1
+        },
+        "examples": [
+            "doctor x1.check: the right option «The child's main problem today» repeats «problem today» of the partner's line",
+            "doctor x5.check: the right option «At home, not outside» repeats «at home» of the partner's line",
+            "doctor x7.check: the right option «Every six hours, but only with high fever» repeats «every six» of the partner's line"
+        ]
+    },
+    "check.listed_alternative_as_wrong": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "listening.count": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "listening.same_exchange": {
+        "total": 1,
+        "days": {
+            "restaurant": 1
+        },
+        "examples": [
+            "restaurant L3: L2 and this question are both about exchange 6"
+        ]
+    },
+    "listening.no_learner_value": {
+        "total": 1,
+        "days": {
+            "rent": 1
+        },
+        "examples": [
+            "rent lesson: no question asks for a value the learner gave (a filler said in the dialogue)"
+        ]
+    },
+    "listening.distractor_not_filler": {
+        "total": 11,
+        "days": {
+            "doctor": 3,
+            "interview": 1,
+            "bank": 2,
+            "restaurant": 3,
+            "airport": 2
+        },
+        "examples": [
+            "doctor L1: the question asks p1's slot («температура»), but 1 of its wrong options are p1's other fillers (expected 2)",
+            "doctor L2: the question asks p2's slot («уже три дня»), but 0 of its wrong options are p2's other fillers (expected 2)",
+            "doctor L3: the question asks p6's slot («парацетамол»), but 0 of its wrong options are p6's other fillers (expected 2)"
+        ]
+    },
+    "vocab.free_combination": {
+        "total": 2,
+        "days": {
+            "doctor": 1,
+            "rent": 1
+        },
+        "examples": [
+            "doctor v7: «every six hours» is a free combination of ordinary words",
+            "rent v6: «work from home» is a free combination of ordinary words"
+        ]
+    },
+    "vocab.everyday_word": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "vocab.used_in_wrong": {
+        "total": 4,
+        "days": {
+            "rent": 2,
+            "airport": 2
+        },
+        "examples": [
+            "rent v1: «deposit» is not in the partner's line of exchange 8",
+            "rent v5: «fixed-term» is not in the partner's line of exchange 4",
+            "airport v5: «check in» is not in frame p4 or its fillers"
+        ]
+    },
+    "vocab.learner_share": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "vocab.nested": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "native.gendered_past": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "image_prompt.rule_text": {
+        "total": 0,
+        "days": [],
+        "examples": []
+    },
+    "answer.index_skew": {
+        "total": 2,
+        "days": {
+            "rent": 1,
+            "restaurant": 1
+        },
+        "examples": [
+            "rent lesson: the right answer stands at index 1 in 9 of 12 questions (75 %)",
+            "restaurant lesson: the right answer stands at index 1 in 8 of 12 questions (67 %)"
+        ]
+    }
+}

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Infrastructure\Prompt;
 
+use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use RuntimeException;
 
 /**
- * THE TWO PROMPT FILES, read from this directory. The version of each is its file stem
- * (`plan-builder-v2`, `lesson-v3`) — a rename is a version bump and nothing else is.
+ * THE PLAN'S PROMPT FILES, read from this directory. The version of each is its file stem
+ * (`plan-builder-v2`, `lesson_day.v4.4`) — a rename is a version bump and nothing else is.
  *
  * The files are frozen: nothing here edits their text. Each ends with a «TEST INPUT» section the
  * author used to try the prompt by hand; that section is cut out and the real inputs go in the
@@ -21,7 +22,20 @@ final class PlanPromptFiles
 {
     private const PLAN_FILE = 'plan-builder-v2.md';
 
-    private const LESSON_FILE = 'lesson-v4.md';
+    private const LESSON_FILE = 'lesson_day.v4.4.md';
+
+    private const REPAIR_FILE = 'lesson_card_repair.v1.md';
+
+    /**
+     * The sections of the lesson prompt a repair of each card kind quotes — by the start of their
+     * heading, word for word: the repair wrapper never retells a rule.
+     */
+    private const REPAIR_SECTIONS = [
+        'frame' => ['LEVEL', 'FRAMES', 'TEXT QUALITY', 'PRONUNCIATION_NATIVE'],
+        'line' => ['LEVEL', 'EXCHANGE KINDS', 'MOBILE-FRIENDLY MESSAGE LENGTH', 'LEARNER MESSAGES', 'TEXT QUALITY', 'PRONUNCIATION_NATIVE'],
+        'check' => ['LEVEL', 'CHECK PER EXCHANGE'],
+        'listening' => ['LISTENING'],
+    ];
 
     private const TEST_INPUT_MARKER = "\n---\n\nTEST INPUT\n";
 
@@ -40,6 +54,69 @@ final class PlanPromptFiles
     public function lessonVersion(): string
     {
         return pathinfo(self::LESSON_FILE, PATHINFO_FILENAME);
+    }
+
+    public function repairVersion(): string
+    {
+        return pathinfo(self::REPAIR_FILE, PATHINFO_FILENAME);
+    }
+
+    /**
+     * P2R's rules for one card kind: the repair wrapper with the lesson prompt's own sections for that
+     * kind quoted in place of `{{rules}}`.
+     *
+     * @param  'frame'|'line'|'check'|'listening'  $kind
+     */
+    public function repairSystem(string $kind): string
+    {
+        $sections = array_map(fn (string $heading): string => $this->lessonSection($heading), self::REPAIR_SECTIONS[$kind]);
+
+        return str_replace('{{rules}}', implode("\n\n---\n\n", $sections), $this->text(self::REPAIR_FILE));
+    }
+
+    public function repairUser(LessonCardRepairRequest $request): string
+    {
+        $json = static fn (array $value): string => json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        $lines = [
+            'TARGET_LANGUAGE: '.$request->targetLanguage,
+            'NATIVE_LANGUAGE: '.$request->nativeLanguage,
+            'LEVEL: '.$request->level->promptLabel(),
+            'LEARNER_GENDER: '.($request->learnerGender->value ?? 'unknown'),
+            '',
+            'ADDRESS: '.$request->address,
+            'CARD KIND: '.$request->kind,
+            '',
+            'FINDINGS (code · what is broken):',
+        ];
+        foreach ($request->findings as $finding) {
+            $lines[] = '- '.$finding['code'].' · '.self::oneLine($finding['detail']);
+        }
+
+        return implode("\n", [
+            ...$lines,
+            '',
+            'CARD (as written):',
+            $json($request->card),
+            '',
+            'LESSON (accepted, for context — do not return it):',
+            $json($request->lesson),
+        ]);
+    }
+
+    /**
+     * One section of the lesson prompt, heading included: the part between two `---` separators whose
+     * first line starts with `$heading`.
+     */
+    public function lessonSection(string $heading): string
+    {
+        foreach (explode("\n---\n", $this->text(self::LESSON_FILE)) as $part) {
+            $part = trim($part);
+            if (str_starts_with($part, $heading)) {
+                return $part;
+            }
+        }
+
+        throw new RuntimeException("Lesson prompt has no section «{$heading}»");
     }
 
     /** The plan builder's rules — the file without its TEST INPUT tail. */
@@ -88,7 +165,7 @@ final class PlanPromptFiles
             '',
             'LEVEL: '.$request->level->promptLabel(),
             '',
-            'PHRASES_COUNT: '.$request->phrasesCount,
+            'LEARNER_GENDER: '.$request->learnerGenderInput(),
             '',
             'VOCABULARY_COUNT: '.$request->vocabularyCount,
             '',

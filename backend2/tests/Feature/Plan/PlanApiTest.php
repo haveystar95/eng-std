@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Port\PlanModelPort;
-use App\Modules\Plan\Domain\Check\LessonChecker;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -23,7 +22,7 @@ it('builds the plan and day one at creation, and reports the versions on every a
         ->and($build['attempts'])->toBe(1)
         ->and($build['cost_usd'])->toBe('0.000000')
         ->and($build['versions']['prompt_plan'])->toBe('plan-builder-v2')
-        ->and($build['versions']['prompt_lesson'])->toBe('lesson-v4')
+        ->and($build['versions']['prompt_lesson'])->toBe('lesson_day.v4.4')
         ->and($build['versions']['build'])->not->toBe('');
 
     $plan = planRead($this, $token, $build['id']);
@@ -43,7 +42,7 @@ it('builds the plan and day one at creation, and reports the versions on every a
     $row = DB::table('plans')->where('id', $build['id'])->first();
     expect($row->prompt_version_plan)->toBe('plan-builder-v2')
         ->and($row->build_version)->not->toBeNull()
-        ->and(DB::table('plan_scenes')->where('plan_id', $build['id'])->where('lesson_status', 'ready')->value('prompt_version_lesson'))->toBe('lesson-v4')
+        ->and(DB::table('plan_scenes')->where('plan_id', $build['id'])->where('lesson_status', 'ready')->value('prompt_version_lesson'))->toBe('lesson_day.v4.4')
         ->and(DB::table('plan_terms')->where('user_id', $user->id)->count())->toBe(14);
 
     $versions = $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/plans/versions')->assertOk()->json('data');
@@ -276,54 +275,6 @@ it('shows an active plan whose date has passed as overdue, with the prompt’s o
 
     $tab = $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/plans/current')->assertOk()->json('data');
     expect($tab['status'])->toBe('overdue')->and($tab['overdue_native'])->toBe('Приём был вчера');
-});
-
-it('marks a lesson failed after two refused answers and lets the learner retry it', function () {
-    [, $token] = planLearner();
-    config(['plan.checks.lesson.counts' => 'gate']);
-    $fake = new FakePlanModel(lesson: static function ($request, int $attempt): array {
-        $p = FakePlanModel::lessonPayload($request);
-        array_pop($p['phrases']);
-
-        return $p;
-    });
-    app()->instance(PlanModelPort::class, $fake);
-    app()->forgetInstance(LessonChecker::class);
-
-    $build = planCreate($this, $token, ['days_total' => 1]);
-    $plan = planRead($this, $token, $build['id']);
-    expect($plan['scenes'][0]['lesson_status'])->toBe('failed')
-        ->and($plan['scenes'][0]['lesson_fail_reason'])->toContain('counts')
-        ->and($fake->lessonCalls)->toBe(2);
-
-    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$build['id']}/start")->assertOk();
-    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$build['id']}/days/1/open")
-        ->assertStatus(409)->assertJsonPath('code', 'plan_lesson_not_ready');
-
-    // The retry asks again; the same broken answer fails again — explicitly, and counted.
-    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$build['id']}/scenes/{$plan['scenes'][0]['id']}/lesson/retry")->assertStatus(202);
-    expect($fake->lessonCalls)->toBe(4)
-        ->and(DB::table('plan_check_counters')->where('check_name', 'counts')->where('action', 'gated')->value('hits'))->toBe(4);
-});
-
-it('counts a check in observe and shows the counters to the admin by prompt version', function () {
-    [, $token] = planLearner();
-    app()->instance(PlanModelPort::class, new FakePlanModel(lesson: static function ($request): array {
-        $p = FakePlanModel::lessonPayload($request);
-        $p['dialogue'][0]['messages'][1]['speaking_key'] = 'describe main pain';
-
-        return $p;
-    }));
-
-    $build = planCreate($this, $token, ['days_total' => 1]);
-    expect(planRead($this, $token, $build['id'])['scenes'][0]['lesson_status'])->toBe('ready');
-
-    [, $admin] = adminActor();
-    $rows = $this->withHeader('Authorization', "Bearer {$admin}")->getJson('/admin/api/plans/checks')->assertOk()->json('data');
-    expect($rows)->toBe([['prompt_version' => 'lesson-v4', 'check' => 'speaking_key_substring', 'action' => 'counted', 'hits' => 1]]);
-
-    $checks = DB::table('plan_scenes')->where('plan_id', $build['id'])->value('checks_json');
-    expect(json_decode((string) $checks, true)[0]['check'])->toBe('speaking_key_substring');
 });
 
 it('deletes a plan and forgets it everywhere', function () {

@@ -21,15 +21,14 @@ use Illuminate\Support\Facades\DB;
  *
  * Bought BY KIND IN PACKETS ({@see VoiceBackfillQueue}), to fit the vendor's free day of ~100 requests: the dialogues
  * of scenes missing partner lines, then the dialogues of scenes missing only the learner's, then phrases, then words —
- * a dialogue is one call per scene, phrases and words go up to twelve a call across scenes in one voice. A scene
- * written before voices had genders gets its cast stored before its first packet — a scene whose phrases were already
- * bought keeps them as the learner's voice.
+ * a dialogue is one call per scene, phrases and words go up to twelve a call across scenes in one voice, each line
+ * in the voice its scene's cast gives its speaker.
  *
  * Waits the vendor's per-minute limit out, and STOPS on the daily one: the next window is the vendor's midnight, and
  * the command says so instead of sleeping half a day — what did not fit stays owed for the next run. Prints what is
  * not voiced yet by kind, before and after, and the packets bought; `--count` only counts: nothing is bought.
  *
- * Writes `plan_line_audios`, `plan_scenes.partner_voice_gender` and files on `plan.audio_disk` — take
+ * Writes `plan_line_audios` and files on `plan.audio_disk` — take
  * the database backup first, as for any write to the dev database.
  */
 final class PlanSpeakBackfillCommand extends Command

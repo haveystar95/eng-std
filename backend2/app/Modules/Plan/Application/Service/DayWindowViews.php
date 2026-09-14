@@ -7,8 +7,10 @@ namespace App\Modules\Plan\Application\Service;
 use App\Modules\Plan\Application\Dto\DayWindowView;
 use App\Modules\Plan\Application\Dto\SceneView;
 use App\Modules\Plan\Application\Dto\WindowDayView;
+use App\Modules\Plan\Application\Dto\WindowFrameView;
 use App\Modules\Plan\Application\Dto\WindowGoalView;
 use App\Modules\Plan\Application\Dto\WindowLineView;
+use App\Modules\Plan\Application\Dto\WindowListeningView;
 use App\Modules\Plan\Application\Dto\WindowPairView;
 use App\Modules\Plan\Application\Dto\WindowPhraseView;
 use App\Modules\Plan\Application\Dto\WindowProgramView;
@@ -22,7 +24,11 @@ use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Exception\SceneNotFound;
+use App\Modules\Plan\Domain\Lesson\Exchange;
+use App\Modules\Plan\Domain\Lesson\Filler;
+use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\Message;
+use App\Modules\Plan\Domain\Lesson\Phrase;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Service\DayWindowStages;
 use App\Modules\Plan\Domain\Service\ImageTones;
@@ -97,7 +103,7 @@ final readonly class DayWindowViews
 
         [$words, $wordStates] = $this->words($plan, $day, $cards, $states, $sceneTones, $termsById, $audio);
         [$phrases, $phraseStates] = $this->phrases($cards, $states, $termsById, $audio);
-        [$dialogue, $lineStates] = $this->dialogue($cards, $states, $audio);
+        [$dialogue, $lineStates] = $this->dialogue($plan, $cards, $states, $audio);
 
         $ownScene = $plan->sceneOf($day);
 
@@ -125,6 +131,49 @@ final readonly class DayWindowViews
                 $dialogue, self::summary($lineStates),
             ),
             allowedAction: $status->action(self::hasSpeak($cards))?->value,
+            listening: self::listening($ownScene?->lesson()),
+        );
+    }
+
+    /**
+     * The questions about the day's own visit, the right option marked where the served lesson put it.
+     *
+     * @return list<WindowListeningView>
+     */
+    private static function listening(?Lesson $lesson): array
+    {
+        $out = [];
+        foreach ($lesson->listening ?? [] as $question) {
+            $options = [];
+            foreach ($question->optionsNative as $index => $option) {
+                $options[] = ['text' => $option, 'correct' => $index === $question->correctOptionIndex];
+            }
+            $out[] = new WindowListeningView($question->textNative, $options, $question->explanationNative);
+        }
+
+        return $out;
+    }
+
+    private static function frame(?Phrase $frame): ?WindowFrameView
+    {
+        if ($frame === null) {
+            return null;
+        }
+
+        return new WindowFrameView(
+            target: $frame->frameTarget,
+            native: $frame->frameNative,
+            pronunciation: $frame->pronunciationNative,
+            kind: $frame->kind->value,
+            slot: $frame->slot === null ? null : [
+                'hint' => $frame->slot->hintNative,
+                'fillers' => array_map(static fn (Filler $f): array => [
+                    'target' => $f->target,
+                    'native' => $f->native,
+                    'pronunciation' => $f->pronunciationNative,
+                    'in_dialogue' => $f->inDialogue,
+                ], $frame->slot->fillers),
+            ],
         );
     }
 
@@ -167,6 +216,7 @@ final readonly class DayWindowViews
                 audioId: $audio->idOf($sceneId, $card->unitRef()),
                 usage: $this->usage($plan, $sceneId, $card->unitRef(), $text, $audio),
                 returnsDay: $state === UnitState::ReturnsTomorrow ? $returnsDay : null,
+                usedIn: $term?->usedIn() ?? [],
             );
             $unitStates[] = $state;
         }
@@ -241,6 +291,7 @@ final readonly class DayWindowViews
                 state: $state->value,
                 pronunciation: $term?->pronunciationNative() ?? self::nullableText($payload, 'pronunciation_native'),
                 audioId: $audio->idOf($sceneId, $card->unitRef()),
+                frame: self::frame($term?->frame()),
             );
             $unitStates[] = $state;
         }
@@ -253,13 +304,14 @@ final readonly class DayWindowViews
      * of a day without one (a review, the rehearsal) come from its exchange cards, and an exchange
      * returned from yesterday is appended after today's. The learner's line takes its exchange's
      * state; an exchange with no practice card of its own is walked when the dialogue was read. Both
-     * lines carry their voice — each in its speaker's.
+     * lines carry their voice — each in its speaker's — and, from the scene's served lesson, the
+     * exchange's kind and the frame and filler of the learner's line (GEN-2a, additive).
      *
      * @param  list<DayCard>  $cards
      * @param  array<string, UnitState>  $states
      * @return array{0: list<WindowPairView>, 1: list<UnitState>}
      */
-    private function dialogue(array $cards, array $states, SceneAudioIndex $audio): array
+    private function dialogue(Plan $plan, array $cards, array $states, SceneAudioIndex $audio): array
     {
         /** @var array<string, array{scene: string, step: int, partner: array{0: string, 1: string}|null, learner: array{0: string, 1: string}|null}> $pairs */
         $pairs = [];
@@ -304,6 +356,8 @@ final readonly class DayWindowViews
         $unitStates = [];
         foreach ($pairs as $pair) {
             $ref = CardPayloads::exchangeRef($pair['step']);
+            $exchange = self::exchangeOf($plan, $pair['scene'], $pair['step']);
+            $said = $exchange?->learner();
             $learner = null;
             if ($pair['learner'] !== null) {
                 $state = $states[UnitStates::key($pair['scene'], UnitKind::Exchange, $ref)]
@@ -311,6 +365,7 @@ final readonly class DayWindowViews
                 $learner = new WindowLineView(
                     $pair['learner'][0], $pair['learner'][1],
                     $audio->idOf($pair['scene'], SpokenLines::learnerRef($pair['step'])), $state->value,
+                    $said?->phraseId, $said?->filler,
                 );
                 $unitStates[] = $state;
             }
@@ -320,10 +375,21 @@ final readonly class DayWindowViews
                     $pair['partner'][0], $pair['partner'][1], $audio->idOf($pair['scene'], SpokenLines::partnerRef($pair['step'])), null,
                 ),
                 $learner,
+                $exchange?->kind->value,
             );
         }
 
         return [$out, $unitStates];
+    }
+
+    /** The exchange of a scene's served lesson, or null when the scene or its lesson is not there. */
+    private static function exchangeOf(Plan $plan, string $sceneId, int $step): ?Exchange
+    {
+        try {
+            return $sceneId === '' ? null : $plan->scene(PlanSceneId::fromString($sceneId))->lesson()?->exchange($step);
+        } catch (SceneNotFound) {
+            return null;
+        }
     }
 
     /**

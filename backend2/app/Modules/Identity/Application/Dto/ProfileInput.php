@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Application\Dto;
 
-/** Partial profile update — only non-null fields are applied. */
+/**
+ * Partial profile update — only non-null fields are applied. Gender is the one field that can be
+ * cleared: `genderGiven` says the request named it, and then `gender` null means «not said».
+ */
 final readonly class ProfileInput
 {
     public function __construct(
@@ -18,5 +21,7 @@ final readonly class ProfileInput
         // The onboarding-finish call sends this true; the updater then stamps `onboarded_at` once
         // (never overwrites). Regular profile edits leave it null. (device-batch F1)
         public ?bool $onboarded = null,
+        public ?string $gender = null,
+        public bool $genderGiven = false,
     ) {}
 }

@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Entity;
 
 use App\Modules\Plan\Domain\Blueprint\SceneBrief;
 use App\Modules\Plan\Domain\Lesson\Lesson;
+use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\LessonStatus;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
@@ -17,7 +18,12 @@ use DateTimeImmutable;
 
 /**
  * One scene of the plan: the brief the plan builder wrote, and — once the lesson generator has
- * answered — the lesson itself with the cost and version it was written at.
+ * answered — the lesson with the cost and version it was written at.
+ *
+ * The scene keeps the model's ANSWER (what is stored and what the validator judged) and serves the
+ * lesson put together from it ({@see LessonAssembly}, seeded by the scene): framed learner lines are
+ * the server's assembly, right answers stand at shuffled places. Every reader deals from
+ * {@see lesson()}; only the store and a repair read {@see answer()}.
  *
  * A lesson written is not yet a ready day (DAY-UI-3): the scene is `illustrating` until its photos
  * are found, and only then `ready` — a day opens with its pictures on it. The partner's voice
@@ -28,9 +34,11 @@ final class PlanScene
     /** «По умолчанию собеседник женский, ученик мужской» (owner, DAY-UI-3). */
     public const DEFAULT_PARTNER_VOICE = VoiceGender::Female;
 
+    private ?Lesson $lesson;
+
     /**
      * @param  list<string>  $goalsNative
-     * @param  list<array{check: string, mode: string, action: string, detail: string}>  $findings
+     * @param  list<array{code: string, address: string, detail: string}>  $findings
      */
     private function __construct(
         private readonly PlanSceneId $id,
@@ -49,7 +57,7 @@ final class PlanScene
         private readonly string $topicDescription,
         private readonly string $imagePrompt,
         private ?Image $image,
-        private ?Lesson $lesson,
+        private ?Lesson $answer,
         private LessonStatus $lessonStatus,
         private ?ModelCall $lessonCall,
         private array $findings,
@@ -57,7 +65,9 @@ final class PlanScene
         private ?DateTimeImmutable $buildStartedAt,
         private ?DateTimeImmutable $generatedAt,
         private ?VoiceGender $partnerVoiceGender = null,
-    ) {}
+    ) {
+        $this->lesson = $answer === null ? null : LessonAssembly::serve($answer, $id->value);
+    }
 
     public static function fromBrief(PlanSceneId $id, PlanId $planId, SceneBrief $brief): self
     {
@@ -71,7 +81,7 @@ final class PlanScene
 
     /**
      * @param  list<string>  $goalsNative
-     * @param  list<array{check: string, mode: string, action: string, detail: string}>  $findings
+     * @param  list<array{code: string, address: string, detail: string}>  $findings
      */
     public static function reconstitute(
         PlanSceneId $id,
@@ -90,7 +100,7 @@ final class PlanScene
         string $topicDescription,
         string $imagePrompt,
         ?Image $image,
-        ?Lesson $lesson,
+        ?Lesson $answer,
         LessonStatus $lessonStatus,
         ?ModelCall $lessonCall,
         array $findings,
@@ -102,7 +112,7 @@ final class PlanScene
         return new self(
             $id, $planId, $order, $kind, $priority, $titleNative, $titleTarget, $teachesNative, $goalsNative,
             $learnerRoleTarget, $learnerRoleNative, $partnerRoleTarget, $partnerRoleNative, $topicDescription,
-            $imagePrompt, $image, $lesson, $lessonStatus, $lessonCall, $findings, $failReason, $buildStartedAt, $generatedAt,
+            $imagePrompt, $image, $answer, $lessonStatus, $lessonCall, $findings, $failReason, $buildStartedAt, $generatedAt,
             $partnerVoiceGender,
         );
     }
@@ -119,17 +129,32 @@ final class PlanScene
      * The lesson is written: the scene waits for its photos (`illustrating`) and knows its voices — the
      * partner's gender the lesson imagined for the role, the default when it said none.
      *
-     * @param list<array{check: string, mode: string, action: string, detail: string}> $findings
+     * @param list<array{code: string, address: string, detail: string}> $findings
      */
-    public function acceptLesson(Lesson $lesson, ModelCall $call, array $findings, DateTimeImmutable $now): void
+    public function acceptLesson(Lesson $answer, ModelCall $call, array $findings, DateTimeImmutable $now): void
     {
-        $this->lesson = $lesson;
+        $this->answer = $answer;
+        $this->lesson = LessonAssembly::serve($answer, $this->id->value);
         $this->lessonStatus = LessonStatus::Illustrating;
         $this->lessonCall = $call;
         $this->findings = $findings;
         $this->failReason = null;
         $this->generatedAt = $now;
-        $this->partnerVoiceGender = $lesson->roleGender ?? self::DEFAULT_PARTNER_VOICE;
+        $this->partnerVoiceGender = $answer->roleGender ?? self::DEFAULT_PARTNER_VOICE;
+    }
+
+    /**
+     * One card of the answer was repaired (P2R): the repaired answer replaces the old one, the findings
+     * are the validator's over it, and what the repair cost is added to the lesson's cost.
+     *
+     * @param list<array{code: string, address: string, detail: string}> $findings
+     */
+    public function reviseLesson(Lesson $answer, array $findings, string $repairCostUsd): void
+    {
+        $this->answer = $answer;
+        $this->lesson = LessonAssembly::serve($answer, $this->id->value);
+        $this->findings = $findings;
+        $this->lessonCall = $this->lessonCall?->plusCost($repairCostUsd);
     }
 
     /** The photos are in (or every search came back empty and the slots got their tones): the day is ready. */
@@ -140,7 +165,7 @@ final class PlanScene
         }
     }
 
-    /** @param list<array{check: string, mode: string, action: string, detail: string}> $findings */
+    /** @param list<array{code: string, address: string, detail: string}> $findings */
     public function failLesson(string $reason, ?ModelCall $call, array $findings): void
     {
         $this->lessonStatus = LessonStatus::Failed;
@@ -288,9 +313,16 @@ final class PlanScene
         return $this->image;
     }
 
+    /** The lesson every reader deals from — the answer put together by the server. */
     public function lesson(): ?Lesson
     {
         return $this->lesson;
+    }
+
+    /** The model's answer as written — what is stored, validated and repaired. */
+    public function answer(): ?Lesson
+    {
+        return $this->answer;
     }
 
     public function lessonStatus(): LessonStatus
@@ -303,7 +335,7 @@ final class PlanScene
         return $this->lessonCall;
     }
 
-    /** @return list<array{check: string, mode: string, action: string, detail: string}> */
+    /** @return list<array{code: string, address: string, detail: string}> */
     public function findings(): array
     {
         return $this->findings;

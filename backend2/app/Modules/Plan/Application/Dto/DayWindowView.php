@@ -11,12 +11,16 @@ namespace App\Modules\Plan\Application\Dto;
  */
 final readonly class DayWindowView
 {
-    /** @param list<WindowStageView> $stages */
+    /**
+     * @param  list<WindowStageView>  $stages
+     * @param  list<WindowListeningView>  $listening  the questions about the day's whole visit (GEN-2a, additive)
+     */
     public function __construct(
         public WindowDayView $day,
         public array $stages,
         public float $dayProgress,
         public WindowProgramView $program,
         public ?string $allowedAction,
+        public array $listening = [],
     ) {}
 }

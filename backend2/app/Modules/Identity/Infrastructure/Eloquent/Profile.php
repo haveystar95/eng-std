@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $tier
  * @property string|null $timezone
  * @property \Illuminate\Support\Carbon|null $onboarded_at
+ * @property string|null $gender `female` | `male`; null = not said
  */
 final class Profile extends Model
 {
@@ -31,7 +32,7 @@ final class Profile extends Model
     public $incrementing = false;
 
     /** @var list<string> */
-    protected $fillable = ['user_id', 'native_language', 'target_language', 'cefr_level', 'daily_goal', 'timezone', 'onboarded_at'];
+    protected $fillable = ['user_id', 'native_language', 'target_language', 'cefr_level', 'daily_goal', 'timezone', 'onboarded_at', 'gender'];
 
     /** @var array<string, string> */
     protected $casts = ['daily_goal' => 'int', 'onboarded_at' => 'datetime'];

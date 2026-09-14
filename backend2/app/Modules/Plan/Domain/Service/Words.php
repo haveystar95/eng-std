@@ -22,8 +22,8 @@ final class Words
         $split = preg_split('/\s+/u', trim($cleaned), -1, PREG_SPLIT_NO_EMPTY);
 
         return $split === false ? [] : array_values(array_map(
-            static fn (string $w): string => trim($w, "'’-"),
-            array_filter($split, static fn (string $w): bool => trim($w, "'’-") !== ''),
+            static fn (string $w): string => self::trimMarks($w),
+            array_filter($split, static fn (string $w): bool => self::trimMarks($w) !== ''),
         ));
     }
 
@@ -114,11 +114,11 @@ final class Words
         preg_match_all('/[\p{L}\p{N}\'’-]+/u', $haystack, $matches, PREG_OFFSET_CAPTURE);
         $spans = [];
         foreach ($matches[0] as [$run, $byte]) {
-            $word = trim($run, "'’-");
+            $word = self::trimMarks($run);
             if ($word === '') {
                 continue;
             }
-            $lead = mb_strlen($run) - mb_strlen(ltrim($run, "'’-"));
+            $lead = mb_strlen($run) - mb_strlen((string) preg_replace("/^['’-]+/u", '', $run));
             $start = mb_strlen(substr($haystack, 0, $byte)) + $lead;
             $spans[] = [$start, $start + mb_strlen($word)];
         }
@@ -128,6 +128,15 @@ final class Words
         }
 
         return [$spans[$first][0], $spans[$first + $count - 1][1] - $spans[$first][0]];
+    }
+
+    /**
+     * A word without the apostrophes and hyphens at its ends. Not `trim()`: that cuts BYTES, and the
+     * typographic apostrophe's bytes are also the tails of Cyrillic letters («доктор» lost its «р»).
+     */
+    private static function trimMarks(string $word): string
+    {
+        return (string) preg_replace("/^['’-]+|['’-]+$/u", '', $word);
     }
 
     private static function sameStem(string $a, string $b): bool

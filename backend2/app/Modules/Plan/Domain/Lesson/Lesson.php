@@ -7,20 +7,23 @@ namespace App\Modules\Plan\Domain\Lesson;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The lesson of one scene as the model wrote it — and as the checks may have corrected it.
+ * The lesson of one scene (`lesson_day.v4.4`): the visit as exchanges, the frames the learner's
+ * lines stand on, the questions about the whole visit, and the day's words.
  *
- * Immutable: every correction returns a new lesson, so the one stored beside the scene is the one
- * every reader assembles the day from. Parsed from the model's JSON by {@see LessonParser}; a
- * lesson that cannot be parsed never exists as a value.
+ * Immutable. Two of them exist per scene: the ANSWER — the model's JSON as written, what is stored
+ * and what the validator judges — and the SERVED lesson every reader deals from, where a framed
+ * learner line is the server's own assembly and the right answers stand at shuffled places
+ * ({@see LessonAssembly}). Parsed by {@see LessonParser}; a lesson that cannot be parsed never
+ * exists as a value.
  */
 final readonly class Lesson
 {
     /**
      * @param  list<Exchange>  $exchanges
      * @param  list<Phrase>  $phrases
+     * @param  list<ListeningQuestion>  $listening
      * @param  list<VocabularyItem>  $vocabulary
-     * @param  VoiceGender|null  $roleGender  the partner's gender as the lesson imagines the role (`lesson-v4`); null
-     *                                        for a lesson written before the prompt said it
+     * @param  VoiceGender|null  $roleGender  the partner's gender as the lesson imagines the role; null when the answer named an odd word
      */
     public function __construct(
         public string $titleTarget,
@@ -29,10 +32,11 @@ final readonly class Lesson
         public string $descriptionNative,
         public string $learnerRoleTarget,
         public string $learnerRoleNative,
+        public ?VoiceGender $roleGender,
         public array $exchanges,
         public array $phrases,
+        public array $listening,
         public array $vocabulary,
-        public ?VoiceGender $roleGender = null,
     ) {}
 
     public function phrase(string $id): ?Phrase
@@ -68,13 +72,24 @@ final readonly class Lesson
         return null;
     }
 
-    /** @return list<VocabularyItem> */
-    public function words(): array
+    /**
+     * The learner's lines that stand on a frame, in the order of the visit — one for a frame said
+     * once, two for a frame said in two exchanges.
+     *
+     * @return list<array{exchange: Exchange, message: Message}>
+     */
+    public function linesOf(string $phraseId): array
     {
-        return array_values(array_filter(
-            $this->vocabulary,
-            static fn (VocabularyItem $v): bool => $v->kind === VocabularyItem::KIND_WORD,
-        ));
+        $out = [];
+        foreach ($this->exchanges as $exchange) {
+            foreach ($exchange->messages as $message) {
+                if ($message->isLearner() && $message->phraseId === $phraseId) {
+                    $out[] = ['exchange' => $exchange, 'message' => $message];
+                }
+            }
+        }
+
+        return $out;
     }
 
     /** @param list<Exchange> $exchanges */
@@ -82,8 +97,8 @@ final readonly class Lesson
     {
         return new self(
             $this->titleTarget, $this->titleNative, $this->descriptionTarget, $this->descriptionNative,
-            $this->learnerRoleTarget, $this->learnerRoleNative, $exchanges, $this->phrases, $this->vocabulary,
-            $this->roleGender,
+            $this->learnerRoleTarget, $this->learnerRoleNative, $this->roleGender,
+            $exchanges, $this->phrases, $this->listening, $this->vocabulary,
         );
     }
 
@@ -92,23 +107,23 @@ final readonly class Lesson
     {
         return new self(
             $this->titleTarget, $this->titleNative, $this->descriptionTarget, $this->descriptionNative,
-            $this->learnerRoleTarget, $this->learnerRoleNative, $this->exchanges, $phrases, $this->vocabulary,
-            $this->roleGender,
+            $this->learnerRoleTarget, $this->learnerRoleNative, $this->roleGender,
+            $this->exchanges, $phrases, $this->listening, $this->vocabulary,
         );
     }
 
-    /** @param list<VocabularyItem> $vocabulary */
-    public function withVocabulary(array $vocabulary): self
+    /** @param list<ListeningQuestion> $listening */
+    public function withListening(array $listening): self
     {
         return new self(
             $this->titleTarget, $this->titleNative, $this->descriptionTarget, $this->descriptionNative,
-            $this->learnerRoleTarget, $this->learnerRoleNative, $this->exchanges, $this->phrases, $vocabulary,
-            $this->roleGender,
+            $this->learnerRoleTarget, $this->learnerRoleNative, $this->roleGender,
+            $this->exchanges, $this->phrases, $listening, $this->vocabulary,
         );
     }
 
     /**
-     * The same shape the prompt's schema describes — what is stored in `plan_scenes.lesson_json`.
+     * The shape of the prompt's STRICT OUTPUT SCHEMA, keys in its order — what `plan_scenes.lesson_json` holds.
      *
      * @return array<string, mixed>
      */
@@ -125,9 +140,12 @@ final readonly class Lesson
                 'role_target' => $this->learnerRoleTarget,
                 'role_native' => $this->learnerRoleNative,
             ],
-            ...($this->roleGender === null ? [] : ['role_gender' => $this->roleGender->value]),
+            'role_gender' => $this->roleGender?->value,
             'dialogue' => array_map(static fn (Exchange $e): array => $e->toArray(), $this->exchanges),
             'phrases' => array_map(static fn (Phrase $p): array => $p->toArray(), $this->phrases),
+            'listening' => [
+                'questions' => array_map(static fn (ListeningQuestion $q): array => $q->toArray(), $this->listening),
+            ],
             'vocabulary' => array_map(static fn (VocabularyItem $v): array => $v->toArray(), $this->vocabulary),
         ];
     }

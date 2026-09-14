@@ -29,6 +29,7 @@ final class UserViewMapper
                 tier: $profile->tier,
                 timezone: $profile->timezone ?? 'UTC',
                 onboardedAt: $profile->onboarded_at?->toISOString(),
+                gender: $profile->gender,
             ) : null,
             // ОБА ЗАМКА, спрошенные здесь, а не на клиенте: пометка аккаунта И та же дверь, что у
             // входа без пароля. Клиент читает один ответ и не складывает его сам.

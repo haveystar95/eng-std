@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Port;
 
+use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 
 /**
- * The two model calls of the plan, behind one seam: which vendor, which prompt file, which schema
- * and what it cost are Infrastructure's business. A transport or vendor failure throws; a reply
- * that decodes as JSON comes back whatever its content — the checks judge it.
+ * The model calls of the plan, behind one seam: which vendor, which prompt file, which schema and
+ * what it cost are Infrastructure's business. A transport or vendor failure throws; a reply that
+ * decodes as JSON comes back whatever its content — the checks judge it.
  */
 interface PlanModelPort
 {
@@ -19,8 +20,13 @@ interface PlanModelPort
 
     public function buildLesson(LessonRequest $request): ModelReply;
 
+    /** P2R: one card of a written lesson, repaired — `{card}` in that card's shape. Asked only by an explicit command. */
+    public function repairLessonCard(LessonCardRepairRequest $request): ModelReply;
+
     /** The versions stamped on every plan and lesson — read from the prompt files' names. */
     public function planPromptVersion(): string;
 
     public function lessonPromptVersion(): string;
+
+    public function repairPromptVersion(): string;
 }

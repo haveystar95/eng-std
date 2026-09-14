@@ -29,7 +29,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 
 /**
- * Rows ↔ the plan aggregate. The lesson is stored as the JSON the model wrote and re-parsed on read.
+ * Rows ↔ the plan aggregate. The lesson is stored as the model's answer and re-parsed on read; the
+ * scene puts the served lesson together from it.
  * The JSON columns are handed to Eloquent as arrays: the models cast them, and a pre-encoded string
  * would be encoded twice.
  */
@@ -86,9 +87,9 @@ final class PlanMapper
 
     private function scene(PlanSceneModel $row, PlanId $planId): PlanScene
     {
-        $lesson = null;
+        $answer = null;
         if (is_array($row->lesson_json)) {
-            $lesson = $this->lessons->parse($row->lesson_json);
+            $answer = $this->lessons->parse($row->lesson_json);
         }
 
         return PlanScene::reconstitute(
@@ -108,10 +109,10 @@ final class PlanMapper
             topicDescription: $row->topic_description,
             imagePrompt: $row->image_prompt,
             image: self::image($row->image_url, $row->image_author, $row->image_author_url, $row->image_tone),
-            lesson: $lesson,
+            answer: $answer,
             lessonStatus: LessonStatus::from($row->lesson_status),
             lessonCall: self::call($row->prompt_version_lesson, $row->build_version, $row->model_lesson, $row->cost_usd_lesson, $row->latency_ms_lesson, $row->attempts_lesson),
-            findings: self::findings($row->checks_json),
+            findings: self::lessonFindings($row->checks_json),
             failReason: $row->fail_reason,
             buildStartedAt: self::instant($row->build_started_at),
             generatedAt: self::instant($row->generated_at),
@@ -215,7 +216,7 @@ final class PlanMapper
             'image_author' => $scene->image()?->author,
             'image_author_url' => $scene->image()?->authorUrl,
             'image_tone' => $scene->image()?->tone,
-            'lesson_json' => $scene->lesson()?->toArray(),
+            'lesson_json' => $scene->answer()?->toArray(),
             'lesson_status' => $scene->lessonStatus()->value,
             'prompt_version_lesson' => $call?->promptVersion,
             'build_version' => $call?->buildVersion,
@@ -278,7 +279,7 @@ final class PlanMapper
         return $url === null || trim($url) === '' ? null : new Image($url, $author, $authorUrl, $tone);
     }
 
-    /** @return list<array{check: string, mode: string, action: string, detail: string}> */
+    /** @return list<array{check: string, mode: string, action: string, detail: string}> the plan checks' findings */
     private static function findings(mixed $raw): array
     {
         if (! is_array($raw)) {
@@ -293,6 +294,22 @@ final class PlanMapper
                     'action' => (string) $row['action'],
                     'detail' => (string) $row['detail'],
                 ];
+            }
+        }
+
+        return $out;
+    }
+
+    /** @return list<array{code: string, address: string, detail: string}> the lesson validator's findings */
+    private static function lessonFindings(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $row) {
+            if (is_array($row) && isset($row['code'], $row['address'], $row['detail'])) {
+                $out[] = ['code' => (string) $row['code'], 'address' => (string) $row['address'], 'detail' => (string) $row['detail']];
             }
         }
 

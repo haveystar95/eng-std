@@ -17,5 +17,8 @@ final readonly class ProfileView
         // ISO-8601 instant the user finished onboarding, or null if never — the client's onboarding
         // gate (device-batch F1). Server truth: survives keychain wipe / reinstall / new device.
         public ?string $onboardedAt = null,
+        // `female` | `male`, or null when the learner never said (GEN-2a). The lesson prompt's
+        // LEARNER_GENDER reads it — the grammar of the learner's own lines in their language.
+        public ?string $gender = null,
     ) {}
 }

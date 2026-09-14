@@ -11,7 +11,10 @@ namespace App\Modules\Plan\Application\Dto;
  */
 final readonly class WindowWordView
 {
-    /** @param array{url: string, author: string|null, author_url: string|null, tone: string|null}|null $image */
+    /**
+     * @param  array{url: string, author: string|null, author_url: string|null, tone: string|null}|null  $image
+     * @param  list<string>  $usedIn  where the lesson says it — frame ids and partner lines (GEN-2a)
+     */
     public function __construct(
         public string $ref,
         public string $term,
@@ -24,5 +27,6 @@ final readonly class WindowWordView
         public ?string $audioId = null,
         public ?WindowUsageView $usage = null,
         public ?int $returnsDay = null,
+        public array $usedIn = [],
     ) {}
 }

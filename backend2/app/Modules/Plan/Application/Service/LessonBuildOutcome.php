@@ -7,9 +7,10 @@ namespace App\Modules\Plan\Application\Service;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
 
+/** What the lesson call came back with: the model's answer and the validator's findings over it, or why it failed. */
 final readonly class LessonBuildOutcome
 {
-    /** @param list<array{check: string, mode: string, action: string, detail: string}> $findings */
+    /** @param list<array{code: string, address: string, detail: string}> $findings */
     private function __construct(
         public ?Lesson $lesson,
         public ?string $failReason,
@@ -17,15 +18,14 @@ final readonly class LessonBuildOutcome
         public array $findings,
     ) {}
 
-    /** @param list<array{check: string, mode: string, action: string, detail: string}> $findings */
-    public static function ok(Lesson $lesson, ModelCall $call, array $findings): self
+    /** @param list<array{code: string, address: string, detail: string}> $findings */
+    public static function ok(Lesson $answer, ModelCall $call, array $findings): self
     {
-        return new self($lesson, null, $call, $findings);
+        return new self($answer, null, $call, $findings);
     }
 
-    /** @param list<array{check: string, mode: string, action: string, detail: string}> $findings */
-    public static function failed(string $reason, ?ModelCall $call, array $findings): self
+    public static function failed(string $reason, ?ModelCall $call): self
     {
-        return new self(null, $reason, $call, $findings);
+        return new self(null, $reason, $call, []);
     }
 }
