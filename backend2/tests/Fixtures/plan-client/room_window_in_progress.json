@@ -75,7 +75,7 @@
   "day_number": 1,
   "cost_usd": "0.062172",
   "latency_ms": 22482,
-  "prompt_version": "lesson_day.v4.4"
+  "prompt_version": "lesson_day.v4.5"
  },
  "stages": [
   {

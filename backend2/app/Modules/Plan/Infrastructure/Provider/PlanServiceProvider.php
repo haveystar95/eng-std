@@ -27,6 +27,7 @@ use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\SceneImageStore;
 use App\Modules\Plan\Application\Port\SceneLocator;
 use App\Modules\Plan\Domain\Check\BlueprintChecker;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
@@ -154,6 +155,10 @@ final class PlanServiceProvider extends ServiceProvider
             CheckModes::fromArray(array_map('strval', (array) config('plan.checks.plan', []))),
         ));
 
+        // WHAT THE LESSON VALIDATOR KNOWS OF EACH LANGUAGE — `config/lesson/lang/<code>.php` (наряд GEN-2b). A code
+        // with no file is a language with no pack: its checks are skipped and counted, never guessed.
+        $this->app->singleton(LanguagePacks::class, fn (): LanguagePacks => new LanguagePacks((array) config('lesson.lang', [])));
+
         $this->app->singleton(PlanPromptFiles::class, fn (): PlanPromptFiles => new PlanPromptFiles(
             dirname(__DIR__).'/Prompt',
         ));
@@ -173,6 +178,8 @@ final class PlanServiceProvider extends ServiceProvider
                 lessonModel: (string) config('plan.model.lesson_model', 'gpt-5.4'),
                 planTimeout: (int) config('plan.model.plan_timeout', 90),
                 lessonTimeout: (int) config('plan.model.lesson_timeout', 90),
+                repairModel: (string) config('plan.model.repair_model', 'gpt-5.4'),
+                judgeModel: (string) config('plan.model.judge_model', 'gpt-5.4-mini'),
             );
         });
 

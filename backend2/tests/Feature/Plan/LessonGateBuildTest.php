@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -13,7 +15,7 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 
 /**
- * THE GATE OF THE LESSON BUILD (решение архитектора после GEN-2a, docs/plan-v2.md §4): «фатальные — день не
+ * THE GATE OF THE LESSON BUILD (решения архитектора после GEN-2a и в GEN-2b, docs/plan-v2.md §4): «фатальные — день не
  * раздаётся до P2R по адресу, вызов автоматический, не больше двух карточек на день, дальше день failed с кодом;
  * остальные — предупреждения».
  */
@@ -22,12 +24,18 @@ beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 function lgCounters(): array
 {
     $out = [];
-    foreach (DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.4')->get() as $row) {
+    foreach (DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.5')->get() as $row) {
         $out["{$row->check_name}|{$row->action}"] = (int) $row->hits;
     }
     ksort($out);
 
     return $out;
+}
+
+/** @return array<string, mixed> a frame of the clean lesson, as the model writes it */
+function lgFrame(int $index): array
+{
+    return FakePlanModel::lessonPayload(new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8))['phrases'][$index];
 }
 
 // Catches a day dealt with a broken card — the gate off, the repair asked for the wrong card, or the repaired
@@ -59,7 +67,7 @@ it('holds a lesson with a fatal finding, repairs the card at its address and giv
         ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')
         ->and(json_decode((string) $scene->lesson_json, true)['phrases'][0]['slot']['fillers'][1]['target'])->toBe('neck')
         ->and(json_decode((string) $scene->checks_json, true))->toBe([])
-        ->and((int) $scene->latency_ms_lesson)->toBe(7 + 3)
+        ->and((int) $scene->latency_ms_lesson)->toBe(7 + 3 + 2) // the lesson, the repair, the seam judge
         ->and((int) $scene->attempts_lesson)->toBe(1)
         ->and(lgCounters())->toBe(['filler.ungrammatical|counted' => 1, 'filler.ungrammatical|gated' => 1]);
 });
@@ -99,21 +107,63 @@ it('asks for two cards at most and then fails the lesson with its fatal codes, w
     expect($fake->lessonCalls)->toBe(2);
 });
 
-// Catches a day dealt with an exchange said by the wrong speakers — a fatal code that stands at no card, since the
-// whole exchange is broken — and a repair asked for it.
-it('fails a lesson whose fatal finding stands at no card without asking for a repair', function () {
-    $fake = new FakePlanModel(lesson: static function ($request): array {
+// Canon GEN-2b: «P2R получает новый вид карточки exchange и поле frame_update — сборка применяет его атомарно (обмен +
+// каркас)»; «exchange.repeats — повтор каркаса с тем же наполнением» is fatal. Catches a day dealt with an exchange that
+// asks what the visit already asked, a repair that takes the line alone (the repeat stays), an exchange stored without
+// the frame it came with (its new filler said and never marked) — and a pair that does not fit put in by halves.
+it('holds a repeated exchange, repairs the whole exchange and stores it together with the frame it came with', function () {
+    $repeat = static function ($request): array {
         $p = FakePlanModel::lessonPayload($request);
-        $p['dialogue'][0]['initiator'] = 'B';
+        $p['dialogue'][7]['messages'][0]['filler'] = 'an X-ray';
+        $p['dialogue'][7]['messages'][0]['text_target'] = 'Do we need an X-ray?';
+        $p['phrases'][5]['slot']['fillers'][1]['in_dialogue'] = false;
 
         return $p;
+    };
+    $fits = new FakePlanModel(lesson: $repeat, repair: static function ($request): array {
+        $card = $request->card;
+        $card['messages'][0]['filler'] = 'a sick note';
+        $card['messages'][0]['text_target'] = 'Do we need a sick note?';
+        $frame = lgFrame(5);
+        $frame['slot']['fillers'][1]['in_dialogue'] = false;
+        $frame['slot']['fillers'][2]['in_dialogue'] = true;
+
+        return ['card' => $card, 'frame_update' => $frame];
     });
-    app()->instance(PlanModelPort::class, $fake);
+    app()->instance(PlanModelPort::class, $fits);
     [, $token] = planLearner();
 
     $id = planCreate($this, $token, ['days_total' => 1])['id'];
+    $scene = DB::table('plan_scenes')->where('plan_id', $id)->first();
+    $lesson = json_decode((string) $scene->lesson_json, true);
 
-    expect($fake->repairCalls)->toBe(0)
-        ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('failed')
-        ->and(planRead($this, $token, $id)['scenes'][0]['lesson_fail_reason'])->toBe('fatal: exchange.shape');
+    expect($fits->repairCalls)->toBe(1)
+        ->and($fits->repairRequests[0]->kind)->toBe('exchange')
+        ->and($fits->repairRequests[0]->address)->toBe('x8')
+        ->and(array_column($fits->repairRequests[0]->findings, 'code'))->toBe(['exchange.repeats'])
+        // The repair is shown the part of the lesson it needs, never the whole answer.
+        ->and(array_keys($fits->repairRequests[0]->context))->toBe(['frames', 'words', 'exchanges'])
+        ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')
+        ->and($lesson['dialogue'][7]['messages'][0]['filler'])->toBe('a sick note')
+        ->and(array_column($lesson['phrases'][5]['slot']['fillers'], 'in_dialogue'))->toBe([true, false, true])
+        ->and(json_decode((string) $scene->checks_json, true))->toBe([])
+        ->and(lgCounters())->toBe(['exchange.repeats|counted' => 1, 'exchange.repeats|gated' => 1]);
+
+    // The same exchange with a frame its line does not stand on: the card is spent, nothing of it is put in, and the
+    // repeat fails the day.
+    $alien = new FakePlanModel(lesson: $repeat, repair: static function ($request): array {
+        $card = $request->card;
+        $card['messages'][0]['filler'] = 'a sick note';
+        $card['messages'][0]['text_target'] = 'Do we need a sick note?';
+
+        return ['card' => $card, 'frame_update' => lgFrame(4)];
+    });
+    app()->instance(PlanModelPort::class, $alien);
+    [, $second] = planLearner();
+
+    $failed = planRead($this, $second, planCreate($this, $second, ['days_total' => 1])['id']);
+
+    expect($alien->repairCalls)->toBe(1)
+        ->and($failed['scenes'][0]['lesson_status'])->toBe('failed')
+        ->and($failed['scenes'][0]['lesson_fail_reason'])->toBe('fatal: exchange.repeats');
 });

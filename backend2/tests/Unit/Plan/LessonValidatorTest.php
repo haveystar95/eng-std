@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Check\LessonCodes;
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Check\LessonValidationContext;
 use App\Modules\Plan\Domain\Check\LessonValidator;
 use App\Modules\Plan\Domain\Check\LessonViolation;
@@ -13,11 +15,12 @@ use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * THE LESSON VALIDATOR, CODE BY CODE (`lesson_day.v4.4`, docs/plan-v2.md §4).
+ * THE LESSON VALIDATOR, CODE BY CODE (`lesson_day.v4.5`, docs/plan-v2.md §4).
  *
  * The clean fixture lesson breaks nothing; every row below breaks ONE rule of the prompt in it and names
  * the code that must count the breach — the defect each code exists to catch, run against the code. A
- * rule the validator stops reading fails its own row.
+ * rule the validator stops reading fails its own row. The words of both languages are the deployment's packs
+ * (`config/lesson/lang`): ru the learner's, en the target.
  */
 
 /** @return array<string, mixed> */
@@ -27,9 +30,9 @@ function lvPayload(): array
 }
 
 /** @return list<LessonViolation> */
-function lvRun(array $payload, ?VoiceGender $gender = null): array
+function lvRun(array $payload, ?VoiceGender $gender = null, ?LessonValidationContext $context = null): array
 {
-    return (new LessonValidator)->run((new LessonParser)->parse($payload), new LessonValidationContext(8, 8, 'ru', 'en', $gender));
+    return (new LessonValidator)->run((new LessonParser)->parse($payload), $context ?? lessonContext('ru', 'en', $gender));
 }
 
 /** @return list<string> */
@@ -63,6 +66,12 @@ function lvBreaks(): array
     }],
     'the closing message asks' => [LessonCodes::EXCHANGE_SECOND_QUESTION, static function (array $p): array {
         $p['dialogue'][3]['messages'][1]['text_target'] = 'Should he have a fever?';
+
+        return $p;
+    }],
+    'an exchange that says a frame with the filler an earlier one said' => [LessonCodes::EXCHANGE_REPEATS, static function (array $p): array {
+        $p['dialogue'][7]['messages'][0]['filler'] = 'an X-ray';
+        $p['dialogue'][7]['messages'][0]['text_target'] = 'Do we need an X-ray?';
 
         return $p;
     }],
@@ -116,6 +125,16 @@ function lvBreaks(): array
 
         return $p;
     }],
+    'a frame that leans on a pronoun it does not name' => [LessonCodes::FRAME_UNRESOLVED_PRONOUN, static function (array $p): array {
+        $p['phrases'][5]['frame_target'] = 'Do we need ___ for it?';
+
+        return $p;
+    }],
+    'a native frame with a word that agrees with the slot' => [LessonCodes::FRAME_NATIVE_AGREEMENT, static function (array $p): array {
+        $p['phrases'][0]['frame_native'] = 'У него болит этот ___.';
+
+        return $p;
+    }],
     'one filler in a slot' => [LessonCodes::FILLER_COUNT, static function (array $p): array {
         $p['phrases'][2]['slot']['fillers'] = [$p['phrases'][2]['slot']['fillers'][0]];
 
@@ -128,6 +147,16 @@ function lvBreaks(): array
     }],
     'a filler marked in_dialogue that no line says' => [LessonCodes::FILLER_ONE_IN_DIALOGUE, static function (array $p): array {
         $p['phrases'][0]['slot']['fillers'][2]['in_dialogue'] = true;
+
+        return $p;
+    }],
+    'a filler that is a clause' => [LessonCodes::FILLER_IS_CLAUSE, static function (array $p): array {
+        $p['phrases'][4]['slot']['fillers'][2]['target'] = 'if he feels better';
+
+        return $p;
+    }],
+    'an article of a filler that does not fit its noun' => [LessonCodes::FILLER_ARTICLE_SEAM, static function (array $p): array {
+        $p['phrases'][5]['slot']['fillers'][2]['target'] = 'a extra note';
 
         return $p;
     }],
@@ -171,6 +200,11 @@ function lvBreaks(): array
     }],
     'a variant longer than the line' => [LessonCodes::VARIANT_LONGER, static function (array $p): array {
         $p['dialogue'][0]['messages'][1]['simplified_variants'] = ['It hurts in his lower back very much today.'];
+
+        return $p;
+    }],
+    'a line that says the partner\'s statement back' => [LessonCodes::LEARNER_RESTATES_PARTNER, static function (array $p): array {
+        $p['dialogue'][4]['messages'][0]['text_target'] = 'He should rest at home.';
 
         return $p;
     }],
@@ -299,11 +333,13 @@ it('counts the one rule a lesson breaks by its code', function (string $code, Cl
     expect(lvCodes($break(lvPayload())))->toContain($code);
 })->with('one broken rule');
 
-// A code with no row of its own is a code nothing proves it counts.
+// A code with no row of its own is a code nothing proves it counts. The seam judge's code is a model's, not a rule's
+// (LessonSeamJudge, `LessonObservationTest`).
 it('has a broken rule for every code it counts', function () {
     $named = array_map(static fn (array $row): string => $row[0], array_values(lvBreaks()));
 
-    expect(array_values(array_diff(LessonCodes::all(), $named)))->toBe([]);
+    expect(array_values(array_diff(LessonCodes::validated(), $named)))->toBe([])
+        ->and(LessonCodes::JUDGED)->toBe([LessonCodes::FILLER_NATIVE_SEAM]);
 });
 
 // Architect, after GEN-2a: «check.verbatim не считает числа/имена/предметы без пересказа». Catches a count that
@@ -354,10 +390,137 @@ it('addresses every finding to its card', function () {
     $p['dialogue'][0]['messages'][1]['speaking_key'] = 'in his';
     $p['phrases'][0]['slot']['fillers'][2]['in_dialogue'] = true;
     $p['dialogue'][1]['check']['options'][1]['text_target'] = 'Earlier this week';
+    $p['dialogue'][6]['messages'][1]['text_target'] = 'Do you want an X-ray?';
 
     $addresses = array_map(static fn (LessonViolation $v): string => "{$v->code}@{$v->address}", lvRun($p));
 
     expect($addresses)->toContain('key.no_content_word@B1')
         ->and($addresses)->toContain('filler.one_in_dialogue@p1.f3')
-        ->and($addresses)->toContain('check.verbatim@x2.check');
+        ->and($addresses)->toContain('check.verbatim@x2.check')
+        // A closing question is the whole exchange's: the repair takes the exchange, whoever asked.
+        ->and($addresses)->toContain('exchange.second_question@x7');
+});
+
+// Canon GEN-2b: «правила не про английский и русский, а про пару (target_lang, native_lang); код, для которого пакета
+// нет, — пропуск проверки со счётчиком lang.pack_missing, НЕ находка». Catches a validator that reads a language it
+// has no pack for with another language's words (a Romanian learner's lines judged by Russian rules), that counts a
+// skip as a finding, that crashes on a pack with no keys — and one that skips checks that need no pack.
+it('skips a check whose language has no pack and writes the skip down, finding nothing of it', function () {
+    $p = lvPayload();
+    $p['vocabulary'][1]['pronunciation_native'] = 'sharp';
+    $p['dialogue'][0]['messages'][1]['text_native'] = 'Я заметил, что у него болит поясница.';
+    $p['phrases'][0]['frame_native'] = 'У него болит этот ___.';
+    $p['listening']['questions'][0]['options_native'] = ['Три дня', 'Поясница', 'Плечо'];
+    $p['dialogue'][0]['messages'][1]['speaking_key'] = 'in his';
+
+    $ru = lessonContext('ru', 'en');
+    $ro = lessonContext('ro', 'en');
+    $codes = static fn (LessonValidationContext $context): array => array_values(array_unique(array_map(
+        static fn (LessonViolation $v): string => $v->code,
+        lvRun($p, null, $context),
+    )));
+    $native = [
+        LessonCodes::PRONUNCIATION_SCRIPT, LessonCodes::FRAME_NATIVE_PUNCT, LessonCodes::FRAME_NATIVE_AGREEMENT,
+        LessonCodes::LISTENING_SAME_EXCHANGE, LessonCodes::LISTENING_NO_LEARNER_VALUE, LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER,
+        LessonCodes::NATIVE_GENDERED_PAST,
+    ];
+
+    expect($codes($ru))->toContain(LessonCodes::PRONUNCIATION_SCRIPT, LessonCodes::NATIVE_GENDERED_PAST, LessonCodes::FRAME_NATIVE_AGREEMENT, LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER)
+        ->and($ru->skips->codes())->toBe([])
+        ->and(array_intersect($codes($ro), $native))->toBe([])
+        ->and($ro->skips->codes())->toEqualCanonicalizing($native)
+        // The target's own rules and the rules that need no language still run for the Romanian learner.
+        ->and($codes($ro))->toContain(LessonCodes::KEY_NO_CONTENT_WORD);
+
+    // No pack at all, on either side: nothing but the language-free rules, and no rule reads a key it was not given.
+    $none = new LessonValidationContext(8, 8, LanguagePack::none('xx'), LanguagePack::none('yy'));
+    $found = lvRun(lvBreaks()['a key of function words'][1](lvPayload()), null, $none);
+    expect($found)->toBe([])
+        ->and($none->skips->codes())->toContain(LessonCodes::KEY_NO_CONTENT_WORD, LessonCodes::EXCHANGE_SECOND_QUESTION, LessonCodes::FILLER_UNGRAMMATICAL);
+    foreach (lvBreaks() as [$code, $break]) {
+        lvRun($break(lvPayload()), null, new LessonValidationContext(8, 8, LanguagePack::none('xx'), LanguagePack::none('yy')));
+    }
+});
+
+// Canon GEN-2b: «frame.native_agreement — слово native-каркаса, согласующееся с окном (пакет native: суффиксы/список)».
+// Catches a rule that keeps its own word list instead of the learner's language's pack — a pack without «разрешён»
+// still finding it — and one that reads agreement anywhere in the frame instead of at the slot («У моего сына ___»).
+it('reads the agreement of a native frame from the native pack, at the slot', function () {
+    $p = lvPayload();
+    $p['phrases'][0]['frame_native'] = '___ ему разрешён.';
+    $p['phrases'][2]['frame_native'] = 'У моего сына боль ___, когда он наклоняется.';
+
+    $ru = require dirname(__DIR__, 3).'/config/lesson/lang/ru.php';
+    $without = $ru;
+    $without['agreement']['short_forms'] = array_values(array_diff($ru['agreement']['short_forms'], ['разрешён']));
+    $at = static fn (array $pack): array => array_values(array_map(
+        static fn (LessonViolation $v): string => $v->address,
+        array_filter(
+            lvRun($p, null, new LessonValidationContext(8, 8, (new LanguagePacks(['ru' => $pack]))->for('ru'), lessonPacks()->for('en'))),
+            static fn (LessonViolation $v): bool => $v->code === LessonCodes::FRAME_NATIVE_AGREEMENT,
+        ),
+    ));
+
+    expect($at($ru))->toBe(['p1'])
+        ->and($at($without))->toBe([]);
+});
+
+// Canon v4.5 (SPEAKING SUPPORT): «Prefer a key that contains a content word. When the frame part outside the slot has
+// no content word at all, the key is the frame part up to the slot, exactly as written». Catches the v4.4 reading — every
+// key without a content word counted, «Here is» on «Here is ___» too — and a key off the frame part let through.
+it('asks a content word of a key only where the frame part has one, and the frame up to the slot where it has none', function () {
+    $frame = static function (string $key): array {
+        $p = lvPayload();
+        $p['phrases'][5]['frame_target'] = 'What about ___?';
+        $p['phrases'][5]['frame_native'] = 'А как насчёт ___?';
+        foreach ([6 => 'an X-ray', 7 => 'a follow-up appointment'] as $i => $filler) {
+            $p['dialogue'][$i]['messages'][0]['text_target'] = "What about {$filler}?";
+            $p['dialogue'][$i]['messages'][0]['speaking_key'] = $key;
+        }
+
+        return array_values(array_map(
+            static fn (LessonViolation $v): string => $v->address,
+            array_filter(lvRun($p), static fn (LessonViolation $v): bool => $v->code === LessonCodes::KEY_NO_CONTENT_WORD),
+        ));
+    };
+
+    expect($frame('What about'))->toBe([])
+        ->and($frame('about'))->toBe(['B7', 'B8'])
+        ->and(lvCodes(lvBreaks()['a key of function words'][1](lvPayload())))->toContain(LessonCodes::KEY_NO_CONTENT_WORD);
+});
+
+// Live day GEN-2b (rent, v4.5): «I can move in ___» + «in June» failed the day as «a word is doubled at the seam» —
+// English says the particle and the preposition both. Catches a fatal count of a sentence that is right, and a doubled
+// word let through where it is wrong («my my»).
+it('does not count a particle before a preposition of the same spelling as a doubled word, and still counts «my my»', function () {
+    $particle = lvPayload();
+    $particle['phrases'][4]['frame_target'] = 'He can move in ___.';
+    $particle['phrases'][4]['slot']['fillers'][2]['target'] = 'in June';
+    $possessive = lvPayload();
+    $possessive['phrases'][0]['slot']['fillers'][1]['target'] = 'his neck';
+    $at = static fn (array $p): array => array_values(array_map(
+        static fn (LessonViolation $v): string => $v->address,
+        array_filter(lvRun($p), static fn (LessonViolation $v): bool => $v->code === LessonCodes::FILLER_UNGRAMMATICAL),
+    ));
+
+    expect($at($particle))->toBe([])
+        ->and($at($possessive))->toBe(['p1.f2']);
+});
+
+// Live day GEN-2b (bank, airport-ro): P2R on the cheap model answered `exchange.second_question` by deleting the mark —
+// «Sure. May I see your passport» — and the day passed with a broken line. Canon GEN-2b: «детекция вопроса» is the
+// target's pack. Catches a question known only by its mark, and a statement read as a question («Have a nice day.»).
+it('knows a closing question by its word order when its question mark is gone, and a statement stays a statement', function () {
+    $unmarked = lvPayload();
+    $unmarked['dialogue'][6]['messages'][1]['text_target'] = 'Sure. May I see your referral first';
+    $statement = lvPayload();
+    $statement['dialogue'][6]['messages'][1]['text_target'] = 'No, an X-ray is not needed. Have a nice day.';
+    $at = static fn (array $p): array => array_values(array_map(
+        static fn (LessonViolation $v): string => $v->address,
+        array_filter(lvRun($p), static fn (LessonViolation $v): bool => $v->code === LessonCodes::EXCHANGE_SECOND_QUESTION),
+    ));
+
+    expect($at($unmarked))->toBe(['x7'])
+        ->and($at($statement))->toBe([])
+        ->and($at(lvPayload()))->toBe([]);
 });

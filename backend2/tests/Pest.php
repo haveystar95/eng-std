@@ -468,3 +468,25 @@ function planShiftDay(string $planId, int $days = 1): void
 {
     Artisan::call('plan:shift-day', ['plan' => $planId, '--days' => $days]);
 }
+
+/**
+ * THE LANGUAGE PACKS AS THE DEPLOYMENT HAS THEM (наряд GEN-2b) — read from `config/lesson/lang/*.php` by path, so a
+ * Unit test that boots no application checks a lesson with the very words production reads.
+ */
+function lessonPacks(): App\Modules\Plan\Domain\Check\Language\LanguagePacks
+{
+    $packs = [];
+    foreach (['en', 'ru', 'uk', 'ro'] as $code) {
+        $packs[$code] = require dirname(__DIR__)."/config/lesson/lang/{$code}.php";
+    }
+
+    return new App\Modules\Plan\Domain\Check\Language\LanguagePacks($packs);
+}
+
+/** What the validator is given for a lesson of the pair (`$native`, `$target`) ordered with 8 words and 8 exchanges. */
+function lessonContext(string $native = 'ru', string $target = 'en', ?App\Modules\Shared\Domain\ValueObject\VoiceGender $gender = null): App\Modules\Plan\Domain\Check\LessonValidationContext
+{
+    $packs = lessonPacks();
+
+    return new App\Modules\Plan\Domain\Check\LessonValidationContext(8, 8, $packs->for($native), $packs->for($target), $gender);
+}

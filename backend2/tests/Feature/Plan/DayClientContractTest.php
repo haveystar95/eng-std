@@ -10,7 +10,7 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 
 /**
- * «GET ДНЯ СОВМЕСТИМ С КЛИЕНТОМ» (наряд GEN-2a): the day read and the day's cards of a `lesson_day.v4.4` lesson carry
+ * «GET ДНЯ СОВМЕСТИМ С КЛИЕНТОМ» (наряд GEN-2a): the day read and the day's cards of a `lesson_day.v4.5` lesson carry
  * every key the phone reads today, with a value of the type it reads — the new fields (frame, slot, fillers,
  * listening, used_in, kind, phrase_ref, filler) are additive.
  *

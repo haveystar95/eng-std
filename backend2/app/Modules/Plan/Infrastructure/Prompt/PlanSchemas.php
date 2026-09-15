@@ -51,12 +51,12 @@ final class PlanSchemas
     }
 
     /**
-     * `lesson_day.v4.4`'s STRICT OUTPUT SCHEMA, keys in its order. Enums hold what the vendor can hold:
-     * the kinds, the speakers, the gender, and every reference — a frame id is one of `p1…pN` (N =
-     * DIALOGUE_COUNT, the most frames a day can have) or null, a vocabulary id one of `v1…vM`, a
-     * `used_in` entry a frame id or a partner line `A1…AN`. `in_dialogue` is a boolean; «exactly the
-     * fillers the dialogue says» is the validator's, the schema cannot say it. No list has a length
-     * (п. 202: a forced length is padded with invented items) — the counts are the validator's too.
+     * `lesson_day.v4.5`'s STRICT OUTPUT SCHEMA, keys in its order (the same structure as v4.4 — v4.5 changed
+     * rules, not fields). Enums hold what the vendor can hold: the kinds, the speakers, the gender, and every
+     * reference — a frame id is one of `p1…pN` (N = DIALOGUE_COUNT, the most frames a day can have) or null, a
+     * vocabulary id one of `v1…vM`, a `used_in` entry a frame id or a partner line `A1…AN`. `in_dialogue` is a
+     * boolean; «exactly the fillers the dialogue says» is the validator's, the schema cannot say it. No list has a
+     * length (п. 202: a forced length is padded with invented items) — the counts are the validator's too.
      *
      * @return array<string, mixed>
      */
@@ -79,13 +79,7 @@ final class PlanSchemas
             'role_gender' => ['type' => 'string', 'enum' => ['female', 'male']],
             'dialogue' => [
                 'type' => 'array',
-                'items' => self::object([
-                    'step' => ['type' => 'integer'],
-                    'kind' => ['type' => 'string', 'enum' => ['answer', 'ask', 'rescue']],
-                    'initiator' => ['type' => 'string', 'enum' => ['A', 'B']],
-                    'messages' => ['type' => 'array', 'items' => ['anyOf' => [self::partnerMessage(), self::learnerMessage($frameIds)]]],
-                    'check' => self::check(),
-                ]),
+                'items' => self::exchange($frameIds, ['type' => 'integer']),
             ],
             'phrases' => ['type' => 'array', 'items' => self::frame($frameIds)],
             'listening' => self::object([
@@ -108,23 +102,72 @@ final class PlanSchemas
     }
 
     /**
-     * THE REPAIR OF ONE CARD (P2R, `lesson_card_repair.v1`): `{card}` in the shape that card has in the
-     * lesson. A frame keeps its id (the enum has only it); a learner line may name any frame of the day.
+     * THE REPAIR OF ONE CARD (P2R, `lesson_card_repair.v1.1`): `{card}` in the shape that card has in the
+     * lesson. A frame keeps its id (the enum has only it); a learner line may name any frame of the day; an
+     * exchange keeps its step (the enum has only it) and comes with `frame_update` — the frame its learner line
+     * stands on, whole. The prompt says «omit "frame_update"» when no filler needed marking; a strict schema
+     * has no optional key, so «omitted» is `null` there.
      *
-     * @param  'frame'|'line'|'check'|'listening'  $kind
+     * @param  'frame'|'exchange'|'line'|'check'|'listening'  $kind
      * @param  list<string>  $frameIds  the frames of the day
      * @return array<string, mixed>
      */
     public static function lessonCard(string $kind, string $address, array $frameIds): array
     {
+        $frames = $frameIds === [] ? ['p1'] : $frameIds;
+        if ($kind === 'exchange') {
+            return self::object([
+                'card' => self::exchange($frames, ['type' => 'integer', 'enum' => [(int) substr($address, 1)]]),
+                'frame_update' => ['type' => ['object', 'null']] + array_slice(self::frame($frames), 1),
+            ]);
+        }
         $card = match ($kind) {
             'frame' => self::frame([$address]),
-            'line' => self::learnerMessage($frameIds === [] ? ['p1'] : $frameIds),
+            'line' => self::learnerMessage($frames),
             'check' => self::check(),
             'listening' => self::listeningQuestion(),
         };
 
         return self::object(['card' => $card]);
+    }
+
+    /**
+     * THE SEAM JUDGE (`lesson_seam_judge.v1`): a verdict per sentence sent — its id (the enum has only the ids
+     * sent) and whether it reads. No length (п. 202): a sentence left without a verdict is simply not judged.
+     *
+     * @param  list<string>  $ids
+     * @return array<string, mixed>
+     */
+    public static function seamJudge(array $ids): array
+    {
+        return self::object([
+            'verdicts' => [
+                'type' => 'array',
+                'items' => self::object([
+                    'id' => ['type' => 'string', 'enum' => $ids === [] ? ['p1.f1'] : $ids],
+                    'reads' => ['type' => 'boolean'],
+                ]),
+            ],
+        ]);
+    }
+
+    /**
+     * One exchange of the dialogue: its step, kind, initiator, the two messages (A and B through `anyOf`) and its
+     * check.
+     *
+     * @param  list<string>  $frameIds
+     * @param  array<string, mixed>  $step
+     * @return array<string, mixed>
+     */
+    private static function exchange(array $frameIds, array $step): array
+    {
+        return self::object([
+            'step' => $step,
+            'kind' => ['type' => 'string', 'enum' => ['answer', 'ask', 'rescue']],
+            'initiator' => ['type' => 'string', 'enum' => ['A', 'B']],
+            'messages' => ['type' => 'array', 'items' => ['anyOf' => [self::partnerMessage(), self::learnerMessage($frameIds)]]],
+            'check' => self::check(),
+        ]);
     }
 
     /** @return array<string, mixed> */

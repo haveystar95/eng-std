@@ -14,13 +14,13 @@ use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
 
 /**
- * THE GATE BETWEEN A WRITTEN LESSON AND A DEALT DAY (решение архитектора после GEN-2a, `docs/plan-v2.md` §4).
+ * THE GATE BETWEEN A WRITTEN LESSON AND A DEALT DAY (решения архитектора после GEN-2a и в GEN-2b, `docs/plan-v2.md` §4).
  *
  * Warnings pass. A fatal finding holds the lesson: P2R is asked for the card it stands at — the next card in
  * {@see LessonGate}'s order, each card once — and the repaired answer is validated again, until no fatal finding
  * is left or {@see LessonGate::MAX_CARDS} cards were asked. A fatal finding still there, or one at no card a
- * repair can take, fails the lesson with its code. A repair the model got wrong (off the card's shape) keeps
- * the answer as it was and uses up its card.
+ * repair can take, fails the lesson with its code. A repair the model got wrong (off the card's shape, or an
+ * exchange whose `frame_update` does not fit it) keeps the answer as it was and uses up its card.
  */
 final readonly class LessonGateKeeper
 {

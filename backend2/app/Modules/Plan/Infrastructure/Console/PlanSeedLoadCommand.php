@@ -86,12 +86,12 @@ final class PlanSeedLoadCommand extends Command
                         'learner_role_native' => 'Родитель', 'partner_role_target' => 'Doctor', 'partner_role_native' => 'Врач',
                         'topic_description' => 'Situation: x. Learner: y. Partner: z. Learner must be able to: a. Partner will: b. Not in this scene: c.',
                         'image_prompt' => 'clinic', 'lesson_json' => $lessonJson, 'lesson_status' => 'ready',
-                        'prompt_version_lesson' => 'lesson_day.v4.4', 'build_version' => 'seed', 'model_lesson' => 'seed',
+                        'prompt_version_lesson' => 'lesson_day.v4.5', 'build_version' => 'seed', 'model_lesson' => 'seed',
                         'cost_usd_lesson' => '0.050000', 'checks_json' => '[]', 'generated_at' => $now, 'created_at' => $now, 'updated_at' => $now,
                     ]);
                     $terms = [];
                     for ($t = 0; $t < 14; $t++) {
-                        // A phrase carries its frame and slot, a word the cards it stands in — the v4.4 columns.
+                        // A phrase carries its frame and slot, a word the cards it stands in — the frame columns (GEN-2a).
                         $phrase = $t >= 8;
                         $terms[] = [
                             'id' => Ulid::generate(), 'scene_id' => $sceneId, 'user_id' => $userId,

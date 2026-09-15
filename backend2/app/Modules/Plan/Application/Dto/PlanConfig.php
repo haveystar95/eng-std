@@ -27,7 +27,7 @@ final readonly class PlanConfig
 
     /**
      * What a lesson orders at this level. The number of frames is not ordered: the model takes it from
-     * the dialogue it writes (`lesson_day.v4.4`).
+     * the dialogue it writes (`lesson_day.v4.5`).
      *
      * @return array{vocabulary: int, dialogue: int}
      */

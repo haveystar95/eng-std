@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * THE CHECK OF ONE EXCHANGE (`lesson_day.v4.4`, CHECK PER EXCHANGE): did the learner understand what
+ * THE CHECK OF ONE EXCHANGE (`lesson_day.v4.5`, CHECK PER EXCHANGE): did the learner understand what
  * the partner said in THIS exchange — three options in both languages, one right, and why.
  */
 final readonly class ExchangeCheck

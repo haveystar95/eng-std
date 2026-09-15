@@ -13,6 +13,7 @@ use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
+use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\PlanModelPort;
@@ -23,6 +24,10 @@ use App\Modules\Plan\Infrastructure\Prompt\PlanSchemas;
  * The plan's model calls over Generation's vendor seam: the prompt file is the system side, the inputs
  * are the user side, the schema is enforced by the vendor, and the request log labels the spend
  * `plan`. Each call is built with the plan's own timeout, not the comparison stack's.
+ *
+ * Four calls, each on its own model (`config/plan.php`): the plan, the lesson and the repair of one card on the
+ * strong model (a cheaper repair did not repair as well — report GEN-2b), the seam judge a step cheaper (a verdict
+ * is a yes or a no).
  */
 final readonly class ContentModelPlanBuilder implements PlanModelPort
 {
@@ -36,6 +41,8 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
         private string $lessonModel,
         private int $planTimeout,
         private int $lessonTimeout,
+        private string $repairModel,
+        private string $judgeModel,
     ) {}
 
     public function buildPlan(PlanRequest $request): ModelReply
@@ -60,12 +67,21 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
 
     public function repairLessonCard(LessonCardRepairRequest $request): ModelReply
     {
-        $model = $this->model($this->lessonModel, $this->lessonTimeout);
+        $model = $this->model($this->repairModel, $this->lessonTimeout);
         $text = $this->prompts->repairSystem($request->kind);
         $prompt = new RenderedPrompt($text, $this->prompts->repairVersion(), PromptShape::Full, hash('sha256', $text));
         $schema = PlanSchemas::lessonCard($request->kind, $request->address, $request->frameIds);
 
         return self::reply($model->complete($prompt, $this->prompts->repairUser($request), $schema), $prompt->version);
+    }
+
+    public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply
+    {
+        $model = $this->model($this->judgeModel, $this->lessonTimeout);
+        $text = $this->prompts->judgeSystem();
+        $prompt = new RenderedPrompt($text, $this->prompts->judgeVersion(), PromptShape::Full, hash('sha256', $text));
+
+        return self::reply($model->complete($prompt, $this->prompts->judgeUser($request), PlanSchemas::seamJudge($request->ids())), $prompt->version);
     }
 
     public function planPromptVersion(): string
@@ -81,6 +97,11 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
     public function lessonPromptVersion(): string
     {
         return $this->prompts->lessonVersion();
+    }
+
+    public function judgePromptVersion(): string
+    {
+        return $this->prompts->judgeVersion();
     }
 
     private function model(string $name, int $timeout): ContentModelPort

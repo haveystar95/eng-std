@@ -7,18 +7,22 @@ namespace App\Modules\Plan\Application\Service;
 use App\Modules\Plan\Application\Dto\LessonCardRepairOutcome;
 use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Application\Dto\ModelReply;
 use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\SceneLocator;
+use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonValidationContext;
 use App\Modules\Plan\Domain\Check\LessonValidator;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
 use App\Modules\Plan\Domain\Exception\SceneNotFound;
+use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
+use App\Modules\Plan\Domain\Lesson\LessonCardContext;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Lesson\Phrase;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
@@ -27,14 +31,15 @@ use App\Modules\Shared\Domain\Service\LanguageName;
 use Throwable;
 
 /**
- * P2R — THE REPAIR OF ONE CARD (наряд GEN-2a). Asked two ways: by the lesson build for a card a fatal
- * finding holds ({@see LessonGateKeeper}, before the lesson is stored), and by the `plan:repair-card`
- * command for a stored lesson.
+ * P2R — THE REPAIR OF ONE CARD (наряды GEN-2a, GEN-2b). Asked two ways: by the lesson build for a card a fatal
+ * finding holds ({@see LessonGateKeeper}, before the lesson is stored), and by the `plan:repair-card` command for a
+ * stored lesson.
  *
- * The findings at the card (or only the named codes) go to the model with the card and the lesson as
- * context — the English detail of each finding, never another card's text. The model answers with the
- * card; the card is parsed to its shape, put into the answer, and the whole answer is validated again.
- * Nothing is written here: the build stores what passed its gate, the command writes only on `--apply`
+ * The findings at the card (or only the named codes) go to the model with the card and the part of the lesson the
+ * card needs ({@see LessonCardContext}) — the English detail of each finding, never another card's text. The model
+ * answers with the card — an exchange may bring the frame its line stands on (`frame_update`), and the two go in
+ * together or not at all; the card is parsed to its shape, put into the answer, and the whole answer is validated
+ * again. Nothing is written here: the build stores what passed its gate, the command writes only on `--apply`
  * ({@see \App\Modules\Plan\Application\Command\ReviseLessonHandler}).
  */
 final readonly class LessonCardRepairer
@@ -47,10 +52,12 @@ final readonly class LessonCardRepairer
         private LessonParser $parser,
         private LearnerGender $gender,
         private PlanConfig $config,
+        private LessonContexts $contexts,
     ) {}
 
     /**
-     * A card of a stored lesson, by its address.
+     * A card of a stored lesson, by its address. The native seams the stored lesson was judged with stay with it
+     * — every one but those of a frame the repair put in (the judge is asked once a day, not per repair).
      *
      * @param  list<string>  $codes  only these codes; all the card's findings when empty
      */
@@ -81,9 +88,20 @@ final readonly class LessonCardRepairer
             targetLangCode: $plan->targetLang()->value,
             nativeLangCode: $plan->nativeLang()->value,
         );
-        $context = self::contextOf($request);
+        $context = $this->contexts->of($request);
 
-        return $this->repairIn($answer, $card, $this->validator->run($answer, $context), $context, $request, $codes);
+        $outcome = $this->repairIn($answer, $card, $this->validator->run($answer, $context), $context, $request, $codes);
+        if ($outcome->status !== LessonCardRepairOutcome::REPAIRED) {
+            return $outcome;
+        }
+        $changed = array_values(array_filter([$card->kind === LessonCard::FRAME ? $card->frameId : null, $outcome->frameUpdate['id'] ?? null], is_string(...)));
+        $judged = array_values(array_filter(
+            $scene->findings(),
+            static fn (array $f): bool => in_array($f['code'], LessonCodes::JUDGED, true)
+                && ! in_array(explode('.', $f['address'])[0], $changed, true),
+        ));
+
+        return $outcome->withLessonFindings($judged);
     }
 
     /**
@@ -113,7 +131,7 @@ final readonly class LessonCardRepairer
             address: $card->address,
             kind: $card->kind,
             card: $before,
-            lesson: $answer->toArray(),
+            context: LessonCardContext::of($answer, $card),
             findings: $findings,
             frameIds: array_map(static fn (Phrase $p): string => $p->id, $answer->phrases),
             targetLanguage: $request->targetLanguage,
@@ -130,20 +148,25 @@ final readonly class LessonCardRepairer
         }
 
         $raw = $reply->payload['card'] ?? null;
+        $rawFrame = $reply->payload['frame_update'] ?? null;
+        $frameUpdate = null;
         try {
             if (! is_array($raw)) {
                 throw ModelAnswerOffSchema::at('card', 'missing object');
             }
             /** @var array<string, mixed> $raw */
             $repairedCard = $this->parser->card($card->kind, $raw);
+            $frameUpdate = $card->kind === LessonCard::EXCHANGE ? $this->parser->frameUpdate($rawFrame) : null;
+            $repaired = $repairedCard instanceof Exchange
+                ? $card->replaceExchange($answer, $repairedCard, $frameUpdate)
+                : $card->replace($answer, $repairedCard);
+            if ($repaired === null) {
+                throw ModelAnswerOffSchema::at('frame_update', 'names no frame the repaired learner line stands on');
+            }
         } catch (ModelAnswerOffSchema $e) {
-            return new LessonCardRepairOutcome(
-                LessonCardRepairOutcome::OFF_SCHEMA, $card->address, $card->kind, $before, is_array($raw) ? $raw : null,
-                self::rows($atCard), [], null, [], count($found), $reply->costUsd, $reply->latencyMs, $reply->promptVersion, $e->getMessage(),
-            );
+            return self::offSchema($card, $before, $raw, $atCard, $found, $reply, $e->getMessage(), is_array($rawFrame) ? $rawFrame : null);
         }
 
-        $repaired = $card->replace($answer, $repairedCard);
         $after = $this->validator->run($repaired, $context);
 
         return new LessonCardRepairOutcome(
@@ -160,18 +183,24 @@ final readonly class LessonCardRepairer
             costUsd: $reply->costUsd,
             latencyMs: $reply->latencyMs,
             promptVersion: $reply->promptVersion,
+            frameUpdate: $frameUpdate?->toArray(),
         );
     }
 
-    /** What the validator reads of the lesson's inputs: the ordered counts and the language CODES (`ru`), not names. */
-    public static function contextOf(LessonRequest $request): LessonValidationContext
+    /**
+     * @param  array<string, mixed>  $before
+     * @param  list<LessonViolation>  $atCard
+     * @param  list<LessonViolation>  $found
+     * @param  array<string, mixed>|null  $frameUpdate
+     */
+    private static function offSchema(LessonCard $card, array $before, mixed $raw, array $atCard, array $found, ModelReply $reply, string $why, ?array $frameUpdate): LessonCardRepairOutcome
     {
-        return new LessonValidationContext(
-            $request->vocabularyCount,
-            $request->dialogueCount,
-            $request->nativeLangCode !== '' ? $request->nativeLangCode : $request->nativeLanguage,
-            $request->targetLangCode !== '' ? $request->targetLangCode : $request->targetLanguage,
-            $request->learnerGender,
+        /** @var array<string, mixed>|null $after */
+        $after = is_array($raw) ? $raw : null;
+
+        return new LessonCardRepairOutcome(
+            LessonCardRepairOutcome::OFF_SCHEMA, $card->address, $card->kind, $before, $after,
+            self::rows($atCard), [], null, [], count($found), $reply->costUsd, $reply->latencyMs, $reply->promptVersion, $why, $frameUpdate,
         );
     }
 

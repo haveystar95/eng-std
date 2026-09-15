@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Application\Dto\LessonSeamVerdict;
 use App\Modules\Plan\Application\Dto\ModelReply;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\BuildVersion;
 use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonValidator;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
@@ -19,11 +21,15 @@ use App\Modules\Plan\Domain\ValueObject\ModelCall;
 use Throwable;
 
 /**
- * THE LESSON CALL (`lesson_day.v4.4`). One retry, and only for an answer that is not the schema — the
- * model's refusal. Everything the validator finds is counted and written beside the lesson; warnings never
- * hold the day, the five fatal codes do — the answer goes through {@see LessonGateKeeper}: P2R for at most
- * two cards, the repaired answer stored, or the lesson failed with the fatal code (решение архитектора после
- * GEN-2a). The repairs' cost and time are the lesson's.
+ * THE LESSON CALL (`lesson_day.v4.5`). One retry, and only for an answer that is not the schema — the model's
+ * refusal. Everything the validator finds is counted and written beside the lesson; warnings never hold the day,
+ * the seven fatal codes do — the answer goes through {@see LessonGateKeeper}: P2R for at most two cards, the
+ * repaired answer stored, or the lesson failed with the fatal code. A check the pair's language packs cannot run
+ * is counted as `lang.pack_missing` (once a code, over the model's answer), never as a finding.
+ *
+ * The lesson that passed the gate is read by the seam judge — once a day, every native sentence of its frames in
+ * one call ({@see LessonSeamJudge}); what does not read is a warning `filler.native_seam`. A failed lesson is not
+ * judged. The repairs' and the judge's cost and time are the lesson's.
  */
 final readonly class LessonBuildService
 {
@@ -36,6 +42,8 @@ final readonly class LessonBuildService
         private CheckCounters $counters,
         private BuildVersion $build,
         private LessonGateKeeper $gate,
+        private LessonContexts $contexts,
+        private LessonSeamJudge $seams,
     ) {}
 
     public function build(LessonRequest $request): LessonBuildOutcome
@@ -43,7 +51,7 @@ final readonly class LessonBuildService
         $cost = '0.000000';
         $latency = 0;
         $violations = [];
-        $context = LessonCardRepairer::contextOf($request);
+        $context = $this->contexts->of($request);
 
         $attempt = 0;
         while (true) {
@@ -66,6 +74,7 @@ final readonly class LessonBuildService
 
             $found = $this->validator->run($answer, $context);
             $this->counters->recordCodes($reply->promptVersion, self::codes($found));
+            $this->counters->recordCodes($reply->promptVersion, array_map(static fn (): string => LessonCodes::LANG_PACK_MISSING, $context->skips->codes()));
 
             $passed = $this->gate->pass($answer, $found, $context, $request);
             $this->counters->recordCodes($reply->promptVersion, self::codes($passed->gated), CheckAction::Gated);
@@ -76,7 +85,14 @@ final readonly class LessonBuildService
                 return LessonBuildOutcome::failed((string) $passed->failReason, $call, self::rows($passed->findings));
             }
 
-            return LessonBuildOutcome::ok($passed->answer, $call, self::rows($passed->findings));
+            $judged = $this->seams->judge($passed->answer, $request->nativeLanguage);
+            $this->counters->recordCodes($reply->promptVersion, self::codes($judged->violations));
+            if ($judged->status === LessonSeamVerdict::UNAVAILABLE) {
+                $this->counters->recordCodes($reply->promptVersion, [LessonCodes::JUDGE_UNAVAILABLE]);
+            }
+            $call = $call->plusCost($judged->costUsd, $judged->latencyMs);
+
+            return LessonBuildOutcome::ok($passed->answer, $call, self::rows([...$passed->findings, ...$judged->violations]));
         }
     }
 

@@ -20,7 +20,7 @@ use App\Modules\Plan\Domain\ValueObject\TermKind;
  * and the collection receives when the day is closed. Written once from the SERVED lesson; its `ref`
  * (`v3`, `p1`) is how the cards point at it.
  *
- * A phrase is a frame (`lesson_day.v4.4`): the unit keeps the frame itself — both renderings, the
+ * A phrase is a frame (`lesson_day.v4.5`): the unit keeps the frame itself — both renderings, the
  * reading, the kind and the slot with its fillers — and its text is the frame said with the filler of
  * its first dialogue line, which is what the phrase cards, the voice and the collection use. A word
  * keeps where the lesson says it (`used_in`).

@@ -7,7 +7,7 @@ namespace App\Modules\Plan\Domain\ValueObject;
 use App\Modules\Plan\Domain\Lesson\Message;
 
 /**
- * WHAT AN EXCHANGE OF THE VISIT IS (`lesson_day.v4.4`, EXCHANGE KINDS).
+ * WHAT AN EXCHANGE OF THE VISIT IS (`lesson_day.v4.5`, EXCHANGE KINDS).
  *
  * `answer` — the partner speaks first and the learner replies; `ask` — the learner asks and the
  * partner answers; `rescue` — the learner did not catch the previous partner line and asks for it

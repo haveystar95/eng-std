@@ -13,18 +13,18 @@ use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use Illuminate\Console\Command;
 
 /**
- * `plan:repair-card {scene} {address} {--code=*} {--apply}` — P2R by hand (наряд GEN-2a): repair ONE card of
- * a written lesson — a frame `p3`, a learner line `B3`, a check `x3.check`, a listening question `L2` — for
- * what the validator finds at it (or only the named codes).
+ * `plan:repair-card {scene} {address} {--code=*} {--apply}` — P2R by hand (наряды GEN-2a, GEN-2b): repair ONE card
+ * of a written lesson — a frame `p3`, a whole exchange `x3`, a learner line `B3`, a check `x3.check`, a listening
+ * question `L2` — for what the validator finds at it (or only the named codes).
  *
- * Without `--apply` nothing is written: the card before and after and the findings before and after are
- * printed, and only the model call is spent. With `--apply` the repaired answer replaces the stored one —
- * refused once the scene's day is dealt. The build repairs fatal cards itself before a lesson is stored;
- * this command is for what a stored lesson still carries — its warnings.
+ * Without `--apply` nothing is written: the card before and after (and the frame a repaired exchange came with)
+ * and the findings before and after are printed, and only the model call is spent. With `--apply` the repaired
+ * answer replaces the stored one — refused once the scene's day is dealt. The build repairs fatal cards itself
+ * before a lesson is stored; this command is for what a stored lesson still carries — its warnings.
  */
 final class PlanRepairCardCommand extends Command
 {
-    protected $signature = 'plan:repair-card {scene : scene id} {address : p3 | p3.f2 | B3 | x3.check | L2} {--code=* : only these validator codes} {--apply : write the repaired lesson}';
+    protected $signature = 'plan:repair-card {scene : scene id} {address : p3 | p3.f2 | x3 | B3 | x3.check | L2} {--code=* : only these validator codes} {--apply : write the repaired lesson}';
 
     protected $description = 'P2R: repair one card of a plan lesson by its address and the validator codes found at it';
 
@@ -42,6 +42,9 @@ final class PlanRepairCardCommand extends Command
         $this->line('findings at the card before: '.self::json($outcome->findingsBefore));
         $this->line('before: '.self::json($outcome->before));
         $this->line('after:  '.self::json($outcome->after));
+        if ($outcome->frameUpdate !== null) {
+            $this->line('frame_update: '.self::json($outcome->frameUpdate));
+        }
         if ($outcome->status !== LessonCardRepairOutcome::REPAIRED || $outcome->answer === null) {
             return $outcome->status === LessonCardRepairOutcome::OFF_SCHEMA ? self::FAILURE : self::SUCCESS;
         }

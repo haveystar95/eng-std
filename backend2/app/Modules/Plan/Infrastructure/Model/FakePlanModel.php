@@ -7,6 +7,7 @@ namespace App\Modules\Plan\Infrastructure\Model;
 use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
+use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use Closure;
@@ -15,9 +16,9 @@ use Closure;
  * Deterministic answers without a network — `PLAN_MODEL_DRIVER=fake` and the whole test suite.
  *
  * The default answers are a valid plan of exactly SCENES_COUNT scenes and a clean lesson — every rule
- * the lesson validator counts honoured — so a day can be dealt from them. A goal
- * containing «unclear» comes back `unclear`, the way the prompt answers a non-situation. A test
- * that wants a BROKEN answer hands in its own closure for either call.
+ * the lesson validator counts honoured — so a day can be dealt from them; the seam judge reads every native
+ * sentence as fine. A goal containing «unclear» comes back `unclear`, the way the prompt answers a
+ * non-situation. A test that wants a BROKEN answer hands in its own closure for any call.
  */
 final class FakePlanModel implements PlanModelPort
 {
@@ -30,8 +31,13 @@ final class FakePlanModel implements PlanModelPort
 
     public int $repairCalls = 0;
 
+    public int $judgeCalls = 0;
+
     /** @var list<LessonCardRepairRequest> */
     public array $repairRequests = [];
+
+    /** @var list<NativeSeamJudgeRequest> */
+    public array $judgeRequests = [];
 
     /** @var list<PlanRequest> */
     public array $planRequests = [];
@@ -43,13 +49,15 @@ final class FakePlanModel implements PlanModelPort
      * @param  (Closure(PlanRequest, int): array<string, mixed>)|null  $plan  attempt number is the second argument
      * @param  (Closure(LessonRequest, int): array<string, mixed>)|null  $lesson
      * @param  (Closure(LessonCardRepairRequest, int): array<string, mixed>)|null  $repair  the default returns the card as written
+     * @param  (Closure(NativeSeamJudgeRequest, int): array<string, mixed>)|null  $judge  the default reads every sentence as fine
      */
     public function __construct(
         private readonly ?Closure $plan = null,
         private readonly ?Closure $lesson = null,
         private readonly ?Closure $repair = null,
         private readonly string $planVersion = 'plan-builder-v2',
-        private readonly string $lessonVersion = 'lesson_day.v4.4',
+        private readonly string $lessonVersion = 'lesson_day.v4.5',
+        private readonly ?Closure $judge = null,
     ) {}
 
     public function buildPlan(PlanRequest $request): ModelReply
@@ -76,7 +84,18 @@ final class FakePlanModel implements PlanModelPort
         $this->repairRequests[] = $request;
         $payload = $this->repair !== null ? ($this->repair)($request, $this->repairCalls) : ['card' => $request->card];
 
-        return new ModelReply($payload, 'lesson_card_repair.v1', self::MODEL, 900, 300, '0.000000', 3, '');
+        return new ModelReply($payload, 'lesson_card_repair.v1.1', self::MODEL, 900, 300, '0.000000', 3, '');
+    }
+
+    public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply
+    {
+        $this->judgeCalls++;
+        $this->judgeRequests[] = $request;
+        $payload = $this->judge !== null
+            ? ($this->judge)($request, $this->judgeCalls)
+            : ['verdicts' => array_map(static fn (string $id): array => ['id' => $id, 'reads' => true], $request->ids())];
+
+        return new ModelReply($payload, 'lesson_seam_judge.v1', self::MODEL, 400, 120, '0.000000', 2, '');
     }
 
     public function planPromptVersion(): string
@@ -86,7 +105,12 @@ final class FakePlanModel implements PlanModelPort
 
     public function repairPromptVersion(): string
     {
-        return 'lesson_card_repair.v1';
+        return 'lesson_card_repair.v1.1';
+    }
+
+    public function judgePromptVersion(): string
+    {
+        return 'lesson_seam_judge.v1';
     }
 
     public function lessonPromptVersion(): string
@@ -154,7 +178,7 @@ final class FakePlanModel implements PlanModelPort
     }
 
     /**
-     * THE CLEAN LESSON (`lesson_day.v4.4`): a doctor's visit with a child's back pain, written to break
+     * THE CLEAN LESSON (`lesson_day.v4.5`): a doctor's visit with a child's back pain, written to break
      * no rule the validator counts — the fixture every plan test deals its days from, and the baseline a
      * test breaks one rule of.
      *

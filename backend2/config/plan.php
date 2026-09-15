@@ -21,7 +21,15 @@ return [
         // Both default to the same strong model the card core runs on (bakeoff-v11-ab, К2).
         'plan_model' => env('PLAN_BUILDER_MODEL', 'gpt-5.4'),
         'lesson_model' => env('PLAN_LESSON_MODEL', 'gpt-5.4'),
-        // Per-call vendor timeout, seconds. Both calls are asynchronous jobs the client polls.
+        // The repair of ONE card (P2R) — a few lines and the part of the lesson they need. A step cheaper was the
+        // order of GEN-2b «if it repairs no worse», and it did not pass: `gpt-5.4-mini` answered a closing question by
+        // deleting its question mark and broke the dialogue's fillers where the lesson's model did not (report GEN-2b
+        // §4) — so the lesson's model stays until the architect says otherwise; the knob is here.
+        'repair_model' => env('PLAN_REPAIR_MODEL', 'gpt-5.4'),
+        // The seam judge — one yes or no per native sentence of the day, one call a day: a step cheaper.
+        'judge_model' => env('PLAN_JUDGE_MODEL', 'gpt-5.4-mini'),
+        // Per-call vendor timeout, seconds. Both calls are asynchronous jobs the client polls; the repair and the
+        // judge run inside the lesson's job and take the lesson's.
         'plan_timeout' => (int) env('PLAN_BUILDER_TIMEOUT', 90),
         'lesson_timeout' => (int) env('PLAN_LESSON_TIMEOUT', 90),
     ],
@@ -31,7 +39,7 @@ return [
     'build_stale_seconds' => (int) env('PLAN_BUILD_STALE_SECONDS', 240),
 
     // What a lesson orders, per level: VOCABULARY_COUNT and DIALOGUE_COUNT. The number of frames is
-    // not ordered — `lesson_day.v4.4` takes it from the dialogue (half to all of its answer/ask exchanges).
+    // not ordered — `lesson_day.v4.5` takes it from the dialogue (half to all of its answer/ask exchanges).
     'counts' => [
         'beginner' => ['vocabulary' => 8, 'dialogue' => 8],
         'intermediate' => ['vocabulary' => 8, 'dialogue' => 8],
@@ -42,7 +50,8 @@ return [
      * or field, `gate` refuses the answer and buys one retry. Every check ships as `observe`; the
      * admin panel shows the counters per prompt version, and a mode is switched HERE, after real
      * plans, never in code. Checks marked «observe навсегда» in the canon ignore this table. The
-     * lesson validator has no modes: it only counts (наряд GEN-2a).
+     * lesson validator has no modes: it only counts (наряд GEN-2a); what it knows of a language is that
+     * language's pack, `config/lesson/lang/<code>.php` (наряд GEN-2b).
      */
     'checks' => [
         'plan' => [

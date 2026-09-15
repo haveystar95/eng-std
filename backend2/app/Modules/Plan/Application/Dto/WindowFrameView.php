@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Dto;
 
 /**
- * The frame behind a phrase of the window (`lesson_day.v4.4`): the pattern with its `___` in both
+ * The frame behind a phrase of the window (`lesson_day.v4.5`): the pattern with its `___` in both
  * languages and read aloud, its kind, and its slot — the hint and the fillers, those the dialogue says
  * marked, each with the voice of the frame said with it (TTS-2). Additive (GEN-2a): the client does not
  * read it yet.

@@ -12,7 +12,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
 /**
- * P2R — ONE CARD BY ITS ADDRESS (наряд GEN-2a): which addresses are cards a repair can take, which findings
+ * P2R — ONE CARD BY ITS ADDRESS (наряды GEN-2a, GEN-2b): which addresses are cards a repair can take, which findings
  * belong to a card, and what putting a repaired card back changes — that card, and for a frame the lines that
  * stand on it, nothing else.
  */
@@ -22,19 +22,47 @@ function lcAnswer(): Lesson
     return (new LessonParser)->parse(FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8)));
 }
 
-it('takes a frame, a filler of it, a learner line, a check and a listening question — and nothing else', function () {
+it('takes a frame, a filler of it, a whole exchange, a learner line, a check and a listening question — and nothing else', function () {
     expect(LessonCard::at('p3')?->kind)->toBe(LessonCard::FRAME)
         ->and(LessonCard::at('p3.f2')?->address)->toBe('p3')
+        ->and(LessonCard::at('x3')?->kind)->toBe(LessonCard::EXCHANGE)
         ->and(LessonCard::at('B3')?->kind)->toBe(LessonCard::LINE)
         ->and(LessonCard::at('x3.check')?->kind)->toBe(LessonCard::CHECK)
         ->and(LessonCard::at('L2')?->kind)->toBe(LessonCard::LISTENING)
         ->and(LessonCard::at('A3'))->toBeNull()
         ->and(LessonCard::at('v4'))->toBeNull()
         ->and(LessonCard::at('lesson'))->toBeNull()
-        ->and(LessonCard::at('x3'))->toBeNull()
         ->and(LessonCard::at('p3')?->covers(new LessonViolation('filler.count', 'p3.f1', '')))->toBeTrue()
         ->and(LessonCard::at('p3')?->covers(new LessonViolation('filler.count', 'p30', '')))->toBeFalse()
-        ->and(LessonCard::at('B3')?->of(lcAnswer())['text_target'] ?? null)->toBe('The pain is sharp when he bends.');
+        // An exchange card holds its two messages and its check, and nothing of another exchange.
+        ->and(array_map(static fn (string $at): bool => LessonCard::at('x3')?->covers(new LessonViolation('x', $at, '')) ?? false, ['x3', 'A3', 'B3', 'x3.check', 'B30', 'x4']))
+        ->toBe([true, true, true, true, false, false])
+        ->and(LessonCard::at('B3')?->of(lcAnswer())['text_target'] ?? null)->toBe('The pain is sharp when he bends.')
+        ->and(LessonCard::at('x3')?->of(lcAnswer())['kind'] ?? null)->toBe('answer');
+});
+
+// Canon GEN-2b: «P2R получает новый вид карточки exchange и поле frame_update — сборка применяет его атомарно (обмен +
+// каркас)». Catches an exchange put in without the frame it came with (its new filler never marked), a frame put in
+// without its exchange, and a pair that does not fit — a frame the repaired line does not stand on — half-applied.
+it('puts a repaired exchange back together with the frame it came with, or nothing at all', function () {
+    $answer = lcAnswer();
+    $parser = new LessonParser;
+    $card = LessonCard::at('x8');
+    $exchange = $card?->of($answer);
+    $exchange['messages'][0]['filler'] = 'a sick note';
+    $exchange['messages'][0]['text_target'] = 'Do we need a sick note?';
+    $frame = LessonCard::at('p6')?->of($answer);
+    $frame['slot']['fillers'][2]['in_dialogue'] = true;
+
+    $repaired = $card->replaceExchange($answer, $parser->card(LessonCard::EXCHANGE, $exchange), $parser->frameUpdate($frame));
+    $alien = $frame;
+    $alien['id'] = 'p5';
+
+    expect($repaired?->exchange(8)?->learner()?->filler)->toBe('a sick note')
+        ->and(array_map(static fn ($f): bool => $f->inDialogue, $repaired?->phrase('p6')->slot->fillers ?? []))->toBe([true, true, true])
+        ->and($repaired?->exchange(7)?->toArray())->toBe($answer->exchange(7)?->toArray())
+        ->and($card->replaceExchange($answer, $parser->card(LessonCard::EXCHANGE, $exchange), $parser->frameUpdate($alien)))->toBeNull()
+        ->and($card->replaceExchange($answer, $parser->card(LessonCard::EXCHANGE, $exchange), null)?->phrase('p6'))->toEqual($answer->phrase('p6'));
 });
 
 // A repaired frame keeps the dialogue true to it. Catches a frame repaired under lines that still say the old frame

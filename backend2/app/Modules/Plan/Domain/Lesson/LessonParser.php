@@ -9,7 +9,7 @@ use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The model's JSON → a {@see Lesson} (`lesson_day.v4.4`). Strict about SHAPE only: a missing key, a
+ * The model's JSON → a {@see Lesson} (`lesson_day.v4.5`). Strict about SHAPE only: a missing key, a
  * wrong type, an unknown kind or speaker, an empty required string is a reply that is not the
  * requested schema, and that is the model's refusal, not a finding ({@see ModelAnswerOffSchema}).
  * Everything about CONTENT — counts, frames, fillers, keys, checks, listening — is the validator's,
@@ -76,20 +76,38 @@ final class LessonParser
     }
 
     /**
-     * One card of a lesson on its own — what a repair answers with: a frame, a learner line, an
-     * exchange's check or a listening question, held to the same shape as inside a whole lesson.
+     * One card of a lesson on its own — what a repair answers with: a frame, a whole exchange, a learner line,
+     * an exchange's check or a listening question, held to the same shape as inside a whole lesson.
      *
-     * @param  'frame'|'line'|'check'|'listening'  $kind
+     * @param  'frame'|'exchange'|'line'|'check'|'listening'  $kind
      * @param  array<string, mixed>  $row
      */
-    public function card(string $kind, array $row): Phrase|Message|ExchangeCheck|ListeningQuestion
+    public function card(string $kind, array $row): Phrase|Exchange|Message|ExchangeCheck|ListeningQuestion
     {
         return match ($kind) {
             LessonCard::FRAME => $this->phrase($row, 'card'),
+            LessonCard::EXCHANGE => $this->exchange($row, 'card'),
             LessonCard::LINE => $this->learnerLine($row),
             LessonCard::CHECK => $this->check($row, 'card'),
             LessonCard::LISTENING => $this->listeningQuestion($row, 'card'),
         };
+    }
+
+    /**
+     * The frame a repaired exchange comes with (P2R v1.1, `frame_update`): absent or null — none; anything else is
+     * held to a frame's shape.
+     */
+    public function frameUpdate(mixed $raw): ?Phrase
+    {
+        if ($raw === null) {
+            return null;
+        }
+        if (! is_array($raw)) {
+            throw ModelAnswerOffSchema::at('frame_update', 'not an object');
+        }
+
+        /** @var array<string, mixed> $raw */
+        return $this->phrase($raw, 'frame_update');
     }
 
     /** @param array<string, mixed> $row */

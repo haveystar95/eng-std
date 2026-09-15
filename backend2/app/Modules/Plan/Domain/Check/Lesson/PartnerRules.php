@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Check\Lesson;
 
+use App\Modules\Plan\Domain\Check\Language\LanguageSide;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonRule;
 use App\Modules\Plan\Domain\Check\LessonValidationContext;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Lesson\Lesson;
-use App\Modules\Plan\Domain\Service\EnglishWords;
 use App\Modules\Plan\Domain\Service\Words;
 
 /**
- * THE PARTNER (`lesson_day.v4.4`, CONVERSATION PARTNER RULE, MOBILE LENGTH): one question per
- * bubble; two sentences and eighteen words at most; never an empty closer («Anything else?»,
- * «Great!»).
+ * THE PARTNER (`lesson_day.v4.5`, CONVERSATION PARTNER RULE, MOBILE LENGTH): one question per bubble; two sentences
+ * and eighteen words at most; never an empty closer («Anything else?», «Great!»).
  *
- * Two questions in one bubble are two question marks, or one sentence that goes on after a comma
- * with «and / or» and a new auxiliary («When did it start, and did you lift anything heavy?»).
+ * Two questions in one bubble are two question marks, or one sentence that asks again (the target's pack spells
+ * how: in English, after a comma with «and / or» and a new auxiliary — «When did it start, and did you lift
+ * anything heavy?»). Words are counted without a language; sentences, questions and closers are the target's.
  */
 final class PartnerRules implements LessonRule
 {
@@ -28,6 +28,11 @@ final class PartnerRules implements LessonRule
 
     public function violations(Lesson $answer, LessonValidationContext $context): array
     {
+        $twoQuestions = $context->reads(LessonCodes::PARTNER_TWO_QUESTIONS, LanguageSide::Target, 'sentence_ends', 'second_question_pattern');
+        $sentences = $context->reads(LessonCodes::PARTNER_TOO_LONG, LanguageSide::Target, 'sentence_ends');
+        $closers = $context->reads(LessonCodes::PARTNER_CLOSER, LanguageSide::Target, 'closers');
+        $target = $context->targetWords();
+
         $out = [];
         foreach ($answer->exchanges as $exchange) {
             $partner = $exchange->partner();
@@ -37,8 +42,7 @@ final class PartnerRules implements LessonRule
             $address = LessonViolation::partner($exchange->step);
             $text = $partner->textTarget;
 
-            if (substr_count($text, '?') >= 2
-                || preg_match('/,\s*(?:and|or)\s+(?:do|does|did|is|are|was|were|have|has|had|can|could|will|would|should)\b[^?]*\?/iu', $text) === 1) {
+            if ($twoQuestions && $target->asksTwice($text)) {
                 $out[] = new LessonViolation(LessonCodes::PARTNER_TWO_QUESTIONS, $address, "«{$text}» asks two things at once");
             }
 
@@ -46,23 +50,15 @@ final class PartnerRules implements LessonRule
             if ($words > self::MAX_WORDS) {
                 $out[] = new LessonViolation(LessonCodes::PARTNER_TOO_LONG, $address, "«{$text}» has {$words} words (max ".self::MAX_WORDS.')');
             }
-            $sentences = self::sentences($text);
-            if ($sentences > self::MAX_SENTENCES) {
-                $out[] = new LessonViolation(LessonCodes::PARTNER_TOO_LONG, $address, "«{$text}» has {$sentences} sentences (max ".self::MAX_SENTENCES.')');
+            if ($sentences && ($count = $target->sentences($text)) > self::MAX_SENTENCES) {
+                $out[] = new LessonViolation(LessonCodes::PARTNER_TOO_LONG, $address, "«{$text}» has {$count} sentences (max ".self::MAX_SENTENCES.')');
             }
 
-            if ($context->targetLang === 'en' && EnglishWords::isCloser($text)) {
+            if ($closers && $target->isCloser($text)) {
                 $out[] = new LessonViolation(LessonCodes::PARTNER_CLOSER, $address, "«{$text}» is an empty closer");
             }
         }
 
         return $out;
-    }
-
-    private static function sentences(string $text): int
-    {
-        $parts = preg_split('/[.?!…]+(?:\s+|$)/u', trim($text), -1, PREG_SPLIT_NO_EMPTY);
-
-        return $parts === false ? 0 : count(array_filter($parts, static fn (string $p): bool => Words::count($p) > 0));
     }
 }

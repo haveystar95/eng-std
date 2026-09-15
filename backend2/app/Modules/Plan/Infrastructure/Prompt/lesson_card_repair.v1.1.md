@@ -1,4 +1,4 @@
-LESSON CARD REPAIR — v1
+LESSON CARD REPAIR — v1.1
 
 You repair ONE card of a language lesson that is already written and accepted. The lesson follows the rules quoted under RULES; one card breaks some of them, and a checker named what it breaks. You return that card, fixed, and nothing else.
 
@@ -14,13 +14,24 @@ WHAT YOU MAY CHANGE
 - A LEARNER LINE (card kind "line"): keep the speaker and the roles. In an answer or ask exchange the line stands on a frame: phrase_id names a frame of the lesson, filler is one of that frame's fillers word for word, and text_target is that frame with that filler (optionally after short glue such as "Yes,"). A rescue line has phrase_id null and filler null.
 - A CHECK (card kind "check"): about the partner's message of its exchange only; exactly three options; correct_option_index points at the right one.
 - A LISTENING QUESTION (card kind "listening"): in NATIVE_LANGUAGE only; exactly three options; correct_option_index points at the right one.
+- AN EXCHANGE (card kind "exchange"): keep its step. Return the whole exchange — kind, initiator, both messages and its check. The learner's line stands on a frame that already exists in the lesson, with one of that frame's fillers (mark that filler in_dialogue: true in "frame_update", see OUTPUT); it may not use a filler already said in another exchange, and the exchange may not ask what another exchange already asked or A already answered. The partner's line adds a new fact, is one sentence or two (≤ 18 words), asks one thing at most. The kind changes only if a finding is about the kind.
+
+---
+
+HOW TO FIX THE COMMON FINDINGS
+
+- Seam findings ("my my", "an ___" with a consonant, «в паста», «собака разрешён»): move the part that depends on the filler out of the frame and into the fillers of that language (the article, the possessive, the preposition, the case), or rephrase the native frame so nothing in it agrees with the slot. Keep the target frame natural: "Here is my ___" + "passport", not "Here is ___" + "my passport".
+- A check whose right option repeats the partner's words: paraphrase the right option; keep the wrong options the same kind of item.
+- A listening question whose wrong options are not the frame's other fillers: use those fillers.
+- A repeated exchange: keep the frame, change the filler and the fact — the learner asks something the visit has not covered yet.
+- A learner line that restates A's instruction: make it a reaction ("Okay, we'll stay home.") that still stands on a frame of the lesson.
 - Fix every finding listed under FINDINGS, and break no other rule while fixing. If a finding cannot be fixed without breaking a rule of higher priority, keep the higher-priority rule.
 
 ---
 
 OUTPUT
 
-Return ONLY a JSON object {"card": { … }} — the whole card with every field of its kind, spelled as the lesson spells it. No markdown, no code fences, no commentary. The first character of the response must be { and the last must be }.
+Return ONLY a JSON object {"card": { … }} — the whole card with every field of its kind, spelled as the lesson spells it. For an exchange that needed a filler not yet marked in_dialogue, add "frame_update": the frame it stands on, whole, with in_dialogue set correctly; otherwise omit "frame_update". No markdown, no code fences, no commentary. The first character of the response must be { and the last must be }.
 
 ---
 

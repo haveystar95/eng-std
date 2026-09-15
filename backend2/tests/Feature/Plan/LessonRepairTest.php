@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 
 /**
- * P2R BY HAND — `plan:repair-card` (наряд GEN-2a): one card of a stored lesson, by its address and what the
+ * P2R BY HAND — `plan:repair-card` (наряды GEN-2a, GEN-2b): one card of a stored lesson, by its address and what the
  * validator finds at it — a warning, since a fatal finding never reaches a stored lesson (`LessonGateBuildTest`);
  * nothing written without `--apply`; with it the repaired answer replaces the stored one, the unit rows keep their
  * ids and photos, and a dealt day is never rewritten.
@@ -114,3 +114,37 @@ it('keeps the stored lesson when the repaired card is not the card\'s shape', fu
         ->and(Artisan::output())->toContain('status: off_schema')
         ->and(DB::table('plan_scenes')->where('id', $sceneId)->value('lesson_json'))->toBe($before);
 });
+
+// Canon GEN-2b: the seam judge reads a day once, when it is written. Catches a repair by hand that drops what the judge
+// found at frames it never touched — the stored findings rewritten from the validator alone — and one that keeps a
+// verdict on a frame the repair rewrote.
+it('keeps the judged native seams of the frames a repair did not rewrite', function () {
+    $fake = new FakePlanModel(
+        lesson: static function ($request): array {
+            $p = FakePlanModel::lessonPayload($request);
+            $p['phrases'][0]['frame_native'] = 'У него болит в/на ___.';
+
+            return $p;
+        },
+        repair: static function ($request): array {
+            $card = $request->card;
+            $card['frame_native'] = 'У него болит ___.';
+
+            return ['card' => $card];
+        },
+        judge: static fn ($request): array => ['verdicts' => array_map(
+            static fn (string $id): array => ['id' => $id, 'reads' => ! in_array($id, ['p1.f2', 'p3.f1'], true)],
+            $request->ids(),
+        )],
+    );
+    app()->instance(PlanModelPort::class, $fake);
+    [, $token] = planLearner();
+    $sceneId = (string) DB::table('plan_scenes')->where('plan_id', planCreate($this, $token, ['days_total' => 1])['id'])->value('id');
+
+    Artisan::call('plan:repair-card', ['scene' => $sceneId, 'address' => 'p1', '--apply' => true]);
+
+    $findings = json_decode((string) DB::table('plan_scenes')->where('id', $sceneId)->value('checks_json'), true);
+    expect($fake->judgeCalls)->toBe(1)
+        ->and(array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", $findings))->toBe(['filler.native_seam@p3.f1']);
+});
+

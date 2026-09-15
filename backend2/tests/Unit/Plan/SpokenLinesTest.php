@@ -19,7 +19,7 @@ use App\Modules\Plan\Domain\ValueObject\VoiceCast;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
-/** EVERYTHING A DAY SAYS, WHOSE VOICE IT IS, AND THE LINE A WORD IS SAID IN — off a served `lesson_day.v4.4` lesson. */
+/** EVERYTHING A DAY SAYS, WHOSE VOICE IT IS, AND THE LINE A WORD IS SAID IN — off a served `lesson_day.v4.5` lesson. */
 
 function slLesson(?Closure $edit = null): Lesson
 {

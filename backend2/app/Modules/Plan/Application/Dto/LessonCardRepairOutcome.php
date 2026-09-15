@@ -10,7 +10,8 @@ use App\Modules\Plan\Domain\Lesson\Lesson;
  * What a repair of one card came back with (P2R). `status`: `repaired` — the model answered with a card of
  * the right shape and `answer` is the lesson with it put in; `nothing_to_repair` — the validator finds
  * nothing at the address (and no code was named); `not_a_card` — the address names no repairable card;
- * `off_schema` — the model's card is not the card's shape (the call is paid for all the same).
+ * `off_schema` — the model's card is not the card's shape, or an exchange's `frame_update` does not fit it (the
+ * call is paid for all the same, and nothing is put in). `frameUpdate` — the frame a repaired exchange came with.
  */
 final readonly class LessonCardRepairOutcome
 {
@@ -28,6 +29,7 @@ final readonly class LessonCardRepairOutcome
      * @param  list<array{code: string, address: string, detail: string}>  $findingsBefore  at this card, before
      * @param  list<array{code: string, address: string, detail: string}>  $findingsAfter  at this card, after
      * @param  list<array{code: string, address: string, detail: string}>  $lessonFindings  over the whole repaired lesson
+     * @param  array<string, mixed>|null  $frameUpdate  the frame a repaired exchange came with
      */
     public function __construct(
         public string $status,
@@ -44,5 +46,20 @@ final readonly class LessonCardRepairOutcome
         public int $latencyMs,
         public string $promptVersion,
         public string $note = '',
+        public ?array $frameUpdate = null,
     ) {}
+
+    /**
+     * The same outcome with more findings over the repaired lesson — the judged ones a stored lesson keeps.
+     *
+     * @param  list<array{code: string, address: string, detail: string}>  $findings
+     */
+    public function withLessonFindings(array $findings): self
+    {
+        return new self(
+            $this->status, $this->address, $this->kind, $this->before, $this->after, $this->findingsBefore, $this->findingsAfter,
+            $this->answer, [...$this->lessonFindings, ...$findings], $this->lessonFindingsBefore, $this->costUsd, $this->latencyMs,
+            $this->promptVersion, $this->note, $this->frameUpdate,
+        );
+    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Check\Lesson;
 
+use App\Modules\Plan\Domain\Check\Language\LanguageSide;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonRule;
 use App\Modules\Plan\Domain\Check\LessonValidationContext;
@@ -14,9 +15,12 @@ use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\Words;
 
 /**
- * THE FRAMES (`lesson_day.v4.4`, FRAMES): as many as half to all of the answer/ask exchanges, each
- * said at least once, at most seven words outside the slot, at most a third without a slot, a native
- * rendering with no «в/на»-style alternatives that ends the way the frame ends.
+ * THE FRAMES (`lesson_day.v4.5`, FRAMES): as many as half to all of the answer/ask exchanges, each said at least
+ * once, at most seven words outside the slot, at most a third without a slot, a native rendering with no
+ * «в/на»-style alternatives that ends the way the frame ends; a frame that stands alone — no pronoun it leans on
+ * without a thing it stands for; a native frame with no word that agrees with its slot («___ разрешён?»).
+ *
+ * The pronoun is read by the target's pack, the agreement by the learner's language's, the closing marks by both.
  */
 final class FrameRules implements LessonRule
 {
@@ -32,6 +36,13 @@ final class FrameRules implements LessonRule
         } elseif ($frames * 2 < $framed) {
             $out[] = new LessonViolation(LessonCodes::FRAME_COUNT, 'lesson', "{$frames} frames for {$framed} answer/ask exchanges (at least half)");
         }
+
+        // Every side a check reads is asked before any frame is read, so a lesson skips what its languages lack
+        // whatever it says.
+        $targetMarks = $context->reads(LessonCodes::FRAME_NATIVE_PUNCT, LanguageSide::Target, 'sentence_ends');
+        $nativeMarks = $context->reads(LessonCodes::FRAME_NATIVE_PUNCT, LanguageSide::Native, 'sentence_ends');
+        $pronouns = $context->reads(LessonCodes::FRAME_UNRESOLVED_PRONOUN, LanguageSide::Target, 'unresolved_pronouns', 'function_words');
+        $agreement = $context->reads(LessonCodes::FRAME_NATIVE_AGREEMENT, LanguageSide::Native, 'agreement');
 
         $withoutSlot = 0;
         foreach ($answer->phrases as $phrase) {
@@ -52,14 +63,24 @@ final class FrameRules implements LessonRule
                 $out[] = new LessonViolation(LessonCodes::FRAME_NATIVE_ALTERNATIVES, $phrase->id, "«{$phrase->frameNative}» writes alternatives inside the frame");
             }
 
-            $target = self::terminal($phrase->frameTarget);
-            $native = self::terminal($phrase->frameNative);
-            if ($target !== $native) {
-                $out[] = new LessonViolation(
-                    LessonCodes::FRAME_NATIVE_PUNCT,
-                    $phrase->id,
-                    '«'.$phrase->frameTarget.'» ends with '.self::named($target).', «'.$phrase->frameNative.'» with '.self::named($native),
-                );
+            if ($targetMarks && $nativeMarks) {
+                $target = $context->targetWords();
+                $native = $context->nativeWords();
+                if ($target->terminalKind($phrase->frameTarget) !== $native->terminalKind($phrase->frameNative)) {
+                    $out[] = new LessonViolation(
+                        LessonCodes::FRAME_NATIVE_PUNCT,
+                        $phrase->id,
+                        '«'.$phrase->frameTarget.'» ends with '.self::named($target->terminal($phrase->frameTarget)).', «'.$phrase->frameNative.'» with '.self::named($native->terminal($phrase->frameNative)),
+                    );
+                }
+            }
+
+            if ($pronouns && ($pronoun = $context->targetWords()->unresolvedPronoun($phrase->frameTarget)) !== null) {
+                $out[] = new LessonViolation(LessonCodes::FRAME_UNRESOLVED_PRONOUN, $phrase->id, "«{$phrase->frameTarget}» leans on «{$pronoun}», and nothing in the frame is what it stands for");
+            }
+
+            if ($agreement && ($agreeing = $context->nativeWords()->agreeingWithSlot($phrase->frameNative)) !== []) {
+                $out[] = new LessonViolation(LessonCodes::FRAME_NATIVE_AGREEMENT, $phrase->id, "«{$phrase->frameNative}»: «".implode('», «', $agreeing).'» agrees with the slot — it changes with the filler');
             }
         }
 
@@ -68,16 +89,6 @@ final class FrameRules implements LessonRule
         }
 
         return $out;
-    }
-
-    /** The sentence mark a text ends with — `.`, `?`, `!` or `…` — or '' when it ends with none. */
-    public static function terminal(string $text): string
-    {
-        // Closing quotes and brackets are not the sentence's mark (and a byte-wise rtrim would cut Cyrillic).
-        $trimmed = (string) preg_replace('/[\s»"\'”’)]+$/u', '', $text);
-        $last = mb_substr($trimmed, -1);
-
-        return in_array($last, ['.', '?', '!', '…'], true) ? $last : '';
     }
 
     private static function named(string $mark): string

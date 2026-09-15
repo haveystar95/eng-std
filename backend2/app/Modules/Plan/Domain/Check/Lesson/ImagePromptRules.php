@@ -11,7 +11,7 @@ use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 
 /**
- * THE IMAGE PROMPT NAMES WHAT IS IN THE PICTURE (`lesson_day.v4.4`, VOCABULARY): never the prompt's own rules
+ * THE IMAGE PROMPT NAMES WHAT IS IN THE PICTURE (`lesson_day.v4.5`, VOCABULARY): never the prompt's own rules
  * repeated inside it («realistic photo of…», «no text or logos») — the photo search reads it as words.
  */
 final class ImagePromptRules implements LessonRule

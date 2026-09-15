@@ -72,6 +72,12 @@ final readonly class Exchange
         return new self($this->step, $this->kind, $this->initiator, $this->messages, $check);
     }
 
+    /** The same exchange at another step — a repaired exchange keeps the place of the one it replaces. */
+    public function withStep(int $step): self
+    {
+        return new self($step, $this->kind, $this->initiator, $this->messages, $this->check);
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {

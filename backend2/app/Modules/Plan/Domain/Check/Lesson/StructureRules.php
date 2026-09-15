@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Check\Lesson;
 
+use App\Modules\Plan\Domain\Check\Language\LanguageSide;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonRule;
 use App\Modules\Plan\Domain\Check\LessonValidationContext;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\Lesson;
-use App\Modules\Plan\Domain\Lesson\Message;
-use App\Modules\Plan\Domain\Service\NativeScript;
 
 /**
  * THE SHAPE OF THE VISIT: the ordered counts, two messages per exchange opened by its initiator, a
  * closing message that is no question, three options with a real right one, readings in the
  * learner's own script. What the strict schema cannot say (it holds no list lengths, п. 202).
+ *
+ * «A question» is the target's question mark and a reading's script is the learner's language's — both read off
+ * their packs; the counts and shapes need no language.
  */
 final class StructureRules implements LessonRule
 {
@@ -39,6 +41,7 @@ final class StructureRules implements LessonRule
             $out[] = new LessonViolation(LessonCodes::VOCAB_COUNT, 'lesson', "{$items} vocabulary items instead of {$context->vocabularyCount}");
         }
 
+        $questions = $context->reads(LessonCodes::EXCHANGE_SECOND_QUESTION, LanguageSide::Target, 'sentence_ends');
         foreach ($answer->exchanges as $exchange) {
             $address = LessonViolation::exchange($exchange->step);
             $messages = count($exchange->messages);
@@ -56,8 +59,10 @@ final class StructureRules implements LessonRule
             if ($first !== null && $second !== null && $first->speaker === $second->speaker) {
                 $out[] = new LessonViolation(LessonCodes::EXCHANGE_SHAPE, $address, "both messages are by {$first->speaker}");
             }
-            if ($second !== null && $second->isQuestion()) {
-                $out[] = new LessonViolation(LessonCodes::EXCHANGE_SECOND_QUESTION, self::messageAddress($second, $exchange->step), "the closing message «{$second->textTarget}» ends with a question mark");
+            // The exchange is the card: a learner's closing question belongs to an ask of its own, a partner's is
+            // a second question of the exchange — either way the repair takes the whole exchange.
+            if ($questions && $second !== null && $context->targetWords()->isQuestion($second->textTarget)) {
+                $out[] = new LessonViolation(LessonCodes::EXCHANGE_SECOND_QUESTION, $address, "the closing message of {$second->speaker} «{$second->textTarget}» ends with a question mark");
             }
 
             $options = count($exchange->check->options);
@@ -79,18 +84,13 @@ final class StructureRules implements LessonRule
             }
         }
 
-        return [...$out, ...self::readings($answer, $context->nativeLang)];
-    }
-
-    public static function messageAddress(Message $message, int $step): string
-    {
-        return $message->isLearner() ? LessonViolation::learner($step) : LessonViolation::partner($step);
+        return [...$out, ...self::readings($answer, $context)];
     }
 
     /** @return list<LessonViolation> */
-    private static function readings(Lesson $answer, string $nativeLang): array
+    private static function readings(Lesson $answer, LessonValidationContext $context): array
     {
-        if (! NativeScript::isChecked($nativeLang)) {
+        if (! $context->reads(LessonCodes::PRONUNCIATION_SCRIPT, LanguageSide::Native, 'script')) {
             return [];
         }
         /** @var list<array{0: string, 1: string|null}> $readings */
@@ -109,9 +109,10 @@ final class StructureRules implements LessonRule
             $readings[] = [LessonViolation::learner($exchange->step), $exchange->learner()?->pronunciationNative];
         }
 
+        $words = $context->nativeWords();
         $out = [];
         foreach ($readings as [$address, $reading]) {
-            if ($reading !== null && ! NativeScript::isValidReading($nativeLang, $reading)) {
+            if ($reading !== null && ! $words->readsInScript($reading)) {
                 $out[] = new LessonViolation(LessonCodes::PRONUNCIATION_SCRIPT, $address, "the reading «{$reading}» leaves the native script");
             }
         }

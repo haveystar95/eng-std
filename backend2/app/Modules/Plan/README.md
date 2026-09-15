@@ -52,21 +52,25 @@ plan fell to `ready` with no start date and day 1 locked again (`docs/research/p
 | `PlanTerm` | written once from the served lesson (`fromLesson`), refs `v*`/`p*` are how cards point at terms; a phrase keeps its frame (`frame_*`, `slot`) and reads as the frame said with its dialogue filler, a word keeps `used_in`; a P2R `--apply` rewrites the texts by ref, never the row or its photo |
 | `PlanEvent` | a journal line, written once and never changed (no mutator; `PlanEventRepository` has `append`/`has`/`forPlan` only); a day event names its day; a rebuild carries `{from, to}` with `to < from`. Written inside the transaction of the handler whose change it records (`BuildPlanHandler`, `BuildLessonHandler`, `CloseDayHandler`, `ReschedulePlanHandler`) or by the tick; the letter is queued after the commit |
 
-The lesson (`Domain/Lesson`, `lesson_day.v4.4`): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
+The lesson (`Domain/Lesson`, `lesson_day.v4.5`): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
 `check`), phrases as frames (`Phrase` + `Slot` + `Filler`), the listening (`ListeningQuestion`, the lesson's own,
 not an exchange's), vocabulary with `used_in`; `LessonParser` (shape only); `LessonAssembly` — the SERVED lesson
 every reader deals from: a framed learner line is the server's assembly of frame and filler (`FrameText`), the
 right answers of checks and listening stand at seeded shuffled places; `LessonCard` — one repairable card by its
-address (P2R). A scene keeps the model's answer (stored, validated, repaired) and serves the assembled lesson.
+address (P2R: a frame, a whole exchange — with the frame its line stands on, together or not at all — a learner
+line, a check, a listening question); `LessonCardContext` — the part of the lesson a repair of that card is shown;
+`NativeSeams` — every native sentence a frame makes with its fillers (what the seam judge reads). A scene keeps the
+model's answer (stored, validated, repaired) and serves the assembled lesson.
 
 Pure services: `PlanCalendar` (layout 1…10, days until the event), `DayAssembler` + stages (the
 day, dealt deterministically), `RouteStages` (which stages a day on the route has and where each
 stands — from card tallies, the dealer's outline or the day type), `BlueprintChecker` (the plan
 checks in observe/drop/gate), `LessonValidator` + `Check/Lesson/*Rules` (the lesson's codes, each with its
-card's address, `LessonCodes`), `LessonGate` (the five fatal codes, the card order a repair takes, at most two cards,
-the `fatal: …` reason), `Words` / `FrameText` / `EnglishWords` /
-`NativeWords` / `NativeScript` (the text rules the validator and the assembly share), `DayMetricsCalculator`,
-`NativeStrings`, `Shuffle`.
+card's address, `LessonCodes`), `Check/Language` — the rules' languages: `LanguagePack` (one language's words, marks
+and patterns from `config/lesson/lang/<code>.php`; a key it lacks is a check skipped, `PackSkips`, never a finding),
+`LanguageWords` (the same questions of any language, answered off its pack), `LessonGate` (the seven fatal codes, the
+card order a repair takes, at most two cards, the `fatal: …` reason), `Words` / `FrameText` (the text rules the
+validator and the assembly share), `DayMetricsCalculator`, `NativeStrings`, `Shuffle`.
 The day window (DAY-UI-2, `window` of the day read, put together by `Application/Service/DayWindowViews`):
 `DayWindowStages` (the five rows — a number only on the current one — and the day's progress),
 `DayPace` (minutes by the stage's pace per card), `UnitStates` (a unit's state from its cards),
@@ -83,10 +87,14 @@ lines deleted before they are bought anew). A database in `generation.speech.nam
 queues no voice for a new day (`QueuedPlanDispatcher`).
 `WordUsage` (the line of the day a word is said in — by the lesson's `used_in` — and its place in it, sheet 23-0e).
 Application: `LessonBuildService` (the lesson call, one retry only for an answer off the schema, the validator's
-findings counted by code), `LessonGateKeeper` (a fatal finding holds the lesson: P2R for its card, at most two cards,
-the repaired answer stored or the lesson failed with its codes; warnings pass) and `LessonCardRepairer` +
-`ReviseLesson` (P2R: one card repaired by the model for what the validator finds at it — asked by the gate before
-a lesson is stored, or by the command for a stored lesson, written only on `--apply` and before the day is dealt).
+findings counted by code, the checks the packs could not run counted as `lang.pack_missing`, the seam judge once after
+the gate), `LessonContexts` (a lesson's validation context — the pair of languages as their packs, by code),
+`LessonGateKeeper` (a fatal finding holds the lesson: P2R for its card, at most two cards, the repaired answer stored
+or the lesson failed with its codes; warnings pass), `LessonSeamJudge` (every native sentence of the day in one call,
+a «no» is `filler.native_seam`) and `LessonCardRepairer` + `ReviseLesson` (P2R: one card repaired by the model for what
+the validator finds at it, shown only the part of the lesson it needs — asked by the gate before a lesson is stored, or
+by the command for a stored lesson, written only on `--apply` and before the day is dealt, the judged seams of frames
+it did not rewrite kept).
 `SceneReadiness` (`illustrating` → `ready` + the `day_ready` line).
 Notifications: `PlanEventRules` (which reschedule is a rebuild; what the calendar owes on and after
 the event date, `event_today` not before 08:00), `NotificationRules` (which fact is a letter —
@@ -140,14 +148,16 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.4`, `lesson_card_repair.v1`). The loader cuts the lesson's `TEST INPUT`
-  section and sends the real inputs as the user message; the repair wrapper quotes the lesson prompt's own
-  sections for the card's kind.
+  (`plan-builder-v2`, `lesson_day.v4.5`, `lesson_card_repair.v1.1`, `lesson_seam_judge.v1`). The loader cuts the
+  lesson's `TEST INPUT` section and sends the real inputs as the user message; the repair wrapper quotes the lesson
+  prompt's own sections for the card's kind and is shown only the part of the lesson the card needs.
 - The lesson is stored as the model wrote it (`plan_scenes.lesson_json`), re-parsed on read and served assembled.
 - Every plan check ships in `observe`; modes are flipped in `config/plan.php`, never in code. The lesson validator
-  has no modes: it counts (`checks_json` of the scene, `plan_check_counters` by code); five codes are fatal by the
-  architect's decision after GEN-2a (`LessonGate`) — a lesson with them is never stored before P2R repairs their
-  card (at most two a day), else it fails `fatal: <codes>`.
+  has no modes: it counts (`checks_json` of the scene, `plan_check_counters` by code, `lang.pack_missing` for a check
+  its languages' packs cannot run); seven codes are fatal by the architect's decisions after GEN-2a and in GEN-2b
+  (`LessonGate`) — a lesson with them is never stored before P2R repairs their card (at most two a day), else it
+  fails `fatal: <codes>`. A lesson that passed is read once by the seam judge (`Application/Service/LessonSeamJudge`,
+  `filler.native_seam`, a warning; `judge.unavailable` when it does not answer).
 - QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN), `plan:repair-card`
   (P2R by hand — Presentation/Console).
 - Ops: `plan:images-backfill {--plan=} {--requery}` — first the photos plans still lack, asked the search

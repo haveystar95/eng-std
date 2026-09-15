@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Check\Lesson;
 
+use App\Modules\Plan\Domain\Check\Language\LanguageSide;
+use App\Modules\Plan\Domain\Check\Language\LanguageWords;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonRule;
 use App\Modules\Plan\Domain\Check\LessonValidationContext;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\Lesson;
-use App\Modules\Plan\Domain\Service\EnglishWords;
 use App\Modules\Plan\Domain\Service\Words;
 
 /**
- * THE CHECK OF EVERY EXCHANGE (`lesson_day.v4.4`, CHECK PER EXCHANGE): always about the partner's
+ * THE CHECK OF EVERY EXCHANGE (`lesson_day.v4.5`, CHECK PER EXCHANGE): always about the partner's
  * line, never about the learner's; the right option a paraphrase — no two consecutive words of the
  * partner's line; no alternative the partner named offered as a wrong option.
  *
@@ -27,19 +28,22 @@ use App\Modules\Plan\Domain\Service\Words;
  *
  * «About the learner» is read two ways: the question names the learner's role as the one who said
  * something, or the right option shares two content words with the learner's line and none with the
- * partner's. English target only — the words are read in English.
+ * partner's. The checks are in the target language, and every word is read by the target's pack.
  */
 final class CheckRules implements LessonRule
 {
-    private const SAYING = ['say', 'says', 'said', 'tell', 'tells', 'told', 'answer', 'answers', 'answered', 'mention', 'mentions', 'mentioned', 'reply', 'replies', 'replied', 'want', 'wants', 'wanted'];
-
     public function violations(Lesson $answer, LessonValidationContext $context): array
     {
-        if ($context->targetLang !== 'en') {
+        $verbatim = $context->reads(LessonCodes::CHECK_VERBATIM, LanguageSide::Target, 'function_words', 'word_forms', 'number_pattern', 'sentence_ends');
+        $aboutLearner = $context->reads(LessonCodes::CHECK_ABOUT_LEARNER, LanguageSide::Target, 'saying_verbs', 'function_words', 'word_forms');
+        $alternatives = $context->reads(LessonCodes::CHECK_LISTED_ALTERNATIVE_AS_WRONG, LanguageSide::Target, 'alternative_words', 'function_words', 'word_forms');
+        if (! $verbatim && ! $aboutLearner && ! $alternatives) {
             return [];
         }
+        $words = $context->targetWords();
+
         $out = [];
-        $items = self::itemWords($answer);
+        $items = $verbatim ? self::itemWords($answer, $words) : [];
         foreach ($answer->exchanges as $exchange) {
             $partner = $exchange->partner();
             $right = $exchange->check->correctOption();
@@ -48,26 +52,27 @@ final class CheckRules implements LessonRule
             }
             $address = LessonViolation::check($exchange->step);
 
-            $fixed = [...EnglishWords::names($partner->textTarget), ...self::counted($partner->textTarget)];
-            $repeated = array_values(array_filter(
-                array_intersect(self::pairs($right->textTarget), self::pairs($partner->textTarget)),
-                static fn (string $pair): bool => ! self::withoutParaphrase($pair, $fixed, $items),
-            ));
-            if ($repeated !== []) {
-                $out[] = new LessonViolation(LessonCodes::CHECK_VERBATIM, $address, "the right option «{$right->textTarget}» repeats «{$repeated[0]}» of the partner's line");
+            if ($verbatim) {
+                $fixed = [...$words->names($partner->textTarget), ...self::counted($partner->textTarget, $words)];
+                $repeated = array_values(array_filter(
+                    array_intersect(self::pairs($right->textTarget, $words), self::pairs($partner->textTarget, $words)),
+                    static fn (string $pair): bool => ! self::withoutParaphrase($pair, $fixed, $items, $words),
+                ));
+                if ($repeated !== []) {
+                    $out[] = new LessonViolation(LessonCodes::CHECK_VERBATIM, $address, "the right option «{$right->textTarget}» repeats «{$repeated[0]}» of the partner's line");
+                }
             }
 
-            if (self::aboutLearner($answer, $exchange)) {
+            if ($aboutLearner && self::aboutLearner($answer, $exchange, $words)) {
                 $out[] = new LessonViolation(LessonCodes::CHECK_ABOUT_LEARNER, $address, "«{$exchange->check->textTarget}» → «{$right->textTarget}» is about the learner's line, not the partner's");
             }
 
-            if (in_array('or', Words::tokens($partner->textTarget), true)) {
+            if ($alternatives && array_filter(Words::tokens($partner->textTarget), $words->isAlternative(...)) !== []) {
                 foreach ($exchange->check->options as $index => $option) {
                     if ($index === $exchange->check->correctOptionIndex) {
                         continue;
                     }
-                    $content = EnglishWords::content($option->textTarget);
-                    if ($content !== [] && EnglishWords::notIn($option->textTarget, $partner->textTarget) === []) {
+                    if ($words->content($option->textTarget) !== [] && $words->notIn($option->textTarget, $partner->textTarget) === []) {
                         $out[] = new LessonViolation(LessonCodes::CHECK_LISTED_ALTERNATIVE_AS_WRONG, $address, "the wrong option «{$option->textTarget}» is an alternative the partner named");
                     }
                 }
@@ -77,7 +82,7 @@ final class CheckRules implements LessonRule
         return $out;
     }
 
-    private static function aboutLearner(Lesson $answer, Exchange $exchange): bool
+    private static function aboutLearner(Lesson $answer, Exchange $exchange, LanguageWords $words): bool
     {
         $learner = $exchange->learner();
         $partner = $exchange->partner();
@@ -88,13 +93,13 @@ final class CheckRules implements LessonRule
 
         $role = Words::tokens($learner->roleTarget ?? $answer->learnerRoleTarget);
         $question = Words::tokens($exchange->check->textTarget);
-        if ($role !== [] && self::contains($question, $role) && array_intersect($question, self::SAYING) !== []) {
+        if ($role !== [] && self::contains($question, $role) && array_filter($question, $words->isSaying(...)) !== []) {
             return true;
         }
 
         return $learner !== null
-            && EnglishWords::shared($right->textTarget, $learner->textTarget) >= 2
-            && EnglishWords::shared($right->textTarget, $partner->textTarget) === 0;
+            && $words->shared($right->textTarget, $learner->textTarget) >= 2
+            && $words->shared($right->textTarget, $partner->textTarget) === 0;
     }
 
     /**
@@ -104,19 +109,19 @@ final class CheckRules implements LessonRule
      * @param  list<string>  $fixed  the partner line's names and counted things, lower-cased
      * @param  list<string>  $items  the words of the lesson's vocabulary and fillers
      */
-    private static function withoutParaphrase(string $pair, array $fixed, array $items): bool
+    private static function withoutParaphrase(string $pair, array $fixed, array $items, LanguageWords $words): bool
     {
         // «one week»: a number word may be a function word of the lists, and still the number.
         foreach (Words::tokens($pair) as $word) {
-            if (EnglishWords::isNumber($word) || in_array($word, $fixed, true)) {
+            if ($words->isNumber($word) || in_array($word, $fixed, true)) {
                 return true;
             }
         }
-        $content = EnglishWords::content($pair);
+        $content = $words->content($pair);
         foreach ($content as $word) {
             $item = false;
             foreach ($items as $other) {
-                if (EnglishWords::sameStem($word, $other)) {
+                if ($words->sameStem($word, $other)) {
                     $item = true;
                     break;
                 }
@@ -135,12 +140,12 @@ final class CheckRules implements LessonRule
      *
      * @return list<string>
      */
-    private static function counted(string $line): array
+    private static function counted(string $line, LanguageWords $words): array
     {
         $tokens = Words::tokens($line);
         $out = [];
         for ($i = 0; $i + 1 < count($tokens); $i++) {
-            if (EnglishWords::isNumber($tokens[$i]) && ! EnglishWords::isFunction($tokens[$i + 1])) {
+            if ($words->isNumber($tokens[$i]) && ! $words->isFunction($tokens[$i + 1])) {
                 $out[] = $tokens[$i + 1];
             }
         }
@@ -153,19 +158,19 @@ final class CheckRules implements LessonRule
      *
      * @return list<string>
      */
-    private static function itemWords(Lesson $answer): array
+    private static function itemWords(Lesson $answer, LanguageWords $words): array
     {
-        $words = [];
+        $out = [];
         foreach ($answer->vocabulary as $item) {
-            $words = [...$words, ...EnglishWords::content($item->termTarget)];
+            $out = [...$out, ...$words->content($item->termTarget)];
         }
         foreach ($answer->phrases as $phrase) {
             foreach ($phrase->fillers() as $filler) {
-                $words = [...$words, ...EnglishWords::content($filler->target)];
+                $out = [...$out, ...$words->content($filler->target)];
             }
         }
 
-        return array_values(array_unique($words));
+        return array_values(array_unique($out));
     }
 
     /**
@@ -174,12 +179,12 @@ final class CheckRules implements LessonRule
      *
      * @return list<string>
      */
-    private static function pairs(string $text): array
+    private static function pairs(string $text, LanguageWords $words): array
     {
         $tokens = Words::tokens($text);
         $out = [];
         for ($i = 0; $i + 1 < count($tokens); $i++) {
-            if (EnglishWords::isFunction($tokens[$i]) && EnglishWords::isFunction($tokens[$i + 1])) {
+            if ($words->isFunction($tokens[$i]) && $words->isFunction($tokens[$i + 1])) {
                 continue;
             }
             $out[] = $tokens[$i].' '.$tokens[$i + 1];

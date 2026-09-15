@@ -6,12 +6,13 @@ namespace App\Modules\Plan\Infrastructure\Prompt;
 
 use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use RuntimeException;
 
 /**
  * THE PLAN'S PROMPT FILES, read from this directory. The version of each is its file stem
- * (`plan-builder-v2`, `lesson_day.v4.4`) — a rename is a version bump and nothing else is.
+ * (`plan-builder-v2`, `lesson_day.v4.5`) — a rename is a version bump and nothing else is.
  *
  * The files are frozen: nothing here edits their text. Each ends with a «TEST INPUT» section the
  * author used to try the prompt by hand; that section is cut out and the real inputs go in the
@@ -22,16 +23,23 @@ final class PlanPromptFiles
 {
     private const PLAN_FILE = 'plan-builder-v2.md';
 
-    private const LESSON_FILE = 'lesson_day.v4.4.md';
+    private const LESSON_FILE = 'lesson_day.v4.5.md';
 
-    private const REPAIR_FILE = 'lesson_card_repair.v1.md';
+    private const REPAIR_FILE = 'lesson_card_repair.v1.1.md';
+
+    private const JUDGE_FILE = 'lesson_seam_judge.v1.md';
 
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their
-     * heading, word for word: the repair wrapper never retells a rule.
+     * heading, word for word: the repair wrapper never retells a rule. A whole exchange answers to every
+     * rule a turn of the visit has: its kind, its place in the visit, both lines and its check.
      */
     private const REPAIR_SECTIONS = [
         'frame' => ['LEVEL', 'FRAMES', 'TEXT QUALITY', 'PRONUNCIATION_NATIVE'],
+        'exchange' => [
+            'LEVEL', 'EXCHANGE KINDS', 'NATURAL ORDER OF ONE VISIT', 'MOBILE-FRIENDLY MESSAGE LENGTH', 'CONVERSATION PARTNER RULE',
+            'LEARNER MESSAGES', 'TEXT QUALITY', 'PRONUNCIATION_NATIVE', 'CHECK PER EXCHANGE',
+        ],
         'line' => ['LEVEL', 'EXCHANGE KINDS', 'MOBILE-FRIENDLY MESSAGE LENGTH', 'LEARNER MESSAGES', 'TEXT QUALITY', 'PRONUNCIATION_NATIVE'],
         'check' => ['LEVEL', 'CHECK PER EXCHANGE'],
         'listening' => ['LISTENING'],
@@ -61,11 +69,16 @@ final class PlanPromptFiles
         return pathinfo(self::REPAIR_FILE, PATHINFO_FILENAME);
     }
 
+    public function judgeVersion(): string
+    {
+        return pathinfo(self::JUDGE_FILE, PATHINFO_FILENAME);
+    }
+
     /**
      * P2R's rules for one card kind: the repair wrapper with the lesson prompt's own sections for that
      * kind quoted in place of `{{rules}}`.
      *
-     * @param  'frame'|'line'|'check'|'listening'  $kind
+     * @param  'frame'|'exchange'|'line'|'check'|'listening'  $kind
      */
     public function repairSystem(string $kind): string
     {
@@ -74,9 +87,12 @@ final class PlanPromptFiles
         return str_replace('{{rules}}', implode("\n\n---\n\n", $sections), $this->text(self::REPAIR_FILE));
     }
 
+    /**
+     * The repair's data: the inputs, the card's address and kind, what is broken, the card, and only the part of
+     * the lesson this card needs (P2R v1.1, наряд GEN-2b) — the day's frames and words and the lines around it.
+     */
     public function repairUser(LessonCardRepairRequest $request): string
     {
-        $json = static fn (array $value): string => json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         $lines = [
             'TARGET_LANGUAGE: '.$request->targetLanguage,
             'NATIVE_LANGUAGE: '.$request->nativeLanguage,
@@ -96,10 +112,27 @@ final class PlanPromptFiles
             ...$lines,
             '',
             'CARD (as written):',
-            $json($request->card),
+            self::json($request->card, pretty: true),
             '',
-            'LESSON (accepted, for context — do not return it):',
-            $json($request->lesson),
+            'LESSON (accepted; only the part this card needs — the day\'s frames and words, the lines around the card; for context, do not return it):',
+            self::json($request->context),
+        ]);
+    }
+
+    /** The seam judge's rules — the file as it is. */
+    public function judgeSystem(): string
+    {
+        return $this->text(self::JUDGE_FILE);
+    }
+
+    /** The seam judge's data: the learner's language by name and every sentence to read, with its id. */
+    public function judgeUser(NativeSeamJudgeRequest $request): string
+    {
+        return implode("\n", [
+            'NATIVE_LANGUAGE: '.$request->nativeLanguage,
+            '',
+            'ITEMS (id · the pattern with its slot · the value put into the slot · the sentence they make):',
+            self::json($request->items),
         ]);
     }
 
@@ -197,6 +230,30 @@ final class PlanPromptFiles
     private static function oneLine(string $text): string
     {
         return trim((string) preg_replace('/\s+/u', ' ', $text));
+    }
+
+    /**
+     * JSON for the model: the card pretty, the context and the items one compact line per entry — what the model
+     * reads without paying for indentation.
+     *
+     * @param  array<array-key, mixed>  $value
+     */
+    private static function json(array $value, bool $pretty = false): string
+    {
+        $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
+        if ($pretty) {
+            return json_encode($value, $flags | JSON_PRETTY_PRINT);
+        }
+        if (! array_is_list($value)) {
+            $lines = [];
+            foreach ($value as $key => $entry) {
+                $lines[] = json_encode((string) $key, $flags).': '.(is_array($entry) ? self::json($entry) : json_encode($entry, $flags));
+            }
+
+            return "{\n".implode(",\n", $lines)."\n}";
+        }
+
+        return "[\n".implode(",\n", array_map(static fn (mixed $entry): string => json_encode($entry, $flags), $value))."\n]";
     }
 
     private function text(string $file): string

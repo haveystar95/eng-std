@@ -14,15 +14,20 @@ use App\Modules\Plan\Domain\Check\Lesson\ListeningRules;
 use App\Modules\Plan\Domain\Check\Lesson\NativeRules;
 use App\Modules\Plan\Domain\Check\Lesson\PartnerRules;
 use App\Modules\Plan\Domain\Check\Lesson\StructureRules;
+use App\Modules\Plan\Domain\Check\Lesson\VisitRules;
 use App\Modules\Plan\Domain\Check\Lesson\VocabularyRules;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 
 /**
- * THE LESSON VALIDATOR (наряд GEN-2a, `docs/plan-v2.md` §4).
+ * THE LESSON VALIDATOR (наряды GEN-2a, GEN-2b, `docs/plan-v2.md` §4).
  *
- * Every rule runs over the model's answer as written, every breach is a finding with a code and a
- * card address. The validator only finds: no finding edits the lesson here. What a finding does to the
- * day — a warning is counted and kept, a fatal one holds the day for a repair — is {@see LessonGate}'s.
+ * Every rule runs over the model's answer as written, every breach is a finding with a code and a card address.
+ * The validator only finds: no finding edits the lesson here. What a finding does to the day — a warning is
+ * counted and kept, a fatal one holds the day for a repair — is {@see LessonGate}'s.
+ *
+ * The rules are about the pair of languages: what a rule needs to know of a language it reads off that language's
+ * pack, and a check whose pack is missing does not run — it is written into the context's skips
+ * ({@see LessonValidationContext::$skips}), counted as `lang.pack_missing`, never a finding.
  */
 final readonly class LessonValidator
 {
@@ -34,6 +39,7 @@ final readonly class LessonValidator
     {
         $this->rules = $rules ?? [
             new StructureRules,
+            new VisitRules,
             new FrameRules,
             new FillerRules,
             new LineRules,

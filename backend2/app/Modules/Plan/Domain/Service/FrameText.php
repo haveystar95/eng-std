@@ -7,7 +7,7 @@ namespace App\Modules\Plan\Domain\Service;
 use App\Modules\Plan\Domain\Lesson\Phrase;
 
 /**
- * A FRAME SAID WITH A FILLER — the server's own assembly of a learner line (`lesson_day.v4.4`,
+ * A FRAME SAID WITH A FILLER — the server's own assembly of a learner line (`lesson_day.v4.5`,
  * LEARNER MESSAGES: «apart from the glue, text_target must equal the substituted frame character by
  * character»).
  *

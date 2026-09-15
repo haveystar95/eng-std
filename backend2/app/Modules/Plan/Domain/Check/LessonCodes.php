@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check;
 
 /**
- * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.4`; наряд GEN-2a). Every breach is counted by
- * code; five of them are fatal — the day is not dealt until a repair takes their card ({@see LessonGate},
- * the architect's decision after six live days) — and the rest are warnings: counted and kept.
+ * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.5`; наряды GEN-2a, GEN-2b). Every breach is counted by
+ * code; seven of them are fatal — the day is not dealt until a repair takes their card ({@see LessonGate}) — and
+ * the rest are warnings: counted and kept. One code is not the validator's but the seam judge's — a model reads
+ * the native sentences a frame makes with its fillers ({@see JUDGED}).
+ *
+ * Two counters are no findings at all: a check that did not run for want of a language pack
+ * ({@see LANG_PACK_MISSING}), and a seam judge that did not answer ({@see JUDGE_UNAVAILABLE}).
  *
  * Canon with the exact rule of every code — `docs/plan-v2.md` §4.
  */
 final class LessonCodes
 {
-    // Shape of the visit (added to the наряд's list: without them a short or broken answer counts nothing).
+    // Shape of the visit.
     public const DIALOGUE_COUNT = 'dialogue.count';
 
     public const VOCAB_COUNT = 'vocab.count';
@@ -22,13 +26,15 @@ final class LessonCodes
 
     public const EXCHANGE_SECOND_QUESTION = 'exchange.second_question';
 
+    public const EXCHANGE_REPEATS = 'exchange.repeats';
+
     public const CHECK_SHAPE = 'check.shape';
 
     public const LISTENING_SHAPE = 'listening.shape';
 
     public const PRONUNCIATION_SCRIPT = 'pronunciation.script';
 
-    // Frames (v4.4 adds the count rule and «every frame is said»).
+    // Frames.
     public const FRAME_COUNT = 'frame.count';
 
     public const FRAME_UNUSED = 'frame.unused';
@@ -41,12 +47,22 @@ final class LessonCodes
 
     public const FRAME_NATIVE_PUNCT = 'frame.native_punct';
 
+    public const FRAME_UNRESOLVED_PRONOUN = 'frame.unresolved_pronoun';
+
+    public const FRAME_NATIVE_AGREEMENT = 'frame.native_agreement';
+
     // Fillers.
     public const FILLER_COUNT = 'filler.count';
 
     public const FILLER_UNGRAMMATICAL = 'filler.ungrammatical';
 
     public const FILLER_ONE_IN_DIALOGUE = 'filler.one_in_dialogue';
+
+    public const FILLER_IS_CLAUSE = 'filler.is_clause';
+
+    public const FILLER_ARTICLE_SEAM = 'filler.article_seam';
+
+    public const FILLER_NATIVE_SEAM = 'filler.native_seam';
 
     // The learner's lines.
     public const LINE_NE_FRAME = 'line.ne_frame';
@@ -64,6 +80,8 @@ final class LessonCodes
     public const KEY_TOO_LONG = 'key.too_long';
 
     public const VARIANT_LONGER = 'variant.longer';
+
+    public const LEARNER_RESTATES_PARTNER = 'learner.restates_partner';
 
     // Kinds of exchange.
     public const KIND_ASK_COUNT = 'kind.ask_count';
@@ -115,17 +133,28 @@ final class LessonCodes
 
     public const IMAGE_PROMPT_RULE_TEXT = 'image_prompt.rule_text';
 
+    /** A check that did not run: the language of its side has no pack for it. One per code a validation skipped. */
+    public const LANG_PACK_MISSING = 'lang.pack_missing';
+
+    /** The seam judge was asked and gave no usable answer: the day's native seams went unread. */
+    public const JUDGE_UNAVAILABLE = 'judge.unavailable';
+
+    /** The codes a model finds, not the validator: the native seams, read by the seam judge once a day. */
+    public const JUDGED = [self::FILLER_NATIVE_SEAM];
+
     /** @return list<string> every code, in the order the report lists them */
     public static function all(): array
     {
         return [
-            self::DIALOGUE_COUNT, self::VOCAB_COUNT, self::EXCHANGE_SHAPE, self::EXCHANGE_SECOND_QUESTION,
+            self::DIALOGUE_COUNT, self::VOCAB_COUNT, self::EXCHANGE_SHAPE, self::EXCHANGE_SECOND_QUESTION, self::EXCHANGE_REPEATS,
             self::CHECK_SHAPE, self::LISTENING_SHAPE, self::PRONUNCIATION_SCRIPT,
             self::FRAME_COUNT, self::FRAME_UNUSED, self::FRAME_TOO_LONG, self::FRAME_NO_SLOT_SHARE,
-            self::FRAME_NATIVE_ALTERNATIVES, self::FRAME_NATIVE_PUNCT,
-            self::FILLER_COUNT, self::FILLER_UNGRAMMATICAL, self::FILLER_ONE_IN_DIALOGUE,
+            self::FRAME_NATIVE_ALTERNATIVES, self::FRAME_NATIVE_PUNCT, self::FRAME_UNRESOLVED_PRONOUN, self::FRAME_NATIVE_AGREEMENT,
+            self::FILLER_COUNT, self::FILLER_UNGRAMMATICAL, self::FILLER_ONE_IN_DIALOGUE, self::FILLER_IS_CLAUSE,
+            self::FILLER_ARTICLE_SEAM, self::FILLER_NATIVE_SEAM,
             self::LINE_NE_FRAME, self::LINE_TOO_LONG, self::LINE_NO_FRAME,
             self::KEY_NOT_IN_LINE, self::KEY_CONTAINS_FILLER, self::KEY_NO_CONTENT_WORD, self::KEY_TOO_LONG, self::VARIANT_LONGER,
+            self::LEARNER_RESTATES_PARTNER,
             self::KIND_ASK_COUNT, self::KIND_RESCUE_COUNT, self::RESCUE_NOT_FIRST, self::RESCUE_NEW_FACT, self::RESCUE_NO_PREV,
             self::PARTNER_TWO_QUESTIONS, self::PARTNER_TOO_LONG, self::PARTNER_CLOSER,
             self::CHECK_ABOUT_LEARNER, self::CHECK_VERBATIM, self::CHECK_LISTED_ALTERNATIVE_AS_WRONG,
@@ -133,5 +162,11 @@ final class LessonCodes
             self::VOCAB_FREE_COMBINATION, self::VOCAB_EVERYDAY_WORD, self::VOCAB_USED_IN_WRONG, self::VOCAB_LEARNER_SHARE, self::VOCAB_NESTED,
             self::NATIVE_GENDERED_PAST, self::IMAGE_PROMPT_RULE_TEXT,
         ];
+    }
+
+    /** @return list<string> the codes the validator itself finds — every code but the judged ones */
+    public static function validated(): array
+    {
+        return array_values(array_diff(self::all(), self::JUDGED));
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Check\Lesson;
 
+use App\Modules\Plan\Domain\Check\Language\LanguageSide;
+use App\Modules\Plan\Domain\Check\Language\LanguageWords;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonRule;
 use App\Modules\Plan\Domain\Check\LessonValidationContext;
@@ -14,21 +16,27 @@ use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\Words;
 
 /**
- * THE FILLERS (`lesson_day.v4.4`, FILLERS): two or three per slot; every one of them makes a
- * sentence when put into the frame; `in_dialogue` marks exactly the fillers the dialogue says — one
- * per exchange that uses the frame, two different ones for a frame said twice.
+ * THE FILLERS (`lesson_day.v4.5`, FILLERS, «where the slot cuts»): two or three per slot; every one of them makes a
+ * sentence when put into the frame; `in_dialogue` marks exactly the fillers the dialogue says.
  *
- * «Grammatical» is checked by the assembly only mechanically — a filler with its own full stop, a
- * word doubled at the seam, «a» before a vowel, an article after an article, a whole clause where
- * the frame already has its verb («My biggest strength is ___» + «I am patient»). The rest is read by
- * a human: the day's export prints every frame with every filler put in.
+ * «Grammatical» is checked by the assembly only mechanically (`filler.ungrammatical`, fatal) — a filler with its
+ * own full stop or its own slot, a word doubled at the seam, and, by the target's pack, an article after an
+ * article, «a» before a vowel or «an» before a consonant at the seam, a whole sentence where the frame already has
+ * its verb («My biggest strength is ___» + «I am patient»). Three warnings of v4.5 beside it: a filler that is a
+ * clause, not a value («if the fever returns»); an article that stays in the frame though it changes with the
+ * filler («I work as an ___»), or an article of the filler that does not fit its noun («a engineer»). Whether the
+ * native sentence reads is the seam judge's, not a code's. Everything else is read by a human: the day's export
+ * prints every frame with every filler put in.
  */
 final class FillerRules implements LessonRule
 {
-    private const ARTICLES = ['a', 'an', 'the'];
-
     public function violations(Lesson $answer, LessonValidationContext $context): array
     {
+        $mechanics = $context->reads(LessonCodes::FILLER_UNGRAMMATICAL, LanguageSide::Target, 'articles', 'article_sound', 'clause', 'seam_repeatable_words');
+        $clauses = $context->reads(LessonCodes::FILLER_IS_CLAUSE, LanguageSide::Target, 'clause');
+        $articles = $context->reads(LessonCodes::FILLER_ARTICLE_SEAM, LanguageSide::Target, 'article_sound');
+        $words = $context->targetWords();
+
         $out = [];
         foreach ($answer->phrases as $phrase) {
             $marked = FrameText::hasSlot($phrase->frameTarget);
@@ -44,13 +52,31 @@ final class FillerRules implements LessonRule
             }
 
             if ($marked) {
+                $before = Words::tokens((preg_split(FrameText::SLOT_PATTERN, $phrase->frameTarget, 2) ?: [''])[0]);
+                $left = $before === [] ? null : $before[count($before) - 1];
+                if ($articles && $left !== null && $words->isSoundArticle($left)) {
+                    $out[] = new LessonViolation(LessonCodes::FILLER_ARTICLE_SEAM, $phrase->id, "«{$phrase->frameTarget}»: «{$left}» stands before the slot — the article changes with the filler and goes with it");
+                }
+
                 foreach ($phrase->fillers() as $index => $filler) {
-                    foreach (self::seams($phrase->frameTarget, $filler->target) as $problem) {
+                    $address = $phrase->id.'.f'.($index + 1);
+                    foreach (self::seams($phrase->frameTarget, $filler->target, $mechanics ? $words : null) as $problem) {
                         $out[] = new LessonViolation(
                             LessonCodes::FILLER_UNGRAMMATICAL,
-                            $phrase->id.'.f'.($index + 1),
+                            $address,
                             '«'.FrameText::fill($phrase->frameTarget, $filler->target)."»: {$problem}",
                         );
+                    }
+
+                    $clause = $clauses ? $words->clause($filler->target) : null;
+                    // A whole sentence after the frame's own words is the fatal code's already — one breach, one finding.
+                    if ($clause !== null && ! ($clause === LanguageWords::SENTENCE && $before !== [])) {
+                        $out[] = new LessonViolation(LessonCodes::FILLER_IS_CLAUSE, $address, "«{$filler->target}» is a clause, not a value — the frame should carry the clause and the slot the value");
+                    }
+
+                    $own = Words::surface($filler->target);
+                    if ($articles && count($own) >= 2 && $words->isSoundArticle($own[0]) && ($problem = $words->articleMismatch($own[0], $own[1])) !== null) {
+                        $out[] = new LessonViolation(LessonCodes::FILLER_ARTICLE_SEAM, $address, "«{$filler->target}»: {$problem}");
                     }
                 }
             }
@@ -62,11 +88,12 @@ final class FillerRules implements LessonRule
     }
 
     /**
-     * What the assembly of one filler into its frame shows on its face.
+     * What the assembly of one filler into its frame shows on its face. Without the target's words (no pack) only
+     * what needs no language: punctuation, a slot, a doubled word.
      *
      * @return list<string>
      */
-    public static function seams(string $frame, string $filler): array
+    public static function seams(string $frame, string $filler, ?LanguageWords $words): array
     {
         $problems = [];
         $filler = trim($filler);
@@ -87,22 +114,23 @@ final class FillerRules implements LessonRule
         $left = $before === [] ? null : $before[count($before) - 1];
         $right = $after[0] ?? null;
 
-        if (($left !== null && $left === $own[0]) || ($right !== null && $right === $own[count($own) - 1])) {
+        // A particle before a preposition of the same spelling is English («move in in June»): the target's pack names
+        // the words a seam may repeat; without the pack every doubled word counts.
+        $doubled = ($left !== null && $left === $own[0] && ! $words?->isSeamRepeatable($left))
+            || ($right !== null && $right === $own[count($own) - 1] && ! $words?->isSeamRepeatable($right));
+        if ($doubled) {
             $problems[] = 'a word is doubled at the seam';
         }
-        if ($left !== null && in_array($left, self::ARTICLES, true) && in_array($own[0], self::ARTICLES, true)) {
+        if ($words === null) {
+            return $problems;
+        }
+        if ($left !== null && $words->isArticle($left) && $words->isArticle($own[0])) {
             $problems[] = "«{$left} {$own[0]}» — an article after an article";
         }
-        // An initialism is read by its letters («an MRI», «an X-ray»), and «one» starts with a «w»: both left alone.
-        $spelled = preg_match('/^(?:[A-Z]{2,}|[A-Z]-)/u', $filler) === 1;
-        if (! $spelled && $left === 'a' && preg_match('/^[aeio]/', $own[0]) === 1 && ! str_starts_with($own[0], 'one')) {
-            $problems[] = "«a {$own[0]}» before a vowel";
+        if ($left !== null && ($mismatch = $words->articleMismatch($left, Words::surface($filler)[0] ?? $own[0])) !== null) {
+            $problems[] = $mismatch;
         }
-        if (! $spelled && $left === 'an' && preg_match('/^[bcdfgjklmnpqrstvwyz]/', $own[0]) === 1) {
-            $problems[] = "«an {$own[0]}» before a consonant";
-        }
-        if (preg_match("/^(i|we|he|she|they|it|you)\s+(am|is|are|was|were|have|has|had|do|does|did|can|will)\b|^(i'm|it's|we're|they're|he's|she's|you're)\b/iu", $filler) === 1
-            && $before !== []) {
+        if ($before !== [] && $words->clause($filler) === LanguageWords::SENTENCE) {
             $problems[] = 'the filler is a whole clause, and the frame already has its verb';
         }
 
@@ -116,6 +144,7 @@ final class FillerRules implements LessonRule
             return [];
         }
         $out = [];
+        // Which fillers the dialogue says, and where first. The same filler said twice is `exchange.repeats`.
         $said = [];
         foreach ($answer->linesOf($phrase->id) as $use) {
             $message = $use['message'];
@@ -130,23 +159,12 @@ final class FillerRules implements LessonRule
 
                 continue;
             }
-            $index = 0;
             foreach ($phrase->slot->fillers as $position => $candidate) {
                 if ($candidate === $filler) {
-                    $index = $position;
+                    $said[$position] ??= $step;
                     break;
                 }
             }
-            if (isset($said[$index])) {
-                $out[] = new LessonViolation(
-                    LessonCodes::FILLER_ONE_IN_DIALOGUE,
-                    $phrase->id,
-                    "exchanges {$said[$index]} and {$step} say {$phrase->id} with the same filler «{$filler->target}»",
-                );
-
-                continue;
-            }
-            $said[$index] = $step;
         }
 
         foreach ($phrase->slot->fillers as $index => $filler) {

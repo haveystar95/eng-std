@@ -7,7 +7,7 @@ namespace App\Modules\Plan\Domain\Lesson;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 
 /**
- * A PHRASE OF THE DAY IS A FRAME (`lesson_day.v4.4`, FRAMES): a reusable sentence pattern with one
+ * A PHRASE OF THE DAY IS A FRAME (`lesson_day.v4.5`, FRAMES): a reusable sentence pattern with one
  * slot `___` (or none), its rendering in the learner's language and its reading — both with `___`
  * kept — and the slot's hint and values. The learner's dialogue lines are the frame said with one of
  * its fillers; the server puts them together ({@see \App\Modules\Plan\Domain\Service\FrameText}).

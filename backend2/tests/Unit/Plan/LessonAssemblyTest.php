@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Check\LessonCodes;
-use App\Modules\Plan\Domain\Check\LessonValidationContext;
 use App\Modules\Plan\Domain\Check\LessonValidator;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
@@ -21,7 +20,7 @@ use App\Modules\Plan\Domain\ValueObject\TermKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
 /**
- * THE SERVED LESSON (`lesson_day.v4.4`; наряд GEN-2a, docs/plan-v2.md §3): the server puts the learner's
+ * THE SERVED LESSON (`lesson_day.v4.5`; наряд GEN-2a, docs/plan-v2.md §3): the server puts the learner's
  * lines together from frames and fillers, marks in the dialogue exactly the fillers it says, and moves
  * the right answers of checks and listening off the places the model put them. Each test names the rule
  * and the defect it catches.
@@ -41,7 +40,7 @@ function laLesson(array $payload): Lesson
 /** @return list<string> */
 function laCodesAt(array $payload, string $code): array
 {
-    $found = (new LessonValidator)->run(laLesson($payload), new LessonValidationContext(8, 8, 'ru', 'en', null));
+    $found = (new LessonValidator)->run(laLesson($payload), lessonContext());
 
     return array_values(array_map(
         static fn (LessonViolation $v): string => $v->address,
@@ -82,13 +81,13 @@ it('forgives the glue and one lowered letter, and nothing else', function () {
         ->and(FrameText::line($frame, null, 'It hurts.'))->toBe(['text' => 'It hurts.', 'matches' => false, 'glue' => '']);
 });
 
-// Canon v4.4 (owner, 15.09): «один каркас МОЖЕТ стоять в двух обменах с разными наполнениями; тогда in_dialogue: true у
-// обоих». Catches marks that lie about what the dialogue says — a filler marked and never said, a filler said and not
-// marked, one filler said twice — and a frame said twice with two marks counted as a breach.
-it('marks in the dialogue exactly the fillers the dialogue says — two for a frame said twice', function () {
+// Canon v4.5 (FILLERS, NATURAL ORDER OF ONE VISIT): «a frame used in one exchange has exactly one in_dialogue filler;
+// a frame used in two exchanges has two — one per exchange, and they are different», «no two exchanges ask the same
+// thing». Catches marks that lie about what the dialogue says — a filler marked and never said, a filler said and not
+// marked — a frame said twice with two marks counted as a breach, and the same filler said twice left uncounted or
+// counted as a mark instead of a repeated exchange.
+it('marks in the dialogue exactly the fillers it says, and counts the same filler said twice as a repeated exchange', function () {
     $clean = laPayload();
-    expect(laCodesAt($clean, LessonCodes::FILLER_ONE_IN_DIALOGUE))->toBe([]);
-
     $markedNotSaid = laPayload();
     $markedNotSaid['phrases'][5]['slot']['fillers'][2]['in_dialogue'] = true;
     $saidNotMarked = laPayload();
@@ -96,10 +95,14 @@ it('marks in the dialogue exactly the fillers the dialogue says — two for a fr
     $sameTwice = laPayload();
     $sameTwice['dialogue'][7]['messages'][0]['filler'] = 'an X-ray';
     $sameTwice['dialogue'][7]['messages'][0]['text_target'] = 'Do we need an X-ray?';
+    $sameTwice['phrases'][5]['slot']['fillers'][1]['in_dialogue'] = false;
 
-    expect(laCodesAt($markedNotSaid, LessonCodes::FILLER_ONE_IN_DIALOGUE))->toBe(['p6.f3'])
+    expect(laCodesAt($clean, LessonCodes::FILLER_ONE_IN_DIALOGUE))->toBe([])
+        ->and(laCodesAt($clean, LessonCodes::EXCHANGE_REPEATS))->toBe([])
+        ->and(laCodesAt($markedNotSaid, LessonCodes::FILLER_ONE_IN_DIALOGUE))->toBe(['p6.f3'])
         ->and(laCodesAt($saidNotMarked, LessonCodes::FILLER_ONE_IN_DIALOGUE))->toBe(['p6.f2'])
-        ->and(laCodesAt($sameTwice, LessonCodes::FILLER_ONE_IN_DIALOGUE))->toContain('p6');
+        ->and(laCodesAt($sameTwice, LessonCodes::EXCHANGE_REPEATS))->toBe(['x8'])
+        ->and(laCodesAt($sameTwice, LessonCodes::FILLER_ONE_IN_DIALOGUE))->toBe([]);
 });
 
 // Canon: «Индексы правильных ответов (check и listening) перемешиваются при сборке». Catches a lesson served with the

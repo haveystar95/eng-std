@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * ONE VALUE OF A FRAME'S SLOT (`lesson_day.v4.4`, FILLERS): the words that go into `___`, their
+ * ONE VALUE OF A FRAME'S SLOT (`lesson_day.v4.5`, FILLERS): the words that go into `___`, their
  * translation and reading, and whether the dialogue says the frame with this value. A frame said in
  * two exchanges has two fillers marked — one per exchange.
  */

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * ONE QUESTION ABOUT THE WHOLE VISIT, HEARD ONCE WITHOUT TEXT (`lesson_day.v4.4`, LISTENING): what
+ * ONE QUESTION ABOUT THE WHOLE VISIT, HEARD ONCE WITHOUT TEXT (`lesson_day.v4.5`, LISTENING): what
  * was agreed, recommended or said — in the learner's language only, three options, one right. Not a
  * field of an exchange: the listening belongs to the lesson.
  */
