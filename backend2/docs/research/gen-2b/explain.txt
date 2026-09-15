@@ -1,0 +1,33 @@
+plan_check_counters rows: 45
+  plan_check_counters_pkey: CREATE UNIQUE INDEX plan_check_counters_pkey ON public.plan_check_counters USING btree (id)
+  plan_check_counters_uidx: CREATE UNIQUE INDEX plan_check_counters_uidx ON public.plan_check_counters USING btree (prompt_version, check_name, action)
+
+=== counters upsert — lang.pack_missing (EXPLAIN, not executed)
+    Insert on plan_check_counters  (cost=0.00..0.01 rows=0 width=0)
+    Conflict Resolution: UPDATE
+    Conflict Arbiter Indexes: plan_check_counters_uidx
+    ->  Result  (cost=0.00..0.01 rows=1 width=430)
+
+=== counters upsert — filler.native_seam (EXPLAIN, not executed)
+    Insert on plan_check_counters  (cost=0.00..0.01 rows=0 width=0)
+    Conflict Resolution: UPDATE
+    Conflict Arbiter Indexes: plan_check_counters_uidx
+    ->  Result  (cost=0.00..0.01 rows=1 width=430)
+
+=== counters upsert — judge.unavailable (EXPLAIN, not executed)
+    Insert on plan_check_counters  (cost=0.00..0.01 rows=0 width=0)
+    Conflict Resolution: UPDATE
+    Conflict Arbiter Indexes: plan_check_counters_uidx
+    ->  Result  (cost=0.00..0.01 rows=1 width=430)
+
+=== admin: GET /admin/api/plans/checks — every counter, ordered (EXPLAIN ANALYZE)
+    Sort  (cost=2.69..2.80 rows=45 width=82) (actual time=0.102..0.105 rows=45 loops=1)
+    Sort Key: prompt_version, check_name, action
+    Sort Method: quicksort  Memory: 29kB
+    Buffers: shared hit=4
+    ->  Seq Scan on plan_check_counters  (cost=0.00..1.45 rows=45 width=82) (actual time=0.013..0.016 rows=45 loops=1)
+    Buffers: shared hit=1
+    Planning:
+    Buffers: shared hit=40 dirtied=2
+    Planning Time: 1.249 ms
+    Execution Time: 0.117 ms

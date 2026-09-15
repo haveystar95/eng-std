@@ -1,0 +1,4988 @@
+{
+    "interview": {
+        "v4.4": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "I have ___ of experience.",
+                    "line": "I have five years of experience.",
+                    "key": "have of experience"
+                },
+                {
+                    "step": 2,
+                    "frame": "I currently work as ___ .",
+                    "line": "I currently work as a project manager.",
+                    "key": "currently work as"
+                },
+                {
+                    "step": 3,
+                    "frame": "I lead a team of ___ .",
+                    "line": "I lead a team of six people.",
+                    "key": "lead a team"
+                },
+                {
+                    "step": 4,
+                    "frame": "My leadership style is ___ .",
+                    "line": "My leadership style is clear communication.",
+                    "key": "leadership style is"
+                },
+                {
+                    "step": 5,
+                    "frame": "I am interested in ___ .",
+                    "line": "I am interested in the product focus.",
+                    "key": "interested in"
+                },
+                {
+                    "step": 6,
+                    "frame": "Could you tell me about ___?",
+                    "line": "Could you tell me about the team structure?",
+                    "key": "tell me about"
+                },
+                {
+                    "step": 7,
+                    "frame": "What does ___ look like?",
+                    "line": "What does success in this role look like?",
+                    "key": "success in this"
+                },
+                {
+                    "step": 8,
+                    "frame": "I handle challenges through ___ .",
+                    "line": "I handle challenges through early communication.",
+                    "key": "handle challenges through"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "У меня ___ опыта.",
+                    "value": "пять лет",
+                    "sentence": "У меня пять лет опыта.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "У меня ___ опыта.",
+                    "value": "семь лет",
+                    "sentence": "У меня семь лет опыта.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f3",
+                    "pattern": "У меня ___ опыта.",
+                    "value": "три года",
+                    "sentence": "У меня три года опыта.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Сейчас я работаю ___ .",
+                    "value": "менеджером проектов",
+                    "sentence": "Сейчас я работаю менеджером проектов.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Сейчас я работаю ___ .",
+                    "value": "тимлидом",
+                    "sentence": "Сейчас я работаю тимлидом.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Сейчас я работаю ___ .",
+                    "value": "операционным менеджером",
+                    "sentence": "Сейчас я работаю операционным менеджером.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "Я руковожу командой из ___ .",
+                    "value": "шести человек",
+                    "sentence": "Я руковожу командой из шести человек.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "Я руковожу командой из ___ .",
+                    "value": "восьми человек",
+                    "sentence": "Я руковожу командой из восьми человек.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "Я руковожу командой из ___ .",
+                    "value": "четырёх человек",
+                    "sentence": "Я руковожу командой из четырёх человек.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "Мой стиль управления — ___ .",
+                    "value": "понятная коммуникация",
+                    "sentence": "Мой стиль управления — понятная коммуникация.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "Мой стиль управления — ___ .",
+                    "value": "разделённая ответственность",
+                    "sentence": "Мой стиль управления — разделённая ответственность.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f3",
+                    "pattern": "Мой стиль управления — ___ .",
+                    "value": "спокойное принятие решений",
+                    "sentence": "Мой стиль управления — спокойное принятие решений.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Меня интересует ___ .",
+                    "value": "ориентированность на продукт",
+                    "sentence": "Меня интересует ориентированность на продукт.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Меня интересует ___ .",
+                    "value": "масштаб компании",
+                    "sentence": "Меня интересует масштаб компании.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f3",
+                    "pattern": "Меня интересует ___ .",
+                    "value": "международная команда",
+                    "sentence": "Меня интересует международная команда.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "Не могли бы вы рассказать о ___?",
+                    "value": "структуре команды",
+                    "sentence": "Не могли бы вы рассказать о структуре команды?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "Не могли бы вы рассказать о ___?",
+                    "value": "процессе онбординга",
+                    "sentence": "Не могли бы вы рассказать о процессе онбординга?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "Не могли бы вы рассказать о ___?",
+                    "value": "проектной дорожной карте",
+                    "sentence": "Не могли бы вы рассказать о проектной дорожной карте?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f1",
+                    "pattern": "Как выглядит ___?",
+                    "value": "успех в этой роли",
+                    "sentence": "Как выглядит успех в этой роли?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f2",
+                    "pattern": "Как выглядит ___?",
+                    "value": "рост в этой команде",
+                    "sentence": "Как выглядит рост в этой команде?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f3",
+                    "pattern": "Как выглядит ___?",
+                    "value": "типичная неделя",
+                    "sentence": "Как выглядит типичная неделя?",
+                    "reads": true
+                },
+                {
+                    "id": "p8.f1",
+                    "pattern": "Я справляюсь со сложностями через ___ .",
+                    "value": "раннюю коммуникацию",
+                    "sentence": "Я справляюсь со сложностями через раннюю коммуникацию.",
+                    "reads": true
+                },
+                {
+                    "id": "p8.f2",
+                    "pattern": "Я справляюсь со сложностями через ___ .",
+                    "value": "еженедельное планирование",
+                    "sentence": "Я справляюсь со сложностями через еженедельное планирование.",
+                    "reads": true
+                },
+                {
+                    "id": "p8.f3",
+                    "pattern": "Я справляюсь со сложностями через ___ .",
+                    "value": "отслеживание рисков",
+                    "sentence": "Я справляюсь со сложностями через отслеживание рисков.",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Сколько опыта у кандидата?",
+                    "options": [
+                        "Три года",
+                        "Пять лет",
+                        "Семь лет"
+                    ],
+                    "right": "Пять лет"
+                },
+                {
+                    "question": "Сколькими людьми сейчас руководит кандидат?",
+                    "options": [
+                        "Четырьмя",
+                        "Шестью",
+                        "Восьмью"
+                    ],
+                    "right": "Шестью"
+                },
+                {
+                    "question": "Что менеджер назвала признаком успеха в этой роли?",
+                    "options": [
+                        "Предсказуемое выполнение задач",
+                        "Частые поездки к клиентам",
+                        "Увеличение штата каждый квартал"
+                    ],
+                    "right": "Предсказуемое выполнение задач"
+                },
+                {
+                    "question": "О чём кандидат спросил менеджера?",
+                    "options": [
+                        "О зарплате",
+                        "О структуре команды",
+                        "О дате выхода"
+                    ],
+                    "right": "О структуре команды"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "answer",
+                    "partner": [
+                        "Could you tell me about your background in project management?",
+                        "Расскажите, пожалуйста, о вашем опыте в управлении проектами."
+                    ],
+                    "learner": [
+                        "I have five years of experience.",
+                        "У меня пять лет опыта."
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "answer",
+                    "partner": [
+                        "What is your current role?",
+                        "Какая у вас сейчас должность?"
+                    ],
+                    "learner": [
+                        "I currently work as a project manager.",
+                        "Сейчас я работаю менеджером проектов."
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "answer",
+                    "partner": [
+                        "How many people do you lead now?",
+                        "Сколькими людьми вы сейчас руководите?"
+                    ],
+                    "learner": [
+                        "I lead a team of six people.",
+                        "Я руковожу командой из шести человек."
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "answer",
+                    "partner": [
+                        "How would you describe your leadership style?",
+                        "Как бы вы описали свой стиль управления?"
+                    ],
+                    "learner": [
+                        "My leadership style is clear communication.",
+                        "Мой стиль управления — это понятная коммуникация."
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "answer",
+                    "partner": [
+                        "Why do you want this role?",
+                        "Почему вы хотите эту должность?"
+                    ],
+                    "learner": [
+                        "I am interested in the product focus.",
+                        "Меня привлекает ориентированность на продукт."
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "ask",
+                    "partner": [
+                        "The team has six developers, one designer, and one QA engineer.",
+                        "В команде шесть разработчиков, один дизайнер и один QA-инженер."
+                    ],
+                    "learner": [
+                        "Could you tell me about the team structure?",
+                        "Не могли бы вы рассказать о структуре команды?"
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "ask",
+                    "partner": [
+                        "Success means predictable delivery, clear priorities, and strong cross-functional communication.",
+                        "Успех здесь — это предсказуемая поставка, чёткие приоритеты и сильная кросс-функциональная коммуникация."
+                    ],
+                    "learner": [
+                        "What does success in this role look like?",
+                        "Как выглядит успех в этой роли?"
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "answer",
+                    "partner": [
+                        "How do you handle challenges in projects?",
+                        "Как вы справляетесь со сложностями в проектах?"
+                    ],
+                    "learner": [
+                        "I handle challenges through early communication.",
+                        "Я справляюсь со сложностями через раннюю коммуникацию."
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "I have ___ of experience.",
+                    "У меня ___ опыта.",
+                    [
+                        "five years / пять лет",
+                        "seven years / семь лет",
+                        "three years / три года"
+                    ]
+                ],
+                [
+                    "p2",
+                    "I currently work as ___ .",
+                    "Сейчас я работаю ___ .",
+                    [
+                        "a project manager / менеджером проектов",
+                        "a team lead / тимлидом",
+                        "an operations manager / операционным менеджером"
+                    ]
+                ],
+                [
+                    "p3",
+                    "I lead a team of ___ .",
+                    "Я руковожу командой из ___ .",
+                    [
+                        "six people / шести человек",
+                        "eight people / восьми человек",
+                        "four people / четырёх человек"
+                    ]
+                ],
+                [
+                    "p4",
+                    "My leadership style is ___ .",
+                    "Мой стиль управления — ___ .",
+                    [
+                        "clear communication / понятная коммуникация",
+                        "shared ownership / разделённая ответственность",
+                        "calm decision-making / спокойное принятие решений"
+                    ]
+                ],
+                [
+                    "p5",
+                    "I am interested in ___ .",
+                    "Меня интересует ___ .",
+                    [
+                        "the product focus / ориентированность на продукт",
+                        "the company scale / масштаб компании",
+                        "the international team / международная команда"
+                    ]
+                ],
+                [
+                    "p6",
+                    "Could you tell me about ___?",
+                    "Не могли бы вы рассказать о ___?",
+                    [
+                        "the team structure / структуре команды",
+                        "the onboarding process / процессе онбординга",
+                        "the project roadmap / проектной дорожной карте"
+                    ]
+                ],
+                [
+                    "p7",
+                    "What does ___ look like?",
+                    "Как выглядит ___?",
+                    [
+                        "success in this role / успех в этой роли",
+                        "growth in this team / рост в этой команде",
+                        "a typical week / типичная неделя"
+                    ]
+                ],
+                [
+                    "p8",
+                    "I handle challenges through ___ .",
+                    "Я справляюсь со сложностями через ___ .",
+                    [
+                        "early communication / раннюю коммуникацию",
+                        "weekly planning / еженедельное планирование",
+                        "risk tracking / отслеживание рисков"
+                    ]
+                ]
+            ],
+            "codes": {
+                "key.not_in_line": 1,
+                "variant.longer": 1,
+                "key.contains_filler": 1,
+                "check.verbatim": 2
+            }
+        },
+        "v4.5": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "I have ___ of experience.",
+                    "line": "I have five years of experience.",
+                    "key": "have of experience"
+                },
+                {
+                    "step": 2,
+                    "frame": "I lead ___.",
+                    "line": "I lead a team of six.",
+                    "key": "lead a team"
+                },
+                {
+                    "step": 3,
+                    "frame": "My leadership style is ___.",
+                    "line": "My leadership style is clear communication.",
+                    "key": "leadership style is"
+                },
+                {
+                    "step": 4,
+                    "frame": "I'm proud of ___.",
+                    "line": "I'm proud of a product launch.",
+                    "key": "proud of"
+                },
+                {
+                    "step": 5,
+                    "frame": "I enjoy working on ___.",
+                    "line": "I enjoy working on complex projects.",
+                    "key": "enjoy working on"
+                },
+                {
+                    "step": 6,
+                    "frame": null,
+                    "line": "Could you say that more slowly, please?",
+                    "key": "say that more slowly"
+                },
+                {
+                    "step": 7,
+                    "frame": "Could you tell me about ___?",
+                    "line": "Could you tell me about the team structure?",
+                    "key": "tell me about"
+                },
+                {
+                    "step": 8,
+                    "frame": "What does ___ look like?",
+                    "line": "What does success in this role look like?",
+                    "key": "does success in"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "У меня ___ опыта.",
+                    "value": "пять лет",
+                    "sentence": "У меня пять лет опыта.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "У меня ___ опыта.",
+                    "value": "семь лет",
+                    "sentence": "У меня семь лет опыта.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f3",
+                    "pattern": "У меня ___ опыта.",
+                    "value": "три года",
+                    "sentence": "У меня три года опыта.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Я руковожу ___.",
+                    "value": "командой из шести человек",
+                    "sentence": "Я руковожу командой из шести человек.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Я руковожу ___.",
+                    "value": "двумя проектными командами",
+                    "sentence": "Я руковожу двумя проектными командами.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Я руковожу ___.",
+                    "value": "удалённой командой",
+                    "sentence": "Я руковожу удалённой командой.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "Мой стиль руководства — ___.",
+                    "value": "понятная коммуникация",
+                    "sentence": "Мой стиль руководства — понятная коммуникация.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "Мой стиль руководства — ___.",
+                    "value": "общая ответственность",
+                    "sentence": "Мой стиль руководства — общая ответственность.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "Мой стиль руководства — ___.",
+                    "value": "регулярная обратная связь",
+                    "sentence": "Мой стиль руководства — регулярная обратная связь.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "Я горжусь ___.",
+                    "value": "запуском продукта",
+                    "sentence": "Я горжусь запуском продукта.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "Я горжусь ___.",
+                    "value": "улучшением процесса",
+                    "sentence": "Я горжусь улучшением процесса.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f3",
+                    "pattern": "Я горжусь ___.",
+                    "value": "мобильным приложением",
+                    "sentence": "Я горжусь мобильным приложением.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Мне нравится работать над ___.",
+                    "value": "сложными проектами",
+                    "sentence": "Мне нравится работать над сложными проектами.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Мне нравится работать над ___.",
+                    "value": "кросс-функциональными командами",
+                    "sentence": "Мне нравится работать над кросс-функциональными командами.",
+                    "reads": false
+                },
+                {
+                    "id": "p5.f3",
+                    "pattern": "Мне нравится работать над ___.",
+                    "value": "клиентскими платформами",
+                    "sentence": "Мне нравится работать над клиентскими платформами.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "Расскажите, пожалуйста, о ___.",
+                    "value": "структуре команды",
+                    "sentence": "Расскажите, пожалуйста, о структуре команды.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "Расскажите, пожалуйста, о ___.",
+                    "value": "процессе онбординга",
+                    "sentence": "Расскажите, пожалуйста, о процессе онбординга.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "Расскажите, пожалуйста, о ___.",
+                    "value": "главных приоритетах",
+                    "sentence": "Расскажите, пожалуйста, о главных приоритетах.",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f1",
+                    "pattern": "Как выглядит ___?",
+                    "value": "успех в этой роли",
+                    "sentence": "Как выглядит успех в этой роли?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f2",
+                    "pattern": "Как выглядит ___?",
+                    "value": "типичная неделя",
+                    "sentence": "Как выглядит типичная неделя?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f3",
+                    "pattern": "Как выглядит ___?",
+                    "value": "первый месяц",
+                    "sentence": "Как выглядит первый месяц?",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Сколько опыта у кандидата?",
+                    "options": [
+                        "Три года",
+                        "Пять лет",
+                        "Семь лет"
+                    ],
+                    "right": "Пять лет"
+                },
+                {
+                    "question": "Сколькими людьми сейчас руководит кандидат?",
+                    "options": [
+                        "Шестью людьми",
+                        "Двумя людьми",
+                        "Десятью людьми"
+                    ],
+                    "right": "Шестью людьми"
+                },
+                {
+                    "question": "С кем кандидат будет работать на этой роли?",
+                    "options": [
+                        "С шестью инженерами и одним дизайнером",
+                        "С тремя менеджерами и двумя аналитиками",
+                        "С одним тестировщиком и рекрутером"
+                    ],
+                    "right": "С шестью инженерами и одним дизайнером"
+                },
+                {
+                    "question": "Что компания считает успехом в этой роли?",
+                    "options": [
+                        "Рост команды до двадцати человек",
+                        "Работу команды в срок и понятную коммуникацию",
+                        "Полный переход на новый стек"
+                    ],
+                    "right": "Работу команды в срок и понятную коммуникацию"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "answer",
+                    "partner": [
+                        "Could you tell me about your background in project management?",
+                        "Расскажите, пожалуйста, о своём опыте в управлении проектами."
+                    ],
+                    "learner": [
+                        "I have five years of experience.",
+                        "У меня пять лет опыта."
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "answer",
+                    "partner": [
+                        "What do you do in your current role?",
+                        "Чем вы занимаетесь на своей текущей должности?"
+                    ],
+                    "learner": [
+                        "I lead a team of six.",
+                        "Я руковожу командой из шести человек."
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "answer",
+                    "partner": [
+                        "How would you describe your leadership style?",
+                        "Как бы вы описали свой стиль руководства?"
+                    ],
+                    "learner": [
+                        "My leadership style is clear communication.",
+                        "Мой стиль руководства — это понятная коммуникация."
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "answer",
+                    "partner": [
+                        "Can you share a project achievement you're proud of?",
+                        "Можете рассказать о достижении в проекте, которым вы гордитесь?"
+                    ],
+                    "learner": [
+                        "I'm proud of a product launch.",
+                        "Я горжусь запуском продукта."
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "answer",
+                    "partner": [
+                        "Why do you want this role? We need strong planning, stakeholder communication, and calm delivery under pressure.",
+                        "Почему вас интересует эта роль? Нам нужны сильное планирование, общение со стейкхолдерами и спокойная работа под давлением."
+                    ],
+                    "learner": [
+                        "I enjoy working on complex projects.",
+                        "Мне нравится работать над сложными проектами."
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "rescue",
+                    "partner": [
+                        "We need strong planning, stakeholder communication, and calm delivery under pressure.",
+                        "Нам нужны сильное планирование, общение со стейкхолдерами и спокойная работа под давлением."
+                    ],
+                    "learner": [
+                        "Could you say that more slowly, please?",
+                        "Скажите, пожалуйста, помедленнее."
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "ask",
+                    "partner": [
+                        "You'll work with six engineers and one designer.",
+                        "Вы будете работать с шестью инженерами и одним дизайнером."
+                    ],
+                    "learner": [
+                        "Could you tell me about the team structure?",
+                        "Расскажите, пожалуйста, о структуре команды."
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "ask",
+                    "partner": [
+                        "Success means the team ships on time and communicates clearly.",
+                        "Успех здесь — это когда команда выпускает продукт вовремя и общается понятно."
+                    ],
+                    "learner": [
+                        "What does success in this role look like?",
+                        "Как выглядит успех в этой роли?"
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "I have ___ of experience.",
+                    "У меня ___ опыта.",
+                    [
+                        "five years / пять лет",
+                        "seven years / семь лет",
+                        "three years / три года"
+                    ]
+                ],
+                [
+                    "p2",
+                    "I lead ___.",
+                    "Я руковожу ___.",
+                    [
+                        "a team of six / командой из шести человек",
+                        "two project teams / двумя проектными командами",
+                        "a remote team / удалённой командой"
+                    ]
+                ],
+                [
+                    "p3",
+                    "My leadership style is ___.",
+                    "Мой стиль руководства — ___.",
+                    [
+                        "clear communication / понятная коммуникация",
+                        "shared ownership / общая ответственность",
+                        "regular feedback / регулярная обратная связь"
+                    ]
+                ],
+                [
+                    "p4",
+                    "I'm proud of ___.",
+                    "Я горжусь ___.",
+                    [
+                        "a product launch / запуском продукта",
+                        "a process improvement / улучшением процесса",
+                        "a mobile app / мобильным приложением"
+                    ]
+                ],
+                [
+                    "p5",
+                    "I enjoy working on ___.",
+                    "Мне нравится работать над ___.",
+                    [
+                        "complex projects / сложными проектами",
+                        "cross-functional teams / кросс-функциональными командами",
+                        "customer platforms / клиентскими платформами"
+                    ]
+                ],
+                [
+                    "p6",
+                    "Could you tell me about ___?",
+                    "Расскажите, пожалуйста, о ___.",
+                    [
+                        "the team structure / структуре команды",
+                        "the onboarding process / процессе онбординга",
+                        "the main priorities / главных приоритетах"
+                    ]
+                ],
+                [
+                    "p7",
+                    "What does ___ look like?",
+                    "Как выглядит ___?",
+                    [
+                        "success in this role / успех в этой роли",
+                        "a typical week / типичная неделя",
+                        "the first month / первый месяц"
+                    ]
+                ]
+            ],
+            "codes": {
+                "pronunciation.script": 1,
+                "frame.native_punct": 1,
+                "key.not_in_line": 1,
+                "key.contains_filler": 2,
+                "variant.longer": 1,
+                "vocab.free_combination": 1,
+                "filler.native_seam": 1
+            }
+        }
+    },
+    "rent": {
+        "v4.4": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "What about ___?",
+                    "line": "What about electricity?",
+                    "key": "What about"
+                },
+                {
+                    "step": 2,
+                    "frame": "How much is ___?",
+                    "line": "How much is the deposit?",
+                    "key": "How much is"
+                },
+                {
+                    "step": 3,
+                    "frame": "I need a ___ contract.",
+                    "line": "I need a one-year contract.",
+                    "key": "need a contract"
+                },
+                {
+                    "step": 4,
+                    "frame": "I work ___ .",
+                    "line": "I work from home.",
+                    "key": "work from"
+                },
+                {
+                    "step": 5,
+                    "frame": "Can I work from home ___?",
+                    "line": "Can I work from home here?",
+                    "key": "Can I work"
+                },
+                {
+                    "step": 6,
+                    "frame": "Is ___ allowed?",
+                    "line": "Is a cat allowed?",
+                    "key": "cat allowed"
+                },
+                {
+                    "step": 7,
+                    "frame": "When can I ___?",
+                    "line": "When can I move in?",
+                    "key": "When can I"
+                },
+                {
+                    "step": 8,
+                    "frame": "How much is ___?",
+                    "line": "How much is the deposit?",
+                    "key": "How much is"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "А как насчёт ___?",
+                    "value": "электричество",
+                    "sentence": "А как насчёт электричество?",
+                    "reads": false
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "А как насчёт ___?",
+                    "value": "интернет",
+                    "sentence": "А как насчёт интернет?",
+                    "reads": false
+                },
+                {
+                    "id": "p1.f3",
+                    "pattern": "А как насчёт ___?",
+                    "value": "парковка",
+                    "sentence": "А как насчёт парковка?",
+                    "reads": false
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Сколько составляет ___?",
+                    "value": "депозит",
+                    "sentence": "Сколько составляет депозит?",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Сколько составляет ___?",
+                    "value": "аренда",
+                    "sentence": "Сколько составляет аренда?",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Сколько составляет ___?",
+                    "value": "коммунальный счёт",
+                    "sentence": "Сколько составляет коммунальный счёт?",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "Мне нужен договор на ___.",
+                    "value": "год",
+                    "sentence": "Мне нужен договор на год.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "Мне нужен договор на ___.",
+                    "value": "шесть месяцев",
+                    "sentence": "Мне нужен договор на шесть месяцев.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "Мне нужен договор на ___.",
+                    "value": "два года",
+                    "sentence": "Мне нужен договор на два года.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "Я работаю ___ .",
+                    "value": "из дома",
+                    "sentence": "Я работаю из дома.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "Я работаю ___ .",
+                    "value": "удалённо",
+                    "sentence": "Я работаю удалённо.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f3",
+                    "pattern": "Я работаю ___ .",
+                    "value": "полный день",
+                    "sentence": "Я работаю полный день.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Я могу работать из дома ___?",
+                    "value": "здесь",
+                    "sentence": "Я могу работать из дома здесь?",
+                    "reads": false
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Я могу работать из дома ___?",
+                    "value": "в этой квартире",
+                    "sentence": "Я могу работать из дома в этой квартире?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "___ разрешён?",
+                    "value": "кошка",
+                    "sentence": "кошка разрешён?",
+                    "reads": false
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "___ разрешён?",
+                    "value": "собака",
+                    "sentence": "собака разрешён?",
+                    "reads": false
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "___ разрешён?",
+                    "value": "субаренда",
+                    "sentence": "субаренда разрешён?",
+                    "reads": false
+                },
+                {
+                    "id": "p7.f1",
+                    "pattern": "Когда я могу ___?",
+                    "value": "въехать",
+                    "sentence": "Когда я могу въехать?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f2",
+                    "pattern": "Когда я могу ___?",
+                    "value": "подписать договор",
+                    "sentence": "Когда я могу подписать договор?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f3",
+                    "pattern": "Когда я могу ___?",
+                    "value": "посмотреть подвал",
+                    "sentence": "Когда я могу посмотреть подвал?",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Что входит в ежемесячную аренду?",
+                    "options": [
+                        "Вода и отопление",
+                        "Интернет и электричество",
+                        "Только отопление"
+                    ],
+                    "right": "Вода и отопление"
+                },
+                {
+                    "question": "На какой срок нужен договор арендатору?",
+                    "options": [
+                        "На шесть месяцев",
+                        "На год",
+                        "На два года"
+                    ],
+                    "right": "На год"
+                },
+                {
+                    "question": "Что арендодатель сказал про удалённую работу?",
+                    "options": [
+                        "Она запрещена",
+                        "Она разрешена, если тихо и без клиентов",
+                        "Она разрешена только по вечерам"
+                    ],
+                    "right": "Она разрешена, если тихо и без клиентов"
+                },
+                {
+                    "question": "Что нужно сделать по поводу кошки?",
+                    "options": [
+                        "Платить отдельную аренду за неё",
+                        "Указать её в договоре",
+                        "Спросить соседей"
+                    ],
+                    "right": "Указать её в договоре"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "answer",
+                    "partner": [
+                        "The rent is 1,200 euros a month, including water and heating.",
+                        "Аренда — 1200 евро в месяц, вода и отопление включены."
+                    ],
+                    "learner": [
+                        "What about electricity?",
+                        "А электричество?"
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "answer",
+                    "partner": [
+                        "Electricity and internet are separate and paid by the tenant.",
+                        "Электричество и интернет оплачиваются отдельно арендатором."
+                    ],
+                    "learner": [
+                        "How much is the deposit?",
+                        "Какой депозит?"
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "answer",
+                    "partner": [
+                        "The deposit is 2,400 euros, returned after the final inspection.",
+                        "Депозит — 2400 евро, его возвращают после финального осмотра."
+                    ],
+                    "learner": [
+                        "I need a one-year contract.",
+                        "Мне нужен договор на год."
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "answer",
+                    "partner": [
+                        "That works. The contract is fixed for twelve months.",
+                        "Это подходит. Договор фиксированный на двенадцать месяцев."
+                    ],
+                    "learner": [
+                        "I work from home.",
+                        "Я работаю из дома."
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "ask",
+                    "partner": [
+                        "Yes, that's fine, as long as it's quiet and no clients visit.",
+                        "Да, это нормально, если тихо и к вам не приходят клиенты."
+                    ],
+                    "learner": [
+                        "Can I work from home here?",
+                        "Я могу работать здесь из дома?"
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "ask",
+                    "partner": [
+                        "Yes, one cat is allowed, but please note it in the contract.",
+                        "Да, одна кошка разрешена, но, пожалуйста, укажите это в договоре."
+                    ],
+                    "learner": [
+                        "Is a cat allowed?",
+                        "Кошка разрешена?"
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "ask",
+                    "partner": [
+                        "You can move in on the first of next month.",
+                        "Вы можете въехать первого числа следующего месяца."
+                    ],
+                    "learner": [
+                        "When can I move in?",
+                        "Когда я могу въехать?"
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "ask",
+                    "partner": [
+                        "It's 2,400 euros, and I return it after inspection.",
+                        "Это 2400 евро, и я возвращаю его после осмотра."
+                    ],
+                    "learner": [
+                        "How much is the deposit?",
+                        "Какой депозит?"
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "What about ___?",
+                    "А как насчёт ___?",
+                    [
+                        "electricity / электричество",
+                        "internet / интернет",
+                        "parking / парковка"
+                    ]
+                ],
+                [
+                    "p2",
+                    "How much is ___?",
+                    "Сколько составляет ___?",
+                    [
+                        "the deposit / депозит",
+                        "the rent / аренда",
+                        "the utility bill / коммунальный счёт"
+                    ]
+                ],
+                [
+                    "p3",
+                    "I need a ___ contract.",
+                    "Мне нужен договор на ___.",
+                    [
+                        "one-year / год",
+                        "six-month / шесть месяцев",
+                        "two-year / два года"
+                    ]
+                ],
+                [
+                    "p4",
+                    "I work ___ .",
+                    "Я работаю ___ .",
+                    [
+                        "from home / из дома",
+                        "remotely / удалённо",
+                        "full-time / полный день"
+                    ]
+                ],
+                [
+                    "p5",
+                    "Can I work from home ___?",
+                    "Я могу работать из дома ___?",
+                    [
+                        "here / здесь",
+                        "in this flat / в этой квартире"
+                    ]
+                ],
+                [
+                    "p6",
+                    "Is ___ allowed?",
+                    "___ разрешён?",
+                    [
+                        "a cat / кошка",
+                        "a dog / собака",
+                        "subletting / субаренда"
+                    ]
+                ],
+                [
+                    "p7",
+                    "When can I ___?",
+                    "Когда я могу ___?",
+                    [
+                        "move in / въехать",
+                        "sign the contract / подписать договор",
+                        "see the cellar / посмотреть подвал"
+                    ]
+                ]
+            ],
+            "codes": {
+                "exchange.second_question": 2,
+                "exchange.repeats": 1,
+                "frame.native_agreement": 1,
+                "filler.article_seam": 1,
+                "filler.one_in_dialogue": 2,
+                "line.ne_frame": 1,
+                "key.not_in_line": 1,
+                "key.contains_filler": 2,
+                "variant.longer": 1,
+                "check.verbatim": 2,
+                "listening.no_learner_value": 1,
+                "vocab.used_in_wrong": 2,
+                "vocab.free_combination": 1,
+                "filler.native_seam": 7
+            }
+        },
+        "v4.5": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "I can move in ___.",
+                    "line": "I can move in next month.",
+                    "key": "can move in"
+                },
+                {
+                    "step": 2,
+                    "frame": "How much is ___?",
+                    "line": "How much is the deposit?",
+                    "key": "How much is"
+                },
+                {
+                    "step": 3,
+                    "frame": "When do I get ___ back?",
+                    "line": "When do I get the deposit back?",
+                    "key": "get the"
+                },
+                {
+                    "step": 4,
+                    "frame": "What is included in ___?",
+                    "line": "What is included in the monthly payment?",
+                    "key": "included in the"
+                },
+                {
+                    "step": 5,
+                    "frame": "Can I work ___?",
+                    "line": "Can I work from home?",
+                    "key": "work from home"
+                },
+                {
+                    "step": 6,
+                    "frame": "Is ___ allowed?",
+                    "line": "Is a cat allowed?",
+                    "key": "cat allowed"
+                },
+                {
+                    "step": 7,
+                    "frame": "A contract for ___ works for me.",
+                    "line": "A contract for twelve months works for me.",
+                    "key": "works for me"
+                },
+                {
+                    "step": 8,
+                    "frame": null,
+                    "line": "Could you repeat that more slowly, please?",
+                    "key": "repeat that"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "Я могу въехать ___.",
+                    "value": "в следующем месяце",
+                    "sentence": "Я могу въехать в следующем месяце.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "Я могу въехать ___.",
+                    "value": "в июне",
+                    "sentence": "Я могу въехать в июне.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f3",
+                    "pattern": "Я могу въехать ___.",
+                    "value": "в понедельник",
+                    "sentence": "Я могу въехать в понедельник.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Сколько стоит ___?",
+                    "value": "депозит",
+                    "sentence": "Сколько стоит депозит?",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Сколько стоит ___?",
+                    "value": "аренда с коммунальными",
+                    "sentence": "Сколько стоит аренда с коммунальными?",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Сколько стоит ___?",
+                    "value": "парковочное место",
+                    "sentence": "Сколько стоит парковочное место?",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "Когда я получу обратно ___?",
+                    "value": "депозит",
+                    "sentence": "Когда я получу обратно депозит?",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "Когда я получу обратно ___?",
+                    "value": "ключи",
+                    "sentence": "Когда я получу обратно ключи?",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "Когда я получу обратно ___?",
+                    "value": "копию паспорта",
+                    "sentence": "Когда я получу обратно копию паспорта?",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "Что входит в ___?",
+                    "value": "ежемесячный платёж",
+                    "sentence": "Что входит в ежемесячный платёж?",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "Что входит в ___?",
+                    "value": "аренду",
+                    "sentence": "Что входит в аренду?",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f3",
+                    "pattern": "Что входит в ___?",
+                    "value": "сервисный сбор",
+                    "sentence": "Что входит в сервисный сбор?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Можно мне работать ___?",
+                    "value": "из дома",
+                    "sentence": "Можно мне работать из дома?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Можно мне работать ___?",
+                    "value": "по вечерам",
+                    "sentence": "Можно мне работать по вечерам?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f3",
+                    "pattern": "Можно мне работать ___?",
+                    "value": "по выходным",
+                    "sentence": "Можно мне работать по выходным?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "___ разрешена?",
+                    "value": "кошка",
+                    "sentence": "кошка разрешена?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "___ разрешена?",
+                    "value": "маленькая собака",
+                    "sentence": "маленькая собака разрешена?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "___ разрешена?",
+                    "value": "велосипед",
+                    "sentence": "велосипед разрешена?",
+                    "reads": false
+                },
+                {
+                    "id": "p7.f1",
+                    "pattern": "Договор на ___ мне подходит.",
+                    "value": "двенадцать месяцев",
+                    "sentence": "Договор на двенадцать месяцев мне подходит.",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f2",
+                    "pattern": "Договор на ___ мне подходит.",
+                    "value": "шесть месяцев",
+                    "sentence": "Договор на шесть месяцев мне подходит.",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f3",
+                    "pattern": "Договор на ___ мне подходит.",
+                    "value": "два года",
+                    "sentence": "Договор на два года мне подходит.",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Когда квартира будет доступна?",
+                    "options": [
+                        "Со следующего месяца",
+                        "Прямо сегодня",
+                        "Через два месяца"
+                    ],
+                    "right": "Со следующего месяца"
+                },
+                {
+                    "question": "Что входит в ежемесячный платёж?",
+                    "options": [
+                        "Только интернет и электричество",
+                        "Вода и отопление",
+                        "Всё, включая интернет"
+                    ],
+                    "right": "Вода и отопление"
+                },
+                {
+                    "question": "Что арендатор хотел уточнить про работу?",
+                    "options": [
+                        "Можно ли работать из дома",
+                        "Можно ли принимать клиентов дома",
+                        "Можно ли работать только ночью"
+                    ],
+                    "right": "Можно ли работать из дома"
+                },
+                {
+                    "question": "Какое животное есть у арендатора?",
+                    "options": [
+                        "Собака",
+                        "Кошка",
+                        "Кролик"
+                    ],
+                    "right": "Кошка"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "answer",
+                    "partner": [
+                        "The flat is available from next month for one year.",
+                        "Квартира доступна со следующего месяца на один год."
+                    ],
+                    "learner": [
+                        "I can move in next month.",
+                        "Я могу въехать в следующем месяце."
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "ask",
+                    "partner": [
+                        "The deposit is two months' rent.",
+                        "Депозит — это аренда за два месяца."
+                    ],
+                    "learner": [
+                        "How much is the deposit?",
+                        "Сколько составляет депозит?"
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "ask",
+                    "partner": [
+                        "After you move out, usually within two months.",
+                        "После вашего выезда, обычно в течение двух месяцев."
+                    ],
+                    "learner": [
+                        "When do I get the deposit back?",
+                        "Когда я получу депозит обратно?"
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "ask",
+                    "partner": [
+                        "Water and heating are included, but electricity and internet are separate.",
+                        "Вода и отопление включены, но электричество и интернет оплачиваются отдельно."
+                    ],
+                    "learner": [
+                        "What is included in the monthly payment?",
+                        "Что входит в ежемесячный платёж?"
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "ask",
+                    "partner": [
+                        "Yes, that's fine, as long as it's quiet office work.",
+                        "Да, это нормально, если это тихая офисная работа."
+                    ],
+                    "learner": [
+                        "Can I work from home?",
+                        "Можно мне работать из дома?"
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "ask",
+                    "partner": [
+                        "Yes, one cat is fine, but please tell the neighbors if needed.",
+                        "Да, одна кошка — это нормально, но, если нужно, пожалуйста, сообщите соседям."
+                    ],
+                    "learner": [
+                        "Is a cat allowed?",
+                        "Кошка разрешена?"
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "answer",
+                    "partner": [
+                        "The contract is for twelve months, and smoking isn't allowed inside.",
+                        "Договор на двенадцать месяцев, и курить внутри нельзя."
+                    ],
+                    "learner": [
+                        "A contract for twelve months works for me.",
+                        "Договор на двенадцать месяцев мне подходит."
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "rescue",
+                    "partner": [
+                        "It's a twelve-month contract, and no smoking inside.",
+                        "Это договор на двенадцать месяцев, и курить внутри нельзя."
+                    ],
+                    "learner": [
+                        "Could you repeat that more slowly, please?",
+                        "Повторите, пожалуйста, это помедленнее."
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "I can move in ___.",
+                    "Я могу въехать ___.",
+                    [
+                        "next month / в следующем месяце",
+                        "in June / в июне",
+                        "on Monday / в понедельник"
+                    ]
+                ],
+                [
+                    "p2",
+                    "How much is ___?",
+                    "Сколько стоит ___?",
+                    [
+                        "the deposit / депозит",
+                        "the warm rent / аренда с коммунальными",
+                        "the parking space / парковочное место"
+                    ]
+                ],
+                [
+                    "p3",
+                    "When do I get ___ back?",
+                    "Когда я получу обратно ___?",
+                    [
+                        "the deposit / депозит",
+                        "the keys / ключи",
+                        "my ID copy / копию паспорта"
+                    ]
+                ],
+                [
+                    "p4",
+                    "What is included in ___?",
+                    "Что входит в ___?",
+                    [
+                        "the monthly payment / ежемесячный платёж",
+                        "the rent / аренду",
+                        "the service charge / сервисный сбор"
+                    ]
+                ],
+                [
+                    "p5",
+                    "Can I work ___?",
+                    "Можно мне работать ___?",
+                    [
+                        "from home / из дома",
+                        "in the evening / по вечерам",
+                        "on weekends / по выходным"
+                    ]
+                ],
+                [
+                    "p6",
+                    "Is ___ allowed?",
+                    "___ разрешена?",
+                    [
+                        "a cat / кошка",
+                        "a small dog / маленькая собака",
+                        "a bike / велосипед"
+                    ]
+                ],
+                [
+                    "p7",
+                    "A contract for ___ works for me.",
+                    "Договор на ___ мне подходит.",
+                    [
+                        "twelve months / двенадцать месяцев",
+                        "six months / шесть месяцев",
+                        "two years / два года"
+                    ]
+                ]
+            ],
+            "codes": {
+                "frame.native_agreement": 1,
+                "key.contains_filler": 4,
+                "variant.longer": 1,
+                "check.verbatim": 1,
+                "vocab.used_in_wrong": 2,
+                "filler.native_seam": 1
+            }
+        }
+    },
+    "bank": {
+        "v4.4": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "I want to open ___.",
+                    "line": "I want to open a bank account.",
+                    "key": "want to open"
+                },
+                {
+                    "step": 2,
+                    "frame": "Here is my ___.",
+                    "line": "Here is my passport.",
+                    "key": "Here is my"
+                },
+                {
+                    "step": 3,
+                    "frame": "Here is my ___.",
+                    "line": "Here is my rental letter.",
+                    "key": "Here is my"
+                },
+                {
+                    "step": 4,
+                    "frame": "I am ___.",
+                    "line": "I am a student.",
+                    "key": "am a"
+                },
+                {
+                    "step": 5,
+                    "frame": "What is ___?",
+                    "line": "What is the monthly fee?",
+                    "key": "What is the"
+                },
+                {
+                    "step": 6,
+                    "frame": "When will ___ arrive?",
+                    "line": "When will the bank card arrive?",
+                    "key": "When will the"
+                },
+                {
+                    "step": 7,
+                    "frame": "How long will ___ stay open?",
+                    "line": "How long will the account stay open?",
+                    "key": "How long will"
+                },
+                {
+                    "step": 8,
+                    "frame": null,
+                    "line": "Could you repeat that more slowly, please?",
+                    "key": "repeat that"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "Я хочу открыть ___.",
+                    "value": "банковский счёт",
+                    "sentence": "Я хочу открыть банковский счёт.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "Я хочу открыть ___.",
+                    "value": "студенческий счёт",
+                    "sentence": "Я хочу открыть студенческий счёт.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f3",
+                    "pattern": "Я хочу открыть ___.",
+                    "value": "новый счёт",
+                    "sentence": "Я хочу открыть новый счёт.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Вот мой/моё ___.",
+                    "value": "мой паспорт",
+                    "sentence": "Вот мой/моё мой паспорт.",
+                    "reads": false
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Вот мой/моё ___.",
+                    "value": "моё письмо об аренде",
+                    "sentence": "Вот мой/моё моё письмо об аренде.",
+                    "reads": false
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Вот мой/моё ___.",
+                    "value": "моё письмо из вуза",
+                    "sentence": "Вот мой/моё моё письмо из вуза.",
+                    "reads": false
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "Я ___.",
+                    "value": "студент",
+                    "sentence": "Я студент.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "Я ___.",
+                    "value": "студент по обмену",
+                    "sentence": "Я студент по обмену.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "Я ___.",
+                    "value": "студент первого курса",
+                    "sentence": "Я студент первого курса.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "Какая/какой ___?",
+                    "value": "ежемесячная комиссия",
+                    "sentence": "Какая/какой ежемесячная комиссия?",
+                    "reads": false
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "Какая/какой ___?",
+                    "value": "комиссия за карту",
+                    "sentence": "Какая/какой комиссия за карту?",
+                    "reads": false
+                },
+                {
+                    "id": "p4.f3",
+                    "pattern": "Какая/какой ___?",
+                    "value": "комиссия за открытие",
+                    "sentence": "Какая/какой комиссия за открытие?",
+                    "reads": false
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Когда придёт ___?",
+                    "value": "банковская карта",
+                    "sentence": "Когда придёт банковская карта?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Когда придёт ___?",
+                    "value": "письмо с ПИН-кодом",
+                    "sentence": "Когда придёт письмо с ПИН-кодом?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f3",
+                    "pattern": "Когда придёт ___?",
+                    "value": "письмо по счёту",
+                    "sentence": "Когда придёт письмо по счёту?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "Как долго ___ будет открыт?",
+                    "value": "счёт",
+                    "sentence": "Как долго счёт будет открыт?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "Как долго ___ будет открыт?",
+                    "value": "студенческий счёт",
+                    "sentence": "Как долго студенческий счёт будет открыт?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "Как долго ___ будет открыт?",
+                    "value": "этот счёт",
+                    "sentence": "Как долго этот счёт будет открыт?",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Что ученик хотел открыть в банке?",
+                    "options": [
+                        "Кредит на учёбу",
+                        "Банковский счёт",
+                        "Страховой полис"
+                    ],
+                    "right": "Банковский счёт"
+                },
+                {
+                    "question": "Что сотрудница сказала о ежемесячной комиссии?",
+                    "options": [
+                        "Она есть только летом",
+                        "Её нет",
+                        "Она зависит от адреса"
+                    ],
+                    "right": "Её нет"
+                },
+                {
+                    "question": "Как ученик подтвердил адрес?",
+                    "options": [
+                        "Письмом об аренде",
+                        "Студенческим билетом",
+                        "Банковской картой"
+                    ],
+                    "right": "Письмом об аренде"
+                },
+                {
+                    "question": "Когда придёт банковская карта?",
+                    "options": [
+                        "В тот же день",
+                        "Через семь дней",
+                        "Через месяц"
+                    ],
+                    "right": "Через семь дней"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "answer",
+                    "partner": [
+                        "How can I help you today?",
+                        "Чем я могу вам сегодня помочь?"
+                    ],
+                    "learner": [
+                        "I want to open a bank account.",
+                        "Я хочу открыть банковский счёт."
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "answer",
+                    "partner": [
+                        "Please show your passport.",
+                        "Пожалуйста, покажите ваш паспорт."
+                    ],
+                    "learner": [
+                        "Here is my passport.",
+                        "Вот мой паспорт."
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "answer",
+                    "partner": [
+                        "Do you have proof of address?",
+                        "У вас есть подтверждение адреса?"
+                    ],
+                    "learner": [
+                        "Here is my rental letter.",
+                        "Вот моё письмо об аренде."
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "answer",
+                    "partner": [
+                        "Are you a student here?",
+                        "Вы здесь студент?"
+                    ],
+                    "learner": [
+                        "I am a student.",
+                        "Я студент."
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "ask",
+                    "partner": [
+                        "The student account has no monthly fee.",
+                        "У студенческого счёта нет ежемесячной комиссии."
+                    ],
+                    "learner": [
+                        "What is the monthly fee?",
+                        "Какая ежемесячная комиссия?"
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "ask",
+                    "partner": [
+                        "It will arrive by post in seven days.",
+                        "Она придёт по почте через семь дней."
+                    ],
+                    "learner": [
+                        "When will the bank card arrive?",
+                        "Когда придёт банковская карта?"
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "ask",
+                    "partner": [
+                        "It stays open for one year, then you can renew it.",
+                        "Он остаётся открытым один год, потом вы можете продлить его."
+                    ],
+                    "learner": [
+                        "How long will the account stay open?",
+                        "Как долго счёт будет открыт?"
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "rescue",
+                    "partner": [
+                        "One year. Then you can renew it.",
+                        "Один год. Потом вы можете продлить его."
+                    ],
+                    "learner": [
+                        "Could you repeat that more slowly, please?",
+                        "Повторите, пожалуйста, помедленнее."
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "I want to open ___.",
+                    "Я хочу открыть ___.",
+                    [
+                        "a bank account / банковский счёт",
+                        "a student account / студенческий счёт",
+                        "a new account / новый счёт"
+                    ]
+                ],
+                [
+                    "p2",
+                    "Here is my ___.",
+                    "Вот мой/моё ___.",
+                    [
+                        "my passport / мой паспорт",
+                        "my rental letter / моё письмо об аренде",
+                        "my student letter / моё письмо из вуза"
+                    ]
+                ],
+                [
+                    "p3",
+                    "I am ___.",
+                    "Я ___.",
+                    [
+                        "a student / студент",
+                        "an exchange student / студент по обмену",
+                        "a first-year student / студент первого курса"
+                    ]
+                ],
+                [
+                    "p4",
+                    "What is ___?",
+                    "Какая/какой ___?",
+                    [
+                        "the monthly fee / ежемесячная комиссия",
+                        "the card fee / комиссия за карту",
+                        "the opening fee / комиссия за открытие"
+                    ]
+                ],
+                [
+                    "p5",
+                    "When will ___ arrive?",
+                    "Когда придёт ___?",
+                    [
+                        "the bank card / банковская карта",
+                        "the PIN letter / письмо с ПИН-кодом",
+                        "the account letter / письмо по счёту"
+                    ]
+                ],
+                [
+                    "p6",
+                    "How long will ___ stay open?",
+                    "Как долго ___ будет открыт?",
+                    [
+                        "the account / счёт",
+                        "the student account / студенческий счёт",
+                        "this account / этот счёт"
+                    ]
+                ]
+            ],
+            "codes": {
+                "pronunciation.script": 3,
+                "frame.native_alternatives": 2,
+                "frame.native_agreement": 3,
+                "filler.ungrammatical": 3,
+                "line.ne_frame": 2,
+                "key.no_content_word": 3,
+                "key.contains_filler": 3,
+                "variant.longer": 1,
+                "filler.native_seam": 6
+            }
+        },
+        "v4.5": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "I'd like to open ___.",
+                    "line": "I'd like to open a bank account.",
+                    "key": "I'd like to open"
+                },
+                {
+                    "step": 2,
+                    "frame": "Here is my ___.",
+                    "line": "Here is my rental contract.",
+                    "key": "Here is my"
+                },
+                {
+                    "step": 3,
+                    "frame": "I'm ___.",
+                    "line": "I'm a student.",
+                    "key": "I'm a"
+                },
+                {
+                    "step": 4,
+                    "frame": "My phone number is ___.",
+                    "line": "My phone number is 07911 456 230.",
+                    "key": "phone number is"
+                },
+                {
+                    "step": 5,
+                    "frame": "What is the ___?",
+                    "line": "What is the monthly fee?",
+                    "key": "monthly fee"
+                },
+                {
+                    "step": 6,
+                    "frame": "When will ___ be ready?",
+                    "line": "When will the card be ready?",
+                    "key": "will the card"
+                },
+                {
+                    "step": 7,
+                    "frame": "Can I keep it for ___?",
+                    "line": "Can I keep it for one year?",
+                    "key": "keep it for"
+                },
+                {
+                    "step": 8,
+                    "frame": "The account opens ___.",
+                    "line": "The account opens today.",
+                    "key": "opens today"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "Я хочу открыть ___.",
+                    "value": "банковский счёт",
+                    "sentence": "Я хочу открыть банковский счёт.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "Я хочу открыть ___.",
+                    "value": "студенческий счёт",
+                    "sentence": "Я хочу открыть студенческий счёт.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f3",
+                    "pattern": "Я хочу открыть ___.",
+                    "value": "совместный счёт",
+                    "sentence": "Я хочу открыть совместный счёт.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Вот ___.",
+                    "value": "мой договор аренды",
+                    "sentence": "Вот мой договор аренды.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Вот ___.",
+                    "value": "мой паспорт",
+                    "sentence": "Вот мой паспорт.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Вот ___.",
+                    "value": "моя справка из вуза",
+                    "sentence": "Вот моя справка из вуза.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "Я ___.",
+                    "value": "студент",
+                    "sentence": "Я студент.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "Я ___.",
+                    "value": "студент по обмену",
+                    "sentence": "Я студент по обмену.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "Я ___.",
+                    "value": "студент первого курса",
+                    "sentence": "Я студент первого курса.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "Мой номер телефона ___.",
+                    "value": "07911 456 230",
+                    "sentence": "Мой номер телефона 07911 456 230.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "Мой номер телефона ___.",
+                    "value": "07740 221 908",
+                    "sentence": "Мой номер телефона 07740 221 908.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f3",
+                    "pattern": "Мой номер телефона ___.",
+                    "value": "07863 110 542",
+                    "sentence": "Мой номер телефона 07863 110 542.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Какая ___?",
+                    "value": "ежемесячная комиссия",
+                    "sentence": "Какая ежемесячная комиссия?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Какая ___?",
+                    "value": "комиссия за карту",
+                    "sentence": "Какая комиссия за карту?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f3",
+                    "pattern": "Какая ___?",
+                    "value": "процедура закрытия",
+                    "sentence": "Какая процедура закрытия?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "Когда ___ будет готово?",
+                    "value": "карта",
+                    "sentence": "Когда карта будет готово?",
+                    "reads": false
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "Когда ___ будет готово?",
+                    "value": "открытие счёта",
+                    "sentence": "Когда открытие счёта будет готово?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "Когда ___ будет готово?",
+                    "value": "онлайн-доступ",
+                    "sentence": "Когда онлайн-доступ будет готово?",
+                    "reads": false
+                },
+                {
+                    "id": "p7.f1",
+                    "pattern": "Я могу оставить его на ___?",
+                    "value": "один год",
+                    "sentence": "Я могу оставить его на один год?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f2",
+                    "pattern": "Я могу оставить его на ___?",
+                    "value": "шесть месяцев",
+                    "sentence": "Я могу оставить его на шесть месяцев?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f3",
+                    "pattern": "Я могу оставить его на ___?",
+                    "value": "два года",
+                    "sentence": "Я могу оставить его на два года?",
+                    "reads": true
+                },
+                {
+                    "id": "p8.f1",
+                    "pattern": "Счёт откроется ___.",
+                    "value": "сегодня",
+                    "sentence": "Счёт откроется сегодня.",
+                    "reads": true
+                },
+                {
+                    "id": "p8.f2",
+                    "pattern": "Счёт откроется ___.",
+                    "value": "завтра",
+                    "sentence": "Счёт откроется завтра.",
+                    "reads": true
+                },
+                {
+                    "id": "p8.f3",
+                    "pattern": "Счёт откроется ___.",
+                    "value": "на этой неделе",
+                    "sentence": "Счёт откроется на этой неделе.",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Какой документ сотрудница попросила сначала?",
+                    "options": [
+                        "Паспорт",
+                        "Справку из вуза",
+                        "Банковскую карту"
+                    ],
+                    "right": "Паспорт"
+                },
+                {
+                    "question": "Что клиент показал как подтверждение адреса?",
+                    "options": [
+                        "Счёт за телефон",
+                        "Договор аренды",
+                        "Студенческий билет"
+                    ],
+                    "right": "Договор аренды"
+                },
+                {
+                    "question": "Что сотрудница сказала про ежемесячную комиссию?",
+                    "options": [
+                        "Она есть у всех",
+                        "Для студентов её нет",
+                        "Она будет через месяц"
+                    ],
+                    "right": "Для студентов её нет"
+                },
+                {
+                    "question": "Когда должна прийти карта?",
+                    "options": [
+                        "Сегодня вечером",
+                        "Через пять-семь рабочих дней",
+                        "Через два месяца"
+                    ],
+                    "right": "Через пять-семь рабочих дней"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "ask",
+                    "partner": [
+                        "Sure. Can I see your passport first?",
+                        "Конечно. Можно сначала ваш паспорт?"
+                    ],
+                    "learner": [
+                        "I'd like to open a bank account.",
+                        "Я хочу открыть банковский счёт."
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "answer",
+                    "partner": [
+                        "I also need proof of address.",
+                        "Мне ещё нужно подтверждение адреса."
+                    ],
+                    "learner": [
+                        "Here is my rental contract.",
+                        "Вот мой договор аренды."
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "answer",
+                    "partner": [
+                        "Are you a student here?",
+                        "Вы здесь студент?"
+                    ],
+                    "learner": [
+                        "I'm a student.",
+                        "Я студент."
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "answer",
+                    "partner": [
+                        "What is your phone number?",
+                        "Какой у вас номер телефона?"
+                    ],
+                    "learner": [
+                        "My phone number is 07911 456 230.",
+                        "Мой номер телефона 07911 456 230."
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "ask",
+                    "partner": [
+                        "For students, the account has no monthly fee.",
+                        "Для студентов у этого счёта нет ежемесячной комиссии."
+                    ],
+                    "learner": [
+                        "What is the monthly fee?",
+                        "Какая ежемесячная комиссия?"
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "ask",
+                    "partner": [
+                        "It will arrive in five to seven business days.",
+                        "Она придёт через пять-семь рабочих дней."
+                    ],
+                    "learner": [
+                        "When will the card be ready?",
+                        "Когда карта будет готова?"
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "ask",
+                    "partner": [
+                        "Yes. The account can stay open for your one-year course.",
+                        "Да. Счёт может оставаться открытым на время вашего годичного курса."
+                    ],
+                    "learner": [
+                        "Can I keep it for one year?",
+                        "Я могу оставить его на один год?"
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "answer",
+                    "partner": [
+                        "I'll open the account today, and your card will come by post.",
+                        "Я открою счёт сегодня, а ваша карта придёт по почте."
+                    ],
+                    "learner": [
+                        "The account opens today.",
+                        "Счёт откроется сегодня."
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "I'd like to open ___.",
+                    "Я хочу открыть ___.",
+                    [
+                        "a bank account / банковский счёт",
+                        "a student account / студенческий счёт",
+                        "a joint account / совместный счёт"
+                    ]
+                ],
+                [
+                    "p2",
+                    "Here is my ___.",
+                    "Вот ___.",
+                    [
+                        "rental contract / мой договор аренды",
+                        "passport / мой паспорт",
+                        "student letter / моя справка из вуза"
+                    ]
+                ],
+                [
+                    "p3",
+                    "I'm ___.",
+                    "Я ___.",
+                    [
+                        "a student / студент",
+                        "an exchange student / студент по обмену",
+                        "a first-year student / студент первого курса"
+                    ]
+                ],
+                [
+                    "p4",
+                    "My phone number is ___.",
+                    "Мой номер телефона ___.",
+                    [
+                        "07911 456 230 / 07911 456 230",
+                        "07740 221 908 / 07740 221 908",
+                        "07863 110 542 / 07863 110 542"
+                    ]
+                ],
+                [
+                    "p5",
+                    "What is the ___?",
+                    "Какая ___?",
+                    [
+                        "monthly fee / ежемесячная комиссия",
+                        "card fee / комиссия за карту",
+                        "closing process / процедура закрытия"
+                    ]
+                ],
+                [
+                    "p6",
+                    "When will ___ be ready?",
+                    "Когда ___ будет готово?",
+                    [
+                        "the card / карта",
+                        "the account / открытие счёта",
+                        "the online access / онлайн-доступ"
+                    ]
+                ],
+                [
+                    "p7",
+                    "Can I keep it for ___?",
+                    "Я могу оставить его на ___?",
+                    [
+                        "one year / один год",
+                        "six months / шесть месяцев",
+                        "two years / два года"
+                    ]
+                ],
+                [
+                    "p8",
+                    "The account opens ___.",
+                    "Счёт откроется ___.",
+                    [
+                        "today / сегодня",
+                        "tomorrow / завтра",
+                        "this week / на этой неделе"
+                    ]
+                ]
+            ],
+            "codes": {
+                "exchange.second_question": 1,
+                "frame.native_agreement": 2,
+                "frame.unresolved_pronoun": 1,
+                "filler.one_in_dialogue": 4,
+                "line.ne_frame": 2,
+                "key.no_content_word": 1,
+                "key.contains_filler": 4,
+                "variant.longer": 1,
+                "listening.distractor_not_filler": 1,
+                "vocab.used_in_wrong": 1,
+                "filler.native_seam": 2
+            }
+        }
+    },
+    "restaurant": {
+        "v4.4": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "Can we see ___?",
+                    "line": "Can we see the menu?",
+                    "key": "Can we see"
+                },
+                {
+                    "step": 2,
+                    "frame": "We'd like ___.",
+                    "line": "We'd like two waters.",
+                    "key": "We'd like"
+                },
+                {
+                    "step": 3,
+                    "frame": "What is in ___?",
+                    "line": "What is in the chicken soup?",
+                    "key": "What is in"
+                },
+                {
+                    "step": 4,
+                    "frame": "Does it have ___?",
+                    "line": "Does it have nuts?",
+                    "key": "Does it have"
+                },
+                {
+                    "step": 5,
+                    "frame": "I'd like ___.",
+                    "line": "I'd like a grilled chicken.",
+                    "key": "I'd like"
+                },
+                {
+                    "step": 6,
+                    "frame": "We'll take ___.",
+                    "line": "We'll take the pasta.",
+                    "key": "We'll take"
+                },
+                {
+                    "step": 7,
+                    "frame": "Can we have ___?",
+                    "line": "Can we have the bill?",
+                    "key": "Can we have"
+                },
+                {
+                    "step": 8,
+                    "frame": "I'll pay ___.",
+                    "line": "I'll pay by card.",
+                    "key": "I'll pay"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "Можно нам посмотреть ___?",
+                    "value": "меню",
+                    "sentence": "Можно нам посмотреть меню?",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "Можно нам посмотреть ___?",
+                    "value": "меню десертов",
+                    "sentence": "Можно нам посмотреть меню десертов?",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Мы хотим ___.",
+                    "value": "две воды",
+                    "sentence": "Мы хотим две воды.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Мы хотим ___.",
+                    "value": "один сок",
+                    "sentence": "Мы хотим один сок.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Мы хотим ___.",
+                    "value": "чай",
+                    "sentence": "Мы хотим чай.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "Что входит в ___?",
+                    "value": "куриный суп",
+                    "sentence": "Что входит в куриный суп?",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "Что входит в ___?",
+                    "value": "салат",
+                    "sentence": "Что входит в салат?",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "Что входит в ___?",
+                    "value": "паста",
+                    "sentence": "Что входит в паста?",
+                    "reads": false
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "В этом есть ___?",
+                    "value": "орехи",
+                    "sentence": "В этом есть орехи?",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "В этом есть ___?",
+                    "value": "сыр",
+                    "sentence": "В этом есть сыр?",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f3",
+                    "pattern": "В этом есть ___?",
+                    "value": "яйца",
+                    "sentence": "В этом есть яйца?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Я бы хотел(а) ___.",
+                    "value": "курицу на гриле",
+                    "sentence": "Я бы хотел(а) курицу на гриле.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Я бы хотел(а) ___.",
+                    "value": "бургер",
+                    "sentence": "Я бы хотел(а) бургер.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f3",
+                    "pattern": "Я бы хотел(а) ___.",
+                    "value": "рыбный суп",
+                    "sentence": "Я бы хотел(а) рыбный суп.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "Мы возьмём ___.",
+                    "value": "пасту",
+                    "sentence": "Мы возьмём пасту.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "Мы возьмём ___.",
+                    "value": "салат",
+                    "sentence": "Мы возьмём салат.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "Мы возьмём ___.",
+                    "value": "суп",
+                    "sentence": "Мы возьмём суп.",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f1",
+                    "pattern": "Можно нам ___?",
+                    "value": "счёт",
+                    "sentence": "Можно нам счёт?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f2",
+                    "pattern": "Можно нам ___?",
+                    "value": "немного хлеба",
+                    "sentence": "Можно нам немного хлеба?",
+                    "reads": true
+                },
+                {
+                    "id": "p8.f1",
+                    "pattern": "Я заплачу ___.",
+                    "value": "картой",
+                    "sentence": "Я заплачу картой.",
+                    "reads": true
+                },
+                {
+                    "id": "p8.f2",
+                    "pattern": "Я заплачу ___.",
+                    "value": "наличными",
+                    "sentence": "Я заплачу наличными.",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Что заказал(а) ученик на питьё в начале?",
+                    "options": [
+                        "Два стакана воды",
+                        "Один чай",
+                        "Два сока"
+                    ],
+                    "right": "Два стакана воды"
+                },
+                {
+                    "question": "Какое блюдо официант назвал безопасным для дочки?",
+                    "options": [
+                        "Пасту",
+                        "Салат",
+                        "Рыбу"
+                    ],
+                    "right": "Пасту"
+                },
+                {
+                    "question": "О чём ученик спросил(а) из-за аллергии дочки?",
+                    "options": [
+                        "Есть ли в блюде орехи",
+                        "Горячее ли блюдо",
+                        "Сколько оно стоит"
+                    ],
+                    "right": "Есть ли в блюде орехи"
+                },
+                {
+                    "question": "Сколько составил счёт в конце?",
+                    "options": [
+                        "Тридцать фунтов",
+                        "Сорок фунтов",
+                        "Пятьдесят фунтов"
+                    ],
+                    "right": "Сорок фунтов"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "ask",
+                    "partner": [
+                        "Of course. Here is the menu.",
+                        "Конечно. Вот меню."
+                    ],
+                    "learner": [
+                        "Can we see the menu?",
+                        "Можно нам меню?"
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "answer",
+                    "partner": [
+                        "What would you like to drink?",
+                        "Что вы хотите пить?"
+                    ],
+                    "learner": [
+                        "We'd like two waters.",
+                        "Мы хотим две воды."
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "ask",
+                    "partner": [
+                        "It has chicken, noodles, and carrots.",
+                        "В нём курица, лапша и морковь."
+                    ],
+                    "learner": [
+                        "What is in the chicken soup?",
+                        "Что входит в куриный суп?"
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "ask",
+                    "partner": [
+                        "No, it does not have nuts.",
+                        "Нет, орехов там нет."
+                    ],
+                    "learner": [
+                        "Does it have nuts?",
+                        "В этом есть орехи?"
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "answer",
+                    "partner": [
+                        "Are you ready to order food?",
+                        "Вы готовы заказать еду?"
+                    ],
+                    "learner": [
+                        "I'd like a grilled chicken.",
+                        "Я бы хотел(а) курицу на гриле."
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "answer",
+                    "partner": [
+                        "For your daughter, the pasta is safe and has no nuts.",
+                        "Для вашей дочки паста безопасна и без орехов."
+                    ],
+                    "learner": [
+                        "We'll take the pasta.",
+                        "Мы возьмём пасту."
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "ask",
+                    "partner": [
+                        "Sure. I'll bring it right away.",
+                        "Конечно. Я сейчас его принесу."
+                    ],
+                    "learner": [
+                        "Can we have the bill?",
+                        "Можно нам счёт?"
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "answer",
+                    "partner": [
+                        "The total is forty pounds.",
+                        "Итого сорок фунтов."
+                    ],
+                    "learner": [
+                        "I'll pay by card.",
+                        "Я заплачу картой."
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "Can we see ___?",
+                    "Можно нам посмотреть ___?",
+                    [
+                        "the menu / меню",
+                        "the dessert menu / меню десертов"
+                    ]
+                ],
+                [
+                    "p2",
+                    "We'd like ___.",
+                    "Мы хотим ___.",
+                    [
+                        "two waters / две воды",
+                        "one juice / один сок",
+                        "a tea / чай"
+                    ]
+                ],
+                [
+                    "p3",
+                    "What is in ___?",
+                    "Что входит в ___?",
+                    [
+                        "the chicken soup / куриный суп",
+                        "the salad / салат",
+                        "the pasta / паста"
+                    ]
+                ],
+                [
+                    "p4",
+                    "Does it have ___?",
+                    "В этом есть ___?",
+                    [
+                        "nuts / орехи",
+                        "cheese / сыр",
+                        "eggs / яйца"
+                    ]
+                ],
+                [
+                    "p5",
+                    "I'd like ___.",
+                    "Я бы хотел(а) ___.",
+                    [
+                        "a grilled chicken / курицу на гриле",
+                        "a burger / бургер",
+                        "a fish soup / рыбный суп"
+                    ]
+                ],
+                [
+                    "p6",
+                    "We'll take ___.",
+                    "Мы возьмём ___.",
+                    [
+                        "the pasta / пасту",
+                        "the salad / салат",
+                        "the soup / суп"
+                    ]
+                ],
+                [
+                    "p7",
+                    "Can we have ___?",
+                    "Можно нам ___?",
+                    [
+                        "the bill / счёт",
+                        "some bread / немного хлеба"
+                    ]
+                ],
+                [
+                    "p8",
+                    "I'll pay ___.",
+                    "Я заплачу ___.",
+                    [
+                        "by card / картой",
+                        "in cash / наличными"
+                    ]
+                ]
+            ],
+            "codes": {
+                "frame.unresolved_pronoun": 1,
+                "frame.native_alternatives": 1,
+                "variant.longer": 1,
+                "listening.same_exchange": 1,
+                "filler.native_seam": 1
+            }
+        },
+        "v4.5": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "Can we see ___?",
+                    "line": "Can we see the menu?",
+                    "key": "Can we see"
+                },
+                {
+                    "step": 2,
+                    "frame": "What is in ___?",
+                    "line": "What is in the chicken pasta?",
+                    "key": "What is in"
+                },
+                {
+                    "step": 3,
+                    "frame": "Does it have ___?",
+                    "line": "Does it have nuts?",
+                    "key": "Does it have"
+                },
+                {
+                    "step": 4,
+                    "frame": "We'd like ___ .",
+                    "line": "We'd like the chicken pasta.",
+                    "key": "We'd like"
+                },
+                {
+                    "step": 5,
+                    "frame": "For her, ___ .",
+                    "line": "For her, grilled fish.",
+                    "key": "For her"
+                },
+                {
+                    "step": 6,
+                    "frame": "We'll have ___ .",
+                    "line": "We'll have water.",
+                    "key": "We'll have"
+                },
+                {
+                    "step": 7,
+                    "frame": "That's good to know.",
+                    "line": "That's good to know.",
+                    "key": "good to know"
+                },
+                {
+                    "step": 8,
+                    "frame": "Can we have ___?",
+                    "line": "Can we have the bill?",
+                    "key": "Can we have"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "Можно нам ___?",
+                    "value": "меню",
+                    "sentence": "Можно нам меню?",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "Можно нам ___?",
+                    "value": "десертное меню",
+                    "sentence": "Можно нам десертное меню?",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Что входит в ___?",
+                    "value": "куриную пасту",
+                    "sentence": "Что входит в куриную пасту?",
+                    "reads": false
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Что входит в ___?",
+                    "value": "суп",
+                    "sentence": "Что входит в суп?",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "Там есть ___?",
+                    "value": "орехи",
+                    "sentence": "Там есть орехи?",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "Там есть ___?",
+                    "value": "сыр",
+                    "sentence": "Там есть сыр?",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "Мы бы хотели ___ .",
+                    "value": "куриную пасту",
+                    "sentence": "Мы бы хотели куриную пасту.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "Мы бы хотели ___ .",
+                    "value": "два салата",
+                    "sentence": "Мы бы хотели два салата.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Для неё — ___ .",
+                    "value": "рыбу на гриле",
+                    "sentence": "Для неё — рыбу на гриле.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Для неё — ___ .",
+                    "value": "томатный суп",
+                    "sentence": "Для неё — томатный суп.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "Мы возьмём ___ .",
+                    "value": "воду",
+                    "sentence": "Мы возьмём воду.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "Мы возьмём ___ .",
+                    "value": "яблочный сок",
+                    "sentence": "Мы возьмём яблочный сок.",
+                    "reads": true
+                },
+                {
+                    "id": "p8.f1",
+                    "pattern": "Можно нам ___?",
+                    "value": "счёт",
+                    "sentence": "Можно нам счёт?",
+                    "reads": true
+                },
+                {
+                    "id": "p8.f2",
+                    "pattern": "Можно нам ___?",
+                    "value": "салфетки",
+                    "sentence": "Можно нам салфетки?",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Что родитель сначала попросил у официанта?",
+                    "options": [
+                        "Меню",
+                        "Счёт",
+                        "Воду"
+                    ],
+                    "right": "Меню"
+                },
+                {
+                    "question": "Что официант сказал про куриную пасту?",
+                    "options": [
+                        "В ней есть грибы",
+                        "В ней есть орехи",
+                        "Она холодная"
+                    ],
+                    "right": "В ней есть грибы"
+                },
+                {
+                    "question": "Что заказали для дочки?",
+                    "options": [
+                        "Томатный суп",
+                        "Рыбу на гриле",
+                        "Два салата"
+                    ],
+                    "right": "Рыбу на гриле"
+                },
+                {
+                    "question": "Как официант приготовит рыбу для дочки?",
+                    "options": [
+                        "С орехами",
+                        "Очень острой",
+                        "Без орехов"
+                    ],
+                    "right": "Без орехов"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "ask",
+                    "partner": [
+                        "Of course. Here are the menus.",
+                        "Конечно. Вот меню."
+                    ],
+                    "learner": [
+                        "Can we see the menu?",
+                        "Можно нам меню?"
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "ask",
+                    "partner": [
+                        "It has chicken, cream sauce, and mushrooms.",
+                        "В ней курица, сливочный соус и грибы."
+                    ],
+                    "learner": [
+                        "What is in the chicken pasta?",
+                        "Что входит в куриную пасту?"
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "ask",
+                    "partner": [
+                        "No, that dish does not have nuts.",
+                        "Нет, в этом блюде нет орехов."
+                    ],
+                    "learner": [
+                        "Does it have nuts?",
+                        "Там есть орехи?"
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "answer",
+                    "partner": [
+                        "What would you like to order?",
+                        "Что вы хотите заказать?"
+                    ],
+                    "learner": [
+                        "We'd like the chicken pasta.",
+                        "Мы бы хотели куриную пасту."
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "answer",
+                    "partner": [
+                        "And for your daughter?",
+                        "А для вашей дочки?"
+                    ],
+                    "learner": [
+                        "For her, grilled fish.",
+                        "Для неё — рыбу на гриле."
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "answer",
+                    "partner": [
+                        "What would you like to drink?",
+                        "Что будете пить?"
+                    ],
+                    "learner": [
+                        "We'll have water.",
+                        "Мы возьмём воду."
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "answer",
+                    "partner": [
+                        "Your daughter can have the grilled fish safely. We make it without nuts.",
+                        "Вашей дочке можно рыбу на гриле. Мы готовим её без орехов."
+                    ],
+                    "learner": [
+                        "That's good to know.",
+                        "Хорошо, что вы сказали."
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "ask",
+                    "partner": [
+                        "Of course. I'll bring it now.",
+                        "Конечно. Сейчас принесу."
+                    ],
+                    "learner": [
+                        "Can we have the bill?",
+                        "Можно нам счёт?"
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "Can we see ___?",
+                    "Можно нам ___?",
+                    [
+                        "the menu / меню",
+                        "the dessert menu / десертное меню"
+                    ]
+                ],
+                [
+                    "p2",
+                    "What is in ___?",
+                    "Что входит в ___?",
+                    [
+                        "the chicken pasta / куриную пасту",
+                        "the soup / суп"
+                    ]
+                ],
+                [
+                    "p3",
+                    "Does it have ___?",
+                    "Там есть ___?",
+                    [
+                        "nuts / орехи",
+                        "cheese / сыр"
+                    ]
+                ],
+                [
+                    "p4",
+                    "We'd like ___ .",
+                    "Мы бы хотели ___ .",
+                    [
+                        "the chicken pasta / куриную пасту",
+                        "two salads / два салата"
+                    ]
+                ],
+                [
+                    "p5",
+                    "For her, ___ .",
+                    "Для неё — ___ .",
+                    [
+                        "grilled fish / рыбу на гриле",
+                        "tomato soup / томатный суп"
+                    ]
+                ],
+                [
+                    "p6",
+                    "We'll have ___ .",
+                    "Мы возьмём ___ .",
+                    [
+                        "water / воду",
+                        "apple juice / яблочный сок"
+                    ]
+                ],
+                [
+                    "p7",
+                    "That's good to know.",
+                    "Хорошо, что вы сказали.",
+                    []
+                ],
+                [
+                    "p8",
+                    "Can we have ___?",
+                    "Можно нам ___?",
+                    [
+                        "the bill / счёт",
+                        "some napkins / салфетки"
+                    ]
+                ]
+            ],
+            "codes": {
+                "frame.unresolved_pronoun": 1,
+                "check.verbatim": 1,
+                "vocab.used_in_wrong": 1,
+                "filler.native_seam": 1
+            }
+        }
+    },
+    "airport": {
+        "v4.4": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "Here is ___.",
+                    "line": "Here is my passport.",
+                    "key": "Here is my"
+                },
+                {
+                    "step": 2,
+                    "frame": "I'm flying to ___.",
+                    "line": "I'm flying to London.",
+                    "key": "I'm flying to"
+                },
+                {
+                    "step": 3,
+                    "frame": "I have ___.",
+                    "line": "I have one suitcase and one backpack.",
+                    "key": "I have"
+                },
+                {
+                    "step": 4,
+                    "frame": "I'm checking in ___.",
+                    "line": "I'm checking in the suitcase.",
+                    "key": "checking in"
+                },
+                {
+                    "step": 5,
+                    "frame": "Can I take ___ onboard?",
+                    "line": "Can I take the backpack onboard?",
+                    "key": "take the"
+                },
+                {
+                    "step": 6,
+                    "frame": "I'd like ___.",
+                    "line": "I'd like a window seat.",
+                    "key": "like a"
+                },
+                {
+                    "step": 7,
+                    "frame": "Where is ___?",
+                    "line": "Where is the gate?",
+                    "key": "Where is the"
+                },
+                {
+                    "step": 8,
+                    "frame": null,
+                    "line": "Could you repeat that more slowly, please?",
+                    "key": "repeat that"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "Вот ___.",
+                    "value": "мой паспорт",
+                    "sentence": "Вот мой паспорт.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "Вот ___.",
+                    "value": "мой посадочный талон",
+                    "sentence": "Вот мой посадочный талон.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f3",
+                    "pattern": "Вот ___.",
+                    "value": "мой билет",
+                    "sentence": "Вот мой билет.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Я лечу в ___.",
+                    "value": "Лондон",
+                    "sentence": "Я лечу в Лондон.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Я лечу в ___.",
+                    "value": "Париж",
+                    "sentence": "Я лечу в Париж.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Я лечу в ___.",
+                    "value": "Рим",
+                    "sentence": "Я лечу в Рим.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "У меня ___.",
+                    "value": "один чемодан и один рюкзак",
+                    "sentence": "У меня один чемодан и один рюкзак.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "У меня ___.",
+                    "value": "один чемодан",
+                    "sentence": "У меня один чемодан.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "У меня ___.",
+                    "value": "два рюкзака",
+                    "sentence": "У меня два рюкзака.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "Я сдаю в багаж ___.",
+                    "value": "чемодан",
+                    "sentence": "Я сдаю в багаж чемодан.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "Я сдаю в багаж ___.",
+                    "value": "большую сумку",
+                    "sentence": "Я сдаю в багаж большую сумку.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f3",
+                    "pattern": "Я сдаю в багаж ___.",
+                    "value": "эту сумку",
+                    "sentence": "Я сдаю в багаж эту сумку.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Можно взять ___ в салон?",
+                    "value": "рюкзак",
+                    "sentence": "Можно взять рюкзак в салон?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Можно взять ___ в салон?",
+                    "value": "эту сумку",
+                    "sentence": "Можно взять эту сумку в салон?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f3",
+                    "pattern": "Можно взять ___ в салон?",
+                    "value": "мой ноутбук",
+                    "sentence": "Можно взять мой ноутбук в салон?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "Я бы хотел ___.",
+                    "value": "место у окна",
+                    "sentence": "Я бы хотел место у окна.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "Я бы хотел ___.",
+                    "value": "место у прохода",
+                    "sentence": "Я бы хотел место у прохода.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "Я бы хотел ___.",
+                    "value": "место с дополнительным местом для ног",
+                    "sentence": "Я бы хотел место с дополнительным местом для ног.",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f1",
+                    "pattern": "Где ___?",
+                    "value": "выход на посадку",
+                    "sentence": "Где выход на посадку?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f2",
+                    "pattern": "Где ___?",
+                    "value": "стойка регистрации",
+                    "sentence": "Где стойка регистрации?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f3",
+                    "pattern": "Где ___?",
+                    "value": "туалет",
+                    "sentence": "Где туалет?",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Куда летит пассажир?",
+                    "options": [
+                        "В Лондон",
+                        "В Париж",
+                        "В Рим"
+                    ],
+                    "right": "В Лондон"
+                },
+                {
+                    "question": "Какую сумку пассажир сдаёт в багаж?",
+                    "options": [
+                        "Рюкзак",
+                        "Чемодан",
+                        "Никакую"
+                    ],
+                    "right": "Чемодан"
+                },
+                {
+                    "question": "Какое место предлагает сотрудница?",
+                    "options": [
+                        "15C у прохода",
+                        "12B посередине",
+                        "14A у окна"
+                    ],
+                    "right": "14A у окна"
+                },
+                {
+                    "question": "Во сколько начинается посадка?",
+                    "options": [
+                        "В 8:50",
+                        "В 9:20",
+                        "В 10:00"
+                    ],
+                    "right": "В 9:20"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "answer",
+                    "partner": [
+                        "Good morning. May I see your passport?",
+                        "Доброе утро. Можно ваш паспорт?"
+                    ],
+                    "learner": [
+                        "Here is my passport.",
+                        "Вот мой паспорт."
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "answer",
+                    "partner": [
+                        "What is your destination today?",
+                        "Куда вы летите сегодня?"
+                    ],
+                    "learner": [
+                        "I'm flying to London.",
+                        "Я лечу в Лондон."
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "answer",
+                    "partner": [
+                        "How many bags do you have?",
+                        "Сколько у вас сумок?"
+                    ],
+                    "learner": [
+                        "I have one suitcase and one backpack.",
+                        "У меня один чемодан и один рюкзак."
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "answer",
+                    "partner": [
+                        "Which bag are you checking in?",
+                        "Какую сумку вы сдаёте в багаж?"
+                    ],
+                    "learner": [
+                        "I'm checking in the suitcase.",
+                        "Я сдаю в багаж чемодан."
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "ask",
+                    "partner": [
+                        "Yes, the backpack can go as hand luggage.",
+                        "Да, рюкзак можно взять как ручную кладь."
+                    ],
+                    "learner": [
+                        "Can I take the backpack onboard?",
+                        "Можно взять рюкзак в салон?"
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "ask",
+                    "partner": [
+                        "I can offer seat 14A by the window.",
+                        "Могу предложить место 14A у окна."
+                    ],
+                    "learner": [
+                        "I'd like a window seat.",
+                        "Я бы хотел место у окна."
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "ask",
+                    "partner": [
+                        "Your gate is A12, and boarding starts at 9:20.",
+                        "Ваш выход A12, посадка начинается в 9:20."
+                    ],
+                    "learner": [
+                        "Where is the gate?",
+                        "Где выход на посадку?"
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "rescue",
+                    "partner": [
+                        "Gate A12. Boarding starts at 9:20.",
+                        "Выход A12. Посадка начинается в 9:20."
+                    ],
+                    "learner": [
+                        "Could you repeat that more slowly, please?",
+                        "Повторите, пожалуйста, помедленнее."
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "Here is ___.",
+                    "Вот ___.",
+                    [
+                        "my passport / мой паспорт",
+                        "my boarding pass / мой посадочный талон",
+                        "my ticket / мой билет"
+                    ]
+                ],
+                [
+                    "p2",
+                    "I'm flying to ___.",
+                    "Я лечу в ___.",
+                    [
+                        "London / Лондон",
+                        "Paris / Париж",
+                        "Rome / Рим"
+                    ]
+                ],
+                [
+                    "p3",
+                    "I have ___.",
+                    "У меня ___.",
+                    [
+                        "one suitcase and one backpack / один чемодан и один рюкзак",
+                        "one suitcase / один чемодан",
+                        "two backpacks / два рюкзака"
+                    ]
+                ],
+                [
+                    "p4",
+                    "I'm checking in ___.",
+                    "Я сдаю в багаж ___.",
+                    [
+                        "the suitcase / чемодан",
+                        "the large bag / большую сумку",
+                        "this bag / эту сумку"
+                    ]
+                ],
+                [
+                    "p5",
+                    "Can I take ___ onboard?",
+                    "Можно взять ___ в салон?",
+                    [
+                        "the backpack / рюкзак",
+                        "this bag / эту сумку",
+                        "my laptop / мой ноутбук"
+                    ]
+                ],
+                [
+                    "p6",
+                    "I'd like ___.",
+                    "Я бы хотел ___.",
+                    [
+                        "a window seat / место у окна",
+                        "an aisle seat / место у прохода",
+                        "an extra-legroom seat / место с дополнительным местом для ног"
+                    ]
+                ],
+                [
+                    "p7",
+                    "Where is ___?",
+                    "Где ___?",
+                    [
+                        "the gate / выход на посадку",
+                        "the check-in desk / стойка регистрации",
+                        "the restroom / туалет"
+                    ]
+                ]
+            ],
+            "codes": {
+                "key.no_content_word": 2,
+                "key.contains_filler": 4,
+                "variant.longer": 1,
+                "vocab.used_in_wrong": 2
+            }
+        },
+        "v4.5": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "I'm checking in ___",
+                    "line": "I'm checking in for this flight.",
+                    "key": "checking in"
+                },
+                {
+                    "step": 2,
+                    "frame": "I'm flying ___",
+                    "line": "I'm flying to London.",
+                    "key": "flying to"
+                },
+                {
+                    "step": 3,
+                    "frame": "I have ___",
+                    "line": "I have one suitcase.",
+                    "key": "I have"
+                },
+                {
+                    "step": 4,
+                    "frame": "Can I take ___?",
+                    "line": "Can I take this backpack?",
+                    "key": "Can I take"
+                },
+                {
+                    "step": 5,
+                    "frame": "Can I have ___?",
+                    "line": "Can I have a window seat?",
+                    "key": "have a"
+                },
+                {
+                    "step": 6,
+                    "frame": "My gate is ___",
+                    "line": "My gate is Gate 12.",
+                    "key": "gate is"
+                },
+                {
+                    "step": 7,
+                    "frame": null,
+                    "line": "Could you repeat that, please?",
+                    "key": "repeat that"
+                },
+                {
+                    "step": 8,
+                    "frame": "My suitcase goes ___",
+                    "line": "My suitcase goes to London.",
+                    "key": "suitcase goes"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "Я регистрируюсь ___",
+                    "value": "на этот рейс",
+                    "sentence": "Я регистрируюсь на этот рейс",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "Я регистрируюсь ___",
+                    "value": "на утренний рейс",
+                    "sentence": "Я регистрируюсь на утренний рейс",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Я лечу ___",
+                    "value": "в Лондон",
+                    "sentence": "Я лечу в Лондон",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Я лечу ___",
+                    "value": "в Париж",
+                    "sentence": "Я лечу в Париж",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Я лечу ___",
+                    "value": "в Рим",
+                    "sentence": "Я лечу в Рим",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "У меня ___",
+                    "value": "один чемодан",
+                    "sentence": "У меня один чемодан",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "У меня ___",
+                    "value": "две сумки",
+                    "sentence": "У меня две сумки",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "У меня ___",
+                    "value": "один рюкзак",
+                    "sentence": "У меня один рюкзак",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "Можно взять ___?",
+                    "value": "этот рюкзак",
+                    "sentence": "Можно взять этот рюкзак?",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "Можно взять ___?",
+                    "value": "эту маленькую сумку",
+                    "sentence": "Можно взять эту маленькую сумку?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Можно ___?",
+                    "value": "место у окна",
+                    "sentence": "Можно место у окна?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Можно ___?",
+                    "value": "место у прохода",
+                    "sentence": "Можно место у прохода?",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f3",
+                    "pattern": "Можно ___?",
+                    "value": "место впереди",
+                    "sentence": "Можно место впереди?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "Мой выход — ___",
+                    "value": "12",
+                    "sentence": "Мой выход — 12",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "Мой выход — ___",
+                    "value": "8",
+                    "sentence": "Мой выход — 8",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "Мой выход — ___",
+                    "value": "15",
+                    "sentence": "Мой выход — 15",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f1",
+                    "pattern": "Мой чемодан едет ___",
+                    "value": "в Лондон",
+                    "sentence": "Мой чемодан едет в Лондон",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f2",
+                    "pattern": "Мой чемодан едет ___",
+                    "value": "в Мадрид",
+                    "sentence": "Мой чемодан едет в Мадрид",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Куда летит пассажир?",
+                    "options": [
+                        "В Лондон",
+                        "В Париж",
+                        "В Рим"
+                    ],
+                    "right": "В Лондон"
+                },
+                {
+                    "question": "Какой багаж пассажир сдаёт?",
+                    "options": [
+                        "Один чемодан",
+                        "Один рюкзак",
+                        "Две сумки"
+                    ],
+                    "right": "Один чемодан"
+                },
+                {
+                    "question": "Какое место получает пассажир?",
+                    "options": [
+                        "У прохода",
+                        "У окна",
+                        "В хвосте самолёта"
+                    ],
+                    "right": "У окна"
+                },
+                {
+                    "question": "Во сколько посадка?",
+                    "options": [
+                        "18:20",
+                        "18:40",
+                        "19:00"
+                    ],
+                    "right": "18:40"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "ask",
+                    "partner": [
+                        "Sure. May I see your passport?",
+                        "Конечно. Можно ваш паспорт?"
+                    ],
+                    "learner": [
+                        "I'm checking in for this flight.",
+                        "Я регистрируюсь на этот рейс."
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "answer",
+                    "partner": [
+                        "Thank you. Where are you flying today?",
+                        "Спасибо. Куда вы летите сегодня?"
+                    ],
+                    "learner": [
+                        "I'm flying to London.",
+                        "Я лечу в Лондон."
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "answer",
+                    "partner": [
+                        "Do you have any bags to check?",
+                        "У вас есть багаж для сдачи?"
+                    ],
+                    "learner": [
+                        "I have one suitcase.",
+                        "У меня один чемодан."
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "ask",
+                    "partner": [
+                        "Yes, that can go as hand luggage.",
+                        "Да, это можно взять как ручную кладь."
+                    ],
+                    "learner": [
+                        "Can I take this backpack?",
+                        "Можно взять этот рюкзак?"
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "ask",
+                    "partner": [
+                        "Yes, seat 14A is available.",
+                        "Да, место 14A свободно."
+                    ],
+                    "learner": [
+                        "Can I have a window seat?",
+                        "Можно место у окна?"
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "answer",
+                    "partner": [
+                        "Here is your boarding pass. Gate 12, boarding at 18:40.",
+                        "Вот ваш посадочный талон. Выход 12, посадка в 18:40."
+                    ],
+                    "learner": [
+                        "My gate is Gate 12.",
+                        "Мой выход — 12."
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "rescue",
+                    "partner": [
+                        "Gate 12. Boarding is at 18:40.",
+                        "Выход 12. Посадка в 18:40."
+                    ],
+                    "learner": [
+                        "Could you repeat that, please?",
+                        "Повторите, пожалуйста."
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "answer",
+                    "partner": [
+                        "Your suitcase is checked through to London.",
+                        "Ваш чемодан зарегистрирован до Лондона."
+                    ],
+                    "learner": [
+                        "My suitcase goes to London.",
+                        "Мой чемодан едет в Лондон."
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "I'm checking in ___",
+                    "Я регистрируюсь ___",
+                    [
+                        "for this flight / на этот рейс",
+                        "for the morning flight / на утренний рейс"
+                    ]
+                ],
+                [
+                    "p2",
+                    "I'm flying ___",
+                    "Я лечу ___",
+                    [
+                        "to London / в Лондон",
+                        "to Paris / в Париж",
+                        "to Rome / в Рим"
+                    ]
+                ],
+                [
+                    "p3",
+                    "I have ___",
+                    "У меня ___",
+                    [
+                        "one suitcase / один чемодан",
+                        "two bags / две сумки",
+                        "one backpack / один рюкзак"
+                    ]
+                ],
+                [
+                    "p4",
+                    "Can I take ___?",
+                    "Можно взять ___?",
+                    [
+                        "this backpack / этот рюкзак",
+                        "this small bag / эту маленькую сумку"
+                    ]
+                ],
+                [
+                    "p5",
+                    "Can I have ___?",
+                    "Можно ___?",
+                    [
+                        "a window seat / место у окна",
+                        "an aisle seat / место у прохода",
+                        "a front seat / место впереди"
+                    ]
+                ],
+                [
+                    "p6",
+                    "My gate is ___",
+                    "Мой выход — ___",
+                    [
+                        "Gate 12 / 12",
+                        "Gate 8 / 8",
+                        "Gate 15 / 15"
+                    ]
+                ],
+                [
+                    "p7",
+                    "My suitcase goes ___",
+                    "Мой чемодан едет ___",
+                    [
+                        "to London / в Лондон",
+                        "to Madrid / в Мадрид"
+                    ]
+                ]
+            ],
+            "codes": {
+                "exchange.second_question": 1,
+                "line.ne_frame": 5,
+                "key.contains_filler": 2,
+                "key.no_content_word": 1,
+                "vocab.used_in_wrong": 1
+            }
+        }
+    },
+    "doctor": {
+        "v4.4": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "My son has ___.",
+                    "line": "My son has a fever.",
+                    "key": "son has a"
+                },
+                {
+                    "step": 2,
+                    "frame": "He has had it ___.",
+                    "line": "He has had it for three days.",
+                    "key": "has had it"
+                },
+                {
+                    "step": 3,
+                    "frame": "His temperature is ___.",
+                    "line": "His temperature is 39 degrees.",
+                    "key": "temperature is"
+                },
+                {
+                    "step": 4,
+                    "frame": "He also has ___.",
+                    "line": "He also has a sore throat.",
+                    "key": "also has a"
+                },
+                {
+                    "step": 5,
+                    "frame": "He should rest ___.",
+                    "line": "He should rest at home.",
+                    "key": "should rest"
+                },
+                {
+                    "step": 6,
+                    "frame": null,
+                    "line": "Could you say that more slowly, please?",
+                    "key": "say that more slowly"
+                },
+                {
+                    "step": 7,
+                    "frame": "How often should I give ___?",
+                    "line": "How often should I give the paracetamol?",
+                    "key": "How often should I give"
+                },
+                {
+                    "step": 8,
+                    "frame": "When should we come back ___?",
+                    "line": "When should we come back if he gets worse?",
+                    "key": "When should we come back"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "У моего сына ___.",
+                    "value": "температура",
+                    "sentence": "У моего сына температура.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "У моего сына ___.",
+                    "value": "кашель",
+                    "sentence": "У моего сына кашель.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f3",
+                    "pattern": "У моего сына ___.",
+                    "value": "боль в ухе",
+                    "sentence": "У моего сына боль в ухе.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Это у него уже ___.",
+                    "value": "уже три дня",
+                    "sentence": "Это у него уже уже три дня.",
+                    "reads": false
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Это у него уже ___.",
+                    "value": "со вчера",
+                    "sentence": "Это у него уже со вчера.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Это у него уже ___.",
+                    "value": "с сегодняшнего утра",
+                    "sentence": "Это у него уже с сегодняшнего утра.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "У него температура ___.",
+                    "value": "39 градусов",
+                    "sentence": "У него температура 39 градусов.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "У него температура ___.",
+                    "value": "38,5",
+                    "sentence": "У него температура 38,5.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "У него температура ___.",
+                    "value": "40 градусов",
+                    "sentence": "У него температура 40 градусов.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "У него ещё ___.",
+                    "value": "болит горло",
+                    "sentence": "У него ещё болит горло.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "У него ещё ___.",
+                    "value": "болит голова",
+                    "sentence": "У него ещё болит голова.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f3",
+                    "pattern": "У него ещё ___.",
+                    "value": "сыпь",
+                    "sentence": "У него ещё сыпь.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Ему нужно отдыхать ___.",
+                    "value": "дома",
+                    "sentence": "Ему нужно отдыхать дома.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Ему нужно отдыхать ___.",
+                    "value": "сегодня",
+                    "sentence": "Ему нужно отдыхать сегодня.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f3",
+                    "pattern": "Ему нужно отдыхать ___.",
+                    "value": "два дня",
+                    "sentence": "Ему нужно отдыхать два дня.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "Как часто мне давать ___?",
+                    "value": "парацетамол",
+                    "sentence": "Как часто мне давать парацетамол?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "Как часто мне давать ___?",
+                    "value": "сироп",
+                    "sentence": "Как часто мне давать сироп?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "Как часто мне давать ___?",
+                    "value": "капли",
+                    "sentence": "Как часто мне давать капли?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f1",
+                    "pattern": "Когда нам нужно прийти снова ___?",
+                    "value": "если ему станет хуже",
+                    "sentence": "Когда нам нужно прийти снова если ему станет хуже?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f2",
+                    "pattern": "Когда нам нужно прийти снова ___?",
+                    "value": "если температура вернётся",
+                    "sentence": "Когда нам нужно прийти снова если температура вернётся?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f3",
+                    "pattern": "Когда нам нужно прийти снова ___?",
+                    "value": "если он перестанет есть",
+                    "sentence": "Когда нам нужно прийти снова если он перестанет есть?",
+                    "reads": true
+                }
+            ],
+            "listening": [
+                {
+                    "question": "С какой основной жалобой родитель пришёл к врачу?",
+                    "options": [
+                        "С болью в животе",
+                        "С температурой у сына",
+                        "С сыпью на руках"
+                    ],
+                    "right": "С температурой у сына"
+                },
+                {
+                    "question": "Сколько дней у ребёнка держатся симптомы?",
+                    "options": [
+                        "Один день",
+                        "Три дня",
+                        "Неделю"
+                    ],
+                    "right": "Три дня"
+                },
+                {
+                    "question": "Что врач посоветовала давать ребёнку?",
+                    "options": [
+                        "Только антибиотик",
+                        "Парацетамол",
+                        "Витамины"
+                    ],
+                    "right": "Парацетамол"
+                },
+                {
+                    "question": "В каком случае врач сказала прийти раньше?",
+                    "options": [
+                        "Если ребёнок не может пить",
+                        "Если ребёнок просит суп",
+                        "Если ребёнок хочет спать днём"
+                    ],
+                    "right": "Если ребёнок не может пить"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "answer",
+                    "partner": [
+                        "What seems to be the problem today?",
+                        "Что вас сегодня беспокоит?"
+                    ],
+                    "learner": [
+                        "My son has a fever.",
+                        "У моего сына температура."
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "answer",
+                    "partner": [
+                        "How long has he had it?",
+                        "Как долго это у него?"
+                    ],
+                    "learner": [
+                        "He has had it for three days.",
+                        "Это у него уже три дня."
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "answer",
+                    "partner": [
+                        "What is his temperature?",
+                        "Какая у него температура?"
+                    ],
+                    "learner": [
+                        "His temperature is 39 degrees.",
+                        "У него температура 39 градусов."
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "answer",
+                    "partner": [
+                        "Does he have a sore throat?",
+                        "У него болит горло?"
+                    ],
+                    "learner": [
+                        "He also has a sore throat.",
+                        "У него ещё болит горло."
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "answer",
+                    "partner": [
+                        "It looks like a throat infection. Give paracetamol, warm drinks, and rest at home.",
+                        "Похоже на инфекцию горла. Давайте парацетамол, тёплое питьё и пусть отдыхает дома."
+                    ],
+                    "learner": [
+                        "He should rest at home.",
+                        "Ему нужно отдыхать дома."
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "rescue",
+                    "partner": [
+                        "Give paracetamol, warm drinks, and rest at home.",
+                        "Давайте парацетамол, тёплое питьё и пусть отдыхает дома."
+                    ],
+                    "learner": [
+                        "Could you say that more slowly, please?",
+                        "Скажите, пожалуйста, это помедленнее."
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "ask",
+                    "partner": [
+                        "Give it every six hours if the fever stays high.",
+                        "Давайте его каждые шесть часов, если температура остаётся высокой."
+                    ],
+                    "learner": [
+                        "How often should I give the paracetamol?",
+                        "Как часто мне давать парацетамол?"
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "ask",
+                    "partner": [
+                        "Come back sooner if he has trouble breathing or cannot drink.",
+                        "Приходите раньше, если ему трудно дышать или он не может пить."
+                    ],
+                    "learner": [
+                        "When should we come back if he gets worse?",
+                        "Когда нам нужно прийти снова, если ему станет хуже?"
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "My son has ___.",
+                    "У моего сына ___.",
+                    [
+                        "a fever / температура",
+                        "a cough / кашель",
+                        "ear pain / боль в ухе"
+                    ]
+                ],
+                [
+                    "p2",
+                    "He has had it ___.",
+                    "Это у него уже ___.",
+                    [
+                        "for three days / уже три дня",
+                        "since yesterday / со вчера",
+                        "since this morning / с сегодняшнего утра"
+                    ]
+                ],
+                [
+                    "p3",
+                    "His temperature is ___.",
+                    "У него температура ___.",
+                    [
+                        "39 degrees / 39 градусов",
+                        "38.5 / 38,5",
+                        "40 degrees / 40 градусов"
+                    ]
+                ],
+                [
+                    "p4",
+                    "He also has ___.",
+                    "У него ещё ___.",
+                    [
+                        "a sore throat / болит горло",
+                        "a headache / болит голова",
+                        "a rash / сыпь"
+                    ]
+                ],
+                [
+                    "p5",
+                    "He should rest ___.",
+                    "Ему нужно отдыхать ___.",
+                    [
+                        "at home / дома",
+                        "today / сегодня",
+                        "for two days / два дня"
+                    ]
+                ],
+                [
+                    "p6",
+                    "How often should I give ___?",
+                    "Как часто мне давать ___?",
+                    [
+                        "the paracetamol / парацетамол",
+                        "the syrup / сироп",
+                        "the drops / капли"
+                    ]
+                ],
+                [
+                    "p7",
+                    "When should we come back ___?",
+                    "Когда нам нужно прийти снова ___?",
+                    [
+                        "if he gets worse / если ему станет хуже",
+                        "if the fever returns / если температура вернётся",
+                        "if he stops eating / если он перестанет есть"
+                    ]
+                ]
+            ],
+            "codes": {
+                "frame.unresolved_pronoun": 1,
+                "filler.is_clause": 3,
+                "key.contains_filler": 2,
+                "key.no_content_word": 2,
+                "key.too_long": 2,
+                "check.verbatim": 1,
+                "vocab.free_combination": 1,
+                "filler.native_seam": 1
+            }
+        },
+        "v4.5": {
+            "keys": [
+                {
+                    "step": 1,
+                    "frame": "My son has ___.",
+                    "line": "My son has a fever and a sore throat.",
+                    "key": "My son has"
+                },
+                {
+                    "step": 2,
+                    "frame": "He has had them ___.",
+                    "line": "He has had them for three days.",
+                    "key": "has had them"
+                },
+                {
+                    "step": 3,
+                    "frame": "His highest temperature was ___.",
+                    "line": "His highest temperature was 39 degrees.",
+                    "key": "highest temperature was"
+                },
+                {
+                    "step": 4,
+                    "frame": "He is eating ___.",
+                    "line": "He is eating less than usual.",
+                    "key": "eating less than"
+                },
+                {
+                    "step": 5,
+                    "frame": "I'll give paracetamol ___.",
+                    "line": "I'll give paracetamol every six hours.",
+                    "key": "give paracetamol"
+                },
+                {
+                    "step": 6,
+                    "frame": null,
+                    "line": "Could you say that more slowly, please?",
+                    "key": "say that more"
+                },
+                {
+                    "step": 7,
+                    "frame": "Does he need ___?",
+                    "line": "Does he need the antibiotic?",
+                    "key": "Does he need"
+                },
+                {
+                    "step": 8,
+                    "frame": "When should we come back if ___?",
+                    "line": "When should we come back if the fever gets worse?",
+                    "key": "When should we"
+                }
+            ],
+            "seams": [
+                {
+                    "id": "p1.f1",
+                    "pattern": "У моего сына ___.",
+                    "value": "температура и болит горло",
+                    "sentence": "У моего сына температура и болит горло.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f2",
+                    "pattern": "У моего сына ___.",
+                    "value": "кашель и озноб",
+                    "sentence": "У моего сына кашель и озноб.",
+                    "reads": true
+                },
+                {
+                    "id": "p1.f3",
+                    "pattern": "У моего сына ___.",
+                    "value": "боль в ухе и температура",
+                    "sentence": "У моего сына боль в ухе и температура.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f1",
+                    "pattern": "Они у него уже ___.",
+                    "value": "три дня",
+                    "sentence": "Они у него уже три дня.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f2",
+                    "pattern": "Они у него уже ___.",
+                    "value": "со вчерашнего дня",
+                    "sentence": "Они у него уже со вчерашнего дня.",
+                    "reads": true
+                },
+                {
+                    "id": "p2.f3",
+                    "pattern": "Они у него уже ___.",
+                    "value": "неделю",
+                    "sentence": "Они у него уже неделю.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f1",
+                    "pattern": "Самая высокая температура была ___.",
+                    "value": "39 градусов",
+                    "sentence": "Самая высокая температура была 39 градусов.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f2",
+                    "pattern": "Самая высокая температура была ___.",
+                    "value": "38,5 градусов",
+                    "sentence": "Самая высокая температура была 38,5 градусов.",
+                    "reads": true
+                },
+                {
+                    "id": "p3.f3",
+                    "pattern": "Самая высокая температура была ___.",
+                    "value": "40 градусов",
+                    "sentence": "Самая высокая температура была 40 градусов.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f1",
+                    "pattern": "Он ест ___.",
+                    "value": "меньше, чем обычно",
+                    "sentence": "Он ест меньше, чем обычно.",
+                    "reads": true
+                },
+                {
+                    "id": "p4.f2",
+                    "pattern": "Он ест ___.",
+                    "value": "почти ничего",
+                    "sentence": "Он ест почти ничего.",
+                    "reads": false
+                },
+                {
+                    "id": "p4.f3",
+                    "pattern": "Он ест ___.",
+                    "value": "уже нормально",
+                    "sentence": "Он ест уже нормально.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f1",
+                    "pattern": "Я буду давать парацетамол ___.",
+                    "value": "каждые шесть часов",
+                    "sentence": "Я буду давать парацетамол каждые шесть часов.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f2",
+                    "pattern": "Я буду давать парацетамол ___.",
+                    "value": "два раза в день",
+                    "sentence": "Я буду давать парацетамол два раза в день.",
+                    "reads": true
+                },
+                {
+                    "id": "p5.f3",
+                    "pattern": "Я буду давать парацетамол ___.",
+                    "value": "перед сном",
+                    "sentence": "Я буду давать парацетамол перед сном.",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f1",
+                    "pattern": "Ему нужен ___?",
+                    "value": "антибиотик",
+                    "sentence": "Ему нужен антибиотик?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f2",
+                    "pattern": "Ему нужен ___?",
+                    "value": "анализ",
+                    "sentence": "Ему нужен анализ?",
+                    "reads": true
+                },
+                {
+                    "id": "p6.f3",
+                    "pattern": "Ему нужен ___?",
+                    "value": "рецепт",
+                    "sentence": "Ему нужен рецепт?",
+                    "reads": true
+                },
+                {
+                    "id": "p7.f1",
+                    "pattern": "Когда нам нужно прийти снова, если ___?",
+                    "value": "если температура станет выше",
+                    "sentence": "Когда нам нужно прийти снова, если если температура станет выше?",
+                    "reads": false
+                },
+                {
+                    "id": "p7.f2",
+                    "pattern": "Когда нам нужно прийти снова, если ___?",
+                    "value": "если у него начнётся кашель",
+                    "sentence": "Когда нам нужно прийти снова, если если у него начнётся кашель?",
+                    "reads": false
+                },
+                {
+                    "id": "p7.f3",
+                    "pattern": "Когда нам нужно прийти снова, если ___?",
+                    "value": "если он не будет есть",
+                    "sentence": "Когда нам нужно прийти снова, если если он не будет есть?",
+                    "reads": false
+                }
+            ],
+            "listening": [
+                {
+                    "question": "Сколько дней у ребёнка уже есть симптомы?",
+                    "options": [
+                        "Один день",
+                        "Три дня",
+                        "Неделю"
+                    ],
+                    "right": "Три дня"
+                },
+                {
+                    "question": "Какая самая высокая температура была у ребёнка?",
+                    "options": [
+                        "38,5 градусов",
+                        "39 градусов",
+                        "40 градусов"
+                    ],
+                    "right": "39 градусов"
+                },
+                {
+                    "question": "Что врач советует давать ребёнку?",
+                    "options": [
+                        "Только антибиотик",
+                        "Питьё, отдых и парацетамол",
+                        "Сироп от кашля и витамины"
+                    ],
+                    "right": "Питьё, отдых и парацетамол"
+                },
+                {
+                    "question": "Когда врач просит прийти снова?",
+                    "options": [
+                        "Завтра, если температура останется высокой или он не сможет пить",
+                        "Через неделю, если горло всё ещё красное",
+                        "Сегодня вечером, если он устанет"
+                    ],
+                    "right": "Завтра, если температура останется высокой или он не сможет пить"
+                }
+            ],
+            "lines": [
+                {
+                    "step": 1,
+                    "kind": "answer",
+                    "partner": [
+                        "What seems to be the problem today?",
+                        "Что вас сегодня беспокоит?"
+                    ],
+                    "learner": [
+                        "My son has a fever and a sore throat.",
+                        "У моего сына температура и болит горло."
+                    ]
+                },
+                {
+                    "step": 2,
+                    "kind": "answer",
+                    "partner": [
+                        "How long has he had these symptoms?",
+                        "Как давно у него эти симптомы?"
+                    ],
+                    "learner": [
+                        "He has had them for three days.",
+                        "Они у него уже три дня."
+                    ]
+                },
+                {
+                    "step": 3,
+                    "kind": "answer",
+                    "partner": [
+                        "What was his highest temperature?",
+                        "Какая у него была самая высокая температура?"
+                    ],
+                    "learner": [
+                        "His highest temperature was 39 degrees.",
+                        "Самая высокая температура была 39 градусов."
+                    ]
+                },
+                {
+                    "step": 4,
+                    "kind": "answer",
+                    "partner": [
+                        "Is he eating and drinking normally?",
+                        "Он ест и пьёт как обычно?"
+                    ],
+                    "learner": [
+                        "He is eating less than usual.",
+                        "Он ест меньше, чем обычно."
+                    ]
+                },
+                {
+                    "step": 5,
+                    "kind": "answer",
+                    "partner": [
+                        "It looks like a throat infection. Give him fluids, rest, and paracetamol every six hours.",
+                        "Похоже на инфекцию горла. Давайте ему питьё, отдых и парацетамол каждые шесть часов."
+                    ],
+                    "learner": [
+                        "I'll give paracetamol every six hours.",
+                        "Я буду давать парацетамол каждые шесть часов."
+                    ]
+                },
+                {
+                    "step": 6,
+                    "kind": "rescue",
+                    "partner": [
+                        "Give him fluids, rest, and paracetamol every six hours.",
+                        "Давайте ему питьё, отдых и парацетамол каждые шесть часов."
+                    ],
+                    "learner": [
+                        "Could you say that more slowly, please?",
+                        "Скажите, пожалуйста, помедленнее."
+                    ]
+                },
+                {
+                    "step": 7,
+                    "kind": "ask",
+                    "partner": [
+                        "No, not now. This seems viral, so antibiotics won't help.",
+                        "Нет, сейчас нет. Это похоже на вирусную инфекцию, поэтому антибиотики не помогут."
+                    ],
+                    "learner": [
+                        "Does he need the antibiotic?",
+                        "Ему нужен антибиотик?"
+                    ]
+                },
+                {
+                    "step": 8,
+                    "kind": "ask",
+                    "partner": [
+                        "Come back tomorrow if the fever stays high or he can't drink.",
+                        "Приходите завтра, если температура останется высокой или он не сможет пить."
+                    ],
+                    "learner": [
+                        "When should we come back if the fever gets worse?",
+                        "Когда нам нужно прийти снова, если температура станет выше?"
+                    ]
+                }
+            ],
+            "frames": [
+                [
+                    "p1",
+                    "My son has ___.",
+                    "У моего сына ___.",
+                    [
+                        "a fever and a sore throat / температура и болит горло",
+                        "a cough and chills / кашель и озноб",
+                        "an earache and a fever / боль в ухе и температура"
+                    ]
+                ],
+                [
+                    "p2",
+                    "He has had them ___.",
+                    "Они у него уже ___.",
+                    [
+                        "for three days / три дня",
+                        "since yesterday / со вчерашнего дня",
+                        "for a week / неделю"
+                    ]
+                ],
+                [
+                    "p3",
+                    "His highest temperature was ___.",
+                    "Самая высокая температура была ___.",
+                    [
+                        "39 degrees / 39 градусов",
+                        "38.5 degrees / 38,5 градусов",
+                        "40 degrees / 40 градусов"
+                    ]
+                ],
+                [
+                    "p4",
+                    "He is eating ___.",
+                    "Он ест ___.",
+                    [
+                        "less than usual / меньше, чем обычно",
+                        "almost nothing / почти ничего",
+                        "normally now / уже нормально"
+                    ]
+                ],
+                [
+                    "p5",
+                    "I'll give paracetamol ___.",
+                    "Я буду давать парацетамол ___.",
+                    [
+                        "every six hours / каждые шесть часов",
+                        "twice a day / два раза в день",
+                        "before bed / перед сном"
+                    ]
+                ],
+                [
+                    "p6",
+                    "Does he need ___?",
+                    "Ему нужен ___?",
+                    [
+                        "the antibiotic / антибиотик",
+                        "a test / анализ",
+                        "a prescription / рецепт"
+                    ]
+                ],
+                [
+                    "p7",
+                    "When should we come back if ___?",
+                    "Когда нам нужно прийти снова, если ___?",
+                    [
+                        "if the fever gets worse / если температура станет выше",
+                        "if he starts coughing / если у него начнётся кашель",
+                        "if he won't eat / если он не будет есть"
+                    ]
+                ]
+            ],
+            "codes": {
+                "frame.native_agreement": 1,
+                "filler.ungrammatical": 3,
+                "filler.is_clause": 3,
+                "key.no_content_word": 2,
+                "key.contains_filler": 1,
+                "line.ne_frame": 1,
+                "line.too_long": 1,
+                "check.verbatim": 1,
+                "filler.native_seam": 4
+            }
+        }
+    }
+}

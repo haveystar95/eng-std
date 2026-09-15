@@ -1,0 +1,747 @@
+{
+    "topic": {
+        "title_target": "Airport check-in",
+        "title_native": "Регистрация в аэропорту",
+        "description_target": "Check in for a flight, show your passport, talk about your bags, and choose a seat.",
+        "description_native": "Зарегистрируйтесь на рейс, покажите паспорт, скажите про багаж и выберите место."
+    },
+    "learner_role": {
+        "role_target": "Passenger",
+        "role_native": "Пассажир"
+    },
+    "role_gender": "female",
+    "dialogue": [
+        {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p1",
+                    "filler": "for this flight",
+                    "text_target": "I'm checking in for this flight.",
+                    "text_native": "Я регистрируюсь на этот рейс.",
+                    "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                    "speaking_key": "checking in",
+                    "simplified_variants": [
+                        "Check-in for this flight.",
+                        "I'm here to check in."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Sure. May I see your passport?",
+                    "text_native": "Конечно. Можно ваш паспорт?"
+                }
+            ],
+            "check": {
+                "text_target": "What does the agent ask to see?",
+                "text_native": "Что сотрудница просит показать?",
+                "options": [
+                    {
+                        "text_target": "A boarding pass",
+                        "text_native": "Посадочный талон"
+                    },
+                    {
+                        "text_target": "An ID document",
+                        "text_native": "Документ, удостоверяющий личность"
+                    },
+                    {
+                        "text_target": "A suitcase tag",
+                        "text_native": "Багажную бирку"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница просит показать паспорт, то есть документ, удостоверяющий личность."
+            }
+        },
+        {
+            "step": 2,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Thank you. Where are you flying today?",
+                    "text_native": "Спасибо. Куда вы летите сегодня?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p2",
+                    "filler": "to London",
+                    "text_target": "I'm flying to London.",
+                    "text_native": "Я лечу в Лондон.",
+                    "pronunciation_native": "Айм флайинг ту Ландан.",
+                    "speaking_key": "flying to",
+                    "simplified_variants": [
+                        "To London.",
+                        "I'm going to London."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the agent want to know?",
+                "text_native": "Что сотрудница хочет узнать?",
+                "options": [
+                    {
+                        "text_target": "The passenger's destination",
+                        "text_native": "Пункт назначения пассажира"
+                    },
+                    {
+                        "text_target": "The passenger's seat number",
+                        "text_native": "Номер места пассажира"
+                    },
+                    {
+                        "text_target": "The passenger's bag weight",
+                        "text_native": "Вес багажа пассажира"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Сотрудница спрашивает, куда летит пассажир."
+            }
+        },
+        {
+            "step": 3,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Do you have any bags to check?",
+                    "text_native": "У вас есть багаж для сдачи?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p3",
+                    "filler": "one suitcase",
+                    "text_target": "I have one suitcase.",
+                    "text_native": "У меня один чемодан.",
+                    "pronunciation_native": "Ай хэв уан суиткейс.",
+                    "speaking_key": "I have",
+                    "simplified_variants": [
+                        "One suitcase.",
+                        "I have a suitcase."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What kind of bag does the agent ask about?",
+                "text_native": "О каком багаже спрашивает сотрудница?",
+                "options": [
+                    {
+                        "text_target": "A bag for the hold",
+                        "text_native": "Багаж, который сдают"
+                    },
+                    {
+                        "text_target": "A small personal item",
+                        "text_native": "Маленькая личная вещь"
+                    },
+                    {
+                        "text_target": "A duty-free bag",
+                        "text_native": "Пакет из duty free"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Сотрудница спрашивает про багаж, который нужно сдать."
+            }
+        },
+        {
+            "step": 4,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p4",
+                    "filler": "this backpack",
+                    "text_target": "Can I take this backpack?",
+                    "text_native": "Можно взять этот рюкзак?",
+                    "pronunciation_native": "Кэн ай тэйк зис бэкпэк?",
+                    "speaking_key": "Can I take",
+                    "simplified_variants": [
+                        "Is this backpack okay?",
+                        "Can I bring this backpack?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Yes, that can go as hand luggage.",
+                    "text_native": "Да, это можно взять как ручную кладь."
+                }
+            ],
+            "check": {
+                "text_target": "How can the backpack travel?",
+                "text_native": "Как можно провезти рюкзак?",
+                "options": [
+                    {
+                        "text_target": "As cabin baggage",
+                        "text_native": "Как ручную кладь"
+                    },
+                    {
+                        "text_target": "In oversized baggage",
+                        "text_native": "Как негабаритный багаж"
+                    },
+                    {
+                        "text_target": "Only under the seat check",
+                        "text_native": "Только на отдельную проверку у места"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Сотрудница говорит, что рюкзак можно взять как ручную кладь."
+            }
+        },
+        {
+            "step": 5,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p5",
+                    "filler": "a window seat",
+                    "text_target": "Can I have a window seat?",
+                    "text_native": "Можно место у окна?",
+                    "pronunciation_native": "Кэн ай хэв э уиндоу сит?",
+                    "speaking_key": "have a",
+                    "simplified_variants": [
+                        "A window seat, please.",
+                        "Can I get a window seat?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Yes, seat 14A is available.",
+                    "text_native": "Да, место 14A свободно."
+                }
+            ],
+            "check": {
+                "text_target": "Which seat does the agent offer?",
+                "text_native": "Какое место предлагает сотрудница?",
+                "options": [
+                    {
+                        "text_target": "12C",
+                        "text_native": "12C"
+                    },
+                    {
+                        "text_target": "14A",
+                        "text_native": "14A"
+                    },
+                    {
+                        "text_target": "16F",
+                        "text_native": "16F"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница предлагает место 14A."
+            }
+        },
+        {
+            "step": 6,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Here is your boarding pass. Gate 12, boarding at 18:40.",
+                    "text_native": "Вот ваш посадочный талон. Выход 12, посадка в 18:40."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p6",
+                    "filler": "Gate 12",
+                    "text_target": "My gate is Gate 12.",
+                    "text_native": "Мой выход — 12.",
+                    "pronunciation_native": "Май гейт из гейт твэлв.",
+                    "speaking_key": "gate is",
+                    "simplified_variants": [
+                        "Gate 12.",
+                        "I'm at Gate 12."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "When does boarding start?",
+                "text_native": "Во сколько начинается посадка?",
+                "options": [
+                    {
+                        "text_target": "At twenty to seven",
+                        "text_native": "Без двадцати семь"
+                    },
+                    {
+                        "text_target": "At half past six",
+                        "text_native": "В половине седьмого"
+                    },
+                    {
+                        "text_target": "At seven o'clock",
+                        "text_native": "В семь часов"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "18:40 — это без двадцати семь вечера."
+            }
+        },
+        {
+            "step": 7,
+            "kind": "rescue",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": null,
+                    "filler": null,
+                    "text_target": "Could you repeat that, please?",
+                    "text_native": "Повторите, пожалуйста.",
+                    "pronunciation_native": "Куд ю рипит зэт, плиз?",
+                    "speaking_key": "repeat that",
+                    "simplified_variants": [
+                        "Please repeat that.",
+                        "Say that again, please."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Gate 12. Boarding is at 18:40.",
+                    "text_native": "Выход 12. Посадка в 18:40."
+                }
+            ],
+            "check": {
+                "text_target": "What gate number does the agent repeat?",
+                "text_native": "Какой номер выхода повторяет сотрудница?",
+                "options": [
+                    {
+                        "text_target": "Gate 10",
+                        "text_native": "Выход 10"
+                    },
+                    {
+                        "text_target": "Gate 12",
+                        "text_native": "Выход 12"
+                    },
+                    {
+                        "text_target": "Gate 20",
+                        "text_native": "Выход 20"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница повторяет, что выход номер 12."
+            }
+        },
+        {
+            "step": 8,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Your suitcase is checked through to London.",
+                    "text_native": "Ваш чемодан зарегистрирован до Лондона."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p7",
+                    "filler": "to London",
+                    "text_target": "My suitcase goes to London.",
+                    "text_native": "Мой чемодан едет в Лондон.",
+                    "pronunciation_native": "Май суиткейс гоуз ту Ландан.",
+                    "speaking_key": "suitcase goes",
+                    "simplified_variants": [
+                        "It goes to London.",
+                        "The suitcase goes to London."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "Where is the suitcase checked through to?",
+                "text_native": "До какого города зарегистрирован чемодан?",
+                "options": [
+                    {
+                        "text_target": "To Paris",
+                        "text_native": "До Парижа"
+                    },
+                    {
+                        "text_target": "To Berlin",
+                        "text_native": "До Берлина"
+                    },
+                    {
+                        "text_target": "To London",
+                        "text_native": "До Лондона"
+                    }
+                ],
+                "correct_option_index": 2,
+                "explanation_native": "Сотрудница говорит, что чемодан зарегистрирован до Лондона."
+            }
+        }
+    ],
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "ask",
+            "frame_target": "I'm checking in ___",
+            "frame_native": "Я регистрируюсь ___",
+            "pronunciation_native": "Айм чекин ин ___",
+            "slot": {
+                "hint_native": "на какой рейс",
+                "fillers": [
+                    {
+                        "target": "for this flight",
+                        "native": "на этот рейс",
+                        "pronunciation_native": "фор зис флайт",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "for the morning flight",
+                        "native": "на утренний рейс",
+                        "pronunciation_native": "фор зе морнин флайт",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "I'm flying ___",
+            "frame_native": "Я лечу ___",
+            "pronunciation_native": "Айм флайинг ___",
+            "slot": {
+                "hint_native": "куда",
+                "fillers": [
+                    {
+                        "target": "to London",
+                        "native": "в Лондон",
+                        "pronunciation_native": "ту Ландан",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "to Paris",
+                        "native": "в Париж",
+                        "pronunciation_native": "ту Пэрис",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "to Rome",
+                        "native": "в Рим",
+                        "pronunciation_native": "ту Роум",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "frame_target": "I have ___",
+            "frame_native": "У меня ___",
+            "pronunciation_native": "Ай хэв ___",
+            "slot": {
+                "hint_native": "какой багаж есть",
+                "fillers": [
+                    {
+                        "target": "one suitcase",
+                        "native": "один чемодан",
+                        "pronunciation_native": "уан суиткейс",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "two bags",
+                        "native": "две сумки",
+                        "pronunciation_native": "ту бэгз",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "one backpack",
+                        "native": "один рюкзак",
+                        "pronunciation_native": "уан бэкпэк",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p4",
+            "kind": "ask",
+            "frame_target": "Can I take ___?",
+            "frame_native": "Можно взять ___?",
+            "pronunciation_native": "Кэн ай тэйк ___?",
+            "slot": {
+                "hint_native": "что взять с собой",
+                "fillers": [
+                    {
+                        "target": "this backpack",
+                        "native": "этот рюкзак",
+                        "pronunciation_native": "зис бэкпэк",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "this small bag",
+                        "native": "эту маленькую сумку",
+                        "pronunciation_native": "зис смол бэг",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "frame_target": "Can I have ___?",
+            "frame_native": "Можно ___?",
+            "pronunciation_native": "Кэн ай хэв ___?",
+            "slot": {
+                "hint_native": "какое место",
+                "fillers": [
+                    {
+                        "target": "a window seat",
+                        "native": "место у окна",
+                        "pronunciation_native": "э уиндоу сит",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "an aisle seat",
+                        "native": "место у прохода",
+                        "pronunciation_native": "эн айл сит",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "a front seat",
+                        "native": "место впереди",
+                        "pronunciation_native": "э франт сит",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p6",
+            "kind": "answer",
+            "frame_target": "My gate is ___",
+            "frame_native": "Мой выход — ___",
+            "pronunciation_native": "Май гейт из ___",
+            "slot": {
+                "hint_native": "номер выхода",
+                "fillers": [
+                    {
+                        "target": "Gate 12",
+                        "native": "12",
+                        "pronunciation_native": "гейт твэлв",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "Gate 8",
+                        "native": "8",
+                        "pronunciation_native": "гейт эйт",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "Gate 15",
+                        "native": "15",
+                        "pronunciation_native": "гейт фифтин",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p7",
+            "kind": "answer",
+            "frame_target": "My suitcase goes ___",
+            "frame_native": "Мой чемодан едет ___",
+            "pronunciation_native": "Май суиткейс гоуз ___",
+            "slot": {
+                "hint_native": "куда отправят чемодан",
+                "fillers": [
+                    {
+                        "target": "to London",
+                        "native": "в Лондон",
+                        "pronunciation_native": "ту Ландан",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "to Madrid",
+                        "native": "в Мадрид",
+                        "pronunciation_native": "ту Мадрид",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Куда летит пассажир?",
+                "options_native": [
+                    "В Лондон",
+                    "В Париж",
+                    "В Рим"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "В разговоре пассажир говорит, что летит в Лондон."
+            },
+            {
+                "text_native": "Какой багаж пассажир сдаёт?",
+                "options_native": [
+                    "Один чемодан",
+                    "Один рюкзак",
+                    "Две сумки"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Пассажир говорит, что у него один чемодан для сдачи."
+            },
+            {
+                "text_native": "Какое место получает пассажир?",
+                "options_native": [
+                    "У прохода",
+                    "У окна",
+                    "В хвосте самолёта"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница говорит, что место 14A свободно, это место у окна."
+            },
+            {
+                "text_native": "Во сколько посадка?",
+                "options_native": [
+                    "18:20",
+                    "18:40",
+                    "19:00"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница сообщает, что посадка начинается в 18:40."
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "term_target": "check in",
+            "translation_native": "регистрироваться на рейс",
+            "pronunciation_native": "чек ин",
+            "definition_target": "to arrive at the airport desk and register for your flight",
+            "kind": "chunk",
+            "image_prompt": "airport passenger at a check-in counter with a suitcase and passport",
+            "used_in": [
+                "p1"
+            ]
+        },
+        {
+            "id": "v2",
+            "term_target": "passport",
+            "translation_native": "паспорт",
+            "pronunciation_native": "паспорт",
+            "definition_target": "an official document for travel and identity",
+            "kind": "word",
+            "image_prompt": "passport in a traveler's hand at an airport counter",
+            "used_in": [
+                "A1"
+            ]
+        },
+        {
+            "id": "v3",
+            "term_target": "suitcase",
+            "translation_native": "чемодан",
+            "pronunciation_native": "суиткейс",
+            "definition_target": "a large travel bag with a hard or soft case",
+            "kind": "word",
+            "image_prompt": "closed suitcase standing beside an airport check-in desk",
+            "used_in": [
+                "p3",
+                "p7",
+                "A8"
+            ]
+        },
+        {
+            "id": "v4",
+            "term_target": "backpack",
+            "translation_native": "рюкзак",
+            "pronunciation_native": "бэкпэк",
+            "definition_target": "a bag carried on your back with two straps",
+            "kind": "word",
+            "image_prompt": "small backpack on an airport floor near a passenger",
+            "used_in": [
+                "p4"
+            ]
+        },
+        {
+            "id": "v5",
+            "term_target": "hand luggage",
+            "translation_native": "ручная кладь",
+            "pronunciation_native": "хэнд лагидж",
+            "definition_target": "bags you take with you into the plane cabin",
+            "kind": "chunk",
+            "image_prompt": "small bag placed in an airplane overhead bin",
+            "used_in": [
+                "A4"
+            ]
+        },
+        {
+            "id": "v6",
+            "term_target": "window seat",
+            "translation_native": "место у окна",
+            "pronunciation_native": "уиндоу сит",
+            "definition_target": "a seat next to the window on a plane",
+            "kind": "chunk",
+            "image_prompt": "airplane seat next to a window with clouds outside",
+            "used_in": [
+                "p5"
+            ]
+        },
+        {
+            "id": "v7",
+            "term_target": "boarding pass",
+            "translation_native": "посадочный талон",
+            "pronunciation_native": "бординг пас",
+            "definition_target": "the document that shows your flight and seat details",
+            "kind": "chunk",
+            "image_prompt": "boarding pass in a passenger's hand at the airport",
+            "used_in": [
+                "A6"
+            ]
+        },
+        {
+            "id": "v8",
+            "term_target": "gate",
+            "translation_native": "выход на посадку",
+            "pronunciation_native": "гейт",
+            "definition_target": "the airport area where passengers go to board the plane",
+            "kind": "word",
+            "image_prompt": "airport departure gate sign with passengers waiting nearby",
+            "used_in": [
+                "p6",
+                "A6",
+                "A7"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,2916 @@
+[
+    {
+        "slug": "interview",
+        "pair": "ru→en",
+        "level": "intermediate",
+        "goal": "Собеседование на позицию менеджера проектов в IT-компании. У меня пять лет опыта, руковожу командой из шести человек",
+        "topic": "Собеседование",
+        "topic_description": "Situation: A job interview at an IT company for a project manager position. The learner has five years of experience and currently leads a team of six people. This is the main interview where they need to present themselves clearly and confidently.\nLearner: the candidate for the project manager role. Partner: the hiring manager.\nLearner must be able to: introduce their professional background; describe their current role, responsibilities, and experience leading a team of six; talk about relevant project management skills and achievements; answer common interview questions and ask a few questions about the role and team.\nPartner will: ask about work experience, leadership style, and past projects; ask why the learner wants this job and how they handle challenges; describe the role, team, and expectations.\nNot in this scene: HR screening, salary negotiation, contract details, technical task feedback.\n\nAbout the learner, in their own words: Собеседование на позицию менеджера проектов в IT-компании. У меня пять лет опыта, руковожу командой из шести человек",
+        "source_scene": "01M2H15Y2JMY990RRK1F624BGQ",
+        "status": "ready",
+        "fail_reason": null,
+        "lesson_cost_usd": "0.084917",
+        "lesson_latency_ms": 42924,
+        "lesson_attempts": 1,
+        "findings_final": [
+            {
+                "code": "pronunciation.script",
+                "address": "p4.f2",
+                "detail": "the reading «э պրосэс импрувмэнт» leaves the native script"
+            },
+            {
+                "code": "frame.native_punct",
+                "address": "p6",
+                "detail": "«Could you tell me about ___?» ends with «?», «Расскажите, пожалуйста, о ___.» with «.»"
+            },
+            {
+                "code": "key.not_in_line",
+                "address": "B1",
+                "detail": "the key «have of experience» is not in «I have five years of experience.»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B2",
+                "detail": "the key «lead a team» takes words of the filler «a team of six»"
+            },
+            {
+                "code": "variant.longer",
+                "address": "B4",
+                "detail": "the variant «A product launch was a big success.» has 7 words, the line 6"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B8",
+                "detail": "the key «does success in» takes words of the filler «success in this role»"
+            },
+            {
+                "code": "vocab.free_combination",
+                "address": "v8",
+                "detail": "«on time» is a free combination of ordinary words"
+            },
+            {
+                "code": "filler.native_seam",
+                "address": "p5.f2",
+                "detail": "«Мне нравится работать над кросс-функциональными командами.» («Мне нравится работать над ___.» with «кросс-функциональными командами») does not read as Russian, the seam judge says"
+            }
+        ],
+        "findings_raw": 7,
+        "pack_skips": [],
+        "calls": [
+            {
+                "call": "lesson",
+                "prompt_version": "lesson_day.v4.5",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 7482,
+                "tokens_out": 4271,
+                "cost_usd": "0.082770",
+                "latency_ms": 41267,
+                "asked": {
+                    "violations": []
+                },
+                "payload": {
+                    "role_gender": "female"
+                }
+            },
+            {
+                "call": "judge",
+                "prompt_version": "lesson_seam_judge.v1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 1398,
+                "tokens_out": 244,
+                "cost_usd": "0.002147",
+                "latency_ms": 1657,
+                "asked": {
+                    "native": "Russian",
+                    "items": [
+                        {
+                            "id": "p1.f1",
+                            "pattern": "У меня ___ опыта.",
+                            "value": "пять лет",
+                            "sentence": "У меня пять лет опыта."
+                        },
+                        {
+                            "id": "p1.f2",
+                            "pattern": "У меня ___ опыта.",
+                            "value": "семь лет",
+                            "sentence": "У меня семь лет опыта."
+                        },
+                        {
+                            "id": "p1.f3",
+                            "pattern": "У меня ___ опыта.",
+                            "value": "три года",
+                            "sentence": "У меня три года опыта."
+                        },
+                        {
+                            "id": "p2.f1",
+                            "pattern": "Я руковожу ___.",
+                            "value": "командой из шести человек",
+                            "sentence": "Я руковожу командой из шести человек."
+                        },
+                        {
+                            "id": "p2.f2",
+                            "pattern": "Я руковожу ___.",
+                            "value": "двумя проектными командами",
+                            "sentence": "Я руковожу двумя проектными командами."
+                        },
+                        {
+                            "id": "p2.f3",
+                            "pattern": "Я руковожу ___.",
+                            "value": "удалённой командой",
+                            "sentence": "Я руковожу удалённой командой."
+                        },
+                        {
+                            "id": "p3.f1",
+                            "pattern": "Мой стиль руководства — ___.",
+                            "value": "понятная коммуникация",
+                            "sentence": "Мой стиль руководства — понятная коммуникация."
+                        },
+                        {
+                            "id": "p3.f2",
+                            "pattern": "Мой стиль руководства — ___.",
+                            "value": "общая ответственность",
+                            "sentence": "Мой стиль руководства — общая ответственность."
+                        },
+                        {
+                            "id": "p3.f3",
+                            "pattern": "Мой стиль руководства — ___.",
+                            "value": "регулярная обратная связь",
+                            "sentence": "Мой стиль руководства — регулярная обратная связь."
+                        },
+                        {
+                            "id": "p4.f1",
+                            "pattern": "Я горжусь ___.",
+                            "value": "запуском продукта",
+                            "sentence": "Я горжусь запуском продукта."
+                        },
+                        {
+                            "id": "p4.f2",
+                            "pattern": "Я горжусь ___.",
+                            "value": "улучшением процесса",
+                            "sentence": "Я горжусь улучшением процесса."
+                        },
+                        {
+                            "id": "p4.f3",
+                            "pattern": "Я горжусь ___.",
+                            "value": "мобильным приложением",
+                            "sentence": "Я горжусь мобильным приложением."
+                        },
+                        {
+                            "id": "p5.f1",
+                            "pattern": "Мне нравится работать над ___.",
+                            "value": "сложными проектами",
+                            "sentence": "Мне нравится работать над сложными проектами."
+                        },
+                        {
+                            "id": "p5.f2",
+                            "pattern": "Мне нравится работать над ___.",
+                            "value": "кросс-функциональными командами",
+                            "sentence": "Мне нравится работать над кросс-функциональными командами."
+                        },
+                        {
+                            "id": "p5.f3",
+                            "pattern": "Мне нравится работать над ___.",
+                            "value": "клиентскими платформами",
+                            "sentence": "Мне нравится работать над клиентскими платформами."
+                        },
+                        {
+                            "id": "p6.f1",
+                            "pattern": "Расскажите, пожалуйста, о ___.",
+                            "value": "структуре команды",
+                            "sentence": "Расскажите, пожалуйста, о структуре команды."
+                        },
+                        {
+                            "id": "p6.f2",
+                            "pattern": "Расскажите, пожалуйста, о ___.",
+                            "value": "процессе онбординга",
+                            "sentence": "Расскажите, пожалуйста, о процессе онбординга."
+                        },
+                        {
+                            "id": "p6.f3",
+                            "pattern": "Расскажите, пожалуйста, о ___.",
+                            "value": "главных приоритетах",
+                            "sentence": "Расскажите, пожалуйста, о главных приоритетах."
+                        },
+                        {
+                            "id": "p7.f1",
+                            "pattern": "Как выглядит ___?",
+                            "value": "успех в этой роли",
+                            "sentence": "Как выглядит успех в этой роли?"
+                        },
+                        {
+                            "id": "p7.f2",
+                            "pattern": "Как выглядит ___?",
+                            "value": "типичная неделя",
+                            "sentence": "Как выглядит типичная неделя?"
+                        },
+                        {
+                            "id": "p7.f3",
+                            "pattern": "Как выглядит ___?",
+                            "value": "первый месяц",
+                            "sentence": "Как выглядит первый месяц?"
+                        }
+                    ]
+                },
+                "payload": {
+                    "verdicts": [
+                        {
+                            "id": "p1.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p1.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p1.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f2",
+                            "reads": false
+                        },
+                        {
+                            "id": "p5.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f3",
+                            "reads": true
+                        }
+                    ]
+                }
+            }
+        ],
+        "repair_payloads": [],
+        "wall_s": 43.2,
+        "at": "2026-09-15T16:59:42+00:00"
+    },
+    {
+        "slug": "rent",
+        "pair": "ru→en",
+        "level": "intermediate",
+        "goal": "Снимаю квартиру в Берлине на год: смотрю квартиру, спрашиваю про депозит, коммунальные платежи и договор. Работаю удалённо, у меня кошка",
+        "topic": "Просмотр жилья",
+        "topic_description": "Situation: At an apartment viewing in Berlin, the learner is meeting the landlord about renting the flat for one year. The learner works remotely and has a cat, so they need to check whether both are acceptable and understand the main rental terms.\nLearner: the learner is a prospective tenant. Partner: the partner is the landlord.\nLearner must be able to: ask about the deposit amount and when it is returned; clarify what utilities are included in the monthly payment and what costs are separate; discuss key contract terms for a one-year rental; ask whether remote work from home and keeping a cat are allowed.\nPartner will: explain the rent, deposit, and utility costs; describe the contract length and basic rules of the flat; answer questions about pets, home office use, and move-in conditions.\nNot in this scene: applying for the flat, negotiating documents, signing the contract, paying money after approval.\n\nAbout the learner, in their own words: Снимаю квартиру в Берлине на год: смотрю квартиру, спрашиваю про депозит, коммунальные платежи и договор. Работаю удалённо, у меня кошка",
+        "source_scene": "01M2H175ZWX46TXXNEM1WDCYBA",
+        "status": "failed",
+        "fail_reason": "fatal: filler.ungrammatical",
+        "lesson_cost_usd": "0.082521",
+        "lesson_latency_ms": 39106,
+        "lesson_attempts": 1,
+        "findings_final": [
+            {
+                "code": "frame.native_agreement",
+                "address": "p6",
+                "detail": "«___ разрешена?»: «разрешена» agrees with the slot — it changes with the filler"
+            },
+            {
+                "code": "filler.ungrammatical",
+                "address": "p1.f2",
+                "detail": "«I can move in in June.»: a word is doubled at the seam"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B3",
+                "detail": "the key «get the» takes words of the filler «the deposit»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B4",
+                "detail": "the key «included in the» takes words of the filler «the monthly payment»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B5",
+                "detail": "the key «work from home» takes words of the filler «from home»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B6",
+                "detail": "the key «cat allowed» takes words of the filler «a cat»"
+            },
+            {
+                "code": "variant.longer",
+                "address": "B6",
+                "detail": "the variant «Can I keep a cat?» has 5 words, the line 4"
+            },
+            {
+                "code": "check.verbatim",
+                "address": "x4.check",
+                "detail": "the right option «Power and internet» repeats «and internet» of the partner's line"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v4",
+                "detail": "«utilities» is not in the partner's line of exchange 4"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v8",
+                "detail": "«remote work» is not in the partner's line of exchange 5"
+            }
+        ],
+        "findings_raw": 10,
+        "pack_skips": [],
+        "calls": [
+            {
+                "call": "lesson",
+                "prompt_version": "lesson_day.v4.5",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 7503,
+                "tokens_out": 4006,
+                "cost_usd": "0.078848",
+                "latency_ms": 36205,
+                "asked": {
+                    "violations": []
+                },
+                "payload": {
+                    "role_gender": "male"
+                }
+            },
+            {
+                "call": "repair",
+                "prompt_version": "lesson_card_repair.v1.1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 4021,
+                "tokens_out": 146,
+                "cost_usd": "0.003673",
+                "latency_ms": 2901,
+                "asked": {
+                    "address": "p1",
+                    "kind": "frame",
+                    "findings": [
+                        {
+                            "code": "filler.ungrammatical",
+                            "detail": "p1.f2: «I can move in in June.»: a word is doubled at the seam"
+                        }
+                    ],
+                    "card": {
+                        "id": "p1",
+                        "kind": "answer",
+                        "frame_target": "I can move in ___.",
+                        "frame_native": "Я могу въехать ___.",
+                        "pronunciation_native": "Ай кэн мув ин ___.",
+                        "slot": {
+                            "hint_native": "когда",
+                            "fillers": [
+                                {
+                                    "target": "next month",
+                                    "native": "в следующем месяце",
+                                    "pronunciation_native": "нэкст манс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "in June",
+                                    "native": "в июне",
+                                    "pronunciation_native": "ин джун",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "on Monday",
+                                    "native": "в понедельник",
+                                    "pronunciation_native": "он мандэй",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "id": "p1",
+                        "kind": "answer",
+                        "frame_target": "I can move in ___.",
+                        "frame_native": "Я могу въехать ___.",
+                        "pronunciation_native": "Ай кэн мув ин ___.",
+                        "slot": {
+                            "hint_native": "когда",
+                            "fillers": [
+                                {
+                                    "target": "next month",
+                                    "native": "в следующем месяце",
+                                    "pronunciation_native": "нэкст манс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "in June",
+                                    "native": "в июне",
+                                    "pronunciation_native": "ин джун",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "on Monday",
+                                    "native": "в понедельник",
+                                    "pronunciation_native": "он мандэй",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        ],
+        "repair_payloads": [
+            {
+                "address": "p1",
+                "payload": {
+                    "card": {
+                        "id": "p1",
+                        "kind": "answer",
+                        "frame_target": "I can move in ___.",
+                        "frame_native": "Я могу въехать ___.",
+                        "pronunciation_native": "Ай кэн мув ин ___.",
+                        "slot": {
+                            "hint_native": "когда",
+                            "fillers": [
+                                {
+                                    "target": "next month",
+                                    "native": "в следующем месяце",
+                                    "pronunciation_native": "нэкст манс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "in June",
+                                    "native": "в июне",
+                                    "pronunciation_native": "ин джун",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "on Monday",
+                                    "native": "в понедельник",
+                                    "pronunciation_native": "он мандэй",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        ],
+        "wall_s": 39.2,
+        "at": "2026-09-15T17:00:22+00:00"
+    },
+    {
+        "slug": "bank",
+        "pair": "ru→en",
+        "level": "beginner",
+        "goal": "Открываю счёт и банковскую карту в банке. Я студент, приехал учиться на год",
+        "topic": "Счёт и карта",
+        "topic_description": "Situation: At a bank branch, the learner is opening a bank account and getting a bank card for a one-year stay as a student abroad. It is a first visit to the bank, and the learner needs help with the basic account setup.\nLearner: the learner is a student. Partner: the partner is a bank clerk.\nLearner must be able to: say they want to open an account and get a bank card; present basic documents and give personal details; answer simple questions about address, phone number, and student status; ask about fees, card delivery, and how long the account stays open.\nPartner will: ask for identification and proof of address or student status; explain account options and basic fees; say what happens next and when the card will be ready.\nNot in this scene: using the card in shops or online, reporting a lost card, solving problems with transfers or payments.\n\nAbout the learner, in their own words: Открываю счёт и банковскую карту в банке. Я студент, приехал учиться на год",
+        "source_scene": "01M2H18B9WRB628Y1F3BFNT5YN",
+        "status": "failed",
+        "fail_reason": "fatal: line.ne_frame",
+        "lesson_cost_usd": "0.089075",
+        "lesson_latency_ms": 40551,
+        "lesson_attempts": 1,
+        "findings_final": [
+            {
+                "code": "frame.native_agreement",
+                "address": "p5",
+                "detail": "«Какая ___?»: «какая» agrees with the slot — it changes with the filler"
+            },
+            {
+                "code": "frame.native_agreement",
+                "address": "p6",
+                "detail": "«Когда ___ будет готово?»: «готово» agrees with the slot — it changes with the filler"
+            },
+            {
+                "code": "frame.unresolved_pronoun",
+                "address": "p7",
+                "detail": "«Can I keep it for ___?» leans on «it», and nothing in the frame is what it stands for"
+            },
+            {
+                "code": "filler.one_in_dialogue",
+                "address": "B5",
+                "detail": "«the monthly fee» is not one of p5's fillers"
+            },
+            {
+                "code": "filler.one_in_dialogue",
+                "address": "p5.f1",
+                "detail": "«monthly fee» is marked in_dialogue, but no line says it"
+            },
+            {
+                "code": "key.no_content_word",
+                "address": "B3",
+                "detail": "«I'm ___.» has no content word outside the slot: the key is «I'm», the frame up to the slot, not «I'm a»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B3",
+                "detail": "the key «I'm a» takes words of the filler «a student»"
+            },
+            {
+                "code": "variant.longer",
+                "address": "B3",
+                "detail": "the variant «I am a student.» has 4 words, the line 3"
+            },
+            {
+                "code": "line.ne_frame",
+                "address": "B5",
+                "detail": "«What is the monthly fee?» is not «What is the ___?» with «the monthly fee»; served as «What is the the monthly fee?»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B5",
+                "detail": "the key «monthly fee» takes words of the filler «the monthly fee»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B6",
+                "detail": "the key «will the card» takes words of the filler «the card»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B8",
+                "detail": "the key «opens today» takes words of the filler «today»"
+            },
+            {
+                "code": "listening.distractor_not_filler",
+                "address": "L3",
+                "detail": "the question asks p3's slot («студент»): the right option «Для студентов её нет» is neither a number nor a time, the wrong option «Она будет через месяц» is a number or a time"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v4",
+                "detail": "«student status» is not in the partner's line of exchange 3"
+            }
+        ],
+        "findings_raw": 18,
+        "pack_skips": [],
+        "calls": [
+            {
+                "call": "lesson",
+                "prompt_version": "lesson_day.v4.5",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 7488,
+                "tokens_out": 4090,
+                "cost_usd": "0.080070",
+                "latency_ms": 36903,
+                "asked": {
+                    "violations": []
+                },
+                "payload": {
+                    "role_gender": "female"
+                }
+            },
+            {
+                "call": "repair",
+                "prompt_version": "lesson_card_repair.v1.1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 5721,
+                "tokens_out": 266,
+                "cost_usd": "0.005488",
+                "latency_ms": 1876,
+                "asked": {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "findings": [
+                        {
+                            "code": "exchange.second_question",
+                            "detail": "x1: the closing message of A «Sure. Can I see your passport first?» ends with a question mark"
+                        }
+                    ],
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Customer",
+                                "role_native": "Клиент",
+                                "phrase_id": "p1",
+                                "filler": "a bank account",
+                                "text_target": "I'd like to open a bank account.",
+                                "text_native": "Я хочу открыть банковский счёт.",
+                                "pronunciation_native": "айд лайк ту оупэн э бэнк экаунт",
+                                "speaking_key": "I'd like to open",
+                                "simplified_variants": [
+                                    "I want to open a bank account."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудница банка",
+                                "text_target": "Sure. Can I see your passport first?",
+                                "text_native": "Конечно. Можно сначала ваш паспорт?"
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Which document does the clerk ask for first?",
+                            "text_native": "Какой документ сотрудница просит сначала?",
+                            "options": [
+                                {
+                                    "text_target": "A student letter",
+                                    "text_native": "Справку из вуза"
+                                },
+                                {
+                                    "text_target": "A passport",
+                                    "text_native": "Паспорт"
+                                },
+                                {
+                                    "text_target": "A bank card",
+                                    "text_native": "Банковскую карту"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Сотрудница сначала просит паспорт."
+                        }
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Customer",
+                                "role_native": "Клиент",
+                                "phrase_id": "p1",
+                                "filler": "a bank account",
+                                "text_target": "I'd like to open a bank account.",
+                                "text_native": "Я хочу открыть банковский счёт.",
+                                "pronunciation_native": "айд лайк ту оупэн э бэнк экаунт",
+                                "speaking_key": "I'd like to open",
+                                "simplified_variants": [
+                                    "I want to open a bank account."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудница банка",
+                                "text_target": "Sure. Can I see your passport first.",
+                                "text_native": "Конечно. Можно сначала ваш паспорт."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Which document does the clerk ask for first?",
+                            "text_native": "Какой документ сотрудница просит сначала?",
+                            "options": [
+                                {
+                                    "text_target": "A student letter",
+                                    "text_native": "Справку из вуза"
+                                },
+                                {
+                                    "text_target": "A passport",
+                                    "text_native": "Паспорт"
+                                },
+                                {
+                                    "text_target": "A bank card",
+                                    "text_native": "Банковскую карту"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Сотрудница сначала просит паспорт."
+                        }
+                    },
+                    "frame_update": null
+                }
+            },
+            {
+                "call": "repair",
+                "prompt_version": "lesson_card_repair.v1.1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 4149,
+                "tokens_out": 90,
+                "cost_usd": "0.003517",
+                "latency_ms": 1772,
+                "asked": {
+                    "address": "B2",
+                    "kind": "line",
+                    "findings": [
+                        {
+                            "code": "filler.one_in_dialogue",
+                            "detail": "B2: «my rental contract» is not one of p2's fillers"
+                        },
+                        {
+                            "code": "line.ne_frame",
+                            "detail": "B2: «Here is my rental contract.» is not «Here is my ___.» with «my rental contract»; served as «Here is my my rental contract.»"
+                        }
+                    ],
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Customer",
+                        "role_native": "Клиент",
+                        "phrase_id": "p2",
+                        "filler": "my rental contract",
+                        "text_target": "Here is my rental contract.",
+                        "text_native": "Вот мой договор аренды.",
+                        "pronunciation_native": "хир из май рентэл контракт",
+                        "speaking_key": "Here is my",
+                        "simplified_variants": [
+                            "This is my rental contract."
+                        ]
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Customer",
+                        "role_native": "Клиент",
+                        "phrase_id": "p2",
+                        "filler": "rental contract",
+                        "text_target": "Here is my rental contract.",
+                        "text_native": "Вот мой договор аренды.",
+                        "pronunciation_native": "хир из май рентэл контракт",
+                        "speaking_key": "Here is my",
+                        "simplified_variants": [
+                            "This is my rental contract."
+                        ]
+                    }
+                }
+            }
+        ],
+        "repair_payloads": [
+            {
+                "address": "x1",
+                "payload": {
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Customer",
+                                "role_native": "Клиент",
+                                "phrase_id": "p1",
+                                "filler": "a bank account",
+                                "text_target": "I'd like to open a bank account.",
+                                "text_native": "Я хочу открыть банковский счёт.",
+                                "pronunciation_native": "айд лайк ту оупэн э бэнк экаунт",
+                                "speaking_key": "I'd like to open",
+                                "simplified_variants": [
+                                    "I want to open a bank account."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудница банка",
+                                "text_target": "Sure. Can I see your passport first.",
+                                "text_native": "Конечно. Можно сначала ваш паспорт."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Which document does the clerk ask for first?",
+                            "text_native": "Какой документ сотрудница просит сначала?",
+                            "options": [
+                                {
+                                    "text_target": "A student letter",
+                                    "text_native": "Справку из вуза"
+                                },
+                                {
+                                    "text_target": "A passport",
+                                    "text_native": "Паспорт"
+                                },
+                                {
+                                    "text_target": "A bank card",
+                                    "text_native": "Банковскую карту"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Сотрудница сначала просит паспорт."
+                        }
+                    },
+                    "frame_update": null
+                }
+            },
+            {
+                "address": "B2",
+                "payload": {
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Customer",
+                        "role_native": "Клиент",
+                        "phrase_id": "p2",
+                        "filler": "rental contract",
+                        "text_target": "Here is my rental contract.",
+                        "text_native": "Вот мой договор аренды.",
+                        "pronunciation_native": "хир из май рентэл контракт",
+                        "speaking_key": "Here is my",
+                        "simplified_variants": [
+                            "This is my rental contract."
+                        ]
+                    }
+                }
+            }
+        ],
+        "wall_s": 40.7,
+        "at": "2026-09-15T17:01:02+00:00"
+    },
+    {
+        "slug": "restaurant",
+        "pair": "ru→en",
+        "level": "beginner",
+        "goal": "Ужин в ресторане с семьёй: заказать еду, спросить про блюда, попросить счёт. У дочки аллергия на орехи",
+        "topic": "Заказ в ресторане",
+        "topic_description": "Situation: At a restaurant table during a family dinner, the learner speaks to a waiter to order food and drinks, ask about dishes, mention that the learner's daughter has a nut allergy, and ask for the bill at the end.\nLearner: the learner is a parent ordering for the family. Partner: the partner is a waiter.\nLearner must be able to: ask for the menu or recommendations; order simple food and drinks for several people; ask whether a dish contains nuts or is safe for the daughter; ask for the bill when the meal is finished.\nPartner will: ask what the family would like to order; describe a dish or say what it contains; ask follow-up questions about drinks, side dishes, or anything else.\nNot in this scene: booking a table, talking to the host at the entrance, making a complaint about bad food or wrong service.\n\nAbout the learner, in their own words: Ужин в ресторане с семьёй: заказать еду, спросить про блюда, попросить счёт. У дочки аллергия на орехи",
+        "source_scene": "01M2H19FWDH6EF3B04K8G69CXK",
+        "status": "ready",
+        "fail_reason": null,
+        "lesson_cost_usd": "0.099414",
+        "lesson_latency_ms": 40075,
+        "lesson_attempts": 1,
+        "findings_final": [
+            {
+                "code": "frame.unresolved_pronoun",
+                "address": "p3",
+                "detail": "«Does it have ___?» leans on «it», and nothing in the frame is what it stands for"
+            },
+            {
+                "code": "check.verbatim",
+                "address": "x7.check",
+                "detail": "the right option «Without nuts» repeats «without nuts» of the partner's line"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v7",
+                "detail": "«bill» is not in the partner's line of exchange 8"
+            },
+            {
+                "code": "filler.native_seam",
+                "address": "p2.f1",
+                "detail": "«Что входит в куриную пасту?» («Что входит в ___?» with «куриную пасту») does not read as Russian, the seam judge says"
+            }
+        ],
+        "findings_raw": 3,
+        "pack_skips": [],
+        "calls": [
+            {
+                "call": "lesson",
+                "prompt_version": "lesson_day.v4.5",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 7493,
+                "tokens_out": 5277,
+                "cost_usd": "0.097888",
+                "latency_ms": 38618,
+                "asked": {
+                    "violations": []
+                },
+                "payload": {
+                    "role_gender": "male"
+                }
+            },
+            {
+                "call": "judge",
+                "prompt_version": "lesson_seam_judge.v1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 1033,
+                "tokens_out": 167,
+                "cost_usd": "0.001526",
+                "latency_ms": 1457,
+                "asked": {
+                    "native": "Russian",
+                    "items": [
+                        {
+                            "id": "p1.f1",
+                            "pattern": "Можно нам ___?",
+                            "value": "меню",
+                            "sentence": "Можно нам меню?"
+                        },
+                        {
+                            "id": "p1.f2",
+                            "pattern": "Можно нам ___?",
+                            "value": "десертное меню",
+                            "sentence": "Можно нам десертное меню?"
+                        },
+                        {
+                            "id": "p2.f1",
+                            "pattern": "Что входит в ___?",
+                            "value": "куриную пасту",
+                            "sentence": "Что входит в куриную пасту?"
+                        },
+                        {
+                            "id": "p2.f2",
+                            "pattern": "Что входит в ___?",
+                            "value": "суп",
+                            "sentence": "Что входит в суп?"
+                        },
+                        {
+                            "id": "p3.f1",
+                            "pattern": "Там есть ___?",
+                            "value": "орехи",
+                            "sentence": "Там есть орехи?"
+                        },
+                        {
+                            "id": "p3.f2",
+                            "pattern": "Там есть ___?",
+                            "value": "сыр",
+                            "sentence": "Там есть сыр?"
+                        },
+                        {
+                            "id": "p4.f1",
+                            "pattern": "Мы бы хотели ___ .",
+                            "value": "куриную пасту",
+                            "sentence": "Мы бы хотели куриную пасту."
+                        },
+                        {
+                            "id": "p4.f2",
+                            "pattern": "Мы бы хотели ___ .",
+                            "value": "два салата",
+                            "sentence": "Мы бы хотели два салата."
+                        },
+                        {
+                            "id": "p5.f1",
+                            "pattern": "Для неё — ___ .",
+                            "value": "рыбу на гриле",
+                            "sentence": "Для неё — рыбу на гриле."
+                        },
+                        {
+                            "id": "p5.f2",
+                            "pattern": "Для неё — ___ .",
+                            "value": "томатный суп",
+                            "sentence": "Для неё — томатный суп."
+                        },
+                        {
+                            "id": "p6.f1",
+                            "pattern": "Мы возьмём ___ .",
+                            "value": "воду",
+                            "sentence": "Мы возьмём воду."
+                        },
+                        {
+                            "id": "p6.f2",
+                            "pattern": "Мы возьмём ___ .",
+                            "value": "яблочный сок",
+                            "sentence": "Мы возьмём яблочный сок."
+                        },
+                        {
+                            "id": "p8.f1",
+                            "pattern": "Можно нам ___?",
+                            "value": "счёт",
+                            "sentence": "Можно нам счёт?"
+                        },
+                        {
+                            "id": "p8.f2",
+                            "pattern": "Можно нам ___?",
+                            "value": "салфетки",
+                            "sentence": "Можно нам салфетки?"
+                        }
+                    ]
+                },
+                "payload": {
+                    "verdicts": [
+                        {
+                            "id": "p1.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p1.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f1",
+                            "reads": false
+                        },
+                        {
+                            "id": "p2.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p8.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p8.f2",
+                            "reads": true
+                        }
+                    ]
+                }
+            }
+        ],
+        "repair_payloads": [],
+        "wall_s": 40.1,
+        "at": "2026-09-15T17:01:42+00:00"
+    },
+    {
+        "slug": "airport",
+        "pair": "ru→en",
+        "level": "beginner",
+        "goal": "Регистрация на рейс в аэропорту: паспорт, багаж, место в самолёте. Лечу с одним чемоданом и рюкзаком",
+        "topic": "Регистрация",
+        "topic_description": "Situation: At the airport check-in counter before a flight. The learner is checking in with a passport, has one suitcase and one backpack, and wants to handle baggage and choose a seat.\nLearner: the passenger. Partner: the check-in agent.\nLearner must be able to: greet and say they are checking in; show a passport and answer simple identity or flight questions; say which bag is checked baggage and which is hand luggage; ask for or choose a seat and understand the boarding pass.\nPartner will: ask for the passport and destination; ask about the number and type of bags; offer a seat or explain where the gate and boarding time are.\nNot in this scene: security screening, passport control, boarding the plane.\n\nAbout the learner, in their own words: Регистрация на рейс в аэропорту: паспорт, багаж, место в самолёте. Лечу с одним чемоданом и рюкзаком",
+        "source_scene": "01M2H1AFDHTN8M3HRWXS0M3S2A",
+        "status": "failed",
+        "fail_reason": "fatal: line.ne_frame",
+        "lesson_cost_usd": "0.085365",
+        "lesson_latency_ms": 35956,
+        "lesson_attempts": 1,
+        "findings_final": [
+            {
+                "code": "line.ne_frame",
+                "address": "B1",
+                "detail": "«I'm checking in for this flight.» is not «I'm checking in ___» with «for this flight»; served as «I'm checking in for this flight»"
+            },
+            {
+                "code": "line.ne_frame",
+                "address": "B2",
+                "detail": "«I'm flying to London.» is not «I'm flying ___» with «to London»; served as «I'm flying to London»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B2",
+                "detail": "the key «flying to» takes words of the filler «to London»"
+            },
+            {
+                "code": "line.ne_frame",
+                "address": "B3",
+                "detail": "«I have one suitcase.» is not «I have ___» with «one suitcase»; served as «I have one suitcase»"
+            },
+            {
+                "code": "key.no_content_word",
+                "address": "B5",
+                "detail": "«Can I have ___?» has no content word outside the slot: the key is «Can I have», the frame up to the slot, not «have a»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B5",
+                "detail": "the key «have a» takes words of the filler «a window seat»"
+            },
+            {
+                "code": "line.ne_frame",
+                "address": "B6",
+                "detail": "«My gate is Gate 12.» is not «My gate is ___» with «Gate 12»; served as «My gate is Gate 12»"
+            },
+            {
+                "code": "line.ne_frame",
+                "address": "B8",
+                "detail": "«My suitcase goes to London.» is not «My suitcase goes ___» with «to London»; served as «My suitcase goes to London»"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v1",
+                "detail": "«check in» is not in frame p1 or its fillers"
+            }
+        ],
+        "findings_raw": 10,
+        "pack_skips": [],
+        "calls": [
+            {
+                "call": "lesson",
+                "prompt_version": "lesson_day.v4.5",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 7463,
+                "tokens_out": 3823,
+                "cost_usd": "0.076003",
+                "latency_ms": 31918,
+                "asked": {
+                    "violations": []
+                },
+                "payload": {
+                    "role_gender": "female"
+                }
+            },
+            {
+                "call": "repair",
+                "prompt_version": "lesson_card_repair.v1.1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 5588,
+                "tokens_out": 396,
+                "cost_usd": "0.005973",
+                "latency_ms": 2770,
+                "asked": {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "findings": [
+                        {
+                            "code": "exchange.second_question",
+                            "detail": "x1: the closing message of A «Sure. May I see your passport?» ends with a question mark"
+                        },
+                        {
+                            "code": "line.ne_frame",
+                            "detail": "B1: «I'm checking in for this flight.» is not «I'm checking in ___» with «for this flight»; served as «I'm checking in for this flight»"
+                        }
+                    ],
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": "p1",
+                                "filler": "for this flight",
+                                "text_target": "I'm checking in for this flight.",
+                                "text_native": "Я регистрируюсь на этот рейс.",
+                                "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                                "speaking_key": "checking in",
+                                "simplified_variants": [
+                                    "Check-in for this flight.",
+                                    "I'm here to check in."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудница регистрации",
+                                "text_target": "Sure. May I see your passport?",
+                                "text_native": "Конечно. Можно ваш паспорт?"
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the agent ask to see?",
+                            "text_native": "Что сотрудница просит показать?",
+                            "options": [
+                                {
+                                    "text_target": "A boarding pass",
+                                    "text_native": "Посадочный талон"
+                                },
+                                {
+                                    "text_target": "An ID document",
+                                    "text_native": "Документ, удостоверяющий личность"
+                                },
+                                {
+                                    "text_target": "A suitcase tag",
+                                    "text_native": "Багажную бирку"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Сотрудница просит показать паспорт, то есть документ, удостоверяющий личность."
+                        }
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": "p1",
+                                "filler": "for this flight",
+                                "text_target": "I'm checking in for this flight.",
+                                "text_native": "Я регистрируюсь на этот рейс.",
+                                "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                                "speaking_key": "checking in",
+                                "simplified_variants": [
+                                    "Check-in for this flight.",
+                                    "I'm here to check in."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудница регистрации",
+                                "text_target": "Sure. May I see your passport",
+                                "text_native": "Конечно. Можно ваш паспорт"
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the agent ask to see?",
+                            "text_native": "Что сотрудница просит показать?",
+                            "options": [
+                                {
+                                    "text_target": "A boarding pass",
+                                    "text_native": "Посадочный талон"
+                                },
+                                {
+                                    "text_target": "An ID document",
+                                    "text_native": "Документ, удостоверяющий личность"
+                                },
+                                {
+                                    "text_target": "A suitcase tag",
+                                    "text_native": "Багажную бирку"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Сотрудница просит показать паспорт, то есть документ, удостоверяющий личность."
+                        }
+                    },
+                    "frame_update": {
+                        "id": "p1",
+                        "kind": "ask",
+                        "frame_target": "I'm checking in ___",
+                        "frame_native": "Я регистрируюсь ___",
+                        "pronunciation_native": "Айм чекин ин ___",
+                        "slot": {
+                            "hint_native": "на этот рейс",
+                            "fillers": [
+                                {
+                                    "target": "for this flight",
+                                    "native": "на этот рейс",
+                                    "pronunciation_native": "фор зис флайт",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "for the morning flight",
+                                    "native": "на утренний рейс",
+                                    "pronunciation_native": "фор зэ морнинг флайт",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "call": "repair",
+                "prompt_version": "lesson_card_repair.v1.1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 3888,
+                "tokens_out": 105,
+                "cost_usd": "0.003389",
+                "latency_ms": 1268,
+                "asked": {
+                    "address": "B1",
+                    "kind": "line",
+                    "findings": [
+                        {
+                            "code": "line.ne_frame",
+                            "detail": "B1: «I'm checking in for this flight.» is not «I'm checking in ___» with «for this flight»; served as «I'm checking in for this flight»"
+                        }
+                    ],
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Passenger",
+                        "role_native": "Пассажир",
+                        "phrase_id": "p1",
+                        "filler": "for this flight",
+                        "text_target": "I'm checking in for this flight.",
+                        "text_native": "Я регистрируюсь на этот рейс.",
+                        "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                        "speaking_key": "checking in",
+                        "simplified_variants": [
+                            "Check-in for this flight.",
+                            "I'm here to check in."
+                        ]
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Passenger",
+                        "role_native": "Пассажир",
+                        "phrase_id": "p1",
+                        "filler": "for this flight",
+                        "text_target": "I'm checking in for this flight.",
+                        "text_native": "Я регистрируюсь на этот рейс.",
+                        "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                        "speaking_key": "checking in",
+                        "simplified_variants": [
+                            "I’m checking in now.",
+                            "I’m checking in today."
+                        ]
+                    }
+                }
+            }
+        ],
+        "repair_payloads": [
+            {
+                "address": "x1",
+                "payload": {
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": "p1",
+                                "filler": "for this flight",
+                                "text_target": "I'm checking in for this flight.",
+                                "text_native": "Я регистрируюсь на этот рейс.",
+                                "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                                "speaking_key": "checking in",
+                                "simplified_variants": [
+                                    "Check-in for this flight.",
+                                    "I'm here to check in."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудница регистрации",
+                                "text_target": "Sure. May I see your passport",
+                                "text_native": "Конечно. Можно ваш паспорт"
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the agent ask to see?",
+                            "text_native": "Что сотрудница просит показать?",
+                            "options": [
+                                {
+                                    "text_target": "A boarding pass",
+                                    "text_native": "Посадочный талон"
+                                },
+                                {
+                                    "text_target": "An ID document",
+                                    "text_native": "Документ, удостоверяющий личность"
+                                },
+                                {
+                                    "text_target": "A suitcase tag",
+                                    "text_native": "Багажную бирку"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Сотрудница просит показать паспорт, то есть документ, удостоверяющий личность."
+                        }
+                    },
+                    "frame_update": {
+                        "id": "p1",
+                        "kind": "ask",
+                        "frame_target": "I'm checking in ___",
+                        "frame_native": "Я регистрируюсь ___",
+                        "pronunciation_native": "Айм чекин ин ___",
+                        "slot": {
+                            "hint_native": "на этот рейс",
+                            "fillers": [
+                                {
+                                    "target": "for this flight",
+                                    "native": "на этот рейс",
+                                    "pronunciation_native": "фор зис флайт",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "for the morning flight",
+                                    "native": "на утренний рейс",
+                                    "pronunciation_native": "фор зэ морнинг флайт",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "address": "B1",
+                "payload": {
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Passenger",
+                        "role_native": "Пассажир",
+                        "phrase_id": "p1",
+                        "filler": "for this flight",
+                        "text_target": "I'm checking in for this flight.",
+                        "text_native": "Я регистрируюсь на этот рейс.",
+                        "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                        "speaking_key": "checking in",
+                        "simplified_variants": [
+                            "I’m checking in now.",
+                            "I’m checking in today."
+                        ]
+                    }
+                }
+            }
+        ],
+        "wall_s": 36,
+        "at": "2026-09-15T17:02:18+00:00"
+    },
+    {
+        "slug": "doctor",
+        "pair": "ru→en",
+        "level": "intermediate",
+        "goal": "Иду к врачу с сыном: у него третий день температура и болит горло. Нужно рассказать симптомы и понять назначения",
+        "topic": "Приём у врача",
+        "topic_description": "Situation: In a clinic consultation, the learner is with their son, who has had a fever for three days and a sore throat. The learner needs to explain the child’s symptoms clearly and understand what the doctor recommends.\nLearner: the parent accompanying a sick child. Partner: the doctor examining the child.\nLearner must be able to: describe the child’s main symptoms and how long they have lasted; answer the doctor’s follow-up questions about temperature, pain, eating, and other signs; understand the diagnosis or likely cause and the treatment plan; ask for clarification about medicine, dosage, rest, and when to come back.\nPartner will: ask about symptoms, duration, and temperature; give advice, a diagnosis, or a prescription; explain what to watch for and when to seek more help.\nNot in this scene: booking the appointment, registration and insurance, buying medicine at the pharmacy.\n\nAbout the learner, in their own words: Иду к врачу с сыном: у него третий день температура и болит горло. Нужно рассказать симптомы и понять назначения",
+        "source_scene": "01M2H13KSAS23K4YPF1M65SJQD",
+        "status": "ready",
+        "fail_reason": null,
+        "lesson_cost_usd": "0.092112",
+        "lesson_latency_ms": 45342,
+        "lesson_attempts": 1,
+        "findings_final": [
+            {
+                "code": "frame.native_agreement",
+                "address": "p6",
+                "detail": "«Ему нужен ___?»: «нужен» agrees with the slot — it changes with the filler"
+            },
+            {
+                "code": "key.no_content_word",
+                "address": "B2",
+                "detail": "«He has had them ___.» has no content word outside the slot: the key is «He has had them», the frame up to the slot, not «has had them»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B4",
+                "detail": "the key «eating less than» takes words of the filler «less than usual»"
+            },
+            {
+                "code": "check.verbatim",
+                "address": "x8.check",
+                "detail": "the right option «Tomorrow, if he is still doing badly» repeats «tomorrow if» of the partner's line"
+            },
+            {
+                "code": "filler.native_seam",
+                "address": "p4.f2",
+                "detail": "«Он ест почти ничего.» («Он ест ___.» with «почти ничего») does not read as Russian, the seam judge says"
+            }
+        ],
+        "findings_raw": 13,
+        "pack_skips": [],
+        "calls": [
+            {
+                "call": "lesson",
+                "prompt_version": "lesson_day.v4.5",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 7491,
+                "tokens_out": 4235,
+                "cost_usd": "0.082253",
+                "latency_ms": 40170,
+                "asked": {
+                    "violations": []
+                },
+                "payload": {
+                    "role_gender": "female"
+                }
+            },
+            {
+                "call": "repair",
+                "prompt_version": "lesson_card_repair.v1.1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 4298,
+                "tokens_out": 174,
+                "cost_usd": "0.004007",
+                "latency_ms": 1680,
+                "asked": {
+                    "address": "p7",
+                    "kind": "frame",
+                    "findings": [
+                        {
+                            "code": "filler.ungrammatical",
+                            "detail": "p7.f1: «When should we come back if if the fever gets worse?»: a word is doubled at the seam"
+                        },
+                        {
+                            "code": "filler.is_clause",
+                            "detail": "p7.f1: «if the fever gets worse» is a clause, not a value — the frame should carry the clause and the slot the value"
+                        },
+                        {
+                            "code": "filler.ungrammatical",
+                            "detail": "p7.f2: «When should we come back if if he starts coughing?»: a word is doubled at the seam"
+                        },
+                        {
+                            "code": "filler.is_clause",
+                            "detail": "p7.f2: «if he starts coughing» is a clause, not a value — the frame should carry the clause and the slot the value"
+                        },
+                        {
+                            "code": "filler.ungrammatical",
+                            "detail": "p7.f3: «When should we come back if if he won't eat?»: a word is doubled at the seam"
+                        },
+                        {
+                            "code": "filler.is_clause",
+                            "detail": "p7.f3: «if he won't eat» is a clause, not a value — the frame should carry the clause and the slot the value"
+                        }
+                    ],
+                    "card": {
+                        "id": "p7",
+                        "kind": "ask",
+                        "frame_target": "When should we come back if ___?",
+                        "frame_native": "Когда нам нужно прийти снова, если ___?",
+                        "pronunciation_native": "Уэн шуд ви кам бэк иф ___?",
+                        "slot": {
+                            "hint_native": "что ухудшится",
+                            "fillers": [
+                                {
+                                    "target": "if the fever gets worse",
+                                    "native": "если температура станет выше",
+                                    "pronunciation_native": "иф зэ фивер гетс уорс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "if he starts coughing",
+                                    "native": "если у него начнётся кашель",
+                                    "pronunciation_native": "иф хи стартс кофинг",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "if he won't eat",
+                                    "native": "если он не будет есть",
+                                    "pronunciation_native": "иф хи воунт ит",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "id": "p7",
+                        "kind": "ask",
+                        "frame_target": "When should we come back if ___?",
+                        "frame_native": "Когда нам нужно прийти снова, если ___?",
+                        "pronunciation_native": "Уэн шуд ви кам бэк иф ___?",
+                        "slot": {
+                            "hint_native": "что ухудшится",
+                            "fillers": [
+                                {
+                                    "target": "the fever gets worse",
+                                    "native": "температура станет выше",
+                                    "pronunciation_native": "зэ фивер гетс уорс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "he starts coughing",
+                                    "native": "у него начнётся кашель",
+                                    "pronunciation_native": "хи стартс кофинг",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "he won't eat",
+                                    "native": "он не будет есть",
+                                    "pronunciation_native": "хи воунт ит",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "call": "repair",
+                "prompt_version": "lesson_card_repair.v1.1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 4156,
+                "tokens_out": 128,
+                "cost_usd": "0.003693",
+                "latency_ms": 1956,
+                "asked": {
+                    "address": "B8",
+                    "kind": "line",
+                    "findings": [
+                        {
+                            "code": "filler.one_in_dialogue",
+                            "detail": "B8: «if the fever gets worse» is not one of p7's fillers"
+                        },
+                        {
+                            "code": "line.ne_frame",
+                            "detail": "B8: «When should we come back if the fever gets worse?» is not «When should we come back if ___?» with «if the fever gets worse»; served as «When should we come back if if the fever gets worse?»"
+                        },
+                        {
+                            "code": "line.too_long",
+                            "detail": "B8: «When should we come back if if the fever gets worse?» has 11 words without the glue (max 10)"
+                        },
+                        {
+                            "code": "key.no_content_word",
+                            "detail": "B8: the key «When should we» has no content word, and «When should we come back if ___?» has one"
+                        }
+                    ],
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Parent",
+                        "role_native": "Родитель",
+                        "phrase_id": "p7",
+                        "filler": "if the fever gets worse",
+                        "text_target": "When should we come back if the fever gets worse?",
+                        "text_native": "Когда нам нужно прийти снова, если температура станет выше?",
+                        "pronunciation_native": "Уэн шуд ви кам бэк иф зэ фивер гетс уорс?",
+                        "speaking_key": "When should we",
+                        "simplified_variants": [
+                            "When should we come back?"
+                        ]
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Parent",
+                        "role_native": "Родитель",
+                        "phrase_id": "p7",
+                        "filler": "the fever gets worse",
+                        "text_target": "When should we come back if the fever gets worse?",
+                        "text_native": "Когда нам нужно прийти снова, если температура станет выше?",
+                        "pronunciation_native": "Уэн шуд ви кам бэк иф зэ фивер гетс уорс?",
+                        "speaking_key": "come back",
+                        "simplified_variants": [
+                            "When should we come back if it gets worse?",
+                            "When should we come back then?"
+                        ]
+                    }
+                }
+            },
+            {
+                "call": "judge",
+                "prompt_version": "lesson_seam_judge.v1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 1414,
+                "tokens_out": 244,
+                "cost_usd": "0.002159",
+                "latency_ms": 1536,
+                "asked": {
+                    "native": "Russian",
+                    "items": [
+                        {
+                            "id": "p1.f1",
+                            "pattern": "У моего сына ___.",
+                            "value": "температура и болит горло",
+                            "sentence": "У моего сына температура и болит горло."
+                        },
+                        {
+                            "id": "p1.f2",
+                            "pattern": "У моего сына ___.",
+                            "value": "кашель и озноб",
+                            "sentence": "У моего сына кашель и озноб."
+                        },
+                        {
+                            "id": "p1.f3",
+                            "pattern": "У моего сына ___.",
+                            "value": "боль в ухе и температура",
+                            "sentence": "У моего сына боль в ухе и температура."
+                        },
+                        {
+                            "id": "p2.f1",
+                            "pattern": "Они у него уже ___.",
+                            "value": "три дня",
+                            "sentence": "Они у него уже три дня."
+                        },
+                        {
+                            "id": "p2.f2",
+                            "pattern": "Они у него уже ___.",
+                            "value": "со вчерашнего дня",
+                            "sentence": "Они у него уже со вчерашнего дня."
+                        },
+                        {
+                            "id": "p2.f3",
+                            "pattern": "Они у него уже ___.",
+                            "value": "неделю",
+                            "sentence": "Они у него уже неделю."
+                        },
+                        {
+                            "id": "p3.f1",
+                            "pattern": "Самая высокая температура была ___.",
+                            "value": "39 градусов",
+                            "sentence": "Самая высокая температура была 39 градусов."
+                        },
+                        {
+                            "id": "p3.f2",
+                            "pattern": "Самая высокая температура была ___.",
+                            "value": "38,5 градусов",
+                            "sentence": "Самая высокая температура была 38,5 градусов."
+                        },
+                        {
+                            "id": "p3.f3",
+                            "pattern": "Самая высокая температура была ___.",
+                            "value": "40 градусов",
+                            "sentence": "Самая высокая температура была 40 градусов."
+                        },
+                        {
+                            "id": "p4.f1",
+                            "pattern": "Он ест ___.",
+                            "value": "меньше, чем обычно",
+                            "sentence": "Он ест меньше, чем обычно."
+                        },
+                        {
+                            "id": "p4.f2",
+                            "pattern": "Он ест ___.",
+                            "value": "почти ничего",
+                            "sentence": "Он ест почти ничего."
+                        },
+                        {
+                            "id": "p4.f3",
+                            "pattern": "Он ест ___.",
+                            "value": "уже нормально",
+                            "sentence": "Он ест уже нормально."
+                        },
+                        {
+                            "id": "p5.f1",
+                            "pattern": "Я буду давать парацетамол ___.",
+                            "value": "каждые шесть часов",
+                            "sentence": "Я буду давать парацетамол каждые шесть часов."
+                        },
+                        {
+                            "id": "p5.f2",
+                            "pattern": "Я буду давать парацетамол ___.",
+                            "value": "два раза в день",
+                            "sentence": "Я буду давать парацетамол два раза в день."
+                        },
+                        {
+                            "id": "p5.f3",
+                            "pattern": "Я буду давать парацетамол ___.",
+                            "value": "перед сном",
+                            "sentence": "Я буду давать парацетамол перед сном."
+                        },
+                        {
+                            "id": "p6.f1",
+                            "pattern": "Ему нужен ___?",
+                            "value": "антибиотик",
+                            "sentence": "Ему нужен антибиотик?"
+                        },
+                        {
+                            "id": "p6.f2",
+                            "pattern": "Ему нужен ___?",
+                            "value": "анализ",
+                            "sentence": "Ему нужен анализ?"
+                        },
+                        {
+                            "id": "p6.f3",
+                            "pattern": "Ему нужен ___?",
+                            "value": "рецепт",
+                            "sentence": "Ему нужен рецепт?"
+                        },
+                        {
+                            "id": "p7.f1",
+                            "pattern": "Когда нам нужно прийти снова, если ___?",
+                            "value": "температура станет выше",
+                            "sentence": "Когда нам нужно прийти снова, если температура станет выше?"
+                        },
+                        {
+                            "id": "p7.f2",
+                            "pattern": "Когда нам нужно прийти снова, если ___?",
+                            "value": "у него начнётся кашель",
+                            "sentence": "Когда нам нужно прийти снова, если у него начнётся кашель?"
+                        },
+                        {
+                            "id": "p7.f3",
+                            "pattern": "Когда нам нужно прийти снова, если ___?",
+                            "value": "он не будет есть",
+                            "sentence": "Когда нам нужно прийти снова, если он не будет есть?"
+                        }
+                    ]
+                },
+                "payload": {
+                    "verdicts": [
+                        {
+                            "id": "p1.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p1.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p1.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f2",
+                            "reads": false
+                        },
+                        {
+                            "id": "p4.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f3",
+                            "reads": true
+                        }
+                    ]
+                }
+            }
+        ],
+        "repair_payloads": [
+            {
+                "address": "p7",
+                "payload": {
+                    "card": {
+                        "id": "p7",
+                        "kind": "ask",
+                        "frame_target": "When should we come back if ___?",
+                        "frame_native": "Когда нам нужно прийти снова, если ___?",
+                        "pronunciation_native": "Уэн шуд ви кам бэк иф ___?",
+                        "slot": {
+                            "hint_native": "что ухудшится",
+                            "fillers": [
+                                {
+                                    "target": "the fever gets worse",
+                                    "native": "температура станет выше",
+                                    "pronunciation_native": "зэ фивер гетс уорс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "he starts coughing",
+                                    "native": "у него начнётся кашель",
+                                    "pronunciation_native": "хи стартс кофинг",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "he won't eat",
+                                    "native": "он не будет есть",
+                                    "pronunciation_native": "хи воунт ит",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "address": "B8",
+                "payload": {
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Parent",
+                        "role_native": "Родитель",
+                        "phrase_id": "p7",
+                        "filler": "the fever gets worse",
+                        "text_target": "When should we come back if the fever gets worse?",
+                        "text_native": "Когда нам нужно прийти снова, если температура станет выше?",
+                        "pronunciation_native": "Уэн шуд ви кам бэк иф зэ фивер гетс уорс?",
+                        "speaking_key": "come back",
+                        "simplified_variants": [
+                            "When should we come back if it gets worse?",
+                            "When should we come back then?"
+                        ]
+                    }
+                }
+            }
+        ],
+        "wall_s": 45.4,
+        "at": "2026-09-15T17:03:04+00:00"
+    },
+    {
+        "slug": "airport-ro",
+        "pair": "ro→en",
+        "level": "beginner",
+        "goal": "Check-in la zborul din aeroport: pașaport, bagaj, loc în avion. Zbor cu o valiză și un rucsac",
+        "topic": "Check-in aeroport",
+        "topic_description": "Situation: At the airport check-in counter before a flight, the learner checks in with a passport, one suitcase, and one backpack, and wants to confirm baggage and seat details.\nLearner: the learner's role is a passenger. Partner: the partner's role is a check-in agent.\nLearner must be able to: greet the agent and say they are checking in; show the passport and answer simple identity or destination questions; say they have one suitcase and one backpack; ask about the seat and understand basic baggage or boarding instructions.\nPartner will: ask for the passport and flight details; ask how many bags the passenger has and whether any bag must be checked; give a seat, baggage tag, and simple instructions about the gate or boarding pass.\nNot in this scene: security control, passport control, finding the gate, boarding the plane.\n\nAbout the learner, in their own words: Check-in la zborul din aeroport: pașaport, bagaj, loc în avion. Zbor cu o valiză și un rucsac",
+        "source_scene": null,
+        "status": "ready",
+        "fail_reason": null,
+        "lesson_cost_usd": "0.084356",
+        "lesson_latency_ms": 38744,
+        "lesson_attempts": 1,
+        "findings_final": [
+            {
+                "code": "key.contains_filler",
+                "address": "B2",
+                "detail": "the key «flying to» takes words of the filler «to London»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B4",
+                "detail": "the key «checking this» takes words of the filler «this suitcase»"
+            },
+            {
+                "code": "key.no_content_word",
+                "address": "B5",
+                "detail": "«What is ___?» has no content word outside the slot: the key is «What is», the frame up to the slot, not «What is my»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B5",
+                "detail": "the key «What is my» takes words of the filler «my seat»"
+            },
+            {
+                "code": "key.no_content_word",
+                "address": "B7",
+                "detail": "«Thank you for ___.» has no content word outside the slot: the key is «Thank you for», the frame up to the slot, not «for the»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B7",
+                "detail": "the key «for the» takes words of the filler «the baggage tag»"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v1",
+                "detail": "«check in» is not in frame p1 or its fillers"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v1",
+                "detail": "«check in» is not in frame p4 or its fillers"
+            },
+            {
+                "code": "filler.native_seam",
+                "address": "p7.f2",
+                "detail": "«Mulțumesc pentru cartea de îmbarcare.» («Mulțumesc pentru ___.» with «cartea de îmbarcare») does not read as Romanian, the seam judge says"
+            }
+        ],
+        "findings_raw": 9,
+        "pack_skips": [
+            {
+                "code": "pronunciation.script",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "script"
+                ]
+            },
+            {
+                "code": "frame.native_punct",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.native_agreement",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "agreement"
+                ]
+            },
+            {
+                "code": "listening.same_exchange",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.no_learner_value",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.distractor_not_filler",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "function_words",
+                    "word_forms",
+                    "number_pattern",
+                    "time_pattern"
+                ]
+            },
+            {
+                "code": "native.gendered_past",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "gendered_past_pattern"
+                ]
+            }
+        ],
+        "calls": [
+            {
+                "call": "plan",
+                "prompt_version": "plan-builder-v2",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 3020,
+                "tokens_out": 446,
+                "cost_usd": "0.014240",
+                "latency_ms": 6427,
+                "asked": [],
+                "payload": {
+                    "status": "ok",
+                    "unclear_reason": null,
+                    "plan": {
+                        "title_native": "Check-in la aeroport",
+                        "title_target": "Airport check-in",
+                        "event_native": "Check-in",
+                        "until_phrase_native": "Până la check-in",
+                        "overdue_native": "Check-in-ul a fost ieri",
+                        "cover_image_prompt": "airport check-in counter with suitcases, boarding area in the background, realistic travel scene, no text, no logos, no close-up faces",
+                        "learner_role_target": "Passenger",
+                        "learner_role_native": "Pasager"
+                    },
+                    "scenes": [
+                        {
+                            "order": 1,
+                            "kind": "situation",
+                            "priority": 1,
+                            "title_native": "Check-in aeroport",
+                            "title_target": "Airport check-in",
+                            "teaches_native": "a prezenta pașaportul și bagajul",
+                            "goals_native": [
+                                "a arăta pașaportul",
+                                "a spune câte bagaje ai",
+                                "a întreba despre loc",
+                                "a înțelege instrucțiunile"
+                            ],
+                            "learner_role_target": "Passenger",
+                            "learner_role_native": "Pasager",
+                            "partner_role_target": "Check-in agent",
+                            "partner_role_native": "Agent de check-in",
+                            "topic_description": "Situation: At the airport check-in counter before a flight, the learner checks in with a passport, one suitcase, and one backpack, and wants to confirm baggage and seat details.\nLearner: the learner's role is a passenger. Partner: the partner's role is a check-in agent.\nLearner must be able to: greet the agent and say they are checking in; show the passport and answer simple identity or destination questions; say they have one suitcase and one backpack; ask about the seat and understand basic baggage or boarding instructions.\nPartner will: ask for the passport and flight details; ask how many bags the passenger has and whether any bag must be checked; give a seat, baggage tag, and simple instructions about the gate or boarding pass.\nNot in this scene: security control, passport control, finding the gate, boarding the plane.",
+                            "image_prompt": "realistic photo of an airport check-in counter, passenger with one suitcase and one backpack, agent behind the desk, bright terminal light, no text, no logos, no close-up faces"
+                        }
+                    ]
+                }
+            },
+            {
+                "call": "lesson",
+                "prompt_version": "lesson_day.v4.5",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 7485,
+                "tokens_out": 3900,
+                "cost_usd": "0.077212",
+                "latency_ms": 35001,
+                "asked": {
+                    "violations": []
+                },
+                "payload": {
+                    "role_gender": "female"
+                }
+            },
+            {
+                "call": "repair",
+                "prompt_version": "lesson_card_repair.v1.1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 5597,
+                "tokens_out": 270,
+                "cost_usd": "0.005413",
+                "latency_ms": 2027,
+                "asked": {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "findings": [
+                        {
+                            "code": "exchange.second_question",
+                            "detail": "x1: the closing message of A «Sure. May I see your passport?» ends with a question mark"
+                        }
+                    ],
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "pasager",
+                                "phrase_id": "p1",
+                                "filler": "this flight",
+                                "text_target": "I'm checking in for this flight.",
+                                "text_native": "Fac check-in pentru acest zbor.",
+                                "pronunciation_native": "aim cec-king in for dhis flait",
+                                "speaking_key": "checking in for",
+                                "simplified_variants": [
+                                    "I'm here to check in.",
+                                    "Check-in for this flight."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "agentă de check-in",
+                                "text_target": "Sure. May I see your passport?",
+                                "text_native": "Sigur. Pot să văd pașaportul?"
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What document does the agent ask for?",
+                            "text_native": "Ce document cere agenta?",
+                            "options": [
+                                {
+                                    "text_target": "A boarding pass",
+                                    "text_native": "Un bilet de îmbarcare"
+                                },
+                                {
+                                    "text_target": "A passport",
+                                    "text_native": "Un pașaport"
+                                },
+                                {
+                                    "text_target": "A visa form",
+                                    "text_native": "Un formular de viză"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Agenta cere pașaportul, nu alt document."
+                        }
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "pasager",
+                                "phrase_id": "p1",
+                                "filler": "this flight",
+                                "text_target": "I'm checking in for this flight.",
+                                "text_native": "Fac check-in pentru acest zbor.",
+                                "pronunciation_native": "aim cec-king in for dhis flait",
+                                "speaking_key": "checking in for",
+                                "simplified_variants": [
+                                    "I'm here to check in.",
+                                    "Check-in for this flight."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "agentă de check-in",
+                                "text_target": "Sure. May I see your passport",
+                                "text_native": "Sigur. Pot să văd pașaportul?"
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What document does the agent ask for?",
+                            "text_native": "Ce document cere agenta?",
+                            "options": [
+                                {
+                                    "text_target": "A boarding pass",
+                                    "text_native": "Un bilet de îmbarcare"
+                                },
+                                {
+                                    "text_target": "A passport",
+                                    "text_native": "Un pașaport"
+                                },
+                                {
+                                    "text_target": "A visa form",
+                                    "text_native": "Un formular de viză"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Agenta cere pașaportul, nu alt document."
+                        }
+                    },
+                    "frame_update": null
+                }
+            },
+            {
+                "call": "judge",
+                "prompt_version": "lesson_seam_judge.v1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 1174,
+                "tokens_out": 189,
+                "cost_usd": "0.001731",
+                "latency_ms": 1716,
+                "asked": {
+                    "native": "Romanian",
+                    "items": [
+                        {
+                            "id": "p1.f1",
+                            "pattern": "Fac check-in pentru ___.",
+                            "value": "acest zbor",
+                            "sentence": "Fac check-in pentru acest zbor."
+                        },
+                        {
+                            "id": "p1.f2",
+                            "pattern": "Fac check-in pentru ___.",
+                            "value": "zborul de dimineață",
+                            "sentence": "Fac check-in pentru zborul de dimineață."
+                        },
+                        {
+                            "id": "p2.f1",
+                            "pattern": "Zbor ___.",
+                            "value": "la Londra",
+                            "sentence": "Zbor la Londra."
+                        },
+                        {
+                            "id": "p2.f2",
+                            "pattern": "Zbor ___.",
+                            "value": "la Madrid",
+                            "sentence": "Zbor la Madrid."
+                        },
+                        {
+                            "id": "p3.f1",
+                            "pattern": "Am ___.",
+                            "value": "o valiză și un rucsac",
+                            "sentence": "Am o valiză și un rucsac."
+                        },
+                        {
+                            "id": "p3.f2",
+                            "pattern": "Am ___.",
+                            "value": "o valiză și un bagaj de mână",
+                            "sentence": "Am o valiză și un bagaj de mână."
+                        },
+                        {
+                            "id": "p4.f1",
+                            "pattern": "Dau la cală ___.",
+                            "value": "această valiză",
+                            "sentence": "Dau la cală această valiză."
+                        },
+                        {
+                            "id": "p4.f2",
+                            "pattern": "Dau la cală ___.",
+                            "value": "geanta mare",
+                            "sentence": "Dau la cală geanta mare."
+                        },
+                        {
+                            "id": "p5.f1",
+                            "pattern": "Care este ___?",
+                            "value": "locul meu",
+                            "sentence": "Care este locul meu?"
+                        },
+                        {
+                            "id": "p5.f2",
+                            "pattern": "Care este ___?",
+                            "value": "poarta mea",
+                            "sentence": "Care este poarta mea?"
+                        },
+                        {
+                            "id": "p6.f1",
+                            "pattern": "Pot să păstrez ___?",
+                            "value": "rucsacul meu",
+                            "sentence": "Pot să păstrez rucsacul meu?"
+                        },
+                        {
+                            "id": "p6.f2",
+                            "pattern": "Pot să păstrez ___?",
+                            "value": "această geantă mică",
+                            "sentence": "Pot să păstrez această geantă mică?"
+                        },
+                        {
+                            "id": "p7.f1",
+                            "pattern": "Mulțumesc pentru ___.",
+                            "value": "eticheta de bagaj",
+                            "sentence": "Mulțumesc pentru eticheta de bagaj."
+                        },
+                        {
+                            "id": "p7.f2",
+                            "pattern": "Mulțumesc pentru ___.",
+                            "value": "cartea de îmbarcare",
+                            "sentence": "Mulțumesc pentru cartea de îmbarcare."
+                        },
+                        {
+                            "id": "p8.f1",
+                            "pattern": "Merg la ___.",
+                            "value": "poarta 12",
+                            "sentence": "Merg la poarta 12."
+                        },
+                        {
+                            "id": "p8.f2",
+                            "pattern": "Merg la ___.",
+                            "value": "poarta 8",
+                            "sentence": "Merg la poarta 8."
+                        }
+                    ]
+                },
+                "payload": {
+                    "verdicts": [
+                        {
+                            "id": "p1.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p1.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f2",
+                            "reads": false
+                        },
+                        {
+                            "id": "p8.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p8.f2",
+                            "reads": true
+                        }
+                    ]
+                }
+            }
+        ],
+        "repair_payloads": [
+            {
+                "address": "x1",
+                "payload": {
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "pasager",
+                                "phrase_id": "p1",
+                                "filler": "this flight",
+                                "text_target": "I'm checking in for this flight.",
+                                "text_native": "Fac check-in pentru acest zbor.",
+                                "pronunciation_native": "aim cec-king in for dhis flait",
+                                "speaking_key": "checking in for",
+                                "simplified_variants": [
+                                    "I'm here to check in.",
+                                    "Check-in for this flight."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "agentă de check-in",
+                                "text_target": "Sure. May I see your passport",
+                                "text_native": "Sigur. Pot să văd pașaportul?"
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What document does the agent ask for?",
+                            "text_native": "Ce document cere agenta?",
+                            "options": [
+                                {
+                                    "text_target": "A boarding pass",
+                                    "text_native": "Un bilet de îmbarcare"
+                                },
+                                {
+                                    "text_target": "A passport",
+                                    "text_native": "Un pașaport"
+                                },
+                                {
+                                    "text_target": "A visa form",
+                                    "text_native": "Un formular de viză"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Agenta cere pașaportul, nu alt document."
+                        }
+                    },
+                    "frame_update": null
+                }
+            }
+        ],
+        "wall_s": 45.2,
+        "at": "2026-09-15T17:03:49+00:00"
+    },
+    {
+        "slug": "doctor-uk",
+        "pair": "uk→en",
+        "level": "intermediate",
+        "goal": "Іду до лікаря з сином: у нього третій день температура і болить горло. Треба розповісти симптоми і зрозуміти призначення",
+        "topic": "Прийом у лікаря",
+        "topic_description": "Situation: In a doctor's office, the learner brings their son because he has had a fever for three days and a sore throat. The goal is to explain the symptoms clearly and understand the treatment instructions for the child.\nLearner: the learner is a parent speaking on behalf of their son. Partner: the partner is a doctor.\nLearner must be able to: describe the child's main symptoms and how long they have lasted; answer follow-up questions about temperature, pain, eating, drinking, and other symptoms; understand the diagnosis or likely cause and the doctor's instructions; ask for clarification about medicines, dosage, how often to give them, and when to come back or seek urgent help.\nPartner will: ask questions about the child's symptoms and general condition; explain what the problem may be and what treatment is needed; give instructions about medicine, rest, fluids, and warning signs.\nNot in this scene: booking the appointment, registration and insurance, paying for the visit, buying medicine at a pharmacy.\n\nAbout the learner, in their own words: Іду до лікаря з сином: у нього третій день температура і болить горло. Треба розповісти симптоми і зрозуміти призначення",
+        "source_scene": null,
+        "status": "ready",
+        "fail_reason": null,
+        "lesson_cost_usd": "0.086140",
+        "lesson_latency_ms": 43007,
+        "lesson_attempts": 1,
+        "findings_final": [
+            {
+                "code": "frame.unresolved_pronoun",
+                "address": "p2",
+                "detail": "«He has had it ___.» leans on «it», and nothing in the frame is what it stands for"
+            },
+            {
+                "code": "frame.unresolved_pronoun",
+                "address": "p4",
+                "detail": "«So it is ___.» leans on «it», and nothing in the frame is what it stands for"
+            },
+            {
+                "code": "frame.unresolved_pronoun",
+                "address": "p6",
+                "detail": "«How often should I give it?» leans on «it», and nothing in the frame is what it stands for"
+            },
+            {
+                "code": "filler.is_clause",
+                "address": "p7.f1",
+                "detail": "«if the fever gets worse» is a clause, not a value — the frame should carry the clause and the slot the value"
+            },
+            {
+                "code": "filler.is_clause",
+                "address": "p7.f2",
+                "detail": "«if he still cannot eat» is a clause, not a value — the frame should carry the clause and the slot the value"
+            },
+            {
+                "code": "filler.is_clause",
+                "address": "p7.f3",
+                "detail": "«if the pain lasts longer» is a clause, not a value — the frame should carry the clause and the slot the value"
+            },
+            {
+                "code": "key.no_content_word",
+                "address": "B2",
+                "detail": "«He has had it ___.» has no content word outside the slot: the key is «He has had it», the frame up to the slot, not «has had it»"
+            },
+            {
+                "code": "key.no_content_word",
+                "address": "B4",
+                "detail": "«So it is ___.» has no content word outside the slot: the key is «So it is», the frame up to the slot, not «it is a»"
+            },
+            {
+                "code": "key.contains_filler",
+                "address": "B4",
+                "detail": "the key «it is a» takes words of the filler «a viral infection»"
+            },
+            {
+                "code": "key.no_content_word",
+                "address": "B8",
+                "detail": "the key «When should I» has no content word, and «When should I come back ___?» has one"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v3",
+                "detail": "«viral infection» is not in the partner's line of exchange 4"
+            },
+            {
+                "code": "vocab.free_combination",
+                "address": "v6",
+                "detail": "«after food» is a free combination of ordinary words"
+            },
+            {
+                "code": "vocab.learner_share",
+                "address": "lesson",
+                "detail": "3 of 8 items are in the learner's frames or fillers (at least half)"
+            }
+        ],
+        "findings_raw": 13,
+        "pack_skips": [
+            {
+                "code": "pronunciation.script",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "script"
+                ]
+            },
+            {
+                "code": "frame.native_punct",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.native_agreement",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "agreement"
+                ]
+            },
+            {
+                "code": "listening.same_exchange",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.no_learner_value",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.distractor_not_filler",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "function_words",
+                    "word_forms",
+                    "number_pattern",
+                    "time_pattern"
+                ]
+            },
+            {
+                "code": "native.gendered_past",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "gendered_past_pattern"
+                ]
+            }
+        ],
+        "calls": [
+            {
+                "call": "plan",
+                "prompt_version": "plan-builder-v2",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 3027,
+                "tokens_out": 495,
+                "cost_usd": "0.014992",
+                "latency_ms": 7149,
+                "asked": [],
+                "payload": {
+                    "status": "ok",
+                    "unclear_reason": null,
+                    "plan": {
+                        "title_native": "Прийом у лікаря",
+                        "title_target": "Doctor's appointment",
+                        "event_native": "Прийом",
+                        "until_phrase_native": "До прийому",
+                        "overdue_native": "Прийом був учора",
+                        "cover_image_prompt": "a realistic photo of a pediatric doctor's office during a consultation, parent seated with a school-age boy, warm light, no text, no logos, no faces in close-up",
+                        "learner_role_target": "Parent",
+                        "learner_role_native": "Мати або батько"
+                    },
+                    "scenes": [
+                        {
+                            "order": 1,
+                            "kind": "situation",
+                            "priority": 1,
+                            "title_native": "Прийом у лікаря",
+                            "title_target": "Doctor visit",
+                            "teaches_native": "описати симптоми, зрозуміти призначення",
+                            "goals_native": [
+                                "описати симптоми дитини",
+                                "сказати, коли це почалось",
+                                "відповісти на питання лікаря",
+                                "уточнити лікування вдома"
+                            ],
+                            "learner_role_target": "Parent",
+                            "learner_role_native": "Мати або батько",
+                            "partner_role_target": "Doctor",
+                            "partner_role_native": "Лікар",
+                            "topic_description": "Situation: In a doctor's office, the learner brings their son because he has had a fever for three days and a sore throat. The goal is to explain the symptoms clearly and understand the treatment instructions for the child.\nLearner: the learner is a parent speaking on behalf of their son. Partner: the partner is a doctor.\nLearner must be able to: describe the child's main symptoms and how long they have lasted; answer follow-up questions about temperature, pain, eating, drinking, and other symptoms; understand the diagnosis or likely cause and the doctor's instructions; ask for clarification about medicines, dosage, how often to give them, and when to come back or seek urgent help.\nPartner will: ask questions about the child's symptoms and general condition; explain what the problem may be and what treatment is needed; give instructions about medicine, rest, fluids, and warning signs.\nNot in this scene: booking the appointment, registration and insurance, paying for the visit, buying medicine at a pharmacy.",
+                            "image_prompt": "a realistic photo of a pediatric consultation room, parent talking to a doctor while sitting next to a boy with a sore throat, warm natural light, no text, no logos, no faces in close-up"
+                        }
+                    ]
+                }
+            },
+            {
+                "call": "lesson",
+                "prompt_version": "lesson_day.v4.5",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 7524,
+                "tokens_out": 4361,
+                "cost_usd": "0.084225",
+                "latency_ms": 41321,
+                "asked": {
+                    "violations": []
+                },
+                "payload": {
+                    "role_gender": "female"
+                }
+            },
+            {
+                "call": "judge",
+                "prompt_version": "lesson_seam_judge.v1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 1317,
+                "tokens_out": 206,
+                "cost_usd": "0.001915",
+                "latency_ms": 1686,
+                "asked": {
+                    "native": "Ukrainian",
+                    "items": [
+                        {
+                            "id": "p1.f1",
+                            "pattern": "У мого сина ___.",
+                            "value": "температура і болить горло",
+                            "sentence": "У мого сина температура і болить горло."
+                        },
+                        {
+                            "id": "p1.f2",
+                            "pattern": "У мого сина ___.",
+                            "value": "кашель і нежить",
+                            "sentence": "У мого сина кашель і нежить."
+                        },
+                        {
+                            "id": "p1.f3",
+                            "pattern": "У мого сина ___.",
+                            "value": "біль у животі й нудота",
+                            "sentence": "У мого сина біль у животі й нудота."
+                        },
+                        {
+                            "id": "p2.f1",
+                            "pattern": "Вона в нього вже ___.",
+                            "value": "три дні",
+                            "sentence": "Вона в нього вже три дні."
+                        },
+                        {
+                            "id": "p2.f2",
+                            "pattern": "Вона в нього вже ___.",
+                            "value": "від учора",
+                            "sentence": "Вона в нього вже від учора."
+                        },
+                        {
+                            "id": "p2.f3",
+                            "pattern": "Вона в нього вже ___.",
+                            "value": "із понеділка",
+                            "sentence": "Вона в нього вже із понеділка."
+                        },
+                        {
+                            "id": "p3.f1",
+                            "pattern": "Він п'є ___.",
+                            "value": "трохи води",
+                            "sentence": "Він п'є трохи води."
+                        },
+                        {
+                            "id": "p3.f2",
+                            "pattern": "Він п'є ___.",
+                            "value": "теплий чай",
+                            "sentence": "Він п'є теплий чай."
+                        },
+                        {
+                            "id": "p3.f3",
+                            "pattern": "Він п'є ___.",
+                            "value": "майже нічого",
+                            "sentence": "Він п'є майже нічого."
+                        },
+                        {
+                            "id": "p4.f1",
+                            "pattern": "Тобто це ___.",
+                            "value": "вірусна інфекція",
+                            "sentence": "Тобто це вірусна інфекція."
+                        },
+                        {
+                            "id": "p4.f2",
+                            "pattern": "Тобто це ___.",
+                            "value": "просто застуда",
+                            "sentence": "Тобто це просто застуда."
+                        },
+                        {
+                            "id": "p5.f1",
+                            "pattern": "Що я можу дати йому ___?",
+                            "value": "від температури",
+                            "sentence": "Що я можу дати йому від температури?"
+                        },
+                        {
+                            "id": "p5.f2",
+                            "pattern": "Що я можу дати йому ___?",
+                            "value": "від болю",
+                            "sentence": "Що я можу дати йому від болю?"
+                        },
+                        {
+                            "id": "p5.f3",
+                            "pattern": "Що я можу дати йому ___?",
+                            "value": "від кашлю",
+                            "sentence": "Що я можу дати йому від кашлю?"
+                        },
+                        {
+                            "id": "p7.f1",
+                            "pattern": "Коли нам знову прийти ___?",
+                            "value": "якщо температура підніметься",
+                            "sentence": "Коли нам знову прийти якщо температура підніметься?"
+                        },
+                        {
+                            "id": "p7.f2",
+                            "pattern": "Коли нам знову прийти ___?",
+                            "value": "якщо він і далі не зможе їсти",
+                            "sentence": "Коли нам знову прийти якщо він і далі не зможе їсти?"
+                        },
+                        {
+                            "id": "p7.f3",
+                            "pattern": "Коли нам знову прийти ___?",
+                            "value": "якщо біль триватиме довше",
+                            "sentence": "Коли нам знову прийти якщо біль триватиме довше?"
+                        }
+                    ]
+                },
+                "payload": {
+                    "verdicts": [
+                        {
+                            "id": "p1.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p1.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p1.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f3",
+                            "reads": true
+                        }
+                    ]
+                }
+            }
+        ],
+        "repair_payloads": [],
+        "wall_s": 50.3,
+        "at": "2026-09-15T17:04:40+00:00"
+    }
+]

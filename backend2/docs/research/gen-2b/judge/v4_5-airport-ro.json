@@ -1,0 +1,173 @@
+{
+    "hash": "756c6d643bc45c6bf9f7a5851e085aab22d31283",
+    "source": "the build",
+    "items": [
+        {
+            "id": "p1.f1",
+            "pattern": "Fac check-in pentru ___.",
+            "value": "acest zbor",
+            "sentence": "Fac check-in pentru acest zbor."
+        },
+        {
+            "id": "p1.f2",
+            "pattern": "Fac check-in pentru ___.",
+            "value": "zborul de dimineață",
+            "sentence": "Fac check-in pentru zborul de dimineață."
+        },
+        {
+            "id": "p2.f1",
+            "pattern": "Zbor ___.",
+            "value": "la Londra",
+            "sentence": "Zbor la Londra."
+        },
+        {
+            "id": "p2.f2",
+            "pattern": "Zbor ___.",
+            "value": "la Madrid",
+            "sentence": "Zbor la Madrid."
+        },
+        {
+            "id": "p3.f1",
+            "pattern": "Am ___.",
+            "value": "o valiză și un rucsac",
+            "sentence": "Am o valiză și un rucsac."
+        },
+        {
+            "id": "p3.f2",
+            "pattern": "Am ___.",
+            "value": "o valiză și un bagaj de mână",
+            "sentence": "Am o valiză și un bagaj de mână."
+        },
+        {
+            "id": "p4.f1",
+            "pattern": "Dau la cală ___.",
+            "value": "această valiză",
+            "sentence": "Dau la cală această valiză."
+        },
+        {
+            "id": "p4.f2",
+            "pattern": "Dau la cală ___.",
+            "value": "geanta mare",
+            "sentence": "Dau la cală geanta mare."
+        },
+        {
+            "id": "p5.f1",
+            "pattern": "Care este ___?",
+            "value": "locul meu",
+            "sentence": "Care este locul meu?"
+        },
+        {
+            "id": "p5.f2",
+            "pattern": "Care este ___?",
+            "value": "poarta mea",
+            "sentence": "Care este poarta mea?"
+        },
+        {
+            "id": "p6.f1",
+            "pattern": "Pot să păstrez ___?",
+            "value": "rucsacul meu",
+            "sentence": "Pot să păstrez rucsacul meu?"
+        },
+        {
+            "id": "p6.f2",
+            "pattern": "Pot să păstrez ___?",
+            "value": "această geantă mică",
+            "sentence": "Pot să păstrez această geantă mică?"
+        },
+        {
+            "id": "p7.f1",
+            "pattern": "Mulțumesc pentru ___.",
+            "value": "eticheta de bagaj",
+            "sentence": "Mulțumesc pentru eticheta de bagaj."
+        },
+        {
+            "id": "p7.f2",
+            "pattern": "Mulțumesc pentru ___.",
+            "value": "cartea de îmbarcare",
+            "sentence": "Mulțumesc pentru cartea de îmbarcare."
+        },
+        {
+            "id": "p8.f1",
+            "pattern": "Merg la ___.",
+            "value": "poarta 12",
+            "sentence": "Merg la poarta 12."
+        },
+        {
+            "id": "p8.f2",
+            "pattern": "Merg la ___.",
+            "value": "poarta 8",
+            "sentence": "Merg la poarta 8."
+        }
+    ],
+    "verdicts": [
+        {
+            "id": "p1.f1",
+            "reads": true
+        },
+        {
+            "id": "p1.f2",
+            "reads": true
+        },
+        {
+            "id": "p2.f1",
+            "reads": true
+        },
+        {
+            "id": "p2.f2",
+            "reads": true
+        },
+        {
+            "id": "p3.f1",
+            "reads": true
+        },
+        {
+            "id": "p3.f2",
+            "reads": true
+        },
+        {
+            "id": "p4.f1",
+            "reads": true
+        },
+        {
+            "id": "p4.f2",
+            "reads": true
+        },
+        {
+            "id": "p5.f1",
+            "reads": true
+        },
+        {
+            "id": "p5.f2",
+            "reads": true
+        },
+        {
+            "id": "p6.f1",
+            "reads": true
+        },
+        {
+            "id": "p6.f2",
+            "reads": true
+        },
+        {
+            "id": "p7.f1",
+            "reads": true
+        },
+        {
+            "id": "p7.f2",
+            "reads": false
+        },
+        {
+            "id": "p8.f1",
+            "reads": true
+        },
+        {
+            "id": "p8.f2",
+            "reads": true
+        }
+    ],
+    "cost_usd": "0.001731",
+    "latency_ms": 1716,
+    "model": "gpt-5.4-mini-2026-03-17",
+    "tokens_in": 1174,
+    "tokens_out": 189
+}

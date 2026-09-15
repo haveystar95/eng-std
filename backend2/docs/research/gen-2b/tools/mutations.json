@@ -1,0 +1,198 @@
+[
+  {
+    "name": "1a. a skipped check is not written down (pack missing → no counter)",
+    "file": "app/Modules/Plan/Domain/Check/LessonValidationContext.php",
+    "find": "        $this->skips->record($code, $side, $pack->code, $missing);\n",
+    "replace": "",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "skips a check whose language has no pack"
+      },
+      {
+        "path": "tests/Feature/Plan/LessonObservationTest.php",
+        "filter": "builds a day for a learner whose language has no rules yet"
+      }
+    ]
+  },
+  {
+    "name": "1b. a language with no rules borrows Russian (uk/ro read by the ru pack)",
+    "file": "app/Modules/Plan/Domain/Check/Language/LanguagePacks.php",
+    "find": "        return $this->packs[$code] ?? LanguagePack::none($code);",
+    "replace": "        return in_array($code, ['ro', 'uk'], true) ? ($this->packs['ru'] ?? LanguagePack::none($code)) : ($this->packs[$code] ?? LanguagePack::none($code));",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "skips a check whose language has no pack"
+      },
+      {
+        "path": "tests/Feature/Plan/LessonObservationTest.php",
+        "filter": "builds a day for a learner whose language has no rules yet"
+      }
+    ]
+  },
+  {
+    "name": "2. the agreement words live in the rule, not in the native pack",
+    "file": "app/Modules/Plan/Domain/Check/Language/LanguageWords.php",
+    "find": "        $listed = [...$this->pack->mapWords('agreement', 'words'), ...$this->pack->mapWords('agreement', 'short_forms')];",
+    "replace": "        $listed = ['мой', 'моё', 'какой', 'этот', 'разрешён', 'открыт'];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "reads the agreement of a native frame from the native pack"
+      }
+    ]
+  },
+  {
+    "name": "3a. a repaired exchange is put in without the frame it came with",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonCard.php",
+    "find": "        return $frameUpdate === null ? $repaired : $this->withFrame($repaired, $frameUpdate->id, $frameUpdate);",
+    "replace": "        return $repaired;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonCardTest.php",
+        "filter": "puts a repaired exchange back together"
+      },
+      {
+        "path": "tests/Feature/Plan/LessonGateBuildTest.php",
+        "filter": "holds a repeated exchange"
+      }
+    ]
+  },
+  {
+    "name": "3b. an exchange and a frame that do not fit are put in by halves",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonCard.php",
+    "find": "        if ($frameUpdate !== null\n",
+    "replace": "        if (false && $frameUpdate !== null\n",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonCardTest.php",
+        "filter": "puts a repaired exchange back together"
+      },
+      {
+        "path": "tests/Feature/Plan/LessonGateBuildTest.php",
+        "filter": "holds a repeated exchange"
+      }
+    ]
+  },
+  {
+    "name": "4a. an eighth code made fatal (partner.too_long)",
+    "file": "app/Modules/Plan/Domain/Check/LessonGate.php",
+    "find": "        LessonCodes::EXCHANGE_REPEATS,\n    ];",
+    "replace": "        LessonCodes::EXCHANGE_REPEATS,\n        LessonCodes::PARTNER_TOO_LONG,\n    ];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonGateTest.php",
+        "filter": "exactly the seven fatal codes"
+      }
+    ]
+  },
+  {
+    "name": "4b. exchange.repeats left a warning (six fatal)",
+    "file": "app/Modules/Plan/Domain/Check/LessonGate.php",
+    "find": "        LessonCodes::EXCHANGE_REPEATS,\n    ];",
+    "replace": "    ];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonGateTest.php",
+        "filter": "exactly the seven fatal codes"
+      }
+    ]
+  },
+  {
+    "name": "5a. the seam judge asked twice a day (before the gate as well)",
+    "file": "app/Modules/Plan/Application/Service/LessonBuildService.php",
+    "find": "            $passed = $this->gate->pass($answer, $found, $context, $request);",
+    "replace": "            $this->seams->judge($answer, $request->nativeLanguage);\n            $passed = $this->gate->pass($answer, $found, $context, $request);",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/LessonObservationTest.php",
+        "filter": "asks the seam judge once a day"
+      }
+    ]
+  },
+  {
+    "name": "5b. the seam judge sent part of the day's sentences",
+    "file": "app/Modules/Plan/Application/Service/LessonSeamJudge.php",
+    "find": "new NativeSeamJudgeRequest($nativeLanguage, $items)",
+    "replace": "new NativeSeamJudgeRequest($nativeLanguage, array_slice($items, 0, 6))",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/LessonObservationTest.php",
+        "filter": "asks the seam judge once a day"
+      }
+    ]
+  },
+  {
+    "name": "6a. a repair by hand drops the judged seams",
+    "file": "app/Modules/Plan/Application/Service/LessonCardRepairer.php",
+    "find": "        return $outcome->withLessonFindings($judged);",
+    "replace": "        return $outcome;",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/LessonRepairTest.php",
+        "filter": "keeps the judged native seams"
+      }
+    ]
+  },
+  {
+    "name": "6b. a repair by hand keeps a verdict on the frame it rewrote",
+    "file": "app/Modules/Plan/Application/Service/LessonCardRepairer.php",
+    "find": "                && ! in_array(explode('.', $f['address'])[0], $changed, true),",
+    "replace": "                && true,",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/LessonRepairTest.php",
+        "filter": "keeps the judged native seams"
+      }
+    ]
+  },
+  {
+    "name": "7. the seam may repeat nothing (the pack's exception ignored)",
+    "file": "app/Modules/Plan/Domain/Check/Language/LanguageWords.php",
+    "find": "        return $this->pack->listed('seam_repeatable_words', $token);",
+    "replace": "        return false;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "particle before a preposition"
+      }
+    ]
+  },
+  {
+    "name": "8. a question is only its question mark",
+    "file": "app/Modules/Plan/Domain/Check/Language/LanguageWords.php",
+    "find": "        if (! $this->pack->has('question_word_order')) {",
+    "replace": "        if (true || ! $this->pack->has('question_word_order')) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "knows a closing question by its word order"
+      }
+    ]
+  },
+  {
+    "name": "9. a key without a content word counted everywhere (the v4.4 reading)",
+    "file": "app/Modules/Plan/Domain/Check/Lesson/LineRules.php",
+    "find": "        if ($words->content($part) !== []) {",
+    "replace": "        if (true) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "asks a content word of a key only where"
+      }
+    ]
+  },
+  {
+    "name": "10. a repeated filler counted as a mark, not a repeated exchange",
+    "file": "app/Modules/Plan/Domain/Check/LessonValidator.php",
+    "find": "            new VisitRules,\n",
+    "replace": "",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonAssemblyTest.php",
+        "filter": "counts the same filler said twice as a repeated exchange"
+      }
+    ]
+  }
+]

@@ -1,0 +1,1872 @@
+{
+    "days": {
+        "v4.4": [
+            "interview",
+            "rent",
+            "bank",
+            "restaurant",
+            "airport",
+            "doctor"
+        ],
+        "v4.5": [
+            "interview",
+            "rent",
+            "bank",
+            "restaurant",
+            "airport",
+            "doctor"
+        ],
+        "ro/uk": [
+            "airport-ro",
+            "doctor-uk"
+        ]
+    },
+    "skips": {
+        "v4.4:interview": [],
+        "v4.4:rent": [],
+        "v4.4:bank": [],
+        "v4.4:restaurant": [],
+        "v4.4:airport": [],
+        "v4.4:doctor": [],
+        "v4.5:interview": [],
+        "v4.5:rent": [],
+        "v4.5:bank": [],
+        "v4.5:restaurant": [],
+        "v4.5:airport": [],
+        "v4.5:doctor": [],
+        "v4.5:airport-ro": [
+            {
+                "code": "pronunciation.script",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "script"
+                ]
+            },
+            {
+                "code": "frame.native_punct",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.native_agreement",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "agreement"
+                ]
+            },
+            {
+                "code": "listening.same_exchange",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.no_learner_value",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.distractor_not_filler",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "function_words",
+                    "word_forms",
+                    "number_pattern",
+                    "time_pattern"
+                ]
+            },
+            {
+                "code": "native.gendered_past",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "gendered_past_pattern"
+                ]
+            }
+        ],
+        "v4.5:doctor-uk": [
+            {
+                "code": "pronunciation.script",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "script"
+                ]
+            },
+            {
+                "code": "frame.native_punct",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.native_agreement",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "agreement"
+                ]
+            },
+            {
+                "code": "listening.same_exchange",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.no_learner_value",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.distractor_not_filler",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "function_words",
+                    "word_forms",
+                    "number_pattern",
+                    "time_pattern"
+                ]
+            },
+            {
+                "code": "native.gendered_past",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "gendered_past_pattern"
+                ]
+            }
+        ]
+    },
+    "codes": {
+        "dialogue.count": {
+            "unit": "lesson",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "vocab.count": {
+            "unit": "lesson",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "exchange.shape": {
+            "unit": "exchanges",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": true
+        },
+        "exchange.second_question": {
+            "unit": "exchanges",
+            "v4.4": {
+                "total": 2,
+                "days": {
+                    "rent": 2
+                },
+                "addresses": 2,
+                "units": 48,
+                "examples": [
+                    "rent x1: the closing message of B «What about electricity?» ends with a question mark",
+                    "rent x2: the closing message of B «How much is the deposit?» ends with a question mark"
+                ],
+                "share": 0.042
+            },
+            "v4.5": {
+                "total": 2,
+                "days": {
+                    "bank": 1,
+                    "airport": 1
+                },
+                "addresses": 2,
+                "units": 48,
+                "examples": [
+                    "bank x1: the closing message of A «Sure. Can I see your passport first?» ends with a question mark",
+                    "airport x1: the closing message of A «Sure. May I see your passport?» ends with a question mark"
+                ],
+                "share": 0.042
+            },
+            "ro/uk": {
+                "total": 1,
+                "days": {
+                    "airport-ro": 1
+                },
+                "examples": [
+                    "airport-ro x1: the closing message of A «Sure. May I see your passport?» ends with a question mark"
+                ]
+            },
+            "rule_not_model": false,
+            "fatal": true
+        },
+        "exchange.repeats": {
+            "unit": "exchanges",
+            "v4.4": {
+                "total": 1,
+                "days": {
+                    "rent": 1
+                },
+                "addresses": 1,
+                "units": 48,
+                "examples": [
+                    "rent x8: exchange 8 says p2 with «the deposit», which exchange 2 already said"
+                ],
+                "share": 0.021
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": true
+        },
+        "check.shape": {
+            "unit": "exchanges",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": true
+        },
+        "listening.shape": {
+            "unit": "questions",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 24,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 24,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": true
+        },
+        "pronunciation.script": {
+            "unit": "readings",
+            "v4.4": {
+                "total": 3,
+                "days": {
+                    "bank": 3
+                },
+                "addresses": 3,
+                "units": 264,
+                "examples": [
+                    "bank p2.f1: the reading «май пáспорт» leaves the native script",
+                    "bank v2: the reading «пáспорт» leaves the native script",
+                    "bank B2: the reading «Хиэр из май пáспорт.» leaves the native script"
+                ],
+                "share": 0.011
+            },
+            "v4.5": {
+                "total": 1,
+                "days": {
+                    "interview": 1
+                },
+                "addresses": 1,
+                "units": 259,
+                "examples": [
+                    "interview p4.f2: the reading «э պրосэс импрувмэнт» leaves the native script"
+                ],
+                "share": 0.004
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "frame.count": {
+            "unit": "lesson",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "frame.unused": {
+            "unit": "frames",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 43,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 44,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "frame.too_long": {
+            "unit": "frames",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 43,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 44,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "frame.no_slot_share": {
+            "unit": "lesson",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "frame.native_alternatives": {
+            "unit": "frames",
+            "v4.4": {
+                "total": 3,
+                "days": {
+                    "bank": 2,
+                    "restaurant": 1
+                },
+                "addresses": 3,
+                "units": 43,
+                "examples": [
+                    "bank p2: «Вот мой/моё ___.» writes alternatives inside the frame",
+                    "bank p4: «Какая/какой ___?» writes alternatives inside the frame",
+                    "restaurant p5: «Я бы хотел(а) ___.» writes alternatives inside the frame"
+                ],
+                "share": 0.07
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 44,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "frame.native_punct": {
+            "unit": "frames",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 43,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 1,
+                "days": {
+                    "interview": 1
+                },
+                "addresses": 1,
+                "units": 44,
+                "examples": [
+                    "interview p6: «Could you tell me about ___?» ends with «?», «Расскажите, пожалуйста, о ___.» with «.»"
+                ],
+                "share": 0.023
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "frame.unresolved_pronoun": {
+            "unit": "frames",
+            "v4.4": {
+                "total": 2,
+                "days": {
+                    "restaurant": 1,
+                    "doctor": 1
+                },
+                "addresses": 2,
+                "units": 43,
+                "examples": [
+                    "restaurant p4: «Does it have ___?» leans on «it», and nothing in the frame is what it stands for",
+                    "doctor p2: «He has had it ___.» leans on «it», and nothing in the frame is what it stands for"
+                ],
+                "share": 0.047
+            },
+            "v4.5": {
+                "total": 2,
+                "days": {
+                    "bank": 1,
+                    "restaurant": 1
+                },
+                "addresses": 2,
+                "units": 44,
+                "examples": [
+                    "bank p7: «Can I keep it for ___?» leans on «it», and nothing in the frame is what it stands for",
+                    "restaurant p3: «Does it have ___?» leans on «it», and nothing in the frame is what it stands for"
+                ],
+                "share": 0.045
+            },
+            "ro/uk": {
+                "total": 3,
+                "days": {
+                    "doctor-uk": 3
+                },
+                "examples": [
+                    "doctor-uk p2: «He has had it ___.» leans on «it», and nothing in the frame is what it stands for",
+                    "doctor-uk p4: «So it is ___.» leans on «it», and nothing in the frame is what it stands for",
+                    "doctor-uk p6: «How often should I give it?» leans on «it», and nothing in the frame is what it stands for"
+                ]
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "frame.native_agreement": {
+            "unit": "slotted",
+            "v4.4": {
+                "total": 4,
+                "days": {
+                    "rent": 1,
+                    "bank": 3
+                },
+                "addresses": 4,
+                "units": 43,
+                "examples": [
+                    "rent p6: «___ разрешён?»: «разрешён» agrees with the slot — it changes with the filler",
+                    "bank p2: «Вот мой/моё ___.»: «моё» agrees with the slot — it changes with the filler",
+                    "bank p4: «Какая/какой ___?»: «какой» agrees with the slot — it changes with the filler",
+                    "bank p6: «Как долго ___ будет открыт?»: «открыт» agrees with the slot — it changes with the filler"
+                ],
+                "share": 0.093
+            },
+            "v4.5": {
+                "total": 4,
+                "days": {
+                    "rent": 1,
+                    "bank": 2,
+                    "doctor": 1
+                },
+                "addresses": 4,
+                "units": 43,
+                "examples": [
+                    "rent p6: «___ разрешена?»: «разрешена» agrees with the slot — it changes with the filler",
+                    "bank p5: «Какая ___?»: «какая» agrees with the slot — it changes with the filler",
+                    "bank p6: «Когда ___ будет готово?»: «готово» agrees with the slot — it changes with the filler",
+                    "doctor p6: «Ему нужен ___?»: «нужен» agrees with the slot — it changes with the filler"
+                ],
+                "share": 0.093
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "filler.count": {
+            "unit": "frames",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 43,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 44,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "filler.ungrammatical": {
+            "unit": "fillers",
+            "v4.4": {
+                "total": 3,
+                "days": {
+                    "bank": 3
+                },
+                "addresses": 3,
+                "units": 125,
+                "examples": [
+                    "bank p2.f1: «Here is my my passport.»: a word is doubled at the seam",
+                    "bank p2.f2: «Here is my my rental letter.»: a word is doubled at the seam",
+                    "bank p2.f3: «Here is my my student letter.»: a word is doubled at the seam"
+                ],
+                "share": 0.024
+            },
+            "v4.5": {
+                "total": 3,
+                "days": {
+                    "doctor": 3
+                },
+                "addresses": 3,
+                "units": 119,
+                "examples": [
+                    "doctor p7.f1: «When should we come back if if the fever gets worse?»: a word is doubled at the seam",
+                    "doctor p7.f2: «When should we come back if if he starts coughing?»: a word is doubled at the seam",
+                    "doctor p7.f3: «When should we come back if if he won't eat?»: a word is doubled at the seam"
+                ],
+                "share": 0.025
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": true
+        },
+        "filler.one_in_dialogue": {
+            "unit": "fillers",
+            "v4.4": {
+                "total": 2,
+                "days": {
+                    "rent": 2
+                },
+                "addresses": 2,
+                "units": 125,
+                "examples": [
+                    "rent B3: «one year» is not one of p3's fillers",
+                    "rent p3.f1: «one-year» is marked in_dialogue, but no line says it"
+                ],
+                "share": 0.016
+            },
+            "v4.5": {
+                "total": 4,
+                "days": {
+                    "bank": 4
+                },
+                "addresses": 4,
+                "units": 119,
+                "examples": [
+                    "bank B2: «my rental contract» is not one of p2's fillers",
+                    "bank p2.f1: «rental contract» is marked in_dialogue, but no line says it",
+                    "bank B5: «the monthly fee» is not one of p5's fillers",
+                    "bank p5.f1: «monthly fee» is marked in_dialogue, but no line says it"
+                ],
+                "share": 0.034
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "filler.is_clause": {
+            "unit": "fillers",
+            "v4.4": {
+                "total": 3,
+                "days": {
+                    "doctor": 3
+                },
+                "addresses": 3,
+                "units": 125,
+                "examples": [
+                    "doctor p7.f1: «if he gets worse» is a clause, not a value — the frame should carry the clause and the slot the value",
+                    "doctor p7.f2: «if the fever returns» is a clause, not a value — the frame should carry the clause and the slot the value",
+                    "doctor p7.f3: «if he stops eating» is a clause, not a value — the frame should carry the clause and the slot the value"
+                ],
+                "share": 0.024
+            },
+            "v4.5": {
+                "total": 3,
+                "days": {
+                    "doctor": 3
+                },
+                "addresses": 3,
+                "units": 119,
+                "examples": [
+                    "doctor p7.f1: «if the fever gets worse» is a clause, not a value — the frame should carry the clause and the slot the value",
+                    "doctor p7.f2: «if he starts coughing» is a clause, not a value — the frame should carry the clause and the slot the value",
+                    "doctor p7.f3: «if he won't eat» is a clause, not a value — the frame should carry the clause and the slot the value"
+                ],
+                "share": 0.025
+            },
+            "ro/uk": {
+                "total": 3,
+                "days": {
+                    "doctor-uk": 3
+                },
+                "examples": [
+                    "doctor-uk p7.f1: «if the fever gets worse» is a clause, not a value — the frame should carry the clause and the slot the value",
+                    "doctor-uk p7.f2: «if he still cannot eat» is a clause, not a value — the frame should carry the clause and the slot the value",
+                    "doctor-uk p7.f3: «if the pain lasts longer» is a clause, not a value — the frame should carry the clause and the slot the value"
+                ]
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "filler.article_seam": {
+            "unit": "fillers",
+            "v4.4": {
+                "total": 1,
+                "days": {
+                    "rent": 1
+                },
+                "addresses": 1,
+                "units": 125,
+                "examples": [
+                    "rent p3: «I need a ___ contract.»: «a» stands before the slot — the article changes with the filler and goes with it"
+                ],
+                "share": 0.008
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 119,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "filler.native_seam": {
+            "unit": "native_seams",
+            "v4.4": {
+                "total": 15,
+                "days": {
+                    "rent": 7,
+                    "bank": 6,
+                    "restaurant": 1,
+                    "doctor": 1
+                },
+                "addresses": 15,
+                "units": 125,
+                "examples": [
+                    "rent p1.f1: «А как насчёт электричество?» («А как насчёт ___?» with «электричество») does not read as Russian, the seam judge says",
+                    "rent p1.f2: «А как насчёт интернет?» («А как насчёт ___?» with «интернет») does not read as Russian, the seam judge says",
+                    "rent p1.f3: «А как насчёт парковка?» («А как насчёт ___?» with «парковка») does not read as Russian, the seam judge says",
+                    "rent p5.f1: «Я могу работать из дома здесь?» («Я могу работать из дома ___?» with «здесь») does not read as Russian, the seam judge says"
+                ],
+                "share": 0.12
+            },
+            "v4.5": {
+                "total": 9,
+                "days": {
+                    "interview": 1,
+                    "rent": 1,
+                    "bank": 2,
+                    "restaurant": 1,
+                    "doctor": 4
+                },
+                "addresses": 9,
+                "units": 119,
+                "examples": [
+                    "interview p5.f2: «Мне нравится работать над кросс-функциональными командами.» («Мне нравится работать над ___.» with «кросс-функциональными командами») does not read as Russian, the seam judge says",
+                    "rent p6.f3: «велосипед разрешена?» («___ разрешена?» with «велосипед») does not read as Russian, the seam judge says",
+                    "bank p6.f1: «Когда карта будет готово?» («Когда ___ будет готово?» with «карта») does not read as Russian, the seam judge says",
+                    "bank p6.f3: «Когда онлайн-доступ будет готово?» («Когда ___ будет готово?» with «онлайн-доступ») does not read as Russian, the seam judge says"
+                ],
+                "share": 0.076
+            },
+            "ro/uk": {
+                "total": 1,
+                "days": {
+                    "airport-ro": 1
+                },
+                "examples": [
+                    "airport-ro p7.f2: «Mulțumesc pentru cartea de îmbarcare.» («Mulțumesc pentru ___.» with «cartea de îmbarcare») does not read as Romanian, the seam judge says"
+                ]
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "line.ne_frame": {
+            "unit": "learner",
+            "v4.4": {
+                "total": 3,
+                "days": {
+                    "rent": 1,
+                    "bank": 2
+                },
+                "addresses": 3,
+                "units": 48,
+                "examples": [
+                    "rent B3: «I need a one-year contract.» is not «I need a ___ contract.» with «one year»; served as «I need a one year contract.»",
+                    "bank B2: «Here is my passport.» is not «Here is my ___.» with «my passport»; served as «Here is my my passport.»",
+                    "bank B3: «Here is my rental letter.» is not «Here is my ___.» with «my rental letter»; served as «Here is my my rental letter.»"
+                ],
+                "share": 0.063
+            },
+            "v4.5": {
+                "total": 8,
+                "days": {
+                    "bank": 2,
+                    "airport": 5,
+                    "doctor": 1
+                },
+                "addresses": 8,
+                "units": 48,
+                "examples": [
+                    "bank B2: «Here is my rental contract.» is not «Here is my ___.» with «my rental contract»; served as «Here is my my rental contract.»",
+                    "bank B5: «What is the monthly fee?» is not «What is the ___?» with «the monthly fee»; served as «What is the the monthly fee?»",
+                    "airport B1: «I'm checking in for this flight.» is not «I'm checking in ___» with «for this flight»; served as «I'm checking in for this flight»",
+                    "airport B2: «I'm flying to London.» is not «I'm flying ___» with «to London»; served as «I'm flying to London»"
+                ],
+                "share": 0.167
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": true
+        },
+        "line.too_long": {
+            "unit": "learner",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 1,
+                "days": {
+                    "doctor": 1
+                },
+                "addresses": 1,
+                "units": 48,
+                "examples": [
+                    "doctor B8: «When should we come back if if the fever gets worse?» has 11 words without the glue (max 10)"
+                ],
+                "share": 0.021
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "line.no_frame": {
+            "unit": "learner",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "key.not_in_line": {
+            "unit": "learner",
+            "v4.4": {
+                "total": 2,
+                "days": {
+                    "interview": 1,
+                    "rent": 1
+                },
+                "addresses": 2,
+                "units": 48,
+                "examples": [
+                    "interview B1: the key «have of experience» is not in «I have five years of experience.»",
+                    "rent B3: the key «need a contract» is not in «I need a one year contract.»"
+                ],
+                "share": 0.042
+            },
+            "v4.5": {
+                "total": 1,
+                "days": {
+                    "interview": 1
+                },
+                "addresses": 1,
+                "units": 48,
+                "examples": [
+                    "interview B1: the key «have of experience» is not in «I have five years of experience.»"
+                ],
+                "share": 0.021
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "key.contains_filler": {
+            "unit": "learner",
+            "v4.4": {
+                "total": 12,
+                "days": {
+                    "interview": 1,
+                    "rent": 2,
+                    "bank": 3,
+                    "airport": 4,
+                    "doctor": 2
+                },
+                "addresses": 12,
+                "units": 48,
+                "examples": [
+                    "interview B7: the key «success in this» takes words of the filler «success in this role»",
+                    "rent B4: the key «work from» takes words of the filler «from home»",
+                    "rent B6: the key «cat allowed» takes words of the filler «a cat»",
+                    "bank B4: the key «am a» takes words of the filler «a student»"
+                ],
+                "share": 0.25
+            },
+            "v4.5": {
+                "total": 13,
+                "days": {
+                    "interview": 2,
+                    "rent": 4,
+                    "bank": 4,
+                    "airport": 2,
+                    "doctor": 1
+                },
+                "addresses": 13,
+                "units": 48,
+                "examples": [
+                    "interview B2: the key «lead a team» takes words of the filler «a team of six»",
+                    "interview B8: the key «does success in» takes words of the filler «success in this role»",
+                    "rent B3: the key «get the» takes words of the filler «the deposit»",
+                    "rent B4: the key «included in the» takes words of the filler «the monthly payment»"
+                ],
+                "share": 0.271
+            },
+            "ro/uk": {
+                "total": 5,
+                "days": {
+                    "airport-ro": 4,
+                    "doctor-uk": 1
+                },
+                "examples": [
+                    "airport-ro B2: the key «flying to» takes words of the filler «to London»",
+                    "airport-ro B4: the key «checking this» takes words of the filler «this suitcase»",
+                    "airport-ro B5: the key «What is my» takes words of the filler «my seat»",
+                    "airport-ro B7: the key «for the» takes words of the filler «the baggage tag»"
+                ]
+            },
+            "rule_not_model": true,
+            "fatal": false
+        },
+        "key.no_content_word": {
+            "unit": "learner",
+            "v4.4": {
+                "total": 7,
+                "days": {
+                    "bank": 3,
+                    "airport": 2,
+                    "doctor": 2
+                },
+                "addresses": 7,
+                "units": 48,
+                "examples": [
+                    "bank B4: «I am ___.» has no content word outside the slot: the key is «I am», the frame up to the slot, not «am a»",
+                    "bank B5: «What is ___?» has no content word outside the slot: the key is «What is», the frame up to the slot, not «What is the»",
+                    "bank B6: the key «When will the» has no content word, and «When will ___ arrive?» has one",
+                    "airport B1: «Here is ___.» has no content word outside the slot: the key is «Here is», the frame up to the slot, not «Here is my»"
+                ],
+                "share": 0.146
+            },
+            "v4.5": {
+                "total": 4,
+                "days": {
+                    "bank": 1,
+                    "airport": 1,
+                    "doctor": 2
+                },
+                "addresses": 4,
+                "units": 48,
+                "examples": [
+                    "bank B3: «I'm ___.» has no content word outside the slot: the key is «I'm», the frame up to the slot, not «I'm a»",
+                    "airport B5: «Can I have ___?» has no content word outside the slot: the key is «Can I have», the frame up to the slot, not «have a»",
+                    "doctor B2: «He has had them ___.» has no content word outside the slot: the key is «He has had them», the frame up to the slot, not «has had them»",
+                    "doctor B8: the key «When should we» has no content word, and «When should we come back if ___?» has one"
+                ],
+                "share": 0.083
+            },
+            "ro/uk": {
+                "total": 5,
+                "days": {
+                    "airport-ro": 2,
+                    "doctor-uk": 3
+                },
+                "examples": [
+                    "airport-ro B5: «What is ___?» has no content word outside the slot: the key is «What is», the frame up to the slot, not «What is my»",
+                    "airport-ro B7: «Thank you for ___.» has no content word outside the slot: the key is «Thank you for», the frame up to the slot, not «for the»",
+                    "doctor-uk B2: «He has had it ___.» has no content word outside the slot: the key is «He has had it», the frame up to the slot, not «has had it»",
+                    "doctor-uk B4: «So it is ___.» has no content word outside the slot: the key is «So it is», the frame up to the slot, not «it is a»"
+                ]
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "key.too_long": {
+            "unit": "learner",
+            "v4.4": {
+                "total": 2,
+                "days": {
+                    "doctor": 2
+                },
+                "addresses": 2,
+                "units": 48,
+                "examples": [
+                    "doctor B7: the key «How often should I give» has 5 words (1–4)",
+                    "doctor B8: the key «When should we come back» has 5 words (1–4)"
+                ],
+                "share": 0.042
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "variant.longer": {
+            "unit": "learner",
+            "v4.4": {
+                "total": 5,
+                "days": {
+                    "interview": 1,
+                    "rent": 1,
+                    "bank": 1,
+                    "restaurant": 1,
+                    "airport": 1
+                },
+                "addresses": 5,
+                "units": 48,
+                "examples": [
+                    "interview B1: the variant «I have five years in project management.» has 7 words, the line 6",
+                    "rent B6: the variant «Can I keep a cat?» has 5 words, the line 4",
+                    "bank B5: the variant «How much is the monthly fee?» has 6 words, the line 5",
+                    "restaurant B4: the variant «Are there nuts in it?» has 5 words, the line 4"
+                ],
+                "share": 0.104
+            },
+            "v4.5": {
+                "total": 3,
+                "days": {
+                    "interview": 1,
+                    "rent": 1,
+                    "bank": 1
+                },
+                "addresses": 3,
+                "units": 48,
+                "examples": [
+                    "interview B4: the variant «A product launch was a big success.» has 7 words, the line 6",
+                    "rent B6: the variant «Can I keep a cat?» has 5 words, the line 4",
+                    "bank B3: the variant «I am a student.» has 4 words, the line 3"
+                ],
+                "share": 0.063
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "learner.restates_partner": {
+            "unit": "answers",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 27,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 24,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "kind.ask_count": {
+            "unit": "lesson",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "kind.rescue_count": {
+            "unit": "lesson",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "rescue.not_first": {
+            "unit": "rescues",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 3,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 4,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "rescue.new_fact": {
+            "unit": "rescues",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 3,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 4,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "rescue.no_prev": {
+            "unit": "rescues",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 3,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 4,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "partner.two_questions": {
+            "unit": "partner",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "partner.too_long": {
+            "unit": "partner",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "partner.closer": {
+            "unit": "partner",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "check.about_learner": {
+            "unit": "exchanges",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "check.verbatim": {
+            "unit": "exchanges",
+            "v4.4": {
+                "total": 5,
+                "days": {
+                    "interview": 2,
+                    "rent": 2,
+                    "doctor": 1
+                },
+                "addresses": 5,
+                "units": 48,
+                "examples": [
+                    "interview x1.check: the right option «Your background managing projects» repeats «your background» of the partner's line",
+                    "interview x2.check: the right option «Your current job title» repeats «your current» of the partner's line",
+                    "rent x1.check: the right option «Water and heating» repeats «water and» of the partner's line",
+                    "rent x7.check: the right option «On the first day of next month» repeats «of next» of the partner's line"
+                ],
+                "share": 0.104
+            },
+            "v4.5": {
+                "total": 3,
+                "days": {
+                    "rent": 1,
+                    "restaurant": 1,
+                    "doctor": 1
+                },
+                "addresses": 3,
+                "units": 48,
+                "examples": [
+                    "rent x4.check: the right option «Power and internet» repeats «and internet» of the partner's line",
+                    "restaurant x7.check: the right option «Without nuts» repeats «without nuts» of the partner's line",
+                    "doctor x8.check: the right option «Tomorrow, if he is still doing badly» repeats «tomorrow if» of the partner's line"
+                ],
+                "share": 0.063
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "check.listed_alternative_as_wrong": {
+            "unit": "exchanges",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "listening.count": {
+            "unit": "lesson",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "listening.same_exchange": {
+            "unit": "questions",
+            "v4.4": {
+                "total": 1,
+                "days": {
+                    "restaurant": 1
+                },
+                "addresses": 1,
+                "units": 24,
+                "examples": [
+                    "restaurant L3: L2 and this question are both about exchange 6"
+                ],
+                "share": 0.042
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 24,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "listening.no_learner_value": {
+            "unit": "lesson",
+            "v4.4": {
+                "total": 1,
+                "days": {
+                    "rent": 1
+                },
+                "addresses": 1,
+                "units": 6,
+                "examples": [
+                    "rent lesson: no question asks for a value the learner gave (a filler said in the dialogue)"
+                ],
+                "share": 0.167
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "listening.distractor_not_filler": {
+            "unit": "questions",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 24,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 1,
+                "days": {
+                    "bank": 1
+                },
+                "addresses": 1,
+                "units": 24,
+                "examples": [
+                    "bank L3: the question asks p3's slot («студент»): the right option «Для студентов её нет» is neither a number nor a time, the wrong option «Она будет через месяц» is a number or a time"
+                ],
+                "share": 0.042
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "vocab.free_combination": {
+            "unit": "vocab",
+            "v4.4": {
+                "total": 2,
+                "days": {
+                    "rent": 1,
+                    "doctor": 1
+                },
+                "addresses": 2,
+                "units": 48,
+                "examples": [
+                    "rent v6: «work from home» is a free combination of ordinary words",
+                    "doctor v7: «every six hours» is a free combination of ordinary words"
+                ],
+                "share": 0.042
+            },
+            "v4.5": {
+                "total": 1,
+                "days": {
+                    "interview": 1
+                },
+                "addresses": 1,
+                "units": 48,
+                "examples": [
+                    "interview v8: «on time» is a free combination of ordinary words"
+                ],
+                "share": 0.021
+            },
+            "ro/uk": {
+                "total": 1,
+                "days": {
+                    "doctor-uk": 1
+                },
+                "examples": [
+                    "doctor-uk v6: «after food» is a free combination of ordinary words"
+                ]
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "vocab.everyday_word": {
+            "unit": "vocab",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "vocab.used_in_wrong": {
+            "unit": "vocab",
+            "v4.4": {
+                "total": 4,
+                "days": {
+                    "rent": 2,
+                    "airport": 2
+                },
+                "addresses": 4,
+                "units": 48,
+                "examples": [
+                    "rent v1: «deposit» is not in the partner's line of exchange 8",
+                    "rent v5: «fixed-term» is not in the partner's line of exchange 4",
+                    "airport v5: «check in» is not in frame p4 or its fillers",
+                    "airport v7: «window seat» is not in the partner's line of exchange 6"
+                ],
+                "share": 0.083
+            },
+            "v4.5": {
+                "total": 5,
+                "days": {
+                    "rent": 2,
+                    "bank": 1,
+                    "restaurant": 1,
+                    "airport": 1
+                },
+                "addresses": 5,
+                "units": 48,
+                "examples": [
+                    "rent v4: «utilities» is not in the partner's line of exchange 4",
+                    "rent v8: «remote work» is not in the partner's line of exchange 5",
+                    "bank v4: «student status» is not in the partner's line of exchange 3",
+                    "restaurant v7: «bill» is not in the partner's line of exchange 8"
+                ],
+                "share": 0.104
+            },
+            "ro/uk": {
+                "total": 3,
+                "days": {
+                    "airport-ro": 2,
+                    "doctor-uk": 1
+                },
+                "examples": [
+                    "airport-ro v1: «check in» is not in frame p1 or its fillers",
+                    "airport-ro v1: «check in» is not in frame p4 or its fillers",
+                    "doctor-uk v3: «viral infection» is not in the partner's line of exchange 4"
+                ]
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "vocab.learner_share": {
+            "unit": "lesson",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 6,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 1,
+                "days": {
+                    "doctor-uk": 1
+                },
+                "examples": [
+                    "doctor-uk lesson: 3 of 8 items are in the learner's frames or fillers (at least half)"
+                ]
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "vocab.nested": {
+            "unit": "vocab",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "native.gendered_past": {
+            "unit": "native_texts",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 216,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 211,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
+        "image_prompt.rule_text": {
+            "unit": "vocab",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 48,
+                "examples": [],
+                "share": 0
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        }
+    }
+}

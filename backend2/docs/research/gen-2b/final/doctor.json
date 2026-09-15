@@ -1,0 +1,761 @@
+{
+    "topic": {
+        "title_target": "At the doctor's with your son",
+        "title_native": "У врача с сыном",
+        "description_target": "Explain your son's symptoms, answer the doctor's questions, and understand the treatment plan.",
+        "description_native": "Расскажите о симптомах у сына, ответьте на вопросы врача и поймите план лечения."
+    },
+    "learner_role": {
+        "role_target": "Parent",
+        "role_native": "Родитель"
+    },
+    "role_gender": "female",
+    "dialogue": [
+        {
+            "step": 1,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Врач",
+                    "text_target": "What seems to be the problem today?",
+                    "text_native": "Что вас сегодня беспокоит?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p1",
+                    "filler": "a fever and a sore throat",
+                    "text_target": "My son has a fever and a sore throat.",
+                    "text_native": "У моего сына температура и болит горло.",
+                    "pronunciation_native": "Май сан хэз э фивер энд э сор сроут.",
+                    "speaking_key": "My son has",
+                    "simplified_variants": [
+                        "He has a fever and a sore throat."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the doctor ask about first?",
+                "text_native": "О чём врач спрашивает в первую очередь?",
+                "options": [
+                    {
+                        "text_target": "Why the child is absent from school",
+                        "text_native": "Почему ребёнок не ходит в школу"
+                    },
+                    {
+                        "text_target": "What problem brought them in today",
+                        "text_native": "С какой проблемой они пришли сегодня"
+                    },
+                    {
+                        "text_target": "Which medicine the child took yesterday",
+                        "text_native": "Какое лекарство ребёнок принимал вчера"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Врач сначала спрашивает, с какой проблемой вы пришли сегодня."
+            }
+        },
+        {
+            "step": 2,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Врач",
+                    "text_target": "How long has he had these symptoms?",
+                    "text_native": "Как давно у него эти симптомы?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p2",
+                    "filler": "for three days",
+                    "text_target": "He has had them for three days.",
+                    "text_native": "Они у него уже три дня.",
+                    "pronunciation_native": "Хи хэз хед зэм фор сри дэйз.",
+                    "speaking_key": "has had them",
+                    "simplified_variants": [
+                        "For three days."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the doctor want to know?",
+                "text_native": "Что хочет узнать врач?",
+                "options": [
+                    {
+                        "text_target": "When the fever is highest",
+                        "text_native": "Когда температура самая высокая"
+                    },
+                    {
+                        "text_target": "How severe the throat pain is",
+                        "text_native": "Насколько сильно болит горло"
+                    },
+                    {
+                        "text_target": "How many days the symptoms have lasted",
+                        "text_native": "Сколько дней длятся симптомы"
+                    }
+                ],
+                "correct_option_index": 2,
+                "explanation_native": "Врач спрашивает о продолжительности симптомов."
+            }
+        },
+        {
+            "step": 3,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Врач",
+                    "text_target": "What was his highest temperature?",
+                    "text_native": "Какая у него была самая высокая температура?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p3",
+                    "filler": "39 degrees",
+                    "text_target": "His highest temperature was 39 degrees.",
+                    "text_native": "Самая высокая температура была 39 градусов.",
+                    "pronunciation_native": "Хиз хайэст тэмпрэчер уоз сёрти-найн дигриз.",
+                    "speaking_key": "highest temperature was",
+                    "simplified_variants": [
+                        "It was 39 degrees."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "Which detail does the doctor ask for?",
+                "text_native": "Какую именно деталь спрашивает врач?",
+                "options": [
+                    {
+                        "text_target": "The child's peak temperature",
+                        "text_native": "Максимальную температуру ребёнка"
+                    },
+                    {
+                        "text_target": "The child's normal temperature",
+                        "text_native": "Обычную температуру ребёнка"
+                    },
+                    {
+                        "text_target": "The room temperature at home",
+                        "text_native": "Температуру в комнате дома"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Врач спрашивает о самой высокой температуре у ребёнка."
+            }
+        },
+        {
+            "step": 4,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Врач",
+                    "text_target": "Is he eating and drinking normally?",
+                    "text_native": "Он ест и пьёт как обычно?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p4",
+                    "filler": "less than usual",
+                    "text_target": "He is eating less than usual.",
+                    "text_native": "Он ест меньше, чем обычно.",
+                    "pronunciation_native": "Хи из итинг лэс зэн южуэл.",
+                    "speaking_key": "eating less than",
+                    "simplified_variants": [
+                        "He is not eating much."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the doctor ask about?",
+                "text_native": "О чём спрашивает врач?",
+                "options": [
+                    {
+                        "text_target": "Food and fluids",
+                        "text_native": "О еде и питье"
+                    },
+                    {
+                        "text_target": "Sleep and exercise",
+                        "text_native": "О сне и физической активности"
+                    },
+                    {
+                        "text_target": "School and homework",
+                        "text_native": "О школе и домашнем задании"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Врач спрашивает, ест и пьёт ли ребёнок как обычно."
+            }
+        },
+        {
+            "step": 5,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Врач",
+                    "text_target": "It looks like a throat infection. Give him fluids, rest, and paracetamol every six hours.",
+                    "text_native": "Похоже на инфекцию горла. Давайте ему питьё, отдых и парацетамол каждые шесть часов."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p5",
+                    "filler": "every six hours",
+                    "text_target": "I'll give paracetamol every six hours.",
+                    "text_native": "Я буду давать парацетамол каждые шесть часов.",
+                    "pronunciation_native": "Айл гив пэрэситэмол эври сикс ауэрз.",
+                    "speaking_key": "give paracetamol",
+                    "simplified_variants": [
+                        "Paracetamol every six hours.",
+                        "I'll give it every six hours."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "How often does the doctor say to give paracetamol?",
+                "text_native": "Как часто врач говорит давать парацетамол?",
+                "options": [
+                    {
+                        "text_target": "Three times a day with meals",
+                        "text_native": "Три раза в день во время еды"
+                    },
+                    {
+                        "text_target": "Once in the morning",
+                        "text_native": "Один раз утром"
+                    },
+                    {
+                        "text_target": "At six-hour intervals",
+                        "text_native": "С интервалом в шесть часов"
+                    }
+                ],
+                "correct_option_index": 2,
+                "explanation_native": "Врач говорит давать парацетамол каждые шесть часов."
+            }
+        },
+        {
+            "step": 6,
+            "kind": "rescue",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": null,
+                    "filler": null,
+                    "text_target": "Could you say that more slowly, please?",
+                    "text_native": "Скажите, пожалуйста, помедленнее.",
+                    "pronunciation_native": "Куд ю сэй зэт мор слоули, плиз?",
+                    "speaking_key": "say that more",
+                    "simplified_variants": [
+                        "Please say that again.",
+                        "More slowly, please."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Врач",
+                    "text_target": "Give him fluids, rest, and paracetamol every six hours.",
+                    "text_native": "Давайте ему питьё, отдых и парацетамол каждые шесть часов."
+                }
+            ],
+            "check": {
+                "text_target": "What should the child get besides medicine?",
+                "text_native": "Что ребёнку нужно, кроме лекарства?",
+                "options": [
+                    {
+                        "text_target": "Warm clothes and fresh air",
+                        "text_native": "Тёплая одежда и свежий воздух"
+                    },
+                    {
+                        "text_target": "More sleep and something to drink",
+                        "text_native": "Больше отдыха и питьё"
+                    },
+                    {
+                        "text_target": "Soup and a hot bath",
+                        "text_native": "Суп и горячая ванна"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Кроме лекарства врач советует питьё и отдых."
+            }
+        },
+        {
+            "step": 7,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p6",
+                    "filler": "the antibiotic",
+                    "text_target": "Does he need the antibiotic?",
+                    "text_native": "Ему нужен антибиотик?",
+                    "pronunciation_native": "Даз хи нид зи энтибайотик?",
+                    "speaking_key": "Does he need",
+                    "simplified_variants": [
+                        "Does he need antibiotics?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Врач",
+                    "text_target": "No, not now. This seems viral, so antibiotics won't help.",
+                    "text_native": "Нет, сейчас нет. Это похоже на вирусную инфекцию, поэтому антибиотики не помогут."
+                }
+            ],
+            "check": {
+                "text_target": "Why doesn't the doctor recommend antibiotics now?",
+                "text_native": "Почему врач сейчас не рекомендует антибиотики?",
+                "options": [
+                    {
+                        "text_target": "The illness is probably caused by a virus",
+                        "text_native": "Болезнь, скорее всего, вызвана вирусом"
+                    },
+                    {
+                        "text_target": "The child is allergic to that medicine",
+                        "text_native": "У ребёнка аллергия на это лекарство"
+                    },
+                    {
+                        "text_target": "The pharmacy is closed today",
+                        "text_native": "Аптека сегодня закрыта"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Врач считает, что это вирусная инфекция, а антибиотики при ней не помогают."
+            }
+        },
+        {
+            "step": 8,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p7",
+                    "filler": "the fever gets worse",
+                    "text_target": "When should we come back if the fever gets worse?",
+                    "text_native": "Когда нам нужно прийти снова, если температура станет выше?",
+                    "pronunciation_native": "Уэн шуд ви кам бэк иф зэ фивер гетс уорс?",
+                    "speaking_key": "come back",
+                    "simplified_variants": [
+                        "When should we come back if it gets worse?",
+                        "When should we come back then?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Врач",
+                    "text_target": "Come back tomorrow if the fever stays high or he can't drink.",
+                    "text_native": "Приходите завтра, если температура останется высокой или он не сможет пить."
+                }
+            ],
+            "check": {
+                "text_target": "When does the doctor want them to return?",
+                "text_native": "Когда врач просит прийти снова?",
+                "options": [
+                    {
+                        "text_target": "Next week after school",
+                        "text_native": "На следующей неделе после школы"
+                    },
+                    {
+                        "text_target": "Tomorrow, if he is still doing badly",
+                        "text_native": "Завтра, если ему по-прежнему плохо"
+                    },
+                    {
+                        "text_target": "This evening after dinner",
+                        "text_native": "Сегодня вечером после ужина"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Врач говорит прийти завтра, если высокая температура сохранится или ребёнок не сможет пить."
+            }
+        }
+    ],
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "frame_target": "My son has ___.",
+            "frame_native": "У моего сына ___.",
+            "pronunciation_native": "Май сан хэз ___.",
+            "slot": {
+                "hint_native": "симптомы",
+                "fillers": [
+                    {
+                        "target": "a fever and a sore throat",
+                        "native": "температура и болит горло",
+                        "pronunciation_native": "э фивер энд э сор сроут",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "a cough and chills",
+                        "native": "кашель и озноб",
+                        "pronunciation_native": "э коф энд чилз",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "an earache and a fever",
+                        "native": "боль в ухе и температура",
+                        "pronunciation_native": "эн иэрэйк энд э фивер",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "He has had them ___.",
+            "frame_native": "Они у него уже ___.",
+            "pronunciation_native": "Хи хэз хед зэм ___.",
+            "slot": {
+                "hint_native": "как долго",
+                "fillers": [
+                    {
+                        "target": "for three days",
+                        "native": "три дня",
+                        "pronunciation_native": "фор сри дэйз",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "since yesterday",
+                        "native": "со вчерашнего дня",
+                        "pronunciation_native": "синс естэрдэй",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "for a week",
+                        "native": "неделю",
+                        "pronunciation_native": "фор э уик",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "frame_target": "His highest temperature was ___.",
+            "frame_native": "Самая высокая температура была ___.",
+            "pronunciation_native": "Хиз хайэст тэмпрэчер уоз ___.",
+            "slot": {
+                "hint_native": "температура",
+                "fillers": [
+                    {
+                        "target": "39 degrees",
+                        "native": "39 градусов",
+                        "pronunciation_native": "сёрти-найн дигриз",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "38.5 degrees",
+                        "native": "38,5 градусов",
+                        "pronunciation_native": "сёрти-эйт пойнт файв дигриз",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "40 degrees",
+                        "native": "40 градусов",
+                        "pronunciation_native": "форти дигриз",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "frame_target": "He is eating ___.",
+            "frame_native": "Он ест ___.",
+            "pronunciation_native": "Хи из итинг ___.",
+            "slot": {
+                "hint_native": "как он ест",
+                "fillers": [
+                    {
+                        "target": "less than usual",
+                        "native": "меньше, чем обычно",
+                        "pronunciation_native": "лэс зэн южуэл",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "almost nothing",
+                        "native": "почти ничего",
+                        "pronunciation_native": "олмоуст насинг",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "normally now",
+                        "native": "уже нормально",
+                        "pronunciation_native": "нормэли нау",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p5",
+            "kind": "answer",
+            "frame_target": "I'll give paracetamol ___.",
+            "frame_native": "Я буду давать парацетамол ___.",
+            "pronunciation_native": "Айл гив пэрэситэмол ___.",
+            "slot": {
+                "hint_native": "как часто",
+                "fillers": [
+                    {
+                        "target": "every six hours",
+                        "native": "каждые шесть часов",
+                        "pronunciation_native": "эври сикс ауэрз",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "twice a day",
+                        "native": "два раза в день",
+                        "pronunciation_native": "твайс э дэй",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "before bed",
+                        "native": "перед сном",
+                        "pronunciation_native": "бифор бед",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "frame_target": "Does he need ___?",
+            "frame_native": "Ему нужен ___?",
+            "pronunciation_native": "Даз хи нид ___?",
+            "slot": {
+                "hint_native": "лекарство или помощь",
+                "fillers": [
+                    {
+                        "target": "the antibiotic",
+                        "native": "антибиотик",
+                        "pronunciation_native": "зи энтибайотик",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "a test",
+                        "native": "анализ",
+                        "pronunciation_native": "э тест",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "a prescription",
+                        "native": "рецепт",
+                        "pronunciation_native": "э прискрипшн",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "frame_target": "When should we come back if ___?",
+            "frame_native": "Когда нам нужно прийти снова, если ___?",
+            "pronunciation_native": "Уэн шуд ви кам бэк иф ___?",
+            "slot": {
+                "hint_native": "что ухудшится",
+                "fillers": [
+                    {
+                        "target": "the fever gets worse",
+                        "native": "температура станет выше",
+                        "pronunciation_native": "зэ фивер гетс уорс",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "he starts coughing",
+                        "native": "у него начнётся кашель",
+                        "pronunciation_native": "хи стартс кофинг",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "he won't eat",
+                        "native": "он не будет есть",
+                        "pronunciation_native": "хи воунт ит",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Сколько дней у ребёнка уже есть симптомы?",
+                "options_native": [
+                    "Один день",
+                    "Три дня",
+                    "Неделю"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Родитель говорит, что симптомы длятся три дня."
+            },
+            {
+                "text_native": "Какая самая высокая температура была у ребёнка?",
+                "options_native": [
+                    "38,5 градусов",
+                    "39 градусов",
+                    "40 градусов"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Родитель сообщает, что самая высокая температура была 39 градусов."
+            },
+            {
+                "text_native": "Что врач советует давать ребёнку?",
+                "options_native": [
+                    "Только антибиотик",
+                    "Питьё, отдых и парацетамол",
+                    "Сироп от кашля и витамины"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Врач рекомендует питьё, отдых и парацетамол."
+            },
+            {
+                "text_native": "Когда врач просит прийти снова?",
+                "options_native": [
+                    "Завтра, если температура останется высокой или он не сможет пить",
+                    "Через неделю, если горло всё ещё красное",
+                    "Сегодня вечером, если он устанет"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Врач говорит прийти завтра при высокой температуре или если ребёнок не сможет пить."
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "term_target": "sore throat",
+            "translation_native": "боль в горле",
+            "pronunciation_native": "сор сроут",
+            "definition_target": "pain or irritation in the throat",
+            "kind": "chunk",
+            "image_prompt": "child holding his throat while sitting in a clinic exam room",
+            "used_in": [
+                "p1"
+            ]
+        },
+        {
+            "id": "v2",
+            "term_target": "symptoms",
+            "translation_native": "симптомы",
+            "pronunciation_native": "симптомс",
+            "definition_target": "signs of illness that a person has",
+            "kind": "word",
+            "image_prompt": null,
+            "used_in": [
+                "A2"
+            ]
+        },
+        {
+            "id": "v3",
+            "term_target": "highest temperature",
+            "translation_native": "самая высокая температура",
+            "pronunciation_native": "хайэст тэмпрэчер",
+            "definition_target": "the maximum body temperature measured",
+            "kind": "chunk",
+            "image_prompt": "digital thermometer showing a high reading on a table",
+            "used_in": [
+                "p3",
+                "A3"
+            ]
+        },
+        {
+            "id": "v4",
+            "term_target": "less than usual",
+            "translation_native": "меньше, чем обычно",
+            "pronunciation_native": "лэс зэн южуэл",
+            "definition_target": "in a smaller amount than normal",
+            "kind": "chunk",
+            "image_prompt": null,
+            "used_in": [
+                "p4"
+            ]
+        },
+        {
+            "id": "v5",
+            "term_target": "throat infection",
+            "translation_native": "инфекция горла",
+            "pronunciation_native": "сроут инфекшн",
+            "definition_target": "an infection affecting the throat",
+            "kind": "chunk",
+            "image_prompt": "doctor examining a child's throat with a light",
+            "used_in": [
+                "A5"
+            ]
+        },
+        {
+            "id": "v6",
+            "term_target": "paracetamol",
+            "translation_native": "парацетамол",
+            "pronunciation_native": "пэрэситэмол",
+            "definition_target": "a medicine used to reduce pain and fever",
+            "kind": "word",
+            "image_prompt": "paracetamol tablets and a glass of water on a kitchen table",
+            "used_in": [
+                "p5",
+                "A5",
+                "A6"
+            ]
+        },
+        {
+            "id": "v7",
+            "term_target": "antibiotic",
+            "translation_native": "антибиотик",
+            "pronunciation_native": "энтибайотик",
+            "definition_target": "a medicine that treats bacterial infections",
+            "kind": "word",
+            "image_prompt": "box of antibiotic capsules on a clinic desk",
+            "used_in": [
+                "p6",
+                "A7"
+            ]
+        },
+        {
+            "id": "v8",
+            "term_target": "come back",
+            "translation_native": "прийти снова",
+            "pronunciation_native": "кам бэк",
+            "definition_target": "return for another visit",
+            "kind": "chunk",
+            "image_prompt": "parent and child walking back into a clinic entrance",
+            "used_in": [
+                "p7",
+                "A8"
+            ]
+        }
+    ]
+}

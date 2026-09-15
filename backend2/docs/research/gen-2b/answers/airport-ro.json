@@ -1,0 +1,749 @@
+{
+    "topic": {
+        "title_target": "Airport check-in",
+        "title_native": "Check-in la aeroport",
+        "description_target": "Check in for a flight, show your passport, talk about your bags, and confirm your seat.",
+        "description_native": "Fă check-in pentru un zbor, arată pașaportul, vorbește despre bagaje și confirmă locul."
+    },
+    "learner_role": {
+        "role_target": "Passenger",
+        "role_native": "pasager"
+    },
+    "role_gender": "female",
+    "dialogue": [
+        {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p1",
+                    "filler": "this flight",
+                    "text_target": "I'm checking in for this flight.",
+                    "text_native": "Fac check-in pentru acest zbor.",
+                    "pronunciation_native": "aim cec-king in for dhis flait",
+                    "speaking_key": "checking in for",
+                    "simplified_variants": [
+                        "I'm here to check in.",
+                        "Check-in for this flight."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Sure. May I see your passport?",
+                    "text_native": "Sigur. Pot să văd pașaportul?"
+                }
+            ],
+            "check": {
+                "text_target": "What document does the agent ask for?",
+                "text_native": "Ce document cere agenta?",
+                "options": [
+                    {
+                        "text_target": "A boarding pass",
+                        "text_native": "Un bilet de îmbarcare"
+                    },
+                    {
+                        "text_target": "A passport",
+                        "text_native": "Un pașaport"
+                    },
+                    {
+                        "text_target": "A visa form",
+                        "text_native": "Un formular de viză"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Agenta cere pașaportul, nu alt document."
+            }
+        },
+        {
+            "step": 2,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Thank you. Where are you flying today?",
+                    "text_native": "Mulțumesc. Unde zburați azi?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p2",
+                    "filler": "to London",
+                    "text_target": "I'm flying to London.",
+                    "text_native": "Zbor la Londra.",
+                    "pronunciation_native": "aim flai-ing tu lan-dăn",
+                    "speaking_key": "flying to",
+                    "simplified_variants": [
+                        "To London.",
+                        "I'm going to London."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the agent want to know?",
+                "text_native": "Ce vrea să știe agenta?",
+                "options": [
+                    {
+                        "text_target": "Your destination",
+                        "text_native": "Destinația ta"
+                    },
+                    {
+                        "text_target": "Your seat number",
+                        "text_native": "Numărul locului tău"
+                    },
+                    {
+                        "text_target": "Your bag weight",
+                        "text_native": "Greutatea bagajului tău"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Agenta întreabă unde zbori, adică destinația."
+            }
+        },
+        {
+            "step": 3,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "How many bags do you have?",
+                    "text_native": "Câte bagaje aveți?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p3",
+                    "filler": "one suitcase and one backpack",
+                    "text_target": "I have one suitcase and one backpack.",
+                    "text_native": "Am o valiză și un rucsac.",
+                    "pronunciation_native": "ai hev uan suit-ceis ænd uan bec-pac",
+                    "speaking_key": "I have",
+                    "simplified_variants": [
+                        "One suitcase and one backpack.",
+                        "I have two bags."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What is the agent asking about?",
+                "text_native": "Despre ce întreabă agenta?",
+                "options": [
+                    {
+                        "text_target": "The number of bags",
+                        "text_native": "Numărul de bagaje"
+                    },
+                    {
+                        "text_target": "The boarding time",
+                        "text_native": "Ora îmbarcării"
+                    },
+                    {
+                        "text_target": "The flight price",
+                        "text_native": "Prețul zborului"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Agenta întreabă câte bagaje ai."
+            }
+        },
+        {
+            "step": 4,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Which bag are you checking?",
+                    "text_native": "Care bagaj îl dați la cală?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p4",
+                    "filler": "this suitcase",
+                    "text_target": "I'm checking this suitcase.",
+                    "text_native": "Dau la cală această valiză.",
+                    "pronunciation_native": "aim cec-king dhis suit-ceis",
+                    "speaking_key": "checking this",
+                    "simplified_variants": [
+                        "This suitcase.",
+                        "I'm checking the suitcase."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the agent want to identify?",
+                "text_native": "Ce vrea să identifice agenta?",
+                "options": [
+                    {
+                        "text_target": "The bag for the hold",
+                        "text_native": "Bagajul pentru cală"
+                    },
+                    {
+                        "text_target": "The flight on the screen",
+                        "text_native": "Zborul de pe ecran"
+                    },
+                    {
+                        "text_target": "The passport photo",
+                        "text_native": "Fotografia din pașaport"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Agenta întreabă ce bagaj mergе la cală."
+            }
+        },
+        {
+            "step": 5,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p5",
+                    "filler": "my seat",
+                    "text_target": "What is my seat?",
+                    "text_native": "Care este locul meu?",
+                    "pronunciation_native": "uat iz mai siit",
+                    "speaking_key": "What is my",
+                    "simplified_variants": [
+                        "My seat, please.",
+                        "Which seat is mine?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Your seat is 14A, by the window.",
+                    "text_native": "Locul dumneavoastră este 14A, la geam."
+                }
+            ],
+            "check": {
+                "text_target": "Where is the seat?",
+                "text_native": "Unde este locul?",
+                "options": [
+                    {
+                        "text_target": "Next to the aisle",
+                        "text_native": "Lângă culoar"
+                    },
+                    {
+                        "text_target": "In the middle",
+                        "text_native": "La mijloc"
+                    },
+                    {
+                        "text_target": "By the window",
+                        "text_native": "La geam"
+                    }
+                ],
+                "correct_option_index": 2,
+                "explanation_native": "Agenta spune că locul este la geam."
+            }
+        },
+        {
+            "step": 6,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p6",
+                    "filler": "my backpack",
+                    "text_target": "Can I keep my backpack?",
+                    "text_native": "Pot să păstrez rucsacul meu?",
+                    "pronunciation_native": "cen ai kiip mai bec-pac",
+                    "speaking_key": "Can I keep",
+                    "simplified_variants": [
+                        "Can I take my backpack?",
+                        "Keep my backpack?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Yes, take it as carry-on.",
+                    "text_native": "Da, luați-l ca bagaj de mână."
+                }
+            ],
+            "check": {
+                "text_target": "How can the passenger take the backpack?",
+                "text_native": "Cum poate pasagerul să ia rucsacul?",
+                "options": [
+                    {
+                        "text_target": "As hand luggage",
+                        "text_native": "Ca bagaj de mână"
+                    },
+                    {
+                        "text_target": "In the checked bag",
+                        "text_native": "În bagajul de cală"
+                    },
+                    {
+                        "text_target": "With special cargo",
+                        "text_native": "La cargo special"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Agenta spune că rucsacul poate fi luat ca bagaj de mână."
+            }
+        },
+        {
+            "step": 7,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Here is your boarding pass and baggage tag.",
+                    "text_native": "Iată cartea de îmbarcare și eticheta de bagaj."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p7",
+                    "filler": "the baggage tag",
+                    "text_target": "Thank you for the baggage tag.",
+                    "text_native": "Mulțumesc pentru eticheta de bagaj.",
+                    "pronunciation_native": "thenc iu for dhă beg-ij teg",
+                    "speaking_key": "for the",
+                    "simplified_variants": [
+                        "Thanks for the tag.",
+                        "Thank you."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What two items does the agent give?",
+                "text_native": "Ce două lucruri dă agenta?",
+                "options": [
+                    {
+                        "text_target": "A passport and a receipt",
+                        "text_native": "Un pașaport și o chitanță"
+                    },
+                    {
+                        "text_target": "A boarding pass and a bag label",
+                        "text_native": "O carte de îmbarcare și o etichetă de bagaj"
+                    },
+                    {
+                        "text_target": "A ticket and a map",
+                        "text_native": "Un bilet și o hartă"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Agenta oferă cartea de îmbarcare și eticheta de bagaj."
+            }
+        },
+        {
+            "step": 8,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Boarding starts at gate 12 in forty minutes.",
+                    "text_native": "Îmbarcarea începe la poarta 12 în patruzeci de minute."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p8",
+                    "filler": "gate 12",
+                    "text_target": "Okay, I'll go to gate 12.",
+                    "text_native": "Bine, merg la poarta 12.",
+                    "pronunciation_native": "ou-chei, ail gou tu geit tuelv",
+                    "speaking_key": "I'll go to",
+                    "simplified_variants": [
+                        "Okay, gate 12.",
+                        "I'll go there."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "When does boarding begin?",
+                "text_native": "Când începe îmbarcarea?",
+                "options": [
+                    {
+                        "text_target": "In about forty minutes",
+                        "text_native": "Peste aproximativ patruzeci de minute"
+                    },
+                    {
+                        "text_target": "Right now",
+                        "text_native": "Chiar acum"
+                    },
+                    {
+                        "text_target": "In two hours",
+                        "text_native": "Peste două ore"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Agenta spune că îmbarcarea începe peste patruzeci de minute."
+            }
+        }
+    ],
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "ask",
+            "frame_target": "I'm checking in for ___.",
+            "frame_native": "Fac check-in pentru ___.",
+            "pronunciation_native": "aim cec-king in for ___",
+            "slot": {
+                "hint_native": "zborul sau cursa",
+                "fillers": [
+                    {
+                        "target": "this flight",
+                        "native": "acest zbor",
+                        "pronunciation_native": "dhis flait",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "the morning flight",
+                        "native": "zborul de dimineață",
+                        "pronunciation_native": "dhă mor-ning flait",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "I'm flying ___.",
+            "frame_native": "Zbor ___.",
+            "pronunciation_native": "aim flai-ing ___",
+            "slot": {
+                "hint_native": "destinația",
+                "fillers": [
+                    {
+                        "target": "to London",
+                        "native": "la Londra",
+                        "pronunciation_native": "tu lan-dăn",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "to Madrid",
+                        "native": "la Madrid",
+                        "pronunciation_native": "tu mă-drid",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "frame_target": "I have ___.",
+            "frame_native": "Am ___.",
+            "pronunciation_native": "ai hev ___",
+            "slot": {
+                "hint_native": "bagajele",
+                "fillers": [
+                    {
+                        "target": "one suitcase and one backpack",
+                        "native": "o valiză și un rucsac",
+                        "pronunciation_native": "uan suit-ceis ænd uan bec-pac",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "one suitcase and one carry-on",
+                        "native": "o valiză și un bagaj de mână",
+                        "pronunciation_native": "uan suit-ceis ænd uan ce-ri on",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "frame_target": "I'm checking ___.",
+            "frame_native": "Dau la cală ___.",
+            "pronunciation_native": "aim cec-king ___",
+            "slot": {
+                "hint_native": "bagajul",
+                "fillers": [
+                    {
+                        "target": "this suitcase",
+                        "native": "această valiză",
+                        "pronunciation_native": "dhis suit-ceis",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "the large bag",
+                        "native": "geanta mare",
+                        "pronunciation_native": "dhă larj beg",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "frame_target": "What is ___?",
+            "frame_native": "Care este ___?",
+            "pronunciation_native": "uat iz ___",
+            "slot": {
+                "hint_native": "detaliul dorit",
+                "fillers": [
+                    {
+                        "target": "my seat",
+                        "native": "locul meu",
+                        "pronunciation_native": "mai siit",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "my gate",
+                        "native": "poarta mea",
+                        "pronunciation_native": "mai geit",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "frame_target": "Can I keep ___?",
+            "frame_native": "Pot să păstrez ___?",
+            "pronunciation_native": "cen ai kiip ___",
+            "slot": {
+                "hint_native": "obiectul sau bagajul",
+                "fillers": [
+                    {
+                        "target": "my backpack",
+                        "native": "rucsacul meu",
+                        "pronunciation_native": "mai bec-pac",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "this small bag",
+                        "native": "această geantă mică",
+                        "pronunciation_native": "dhis smol beg",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p7",
+            "kind": "answer",
+            "frame_target": "Thank you for ___.",
+            "frame_native": "Mulțumesc pentru ___.",
+            "pronunciation_native": "thenc iu for ___",
+            "slot": {
+                "hint_native": "lucrul primit",
+                "fillers": [
+                    {
+                        "target": "the baggage tag",
+                        "native": "eticheta de bagaj",
+                        "pronunciation_native": "dhă beg-ij teg",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "the boarding pass",
+                        "native": "cartea de îmbarcare",
+                        "pronunciation_native": "dhă bor-ding pas",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p8",
+            "kind": "answer",
+            "frame_target": "I'll go to ___.",
+            "frame_native": "Merg la ___.",
+            "pronunciation_native": "ail gou tu ___",
+            "slot": {
+                "hint_native": "poarta sau locul",
+                "fillers": [
+                    {
+                        "target": "gate 12",
+                        "native": "poarta 12",
+                        "pronunciation_native": "geit tuelv",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "gate 8",
+                        "native": "poarta 8",
+                        "pronunciation_native": "geit eit",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Unde zboară pasagerul?",
+                "options_native": [
+                    "La Madrid",
+                    "La Londra",
+                    "La Roma"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Pasagerul spune că zboară la Londra."
+            },
+            {
+                "text_native": "Ce bagaj dă pasagerul la cală?",
+                "options_native": [
+                    "Rucsacul",
+                    "Valiza",
+                    "Ambele bagaje"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Pasagerul spune că dă la cală valiza."
+            },
+            {
+                "text_native": "Ce loc primește pasagerul?",
+                "options_native": [
+                    "14A la geam",
+                    "14C la culoar",
+                    "12B la mijloc"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Agenta spune că locul este 14A, la geam."
+            },
+            {
+                "text_native": "Cum poate lua pasagerul rucsacul?",
+                "options_native": [
+                    "Ca bagaj de mână",
+                    "Ca bagaj de cală",
+                    "Nu îl poate lua"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Agenta spune că rucsacul poate fi luat ca bagaj de mână."
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "term_target": "check in",
+            "translation_native": "a face check-in",
+            "pronunciation_native": "cec in",
+            "definition_target": "to register for a flight before departure",
+            "kind": "chunk",
+            "image_prompt": "airport check-in counter with a passenger and agent",
+            "used_in": [
+                "p1",
+                "p4"
+            ]
+        },
+        {
+            "id": "v2",
+            "term_target": "passport",
+            "translation_native": "pașaport",
+            "pronunciation_native": "pas-port",
+            "definition_target": "an official travel document for international trips",
+            "kind": "word",
+            "image_prompt": "passport on an airport counter",
+            "used_in": [
+                "A1"
+            ]
+        },
+        {
+            "id": "v3",
+            "term_target": "suitcase",
+            "translation_native": "valiză",
+            "pronunciation_native": "suit-ceis",
+            "definition_target": "a travel case for clothes and personal items",
+            "kind": "word",
+            "image_prompt": "medium suitcase beside an airport check-in desk",
+            "used_in": [
+                "p3",
+                "p4"
+            ]
+        },
+        {
+            "id": "v4",
+            "term_target": "backpack",
+            "translation_native": "rucsac",
+            "pronunciation_native": "bec-pac",
+            "definition_target": "a bag carried on your back",
+            "kind": "word",
+            "image_prompt": "black backpack on the floor at an airport counter",
+            "used_in": [
+                "p3",
+                "p6"
+            ]
+        },
+        {
+            "id": "v5",
+            "term_target": "window",
+            "translation_native": "geam",
+            "pronunciation_native": "uin-dou",
+            "definition_target": "the side seat next to the plane window",
+            "kind": "word",
+            "image_prompt": "airplane window seat with the window visible",
+            "used_in": [
+                "A5"
+            ]
+        },
+        {
+            "id": "v6",
+            "term_target": "carry-on",
+            "translation_native": "bagaj de mână",
+            "pronunciation_native": "ce-ri on",
+            "definition_target": "a bag you take with you onto the plane",
+            "kind": "word",
+            "image_prompt": "small carry-on bag under an airport seat area",
+            "used_in": [
+                "A6",
+                "p3"
+            ]
+        },
+        {
+            "id": "v7",
+            "term_target": "boarding pass",
+            "translation_native": "carte de îmbarcare",
+            "pronunciation_native": "bor-ding pas",
+            "definition_target": "the document that lets you board the plane",
+            "kind": "chunk",
+            "image_prompt": "boarding pass in a passenger's hand at the airport",
+            "used_in": [
+                "A7",
+                "p7"
+            ]
+        },
+        {
+            "id": "v8",
+            "term_target": "baggage tag",
+            "translation_native": "etichetă de bagaj",
+            "pronunciation_native": "beg-ij teg",
+            "definition_target": "a label attached to checked luggage",
+            "kind": "chunk",
+            "image_prompt": "baggage tag attached to a suitcase handle",
+            "used_in": [
+                "A7",
+                "p7"
+            ]
+        }
+    ]
+}

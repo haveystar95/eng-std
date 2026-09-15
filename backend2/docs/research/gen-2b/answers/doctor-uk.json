@@ -1,0 +1,730 @@
+{
+    "topic": {
+        "title_target": "At the doctor's with your son",
+        "title_native": "У лікаря з сином",
+        "description_target": "Explain your son's symptoms and understand the doctor's advice.",
+        "description_native": "Поясніть симптоми сина й зрозумійте поради лікаря."
+    },
+    "learner_role": {
+        "role_target": "Parent",
+        "role_native": "Мати або батько"
+    },
+    "role_gender": "female",
+    "dialogue": [
+        {
+            "step": 1,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Лікарка",
+                    "text_target": "What seems to be the problem today?",
+                    "text_native": "Що вас сьогодні турбує?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Мати або батько",
+                    "phrase_id": "p1",
+                    "filler": "a fever and a sore throat",
+                    "text_target": "My son has a fever and a sore throat.",
+                    "text_native": "У мого сина температура і болить горло.",
+                    "pronunciation_native": "май сан хез э фівер енд э сор сроут",
+                    "speaking_key": "My son has",
+                    "simplified_variants": [
+                        "He has a fever and a sore throat."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the doctor ask first?",
+                "text_native": "Про що лікарка питає спочатку?",
+                "options": [
+                    {
+                        "text_target": "Why your son stayed home",
+                        "text_native": "Чому ваш син залишився вдома"
+                    },
+                    {
+                        "text_target": "What is wrong today",
+                        "text_native": "Що сталося сьогодні"
+                    },
+                    {
+                        "text_target": "Which medicine he took",
+                        "text_native": "Які ліки він приймав"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Лікарка спочатку просить коротко сказати, у чому проблема сьогодні."
+            }
+        },
+        {
+            "step": 2,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Лікарка",
+                    "text_target": "How long has he had the fever?",
+                    "text_native": "Як довго в нього температура?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Мати або батько",
+                    "phrase_id": "p2",
+                    "filler": "for three days",
+                    "text_target": "He has had it for three days.",
+                    "text_native": "Вона в нього вже три дні.",
+                    "pronunciation_native": "хі хез хед іт фор срі дейз",
+                    "speaking_key": "has had it",
+                    "simplified_variants": [
+                        "For three days.",
+                        "He has had it three days."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the doctor want to know?",
+                "text_native": "Що хоче дізнатися лікарка?",
+                "options": [
+                    {
+                        "text_target": "How long the fever has lasted",
+                        "text_native": "Скільки часу тримається температура"
+                    },
+                    {
+                        "text_target": "How high the fever was this morning",
+                        "text_native": "Яка була температура сьогодні зранку"
+                    },
+                    {
+                        "text_target": "How often he gets fever",
+                        "text_native": "Як часто в нього буває температура"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Лікарка питає саме про тривалість температури."
+            }
+        },
+        {
+            "step": 3,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Лікарка",
+                    "text_target": "Is he drinking enough fluids?",
+                    "text_native": "Він п'є достатньо рідини?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Мати або батько",
+                    "phrase_id": "p3",
+                    "filler": "a little water",
+                    "text_target": "He is drinking a little water.",
+                    "text_native": "Він п'є трохи води.",
+                    "pronunciation_native": "хі із дрінкінг э літл вотер",
+                    "speaking_key": "is drinking",
+                    "simplified_variants": [
+                        "He drinks a little water."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What is the doctor asking about?",
+                "text_native": "Про що питає лікарка?",
+                "options": [
+                    {
+                        "text_target": "Whether he is sleeping well",
+                        "text_native": "Чи він добре спить"
+                    },
+                    {
+                        "text_target": "Whether he is taking medicine",
+                        "text_native": "Чи він приймає ліки"
+                    },
+                    {
+                        "text_target": "Whether he is getting enough to drink",
+                        "text_native": "Чи він достатньо п'є"
+                    }
+                ],
+                "correct_option_index": 2,
+                "explanation_native": "Лікарка уточнює, чи дитина п'є достатньо рідини."
+            }
+        },
+        {
+            "step": 4,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Лікарка",
+                    "text_target": "It looks like a viral throat infection.",
+                    "text_native": "Схоже на вірусну інфекцію горла."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Мати або батько",
+                    "phrase_id": "p4",
+                    "filler": "a viral infection",
+                    "text_target": "So it is a viral infection.",
+                    "text_native": "Тобто це вірусна інфекція.",
+                    "pronunciation_native": "соу іт із э вайрэл інфекшн",
+                    "speaking_key": "it is a",
+                    "simplified_variants": [
+                        "It is viral, then."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the doctor think it is?",
+                "text_native": "Що, на думку лікарки, це може бути?",
+                "options": [
+                    {
+                        "text_target": "A bacterial ear problem",
+                        "text_native": "Бактеріальна проблема з вухом"
+                    },
+                    {
+                        "text_target": "A virus affecting the throat",
+                        "text_native": "Вірус, що вразив горло"
+                    },
+                    {
+                        "text_target": "An allergy to food",
+                        "text_native": "Алергія на їжу"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Лікарка каже, що це схоже на вірусну інфекцію горла."
+            }
+        },
+        {
+            "step": 5,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Мати або батько",
+                    "phrase_id": "p5",
+                    "filler": "for the fever",
+                    "text_target": "What can I give him for the fever?",
+                    "text_native": "Що я можу дати йому від температури?",
+                    "pronunciation_native": "вот кен ай гів хім фор зе фівер",
+                    "speaking_key": "can I give",
+                    "simplified_variants": [
+                        "What can I give for the fever?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Лікарка",
+                    "text_target": "Give him paracetamol or ibuprofen for fever and throat pain.",
+                    "text_native": "Дайте йому парацетамол або ібупрофен від температури й болю в горлі."
+                }
+            ],
+            "check": {
+                "text_target": "Which medicines does the doctor recommend?",
+                "text_native": "Які ліки радить лікарка?",
+                "options": [
+                    {
+                        "text_target": "Cough syrup and vitamins",
+                        "text_native": "Сироп від кашлю та вітаміни"
+                    },
+                    {
+                        "text_target": "An antibiotic and nasal drops",
+                        "text_native": "Антибіотик і краплі в ніс"
+                    },
+                    {
+                        "text_target": "Paracetamol or ibuprofen",
+                        "text_native": "Парацетамол або ібупрофен"
+                    }
+                ],
+                "correct_option_index": 2,
+                "explanation_native": "Лікарка радить парацетамол або ібупрофен."
+            }
+        },
+        {
+            "step": 6,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Мати або батько",
+                    "phrase_id": "p6",
+                    "filler": "how often",
+                    "text_target": "How often should I give it?",
+                    "text_native": "Як часто мені це давати?",
+                    "pronunciation_native": "хау офен шуд ай гів іт",
+                    "speaking_key": "How often should",
+                    "simplified_variants": [
+                        "How often do I give it?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Лікарка",
+                    "text_target": "Every six hours if needed, and always after food.",
+                    "text_native": "Кожні шість годин за потреби, і обов’язково після їжі."
+                }
+            ],
+            "check": {
+                "text_target": "When should the medicine be given?",
+                "text_native": "Коли треба давати ліки?",
+                "options": [
+                    {
+                        "text_target": "Every six hours, after eating",
+                        "text_native": "Кожні шість годин, після їжі"
+                    },
+                    {
+                        "text_target": "Once each morning, before breakfast",
+                        "text_native": "Раз щоранку, перед сніданком"
+                    },
+                    {
+                        "text_target": "Every two hours, with juice",
+                        "text_native": "Кожні дві години, із соком"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Лікарка сказала давати ліки кожні шість годин за потреби й після їжі."
+            }
+        },
+        {
+            "step": 7,
+            "kind": "rescue",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Мати або батько",
+                    "phrase_id": null,
+                    "filler": null,
+                    "text_target": "Could you say that more slowly, please?",
+                    "text_native": "Можете сказати це повільніше, будь ласка?",
+                    "pronunciation_native": "куд ю сей зет мор слоулі, пліз",
+                    "speaking_key": "say that more slowly",
+                    "simplified_variants": [
+                        "Please say that more slowly.",
+                        "Could you repeat that, please?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Лікарка",
+                    "text_target": "Every six hours, after food.",
+                    "text_native": "Кожні шість годин, після їжі."
+                }
+            ],
+            "check": {
+                "text_target": "What detail does the doctor repeat?",
+                "text_native": "Яку деталь лікарка повторює?",
+                "options": [
+                    {
+                        "text_target": "Use it after meals",
+                        "text_native": "Давати після їжі"
+                    },
+                    {
+                        "text_target": "Use it only at bedtime",
+                        "text_native": "Давати тільки перед сном"
+                    },
+                    {
+                        "text_target": "Use it before school",
+                        "text_native": "Давати перед школою"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "У повторі лікарка ще раз каже, що ліки треба давати після їжі."
+            }
+        },
+        {
+            "step": 8,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Мати або батько",
+                    "phrase_id": "p7",
+                    "filler": "if the fever gets worse",
+                    "text_target": "When should I come back if the fever gets worse?",
+                    "text_native": "Коли нам знову прийти, якщо температура підніметься?",
+                    "pronunciation_native": "вен шуд ай кам бек іф зе фівер гетс ворс",
+                    "speaking_key": "When should I",
+                    "simplified_variants": [
+                        "When should we come back?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Doctor",
+                    "role_native": "Лікарка",
+                    "text_target": "Come back if he cannot drink, or if breathing gets hard.",
+                    "text_native": "Приходьте знову, якщо він не зможе пити або якщо йому стане важко дихати."
+                }
+            ],
+            "check": {
+                "text_target": "When does the doctor want to see him again?",
+                "text_native": "Коли лікарка хоче знову його побачити?",
+                "options": [
+                    {
+                        "text_target": "If he gets sleepy after medicine",
+                        "text_native": "Якщо він стане сонним після ліків"
+                    },
+                    {
+                        "text_target": "If he stops drinking or struggles to breathe",
+                        "text_native": "Якщо він не зможе пити або йому буде важко дихати"
+                    },
+                    {
+                        "text_target": "If his throat still hurts tonight",
+                        "text_native": "Якщо горло й далі болітиме сьогодні ввечері"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Лікарка просить повернутися, якщо дитина не зможе пити або матиме утруднене дихання."
+            }
+        }
+    ],
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "frame_target": "My son has ___.",
+            "frame_native": "У мого сина ___.",
+            "pronunciation_native": "май сан хез ___",
+            "slot": {
+                "hint_native": "симптоми",
+                "fillers": [
+                    {
+                        "target": "a fever and a sore throat",
+                        "native": "температура і болить горло",
+                        "pronunciation_native": "э фівер енд э сор сроут",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "a cough and a runny nose",
+                        "native": "кашель і нежить",
+                        "pronunciation_native": "э коф енд э ранні ноуз",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "stomach pain and nausea",
+                        "native": "біль у животі й нудота",
+                        "pronunciation_native": "стамек пейн енд нозіа",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "He has had it ___.",
+            "frame_native": "Вона в нього вже ___.",
+            "pronunciation_native": "хі хез хед іт ___",
+            "slot": {
+                "hint_native": "тривалість",
+                "fillers": [
+                    {
+                        "target": "for three days",
+                        "native": "три дні",
+                        "pronunciation_native": "фор срі дейз",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "since yesterday",
+                        "native": "від учора",
+                        "pronunciation_native": "сінс єстердей",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "since Monday",
+                        "native": "із понеділка",
+                        "pronunciation_native": "сінс мандей",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "frame_target": "He is drinking ___.",
+            "frame_native": "Він п'є ___.",
+            "pronunciation_native": "хі із дрінкінг ___",
+            "slot": {
+                "hint_native": "що і скільки п'є",
+                "fillers": [
+                    {
+                        "target": "a little water",
+                        "native": "трохи води",
+                        "pronunciation_native": "э літл вотер",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "warm tea",
+                        "native": "теплий чай",
+                        "pronunciation_native": "ворм ті",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "almost nothing",
+                        "native": "майже нічого",
+                        "pronunciation_native": "олмоуст насінг",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "frame_target": "So it is ___.",
+            "frame_native": "Тобто це ___.",
+            "pronunciation_native": "соу іт із ___",
+            "slot": {
+                "hint_native": "що це за проблема",
+                "fillers": [
+                    {
+                        "target": "a viral infection",
+                        "native": "вірусна інфекція",
+                        "pronunciation_native": "э вайрэл інфекшн",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "just a cold",
+                        "native": "просто застуда",
+                        "pronunciation_native": "джаст э коулд",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "frame_target": "What can I give him ___?",
+            "frame_native": "Що я можу дати йому ___?",
+            "pronunciation_native": "вот кен ай гів хім ___",
+            "slot": {
+                "hint_native": "для чого",
+                "fillers": [
+                    {
+                        "target": "for the fever",
+                        "native": "від температури",
+                        "pronunciation_native": "фор зе фівер",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "for the pain",
+                        "native": "від болю",
+                        "pronunciation_native": "фор зе пейн",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "for the cough",
+                        "native": "від кашлю",
+                        "pronunciation_native": "фор зе коф",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "frame_target": "How often should I give it?",
+            "frame_native": "Як часто мені це давати?",
+            "pronunciation_native": "хау офен шуд ай гів іт",
+            "slot": null
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "frame_target": "When should I come back ___?",
+            "frame_native": "Коли нам знову прийти ___?",
+            "pronunciation_native": "вен шуд ай кам бек ___",
+            "slot": {
+                "hint_native": "за якої умови",
+                "fillers": [
+                    {
+                        "target": "if the fever gets worse",
+                        "native": "якщо температура підніметься",
+                        "pronunciation_native": "іф зе фівер гетс ворс",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "if he still cannot eat",
+                        "native": "якщо він і далі не зможе їсти",
+                        "pronunciation_native": "іф хі стіл кенот іт",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "if the pain lasts longer",
+                        "native": "якщо біль триватиме довше",
+                        "pronunciation_native": "іф зе пейн ластс лонгер",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Скільки днів у сина температура?",
+                "options_native": [
+                    "Один день",
+                    "Три дні",
+                    "Тиждень"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Батько або мати сказали, що температура триває три дні."
+            },
+            {
+                "text_native": "Що лікарка вважає найбільш імовірною причиною?",
+                "options_native": [
+                    "Вірусну інфекцію горла",
+                    "Алергію",
+                    "Вушну інфекцію"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Лікарка сказала, що це схоже на вірусну інфекцію горла."
+            },
+            {
+                "text_native": "Які ліки лікарка порадила дати дитині?",
+                "options_native": [
+                    "Парацетамол або ібупрофен",
+                    "Тільки антибіотик",
+                    "Сироп від кашлю"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Лікарка рекомендувала парацетамол або ібупрофен."
+            },
+            {
+                "text_native": "Коли треба знову прийти до лікарки?",
+                "options_native": [
+                    "Якщо дитина не може пити або важко дихає",
+                    "Якщо ввечері знову заболить горло",
+                    "Якщо захоче спати вдень"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Лікарка попросила повернутися, якщо дитина не зможе пити або матиме утруднене дихання."
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "term_target": "sore throat",
+            "translation_native": "біль у горлі",
+            "pronunciation_native": "сор сроут",
+            "definition_target": "pain or irritation in the throat",
+            "kind": "chunk",
+            "image_prompt": "child holding his throat while sitting in a doctor's office",
+            "used_in": [
+                "p1"
+            ]
+        },
+        {
+            "id": "v2",
+            "term_target": "fluids",
+            "translation_native": "рідина",
+            "pronunciation_native": "флуїдз",
+            "definition_target": "drinks that help the body stay hydrated",
+            "kind": "word",
+            "image_prompt": "glass of water and tea on a table near a sick child",
+            "used_in": [
+                "A3"
+            ]
+        },
+        {
+            "id": "v3",
+            "term_target": "viral infection",
+            "translation_native": "вірусна інфекція",
+            "pronunciation_native": "вайрэл інфекшн",
+            "definition_target": "an illness caused by a virus",
+            "kind": "chunk",
+            "image_prompt": null,
+            "used_in": [
+                "A4",
+                "p4"
+            ]
+        },
+        {
+            "id": "v4",
+            "term_target": "paracetamol",
+            "translation_native": "парацетамол",
+            "pronunciation_native": "пересітемол",
+            "definition_target": "a medicine used to reduce fever and pain",
+            "kind": "word",
+            "image_prompt": "paracetamol tablets beside a glass of water",
+            "used_in": [
+                "A5"
+            ]
+        },
+        {
+            "id": "v5",
+            "term_target": "ibuprofen",
+            "translation_native": "ібупрофен",
+            "pronunciation_native": "айбьюпроуфен",
+            "definition_target": "a medicine used for pain, swelling, and fever",
+            "kind": "word",
+            "image_prompt": "ibuprofen tablets on a kitchen table",
+            "used_in": [
+                "A5"
+            ]
+        },
+        {
+            "id": "v6",
+            "term_target": "after food",
+            "translation_native": "після їжі",
+            "pronunciation_native": "афтэр фуд",
+            "definition_target": "taken after eating a meal or snack",
+            "kind": "chunk",
+            "image_prompt": "medicine spoon next to a child's plate after a meal",
+            "used_in": [
+                "A6",
+                "A7"
+            ]
+        },
+        {
+            "id": "v7",
+            "term_target": "come back",
+            "translation_native": "прийти знову",
+            "pronunciation_native": "кам бек",
+            "definition_target": "return for another visit",
+            "kind": "chunk",
+            "image_prompt": "parent and child entering a clinic door again",
+            "used_in": [
+                "p7",
+                "A8"
+            ]
+        },
+        {
+            "id": "v8",
+            "term_target": "breathing",
+            "translation_native": "дихання",
+            "pronunciation_native": "брізінг",
+            "definition_target": "the act of taking air in and out of the lungs",
+            "kind": "word",
+            "image_prompt": "doctor listening to a child's breathing with a stethoscope",
+            "used_in": [
+                "A8"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,2380 @@
+[
+    {
+        "case": "GEN-2a rent B3 (v4.4)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "filler.one_in_dialogue@B3",
+            "line.ne_frame@B3",
+            "key.not_in_line@B3"
+        ],
+        "at_card_after": [
+            "variant.longer@B3"
+        ],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "exchange.second_question@x2",
+            "exchange.repeats@x8",
+            "line.ne_frame@B3"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x1",
+            "exchange.second_question@x2",
+            "exchange.repeats@x8"
+        ],
+        "findings_before": 18,
+        "findings_after": 14,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Prospective tenant",
+            "role_native": "Будущий арендатор",
+            "phrase_id": "p3",
+            "filler": "one year",
+            "text_target": "I need a one-year contract.",
+            "text_native": "Мне нужен договор на год.",
+            "pronunciation_native": "ай нид э уан-йир контракт",
+            "speaking_key": "need a contract",
+            "simplified_variants": [
+                "I need it for one year."
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Prospective tenant",
+            "role_native": "Будущий арендатор",
+            "phrase_id": "p3",
+            "filler": "one-year",
+            "text_target": "I need a one-year contract.",
+            "text_native": "Мне нужен договор на год.",
+            "pronunciation_native": "ай нид э уан-йир контракт",
+            "speaking_key": "need a",
+            "simplified_variants": [
+                "I need it for one year."
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.011570",
+        "latency_ms": 2945,
+        "tokens_in": 4058,
+        "tokens_out": 95,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "exchange.second_question@x2",
+            "exchange.repeats@x8",
+            "line.ne_frame@B3"
+        ],
+        "at_card_after_now": [
+            "variant.longer@B3"
+        ],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "exchange.second_question@x2",
+            "exchange.repeats@x8"
+        ]
+    },
+    {
+        "case": "GEN-2a rent B3 (v4.4)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "filler.one_in_dialogue@B3",
+            "line.ne_frame@B3",
+            "key.not_in_line@B3"
+        ],
+        "at_card_after": [
+            "variant.longer@B3"
+        ],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "exchange.second_question@x2",
+            "exchange.repeats@x8",
+            "line.ne_frame@B3"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x1",
+            "exchange.second_question@x2",
+            "exchange.repeats@x8"
+        ],
+        "findings_before": 18,
+        "findings_after": 14,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Prospective tenant",
+            "role_native": "Будущий арендатор",
+            "phrase_id": "p3",
+            "filler": "one year",
+            "text_target": "I need a one-year contract.",
+            "text_native": "Мне нужен договор на год.",
+            "pronunciation_native": "ай нид э уан-йир контракт",
+            "speaking_key": "need a contract",
+            "simplified_variants": [
+                "I need it for one year."
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Prospective tenant",
+            "role_native": "Будущий арендатор",
+            "phrase_id": "p3",
+            "filler": "one-year",
+            "text_target": "I need a one-year contract.",
+            "text_native": "Мне нужен договор на год.",
+            "pronunciation_native": "ай нид э уан-йир контракт",
+            "speaking_key": "I need a",
+            "simplified_variants": [
+                "I need it for one year."
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.003476",
+        "latency_ms": 1948,
+        "tokens_in": 4058,
+        "tokens_out": 96,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "exchange.second_question@x2",
+            "exchange.repeats@x8",
+            "line.ne_frame@B3"
+        ],
+        "at_card_after_now": [
+            "variant.longer@B3"
+        ],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "exchange.second_question@x2",
+            "exchange.repeats@x8"
+        ]
+    },
+    {
+        "case": "GEN-2a bank p2 (v4.4)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "pronunciation.script@p2.f1",
+            "frame.native_alternatives@p2",
+            "frame.native_agreement@p2",
+            "filler.ungrammatical@p2.f1",
+            "filler.ungrammatical@p2.f2",
+            "filler.ungrammatical@p2.f3"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "filler.ungrammatical@p2.f1",
+            "filler.ungrammatical@p2.f2",
+            "filler.ungrammatical@p2.f3",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3"
+        ],
+        "fatal_after": [],
+        "findings_before": 20,
+        "findings_after": 16,
+        "card_before": {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "Here is my ___.",
+            "frame_native": "Вот мой/моё ___.",
+            "pronunciation_native": "Хиэр из май ___.",
+            "slot": {
+                "hint_native": "какой документ вы показываете",
+                "fillers": [
+                    {
+                        "target": "my passport",
+                        "native": "мой паспорт",
+                        "pronunciation_native": "май пáспорт",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "my rental letter",
+                        "native": "моё письмо об аренде",
+                        "pronunciation_native": "май рэнтэл летэр",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "my student letter",
+                        "native": "моё письмо из вуза",
+                        "pronunciation_native": "май стьюдэнт летэр",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "card_after": {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "Here is ___.",
+            "frame_native": "Вот ___.",
+            "pronunciation_native": "Хиэр из ___.",
+            "slot": {
+                "hint_native": "какой документ вы показываете",
+                "fillers": [
+                    {
+                        "target": "my passport",
+                        "native": "мой паспорт",
+                        "pronunciation_native": "май пэспорт",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "my rental letter",
+                        "native": "моё письмо об аренде",
+                        "pronunciation_native": "май рентэл летэр",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "my student letter",
+                        "native": "моё письмо из вуза",
+                        "pronunciation_native": "май стьюдэнт летэр",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.012765",
+        "latency_ms": 5052,
+        "tokens_in": 4182,
+        "tokens_out": 154,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "filler.ungrammatical@p2.f1",
+            "filler.ungrammatical@p2.f2",
+            "filler.ungrammatical@p2.f3",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3"
+        ],
+        "at_card_after_now": [],
+        "fatal_after_now": []
+    },
+    {
+        "case": "GEN-2a bank p2 (v4.4)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "pronunciation.script@p2.f1",
+            "frame.native_alternatives@p2",
+            "frame.native_agreement@p2",
+            "filler.ungrammatical@p2.f1",
+            "filler.ungrammatical@p2.f2",
+            "filler.ungrammatical@p2.f3"
+        ],
+        "at_card_after": [
+            "pronunciation.script@p2.f1",
+            "filler.one_in_dialogue@p2.f1",
+            "filler.one_in_dialogue@p2.f2"
+        ],
+        "fatal_before": [
+            "filler.ungrammatical@p2.f1",
+            "filler.ungrammatical@p2.f2",
+            "filler.ungrammatical@p2.f3",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3"
+        ],
+        "fatal_after": [
+            "line.ne_frame@B2",
+            "line.ne_frame@B3"
+        ],
+        "findings_before": 20,
+        "findings_after": 19,
+        "card_before": {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "Here is my ___.",
+            "frame_native": "Вот мой/моё ___.",
+            "pronunciation_native": "Хиэр из май ___.",
+            "slot": {
+                "hint_native": "какой документ вы показываете",
+                "fillers": [
+                    {
+                        "target": "my passport",
+                        "native": "мой паспорт",
+                        "pronunciation_native": "май пáспорт",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "my rental letter",
+                        "native": "моё письмо об аренде",
+                        "pronunciation_native": "май рэнтэл летэр",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "my student letter",
+                        "native": "моё письмо из вуза",
+                        "pronunciation_native": "май стьюдэнт летэр",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "card_after": {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "Here is my ___.",
+            "frame_native": "Вот ___.",
+            "pronunciation_native": "Хиэр из май ___.",
+            "slot": {
+                "hint_native": "какой документ вы показываете",
+                "fillers": [
+                    {
+                        "target": "passport",
+                        "native": "мой паспорт",
+                        "pronunciation_native": "пáспорт",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "rental letter",
+                        "native": "моё письмо об аренде",
+                        "pronunciation_native": "рэнтэл летэр",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "student letter",
+                        "native": "моё письмо из вуза",
+                        "pronunciation_native": "стьюдэнт летэр",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.003812",
+        "latency_ms": 1645,
+        "tokens_in": 4182,
+        "tokens_out": 150,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "filler.ungrammatical@p2.f1",
+            "filler.ungrammatical@p2.f2",
+            "filler.ungrammatical@p2.f3",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3"
+        ],
+        "at_card_after_now": [
+            "pronunciation.script@p2.f1",
+            "filler.one_in_dialogue@p2.f1",
+            "filler.one_in_dialogue@p2.f2"
+        ],
+        "fatal_after_now": [
+            "line.ne_frame@B2",
+            "line.ne_frame@B3"
+        ]
+    },
+    {
+        "case": "Ден interview p1 (v4.4; P2R v1 on gpt-5.4 returned it unchanged)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "filler.article_seam@p1",
+            "filler.ungrammatical@p1.f2",
+            "filler.ungrammatical@p1.f3"
+        ],
+        "at_card_after": [
+            "filler.one_in_dialogue@p1.f1"
+        ],
+        "fatal_before": [
+            "exchange.second_question@x5",
+            "filler.ungrammatical@p1.f2",
+            "filler.ungrammatical@p1.f3"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x5"
+        ],
+        "findings_before": 11,
+        "findings_after": 11,
+        "card_before": {
+            "id": "p1",
+            "kind": "answer",
+            "frame_target": "I work as an ___.",
+            "frame_native": "Я работаю ___ .",
+            "pronunciation_native": "Ай уорк эз эн ___ .",
+            "slot": {
+                "hint_native": "должность",
+                "fillers": [
+                    {
+                        "target": "operations manager",
+                        "native": "операционным менеджером",
+                        "pronunciation_native": "оперэйшнз мэниджер",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "project coordinator",
+                        "native": "координатором проектов",
+                        "pronunciation_native": "проджект коордынэйтор",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "sales specialist",
+                        "native": "специалистом по продажам",
+                        "pronunciation_native": "сэйлз спэшелист",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "card_after": {
+            "id": "p1",
+            "kind": "answer",
+            "frame_target": "I work as ___.",
+            "frame_native": "Я работаю ___ .",
+            "pronunciation_native": "Ай уорк эз ___ .",
+            "slot": {
+                "hint_native": "должность",
+                "fillers": [
+                    {
+                        "target": "an operations manager",
+                        "native": "операционным менеджером",
+                        "pronunciation_native": "эн оперэйшнз мэниджер",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "a project coordinator",
+                        "native": "координатором проектов",
+                        "pronunciation_native": "э проджект коордынэйтор",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "a sales specialist",
+                        "native": "специалистом по продажам",
+                        "pronunciation_native": "э сэйлз спэшелист",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.012917",
+        "latency_ms": 4843,
+        "tokens_in": 4153,
+        "tokens_out": 169,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "exchange.second_question@x5",
+            "filler.ungrammatical@p1.f2",
+            "filler.ungrammatical@p1.f3"
+        ],
+        "at_card_after_now": [
+            "filler.one_in_dialogue@p1.f1"
+        ],
+        "fatal_after_now": [
+            "exchange.second_question@x5"
+        ]
+    },
+    {
+        "case": "Ден interview p1 (v4.4; P2R v1 on gpt-5.4 returned it unchanged)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "filler.article_seam@p1",
+            "filler.ungrammatical@p1.f2",
+            "filler.ungrammatical@p1.f3"
+        ],
+        "at_card_after": [
+            "filler.one_in_dialogue@p1.f1"
+        ],
+        "fatal_before": [
+            "exchange.second_question@x5",
+            "filler.ungrammatical@p1.f2",
+            "filler.ungrammatical@p1.f3"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x5"
+        ],
+        "findings_before": 11,
+        "findings_after": 11,
+        "card_before": {
+            "id": "p1",
+            "kind": "answer",
+            "frame_target": "I work as an ___.",
+            "frame_native": "Я работаю ___ .",
+            "pronunciation_native": "Ай уорк эз эн ___ .",
+            "slot": {
+                "hint_native": "должность",
+                "fillers": [
+                    {
+                        "target": "operations manager",
+                        "native": "операционным менеджером",
+                        "pronunciation_native": "оперэйшнз мэниджер",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "project coordinator",
+                        "native": "координатором проектов",
+                        "pronunciation_native": "проджект коордынэйтор",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "sales specialist",
+                        "native": "специалистом по продажам",
+                        "pronunciation_native": "сэйлз спэшелист",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "card_after": {
+            "id": "p1",
+            "kind": "answer",
+            "frame_target": "I work as ___.",
+            "frame_native": "Я работаю ___ .",
+            "pronunciation_native": "Ай уорк эз ___ .",
+            "slot": {
+                "hint_native": "должность",
+                "fillers": [
+                    {
+                        "target": "an operations manager",
+                        "native": "операционным менеджером",
+                        "pronunciation_native": "эн опэрэйшнз мэниджэр",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "a project coordinator",
+                        "native": "координатором проектов",
+                        "pronunciation_native": "э проджект коордынэйтор",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "a sales specialist",
+                        "native": "специалистом по продажам",
+                        "pronunciation_native": "э сэйлз спэшелист",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.003875",
+        "latency_ms": 2515,
+        "tokens_in": 4153,
+        "tokens_out": 169,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "exchange.second_question@x5",
+            "filler.ungrammatical@p1.f2",
+            "filler.ungrammatical@p1.f3"
+        ],
+        "at_card_after_now": [
+            "filler.one_in_dialogue@p1.f1"
+        ],
+        "fatal_after_now": [
+            "exchange.second_question@x5"
+        ]
+    },
+    {
+        "case": "GEN-2b bank x1 (v4.5)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "exchange.second_question@x1"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "fatal_after": [
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "findings_before": 18,
+        "findings_after": 17,
+        "card_before": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Customer",
+                    "role_native": "Клиент",
+                    "phrase_id": "p1",
+                    "filler": "a bank account",
+                    "text_target": "I'd like to open a bank account.",
+                    "text_native": "Я хочу открыть банковский счёт.",
+                    "pronunciation_native": "айд лайк ту оупэн э бэнк экаунт",
+                    "speaking_key": "I'd like to open",
+                    "simplified_variants": [
+                        "I want to open a bank account."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Bank clerk",
+                    "role_native": "Сотрудница банка",
+                    "text_target": "Sure. Can I see your passport first?",
+                    "text_native": "Конечно. Можно сначала ваш паспорт?"
+                }
+            ],
+            "check": {
+                "text_target": "Which document does the clerk ask for first?",
+                "text_native": "Какой документ сотрудница просит сначала?",
+                "options": [
+                    {
+                        "text_target": "A student letter",
+                        "text_native": "Справку из вуза"
+                    },
+                    {
+                        "text_target": "A passport",
+                        "text_native": "Паспорт"
+                    },
+                    {
+                        "text_target": "A bank card",
+                        "text_native": "Банковскую карту"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница сначала просит паспорт."
+            }
+        },
+        "card_after": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Customer",
+                    "role_native": "Клиент",
+                    "phrase_id": "p1",
+                    "filler": "a bank account",
+                    "text_target": "I'd like to open a bank account.",
+                    "text_native": "Я хочу открыть банковский счёт.",
+                    "pronunciation_native": "айд лайк ту оупэн э бэнк экаунт",
+                    "speaking_key": "I'd like to open",
+                    "simplified_variants": [
+                        "I want to open a bank account."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Bank clerk",
+                    "role_native": "Сотрудница банка",
+                    "text_target": "Sure. Please show me your passport first.",
+                    "text_native": "Конечно. Покажите, пожалуйста, сначала ваш паспорт."
+                }
+            ],
+            "check": {
+                "text_target": "Which document does the clerk ask for first?",
+                "text_native": "Какой документ сотрудница просит сначала?",
+                "options": [
+                    {
+                        "text_target": "A student letter",
+                        "text_native": "Справку из вуза"
+                    },
+                    {
+                        "text_target": "A passport",
+                        "text_native": "Паспорт"
+                    },
+                    {
+                        "text_target": "A bank card",
+                        "text_native": "Банковскую карту"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница сначала просит паспорт."
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.018368",
+        "latency_ms": 3323,
+        "tokens_in": 5721,
+        "tokens_out": 271,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "at_card_after_now": [],
+        "fatal_after_now": [
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ]
+    },
+    {
+        "case": "GEN-2b bank x1 (v4.5)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "exchange.second_question@x1"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "fatal_after": [
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "findings_before": 18,
+        "findings_after": 17,
+        "card_before": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Customer",
+                    "role_native": "Клиент",
+                    "phrase_id": "p1",
+                    "filler": "a bank account",
+                    "text_target": "I'd like to open a bank account.",
+                    "text_native": "Я хочу открыть банковский счёт.",
+                    "pronunciation_native": "айд лайк ту оупэн э бэнк экаунт",
+                    "speaking_key": "I'd like to open",
+                    "simplified_variants": [
+                        "I want to open a bank account."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Bank clerk",
+                    "role_native": "Сотрудница банка",
+                    "text_target": "Sure. Can I see your passport first?",
+                    "text_native": "Конечно. Можно сначала ваш паспорт?"
+                }
+            ],
+            "check": {
+                "text_target": "Which document does the clerk ask for first?",
+                "text_native": "Какой документ сотрудница просит сначала?",
+                "options": [
+                    {
+                        "text_target": "A student letter",
+                        "text_native": "Справку из вуза"
+                    },
+                    {
+                        "text_target": "A passport",
+                        "text_native": "Паспорт"
+                    },
+                    {
+                        "text_target": "A bank card",
+                        "text_native": "Банковскую карту"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница сначала просит паспорт."
+            }
+        },
+        "card_after": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Customer",
+                    "role_native": "Клиент",
+                    "phrase_id": "p1",
+                    "filler": "a bank account",
+                    "text_target": "I'd like to open a bank account.",
+                    "text_native": "Я хочу открыть банковский счёт.",
+                    "pronunciation_native": "айд лайк ту оупэн э бэнк экаунт",
+                    "speaking_key": "I'd like to open",
+                    "simplified_variants": [
+                        "I want to open a bank account."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Bank clerk",
+                    "role_native": "Сотрудница банка",
+                    "text_target": "Sure. I need to see your passport first.",
+                    "text_native": "Конечно. Сначала мне нужен ваш паспорт."
+                }
+            ],
+            "check": {
+                "text_target": "Which document does the clerk ask for first?",
+                "text_native": "Какой документ сотрудница просит сначала?",
+                "options": [
+                    {
+                        "text_target": "A student letter",
+                        "text_native": "Справку из вуза"
+                    },
+                    {
+                        "text_target": "A passport",
+                        "text_native": "Паспорт"
+                    },
+                    {
+                        "text_target": "A bank card",
+                        "text_native": "Банковскую карту"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница сначала просит паспорт."
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.005501",
+        "latency_ms": 2104,
+        "tokens_in": 5721,
+        "tokens_out": 269,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "at_card_after_now": [],
+        "fatal_after_now": [
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ]
+    },
+    {
+        "case": "GEN-2b bank B2 (v4.5)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "filler.one_in_dialogue@B2",
+            "line.ne_frame@B2"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B5"
+        ],
+        "findings_before": 18,
+        "findings_after": 15,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Customer",
+            "role_native": "Клиент",
+            "phrase_id": "p2",
+            "filler": "my rental contract",
+            "text_target": "Here is my rental contract.",
+            "text_native": "Вот мой договор аренды.",
+            "pronunciation_native": "хир из май рентэл контракт",
+            "speaking_key": "Here is my",
+            "simplified_variants": [
+                "This is my rental contract."
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Customer",
+            "role_native": "Клиент",
+            "phrase_id": "p2",
+            "filler": "rental contract",
+            "text_target": "Here is my rental contract.",
+            "text_native": "Вот мой договор аренды.",
+            "pronunciation_native": "хир из май рентэл контракт",
+            "speaking_key": "Here is my",
+            "simplified_variants": [
+                "This is my rental contract."
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.011725",
+        "latency_ms": 1736,
+        "tokens_in": 4150,
+        "tokens_out": 90,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "at_card_after_now": [],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B5"
+        ]
+    },
+    {
+        "case": "GEN-2b bank B2 (v4.5)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "filler.one_in_dialogue@B2",
+            "line.ne_frame@B2"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B5"
+        ],
+        "findings_before": 18,
+        "findings_after": 15,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Customer",
+            "role_native": "Клиент",
+            "phrase_id": "p2",
+            "filler": "my rental contract",
+            "text_target": "Here is my rental contract.",
+            "text_native": "Вот мой договор аренды.",
+            "pronunciation_native": "хир из май рентэл контракт",
+            "speaking_key": "Here is my",
+            "simplified_variants": [
+                "This is my rental contract."
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Customer",
+            "role_native": "Клиент",
+            "phrase_id": "p2",
+            "filler": "rental contract",
+            "text_target": "Here is my rental contract.",
+            "text_native": "Вот мой договор аренды.",
+            "pronunciation_native": "хир из май рентэл контракт",
+            "speaking_key": "Here is my",
+            "simplified_variants": [
+                "This is my rental contract."
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.003545",
+        "latency_ms": 3486,
+        "tokens_in": 4150,
+        "tokens_out": 96,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "at_card_after_now": [],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B5"
+        ]
+    },
+    {
+        "case": "GEN-2b bank B5 (v4.5)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "filler.one_in_dialogue@B5",
+            "line.ne_frame@B5",
+            "key.contains_filler@B5"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2"
+        ],
+        "findings_before": 18,
+        "findings_after": 14,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Customer",
+            "role_native": "Клиент",
+            "phrase_id": "p5",
+            "filler": "the monthly fee",
+            "text_target": "What is the monthly fee?",
+            "text_native": "Какая ежемесячная комиссия?",
+            "pronunciation_native": "уот из зэ мансли фи",
+            "speaking_key": "monthly fee",
+            "simplified_variants": [
+                "Is there a monthly fee?"
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Customer",
+            "role_native": "Клиент",
+            "phrase_id": "p5",
+            "filler": "monthly fee",
+            "text_target": "What is the monthly fee?",
+            "text_native": "Какая ежемесячная комиссия?",
+            "pronunciation_native": "уот из зэ мансли фи",
+            "speaking_key": "What is the",
+            "simplified_variants": [
+                "Is there a monthly fee?"
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.011938",
+        "latency_ms": 2085,
+        "tokens_in": 4211,
+        "tokens_out": 94,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "at_card_after_now": [],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2"
+        ]
+    },
+    {
+        "case": "GEN-2b bank B5 (v4.5)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "filler.one_in_dialogue@B5",
+            "line.ne_frame@B5",
+            "key.contains_filler@B5"
+        ],
+        "at_card_after": [
+            "variant.longer@B5"
+        ],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2"
+        ],
+        "findings_before": 18,
+        "findings_after": 15,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Customer",
+            "role_native": "Клиент",
+            "phrase_id": "p5",
+            "filler": "the monthly fee",
+            "text_target": "What is the monthly fee?",
+            "text_native": "Какая ежемесячная комиссия?",
+            "pronunciation_native": "уот из зэ мансли фи",
+            "speaking_key": "monthly fee",
+            "simplified_variants": [
+                "Is there a monthly fee?"
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Customer",
+            "role_native": "Клиент",
+            "phrase_id": "p5",
+            "filler": "monthly fee",
+            "text_target": "What is the monthly fee?",
+            "text_native": "Какая ежемесячная комиссия?",
+            "pronunciation_native": "уот из зэ мансли фи",
+            "speaking_key": "What is the",
+            "simplified_variants": [
+                "What is the fee each month?"
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.003586",
+        "latency_ms": 2038,
+        "tokens_in": 4211,
+        "tokens_out": 95,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B5"
+        ],
+        "at_card_after_now": [
+            "variant.longer@B5"
+        ],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2"
+        ]
+    },
+    {
+        "case": "GEN-2b airport x1 (v4.5)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "fatal_after": [
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "findings_before": 10,
+        "findings_after": 8,
+        "card_before": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p1",
+                    "filler": "for this flight",
+                    "text_target": "I'm checking in for this flight.",
+                    "text_native": "Я регистрируюсь на этот рейс.",
+                    "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                    "speaking_key": "checking in",
+                    "simplified_variants": [
+                        "Check-in for this flight.",
+                        "I'm here to check in."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Sure. May I see your passport?",
+                    "text_native": "Конечно. Можно ваш паспорт?"
+                }
+            ],
+            "check": {
+                "text_target": "What does the agent ask to see?",
+                "text_native": "Что сотрудница просит показать?",
+                "options": [
+                    {
+                        "text_target": "A boarding pass",
+                        "text_native": "Посадочный талон"
+                    },
+                    {
+                        "text_target": "An ID document",
+                        "text_native": "Документ, удостоверяющий личность"
+                    },
+                    {
+                        "text_target": "A suitcase tag",
+                        "text_native": "Багажную бирку"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница просит показать паспорт, то есть документ, удостоверяющий личность."
+            }
+        },
+        "card_after": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p1",
+                    "filler": "for this flight",
+                    "text_target": "I'm checking in for this flight",
+                    "text_native": "Я регистрируюсь на этот рейс.",
+                    "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                    "speaking_key": "checking in",
+                    "simplified_variants": [
+                        "Check-in for this flight.",
+                        "I'm here to check in."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Sure. Please show me your passport.",
+                    "text_native": "Конечно. Покажите, пожалуйста, ваш паспорт."
+                }
+            ],
+            "check": {
+                "text_target": "What does the agent ask to see?",
+                "text_native": "Что сотрудница просит показать?",
+                "options": [
+                    {
+                        "text_target": "A boarding pass",
+                        "text_native": "Посадочный талон"
+                    },
+                    {
+                        "text_target": "An ID document",
+                        "text_native": "Документ, удостоверяющий личность"
+                    },
+                    {
+                        "text_target": "A suitcase tag",
+                        "text_native": "Багажную бирку"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница просит показать паспорт, то есть документ, удостоверяющий личность."
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.018230",
+        "latency_ms": 3400,
+        "tokens_in": 5588,
+        "tokens_out": 284,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "at_card_after_now": [],
+        "fatal_after_now": [
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ]
+    },
+    {
+        "case": "GEN-2b airport x1 (v4.5)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1"
+        ],
+        "at_card_after": [
+            "line.ne_frame@B1"
+        ],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "fatal_after": [
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "findings_before": 10,
+        "findings_after": 9,
+        "card_before": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p1",
+                    "filler": "for this flight",
+                    "text_target": "I'm checking in for this flight.",
+                    "text_native": "Я регистрируюсь на этот рейс.",
+                    "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                    "speaking_key": "checking in",
+                    "simplified_variants": [
+                        "Check-in for this flight.",
+                        "I'm here to check in."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Sure. May I see your passport?",
+                    "text_native": "Конечно. Можно ваш паспорт?"
+                }
+            ],
+            "check": {
+                "text_target": "What does the agent ask to see?",
+                "text_native": "Что сотрудница просит показать?",
+                "options": [
+                    {
+                        "text_target": "A boarding pass",
+                        "text_native": "Посадочный талон"
+                    },
+                    {
+                        "text_target": "An ID document",
+                        "text_native": "Документ, удостоверяющий личность"
+                    },
+                    {
+                        "text_target": "A suitcase tag",
+                        "text_native": "Багажную бирку"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница просит показать паспорт, то есть документ, удостоверяющий личность."
+            }
+        },
+        "card_after": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир",
+                    "phrase_id": "p1",
+                    "filler": "for this flight",
+                    "text_target": "I'm checking in for this flight.",
+                    "text_native": "Я регистрируюсь на этот рейс.",
+                    "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                    "speaking_key": "checking in",
+                    "simplified_variants": [
+                        "Check-in for this flight.",
+                        "I'm here to check in."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "Сотрудница регистрации",
+                    "text_target": "Sure. May I see your passport.",
+                    "text_native": "Конечно. Можно ваш паспорт."
+                }
+            ],
+            "check": {
+                "text_target": "What does the agent ask to see?",
+                "text_native": "Что сотрудница просит показать?",
+                "options": [
+                    {
+                        "text_target": "A boarding pass",
+                        "text_native": "Посадочный талон"
+                    },
+                    {
+                        "text_target": "An ID document",
+                        "text_native": "Документ, удостоверяющий личность"
+                    },
+                    {
+                        "text_target": "A suitcase tag",
+                        "text_native": "Багажную бирку"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Сотрудница просит показать паспорт, то есть документ, удостоверяющий личность."
+            }
+        },
+        "frame_update": {
+            "id": "p1",
+            "kind": "ask",
+            "frame_target": "I'm checking in ___",
+            "frame_native": "Я регистрируюсь ___",
+            "pronunciation_native": "Айм чекин ин ___",
+            "slot": {
+                "hint_native": "на этот рейс",
+                "fillers": [
+                    {
+                        "target": "for this flight",
+                        "native": "на этот рейс",
+                        "pronunciation_native": "фор зис флайт",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "for the morning flight",
+                        "native": "на утренний рейс",
+                        "pronunciation_native": "фор зе морнинг флайт",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "cost_usd": "0.005978",
+        "latency_ms": 2712,
+        "tokens_in": 5588,
+        "tokens_out": 397,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "at_card_after_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1"
+        ],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ]
+    },
+    {
+        "case": "GEN-2b airport B1 (v4.5)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "line.ne_frame@B1"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "findings_before": 10,
+        "findings_after": 9,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Passenger",
+            "role_native": "Пассажир",
+            "phrase_id": "p1",
+            "filler": "for this flight",
+            "text_target": "I'm checking in for this flight.",
+            "text_native": "Я регистрируюсь на этот рейс.",
+            "pronunciation_native": "Айм чекин ин фор зис флайт.",
+            "speaking_key": "checking in",
+            "simplified_variants": [
+                "Check-in for this flight.",
+                "I'm here to check in."
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Passenger",
+            "role_native": "Пассажир",
+            "phrase_id": "p1",
+            "filler": "for this flight",
+            "text_target": "I'm checking in for this flight",
+            "text_native": "Я регистрируюсь на этот рейс.",
+            "pronunciation_native": "Айм чекин ин фор зис флайт",
+            "speaking_key": "checking in",
+            "simplified_variants": [
+                "I'm here to check in.",
+                "Check-in for this flight."
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.011300",
+        "latency_ms": 2075,
+        "tokens_in": 3890,
+        "tokens_out": 105,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "at_card_after_now": [],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ]
+    },
+    {
+        "case": "GEN-2b airport B1 (v4.5)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "line.ne_frame@B1"
+        ],
+        "at_card_after": [
+            "line.ne_frame@B1"
+        ],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "findings_before": 10,
+        "findings_after": 10,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Passenger",
+            "role_native": "Пассажир",
+            "phrase_id": "p1",
+            "filler": "for this flight",
+            "text_target": "I'm checking in for this flight.",
+            "text_native": "Я регистрируюсь на этот рейс.",
+            "pronunciation_native": "Айм чекин ин фор зис флайт.",
+            "speaking_key": "checking in",
+            "simplified_variants": [
+                "Check-in for this flight.",
+                "I'm here to check in."
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Passenger",
+            "role_native": "Пассажир",
+            "phrase_id": "p1",
+            "filler": "for this flight",
+            "text_target": "I'm checking in for this flight.",
+            "text_native": "Я регистрируюсь на этот рейс.",
+            "pronunciation_native": "Айм чекин ин фор зис флайт.",
+            "speaking_key": "checking in",
+            "simplified_variants": [
+                "Check in for this flight.",
+                "I'm checking in today."
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.003386",
+        "latency_ms": 3607,
+        "tokens_in": 3890,
+        "tokens_out": 104,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "at_card_after_now": [
+            "line.ne_frame@B1"
+        ],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ]
+    },
+    {
+        "case": "GEN-2b airport B2 (v4.5)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "line.ne_frame@B2",
+            "key.contains_filler@B2"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "findings_before": 10,
+        "findings_after": 8,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Passenger",
+            "role_native": "Пассажир",
+            "phrase_id": "p2",
+            "filler": "to London",
+            "text_target": "I'm flying to London.",
+            "text_native": "Я лечу в Лондон.",
+            "pronunciation_native": "Айм флайинг ту Ландан.",
+            "speaking_key": "flying to",
+            "simplified_variants": [
+                "To London.",
+                "I'm going to London."
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Passenger",
+            "role_native": "Пассажир",
+            "phrase_id": "p2",
+            "filler": "to London",
+            "text_target": "I'm flying to London",
+            "text_native": "Я лечу в Лондон.",
+            "pronunciation_native": "Айм флайинг ту Ландан.",
+            "speaking_key": "I'm flying",
+            "simplified_variants": [
+                "To London.",
+                "I'm going there."
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.011298",
+        "latency_ms": 1942,
+        "tokens_in": 3979,
+        "tokens_out": 90,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "at_card_after_now": [],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ]
+    },
+    {
+        "case": "GEN-2b airport B2 (v4.5)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "line.ne_frame@B2",
+            "key.contains_filler@B2"
+        ],
+        "at_card_after": [
+            "line.ne_frame@B2"
+        ],
+        "fatal_before": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "fatal_after": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "findings_before": 10,
+        "findings_after": 9,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Passenger",
+            "role_native": "Пассажир",
+            "phrase_id": "p2",
+            "filler": "to London",
+            "text_target": "I'm flying to London.",
+            "text_native": "Я лечу в Лондон.",
+            "pronunciation_native": "Айм флайинг ту Ландан.",
+            "speaking_key": "flying to",
+            "simplified_variants": [
+                "To London.",
+                "I'm going to London."
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Passenger",
+            "role_native": "Пассажир",
+            "phrase_id": "p2",
+            "filler": "to London",
+            "text_target": "I'm flying to London.",
+            "text_native": "Я лечу в Лондон.",
+            "pronunciation_native": "Айм флайинг ту Ландан.",
+            "speaking_key": "flying",
+            "simplified_variants": [
+                "I'm going to London.",
+                "London."
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.003389",
+        "latency_ms": 1742,
+        "tokens_in": 3979,
+        "tokens_out": 90,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ],
+        "at_card_after_now": [
+            "line.ne_frame@B2"
+        ],
+        "fatal_after_now": [
+            "exchange.second_question@x1",
+            "line.ne_frame@B1",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3",
+            "line.ne_frame@B6",
+            "line.ne_frame@B8"
+        ]
+    },
+    {
+        "case": "GEN-2b doctor p7 (v4.5)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "filler.ungrammatical@p7.f1",
+            "filler.is_clause@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.is_clause@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "filler.is_clause@p7.f3"
+        ],
+        "at_card_after": [
+            "filler.one_in_dialogue@p7.f1"
+        ],
+        "fatal_before": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "fatal_after": [
+            "line.ne_frame@B8"
+        ],
+        "findings_before": 13,
+        "findings_after": 9,
+        "card_before": {
+            "id": "p7",
+            "kind": "ask",
+            "frame_target": "When should we come back if ___?",
+            "frame_native": "Когда нам нужно прийти снова, если ___?",
+            "pronunciation_native": "Уэн шуд ви кам бэк иф ___?",
+            "slot": {
+                "hint_native": "что ухудшится",
+                "fillers": [
+                    {
+                        "target": "if the fever gets worse",
+                        "native": "если температура станет выше",
+                        "pronunciation_native": "иф зэ фивер гетс уорс",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "if he starts coughing",
+                        "native": "если у него начнётся кашель",
+                        "pronunciation_native": "иф хи стартс кофинг",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "if he won't eat",
+                        "native": "если он не будет есть",
+                        "pronunciation_native": "иф хи воунт ит",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "card_after": {
+            "id": "p7",
+            "kind": "ask",
+            "frame_target": "When should we come back if ___?",
+            "frame_native": "Когда нам нужно прийти снова, если ___?",
+            "pronunciation_native": "Уэн шуд ви кам бэк иф ___?",
+            "slot": {
+                "hint_native": "что случится",
+                "fillers": [
+                    {
+                        "target": "the fever stays high",
+                        "native": "температура останется высокой",
+                        "pronunciation_native": "зэ фивер стэйз хай",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "he starts coughing",
+                        "native": "у него начнётся кашель",
+                        "pronunciation_native": "хи стартс кофинг",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "he can't drink",
+                        "native": "он не сможет пить",
+                        "pronunciation_native": "хи кант дринк",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.013325",
+        "latency_ms": 2483,
+        "tokens_in": 4298,
+        "tokens_out": 172,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "at_card_after_now": [
+            "filler.one_in_dialogue@p7.f1"
+        ],
+        "fatal_after_now": [
+            "line.ne_frame@B8"
+        ]
+    },
+    {
+        "case": "GEN-2b doctor p7 (v4.5)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "filler.ungrammatical@p7.f1",
+            "filler.is_clause@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.is_clause@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "filler.is_clause@p7.f3"
+        ],
+        "at_card_after": [
+            "filler.one_in_dialogue@p7.f1"
+        ],
+        "fatal_before": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "fatal_after": [
+            "line.ne_frame@B8"
+        ],
+        "findings_before": 13,
+        "findings_after": 9,
+        "card_before": {
+            "id": "p7",
+            "kind": "ask",
+            "frame_target": "When should we come back if ___?",
+            "frame_native": "Когда нам нужно прийти снова, если ___?",
+            "pronunciation_native": "Уэн шуд ви кам бэк иф ___?",
+            "slot": {
+                "hint_native": "что ухудшится",
+                "fillers": [
+                    {
+                        "target": "if the fever gets worse",
+                        "native": "если температура станет выше",
+                        "pronunciation_native": "иф зэ фивер гетс уорс",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "if he starts coughing",
+                        "native": "если у него начнётся кашель",
+                        "pronunciation_native": "иф хи стартс кофинг",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "if he won't eat",
+                        "native": "если он не будет есть",
+                        "pronunciation_native": "иф хи воунт ит",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "card_after": {
+            "id": "p7",
+            "kind": "ask",
+            "frame_target": "When should we come back if ___?",
+            "frame_native": "Когда нам нужно прийти снова, если ___?",
+            "pronunciation_native": "Уэн шуд ви кам бэк иф ___?",
+            "slot": {
+                "hint_native": "что ухудшится",
+                "fillers": [
+                    {
+                        "target": "the fever gets worse",
+                        "native": "температура станет выше",
+                        "pronunciation_native": "зэ фивер гетс уорс",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "he starts coughing",
+                        "native": "у него начнётся кашель",
+                        "pronunciation_native": "хи стартс кофинг",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "he won't eat",
+                        "native": "он не будет есть",
+                        "pronunciation_native": "хи воунт ит",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.004007",
+        "latency_ms": 4224,
+        "tokens_in": 4298,
+        "tokens_out": 174,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "at_card_after_now": [
+            "filler.one_in_dialogue@p7.f1"
+        ],
+        "fatal_after_now": [
+            "line.ne_frame@B8"
+        ]
+    },
+    {
+        "case": "GEN-2b doctor B8 (v4.5)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "line.ne_frame@B8",
+            "line.too_long@B8",
+            "key.no_content_word@B8"
+        ],
+        "at_card_after": [
+            "line.ne_frame@B8"
+        ],
+        "fatal_before": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "fatal_after": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "findings_before": 13,
+        "findings_after": 13,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Parent",
+            "role_native": "Родитель",
+            "phrase_id": "p7",
+            "filler": "if the fever gets worse",
+            "text_target": "When should we come back if the fever gets worse?",
+            "text_native": "Когда нам нужно прийти снова, если температура станет выше?",
+            "pronunciation_native": "Уэн шуд ви кам бэк иф зэ фивер гетс уорс?",
+            "speaking_key": "When should we",
+            "simplified_variants": [
+                "When should we come back?"
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Parent",
+            "role_native": "Родитель",
+            "phrase_id": "p7",
+            "filler": "if he won't eat",
+            "text_target": "When should we come back if he won't eat?",
+            "text_native": "Когда нам нужно прийти снова, если он не будет есть?",
+            "pronunciation_native": "Уэн шуд ви кам бэк иф хи воунт ит?",
+            "speaking_key": "come back if",
+            "simplified_variants": [
+                "When do we come back if he won't eat?"
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.012075",
+        "latency_ms": 1980,
+        "tokens_in": 4134,
+        "tokens_out": 116,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "at_card_after_now": [
+            "line.ne_frame@B8"
+        ],
+        "fatal_after_now": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ]
+    },
+    {
+        "case": "GEN-2b doctor B8 (v4.5)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "line.ne_frame@B8",
+            "line.too_long@B8",
+            "key.no_content_word@B8"
+        ],
+        "at_card_after": [
+            "line.ne_frame@B8",
+            "line.too_long@B8"
+        ],
+        "fatal_before": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "fatal_after": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "findings_before": 13,
+        "findings_after": 12,
+        "card_before": {
+            "speaker": "B",
+            "role_target": "Parent",
+            "role_native": "Родитель",
+            "phrase_id": "p7",
+            "filler": "if the fever gets worse",
+            "text_target": "When should we come back if the fever gets worse?",
+            "text_native": "Когда нам нужно прийти снова, если температура станет выше?",
+            "pronunciation_native": "Уэн шуд ви кам бэк иф зэ фивер гетс уорс?",
+            "speaking_key": "When should we",
+            "simplified_variants": [
+                "When should we come back?"
+            ]
+        },
+        "card_after": {
+            "speaker": "B",
+            "role_target": "Parent",
+            "role_native": "Родитель",
+            "phrase_id": "p7",
+            "filler": "if the fever gets worse",
+            "text_target": "When should we come back? If the fever gets worse.",
+            "text_native": "Когда нам нужно прийти снова? Если температура станет выше.",
+            "pronunciation_native": "Уэн шуд ви кам бэк? Иф зэ фивер гетс уорс.",
+            "speaking_key": "come back",
+            "simplified_variants": [
+                "When should we come back?",
+                "If the fever gets worse, when should we come back?"
+            ]
+        },
+        "frame_update": null,
+        "cost_usd": "0.003681",
+        "latency_ms": 1987,
+        "tokens_in": 4134,
+        "tokens_out": 129,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "at_card_after_now": [
+            "line.ne_frame@B8",
+            "line.too_long@B8"
+        ],
+        "fatal_after_now": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ]
+    },
+    {
+        "case": "GEN-2b airport-ro x1 (v4.5)",
+        "model": "gpt-5.4",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "exchange.second_question@x1"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "exchange.second_question@x1"
+        ],
+        "fatal_after": [],
+        "findings_before": 9,
+        "findings_after": 8,
+        "card_before": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p1",
+                    "filler": "this flight",
+                    "text_target": "I'm checking in for this flight.",
+                    "text_native": "Fac check-in pentru acest zbor.",
+                    "pronunciation_native": "aim cec-king in for dhis flait",
+                    "speaking_key": "checking in for",
+                    "simplified_variants": [
+                        "I'm here to check in.",
+                        "Check-in for this flight."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Sure. May I see your passport?",
+                    "text_native": "Sigur. Pot să văd pașaportul?"
+                }
+            ],
+            "check": {
+                "text_target": "What document does the agent ask for?",
+                "text_native": "Ce document cere agenta?",
+                "options": [
+                    {
+                        "text_target": "A boarding pass",
+                        "text_native": "Un bilet de îmbarcare"
+                    },
+                    {
+                        "text_target": "A passport",
+                        "text_native": "Un pașaport"
+                    },
+                    {
+                        "text_target": "A visa form",
+                        "text_native": "Un formular de viză"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Agenta cere pașaportul, nu alt document."
+            }
+        },
+        "card_after": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p1",
+                    "filler": "this flight",
+                    "text_target": "I'm checking in for this flight.",
+                    "text_native": "Fac check-in pentru acest zbor.",
+                    "pronunciation_native": "aim cec-king in for dhis flait",
+                    "speaking_key": "checking in for",
+                    "simplified_variants": [
+                        "I'm here to check in.",
+                        "Check-in for this flight."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Sure. Please show me your passport.",
+                    "text_native": "Sigur. Arătați-mi pașaportul, vă rog."
+                }
+            ],
+            "check": {
+                "text_target": "What document does the agent ask for?",
+                "text_native": "Ce document cere agenta?",
+                "options": [
+                    {
+                        "text_target": "A boarding pass",
+                        "text_native": "Un bilet de îmbarcare"
+                    },
+                    {
+                        "text_target": "A passport",
+                        "text_native": "Un pașaport"
+                    },
+                    {
+                        "text_target": "A visa form",
+                        "text_native": "Un formular de viză"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Agenta cere pașaportul, nu alt document."
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.018103",
+        "latency_ms": 2912,
+        "tokens_in": 5597,
+        "tokens_out": 274,
+        "model_answered": "gpt-5.4-2026-03-05",
+        "fatal_before_now": [
+            "exchange.second_question@x1"
+        ],
+        "at_card_after_now": [],
+        "fatal_after_now": []
+    },
+    {
+        "case": "GEN-2b airport-ro x1 (v4.5)",
+        "model": "gpt-5.4-mini",
+        "status": "repaired",
+        "note": "",
+        "at_card_before": [
+            "exchange.second_question@x1"
+        ],
+        "at_card_after": [],
+        "fatal_before": [
+            "exchange.second_question@x1"
+        ],
+        "fatal_after": [],
+        "findings_before": 9,
+        "findings_after": 8,
+        "card_before": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p1",
+                    "filler": "this flight",
+                    "text_target": "I'm checking in for this flight.",
+                    "text_native": "Fac check-in pentru acest zbor.",
+                    "pronunciation_native": "aim cec-king in for dhis flait",
+                    "speaking_key": "checking in for",
+                    "simplified_variants": [
+                        "I'm here to check in.",
+                        "Check-in for this flight."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Sure. May I see your passport?",
+                    "text_native": "Sigur. Pot să văd pașaportul?"
+                }
+            ],
+            "check": {
+                "text_target": "What document does the agent ask for?",
+                "text_native": "Ce document cere agenta?",
+                "options": [
+                    {
+                        "text_target": "A boarding pass",
+                        "text_native": "Un bilet de îmbarcare"
+                    },
+                    {
+                        "text_target": "A passport",
+                        "text_native": "Un pașaport"
+                    },
+                    {
+                        "text_target": "A visa form",
+                        "text_native": "Un formular de viză"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Agenta cere pașaportul, nu alt document."
+            }
+        },
+        "card_after": {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Passenger",
+                    "role_native": "pasager",
+                    "phrase_id": "p1",
+                    "filler": "this flight",
+                    "text_target": "I'm checking in for this flight.",
+                    "text_native": "Fac check-in pentru acest zbor.",
+                    "pronunciation_native": "aim cec-king in for dhis flait",
+                    "speaking_key": "checking in for",
+                    "simplified_variants": [
+                        "I'm here to check in.",
+                        "Check-in for this flight."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Check-in agent",
+                    "role_native": "agentă de check-in",
+                    "text_target": "Sure. May I see your passport.",
+                    "text_native": "Sigur. Pot să văd pașaportul?"
+                }
+            ],
+            "check": {
+                "text_target": "What document does the agent ask for?",
+                "text_native": "Ce document cere agenta?",
+                "options": [
+                    {
+                        "text_target": "A boarding pass",
+                        "text_native": "Un bilet de îmbarcare"
+                    },
+                    {
+                        "text_target": "A passport",
+                        "text_native": "Un pașaport"
+                    },
+                    {
+                        "text_target": "A visa form",
+                        "text_native": "Un formular de viză"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Agenta cere pașaportul, nu alt document."
+            }
+        },
+        "frame_update": null,
+        "cost_usd": "0.005413",
+        "latency_ms": 2680,
+        "tokens_in": 5597,
+        "tokens_out": 270,
+        "model_answered": "gpt-5.4-mini-2026-03-17",
+        "fatal_before_now": [
+            "exchange.second_question@x1"
+        ],
+        "at_card_after_now": [
+            "exchange.second_question@x1"
+        ],
+        "fatal_after_now": [
+            "exchange.second_question@x1"
+        ]
+    }
+]

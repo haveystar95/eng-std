@@ -1,0 +1,21 @@
+TOPIC: Собеседование
+
+TOPIC_DESCRIPTION: Situation: An online job interview on Friday with an interviewer. The learner needs to talk about professional background, explain strengths and weaknesses, and discuss the contract and working conditions at the end of the interview.
+Learner: the job candidate. Partner: the interviewer.
+Learner must be able to: introduce their experience and current role clearly; describe strengths with examples; talk about weaknesses in a professional way and show how they manage them; ask about contract terms, schedule, salary conditions, and next steps.
+Partner will: ask about past experience and responsibilities; ask direct questions about strengths and weaknesses; explain the role briefly and answer questions about conditions or the contract.
+Not in this scene: small talk before the call, technical problems with the video platform, accepting the offer after the interview.
+
+About the learner, in their own words: Собеседование в пятницу онлайн . Сильные и слабые стороны . Договор , условия
+
+TARGET_LANGUAGE: English
+
+NATIVE_LANGUAGE: Russian
+
+LEVEL: Intermediate
+
+LEARNER_GENDER: unknown
+
+VOCABULARY_COUNT: 8
+
+DIALOGUE_COUNT: 8
