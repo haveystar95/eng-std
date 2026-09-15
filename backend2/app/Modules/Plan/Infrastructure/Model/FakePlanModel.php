@@ -95,7 +95,7 @@ final class FakePlanModel implements PlanModelPort
             ? ($this->judge)($request, $this->judgeCalls)
             : ['verdicts' => array_map(static fn (string $id): array => ['id' => $id, 'reads' => true], $request->ids())];
 
-        return new ModelReply($payload, 'lesson_seam_judge.v1', self::MODEL, 400, 120, '0.000000', 2, '');
+        return new ModelReply($payload, 'lesson_seam_judge.v1.1', self::MODEL, 400, 120, '0.000000', 2, '');
     }
 
     public function planPromptVersion(): string
@@ -110,7 +110,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function judgePromptVersion(): string
     {
-        return 'lesson_seam_judge.v1';
+        return 'lesson_seam_judge.v1.1';
     }
 
     public function lessonPromptVersion(): string

@@ -120,6 +120,11 @@ function lvBreaks(): array
 
         return $p;
     }],
+    'a frame written without its closing mark' => [LessonCodes::FRAME_NO_END_PUNCT, static function (array $p): array {
+        $p['phrases'][1]['frame_target'] = 'It started ___';
+
+        return $p;
+    }],
     'the native frame ends with another mark' => [LessonCodes::FRAME_NATIVE_PUNCT, static function (array $p): array {
         $p['phrases'][0]['frame_native'] = 'У него болит ___?';
 
@@ -175,26 +180,6 @@ function lvBreaks(): array
     }],
     'an answer line without a frame' => [LessonCodes::LINE_NO_FRAME, static function (array $p): array {
         $p['dialogue'][0]['messages'][1]['phrase_id'] = null;
-
-        return $p;
-    }],
-    'a key that is not in the line' => [LessonCodes::KEY_NOT_IN_LINE, static function (array $p): array {
-        $p['dialogue'][0]['messages'][1]['speaking_key'] = 'hurts badly';
-
-        return $p;
-    }],
-    'a key made of the filler' => [LessonCodes::KEY_CONTAINS_FILLER, static function (array $p): array {
-        $p['dialogue'][0]['messages'][1]['speaking_key'] = 'his lower back';
-
-        return $p;
-    }],
-    'a key of function words' => [LessonCodes::KEY_NO_CONTENT_WORD, static function (array $p): array {
-        $p['dialogue'][0]['messages'][1]['speaking_key'] = 'in his';
-
-        return $p;
-    }],
-    'a key of five words' => [LessonCodes::KEY_TOO_LONG, static function (array $p): array {
-        $p['dialogue'][2]['messages'][1]['speaking_key'] = 'pain is sharp when he';
 
         return $p;
     }],
@@ -334,11 +319,15 @@ it('counts the one rule a lesson breaks by its code', function (string $code, Cl
 })->with('one broken rule');
 
 // A code with no row of its own is a code nothing proves it counts. The seam judge's code is a model's, not a rule's
-// (LessonSeamJudge, `LessonObservationTest`).
-it('has a broken rule for every code it counts', function () {
+// (LessonSeamJudge, `LessonObservationTest`). Доработка GEN-2b: «кодов становится 50: 7 фатальных, 43 предупреждения» —
+// no code is about the speaking key any more, the key is the server's.
+it('has a broken rule for every one of its fifty codes', function () {
     $named = array_map(static fn (array $row): string => $row[0], array_values(lvBreaks()));
 
     expect(array_values(array_diff(LessonCodes::validated(), $named)))->toBe([])
+        ->and(count(LessonCodes::all()))->toBe(50)
+        ->and(count(array_unique(LessonCodes::all())))->toBe(50)
+        ->and(array_filter(LessonCodes::all(), static fn (string $code): bool => str_starts_with($code, 'key.')))->toBe([])
         ->and(LessonCodes::JUDGED)->toBe([LessonCodes::FILLER_NATIVE_SEAM]);
 });
 
@@ -387,14 +376,14 @@ it('reads a gendered past only while the learner\'s gender is unknown', function
 
 it('addresses every finding to its card', function () {
     $p = lvPayload();
-    $p['dialogue'][0]['messages'][1]['speaking_key'] = 'in his';
+    $p['phrases'][1]['frame_target'] = 'It started ___';
     $p['phrases'][0]['slot']['fillers'][2]['in_dialogue'] = true;
     $p['dialogue'][1]['check']['options'][1]['text_target'] = 'Earlier this week';
     $p['dialogue'][6]['messages'][1]['text_target'] = 'Do you want an X-ray?';
 
     $addresses = array_map(static fn (LessonViolation $v): string => "{$v->code}@{$v->address}", lvRun($p));
 
-    expect($addresses)->toContain('key.no_content_word@B1')
+    expect($addresses)->toContain('frame.no_end_punct@p2')
         ->and($addresses)->toContain('filler.one_in_dialogue@p1.f3')
         ->and($addresses)->toContain('check.verbatim@x2.check')
         // A closing question is the whole exchange's: the repair takes the exchange, whoever asked.
@@ -411,7 +400,7 @@ it('skips a check whose language has no pack and writes the skip down, finding n
     $p['dialogue'][0]['messages'][1]['text_native'] = 'Я заметил, что у него болит поясница.';
     $p['phrases'][0]['frame_native'] = 'У него болит этот ___.';
     $p['listening']['questions'][0]['options_native'] = ['Три дня', 'Поясница', 'Плечо'];
-    $p['dialogue'][0]['messages'][1]['speaking_key'] = 'in his';
+    $p['phrases'][4]['slot']['fillers'][2]['target'] = 'if he feels better';
 
     $ru = lessonContext('ru', 'en');
     $ro = lessonContext('ro', 'en');
@@ -419,8 +408,9 @@ it('skips a check whose language has no pack and writes the skip down, finding n
         static fn (LessonViolation $v): string => $v->code,
         lvRun($p, null, $context),
     )));
+    // `frame.no_end_punct` reads both sides: the target frame is still read for the Romanian learner, the native one is not.
     $native = [
-        LessonCodes::PRONUNCIATION_SCRIPT, LessonCodes::FRAME_NATIVE_PUNCT, LessonCodes::FRAME_NATIVE_AGREEMENT,
+        LessonCodes::PRONUNCIATION_SCRIPT, LessonCodes::FRAME_NO_END_PUNCT, LessonCodes::FRAME_NATIVE_PUNCT, LessonCodes::FRAME_NATIVE_AGREEMENT,
         LessonCodes::LISTENING_SAME_EXCHANGE, LessonCodes::LISTENING_NO_LEARNER_VALUE, LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER,
         LessonCodes::NATIVE_GENDERED_PAST,
     ];
@@ -430,13 +420,13 @@ it('skips a check whose language has no pack and writes the skip down, finding n
         ->and(array_intersect($codes($ro), $native))->toBe([])
         ->and($ro->skips->codes())->toEqualCanonicalizing($native)
         // The target's own rules and the rules that need no language still run for the Romanian learner.
-        ->and($codes($ro))->toContain(LessonCodes::KEY_NO_CONTENT_WORD);
+        ->and($codes($ro))->toContain(LessonCodes::FILLER_IS_CLAUSE);
 
     // No pack at all, on either side: nothing but the language-free rules, and no rule reads a key it was not given.
     $none = new LessonValidationContext(8, 8, LanguagePack::none('xx'), LanguagePack::none('yy'));
-    $found = lvRun(lvBreaks()['a key of function words'][1](lvPayload()), null, $none);
+    $found = lvRun(lvBreaks()['a filler that is a clause'][1](lvPayload()), null, $none);
     expect($found)->toBe([])
-        ->and($none->skips->codes())->toContain(LessonCodes::KEY_NO_CONTENT_WORD, LessonCodes::EXCHANGE_SECOND_QUESTION, LessonCodes::FILLER_UNGRAMMATICAL);
+        ->and($none->skips->codes())->toContain(LessonCodes::FILLER_IS_CLAUSE, LessonCodes::EXCHANGE_SECOND_QUESTION, LessonCodes::FILLER_UNGRAMMATICAL);
     foreach (lvBreaks() as [$code, $break]) {
         lvRun($break(lvPayload()), null, new LessonValidationContext(8, 8, LanguagePack::none('xx'), LanguagePack::none('yy')));
     }
@@ -463,30 +453,6 @@ it('reads the agreement of a native frame from the native pack, at the slot', fu
 
     expect($at($ru))->toBe(['p1'])
         ->and($at($without))->toBe([]);
-});
-
-// Canon v4.5 (SPEAKING SUPPORT): «Prefer a key that contains a content word. When the frame part outside the slot has
-// no content word at all, the key is the frame part up to the slot, exactly as written». Catches the v4.4 reading — every
-// key without a content word counted, «Here is» on «Here is ___» too — and a key off the frame part let through.
-it('asks a content word of a key only where the frame part has one, and the frame up to the slot where it has none', function () {
-    $frame = static function (string $key): array {
-        $p = lvPayload();
-        $p['phrases'][5]['frame_target'] = 'What about ___?';
-        $p['phrases'][5]['frame_native'] = 'А как насчёт ___?';
-        foreach ([6 => 'an X-ray', 7 => 'a follow-up appointment'] as $i => $filler) {
-            $p['dialogue'][$i]['messages'][0]['text_target'] = "What about {$filler}?";
-            $p['dialogue'][$i]['messages'][0]['speaking_key'] = $key;
-        }
-
-        return array_values(array_map(
-            static fn (LessonViolation $v): string => $v->address,
-            array_filter(lvRun($p), static fn (LessonViolation $v): bool => $v->code === LessonCodes::KEY_NO_CONTENT_WORD),
-        ));
-    };
-
-    expect($frame('What about'))->toBe([])
-        ->and($frame('about'))->toBe(['B7', 'B8'])
-        ->and(lvCodes(lvBreaks()['a key of function words'][1](lvPayload())))->toContain(LessonCodes::KEY_NO_CONTENT_WORD);
 });
 
 // Live day GEN-2b (rent, v4.5): «I can move in ___» + «in June» failed the day as «a word is doubled at the seam» —

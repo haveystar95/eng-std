@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Command;
 
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Exception\LessonAlreadyDealt;
 use App\Modules\Plan\Domain\Exception\SceneNotFound;
@@ -25,6 +26,7 @@ final readonly class ReviseLessonHandler
         private PlanRepository $plans,
         private PlanTermRepository $terms,
         private TransactionManager $tx,
+        private LanguagePacks $packs,
     ) {}
 
     public function __invoke(ReviseLesson $command): void
@@ -41,7 +43,7 @@ final readonly class ReviseLessonHandler
                 }
             }
 
-            $scene->reviseLesson($command->answer, $command->findings, $command->repairCostUsd);
+            $scene->reviseLesson($command->answer, $this->packs->for($plan->targetLang()->value), $command->findings, $command->repairCostUsd);
             $this->plans->saveScene($scene);
             $served = $scene->lesson();
             if ($served !== null) {

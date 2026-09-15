@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Infrastructure\Eloquent;
 
 use App\Modules\Plan\Domain\Blueprint\PlanTitles;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\PlanScene;
@@ -30,13 +31,16 @@ use DateTimeInterface;
 
 /**
  * Rows ↔ the plan aggregate. The lesson is stored as the model's answer and re-parsed on read; the
- * scene puts the served lesson together from it.
+ * scene puts the served lesson together from it, in the plan's target language (its pack).
  * The JSON columns are handed to Eloquent as arrays: the models cast them, and a pre-encoded string
  * would be encoded twice.
  */
 final class PlanMapper
 {
-    public function __construct(private readonly LessonParser $lessons = new LessonParser) {}
+    public function __construct(
+        private readonly LanguagePacks $packs,
+        private readonly LessonParser $lessons = new LessonParser,
+    ) {}
 
     public function toDomain(PlanModel $row): Plan
     {
@@ -74,7 +78,7 @@ final class PlanMapper
             startedAt: self::instant($row->started_at),
             finishedAt: self::instant($row->finished_at),
             createdAt: self::instant($row->created_at) ?? new DateTimeImmutable,
-            scenes: array_values($row->scenes->map(fn (PlanSceneModel $s): PlanScene => $this->scene($s, $planId))->all()),
+            scenes: array_values($row->scenes->map(fn (PlanSceneModel $s): PlanScene => $this->scene($s, $planId, $row->target_lang))->all()),
             days: array_values($row->days->map(fn (PlanDayModel $d): PlanDay => $this->day($d, $planId))->all()),
         );
     }
@@ -82,10 +86,12 @@ final class PlanMapper
     /** One scene row on its own — what a scene-addressed job reads and writes. */
     public function sceneOf(PlanSceneModel $row): PlanScene
     {
-        return $this->scene($row, PlanId::fromString($row->plan_id));
+        $targetLang = (string) PlanModel::query()->whereKey($row->plan_id)->value('target_lang');
+
+        return $this->scene($row, PlanId::fromString($row->plan_id), $targetLang);
     }
 
-    private function scene(PlanSceneModel $row, PlanId $planId): PlanScene
+    private function scene(PlanSceneModel $row, PlanId $planId, string $targetLang): PlanScene
     {
         $answer = null;
         if (is_array($row->lesson_json)) {
@@ -116,6 +122,7 @@ final class PlanMapper
             failReason: $row->fail_reason,
             buildStartedAt: self::instant($row->build_started_at),
             generatedAt: self::instant($row->generated_at),
+            targetPack: $this->packs->for($targetLang),
             partnerVoiceGender: VoiceGender::tryFromAny($row->partner_voice_gender),
         );
     }

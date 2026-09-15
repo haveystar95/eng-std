@@ -23,12 +23,13 @@ beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
  */
 
 // Canon: «остальные — предупреждения» (день ВЫХОДИТ, нарушения считаются). Catches a warning that refuses the lesson,
-// buys a second call or a repair, or leaves the day unopenable — and findings that lose their card's address.
+// buys a second call or a repair, or leaves the day unopenable — and findings that lose their card's address. A frame
+// written without its full stop (доработка GEN-2b) is such a warning: its line is still read against it.
 it('counts what a lesson breaks and gives the day all the same', function () {
     [, $token] = planLearner();
     $fake = new FakePlanModel(lesson: static function ($request): array {
         $p = FakePlanModel::lessonPayload($request);
-        $p['dialogue'][0]['messages'][1]['speaking_key'] = 'in his';
+        $p['phrases'][1]['frame_target'] = 'It started ___';
         $p['dialogue'][1]['check']['options'][1]['text_target'] = 'Earlier this week';
         $p['phrases'][4]['frame_native'] = 'Он будет отдыхать в/на ___.';
 
@@ -46,14 +47,14 @@ it('counts what a lesson breaks and gives the day all the same', function () {
         ->and(planRead($this, $token, $build['id'])['scenes'][0]['lesson_status'])->toBe('ready')
         ->and(count($day['cards']))->toBeGreaterThan(60)
         ->and(array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", $findings))
-        ->toEqualCanonicalizing(['frame.native_alternatives@p5', 'check.verbatim@x2.check', 'key.no_content_word@B1']);
+        ->toEqualCanonicalizing(['frame.native_alternatives@p5', 'check.verbatim@x2.check', 'frame.no_end_punct@p2']);
 
     [, $admin] = adminActor();
     $rows = $this->withHeader('Authorization', "Bearer {$admin}")->getJson('/admin/api/plans/checks')->assertOk()->json('data');
     expect(array_values(array_filter($rows, static fn (array $r): bool => $r['prompt_version'] === 'lesson_day.v4.5')))->toEqualCanonicalizing([
         ['prompt_version' => 'lesson_day.v4.5', 'check' => 'frame.native_alternatives', 'action' => 'counted', 'hits' => 1],
         ['prompt_version' => 'lesson_day.v4.5', 'check' => 'check.verbatim', 'action' => 'counted', 'hits' => 1],
-        ['prompt_version' => 'lesson_day.v4.5', 'check' => 'key.no_content_word', 'action' => 'counted', 'hits' => 1],
+        ['prompt_version' => 'lesson_day.v4.5', 'check' => 'frame.no_end_punct', 'action' => 'counted', 'hits' => 1],
     ]);
 });
 
@@ -217,6 +218,7 @@ it('builds a day for a learner whose language has no rules yet, skipping and cou
     expect($fake->lessonRequests[0]->nativeLanguage)->toBe('Romanian')
         ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')
         ->and($findings)->toBe([])
-        ->and($counters)->toBe(['lang.pack_missing' => 7])
+        // Eight checks read the learner's language: seven of GEN-2b and the native side of `frame.no_end_punct`.
+        ->and($counters)->toBe(['lang.pack_missing' => 8])
         ->and($fake->repairCalls)->toBe(0);
 });

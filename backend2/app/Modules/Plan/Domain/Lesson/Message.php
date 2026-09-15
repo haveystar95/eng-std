@@ -9,6 +9,10 @@ namespace App\Modules\Plan\Domain\Lesson;
  * speaker B is the learner: the frame the line stands on (`phrase_id`) and the filler it was said
  * with, a reading, a speaking key and simplified variants. A rescue line of the learner carries no
  * frame and no filler.
+ *
+ * In the model's ANSWER `filler` and `speaking_key` are what the model wrote — kept in the stored JSON and read by
+ * nobody. In the SERVED lesson they are the server's: the filler found in the line's text, the key taken from its
+ * frame ({@see LessonAssembly::said()}).
  */
 final readonly class Message
 {
@@ -46,6 +50,15 @@ final readonly class Message
         return new self(
             $this->speaker, $this->roleTarget, $this->roleNative, $textTarget, $this->textNative,
             $this->pronunciationNative, $this->speakingKey, $this->simplifiedVariants, $this->phraseId, $this->filler,
+        );
+    }
+
+    /** The same line as the server reads it: the filler found in its text and the key it takes from its frame. */
+    public function withServerReading(?string $filler, ?string $speakingKey): self
+    {
+        return new self(
+            $this->speaker, $this->roleTarget, $this->roleNative, $this->textTarget, $this->textNative,
+            $this->pronunciationNative, $speakingKey, $this->simplifiedVariants, $this->phraseId, $filler,
         );
     }
 

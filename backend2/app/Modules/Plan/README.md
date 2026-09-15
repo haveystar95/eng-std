@@ -55,12 +55,15 @@ plan fell to `ready` with no start date and day 1 locked again (`docs/research/p
 The lesson (`Domain/Lesson`, `lesson_day.v4.5`): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
 `check`), phrases as frames (`Phrase` + `Slot` + `Filler`), the listening (`ListeningQuestion`, the lesson's own,
 not an exchange's), vocabulary with `used_in`; `LessonParser` (shape only); `LessonAssembly` — the SERVED lesson
-every reader deals from: a framed learner line is the server's assembly of frame and filler (`FrameText`), the
-right answers of checks and listening stand at seeded shuffled places; `LessonCard` — one repairable card by its
-address (P2R: a frame, a whole exchange — with the frame its line stands on, together or not at all — a learner
-line, a check, a listening question); `LessonCardContext` — the part of the lesson a repair of that card is shown;
-`NativeSeams` — every native sentence a frame makes with its fillers (what the seam judge reads). A scene keeps the
-model's answer (stored, validated, repaired) and serves the assembled lesson.
+every reader deals from: the filler of a learner line is the one the server finds in its text among its frame's
+fillers, the closing mark aside (`FrameText`), the `in_dialogue` marks are what the lines say, the speaking key comes
+from the frame (`SpeakingKey`, the target's pack says which words are content) — the model's `filler`, marks and key
+are read by nobody but `filler.one_in_dialogue` (the marks); the right answers of checks and listening stand at seeded
+shuffled places; `LessonCard` — one repairable card by its address (P2R: a frame, a whole exchange — with the frame
+its line stands on, together or not at all — a learner line, a check, a listening question); `LessonCardContext` — the
+part of the lesson a repair of that card is shown, as the server reads it; `NativeSeams` — every native sentence a
+frame makes with its fillers (what the seam judge reads). A scene keeps the model's answer (stored, validated,
+repaired) and serves the assembled lesson in the plan's target language.
 
 Pure services: `PlanCalendar` (layout 1…10, days until the event), `DayAssembler` + stages (the
 day, dealt deterministically), `RouteStages` (which stages a day on the route has and where each
@@ -148,7 +151,7 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.5`, `lesson_card_repair.v1.1`, `lesson_seam_judge.v1`). The loader cuts the
+  (`plan-builder-v2`, `lesson_day.v4.5`, `lesson_card_repair.v1.1`, `lesson_seam_judge.v1.1`). The loader cuts the
   lesson's `TEST INPUT` section and sends the real inputs as the user message; the repair wrapper quotes the lesson
   prompt's own sections for the card's kind and is shown only the part of the lesson the card needs.
 - The lesson is stored as the model wrote it (`plan_scenes.lesson_json`), re-parsed on read and served assembled.

@@ -58,7 +58,7 @@ it('puts a repaired exchange back together with the frame it came with, or nothi
     $alien = $frame;
     $alien['id'] = 'p5';
 
-    expect($repaired?->exchange(8)?->learner()?->filler)->toBe('a sick note')
+    expect(LessonAssembly::fillerOf($repaired ?? throw new LogicException, $repaired->exchange(8)?->learner() ?? throw new LogicException)?->target)->toBe('a sick note')
         ->and(array_map(static fn ($f): bool => $f->inDialogue, $repaired?->phrase('p6')->slot->fillers ?? []))->toBe([true, true, true])
         ->and($repaired?->exchange(7)?->toArray())->toBe($answer->exchange(7)?->toArray())
         ->and($card->replaceExchange($answer, $parser->card(LessonCard::EXCHANGE, $exchange), $parser->frameUpdate($alien)))->toBeNull()
@@ -66,17 +66,21 @@ it('puts a repaired exchange back together with the frame it came with, or nothi
 });
 
 // A repaired frame keeps the dialogue true to it. Catches a frame repaired under lines that still say the old frame
-// — the served line and the phrase card would teach two different sentences.
+// — the served line and the phrase card would teach two different sentences — and a line that loses its closing mark
+// to a frame written without one.
 it('puts a repaired frame back and says its dialogue lines with the new frame, glue and all', function () {
     $answer = lcAnswer();
     $card = LessonCard::at('p5');
     $raw = $card?->of($answer);
     $raw['frame_target'] = 'He will stay ___.';
     $repaired = $card->replace($answer, (new LessonParser)->card(LessonCard::FRAME, $raw));
+    $unmarked = $raw;
+    $unmarked['frame_target'] = 'He will stay ___';
 
     expect($repaired->phrase('p5')?->frameTarget)->toBe('He will stay ___.')
         ->and($repaired->exchange(5)?->learner()?->textTarget)->toBe('Okay, he will stay at home.')
-        ->and(LessonAssembly::serve($repaired, 's')->exchange(5)?->learner()?->textTarget)->toBe('Okay, he will stay at home.')
+        ->and(LessonAssembly::serve($repaired, 's', lessonPacks()->for('en'))->exchange(5)?->learner()?->textTarget)->toBe('Okay, he will stay at home.')
+        ->and($card->replace($answer, (new LessonParser)->card(LessonCard::FRAME, $unmarked))->exchange(5)?->learner()?->textTarget)->toBe('Okay, he will stay at home.')
         // Nothing else moved.
         ->and($repaired->exchange(1)?->toArray())->toBe($answer->exchange(1)?->toArray())
         ->and($repaired->listening)->toEqual($answer->listening);

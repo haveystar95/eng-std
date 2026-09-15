@@ -27,7 +27,7 @@ final class PlanPromptFiles
 
     private const REPAIR_FILE = 'lesson_card_repair.v1.1.md';
 
-    private const JUDGE_FILE = 'lesson_seam_judge.v1.md';
+    private const JUDGE_FILE = 'lesson_seam_judge.v1.1.md';
 
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their

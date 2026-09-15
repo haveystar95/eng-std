@@ -20,7 +20,12 @@ use App\Modules\Plan\Domain\Service\Words;
  * «в/на»-style alternatives that ends the way the frame ends; a frame that stands alone — no pronoun it leans on
  * without a thing it stands for; a native frame with no word that agrees with its slot («___ разрешён?»).
  *
- * The pronoun is read by the target's pack, the agreement by the learner's language's, the closing marks by both.
+ * A frame written without a mark at its end, in either language, is `frame.no_end_punct` (доработка GEN-2b): the
+ * assembly reads the line past it all the same, and the phrase of the day borrows its line's mark. Whether the two
+ * renderings end the same way (`frame.native_punct`) is asked only of a frame that has a mark on both sides.
+ *
+ * The pronoun is read by the target's pack, the agreement by the learner's language's, the closing marks each by its
+ * own side's.
  */
 final class FrameRules implements LessonRule
 {
@@ -39,6 +44,8 @@ final class FrameRules implements LessonRule
 
         // Every side a check reads is asked before any frame is read, so a lesson skips what its languages lack
         // whatever it says.
+        $targetEnds = $context->reads(LessonCodes::FRAME_NO_END_PUNCT, LanguageSide::Target, 'sentence_ends');
+        $nativeEnds = $context->reads(LessonCodes::FRAME_NO_END_PUNCT, LanguageSide::Native, 'sentence_ends');
         $targetMarks = $context->reads(LessonCodes::FRAME_NATIVE_PUNCT, LanguageSide::Target, 'sentence_ends');
         $nativeMarks = $context->reads(LessonCodes::FRAME_NATIVE_PUNCT, LanguageSide::Native, 'sentence_ends');
         $pronouns = $context->reads(LessonCodes::FRAME_UNRESOLVED_PRONOUN, LanguageSide::Target, 'unresolved_pronouns', 'function_words');
@@ -63,10 +70,22 @@ final class FrameRules implements LessonRule
                 $out[] = new LessonViolation(LessonCodes::FRAME_NATIVE_ALTERNATIVES, $phrase->id, "«{$phrase->frameNative}» writes alternatives inside the frame");
             }
 
+            $unmarked = [];
+            if ($targetEnds && $context->targetWords()->terminal($phrase->frameTarget) === '') {
+                $unmarked[] = "«{$phrase->frameTarget}»";
+            }
+            if ($nativeEnds && $context->nativeWords()->terminal($phrase->frameNative) === '') {
+                $unmarked[] = "the native «{$phrase->frameNative}»";
+            }
+            if ($unmarked !== []) {
+                $out[] = new LessonViolation(LessonCodes::FRAME_NO_END_PUNCT, $phrase->id, implode(' and ', $unmarked).(count($unmarked) === 1 ? ' ends' : ' end').' with no mark');
+            }
+
             if ($targetMarks && $nativeMarks) {
                 $target = $context->targetWords();
                 $native = $context->nativeWords();
-                if ($target->terminalKind($phrase->frameTarget) !== $native->terminalKind($phrase->frameNative)) {
+                $bothMarked = $target->terminal($phrase->frameTarget) !== '' && $native->terminal($phrase->frameNative) !== '';
+                if ($bothMarked && $target->terminalKind($phrase->frameTarget) !== $native->terminalKind($phrase->frameNative)) {
                     $out[] = new LessonViolation(
                         LessonCodes::FRAME_NATIVE_PUNCT,
                         $phrase->id,

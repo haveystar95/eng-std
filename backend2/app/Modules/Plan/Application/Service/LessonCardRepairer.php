@@ -21,6 +21,7 @@ use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
 use App\Modules\Plan\Domain\Exception\SceneNotFound;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\Lesson;
+use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
 use App\Modules\Plan\Domain\Lesson\LessonCardContext;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
@@ -36,11 +37,13 @@ use Throwable;
  * stored lesson.
  *
  * The findings at the card (or only the named codes) go to the model with the card and the part of the lesson the
- * card needs ({@see LessonCardContext}) — the English detail of each finding, never another card's text. The model
- * answers with the card — an exchange may bring the frame its line stands on (`frame_update`), and the two go in
- * together or not at all; the card is parsed to its shape, put into the answer, and the whole answer is validated
- * again. Nothing is written here: the build stores what passed its gate, the command writes only on `--apply`
- * ({@see \App\Modules\Plan\Application\Command\ReviseLessonHandler}).
+ * card needs ({@see LessonCardContext}) — the English detail of each finding, never another card's text. Card and
+ * context are the answer as the server reads it ({@see LessonAssembly::said()}): the filler found in each line, the
+ * marks of what the lines say, the key of the frame — the model's own `filler`, marks and key are shown to nobody.
+ * The model answers with the card — an exchange may bring the frame its line stands on (`frame_update`), and the two
+ * go in together or not at all; the card is parsed to its shape, put into the answer, and the whole answer is
+ * validated again. Nothing is written here: the build stores what passed its gate, the command writes only on
+ * `--apply` ({@see \App\Modules\Plan\Application\Command\ReviseLessonHandler}).
  */
 final readonly class LessonCardRepairer
 {
@@ -112,7 +115,8 @@ final readonly class LessonCardRepairer
      */
     public function repairIn(Lesson $answer, LessonCard $card, array $found, LessonValidationContext $context, LessonRequest $request, array $codes = []): LessonCardRepairOutcome
     {
-        $before = $card->of($answer);
+        $read = LessonAssembly::said($answer, $context->target);
+        $before = $card->of($read);
         if ($before === null) {
             return self::nothing(LessonCardRepairOutcome::NOT_A_CARD, $card->address, $card->kind, 'no repairable card at this address');
         }
@@ -131,7 +135,7 @@ final readonly class LessonCardRepairer
             address: $card->address,
             kind: $card->kind,
             card: $before,
-            context: LessonCardContext::of($answer, $card),
+            context: LessonCardContext::of($read, $card),
             findings: $findings,
             frameIds: array_map(static fn (Phrase $p): string => $p->id, $answer->phrases),
             targetLanguage: $request->targetLanguage,
@@ -174,7 +178,7 @@ final readonly class LessonCardRepairer
             address: $card->address,
             kind: $card->kind,
             before: $before,
-            after: $card->of($repaired),
+            after: $card->of(LessonAssembly::said($repaired, $context->target)),
             findingsBefore: self::rows($atCard),
             findingsAfter: self::rows(array_values(array_filter($after, static fn (LessonViolation $v): bool => $card->covers($v)))),
             answer: $repaired,

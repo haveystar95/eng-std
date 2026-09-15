@@ -38,7 +38,7 @@ it('asks for a frame, then a whole exchange, then lines, checks and listening â€
         new LessonViolation(LessonCodes::CHECK_SHAPE, 'x3.check', 'x'),
         new LessonViolation(LessonCodes::EXCHANGE_REPEATS, 'x8', 'x'),
         new LessonViolation(LessonCodes::LINE_NE_FRAME, 'B2', 'x'),
-        new LessonViolation(LessonCodes::KEY_NO_CONTENT_WORD, 'B2', 'x'),
+        new LessonViolation(LessonCodes::VARIANT_LONGER, 'B2', 'x'),
         new LessonViolation(LessonCodes::FILLER_UNGRAMMATICAL, 'p1.f2', 'x'),
         new LessonViolation(LessonCodes::EXCHANGE_SECOND_QUESTION, 'x4', 'x'),
         new LessonViolation(LessonCodes::FILLER_UNGRAMMATICAL, 'p1.f3', 'x'),

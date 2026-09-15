@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Entity;
 
 use App\Modules\Plan\Domain\Blueprint\SceneBrief;
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\ValueObject\Image;
@@ -21,9 +22,10 @@ use DateTimeImmutable;
  * answered — the lesson with the cost and version it was written at.
  *
  * The scene keeps the model's ANSWER (what is stored and what the validator judged) and serves the
- * lesson put together from it ({@see LessonAssembly}, seeded by the scene): framed learner lines are
- * the server's assembly, right answers stand at shuffled places. Every reader deals from
- * {@see lesson()}; only the store and a repair read {@see answer()}.
+ * lesson put together from it ({@see LessonAssembly}, seeded by the scene): the filler of every learner
+ * line and the in-dialogue marks are what the server finds in the lines, the speaking keys come from the
+ * frames — which words are content is the plan's target language's pack — and right answers stand at
+ * shuffled places. Every reader deals from {@see lesson()}; only the store and a repair read {@see answer()}.
  *
  * A lesson written is not yet a ready day (DAY-UI-3): the scene is `illustrating` until its photos
  * are found, and only then `ready` — a day opens with its pictures on it. The partner's voice
@@ -64,24 +66,27 @@ final class PlanScene
         private ?string $failReason,
         private ?DateTimeImmutable $buildStartedAt,
         private ?DateTimeImmutable $generatedAt,
-        private ?VoiceGender $partnerVoiceGender = null,
+        private ?VoiceGender $partnerVoiceGender,
+        ?LanguagePack $targetPack,
     ) {
-        $this->lesson = $answer === null ? null : LessonAssembly::serve($answer, $id->value);
+        $this->lesson = $answer === null || $targetPack === null ? null : LessonAssembly::serve($answer, $id->value, $targetPack);
     }
 
+    /** A scene of the plan's brief: no lesson yet, nothing to serve — the lesson comes with its language ({@see acceptLesson()}). */
     public static function fromBrief(PlanSceneId $id, PlanId $planId, SceneBrief $brief): self
     {
         return new self(
             $id, $planId, $brief->order, $brief->kind, $brief->priority, $brief->titleNative, $brief->titleTarget,
             $brief->teachesNative, $brief->goalsNative, $brief->learnerRoleTarget, $brief->learnerRoleNative,
             $brief->partnerRoleTarget, $brief->partnerRoleNative, $brief->topicDescription, $brief->imagePrompt,
-            null, null, LessonStatus::Pending, null, [], null, null, null, null,
+            null, null, LessonStatus::Pending, null, [], null, null, null, null, null,
         );
     }
 
     /**
      * @param  list<string>  $goalsNative
      * @param  list<array{code: string, address: string, detail: string}>  $findings
+     * @param  LanguagePack  $targetPack  the plan's target language — the served lesson's keys read its content words
      */
     public static function reconstitute(
         PlanSceneId $id,
@@ -107,13 +112,14 @@ final class PlanScene
         ?string $failReason,
         ?DateTimeImmutable $buildStartedAt,
         ?DateTimeImmutable $generatedAt,
+        LanguagePack $targetPack,
         ?VoiceGender $partnerVoiceGender = null,
     ): self {
         return new self(
             $id, $planId, $order, $kind, $priority, $titleNative, $titleTarget, $teachesNative, $goalsNative,
             $learnerRoleTarget, $learnerRoleNative, $partnerRoleTarget, $partnerRoleNative, $topicDescription,
             $imagePrompt, $image, $answer, $lessonStatus, $lessonCall, $findings, $failReason, $buildStartedAt, $generatedAt,
-            $partnerVoiceGender,
+            $partnerVoiceGender, $targetPack,
         );
     }
 
@@ -129,12 +135,13 @@ final class PlanScene
      * The lesson is written: the scene waits for its photos (`illustrating`) and knows its voices — the
      * partner's gender the lesson imagined for the role, the default when it said none.
      *
+     * @param  LanguagePack  $targetPack  the plan's target language, which the served lesson's keys are read in
      * @param list<array{code: string, address: string, detail: string}> $findings
      */
-    public function acceptLesson(Lesson $answer, ModelCall $call, array $findings, DateTimeImmutable $now): void
+    public function acceptLesson(Lesson $answer, LanguagePack $targetPack, ModelCall $call, array $findings, DateTimeImmutable $now): void
     {
         $this->answer = $answer;
-        $this->lesson = LessonAssembly::serve($answer, $this->id->value);
+        $this->lesson = LessonAssembly::serve($answer, $this->id->value, $targetPack);
         $this->lessonStatus = LessonStatus::Illustrating;
         $this->lessonCall = $call;
         $this->findings = $findings;
@@ -147,12 +154,13 @@ final class PlanScene
      * One card of the answer was repaired (P2R): the repaired answer replaces the old one, the findings
      * are the validator's over it, and what the repair cost is added to the lesson's cost.
      *
+     * @param  LanguagePack  $targetPack  the plan's target language, which the served lesson's keys are read in
      * @param list<array{code: string, address: string, detail: string}> $findings
      */
-    public function reviseLesson(Lesson $answer, array $findings, string $repairCostUsd): void
+    public function reviseLesson(Lesson $answer, LanguagePack $targetPack, array $findings, string $repairCostUsd): void
     {
         $this->answer = $answer;
-        $this->lesson = LessonAssembly::serve($answer, $this->id->value);
+        $this->lesson = LessonAssembly::serve($answer, $this->id->value, $targetPack);
         $this->findings = $findings;
         $this->lessonCall = $this->lessonCall?->plusCost($repairCostUsd);
     }

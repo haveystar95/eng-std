@@ -18,6 +18,11 @@ final readonly class Filler
         public bool $inDialogue,
     ) {}
 
+    public function withInDialogue(bool $inDialogue): self
+    {
+        return new self($this->target, $this->native, $this->pronunciationNative, $inDialogue);
+    }
+
     /** @return array{target: string, native: string, pronunciation_native: string, in_dialogue: bool} */
     public function toArray(): array
     {

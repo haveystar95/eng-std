@@ -84,7 +84,8 @@ final class SpokenLines
 
     /**
      * A phrase said with each of its fillers (TTS-2): the frame with the filler in its slot, as the learner would say
-     * it. The phrase itself already IS its frame said with one filler — that filler is voiced as the phrase
+     * it — with the phrase's closing mark when the frame is written without one, the mark the phrase took from its
+     * line. The phrase itself already IS its frame said with one filler — that filler is voiced as the phrase
      * (`voicedAs` names the phrase's own ref) and not bought twice; every other filler is its own file. A filler the
      * frame cannot be said with (no slot, a second slot left) has no sound.
      *
@@ -102,6 +103,7 @@ final class SpokenLines
             if ($text === '' || FrameText::hasSlot($text)) {
                 continue;
             }
+            $text = FrameText::withEndMarkOf($text, $phrase->textTarget());
             $ref = self::fillerRef($phrase->ref(), $index);
             $out[] = [
                 'index' => $index,

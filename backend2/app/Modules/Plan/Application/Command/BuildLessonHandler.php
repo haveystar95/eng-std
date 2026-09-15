@@ -10,6 +10,7 @@ use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\LessonBuildService;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
@@ -52,6 +53,7 @@ final readonly class BuildLessonHandler
         private LearnerGender $gender,
         private Clock $clock,
         private TransactionManager $tx,
+        private LanguagePacks $packs,
     ) {}
 
     public function __invoke(BuildLesson $command): void
@@ -105,14 +107,15 @@ final readonly class BuildLessonHandler
             return;
         }
 
-        $this->tx->run(function () use ($scene, $outcome, $now): void {
+        $targetPack = $this->packs->for($plan->targetLang()->value);
+        $this->tx->run(function () use ($scene, $outcome, $now, $targetPack): void {
             if ($outcome->lesson === null || $outcome->call === null) {
                 $scene->failLesson($outcome->failReason ?? 'unknown', $outcome->call, $outcome->findings);
                 $this->plans->saveScene($scene);
 
                 return;
             }
-            $scene->acceptLesson($outcome->lesson, $outcome->call, $outcome->findings, $now);
+            $scene->acceptLesson($outcome->lesson, $targetPack, $outcome->call, $outcome->findings, $now);
             $this->plans->saveScene($scene);
             $served = $scene->lesson();
             if ($served !== null) {

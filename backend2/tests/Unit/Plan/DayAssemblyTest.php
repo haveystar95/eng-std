@@ -36,7 +36,7 @@ function daMaterial(PlanLevel $level = PlanLevel::Beginner, ?PlanSceneId $sceneI
     if ($edit !== null) {
         $payload = $edit($payload);
     }
-    $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value);
+    $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value, lessonPacks()->for('en'));
 
     return new SceneMaterial($sceneId, $lesson, PlanTerm::fromLesson($sceneId, $lesson, static fn (): PlanTermId => PlanTermId::generate()));
 }
@@ -86,7 +86,7 @@ it('asks the learner to say their own served line, with the key and the text as 
 
     expect($speak[4]->payload()['expected'])->toBe('Okay, he will rest at home.')
         ->and($speak[4]->payload()['task_native'])->toBe('Хорошо, он будет отдыхать дома.')
-        ->and($speak[4]->payload()['hints'])->toBe(['key' => 'will rest', 'text' => 'Okay, he will rest at home.'])
+        ->and($speak[4]->payload()['hints'])->toBe(['key' => 'He will rest', 'text' => 'Okay, he will rest at home.'])
         ->and($speak[4]->payload()['coverage'])->toBe(0.7);
 });
 

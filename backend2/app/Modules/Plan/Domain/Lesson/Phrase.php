@@ -35,6 +35,26 @@ final readonly class Phrase
         return $this->slot->fillers ?? [];
     }
 
+    /**
+     * The same frame with `in_dialogue` on exactly the fillers at `$said` (their places in the slot) — the marks the
+     * server serves, set by what the dialogue says, not by the model's marks.
+     *
+     * @param  list<int>  $said
+     */
+    public function withFillersSaid(array $said): self
+    {
+        if ($this->slot === null) {
+            return $this;
+        }
+        $fillers = array_map(
+            static fn (Filler $f, int $i): Filler => $f->withInDialogue(in_array($i, $said, true)),
+            $this->slot->fillers,
+            array_keys($this->slot->fillers),
+        );
+
+        return new self($this->id, $this->kind, $this->frameTarget, $this->frameNative, $this->pronunciationNative, new Slot($this->slot->hintNative, $fillers));
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {

@@ -36,8 +36,8 @@ return [
         'subjects' => ['i', 'you', 'he', 'she', 'it', 'we', 'they', 'there'],
     ],
 
-    // Words that carry no content of their own: a speaking key needs a word that is not one of them; a
-    // repeated pair of two of them copies nothing.
+    // Words that carry no content of their own: the server's speaking key takes the part of the frame with more words
+    // that are not one of them; a repeated pair of two of them copies nothing.
     'function_words' => [
         'a', 'an', 'the', 'to', 'of', 'in', 'on', 'at', 'for', 'with', 'by', 'from', 'up', 'down', 'about',
         'into', 'over', 'after', 'before', 'under', 'and', 'or', 'but', 'so', 'if', 'than', 'as', 'because',

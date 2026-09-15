@@ -109,9 +109,25 @@ final class Words
         if ($position === null) {
             return null;
         }
-        // The same words tokens() makes, with where each stands: a run of letters, digits, apostrophes
-        // and hyphens, trimmed of apostrophes and hyphens at its ends, empty runs dropped.
-        preg_match_all('/[\p{L}\p{N}\'’-]+/u', $haystack, $matches, PREG_OFFSET_CAPTURE);
+        $spans = self::spans($haystack);
+        [$first, $count] = $position;
+        if (! isset($spans[$first], $spans[$first + $count - 1])) {
+            return null;
+        }
+
+        return [$spans[$first][0], $spans[$first + $count - 1][1] - $spans[$first][0]];
+    }
+
+    /**
+     * The same words {@see tokens()} makes, with where each stands in the text, in characters: a run of letters,
+     * digits, apostrophes and hyphens, trimmed of apostrophes and hyphens at its ends, empty runs dropped —
+     * [start, end, the word lower-cased].
+     *
+     * @return list<array{0: int, 1: int, 2: string}>
+     */
+    public static function spans(string $text): array
+    {
+        preg_match_all('/[\p{L}\p{N}\'’-]+/u', $text, $matches, PREG_OFFSET_CAPTURE);
         $spans = [];
         foreach ($matches[0] as [$run, $byte]) {
             $word = self::trimMarks($run);
@@ -119,15 +135,11 @@ final class Words
                 continue;
             }
             $lead = mb_strlen($run) - mb_strlen((string) preg_replace("/^['’-]+/u", '', $run));
-            $start = mb_strlen(substr($haystack, 0, $byte)) + $lead;
-            $spans[] = [$start, $start + mb_strlen($word)];
-        }
-        [$first, $count] = $position;
-        if (! isset($spans[$first], $spans[$first + $count - 1])) {
-            return null;
+            $start = mb_strlen(substr($text, 0, $byte)) + $lead;
+            $spans[] = [$start, $start + mb_strlen($word), mb_strtolower($word)];
         }
 
-        return [$spans[$first][0], $spans[$first + $count - 1][1] - $spans[$first][0]];
+        return $spans;
     }
 
     /**

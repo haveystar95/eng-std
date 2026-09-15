@@ -17,10 +17,16 @@ namespace App\Modules\Plan\Domain\Lesson;
  *  - a listening question: the whole visit in the learner's language, and the other questions.
  *
  * Checks, readings, keys, variants, definitions and image prompts stay out: no card is repaired against them.
+ *
+ * It is read off the lesson AS THE SERVER READS IT ({@see LessonAssembly::said()}): a line's filler is the one found in
+ * its text and a frame's `in_dialogue` marks what its lines say — never the model's own `filler` field or marks.
  */
 final class LessonCardContext
 {
-    /** @return array<string, mixed> */
+    /**
+     * @param  Lesson  $answer  the answer as the server reads it — {@see LessonAssembly::said()}
+     * @return array<string, mixed>
+     */
     public static function of(Lesson $answer, LessonCard $card): array
     {
         $context = [

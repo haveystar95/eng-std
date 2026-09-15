@@ -25,7 +25,7 @@ function slLesson(?Closure $edit = null): Lesson
 {
     $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8));
 
-    return LessonAssembly::serve((new LessonParser)->parse($edit === null ? $payload : $edit($payload)), 'scene');
+    return LessonAssembly::serve((new LessonParser)->parse($edit === null ? $payload : $edit($payload)), 'scene', lessonPacks()->for('en'));
 }
 
 it('names every line of the dialogue by its exchange and speaker, in the order they are said', function () {

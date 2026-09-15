@@ -108,14 +108,17 @@ it('asks for two cards at most and then fails the lesson with its fatal codes, w
 });
 
 // Canon GEN-2b: «P2R получает новый вид карточки exchange и поле frame_update — сборка применяет его атомарно (обмен +
-// каркас)»; «exchange.repeats — повтор каркаса с тем же наполнением» is fatal. Catches a day dealt with an exchange that
+// каркас)»; «exchange.repeats — повтор каркаса с тем же наполнением» is fatal. Доработка: «поле filler реплики в ответе
+// модели не читается никем: ни сборкой, ни валидатором, ни контекстом P2R». Catches a day dealt with an exchange that
 // asks what the visit already asked, a repair that takes the line alone (the repeat stays), an exchange stored without
-// the frame it came with (its new filler said and never marked) — and a pair that does not fit put in by halves.
+// the frame it came with (its new filler said and never marked), a pair that does not fit put in by halves — and a
+// repair shown the model's own filler field instead of the filler its line says.
 it('holds a repeated exchange, repairs the whole exchange and stores it together with the frame it came with', function () {
     $repeat = static function ($request): array {
         $p = FakePlanModel::lessonPayload($request);
-        $p['dialogue'][7]['messages'][0]['filler'] = 'an X-ray';
+        // Exchange 8 says «an X-ray» again; its field still names «a follow-up appointment», exchange 7's names «a sick note».
         $p['dialogue'][7]['messages'][0]['text_target'] = 'Do we need an X-ray?';
+        $p['dialogue'][6]['messages'][0]['filler'] = 'a sick note';
         $p['phrases'][5]['slot']['fillers'][1]['in_dialogue'] = false;
 
         return $p;
@@ -141,8 +144,11 @@ it('holds a repeated exchange, repairs the whole exchange and stores it together
         ->and($fits->repairRequests[0]->kind)->toBe('exchange')
         ->and($fits->repairRequests[0]->address)->toBe('x8')
         ->and(array_column($fits->repairRequests[0]->findings, 'code'))->toBe(['exchange.repeats'])
-        // The repair is shown the part of the lesson it needs, never the whole answer.
+        // The repair is shown the part of the lesson it needs, never the whole answer — and as the server reads it: the
+        // filler each line says, not what the model wrote in the field.
         ->and(array_keys($fits->repairRequests[0]->context))->toBe(['frames', 'words', 'exchanges'])
+        ->and($fits->repairRequests[0]->card['messages'][0]['filler'])->toBe('an X-ray')
+        ->and(array_column(array_column($fits->repairRequests[0]->context['exchanges'], null, 'step')[7]['messages'], 'filler', 'speaker'))->toBe(['B' => 'an X-ray'])
         ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')
         ->and($lesson['dialogue'][7]['messages'][0]['filler'])->toBe('a sick note')
         ->and(array_column($lesson['phrases'][5]['slot']['fillers'], 'in_dialogue'))->toBe([true, false, true])

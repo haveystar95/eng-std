@@ -13,10 +13,11 @@ use App\Modules\Plan\Domain\Service\FrameText;
  * check (`x3.check`), a listening question (`L2`). Anything else the validator addresses — the lesson as a
  * whole, a partner line on its own, a vocabulary item — is not a card a repair can take.
  *
- * It reads the card out of the model's answer and puts a repaired one back. A repaired frame keeps the
- * dialogue lines that stand on it true to it: each such line becomes the new frame with its own filler,
- * after the glue it had — the server's assembly, not the model's. A repaired exchange may come with the frame
- * its learner line stands on (`frame_update`, P2R v1.1): the two go in together or not at all.
+ * It reads the card out of a lesson and puts a repaired one back. A repaired frame keeps the dialogue lines that
+ * stand on it true to it: each line that said the old frame becomes the new frame with the filler the server found
+ * in it, after the glue it had and with its own closing mark where the new frame has none — the server's assembly,
+ * not the model's. A repaired exchange may come with the frame its learner line stands on (`frame_update`, P2R
+ * v1.1): the two go in together or not at all.
  */
 final readonly class LessonCard
 {
@@ -139,17 +140,19 @@ final readonly class LessonCard
                 if ($old === null || ! $message->isLearner() || $message->phraseId !== $frame->id) {
                     return $message;
                 }
-                $was = FrameText::line($old, $message->filler, $message->textTarget);
-                if (! $was['matches']) {
+                $was = FrameText::line($old, $message->textTarget);
+                $filler = $was['filler']?->target;
+                // A line that did not say the old frame, or a new slot with no filler found to say it with, stays as it was.
+                if (! $was['matches'] || (FrameText::hasSlot($frame->frameTarget) && $filler === null)) {
                     return $message;
                 }
-                $core = FrameText::fill($frame->frameTarget, $message->filler);
+                $core = FrameText::fill($frame->frameTarget, $filler);
                 $after = mb_substr($message->textTarget, mb_strlen($was['glue']), 1);
                 if ($was['glue'] !== '' && $after !== '' && $after === mb_strtolower($after)) {
                     $core = mb_strtolower(mb_substr($core, 0, 1)).mb_substr($core, 1);
                 }
 
-                return $message->withText($was['glue'].$core);
+                return $message->withText(FrameText::withEndMarkOf($was['glue'].$core, $message->textTarget));
             }, $exchange->messages));
         }, $answer->exchanges);
 

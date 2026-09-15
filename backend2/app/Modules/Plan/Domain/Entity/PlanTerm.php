@@ -58,7 +58,8 @@ final class PlanTerm
      * A word's example is the line of the day it is said in ({@see WordUsage}). A phrase's text is its
      * frame with the filler of its first dialogue line — or, for a frame no line says, its first
      * in-dialogue filler, then its first filler; the translation and the reading are put together the
-     * same way; the line lends the phrase its speaking key, variants and example.
+     * same way; the line lends the phrase its speaking key, variants and example — and its closing mark
+     * to a frame written without one (доработка GEN-2b: «I'd like a ___, please» said «…, please.»).
      *
      * @param  callable(): PlanTermId  $ids
      * @return list<self>
@@ -93,11 +94,23 @@ final class PlanTerm
     }
 
     /**
-     * The frame said with its dialogue filler: [text, translation, reading].
+     * The frame said with its dialogue filler: [text, translation, reading]. A text or a translation whose frame ends
+     * with no mark takes the mark its line ends with.
      *
      * @return array{0: string, 1: string, 2: string}
      */
     private static function said(Phrase $phrase, ?Message $line): array
+    {
+        [$text, $native, $reading] = self::filled($phrase, $line);
+        if ($line === null) {
+            return [$text, $native, $reading];
+        }
+
+        return [FrameText::withEndMarkOf($text, $line->textTarget), FrameText::withEndMarkOf($native, $line->textNative), $reading];
+    }
+
+    /** @return array{0: string, 1: string, 2: string} */
+    private static function filled(Phrase $phrase, ?Message $line): array
     {
         if (! FrameText::hasSlot($phrase->frameTarget)) {
             return [trim($phrase->frameTarget), trim($phrase->frameNative), trim($phrase->pronunciationNative)];

@@ -11,6 +11,7 @@ use App\Modules\Plan\Domain\Check\LessonRule;
 use App\Modules\Plan\Domain\Check\LessonValidationContext;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Lesson\Lesson;
+use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\Phrase;
 use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\Words;
@@ -18,6 +19,11 @@ use App\Modules\Plan\Domain\Service\Words;
 /**
  * THE FILLERS (`lesson_day.v4.5`, FILLERS, «where the slot cuts»): two or three per slot; every one of them makes a
  * sentence when put into the frame; `in_dialogue` marks exactly the fillers the dialogue says.
+ *
+ * What the dialogue says is the server's reading of its lines ({@see LessonAssembly::fillerOf()}), never the model's
+ * `filler` field; this is the one rule that reads the model's `in_dialogue` marks — `filler.one_in_dialogue` is the
+ * finding that they differ from what the lines say. A line that says none of its frame's fillers is `line.ne_frame`,
+ * not a mark.
  *
  * «Grammatical» is checked by the assembly only mechanically (`filler.ungrammatical`, fatal) — a filler with its
  * own full stop or its own slot, a word doubled at the seam, and, by the target's pack, an article after an
@@ -147,23 +153,10 @@ final class FillerRules implements LessonRule
         // Which fillers the dialogue says, and where first. The same filler said twice is `exchange.repeats`.
         $said = [];
         foreach ($answer->linesOf($phrase->id) as $use) {
-            $message = $use['message'];
-            $step = $use['exchange']->step;
-            $filler = $phrase->filler($message->filler);
-            if ($filler === null) {
-                $out[] = new LessonViolation(
-                    LessonCodes::FILLER_ONE_IN_DIALOGUE,
-                    LessonViolation::learner($step),
-                    '«'.($message->filler ?? 'null')."» is not one of {$phrase->id}'s fillers",
-                );
-
-                continue;
-            }
-            foreach ($phrase->slot->fillers as $position => $candidate) {
-                if ($candidate === $filler) {
-                    $said[$position] ??= $step;
-                    break;
-                }
+            $filler = LessonAssembly::fillerOf($answer, $use['message']);
+            $position = $filler === null ? false : array_search($filler, $phrase->slot->fillers, true);
+            if (is_int($position)) {
+                $said[$position] ??= $use['exchange']->step;
             }
         }
 

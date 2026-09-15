@@ -12,6 +12,7 @@ use App\Modules\Plan\Domain\Check\LessonValidationContext;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Lesson\Lesson;
+use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\ListeningQuestion;
 use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\Lesson\Phrase;
@@ -130,7 +131,7 @@ final class ListeningRules implements LessonRule
     }
 
     /**
-     * Every filler the dialogue says, with its frame.
+     * Every filler the dialogue says, with its frame — as the server finds it in the lines.
      *
      * @return list<array{0: Phrase, 1: Filler}>
      */
@@ -139,7 +140,7 @@ final class ListeningRules implements LessonRule
         $out = [];
         foreach ($answer->phrases as $phrase) {
             foreach ($answer->linesOf($phrase->id) as $use) {
-                $filler = $phrase->filler($use['message']->filler);
+                $filler = LessonAssembly::fillerOf($answer, $use['message']);
                 if ($filler !== null) {
                     $out[] = [$phrase, $filler];
                 }

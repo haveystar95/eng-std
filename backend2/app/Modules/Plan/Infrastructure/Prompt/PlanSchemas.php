@@ -132,7 +132,7 @@ final class PlanSchemas
     }
 
     /**
-     * THE SEAM JUDGE (`lesson_seam_judge.v1`): a verdict per sentence sent — its id (the enum has only the ids
+     * THE SEAM JUDGE (`lesson_seam_judge.v1.1`): a verdict per sentence sent — its id (the enum has only the ids
      * sent) and whether it reads. No length (п. 202): a sentence left without a verdict is simply not judged.
      *
      * @param  list<string>  $ids

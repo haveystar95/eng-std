@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check;
 
 /**
- * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.5`; наряды GEN-2a, GEN-2b). Every breach is counted by
- * code; seven of them are fatal — the day is not dealt until a repair takes their card ({@see LessonGate}) — and
- * the rest are warnings: counted and kept. One code is not the validator's but the seam judge's — a model reads
- * the native sentences a frame makes with its fillers ({@see JUDGED}).
+ * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.5`; наряды GEN-2a, GEN-2b и его доработка) — fifty. Every
+ * breach is counted by code; seven of them are fatal — the day is not dealt until a repair takes their card
+ * ({@see LessonGate}) — and the other 43 are warnings: counted and kept. One code is not the validator's but the seam
+ * judge's — a model reads the native sentences a frame makes with its fillers ({@see JUDGED}).
+ *
+ * No code is about the speaking key: the key is the server's, taken from the frame (`docs/plan-v2.md` §3а).
  *
  * Two counters are no findings at all: a check that did not run for want of a language pack
  * ({@see LANG_PACK_MISSING}), and a seam judge that did not answer ({@see JUDGE_UNAVAILABLE}).
@@ -45,6 +47,8 @@ final class LessonCodes
 
     public const FRAME_NATIVE_ALTERNATIVES = 'frame.native_alternatives';
 
+    public const FRAME_NO_END_PUNCT = 'frame.no_end_punct';
+
     public const FRAME_NATIVE_PUNCT = 'frame.native_punct';
 
     public const FRAME_UNRESOLVED_PRONOUN = 'frame.unresolved_pronoun';
@@ -70,14 +74,6 @@ final class LessonCodes
     public const LINE_TOO_LONG = 'line.too_long';
 
     public const LINE_NO_FRAME = 'line.no_frame';
-
-    public const KEY_NOT_IN_LINE = 'key.not_in_line';
-
-    public const KEY_CONTAINS_FILLER = 'key.contains_filler';
-
-    public const KEY_NO_CONTENT_WORD = 'key.no_content_word';
-
-    public const KEY_TOO_LONG = 'key.too_long';
 
     public const VARIANT_LONGER = 'variant.longer';
 
@@ -149,11 +145,11 @@ final class LessonCodes
             self::DIALOGUE_COUNT, self::VOCAB_COUNT, self::EXCHANGE_SHAPE, self::EXCHANGE_SECOND_QUESTION, self::EXCHANGE_REPEATS,
             self::CHECK_SHAPE, self::LISTENING_SHAPE, self::PRONUNCIATION_SCRIPT,
             self::FRAME_COUNT, self::FRAME_UNUSED, self::FRAME_TOO_LONG, self::FRAME_NO_SLOT_SHARE,
-            self::FRAME_NATIVE_ALTERNATIVES, self::FRAME_NATIVE_PUNCT, self::FRAME_UNRESOLVED_PRONOUN, self::FRAME_NATIVE_AGREEMENT,
+            self::FRAME_NATIVE_ALTERNATIVES, self::FRAME_NO_END_PUNCT, self::FRAME_NATIVE_PUNCT, self::FRAME_UNRESOLVED_PRONOUN,
+            self::FRAME_NATIVE_AGREEMENT,
             self::FILLER_COUNT, self::FILLER_UNGRAMMATICAL, self::FILLER_ONE_IN_DIALOGUE, self::FILLER_IS_CLAUSE,
             self::FILLER_ARTICLE_SEAM, self::FILLER_NATIVE_SEAM,
-            self::LINE_NE_FRAME, self::LINE_TOO_LONG, self::LINE_NO_FRAME,
-            self::KEY_NOT_IN_LINE, self::KEY_CONTAINS_FILLER, self::KEY_NO_CONTENT_WORD, self::KEY_TOO_LONG, self::VARIANT_LONGER,
+            self::LINE_NE_FRAME, self::LINE_TOO_LONG, self::LINE_NO_FRAME, self::VARIANT_LONGER,
             self::LEARNER_RESTATES_PARTNER,
             self::KIND_ASK_COUNT, self::KIND_RESCUE_COUNT, self::RESCUE_NOT_FIRST, self::RESCUE_NEW_FACT, self::RESCUE_NO_PREV,
             self::PARTNER_TWO_QUESTIONS, self::PARTNER_TOO_LONG, self::PARTNER_CLOSER,
