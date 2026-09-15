@@ -4,28 +4,28 @@
 
 Ученик: Будущий арендатор · собеседник: Арендодатель (мужчина)
 
-Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.078848 · 36.2 с · токены вход/выход 7503/4006 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 10 (фатальных 0) · порог в сборке: урок failed (fatal: filler.ungrammatical)
+Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.078848 · 36.2 с · токены вход/выход 7503/4006 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 8 (фатальных 0) · судья швов `lesson_seam_judge.v1.1`
 
-> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок; реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках. «Судья» — вердикт судьи швов о собранной фразе на родном.
+> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок (починки порога — внизу). Реплики — как их написала модель и получит приложение; наполнение реплики и ключ — серверные: наполнение найдено по тексту реплики среди наполнений её каркаса, ключ взят из каркаса. «Судья» — вердикт судьи швов о собранной фразе на родном.
 
 ## Сценарий диалога
 
 | # | вид обмена | кто | реплика | перевод | каркас · наполнение | ключ | оценка |
 |---|---|---|---|---|---|---|---|
 | 1 | ответ | Арендодатель (собеседник) | The flat is available from next month for one year. | Квартира доступна со следующего месяца на один год. |  |  | |
-| 1 | ответ | Будущий арендатор (ученик) | I can move in next month. | Я могу въехать в следующем месяце. | p1 · next month | can move in | |
+| 1 | ответ | Будущий арендатор (ученик) | I can move in next month. | Я могу въехать в следующем месяце. | p1 · next month | I can move in | |
 | 2 | вопрос ученика | Будущий арендатор (ученик) | How much is the deposit? | Сколько составляет депозит? | p2 · the deposit | How much is | |
 | 2 | вопрос ученика | Арендодатель (собеседник) | The deposit is two months' rent. | Депозит — это аренда за два месяца. |  |  | |
-| 3 | вопрос ученика | Будущий арендатор (ученик) | When do I get the deposit back? | Когда я получу депозит обратно? | p3 · the deposit | get the | |
+| 3 | вопрос ученика | Будущий арендатор (ученик) | When do I get the deposit back? | Когда я получу депозит обратно? | p3 · the deposit | When do I get | |
 | 3 | вопрос ученика | Арендодатель (собеседник) | After you move out, usually within two months. | После вашего выезда, обычно в течение двух месяцев. |  |  | |
-| 4 | вопрос ученика | Будущий арендатор (ученик) | What is included in the monthly payment? | Что входит в ежемесячный платёж? | p4 · the monthly payment | included in the | |
+| 4 | вопрос ученика | Будущий арендатор (ученик) | What is included in the monthly payment? | Что входит в ежемесячный платёж? | p4 · the monthly payment | What is included in | |
 | 4 | вопрос ученика | Арендодатель (собеседник) | Water and heating are included, but electricity and internet are separate. | Вода и отопление включены, но электричество и интернет оплачиваются отдельно. |  |  | |
-| 5 | вопрос ученика | Будущий арендатор (ученик) | Can I work from home? | Можно мне работать из дома? | p5 · from home | work from home | |
+| 5 | вопрос ученика | Будущий арендатор (ученик) | Can I work from home? | Можно мне работать из дома? | p5 · from home | Can I work | |
 | 5 | вопрос ученика | Арендодатель (собеседник) | Yes, that's fine, as long as it's quiet office work. | Да, это нормально, если это тихая офисная работа. |  |  | |
-| 6 | вопрос ученика | Будущий арендатор (ученик) | Is a cat allowed? | Кошка разрешена? | p6 · a cat | cat allowed | |
+| 6 | вопрос ученика | Будущий арендатор (ученик) | Is a cat allowed? | Кошка разрешена? | p6 · a cat | allowed | |
 | 6 | вопрос ученика | Арендодатель (собеседник) | Yes, one cat is fine, but please tell the neighbors if needed. | Да, одна кошка — это нормально, но, если нужно, пожалуйста, сообщите соседям. |  |  | |
 | 7 | ответ | Арендодатель (собеседник) | The contract is for twelve months, and smoking isn't allowed inside. | Договор на двенадцать месяцев, и курить внутри нельзя. |  |  | |
-| 7 | ответ | Будущий арендатор (ученик) | A contract for twelve months works for me. | Договор на двенадцать месяцев мне подходит. | p7 · twelve months | works for me | |
+| 7 | ответ | Будущий арендатор (ученик) | A contract for twelve months works for me. | Договор на двенадцать месяцев мне подходит. | p7 · twelve months | A contract for | |
 | 8 | переспрос | Будущий арендатор (ученик) | Could you repeat that more slowly, please? | Повторите, пожалуйста, это помедленнее. | — | repeat that | |
 | 8 | переспрос | Арендодатель (собеседник) | It's a twelve-month contract, and no smoking inside. | Это договор на двенадцать месяцев, и курить внутри нельзя. |  |  | |
 
@@ -87,8 +87,8 @@
 
 | наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | судья | оценка |
 |---|---|---|---|---|---|---|---|
-| a cat | кошка | э кэт | да | Is a cat allowed? | кошка разрешена? | читается | |
-| a small dog | маленькая собака | э смол дог | — | Is a small dog allowed? | маленькая собака разрешена? | читается | |
+| a cat | кошка | э кэт | да | Is a cat allowed? | кошка разрешена? | **не читается** | |
+| a small dog | маленькая собака | э смол дог | — | Is a small dog allowed? | маленькая собака разрешена? | **не читается** | |
 | a bike | велосипед | э байк | — | Is a bike allowed? | велосипед разрешена? | **не читается** | |
 
 ### p7 · ответ — «A contract for ___ works for me.»
@@ -141,14 +141,12 @@
 | код | порог | адрес | что |
 |---|---|---|---|
 | `frame.native_agreement` | предупреждение | p6 | «___ разрешена?»: «разрешена» agrees with the slot — it changes with the filler |
-| `key.contains_filler` | предупреждение | B3 | the key «get the» takes words of the filler «the deposit» |
-| `key.contains_filler` | предупреждение | B4 | the key «included in the» takes words of the filler «the monthly payment» |
-| `key.contains_filler` | предупреждение | B5 | the key «work from home» takes words of the filler «from home» |
-| `key.contains_filler` | предупреждение | B6 | the key «cat allowed» takes words of the filler «a cat» |
 | `variant.longer` | предупреждение | B6 | the variant «Can I keep a cat?» has 5 words, the line 4 |
 | `check.verbatim` | предупреждение | x4.check | the right option «Power and internet» repeats «and internet» of the partner's line |
 | `vocab.used_in_wrong` | предупреждение | v4 | «utilities» is not in the partner's line of exchange 4 |
 | `vocab.used_in_wrong` | предупреждение | v8 | «remote work» is not in the partner's line of exchange 5 |
+| `filler.native_seam` | предупреждение | p6.f1 | «кошка разрешена?» («___ разрешена?» with «кошка») does not read as Russian, the seam judge says |
+| `filler.native_seam` | предупреждение | p6.f2 | «маленькая собака разрешена?» («___ разрешена?» with «маленькая собака») does not read as Russian, the seam judge says |
 | `filler.native_seam` | предупреждение | p6.f3 | «велосипед разрешена?» («___ разрешена?» with «велосипед») does not read as Russian, the seam judge says |
 
 ## Не проверено — у языка нет пакета (`lang.pack_missing`, не находка)
@@ -157,6 +155,5 @@
 
 ## Порог (фатальные коды → P2R, не больше двух карточек)
 
-- **Живая сборка** (валидатор до двух уточнений отчёта §3, P2R на `gpt-5.4-mini`): P2R p1 (frame, $0.003673, 2901 мс: filler.ungrammatical); итог: failed — fatal: filler.ungrammatical.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4`**: passes.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4-mini`**: passes.
+- **Живая сборка GEN-2b** (валидатор до сдачи, P2R на `gpt-5.4-mini`): P2R p1 (frame, $0.003673, 2901 мс: filler.ungrammatical); итог: failed — fatal: filler.ungrammatical.
+- **Порог доработки** (валидатор доработки, P2R на `gpt-5.4`): фатальных нет, проходит без починки.

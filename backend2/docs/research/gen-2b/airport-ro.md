@@ -4,28 +4,28 @@
 
 Ученик: pasager · собеседник: agentă de check-in (женщина)
 
-Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.077212 · 35.0 с · токены вход/выход 7485/3900 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 10 (фатальных 1) · порог в сборке: урок прошёл
+Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.077212 · 35.0 с · токены вход/выход 7485/3900 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 3 (фатальных 1) · судья швов `lesson_seam_judge.v1.1`
 
-> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок; реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках. «Судья» — вердикт судьи швов о собранной фразе на родном.
+> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок (починки порога — внизу). Реплики — как их написала модель и получит приложение; наполнение реплики и ключ — серверные: наполнение найдено по тексту реплики среди наполнений её каркаса, ключ взят из каркаса. «Судья» — вердикт судьи швов о собранной фразе на родном.
 
 ## Сценарий диалога
 
 | # | вид обмена | кто | реплика | перевод | каркас · наполнение | ключ | оценка |
 |---|---|---|---|---|---|---|---|
-| 1 | вопрос ученика | pasager (ученик) | I'm checking in for this flight. | Fac check-in pentru acest zbor. | p1 · this flight | checking in for | |
+| 1 | вопрос ученика | pasager (ученик) | I'm checking in for this flight. | Fac check-in pentru acest zbor. | p1 · this flight | I'm checking in for | |
 | 1 | вопрос ученика | agentă de check-in (собеседник) | Sure. May I see your passport? | Sigur. Pot să văd pașaportul? |  |  | |
 | 2 | ответ | agentă de check-in (собеседник) | Thank you. Where are you flying today? | Mulțumesc. Unde zburați azi? |  |  | |
-| 2 | ответ | pasager (ученик) | I'm flying to London. | Zbor la Londra. | p2 · to London | flying to | |
+| 2 | ответ | pasager (ученик) | I'm flying to London. | Zbor la Londra. | p2 · to London | I'm flying | |
 | 3 | ответ | agentă de check-in (собеседник) | How many bags do you have? | Câte bagaje aveți? |  |  | |
 | 3 | ответ | pasager (ученик) | I have one suitcase and one backpack. | Am o valiză și un rucsac. | p3 · one suitcase and one backpack | I have | |
 | 4 | ответ | agentă de check-in (собеседник) | Which bag are you checking? | Care bagaj îl dați la cală? |  |  | |
-| 4 | ответ | pasager (ученик) | I'm checking this suitcase. | Dau la cală această valiză. | p4 · this suitcase | checking this | |
-| 5 | вопрос ученика | pasager (ученик) | What is my seat? | Care este locul meu? | p5 · my seat | What is my | |
+| 4 | ответ | pasager (ученик) | I'm checking this suitcase. | Dau la cală această valiză. | p4 · this suitcase | I'm checking | |
+| 5 | вопрос ученика | pasager (ученик) | What is my seat? | Care este locul meu? | p5 · my seat | What is | |
 | 5 | вопрос ученика | agentă de check-in (собеседник) | Your seat is 14A, by the window. | Locul dumneavoastră este 14A, la geam. |  |  | |
 | 6 | вопрос ученика | pasager (ученик) | Can I keep my backpack? | Pot să păstrez rucsacul meu? | p6 · my backpack | Can I keep | |
 | 6 | вопрос ученика | agentă de check-in (собеседник) | Yes, take it as carry-on. | Da, luați-l ca bagaj de mână. |  |  | |
 | 7 | ответ | agentă de check-in (собеседник) | Here is your boarding pass and baggage tag. | Iată cartea de îmbarcare și eticheta de bagaj. |  |  | |
-| 7 | ответ | pasager (ученик) | Thank you for the baggage tag. | Mulțumesc pentru eticheta de bagaj. | p7 · the baggage tag | for the | |
+| 7 | ответ | pasager (ученик) | Thank you for the baggage tag. | Mulțumesc pentru eticheta de bagaj. | p7 · the baggage tag | Thank you for | |
 | 8 | ответ | agentă de check-in (собеседник) | Boarding starts at gate 12 in forty minutes. | Îmbarcarea începe la poarta 12 în patruzeci de minute. |  |  | |
 | 8 | ответ | pasager (ученик) | Okay, I'll go to gate 12. | Bine, merg la poarta 12. | p8 · gate 12 | I'll go to | |
 
@@ -92,7 +92,7 @@
 | наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | судья | оценка |
 |---|---|---|---|---|---|---|---|
 | the baggage tag | eticheta de bagaj | dhă beg-ij teg | да | Thank you for the baggage tag. | Mulțumesc pentru eticheta de bagaj. | читается | |
-| the boarding pass | cartea de îmbarcare | dhă bor-ding pas | — | Thank you for the boarding pass. | Mulțumesc pentru cartea de îmbarcare. | **не читается** | |
+| the boarding pass | cartea de îmbarcare | dhă bor-ding pas | — | Thank you for the boarding pass. | Mulțumesc pentru cartea de îmbarcare. | читается | |
 
 ### p8 · ответ — «I'll go to ___.»
 
@@ -143,21 +143,15 @@
 | код | порог | адрес | что |
 |---|---|---|---|
 | `exchange.second_question` | **фатально** | x1 | the closing message of A «Sure. May I see your passport?» ends with a question mark |
-| `key.contains_filler` | предупреждение | B2 | the key «flying to» takes words of the filler «to London» |
-| `key.contains_filler` | предупреждение | B4 | the key «checking this» takes words of the filler «this suitcase» |
-| `key.no_content_word` | предупреждение | B5 | «What is ___?» has no content word outside the slot: the key is «What is», the frame up to the slot, not «What is my» |
-| `key.contains_filler` | предупреждение | B5 | the key «What is my» takes words of the filler «my seat» |
-| `key.no_content_word` | предупреждение | B7 | «Thank you for ___.» has no content word outside the slot: the key is «Thank you for», the frame up to the slot, not «for the» |
-| `key.contains_filler` | предупреждение | B7 | the key «for the» takes words of the filler «the baggage tag» |
 | `vocab.used_in_wrong` | предупреждение | v1 | «check in» is not in frame p1 or its fillers |
 | `vocab.used_in_wrong` | предупреждение | v1 | «check in» is not in frame p4 or its fillers |
-| `filler.native_seam` | предупреждение | p7.f2 | «Mulțumesc pentru cartea de îmbarcare.» («Mulțumesc pentru ___.» with «cartea de îmbarcare») does not read as Romanian, the seam judge says |
 
 ## Не проверено — у языка нет пакета (`lang.pack_missing`, не находка)
 
 | код | сторона пары | язык | чего нет в пакете |
 |---|---|---|---|
 | `pronunciation.script` | родной | ro | script |
+| `frame.no_end_punct` | родной | ro | sentence_ends |
 | `frame.native_punct` | родной | ro | sentence_ends |
 | `frame.native_agreement` | родной | ro | agreement |
 | `listening.same_exchange` | родной | ro | function_words, word_forms |
@@ -167,6 +161,5 @@
 
 ## Порог (фатальные коды → P2R, не больше двух карточек)
 
-- **Живая сборка** (валидатор до двух уточнений отчёта §3, P2R на `gpt-5.4-mini`): P2R x1 (exchange, $0.005413, 2027 мс: exchange.second_question); итог: ready.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4`**: passes after repair · карточки x1 · $0.018103 · 2988 мс.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4-mini`**: failed — fatal: exchange.second_question · карточки x1 · $0.005408 · 2661 мс.
+- **Живая сборка GEN-2b** (валидатор до сдачи, P2R на `gpt-5.4-mini`): P2R x1 (exchange, $0.005413, 2027 мс: exchange.second_question); итог: ready.
+- **Порог доработки** (валидатор доработки, P2R на `gpt-5.4`): проходит после починки · карточки x1 · $0.018120 · 2994 мс.

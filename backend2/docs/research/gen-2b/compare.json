@@ -6,49 +6,57 @@
                     "step": 1,
                     "frame": "I have ___ of experience.",
                     "line": "I have five years of experience.",
-                    "key": "have of experience"
+                    "filler": "five years",
+                    "key": "of experience"
                 },
                 {
                     "step": 2,
                     "frame": "I currently work as ___ .",
                     "line": "I currently work as a project manager.",
-                    "key": "currently work as"
+                    "filler": "a project manager",
+                    "key": "I currently work as"
                 },
                 {
                     "step": 3,
                     "frame": "I lead a team of ___ .",
                     "line": "I lead a team of six people.",
-                    "key": "lead a team"
+                    "filler": "six people",
+                    "key": "lead a team of"
                 },
                 {
                     "step": 4,
                     "frame": "My leadership style is ___ .",
                     "line": "My leadership style is clear communication.",
-                    "key": "leadership style is"
+                    "filler": "clear communication",
+                    "key": "My leadership style is"
                 },
                 {
                     "step": 5,
                     "frame": "I am interested in ___ .",
                     "line": "I am interested in the product focus.",
-                    "key": "interested in"
+                    "filler": "the product focus",
+                    "key": "I am interested in"
                 },
                 {
                     "step": 6,
                     "frame": "Could you tell me about ___?",
                     "line": "Could you tell me about the team structure?",
-                    "key": "tell me about"
+                    "filler": "the team structure",
+                    "key": "you tell me about"
                 },
                 {
                     "step": 7,
                     "frame": "What does ___ look like?",
                     "line": "What does success in this role look like?",
-                    "key": "success in this"
+                    "filler": "success in this role",
+                    "key": "look like"
                 },
                 {
                     "step": 8,
                     "frame": "I handle challenges through ___ .",
                     "line": "I handle challenges through early communication.",
-                    "key": "handle challenges through"
+                    "filler": "early communication",
+                    "key": "I handle challenges through"
                 }
             ],
             "seams": [
@@ -440,9 +448,7 @@
                 ]
             ],
             "codes": {
-                "key.not_in_line": 1,
                 "variant.longer": 1,
-                "key.contains_filler": 1,
                 "check.verbatim": 2
             }
         },
@@ -452,49 +458,57 @@
                     "step": 1,
                     "frame": "I have ___ of experience.",
                     "line": "I have five years of experience.",
-                    "key": "have of experience"
+                    "filler": "five years",
+                    "key": "of experience"
                 },
                 {
                     "step": 2,
                     "frame": "I lead ___.",
                     "line": "I lead a team of six.",
-                    "key": "lead a team"
+                    "filler": "a team of six",
+                    "key": "I lead"
                 },
                 {
                     "step": 3,
                     "frame": "My leadership style is ___.",
                     "line": "My leadership style is clear communication.",
-                    "key": "leadership style is"
+                    "filler": "clear communication",
+                    "key": "My leadership style is"
                 },
                 {
                     "step": 4,
                     "frame": "I'm proud of ___.",
                     "line": "I'm proud of a product launch.",
-                    "key": "proud of"
+                    "filler": "a product launch",
+                    "key": "I'm proud of"
                 },
                 {
                     "step": 5,
                     "frame": "I enjoy working on ___.",
                     "line": "I enjoy working on complex projects.",
-                    "key": "enjoy working on"
+                    "filler": "complex projects",
+                    "key": "I enjoy working on"
                 },
                 {
                     "step": 6,
                     "frame": null,
                     "line": "Could you say that more slowly, please?",
+                    "filler": null,
                     "key": "say that more slowly"
                 },
                 {
                     "step": 7,
                     "frame": "Could you tell me about ___?",
                     "line": "Could you tell me about the team structure?",
-                    "key": "tell me about"
+                    "filler": "the team structure",
+                    "key": "you tell me about"
                 },
                 {
                     "step": 8,
                     "frame": "What does ___ look like?",
                     "line": "What does success in this role look like?",
-                    "key": "does success in"
+                    "filler": "success in this role",
+                    "key": "look like"
                 }
             ],
             "seams": [
@@ -503,147 +517,168 @@
                     "pattern": "У меня ___ опыта.",
                     "value": "пять лет",
                     "sentence": "У меня пять лет опыта.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p1.f2",
                     "pattern": "У меня ___ опыта.",
                     "value": "семь лет",
                     "sentence": "У меня семь лет опыта.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p1.f3",
                     "pattern": "У меня ___ опыта.",
                     "value": "три года",
                     "sentence": "У меня три года опыта.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f1",
                     "pattern": "Я руковожу ___.",
                     "value": "командой из шести человек",
                     "sentence": "Я руковожу командой из шести человек.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f2",
                     "pattern": "Я руковожу ___.",
                     "value": "двумя проектными командами",
                     "sentence": "Я руковожу двумя проектными командами.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f3",
                     "pattern": "Я руковожу ___.",
                     "value": "удалённой командой",
                     "sentence": "Я руковожу удалённой командой.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f1",
                     "pattern": "Мой стиль руководства — ___.",
                     "value": "понятная коммуникация",
                     "sentence": "Мой стиль руководства — понятная коммуникация.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f2",
                     "pattern": "Мой стиль руководства — ___.",
                     "value": "общая ответственность",
                     "sentence": "Мой стиль руководства — общая ответственность.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f3",
                     "pattern": "Мой стиль руководства — ___.",
                     "value": "регулярная обратная связь",
                     "sentence": "Мой стиль руководства — регулярная обратная связь.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f1",
                     "pattern": "Я горжусь ___.",
                     "value": "запуском продукта",
                     "sentence": "Я горжусь запуском продукта.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f2",
                     "pattern": "Я горжусь ___.",
                     "value": "улучшением процесса",
                     "sentence": "Я горжусь улучшением процесса.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f3",
                     "pattern": "Я горжусь ___.",
                     "value": "мобильным приложением",
                     "sentence": "Я горжусь мобильным приложением.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f1",
                     "pattern": "Мне нравится работать над ___.",
                     "value": "сложными проектами",
                     "sentence": "Мне нравится работать над сложными проектами.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f2",
                     "pattern": "Мне нравится работать над ___.",
                     "value": "кросс-функциональными командами",
                     "sentence": "Мне нравится работать над кросс-функциональными командами.",
-                    "reads": false
+                    "reads": true,
+                    "reads_v1": false
                 },
                 {
                     "id": "p5.f3",
                     "pattern": "Мне нравится работать над ___.",
                     "value": "клиентскими платформами",
                     "sentence": "Мне нравится работать над клиентскими платформами.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f1",
                     "pattern": "Расскажите, пожалуйста, о ___.",
                     "value": "структуре команды",
                     "sentence": "Расскажите, пожалуйста, о структуре команды.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f2",
                     "pattern": "Расскажите, пожалуйста, о ___.",
                     "value": "процессе онбординга",
                     "sentence": "Расскажите, пожалуйста, о процессе онбординга.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f3",
                     "pattern": "Расскажите, пожалуйста, о ___.",
                     "value": "главных приоритетах",
                     "sentence": "Расскажите, пожалуйста, о главных приоритетах.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p7.f1",
                     "pattern": "Как выглядит ___?",
                     "value": "успех в этой роли",
                     "sentence": "Как выглядит успех в этой роли?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p7.f2",
                     "pattern": "Как выглядит ___?",
                     "value": "типичная неделя",
                     "sentence": "Как выглядит типичная неделя?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p7.f3",
                     "pattern": "Как выглядит ___?",
                     "value": "первый месяц",
                     "sentence": "Как выглядит первый месяц?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 }
             ],
             "listening": [
@@ -857,11 +892,8 @@
             "codes": {
                 "pronunciation.script": 1,
                 "frame.native_punct": 1,
-                "key.not_in_line": 1,
-                "key.contains_filler": 2,
                 "variant.longer": 1,
-                "vocab.free_combination": 1,
-                "filler.native_seam": 1
+                "vocab.free_combination": 1
             }
         }
     },
@@ -872,48 +904,56 @@
                     "step": 1,
                     "frame": "What about ___?",
                     "line": "What about electricity?",
+                    "filler": "electricity",
                     "key": "What about"
                 },
                 {
                     "step": 2,
                     "frame": "How much is ___?",
                     "line": "How much is the deposit?",
+                    "filler": "the deposit",
                     "key": "How much is"
                 },
                 {
                     "step": 3,
                     "frame": "I need a ___ contract.",
                     "line": "I need a one-year contract.",
-                    "key": "need a contract"
+                    "filler": "one-year",
+                    "key": "I need a"
                 },
                 {
                     "step": 4,
                     "frame": "I work ___ .",
                     "line": "I work from home.",
-                    "key": "work from"
+                    "filler": "from home",
+                    "key": "I work"
                 },
                 {
                     "step": 5,
                     "frame": "Can I work from home ___?",
                     "line": "Can I work from home here?",
-                    "key": "Can I work"
+                    "filler": "here",
+                    "key": "I work from home"
                 },
                 {
                     "step": 6,
                     "frame": "Is ___ allowed?",
                     "line": "Is a cat allowed?",
-                    "key": "cat allowed"
+                    "filler": "a cat",
+                    "key": "allowed"
                 },
                 {
                     "step": 7,
                     "frame": "When can I ___?",
                     "line": "When can I move in?",
+                    "filler": "move in",
                     "key": "When can I"
                 },
                 {
                     "step": 8,
                     "frame": "How much is ___?",
                     "line": "How much is the deposit?",
+                    "filler": "the deposit",
                     "key": "How much is"
                 }
             ],
@@ -1271,13 +1311,8 @@
                 "exchange.repeats": 1,
                 "frame.native_agreement": 1,
                 "filler.article_seam": 1,
-                "filler.one_in_dialogue": 2,
-                "line.ne_frame": 1,
-                "key.not_in_line": 1,
-                "key.contains_filler": 2,
-                "variant.longer": 1,
+                "variant.longer": 2,
                 "check.verbatim": 2,
-                "listening.no_learner_value": 1,
                 "vocab.used_in_wrong": 2,
                 "vocab.free_combination": 1,
                 "filler.native_seam": 7
@@ -1289,48 +1324,56 @@
                     "step": 1,
                     "frame": "I can move in ___.",
                     "line": "I can move in next month.",
-                    "key": "can move in"
+                    "filler": "next month",
+                    "key": "I can move in"
                 },
                 {
                     "step": 2,
                     "frame": "How much is ___?",
                     "line": "How much is the deposit?",
+                    "filler": "the deposit",
                     "key": "How much is"
                 },
                 {
                     "step": 3,
                     "frame": "When do I get ___ back?",
                     "line": "When do I get the deposit back?",
-                    "key": "get the"
+                    "filler": "the deposit",
+                    "key": "When do I get"
                 },
                 {
                     "step": 4,
                     "frame": "What is included in ___?",
                     "line": "What is included in the monthly payment?",
-                    "key": "included in the"
+                    "filler": "the monthly payment",
+                    "key": "What is included in"
                 },
                 {
                     "step": 5,
                     "frame": "Can I work ___?",
                     "line": "Can I work from home?",
-                    "key": "work from home"
+                    "filler": "from home",
+                    "key": "Can I work"
                 },
                 {
                     "step": 6,
                     "frame": "Is ___ allowed?",
                     "line": "Is a cat allowed?",
-                    "key": "cat allowed"
+                    "filler": "a cat",
+                    "key": "allowed"
                 },
                 {
                     "step": 7,
                     "frame": "A contract for ___ works for me.",
                     "line": "A contract for twelve months works for me.",
-                    "key": "works for me"
+                    "filler": "twelve months",
+                    "key": "A contract for"
                 },
                 {
                     "step": 8,
                     "frame": null,
                     "line": "Could you repeat that more slowly, please?",
+                    "filler": null,
                     "key": "repeat that"
                 }
             ],
@@ -1340,147 +1383,168 @@
                     "pattern": "Я могу въехать ___.",
                     "value": "в следующем месяце",
                     "sentence": "Я могу въехать в следующем месяце.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p1.f2",
                     "pattern": "Я могу въехать ___.",
                     "value": "в июне",
                     "sentence": "Я могу въехать в июне.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p1.f3",
                     "pattern": "Я могу въехать ___.",
                     "value": "в понедельник",
                     "sentence": "Я могу въехать в понедельник.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f1",
                     "pattern": "Сколько стоит ___?",
                     "value": "депозит",
                     "sentence": "Сколько стоит депозит?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f2",
                     "pattern": "Сколько стоит ___?",
                     "value": "аренда с коммунальными",
                     "sentence": "Сколько стоит аренда с коммунальными?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f3",
                     "pattern": "Сколько стоит ___?",
                     "value": "парковочное место",
                     "sentence": "Сколько стоит парковочное место?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f1",
                     "pattern": "Когда я получу обратно ___?",
                     "value": "депозит",
                     "sentence": "Когда я получу обратно депозит?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f2",
                     "pattern": "Когда я получу обратно ___?",
                     "value": "ключи",
                     "sentence": "Когда я получу обратно ключи?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f3",
                     "pattern": "Когда я получу обратно ___?",
                     "value": "копию паспорта",
                     "sentence": "Когда я получу обратно копию паспорта?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f1",
                     "pattern": "Что входит в ___?",
                     "value": "ежемесячный платёж",
                     "sentence": "Что входит в ежемесячный платёж?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f2",
                     "pattern": "Что входит в ___?",
                     "value": "аренду",
                     "sentence": "Что входит в аренду?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f3",
                     "pattern": "Что входит в ___?",
                     "value": "сервисный сбор",
                     "sentence": "Что входит в сервисный сбор?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f1",
                     "pattern": "Можно мне работать ___?",
                     "value": "из дома",
                     "sentence": "Можно мне работать из дома?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f2",
                     "pattern": "Можно мне работать ___?",
                     "value": "по вечерам",
                     "sentence": "Можно мне работать по вечерам?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f3",
                     "pattern": "Можно мне работать ___?",
                     "value": "по выходным",
                     "sentence": "Можно мне работать по выходным?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f1",
                     "pattern": "___ разрешена?",
                     "value": "кошка",
                     "sentence": "кошка разрешена?",
-                    "reads": true
+                    "reads": false,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f2",
                     "pattern": "___ разрешена?",
                     "value": "маленькая собака",
                     "sentence": "маленькая собака разрешена?",
-                    "reads": true
+                    "reads": false,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f3",
                     "pattern": "___ разрешена?",
                     "value": "велосипед",
                     "sentence": "велосипед разрешена?",
-                    "reads": false
+                    "reads": false,
+                    "reads_v1": false
                 },
                 {
                     "id": "p7.f1",
                     "pattern": "Договор на ___ мне подходит.",
                     "value": "двенадцать месяцев",
                     "sentence": "Договор на двенадцать месяцев мне подходит.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p7.f2",
                     "pattern": "Договор на ___ мне подходит.",
                     "value": "шесть месяцев",
                     "sentence": "Договор на шесть месяцев мне подходит.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p7.f3",
                     "pattern": "Договор на ___ мне подходит.",
                     "value": "два года",
                     "sentence": "Договор на два года мне подходит.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 }
             ],
             "listening": [
@@ -1693,11 +1757,10 @@
             ],
             "codes": {
                 "frame.native_agreement": 1,
-                "key.contains_filler": 4,
                 "variant.longer": 1,
                 "check.verbatim": 1,
                 "vocab.used_in_wrong": 2,
-                "filler.native_seam": 1
+                "filler.native_seam": 3
             }
         }
     },
@@ -1708,48 +1771,56 @@
                     "step": 1,
                     "frame": "I want to open ___.",
                     "line": "I want to open a bank account.",
-                    "key": "want to open"
+                    "filler": "a bank account",
+                    "key": "I want to open"
                 },
                 {
                     "step": 2,
                     "frame": "Here is my ___.",
                     "line": "Here is my passport.",
+                    "filler": null,
                     "key": "Here is my"
                 },
                 {
                     "step": 3,
                     "frame": "Here is my ___.",
                     "line": "Here is my rental letter.",
+                    "filler": null,
                     "key": "Here is my"
                 },
                 {
                     "step": 4,
                     "frame": "I am ___.",
                     "line": "I am a student.",
-                    "key": "am a"
+                    "filler": "a student",
+                    "key": "I am"
                 },
                 {
                     "step": 5,
                     "frame": "What is ___?",
                     "line": "What is the monthly fee?",
-                    "key": "What is the"
+                    "filler": "the monthly fee",
+                    "key": "What is"
                 },
                 {
                     "step": 6,
                     "frame": "When will ___ arrive?",
                     "line": "When will the bank card arrive?",
-                    "key": "When will the"
+                    "filler": "the bank card",
+                    "key": "arrive"
                 },
                 {
                     "step": 7,
                     "frame": "How long will ___ stay open?",
                     "line": "How long will the account stay open?",
-                    "key": "How long will"
+                    "filler": "the account",
+                    "key": "stay open"
                 },
                 {
                     "step": 8,
                     "frame": null,
                     "line": "Could you repeat that more slowly, please?",
+                    "filler": null,
                     "key": "repeat that"
                 }
             ],
@@ -2084,9 +2155,8 @@
                 "frame.native_alternatives": 2,
                 "frame.native_agreement": 3,
                 "filler.ungrammatical": 3,
+                "filler.one_in_dialogue": 2,
                 "line.ne_frame": 2,
-                "key.no_content_word": 3,
-                "key.contains_filler": 3,
                 "variant.longer": 1,
                 "filler.native_seam": 6
             }
@@ -2097,49 +2167,57 @@
                     "step": 1,
                     "frame": "I'd like to open ___.",
                     "line": "I'd like to open a bank account.",
+                    "filler": "a bank account",
                     "key": "I'd like to open"
                 },
                 {
                     "step": 2,
                     "frame": "Here is my ___.",
                     "line": "Here is my rental contract.",
+                    "filler": "rental contract",
                     "key": "Here is my"
                 },
                 {
                     "step": 3,
                     "frame": "I'm ___.",
                     "line": "I'm a student.",
-                    "key": "I'm a"
+                    "filler": "a student",
+                    "key": "I'm"
                 },
                 {
                     "step": 4,
                     "frame": "My phone number is ___.",
                     "line": "My phone number is 07911 456 230.",
-                    "key": "phone number is"
+                    "filler": "07911 456 230",
+                    "key": "My phone number is"
                 },
                 {
                     "step": 5,
                     "frame": "What is the ___?",
                     "line": "What is the monthly fee?",
-                    "key": "monthly fee"
+                    "filler": "monthly fee",
+                    "key": "What is the"
                 },
                 {
                     "step": 6,
                     "frame": "When will ___ be ready?",
                     "line": "When will the card be ready?",
-                    "key": "will the card"
+                    "filler": "the card",
+                    "key": "be ready"
                 },
                 {
                     "step": 7,
                     "frame": "Can I keep it for ___?",
                     "line": "Can I keep it for one year?",
-                    "key": "keep it for"
+                    "filler": "one year",
+                    "key": "I keep it for"
                 },
                 {
                     "step": 8,
                     "frame": "The account opens ___.",
                     "line": "The account opens today.",
-                    "key": "opens today"
+                    "filler": "today",
+                    "key": "The account opens"
                 }
             ],
             "seams": [
@@ -2148,168 +2226,192 @@
                     "pattern": "Я хочу открыть ___.",
                     "value": "банковский счёт",
                     "sentence": "Я хочу открыть банковский счёт.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p1.f2",
                     "pattern": "Я хочу открыть ___.",
                     "value": "студенческий счёт",
                     "sentence": "Я хочу открыть студенческий счёт.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p1.f3",
                     "pattern": "Я хочу открыть ___.",
                     "value": "совместный счёт",
                     "sentence": "Я хочу открыть совместный счёт.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f1",
                     "pattern": "Вот ___.",
                     "value": "мой договор аренды",
                     "sentence": "Вот мой договор аренды.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f2",
                     "pattern": "Вот ___.",
                     "value": "мой паспорт",
                     "sentence": "Вот мой паспорт.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f3",
                     "pattern": "Вот ___.",
                     "value": "моя справка из вуза",
                     "sentence": "Вот моя справка из вуза.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f1",
                     "pattern": "Я ___.",
                     "value": "студент",
                     "sentence": "Я студент.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f2",
                     "pattern": "Я ___.",
                     "value": "студент по обмену",
                     "sentence": "Я студент по обмену.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f3",
                     "pattern": "Я ___.",
                     "value": "студент первого курса",
                     "sentence": "Я студент первого курса.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f1",
                     "pattern": "Мой номер телефона ___.",
                     "value": "07911 456 230",
                     "sentence": "Мой номер телефона 07911 456 230.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f2",
                     "pattern": "Мой номер телефона ___.",
                     "value": "07740 221 908",
                     "sentence": "Мой номер телефона 07740 221 908.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f3",
                     "pattern": "Мой номер телефона ___.",
                     "value": "07863 110 542",
                     "sentence": "Мой номер телефона 07863 110 542.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f1",
                     "pattern": "Какая ___?",
                     "value": "ежемесячная комиссия",
                     "sentence": "Какая ежемесячная комиссия?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f2",
                     "pattern": "Какая ___?",
                     "value": "комиссия за карту",
                     "sentence": "Какая комиссия за карту?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f3",
                     "pattern": "Какая ___?",
                     "value": "процедура закрытия",
                     "sentence": "Какая процедура закрытия?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f1",
                     "pattern": "Когда ___ будет готово?",
                     "value": "карта",
                     "sentence": "Когда карта будет готово?",
-                    "reads": false
+                    "reads": false,
+                    "reads_v1": false
                 },
                 {
                     "id": "p6.f2",
                     "pattern": "Когда ___ будет готово?",
                     "value": "открытие счёта",
                     "sentence": "Когда открытие счёта будет готово?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f3",
                     "pattern": "Когда ___ будет готово?",
                     "value": "онлайн-доступ",
                     "sentence": "Когда онлайн-доступ будет готово?",
-                    "reads": false
+                    "reads": false,
+                    "reads_v1": false
                 },
                 {
                     "id": "p7.f1",
                     "pattern": "Я могу оставить его на ___?",
                     "value": "один год",
                     "sentence": "Я могу оставить его на один год?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p7.f2",
                     "pattern": "Я могу оставить его на ___?",
                     "value": "шесть месяцев",
                     "sentence": "Я могу оставить его на шесть месяцев?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p7.f3",
                     "pattern": "Я могу оставить его на ___?",
                     "value": "два года",
                     "sentence": "Я могу оставить его на два года?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p8.f1",
                     "pattern": "Счёт откроется ___.",
                     "value": "сегодня",
                     "sentence": "Счёт откроется сегодня.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p8.f2",
                     "pattern": "Счёт откроется ___.",
                     "value": "завтра",
                     "sentence": "Счёт откроется завтра.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p8.f3",
                     "pattern": "Счёт откроется ___.",
                     "value": "на этой неделе",
                     "sentence": "Счёт откроется на этой неделе.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 }
             ],
             "listening": [
@@ -2534,10 +2636,6 @@
                 "exchange.second_question": 1,
                 "frame.native_agreement": 2,
                 "frame.unresolved_pronoun": 1,
-                "filler.one_in_dialogue": 4,
-                "line.ne_frame": 2,
-                "key.no_content_word": 1,
-                "key.contains_filler": 4,
                 "variant.longer": 1,
                 "listening.distractor_not_filler": 1,
                 "vocab.used_in_wrong": 1,
@@ -2552,48 +2650,56 @@
                     "step": 1,
                     "frame": "Can we see ___?",
                     "line": "Can we see the menu?",
+                    "filler": "the menu",
                     "key": "Can we see"
                 },
                 {
                     "step": 2,
                     "frame": "We'd like ___.",
                     "line": "We'd like two waters.",
+                    "filler": "two waters",
                     "key": "We'd like"
                 },
                 {
                     "step": 3,
                     "frame": "What is in ___?",
                     "line": "What is in the chicken soup?",
+                    "filler": "the chicken soup",
                     "key": "What is in"
                 },
                 {
                     "step": 4,
                     "frame": "Does it have ___?",
                     "line": "Does it have nuts?",
+                    "filler": "nuts",
                     "key": "Does it have"
                 },
                 {
                     "step": 5,
                     "frame": "I'd like ___.",
                     "line": "I'd like a grilled chicken.",
+                    "filler": "a grilled chicken",
                     "key": "I'd like"
                 },
                 {
                     "step": 6,
                     "frame": "We'll take ___.",
                     "line": "We'll take the pasta.",
+                    "filler": "the pasta",
                     "key": "We'll take"
                 },
                 {
                     "step": 7,
                     "frame": "Can we have ___?",
                     "line": "Can we have the bill?",
+                    "filler": "the bill",
                     "key": "Can we have"
                 },
                 {
                     "step": 8,
                     "frame": "I'll pay ___.",
                     "line": "I'll pay by card.",
+                    "filler": "by card",
                     "key": "I'll pay"
                 }
             ],
@@ -2975,48 +3081,56 @@
                     "step": 1,
                     "frame": "Can we see ___?",
                     "line": "Can we see the menu?",
+                    "filler": "the menu",
                     "key": "Can we see"
                 },
                 {
                     "step": 2,
                     "frame": "What is in ___?",
                     "line": "What is in the chicken pasta?",
+                    "filler": "the chicken pasta",
                     "key": "What is in"
                 },
                 {
                     "step": 3,
                     "frame": "Does it have ___?",
                     "line": "Does it have nuts?",
+                    "filler": "nuts",
                     "key": "Does it have"
                 },
                 {
                     "step": 4,
                     "frame": "We'd like ___ .",
                     "line": "We'd like the chicken pasta.",
+                    "filler": "the chicken pasta",
                     "key": "We'd like"
                 },
                 {
                     "step": 5,
                     "frame": "For her, ___ .",
                     "line": "For her, grilled fish.",
+                    "filler": "grilled fish",
                     "key": "For her"
                 },
                 {
                     "step": 6,
                     "frame": "We'll have ___ .",
                     "line": "We'll have water.",
+                    "filler": "water",
                     "key": "We'll have"
                 },
                 {
                     "step": 7,
                     "frame": "That's good to know.",
                     "line": "That's good to know.",
-                    "key": "good to know"
+                    "filler": null,
+                    "key": "That's good to know"
                 },
                 {
                     "step": 8,
                     "frame": "Can we have ___?",
                     "line": "Can we have the bill?",
+                    "filler": "the bill",
                     "key": "Can we have"
                 }
             ],
@@ -3026,98 +3140,112 @@
                     "pattern": "Можно нам ___?",
                     "value": "меню",
                     "sentence": "Можно нам меню?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p1.f2",
                     "pattern": "Можно нам ___?",
                     "value": "десертное меню",
                     "sentence": "Можно нам десертное меню?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f1",
                     "pattern": "Что входит в ___?",
                     "value": "куриную пасту",
                     "sentence": "Что входит в куриную пасту?",
-                    "reads": false
+                    "reads": true,
+                    "reads_v1": false
                 },
                 {
                     "id": "p2.f2",
                     "pattern": "Что входит в ___?",
                     "value": "суп",
                     "sentence": "Что входит в суп?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f1",
                     "pattern": "Там есть ___?",
                     "value": "орехи",
                     "sentence": "Там есть орехи?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f2",
                     "pattern": "Там есть ___?",
                     "value": "сыр",
                     "sentence": "Там есть сыр?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f1",
                     "pattern": "Мы бы хотели ___ .",
                     "value": "куриную пасту",
                     "sentence": "Мы бы хотели куриную пасту.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f2",
                     "pattern": "Мы бы хотели ___ .",
                     "value": "два салата",
                     "sentence": "Мы бы хотели два салата.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f1",
                     "pattern": "Для неё — ___ .",
                     "value": "рыбу на гриле",
                     "sentence": "Для неё — рыбу на гриле.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f2",
                     "pattern": "Для неё — ___ .",
                     "value": "томатный суп",
                     "sentence": "Для неё — томатный суп.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f1",
                     "pattern": "Мы возьмём ___ .",
                     "value": "воду",
                     "sentence": "Мы возьмём воду.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f2",
                     "pattern": "Мы возьмём ___ .",
                     "value": "яблочный сок",
                     "sentence": "Мы возьмём яблочный сок.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p8.f1",
                     "pattern": "Можно нам ___?",
                     "value": "счёт",
                     "sentence": "Можно нам счёт?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p8.f2",
                     "pattern": "Можно нам ___?",
                     "value": "салфетки",
                     "sentence": "Можно нам салфетки?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 }
             ],
             "listening": [
@@ -3330,8 +3458,7 @@
             "codes": {
                 "frame.unresolved_pronoun": 1,
                 "check.verbatim": 1,
-                "vocab.used_in_wrong": 1,
-                "filler.native_seam": 1
+                "vocab.used_in_wrong": 1
             }
         }
     },
@@ -3342,48 +3469,56 @@
                     "step": 1,
                     "frame": "Here is ___.",
                     "line": "Here is my passport.",
-                    "key": "Here is my"
+                    "filler": "my passport",
+                    "key": "Here is"
                 },
                 {
                     "step": 2,
                     "frame": "I'm flying to ___.",
                     "line": "I'm flying to London.",
+                    "filler": "London",
                     "key": "I'm flying to"
                 },
                 {
                     "step": 3,
                     "frame": "I have ___.",
                     "line": "I have one suitcase and one backpack.",
+                    "filler": "one suitcase and one backpack",
                     "key": "I have"
                 },
                 {
                     "step": 4,
                     "frame": "I'm checking in ___.",
                     "line": "I'm checking in the suitcase.",
-                    "key": "checking in"
+                    "filler": "the suitcase",
+                    "key": "I'm checking in"
                 },
                 {
                     "step": 5,
                     "frame": "Can I take ___ onboard?",
                     "line": "Can I take the backpack onboard?",
-                    "key": "take the"
+                    "filler": "the backpack",
+                    "key": "Can I take"
                 },
                 {
                     "step": 6,
                     "frame": "I'd like ___.",
                     "line": "I'd like a window seat.",
-                    "key": "like a"
+                    "filler": "a window seat",
+                    "key": "I'd like"
                 },
                 {
                     "step": 7,
                     "frame": "Where is ___?",
                     "line": "Where is the gate?",
-                    "key": "Where is the"
+                    "filler": "the gate",
+                    "key": "Where is"
                 },
                 {
                     "step": 8,
                     "frame": null,
                     "line": "Could you repeat that more slowly, please?",
+                    "filler": null,
                     "key": "repeat that"
                 }
             ],
@@ -3745,8 +3880,6 @@
                 ]
             ],
             "codes": {
-                "key.no_content_word": 2,
-                "key.contains_filler": 4,
                 "variant.longer": 1,
                 "vocab.used_in_wrong": 2
             }
@@ -3757,49 +3890,57 @@
                     "step": 1,
                     "frame": "I'm checking in ___",
                     "line": "I'm checking in for this flight.",
-                    "key": "checking in"
+                    "filler": "for this flight",
+                    "key": "I'm checking in"
                 },
                 {
                     "step": 2,
                     "frame": "I'm flying ___",
                     "line": "I'm flying to London.",
-                    "key": "flying to"
+                    "filler": "to London",
+                    "key": "I'm flying"
                 },
                 {
                     "step": 3,
                     "frame": "I have ___",
                     "line": "I have one suitcase.",
+                    "filler": "one suitcase",
                     "key": "I have"
                 },
                 {
                     "step": 4,
                     "frame": "Can I take ___?",
                     "line": "Can I take this backpack?",
+                    "filler": "this backpack",
                     "key": "Can I take"
                 },
                 {
                     "step": 5,
                     "frame": "Can I have ___?",
                     "line": "Can I have a window seat?",
-                    "key": "have a"
+                    "filler": "a window seat",
+                    "key": "Can I have"
                 },
                 {
                     "step": 6,
                     "frame": "My gate is ___",
                     "line": "My gate is Gate 12.",
-                    "key": "gate is"
+                    "filler": "Gate 12",
+                    "key": "My gate is"
                 },
                 {
                     "step": 7,
                     "frame": null,
                     "line": "Could you repeat that, please?",
+                    "filler": null,
                     "key": "repeat that"
                 },
                 {
                     "step": 8,
                     "frame": "My suitcase goes ___",
                     "line": "My suitcase goes to London.",
-                    "key": "suitcase goes"
+                    "filler": "to London",
+                    "key": "My suitcase goes"
                 }
             ],
             "seams": [
@@ -3808,126 +3949,144 @@
                     "pattern": "Я регистрируюсь ___",
                     "value": "на этот рейс",
                     "sentence": "Я регистрируюсь на этот рейс",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p1.f2",
                     "pattern": "Я регистрируюсь ___",
                     "value": "на утренний рейс",
                     "sentence": "Я регистрируюсь на утренний рейс",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f1",
                     "pattern": "Я лечу ___",
                     "value": "в Лондон",
                     "sentence": "Я лечу в Лондон",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f2",
                     "pattern": "Я лечу ___",
                     "value": "в Париж",
                     "sentence": "Я лечу в Париж",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f3",
                     "pattern": "Я лечу ___",
                     "value": "в Рим",
                     "sentence": "Я лечу в Рим",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f1",
                     "pattern": "У меня ___",
                     "value": "один чемодан",
                     "sentence": "У меня один чемодан",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f2",
                     "pattern": "У меня ___",
                     "value": "две сумки",
                     "sentence": "У меня две сумки",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f3",
                     "pattern": "У меня ___",
                     "value": "один рюкзак",
                     "sentence": "У меня один рюкзак",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f1",
                     "pattern": "Можно взять ___?",
                     "value": "этот рюкзак",
                     "sentence": "Можно взять этот рюкзак?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f2",
                     "pattern": "Можно взять ___?",
                     "value": "эту маленькую сумку",
                     "sentence": "Можно взять эту маленькую сумку?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f1",
                     "pattern": "Можно ___?",
                     "value": "место у окна",
                     "sentence": "Можно место у окна?",
-                    "reads": true
+                    "reads": false,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f2",
                     "pattern": "Можно ___?",
                     "value": "место у прохода",
                     "sentence": "Можно место у прохода?",
-                    "reads": true
+                    "reads": false,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f3",
                     "pattern": "Можно ___?",
                     "value": "место впереди",
                     "sentence": "Можно место впереди?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f1",
                     "pattern": "Мой выход — ___",
                     "value": "12",
                     "sentence": "Мой выход — 12",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f2",
                     "pattern": "Мой выход — ___",
                     "value": "8",
                     "sentence": "Мой выход — 8",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f3",
                     "pattern": "Мой выход — ___",
                     "value": "15",
                     "sentence": "Мой выход — 15",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p7.f1",
                     "pattern": "Мой чемодан едет ___",
                     "value": "в Лондон",
                     "sentence": "Мой чемодан едет в Лондон",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p7.f2",
                     "pattern": "Мой чемодан едет ___",
                     "value": "в Мадрид",
                     "sentence": "Мой чемодан едет в Мадрид",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 }
             ],
             "listening": [
@@ -4137,10 +4296,9 @@
             ],
             "codes": {
                 "exchange.second_question": 1,
-                "line.ne_frame": 5,
-                "key.contains_filler": 2,
-                "key.no_content_word": 1,
-                "vocab.used_in_wrong": 1
+                "frame.no_end_punct": 5,
+                "vocab.used_in_wrong": 1,
+                "filler.native_seam": 2
             }
         }
     },
@@ -4151,49 +4309,57 @@
                     "step": 1,
                     "frame": "My son has ___.",
                     "line": "My son has a fever.",
-                    "key": "son has a"
+                    "filler": "a fever",
+                    "key": "My son has"
                 },
                 {
                     "step": 2,
                     "frame": "He has had it ___.",
                     "line": "He has had it for three days.",
-                    "key": "has had it"
+                    "filler": "for three days",
+                    "key": "He has had it"
                 },
                 {
                     "step": 3,
                     "frame": "His temperature is ___.",
                     "line": "His temperature is 39 degrees.",
-                    "key": "temperature is"
+                    "filler": "39 degrees",
+                    "key": "His temperature is"
                 },
                 {
                     "step": 4,
                     "frame": "He also has ___.",
                     "line": "He also has a sore throat.",
-                    "key": "also has a"
+                    "filler": "a sore throat",
+                    "key": "He also has"
                 },
                 {
                     "step": 5,
                     "frame": "He should rest ___.",
                     "line": "He should rest at home.",
-                    "key": "should rest"
+                    "filler": "at home",
+                    "key": "He should rest"
                 },
                 {
                     "step": 6,
                     "frame": null,
                     "line": "Could you say that more slowly, please?",
+                    "filler": null,
                     "key": "say that more slowly"
                 },
                 {
                     "step": 7,
                     "frame": "How often should I give ___?",
                     "line": "How often should I give the paracetamol?",
-                    "key": "How often should I give"
+                    "filler": "the paracetamol",
+                    "key": "often should I give"
                 },
                 {
                     "step": 8,
                     "frame": "When should we come back ___?",
                     "line": "When should we come back if he gets worse?",
-                    "key": "When should we come back"
+                    "filler": "if he gets worse",
+                    "key": "should we come back"
                 }
             ],
             "seams": [
@@ -4556,9 +4722,6 @@
             "codes": {
                 "frame.unresolved_pronoun": 1,
                 "filler.is_clause": 3,
-                "key.contains_filler": 2,
-                "key.no_content_word": 2,
-                "key.too_long": 2,
                 "check.verbatim": 1,
                 "vocab.free_combination": 1,
                 "filler.native_seam": 1
@@ -4570,49 +4733,57 @@
                     "step": 1,
                     "frame": "My son has ___.",
                     "line": "My son has a fever and a sore throat.",
+                    "filler": "a fever and a sore throat",
                     "key": "My son has"
                 },
                 {
                     "step": 2,
                     "frame": "He has had them ___.",
                     "line": "He has had them for three days.",
-                    "key": "has had them"
+                    "filler": "for three days",
+                    "key": "He has had them"
                 },
                 {
                     "step": 3,
                     "frame": "His highest temperature was ___.",
                     "line": "His highest temperature was 39 degrees.",
-                    "key": "highest temperature was"
+                    "filler": "39 degrees",
+                    "key": "His highest temperature was"
                 },
                 {
                     "step": 4,
                     "frame": "He is eating ___.",
                     "line": "He is eating less than usual.",
-                    "key": "eating less than"
+                    "filler": "less than usual",
+                    "key": "He is eating"
                 },
                 {
                     "step": 5,
                     "frame": "I'll give paracetamol ___.",
                     "line": "I'll give paracetamol every six hours.",
-                    "key": "give paracetamol"
+                    "filler": "every six hours",
+                    "key": "I'll give paracetamol"
                 },
                 {
                     "step": 6,
                     "frame": null,
                     "line": "Could you say that more slowly, please?",
+                    "filler": null,
                     "key": "say that more"
                 },
                 {
                     "step": 7,
                     "frame": "Does he need ___?",
                     "line": "Does he need the antibiotic?",
+                    "filler": "the antibiotic",
                     "key": "Does he need"
                 },
                 {
                     "step": 8,
                     "frame": "When should we come back if ___?",
                     "line": "When should we come back if the fever gets worse?",
-                    "key": "When should we"
+                    "filler": null,
+                    "key": "we come back if"
                 }
             ],
             "seams": [
@@ -4621,147 +4792,168 @@
                     "pattern": "У моего сына ___.",
                     "value": "температура и болит горло",
                     "sentence": "У моего сына температура и болит горло.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p1.f2",
                     "pattern": "У моего сына ___.",
                     "value": "кашель и озноб",
                     "sentence": "У моего сына кашель и озноб.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p1.f3",
                     "pattern": "У моего сына ___.",
                     "value": "боль в ухе и температура",
                     "sentence": "У моего сына боль в ухе и температура.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f1",
                     "pattern": "Они у него уже ___.",
                     "value": "три дня",
                     "sentence": "Они у него уже три дня.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f2",
                     "pattern": "Они у него уже ___.",
                     "value": "со вчерашнего дня",
                     "sentence": "Они у него уже со вчерашнего дня.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p2.f3",
                     "pattern": "Они у него уже ___.",
                     "value": "неделю",
                     "sentence": "Они у него уже неделю.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f1",
                     "pattern": "Самая высокая температура была ___.",
                     "value": "39 градусов",
                     "sentence": "Самая высокая температура была 39 градусов.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f2",
                     "pattern": "Самая высокая температура была ___.",
                     "value": "38,5 градусов",
                     "sentence": "Самая высокая температура была 38,5 градусов.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p3.f3",
                     "pattern": "Самая высокая температура была ___.",
                     "value": "40 градусов",
                     "sentence": "Самая высокая температура была 40 градусов.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f1",
                     "pattern": "Он ест ___.",
                     "value": "меньше, чем обычно",
                     "sentence": "Он ест меньше, чем обычно.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p4.f2",
                     "pattern": "Он ест ___.",
                     "value": "почти ничего",
                     "sentence": "Он ест почти ничего.",
-                    "reads": false
+                    "reads": false,
+                    "reads_v1": false
                 },
                 {
                     "id": "p4.f3",
                     "pattern": "Он ест ___.",
                     "value": "уже нормально",
                     "sentence": "Он ест уже нормально.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f1",
                     "pattern": "Я буду давать парацетамол ___.",
                     "value": "каждые шесть часов",
                     "sentence": "Я буду давать парацетамол каждые шесть часов.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f2",
                     "pattern": "Я буду давать парацетамол ___.",
                     "value": "два раза в день",
                     "sentence": "Я буду давать парацетамол два раза в день.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p5.f3",
                     "pattern": "Я буду давать парацетамол ___.",
                     "value": "перед сном",
                     "sentence": "Я буду давать парацетамол перед сном.",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f1",
                     "pattern": "Ему нужен ___?",
                     "value": "антибиотик",
                     "sentence": "Ему нужен антибиотик?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f2",
                     "pattern": "Ему нужен ___?",
                     "value": "анализ",
                     "sentence": "Ему нужен анализ?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p6.f3",
                     "pattern": "Ему нужен ___?",
                     "value": "рецепт",
                     "sentence": "Ему нужен рецепт?",
-                    "reads": true
+                    "reads": true,
+                    "reads_v1": true
                 },
                 {
                     "id": "p7.f1",
                     "pattern": "Когда нам нужно прийти снова, если ___?",
                     "value": "если температура станет выше",
                     "sentence": "Когда нам нужно прийти снова, если если температура станет выше?",
-                    "reads": false
+                    "reads": false,
+                    "reads_v1": false
                 },
                 {
                     "id": "p7.f2",
                     "pattern": "Когда нам нужно прийти снова, если ___?",
                     "value": "если у него начнётся кашель",
                     "sentence": "Когда нам нужно прийти снова, если если у него начнётся кашель?",
-                    "reads": false
+                    "reads": false,
+                    "reads_v1": false
                 },
                 {
                     "id": "p7.f3",
                     "pattern": "Когда нам нужно прийти снова, если ___?",
                     "value": "если он не будет есть",
                     "sentence": "Когда нам нужно прийти снова, если если он не будет есть?",
-                    "reads": false
+                    "reads": false,
+                    "reads_v1": false
                 }
             ],
             "listening": [
@@ -4976,10 +5168,8 @@
                 "frame.native_agreement": 1,
                 "filler.ungrammatical": 3,
                 "filler.is_clause": 3,
-                "key.no_content_word": 2,
-                "key.contains_filler": 1,
+                "filler.one_in_dialogue": 1,
                 "line.ne_frame": 1,
-                "line.too_long": 1,
                 "check.verbatim": 1,
                 "filler.native_seam": 4
             }

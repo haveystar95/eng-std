@@ -1,0 +1,485 @@
+[
+    {
+        "slug": "interview",
+        "model": "gpt-5.4",
+        "findings": 4,
+        "fatal": [],
+        "outcome": "passes",
+        "cards_asked": [],
+        "repair_cost_usd": "0.000000",
+        "repair_latency_ms": 0,
+        "findings_after": 4,
+        "fatal_after": []
+    },
+    {
+        "slug": "rent",
+        "model": "gpt-5.4",
+        "findings": 5,
+        "fatal": [],
+        "outcome": "passes",
+        "cards_asked": [],
+        "repair_cost_usd": "0.000000",
+        "repair_latency_ms": 0,
+        "findings_after": 5,
+        "fatal_after": []
+    },
+    {
+        "slug": "bank",
+        "model": "gpt-5.4",
+        "findings": 7,
+        "fatal": [
+            "exchange.second_question@x1"
+        ],
+        "outcome": "passes after repair",
+        "cards_asked": [
+            "x1"
+        ],
+        "repair_cost_usd": "0.018365",
+        "repair_latency_ms": 5396,
+        "findings_after": 6,
+        "fatal_after": [],
+        "cards": {
+            "x1": {
+                "before": {
+                    "step": 1,
+                    "kind": "ask",
+                    "initiator": "B",
+                    "messages": [
+                        {
+                            "speaker": "B",
+                            "role_target": "Customer",
+                            "role_native": "Клиент",
+                            "phrase_id": "p1",
+                            "filler": "a bank account",
+                            "text_target": "I'd like to open a bank account.",
+                            "text_native": "Я хочу открыть банковский счёт.",
+                            "pronunciation_native": "айд лайк ту оупэн э бэнк экаунт",
+                            "speaking_key": "I'd like to open",
+                            "simplified_variants": [
+                                "I want to open a bank account."
+                            ]
+                        },
+                        {
+                            "speaker": "A",
+                            "role_target": "Bank clerk",
+                            "role_native": "Сотрудница банка",
+                            "text_target": "Sure. Can I see your passport first?",
+                            "text_native": "Конечно. Можно сначала ваш паспорт?"
+                        }
+                    ],
+                    "check": {
+                        "text_target": "Which document does the clerk ask for first?",
+                        "text_native": "Какой документ сотрудница просит сначала?",
+                        "options": [
+                            {
+                                "text_target": "A student letter",
+                                "text_native": "Справку из вуза"
+                            },
+                            {
+                                "text_target": "A passport",
+                                "text_native": "Паспорт"
+                            },
+                            {
+                                "text_target": "A bank card",
+                                "text_native": "Банковскую карту"
+                            }
+                        ],
+                        "correct_option_index": 1,
+                        "explanation_native": "Сотрудница сначала просит паспорт."
+                    }
+                },
+                "after": {
+                    "step": 1,
+                    "kind": "ask",
+                    "initiator": "B",
+                    "messages": [
+                        {
+                            "speaker": "B",
+                            "role_target": "Customer",
+                            "role_native": "Клиент",
+                            "phrase_id": "p1",
+                            "filler": "a bank account",
+                            "text_target": "I'd like to open a bank account.",
+                            "text_native": "Я хочу открыть банковский счёт.",
+                            "pronunciation_native": "айд лайк ту оупэн э бэнк экаунт",
+                            "speaking_key": "I'd like to open",
+                            "simplified_variants": [
+                                "I want to open a bank account."
+                            ]
+                        },
+                        {
+                            "speaker": "A",
+                            "role_target": "Bank clerk",
+                            "role_native": "Сотрудница банка",
+                            "text_target": "Sure. Please show me your passport first.",
+                            "text_native": "Конечно. Покажите, пожалуйста, сначала ваш паспорт."
+                        }
+                    ],
+                    "check": {
+                        "text_target": "Which document does the clerk ask for first?",
+                        "text_native": "Какой документ сотрудница просит сначала?",
+                        "options": [
+                            {
+                                "text_target": "A student letter",
+                                "text_native": "Справку из вуза"
+                            },
+                            {
+                                "text_target": "A passport",
+                                "text_native": "Паспорт"
+                            },
+                            {
+                                "text_target": "A bank card",
+                                "text_native": "Банковскую карту"
+                            }
+                        ],
+                        "correct_option_index": 1,
+                        "explanation_native": "Сотрудница сначала просит паспорт."
+                    }
+                }
+            }
+        }
+    },
+    {
+        "slug": "restaurant",
+        "model": "gpt-5.4",
+        "findings": 3,
+        "fatal": [],
+        "outcome": "passes",
+        "cards_asked": [],
+        "repair_cost_usd": "0.000000",
+        "repair_latency_ms": 0,
+        "findings_after": 3,
+        "fatal_after": []
+    },
+    {
+        "slug": "airport",
+        "model": "gpt-5.4",
+        "findings": 7,
+        "fatal": [
+            "exchange.second_question@x1"
+        ],
+        "outcome": "passes after repair",
+        "cards_asked": [
+            "x1"
+        ],
+        "repair_cost_usd": "0.018145",
+        "repair_latency_ms": 4230,
+        "findings_after": 6,
+        "fatal_after": [],
+        "cards": {
+            "x1": {
+                "before": {
+                    "step": 1,
+                    "kind": "ask",
+                    "initiator": "B",
+                    "messages": [
+                        {
+                            "speaker": "B",
+                            "role_target": "Passenger",
+                            "role_native": "Пассажир",
+                            "phrase_id": "p1",
+                            "filler": "for this flight",
+                            "text_target": "I'm checking in for this flight.",
+                            "text_native": "Я регистрируюсь на этот рейс.",
+                            "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                            "speaking_key": "I'm checking in",
+                            "simplified_variants": [
+                                "Check-in for this flight.",
+                                "I'm here to check in."
+                            ]
+                        },
+                        {
+                            "speaker": "A",
+                            "role_target": "Check-in agent",
+                            "role_native": "Сотрудница регистрации",
+                            "text_target": "Sure. May I see your passport?",
+                            "text_native": "Конечно. Можно ваш паспорт?"
+                        }
+                    ],
+                    "check": {
+                        "text_target": "What does the agent ask to see?",
+                        "text_native": "Что сотрудница просит показать?",
+                        "options": [
+                            {
+                                "text_target": "A boarding pass",
+                                "text_native": "Посадочный талон"
+                            },
+                            {
+                                "text_target": "An ID document",
+                                "text_native": "Документ, удостоверяющий личность"
+                            },
+                            {
+                                "text_target": "A suitcase tag",
+                                "text_native": "Багажную бирку"
+                            }
+                        ],
+                        "correct_option_index": 1,
+                        "explanation_native": "Сотрудница просит показать паспорт, то есть документ, удостоверяющий личность."
+                    }
+                },
+                "after": {
+                    "step": 1,
+                    "kind": "ask",
+                    "initiator": "B",
+                    "messages": [
+                        {
+                            "speaker": "B",
+                            "role_target": "Passenger",
+                            "role_native": "Пассажир",
+                            "phrase_id": "p1",
+                            "filler": "for this flight",
+                            "text_target": "I'm checking in for this flight.",
+                            "text_native": "Я регистрируюсь на этот рейс.",
+                            "pronunciation_native": "Айм чекин ин фор зис флайт.",
+                            "speaking_key": "I'm checking in",
+                            "simplified_variants": [
+                                "Check-in for this flight.",
+                                "I'm here to check in."
+                            ]
+                        },
+                        {
+                            "speaker": "A",
+                            "role_target": "Check-in agent",
+                            "role_native": "Сотрудница регистрации",
+                            "text_target": "Sure. Please show me your passport.",
+                            "text_native": "Конечно. Покажите, пожалуйста, ваш паспорт."
+                        }
+                    ],
+                    "check": {
+                        "text_target": "What does the agent ask to see?",
+                        "text_native": "Что сотрудница просит показать?",
+                        "options": [
+                            {
+                                "text_target": "A boarding pass",
+                                "text_native": "Посадочный талон"
+                            },
+                            {
+                                "text_target": "An ID document",
+                                "text_native": "Документ, удостоверяющий личность"
+                            },
+                            {
+                                "text_target": "A suitcase tag",
+                                "text_native": "Багажную бирку"
+                            }
+                        ],
+                        "correct_option_index": 1,
+                        "explanation_native": "Сотрудница просит показать паспорт, то есть документ, удостоверяющий личность."
+                    }
+                }
+            }
+        }
+    },
+    {
+        "slug": "doctor",
+        "model": "gpt-5.4",
+        "findings": 10,
+        "fatal": [
+            "filler.ungrammatical@p7.f1",
+            "filler.ungrammatical@p7.f2",
+            "filler.ungrammatical@p7.f3",
+            "line.ne_frame@B8"
+        ],
+        "outcome": "passes after repair",
+        "cards_asked": [
+            "p7"
+        ],
+        "repair_cost_usd": "0.013423",
+        "repair_latency_ms": 2243,
+        "findings_after": 2,
+        "fatal_after": [],
+        "cards": {
+            "p7": {
+                "before": {
+                    "id": "p7",
+                    "kind": "ask",
+                    "frame_target": "When should we come back if ___?",
+                    "frame_native": "Когда нам нужно прийти снова, если ___?",
+                    "pronunciation_native": "Уэн шуд ви кам бэк иф ___?",
+                    "slot": {
+                        "hint_native": "что ухудшится",
+                        "fillers": [
+                            {
+                                "target": "if the fever gets worse",
+                                "native": "если температура станет выше",
+                                "pronunciation_native": "иф зэ фивер гетс уорс",
+                                "in_dialogue": false
+                            },
+                            {
+                                "target": "if he starts coughing",
+                                "native": "если у него начнётся кашель",
+                                "pronunciation_native": "иф хи стартс кофинг",
+                                "in_dialogue": false
+                            },
+                            {
+                                "target": "if he won't eat",
+                                "native": "если он не будет есть",
+                                "pronunciation_native": "иф хи воунт ит",
+                                "in_dialogue": false
+                            }
+                        ]
+                    }
+                },
+                "after": {
+                    "id": "p7",
+                    "kind": "ask",
+                    "frame_target": "When should we come back if ___?",
+                    "frame_native": "Когда нам нужно прийти снова, если ___?",
+                    "pronunciation_native": "Уэн шуд ви кам бэк иф ___?",
+                    "slot": {
+                        "hint_native": "что будет не так",
+                        "fillers": [
+                            {
+                                "target": "the fever gets worse",
+                                "native": "температура станет выше",
+                                "pronunciation_native": "зэ фивер гетс уорс",
+                                "in_dialogue": true
+                            },
+                            {
+                                "target": "he starts coughing",
+                                "native": "у него начнётся кашель",
+                                "pronunciation_native": "хи стартс кофинг",
+                                "in_dialogue": false
+                            },
+                            {
+                                "target": "he won't eat",
+                                "native": "он не будет есть",
+                                "pronunciation_native": "хи воунт ит",
+                                "in_dialogue": false
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "slug": "airport-ro",
+        "model": "gpt-5.4",
+        "findings": 3,
+        "fatal": [
+            "exchange.second_question@x1"
+        ],
+        "outcome": "passes after repair",
+        "cards_asked": [
+            "x1"
+        ],
+        "repair_cost_usd": "0.018120",
+        "repair_latency_ms": 2994,
+        "findings_after": 2,
+        "fatal_after": [],
+        "cards": {
+            "x1": {
+                "before": {
+                    "step": 1,
+                    "kind": "ask",
+                    "initiator": "B",
+                    "messages": [
+                        {
+                            "speaker": "B",
+                            "role_target": "Passenger",
+                            "role_native": "pasager",
+                            "phrase_id": "p1",
+                            "filler": "this flight",
+                            "text_target": "I'm checking in for this flight.",
+                            "text_native": "Fac check-in pentru acest zbor.",
+                            "pronunciation_native": "aim cec-king in for dhis flait",
+                            "speaking_key": "I'm checking in for",
+                            "simplified_variants": [
+                                "I'm here to check in.",
+                                "Check-in for this flight."
+                            ]
+                        },
+                        {
+                            "speaker": "A",
+                            "role_target": "Check-in agent",
+                            "role_native": "agentă de check-in",
+                            "text_target": "Sure. May I see your passport?",
+                            "text_native": "Sigur. Pot să văd pașaportul?"
+                        }
+                    ],
+                    "check": {
+                        "text_target": "What document does the agent ask for?",
+                        "text_native": "Ce document cere agenta?",
+                        "options": [
+                            {
+                                "text_target": "A boarding pass",
+                                "text_native": "Un bilet de îmbarcare"
+                            },
+                            {
+                                "text_target": "A passport",
+                                "text_native": "Un pașaport"
+                            },
+                            {
+                                "text_target": "A visa form",
+                                "text_native": "Un formular de viză"
+                            }
+                        ],
+                        "correct_option_index": 1,
+                        "explanation_native": "Agenta cere pașaportul, nu alt document."
+                    }
+                },
+                "after": {
+                    "step": 1,
+                    "kind": "ask",
+                    "initiator": "B",
+                    "messages": [
+                        {
+                            "speaker": "B",
+                            "role_target": "Passenger",
+                            "role_native": "pasager",
+                            "phrase_id": "p1",
+                            "filler": "this flight",
+                            "text_target": "I'm checking in for this flight.",
+                            "text_native": "Fac check-in pentru acest zbor.",
+                            "pronunciation_native": "aim cec-king in for dhis flait",
+                            "speaking_key": "I'm checking in for",
+                            "simplified_variants": [
+                                "I'm here to check in.",
+                                "Check-in for this flight."
+                            ]
+                        },
+                        {
+                            "speaker": "A",
+                            "role_target": "Check-in agent",
+                            "role_native": "agentă de check-in",
+                            "text_target": "Sure. Please show me your passport.",
+                            "text_native": "Sigur. Arătați-mi pașaportul, vă rog."
+                        }
+                    ],
+                    "check": {
+                        "text_target": "What document does the agent ask for?",
+                        "text_native": "Ce document cere agenta?",
+                        "options": [
+                            {
+                                "text_target": "A boarding pass",
+                                "text_native": "Un bilet de îmbarcare"
+                            },
+                            {
+                                "text_target": "A passport",
+                                "text_native": "Un pașaport"
+                            },
+                            {
+                                "text_target": "A visa form",
+                                "text_native": "Un formular de viză"
+                            }
+                        ],
+                        "correct_option_index": 1,
+                        "explanation_native": "Agenta cere pașaportul, nu alt document."
+                    }
+                }
+            }
+        }
+    },
+    {
+        "slug": "doctor-uk",
+        "model": "gpt-5.4",
+        "findings": 9,
+        "fatal": [],
+        "outcome": "passes",
+        "cards_asked": [],
+        "repair_cost_usd": "0.000000",
+        "repair_latency_ms": 0,
+        "findings_after": 9,
+        "fatal_after": []
+    }
+]

@@ -4,9 +4,9 @@
 
 Ученик: Родитель · собеседник: Врач (женщина)
 
-Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.082253 · 40.2 с · токены вход/выход 7491/4235 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 17 (фатальных 4) · порог в сборке: урок прошёл
+Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.082253 · 40.2 с · токены вход/выход 7491/4235 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 14 (фатальных 4) · судья швов `lesson_seam_judge.v1.1`
 
-> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок; реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках. «Судья» — вердикт судьи швов о собранной фразе на родном.
+> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок (починки порога — внизу). Реплики — как их написала модель и получит приложение; наполнение реплики и ключ — серверные: наполнение найдено по тексту реплики среди наполнений её каркаса, ключ взят из каркаса. «Судья» — вердикт судьи швов о собранной фразе на родном.
 
 ## Сценарий диалога
 
@@ -15,18 +15,18 @@
 | 1 | ответ | Врач (собеседник) | What seems to be the problem today? | Что вас сегодня беспокоит? |  |  | |
 | 1 | ответ | Родитель (ученик) | My son has a fever and a sore throat. | У моего сына температура и болит горло. | p1 · a fever and a sore throat | My son has | |
 | 2 | ответ | Врач (собеседник) | How long has he had these symptoms? | Как давно у него эти симптомы? |  |  | |
-| 2 | ответ | Родитель (ученик) | He has had them for three days. | Они у него уже три дня. | p2 · for three days | has had them | |
+| 2 | ответ | Родитель (ученик) | He has had them for three days. | Они у него уже три дня. | p2 · for three days | He has had them | |
 | 3 | ответ | Врач (собеседник) | What was his highest temperature? | Какая у него была самая высокая температура? |  |  | |
-| 3 | ответ | Родитель (ученик) | His highest temperature was 39 degrees. | Самая высокая температура была 39 градусов. | p3 · 39 degrees | highest temperature was | |
+| 3 | ответ | Родитель (ученик) | His highest temperature was 39 degrees. | Самая высокая температура была 39 градусов. | p3 · 39 degrees | His highest temperature was | |
 | 4 | ответ | Врач (собеседник) | Is he eating and drinking normally? | Он ест и пьёт как обычно? |  |  | |
-| 4 | ответ | Родитель (ученик) | He is eating less than usual. | Он ест меньше, чем обычно. | p4 · less than usual | eating less than | |
+| 4 | ответ | Родитель (ученик) | He is eating less than usual. | Он ест меньше, чем обычно. | p4 · less than usual | He is eating | |
 | 5 | ответ | Врач (собеседник) | It looks like a throat infection. Give him fluids, rest, and paracetamol every six hours. | Похоже на инфекцию горла. Давайте ему питьё, отдых и парацетамол каждые шесть часов. |  |  | |
-| 5 | ответ | Родитель (ученик) | I'll give paracetamol every six hours. | Я буду давать парацетамол каждые шесть часов. | p5 · every six hours | give paracetamol | |
+| 5 | ответ | Родитель (ученик) | I'll give paracetamol every six hours. | Я буду давать парацетамол каждые шесть часов. | p5 · every six hours | I'll give paracetamol | |
 | 6 | переспрос | Родитель (ученик) | Could you say that more slowly, please? | Скажите, пожалуйста, помедленнее. | — | say that more | |
 | 6 | переспрос | Врач (собеседник) | Give him fluids, rest, and paracetamol every six hours. | Давайте ему питьё, отдых и парацетамол каждые шесть часов. |  |  | |
 | 7 | вопрос ученика | Родитель (ученик) | Does he need the antibiotic? | Ему нужен антибиотик? | p6 · the antibiotic | Does he need | |
 | 7 | вопрос ученика | Врач (собеседник) | No, not now. This seems viral, so antibiotics won't help. | Нет, сейчас нет. Это похоже на вирусную инфекцию, поэтому антибиотики не помогут. |  |  | |
-| 8 | вопрос ученика | Родитель (ученик) | When should we come back if if the fever gets worse? (модель: «When should we come back if the fever gets worse?») | Когда нам нужно прийти снова, если температура станет выше? | p7 · if the fever gets worse | When should we | |
+| 8 | вопрос ученика | Родитель (ученик) | When should we come back if the fever gets worse? | Когда нам нужно прийти снова, если температура станет выше? | p7 · **не каркас ни с одним наполнением** | we come back if | |
 | 8 | вопрос ученика | Врач (собеседник) | Come back tomorrow if the fever stays high or he can't drink. | Приходите завтра, если температура останется высокой или он не сможет пить. |  |  | |
 
 ## Каркасы
@@ -97,7 +97,7 @@
 
 | наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | судья | оценка |
 |---|---|---|---|---|---|---|---|
-| if the fever gets worse | если температура станет выше | иф зэ фивер гетс уорс | да | When should we come back if if the fever gets worse? | Когда нам нужно прийти снова, если если температура станет выше? | **не читается** | |
+| if the fever gets worse | если температура станет выше | иф зэ фивер гетс уорс | — | When should we come back if if the fever gets worse? | Когда нам нужно прийти снова, если если температура станет выше? | **не читается** | |
 | if he starts coughing | если у него начнётся кашель | иф хи стартс кофинг | — | When should we come back if if he starts coughing? | Когда нам нужно прийти снова, если если у него начнётся кашель? | **не читается** | |
 | if he won't eat | если он не будет есть | иф хи воунт ит | — | When should we come back if if he won't eat? | Когда нам нужно прийти снова, если если он не будет есть? | **не читается** | |
 
@@ -147,11 +147,8 @@
 | `filler.is_clause` | предупреждение | p7.f2 | «if he starts coughing» is a clause, not a value — the frame should carry the clause and the slot the value |
 | `filler.ungrammatical` | **фатально** | p7.f3 | «When should we come back if if he won't eat?»: a word is doubled at the seam |
 | `filler.is_clause` | предупреждение | p7.f3 | «if he won't eat» is a clause, not a value — the frame should carry the clause and the slot the value |
-| `key.no_content_word` | предупреждение | B2 | «He has had them ___.» has no content word outside the slot: the key is «He has had them», the frame up to the slot, not «has had them» |
-| `key.contains_filler` | предупреждение | B4 | the key «eating less than» takes words of the filler «less than usual» |
-| `line.ne_frame` | **фатально** | B8 | «When should we come back if the fever gets worse?» is not «When should we come back if ___?» with «if the fever gets worse»; served as «When should we come back if if the fever gets worse?» |
-| `line.too_long` | предупреждение | B8 | «When should we come back if if the fever gets worse?» has 11 words without the glue (max 10) |
-| `key.no_content_word` | предупреждение | B8 | the key «When should we» has no content word, and «When should we come back if ___?» has one |
+| `filler.one_in_dialogue` | предупреждение | p7.f1 | «if the fever gets worse» is marked in_dialogue, but no line says it |
+| `line.ne_frame` | **фатально** | B8 | «When should we come back if the fever gets worse?» is not «When should we come back if ___?» with any of its fillers («if the fever gets worse», «if he starts coughing», «if he won't eat») |
 | `check.verbatim` | предупреждение | x8.check | the right option «Tomorrow, if he is still doing badly» repeats «tomorrow if» of the partner's line |
 | `filler.native_seam` | предупреждение | p4.f2 | «Он ест почти ничего.» («Он ест ___.» with «почти ничего») does not read as Russian, the seam judge says |
 | `filler.native_seam` | предупреждение | p7.f1 | «Когда нам нужно прийти снова, если если температура станет выше?» («Когда нам нужно прийти снова, если ___?» with «если температура станет выше») does not read as Russian, the seam judge says |
@@ -164,6 +161,5 @@
 
 ## Порог (фатальные коды → P2R, не больше двух карточек)
 
-- **Живая сборка** (валидатор до двух уточнений отчёта §3, P2R на `gpt-5.4-mini`): P2R p7 (frame, $0.004007, 1680 мс: filler.ungrammatical, filler.is_clause); B8 (line, $0.003693, 1956 мс: filler.one_in_dialogue, line.ne_frame, line.too_long, key.no_content_word); итог: ready.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4`**: passes after repair · карточки p7, B8 · $0.025183 · 4579 мс.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4-mini`**: passes after repair · карточки p7, B8 · $0.007669 · 4438 мс.
+- **Живая сборка GEN-2b** (валидатор до сдачи, P2R на `gpt-5.4-mini`): P2R p7 (frame, $0.004007, 1680 мс: filler.ungrammatical, filler.is_clause); B8 (line, $0.003693, 1956 мс: filler.one_in_dialogue, line.ne_frame, line.too_long, key.no_content_word); итог: ready.
+- **Порог доработки** (валидатор доработки, P2R на `gpt-5.4`): проходит после починки · карточки p7 · $0.013423 · 2243 мс.

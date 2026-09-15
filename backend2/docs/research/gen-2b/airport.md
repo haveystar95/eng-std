@@ -4,30 +4,30 @@
 
 Ученик: Пассажир · собеседник: Сотрудница регистрации (женщина)
 
-Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.076003 · 31.9 с · токены вход/выход 7463/3823 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 10 (фатальных 6) · порог в сборке: урок failed (fatal: line.ne_frame)
+Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.076003 · 31.9 с · токены вход/выход 7463/3823 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 9 (фатальных 1) · судья швов `lesson_seam_judge.v1.1`
 
-> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок; реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках. «Судья» — вердикт судьи швов о собранной фразе на родном.
+> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок (починки порога — внизу). Реплики — как их написала модель и получит приложение; наполнение реплики и ключ — серверные: наполнение найдено по тексту реплики среди наполнений её каркаса, ключ взят из каркаса. «Судья» — вердикт судьи швов о собранной фразе на родном.
 
 ## Сценарий диалога
 
 | # | вид обмена | кто | реплика | перевод | каркас · наполнение | ключ | оценка |
 |---|---|---|---|---|---|---|---|
-| 1 | вопрос ученика | Пассажир (ученик) | I'm checking in for this flight (модель: «I'm checking in for this flight.») | Я регистрируюсь на этот рейс. | p1 · for this flight | checking in | |
+| 1 | вопрос ученика | Пассажир (ученик) | I'm checking in for this flight. | Я регистрируюсь на этот рейс. | p1 · for this flight | I'm checking in | |
 | 1 | вопрос ученика | Сотрудница регистрации (собеседник) | Sure. May I see your passport? | Конечно. Можно ваш паспорт? |  |  | |
 | 2 | ответ | Сотрудница регистрации (собеседник) | Thank you. Where are you flying today? | Спасибо. Куда вы летите сегодня? |  |  | |
-| 2 | ответ | Пассажир (ученик) | I'm flying to London (модель: «I'm flying to London.») | Я лечу в Лондон. | p2 · to London | flying to | |
+| 2 | ответ | Пассажир (ученик) | I'm flying to London. | Я лечу в Лондон. | p2 · to London | I'm flying | |
 | 3 | ответ | Сотрудница регистрации (собеседник) | Do you have any bags to check? | У вас есть багаж для сдачи? |  |  | |
-| 3 | ответ | Пассажир (ученик) | I have one suitcase (модель: «I have one suitcase.») | У меня один чемодан. | p3 · one suitcase | I have | |
+| 3 | ответ | Пассажир (ученик) | I have one suitcase. | У меня один чемодан. | p3 · one suitcase | I have | |
 | 4 | вопрос ученика | Пассажир (ученик) | Can I take this backpack? | Можно взять этот рюкзак? | p4 · this backpack | Can I take | |
 | 4 | вопрос ученика | Сотрудница регистрации (собеседник) | Yes, that can go as hand luggage. | Да, это можно взять как ручную кладь. |  |  | |
-| 5 | вопрос ученика | Пассажир (ученик) | Can I have a window seat? | Можно место у окна? | p5 · a window seat | have a | |
+| 5 | вопрос ученика | Пассажир (ученик) | Can I have a window seat? | Можно место у окна? | p5 · a window seat | Can I have | |
 | 5 | вопрос ученика | Сотрудница регистрации (собеседник) | Yes, seat 14A is available. | Да, место 14A свободно. |  |  | |
 | 6 | ответ | Сотрудница регистрации (собеседник) | Here is your boarding pass. Gate 12, boarding at 18:40. | Вот ваш посадочный талон. Выход 12, посадка в 18:40. |  |  | |
-| 6 | ответ | Пассажир (ученик) | My gate is Gate 12 (модель: «My gate is Gate 12.») | Мой выход — 12. | p6 · Gate 12 | gate is | |
+| 6 | ответ | Пассажир (ученик) | My gate is Gate 12. | Мой выход — 12. | p6 · Gate 12 | My gate is | |
 | 7 | переспрос | Пассажир (ученик) | Could you repeat that, please? | Повторите, пожалуйста. | — | repeat that | |
 | 7 | переспрос | Сотрудница регистрации (собеседник) | Gate 12. Boarding is at 18:40. | Выход 12. Посадка в 18:40. |  |  | |
 | 8 | ответ | Сотрудница регистрации (собеседник) | Your suitcase is checked through to London. | Ваш чемодан зарегистрирован до Лондона. |  |  | |
-| 8 | ответ | Пассажир (ученик) | My suitcase goes to London (модель: «My suitcase goes to London.») | Мой чемодан едет в Лондон. | p7 · to London | suitcase goes | |
+| 8 | ответ | Пассажир (ученик) | My suitcase goes to London. | Мой чемодан едет в Лондон. | p7 · to London | My suitcase goes | |
 
 ## Каркасы
 
@@ -37,8 +37,8 @@
 
 | наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | судья | оценка |
 |---|---|---|---|---|---|---|---|
-| for this flight | на этот рейс | фор зис флайт | да | I'm checking in for this flight | Я регистрируюсь на этот рейс | читается | |
-| for the morning flight | на утренний рейс | фор зе морнин флайт | — | I'm checking in for the morning flight | Я регистрируюсь на утренний рейс | читается | |
+| for this flight | на этот рейс | фор зис флайт | да | I'm checking in for this flight. | Я регистрируюсь на этот рейс. | читается | |
+| for the morning flight | на утренний рейс | фор зе морнин флайт | — | I'm checking in for the morning flight. | Я регистрируюсь на утренний рейс. | читается | |
 
 ### p2 · ответ — «I'm flying ___»
 
@@ -46,9 +46,9 @@
 
 | наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | судья | оценка |
 |---|---|---|---|---|---|---|---|
-| to London | в Лондон | ту Ландан | да | I'm flying to London | Я лечу в Лондон | читается | |
-| to Paris | в Париж | ту Пэрис | — | I'm flying to Paris | Я лечу в Париж | читается | |
-| to Rome | в Рим | ту Роум | — | I'm flying to Rome | Я лечу в Рим | читается | |
+| to London | в Лондон | ту Ландан | да | I'm flying to London. | Я лечу в Лондон. | читается | |
+| to Paris | в Париж | ту Пэрис | — | I'm flying to Paris. | Я лечу в Париж. | читается | |
+| to Rome | в Рим | ту Роум | — | I'm flying to Rome. | Я лечу в Рим. | читается | |
 
 ### p3 · ответ — «I have ___»
 
@@ -56,9 +56,9 @@
 
 | наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | судья | оценка |
 |---|---|---|---|---|---|---|---|
-| one suitcase | один чемодан | уан суиткейс | да | I have one suitcase | У меня один чемодан | читается | |
-| two bags | две сумки | ту бэгз | — | I have two bags | У меня две сумки | читается | |
-| one backpack | один рюкзак | уан бэкпэк | — | I have one backpack | У меня один рюкзак | читается | |
+| one suitcase | один чемодан | уан суиткейс | да | I have one suitcase. | У меня один чемодан. | читается | |
+| two bags | две сумки | ту бэгз | — | I have two bags. | У меня две сумки. | читается | |
+| one backpack | один рюкзак | уан бэкпэк | — | I have one backpack. | У меня один рюкзак. | читается | |
 
 ### p4 · вопрос ученика — «Can I take ___?»
 
@@ -75,8 +75,8 @@
 
 | наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | судья | оценка |
 |---|---|---|---|---|---|---|---|
-| a window seat | место у окна | э уиндоу сит | да | Can I have a window seat? | Можно место у окна? | читается | |
-| an aisle seat | место у прохода | эн айл сит | — | Can I have an aisle seat? | Можно место у прохода? | читается | |
+| a window seat | место у окна | э уиндоу сит | да | Can I have a window seat? | Можно место у окна? | **не читается** | |
+| an aisle seat | место у прохода | эн айл сит | — | Can I have an aisle seat? | Можно место у прохода? | **не читается** | |
 | a front seat | место впереди | э франт сит | — | Can I have a front seat? | Можно место впереди? | читается | |
 
 ### p6 · ответ — «My gate is ___»
@@ -85,9 +85,9 @@
 
 | наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | судья | оценка |
 |---|---|---|---|---|---|---|---|
-| Gate 12 | 12 | гейт твэлв | да | My gate is Gate 12 | Мой выход — 12 | читается | |
-| Gate 8 | 8 | гейт эйт | — | My gate is Gate 8 | Мой выход — 8 | читается | |
-| Gate 15 | 15 | гейт фифтин | — | My gate is Gate 15 | Мой выход — 15 | читается | |
+| Gate 12 | 12 | гейт твэлв | да | My gate is Gate 12. | Мой выход — 12. | читается | |
+| Gate 8 | 8 | гейт эйт | — | My gate is Gate 8. | Мой выход — 8. | читается | |
+| Gate 15 | 15 | гейт фифтин | — | My gate is Gate 15. | Мой выход — 15. | читается | |
 
 ### p7 · ответ — «My suitcase goes ___»
 
@@ -95,8 +95,8 @@
 
 | наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | судья | оценка |
 |---|---|---|---|---|---|---|---|
-| to London | в Лондон | ту Ландан | да | My suitcase goes to London | Мой чемодан едет в Лондон | читается | |
-| to Madrid | в Мадрид | ту Мадрид | — | My suitcase goes to Madrid | Мой чемодан едет в Мадрид | читается | |
+| to London | в Лондон | ту Ландан | да | My suitcase goes to London. | Мой чемодан едет в Лондон. | читается | |
+| to Madrid | в Мадрид | ту Мадрид | — | My suitcase goes to Madrid. | Мой чемодан едет в Мадрид. | читается | |
 
 ## Проверки обменов
 
@@ -138,15 +138,14 @@
 | код | порог | адрес | что |
 |---|---|---|---|
 | `exchange.second_question` | **фатально** | x1 | the closing message of A «Sure. May I see your passport?» ends with a question mark |
-| `line.ne_frame` | **фатально** | B1 | «I'm checking in for this flight.» is not «I'm checking in ___» with «for this flight»; served as «I'm checking in for this flight» |
-| `line.ne_frame` | **фатально** | B2 | «I'm flying to London.» is not «I'm flying ___» with «to London»; served as «I'm flying to London» |
-| `key.contains_filler` | предупреждение | B2 | the key «flying to» takes words of the filler «to London» |
-| `line.ne_frame` | **фатально** | B3 | «I have one suitcase.» is not «I have ___» with «one suitcase»; served as «I have one suitcase» |
-| `key.no_content_word` | предупреждение | B5 | «Can I have ___?» has no content word outside the slot: the key is «Can I have», the frame up to the slot, not «have a» |
-| `key.contains_filler` | предупреждение | B5 | the key «have a» takes words of the filler «a window seat» |
-| `line.ne_frame` | **фатально** | B6 | «My gate is Gate 12.» is not «My gate is ___» with «Gate 12»; served as «My gate is Gate 12» |
-| `line.ne_frame` | **фатально** | B8 | «My suitcase goes to London.» is not «My suitcase goes ___» with «to London»; served as «My suitcase goes to London» |
+| `frame.no_end_punct` | предупреждение | p1 | «I'm checking in ___» and the native «Я регистрируюсь ___» end with no mark |
+| `frame.no_end_punct` | предупреждение | p2 | «I'm flying ___» and the native «Я лечу ___» end with no mark |
+| `frame.no_end_punct` | предупреждение | p3 | «I have ___» and the native «У меня ___» end with no mark |
+| `frame.no_end_punct` | предупреждение | p6 | «My gate is ___» and the native «Мой выход — ___» end with no mark |
+| `frame.no_end_punct` | предупреждение | p7 | «My suitcase goes ___» and the native «Мой чемодан едет ___» end with no mark |
 | `vocab.used_in_wrong` | предупреждение | v1 | «check in» is not in frame p1 or its fillers |
+| `filler.native_seam` | предупреждение | p5.f1 | «Можно место у окна?» («Можно ___?» with «место у окна») does not read as Russian, the seam judge says |
+| `filler.native_seam` | предупреждение | p5.f2 | «Можно место у прохода?» («Можно ___?» with «место у прохода») does not read as Russian, the seam judge says |
 
 ## Не проверено — у языка нет пакета (`lang.pack_missing`, не находка)
 
@@ -154,6 +153,5 @@
 
 ## Порог (фатальные коды → P2R, не больше двух карточек)
 
-- **Живая сборка** (валидатор до двух уточнений отчёта §3, P2R на `gpt-5.4-mini`): P2R x1 (exchange, $0.005973, 2770 мс: exchange.second_question, line.ne_frame); B1 (line, $0.003389, 1268 мс: line.ne_frame); итог: failed — fatal: line.ne_frame.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4`**: failed — fatal: line.ne_frame · карточки x1, B1 · $0.031385 · 5854 мс.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4-mini`**: failed — fatal: exchange.second_question, line.ne_frame · карточки x1, B1 · $0.009385 · 4913 мс.
+- **Живая сборка GEN-2b** (валидатор до сдачи, P2R на `gpt-5.4-mini`): P2R x1 (exchange, $0.005973, 2770 мс: exchange.second_question, line.ne_frame); B1 (line, $0.003389, 1268 мс: line.ne_frame); итог: failed — fatal: line.ne_frame.
+- **Порог доработки** (валидатор доработки, P2R на `gpt-5.4`): проходит после починки · карточки x1 · $0.018145 · 4230 мс.

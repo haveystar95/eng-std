@@ -4,9 +4,9 @@
 
 Ученик: Мати або батько · собеседник: Лікарка (женщина)
 
-Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.084225 · 41.3 с · токены вход/выход 7524/4361 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 13 (фатальных 0) · порог в сборке: урок прошёл
+Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.084225 · 41.3 с · токены вход/выход 7524/4361 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 9 (фатальных 0) · судья швов `lesson_seam_judge.v1.1`
 
-> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок; реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках. «Судья» — вердикт судьи швов о собранной фразе на родном.
+> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок (починки порога — внизу). Реплики — как их написала модель и получит приложение; наполнение реплики и ключ — серверные: наполнение найдено по тексту реплики среди наполнений её каркаса, ключ взят из каркаса. «Судья» — вердикт судьи швов о собранной фразе на родном.
 
 ## Сценарий диалога
 
@@ -15,18 +15,18 @@
 | 1 | ответ | Лікарка (собеседник) | What seems to be the problem today? | Що вас сьогодні турбує? |  |  | |
 | 1 | ответ | Мати або батько (ученик) | My son has a fever and a sore throat. | У мого сина температура і болить горло. | p1 · a fever and a sore throat | My son has | |
 | 2 | ответ | Лікарка (собеседник) | How long has he had the fever? | Як довго в нього температура? |  |  | |
-| 2 | ответ | Мати або батько (ученик) | He has had it for three days. | Вона в нього вже три дні. | p2 · for three days | has had it | |
+| 2 | ответ | Мати або батько (ученик) | He has had it for three days. | Вона в нього вже три дні. | p2 · for three days | He has had it | |
 | 3 | ответ | Лікарка (собеседник) | Is he drinking enough fluids? | Він п'є достатньо рідини? |  |  | |
-| 3 | ответ | Мати або батько (ученик) | He is drinking a little water. | Він п'є трохи води. | p3 · a little water | is drinking | |
+| 3 | ответ | Мати або батько (ученик) | He is drinking a little water. | Він п'є трохи води. | p3 · a little water | He is drinking | |
 | 4 | ответ | Лікарка (собеседник) | It looks like a viral throat infection. | Схоже на вірусну інфекцію горла. |  |  | |
-| 4 | ответ | Мати або батько (ученик) | So it is a viral infection. | Тобто це вірусна інфекція. | p4 · a viral infection | it is a | |
-| 5 | вопрос ученика | Мати або батько (ученик) | What can I give him for the fever? | Що я можу дати йому від температури? | p5 · for the fever | can I give | |
+| 4 | ответ | Мати або батько (ученик) | So it is a viral infection. | Тобто це вірусна інфекція. | p4 · a viral infection | So it is | |
+| 5 | вопрос ученика | Мати або батько (ученик) | What can I give him for the fever? | Що я можу дати йому від температури? | p5 · for the fever | can I give him | |
 | 5 | вопрос ученика | Лікарка (собеседник) | Give him paracetamol or ibuprofen for fever and throat pain. | Дайте йому парацетамол або ібупрофен від температури й болю в горлі. |  |  | |
-| 6 | вопрос ученика | Мати або батько (ученик) | How often should I give it? | Як часто мені це давати? | p6 · how often | How often should | |
+| 6 | вопрос ученика | Мати або батько (ученик) | How often should I give it? | Як часто мені це давати? | p6 · — | How often should I | |
 | 6 | вопрос ученика | Лікарка (собеседник) | Every six hours if needed, and always after food. | Кожні шість годин за потреби, і обов’язково після їжі. |  |  | |
 | 7 | переспрос | Мати або батько (ученик) | Could you say that more slowly, please? | Можете сказати це повільніше, будь ласка? | — | say that more slowly | |
 | 7 | переспрос | Лікарка (собеседник) | Every six hours, after food. | Кожні шість годин, після їжі. |  |  | |
-| 8 | вопрос ученика | Мати або батько (ученик) | When should I come back if the fever gets worse? | Коли нам знову прийти, якщо температура підніметься? | p7 · if the fever gets worse | When should I | |
+| 8 | вопрос ученика | Мати або батько (ученик) | When should I come back if the fever gets worse? | Коли нам знову прийти, якщо температура підніметься? | p7 · if the fever gets worse | should I come back | |
 | 8 | вопрос ученика | Лікарка (собеседник) | Come back if he cannot drink, or if breathing gets hard. | Приходьте знову, якщо він не зможе пити або якщо йому стане важко дихати. |  |  | |
 
 ## Каркасы
@@ -143,10 +143,6 @@
 | `filler.is_clause` | предупреждение | p7.f1 | «if the fever gets worse» is a clause, not a value — the frame should carry the clause and the slot the value |
 | `filler.is_clause` | предупреждение | p7.f2 | «if he still cannot eat» is a clause, not a value — the frame should carry the clause and the slot the value |
 | `filler.is_clause` | предупреждение | p7.f3 | «if the pain lasts longer» is a clause, not a value — the frame should carry the clause and the slot the value |
-| `key.no_content_word` | предупреждение | B2 | «He has had it ___.» has no content word outside the slot: the key is «He has had it», the frame up to the slot, not «has had it» |
-| `key.no_content_word` | предупреждение | B4 | «So it is ___.» has no content word outside the slot: the key is «So it is», the frame up to the slot, not «it is a» |
-| `key.contains_filler` | предупреждение | B4 | the key «it is a» takes words of the filler «a viral infection» |
-| `key.no_content_word` | предупреждение | B8 | the key «When should I» has no content word, and «When should I come back ___?» has one |
 | `vocab.used_in_wrong` | предупреждение | v3 | «viral infection» is not in the partner's line of exchange 4 |
 | `vocab.free_combination` | предупреждение | v6 | «after food» is a free combination of ordinary words |
 | `vocab.learner_share` | предупреждение | lesson | 3 of 8 items are in the learner's frames or fillers (at least half) |
@@ -156,6 +152,7 @@
 | код | сторона пары | язык | чего нет в пакете |
 |---|---|---|---|
 | `pronunciation.script` | родной | uk | script |
+| `frame.no_end_punct` | родной | uk | sentence_ends |
 | `frame.native_punct` | родной | uk | sentence_ends |
 | `frame.native_agreement` | родной | uk | agreement |
 | `listening.same_exchange` | родной | uk | function_words, word_forms |
@@ -165,6 +162,5 @@
 
 ## Порог (фатальные коды → P2R, не больше двух карточек)
 
-- **Живая сборка** (валидатор до двух уточнений отчёта §3, P2R на `gpt-5.4-mini`): фатальных нет — P2R не звался; итог: ready.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4`**: passes.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4-mini`**: passes.
+- **Живая сборка GEN-2b** (валидатор до сдачи, P2R на `gpt-5.4-mini`): фатальных нет — P2R не звался; итог: ready.
+- **Порог доработки** (валидатор доработки, P2R на `gpt-5.4`): фатальных нет, проходит без починки.

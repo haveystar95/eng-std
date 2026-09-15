@@ -21,6 +21,153 @@
             "doctor-uk"
         ]
     },
+    "judge": {
+        "v4.4": "lesson_seam_judge.v1",
+        "v4.5": "lesson_seam_judge.v1.1",
+        "ro/uk": "lesson_seam_judge.v1.1",
+        "per_day": {
+            "v4.4:interview": {
+                "sentences": 24,
+                "no_v1": [],
+                "no_v1_1": null
+            },
+            "v4.4:rent": {
+                "sentences": 20,
+                "no_v1": [
+                    "p1.f1",
+                    "p1.f2",
+                    "p1.f3",
+                    "p5.f1",
+                    "p6.f1",
+                    "p6.f2",
+                    "p6.f3"
+                ],
+                "no_v1_1": null
+            },
+            "v4.4:bank": {
+                "sentences": 18,
+                "no_v1": [
+                    "p2.f1",
+                    "p2.f2",
+                    "p2.f3",
+                    "p4.f1",
+                    "p4.f2",
+                    "p4.f3"
+                ],
+                "no_v1_1": null
+            },
+            "v4.4:restaurant": {
+                "sentences": 21,
+                "no_v1": [
+                    "p3.f3"
+                ],
+                "no_v1_1": null
+            },
+            "v4.4:airport": {
+                "sentences": 21,
+                "no_v1": [],
+                "no_v1_1": null
+            },
+            "v4.4:doctor": {
+                "sentences": 21,
+                "no_v1": [
+                    "p2.f1"
+                ],
+                "no_v1_1": null
+            },
+            "v4.5:interview": {
+                "sentences": 21,
+                "no_v1": [
+                    "p5.f2"
+                ],
+                "no_v1_1": []
+            },
+            "v4.5:rent": {
+                "sentences": 21,
+                "no_v1": [
+                    "p6.f3"
+                ],
+                "no_v1_1": [
+                    "p6.f1",
+                    "p6.f2",
+                    "p6.f3"
+                ]
+            },
+            "v4.5:bank": {
+                "sentences": 24,
+                "no_v1": [
+                    "p6.f1",
+                    "p6.f3"
+                ],
+                "no_v1_1": [
+                    "p6.f1",
+                    "p6.f3"
+                ]
+            },
+            "v4.5:restaurant": {
+                "sentences": 14,
+                "no_v1": [
+                    "p2.f1"
+                ],
+                "no_v1_1": []
+            },
+            "v4.5:airport": {
+                "sentences": 18,
+                "no_v1": [],
+                "no_v1_1": [
+                    "p5.f1",
+                    "p5.f2"
+                ]
+            },
+            "v4.5:doctor": {
+                "sentences": 21,
+                "no_v1": [
+                    "p4.f2",
+                    "p7.f1",
+                    "p7.f2",
+                    "p7.f3"
+                ],
+                "no_v1_1": [
+                    "p4.f2",
+                    "p7.f1",
+                    "p7.f2",
+                    "p7.f3"
+                ]
+            },
+            "v4.5:airport-ro": {
+                "sentences": 16,
+                "no_v1": [
+                    "p7.f2"
+                ],
+                "no_v1_1": []
+            },
+            "v4.5:doctor-uk": {
+                "sentences": 17,
+                "no_v1": [],
+                "no_v1_1": []
+            }
+        }
+    },
+    "totals": {
+        "v4.4": {
+            "fatal": 8,
+            "validator": 44,
+            "judge": 15,
+            "skipped_codes": 0
+        },
+        "v4.5": {
+            "fatal": 6,
+            "validator": 36,
+            "judge": 11,
+            "skipped_codes": 0
+        },
+        "ro/uk": {
+            "fatal": 1,
+            "validator": 12,
+            "judge": 0,
+            "skipped_codes": 16
+        }
+    },
     "skips": {
         "v4.4:interview": [],
         "v4.4:rent": [],
@@ -41,6 +188,14 @@
                 "language": "ro",
                 "keys": [
                     "script"
+                ]
+            },
+            {
+                "code": "frame.no_end_punct",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "sentence_ends"
                 ]
             },
             {
@@ -104,6 +259,14 @@
                 "language": "uk",
                 "keys": [
                     "script"
+                ]
+            },
+            {
+                "code": "frame.no_end_punct",
+                "side": "native",
+                "language": "uk",
+                "keys": [
+                    "sentence_ends"
                 ]
             },
             {
@@ -536,6 +699,39 @@
             "rule_not_model": false,
             "fatal": false
         },
+        "frame.no_end_punct": {
+            "unit": "frames",
+            "v4.4": {
+                "total": 0,
+                "days": [],
+                "addresses": 0,
+                "units": 43,
+                "examples": [],
+                "share": 0
+            },
+            "v4.5": {
+                "total": 5,
+                "days": {
+                    "airport": 5
+                },
+                "addresses": 5,
+                "units": 44,
+                "examples": [
+                    "airport p1: «I'm checking in ___» and the native «Я регистрируюсь ___» end with no mark",
+                    "airport p2: «I'm flying ___» and the native «Я лечу ___» end with no mark",
+                    "airport p3: «I have ___» and the native «У меня ___» end with no mark",
+                    "airport p6: «My gate is ___» and the native «Мой выход — ___» end with no mark"
+                ],
+                "share": 0.114
+            },
+            "ro/uk": {
+                "total": 0,
+                "days": [],
+                "examples": []
+            },
+            "rule_not_model": false,
+            "fatal": false
+        },
         "frame.native_punct": {
             "unit": "frames",
             "v4.4": {
@@ -722,30 +918,27 @@
             "v4.4": {
                 "total": 2,
                 "days": {
-                    "rent": 2
+                    "bank": 2
                 },
                 "addresses": 2,
                 "units": 125,
                 "examples": [
-                    "rent B3: «one year» is not one of p3's fillers",
-                    "rent p3.f1: «one-year» is marked in_dialogue, but no line says it"
+                    "bank p2.f1: «my passport» is marked in_dialogue, but no line says it",
+                    "bank p2.f2: «my rental letter» is marked in_dialogue, but no line says it"
                 ],
                 "share": 0.016
             },
             "v4.5": {
-                "total": 4,
+                "total": 1,
                 "days": {
-                    "bank": 4
+                    "doctor": 1
                 },
-                "addresses": 4,
+                "addresses": 1,
                 "units": 119,
                 "examples": [
-                    "bank B2: «my rental contract» is not one of p2's fillers",
-                    "bank p2.f1: «rental contract» is marked in_dialogue, but no line says it",
-                    "bank B5: «the monthly fee» is not one of p5's fillers",
-                    "bank p5.f1: «monthly fee» is marked in_dialogue, but no line says it"
+                    "doctor p7.f1: «if the fever gets worse» is marked in_dialogue, but no line says it"
                 ],
-                "share": 0.034
+                "share": 0.008
             },
             "ro/uk": {
                 "total": 0,
@@ -850,32 +1043,27 @@
                 "share": 0.12
             },
             "v4.5": {
-                "total": 9,
+                "total": 11,
                 "days": {
-                    "interview": 1,
-                    "rent": 1,
+                    "rent": 3,
                     "bank": 2,
-                    "restaurant": 1,
+                    "airport": 2,
                     "doctor": 4
                 },
-                "addresses": 9,
+                "addresses": 11,
                 "units": 119,
                 "examples": [
-                    "interview p5.f2: «Мне нравится работать над кросс-функциональными командами.» («Мне нравится работать над ___.» with «кросс-функциональными командами») does not read as Russian, the seam judge says",
+                    "rent p6.f1: «кошка разрешена?» («___ разрешена?» with «кошка») does not read as Russian, the seam judge says",
+                    "rent p6.f2: «маленькая собака разрешена?» («___ разрешена?» with «маленькая собака») does not read as Russian, the seam judge says",
                     "rent p6.f3: «велосипед разрешена?» («___ разрешена?» with «велосипед») does not read as Russian, the seam judge says",
-                    "bank p6.f1: «Когда карта будет готово?» («Когда ___ будет готово?» with «карта») does not read as Russian, the seam judge says",
-                    "bank p6.f3: «Когда онлайн-доступ будет готово?» («Когда ___ будет готово?» with «онлайн-доступ») does not read as Russian, the seam judge says"
+                    "bank p6.f1: «Когда карта будет готово?» («Когда ___ будет готово?» with «карта») does not read as Russian, the seam judge says"
                 ],
-                "share": 0.076
+                "share": 0.092
             },
             "ro/uk": {
-                "total": 1,
-                "days": {
-                    "airport-ro": 1
-                },
-                "examples": [
-                    "airport-ro p7.f2: «Mulțumesc pentru cartea de îmbarcare.» («Mulțumesc pentru ___.» with «cartea de îmbarcare») does not read as Romanian, the seam judge says"
-                ]
+                "total": 0,
+                "days": [],
+                "examples": []
             },
             "rule_not_model": false,
             "fatal": false
@@ -883,36 +1071,29 @@
         "line.ne_frame": {
             "unit": "learner",
             "v4.4": {
-                "total": 3,
+                "total": 2,
                 "days": {
-                    "rent": 1,
                     "bank": 2
                 },
-                "addresses": 3,
+                "addresses": 2,
                 "units": 48,
                 "examples": [
-                    "rent B3: «I need a one-year contract.» is not «I need a ___ contract.» with «one year»; served as «I need a one year contract.»",
-                    "bank B2: «Here is my passport.» is not «Here is my ___.» with «my passport»; served as «Here is my my passport.»",
-                    "bank B3: «Here is my rental letter.» is not «Here is my ___.» with «my rental letter»; served as «Here is my my rental letter.»"
+                    "bank B2: «Here is my passport.» is not «Here is my ___.» with any of its fillers («my passport», «my rental letter», «my student letter»)",
+                    "bank B3: «Here is my rental letter.» is not «Here is my ___.» with any of its fillers («my passport», «my rental letter», «my student letter»)"
                 ],
-                "share": 0.063
+                "share": 0.042
             },
             "v4.5": {
-                "total": 8,
+                "total": 1,
                 "days": {
-                    "bank": 2,
-                    "airport": 5,
                     "doctor": 1
                 },
-                "addresses": 8,
+                "addresses": 1,
                 "units": 48,
                 "examples": [
-                    "bank B2: «Here is my rental contract.» is not «Here is my ___.» with «my rental contract»; served as «Here is my my rental contract.»",
-                    "bank B5: «What is the monthly fee?» is not «What is the ___?» with «the monthly fee»; served as «What is the the monthly fee?»",
-                    "airport B1: «I'm checking in for this flight.» is not «I'm checking in ___» with «for this flight»; served as «I'm checking in for this flight»",
-                    "airport B2: «I'm flying to London.» is not «I'm flying ___» with «to London»; served as «I'm flying to London»"
+                    "doctor B8: «When should we come back if the fever gets worse?» is not «When should we come back if ___?» with any of its fillers («if the fever gets worse», «if he starts coughing», «if he won't eat»)"
                 ],
-                "share": 0.167
+                "share": 0.021
             },
             "ro/uk": {
                 "total": 0,
@@ -933,16 +1114,12 @@
                 "share": 0
             },
             "v4.5": {
-                "total": 1,
-                "days": {
-                    "doctor": 1
-                },
-                "addresses": 1,
+                "total": 0,
+                "days": [],
+                "addresses": 0,
                 "units": 48,
-                "examples": [
-                    "doctor B8: «When should we come back if if the fever gets worse?» has 11 words without the glue (max 10)"
-                ],
-                "share": 0.021
+                "examples": [],
+                "share": 0
             },
             "ro/uk": {
                 "total": 0,
@@ -978,201 +1155,26 @@
             "rule_not_model": false,
             "fatal": false
         },
-        "key.not_in_line": {
-            "unit": "learner",
-            "v4.4": {
-                "total": 2,
-                "days": {
-                    "interview": 1,
-                    "rent": 1
-                },
-                "addresses": 2,
-                "units": 48,
-                "examples": [
-                    "interview B1: the key «have of experience» is not in «I have five years of experience.»",
-                    "rent B3: the key «need a contract» is not in «I need a one year contract.»"
-                ],
-                "share": 0.042
-            },
-            "v4.5": {
-                "total": 1,
-                "days": {
-                    "interview": 1
-                },
-                "addresses": 1,
-                "units": 48,
-                "examples": [
-                    "interview B1: the key «have of experience» is not in «I have five years of experience.»"
-                ],
-                "share": 0.021
-            },
-            "ro/uk": {
-                "total": 0,
-                "days": [],
-                "examples": []
-            },
-            "rule_not_model": false,
-            "fatal": false
-        },
-        "key.contains_filler": {
-            "unit": "learner",
-            "v4.4": {
-                "total": 12,
-                "days": {
-                    "interview": 1,
-                    "rent": 2,
-                    "bank": 3,
-                    "airport": 4,
-                    "doctor": 2
-                },
-                "addresses": 12,
-                "units": 48,
-                "examples": [
-                    "interview B7: the key «success in this» takes words of the filler «success in this role»",
-                    "rent B4: the key «work from» takes words of the filler «from home»",
-                    "rent B6: the key «cat allowed» takes words of the filler «a cat»",
-                    "bank B4: the key «am a» takes words of the filler «a student»"
-                ],
-                "share": 0.25
-            },
-            "v4.5": {
-                "total": 13,
-                "days": {
-                    "interview": 2,
-                    "rent": 4,
-                    "bank": 4,
-                    "airport": 2,
-                    "doctor": 1
-                },
-                "addresses": 13,
-                "units": 48,
-                "examples": [
-                    "interview B2: the key «lead a team» takes words of the filler «a team of six»",
-                    "interview B8: the key «does success in» takes words of the filler «success in this role»",
-                    "rent B3: the key «get the» takes words of the filler «the deposit»",
-                    "rent B4: the key «included in the» takes words of the filler «the monthly payment»"
-                ],
-                "share": 0.271
-            },
-            "ro/uk": {
-                "total": 5,
-                "days": {
-                    "airport-ro": 4,
-                    "doctor-uk": 1
-                },
-                "examples": [
-                    "airport-ro B2: the key «flying to» takes words of the filler «to London»",
-                    "airport-ro B4: the key «checking this» takes words of the filler «this suitcase»",
-                    "airport-ro B5: the key «What is my» takes words of the filler «my seat»",
-                    "airport-ro B7: the key «for the» takes words of the filler «the baggage tag»"
-                ]
-            },
-            "rule_not_model": true,
-            "fatal": false
-        },
-        "key.no_content_word": {
-            "unit": "learner",
-            "v4.4": {
-                "total": 7,
-                "days": {
-                    "bank": 3,
-                    "airport": 2,
-                    "doctor": 2
-                },
-                "addresses": 7,
-                "units": 48,
-                "examples": [
-                    "bank B4: «I am ___.» has no content word outside the slot: the key is «I am», the frame up to the slot, not «am a»",
-                    "bank B5: «What is ___?» has no content word outside the slot: the key is «What is», the frame up to the slot, not «What is the»",
-                    "bank B6: the key «When will the» has no content word, and «When will ___ arrive?» has one",
-                    "airport B1: «Here is ___.» has no content word outside the slot: the key is «Here is», the frame up to the slot, not «Here is my»"
-                ],
-                "share": 0.146
-            },
-            "v4.5": {
-                "total": 4,
-                "days": {
-                    "bank": 1,
-                    "airport": 1,
-                    "doctor": 2
-                },
-                "addresses": 4,
-                "units": 48,
-                "examples": [
-                    "bank B3: «I'm ___.» has no content word outside the slot: the key is «I'm», the frame up to the slot, not «I'm a»",
-                    "airport B5: «Can I have ___?» has no content word outside the slot: the key is «Can I have», the frame up to the slot, not «have a»",
-                    "doctor B2: «He has had them ___.» has no content word outside the slot: the key is «He has had them», the frame up to the slot, not «has had them»",
-                    "doctor B8: the key «When should we» has no content word, and «When should we come back if ___?» has one"
-                ],
-                "share": 0.083
-            },
-            "ro/uk": {
-                "total": 5,
-                "days": {
-                    "airport-ro": 2,
-                    "doctor-uk": 3
-                },
-                "examples": [
-                    "airport-ro B5: «What is ___?» has no content word outside the slot: the key is «What is», the frame up to the slot, not «What is my»",
-                    "airport-ro B7: «Thank you for ___.» has no content word outside the slot: the key is «Thank you for», the frame up to the slot, not «for the»",
-                    "doctor-uk B2: «He has had it ___.» has no content word outside the slot: the key is «He has had it», the frame up to the slot, not «has had it»",
-                    "doctor-uk B4: «So it is ___.» has no content word outside the slot: the key is «So it is», the frame up to the slot, not «it is a»"
-                ]
-            },
-            "rule_not_model": false,
-            "fatal": false
-        },
-        "key.too_long": {
-            "unit": "learner",
-            "v4.4": {
-                "total": 2,
-                "days": {
-                    "doctor": 2
-                },
-                "addresses": 2,
-                "units": 48,
-                "examples": [
-                    "doctor B7: the key «How often should I give» has 5 words (1–4)",
-                    "doctor B8: the key «When should we come back» has 5 words (1–4)"
-                ],
-                "share": 0.042
-            },
-            "v4.5": {
-                "total": 0,
-                "days": [],
-                "addresses": 0,
-                "units": 48,
-                "examples": [],
-                "share": 0
-            },
-            "ro/uk": {
-                "total": 0,
-                "days": [],
-                "examples": []
-            },
-            "rule_not_model": false,
-            "fatal": false
-        },
         "variant.longer": {
             "unit": "learner",
             "v4.4": {
-                "total": 5,
+                "total": 6,
                 "days": {
                     "interview": 1,
-                    "rent": 1,
+                    "rent": 2,
                     "bank": 1,
                     "restaurant": 1,
                     "airport": 1
                 },
-                "addresses": 5,
+                "addresses": 6,
                 "units": 48,
                 "examples": [
                     "interview B1: the variant «I have five years in project management.» has 7 words, the line 6",
+                    "rent B3: the variant «I need it for one year.» has 6 words, the line 5",
                     "rent B6: the variant «Can I keep a cat?» has 5 words, the line 4",
-                    "bank B5: the variant «How much is the monthly fee?» has 6 words, the line 5",
-                    "restaurant B4: the variant «Are there nuts in it?» has 5 words, the line 4"
+                    "bank B5: the variant «How much is the monthly fee?» has 6 words, the line 5"
                 ],
-                "share": 0.104
+                "share": 0.125
             },
             "v4.5": {
                 "total": 3,
@@ -1586,16 +1588,12 @@
         "listening.no_learner_value": {
             "unit": "lesson",
             "v4.4": {
-                "total": 1,
-                "days": {
-                    "rent": 1
-                },
-                "addresses": 1,
+                "total": 0,
+                "days": [],
+                "addresses": 0,
                 "units": 6,
-                "examples": [
-                    "rent lesson: no question asks for a value the learner gave (a filler said in the dialogue)"
-                ],
-                "share": 0.167
+                "examples": [],
+                "share": 0
             },
             "v4.5": {
                 "total": 0,

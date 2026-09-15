@@ -1,0 +1,194 @@
+{
+    "hash": "28af3a7899ab0e1694691ae806c52f17dda711fe",
+    "source": "доработка",
+    "prompt_version": "lesson_seam_judge.v1.1",
+    "items": [
+        {
+            "id": "p1.f1",
+            "pattern": "Я регистрируюсь ___",
+            "value": "на этот рейс",
+            "sentence": "Я регистрируюсь на этот рейс"
+        },
+        {
+            "id": "p1.f2",
+            "pattern": "Я регистрируюсь ___",
+            "value": "на утренний рейс",
+            "sentence": "Я регистрируюсь на утренний рейс"
+        },
+        {
+            "id": "p2.f1",
+            "pattern": "Я лечу ___",
+            "value": "в Лондон",
+            "sentence": "Я лечу в Лондон"
+        },
+        {
+            "id": "p2.f2",
+            "pattern": "Я лечу ___",
+            "value": "в Париж",
+            "sentence": "Я лечу в Париж"
+        },
+        {
+            "id": "p2.f3",
+            "pattern": "Я лечу ___",
+            "value": "в Рим",
+            "sentence": "Я лечу в Рим"
+        },
+        {
+            "id": "p3.f1",
+            "pattern": "У меня ___",
+            "value": "один чемодан",
+            "sentence": "У меня один чемодан"
+        },
+        {
+            "id": "p3.f2",
+            "pattern": "У меня ___",
+            "value": "две сумки",
+            "sentence": "У меня две сумки"
+        },
+        {
+            "id": "p3.f3",
+            "pattern": "У меня ___",
+            "value": "один рюкзак",
+            "sentence": "У меня один рюкзак"
+        },
+        {
+            "id": "p4.f1",
+            "pattern": "Можно взять ___?",
+            "value": "этот рюкзак",
+            "sentence": "Можно взять этот рюкзак?"
+        },
+        {
+            "id": "p4.f2",
+            "pattern": "Можно взять ___?",
+            "value": "эту маленькую сумку",
+            "sentence": "Можно взять эту маленькую сумку?"
+        },
+        {
+            "id": "p5.f1",
+            "pattern": "Можно ___?",
+            "value": "место у окна",
+            "sentence": "Можно место у окна?"
+        },
+        {
+            "id": "p5.f2",
+            "pattern": "Можно ___?",
+            "value": "место у прохода",
+            "sentence": "Можно место у прохода?"
+        },
+        {
+            "id": "p5.f3",
+            "pattern": "Можно ___?",
+            "value": "место впереди",
+            "sentence": "Можно место впереди?"
+        },
+        {
+            "id": "p6.f1",
+            "pattern": "Мой выход — ___",
+            "value": "12",
+            "sentence": "Мой выход — 12"
+        },
+        {
+            "id": "p6.f2",
+            "pattern": "Мой выход — ___",
+            "value": "8",
+            "sentence": "Мой выход — 8"
+        },
+        {
+            "id": "p6.f3",
+            "pattern": "Мой выход — ___",
+            "value": "15",
+            "sentence": "Мой выход — 15"
+        },
+        {
+            "id": "p7.f1",
+            "pattern": "Мой чемодан едет ___",
+            "value": "в Лондон",
+            "sentence": "Мой чемодан едет в Лондон"
+        },
+        {
+            "id": "p7.f2",
+            "pattern": "Мой чемодан едет ___",
+            "value": "в Мадрид",
+            "sentence": "Мой чемодан едет в Мадрид"
+        }
+    ],
+    "verdicts": [
+        {
+            "id": "p1.f1",
+            "reads": true
+        },
+        {
+            "id": "p1.f2",
+            "reads": true
+        },
+        {
+            "id": "p2.f1",
+            "reads": true
+        },
+        {
+            "id": "p2.f2",
+            "reads": true
+        },
+        {
+            "id": "p2.f3",
+            "reads": true
+        },
+        {
+            "id": "p3.f1",
+            "reads": true
+        },
+        {
+            "id": "p3.f2",
+            "reads": true
+        },
+        {
+            "id": "p3.f3",
+            "reads": true
+        },
+        {
+            "id": "p4.f1",
+            "reads": true
+        },
+        {
+            "id": "p4.f2",
+            "reads": true
+        },
+        {
+            "id": "p5.f1",
+            "reads": false
+        },
+        {
+            "id": "p5.f2",
+            "reads": false
+        },
+        {
+            "id": "p5.f3",
+            "reads": true
+        },
+        {
+            "id": "p6.f1",
+            "reads": true
+        },
+        {
+            "id": "p6.f2",
+            "reads": true
+        },
+        {
+            "id": "p6.f3",
+            "reads": true
+        },
+        {
+            "id": "p7.f1",
+            "reads": true
+        },
+        {
+            "id": "p7.f2",
+            "reads": true
+        }
+    ],
+    "cost_usd": "0.001863",
+    "latency_ms": 1856,
+    "model": "gpt-5.4-mini-2026-03-17",
+    "tokens_in": 1218,
+    "tokens_out": 211
+}

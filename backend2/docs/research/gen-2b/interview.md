@@ -4,29 +4,29 @@
 
 Ученик: Кандидат · собеседник: Менеджер по найму (женщина)
 
-Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.082770 · 41.3 с · токены вход/выход 7482/4271 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 8 (фатальных 0) · порог в сборке: урок прошёл
+Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.082770 · 41.3 с · токены вход/выход 7482/4271 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 4 (фатальных 0) · судья швов `lesson_seam_judge.v1.1`
 
-> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок; реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках. «Судья» — вердикт судьи швов о собранной фразе на родном.
+> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок (починки порога — внизу). Реплики — как их написала модель и получит приложение; наполнение реплики и ключ — серверные: наполнение найдено по тексту реплики среди наполнений её каркаса, ключ взят из каркаса. «Судья» — вердикт судьи швов о собранной фразе на родном.
 
 ## Сценарий диалога
 
 | # | вид обмена | кто | реплика | перевод | каркас · наполнение | ключ | оценка |
 |---|---|---|---|---|---|---|---|
 | 1 | ответ | Менеджер по найму (собеседник) | Could you tell me about your background in project management? | Расскажите, пожалуйста, о своём опыте в управлении проектами. |  |  | |
-| 1 | ответ | Кандидат (ученик) | I have five years of experience. | У меня пять лет опыта. | p1 · five years | have of experience | |
+| 1 | ответ | Кандидат (ученик) | I have five years of experience. | У меня пять лет опыта. | p1 · five years | of experience | |
 | 2 | ответ | Менеджер по найму (собеседник) | What do you do in your current role? | Чем вы занимаетесь на своей текущей должности? |  |  | |
-| 2 | ответ | Кандидат (ученик) | I lead a team of six. | Я руковожу командой из шести человек. | p2 · a team of six | lead a team | |
+| 2 | ответ | Кандидат (ученик) | I lead a team of six. | Я руковожу командой из шести человек. | p2 · a team of six | I lead | |
 | 3 | ответ | Менеджер по найму (собеседник) | How would you describe your leadership style? | Как бы вы описали свой стиль руководства? |  |  | |
-| 3 | ответ | Кандидат (ученик) | My leadership style is clear communication. | Мой стиль руководства — это понятная коммуникация. | p3 · clear communication | leadership style is | |
+| 3 | ответ | Кандидат (ученик) | My leadership style is clear communication. | Мой стиль руководства — это понятная коммуникация. | p3 · clear communication | My leadership style is | |
 | 4 | ответ | Менеджер по найму (собеседник) | Can you share a project achievement you're proud of? | Можете рассказать о достижении в проекте, которым вы гордитесь? |  |  | |
-| 4 | ответ | Кандидат (ученик) | I'm proud of a product launch. | Я горжусь запуском продукта. | p4 · a product launch | proud of | |
+| 4 | ответ | Кандидат (ученик) | I'm proud of a product launch. | Я горжусь запуском продукта. | p4 · a product launch | I'm proud of | |
 | 5 | ответ | Менеджер по найму (собеседник) | Why do you want this role? We need strong planning, stakeholder communication, and calm delivery under pressure. | Почему вас интересует эта роль? Нам нужны сильное планирование, общение со стейкхолдерами и спокойная работа под давлением. |  |  | |
-| 5 | ответ | Кандидат (ученик) | I enjoy working on complex projects. | Мне нравится работать над сложными проектами. | p5 · complex projects | enjoy working on | |
+| 5 | ответ | Кандидат (ученик) | I enjoy working on complex projects. | Мне нравится работать над сложными проектами. | p5 · complex projects | I enjoy working on | |
 | 6 | переспрос | Кандидат (ученик) | Could you say that more slowly, please? | Скажите, пожалуйста, помедленнее. | — | say that more slowly | |
 | 6 | переспрос | Менеджер по найму (собеседник) | We need strong planning, stakeholder communication, and calm delivery under pressure. | Нам нужны сильное планирование, общение со стейкхолдерами и спокойная работа под давлением. |  |  | |
-| 7 | вопрос ученика | Кандидат (ученик) | Could you tell me about the team structure? | Расскажите, пожалуйста, о структуре команды. | p6 · the team structure | tell me about | |
+| 7 | вопрос ученика | Кандидат (ученик) | Could you tell me about the team structure? | Расскажите, пожалуйста, о структуре команды. | p6 · the team structure | you tell me about | |
 | 7 | вопрос ученика | Менеджер по найму (собеседник) | You'll work with six engineers and one designer. | Вы будете работать с шестью инженерами и одним дизайнером. |  |  | |
-| 8 | вопрос ученика | Кандидат (ученик) | What does success in this role look like? | Как выглядит успех в этой роли? | p7 · success in this role | does success in | |
+| 8 | вопрос ученика | Кандидат (ученик) | What does success in this role look like? | Как выглядит успех в этой роли? | p7 · success in this role | look like | |
 | 8 | вопрос ученика | Менеджер по найму (собеседник) | Success means the team ships on time and communicates clearly. | Успех здесь — это когда команда выпускает продукт вовремя и общается понятно. |  |  | |
 
 ## Каркасы
@@ -78,7 +78,7 @@
 | наполнение | перевод | чтение | в диалоге | собранная фраза | собранный перевод | судья | оценка |
 |---|---|---|---|---|---|---|---|
 | complex projects | сложными проектами | кэмплекс проджектс | да | I enjoy working on complex projects. | Мне нравится работать над сложными проектами. | читается | |
-| cross-functional teams | кросс-функциональными командами | крос-фанкшенэл тимз | — | I enjoy working on cross-functional teams. | Мне нравится работать над кросс-функциональными командами. | **не читается** | |
+| cross-functional teams | кросс-функциональными командами | крос-фанкшенэл тимз | — | I enjoy working on cross-functional teams. | Мне нравится работать над кросс-функциональными командами. | читается | |
 | customer platforms | клиентскими платформами | кастомер платформз | — | I enjoy working on customer platforms. | Мне нравится работать над клиентскими платформами. | читается | |
 
 ### p6 · вопрос ученика — «Could you tell me about ___?»
@@ -142,12 +142,8 @@
 |---|---|---|---|
 | `pronunciation.script` | предупреждение | p4.f2 | the reading «э պրосэс импрувмэнт» leaves the native script |
 | `frame.native_punct` | предупреждение | p6 | «Could you tell me about ___?» ends with «?», «Расскажите, пожалуйста, о ___.» with «.» |
-| `key.not_in_line` | предупреждение | B1 | the key «have of experience» is not in «I have five years of experience.» |
-| `key.contains_filler` | предупреждение | B2 | the key «lead a team» takes words of the filler «a team of six» |
 | `variant.longer` | предупреждение | B4 | the variant «A product launch was a big success.» has 7 words, the line 6 |
-| `key.contains_filler` | предупреждение | B8 | the key «does success in» takes words of the filler «success in this role» |
 | `vocab.free_combination` | предупреждение | v8 | «on time» is a free combination of ordinary words |
-| `filler.native_seam` | предупреждение | p5.f2 | «Мне нравится работать над кросс-функциональными командами.» («Мне нравится работать над ___.» with «кросс-функциональными командами») does not read as Russian, the seam judge says |
 
 ## Не проверено — у языка нет пакета (`lang.pack_missing`, не находка)
 
@@ -155,6 +151,5 @@
 
 ## Порог (фатальные коды → P2R, не больше двух карточек)
 
-- **Живая сборка** (валидатор до двух уточнений отчёта §3, P2R на `gpt-5.4-mini`): фатальных нет — P2R не звался; итог: ready.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4`**: passes.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4-mini`**: passes.
+- **Живая сборка GEN-2b** (валидатор до сдачи, P2R на `gpt-5.4-mini`): фатальных нет — P2R не звался; итог: ready.
+- **Порог доработки** (валидатор доработки, P2R на `gpt-5.4`): фатальных нет, проходит без починки.

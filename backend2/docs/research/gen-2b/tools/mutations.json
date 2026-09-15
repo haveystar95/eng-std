@@ -172,18 +172,6 @@
     ]
   },
   {
-    "name": "9. a key without a content word counted everywhere (the v4.4 reading)",
-    "file": "app/Modules/Plan/Domain/Check/Lesson/LineRules.php",
-    "find": "        if ($words->content($part) !== []) {",
-    "replace": "        if (true) {",
-    "tests": [
-      {
-        "path": "tests/Unit/Plan/LessonValidatorTest.php",
-        "filter": "asks a content word of a key only where"
-      }
-    ]
-  },
-  {
     "name": "10. a repeated filler counted as a mark, not a repeated exchange",
     "file": "app/Modules/Plan/Domain/Check/LessonValidator.php",
     "find": "            new VisitRules,\n",
@@ -192,6 +180,162 @@
       {
         "path": "tests/Unit/Plan/LessonAssemblyTest.php",
         "filter": "counts the same filler said twice as a repeated exchange"
+      }
+    ]
+  },
+  {
+    "name": "11a. the closing mark compared again (доработка п. 1)",
+    "file": "app/Modules/Plan/Domain/Service/FrameText.php",
+    "find": "        $said = self::withoutEndMark($said);\n        $core = self::withoutEndMark($core);\n",
+    "replace": "        $said = trim($said);\n        $core = trim($core);\n",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonAssemblyTest.php",
+        "filter": "leaves the closing mark out of the comparison"
+      }
+    ]
+  },
+  {
+    "name": "11b. the phrase of the day does not borrow its line's mark (доработка п. 1)",
+    "file": "app/Modules/Plan/Domain/Entity/PlanTerm.php",
+    "find": "        return [FrameText::withEndMarkOf($text, $line->textTarget), FrameText::withEndMarkOf($native, $line->textNative), $reading];",
+    "replace": "        return [$text, $native, $reading];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonAssemblyTest.php",
+        "filter": "leaves the closing mark out of the comparison"
+      }
+    ]
+  },
+  {
+    "name": "11c. a frame without its closing mark is not counted (доработка п. 1)",
+    "file": "app/Modules/Plan/Domain/Check/Lesson/FrameRules.php",
+    "find": "            if ($unmarked !== []) {",
+    "replace": "            if (false) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonAssemblyTest.php",
+        "filter": "leaves the closing mark out of the comparison"
+      }
+    ]
+  },
+  {
+    "name": "12a. the served line's filler is the model's field (доработка п. 2)",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonAssembly.php",
+    "find": "                $filler = FrameText::line($phrase, $message->textTarget)['filler'];",
+    "replace": "                $filler = $phrase->filler($message->filler);",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonAssemblyTest.php",
+        "filter": "finds the filler of a line by its text"
+      }
+    ]
+  },
+  {
+    "name": "12b. the validator reads the model's filler field (доработка п. 2)",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonAssembly.php",
+    "find": "        return $phrase === null ? null : FrameText::line($phrase, $message->textTarget)['filler'];",
+    "replace": "        return $phrase?->filler($message->filler);",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonAssemblyTest.php",
+        "filter": "finds the filler of a line by its text"
+      }
+    ]
+  },
+  {
+    "name": "12c. the P2R context shows the model's filler field (доработка п. 2)",
+    "file": "app/Modules/Plan/Application/Service/LessonCardRepairer.php",
+    "find": "            context: LessonCardContext::of($read, $card),",
+    "replace": "            context: LessonCardContext::of($answer, $card),",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/LessonGateBuildTest.php",
+        "filter": "holds a repeated exchange"
+      }
+    ]
+  },
+  {
+    "name": "12d. the P2R card shows the model's filler field (доработка п. 2)",
+    "file": "app/Modules/Plan/Application/Service/LessonCardRepairer.php",
+    "find": "        $before = $card->of($read);",
+    "replace": "        $before = $card->of($answer);",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/LessonGateBuildTest.php",
+        "filter": "holds a repeated exchange"
+      }
+    ]
+  },
+  {
+    "name": "12e. when two fillers make the line, the last one wins (доработка п. 2)",
+    "file": "app/Modules/Plan/Domain/Service/FrameText.php",
+    "find": "        foreach ($phrase->fillers() as $filler) {",
+    "replace": "        foreach (array_reverse($phrase->fillers()) as $filler) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonAssemblyTest.php",
+        "filter": "finds the filler of a line by its text"
+      }
+    ]
+  },
+  {
+    "name": "13a. the served key is the model's (доработка п. 3)",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonAssembly.php",
+    "find": "SpeakingKey::ofFrame($phrase->frameTarget, $target)",
+    "replace": "$message->speakingKey",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonAssemblyTest.php",
+        "filter": "takes the speaking key of a line from its frame"
+      }
+    ]
+  },
+  {
+    "name": "13b. a key of five words (доработка п. 3)",
+    "file": "app/Modules/Plan/Domain/Service/SpeakingKey.php",
+    "find": "    public const MAX_WORDS = 4;",
+    "replace": "    public const MAX_WORDS = 5;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonAssemblyTest.php",
+        "filter": "takes the speaking key of a line from its frame"
+      }
+    ]
+  },
+  {
+    "name": "13c. the part without content words taken while the other has them (доработка п. 3)",
+    "file": "app/Modules/Plan/Domain/Service/SpeakingKey.php",
+    "find": "                return $inAfter > $inBefore ? self::first($after) : self::last($before);",
+    "replace": "                return self::last($before);",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonAssemblyTest.php",
+        "filter": "takes the speaking key of a line from its frame"
+      }
+    ]
+  },
+  {
+    "name": "14. a code with no broken rule of its own (51 codes)",
+    "file": "app/Modules/Plan/Domain/Check/LessonCodes.php",
+    "find": "            self::LINE_NE_FRAME, self::LINE_TOO_LONG, self::LINE_NO_FRAME, self::VARIANT_LONGER,",
+    "replace": "            self::LINE_NE_FRAME, self::LINE_TOO_LONG, self::LINE_NO_FRAME, 'key.too_long', self::VARIANT_LONGER,",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "has a broken rule for every one of its fifty codes"
+      }
+    ]
+  },
+  {
+    "name": "15. the clean lesson with a frame written without its mark",
+    "file": "app/Modules/Plan/Infrastructure/Model/FakePlanModel.php",
+    "find": "'frame_target' => 'It started ___.'",
+    "replace": "'frame_target' => 'It started ___'",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "finds nothing in a lesson that keeps every rule"
       }
     ]
   }

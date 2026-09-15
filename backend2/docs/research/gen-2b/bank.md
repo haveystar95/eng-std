@@ -4,9 +4,9 @@
 
 Ученик: Клиент · собеседник: Сотрудница банка (женщина)
 
-Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.080070 · 36.9 с · токены вход/выход 7488/4090 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 20 (фатальных 3) · порог в сборке: урок failed (fatal: line.ne_frame)
+Промт `lesson_day.v4.5` · модель `gpt-5.4-2026-03-05` · вызов урока $0.080070 · 36.9 с · токены вход/выход 7488/4090 · попыток урока: 1 · находок валидатора и судьи в ответе модели: 9 (фатальных 1) · судья швов `lesson_seam_judge.v1.1`
 
-> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок; реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках. «Судья» — вердикт судьи швов о собранной фразе на родном.
+> Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Это ответ модели БЕЗ починок (починки порога — внизу). Реплики — как их написала модель и получит приложение; наполнение реплики и ключ — серверные: наполнение найдено по тексту реплики среди наполнений её каркаса, ключ взят из каркаса. «Судья» — вердикт судьи швов о собранной фразе на родном.
 
 ## Сценарий диалога
 
@@ -15,19 +15,19 @@
 | 1 | вопрос ученика | Клиент (ученик) | I'd like to open a bank account. | Я хочу открыть банковский счёт. | p1 · a bank account | I'd like to open | |
 | 1 | вопрос ученика | Сотрудница банка (собеседник) | Sure. Can I see your passport first? | Конечно. Можно сначала ваш паспорт? |  |  | |
 | 2 | ответ | Сотрудница банка (собеседник) | I also need proof of address. | Мне ещё нужно подтверждение адреса. |  |  | |
-| 2 | ответ | Клиент (ученик) | Here is my my rental contract. (модель: «Here is my rental contract.») | Вот мой договор аренды. | p2 · my rental contract | Here is my | |
+| 2 | ответ | Клиент (ученик) | Here is my rental contract. | Вот мой договор аренды. | p2 · rental contract | Here is my | |
 | 3 | ответ | Сотрудница банка (собеседник) | Are you a student here? | Вы здесь студент? |  |  | |
-| 3 | ответ | Клиент (ученик) | I'm a student. | Я студент. | p3 · a student | I'm a | |
+| 3 | ответ | Клиент (ученик) | I'm a student. | Я студент. | p3 · a student | I'm | |
 | 4 | ответ | Сотрудница банка (собеседник) | What is your phone number? | Какой у вас номер телефона? |  |  | |
-| 4 | ответ | Клиент (ученик) | My phone number is 07911 456 230. | Мой номер телефона 07911 456 230. | p4 · 07911 456 230 | phone number is | |
-| 5 | вопрос ученика | Клиент (ученик) | What is the the monthly fee? (модель: «What is the monthly fee?») | Какая ежемесячная комиссия? | p5 · the monthly fee | monthly fee | |
+| 4 | ответ | Клиент (ученик) | My phone number is 07911 456 230. | Мой номер телефона 07911 456 230. | p4 · 07911 456 230 | My phone number is | |
+| 5 | вопрос ученика | Клиент (ученик) | What is the monthly fee? | Какая ежемесячная комиссия? | p5 · monthly fee | What is the | |
 | 5 | вопрос ученика | Сотрудница банка (собеседник) | For students, the account has no monthly fee. | Для студентов у этого счёта нет ежемесячной комиссии. |  |  | |
-| 6 | вопрос ученика | Клиент (ученик) | When will the card be ready? | Когда карта будет готова? | p6 · the card | will the card | |
+| 6 | вопрос ученика | Клиент (ученик) | When will the card be ready? | Когда карта будет готова? | p6 · the card | be ready | |
 | 6 | вопрос ученика | Сотрудница банка (собеседник) | It will arrive in five to seven business days. | Она придёт через пять-семь рабочих дней. |  |  | |
-| 7 | вопрос ученика | Клиент (ученик) | Can I keep it for one year? | Я могу оставить его на один год? | p7 · one year | keep it for | |
+| 7 | вопрос ученика | Клиент (ученик) | Can I keep it for one year? | Я могу оставить его на один год? | p7 · one year | I keep it for | |
 | 7 | вопрос ученика | Сотрудница банка (собеседник) | Yes. The account can stay open for your one-year course. | Да. Счёт может оставаться открытым на время вашего годичного курса. |  |  | |
 | 8 | ответ | Сотрудница банка (собеседник) | I'll open the account today, and your card will come by post. | Я открою счёт сегодня, а ваша карта придёт по почте. |  |  | |
-| 8 | ответ | Клиент (ученик) | The account opens today. | Счёт откроется сегодня. | p8 · today | opens today | |
+| 8 | ответ | Клиент (ученик) | The account opens today. | Счёт откроется сегодня. | p8 · today | The account opens | |
 
 ## Каркасы
 
@@ -154,18 +154,7 @@
 | `frame.native_agreement` | предупреждение | p5 | «Какая ___?»: «какая» agrees with the slot — it changes with the filler |
 | `frame.native_agreement` | предупреждение | p6 | «Когда ___ будет готово?»: «готово» agrees with the slot — it changes with the filler |
 | `frame.unresolved_pronoun` | предупреждение | p7 | «Can I keep it for ___?» leans on «it», and nothing in the frame is what it stands for |
-| `filler.one_in_dialogue` | предупреждение | B2 | «my rental contract» is not one of p2's fillers |
-| `filler.one_in_dialogue` | предупреждение | p2.f1 | «rental contract» is marked in_dialogue, but no line says it |
-| `filler.one_in_dialogue` | предупреждение | B5 | «the monthly fee» is not one of p5's fillers |
-| `filler.one_in_dialogue` | предупреждение | p5.f1 | «monthly fee» is marked in_dialogue, but no line says it |
-| `line.ne_frame` | **фатально** | B2 | «Here is my rental contract.» is not «Here is my ___.» with «my rental contract»; served as «Here is my my rental contract.» |
-| `key.no_content_word` | предупреждение | B3 | «I'm ___.» has no content word outside the slot: the key is «I'm», the frame up to the slot, not «I'm a» |
-| `key.contains_filler` | предупреждение | B3 | the key «I'm a» takes words of the filler «a student» |
 | `variant.longer` | предупреждение | B3 | the variant «I am a student.» has 4 words, the line 3 |
-| `line.ne_frame` | **фатально** | B5 | «What is the monthly fee?» is not «What is the ___?» with «the monthly fee»; served as «What is the the monthly fee?» |
-| `key.contains_filler` | предупреждение | B5 | the key «monthly fee» takes words of the filler «the monthly fee» |
-| `key.contains_filler` | предупреждение | B6 | the key «will the card» takes words of the filler «the card» |
-| `key.contains_filler` | предупреждение | B8 | the key «opens today» takes words of the filler «today» |
 | `listening.distractor_not_filler` | предупреждение | L3 | the question asks p3's slot («студент»): the right option «Для студентов её нет» is neither a number nor a time, the wrong option «Она будет через месяц» is a number or a time |
 | `vocab.used_in_wrong` | предупреждение | v4 | «student status» is not in the partner's line of exchange 3 |
 | `filler.native_seam` | предупреждение | p6.f1 | «Когда карта будет готово?» («Когда ___ будет готово?» with «карта») does not read as Russian, the seam judge says |
@@ -177,6 +166,5 @@
 
 ## Порог (фатальные коды → P2R, не больше двух карточек)
 
-- **Живая сборка** (валидатор до двух уточнений отчёта §3, P2R на `gpt-5.4-mini`): P2R x1 (exchange, $0.005488, 1876 мс: exchange.second_question); B2 (line, $0.003517, 1772 мс: filler.one_in_dialogue, line.ne_frame); итог: failed — fatal: line.ne_frame.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4`**: failed — fatal: line.ne_frame · карточки x1, B2 · $0.030086 · 4871 мс.
-- **Порог на валидаторе сдачи, P2R на `gpt-5.4-mini`**: failed — fatal: exchange.second_question, line.ne_frame · карточки x1, B2 · $0.009032 · 4601 мс.
+- **Живая сборка GEN-2b** (валидатор до сдачи, P2R на `gpt-5.4-mini`): P2R x1 (exchange, $0.005488, 1876 мс: exchange.second_question); B2 (line, $0.003517, 1772 мс: filler.one_in_dialogue, line.ne_frame); итог: failed — fatal: line.ne_frame.
+- **Порог доработки** (валидатор доработки, P2R на `gpt-5.4`): проходит после починки · карточки x1 · $0.018365 · 5396 мс.
