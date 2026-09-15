@@ -20,10 +20,10 @@ final readonly class ModelCall
         public int $attempts,
     ) {}
 
-    /** The same call with money spent on it afterwards (a repair of one of its cards) — no new attempt. */
-    public function plusCost(string $costUsd): self
+    /** The same call with money (and time) spent on it afterwards — repairs of its cards; no new attempt. */
+    public function plusCost(string $costUsd, int $latencyMs = 0): self
     {
-        return new self($this->promptVersion, $this->buildVersion, $this->model, self::addCosts($this->costUsd, $costUsd), $this->latencyMs, $this->attempts);
+        return new self($this->promptVersion, $this->buildVersion, $this->model, self::addCosts($this->costUsd, $costUsd), $this->latencyMs + $latencyMs, $this->attempts);
     }
 
     public static function addCosts(string $a, string $b): string

@@ -16,19 +16,20 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 
 /**
- * THE LESSON CALL OF `lesson_day.v4.4` OVER HTTP (наряд GEN-2a): the validator observes and the day comes out;
- * a refusal is only an answer off the schema; the inputs are the prompt's — the learner's gender from the
- * profile at the moment the day is written, the learner's own words beside the brief, no count of frames.
+ * THE LESSON CALL OF `lesson_day.v4.4` OVER HTTP (наряд GEN-2a): warnings are counted and the day comes out (the
+ * fatal codes — `LessonGateBuildTest`); a refusal is only an answer off the schema; the inputs are the prompt's —
+ * the learner's gender from the profile at the moment the day is written, the learner's own words beside the
+ * brief, no count of frames.
  */
 
-// Canon: «Валидатор — режим наблюдения (день ВЫХОДИТ, нарушения считаются)». Catches a finding that refuses the lesson,
-// buys a second call, or leaves the day unopenable — and findings that lose their card's address.
+// Canon: «остальные — предупреждения» (день ВЫХОДИТ, нарушения считаются). Catches a warning that refuses the lesson,
+// buys a second call or a repair, or leaves the day unopenable — and findings that lose their card's address.
 it('counts what a lesson breaks and gives the day all the same', function () {
     [, $token] = planLearner();
     $fake = new FakePlanModel(lesson: static function ($request): array {
         $p = FakePlanModel::lessonPayload($request);
         $p['dialogue'][0]['messages'][1]['speaking_key'] = 'in his';
-        $p['dialogue'][1]['messages'][1]['text_target'] = 'It began three days ago.';
+        $p['dialogue'][1]['check']['options'][1]['text_target'] = 'Earlier this week';
         $p['phrases'][4]['frame_native'] = 'Он будет отдыхать в/на ___.';
 
         return $p;
@@ -41,16 +42,17 @@ it('counts what a lesson breaks and gives the day all the same', function () {
 
     $findings = json_decode((string) DB::table('plan_scenes')->where('plan_id', $build['id'])->value('checks_json'), true);
     expect($fake->lessonCalls)->toBe(1)
+        ->and($fake->repairCalls)->toBe(0)
         ->and(planRead($this, $token, $build['id'])['scenes'][0]['lesson_status'])->toBe('ready')
         ->and(count($day['cards']))->toBeGreaterThan(60)
         ->and(array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", $findings))
-        ->toEqualCanonicalizing(['frame.native_alternatives@p5', 'line.ne_frame@B2', 'key.no_content_word@B1']);
+        ->toEqualCanonicalizing(['frame.native_alternatives@p5', 'check.verbatim@x2.check', 'key.no_content_word@B1']);
 
     [, $admin] = adminActor();
     $rows = $this->withHeader('Authorization', "Bearer {$admin}")->getJson('/admin/api/plans/checks')->assertOk()->json('data');
     expect(array_values(array_filter($rows, static fn (array $r): bool => $r['prompt_version'] === 'lesson_day.v4.4')))->toEqualCanonicalizing([
         ['prompt_version' => 'lesson_day.v4.4', 'check' => 'frame.native_alternatives', 'action' => 'counted', 'hits' => 1],
-        ['prompt_version' => 'lesson_day.v4.4', 'check' => 'line.ne_frame', 'action' => 'counted', 'hits' => 1],
+        ['prompt_version' => 'lesson_day.v4.4', 'check' => 'check.verbatim', 'action' => 'counted', 'hits' => 1],
         ['prompt_version' => 'lesson_day.v4.4', 'check' => 'key.no_content_word', 'action' => 'counted', 'hits' => 1],
     ]);
 });

@@ -16,8 +16,14 @@ use App\Modules\Plan\Domain\Service\Words;
 /**
  * THE CHECK OF EVERY EXCHANGE (`lesson_day.v4.4`, CHECK PER EXCHANGE): always about the partner's
  * line, never about the learner's; the right option a paraphrase — no two consecutive words of the
- * partner's line (a pair of two function words aside); no alternative the partner named offered as a
- * wrong option.
+ * partner's line; no alternative the partner named offered as a wrong option.
+ *
+ * A repeated pair that has no paraphrase is not a copy (решение архитектора после GEN-2a): a pair of two
+ * function words («in the»); a pair with a number, a name or a counted thing in it («forty pounds», «2 400»,
+ * «the first», «take Nurofen», «designer and» after «one designer»); a pair whose content words are all the
+ * lesson's own items — words of its vocabulary or of a frame's fillers («the pasta»): the check names the item
+ * the partner stated. A time is not exempt — the prompt's own paraphrase of «twice a day after meals» is
+ * «morning and evening, after eating».
  *
  * «About the learner» is read two ways: the question names the learner's role as the one who said
  * something, or the right option shares two content words with the learner's line and none with the
@@ -33,6 +39,7 @@ final class CheckRules implements LessonRule
             return [];
         }
         $out = [];
+        $items = self::itemWords($answer);
         foreach ($answer->exchanges as $exchange) {
             $partner = $exchange->partner();
             $right = $exchange->check->correctOption();
@@ -41,7 +48,11 @@ final class CheckRules implements LessonRule
             }
             $address = LessonViolation::check($exchange->step);
 
-            $repeated = array_values(array_intersect(self::pairs($right->textTarget), self::pairs($partner->textTarget)));
+            $fixed = [...EnglishWords::names($partner->textTarget), ...self::counted($partner->textTarget)];
+            $repeated = array_values(array_filter(
+                array_intersect(self::pairs($right->textTarget), self::pairs($partner->textTarget)),
+                static fn (string $pair): bool => ! self::withoutParaphrase($pair, $fixed, $items),
+            ));
             if ($repeated !== []) {
                 $out[] = new LessonViolation(LessonCodes::CHECK_VERBATIM, $address, "the right option «{$right->textTarget}» repeats «{$repeated[0]}» of the partner's line");
             }
@@ -84,6 +95,77 @@ final class CheckRules implements LessonRule
         return $learner !== null
             && EnglishWords::shared($right->textTarget, $learner->textTarget) >= 2
             && EnglishWords::shared($right->textTarget, $partner->textTarget) === 0;
+    }
+
+    /**
+     * A repeated pair no paraphrase can avoid: a number, a name or a counted thing in it, or nothing but the
+     * lesson's items.
+     *
+     * @param  list<string>  $fixed  the partner line's names and counted things, lower-cased
+     * @param  list<string>  $items  the words of the lesson's vocabulary and fillers
+     */
+    private static function withoutParaphrase(string $pair, array $fixed, array $items): bool
+    {
+        // «one week»: a number word may be a function word of the lists, and still the number.
+        foreach (Words::tokens($pair) as $word) {
+            if (EnglishWords::isNumber($word) || in_array($word, $fixed, true)) {
+                return true;
+            }
+        }
+        $content = EnglishWords::content($pair);
+        foreach ($content as $word) {
+            $item = false;
+            foreach ($items as $other) {
+                if (EnglishWords::sameStem($word, $other)) {
+                    $item = true;
+                    break;
+                }
+            }
+            if (! $item) {
+                return false;
+            }
+        }
+
+        return $content !== [];
+    }
+
+    /**
+     * The things a line counts: the word right after a number («six developers, one designer» — the amount is
+     * the number with its thing).
+     *
+     * @return list<string>
+     */
+    private static function counted(string $line): array
+    {
+        $tokens = Words::tokens($line);
+        $out = [];
+        for ($i = 0; $i + 1 < count($tokens); $i++) {
+            if (EnglishWords::isNumber($tokens[$i]) && ! EnglishWords::isFunction($tokens[$i + 1])) {
+                $out[] = $tokens[$i + 1];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * The content words of the lesson's own items — its vocabulary terms and every frame's fillers.
+     *
+     * @return list<string>
+     */
+    private static function itemWords(Lesson $answer): array
+    {
+        $words = [];
+        foreach ($answer->vocabulary as $item) {
+            $words = [...$words, ...EnglishWords::content($item->termTarget)];
+        }
+        foreach ($answer->phrases as $phrase) {
+            foreach ($phrase->fillers() as $filler) {
+                $words = [...$words, ...EnglishWords::content($filler->target)];
+            }
+        }
+
+        return array_values(array_unique($words));
     }
 
     /**

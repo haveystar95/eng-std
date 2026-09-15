@@ -4,7 +4,7 @@
 
 Сцена: «Просмотр жилья» / «Flat viewing» · ученик: Будущий арендатор · собеседник: Арендодатель (мужчина)
 
-Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.076523 · 29.1 с · токены вход/выход 6651/3993 · одна попытка: да · находок валидатора: 21
+Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.076523 · 29.1 с · токены вход/выход 6651/3993 · одна попытка: да · находок валидатора: 18
 
 > Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках.
 
@@ -135,28 +135,25 @@
 | v7 | allowed | слово | разрешён | элауд | permitted by rules or by the owner | p6, A6 | — | |
 | v8 | move in | связка | въехать | мув ин | start living in a new home | p7, A7 | person carrying a box into an apartment doorway | |
 
-## Находки валидатора (режим наблюдения — день вышел)
+## Находки валидатора (урок как его написала модель; фатальные держат день до P2R, §15 отчёта)
 
-| код | адрес | что |
-|---|---|---|
-| `exchange.second_question` | B1 | the closing message «What about electricity?» ends with a question mark |
-| `exchange.second_question` | B2 | the closing message «How much is the deposit?» ends with a question mark |
-| `filler.one_in_dialogue` | p2 | exchanges 2 and 8 say p2 with the same filler «the deposit» |
-| `filler.one_in_dialogue` | B3 | «one year» is not one of p3's fillers |
-| `filler.one_in_dialogue` | p3.f1 | «one-year» is marked in_dialogue, but no line says it |
-| `key.no_content_word` | B1 | the key «What about» has no content word |
-| `line.ne_frame` | B3 | «I need a one-year contract.» is not «I need a ___ contract.» with «one year»; served as «I need a one year contract.» |
-| `key.not_in_line` | B3 | the key «need a contract» is not in «I need a one year contract.» |
-| `key.contains_filler` | B4 | the key «work from» takes words of the filler «from home» |
-| `key.contains_filler` | B6 | the key «cat allowed» takes words of the filler «a cat» |
-| `variant.longer` | B6 | the variant «Can I keep a cat?» has 5 words, the line 4 |
-| `key.no_content_word` | B7 | the key «When can I» has no content word |
-| `check.verbatim` | x1.check | the right option «Water and heating» repeats «water and» of the partner's line |
-| `check.verbatim` | x2.check | the right option «Electricity and internet» repeats «electricity and» of the partner's line |
-| `check.verbatim` | x7.check | the right option «On the first day of next month» repeats «the first» of the partner's line |
-| `check.verbatim` | x8.check | the right option «2,400 euros» repeats «2 400» of the partner's line |
-| `listening.no_learner_value` | lesson | no question asks for a value the learner gave (a filler said in the dialogue) |
-| `vocab.used_in_wrong` | v1 | «deposit» is not in the partner's line of exchange 8 |
-| `vocab.used_in_wrong` | v5 | «fixed-term» is not in the partner's line of exchange 4 |
-| `vocab.free_combination` | v6 | «work from home» is a free combination of ordinary words |
-| `answer.index_skew` | lesson | the right answer stands at index 1 in 9 of 12 questions (75 %) |
+| код | порог | адрес | что |
+|---|---|---|---|
+| `exchange.second_question` | предупреждение | B1 | the closing message «What about electricity?» ends with a question mark |
+| `exchange.second_question` | предупреждение | B2 | the closing message «How much is the deposit?» ends with a question mark |
+| `filler.one_in_dialogue` | предупреждение | p2 | exchanges 2 and 8 say p2 with the same filler «the deposit» |
+| `filler.one_in_dialogue` | предупреждение | B3 | «one year» is not one of p3's fillers |
+| `filler.one_in_dialogue` | предупреждение | p3.f1 | «one-year» is marked in_dialogue, but no line says it |
+| `key.no_content_word` | предупреждение | B1 | the key «What about» has no content word |
+| `line.ne_frame` | **фатально** | B3 | «I need a one-year contract.» is not «I need a ___ contract.» with «one year»; served as «I need a one year contract.» |
+| `key.not_in_line` | предупреждение | B3 | the key «need a contract» is not in «I need a one year contract.» |
+| `key.contains_filler` | предупреждение | B4 | the key «work from» takes words of the filler «from home» |
+| `key.contains_filler` | предупреждение | B6 | the key «cat allowed» takes words of the filler «a cat» |
+| `variant.longer` | предупреждение | B6 | the variant «Can I keep a cat?» has 5 words, the line 4 |
+| `key.no_content_word` | предупреждение | B7 | the key «When can I» has no content word |
+| `check.verbatim` | предупреждение | x1.check | the right option «Water and heating» repeats «water and» of the partner's line |
+| `check.verbatim` | предупреждение | x7.check | the right option «On the first day of next month» repeats «of next» of the partner's line |
+| `listening.no_learner_value` | предупреждение | lesson | no question asks for a value the learner gave (a filler said in the dialogue) |
+| `vocab.used_in_wrong` | предупреждение | v1 | «deposit» is not in the partner's line of exchange 8 |
+| `vocab.used_in_wrong` | предупреждение | v5 | «fixed-term» is not in the partner's line of exchange 4 |
+| `vocab.free_combination` | предупреждение | v6 | «work from home» is a free combination of ordinary words |

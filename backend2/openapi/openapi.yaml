@@ -2807,7 +2807,7 @@ components:
             - $ref: '#/components/schemas/PlanSceneImage'
             - type: 'null'
         lesson_status: { type: string, enum: [pending, building, ready, failed], description: '`building` also while the lesson is written and its photos are being found — a day is `ready` with its pictures on it (DAY-UI-3)' }
-        lesson_fail_reason: { type: [string, 'null'] }
+        lesson_fail_reason: { type: [string, 'null'], description: 'Why a `failed` lesson failed — for logs and the admin, not parsed by the client. A lesson the gate failed (a fatal validator finding left after two card repairs, or one no card can take) reads `fatal: <codes>`, e.g. `fatal: line.ne_frame, check.shape` (GEN-2a)' }
         day_number: { type: [integer, 'null'], description: 'Which day the scene stands on; null for a scene not (yet) on the route' }
         cost_usd: { type: [string, 'null'] }
         latency_ms: { type: [integer, 'null'] }

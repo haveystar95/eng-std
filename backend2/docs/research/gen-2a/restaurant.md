@@ -4,7 +4,7 @@
 
 Сцена: «Заказ в ресторане» / «Ordering at Table» · ученик: Родитель · собеседник: Официант (мужчина)
 
-Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.073318 · 24.6 с · токены вход/выход 6641/3781 · одна попытка: да · находок валидатора: 12
+Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.073318 · 24.6 с · токены вход/выход 6641/3781 · одна попытка: да · находок валидатора: 6
 
 > Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках.
 
@@ -143,19 +143,13 @@
 | v7 | bill | слово | счёт | бил | the paper showing how much you must pay | p7 | restaurant bill folder on a table | |
 | v8 | by card | связка | картой | бай кард | using a bank card to pay | p8 | customer paying with a bank card at a restaurant table | |
 
-## Находки валидатора (режим наблюдения — день вышел)
+## Находки валидатора (урок как его написала модель; фатальные держат день до P2R, §15 отчёта)
 
-| код | адрес | что |
-|---|---|---|
-| `frame.native_alternatives` | p5 | «Я бы хотел(а) ___.» writes alternatives inside the frame |
-| `key.no_content_word` | B3 | the key «What is in» has no content word |
-| `key.no_content_word` | B4 | the key «Does it have» has no content word |
-| `variant.longer` | B4 | the variant «Are there nuts in it?» has 5 words, the line 4 |
-| `key.no_content_word` | B7 | the key «Can we have» has no content word |
-| `check.verbatim` | x6.check | the right option «The pasta» repeats «the pasta» of the partner's line |
-| `check.verbatim` | x8.check | the right option «Forty pounds» repeats «forty pounds» of the partner's line |
-| `listening.same_exchange` | L3 | L2 and this question are both about exchange 6 |
-| `listening.distractor_not_filler` | L1 | the question asks p2's slot («две воды»), but 1 of its wrong options are p2's other fillers (expected 2) |
-| `listening.distractor_not_filler` | L2 | the question asks p6's slot («пасту»), but 1 of its wrong options are p6's other fillers (expected 2) |
-| `listening.distractor_not_filler` | L3 | the question asks p4's slot («орехи»), but 0 of its wrong options are p4's other fillers (expected 2) |
-| `answer.index_skew` | lesson | the right answer stands at index 1 in 8 of 12 questions (67 %) |
+| код | порог | адрес | что |
+|---|---|---|---|
+| `frame.native_alternatives` | предупреждение | p5 | «Я бы хотел(а) ___.» writes alternatives inside the frame |
+| `key.no_content_word` | предупреждение | B3 | the key «What is in» has no content word |
+| `key.no_content_word` | предупреждение | B4 | the key «Does it have» has no content word |
+| `variant.longer` | предупреждение | B4 | the variant «Are there nuts in it?» has 5 words, the line 4 |
+| `key.no_content_word` | предупреждение | B7 | the key «Can we have» has no content word |
+| `listening.same_exchange` | предупреждение | L3 | L2 and this question are both about exchange 6 |

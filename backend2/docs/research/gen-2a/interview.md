@@ -4,7 +4,7 @@
 
 Сцена: «Собеседование» / «Interview» · ученик: Кандидат · собеседник: Нанимающий менеджер (женщина)
 
-Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.083475 · 33.3 с · токены вход/выход 6630/4460 · одна попытка: да · находок валидатора: 7
+Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.083475 · 33.3 с · токены вход/выход 6630/4460 · одна попытка: да · находок валидатора: 5
 
 > Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках.
 
@@ -146,14 +146,12 @@
 | v7 | cross-functional communication | связка | кросс-функциональная коммуникация | крос-фанкшэнэл кэмьюникейшн | communication between people from different job functions | A7 | developer designer and QA engineer discussing work together | |
 | v8 | handle challenges | связка | справляться со сложностями | хэндл челинджиз | to deal with problems effectively | A8, p8 | manager reviewing risks and notes during a project discussion | |
 
-## Находки валидатора (режим наблюдения — день вышел)
+## Находки валидатора (урок как его написала модель; фатальные держат день до P2R, §15 отчёта)
 
-| код | адрес | что |
-|---|---|---|
-| `key.not_in_line` | B1 | the key «have of experience» is not in «I have five years of experience.» |
-| `variant.longer` | B1 | the variant «I have five years in project management.» has 7 words, the line 6 |
-| `key.contains_filler` | B7 | the key «success in this» takes words of the filler «success in this role» |
-| `check.verbatim` | x1.check | the right option «Your background managing projects» repeats «your background» of the partner's line |
-| `check.verbatim` | x2.check | the right option «Your current job title» repeats «your current» of the partner's line |
-| `check.verbatim` | x6.check | the right option «Six developers, one designer, and one QA engineer» repeats «six developers» of the partner's line |
-| `listening.distractor_not_filler` | L4 | the question asks p6's slot («структуре команды»), but 0 of its wrong options are p6's other fillers (expected 2) |
+| код | порог | адрес | что |
+|---|---|---|---|
+| `key.not_in_line` | предупреждение | B1 | the key «have of experience» is not in «I have five years of experience.» |
+| `variant.longer` | предупреждение | B1 | the variant «I have five years in project management.» has 7 words, the line 6 |
+| `key.contains_filler` | предупреждение | B7 | the key «success in this» takes words of the filler «success in this role» |
+| `check.verbatim` | предупреждение | x1.check | the right option «Your background managing projects» repeats «your background» of the partner's line |
+| `check.verbatim` | предупреждение | x2.check | the right option «Your current job title» repeats «your current» of the partner's line |

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check;
 
 /**
- * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.4`; наряд GEN-2a). Nothing here is fatal:
- * a lesson is accepted whatever it breaks, every breach is counted by code, and which codes become
- * fatal is decided by the architect after live lessons, not in this file.
+ * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.4`; наряд GEN-2a). Every breach is counted by
+ * code; five of them are fatal — the day is not dealt until a repair takes their card ({@see LessonGate},
+ * the architect's decision after six live days) — and the rest are warnings: counted and kept.
  *
  * Canon with the exact rule of every code — `docs/plan-v2.md` §4.
  */
@@ -110,12 +110,10 @@ final class LessonCodes
 
     public const VOCAB_NESTED = 'vocab.nested';
 
-    // Native text, image prompts, answer places.
+    // Native text, image prompts.
     public const NATIVE_GENDERED_PAST = 'native.gendered_past';
 
     public const IMAGE_PROMPT_RULE_TEXT = 'image_prompt.rule_text';
-
-    public const ANSWER_INDEX_SKEW = 'answer.index_skew';
 
     /** @return list<string> every code, in the order the report lists them */
     public static function all(): array
@@ -133,7 +131,7 @@ final class LessonCodes
             self::CHECK_ABOUT_LEARNER, self::CHECK_VERBATIM, self::CHECK_LISTED_ALTERNATIVE_AS_WRONG,
             self::LISTENING_COUNT, self::LISTENING_SAME_EXCHANGE, self::LISTENING_NO_LEARNER_VALUE, self::LISTENING_DISTRACTOR_NOT_FILLER,
             self::VOCAB_FREE_COMBINATION, self::VOCAB_EVERYDAY_WORD, self::VOCAB_USED_IN_WRONG, self::VOCAB_LEARNER_SHARE, self::VOCAB_NESTED,
-            self::NATIVE_GENDERED_PAST, self::IMAGE_PROMPT_RULE_TEXT, self::ANSWER_INDEX_SKEW,
+            self::NATIVE_GENDERED_PAST, self::IMAGE_PROMPT_RULE_TEXT,
         ];
     }
 }

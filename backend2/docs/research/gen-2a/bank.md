@@ -4,7 +4,7 @@
 
 Сцена: «Счёт и карта» / «Account and card» · ученик: Студент, клиент банка · собеседник: Сотрудница банка (женщина)
 
-Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.075450 · 28.9 с · токены вход/выход 6636/3924 · одна попытка: да · находок валидатора: 21
+Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.075450 · 28.9 с · токены вход/выход 6636/3924 · одна попытка: да · находок валидатора: 19
 
 > Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках.
 
@@ -126,28 +126,26 @@
 | v7 | by post | связка | по почте | бай поуст | sent or delivered through the mail | A6 | sealed bank envelope in a home mailbox | |
 | v8 | renew | слово | продлить | ринью | to continue something for a new period | A7, A8 | — | |
 
-## Находки валидатора (режим наблюдения — день вышел)
+## Находки валидатора (урок как его написала модель; фатальные держат день до P2R, §15 отчёта)
 
-| код | адрес | что |
-|---|---|---|
-| `pronunciation.script` | p2.f1 | the reading «май пáспорт» leaves the native script |
-| `pronunciation.script` | v2 | the reading «пáспорт» leaves the native script |
-| `pronunciation.script` | B2 | the reading «Хиэр из май пáспорт.» leaves the native script |
-| `frame.native_alternatives` | p2 | «Вот мой/моё ___.» writes alternatives inside the frame |
-| `frame.native_alternatives` | p4 | «Какая/какой ___?» writes alternatives inside the frame |
-| `filler.ungrammatical` | p2.f1 | «Here is my my passport.»: a word is doubled at the seam |
-| `filler.ungrammatical` | p2.f2 | «Here is my my rental letter.»: a word is doubled at the seam |
-| `filler.ungrammatical` | p2.f3 | «Here is my my student letter.»: a word is doubled at the seam |
-| `line.ne_frame` | B2 | «Here is my passport.» is not «Here is my ___.» with «my passport»; served as «Here is my my passport.» |
-| `key.no_content_word` | B2 | the key «Here is my» has no content word |
-| `line.ne_frame` | B3 | «Here is my rental letter.» is not «Here is my ___.» with «my rental letter»; served as «Here is my my rental letter.» |
-| `key.no_content_word` | B3 | the key «Here is my» has no content word |
-| `key.no_content_word` | B4 | the key «am a» has no content word |
-| `key.contains_filler` | B4 | the key «am a» takes words of the filler «a student» |
-| `key.no_content_word` | B5 | the key «What is the» has no content word |
-| `key.contains_filler` | B5 | the key «What is the» takes words of the filler «the monthly fee» |
-| `variant.longer` | B5 | the variant «How much is the monthly fee?» has 6 words, the line 5 |
-| `key.no_content_word` | B6 | the key «When will the» has no content word |
-| `key.contains_filler` | B6 | the key «When will the» takes words of the filler «the bank card» |
-| `listening.distractor_not_filler` | L1 | the question asks p1's slot («банковский счёт»), but 0 of its wrong options are p1's other fillers (expected 2) |
-| `listening.distractor_not_filler` | L3 | the question asks p2's slot («моё письмо об аренде»), but 0 of its wrong options are p2's other fillers (expected 2) |
+| код | порог | адрес | что |
+|---|---|---|---|
+| `pronunciation.script` | предупреждение | p2.f1 | the reading «май пáспорт» leaves the native script |
+| `pronunciation.script` | предупреждение | v2 | the reading «пáспорт» leaves the native script |
+| `pronunciation.script` | предупреждение | B2 | the reading «Хиэр из май пáспорт.» leaves the native script |
+| `frame.native_alternatives` | предупреждение | p2 | «Вот мой/моё ___.» writes alternatives inside the frame |
+| `frame.native_alternatives` | предупреждение | p4 | «Какая/какой ___?» writes alternatives inside the frame |
+| `filler.ungrammatical` | **фатально** | p2.f1 | «Here is my my passport.»: a word is doubled at the seam |
+| `filler.ungrammatical` | **фатально** | p2.f2 | «Here is my my rental letter.»: a word is doubled at the seam |
+| `filler.ungrammatical` | **фатально** | p2.f3 | «Here is my my student letter.»: a word is doubled at the seam |
+| `line.ne_frame` | **фатально** | B2 | «Here is my passport.» is not «Here is my ___.» with «my passport»; served as «Here is my my passport.» |
+| `key.no_content_word` | предупреждение | B2 | the key «Here is my» has no content word |
+| `line.ne_frame` | **фатально** | B3 | «Here is my rental letter.» is not «Here is my ___.» with «my rental letter»; served as «Here is my my rental letter.» |
+| `key.no_content_word` | предупреждение | B3 | the key «Here is my» has no content word |
+| `key.no_content_word` | предупреждение | B4 | the key «am a» has no content word |
+| `key.contains_filler` | предупреждение | B4 | the key «am a» takes words of the filler «a student» |
+| `key.no_content_word` | предупреждение | B5 | the key «What is the» has no content word |
+| `key.contains_filler` | предупреждение | B5 | the key «What is the» takes words of the filler «the monthly fee» |
+| `variant.longer` | предупреждение | B5 | the variant «How much is the monthly fee?» has 6 words, the line 5 |
+| `key.no_content_word` | предупреждение | B6 | the key «When will the» has no content word |
+| `key.contains_filler` | предупреждение | B6 | the key «When will the» takes words of the filler «the bank card» |

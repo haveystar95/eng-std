@@ -4,7 +4,7 @@
 
 Сцена: «Регистрация» / «Check-in» · ученик: Пассажир · собеседник: Сотрудница регистрации (женщина)
 
-Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.075988 · 25.5 с · токены вход/выход 6611/3964 · одна попытка: да · находок валидатора: 13
+Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.075988 · 25.5 с · токены вход/выход 6611/3964 · одна попытка: да · находок валидатора: 10
 
 > Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках.
 
@@ -136,20 +136,17 @@
 | v7 | window seat | связка | место у окна | уиндоу сит | a seat next to the window on a plane | p6, A6 | airplane seat beside a window | |
 | v8 | boarding | слово | посадка | бординг | the process of getting onto the plane | A7, A8 | airport gate screen showing boarding time | |
 
-## Находки валидатора (режим наблюдения — день вышел)
+## Находки валидатора (урок как его написала модель; фатальные держат день до P2R, §15 отчёта)
 
-| код | адрес | что |
-|---|---|---|
-| `key.no_content_word` | B1 | the key «Here is my» has no content word |
-| `key.contains_filler` | B1 | the key «Here is my» takes words of the filler «my passport» |
-| `variant.longer` | B2 | the variant «My flight is to London.» has 5 words, the line 4 |
-| `key.no_content_word` | B3 | the key «I have» has no content word |
-| `key.contains_filler` | B5 | the key «take the» takes words of the filler «the backpack» |
-| `key.contains_filler` | B6 | the key «like a» takes words of the filler «a window seat» |
-| `key.no_content_word` | B7 | the key «Where is the» has no content word |
-| `key.contains_filler` | B7 | the key «Where is the» takes words of the filler «the gate» |
-| `check.verbatim` | x6.check | the right option «14A next to the window» repeats «the window» of the partner's line |
-| `listening.distractor_not_filler` | L2 | the question asks p3's slot («один чемодан и один рюкзак»), but 1 of its wrong options are p3's other fillers (expected 2) |
-| `listening.distractor_not_filler` | L3 | the question asks p6's slot («место у окна»), but 1 of its wrong options are p6's other fillers (expected 2) |
-| `vocab.used_in_wrong` | v5 | «check in» is not in frame p4 or its fillers |
-| `vocab.used_in_wrong` | v7 | «window seat» is not in the partner's line of exchange 6 |
+| код | порог | адрес | что |
+|---|---|---|---|
+| `key.no_content_word` | предупреждение | B1 | the key «Here is my» has no content word |
+| `key.contains_filler` | предупреждение | B1 | the key «Here is my» takes words of the filler «my passport» |
+| `variant.longer` | предупреждение | B2 | the variant «My flight is to London.» has 5 words, the line 4 |
+| `key.no_content_word` | предупреждение | B3 | the key «I have» has no content word |
+| `key.contains_filler` | предупреждение | B5 | the key «take the» takes words of the filler «the backpack» |
+| `key.contains_filler` | предупреждение | B6 | the key «like a» takes words of the filler «a window seat» |
+| `key.no_content_word` | предупреждение | B7 | the key «Where is the» has no content word |
+| `key.contains_filler` | предупреждение | B7 | the key «Where is the» takes words of the filler «the gate» |
+| `vocab.used_in_wrong` | предупреждение | v5 | «check in» is not in frame p4 or its fillers |
+| `vocab.used_in_wrong` | предупреждение | v7 | «window seat» is not in the partner's line of exchange 6 |

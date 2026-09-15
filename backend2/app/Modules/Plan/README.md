@@ -61,7 +61,8 @@ Pure services: `PlanCalendar` (layout 1…10, days until the event), `DayAssembl
 day, dealt deterministically), `RouteStages` (which stages a day on the route has and where each
 stands — from card tallies, the dealer's outline or the day type), `BlueprintChecker` (the plan
 checks in observe/drop/gate), `LessonValidator` + `Check/Lesson/*Rules` (the lesson's codes, each with its
-card's address — observation only, nothing refused, `LessonCodes`), `Words` / `FrameText` / `EnglishWords` /
+card's address, `LessonCodes`), `LessonGate` (the five fatal codes, the card order a repair takes, at most two cards,
+the `fatal: …` reason), `Words` / `FrameText` / `EnglishWords` /
 `NativeWords` / `NativeScript` (the text rules the validator and the assembly share), `DayMetricsCalculator`,
 `NativeStrings`, `Shuffle`.
 The day window (DAY-UI-2, `window` of the day read, put together by `Application/Service/DayWindowViews`):
@@ -76,8 +77,10 @@ The voice (DAY-UI-3): `SpokenLines` (what a day says out loud, the file names, w
 owes, as ≤ 4 calls), `SceneVoices` + `SceneAudioIndex` (a reader's lookup in the speaker's voice).
 `WordUsage` (the line of the day a word is said in — by the lesson's `used_in` — and its place in it, sheet 23-0e).
 Application: `LessonBuildService` (the lesson call, one retry only for an answer off the schema, the validator's
-findings counted by code) and `LessonCardRepairer` + `ReviseLesson` (P2R: one card repaired by the model for what the
-validator finds at it; written only on an explicit `--apply`, only before the day is dealt).
+findings counted by code), `LessonGateKeeper` (a fatal finding holds the lesson: P2R for its card, at most two cards,
+the repaired answer stored or the lesson failed with its codes; warnings pass) and `LessonCardRepairer` +
+`ReviseLesson` (P2R: one card repaired by the model for what the validator finds at it — asked by the gate before
+a lesson is stored, or by the command for a stored lesson, written only on `--apply` and before the day is dealt).
 `SceneReadiness` (`illustrating` → `ready` + the `day_ready` line).
 Notifications: `PlanEventRules` (which reschedule is a rebuild; what the calendar owes on and after
 the event date, `event_today` not before 08:00), `NotificationRules` (which fact is a letter —
@@ -136,7 +139,9 @@ reads plan tables.
   sections for the card's kind.
 - The lesson is stored as the model wrote it (`plan_scenes.lesson_json`), re-parsed on read and served assembled.
 - Every plan check ships in `observe`; modes are flipped in `config/plan.php`, never in code. The lesson validator
-  has no modes: it counts (`checks_json` of the scene, `plan_check_counters` by code).
+  has no modes: it counts (`checks_json` of the scene, `plan_check_counters` by code); five codes are fatal by the
+  architect's decision after GEN-2a (`LessonGate`) — a lesson with them is never stored before P2R repairs their
+  card (at most two a day), else it fails `fatal: <codes>`.
 - QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN), `plan:repair-card`
   (P2R by hand — Presentation/Console).
 - Ops: `plan:images-backfill {--plan=} {--requery}` — first the photos plans still lack, asked the search

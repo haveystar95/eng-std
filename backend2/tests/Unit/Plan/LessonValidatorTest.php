@@ -248,8 +248,8 @@ function lvBreaks(): array
 
         return $p;
     }],
-    'a slot asked with wrong options that are not its fillers' => [LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER, static function (array $p): array {
-        $p['listening']['questions'][0]['options_native'] = ['Живот', 'Поясница', 'Колено'];
+    'a slot asked with a wrong option of another kind' => [LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER, static function (array $p): array {
+        $p['listening']['questions'][0]['options_native'] = ['Три дня', 'Поясница', 'Плечо'];
 
         return $p;
     }],
@@ -290,16 +290,6 @@ function lvBreaks(): array
 
         return $p;
     }],
-    'every right answer at the first place' => [LessonCodes::ANSWER_INDEX_SKEW, static function (array $p): array {
-        foreach (array_keys($p['dialogue']) as $i) {
-            $p['dialogue'][$i]['check']['correct_option_index'] = 0;
-        }
-        foreach (array_keys($p['listening']['questions']) as $i) {
-            $p['listening']['questions'][$i]['correct_option_index'] = 0;
-        }
-
-        return $p;
-    }],
     ];
 }
 
@@ -314,6 +304,41 @@ it('has a broken rule for every code it counts', function () {
     $named = array_map(static fn (array $row): string => $row[0], array_values(lvBreaks()));
 
     expect(array_values(array_diff(LessonCodes::all(), $named)))->toBe([]);
+});
+
+// Architect, after GEN-2a: «check.verbatim не считает числа/имена/предметы без пересказа». Catches a count that
+// punishes a check for naming the amount, the medicine or the item the partner stated — and one that stops counting
+// a real copy.
+it('does not count a copied number, name or item of the lesson as a copy, and still counts a copied phrase', function () {
+    $number = lvPayload();
+    $number['dialogue'][7]['check']['options'][2]['text_target'] = 'After one week';
+    $name = lvPayload();
+    $name['dialogue'][4]['messages'][0]['text_target'] = 'It looks like a muscle strain, so he should rest and take Nurofen.';
+    $name['dialogue'][4]['check']['options'][1]['text_target'] = 'Take Nurofen';
+    $item = lvPayload();
+    $item['dialogue'][0]['check']['options'][0]['text_target'] = 'His lower back';
+    $copy = lvPayload();
+    $copy['dialogue'][4]['check']['options'][1]['text_target'] = 'He should rest';
+
+    expect(lvCodes($number))->not->toContain(LessonCodes::CHECK_VERBATIM)
+        ->and(lvCodes($name))->not->toContain(LessonCodes::CHECK_VERBATIM)
+        ->and(lvCodes($item))->not->toContain(LessonCodes::CHECK_VERBATIM)
+        ->and(lvCodes($copy))->toContain(LessonCodes::CHECK_VERBATIM);
+});
+
+// Architect, after GEN-2a: «listening.distractor_not_filler считает только „не того рода“». Catches a count of every
+// fair distractor that is not on the frame's list — and one that lets a wrong option of another kind pass.
+it('counts a listening distractor only when it is of another kind than the slot', function () {
+    $sameKind = lvPayload();
+    $sameKind['listening']['questions'][0]['options_native'] = ['Живот', 'Поясница', 'Колено'];
+    $timeSlot = lvPayload();
+    $timeSlot['listening']['questions'][2] = ['text_native' => 'Когда началась боль?', 'options_native' => ['Неделю назад', 'Три дня назад', 'Через месяц'], 'correct_option_index' => 1, 'explanation_native' => 'Началось три дня назад.'];
+    $timeSlotOtherKind = lvPayload();
+    $timeSlotOtherKind['listening']['questions'][2] = ['text_native' => 'Когда началась боль?', 'options_native' => ['После футбола', 'Три дня назад', 'Через месяц'], 'correct_option_index' => 1, 'explanation_native' => 'Началось три дня назад.'];
+
+    expect(lvCodes($sameKind))->not->toContain(LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER)
+        ->and(lvCodes($timeSlot))->not->toContain(LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER)
+        ->and(lvCodes($timeSlotOtherKind))->toContain(LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER);
 });
 
 it('reads a gendered past only while the learner\'s gender is unknown', function () {

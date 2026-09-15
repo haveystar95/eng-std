@@ -52,6 +52,13 @@ final class EnglishWords
         'some', 'other', 'different', 'important', 'real', 'whole',
     ];
 
+    private const NUMBERS = [
+        'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve',
+        'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'thirty',
+        'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'thousand', 'million', 'half', 'dozen',
+        'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'once', 'twice',
+    ];
+
     private const CLOSERS = [
         'anything else', 'is there anything else', 'great', 'sounds good', 'sounds great', 'perfect', 'okay',
         'ok', 'all right', 'alright', 'good', 'fine', 'thank you', 'thanks', "you're welcome", 'no problem',
@@ -72,6 +79,38 @@ final class EnglishWords
     public static function isOrdinaryHead(string $token): bool
     {
         return in_array(self::normal($token), self::ORDINARY_HEADS, true);
+    }
+
+    /** A number: digits anywhere in the word («2», «400», «14a»), a number word, or number words hyphenated («thirty-nine»). */
+    public static function isNumber(string $token): bool
+    {
+        $token = self::normal($token);
+        if (preg_match('/\d/u', $token) === 1) {
+            return true;
+        }
+        $parts = explode('-', $token);
+
+        return $parts !== [''] && array_diff($parts, self::NUMBERS) === [];
+    }
+
+    /**
+     * The names of a text: words written with a capital letter anywhere but at the start of a sentence
+     * («Take Nurofen», «Dr Smith»), lower-cased. The pronoun «I» is a function word, not a name.
+     *
+     * @return list<string>
+     */
+    public static function names(string $text): array
+    {
+        $out = [];
+        foreach (preg_split('/[.!?…]+/u', $text) ?: [] as $sentence) {
+            foreach (array_slice(Words::surface($sentence), 1) as $word) {
+                if (preg_match('/^\p{Lu}/u', $word) === 1 && ! self::isFunction($word)) {
+                    $out[] = mb_strtolower($word);
+                }
+            }
+        }
+
+        return array_values(array_unique($out));
     }
 
     /** A line that says nothing but «we are done» — its whole text, punctuation aside. */

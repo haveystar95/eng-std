@@ -29,9 +29,39 @@ final class NativeWords
         'чем', 'чём', 'кто', 'быть', 'есть', 'будет', 'можно', 'нужно', 'надо',
     ];
 
+    /** Number words of ru / uk / be, ordinals and «раз» included — whole words. */
+    private const NUMBER = '/^(?:\d[\p{L}\d:.,]*|один|одн[аоуиы]\w*|два|две|двух|двум|двумя|трое|тр[её]х|тр[её]м|тремя|три|четыр\w*|пят[ьи]|пятью|пятнадцат\w*|пятьдесят\w*|пятьсот|шест[ьи]|шестью|шестнадцат\w*|шестьдесят\w*|сем[ьи]|семнадцат\w*|семьдесят\w*|восем\w*|восьм\w*|девят\w*|девяност\w*|десят\w*|одиннадцат\w*|двенадцат\w*|тринадцат\w*|двадцат\w*|тридцат\w*|сорок\w*|сто|ста|сотн\w*|двест\w*|трист\w*|четырест\w*|тысяч\w*|миллион\w*|половин\w*|полтор\w*|перв\w*|втор[оаы]\w*|трет\w*|четв[её]рт\w*|пят[ыо]\w*|шест[ыо]\w*|седьм\w*|раз|раза|адзін|адна|дзве|тры|чатыры|пяць|шэсць|сем|восем|дзевяць|дзесяць|чотири|п[\'’]ять|шість|сім|вісім|дев[\'’]ять)$/u';
+
+    /** Time and duration words of ru / uk / be — units, parts of the day, days, months, «вчера», «назад», «через». */
+    private const TIME = '/^(?:назад|спустя|тому|через|раньше|позже|скоро|недавно|давно|сейчас|потом|раніше|пізніше|зараз|потім|секунд\w*|минут\w*|хвилин\w*|хвілін\w*|час|часа|часов|часу|годин\w*|гадзін\w*|сутк\w*|суток|ден[ьи]|дня|дней|дн[её]м|дні|днів|дзень|дзён|недел\w*|тиж\w*|тыдз\w*|тыдн\w*|месяц\w*|місяц\w*|год|года|году|годы|лет|рік|роки|років|гады|гадоў|утр[оау]\w*|ранок|ранку|вранці|раніц\w*|вечер\w*|вечір|вечора|ввечері|вечар\w*|ноч\w*|ніч|полдень|полночь|вчера|вчерашн\w*|вчора|учора|ўчора|сегодня|сегодняшн\w*|сьогодні|сёння|завтра|завтрашн\w*|заўтра|позавчера|послезавтра|понедельник\w*|вторник\w*|сред[ауы]|четверг\w*|пятниц\w*|суббот\w*|воскресень\w*|январ\w*|феврал\w*|март\w*|апрел\w*|ма[йя]|июн\w*|июл\w*|август\w*|сентябр\w*|октябр\w*|ноябр\w*|декабр\w*|выходн\w*)$/u';
+
     public static function isChecked(string $nativeLang): bool
     {
         return in_array(strtolower($nativeLang), self::CHECKED, true);
+    }
+
+    public const VALUE_NUMBER_OR_TIME = 'number_or_time';
+
+    public const VALUE_MIXED = 'mixed';
+
+    public const VALUE_OTHER = 'other';
+
+    /**
+     * What kind of value a short answer names, as far as words tell without meaning: `number_or_time` — nothing
+     * but numbers and time words («три дня», «со вчера», «в 9 утра», «шестью»); `other` — no number and no time
+     * word at all («поясница», «после футбола»); `mixed` — a count or a time of a thing («две воды», «14A у окна»),
+     * which may stand beside either.
+     */
+    public static function valueKind(string $text): string
+    {
+        $words = array_values(array_filter(Words::tokens($text), static fn (string $t): bool => ! in_array($t, self::FUNCTION, true)));
+        $counted = count(array_filter($words, static fn (string $w): bool => preg_match(self::NUMBER, $w) === 1 || preg_match(self::TIME, $w) === 1));
+
+        return match (true) {
+            $words !== [] && $counted === count($words) => self::VALUE_NUMBER_OR_TIME,
+            $counted === 0 => self::VALUE_OTHER,
+            default => self::VALUE_MIXED,
+        };
     }
 
     /**

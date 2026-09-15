@@ -14,24 +14,25 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 
 /**
- * P2R BY HAND — `plan:repair-card` (наряд GEN-2a): one card, by its address and what the validator finds at it;
+ * P2R BY HAND — `plan:repair-card` (наряд GEN-2a): one card of a stored lesson, by its address and what the
+ * validator finds at it — a warning, since a fatal finding never reaches a stored lesson (`LessonGateBuildTest`);
  * nothing written without `--apply`; with it the repaired answer replaces the stored one, the unit rows keep their
  * ids and photos, and a dealt day is never rewritten.
  */
 
-/** A built one-day plan whose lesson has a filler that doubles its frame's word, and the model's repair of it. */
+/** A built one-day plan whose lesson writes alternatives into a native frame, and the model's repair of it. */
 function lrBuild(object $ctx, ?Closure $repair = null): array
 {
     $fake = new FakePlanModel(
         lesson: static function ($request): array {
             $p = FakePlanModel::lessonPayload($request);
-            $p['phrases'][0]['slot']['fillers'][1]['target'] = 'his neck';
+            $p['phrases'][0]['frame_native'] = 'У него болит в/на ___.';
 
             return $p;
         },
         repair: $repair ?? static function ($request): array {
             $card = $request->card;
-            $card['slot']['fillers'][1]['target'] = 'neck';
+            $card['frame_native'] = 'У него болит ___.';
 
             return ['card' => $card];
         },
@@ -53,9 +54,9 @@ it('shows a repaired card and its findings before and after, and writes nothing 
     expect($fake->repairCalls)->toBe(1)
         ->and($fake->repairRequests[0]->address)->toBe('p1')
         ->and($fake->repairRequests[0]->kind)->toBe('frame')
-        ->and(array_column($fake->repairRequests[0]->findings, 'code'))->toBe(['filler.ungrammatical'])
+        ->and(array_column($fake->repairRequests[0]->findings, 'code'))->toBe(['frame.native_alternatives'])
         // The model is told what is broken in English, never shown another card's text as a finding.
-        ->and($fake->repairRequests[0]->findings[0]['detail'])->toStartWith('p1.f2: «It hurts in his his neck.»')
+        ->and($fake->repairRequests[0]->findings[0]['detail'])->toStartWith('p1: «У него болит в/на ___.»')
         ->and($output)->toContain('status: repaired')
         ->and($output)->toContain('findings in the lesson: 1 → 0')
         ->and($output)->toContain('not written (no --apply)')
@@ -70,10 +71,10 @@ it('writes the repaired lesson with --apply, keeping every unit row and its phot
 
     $lesson = json_decode((string) DB::table('plan_scenes')->where('id', $sceneId)->value('lesson_json'), true);
     expect(Artisan::output())->toContain('written')
-        ->and($lesson['phrases'][0]['slot']['fillers'][1]['target'])->toBe('neck')
+        ->and($lesson['phrases'][0]['frame_native'])->toBe('У него болит ___.')
         ->and(json_decode((string) DB::table('plan_scenes')->where('id', $sceneId)->value('checks_json'), true))->toBe([])
         ->and(DB::table('plan_terms')->where('scene_id', $sceneId)->orderBy('ref')->get(['id', 'ref', 'image_url'])->all())->toEqual($terms)
-        ->and(json_decode((string) DB::table('plan_terms')->where('scene_id', $sceneId)->where('ref', 'p1')->value('slot'), true)['fillers'][1]['target'])->toBe('neck');
+        ->and(DB::table('plan_terms')->where('scene_id', $sceneId)->where('ref', 'p1')->value('frame_native'))->toBe('У него болит ___.');
 });
 
 // Catches a repair written under the cards a learner already holds.

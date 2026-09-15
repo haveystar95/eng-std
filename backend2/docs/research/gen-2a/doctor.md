@@ -4,7 +4,7 @@
 
 Сцена: «Приём у врача» / «Doctor visit» · ученик: Родитель · собеседник: Врач (женщина)
 
-Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.078488 · 32.2 с · токены вход/выход 6639/4126 · одна попытка: да · находок валидатора: 13
+Промт `lesson_day.v4.4` · модель `gpt-5.4-2026-03-05` · урок $0.078488 · 32.2 с · токены вход/выход 6639/4126 · одна попытка: да · находок валидатора: 8
 
 > Колонка «оценка» пустая — ставит Ден: **✓** / **так не говорят** / **слишком длинно** / **не то слово**. Реплики ученика — как их получит приложение (сервер собирает их из каркаса и наполнения); если модель написала иначе, её текст — в скобках.
 
@@ -136,20 +136,15 @@
 | v7 | every six hours | связка | каждые шесть часов | э́ври сикс ауэрз | at six-hour intervals | A7 | — | |
 | v8 | trouble breathing | связка | трудно дышать | трабл бриизинг | difficulty getting enough air | A8 | child sitting upright in bed while a parent watches closely | |
 
-## Находки валидатора (режим наблюдения — день вышел)
+## Находки валидатора (урок как его написала модель; фатальные держат день до P2R, §15 отчёта)
 
-| код | адрес | что |
-|---|---|---|
-| `key.contains_filler` | B1 | the key «son has a» takes words of the filler «a fever» |
-| `key.no_content_word` | B2 | the key «has had it» has no content word |
-| `key.no_content_word` | B4 | the key «also has a» has no content word |
-| `key.contains_filler` | B4 | the key «also has a» takes words of the filler «a sore throat» |
-| `key.too_long` | B7 | the key «How often should I give» has 5 words (1–4) |
-| `key.too_long` | B8 | the key «When should we come back» has 5 words (1–4) |
-| `check.verbatim` | x1.check | the right option «The child's main problem today» repeats «problem today» of the partner's line |
-| `check.verbatim` | x5.check | the right option «At home, not outside» repeats «at home» of the partner's line |
-| `check.verbatim` | x7.check | the right option «Every six hours, but only with high fever» repeats «every six» of the partner's line |
-| `listening.distractor_not_filler` | L1 | the question asks p1's slot («температура»), but 1 of its wrong options are p1's other fillers (expected 2) |
-| `listening.distractor_not_filler` | L2 | the question asks p2's slot («уже три дня»), but 0 of its wrong options are p2's other fillers (expected 2) |
-| `listening.distractor_not_filler` | L3 | the question asks p6's slot («парацетамол»), but 0 of its wrong options are p6's other fillers (expected 2) |
-| `vocab.free_combination` | v7 | «every six hours» is a free combination of ordinary words |
+| код | порог | адрес | что |
+|---|---|---|---|
+| `key.contains_filler` | предупреждение | B1 | the key «son has a» takes words of the filler «a fever» |
+| `key.no_content_word` | предупреждение | B2 | the key «has had it» has no content word |
+| `key.no_content_word` | предупреждение | B4 | the key «also has a» has no content word |
+| `key.contains_filler` | предупреждение | B4 | the key «also has a» takes words of the filler «a sore throat» |
+| `key.too_long` | предупреждение | B7 | the key «How often should I give» has 5 words (1–4) |
+| `key.too_long` | предупреждение | B8 | the key «When should we come back» has 5 words (1–4) |
+| `check.verbatim` | предупреждение | x1.check | the right option «The child's main problem today» repeats «problem today» of the partner's line |
+| `vocab.free_combination` | предупреждение | v7 | «every six hours» is a free combination of ordinary words |

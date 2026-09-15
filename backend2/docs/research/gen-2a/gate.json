@@ -1,0 +1,158 @@
+[
+    {
+        "slug": "doctor",
+        "findings": 8,
+        "fatal": [],
+        "outcome": "passes — no fatal finding, no repair"
+    },
+    {
+        "slug": "interview",
+        "findings": 5,
+        "fatal": [],
+        "outcome": "passes — no fatal finding, no repair"
+    },
+    {
+        "slug": "rent",
+        "findings": 18,
+        "fatal": [
+            "line.ne_frame@B3"
+        ],
+        "outcome": "passes after repair",
+        "cards_asked": [
+            "B3"
+        ],
+        "repair_cost_usd": "0.021837",
+        "repair_latency_ms": 3551,
+        "wall_s": 3.6,
+        "findings_after": 14,
+        "fatal_after": [],
+        "cards": {
+            "B3": {
+                "before": {
+                    "speaker": "B",
+                    "role_target": "Prospective tenant",
+                    "role_native": "Будущий арендатор",
+                    "phrase_id": "p3",
+                    "filler": "one year",
+                    "text_target": "I need a one-year contract.",
+                    "text_native": "Мне нужен договор на год.",
+                    "pronunciation_native": "ай нид э уан-йир контракт",
+                    "speaking_key": "need a contract",
+                    "simplified_variants": [
+                        "I need it for one year."
+                    ]
+                },
+                "after": {
+                    "speaker": "B",
+                    "role_target": "Prospective tenant",
+                    "role_native": "Будущий арендатор",
+                    "phrase_id": "p3",
+                    "filler": "one-year",
+                    "text_target": "I need a one-year contract.",
+                    "text_native": "Мне нужен договор на год.",
+                    "pronunciation_native": "ай нид э уан-йир контракт",
+                    "speaking_key": "need a",
+                    "simplified_variants": [
+                        "I need it for one year."
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "slug": "bank",
+        "findings": 19,
+        "fatal": [
+            "filler.ungrammatical@p2.f1",
+            "filler.ungrammatical@p2.f2",
+            "filler.ungrammatical@p2.f3",
+            "line.ne_frame@B2",
+            "line.ne_frame@B3"
+        ],
+        "outcome": "passes after repair",
+        "cards_asked": [
+            "p2"
+        ],
+        "repair_cost_usd": "0.022070",
+        "repair_latency_ms": 2454,
+        "wall_s": 2.5,
+        "findings_after": 14,
+        "fatal_after": [],
+        "cards": {
+            "p2": {
+                "before": {
+                    "id": "p2",
+                    "kind": "answer",
+                    "frame_target": "Here is my ___.",
+                    "frame_native": "Вот мой/моё ___.",
+                    "pronunciation_native": "Хиэр из май ___.",
+                    "slot": {
+                        "hint_native": "какой документ вы показываете",
+                        "fillers": [
+                            {
+                                "target": "my passport",
+                                "native": "мой паспорт",
+                                "pronunciation_native": "май пáспорт",
+                                "in_dialogue": true
+                            },
+                            {
+                                "target": "my rental letter",
+                                "native": "моё письмо об аренде",
+                                "pronunciation_native": "май рэнтэл летэр",
+                                "in_dialogue": true
+                            },
+                            {
+                                "target": "my student letter",
+                                "native": "моё письмо из вуза",
+                                "pronunciation_native": "май стьюдэнт летэр",
+                                "in_dialogue": false
+                            }
+                        ]
+                    }
+                },
+                "after": {
+                    "id": "p2",
+                    "kind": "answer",
+                    "frame_target": "Here is ___.",
+                    "frame_native": "Вот ___.",
+                    "pronunciation_native": "Хиэр из ___.",
+                    "slot": {
+                        "hint_native": "какой документ вы показываете",
+                        "fillers": [
+                            {
+                                "target": "my passport",
+                                "native": "мой паспорт",
+                                "pronunciation_native": "май паспорт",
+                                "in_dialogue": true
+                            },
+                            {
+                                "target": "my rental letter",
+                                "native": "моё письмо об аренде",
+                                "pronunciation_native": "май рэнтэл летэр",
+                                "in_dialogue": true
+                            },
+                            {
+                                "target": "my student letter",
+                                "native": "моё письмо из вуза",
+                                "pronunciation_native": "май стьюдэнт летэр",
+                                "in_dialogue": false
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "slug": "restaurant",
+        "findings": 6,
+        "fatal": [],
+        "outcome": "passes — no fatal finding, no repair"
+    },
+    {
+        "slug": "airport",
+        "findings": 10,
+        "fatal": [],
+        "outcome": "passes — no fatal finding, no repair"
+    }
+]

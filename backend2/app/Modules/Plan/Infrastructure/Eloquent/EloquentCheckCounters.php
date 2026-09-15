@@ -24,11 +24,11 @@ final class EloquentCheckCounters implements CheckCounters
         $this->add($promptVersion, $hits);
     }
 
-    public function recordCodes(string $promptVersion, array $codes): void
+    public function recordCodes(string $promptVersion, array $codes, CheckAction $action = CheckAction::Counted): void
     {
         $hits = [];
         foreach ($codes as $code) {
-            $key = $code.'|'.CheckAction::Counted->value;
+            $key = $code.'|'.$action->value;
             $hits[$key] = ($hits[$key] ?? 0) + 1;
         }
 

@@ -23,6 +23,8 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * Runs the lesson call for one scene. Idempotent: the scene is CLAIMED (`building`) inside a
  * transaction before the model is asked, so a second job for the same scene finds it claimed and
  * stops; a stale claim (a worker that died mid-call) is re-claimable after the configured window.
+ * What is stored has passed the gate ({@see \App\Modules\Plan\Application\Service\LessonGateKeeper}): no
+ * fatal finding is ever written as a lesson — its card was repaired, or the lesson failed with its code.
  * On success the terms are written from the served lesson and the scene waits for its photos
  * (`illustrating`): the photo job and the voice job are queued together and run side by side. The
  * photo job makes the day ready — and writes its `day_ready` line — when the pictures are in

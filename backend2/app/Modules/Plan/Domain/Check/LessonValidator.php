@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Check;
 
-use App\Modules\Plan\Domain\Check\Lesson\AnswerRules;
 use App\Modules\Plan\Domain\Check\Lesson\CheckRules;
 use App\Modules\Plan\Domain\Check\Lesson\FillerRules;
 use App\Modules\Plan\Domain\Check\Lesson\FrameRules;
+use App\Modules\Plan\Domain\Check\Lesson\ImagePromptRules;
 use App\Modules\Plan\Domain\Check\Lesson\KindRules;
 use App\Modules\Plan\Domain\Check\Lesson\LineRules;
 use App\Modules\Plan\Domain\Check\Lesson\ListeningRules;
@@ -18,12 +18,11 @@ use App\Modules\Plan\Domain\Check\Lesson\VocabularyRules;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 
 /**
- * THE LESSON VALIDATOR — OBSERVATION MODE (наряд GEN-2a, `docs/plan-v2.md` §4).
+ * THE LESSON VALIDATOR (наряд GEN-2a, `docs/plan-v2.md` §4).
  *
  * Every rule runs over the model's answer as written, every breach is a finding with a code and a
- * card address, and the lesson is accepted whatever the findings: the day comes out, the counters
- * grow. No rule is fatal here and no finding edits the lesson — fatality is the architect's decision,
- * made later from the counts.
+ * card address. The validator only finds: no finding edits the lesson here. What a finding does to the
+ * day — a warning is counted and kept, a fatal one holds the day for a repair — is {@see LessonGate}'s.
  */
 final readonly class LessonValidator
 {
@@ -44,7 +43,7 @@ final readonly class LessonValidator
             new ListeningRules,
             new VocabularyRules,
             new NativeRules,
-            new AnswerRules,
+            new ImagePromptRules,
         ];
     }
 

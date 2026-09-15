@@ -14,6 +14,7 @@ declare(strict_types=1);
  */
 
 use App\Modules\Plan\Domain\Check\LessonCodes;
+use App\Modules\Plan\Domain\Check\LessonGate;
 use App\Modules\Plan\Domain\Check\LessonValidationContext;
 use App\Modules\Plan\Domain\Check\LessonValidator;
 use App\Modules\Plan\Domain\Check\LessonViolation;
@@ -147,15 +148,15 @@ foreach ($runs as $run) {
             $cell($item->pronunciationNative), $cell($item->definitionTarget), implode(', ', $item->usedIn), $cell($item->imagePrompt ?? '—'));
     }
     $md[] = '';
-    $md[] = '## Находки валидатора (режим наблюдения — день вышел)';
+    $md[] = '## Находки валидатора (урок как его написала модель; фатальные держат день до P2R, §15 отчёта)';
     $md[] = '';
     if ($findings === []) {
         $md[] = 'Нет.';
     } else {
-        $md[] = '| код | адрес | что |';
-        $md[] = '|---|---|---|';
+        $md[] = '| код | порог | адрес | что |';
+        $md[] = '|---|---|---|---|';
         foreach ($findings as $f) {
-            $md[] = sprintf('| `%s` | %s | %s |', $f->code, $f->address, $cell($f->detail));
+            $md[] = sprintf('| `%s` | %s | %s | %s |', $f->code, LessonGate::isFatal($f->code) ? '**фатально**' : 'предупреждение', $f->address, $cell($f->detail));
         }
     }
     $md[] = '';

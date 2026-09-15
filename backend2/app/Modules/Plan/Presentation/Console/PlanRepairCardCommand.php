@@ -19,7 +19,8 @@ use Illuminate\Console\Command;
  *
  * Without `--apply` nothing is written: the card before and after and the findings before and after are
  * printed, and only the model call is spent. With `--apply` the repaired answer replaces the stored one —
- * refused once the scene's day is dealt. The build never calls this.
+ * refused once the scene's day is dealt. The build repairs fatal cards itself before a lesson is stored;
+ * this command is for what a stored lesson still carries — its warnings.
  */
 final class PlanRepairCardCommand extends Command
 {

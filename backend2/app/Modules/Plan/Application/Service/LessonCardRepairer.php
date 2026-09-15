@@ -6,6 +6,9 @@ namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Dto\LessonCardRepairOutcome;
 use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
+use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Application\Dto\PlanConfig;
+use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\SceneLocator;
@@ -14,22 +17,25 @@ use App\Modules\Plan\Domain\Check\LessonValidator;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
 use App\Modules\Plan\Domain\Exception\SceneNotFound;
+use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Lesson\Phrase;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Shared\Domain\Service\LanguageName;
+use Throwable;
 
 /**
- * P2R — THE REPAIR OF ONE CARD (наряд GEN-2a). Asked only by an explicit command, never by the build.
+ * P2R — THE REPAIR OF ONE CARD (наряд GEN-2a). Asked two ways: by the lesson build for a card a fatal
+ * finding holds ({@see LessonGateKeeper}, before the lesson is stored), and by the `plan:repair-card`
+ * command for a stored lesson.
  *
- * The card is found by its address in the scene's stored ANSWER; the validator runs over the answer and
- * the findings at that card (or only the named codes) go to the model with the card and the lesson as
+ * The findings at the card (or only the named codes) go to the model with the card and the lesson as
  * context — the English detail of each finding, never another card's text. The model answers with the
  * card; the card is parsed to its shape, put into the answer, and the whole answer is validated again.
- * Nothing is written here: whether the repaired answer replaces the stored one is {@see
- * \App\Modules\Plan\Application\Command\ReviseLessonHandler}'s, on the command's `--apply`.
+ * Nothing is written here: the build stores what passed its gate, the command writes only on `--apply`
+ * ({@see \App\Modules\Plan\Application\Command\ReviseLessonHandler}).
  */
 final readonly class LessonCardRepairer
 {
@@ -40,9 +46,14 @@ final readonly class LessonCardRepairer
         private LessonValidator $validator,
         private LessonParser $parser,
         private LearnerGender $gender,
+        private PlanConfig $config,
     ) {}
 
-    /** @param list<string> $codes only these codes; all the card's findings when empty */
+    /**
+     * A card of a stored lesson, by its address.
+     *
+     * @param  list<string>  $codes  only these codes; all the card's findings when empty
+     */
     public function repair(PlanSceneId $sceneId, string $address, array $codes = []): LessonCardRepairOutcome
     {
         $planId = $this->scenes->planIdOf($sceneId);
@@ -53,40 +64,70 @@ final readonly class LessonCardRepairer
         $scene = $plan->scene($sceneId);
         $answer = $scene->answer();
         $card = LessonCard::at($address);
-        $before = $answer === null || $card === null ? null : $card->of($answer);
-        if ($answer === null || $card === null || $before === null) {
+        if ($answer === null || $card === null || $card->of($answer) === null) {
             return self::nothing(LessonCardRepairOutcome::NOT_A_CARD, $address, $card?->kind, 'no lesson, or no repairable card at this address');
         }
 
-        $gender = $this->gender->of($plan->userId());
-        $context = new LessonValidationContext(
-            count($answer->vocabulary), count($answer->exchanges),
-            $plan->nativeLang()->value, $plan->targetLang()->value, $gender,
+        $counts = $this->config->countsFor($plan->level());
+        $request = new LessonRequest(
+            topic: $scene->titleNative(),
+            topicDescription: $scene->topicDescription(),
+            targetLanguage: LanguageName::of($plan->targetLang()->value),
+            nativeLanguage: LanguageName::of($plan->nativeLang()->value),
+            level: $plan->level(),
+            learnerGender: $this->gender->of($plan->userId()),
+            vocabularyCount: $counts['vocabulary'],
+            dialogueCount: $counts['dialogue'],
+            targetLangCode: $plan->targetLang()->value,
+            nativeLangCode: $plan->nativeLang()->value,
         );
-        $all = $this->validator->run($answer, $context);
+        $context = self::contextOf($request);
+
+        return $this->repairIn($answer, $card, $this->validator->run($answer, $context), $context, $request, $codes);
+    }
+
+    /**
+     * A card of an answer in hand — the build's, before it is stored.
+     *
+     * @param  list<LessonViolation>  $found  the validator's findings over `$answer`
+     * @param  list<string>  $codes  only these codes; all the card's findings when empty
+     */
+    public function repairIn(Lesson $answer, LessonCard $card, array $found, LessonValidationContext $context, LessonRequest $request, array $codes = []): LessonCardRepairOutcome
+    {
+        $before = $card->of($answer);
+        if ($before === null) {
+            return self::nothing(LessonCardRepairOutcome::NOT_A_CARD, $card->address, $card->kind, 'no repairable card at this address');
+        }
         $atCard = array_values(array_filter(
-            $all,
+            $found,
             static fn (LessonViolation $v): bool => $card->covers($v) && ($codes === [] || in_array($v->code, $codes, true)),
         ));
         if ($atCard === [] && $codes === []) {
-            return self::nothing(LessonCardRepairOutcome::NOTHING_TO_REPAIR, $address, $card->kind, 'the validator finds nothing at this card', $before, count($all));
+            return self::nothing(LessonCardRepairOutcome::NOTHING_TO_REPAIR, $card->address, $card->kind, 'the validator finds nothing at this card', $before, count($found));
         }
         $findings = $atCard === []
             ? array_map(static fn (string $code): array => ['code' => $code, 'detail' => 'named by the session'], $codes)
             : array_map(static fn (LessonViolation $v): array => ['code' => $v->code, 'detail' => "{$v->address}: {$v->detail}"], $atCard);
 
-        $reply = $this->model->repairLessonCard(new LessonCardRepairRequest(
+        $repairRequest = new LessonCardRepairRequest(
             address: $card->address,
             kind: $card->kind,
             card: $before,
             lesson: $answer->toArray(),
             findings: $findings,
             frameIds: array_map(static fn (Phrase $p): string => $p->id, $answer->phrases),
-            targetLanguage: LanguageName::of($plan->targetLang()->value),
-            nativeLanguage: LanguageName::of($plan->nativeLang()->value),
-            level: $plan->level(),
-            learnerGender: $gender,
-        ));
+            targetLanguage: $request->targetLanguage,
+            nativeLanguage: $request->nativeLanguage,
+            level: $request->level,
+            learnerGender: $request->learnerGender,
+        );
+        try {
+            $reply = $this->model->repairLessonCard($repairRequest);
+        } catch (PlanModelUnavailable $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            throw PlanModelUnavailable::because($e->getMessage());
+        }
 
         $raw = $reply->payload['card'] ?? null;
         try {
@@ -98,7 +139,7 @@ final readonly class LessonCardRepairer
         } catch (ModelAnswerOffSchema $e) {
             return new LessonCardRepairOutcome(
                 LessonCardRepairOutcome::OFF_SCHEMA, $card->address, $card->kind, $before, is_array($raw) ? $raw : null,
-                self::rows($atCard), [], null, [], count($all), $reply->costUsd, $reply->latencyMs, $reply->promptVersion, $e->getMessage(),
+                self::rows($atCard), [], null, [], count($found), $reply->costUsd, $reply->latencyMs, $reply->promptVersion, $e->getMessage(),
             );
         }
 
@@ -115,10 +156,22 @@ final readonly class LessonCardRepairer
             findingsAfter: self::rows(array_values(array_filter($after, static fn (LessonViolation $v): bool => $card->covers($v)))),
             answer: $repaired,
             lessonFindings: self::rows($after),
-            lessonFindingsBefore: count($all),
+            lessonFindingsBefore: count($found),
             costUsd: $reply->costUsd,
             latencyMs: $reply->latencyMs,
             promptVersion: $reply->promptVersion,
+        );
+    }
+
+    /** What the validator reads of the lesson's inputs: the ordered counts and the language CODES (`ru`), not names. */
+    public static function contextOf(LessonRequest $request): LessonValidationContext
+    {
+        return new LessonValidationContext(
+            $request->vocabularyCount,
+            $request->dialogueCount,
+            $request->nativeLangCode !== '' ? $request->nativeLangCode : $request->nativeLanguage,
+            $request->targetLangCode !== '' ? $request->targetLangCode : $request->targetLanguage,
+            $request->learnerGender,
         );
     }
 

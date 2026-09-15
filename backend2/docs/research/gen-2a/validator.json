@@ -243,18 +243,16 @@
         "examples": []
     },
     "check.verbatim": {
-        "total": 13,
+        "total": 5,
         "days": {
-            "doctor": 3,
-            "interview": 3,
-            "rent": 4,
-            "restaurant": 2,
-            "airport": 1
+            "doctor": 1,
+            "interview": 2,
+            "rent": 2
         },
         "examples": [
             "doctor x1.check: the right option «The child's main problem today» repeats «problem today» of the partner's line",
-            "doctor x5.check: the right option «At home, not outside» repeats «at home» of the partner's line",
-            "doctor x7.check: the right option «Every six hours, but only with high fever» repeats «every six» of the partner's line"
+            "interview x1.check: the right option «Your background managing projects» repeats «your background» of the partner's line",
+            "interview x2.check: the right option «Your current job title» repeats «your current» of the partner's line"
         ]
     },
     "check.listed_alternative_as_wrong": {
@@ -286,19 +284,9 @@
         ]
     },
     "listening.distractor_not_filler": {
-        "total": 11,
-        "days": {
-            "doctor": 3,
-            "interview": 1,
-            "bank": 2,
-            "restaurant": 3,
-            "airport": 2
-        },
-        "examples": [
-            "doctor L1: the question asks p1's slot («температура»), but 1 of its wrong options are p1's other fillers (expected 2)",
-            "doctor L2: the question asks p2's slot («уже три дня»), but 0 of its wrong options are p2's other fillers (expected 2)",
-            "doctor L3: the question asks p6's slot («парацетамол»), but 0 of its wrong options are p6's other fillers (expected 2)"
-        ]
+        "total": 0,
+        "days": [],
+        "examples": []
     },
     "vocab.free_combination": {
         "total": 2,
@@ -347,16 +335,5 @@
         "total": 0,
         "days": [],
         "examples": []
-    },
-    "answer.index_skew": {
-        "total": 2,
-        "days": {
-            "rent": 1,
-            "restaurant": 1
-        },
-        "examples": [
-            "rent lesson: the right answer stands at index 1 in 9 of 12 questions (75 %)",
-            "restaurant lesson: the right answer stands at index 1 in 8 of 12 questions (67 %)"
-        ]
     }
 }

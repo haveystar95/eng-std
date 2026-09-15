@@ -19,8 +19,14 @@ use App\Modules\Plan\Domain\Service\Words;
 /**
  * LISTENING — THE WHOLE VISIT BY EAR (`lesson_day.v4.4`, LISTENING): three to five questions, no two
  * about the same exchange, at least one about a value the learner gave (a filler said in the
- * dialogue), and where a question asks a frame's slot, its wrong options are that frame's other
- * fillers.
+ * dialogue), and where a question asks a frame's slot, its wrong options are values of the slot's kind.
+ *
+ * The prompt asks for that frame's other fillers; the architect counts only a wrong option of ANOTHER kind
+ * (после GEN-2a: «Один день» beside «Три дня» is a fair distractor even when the frame's list has «со
+ * вчера»). The kind a code can tell without meaning is read off the right option — the slot's value as the
+ * question asks it — by {@see NativeWords::valueKind()}: a wrong option is of another kind when one of the two
+ * is nothing but a number or a time and the other has neither («Три дня» beside «Кашель»); a count of a thing
+ * («две воды», «14A у окна») fits beside both.
  *
  * The questions are in the learner's language, so the reading is by the learner's-language words
  * ({@see NativeWords}): a question belongs to the exchange whose two lines share the most content words
@@ -73,28 +79,16 @@ final class ListeningRules implements LessonRule
                     continue;
                 }
                 $learnerValue = true;
-                $others = array_values(array_filter($phrase->fillers(), static fn (Filler $f): bool => $f !== $filler));
-                $wrong = array_values(array_filter(
-                    $question->optionsNative,
-                    static fn (string $o, int $i): bool => $i !== $question->correctOptionIndex,
-                    ARRAY_FILTER_USE_BOTH,
-                ));
-                $fromFrame = count(array_filter($wrong, static function (string $option) use ($others): bool {
-                    foreach ($others as $other) {
-                        if (self::same($option, $other->native)) {
-                            return true;
-                        }
+                $kind = NativeWords::valueKind($right);
+                foreach ($question->optionsNative as $i => $option) {
+                    if ($i !== $question->correctOptionIndex && self::otherKind($kind, NativeWords::valueKind($option))) {
+                        $out[] = new LessonViolation(
+                            LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER,
+                            LessonViolation::listening($index),
+                            "the question asks {$phrase->id}'s slot («{$filler->native}»): the right option «{$right}» is ".self::kindName($kind).", the wrong option «{$option}» is ".self::kindName(NativeWords::valueKind($option)),
+                        );
+                        break;
                     }
-
-                    return false;
-                }));
-                $needed = min(2, count($others));
-                if ($fromFrame < $needed) {
-                    $out[] = new LessonViolation(
-                        LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER,
-                        LessonViolation::listening($index),
-                        "the question asks {$phrase->id}'s slot («{$filler->native}»), but {$fromFrame} of its wrong options are {$phrase->id}'s other fillers (expected {$needed})",
-                    );
                 }
                 break;
             }
@@ -142,6 +136,22 @@ final class ListeningRules implements LessonRule
         }
 
         return $out;
+    }
+
+    /** Of another kind: nothing but a number or a time beside no number and no time at all — a count of a thing fits either. */
+    private static function otherKind(string $a, string $b): bool
+    {
+        return [$a, $b] === [NativeWords::VALUE_NUMBER_OR_TIME, NativeWords::VALUE_OTHER]
+            || [$a, $b] === [NativeWords::VALUE_OTHER, NativeWords::VALUE_NUMBER_OR_TIME];
+    }
+
+    private static function kindName(string $kind): string
+    {
+        return match ($kind) {
+            NativeWords::VALUE_NUMBER_OR_TIME => 'a number or a time',
+            NativeWords::VALUE_OTHER => 'neither a number nor a time',
+            default => 'a count or a time of a thing',
+        };
     }
 
     /** The same value: equal words, or a content word of the same root. */
