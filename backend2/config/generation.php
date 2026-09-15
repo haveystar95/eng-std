@@ -46,28 +46,41 @@ return [
         'monthly_credits' => (int) env('SPEECH_MONTHLY_CREDITS', 30000),
 
         /*
-         * ГОЛОСА ЯЗЫКОВОГО ПАКЕТА — язык обучения → роль → пол (TTS-2). У сцены два человека разного пола; у
-         * мужчины-собеседника свой голос, чтобы он не звучал как мужчина-ученик, женский голос у ролей один.
+         * КАП НА ЗАПУСК. Больше этого числа кредитов один запуск не покупает: одна задача озвучки сцены или один запуск
+         * `plan:speak-backfill`. Перед каждой сценой купленное за запуск складывается с оценкой сцены (символы строк по
+         * тарифу модели); не помещается — стоп, ничего из сцены не куплено, письмо в лог (решение архитектора TTS-2).
+         */
+        'job_credits_cap' => (int) env('SPEECH_JOB_CREDITS_CAP', 3000),
+
+        /*
+         * БАЗЫ БЕЗ АВТООЗВУЧКИ. Здесь новые дни не озвучиваются сами, а `plan:speak-backfill` без `--plan` ничего не
+         * покупает: голос — только по явному `--plan` (решение архитектора TTS-2, e2e-стенд исключён навсегда).
+         */
+        'named_plans_only_databases' => ['wordtrainer_e2e_test'],
+
+        /*
+         * ГОЛОСА ЯЗЫКОВОГО ПАКЕТА — язык обучения → роль → пол (TTS-2). Голоса ролей в сцене всегда разные, какого бы
+         * пола ни была каждая роль: у собеседника и у ученика свой женский и свой мужской голос — четыре разных id.
+         * Четыре голоса ниже Ден послушал и утвердил 15.09; сменить голос — одна строка `SPEECH_VOICE_EN_*` в `.env`,
+         * перезапуск horizon и переозвучка по команде (`plan:speak-backfill --plan=… --drop-unread`, цена — до покупки).
          *
          * Модель у всех голосов одна — `eleven_v3_conversational` (v3 Conversational, решение архитектора TTS-2): каждая
          * строка, и реплика собеседника, и реплика ученика, — свой вызов своим голосом. `stability` 0.5 — пресет
-         * Natural v3; остальное — по умолчанию вендора. Смена модели, голоса или стабильности — другой ключ файла и новые
-         * файлы, а не переигрывание старых (DECISIONS п. 248).
+         * Natural v3; темп — обычный у всех голосов (замедление «Повтори вслух» — забота клиента); остальное — по
+         * умолчанию вендора. Смена модели, голоса или стабильности — другой ключ файла и новые файлы, а не переигрывание
+         * старых (DECISIONS п. 248).
          *
          * Языка нет в таблице — голоса нет, и это не отказ: строки звучат системным синтезом.
          */
         'voices' => [
             'en' => [
                 'partner' => [
-                    // Выбор владельца (TTS-2).
                     'female' => [
                         'provider' => 'elevenlabs',
                         'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
-                        'voice' => env('SPEECH_VOICE_EN_PARTNER_FEMALE', '4tRn1lSkEn13EVTuqb0g'),
+                        'voice' => env('SPEECH_VOICE_EN_PARTNER_FEMALE', '4NejU5DwQjevnR6mh3mb'),
                         'stability' => (float) env('SPEECH_STABILITY', 0.5),
                     ],
-                    // Подобран по описанию библиотеки («casual, balanced», американский), не ушами: строка конфига,
-                    // уши владельца могут её сменить (DECISIONS п. 249).
                     'male' => [
                         'provider' => 'elevenlabs',
                         'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
@@ -76,14 +89,12 @@ return [
                     ],
                 ],
                 'learner' => [
-                    // Женский голос у ролей один — сцена всё равно двух полов.
                     'female' => [
                         'provider' => 'elevenlabs',
                         'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
-                        'voice' => env('SPEECH_VOICE_EN_LEARNER_FEMALE', '4tRn1lSkEn13EVTuqb0g'),
+                        'voice' => env('SPEECH_VOICE_EN_LEARNER_FEMALE', 'Nhs7eitvQWFTQBsf0yiT'),
                         'stability' => (float) env('SPEECH_STABILITY', 0.5),
                     ],
-                    // Выбор владельца (TTS-2).
                     'male' => [
                         'provider' => 'elevenlabs',
                         'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),

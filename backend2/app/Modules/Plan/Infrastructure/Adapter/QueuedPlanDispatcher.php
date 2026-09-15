@@ -12,6 +12,7 @@ use App\Modules\Plan\Infrastructure\Job\BuildLessonJob;
 use App\Modules\Plan\Infrastructure\Job\BuildPlanJob;
 use App\Modules\Plan\Infrastructure\Job\IllustrateSceneJob;
 use App\Modules\Plan\Infrastructure\Job\VoiceSceneJob;
+use Illuminate\Support\Facades\Log;
 
 final class QueuedPlanDispatcher implements PlanDispatcher
 {
@@ -37,6 +38,12 @@ final class QueuedPlanDispatcher implements PlanDispatcher
 
     public function voiceScene(PlanSceneId $sceneId): void
     {
+        // A database voiced only by name (the e2e stand): a new day is not voiced on its own there (TTS-2).
+        if (VoiceDatabase::namedPlansOnly()) {
+            Log::info('voice not queued: this database is voiced only by plan:speak-backfill --plan', ['scene_id' => $sceneId->value]);
+
+            return;
+        }
         VoiceSceneJob::dispatch($sceneId->value);
     }
 }

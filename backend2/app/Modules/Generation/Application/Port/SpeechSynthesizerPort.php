@@ -29,6 +29,15 @@ interface SpeechSynthesizerPort
      */
     public function speakLines(array $lines, callable $spoken): void;
 
+    /**
+     * What these lines would cost in the vendor's credits, before a single one is bought — the tariff's rate for each
+     * line's characters, rounded up per line as the vendor rounds. An estimate for a cap to be checked against; the bill
+     * itself is what `speakLines` hands back.
+     *
+     * @param  list<SpeechLine>  $lines
+     */
+    public function creditsFor(array $lines): int;
+
     /** What the vendor account has left this month; null — the vendor would not say (a key without that permission, a failed call). */
     public function balance(): ?SpeechBalance;
 }

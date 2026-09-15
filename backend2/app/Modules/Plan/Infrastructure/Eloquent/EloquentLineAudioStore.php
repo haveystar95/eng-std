@@ -49,6 +49,22 @@ final class EloquentLineAudioStore implements LineAudioStore
         return $row === null ? null : self::row((array) $row);
     }
 
+    public function ofScene(PlanSceneId $sceneId): array
+    {
+        $out = [];
+        foreach (DB::table('plan_line_audios')->where('scene_id', $sceneId->value)->orderBy('line_ref')->get() as $row) {
+            $out[] = self::row((array) $row);
+        }
+
+        return $out;
+    }
+
+    public function drop(LineAudioRow $row): void
+    {
+        $this->disks->disk($this->disk)->delete($row->path);
+        DB::table('plan_line_audios')->where('id', $row->id)->delete();
+    }
+
     public function put(PlanSceneId $sceneId, string $lineRef, SpokenAudio $audio): ?LineAudioRow
     {
         $exists = DB::table('plan_line_audios')

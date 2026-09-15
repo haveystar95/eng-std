@@ -5,7 +5,10 @@ declare(strict_types=1);
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Infrastructure\Adapter\ElevenLabsSpeechSynthesizer;
 use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
+use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Shared\Domain\ValueObject\LineVoice;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
+use App\Modules\Shared\Domain\ValueObject\VoiceRole;
 
 /**
  * ONE VOICE IN THE PRODUCT (наряд TTS-2): the server speaks with ElevenLabs and with nothing else, and the voice it
@@ -100,6 +103,27 @@ it('builds one synthesizer — ElevenLabs — and the double only when the drive
         ->and(app(SpeechSynthesizerPort::class))->toBeInstanceOf(ElevenLabsSpeechSynthesizer::class);
 });
 
+// Canon (TTS-2, доработка): «в сцене голоса ролей всегда разные» — whatever gender each role has, the partner never speaks
+// in the learner's voice. Catches one woman's voice shared by both roles (the pack before this fix) or one man's.
+it('gives the two roles of a scene different voices, whatever gender each role has', function () {
+    $catalog = new VoiceCatalog((array) config('generation.speech.voices'));
+    $pairs = [];
+    foreach ([VoiceGender::Female, VoiceGender::Male] as $partner) {
+        foreach ([VoiceGender::Female, VoiceGender::Male] as $learner) {
+            $pairs["partner {$partner->value} · learner {$learner->value}"] = [
+                $catalog->forLanguage('en', VoiceRole::Partner, $partner)?->voice,
+                $catalog->forLanguage('en', VoiceRole::Learner, $learner)?->voice,
+            ];
+        }
+    }
+
+    foreach ($pairs as $scene => [$partnerVoice, $learnerVoice]) {
+        expect($partnerVoice)->not->toBeNull($scene)
+            ->and($learnerVoice)->not->toBeNull($scene)
+            ->and($partnerVoice)->not->toBe($learnerVoice, $scene);
+    }
+});
+
 it('voices every language pack with ElevenLabs on eleven_v3_conversational, a man partner and a man learner apart', function () {
     $voices = [];
     foreach ((array) config('generation.speech.voices') as $lang => $roles) {
@@ -113,6 +137,6 @@ it('voices every language pack with ElevenLabs on eleven_v3_conversational, a ma
     expect(array_keys($voices))->toBe(['en.partner.female', 'en.partner.male', 'en.learner.female', 'en.learner.male'])
         ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->provider, $voices)))->toBe(['en.partner.female' => 'elevenlabs'])
         ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->model, $voices)))->toBe(['en.partner.female' => 'eleven_v3_conversational'])
-        ->and($voices['en.partner.male']->voice)->not->toBe($voices['en.learner.male']->voice)
+        ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->voice, $voices)))->toHaveCount(4)
         ->and($voices['en.partner.female']->stability)->toBe(0.5);
 });

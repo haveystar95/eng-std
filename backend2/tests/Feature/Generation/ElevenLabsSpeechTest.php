@@ -90,6 +90,26 @@ it('reads the credits off the vendor’s character-cost and prices them at the a
         ->and($spoken[0]->requestId)->toBe('req-live');
 });
 
+// TTS-2, the credits cap: a scene is weighed before it is bought. Live 15.09 on Starter the vendor billed 31 characters on
+// v3 Conversational 8 credits — a quarter of a credit a character, rounded up line by line. Catches a weight rounded
+// once for the whole scene (under the bill), floating-point dust paid as a credit, and a model without a rate weighed at
+// nothing.
+it('weighs lines in credits before buying them, rounded up line by line as the vendor bills', function () {
+    Http::fake();
+    $lines = [
+        new SpeechLine('Hello, how are you doing today?', elevenVoice('v')),
+        new SpeechLine(str_repeat('a', 12), elevenVoice('v')),
+        new SpeechLine('Hello', elevenVoice('v')),
+        new SpeechLine('World', elevenVoice('v')),
+    ];
+
+    // 31 → 8, 12 → 3 (12 × 0.05 / 0.20 is 3.0000000000000004 in floating point, not a fourth credit), 5 → 2, 5 → 2; the
+    // scene weighed at once would be 53 → 14.
+    expect(elevenVendor()->creditsFor($lines))->toBe(15)
+        ->and(elevenVendor()->creditsFor([new SpeechLine('Hello.', new LineVoice('elevenlabs', 'eleven_unrated', 'v', 0.5))]))->toBe(6);
+    Http::assertNothingSent();
+});
+
 // Canon (TTS-2): «429 / лимит одновременности → повтор с задержкой, очередь не падает». Live 15.09: the 429 of the
 // concurrency limit comes without Retry-After.
 it('retries the concurrency limit and buys the line once; after the short retries it asks the queue to wait', function () {

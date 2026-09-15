@@ -27,6 +27,14 @@ interface LineSpeaker
      */
     public function sayEach(string $lang, array $lines, callable $keep): void;
 
+    /**
+     * What saying these lines would cost in the vendor's credits, before anything is bought — the estimate a credits cap
+     * is checked against. 0 — speech is off or the pack has none of their voices.
+     *
+     * @param  list<LineToSay>  $lines
+     */
+    public function creditsFor(string $lang, array $lines): int;
+
     /** The key a file of this voice is stored under, so a stored one is found before buying. Null — no such voice. */
     public function voiceKeyFor(string $lang, Speaker $speaker, VoiceGender $gender): ?string;
 

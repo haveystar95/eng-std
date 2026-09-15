@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Service;
 
+use App\Modules\Plan\Application\Dto\LineAudioRow;
 use App\Modules\Plan\Application\Dto\LineToSay;
 use App\Modules\Plan\Application\Dto\SceneVoiceDebt;
 use App\Modules\Plan\Application\Port\LineAudioStore;
@@ -102,6 +103,38 @@ final readonly class SceneVoiceQueue
             fillers: $count['fillers'],
             words: $count['words'],
         );
+    }
+
+    /**
+     * The lines of a scene filed under a voice their speaker no longer has in it — a voice of the pack changed (TTS-2;
+     * the voice is a key of the file, DECISIONS п. 248), so no reader finds them and the speaker's lines are owed anew.
+     * Nothing is unread when the scene cannot say which voice is right: no lesson, speech off, a voice missing from the
+     * pack — a switched-off voice must never read as «every file is stale».
+     *
+     * @return list<LineAudioRow>
+     */
+    public function unread(PlanSceneId $sceneId): array
+    {
+        $planId = $this->scenes->planIdOf($sceneId);
+        $plan = $planId === null ? null : $this->plans->findById($planId);
+        $scene = $plan?->scene($sceneId);
+        if ($plan === null || $scene === null || ! $scene->hasLesson()) {
+            return [];
+        }
+        $cast = VoiceCast::ofScene($scene);
+        $keys = [];
+        foreach ([Speaker::Partner, Speaker::Learner] as $speaker) {
+            $key = $this->speaker->voiceKeyFor($plan->targetLang()->value, $speaker, $cast->genderOf($speaker));
+            if ($key === null) {
+                return [];
+            }
+            $keys[$speaker->value] = $key;
+        }
+
+        return array_values(array_filter(
+            $this->store->ofScene($sceneId),
+            static fn (LineAudioRow $row): bool => $row->voiceKey !== $keys[SpokenLines::speakerOf($row->lineRef)->value],
+        ));
     }
 
     /** @return list<array{index: int, ref: string, text: string, voicedAs: string}> */

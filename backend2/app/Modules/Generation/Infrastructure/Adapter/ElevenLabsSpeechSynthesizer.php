@@ -154,6 +154,14 @@ final class ElevenLabsSpeechSynthesizer implements SpeechSynthesizerPort
         }
     }
 
+    public function creditsFor(array $lines): int
+    {
+        return array_sum(array_map(
+            fn (SpeechLine $line): int => $this->creditsOf(SpeechCost::charactersOf($line->text), $line->voice->model),
+            $lines,
+        ));
+    }
+
     public function balance(): ?SpeechBalance
     {
         try {
@@ -184,9 +192,7 @@ final class ElevenLabsSpeechSynthesizer implements SpeechSynthesizerPort
         $characters = SpeechCost::charactersOf($line->text);
         $header = $response->header('character-cost');
         // No header: the credits the model's rate says those characters are worth at this account's credit price.
-        $credits = ctype_digit($header)
-            ? (int) $header
-            : (int) ceil($characters * (SpeechCost::perThousandCharacters($line->voice->model) ?? 0.0) / max(0.000001, $this->usdPerThousandCredits));
+        $credits = ctype_digit($header) ? (int) $header : $this->creditsOf($characters, $line->voice->model);
         $id = $response->header('request-id');
 
         return new SpokenLine(
@@ -199,6 +205,22 @@ final class ElevenLabsSpeechSynthesizer implements SpeechSynthesizerPort
             costUsd: SpeechCost::ofCredits($credits, $this->usdPerThousandCredits),
             requestId: $id === '' ? null : mb_substr($id, 0, 64),
         );
+    }
+
+    /**
+     * The credits a text's characters are worth: the model's rate at this account's credit price, rounded up per line as
+     * the vendor rounds (live 15.09 on Starter: 31 characters on v3 Conversational — 8 credits). A model the rate table
+     * does not know is taken at a credit a character, the dearest the vendor has charged — an estimate that errs high.
+     */
+    private function creditsOf(int $characters, string $model): int
+    {
+        $rate = SpeechCost::perThousandCharacters($model);
+        if ($rate === null) {
+            return $characters;
+        }
+
+        // Rounded first: 12 × 0.05 / 0.20 is 3.0000000000000004 in floating point, and a cap must not pay for the dust.
+        return (int) ceil(round($characters * $rate / max(0.000001, $this->usdPerThousandCredits), 6));
     }
 
     /** The refusal a non-2xx answer is: the account's, a window to wait for, or a text the vendor will not read. */

@@ -15,6 +15,7 @@ use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
+use App\Modules\Plan\Application\Service\VoiceCap;
 use App\Modules\Plan\Application\Service\VoiceFuse;
 use App\Modules\Plan\Application\Port\NativeDistractorSource;
 use App\Modules\Plan\Application\Port\PlanAccountEraser;
@@ -192,6 +193,11 @@ final class PlanServiceProvider extends ServiceProvider
             $app->make(Clock::class),
             (int) config('generation.speech.monthly_credits', 10000),
             (float) config('generation.speech.fuse_share', 0.10),
+        ));
+        // The credits cap of one run of purchases (TTS-2): a voice job, a backfill.
+        $this->app->bind(VoiceCap::class, fn (Container $app): VoiceCap => new VoiceCap(
+            $app->make(LineSpeaker::class),
+            (int) config('generation.speech.job_credits_cap', 3000),
         ));
 
         // The sized copies of scene photos. The fake image driver (the whole test suite, offline

@@ -76,8 +76,11 @@ Application: `PlanImageLadder` (every missing photo's ladder climbed together, o
 image_prompt → «term, scene theme» → the theme on a page of its own; never the bare word, DAY-UI-3).
 The voice (DAY-UI-3, TTS-2): `SpokenLines` (what a day says out loud, the file names, whose voice each is, the fillers
 a phrase does not already say), `VoiceCast`; `SceneVoiceQueue` (what a scene still owes, every line its own call),
-`VoiceFuse` (nothing is bought below a tenth of the vendor account left), `SceneVoices` + `SceneAudioIndex` (a reader's
-lookup in the speaker's voice).
+`VoiceFuse` (nothing is bought below a tenth of the vendor account left), `VoiceCap` (one run of purchases — a voice
+job, a backfill — never buys past `generation.speech.job_credits_cap`: checked before each scene against its estimate),
+`SceneVoices` + `SceneAudioIndex` (a reader's lookup in the speaker's voice); `DropUnreadVoiceHandler` (a changed voice's
+lines deleted before they are bought anew). A database in `generation.speech.named_plans_only_databases` (the e2e stand)
+queues no voice for a new day (`QueuedPlanDispatcher`).
 `WordUsage` (the line of the day a word is said in — by the lesson's `used_in` — and its place in it, sheet 23-0e).
 Application: `LessonBuildService` (the lesson call, one retry only for an answer off the schema, the validator's
 findings counted by code), `LessonGateKeeper` (a fatal finding holds the lesson: P2R for its card, at most two cards,
@@ -151,12 +154,16 @@ reads plan tables.
   ladder (prints «было пусто / стало»; `--requery` re-asks the words the bare word photographed and the words repeating a picture of their day), then tones and square copies for scene photos
   stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a
   missing copy on its own, so the copies part is an optimisation; the tones only come from here.
-- Ops: `plan:speak-backfill {--plan=*} {--count}` (DAY-UI-3, TTS-2) — what scenes still do not say in the
-  server's voice, scene by scene the way a fresh day is voiced (every line its own call); the plans of real
-  learners first, then QA accounts', newest first; `--plan` only the plans named, in that order. Waits out
-  the concurrency limit a few times, stops on a refusal of the vendor account (its code printed) and at the
-  fuse; prints what is not voiced yet by five kinds, before and after, and what the run bought (lines,
-  characters, dollars, credits, calls); `--count` only counts.
+- Ops: `plan:speak-backfill {--plan=*} {--count} {--drop-unread} {--drop-only}` (DAY-UI-3, TTS-2) — what scenes still do not say in the
+  server's voice, scene by scene the way a fresh day is voiced (every line its own call); `--drop-unread` deletes, right
+  before a scene is bought, its lines filed under a voice their speaker no longer has (a voice of the pack changed), rows
+  and files; the plans of real learners first, then QA accounts', newest first; `--plan` only the plans named, in that
+  order — and on a database voiced only by name (the e2e stand) nothing is bought without it. The whole run is one run of
+  the credits cap. Waits out the concurrency limit a few times, stops on a refusal of the vendor account (its code
+  printed), at the cap and at the fuse; prints what is not voiced yet by five kinds, before and after, and what the run
+  bought (lines, characters, dollars, credits, calls); `--count` only counts and names the price of what is owed
+  (credits · characters · $) — to be agreed before buying; `--drop-only` only deletes the lines of a voice their speaker
+  no longer has, rows and files, and buys nothing.
 - Ops: `plan:speak-report {--plan=} {--day=}` (TTS-2) — what the voice cost: every plan, a plan by day, a day by
   kind of line — characters, dollars, credits, calls (distinct vendor request ids).
 - The plan languages are the server's list (`plan.languages`, `GET /plans/languages`), and

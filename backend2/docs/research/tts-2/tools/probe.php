@@ -8,12 +8,21 @@ declare(strict_types=1);
  *   docker compose exec -T app php docs/research/tts-2/tools/probe.php account
  *   docker compose exec -T app php docs/research/tts-2/tools/probe.php voices <voice_id> …
  *   docker compose exec -T app php docs/research/tts-2/tools/probe.php library "gender=male&language=en&page_size=20"
- *   docker compose exec -T app php docs/research/tts-2/tools/probe.php line <model_id> <voice_id> "text"
+ *   docker compose exec -T app php docs/research/tts-2/tools/probe.php line <model_id> <voice_id> "text" [stability] [speed]
  *   docker compose exec -T app php docs/research/tts-2/tools/probe.php parallel <model_id> <voice_id> <n>
+ *   docker compose exec -T app php docs/research/tts-2/tools/probe.php takes <model_id> <voice_id> <n> "text" <label> [stability]
+ *   docker compose exec -T app php docs/research/tts-2/tools/probe.php hear <label> <n>
  *
- * `account`, `voices`, `library` are free. `line` and `parallel` buy characters — keep the texts short. The key is read
- * from `ELEVENLABS_API_KEY`; nothing secret is printed. The sound of the last paid line lands in
- * `storage/app/tts-2/probe-line.mp3` to listen to.
+ * `hear` puts the takes through speech-to-text: what was actually said (a direction in brackets must not be read aloud)
+ * and how fast — words from the first one's start to the last one's end. The voice key has no `speech_to_text`
+ * permission, so the ears are OpenAI `whisper-1` on `OPENAI_API_KEY` (a fraction of a cent a take).
+ *
+ * Every paid mode is a purchase from a vendor: run it only on command, with the price named first (handoff, TTS-2).
+ *
+ * `account`, `voices`, `library` are free. `line`, `parallel` and `takes` buy characters — keep the texts short. The key
+ * is read from `ELEVENLABS_API_KEY`; nothing secret is printed. The sound of the last paid line lands in
+ * `storage/app/tts-2/probe-line.mp3` to listen to; `takes` keeps every take as `probe-<label>-<i>.mp3` — one take of
+ * a line differs from the next, so a pace is judged on several.
  */
 
 use Illuminate\Contracts\Console\Kernel;
@@ -97,10 +106,11 @@ switch ($argv[1] ?? 'account') {
 
     case 'line':
         [$model, $voice, $text] = [$argv[2], $argv[3], $argv[4] ?? 'Hello.'];
+        $settings = ['stability' => (float) ($argv[5] ?? 0.5)] + (isset($argv[6]) ? ['speed' => (float) $argv[6]] : []);
         $r = $client()->post("{$base}/v1/text-to-speech/{$voice}?output_format=mp3_44100_128", [
             'text' => $text,
             'model_id' => $model,
-            'voice_settings' => ['stability' => (float) ($argv[5] ?? 0.5)],
+            'voice_settings' => $settings,
         ]);
         echo "line {$r->status()}\n";
         $print($headers($r));
@@ -134,6 +144,67 @@ switch ($argv[1] ?? 'account') {
             if (! $r->successful()) {
                 echo $r->body(), "\n";
             }
+        }
+        break;
+
+    case 'takes':
+        [$model, $voice, $n, $text, $label] = [$argv[2], $argv[3], (int) ($argv[4] ?? 3), $argv[5] ?? 'Hello.', $argv[6] ?? 'take'];
+        $stability = (float) ($argv[7] ?? 0.5);
+        foreach (array_chunk(range(1, max(1, $n)), 3) as $round) {
+            $responses = Http::pool(static function (Pool $pool) use ($base, $key, $model, $voice, $text, $stability, $round): array {
+                $out = [];
+                foreach ($round as $i) {
+                    $out[$i] = $pool->as((string) $i)->withHeaders(['xi-api-key' => $key])->timeout(120)
+                        ->post("{$base}/v1/text-to-speech/{$voice}?output_format=mp3_44100_128", [
+                            'text' => $text,
+                            'model_id' => $model,
+                            'voice_settings' => ['stability' => $stability],
+                        ]);
+                }
+
+                return $out;
+            });
+            foreach ($responses as $i => $r) {
+                if (! $r instanceof Response) {
+                    echo "#{$i} ", get_debug_type($r), "\n";
+
+                    continue;
+                }
+                if (! $r->successful()) {
+                    echo "#{$i} {$r->status()} ", $r->body(), "\n";
+
+                    continue;
+                }
+                file_put_contents("{$dir}/probe-{$label}-{$i}.mp3", $r->body());
+                echo "#{$i} 200 bytes ", strlen($r->body()), ' credits ', $r->header('character-cost'), "\n";
+            }
+        }
+        break;
+
+    case 'hear':
+        [$label, $n] = [$argv[2] ?? 'take', (int) ($argv[3] ?? 1)];
+        for ($i = 1; $i <= $n; $i++) {
+            $path = "{$dir}/probe-{$label}-{$i}.mp3";
+            if (! is_file($path)) {
+                echo "#{$i} no take\n";
+
+                continue;
+            }
+            $r = Http::withToken((string) env('OPENAI_API_KEY', ''))->timeout(120)
+                ->attach('file', (string) file_get_contents($path), basename($path))
+                ->post('https://api.openai.com/v1/audio/transcriptions', [
+                    'model' => 'whisper-1', 'language' => 'en', 'response_format' => 'verbose_json', 'timestamp_granularities[]' => 'word',
+                ]);
+            if (! $r->successful()) {
+                echo "#{$i} {$r->status()} ", $r->body(), "\n";
+
+                continue;
+            }
+            $words = array_values(array_filter((array) $r->json('words'), is_array(...)));
+            $first = (float) ($words[0]['start'] ?? 0);
+            $last = (float) ($words === [] ? 0 : ($words[count($words) - 1]['end'] ?? 0));
+            $span = $last - $first;
+            printf("#%d words %d  %.2fs → %.2fs  (%.2fs, %.2f words/s)  \"%s\"\n", $i, count($words), $first, $last, $span, $span > 0 ? count($words) / $span : 0, (string) $r->json('text'));
         }
         break;
 

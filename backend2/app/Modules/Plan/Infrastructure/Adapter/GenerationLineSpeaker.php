@@ -67,6 +67,22 @@ final readonly class GenerationLineSpeaker implements LineSpeaker
         }
     }
 
+    public function creditsFor(string $lang, array $lines): int
+    {
+        if (! $this->enabled) {
+            return 0;
+        }
+        $asked = [];
+        foreach ($lines as $line) {
+            $voice = $this->voiceOf($lang, $line);
+            if ($voice !== null) {
+                $asked[] = new SpeechLine($line->text, $voice);
+            }
+        }
+
+        return $asked === [] ? 0 : $this->synthesizer->creditsFor($asked);
+    }
+
     public function voiceKeyFor(string $lang, Speaker $speaker, VoiceGender $gender): ?string
     {
         $found = $this->enabled ? $this->voices->forLanguage($lang, VoiceRole::from($speaker->value), $gender) : null;

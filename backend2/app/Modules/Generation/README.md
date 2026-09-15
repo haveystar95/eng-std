@@ -184,12 +184,15 @@ plan and spends nothing; `--pace=` spaces calls under an org token-per-minute ca
 One port, one vendor (TTS-2): `speakLines` — every line on its own `POST /v1/text-to-speech/{voice}` call to
 ElevenLabs (`ElevenLabsSpeechSynthesizer`; `FakeSpeechSynthesizer` for tests and `SPEECH_DRIVER=fake`), as many at once
 as the account's `maximum-concurrent-requests`, each line's credits read off `character-cost` and priced at the
-account's credit price — and `balance` (`/v1/user/subscription`). A transient refusal (429, 5xx, the network) is
+account's credit price — `creditsFor` (what lines would cost before any is bought: the model's rate for their characters
+at the credit price, rounded up line by line; the weight a credits cap is checked against) and `balance`
+(`/v1/user/subscription`). A transient refusal (429, 5xx, the network) is
 retried briefly, then `TransientSpeechError`; a refusal of the account (401/402/403, a voice the plan does not include)
 is `SpeechAccountError` with the vendor's code. Generation owns the vendor seam only; the one caller is the learning
 plan (`app/Modules/Plan`), which buys the audio of everything a day says and stores the files under its own tables.
-The voices (by language, role and gender), the model, the concurrency, the credit price and the on/off switch are
-config (`generation.speech.*`, `services.elevenlabs.*`).
+The voices (by language, role and gender; the ids are `SPEECH_VOICE_EN_*` lines of `.env`), the model, the concurrency,
+the credit price, the credits cap of a run and the on/off switch are config (`generation.speech.*`,
+`services.elevenlabs.*`).
 
 ## Boundaries
 

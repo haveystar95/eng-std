@@ -69,6 +69,11 @@ final class FakeSpeechSynthesizer implements SpeechSynthesizerPort
         }
     }
 
+    public function creditsFor(array $lines): int
+    {
+        return array_sum(array_map(static fn (SpeechLine $line): int => (int) ceil(SpeechCost::charactersOf($line->text) / 4), $lines));
+    }
+
     public function balance(): ?SpeechBalance
     {
         return $this->balance;

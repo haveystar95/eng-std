@@ -25,6 +25,12 @@ interface LineAudioStore
 
     public function find(string $audioId): ?LineAudioRow;
 
+    /** @return list<LineAudioRow> every line stored for the scene, in every voice */
+    public function ofScene(PlanSceneId $sceneId): array;
+
+    /** Deletes the row and its file — a line nobody reads any more. */
+    public function drop(LineAudioRow $row): void;
+
     /**
      * Writes the bytes and the row; returns the row, or null when this voice already had the line — then nothing is
      * written at all, the file behind an address already handed out stays as it was.

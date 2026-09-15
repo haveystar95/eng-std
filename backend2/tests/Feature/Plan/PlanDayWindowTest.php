@@ -17,6 +17,7 @@ use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
 use App\Modules\Plan\Application\Port\PlanImageFinder;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Application\Service\SceneVoiceQueue;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\ImageQuery;
@@ -24,6 +25,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Infrastructure\Job\VoiceSceneJob;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
+use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -284,7 +286,7 @@ it('names the day a word that failed twice comes back on (23-0e)', function () {
         ->and($words['v1']['returns_day'])->toBeNull();
 });
 
-// ── TTS-2 · the voice: ElevenLabs, everything a day says, a dialogue in one call, the account's refusals ───────────
+// ── TTS-2 · the voice: ElevenLabs, everything a day says, a line a call, the account's refusals ────────────────────
 
 // Canon (owner, DAY-UI-3; TTS-2): «озвучиваются все реплики собеседника, все реплики ученика, все фразы, фразы с
 // наполнениями, слова». Catches a learner's line, a phrase, a filler or a word left to the phone's voice, and a filler
@@ -377,15 +379,19 @@ it('backfills a lesson whole: after plan:speak-backfill every word, line, phrase
     expect(array_filter(array_merge(...array_values($before))))->toBe([]);
 
     Artisan::call('plan:speak-backfill', ['--count' => true]);
-    expect(Artisan::output())->toContain('partner lines 8, learner lines 8, phrases 6, fillers 10, words 8')
+    $counted = Artisan::output();
+    expect($counted)->toContain('partner lines 8, learner lines 8, phrases 6, fillers 10, words 8')
         ->and($vendor->calls)->toBe(0);
 
     Artisan::call('plan:speak-backfill');
     $output = Artisan::output();
     $after = windowVoiceUrls(windowOf($this, $token, $id, 1)['program']);
 
+    // TTS-2: «цену назвать до покупки» — the price --count names is the bill the run then brings, in all three units.
+    $credits = (int) DB::table('plan_line_audios')->sum('credits');
     expect($output)->toContain('after: partner lines 0, learner lines 0, phrases 0, fillers 0, words 0')
         ->and($output)->toContain('bought: 40 lines')
+        ->and($counted)->toContain(sprintf('Would cost about %d credits · %d characters · $%s', $credits, (int) DB::table('plan_line_audios')->sum('characters'), number_format($credits / 1000 * 0.20, 4, '.', '')))
         ->and($after['usages'])->not->toBeEmpty();
     foreach ($after as $kind => $urls) {
         expect($urls)->not->toBeEmpty()
@@ -551,6 +557,16 @@ it('backfills real learners before QA accounts, and --plan only the plans named'
             return $this->inner->read($row);
         }
 
+        public function ofScene(PlanSceneId $sceneId): array
+        {
+            return $this->inner->ofScene($sceneId);
+        }
+
+        public function drop(\App\Modules\Plan\Application\Dto\LineAudioRow $row): void
+        {
+            $this->inner->drop($row);
+        }
+
         public function creditsSince(\DateTimeImmutable $since): int
         {
             return $this->inner->creditsSince($since);
@@ -566,6 +582,135 @@ it('backfills real learners before QA accounts, and --plan only the plans named'
     Artisan::call('plan:speak-backfill');
 
     expect(array_values(array_unique($store->scenes)))->toBe([$sceneOf($plan), $sceneOf($qaPlan)]);
+});
+
+// Canon (TTS-2, доработка): a voice of the pack changed — «переозвучить строки ученика, остальное не трогать». The voice is
+// a key of the file (DECISIONS п. 248), so the speaker's old files are read by nobody. Catches a re-voicing that leaves the
+// dead files behind, one that buys the partner's lines again, and — the dangerous one — speech switched off read as «every
+// file is stale».
+it('re-voices with --drop-unread only the lines whose speaker’s voice changed, and drops nothing while speech is off', function () {
+    $vendor = windowVoice();
+    [, $token] = planLearner();
+    planCreate($this, $token, ['days_total' => 2]);
+    $partnerLine = DB::table('plan_line_audios')->where('line_ref', 'x1')->first();
+    $learnerPath = (string) DB::table('plan_line_audios')->where('line_ref', 'x1b')->value('path');
+    config(['generation.speech.voices.en.learner.male.voice' => 'another-learner-man']);
+    app()->forgetInstance(VoiceCatalog::class);
+    $vendor->calls = 0;
+
+    Artisan::call('plan:speak-backfill', ['--count' => true]);
+    expect(Artisan::output())->toContain('partner lines 0, learner lines 8, phrases 6, fillers 10, words 8');
+
+    Artisan::call('plan:speak-backfill', ['--drop-unread' => true]);
+    $output = Artisan::output();
+    $learnerKeys = DB::table('plan_line_audios')->where('line_ref', 'not like', 'x%')->orWhere('line_ref', 'like', 'x%b')->pluck('voice_key')->unique()->values()->all();
+
+    expect($output)->toContain('dropped: 32')
+        ->and($output)->toContain('after: partner lines 0, learner lines 0, phrases 0, fillers 0, words 0')
+        ->and($vendor->calls)->toBe(32)
+        ->and(DB::table('plan_line_audios')->count())->toBe(40)
+        ->and(DB::table('plan_line_audios')->where('line_ref', 'x1')->first())->toEqual($partnerLine)
+        ->and(Storage::disk('local')->exists($learnerPath))->toBeFalse()
+        ->and($learnerKeys)->toHaveCount(1)
+        ->and($learnerKeys[0])->toContain('another-learner-man');
+
+    config(['generation.speech.enabled' => false]);
+    Artisan::call('plan:speak-backfill', ['--drop-unread' => true]);
+    expect(Artisan::output())->toContain('dropped: 0')
+        ->and(DB::table('plan_line_audios')->count())->toBe(40);
+});
+
+// Canon (TTS-2, the architect): «мёртвые файлы замедленного голоса — удалить, строки под старым ключом снести, без
+// переозвучки». Catches a drop that buys what it dropped, one that leaves the files on the disk, and one that takes the
+// lines of a voice the pack still has.
+it('deletes with --drop-only the lines of a voice their speaker no longer has, rows and files, and buys nothing', function () {
+    $vendor = windowVoice();
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 2])['id'];
+    $partnerLines = DB::table('plan_line_audios')->where('line_ref', 'like', 'x%')->where('line_ref', 'not like', 'x%b')->orderBy('line_ref')->get()->all();
+    $learnerPath = (string) DB::table('plan_line_audios')->where('line_ref', 'x1b')->value('path');
+    config(['generation.speech.voices.en.learner.male.voice' => 'another-learner-man']);
+    app()->forgetInstance(VoiceCatalog::class);
+    $vendor->calls = 0;
+
+    Artisan::call('plan:speak-backfill', ['--plan' => [$id], '--drop-only' => true]);
+
+    expect(Artisan::output())->toContain('dropped: 32 in 1 scenes; nothing bought')
+        ->and($vendor->calls)->toBe(0)
+        ->and(DB::table('plan_line_audios')->orderBy('line_ref')->get()->all())->toEqual($partnerLines)
+        ->and(Storage::disk('local')->exists($learnerPath))->toBeFalse();
+    Artisan::call('plan:speak-backfill', ['--count' => true]);
+    expect(Artisan::output())->toContain('partner lines 0, learner lines 8, phrases 6, fillers 10, words 8');
+});
+
+// Canon (TTS-2, the architect): «кап на наряд SPEECH_JOB_CREDITS_CAP, по умолчанию 3 000; превышение — стоп и письмо в
+// лог». One run of purchases — a voice job, a whole plan:speak-backfill — never buys past the cap: before each scene what
+// the run has bought and what the scene would cost are added up. Catches a cap checked scene by scene alone (a backfill of
+// many scenes walks past it), a cap checked after the purchase, and a stop without the letter.
+it('never lets one run buy past the credits cap: the scene that would go over is not bought, and the letter goes to the log', function () {
+    [, $token] = planLearner();
+    $first = planCreate($this, $token, ['days_total' => 2])['id'];
+    [, $otherToken] = planLearner();
+    app('auth')->forgetGuards();
+    $second = planCreate($this, $otherToken, ['days_total' => 2])['id'];
+    $sceneOf = static fn (string $id): string => (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
+    $vendor = windowVoice();
+    $costOf = static function (string $sceneId): int {
+        $debt = app(SceneVoiceQueue::class)->owed(PlanSceneId::fromString($sceneId));
+
+        return $debt === null ? 0 : app(LineSpeaker::class)->creditsFor($debt->lang, $debt->lines);
+    };
+    $cost = $costOf($sceneOf($first));
+    expect($cost)->toBeGreaterThan(0)->and($costOf($sceneOf($second)))->toBe($cost);
+    Log::spy();
+
+    // Room for a scene and a half: one scene is bought whole, the next would go over and is not touched.
+    $cap = $cost + intdiv($cost, 2);
+    config(['generation.speech.job_credits_cap' => $cap]);
+    Artisan::call('plan:speak-backfill');
+
+    expect(Artisan::output())->toContain('Stopped by the credits cap')
+        ->and($vendor->calls)->toBe(40)
+        ->and((int) DB::table('plan_line_audios')->sum('credits'))->toBe($cost)
+        ->and(DB::table('plan_line_audios')->distinct()->count('scene_id'))->toBe(1);
+    Log::shouldHaveReceived('error')->withArgs(static fn (string $message, array $context): bool => str_contains($message, 'credits cap') && $context['cap'] === $cap);
+
+    // A voice job is a run of its own: a scene dearer than the cap is not bought, and the job neither fails nor waits.
+    config(['generation.speech.job_credits_cap' => $cost - 1]);
+    $owed = DB::table('plan_line_audios')->where('scene_id', $sceneOf($first))->exists() ? $sceneOf($second) : $sceneOf($first);
+    $queueJob = Mockery::mock(Job::class);
+    $queueJob->shouldNotReceive('fail');
+    $queueJob->shouldNotReceive('release');
+    $job = new VoiceSceneJob($owed);
+    $job->setJob($queueJob);
+    $job->handle(app(VoiceSceneHandler::class));
+
+    expect($vendor->calls)->toBe(40);
+    Log::shouldHaveReceived('error')->withArgs(static fn (string $message, array $context): bool => str_contains($message, 'credits cap') && ($context['scene_id'] ?? null) === $owed && $context['scene_credits'] === $cost);
+});
+
+// Canon (TTS-2, the architect): «wordtrainer_e2e_test из автоозвучки и бэкфилла исключить навсегда (озвучивать только по
+// явному --plan)». Catches a new day voiced on its own on such a database, a backfill of every scene there, and a --plan
+// refused along with them.
+it('voices nothing on its own on a database kept for named plans: no voice for a new day, no backfill without --plan', function () {
+    config(['generation.speech.named_plans_only_databases' => [(string) config('database.connections.'.config('database.default').'.database')]]);
+    $vendor = windowVoice();
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 2])['id'];
+    expect($vendor->calls)->toBe(0);
+
+    $refused = Artisan::call('plan:speak-backfill');
+    expect($refused)->toBe(1)
+        ->and(Artisan::output())->toContain('voiced only by --plan');
+    $refusedDrop = Artisan::call('plan:speak-backfill', ['--drop-unread' => true]);
+    expect($refusedDrop)->toBe(1)->and($vendor->calls)->toBe(0);
+
+    Artisan::call('plan:speak-backfill', ['--count' => true]);
+    expect(Artisan::output())->toContain('partner lines 8, learner lines 8, phrases 6, fillers 10, words 8');
+
+    Artisan::call('plan:speak-backfill', ['--plan' => [$id]]);
+    expect(Artisan::output())->toContain('bought: 40 lines')
+        ->and($vendor->calls)->toBe(40);
 });
 
 // ── DAY-UI-3 · the photos: with the lesson, all at once, never by the bare word ─────────────────────

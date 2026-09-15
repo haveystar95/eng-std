@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Port\SpeechAccountError;
 use App\Modules\Generation\Application\Port\TransientSpeechError;
 use App\Modules\Plan\Application\Command\VoiceScene;
 use App\Modules\Plan\Application\Command\VoiceSceneHandler;
+use App\Modules\Plan\Application\Exception\VoiceCapReached;
 use App\Modules\Plan\Application\Exception\VoiceFuseTripped;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use DateTimeImmutable;
@@ -18,17 +19,19 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Everything one scene says out loud, in its two voices (DAY-UI-3, TTS-2): the dialogue in one call, every phrase,
- * filler and word on a call of its own. The day never waits for it — the phone reads meanwhile.
+ * Everything one scene says out loud, in its speakers' voices (DAY-UI-3, TTS-2): every line — the partner's, the
+ * learner's, a phrase, a filler, a word — on a call of its own. The day never waits for it — the phone reads meanwhile.
  *
- * Three ways it ends without the voice, each for its reason:
+ * Four ways it ends without the voice, each for its reason:
  *
  * - the vendor's concurrency limit or a 5xx outlasts the adapter's own short retries — the job goes back on the queue
  *   for a while and buys only what is still missing (a transient refusal never fails a day);
  * - the vendor ACCOUNT refuses — no credits, a voice the plan does not include, a wrong key: the job FAILS with the
  *   vendor's code and the letter goes to the log; a retry would buy the same refusal. `plan:speak-backfill` after the
  *   account is fixed;
- * - the fuse tripped — too little of the account left: the letter goes to the log and the job ends without buying.
+ * - the fuse tripped — too little of the account left: the letter goes to the log and the job ends without buying;
+ * - the scene would cost more than the credits cap of a run (`generation.speech.job_credits_cap`): the letter goes to
+ *   the log and the job ends without buying.
  */
 final class VoiceSceneJob implements ShouldQueue
 {
@@ -65,6 +68,13 @@ final class VoiceSceneJob implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
             $this->fail($e);
+        } catch (VoiceCapReached $e) {
+            Log::error('VoiceSceneJob stopped by the credits cap; nothing bought, the day reads with the phone voice until plan:speak-backfill', [
+                'scene_id' => $this->sceneId,
+                'scene_credits' => $e->sceneCredits,
+                'cap' => $e->cap,
+                'error' => $e->getMessage(),
+            ]);
         } catch (VoiceFuseTripped $e) {
             Log::error('VoiceSceneJob stopped by the voice fuse; nothing bought, the day reads with the phone voice until plan:speak-backfill', [
                 'scene_id' => $this->sceneId,
