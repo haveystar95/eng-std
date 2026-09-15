@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Modules\Collections\Application\Command\DeleteCollection;
+use App\Modules\Collections\Application\Command\DeleteCollectionHandler;
+use App\Modules\Shared\Domain\Exception\ProblemDetails;
+use App\Modules\Shared\Domain\ValueObject\CollectionId;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
@@ -28,8 +33,10 @@ return new class extends Migration
      *  - `plan_check_counters` — every row counted under a prompt version that no longer exists: all but
      *    the plan builder's (`plan-builder-*`) and the frames lesson's (`lesson_day.*`) — their names are
      *    checks that no longer exist.
-     *  - `collections` — a plan's collection is SOFT-deleted (tombstones for the phone's mirror, the way
-     *    PLAN-GEN retired the first plan's collections); the global terms stay.
+     *  - `collections` — a plan's collection is SOFT-deleted (tombstones for the phone's mirror) by the
+     *    Collections module itself: its `DeleteCollection` with the plan's learner as the owner — this
+     *    module does not write another module's table. A collection already gone, or no longer the
+     *    learner's to delete, is skipped and counted. The global terms stay.
      *  - files — each dropped scene's voice (`plan-audio/<scene>/` on `plan.audio_disk`) and the square
      *    copies of its photo (`plan-images/<scene>/` on `plan.image_disk`).
      *
@@ -40,7 +47,8 @@ return new class extends Migration
     {
         $plans = DB::table('plans')->pluck('id')->all();
         $scenes = $plans === [] ? [] : DB::table('plan_scenes')->whereIn('plan_id', $plans)->pluck('id')->all();
-        $collections = $plans === [] ? [] : DB::table('plans')->whereIn('id', $plans)->whereNotNull('collection_id')->pluck('collection_id')->all();
+        /** @var list<object{user_id: string, collection_id: string}> $collections */
+        $collections = $plans === [] ? [] : DB::table('plans')->whereIn('id', $plans)->whereNotNull('collection_id')->get(['user_id', 'collection_id'])->all();
 
         $counts = [
             'plans' => count($plans),
@@ -52,13 +60,19 @@ return new class extends Migration
             'plan_events' => $plans === [] ? 0 : DB::table('plan_events')->whereIn('plan_id', $plans)->count(),
             'plan_notifications' => $plans === [] ? 0 : DB::table('plan_notifications')->whereIn('plan_id', $plans)->count(),
             'plan_check_counters' => self::retiredCounters()->count(),
-            'collections_tombstoned' => $collections === [] ? 0 : DB::table('collections')->whereIn('id', $collections)->whereNull('deleted_at')->count(),
+            'collections_tombstoned' => 0,
+            'collections_skipped' => 0,
         ];
 
-        DB::transaction(function () use ($plans, $collections): void {
-            if ($collections !== []) {
-                DB::table('collections')->whereIn('id', $collections)->whereNull('deleted_at')
-                    ->update(['deleted_at' => now(), 'updated_at' => now()]);
+        DB::transaction(function () use ($plans, $collections, &$counts): void {
+            $delete = app(DeleteCollectionHandler::class);
+            foreach ($collections as $row) {
+                try {
+                    $delete(new DeleteCollection(new CollectionId($row->collection_id), new UserId($row->user_id)));
+                    $counts['collections_tombstoned']++;
+                } catch (ProblemDetails) {
+                    $counts['collections_skipped']++;
+                }
             }
             foreach (array_chunk($plans, 500) as $chunk) {
                 DB::table('plans')->whereIn('id', $chunk)->delete();
