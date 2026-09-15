@@ -1,5 +1,7 @@
 # DAY-UI-2 — «Окно дня» по кадрам 23-0a…0d + бэкенд под него
 
+> **15.09, наряд TTS-2:** голос сервера переведён на ElevenLabs; прежний вендор голоса и его труба (вызов сценарием, нарезка звука по паузам, пачки под суточную квоту, ожидание суточного окна, инструмент прослушки нарезки) снесены вместе с кодом. Имена снятых классов, моделей, голосов и инструментов заменены здесь описаниями (точные — в git до `acc5441a`). Действующий голос — `docs/plan-v2.md` §7.
+
 Наряд DAY-UI-2 (14.09.2026). Канва — `backend2/docs/design/plan-canvas.dc.html`, серия 23 (кадры
 23-0a «не начат», 23-0b «идёт», 23-0c «пройден», 23-0d «три вкладки в трёх состояниях»), таблицы
 «Изменения · серия 23» и «Тайминг · серия 23», `@keyframes om-cab-in` / `om-check-pop`.
@@ -114,7 +116,7 @@
 - `plan_line_audios` по-прежнему ключуется `line_ref` (миграция `2026_09_14_100100`, старые строки
   стали `x<step>`); строки фраз, купленные 14.09 до правки, — **51 строка в 10 сценах, $0.0322** — лежат
   в таблице, их больше никто не называет (не удалялись: удаление данных — отдельным решением);
-- **лимит вендора — поминутный и суточный:** Gemini TTS отвечает 429 `GenerateRequestsPerMinutePerProjectPerModel`
+- **лимит вендора — поминутный и суточный:** прежний вендор голоса отвечает 429 с квотой запросов в минуту
   (10 в минуту) и `GenerateRequestsPerDayPerProjectPerModel` (**100 в сутки**). Сцена — 8 реплик роли,
   два урока подряд — 16; три попытки job'а сдавались на полпути, поэтому `SpeakSceneLinesJob`
   повторяется раз в минуту до получаса (`retryUntil`), каждая попытка покупает только недостающее;
@@ -210,7 +212,7 @@ select * from "day_cards" where "day_id" = ? order by CASE stage … END, "posit
 
 select * from "plan_line_audios" where "scene_id" in (?) and "voice_key" = ?
   Index Scan using plan_line_audios_uidx on plan_line_audios (actual rows=14 loops=1)
-    Index Cond: (scene_id = … AND voice_key = 'gemini:gemini-2.5-flash-preview-tts:Aoede:p90')
+    Index Cond: (scene_id = … AND voice_key = '<ключ голоса>')
   Buffers: shared hit=3 · Execution Time: 0.022 ms
 
 select * from "plan_terms" where "scene_id" in (?, ?) order by "scene_id", "position"

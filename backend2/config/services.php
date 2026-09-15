@@ -88,6 +88,14 @@ return [
         'generate_model' => env('GEMINI_GENERATE_MODEL', 'gemini-3.7-flash'),
     ],
 
+    'elevenlabs' => [
+        // The server's voice (TTS-2) — server-side only. The key needs `text_to_speech` and `user_read` (the
+        // account's balance for the voice fuse); the voices and the model are the language pack's, in
+        // config/generation.php.
+        'api_key' => env('ELEVENLABS_API_KEY'),
+        'base_url' => env('ELEVENLABS_BASE_URL', 'https://api.elevenlabs.io'),
+    ],
+
     'deepl' => [
         // Machine translation for the search field's instant hint — and for NOTHING else. It never
         // writes card content: a term's translation, its example and its description are written by

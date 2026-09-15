@@ -28,7 +28,6 @@ use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\Message;
-use App\Modules\Plan\Domain\Lesson\Phrase;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Service\DayWindowStages;
 use App\Modules\Plan\Domain\Service\ImageTones;
@@ -154,10 +153,19 @@ final readonly class DayWindowViews
         return $out;
     }
 
-    private static function frame(?Phrase $frame): ?WindowFrameView
+    /**
+     * The frame behind a phrase, each filler with the voice of the frame said with it (TTS-2): its own file, or the
+     * phrase's when the phrase already is the frame said with that filler.
+     */
+    private static function frame(?PlanTerm $term, string $sceneId, SceneAudioIndex $audio): ?WindowFrameView
     {
-        if ($frame === null) {
+        $frame = $term?->frame();
+        if ($term === null || $frame === null) {
             return null;
+        }
+        $voiced = [];
+        foreach (SpokenLines::fillers($term) as $filler) {
+            $voiced[$filler['index']] = $audio->idOf($sceneId, $filler['voicedAs']);
         }
 
         return new WindowFrameView(
@@ -167,12 +175,13 @@ final readonly class DayWindowViews
             kind: $frame->kind->value,
             slot: $frame->slot === null ? null : [
                 'hint' => $frame->slot->hintNative,
-                'fillers' => array_map(static fn (Filler $f): array => [
+                'fillers' => array_map(static fn (Filler $f, int $i): array => [
                     'target' => $f->target,
                     'native' => $f->native,
                     'pronunciation' => $f->pronunciationNative,
                     'in_dialogue' => $f->inDialogue,
-                ], $frame->slot->fillers),
+                    'audio_id' => $voiced[$i] ?? null,
+                ], $frame->slot->fillers, array_keys($frame->slot->fillers)),
             ],
         );
     }
@@ -291,7 +300,7 @@ final readonly class DayWindowViews
                 state: $state->value,
                 pronunciation: $term?->pronunciationNative() ?? self::nullableText($payload, 'pronunciation_native'),
                 audioId: $audio->idOf($sceneId, $card->unitRef()),
-                frame: self::frame($term?->frame()),
+                frame: self::frame($term, $sceneId, $audio),
             );
             $unitStates[] = $state;
         }

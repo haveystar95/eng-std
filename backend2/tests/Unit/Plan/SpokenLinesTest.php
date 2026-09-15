@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
@@ -10,6 +11,9 @@ use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\Service\WordUsage;
 use App\Modules\Plan\Domain\Service\Words;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
+use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
+use App\Modules\Plan\Domain\ValueObject\PlanTermId;
+use App\Modules\Plan\Domain\ValueObject\TermKind;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Domain\ValueObject\VoiceCast;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
@@ -70,4 +74,30 @@ it('finds the line a word is said in by where the lesson says it, and places the
         return $p;
     }), 'v3', 'fever');
     expect($moved['step'])->toBe(4)->and($moved['speaker'])->toBe(Speaker::Partner);
+});
+
+// Canon (TTS-2): «фразы с наполнениями» are voiced — the frame said with each filler, in the learner's voice. The phrase
+// already IS its frame said with one filler, and that one is not bought twice. Catches a filler said alone («neck»), a
+// filler read with its slot left in, and the phrase's own filler bought as a second file.
+it('says a phrase with each of its other fillers — the frame with the filler in its slot — and the phrase’s own filler as the phrase', function () {
+    $scene = PlanSceneId::fromString('01M2TTS2SCENE0000000000001');
+    $phrases = array_values(array_filter(
+        PlanTerm::fromLesson($scene, slLesson(), static fn (): PlanTermId => PlanTermId::generate()),
+        static fn (PlanTerm $t): bool => $t->kind() === TermKind::Phrase,
+    ));
+    $byRef = [];
+    foreach ($phrases as $phrase) {
+        $byRef[$phrase->ref()] = SpokenLines::fillers($phrase);
+    }
+
+    expect(array_column($byRef['p1'], 'text'))->toBe(['It hurts in his lower back.', 'It hurts in his neck.', 'It hurts in his shoulder.'])
+        ->and(array_column($byRef['p1'], 'ref'))->toBe(['p1.f1', 'p1.f2', 'p1.f3'])
+        ->and(array_column($byRef['p1'], 'voicedAs'))->toBe(['p1', 'p1.f2', 'p1.f3'])
+        // A frame said in two exchanges: its phrase is the first; the second filler the dialogue says is a file of its own.
+        ->and(array_column($byRef['p6'], 'voicedAs'))->toBe(['p6', 'p6.f2', 'p6.f3'])
+        ->and($byRef['p6'][1]['text'])->toBe('Do we need a follow-up appointment?')
+        // A frame without a slot has no fillers to say.
+        ->and($byRef['p4'])->toBe([])
+        ->and(SpokenLines::speakerOf('p1.f2'))->toBe(Speaker::Learner)
+        ->and(array_sum(array_map(static fn (array $f): int => count(array_filter($f, static fn (array $x): bool => $x['voicedAs'] === $x['ref'])), $byRef)))->toBe(10);
 });

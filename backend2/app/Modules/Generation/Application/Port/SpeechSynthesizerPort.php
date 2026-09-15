@@ -4,23 +4,31 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Application\Port;
 
-use App\Modules\Generation\Application\Dto\SpeechScript;
+use App\Modules\Generation\Application\Dto\SpeechBalance;
+use App\Modules\Generation\Application\Dto\SpeechLine;
 use App\Modules\Generation\Application\Dto\SpokenLine;
 
 /**
- * «СКАЖИ ЭТИ СТРОКИ ЭТИМИ ГОЛОСАМИ» — вся труба серверной озвучки за одним методом.
+ * «СКАЖИ ЭТИ СТРОКИ ЭТИМИ ГОЛОСАМИ» — вся труба серверной озвучки за одним интерфейсом с одной реализацией, ElevenLabs
+ * (наряд TTS-2; двойник для тестов и `SPEECH_DRIVER=fake` — не реализация продукта).
  *
- * Порт узкий сознательно: у нас нет продукта «синтез речи», у нас есть продукт «строки дня звучат».
- * С DAY-UI-3 единица — СЦЕНАРИЙ: диалог дня двумя голосами или пачка слов одним голосом, и вендор
- * спрашивается ОДИН раз на сценарий (лимит бесплатного Gemini — запросы, а не секунды). Адаптер,
- * который так не умеет, говорит строку за строкой внутри себя — наружу это не видно.
+ * Порт узкий сознательно: у нас нет продукта «синтез речи», у нас есть продукт «строки дня звучат». Строка — реплика
+ * собеседника или ученика, фраза, фраза с наполнением, слово — и каждая говорится своим вызовом своим голосом: вендор
+ * берёт за символ, пакетировать нечего, а у отдельной строки свой файл и резать нечего. Строк сразу столько, сколько
+ * позволяет тариф аккаунта; каждая купленная отдаётся сразу, поэтому отказ на пятой не теряет четыре оплаченные.
  *
- * Возвращает звук каждой строки в порядке сценария. Бросает {@see TransientSpeechError} на том, что
- * стоит повторить (лимит, 5xx, сеть), {@see SpeechNotCut} — когда звук не разрезался на строки, и
- * обычное исключение на том, чего повторять не надо.
+ * Бросает {@see TransientSpeechError} на том, что стоит повторить позже (лимит одновременности, 5xx, сеть — после своих
+ * коротких повторов) и {@see SpeechAccountError} — когда аккаунт не может платить или голос ему не разрешён (повтор
+ * купит тот же отказ). Отказ прочитать один текст не бросается: строка пропускается и остаётся голосом телефона.
  */
 interface SpeechSynthesizerPort
 {
-    /** @return list<SpokenLine> one per turn, in the script's order */
-    public function speakScript(SpeechScript $script): array;
+    /**
+     * @param  list<SpeechLine>  $lines
+     * @param  callable(int, SpokenLine): void  $spoken  called with the index into `$lines` as soon as a line is bought
+     */
+    public function speakLines(array $lines, callable $spoken): void;
+
+    /** What the vendor account has left this month; null — the vendor would not say (a key without that permission, a failed call). */
+    public function balance(): ?SpeechBalance;
 }

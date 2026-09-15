@@ -4,29 +4,31 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Infrastructure\Adapter;
 
-use App\Modules\Generation\Application\Dto\SpeechScript;
-use App\Modules\Generation\Application\Dto\SpeechTurn;
+use App\Modules\Generation\Application\Dto\SpeechLine;
 use App\Modules\Generation\Application\Dto\SpokenLine;
-use App\Modules\Generation\Application\Port\SpeechNotCut;
+use App\Modules\Generation\Application\Port\SpeechAccountError;
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Application\Port\TransientSpeechError;
 use App\Modules\Plan\Application\Dto\LineToSay;
 use App\Modules\Plan\Application\Dto\SpokenAudio;
+use App\Modules\Plan\Application\Dto\VoiceBalance;
 use App\Modules\Plan\Application\Port\LineSpeaker;
+use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Shared\Domain\ValueObject\LineVoice;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
+use App\Modules\Shared\Domain\ValueObject\VoiceRole;
+use DateTimeImmutable;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * The language pack's two voices for what a scene says (`generation.speech.voices`, DAY-UI-3): one
- * script per call — the dialogue with both voices, a batch with the learner's.
+ * The language pack's voices for what a scene says (`generation.speech.voices`, TTS-2): every line on a call of its
+ * own, in the voice the pack gives its speaker's role and gender.
  *
- * Switched off, or a language without both voices, means nothing is said — the client uses the phone's
- * voice. A vendor refusal or a sound that did not cut into its lines is logged and says nothing either
- * (the lines stay owed for the next run); a transient error propagates so the job waits for the
- * vendor's window.
+ * Switched off, or a language without the voice a line needs, means that line is not said — the client uses the phone's
+ * voice. A refusal to read a text is the synthesizer's to skip; a transient error and a refusal of the vendor account
+ * propagate.
  */
 final readonly class GenerationLineSpeaker implements LineSpeaker
 {
@@ -36,62 +38,75 @@ final readonly class GenerationLineSpeaker implements LineSpeaker
         private bool $enabled,
     ) {}
 
-    public function say(string $lang, array $lines): array
+    public function sayEach(string $lang, array $lines, callable $keep): void
     {
-        if (! $this->enabled || $lines === []) {
-            return [];
+        if (! $this->enabled) {
+            return;
         }
-        /** @var array<string, LineVoice> $voices */
-        $voices = [];
+        $said = [];
+        $asked = [];
         foreach ($lines as $line) {
-            $voice = $this->voices->forLanguage($lang, $line->voice);
-            if ($voice === null) {
-                return [];
+            $voice = $this->voiceOf($lang, $line);
+            if ($voice !== null) {
+                $said[] = $line;
+                $asked[] = new SpeechLine($line->text, $voice);
             }
-            $voices[$line->voice->value] = $voice;
+        }
+        if ($asked === []) {
+            return;
         }
 
         try {
-            $spoken = $this->synthesizer->speakScript(new SpeechScript(
-                $lang,
-                array_map(static fn (LineToSay $l): SpeechTurn => new SpeechTurn($l->voice->value, $l->text), $lines),
-                $voices,
-            ));
-        } catch (TransientSpeechError $e) {
+            $this->synthesizer->speakLines($asked, static function (int $i, SpokenLine $audio) use ($said, $asked, $keep): void {
+                $keep($said[$i]->ref, self::audio($audio, $asked[$i]->voice));
+            });
+        } catch (TransientSpeechError|SpeechAccountError $e) {
             throw $e;
-        } catch (SpeechNotCut $e) {
-            Log::warning('plan lines not cut; they stay on the phone voice', ['lang' => $lang, 'lines' => count($lines), 'error' => $e->getMessage()]);
-
-            return [];
         } catch (Throwable $e) {
-            Log::warning('plan lines not spoken', ['lang' => $lang, 'lines' => count($lines), 'error' => $e->getMessage()]);
-
-            return [];
+            Log::warning('plan lines not spoken', ['lang' => $lang, 'lines' => count($asked), 'error' => $e->getMessage()]);
         }
-
-        $out = [];
-        foreach ($lines as $i => $line) {
-            $audio = $spoken[$i] ?? null;
-            if (! $audio instanceof SpokenLine) {
-                continue;
-            }
-            $voice = $voices[$line->voice->value];
-            $out[$line->ref] = new SpokenAudio(
-                bytes: $audio->bytes,
-                format: $audio->format,
-                voiceKey: $voice->key().':'.$voice->variant(),
-                durationMs: $audio->durationMs,
-                costUsd: $audio->costUsd,
-            );
-        }
-
-        return $out;
     }
 
-    public function voiceKeyFor(string $lang, VoiceGender $voice): ?string
+    public function voiceKeyFor(string $lang, Speaker $speaker, VoiceGender $gender): ?string
     {
-        $found = $this->enabled ? $this->voices->forLanguage($lang, $voice) : null;
+        $found = $this->enabled ? $this->voices->forLanguage($lang, VoiceRole::from($speaker->value), $gender) : null;
 
-        return $found === null ? null : $found->key().':'.$found->variant();
+        return $found === null ? null : self::key($found);
+    }
+
+    public function balance(): ?VoiceBalance
+    {
+        $balance = $this->enabled ? $this->synthesizer->balance() : null;
+
+        return $balance === null ? null : new VoiceBalance(
+            used: $balance->used,
+            limit: $balance->limit,
+            source: VoiceBalance::VENDOR,
+            resetsAt: $balance->resetsAtUnix === null ? null : new DateTimeImmutable('@'.$balance->resetsAtUnix),
+        );
+    }
+
+    private function voiceOf(string $lang, LineToSay $line): ?LineVoice
+    {
+        return $this->voices->forLanguage($lang, VoiceRole::from($line->speaker->value), $line->gender);
+    }
+
+    private static function key(LineVoice $voice): string
+    {
+        return $voice->key().':'.$voice->variant();
+    }
+
+    private static function audio(SpokenLine $audio, LineVoice $voice): SpokenAudio
+    {
+        return new SpokenAudio(
+            bytes: $audio->bytes,
+            format: $audio->format,
+            voiceKey: self::key($voice),
+            durationMs: $audio->durationMs,
+            characters: $audio->characters,
+            credits: $audio->credits,
+            costUsd: $audio->costUsd,
+            requestId: $audio->requestId,
+        );
     }
 }

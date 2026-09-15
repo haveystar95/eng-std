@@ -3042,12 +3042,13 @@ components:
                   type: array
                   items:
                     type: object
-                    required: [target, native, pronunciation, in_dialogue]
+                    required: [target, native, pronunciation, in_dialogue, audio_url]
                     properties:
                       target: { type: string }
                       native: { type: string }
                       pronunciation: { type: string }
                       in_dialogue: { type: boolean, description: 'The dialogue says the frame with this filler — one per exchange that uses the frame' }
+                      audio_url: { type: [string, 'null'], format: uri, description: 'The frame said with this filler, in the learner''s voice (TTS-2, additive); the filler the phrase itself is said with shares the phrase''s file. Null until voiced — the phone reads it meanwhile' }
             - type: 'null'
 
     PlanWindowPair:

@@ -181,10 +181,15 @@ plan and spends nothing; `--pace=` spaces calls under an org token-per-minute ca
 
 ## Speech synthesis (`SpeechSynthesizerPort`)
 
-One method («say this line with this voice»), three adapters (OpenAI, Gemini, Fake) and the PCM →
-mp3 encoder. Generation owns the vendor seam only; the one caller is the learning plan
-(`app/Modules/Plan`), which buys audio for the partner's lines of a scene and stores the files under
-its own tables. Voice per language and the on/off switch are config (`generation.speech.*`).
+One port, one vendor (TTS-2): `speakLines` — every line on its own `POST /v1/text-to-speech/{voice}` call to
+ElevenLabs (`ElevenLabsSpeechSynthesizer`; `FakeSpeechSynthesizer` for tests and `SPEECH_DRIVER=fake`), as many at once
+as the account's `maximum-concurrent-requests`, each line's credits read off `character-cost` and priced at the
+account's credit price — and `balance` (`/v1/user/subscription`). A transient refusal (429, 5xx, the network) is
+retried briefly, then `TransientSpeechError`; a refusal of the account (401/402/403, a voice the plan does not include)
+is `SpeechAccountError` with the vendor's code. Generation owns the vendor seam only; the one caller is the learning
+plan (`app/Modules/Plan`), which buys the audio of everything a day says and stores the files under its own tables.
+The voices (by language, role and gender), the model, the concurrency, the credit price and the on/off switch are
+config (`generation.speech.*`, `services.elevenlabs.*`).
 
 ## Boundaries
 

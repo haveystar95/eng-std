@@ -93,6 +93,8 @@ final class LogOutboundHttp
             // Pexels calls went untagged, which is what this docblock was written about.
             str_contains($host, 'anthropic') => 'anthropic',
             str_contains($host, 'x.ai') => 'xai',
+            // The server's voice (TTS-2).
+            str_contains($host, 'elevenlabs') => 'elevenlabs',
             default => null,
         };
     }

@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Infrastructure\Eloquent;
 
 use App\Modules\Plan\Application\Dto\LineAudioRow;
+use App\Modules\Plan\Application\Dto\SpokenAudio;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
+use DateTimeImmutable;
 use Illuminate\Contracts\Filesystem\Factory as Disks;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Bytes on the configured private disk under `plan-audio/<scene>/`, one row per (scene, line
- * reference, voice). The unique constraint is the idempotency: a second `put` for a line this voice
- * already has inserts no row — and writes no file: the dialogue is bought whole (DAY-UI-3), so the
- * same line comes back from the vendor again, and the file behind an address a phone already cached
- * must stay the file it downloaded.
+ * Bytes on the configured private disk under `plan-audio/<scene>/`, one row per (scene, line reference, voice), with
+ * the line's bill: its characters, the credits the vendor debited and their price, the vendor's request id (TTS-2). The
+ * unique constraint is the idempotency: a second `put` for a line this voice already has inserts no row — and writes no
+ * file: the file behind an address a phone already cached must stay the file it downloaded.
  */
 final class EloquentLineAudioStore implements LineAudioStore
 {
@@ -48,37 +49,40 @@ final class EloquentLineAudioStore implements LineAudioStore
         return $row === null ? null : self::row((array) $row);
     }
 
-    public function put(PlanSceneId $sceneId, string $lineRef, string $voiceKey, string $format, string $bytes, ?int $durationMs, ?string $costUsd): ?LineAudioRow
+    public function put(PlanSceneId $sceneId, string $lineRef, SpokenAudio $audio): ?LineAudioRow
     {
         $exists = DB::table('plan_line_audios')
-            ->where('scene_id', $sceneId->value)->where('line_ref', $lineRef)->where('voice_key', $voiceKey)
+            ->where('scene_id', $sceneId->value)->where('line_ref', $lineRef)->where('voice_key', $audio->voiceKey)
             ->exists();
         if ($exists) {
             return null;
         }
         $id = Ulid::generate();
-        $path = sprintf('plan-audio/%s/%s-%s.%s', $sceneId->value, $lineRef, substr(sha1($voiceKey), 0, 12), $format);
+        $path = sprintf('plan-audio/%s/%s-%s.%s', $sceneId->value, $lineRef, substr(sha1($audio->voiceKey), 0, 12), $audio->format);
         $userId = DB::table('plan_scenes')->where('id', $sceneId->value)->value('user_id');
 
-        $this->disks->disk($this->disk)->put($path, $bytes);
+        $this->disks->disk($this->disk)->put($path, $audio->bytes);
         $inserted = DB::table('plan_line_audios')->insertOrIgnore([
             'id' => $id,
             'scene_id' => $sceneId->value,
             'user_id' => (string) $userId,
             'line_ref' => $lineRef,
-            'voice_key' => $voiceKey,
-            'format' => $format,
+            'voice_key' => $audio->voiceKey,
+            'format' => $audio->format,
             'path' => $path,
-            'bytes' => strlen($bytes),
-            'duration_ms' => $durationMs,
-            'cost_usd' => $costUsd,
+            'bytes' => strlen($audio->bytes),
+            'duration_ms' => $audio->durationMs,
+            'characters' => $audio->characters,
+            'cost_usd' => $audio->costUsd,
+            'credits' => $audio->credits,
+            'request_id' => $audio->requestId,
             'created_at' => now(),
         ]);
         if ($inserted === 0) {
             return null;
         }
 
-        return new LineAudioRow($id, $sceneId->value, $lineRef, $voiceKey, $format, $path, $durationMs);
+        return new LineAudioRow($id, $sceneId->value, $lineRef, $audio->voiceKey, $audio->format, $path, $audio->durationMs);
     }
 
     public function read(LineAudioRow $row): ?string
@@ -86,6 +90,11 @@ final class EloquentLineAudioStore implements LineAudioStore
         $disk = $this->disks->disk($this->disk);
 
         return $disk->exists($row->path) ? $disk->get($row->path) : null;
+    }
+
+    public function creditsSince(DateTimeImmutable $since): int
+    {
+        return (int) DB::table('plan_line_audios')->where('created_at', '>=', $since)->sum('credits');
     }
 
     /** @param array<string, mixed> $row */

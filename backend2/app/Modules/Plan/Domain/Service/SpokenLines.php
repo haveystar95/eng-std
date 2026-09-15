@@ -11,13 +11,14 @@ use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
 
 /**
- * EVERYTHING A DAY SAYS OUT LOUD, AND WHAT EACH FILE IS CALLED (DAY-UI-3).
+ * EVERYTHING A DAY SAYS OUT LOUD, AND WHAT EACH FILE IS CALLED (DAY-UI-3, TTS-2).
  *
- * Canon: the server voices every line of the dialogue — the partner's AND the learner's — every
- * phrase and every word, in the scene's two voices. A file is named by the unit it voices
- * (`plan_line_audios.line_ref`): `x3` — the partner's line of exchange 3 (the name it had when only
- * the partner was voiced), `x3b` — the learner's line of exchange 3, `p2` — phrase 2, `v5` — word or
- * chunk 5 (the refs `plan_terms` already carry).
+ * Canon: the server voices every line of the dialogue — the partner's AND the learner's — every phrase, every phrase
+ * said with each of its other fillers, and every word, in the scene's two voices. A file is named by the unit it voices
+ * (`plan_line_audios.line_ref`): `x3` — the partner's line of exchange 3 (the name it had when only the partner was
+ * voiced), `x3b` — the learner's line of exchange 3, `p2` — phrase 2, `p2.f3` — the frame of phrase 2 said with its
+ * third filler (the address the lesson's validator already gives a filler), `v5` — word or chunk 5 (the refs
+ * `plan_terms` already carry).
  */
 final class SpokenLines
 {
@@ -29,6 +30,11 @@ final class SpokenLines
     public static function learnerRef(int $step): string
     {
         return CardPayloads::exchangeRef($step).'b';
+    }
+
+    public static function fillerRef(string $phraseRef, int $index): string
+    {
+        return $phraseRef.'.f'.($index + 1);
     }
 
     /**
@@ -77,8 +83,40 @@ final class SpokenLines
     }
 
     /**
+     * A phrase said with each of its fillers (TTS-2): the frame with the filler in its slot, as the learner would say
+     * it. The phrase itself already IS its frame said with one filler — that filler is voiced as the phrase
+     * (`voicedAs` names the phrase's own ref) and not bought twice; every other filler is its own file. A filler the
+     * frame cannot be said with (no slot, a second slot left) has no sound.
+     *
+     * @return list<array{index: int, ref: string, text: string, voicedAs: string}>
+     */
+    public static function fillers(PlanTerm $phrase): array
+    {
+        $frame = $phrase->frame();
+        if ($phrase->kind() !== TermKind::Phrase || $frame === null || ! FrameText::hasSlot($frame->frameTarget)) {
+            return [];
+        }
+        $out = [];
+        foreach ($frame->fillers() as $index => $filler) {
+            $text = FrameText::fill($frame->frameTarget, $filler->target);
+            if ($text === '' || FrameText::hasSlot($text)) {
+                continue;
+            }
+            $ref = self::fillerRef($phrase->ref(), $index);
+            $out[] = [
+                'index' => $index,
+                'ref' => $ref,
+                'text' => $text,
+                'voicedAs' => $text === trim($phrase->textTarget()) ? $phrase->ref() : $ref,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * Whose voice a stored ref is: the partner's line is the partner's, everything else — the
-     * learner's line, a phrase, a word — is the learner's.
+     * learner's line, a phrase, a filler, a word — is the learner's.
      */
     public static function speakerOf(string $ref): Speaker
     {

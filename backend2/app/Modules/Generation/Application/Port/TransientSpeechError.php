@@ -7,35 +7,28 @@ namespace App\Modules\Generation\Application\Port;
 use RuntimeException;
 
 /**
- * Сбой озвучки, который стоит повторить: лимит вендора, 5xx, сеть. Часть контракта
- * {@see SpeechSynthesizerPort} — адаптер бросает, джоба ждёт и повторяет.
+ * Сбой озвучки, который стоит повторить: лимит вендора, 5xx, сеть. Часть контракта {@see SpeechSynthesizerPort} —
+ * адаптер сначала повторяет сам (коротко, с паузой), потом бросает, и джоба ждёт.
  *
- * Отдельный тип, а не флаг в сообщении, потому что от него зависят ДЕНЬГИ: повтор невозвратной
- * ошибки — это второй счёт за тот же отказ. Ответ «не могу озвучить этот текст» невозвратен и
- * бросается обычным исключением.
+ * Отдельный тип, а не флаг в сообщении, потому что от него зависят ДЕНЬГИ: повтор невозвратной ошибки — это второй
+ * запрос за тот же отказ. Отказ прочитать текст невозвратен и бросается обычным исключением, отказ аккаунта —
+ * {@see SpeechAccountError}.
  *
- * Лимит бывает ДВУХ окон (DAY-UI-3; Gemini TTS: 10 запросов в минуту и 100 в сутки): поминутный
- * проходит за минуту, суточный — к полуночи вендора. `perDay` и `retryAfterSeconds` — ровно то, что
- * вендор сказал сам (`QuotaFailure.quotaId`, `RetryInfo.retryDelay`): джоба ждёт до следующего окна,
- * а не долбит закрытую дверь раз в минуту.
+ * `retryAfterSeconds` — сколько вендор попросил подождать (`Retry-After`), если попросил: 429 ElevenLabs при превышении
+ * одновременности живьём приходит без этого заголовка (15.09), и тогда ждёт джоба сама.
  */
 final class TransientSpeechError extends RuntimeException
 {
     private function __construct(
         string $message,
         public readonly ?int $retryAfterSeconds = null,
-        public readonly bool $perDay = false,
     ) {
         parent::__construct($message);
     }
 
-    public static function rateLimited(string $provider, ?int $retryAfterSeconds, bool $perDay = false): self
+    public static function rateLimited(string $provider, ?int $retryAfterSeconds, string $detail = ''): self
     {
-        return new self(
-            "{$provider} speech rate limit hit".($perDay ? ' (daily quota)' : ''),
-            $retryAfterSeconds,
-            $perDay,
-        );
+        return new self(trim("{$provider} speech rate limit hit {$detail}"), $retryAfterSeconds);
     }
 
     public static function upstream(string $provider, int $status): self

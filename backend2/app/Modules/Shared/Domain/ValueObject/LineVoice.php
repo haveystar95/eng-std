@@ -7,21 +7,20 @@ namespace App\Modules\Shared\Domain\ValueObject;
 use InvalidArgumentException;
 
 /**
- * ЧЕМ ГОВОРИТ РЕПЛИКА — вендор, модель, голос и темп, одним значением (наряд TTS-1).
+ * ЧЕМ ГОВОРИТ РЕПЛИКА — вендор, модель, голос и его настройка, одним значением (наряды TTS-1, TTS-2).
  *
- * Живёт в ядре, потому что его читают ОБА берега: Generation покупает у вендора звук этим голосом,
- * Vocabulary хранит файл под его ключом, а Learning спрашивает «есть ли у этой реплики файл ЭТОГО
- * голоса». Три модуля, одно понятие — значит Shared, иначе у каждого будет своя строка формата
- * «openai/coral» и они разойдутся ровно на том дне, когда голос сменят.
+ * Живёт в ядре, потому что его читают ОБА берега: Generation покупает у вендора звук этим голосом, Plan
+ * хранит файл под его ключом и ищет «есть ли у этой строки файл ЭТОГО голоса». Два модуля, одно понятие —
+ * иначе у каждого будет своя строка формата «vendor/voice», и они разойдутся ровно в тот день, когда голос
+ * сменят.
  *
  * ## Ключ и вариант — две разные вещи, и обе в уникальном индексе `plan_line_audios`
  *
- * - {@see key()} — «кто говорит»: `openai:gpt-4o-mini-tts:coral`.
- * - {@see variant()} — «как говорит»: темп, `p90` для speed = 0.9.
+ * - {@see key()} — «кто говорит»: `elevenlabs:eleven_v3:<voice id>`.
+ * - {@see variant()} — «как говорит»: стабильность голоса, `s50` для 0.5 (пресет Natural у v3).
  *
- * Темп отдельно от голоса, потому что серверный файл ускорить на клиенте нельзя (канон §7: темп
- * реплик — своя ручка, и он закладывается ПРИ ГЕНЕРАЦИИ). Смена ручки обязана дать другой файл, а
- * не переиграть тот же быстрее, — иначе ручка врёт.
+ * Настройка отдельно от голоса, потому что серверный файл переиграть на клиенте нельзя: смена ручки обязана
+ * дать ДРУГОЙ файл по другому адресу, а не подменить тот, что телефон уже скачал (DECISIONS п. 248).
  */
 final readonly class LineVoice
 {
@@ -30,16 +29,16 @@ final readonly class LineVoice
         public string $model,
         public string $voice,
         /**
-         * Темп подачи, где 1.0 — обычная речь вендора. Реплики звучат МЕДЛЕННЕЕ слов (канон §7),
-         * поэтому дефолт пакета ниже единицы; здесь только проверка границ, решение — в конфиге.
+         * Стабильность голоса, 0…1. У Eleven v3 это три пресета: Creative (0.0), Natural (0.5) и Robust (1.0);
+         * решение — в конфиге пакета, здесь только границы.
          */
-        public float $speed = 1.0,
+        public float $stability = 0.5,
     ) {
         if (trim($provider) === '' || trim($model) === '' || trim($voice) === '') {
-            throw new InvalidArgumentException('a voice needs a provider, a model and a voice name');
+            throw new InvalidArgumentException('a voice needs a provider, a model and a voice id');
         }
-        if ($speed < 0.25 || $speed > 2.0) {
-            throw new InvalidArgumentException("speech speed out of range: {$speed}");
+        if ($stability < 0.0 || $stability > 1.0) {
+            throw new InvalidArgumentException("voice stability out of range: {$stability}");
         }
     }
 
@@ -52,22 +51,22 @@ final readonly class LineVoice
             provider: (string) ($row['provider'] ?? ''),
             model: (string) ($row['model'] ?? ''),
             voice: (string) ($row['voice'] ?? ''),
-            speed: (float) ($row['speed'] ?? 1.0),
+            stability: (float) ($row['stability'] ?? 0.5),
         );
     }
 
-    /** «Кто говорит», as stored in `plan_line_audios.voice`. */
+    /** «Кто говорит», the first half of `plan_line_audios.voice_key`. */
     public function key(): string
     {
         return "{$this->provider}:{$this->model}:{$this->voice}";
     }
 
     /**
-     * «Как говорит», as stored in `plan_line_audios.variant`. Integer percent so the value is a stable
-     * short string: 0.9 → `p90`, and never `p90.00000000001`.
+     * «Как говорит», the second half of `plan_line_audios.voice_key`. Integer percent so the value is a stable
+     * short string: 0.5 → `s50`, and never `s50.00000000001`.
      */
     public function variant(): string
     {
-        return 'p' . (string) (int) round($this->speed * 100);
+        return 's'.(string) (int) round($this->stability * 100);
     }
 }

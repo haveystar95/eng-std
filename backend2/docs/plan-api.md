@@ -140,7 +140,7 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 | `stages[5]` | words · phrases · dialogue · listen · speak: `state` `done` / `current` / `locked`; `done_count`, `total`, `minutes_left` — **только у `current`** (у остальных null: цифру клиент не рисует); `share` 0…1 — полоса ряда. У не начатого дня все `locked` |
 | `day_progress` | 0…1 — доля пройденных этапов; полоса компактной шапки |
 | `program.words` | `summary {total, done, returns}` + `items[{ref, term, translation, pronunciation, definition, image, image_tone, audio_url, usage, state, returns_day, used_in}]`; `state` — `pending` / `done` / `returns_tomorrow`; `usage {text, translation, offset, length, audio_url}` — реплика дня, где слово звучит (по `used_in` урока, иначе первая реплика визита со словом), и место слова в ней в символах (подсветка шита 23-0e; слова нет в диалоге — `null`); `returns_day` — номер дня возврата у `returns_tomorrow` («вернётся в день 3»); `used_in` — где урок говорит слово (`p3` каркас или его наполнение, `A3` реплика собеседника), аддитивно GEN-2a |
-| `program.phrases` | `summary` + `items[{ref, text, translation, pronunciation, audio_url, state, frame}]` — голос ученика сцены. Фраза — каркас (`lesson_day.v4.4`): `text`/`translation`/`pronunciation` — каркас с наполнением его первой реплики диалога; `frame {target, native, pronunciation, kind, slot {hint, fillers[{target, native, pronunciation, in_dialogue}]} \| null}` — сам каркас, аддитивно GEN-2a |
+| `program.phrases` | `summary` + `items[{ref, text, translation, pronunciation, audio_url, state, frame}]` — голос ученика сцены. Фраза — каркас (`lesson_day.v4.4`): `text`/`translation`/`pronunciation` — каркас с наполнением его первой реплики диалога; `frame {target, native, pronunciation, kind, slot {hint, fillers[{target, native, pronunciation, in_dialogue, audio_url}]} \| null}` — сам каркас, аддитивно GEN-2a; `audio_url` наполнения — каркас, сказанный с этим наполнением, голосом ученика (TTS-2; у наполнения, которым сказана сама фраза, — файл фразы) |
 | `program.dialogue` | `summary` + `items[{step, kind, partner {text, translation, audio_url}, learner {text, translation, audio_url, state, phrase_ref, filler}}]` — голос у обеих реплик (каждая голосом своего говорящего), состояние — у реплики ученика; реплика ученика — собранная сервером из каркаса и наполнения; `kind` (answer / ask / rescue), `phrase_ref`, `filler` — аддитивно GEN-2a |
 | `allowed_action` | `start` / `continue` / `again` / null — одна кнопка. `again` — «Говорю сам» ещё раз по `GET …/cards`, ответы не отправляются (не пересдача дня) |
 | `listening` | вопросы обо всём визите дня (`lesson_day.v4.4`): `[{question, options[{text, correct}], explanation_native}]` на родном языке, верный — на перемешанном сервером месте; у повторения и репетиции — `[]`; аддитивно GEN-2a, клиент пока не читает |
@@ -161,18 +161,19 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 нашло голое слово или повторяет картинку своего дня). Одна картинка в дне не показывается дважды: слово,
 чьё фото повторяет плиту или слово раньше, получает следующую страницу ответов.
 
-**Голос сервера — всё, двумя голосами** (канон владельца, DAY-UI-3; отменяет «только реплики роли»
-DAY-UI-2): озвучены реплики собеседника (`x3`) и ученика (`x3b`), фразы (`p2`) и слова (`v5`). У сцены
-два голоса разного пола: пол собеседника — `role_gender` урока, по умолчанию собеседник
-женский, ученик мужской; голос ученика читает и его реплики, и фразы, и слова
-(`plan_scenes.partner_voice_gender`). `VoiceSceneJob` ставится вместе с фото и **день не ждёт**: диалог —
-**один** вызов Gemini TTS с двумя говорящими, разрезанный по паузам (`PcmTurnCutter`), фразы — один
-вызов, слова — один (≤ 4 вызовов на день). 429 поминутный — job ждёт минуту, суточный — до сброса суточной
-квоты: позднее из `RetryInfo.retryDelay` и полуночи Pacific (так RPD сбрасывает Gemini API), не падает; телефон
-тем временем читает своим голосом. Недостающее существующих сцен — `php artisan plan:speak-backfill`: пакетами по
-видам (диалоги сцен без реплик собеседника → без реплик ученика → фразы → слова по 12 через сцены), печатает
-«не озвучено» по видам до и после; `--count` — только посчитать; на суточном лимите останавливается и говорит,
-когда окно.
+**Голос сервера — ElevenLabs, всё, что звучит в дне** (DAY-UI-3, TTS-2): реплики собеседника (`x3`) и ученика
+(`x3b`), фразы (`p2`), фразы с наполнениями (`p2.f3` — каркас фразы 2 с третьим наполнением) и слова (`v5`). У сцены
+два человека разного пола: пол собеседника — `role_gender` урока, по умолчанию собеседник женский, ученик мужской;
+голос ученика читает его реплики, фразы, наполнения и слова (`plan_scenes.partner_voice_gender`). Голос выбирается по
+роли и полу: у мужчины-собеседника свой голос, не голос мужчины-ученика. Модель — `eleven_v3_conversational`
+(v3 Conversational), stability 0.5 (Natural), mp3 44,1 кГц 128 кбит/с. `VoiceSceneJob` ставится вместе с фото, и
+**день не ждёт**: каждая строка — отдельный вызов своим голосом, по три одновременно (тариф Starter). Лимит
+одновременности (429) — короткие повторы, потом job ждёт и не падает; отказ аккаунта (401/402, голос не по тарифу) —
+job `failed` с кодом вендора, письмо в лог. Остаток кредитов аккаунта меньше 10 % — очередь голоса не покупает
+(предохранитель). Телефон тем временем читает своим голосом. Недостающее существующих сцен —
+`php artisan plan:speak-backfill {--plan=*} {--count}`: сцена за сценой, планы учеников раньше QA-аккаунтов, «не озвучено»
+по пяти видам до и после. Во что обошлось — `php artisan plan:speak-report {--plan=} {--day=}`: символы, кредиты, $,
+вызовы по плану, дню, виду строк.
 
 Карточка (`PlanCard`): `stage`, `position`, `kind`, `source` (`today`/`returned`), `unit_kind` /
 `unit_ref`, `payload`, `retry_of`, `result`, `attempts`, `returns`. Состав `payload` по видам

@@ -110,6 +110,20 @@ it('records a BINARY response as a description, never as its bytes', function ()
         ->and($log->status)->toBe(200);
 });
 
+// TTS-2: the voice vendor's calls carry their own tag and their key in a header of its own name.
+it('tags the voice vendor’s calls and hides its key', function () {
+    Http::fake(['api.elevenlabs.io/*' => Http::response("ID3\x04\x00".random_bytes(512), 200, ['Content-Type' => 'audio/mpeg'])]);
+
+    Http::withHeaders(['xi-api-key' => 'sk_voice_secret'])
+        ->post('https://api.elevenlabs.io/v1/text-to-speech/voice?output_format=mp3_44100_128', ['text' => 'Hi.']);
+
+    $log = ApiRequestLogModel::query()->where('host', 'api.elevenlabs.io')->first();
+
+    expect($log?->service)->toBe('elevenlabs')
+        ->and($log?->request_headers['xi-api-key'] ?? null)->toBe('[REDACTED]')
+        ->and($log?->response_body['binary'] ?? null)->toBeTrue();
+});
+
 it('still keeps a plain-text body that is not JSON', function () {
     Http::fake(['api.pexels.com/*' => Http::response('rate limit exceeded', 429)]);
 

@@ -242,7 +242,16 @@ final class PlanJson
             'native' => $f->native,
             'pronunciation' => $f->pronunciation,
             'kind' => $f->kind,
-            'slot' => $f->slot,
+            'slot' => $f->slot === null ? null : [
+                'hint' => $f->slot['hint'],
+                'fillers' => array_map(static fn (array $filler): array => [
+                    'target' => $filler['target'],
+                    'native' => $filler['native'],
+                    'pronunciation' => $filler['pronunciation'],
+                    'in_dialogue' => $filler['in_dialogue'],
+                    'audio_url' => $audio($filler['audio_id']),
+                ], $f->slot['fillers']),
+            ],
         ];
         $usage = static fn (?WindowUsageView $u): ?array => $u === null ? null : [
             'text' => $u->text,

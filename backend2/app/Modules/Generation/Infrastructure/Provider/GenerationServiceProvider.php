@@ -22,10 +22,7 @@ use App\Modules\Generation\Application\Port\GenerationQuota;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
-use App\Modules\Generation\Application\Port\SpeechEncoder;
-use App\Modules\Generation\Infrastructure\Adapter\GeminiSpeechSynthesizer;
-use App\Modules\Generation\Infrastructure\Adapter\LameSpeechEncoder;
-use App\Modules\Generation\Infrastructure\Adapter\OpenAiSpeechSynthesizer;
+use App\Modules\Generation\Infrastructure\Adapter\ElevenLabsSpeechSynthesizer;
 use App\Modules\Generation\Application\Port\LoggedResponseReader;
 use App\Modules\Generation\Application\Port\ObservedTokenAverages;
 use App\Modules\Generation\Application\Port\DialogSummarizerPort;
@@ -151,11 +148,6 @@ final class GenerationServiceProvider extends ServiceProvider
         $this->app->bind(DispatchesGeneration::class, QueuedGenerationDispatcher::class);
         $this->app->bind(DispatchesImageAttachment::class, QueuedImageAttachmentDispatcher::class);
 
-        // ---- ОЗВУЧКА (речь вендора → mp3) --------------------------------------------------
-        // Кодировщик озвучки: PCM вендора → mp3. Битрейт — конфиг, потому что это решение «по уху».
-        $this->app->bind(SpeechEncoder::class, fn (): SpeechEncoder => new LameSpeechEncoder(
-            bitrateKbps: (int) config('generation.speech.mp3_bitrate', 64),
-        ));
         $this->app->bind(DispatchesExampleRepair::class, QueuedExampleRepairDispatcher::class);
         // Fulfils Vocabulary's enrichment-dispatch port with the Generation queue job.
         $this->app->bind(DispatchesTermEnrichment::class, QueuedTermEnrichmentDispatcher::class);
@@ -460,30 +452,22 @@ final class GenerationServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(SpeechSynthesizerPort::class, function (): SpeechSynthesizerPort {
-            $driver = (string) config('generation.speech.driver', 'openai');
-
-            if ($driver === 'fake') {
+            if (config('generation.speech.driver') === 'fake') {
                 return new FakeSpeechSynthesizer();
             }
-            // Озвучка билли́тся за символ или за секунду звука — то есть ровно так же, как модель.
-            // Дверь закрыта в тестах по той же причине, что и у соседей.
+            // Озвучка биллится за символ — ровно так же, как модель за токен. Дверь закрыта в тестах по той же
+            // причине, что и у соседей.
             LiveModelGuard::refuse('speech synthesizer');
 
-            $timeout = (int) config('generation.speech.timeout', 60);
-
-            return $driver === 'gemini'
-                ? new GeminiSpeechSynthesizer(
-                    context: $this->app->make(OutboundCallContext::class),
-                    apiKey: (string) config('services.gemini.api_key'),
-                    encoder: $this->app->make(SpeechEncoder::class),
-                    // A script is the whole dialogue of a day in one call — minutes of sound, not a line.
-                    timeout: (int) config('generation.speech.script_timeout', 180),
-                )
-                : new OpenAiSpeechSynthesizer(
-                    context: $this->app->make(OutboundCallContext::class),
-                    apiKey: (string) config('services.openai.api_key'),
-                    timeout: $timeout,
-                );
+            // One vendor, one implementation (TTS-2): ElevenLabs.
+            return new ElevenLabsSpeechSynthesizer(
+                context: $this->app->make(OutboundCallContext::class),
+                apiKey: (string) config('services.elevenlabs.api_key'),
+                usdPerThousandCredits: (float) config('generation.speech.usd_per_thousand_credits', 0.20),
+                concurrency: (int) config('generation.speech.concurrency', 3),
+                timeout: (int) config('generation.speech.timeout', 60),
+                baseUrl: (string) config('services.elevenlabs.base_url', 'https://api.elevenlabs.io'),
+            );
         });
 
         $this->app->bind(ImageSearchPort::class, function (): ImageSearchPort {

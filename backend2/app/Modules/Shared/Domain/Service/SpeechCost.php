@@ -5,105 +5,69 @@ declare(strict_types=1);
 namespace App\Modules\Shared\Domain\Service;
 
 /**
- * Во что обходится ОЗВУЧКА — одна таблица на всё приложение, рядом с {@see ModelCost} и по тем же
- * правилам: модель, которой тут нет, стоит `null`, то есть «не тарифицируется», и никогда «ноль».
+ * Во что обходится ОЗВУЧКА — одна таблица на всё приложение, рядом с {@see ModelCost} и по тем же правилам: модель,
+ * которой тут нет, стоит `null`, то есть «не тарифицируется», и никогда «ноль» (наряд TTS-2).
  *
- * Отдельно от `ModelCost`, потому что счёт другой формы. Текстовая модель берёт за ТОКЕНЫ, которые
- * нам возвращает сама; за озвучку одни вендоры берут за СИМВОЛЫ входа (OpenAI `tts-1`), другие — за
- * ТОКЕНЫ выходного звука, то есть фактически за длительность (OpenAI `gpt-4o-mini-tts`, Gemini
- * TTS). Второе означает вещь, которую легко не заметить: чем МЕДЛЕННЕЕ читает голос, тем дороже
- * стоит та же строка. Реплики канон просит читать медленнее слов (§7) — значит эта строка кода
- * оплачивается ручкой темпа, и лучше, чтобы это было видно.
+ * Голос покупается у ElevenLabs, и счёт идёт ЗА СИМВОЛЫ ТЕКСТА, а не за секунды звука. Тариф API — за 1 000 символов по
+ * модели: v3 Conversational, Flash, Turbo — $0.05, Eleven v3 и Multilingual v2 — $0.10 (прайс 15.09.2026,
+ * `elevenlabs.io/pricing/api`).
  *
- * Ставки сверены с прайсами вендоров 04.09.2026 (docs/research/tts-1.md, Ч.0.2).
+ * ФАКТИЧЕСКАЯ цена строки — из ответа вендора: заголовок `character-cost` называет кредиты, списанные с аккаунта, и
+ * кредит стоит цену тарифа аккаунта (Starter — $6 за 30 000, $0.20 за тысячу). Символы и кредиты — разные числа: за
+ * символ модель берёт долю кредита по тарифу аккаунта (живьём 15.09 на Starter: v3 Conversational — «Hello, how are you
+ * doing today?» 31 символ → 8 кредитов, v3 — 16; на Free v3 — символ за кредит). Кредиты × цена кредита сходятся с
+ * символами × тарифом модели до округления вендора вверх — поэтому деньги пишутся по кредитам, а тариф модели —
+ * справка, по которой видно, что они сошлись.
  */
 final class SpeechCost
 {
-    /**
-     * Битрейт mp3, который OpenAI отдаёт на `/v1/audio/speech`: 128 кбит/с = 16 000 байт/с.
-     * Измерено по 20 живым файлам наряда TTS-1 — вес/длительность даёт 16 000 ± 0 на всех.
-     */
+    /** mp3 128 кбит/с — формат, в котором голос покупается (`mp3_44100_128`): 16 000 байт в секунду. */
     private const MP3_BYTES_PER_SECOND = 16000;
 
     /**
-     * Модели, которые берут за СИМВОЛЫ входа: USD за 1M символов.
+     * USD за 1 000 символов текста, по модели.
      *
      * @var array<string, float>
      */
-    private const PER_CHARACTER = [
-        'tts-1' => 15.0,
-        'tts-1-hd' => 30.0,
+    private const PER_THOUSAND_CHARACTERS = [
+        'eleven_v3_conversational' => 0.05,
+        'eleven_flash_v2_5' => 0.05,
+        'eleven_flash_v2' => 0.05,
+        'eleven_turbo_v2_5' => 0.05,
+        'eleven_turbo_v2' => 0.05,
+        'eleven_v3' => 0.10,
+        'eleven_multilingual_v2' => 0.10,
     ];
 
-    /**
-     * Модели, которые берут за ТОКЕНЫ: [текст-вход USD/1M токенов, звук-выход USD/1M токенов,
-     * звуковых токенов в секунде].
-     *
-     * Токенов в секунде: OpenAI — 1 токен на 50 мс выходного звука (20/с, та же цифра, что в
-     * `ModelCost::REALTIME_PRICING`); Gemini — 25/с.
-     *
-     * @var array<string, array{0: float, 1: float, 2: int}>
-     */
-    private const PER_TOKEN = [
-        'gpt-4o-mini-tts' => [0.60, 12.0, 20],
-        'gemini-2.5-flash-preview-tts' => [0.50, 10.0, 25],
-        'gemini-2.5-pro-preview-tts' => [1.00, 20.0, 25],
-        'gemini-3.1-flash-tts-preview' => [1.00, 20.0, 25],
-    ];
+    /** Тариф модели — USD за 1 000 символов текста; `null` — модели нет в таблице. */
+    public static function perThousandCharacters(string $model): ?float
+    {
+        return self::PER_THOUSAND_CHARACTERS[$model] ?? null;
+    }
+
+    /** Цена символов текста по тарифу модели, USD строкой с шестью знаками; `null` — модели нет в таблице. */
+    public static function ofCharacters(string $model, int $characters): ?string
+    {
+        $rate = self::perThousandCharacters($model);
+
+        return $rate === null ? null : number_format(max(0, $characters) / 1000 * $rate, 6, '.', '');
+    }
+
+    /** Цена списанных кредитов по цене кредита тарифа аккаунта, USD строкой с шестью знаками. */
+    public static function ofCredits(int $credits, float $usdPerThousandCredits): string
+    {
+        return number_format(max(0, $credits) / 1000 * max(0.0, $usdPerThousandCredits), 6, '.', '');
+    }
+
+    /** Сколько символов вендор считает в тексте строки: без пробелов по краям. */
+    public static function charactersOf(string $text): int
+    {
+        return mb_strlen(trim($text));
+    }
 
     /** Сколько миллисекунд звучит mp3 такого веса. */
     public static function mp3DurationMs(int $bytes): int
     {
         return (int) round($bytes / self::MP3_BYTES_PER_SECOND * 1000);
-    }
-
-    /**
-     * Цена ОДНОЙ озвученной реплики, USD строкой с шестью знаками. `null` — модель без ставки.
-     *
-     * Текстовый вход у токенных моделей считается по грубому «4 символа = токен»: доля этой
-     * половины в счёте — единицы процентов (звук дороже входа в двадцать раз), и точный токенайзер
-     * ради неё не стоит вызова.
-     */
-    public static function estimate(string $model, int $chars, ?int $durationMs): ?string
-    {
-        $key = ModelCost::baseModel($model);
-
-        if (isset(self::PER_CHARACTER[$key])) {
-            return number_format($chars / 1_000_000 * self::PER_CHARACTER[$key], 6, '.', '');
-        }
-
-        if (! isset(self::PER_TOKEN[$key]) || $durationMs === null) {
-            return null;
-        }
-
-        [$textPer1M, $audioPer1M, $tokensPerSecond] = self::PER_TOKEN[$key];
-        $audioTokens = $durationMs / 1000 * $tokensPerSecond;
-        $textTokens = $chars / 4;
-
-        $cost = $audioTokens / 1_000_000 * $audioPer1M + $textTokens / 1_000_000 * $textPer1M;
-
-        return number_format($cost, 6, '.', '');
-    }
-
-    /**
-     * Ставка, приведённая к ОДНОЙ мере — USD за 1M символов при заданном темпе чтения
-     * (символов в секунду). Только для отчётов: сравнивать посимвольного вендора с
-     * подлительностным иначе нечем, а «$15 против $12» — сравнение двух разных величин.
-     */
-    public static function perMillionCharacters(string $model, float $charsPerSecond): ?float
-    {
-        $key = ModelCost::baseModel($model);
-
-        if (isset(self::PER_CHARACTER[$key])) {
-            return self::PER_CHARACTER[$key];
-        }
-        if (! isset(self::PER_TOKEN[$key]) || $charsPerSecond <= 0) {
-            return null;
-        }
-
-        [$textPer1M, $audioPer1M, $tokensPerSecond] = self::PER_TOKEN[$key];
-        $audioTokensPerChar = $tokensPerSecond / $charsPerSecond;
-
-        return $audioTokensPerChar * $audioPer1M + $textPer1M / 4;
     }
 }

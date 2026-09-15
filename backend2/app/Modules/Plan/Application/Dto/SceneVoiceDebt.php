@@ -7,24 +7,26 @@ namespace App\Modules\Plan\Application\Dto;
 use App\Modules\Plan\Domain\ValueObject\VoiceCast;
 
 /**
- * What a scene's voice still owes (DAY-UI-3): its cast, the calls that buy the rest, and how many lines
- * of each kind are not voiced yet.
+ * What a scene's voice still owes (DAY-UI-3, TTS-2): every line not voiced yet, in the order they are bought — the
+ * dialogue's lines, the phrases, the fillers (a phrase said with another of its fillers), the words — and how many of
+ * each kind.
  */
 final readonly class SceneVoiceDebt
 {
-    /** @param list<VoiceBatch> $batches in the order they are bought: the dialogue, the phrases, the words */
+    /** @param list<LineToSay> $lines each said on its own call */
     public function __construct(
         public string $lang,
         public VoiceCast $cast,
-        public array $batches,
+        public array $lines,
         public int $partnerLines,
         public int $learnerLines,
         public int $phrases,
+        public int $fillers,
         public int $words,
     ) {}
 
     public function isSettled(): bool
     {
-        return $this->batches === [];
+        return $this->lines === [];
     }
 }

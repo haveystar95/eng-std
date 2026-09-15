@@ -6,35 +6,30 @@ namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Dto\LineToSay;
 use App\Modules\Plan\Application\Dto\SceneVoiceDebt;
-use App\Modules\Plan\Application\Dto\VoiceBatch;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
 use App\Modules\Plan\Application\Port\SceneLocator;
+use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
+use App\Modules\Plan\Domain\ValueObject\TermKind;
 use App\Modules\Plan\Domain\ValueObject\VoiceCast;
-use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * WHAT THE SERVER'S VOICE STILL OWES A SCENE — all of it (DAY-UI-3).
+ * WHAT THE SERVER'S VOICE STILL OWES A SCENE — all of it (DAY-UI-3, TTS-2).
  *
- * Canon (owner, DAY-UI-3): every line of the dialogue — the partner's and the learner's — every phrase
- * and every word is voiced by the server, in the scene's two voices of different gender. The queue is
- * whatever the store does not have in the voice its speaker has in this scene, as CALLS: the dialogue
- * in one call with both voices (the whole of it, when anything in it is missing), the phrases in one,
- * the words in one — two when a scene has more words than a batch carries. Four calls a day at most:
- * the free vendor counts requests.
+ * Canon: every line of the dialogue — the partner's and the learner's — every phrase, every phrase with each of its
+ * other fillers and every word is voiced by the server, each line on a call of its own in the voice its speaker has in
+ * the scene. What is owed is whatever the store does not have in that voice; a filler its phrase already says is not
+ * owed at all.
  *
  * Null when there is nothing to ask: no plan, no lesson yet, or no voice for the language (speech off).
  */
 final readonly class SceneVoiceQueue
 {
-    /** Lines in one batch of words: a day has 8–16, and two calls stay inside four a day. */
-    public const WORDS_PER_CALL = 12;
-
     public function __construct(
         private SceneLocator $scenes,
         private PlanRepository $plans,
@@ -53,77 +48,65 @@ final readonly class SceneVoiceQueue
             return null;
         }
         $lang = $plan->targetLang()->value;
-        $keys = [
-            VoiceGender::Female->value => $this->speaker->voiceKeyFor($lang, VoiceGender::Female),
-            VoiceGender::Male->value => $this->speaker->voiceKeyFor($lang, VoiceGender::Male),
-        ];
-        if (in_array(null, $keys, true)) {
-            return null;
-        }
-        /** @var array<string, string> $keys */
-        $have = $this->store->forScenes([$sceneId->value], array_values($keys));
-
         $cast = VoiceCast::ofScene($scene);
-        $missing = static function (string $ref, Speaker $speaker) use ($have, $keys, $cast, $sceneId): bool {
-            return ! isset($have[$sceneId->value.':'.$ref.':'.$keys[$cast->genderOf($speaker)->value]]);
-        };
+        $keys = [];
+        foreach ([Speaker::Partner, Speaker::Learner] as $speaker) {
+            $key = $this->speaker->voiceKeyFor($lang, $speaker, $cast->genderOf($speaker));
+            if ($key === null) {
+                return null;
+            }
+            $keys[$speaker->value] = $key;
+        }
+        $have = $this->store->forScenes([$sceneId->value], array_values(array_unique($keys)));
+        $missing = static fn (string $ref, Speaker $speaker): bool => ! isset($have[$sceneId->value.':'.$ref.':'.$keys[$speaker->value]]);
 
-        $batches = [];
-        $partner = 0;
-        $learner = 0;
-        $dialogue = [];
-        $owedDialogue = [];
+        $lines = [];
+        $count = ['partner' => 0, 'learner' => 0, 'phrases' => 0, 'fillers' => 0, 'words' => 0];
         foreach (SpokenLines::dialogue($lesson) as $line) {
-            $dialogue[] = new LineToSay($line['ref'], $line['text'], $cast->genderOf($line['speaker']));
-            if (! $missing($line['ref'], $line['speaker'])) {
-                continue;
+            if ($missing($line['ref'], $line['speaker'])) {
+                $lines[] = new LineToSay($line['ref'], $line['text'], $line['speaker'], $cast->genderOf($line['speaker']));
+                $count[$line['speaker'] === Speaker::Partner ? 'partner' : 'learner']++;
             }
-            $owedDialogue[] = $line['ref'];
-            if ($line['speaker'] === Speaker::Partner) {
-                $partner++;
-            } else {
-                $learner++;
-            }
-        }
-        if ($owedDialogue !== []) {
-            $batches[] = new VoiceBatch(VoiceBatch::DIALOGUE, $dialogue, $owedDialogue);
         }
 
+        $learnerLine = static fn (string $ref, string $text): LineToSay => new LineToSay($ref, $text, Speaker::Learner, $cast->learner());
         $terms = $this->terms->forScene($sceneId);
-        $phrases = self::owedTerms(SpokenLines::terms($terms, phrases: true), $cast, $missing);
-        if ($phrases !== []) {
-            $batches[] = new VoiceBatch(VoiceBatch::PHRASES, $phrases, array_map(static fn (LineToSay $l): string => $l->ref, $phrases));
+        foreach (SpokenLines::terms($terms, phrases: true) as $phrase) {
+            if ($missing($phrase['ref'], Speaker::Learner)) {
+                $lines[] = $learnerLine($phrase['ref'], $phrase['text']);
+                $count['phrases']++;
+            }
         }
-        $words = self::owedTerms(SpokenLines::terms($terms, phrases: false), $cast, $missing);
-        foreach (array_chunk($words, self::WORDS_PER_CALL) as $chunk) {
-            $batches[] = new VoiceBatch(VoiceBatch::WORDS, $chunk, array_map(static fn (LineToSay $l): string => $l->ref, $chunk));
+        foreach ($terms as $term) {
+            foreach (self::fillersOf($term) as $filler) {
+                if ($filler['voicedAs'] === $filler['ref'] && $missing($filler['ref'], Speaker::Learner)) {
+                    $lines[] = $learnerLine($filler['ref'], $filler['text']);
+                    $count['fillers']++;
+                }
+            }
+        }
+        foreach (SpokenLines::terms($terms, phrases: false) as $word) {
+            if ($missing($word['ref'], Speaker::Learner)) {
+                $lines[] = $learnerLine($word['ref'], $word['text']);
+                $count['words']++;
+            }
         }
 
         return new SceneVoiceDebt(
             lang: $lang,
             cast: $cast,
-            batches: $batches,
-            partnerLines: $partner,
-            learnerLines: $learner,
-            phrases: count($phrases),
-            words: count($words),
+            lines: $lines,
+            partnerLines: $count['partner'],
+            learnerLines: $count['learner'],
+            phrases: $count['phrases'],
+            fillers: $count['fillers'],
+            words: $count['words'],
         );
     }
 
-    /**
-     * @param  list<array{ref: string, text: string}>  $terms
-     * @param  callable(string, Speaker): bool  $missing
-     * @return list<LineToSay>
-     */
-    private static function owedTerms(array $terms, VoiceCast $cast, callable $missing): array
+    /** @return list<array{index: int, ref: string, text: string, voicedAs: string}> */
+    private static function fillersOf(PlanTerm $term): array
     {
-        $out = [];
-        foreach ($terms as $term) {
-            if ($missing($term['ref'], Speaker::Learner)) {
-                $out[] = new LineToSay($term['ref'], $term['text'], $cast->learner());
-            }
-        }
-
-        return $out;
+        return $term->kind() === TermKind::Phrase ? SpokenLines::fillers($term) : [];
     }
 }

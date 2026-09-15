@@ -4,116 +4,153 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Infrastructure\Console;
 
+use App\Modules\Generation\Application\Port\SpeechAccountError;
 use App\Modules\Generation\Application\Port\TransientSpeechError;
-use App\Modules\Plan\Application\Command\BuyVoicePacket;
-use App\Modules\Plan\Application\Command\BuyVoicePacketHandler;
-use App\Modules\Plan\Application\Dto\VoicePacket;
+use App\Modules\Identity\Application\Port\UserReader;
+use App\Modules\Plan\Application\Command\VoiceScene;
+use App\Modules\Plan\Application\Command\VoiceSceneHandler;
+use App\Modules\Plan\Application\Dto\VoiceBalance;
+use App\Modules\Plan\Application\Exception\VoiceFuseTripped;
 use App\Modules\Plan\Application\Service\SceneVoiceQueue;
-use App\Modules\Plan\Application\Service\VoiceBackfillQueue;
+use App\Modules\Plan\Application\Service\VoiceFuse;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
+use App\Modules\Shared\Domain\ValueObject\UserId;
+use DateTimeImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 /**
- * `plan:speak-backfill {--plan=} {--count}` — everything existing scenes still do not say in the
- * server's voice (DAY-UI-3): the partner's lines, the learner's lines, the phrases, the words.
+ * `plan:speak-backfill {--plan=*} {--count}` — everything the lessons of existing scenes still do not say in the
+ * server's voice (TTS-2): the partner's lines, the learner's lines, the phrases, the phrases with their other fillers,
+ * the words.
  *
- * Bought BY KIND IN PACKETS ({@see VoiceBackfillQueue}), to fit the vendor's free day of ~100 requests: the dialogues
- * of scenes missing partner lines, then the dialogues of scenes missing only the learner's, then phrases, then words —
- * a dialogue is one call per scene, phrases and words go up to twelve a call across scenes in one voice, each line
- * in the voice its scene's cast gives its speaker.
+ * Scene by scene, each the way a fresh day is voiced ({@see VoiceSceneHandler}): the dialogue in one call with its two
+ * voices, every other line on a call of its own. The order: the plans of real learners first, then the plans of QA
+ * accounts (the simulator's), newest plan first within each, scenes in their order; `--plan` takes only the plans named,
+ * in the order named.
  *
- * Waits the vendor's per-minute limit out, and STOPS on the daily one: the next window is the vendor's midnight, and
- * the command says so instead of sleeping half a day — what did not fit stays owed for the next run. Prints what is
- * not voiced yet by kind, before and after, and the packets bought; `--count` only counts: nothing is bought.
+ * Waits a transient refusal out a few times, and STOPS on a refusal of the vendor account (no credits, a voice the plan
+ * does not include — the vendor's code is printed) and on the fuse (too little of the account left). What did not get
+ * bought stays owed, and the next run starts where this one stopped — nothing here remembers a position. Prints what
+ * is not voiced yet by kind before and after, and what the run bought: lines, characters, dollars, credits, calls. `--count`
+ * only counts: nothing is bought.
  *
- * Writes `plan_line_audios` and files on `plan.audio_disk` — take
- * the database backup first, as for any write to the dev database.
+ * Writes `plan_line_audios` and files on `plan.audio_disk` — take the database backup first, as for any write to the
+ * dev database.
  */
 final class PlanSpeakBackfillCommand extends Command
 {
-    protected $signature = 'plan:speak-backfill {--plan= : only this plan id} {--count : only count what is not voiced yet}';
+    protected $signature = 'plan:speak-backfill {--plan=* : only these plan ids, in this order} {--count : only count what is not voiced yet}';
 
-    protected $description = 'Voice what plan scenes still lack — dialogues, then phrases and words in packets — waiting out the per-minute vendor limit';
+    protected $description = 'Voice what plan scenes still lack — the dialogue in one call, every other line on its own — real learners first';
 
-    /** Per-minute refusals in a row on one packet before the command gives up for now. */
-    private const MAX_WAITS = 10;
+    /** Transient refusals in a row on one scene before the command gives up for now. */
+    private const MAX_WAITS = 5;
 
-    public function handle(BuyVoicePacketHandler $buy, VoiceBackfillQueue $backfill, SceneVoiceQueue $queue): int
+    public function handle(VoiceSceneHandler $voice, SceneVoiceQueue $queue, VoiceFuse $fuse, UserReader $users): int
     {
-        $option = $this->option('plan');
-        if (is_string($option) && $option !== '' && ! Ulid::isValid($option)) {
-            $this->error("Not a plan id: {$option}");
+        /** @var list<string> $named */
+        $named = array_values(array_filter((array) $this->option('plan'), static fn (mixed $id): bool => is_string($id) && $id !== ''));
+        foreach ($named as $id) {
+            if (! Ulid::isValid($id)) {
+                $this->error("Not a plan id: {$id}");
 
-            return self::FAILURE;
+                return self::FAILURE;
+            }
         }
 
-        /** @var list<string> $scenes */
-        $scenes = DB::table('plan_scenes')
-            ->join('plans', 'plans.id', '=', 'plan_scenes.plan_id')
-            ->where('plans.status', '<>', 'deleted')
-            ->whereIn('plan_scenes.lesson_status', ['ready', 'illustrating'])
-            ->when(is_string($option) && $option !== '', static fn ($q) => $q->where('plans.id', $option))
-            ->orderBy('plans.created_at', 'desc')
-            ->orderBy('plan_scenes.order')
-            ->pluck('plan_scenes.id')
-            ->all();
-
+        $scenes = $this->scenes($named, $users);
         $before = $this->owed($scenes, $queue);
         if ($this->option('count') === true) {
-            $this->info(sprintf('Not voiced yet, %d scenes — %s', count($scenes), self::words($before)));
+            $this->info(sprintf('Not voiced yet, %d scenes — %s', count($scenes), self::kinds($before)));
 
             return self::SUCCESS;
         }
 
-        $packets = $backfill->packets(array_map(static fn (string $id): PlanSceneId => PlanSceneId::fromString($id), $scenes));
-        $bought = [VoicePacket::DIALOGUE => 0, VoicePacket::PHRASES => 0, VoicePacket::WORDS => 0];
-        foreach ($packets as $packet) {
-            $waits = 0;
-            while (true) {
-                try {
-                    $buy(new BuyVoicePacket($packet));
-                    $bought[$packet->kind]++;
-                    break;
-                } catch (TransientSpeechError $e) {
-                    if ($e->perDay) {
-                        $this->warn(sprintf(
-                            'The vendor\'s daily limit is spent — the next window opens in %s; run the command again then.',
-                            self::hours($e->retryAfterSeconds),
-                        ));
-                        break 2;
+        $started = new DateTimeImmutable();
+        $balance = $fuse->balance();
+        $this->line(self::balanceLine('Account before', $balance));
+        $voiced = 0;
+        try {
+            foreach ($scenes as $sceneId) {
+                for ($waits = 0; ; $waits++) {
+                    try {
+                        $voice(new VoiceScene(PlanSceneId::fromString($sceneId)));
+                        $voiced++;
+                        break;
+                    } catch (TransientSpeechError $e) {
+                        if ($waits >= self::MAX_WAITS) {
+                            $this->warn('The vendor kept refusing — run the command again later: '.$e->getMessage());
+                            break 2;
+                        }
+                        $wait = max(5, min(120, $e->retryAfterSeconds ?? 30));
+                        $this->line("Vendor limit — waiting {$wait} s ({$e->getMessage()})");
+                        sleep($wait);
                     }
-                    if (++$waits > self::MAX_WAITS) {
-                        $this->warn('The vendor kept refusing — run the command again later: '.$e->getMessage());
-                        break 2;
-                    }
-                    $wait = max(1, min(120, $e->retryAfterSeconds ?? 60));
-                    $this->line("Vendor limit — waiting {$wait} s");
-                    sleep($wait);
                 }
             }
+        } catch (SpeechAccountError $e) {
+            $this->error("The voice vendor account refused ({$e->httpStatus} {$e->vendorCode}) — stopped; nothing more is bought until the account is fixed: {$e->getMessage()}");
+        } catch (VoiceFuseTripped $e) {
+            $this->warn('Stopped by the voice fuse — '.$e->getMessage());
         }
 
+        $bought = $this->bought($scenes, $started);
         $this->info(sprintf(
-            'Packets bought: dialogues %d, phrases %d, words %d (of %d)',
-            $bought[VoicePacket::DIALOGUE], $bought[VoicePacket::PHRASES], $bought[VoicePacket::WORDS], count($packets),
+            'Scenes gone through: %d of %d · bought: %d lines, %d characters, $%s, %d credits, %d calls',
+            $voiced, count($scenes), $bought['lines'], $bought['characters'], $bought['usd'], $bought['credits'], $bought['calls'],
         ));
-        $this->info(sprintf(
-            'Not voiced yet, %d scenes — before: %s · after: %s',
-            count($scenes), self::words($before), self::words($this->owed($scenes, $queue)),
-        ));
+        $this->info(sprintf('Not voiced yet, %d scenes — before: %s · after: %s', count($scenes), self::kinds($before), self::kinds($this->owed($scenes, $queue))));
+        $this->line(self::balanceLine('Account after', $fuse->balance()));
 
         return self::SUCCESS;
     }
 
     /**
+     * The scenes with a lesson, in the order they are voiced.
+     *
+     * @param  list<string>  $named
+     * @return list<string>
+     */
+    private function scenes(array $named, UserReader $users): array
+    {
+        /** @var list<stdClass> $rows */
+        $rows = DB::table('plan_scenes')
+            ->join('plans', 'plans.id', '=', 'plan_scenes.plan_id')
+            ->where('plans.status', '<>', 'deleted')
+            ->whereIn('plan_scenes.lesson_status', ['ready', 'illustrating'])
+            ->when($named !== [], static fn ($q) => $q->whereIn('plans.id', $named))
+            ->orderBy('plans.created_at', 'desc')
+            ->orderBy('plan_scenes.order')
+            ->get(['plan_scenes.id as scene_id', 'plans.id as plan_id', 'plans.user_id as user_id'])
+            ->all();
+
+        $qa = [];
+        $rank = static function (stdClass $row) use ($named, $users, &$qa): int {
+            if ($named !== []) {
+                return (int) array_search((string) $row->plan_id, $named, true);
+            }
+            $user = (string) $row->user_id;
+            $qa[$user] ??= $users->byId(new UserId($user))?->qaTools === true;
+
+            return $qa[$user] ? 1 : 0;
+        };
+        // A stable sort: within one rank the newest plan stays first and its scenes stay in order.
+        $ranked = array_map(static fn (stdClass $row, int $i): array => [$rank($row), $i, (string) $row->scene_id], $rows, array_keys($rows));
+        usort($ranked, static fn (array $a, array $b): int => [$a[0], $a[1]] <=> [$b[0], $b[1]]);
+
+        return array_map(static fn (array $r): string => $r[2], $ranked);
+    }
+
+    /**
      * @param  list<string>  $scenes
-     * @return array{partner: int, learner: int, phrases: int, words: int}
+     * @return array{partner: int, learner: int, phrases: int, fillers: int, words: int}
      */
     private function owed(array $scenes, SceneVoiceQueue $queue): array
     {
-        $out = ['partner' => 0, 'learner' => 0, 'phrases' => 0, 'words' => 0];
+        $out = ['partner' => 0, 'learner' => 0, 'phrases' => 0, 'fillers' => 0, 'words' => 0];
         foreach ($scenes as $sceneId) {
             $debt = $queue->owed(PlanSceneId::fromString($sceneId));
             if ($debt === null) {
@@ -122,20 +159,49 @@ final class PlanSpeakBackfillCommand extends Command
             $out['partner'] += $debt->partnerLines;
             $out['learner'] += $debt->learnerLines;
             $out['phrases'] += $debt->phrases;
+            $out['fillers'] += $debt->fillers;
             $out['words'] += $debt->words;
         }
 
         return $out;
     }
 
-    /** @param array{partner: int, learner: int, phrases: int, words: int} $owed */
-    private static function words(array $owed): string
+    /**
+     * @param  list<string>  $scenes
+     * @return array{lines: int, characters: int, usd: string, credits: int, calls: int}
+     */
+    private function bought(array $scenes, DateTimeImmutable $since): array
     {
-        return "partner lines {$owed['partner']}, learner lines {$owed['learner']}, phrases {$owed['phrases']}, words {$owed['words']}";
+        $row = $scenes === [] ? null : DB::table('plan_line_audios')
+            ->whereIn('scene_id', $scenes)
+            ->where('created_at', '>=', $since)
+            ->selectRaw('count(*) as lines, coalesce(sum(characters), 0) as characters, coalesce(sum(cost_usd), 0) as usd, coalesce(sum(credits), 0) as credits, count(distinct coalesce(request_id, id)) as calls')
+            ->first();
+
+        return [
+            'lines' => (int) ($row->lines ?? 0),
+            'characters' => (int) ($row->characters ?? 0),
+            'usd' => number_format((float) ($row->usd ?? 0), 4, '.', ''),
+            'credits' => (int) ($row->credits ?? 0),
+            'calls' => (int) ($row->calls ?? 0),
+        ];
     }
 
-    private static function hours(?int $seconds): string
+    /** @param array{partner: int, learner: int, phrases: int, fillers: int, words: int} $owed */
+    private static function kinds(array $owed): string
     {
-        return $seconds === null ? 'the vendor\'s next day' : sprintf('%dh %02dm', intdiv($seconds, 3600), intdiv($seconds % 3600, 60));
+        return "partner lines {$owed['partner']}, learner lines {$owed['learner']}, phrases {$owed['phrases']}, fillers {$owed['fillers']}, words {$owed['words']}";
+    }
+
+    private static function balanceLine(string $label, VoiceBalance $balance): string
+    {
+        return sprintf(
+            '%s: %d of %d credits left (%s)%s',
+            $label,
+            $balance->remaining(),
+            $balance->limit,
+            $balance->source === VoiceBalance::VENDOR ? 'the vendor\'s count' : 'this app\'s count this month',
+            $balance->resetsAt === null ? '' : ', resets '.$balance->resetsAt->format('Y-m-d H:i').' UTC',
+        );
     }
 }

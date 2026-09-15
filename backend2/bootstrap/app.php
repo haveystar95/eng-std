@@ -25,6 +25,7 @@ use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanImagesBackfillCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanSeedLoadCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanSpeakBackfillCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanSpeakReportCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanShiftDayCommand;
 use App\Modules\Plan\Presentation\Console\PlanNotifyTestCommand;
 use App\Modules\Plan\Presentation\Console\PlanRepairCardCommand;
@@ -73,6 +74,7 @@ return Application::configure(basePath: dirname(__DIR__))
         PlanNotifyTestCommand::class,
         PlanImagesBackfillCommand::class,
         PlanSpeakBackfillCommand::class,
+        PlanSpeakReportCommand::class,
         VerificationStatsCommand::class,
         StorePublishCommand::class,
         BatchAgeProgressCommand::class,

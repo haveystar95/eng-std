@@ -15,6 +15,7 @@ use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
+use App\Modules\Plan\Application\Service\VoiceFuse;
 use App\Modules\Plan\Application\Port\NativeDistractorSource;
 use App\Modules\Plan\Application\Port\PlanAccountEraser;
 use App\Modules\Plan\Application\Port\PlanCollectionWriter;
@@ -48,6 +49,7 @@ use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanTermRepository;
 use App\Modules\Plan\Infrastructure\Model\ContentModelPlanBuilder;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
+use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Plan\Application\Port\LearnerDevices;
 use App\Modules\Plan\Application\Port\LearnerHabits;
@@ -181,6 +183,15 @@ final class PlanServiceProvider extends ServiceProvider
         $this->app->bind(LineAudioStore::class, fn (Container $app): LineAudioStore => new EloquentLineAudioStore(
             $app->make(Disks::class),
             (string) config('plan.audio_disk', 'local'),
+        ));
+        // The voice fuse (TTS-2): the plan size it counts against when the vendor would not say, and the share of it
+        // below which nothing is bought — read here so Application stays clear of config().
+        $this->app->bind(VoiceFuse::class, fn (Container $app): VoiceFuse => new VoiceFuse(
+            $app->make(LineSpeaker::class),
+            $app->make(LineAudioStore::class),
+            $app->make(Clock::class),
+            (int) config('generation.speech.monthly_credits', 10000),
+            (float) config('generation.speech.fuse_share', 0.10),
         ));
 
         // The sized copies of scene photos. The fake image driver (the whole test suite, offline

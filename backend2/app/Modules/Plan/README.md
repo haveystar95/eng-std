@@ -10,10 +10,12 @@ Tables: `plans`, `plan_scenes`, `plan_days`, `day_cards`, `plan_terms`, `plan_li
 (`#RRGGBB`, written in the same conditional UPDATE as the photo); `plan_terms.image_tone` (DAY-UI-2)
 — the tone of a word's photo, or of its slot when the search ladder found none (which is also the
 mark that the ladder was asked). `plan_line_audios` rows are named by the unit reference
-(`line_ref`: `x3` — the partner's line of exchange 3, `x3b` — the learner's, `p2` — a phrase, `v5` — a
-word or chunk). Since DAY-UI-3 the server voices everything a day says, in two voices of different
-gender per scene: the partner's gender is `plan_scenes.partner_voice_gender` (from the lesson's
-`role_gender`), the learner's lines, phrases and words take the other. A lesson written is
+(`line_ref`: `x3` — the partner's line of exchange 3, `x3b` — the learner's, `p2` — a phrase, `p2.f3` — the
+phrase's frame said with its third filler, `v5` — a word or chunk), each with its bill (`characters`,
+`credits` — the vendor's `character-cost`, `cost_usd`, `request_id`). Since DAY-UI-3 the server voices
+everything a day says (with TTS-2, on ElevenLabs), in the voices of two people of different gender per
+scene: the partner's gender is `plan_scenes.partner_voice_gender` (from the lesson's `role_gender`), the
+learner's lines, phrases, fillers and words take the other; the voice is picked by role and gender. A lesson written is
 `illustrating` (the wire says `building`) until its photos are found, then `ready`. Files on disks, not tables:
 spoken lines (`plan.audio_disk`, `plan-audio/…`) and the square copies of scene photos
 (`plan.image_disk`, `plan-images/<scene>/<112|448>.jpg`).
@@ -72,9 +74,10 @@ The day window (DAY-UI-2, `window` of the day read, put together by `Application
 queries); value objects `WindowStatus`, `WindowStage`, `WindowAction`, `UnitState`, `ProgramSummary`.
 Application: `PlanImageLadder` (every missing photo's ladder climbed together, one finder batch per rung —
 image_prompt → «term, scene theme» → the theme on a page of its own; never the bare word, DAY-UI-3).
-The voice (DAY-UI-3): `SpokenLines` (what a day says out loud, the file names, whose voice each is), `VoiceCast`;
-`SceneVoiceQueue` (what a scene still
-owes, as ≤ 4 calls), `SceneVoices` + `SceneAudioIndex` (a reader's lookup in the speaker's voice).
+The voice (DAY-UI-3, TTS-2): `SpokenLines` (what a day says out loud, the file names, whose voice each is, the fillers
+a phrase does not already say), `VoiceCast`; `SceneVoiceQueue` (what a scene still owes, every line its own call),
+`VoiceFuse` (nothing is bought below a tenth of the vendor account left), `SceneVoices` + `SceneAudioIndex` (a reader's
+lookup in the speaker's voice).
 `WordUsage` (the line of the day a word is said in — by the lesson's `used_in` — and its place in it, sheet 23-0e).
 Application: `LessonBuildService` (the lesson call, one retry only for an answer off the schema, the validator's
 findings counted by code), `LessonGateKeeper` (a fatal finding holds the lesson: P2R for its card, at most two cards,
@@ -100,7 +103,7 @@ reads plan tables.
 
 | Module | How | Why |
 |---|---|---|
-| `Generation` | `ContentModelCatalog` → `ContentModelPort` (purpose `plan`, own timeout); `ImageSearchPort`; `SpeechSynthesizerPort` | the two model calls, the photos (`searchMany`), the day's voice (`speakScript`) |
+| `Generation` | `ContentModelCatalog` → `ContentModelPort` (purpose `plan`, own timeout); `ImageSearchPort`; `SpeechSynthesizerPort` | the two model calls, the photos (`searchMany`), the day's voice (`speakLines`, `balance`) |
 | `Identity` | `UserReader`; `GetPushTokens` + `RemovePushToken`; `GetUsualVisitTime` | the learner's timezone, native language and gender (the lesson's LEARNER_GENDER); the device addresses a letter goes to (and forgetting a dead one); when the daily reminder is due |
 | `Vocabulary` | `ImportTerm`; `NativeDistractorReader` | a closed day's words and phrases become terms (dedup, provenance); catalogue translations as wrong options for a thin Beginner choice |
 | `Collections` | `CreateGeneratedCollection` (origin `plan`), `AddTermToCollection`; `DeleteCollection` | the plan's collection; its tombstone when the plan is dropped by the GEN-2a purge migration |
@@ -111,13 +114,13 @@ reads plan tables.
 | Port | Implementations |
 |---|---|
 | `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson and the P2R card repair), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`) |
-| `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice, waiting out the vendor's window) |
+| `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice: waits out the concurrency limit, fails with the vendor's code on a refusal of the account, stops at the fuse) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
 | `LearnerGender` | `IdentityLearnerGender` (the profile's gender, read when a lesson is written) |
 | `BuildVersion` | `StampedBuildVersion` (`APP_COMMIT` / `storage/app/commit`) |
 | `PlanImageFinder` | `PexelsPlanImageFinder` (search → photo + tone; `findMany` — a batch, six on the wire, over Generation's `searchMany`; `tone(url)` → Pexels `GET /photos/{id}` for the backfill) |
 | `SceneImageStore` | `CdnSceneImageStore` (disk `plan.image_disk`; fetches the 112/448 square crops from the photo's CDN, labelled `images`; fetches nothing under the fake image driver) |
-| `LineSpeaker` | `GenerationLineSpeaker` — one script per vendor call in the pack's two voices (`SpeechSynthesizerPort::speakScript`); off when `SPEECH_ENABLED=false` |
+| `LineSpeaker` | `GenerationLineSpeaker` — every line on its own vendor call in the voice the pack gives its role and gender (`SpeechSynthesizerPort::speakLines`), the account's balance for the fuse; off when `SPEECH_ENABLED=false` |
 | `LineAudioStore` | `EloquentLineAudioStore` (private disk `plan.audio_disk`) |
 | `PlanCollectionWriter` | `VocabularyPlanCollectionWriter` |
 | `NativeDistractorSource` | `VocabularyNativeDistractorSource` (over Vocabulary's `NativeDistractorReader` — catalogue translations for a thin Beginner choice) |
@@ -148,14 +151,14 @@ reads plan tables.
   ladder (prints «было пусто / стало»; `--requery` re-asks the words the bare word photographed and the words repeating a picture of their day), then tones and square copies for scene photos
   stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a
   missing copy on its own, so the copies part is an optimisation; the tones only come from here.
-- Ops: `plan:speak-backfill {--plan=} {--count}` (DAY-UI-3) — what scenes still do not say in the
-  server's voice, bought BY KIND IN PACKETS to fit the vendor's ~100 requests a day (`VoiceBackfillQueue` →
-  `BuyVoicePacketHandler`): the dialogues of scenes missing partner lines, then of scenes missing only the
-  learner's (one call a scene, the whole conversation, only the missing lines kept), then phrases, then
-  words — up to twelve a call across scenes, one voice a packet; waits out the vendor's per-minute limit
-  and stops on the daily one, naming the window; prints the packets bought and what is not voiced yet by
-  kind, before and after (`--count` only counts). `VoiceSceneJob` (a fresh day) stays per scene, ≤ 4 calls,
-  and goes back on the queue until the day's quota comes back (midnight Pacific, or the answer's later time).
+- Ops: `plan:speak-backfill {--plan=*} {--count}` (DAY-UI-3, TTS-2) — what scenes still do not say in the
+  server's voice, scene by scene the way a fresh day is voiced (every line its own call); the plans of real
+  learners first, then QA accounts', newest first; `--plan` only the plans named, in that order. Waits out
+  the concurrency limit a few times, stops on a refusal of the vendor account (its code printed) and at the
+  fuse; prints what is not voiced yet by five kinds, before and after, and what the run bought (lines,
+  characters, dollars, credits, calls); `--count` only counts.
+- Ops: `plan:speak-report {--plan=} {--day=}` (TTS-2) — what the voice cost: every plan, a plan by day, a day by
+  kind of line — characters, dollars, credits, calls (distinct vendor request ids).
 - The plan languages are the server's list (`plan.languages`, `GET /plans/languages`), and
   `POST /plans` validates against it.
 - Notifications: `plan:notify-tick` (Presentation/Console, every 15 min in `routes/console.php`, run

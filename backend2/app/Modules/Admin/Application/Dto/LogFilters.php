@@ -15,7 +15,7 @@ final readonly class LogFilters
 {
     public function __construct(
         public ?string $direction = null,     // inbound | outbound
-        public ?string $provider = null,      // the `service` tag: openai | pexels | gemini
+        public ?string $provider = null,      // the `service` tag: openai | pexels | gemini | anthropic | xai | elevenlabs
         public ?int $status = null,
         public ?string $statusClass = null,   // '2xx' | '4xx' | '5xx' | 'error' — coarser than $status
         public ?string $purpose = null,

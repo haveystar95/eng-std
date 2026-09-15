@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Generation\Application\Dto\SpeechBalance;
+use App\Modules\Generation\Application\Port\SpeechAccountError;
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Application\Port\TransientSpeechError;
 use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
@@ -19,6 +21,7 @@ use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\ImageQuery;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
+use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Infrastructure\Job\VoiceSceneJob;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
@@ -27,6 +30,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
@@ -117,20 +121,42 @@ function windowFinder(array $nothingFor = []): PlanImageFinder
     };
 }
 
-/** The real voice pipe over the fake vendor: speech on, both of the pack's voices, every script remembered. */
-function windowVoice(string $mode = FakeSpeechSynthesizer::OK): FakeSpeechSynthesizer
+/** The real voice pipe over the fake vendor: speech on, the pack's voices, every call remembered. */
+function windowVoice(string $mode = FakeSpeechSynthesizer::OK, ?SpeechBalance $balance = null): FakeSpeechSynthesizer
 {
     config(['generation.speech.enabled' => true, 'generation.speech.driver' => 'fake']);
-    $vendor = new FakeSpeechSynthesizer($mode);
+    $vendor = new FakeSpeechSynthesizer($mode, $balance);
     app()->instance(SpeechSynthesizerPort::class, $vendor);
 
     return $vendor;
 }
 
-/** The voice key a line of this gender is stored under, as the pack configures it. */
-function windowVoiceKey(string $gender): string
+/** The voice key a line of this speaker and gender is stored under, as the pack configures it. */
+function windowVoiceKey(string $speaker, string $gender): string
 {
-    return (string) app(LineSpeaker::class)->voiceKeyFor('en', VoiceGender::from($gender));
+    return (string) app(LineSpeaker::class)->voiceKeyFor('en', Speaker::from($speaker), VoiceGender::from($gender));
+}
+
+/**
+ * Every address a day's window gives its voice: words, the lines they are said in, phrases, every filler of every
+ * frame, both lines of every exchange.
+ *
+ * @param  array<string, mixed>  $program
+ * @return array{words: list<mixed>, usages: list<mixed>, phrases: list<mixed>, fillers: list<mixed>, partner: list<mixed>, learner: list<mixed>}
+ */
+function windowVoiceUrls(array $program): array
+{
+    $phrases = $program['phrases']['items'];
+    $lines = $program['dialogue']['items'];
+
+    return [
+        'words' => array_column($program['words']['items'], 'audio_url'),
+        'usages' => array_values(array_filter(array_map(static fn (array $w): mixed => $w['usage']['audio_url'] ?? false, $program['words']['items']), static fn (mixed $u): bool => $u !== false)),
+        'phrases' => array_column($phrases, 'audio_url'),
+        'fillers' => array_column(array_merge(...array_map(static fn (array $p): array => $p['frame']['slot']['fillers'] ?? [], $phrases)), 'audio_url'),
+        'partner' => array_map(static fn (array $pair): mixed => $pair['partner']['audio_url'] ?? null, $lines),
+        'learner' => array_map(static fn (array $pair): mixed => $pair['learner']['audio_url'] ?? null, $lines),
+    ];
 }
 
 it('opens a day not started with five rows «впереди» and no number, the programme counted and «Начать» (23-0a)', function () {
@@ -258,164 +284,183 @@ it('names the day a word that failed twice comes back on (23-0e)', function () {
         ->and($words['v1']['returns_day'])->toBeNull();
 });
 
-// ── DAY-UI-3 · the voice: everything, two voices, a few calls, the vendor's window waited out ────────
+// ── TTS-2 · the voice: ElevenLabs, everything a day says, a dialogue in one call, the account's refusals ───────────
 
-// Canon (owner, DAY-UI-3): «озвучиваются все реплики собеседника, все реплики ученика, все фразы, слова».
-// Catches the DAY-UI-2 rule: a learner's line, a phrase or a word left to the phone's voice.
-it('voices everything a day says: both speakers’ lines, every phrase and every word, each with its own address', function () {
+// Canon (owner, DAY-UI-3; TTS-2): «озвучиваются все реплики собеседника, все реплики ученика, все фразы, фразы с
+// наполнениями, слова». Catches a learner's line, a phrase, a filler or a word left to the phone's voice, and a filler
+// bought again though its phrase already says it.
+it('voices everything a day says: both speakers’ lines, every phrase with each of its fillers and every word, each at its own address', function () {
     windowVoice();
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 2])['id'];
 
     $program = windowOf($this, $token, $id, 1)['program'];
-    $lines = $program['dialogue']['items'];
-    $urls = [
-        ...array_column($program['words']['items'], 'audio_url'),
-        ...array_column($program['phrases']['items'], 'audio_url'),
-        ...array_map(static fn (array $p): mixed => $p['partner']['audio_url'] ?? null, $lines),
-        ...array_map(static fn (array $p): mixed => $p['learner']['audio_url'] ?? null, $lines),
-    ];
+    $urls = windowVoiceUrls($program);
+    $all = [...$urls['words'], ...$urls['phrases'], ...$urls['partner'], ...$urls['learner'], ...$urls['fillers']];
 
-    expect($urls)->toHaveCount(8 + 6 + 8 + 8)
-        ->and(array_filter($urls, static fn (mixed $u): bool => ! is_string($u) || ! str_contains($u, '/api/v1/plans/audio/')))->toBe([])
-        ->and(array_unique($urls))->toHaveCount(30)
-        ->and($lines[0]['learner'])->toHaveKeys(['text', 'translation', 'audio_url', 'state'])
-        ->and($lines[0]['partner'])->not->toHaveKey('state')
-        ->and(collect($program['words']['items'])->firstWhere('term', 'heating pad')['usage']['audio_url'])->toBe($lines[4]['partner']['audio_url']);
+    expect($urls['fillers'])->toHaveCount(15)
+        ->and(array_filter($all, static fn (mixed $u): bool => ! is_string($u) || ! str_contains($u, '/api/v1/plans/audio/')))->toBe([])
+        ->and(array_unique([...$urls['words'], ...$urls['phrases'], ...$urls['partner'], ...$urls['learner']]))->toHaveCount(30)
+        ->and(array_unique($urls['fillers']))->toHaveCount(15)
+        // The filler each phrase is said with IS the phrase: one file, not two.
+        ->and(array_intersect($urls['fillers'], $urls['phrases']))->toHaveCount(5)
+        ->and(collect($program['words']['items'])->firstWhere('term', 'heating pad')['usage']['audio_url'])->toBe($program['dialogue']['items'][4]['partner']['audio_url']);
 
-    // The file behind the learner's address is that line in that voice (the partner is a woman, the learner the other voice).
-    $path = parse_url((string) $lines[0]['learner']['audio_url'], PHP_URL_PATH);
-    $bytes = $this->withHeader('Authorization', "Bearer {$token}")->get((string) $path)->assertOk()->getContent();
-    expect($bytes)->toBe('FAKEMP3:'.md5(str_replace(':p90', '', windowVoiceKey('male')).'|p90|en|'.$lines[0]['learner']['text']));
+    // The file behind the learner's address is that line in the learner's voice.
+    $line = $program['dialogue']['items'][0]['learner'];
+    $bytes = $this->withHeader('Authorization', "Bearer {$token}")->get((string) parse_url((string) $line['audio_url'], PHP_URL_PATH))->assertOk()->getContent();
+    expect($bytes)->toBe('FAKEMP3:'.md5(preg_replace('/:(s\d+)$/', '|$1', windowVoiceKey('learner', 'male')).'|'.$line['text']));
 });
 
-// Canon (owner, DAY-UI-3): «собеседник и ученик разного пола; пол собеседника задаёт роль; голос ученика = тот же
-// голос для его реплик и фраз». Catches one voice for both people, and a phrase read by the partner's voice.
-it('casts a scene’s two voices by the role’s gender: the partner’s lines in one, the learner’s lines, phrases and words in the other', function () {
+// Canon (TTS-2): «собеседник-женщина, ученик-мужчина; для сцен с мужским собеседником — мужской голос собеседника, ученик
+// тогда женским». Catches one voice for both people, a phrase read by the partner, and a man partner in the learner's voice.
+it('casts a scene’s voices by role and gender: a man partner has a voice of his own, and the learner is then the woman', function () {
     windowVoice();
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 2])['id'];
     $sceneId = (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
-    $keys = DB::table('plan_line_audios')->where('scene_id', $sceneId)->pluck('voice_key', 'line_ref');
+    $keys = static fn (): array => DB::table('plan_line_audios')->where('scene_id', $sceneId)->pluck('voice_key', 'line_ref')->all();
 
     expect(DB::table('plan_scenes')->where('id', $sceneId)->value('partner_voice_gender'))->toBe('female')
-        ->and(windowVoiceKey('male'))->not->toBe(windowVoiceKey('female'))
-        ->and($keys['x1'])->toBe(windowVoiceKey('female'))
-        ->and($keys['x1b'])->toBe(windowVoiceKey('male'))
-        ->and($keys['p1'])->toBe(windowVoiceKey('male'))
-        ->and($keys['v1'])->toBe(windowVoiceKey('male'));
+        ->and($keys())->toMatchArray([
+            'x1' => windowVoiceKey('partner', 'female'),
+            'x1b' => windowVoiceKey('learner', 'male'),
+            'p1' => windowVoiceKey('learner', 'male'),
+            'p1.f2' => windowVoiceKey('learner', 'male'),
+            'v1' => windowVoiceKey('learner', 'male'),
+        ]);
+
+    DB::table('plan_line_audios')->where('scene_id', $sceneId)->delete();
+    DB::table('plan_scenes')->where('id', $sceneId)->update(['partner_voice_gender' => 'male']);
+    app(VoiceSceneHandler::class)(new VoiceScene(PlanSceneId::fromString($sceneId)));
+
+    expect(windowVoiceKey('partner', 'male'))->not->toBe(windowVoiceKey('learner', 'male'))
+        ->and($keys())->toMatchArray([
+            'x1' => windowVoiceKey('partner', 'male'),
+            'x1b' => windowVoiceKey('learner', 'female'),
+            'p1' => windowVoiceKey('learner', 'female'),
+            'v1' => windowVoiceKey('learner', 'female'),
+        ]);
 });
 
-// Canon (DAY-UI-3): «диалог дня — ОДНИМ вызовом с двумя говорящими; слова и фразы — пачками; ≤ 4 вызовов на день».
-// Catches a call per line: thirty requests of a vendor that allows a hundred a day.
-it('buys a day’s voice in at most four calls — the whole dialogue in one with both voices, the phrases in one, the words in one', function () {
+// Canon (TTS-2, architect's clarification): «Text to Dialogue не использовать: каждая реплика собеседника и ученика —
+// отдельный вызов своим голосом; модель везде — v3 Conversational». Catches a dialogue said as one sound, a learner's line
+// in the partner's voice, and a line bought on another model.
+it('says every line of a day on a call of its own — each dialogue line in its speaker’s voice — on v3 Conversational', function () {
     $vendor = windowVoice();
     [, $token] = planLearner();
     planCreate($this, $token, ['days_total' => 2]);
 
-    $dialogue = array_values(array_filter($vendor->scripts, static fn ($s): bool => count($s->voices) === 2));
+    $voiceOf = static fn (string $text): array => array_values(array_unique(array_map(
+        static fn ($l): string => $l->voice->voice,
+        array_filter($vendor->lines, static fn ($l): bool => $l->text === $text),
+    )));
+    $partner = (string) config('generation.speech.voices.en.partner.female.voice');
+    $learner = (string) config('generation.speech.voices.en.learner.male.voice');
 
-    expect($vendor->calls)->toBeLessThanOrEqual(4)
-        ->and($vendor->calls)->toBe(3)
-        ->and($dialogue)->toHaveCount(1)
-        ->and($dialogue[0]->turns)->toHaveCount(16)
-        ->and(array_map(static fn ($t): string => $t->speaker, array_slice($dialogue[0]->turns, 0, 2)))->toBe(['female', 'male'])
-        ->and(array_sum(array_map(static fn ($s): int => count($s->turns), $vendor->scripts)))->toBe(16 + 6 + 8);
+    expect($vendor->calls)->toBe(16 + 6 + 10 + 8)
+        ->and($vendor->lines)->toHaveCount(40)
+        ->and(array_unique(array_map(static fn ($l): string => $l->voice->model, $vendor->lines)))->toBe(['eleven_v3_conversational'])
+        ->and($voiceOf('Where does it hurt: his upper back or his lower back?'))->toBe([$partner])
+        ->and($voiceOf('It hurts in his lower back.'))->toBe([$learner])
+        ->and($partner)->not->toBe($learner);
 });
 
-// Catches a backfill that buys again what is stored (or swaps a file behind an address a phone cached), and one
-// that cannot say what is left by kind.
-it('backfills what scenes still lack by kind — the dialogue whole in one call, only its missing lines stored', function () {
-    $vendor = windowVoice();
+// Canon (TTS-2): «у каждой строки урока есть audio_url после бэкфилла». Catches a backfill that leaves a kind behind (the
+// fillers are new), counts by the old four kinds, or buys again what is stored.
+it('backfills a lesson whole: after plan:speak-backfill every word, line, phrase, filler and both speakers have an audio_url', function () {
     [, $token] = planLearner();
-    planCreate($this, $token, ['days_total' => 2]);
-    DB::table('plan_line_audios')->whereIn('line_ref', ['x2', 'x2b', 'p3', 'v5'])->delete();
-    $kept = DB::table('plan_line_audios')->where('line_ref', 'x1')->first();
-    $vendor->calls = 0;
-    $vendor->scripts = [];
+    // Built while speech was off: the lesson is there, its voice is not.
+    $id = planCreate($this, $token, ['days_total' => 2])['id'];
+    $vendor = windowVoice();
+    $before = windowVoiceUrls(windowOf($this, $token, $id, 1)['program']);
+    expect(array_filter(array_merge(...array_values($before))))->toBe([]);
 
     Artisan::call('plan:speak-backfill', ['--count' => true]);
-    expect(Artisan::output())->toContain('partner lines 1, learner lines 1, phrases 1, words 1')
+    expect(Artisan::output())->toContain('partner lines 8, learner lines 8, phrases 6, fillers 10, words 8')
         ->and($vendor->calls)->toBe(0);
 
     Artisan::call('plan:speak-backfill');
-    expect(Artisan::output())->toContain('after: partner lines 0, learner lines 0, phrases 0, words 0')
-        ->and($vendor->calls)->toBe(3)
-        ->and($vendor->scripts[0]->turns)->toHaveCount(16)
-        ->and($vendor->scripts[1]->turns)->toHaveCount(1)
-        ->and(DB::table('plan_line_audios')->count())->toBe(30)
-        ->and(DB::table('plan_line_audios')->where('line_ref', 'x1')->first())->toEqual($kept);
-});
-
-// Owner, 14.09: «backfill пакетами, чтобы уложиться в ~100 вызовов: диалоги одним вызовом на сцену, фразы и слова пачками
-// по 10–12; порядок: реплики собеседника → реплики ученика → фразы → слова». Catches a backfill that buys scene by scene
-// (three or four calls a scene), serves phrases before the dialogues, packs past twelve, or — packing across scenes —
-// stores one scene's `p1` under another's.
-it('backfills in packets by kind: partner-owing dialogues, then learner-only dialogues, then phrases and words across scenes, twelve a call', function () {
-    $vendor = windowVoice();
-    [, $tokenA] = planLearner();
-    [, $tokenB] = planLearner();
-    $planA = planCreate($this, $tokenA, ['days_total' => 2])['id'];
-    $planB = planCreate($this, $tokenB, ['days_total' => 2])['id'];
-    $sceneOf = static fn (string $plan): string => (string) DB::table('plan_scenes')->where('plan_id', $plan)->orderBy('order')->value('id');
-    [$sceneA, $sceneB] = [$sceneOf($planA), $sceneOf($planB)];
-    // A lacks a partner line and B only its learner's; both lack every phrase and every word.
-    DB::table('plan_line_audios')->where('scene_id', $sceneB)->whereIn('line_ref', ['x1b', 'x3b'])->delete();
-    DB::table('plan_line_audios')->where('scene_id', $sceneA)->where('line_ref', 'x2')->delete();
-    DB::table('plan_line_audios')->where(static fn ($q) => $q->where('line_ref', 'like', 'p%')->orWhere('line_ref', 'like', 'v%'))->delete();
-    $vendor->calls = 0;
-    $vendor->scripts = [];
-    // Both scenes say the same fake lesson: which scene a call belongs to is read off the refs the speaker is given.
-    $spy = new class(app(LineSpeaker::class)) implements LineSpeaker
-    {
-        /** @var list<list<string>> scene id of every line, per call */
-        public array $scenes = [];
-
-        public function __construct(private readonly LineSpeaker $inner) {}
-
-        public function say(string $lang, array $lines): array
-        {
-            $this->scenes[] = array_values(array_unique(array_map(static fn ($l): string => explode(':', $l->ref)[0], $lines)));
-
-            return $this->inner->say($lang, $lines);
-        }
-
-        public function voiceKeyFor(string $lang, VoiceGender $voice): ?string
-        {
-            return $this->inner->voiceKeyFor($lang, $voice);
-        }
-    };
-    app()->instance(LineSpeaker::class, $spy);
-
-    Artisan::call('plan:speak-backfill');
     $output = Artisan::output();
+    $after = windowVoiceUrls(windowOf($this, $token, $id, 1)['program']);
 
-    $shape = array_map(static fn ($s): string => count($s->voices).'×'.count($s->turns), $vendor->scripts);
-    // A's dialogue comes first although B's plan is newer (scenes are served newest plan first): partner lines before
-    // the learner's. Phrases and words are packed across both scenes.
-    expect($spy->scenes[0])->toBe([$sceneA])
-        ->and($spy->scenes[1])->toBe([$sceneB])
-        ->and($spy->scenes[2])->toEqualCanonicalizing([$sceneA, $sceneB])
-        ->and($shape)->toBe(['2×16', '2×16', '1×12', '1×12', '1×4'])
-        ->and($vendor->calls)->toBe(5)
-        ->and($output)->toContain('Packets bought: dialogues 2, phrases 1, words 2 (of 5)')
-        ->and($output)->toContain('before: partner lines 1, learner lines 2, phrases 12, words 16 · after: partner lines 0, learner lines 0, phrases 0, words 0');
-    foreach ([$sceneA, $sceneB] as $scene) {
-        expect(DB::table('plan_line_audios')->where('scene_id', $scene)->count())->toBe(30, $scene)
-            ->and(DB::table('plan_line_audios')->where('scene_id', $scene)->where('line_ref', 'like', 'p%')->count())->toBe(6)
-            ->and(DB::table('plan_line_audios')->where('scene_id', $scene)->where('line_ref', 'like', 'v%')->count())->toBe(8);
+    expect($output)->toContain('after: partner lines 0, learner lines 0, phrases 0, fillers 0, words 0')
+        ->and($output)->toContain('bought: 40 lines')
+        ->and($after['usages'])->not->toBeEmpty();
+    foreach ($after as $kind => $urls) {
+        expect($urls)->not->toBeEmpty()
+            ->and(array_filter($urls, static fn (mixed $u): bool => ! is_string($u)))->toBe([], "{$kind} without a voice");
     }
-    $partnerFirst = DB::table('plan_line_audios')->where('scene_id', $sceneA)->where('line_ref', 'x2')->first();
-    expect($partnerFirst->voice_key)->toBe(windowVoiceKey('female'));
+
+    $vendor->calls = 0;
+    Artisan::call('plan:speak-backfill');
+    expect($vendor->calls)->toBe(0)->and(DB::table('plan_line_audios')->count())->toBe(40);
 });
 
-// Canon (DAY-UI-3): «при 429 — очередь ждёт до следующего окна, не падает; телефон тем временем читает своим
-// голосом». Catches a daily refusal knocked on every minute and failed when the tries run out.
-it('waits for the vendor’s next window on a daily refusal and fails nothing — the phone reads meanwhile', function () {
+// Canon (TTS-2): «в plan_line_audios — символы и стоимость по тарифу модели; сводка на день: символы, $, число вызовов».
+// Catches a row without its bill, a price that is not the vendor's charge, and calls miscounted.
+it('writes the characters, their price, the credits debited and the call at every line, and plan:speak-report adds up a day by kind', function () {
+    windowVoice();
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 2])['id'];
+    $rows = DB::table('plan_line_audios')->get();
+
+    expect($rows)->toHaveCount(40);
+    foreach ($rows as $row) {
+        expect($row->characters)->toBeGreaterThan(0, $row->line_ref)
+            ->and($row->credits)->toBeGreaterThan(0, $row->line_ref)
+            // The price is the vendor's charge — credits at the account's credit price — not the characters.
+            ->and($row->cost_usd)->toBe(number_format($row->credits * 0.20 / 1000, 6, '.', ''), $row->line_ref)
+            ->and($row->request_id)->not->toBeNull();
+    }
+    expect($rows->pluck('request_id')->unique())->toHaveCount(40);
+
+    Artisan::call('plan:speak-report', ['--plan' => $id, '--day' => '1']);
+    $report = Artisan::output();
+    $characters = (int) $rows->sum('characters');
+    $credits = (int) $rows->sum('credits');
+    expect($report)->toContain('partner lines')->toContain('learner lines')->toContain('fillers')->toContain('words')
+        ->and($report)->toMatch('/total\s*\|\s*40\s*\|\s*'.$characters.'\s*\|\s*\$'.preg_quote(number_format($credits * 0.20 / 1000, 4, '.', ''), '/').'\s*\|\s*'.$credits.'\s*\|\s*40\s*\|/');
+
+    Artisan::call('plan:speak-report');
+    expect(Artisan::output())->toContain($id);
+});
+
+// Canon (TTS-2): «401/402 (нет баланса) → job в failed с кодом, письмо в лог, окно дня читает голосом телефона; при 402
+// очередь не падает». Catches a refusal of the account retried as if it were the concurrency limit, one that throws past
+// the job and takes the day's photos down with it, and a day that does not open.
+it('fails the voice job with the vendor’s code when the account refuses (402), goes on with the queue, and the day reads with the phone’s voice', function () {
+    $vendor = windowVoice(FakeSpeechSynthesizer::NO_CREDITS);
+    Log::spy();
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 2])['id'];
     $sceneId = (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
-    windowVoice(FakeSpeechSynthesizer::DAILY_LIMIT);
+
+    // The queue went on: the photo job after the voice job ran, the day is ready and opens.
+    expect(DB::table('plan_scenes')->where('id', $sceneId)->value('lesson_status'))->toBe('ready')
+        ->and(DB::table('plan_scenes')->where('id', $sceneId)->value('image_url'))->not->toBeNull()
+        ->and($vendor->calls)->toBe(1)
+        ->and(DB::table('plan_line_audios')->count())->toBe(0);
+    $urls = windowVoiceUrls(windowOf($this, $token, $id, 1)['program']);
+    expect(array_filter(array_merge(...array_values($urls))))->toBe([]);
+    Log::shouldHaveReceived('error')->withArgs(static fn (string $message, array $context): bool => str_contains($message, 'quota_exceeded') && $context['code'] === 'quota_exceeded' && $context['scene_id'] === $sceneId);
+
+    // The job itself: failed with the code, never released to knock again.
+    $queueJob = Mockery::mock(Job::class);
+    $queueJob->shouldReceive('fail')->once()->withArgs(static fn ($e): bool => $e instanceof SpeechAccountError && $e->vendorCode === 'quota_exceeded');
+    $queueJob->shouldNotReceive('release');
+    $job = new VoiceSceneJob($sceneId);
+    $job->setJob($queueJob);
+    $job->handle(app(VoiceSceneHandler::class));
+});
+
+// Canon (TTS-2): «429 / лимит одновременности → повтор с задержкой, очередь не падает». Catches a transient refusal that
+// fails the job.
+it('waits out the vendor’s concurrency limit — the job goes back on the queue and fails nothing', function () {
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 2])['id'];
+    $sceneId = (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
+    windowVoice(FakeSpeechSynthesizer::RATE_LIMITED);
     $released = [];
     $queueJob = Mockery::mock(Job::class);
     $queueJob->shouldReceive('release')->andReturnUsing(function (int $delay) use (&$released): void {
@@ -428,10 +473,99 @@ it('waits for the vendor’s next window on a daily refusal and fails nothing �
     $job->handle(app(VoiceSceneHandler::class));
 
     expect($released)->toHaveCount(1)
-        ->and($released[0])->toBeGreaterThanOrEqual(3600)->toBeLessThanOrEqual(3620)
-        ->and(VoiceSceneJob::waitFor(TransientSpeechError::rateLimited('gemini', 49480, true)))->toBeGreaterThanOrEqual(49480)
-        ->and(VoiceSceneJob::waitFor(TransientSpeechError::rateLimited('gemini', null)))->toBeLessThan(90)
-        ->and(windowOf($this, $token, $id, 1)['program']['dialogue']['items'][0]['learner']['audio_url'])->toBeNull();
+        ->and($released[0])->toBeGreaterThanOrEqual(30)->toBeLessThanOrEqual(40)
+        ->and(VoiceSceneJob::waitFor(TransientSpeechError::rateLimited('vendor', 7200)))->toBeLessThanOrEqual(3610);
+});
+
+// Canon (TTS-2): «при остатке кредитов плана < 10 % — стоп очереди и письмо в лог (баланс — по API аккаунта, если отдаёт;
+// иначе по накопленному счётчику)». Catches a fuse that does not stop the queue, and one blind when the vendor says nothing.
+it('stops buying below a tenth of the account left — by the vendor’s count, else by the lines stored this month — and says so', function () {
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 2])['id'];
+    $sceneId = (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
+    $vendor = windowVoice(balance: new SpeechBalance(used: 9100, limit: 10000, resetsAtUnix: null));
+    Log::spy();
+
+    (new VoiceSceneJob($sceneId))->handle(app(VoiceSceneHandler::class));
+    Artisan::call('plan:speak-backfill');
+
+    expect($vendor->calls)->toBe(0)
+        ->and(Artisan::output())->toContain('Stopped by the voice fuse')->toContain('900 of 10000 credits left')
+        ->and(DB::table('plan_line_audios')->count())->toBe(0);
+    Log::shouldHaveReceived('error')->withArgs(static fn (string $message, array $context): bool => str_contains($message, 'voice fuse') && $context['remaining'] === 900);
+
+    // The vendor would not say: the credits of the lines stored since the start of the month count against the plan size.
+    $vendor->balance = null;
+    config(['generation.speech.monthly_credits' => 1000]);
+    app()->forgetInstance(VoiceSceneHandler::class);
+    DB::table('plan_line_audios')->insert([
+        'id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(), 'scene_id' => $sceneId, 'user_id' => (string) DB::table('plan_scenes')->where('id', $sceneId)->value('user_id'),
+        'line_ref' => 'v12', 'voice_key' => windowVoiceKey('learner', 'male'), 'format' => 'mp3', 'path' => 'plan-audio/x.mp3', 'bytes' => 1,
+        'characters' => 1900, 'cost_usd' => '0.190000', 'credits' => 950, 'request_id' => 'earlier', 'created_at' => now(),
+    ]);
+    Artisan::call('plan:speak-backfill');
+    expect($vendor->calls)->toBe(0)->and(Artisan::output())->toContain('50 of 1000 credits left');
+});
+
+// Canon (TTS-2): «порядок: план Дена → сцены симулятора → остальное». Catches a backfill that serves a QA account before a
+// real learner, and a --plan that buys anything but the plans named.
+it('backfills real learners before QA accounts, and --plan only the plans named', function () {
+    config(['qa.dev_login' => true]);
+    [$qaUser, $qaToken] = planLearner();
+    DB::table('users')->where('id', $qaUser->id)->update(['is_qa' => true]);
+    $qaPlan = planCreate($this, $qaToken, ['days_total' => 2])['id'];
+    [, $token] = planLearner();
+    // The guard remembers the first bearer's user between requests of one test.
+    app('auth')->forgetGuards();
+    $plan = planCreate($this, $token, ['days_total' => 2])['id'];
+    // The QA plan is the newer one — and still comes second.
+    DB::table('plans')->where('id', $qaPlan)->update(['created_at' => now()->addMinute()]);
+    $sceneOf = static fn (string $id): string => (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
+    windowVoice();
+    $store = new class(app(LineAudioStore::class)) implements LineAudioStore
+    {
+        /** @var list<string> the scene of every line stored, in the order stored */
+        public array $scenes = [];
+
+        public function __construct(private readonly LineAudioStore $inner) {}
+
+        public function forScenes(array $sceneIds, array $voiceKeys): array
+        {
+            return $this->inner->forScenes($sceneIds, $voiceKeys);
+        }
+
+        public function find(string $audioId): ?\App\Modules\Plan\Application\Dto\LineAudioRow
+        {
+            return $this->inner->find($audioId);
+        }
+
+        public function put(PlanSceneId $sceneId, string $lineRef, \App\Modules\Plan\Application\Dto\SpokenAudio $audio): ?\App\Modules\Plan\Application\Dto\LineAudioRow
+        {
+            $this->scenes[] = $sceneId->value;
+
+            return $this->inner->put($sceneId, $lineRef, $audio);
+        }
+
+        public function read(\App\Modules\Plan\Application\Dto\LineAudioRow $row): ?string
+        {
+            return $this->inner->read($row);
+        }
+
+        public function creditsSince(\DateTimeImmutable $since): int
+        {
+            return $this->inner->creditsSince($since);
+        }
+    };
+    app()->instance(LineAudioStore::class, $store);
+
+    Artisan::call('plan:speak-backfill', ['--plan' => [$qaPlan]]);
+    expect(array_values(array_unique($store->scenes)))->toBe([$sceneOf($qaPlan)]);
+
+    DB::table('plan_line_audios')->delete();
+    $store->scenes = [];
+    Artisan::call('plan:speak-backfill');
+
+    expect(array_values(array_unique($store->scenes)))->toBe([$sceneOf($plan), $sceneOf($qaPlan)]);
 });
 
 // ── DAY-UI-3 · the photos: with the lesson, all at once, never by the bare word ─────────────────────

@@ -46,7 +46,7 @@ tables: plans=250 scenes=1000 days=1500 cards=100500 terms=14000 line_audios=300
         Execution Time: 0.147 ms
   [17] 0.8 ms  select * from "plan_line_audios" where "scene_id" in (?) and "voice_key" in (?, ?)
         Index Scan using plan_line_audios_uidx on plan_line_audios  (cost=0.41..49.20 rows=24 width=204) (actual time=0.022..0.028 rows=30 loops=1)
-        Index Cond: ((scene_id = '01M2H445CTFT81T8DVZCRX3Z5G'::bpchar) AND ((voice_key)::text = ANY ('{gemini:gemini-2.5-flash-preview-tts:Aoede:p90,gemini:gemini-2.5-flash-preview-tts:Puck:p90}'::text[])))
+        Index Cond: ((scene_id = '01M2H445CTFT81T8DVZCRX3Z5G'::bpchar) AND ((voice_key)::text = ANY ('{<ключ женского голоса>,<ключ мужского голоса>}'::text[])))
         Buffers: shared hit=4
         Execution Time: 0.035 ms
   [18] 0.7 ms  select * from "plan_terms" where "scene_id" in (?) order by "scene_id" asc, "position" asc
@@ -90,7 +90,7 @@ tables: plans=250 scenes=1000 days=1500 cards=100500 terms=14000 line_audios=300
         Execution Time: 0.086 ms
   [10] 0.6 ms  select * from "plan_line_audios" where "scene_id" in (?) and "voice_key" in (?, ?)
         Index Scan using plan_line_audios_uidx on plan_line_audios  (cost=0.41..49.20 rows=24 width=204) (actual time=0.023..0.030 rows=30 loops=1)
-        Index Cond: ((scene_id = '01M2H445D8KBWABSA4V0VZJMXG'::bpchar) AND ((voice_key)::text = ANY ('{gemini:gemini-2.5-flash-preview-tts:Aoede:p90,gemini:gemini-2.5-flash-preview-tts:Puck:p90}'::text[])))
+        Index Cond: ((scene_id = '01M2H445D8KBWABSA4V0VZJMXG'::bpchar) AND ((voice_key)::text = ANY ('{<ключ женского голоса>,<ключ мужского голоса>}'::text[])))
         Buffers: shared hit=14
         Execution Time: 0.035 ms
   [11] 0.2 ms  select * from "plan_terms" where "scene_id" in (?) order by "scene_id" asc, "position" asc
@@ -146,7 +146,7 @@ tables: plans=250 scenes=1000 days=1500 cards=100500 terms=14000 line_audios=300
         Execution Time: 0.023 ms
   [12] 0.7 ms  select * from "plan_line_audios" where "scene_id" in (?, ?) and "voice_key" in (?, ?)
         Index Scan using plan_line_audios_uidx on plan_line_audios  (cost=0.41..94.97 rows=48 width=204) (actual time=0.027..0.038 rows=60 loops=1)
-        Index Cond: ((scene_id = ANY ('{01M2H445CTFT81T8DVZCRX3Z5G,01M2H445D8KBWABSA4V0VZJMXG}'::bpchar[])) AND ((voice_key)::text = ANY ('{gemini:gemini-2.5-flash-preview-tts:Aoede:p90,gemini:gemini-2.5-flash-preview-tts:Puck:p90}'::text[])))
+        Index Cond: ((scene_id = ANY ('{01M2H445CTFT81T8DVZCRX3Z5G,01M2H445D8KBWABSA4V0VZJMXG}'::bpchar[])) AND ((voice_key)::text = ANY ('{<ключ женского голоса>,<ключ мужского голоса>}'::text[])))
         Buffers: shared hit=15
         Execution Time: 0.046 ms
   [13] 0.4 ms  select * from "plan_terms" where "scene_id" in (?, ?) order by "scene_id" asc, "position" asc
