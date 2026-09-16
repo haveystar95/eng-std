@@ -44,8 +44,8 @@ e2e-базы `wordtrainer_e2e_test` (план «врач», QA `qa-gen2a-doctor@
 - **После сдачи** (§14, §15): на экранах сессии нет QA-кнопки «пожаловаться»; у «Своего окна» живая строка под чипами без
   наложений; 32-1 / 32-7 / 32-8 / 32-9 переделаны по телефону; шесть звуков владельца системными звуками; ранняя остановка
   записи и пословная склейка; порядок реплик в окне дня по виду обмена; контракт параллельной SESSION-1e подхвачен
-  (`word_listen` на родном, `frames[].said`). Ворота — analyze **0**, тесты **1 440 зелёных**; релиз **1.0.0 (3)** собран, на
-  телефон не установлен — телефон недоступен (§15.7).
+  (`word_listen` на родном, `frames[].said`). Ворота — analyze **0**, тесты **1 440 зелёных**; на телефоне — **1.0.0 (3)**
+  (§15.7).
 
 ## §2. Вид → кадр → виджет → зачёт → чем проверен
 
@@ -299,7 +299,7 @@ e2e-базы `wordtrainer_e2e_test` (план «врач», QA `qa-gen2a-doctor@
 (Denis) (wireless)»), установлено `xcrun devicectl device install app` — на телефоне `com.denis.engstd` **1.0.0 (2)**.
 Приложение на телефоне не запускалось и сессия не проходилась: телефон ходит в основной backend2 (`wordtrainer`), а этот
 наряд основную базу и план Дена не трогает — годится ли день плана Дена для нового контракта карточек, здесь не проверено.
-После доводки — сборка **1.0.0 (3)** собрана, установка ждёт доступного телефона (§15.7).
+После доводки — на телефоне **1.0.0 (3)** (§15.7).
 
 ## §11. Что не проверено и что замечено
 
@@ -573,10 +573,10 @@ learner» (три вида в одном окне, порядок пузырей
   `session_sounds_setting_test.dart` — 6, `qa_report_hidden_test.dart` — 1, `session_contract_test.dart` — 11 (было 7),
   `speech_coverage_test.dart` — 8, `live_line_test.dart` — 7, `day_window_canon_test.dart` — +1.
 - Телефон: `pubspec.yaml` `1.0.0+3`; релиз на итоговом коде собран каноничной сборкой с `DEVELOPER_DIR` беты Xcode 27
-  (`flutter build ios --release`, 82 с, `Runner.app` 50.3 MB). **Установить не удалось**: «iPhone (Denis)» в `xcrun devicectl
-  list devices` — `unavailable`, установка — `CoreDeviceError 4016` (нет доверенного соединения; нужен кабель или телефон в
-  сети). Установка, когда телефон доступен: `xcrun devicectl device install app --device BD079C78-4F7D-57BC-88DC-4214DF357282
-  mobile/build/ios/iphoneos/Runner.app`, проверка — `devicectl device info apps --bundle-id com.denis.engstd` → 1.0.0 (3).
+  (`flutter build ios --release`, 82 с, `Runner.app` 50.3 MB, собран после последней правки кода). Первая попытка установки —
+  «iPhone (Denis)» в `xcrun devicectl list devices` был `unavailable`, установка упала `CoreDeviceError 4016`; когда владелец
+  вывел телефон в сеть (`available (paired)`) — `xcrun devicectl device install app` прошла, `devicectl device info apps
+  --bundle-id com.denis.engstd` — **Eng Std 1.0.0 (3)**. Приложение на телефоне не запускалось, сессия не проходилась.
 
 ### 15.8. Что не проверено
 
