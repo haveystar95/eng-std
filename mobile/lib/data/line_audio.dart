@@ -370,9 +370,9 @@ class LineAudioCache {
     }
   }
 
-  /// Сыграть файл по пути — сессия дня (наряд SESSION-1b) знает звук карточки по АДРЕСУ, а не по
-  /// тексту. [rate] — темп воспроизведения (0.85× у «Повтори вслух»). Ждёт конца файла; false — играть
-  /// нечем (не iOS, файл пропал), зовите системный голос.
+  /// Play a file by path — the day session (work order SESSION-1b) knows a card's sound by its URL, not by
+  /// its text. [rate] — playback rate (0.85× on "Say it aloud"). Waits for the file to end; false — nothing
+  /// to play with (not iOS, the file is gone), call the system voice.
   Future<bool> playFile(String path, {double rate = 1.0}) async {
     try {
       await _channel.invokeMethod<void>('play', {'path': path, if (rate != 1.0) 'rate': rate});

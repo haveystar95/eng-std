@@ -149,8 +149,8 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
       }
       if (!mounted) return;
     }
-    // СЕССИЯ ДНЯ (наряд SESSION-1b): «Начать», «Продолжить» и «Ещё раз» ведут в одну сессию — она сама читает
-    // день и встаёт на первую неотвеченную карточку; день в этой сборке не закрывается.
+    // DAY SESSION (work order SESSION-1b): «Start», «Continue» and «Once more» lead into one session — it reads
+    // the day itself and stops at the first unanswered card; the day does not close in this build.
     await Navigator.of(context).push<void>(
       MaterialPageRoute(builder: (_) => SessionScreen(plan: _plan, number: current.day.number)),
     );

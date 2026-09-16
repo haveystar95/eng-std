@@ -161,6 +161,14 @@ class ProfileScreen extends ConsumerWidget {
               value: settings.soundsEnabled,
               onChanged: (v) => ref.read(appSettingsProvider.notifier).setSoundsEnabled(v),
             ),
+            // «SOUNDS IN THE SESSION» — the owner's six sounds of the day session (polish pass SESSION-1b′), a switch
+            // of its own, on by default.
+            _SwitchRow(
+              label: l.profileRowSessionSounds,
+              hint: l.profileSessionSoundsHint,
+              value: settings.sessionSoundsEnabled,
+              onChanged: (v) => ref.read(appSettingsProvider.notifier).setSessionSoundsEnabled(v),
+            ),
             // «Подсказка произношения». The switch shows the EFFECTIVE value — the stored decision
             // if there is one, otherwise the one the learner's own alphabet implies — so it never
             // reads «off» while the hint is on screen.

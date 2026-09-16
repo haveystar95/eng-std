@@ -45,6 +45,21 @@ class _QaReportOverlayState extends ConsumerState<QaReportOverlay> {
 
   bool _sending = false;
 
+  /// Mounted [QaReportHidden]s — while at least one is mounted, there is no button.
+  final Set<Object> _hiders = {};
+
+  void _hide(Object token) => _afterFrame(() => _hiders.add(token));
+
+  void _unhide(Object token) => _afterFrame(() => _hiders.remove(token));
+
+  /// The set changes after the frame: a screen mounts and unmounts in the middle of a build, and an ancestor
+  /// must not be rebuilt during a build.
+  void _afterFrame(VoidCallback change) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(change);
+    });
+  }
+
   Future<void> _send() async {
     if (_sending) return;
     setState(() => _sending = true);
@@ -114,7 +129,7 @@ class _QaReportOverlayState extends ConsumerState<QaReportOverlay> {
           widget.child,
           // Правый край и середина по высоте: снизу тянется плавающая полоса вкладок, сверху —
           // шапки экранов, а середина правого края свободна на всех экранах серии.
-          if (qa)
+          if (qa && _hiders.isEmpty)
             Positioned(
               right: 0,
               top: MediaQuery.sizeOf(context).height * 0.42,
@@ -141,4 +156,39 @@ class _QaReportOverlayState extends ConsumerState<QaReportOverlay> {
       ),
     );
   }
+}
+
+/// A SCREEN WITHOUT THE REPORT BUTTON: while this widget is mounted there is no button — neither on the screen
+/// nor on its sheets. The day session works this way (work order SESSION-1b, screenshot fixes): the session
+/// canvas does not know the button, and its palette has no red. The app's other screens show the button as
+/// before.
+class QaReportHidden extends StatefulWidget {
+  const QaReportHidden({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<QaReportHidden> createState() => _QaReportHiddenState();
+}
+
+class _QaReportHiddenState extends State<QaReportHidden> {
+  /// The report overlay above the navigator; captured up front — ancestors can no longer be looked up in
+  /// `dispose`.
+  _QaReportOverlayState? _overlay;
+
+  @override
+  void initState() {
+    super.initState();
+    _overlay = context.findAncestorStateOfType<_QaReportOverlayState>();
+    _overlay?._hide(this);
+  }
+
+  @override
+  void dispose() {
+    _overlay?._unhide(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

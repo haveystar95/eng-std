@@ -1,25 +1,26 @@
-/// ОЧЕРЕДЬ СЕССИИ — какая карточка сейчас и что осталось (наряд SESSION-1b, разд. 1).
+/// SESSION QUEUE — which card is current and what is left (work order SESSION-1b, section 1).
 ///
-/// Очередь этапа — его карточки без `result`, по `position`. Локального прогресса нет: очередь строится
-/// из ответа сервера и меняется только его же ответами — отвеченная карточка заменяется карточкой из
-/// ответа, копия после первого провала (`requeued`) встаёт в конец этапа (у неё следующая позиция).
+/// A stage's queue is its cards without `result`, by `position`. There is no local progress: the queue is built
+/// from the server's response and changes only through its own responses — an answered card is replaced by the
+/// card from the response, the copy after the first failure (`requeued`) goes to the end of the stage (it has the
+/// next position).
 ///
-/// Счёт шапки и бусины — по ЕДИНИЦАМ (`unit.ref`), не по карточкам: «ещё 4 слова».
+/// The header count and the beads are by UNITS (`unit.ref`), not by cards: «4 words left».
 library;
 
 import '../plan_models.dart';
 import 'session_day.dart';
 import 'session_models.dart';
 
-/// Бусина единицы под шапкой (30-2).
+/// A unit's bead under the header (30-2).
 enum SessionBead {
-  /// Все карточки единицы в этапе отвечены — шалфей.
+  /// All of the unit's cards in the stage are answered — sage.
   done,
 
-  /// Единица текущей карточки — латунь.
+  /// The current card's unit — brass.
   current,
 
-  /// Впереди — контур.
+  /// Ahead — outline.
   ahead,
 }
 
@@ -29,14 +30,14 @@ class SessionQueue {
 
   final Map<PlanStage, List<SessionCard>> _cards;
 
-  /// Карточки этапа по `position`.
+  /// The stage's cards by `position`.
   List<SessionCard> cardsOf(PlanStage stage) {
     final list = List.of(_cards[stage] ?? const <SessionCard>[]);
     list.sort((a, b) => a.position.compareTo(b.position));
     return list;
   }
 
-  /// Первая неотвеченная карточка этапа — с неё этап продолжается.
+  /// The stage's first unanswered card — the stage continues from it.
   SessionCard? nextIn(PlanStage stage) {
     for (final c in cardsOf(stage)) {
       if (!c.isAnswered) return c;
@@ -44,7 +45,7 @@ class SessionQueue {
     return null;
   }
 
-  /// У этапа есть карточки, и все отвечены.
+  /// The stage has cards, and all of them are answered.
   bool isDone(PlanStage stage) {
     final cards = _cards[stage] ?? const <SessionCard>[];
     return cards.isNotEmpty && cards.every((c) => c.isAnswered);
@@ -52,7 +53,7 @@ class SessionQueue {
 
   bool hasCards(PlanStage stage) => (_cards[stage] ?? const <SessionCard>[]).isNotEmpty;
 
-  /// Первый этап дня, где ещё есть что отвечать; null — всё отвечено.
+  /// The day's first stage that still has something to answer; null — everything is answered.
   PlanStage? firstOpenStage() {
     for (final s in PlanStage.known) {
       if (nextIn(s) != null) return s;
@@ -60,7 +61,7 @@ class SessionQueue {
     return null;
   }
 
-  /// Этап после [stage] в порядке дня, у которого есть карточки.
+  /// The stage after [stage] in the day's order that has cards.
   PlanStage? stageAfter(PlanStage stage) {
     final known = PlanStage.known;
     for (var i = known.indexOf(stage) + 1; i < known.length; i++) {
@@ -69,13 +70,13 @@ class SessionQueue {
     return null;
   }
 
-  /// Ответ сервера: карточка заменяет свою прежнюю копию; копия после провала — в конец этапа.
+  /// The server's response: a card replaces its previous copy; the copy after a failure — to the end of the stage.
   void apply({SessionCard? answered, SessionCard? requeued}) {
     if (answered != null) _put(answered);
     if (requeued != null) _put(requeued);
   }
 
-  /// Отметить карточку отвеченной до ответа сервера (ответ ушёл в очередь отправки).
+  /// Mark a card answered before the server's response (the answer went into the send queue).
   void markAnswered(SessionCard card, SessionResult result, int attempts) {
     _put(SessionCard(
       id: card.id,
@@ -104,7 +105,7 @@ class SessionQueue {
     }
   }
 
-  /// Единицы этапа в порядке первого появления.
+  /// The stage's units in order of first appearance.
   List<String> unitsOf(PlanStage stage) {
     final seen = <String>{};
     return [
@@ -113,13 +114,13 @@ class SessionQueue {
     ];
   }
 
-  /// Единица закрыта в этапе — все её карточки отвечены.
+  /// The unit is closed in the stage — all of its cards are answered.
   bool unitDone(PlanStage stage, String ref) => cardsOf(stage).where((c) => c.unit.ref == ref).every((c) => c.isAnswered);
 
-  /// «ещё N слов» — единицы, у которых в этапе осталась неотвеченная карточка (текущая тоже).
+  /// «N words left» — units that still have an unanswered card in the stage (the current one too).
   int unitsLeft(PlanStage stage) => unitsOf(stage).where((ref) => !unitDone(stage, ref)).length;
 
-  /// Бусины этапа по единицам: пройденные шалфеем, текущая латунью.
+  /// The stage's beads by unit: completed ones in sage, the current one in brass.
   List<SessionBead> beads(PlanStage stage, {String? currentUnit}) => [
     for (final ref in unitsOf(stage))
       if (ref == currentUnit && !unitDone(stage, ref))
@@ -130,14 +131,14 @@ class SessionQueue {
         SessionBead.ahead,
   ];
 
-  /// Полоса шапки: доля отвеченных карточек этапа.
+  /// The header bar: the share of the stage's cards that are answered.
   double progress(PlanStage stage) {
     final cards = cardsOf(stage);
     if (cards.isEmpty) return 0;
     return cards.where((c) => c.isAnswered).length / cards.length;
   }
 
-  /// Единицы этапа, которые вернутся на следующий день: у их карточки сервер поставил `returns`.
+  /// The stage's units that will return the next day: the server set `returns` on their card.
   List<String> returningUnits(PlanStage stage) {
     final refs = <String>{};
     for (final c in cardsOf(stage)) {
@@ -146,7 +147,7 @@ class SessionQueue {
     return [for (final ref in unitsOf(stage)) if (refs.contains(ref)) ref];
   }
 
-  /// Первая карточка единицы в этапе, у которой есть [T], — отсюда подписи единицы (слово, фраза, фото).
+  /// The unit's first card in the stage that has [T] — the unit's captions come from here (word, phrase, photo).
   T? payloadOfUnit<T extends CardPayload>(PlanStage stage, String ref) {
     for (final c in cardsOf(stage)) {
       if (c.unit.ref == ref && c.payload is T) return c.payload as T;

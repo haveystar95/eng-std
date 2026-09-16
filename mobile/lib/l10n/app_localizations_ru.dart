@@ -3484,6 +3484,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileSoundsHint => 'Верно · неверно · этап закрыт · день закрыт';
 
   @override
+  String get profileRowSessionSounds => 'Звуки в сессии';
+
+  @override
+  String get profileSessionSoundsHint => 'Верно · мимо · запись · этап пройден';
+
+  @override
   String dayCards(int n) {
     String _temp0 = intl.Intl.pluralLogic(
       n,
@@ -3632,7 +3638,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskInsertWord => 'Вставь слово в окно';
 
   @override
-  String get planSessionTaskRememberPhrase => 'Запомни фразу';
+  String get planSessionTaskLookListen => 'Посмотри и послушай';
+
+  @override
+  String get planSessionChangeable => 'эту часть можно менять';
 
   @override
   String get planSessionTaskAssemblePhrase => 'Собери фразу';
@@ -3644,13 +3653,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskSayPhrase => 'Скажи фразу вслух';
 
   @override
-  String get planSessionTaskOtherSlot => 'Скажи с другим окном';
+  String get planSessionTaskSayWhole => 'Скажи целиком — окно по-русски ниже';
 
   @override
-  String get planSessionTaskReply => 'Ответь собеседнику';
+  String get planSessionTaskWhatAnswer => 'Что ты ответишь?';
 
   @override
-  String get planSessionTaskOwnSlot => 'Скажи своё';
+  String get planSessionTaskSayOwn => 'Скажи целиком — значение выбери сам';
 
   @override
   String get planSessionBrowWord => 'Слово';

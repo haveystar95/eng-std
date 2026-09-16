@@ -12,8 +12,8 @@ import '../../../../data/providers.dart';
 import '../../../../ui/scene_circle.dart';
 import 'session_bits.dart';
 
-/// ШАПКА СЕССИИ (кадр 30-2): крестик, имя этапа, полоса прогресса, справа словами «ещё N слов», под ней
-/// бусины по единицам — пройденные шалфеем, текущая латунью, впереди контуром. Минут в шапке нет.
+/// SESSION HEADER (canvas 30-2): cross, stage name, progress bar, on the right in words «N words left», below it
+/// beads per unit — done ones in sage, the current one in brass, ahead — outlined. No minutes in the header.
 class SessionHeader extends StatelessWidget {
   const SessionHeader({
     super.key,
@@ -26,10 +26,10 @@ class SessionHeader extends StatelessWidget {
 
   final String stageName;
 
-  /// Доля отвеченных карточек этапа.
+  /// The share of the stage's cards that are answered.
   final double progress;
 
-  /// «ещё 4 слова».
+  /// «4 words left».
   final String left;
   final List<SessionBead> beads;
   final VoidCallback onClose;
@@ -104,7 +104,7 @@ class SessionHeader extends StatelessWidget {
   }
 }
 
-/// На сколько поле касания крестика (44) выходит за его значок (24) влево.
+/// How far the cross's tap area (44) extends beyond its icon (24) to the left.
 const double kSessionCloseInset = 10;
 
 class _Bead extends StatelessWidget {
@@ -132,18 +132,18 @@ class _Bead extends StatelessWidget {
   }
 }
 
-/// Крестик / стрелка назад 24 — поле касания 44.
+/// Cross / back arrow 24 — tap area 44.
 class SessionCloseButton extends StatelessWidget {
   const SessionCloseButton({super.key, required this.onTap, required this.label, this.back = false});
 
   final VoidCallback onTap;
   final String label;
 
-  /// Стрелка «назад» (вход в этап 30-1) вместо крестика.
+  /// A «back» arrow (stage entry 30-1) instead of the cross.
   final bool back;
 
-  /// Поле касания 44 в ширину (значок 24 стоит на кромке поля экрана, поле касания выходит влево на
-  /// [kSessionCloseInset]) и 24 в высоту строки шапки. Вызывающий ставит кнопку с отступом
+  /// Tap area 44 wide (the 24 icon sits on the edge of the screen margin, the tap area extends left by
+  /// [kSessionCloseInset]) and 24 high, the height of the header row. The caller places the button with an inset of
   /// `kSessionGutter - kSessionCloseInset`.
   @override
   Widget build(BuildContext context) => Semantics(
@@ -161,8 +161,8 @@ class SessionCloseButton extends StatelessWidget {
   );
 }
 
-/// ПОЛОСА СЦЕНЫ (кадр 30-2b): фото сцены 32, «Запись к врачу · Регистратор» (роль в именительном, как отдал
-/// сервер), кружок ученика 32 справа. Не нажимается — это напоминание.
+/// SCENE STRIP (canvas 30-2b): scene photo 32, «Doctor's appointment · Receptionist» (native; the role in the
+/// nominative, as the server gave it), the learner's circle 32 on the right. Not tappable — it is a reminder.
 class SessionSceneStrip extends ConsumerWidget {
   const SessionSceneStrip({super.key, required this.scene});
 
@@ -213,7 +213,7 @@ class SessionSceneStrip extends ConsumerWidget {
   }
 }
 
-/// БАННЕР «НЕТ СВЯЗИ» — ответ ждёт отправки; следующая карточка не откроется, пока он не ушёл.
+/// «NO CONNECTION» BANNER — the answer is waiting to be sent; the next card will not open until it has gone out.
 class SessionOfflineBanner extends StatelessWidget {
   const SessionOfflineBanner({super.key});
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -10,6 +11,7 @@ import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/plan/session/speech_coverage.dart';
+import '../../../../data/plan/session/speech_stop.dart';
 import '../../../../data/speech/speech_turn.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_choice.dart';
@@ -20,9 +22,9 @@ import '../session_texts.dart';
 import 'card_kit.dart';
 import 'word_cards.dart' show kAutoplayDelay, kRepeatRate;
 
-/// ФРАЗЫ — серия 32 канвы: каркас с окном, по виджету на вид.
+/// PHRASES — canvas series 32: a frame with a slot, one widget per kind.
 
-/// Чтение каркаса с наполнением: `___` в чтении заменено чтением наполнения.
+/// Reading of the frame with a filler: `___` in the reading is replaced by the filler's reading.
 String? _pronunciation(CardFrame frame, CardFiller? filler) {
   final base = frame.framePronunciationNative;
   if (base == null) return null;
@@ -30,7 +32,7 @@ String? _pronunciation(CardFrame frame, CardFiller? filler) {
   return fp == null ? base : base.replaceFirst(kSlotMark, fp);
 }
 
-/// Перевод каркаса с наполнением — фраза на родном (`native_line`), иначе каркас на родном.
+/// Translation of the frame with a filler — the native phrase (`native_line`), otherwise the native frame.
 String _native(CardFrame frame, CardFiller? filler) {
   if (filler == null) return frame.frameNative;
   return filler.nativeLine ?? frame.frameNative.replaceFirst(kSlotMark, filler.native);
@@ -42,8 +44,8 @@ void _autoplay(State state, CardEnv env, CardAudio? audio, String fallback, Obje
   });
 }
 
-/// ПЛАШКА ФРАЗЫ (32-1, 32-3…32-9) — `#EFEBE3` во всё поле листа, фраза Literata 30 по левому краю,
-/// «прослушать» 44 в правом нижнем углу.
+/// PHRASE PLATE (32-1, 32-3…32-9) — `#EFEBE3` across the sheet's whole field, the phrase in Literata 30
+/// left-aligned, «Listen» 44 in the bottom-right corner.
 class _PhrasePlate extends StatelessWidget {
   const _PhrasePlate({required this.child, this.listen, this.height = 208, this.topLeft});
 
@@ -52,7 +54,7 @@ class _PhrasePlate extends StatelessWidget {
   final double height;
   final Widget? topLeft;
 
-  /// Высота плашки не меньше [height]; длинная фраза её растит — текст не режется.
+  /// The plate's height is at least [height]; a long phrase grows it — the text is not clipped.
   @override
   Widget build(BuildContext context) => ColoredBox(
     color: AppColors.ground,
@@ -71,7 +73,7 @@ class _PhrasePlate extends StatelessWidget {
   );
 }
 
-/// Текстовая часть листа фразы — бровь, чтение, перевод.
+/// The text part of the phrase sheet — eyebrow, reading, translation.
 class _PhraseFooter extends StatelessWidget {
   const _PhraseFooter({required this.eyebrow, this.reading, this.native, this.nativeStyle});
 
@@ -95,7 +97,7 @@ class _PhraseFooter extends StatelessWidget {
   );
 }
 
-/// Лист фразы: плашка сверху и текстовая часть.
+/// The phrase sheet: the plate on top and the text part.
 class _PhraseSheet extends StatelessWidget {
   const _PhraseSheet({required this.plate, required this.footer});
 
@@ -109,14 +111,16 @@ class _PhraseSheet extends StatelessWidget {
   );
 }
 
-/// Ряд чипов наполнений 40 (выбранный — чернила).
+/// A row of filler chips 40: the selected one — ink; [neutral] — paper with an outline, they do not darken when
+/// selected (32-1, 32-9 — polish pass SESSION-1b′).
 class _FillerChips extends StatelessWidget {
-  const _FillerChips({required this.fillers, required this.selected, required this.onTap, this.extra});
+  const _FillerChips({super.key, required this.fillers, required this.selected, required this.onTap, this.extra, this.neutral = false});
 
   final List<CardFiller> fillers;
   final int? selected;
   final ValueChanged<CardFiller>? onTap;
   final Widget? extra;
+  final bool neutral;
 
   @override
   Widget build(BuildContext context) => Wrap(
@@ -128,7 +132,8 @@ class _FillerChips extends StatelessWidget {
           key: ValueKey('chip-${f.index}'),
           text: f.target,
           height: 40,
-          selected: selected == f.index,
+          outlined: neutral,
+          selected: !neutral && selected == f.index,
           onTap: onTap == null ? null : () => onTap!(f),
         ),
       ?extra,
@@ -138,8 +143,10 @@ class _FillerChips extends StatelessWidget {
 
 // ── 32-1 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// ЗНАКОМСТВО С КАРКАСОМ (32-1): каркас с окном, три чипа-наполнения, чтение и перевод; тап по чипу
-/// подставляет наполнение в окно и играет его звук. «Понятно» → `passed`.
+/// FRAME INTRO (32-1) — a lesson card, not a task (polish pass SESSION-1b′, item 3): «Look and listen»; the frame
+/// right away with the filler said in the dialogue in the slot; above the chips, in grey, «this part can change»;
+/// the chips are neutral and do not darken when selected — a tap puts the filler into the slot, voices it and
+/// highlights the slot in sage for 600 ms. «Got it» → `passed`, no reaction sound.
 class PhraseIntroCard extends StatefulWidget {
   const PhraseIntroCard({super.key, required this.env, required this.payload});
 
@@ -151,11 +158,29 @@ class PhraseIntroCard extends StatefulWidget {
 }
 
 class _PhraseIntroCardState extends State<PhraseIntroCard> {
+  /// The filler the learner put in themselves; null — the one said in the dialogue.
   CardFiller? _filler;
+
+  /// The slot is highlighted after a tap on a chip.
+  bool _flash = false;
+  Timer? _flashTimer;
+
+  @override
+  void dispose() {
+    _flashTimer?.cancel();
+    super.dispose();
+  }
 
   void _pick(CardFiller f) {
     final frame = widget.payload.frame;
-    setState(() => _filler = f);
+    _flashTimer?.cancel();
+    setState(() {
+      _filler = f;
+      _flash = true;
+    });
+    _flashTimer = Timer(AppMotion.sessionAutoAdvance, () {
+      if (mounted) setState(() => _flash = false);
+    });
     unawaited(widget.env.voice.play(f.audio, fallback: frame.filledWith(f.target), key: 'chip-${f.index}'));
   }
 
@@ -165,13 +190,13 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
     final env = widget.env;
     final p = widget.payload;
     final frame = p.frame;
-    final f = _filler;
-    final listenAudio = f?.audio ?? p.said.audio;
-    final listenText = f == null ? p.said.textTarget : frame.filledWith(f.target);
+    final shown = _filler ?? frame.filler(p.said.fillerIndex);
+    final listenAudio = _filler?.audio ?? p.said.audio;
+    final listenText = _filler == null ? p.said.textTarget : frame.filledWith(_filler!.target);
     return CardLayout(
       bodyGap: 12,
       fadeStop: 0.34,
-      task: SessionTask(l.planSessionTaskRememberPhrase),
+      task: SessionTask(l.planSessionTaskLookListen),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -179,19 +204,26 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
             plate: _PhrasePlate(
               height: 288,
               listen: CardListen(env: env, audio: listenAudio, fallback: listenText, playKey: 'intro-phrase'),
-              child: frame.hasSlot
-                  ? SessionFrameText.frame(frame, style: AppTextSession.frame, slot: f?.target, look: f == null ? SlotLook.empty : SlotLook.filled)
-                  : SessionFrameText.plain(frame.frameTarget, style: AppTextSession.frame),
+              child: frame.hasSlot && shown != null
+                  ? SessionFrameText.frame(
+                      frame,
+                      style: AppTextSession.frame,
+                      slot: shown.target,
+                      look: _flash ? SlotLook.highlight : SlotLook.filled,
+                    )
+                  : SessionFrameText.plain(frame.hasSlot ? p.said.textTarget : frame.frameTarget, style: AppTextSession.frame),
             ),
             footer: _PhraseFooter(
               eyebrow: l.planSessionBrowFrame,
-              reading: _pronunciation(frame, f),
-              native: _native(frame, f),
+              reading: _pronunciation(frame, shown),
+              native: _native(frame, shown),
             ),
           ),
           if (frame.hasSlot) ...[
-            const SizedBox(height: 24),
-            _FillerChips(fillers: frame.fillers, selected: f?.index, onTap: _pick),
+            const SizedBox(height: 20),
+            Text(l.planSessionChangeable, key: const ValueKey('intro-changeable'), style: AppTextSession.meta),
+            const SizedBox(height: 8),
+            _FillerChips(fillers: frame.fillers, selected: null, neutral: true, onTap: _pick),
           ],
         ],
       ),
@@ -209,9 +241,9 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
 
 // ── 32-2 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// ПЕРЕВОД → СБОРКА (32-2): плитки каркаса и чипы наполнений в одном лотке; окно в строке — пустой чип до
-/// выбора наполнения; «Проверить»; зачёт — слова = `expected.words`, окно на `slot_at`, наполнение =
-/// `expected.filler_index`. Плитки строчные — первое слово собранной строки клиент пишет с заглавной.
+/// TRANSLATION → ASSEMBLY (32-2): the frame's tiles and the filler chips in one tray; the slot in the row is an
+/// empty chip until a filler is chosen; «Check»; pass — words = `expected.words`, the slot at `slot_at`, filler =
+/// `expected.filler_index`. Tiles are lower-case — the client capitalizes the first word of the assembled row.
 class PhraseAssembleCard extends StatefulWidget {
   const PhraseAssembleCard({super.key, required this.env, required this.payload});
 
@@ -268,6 +300,7 @@ class _PhraseAssembleCardState extends State<PhraseAssembleCard> {
     } else {
       AppHaptics.warning();
     }
+    SessionSounds.verdict(correct: ok);
     widget.env.submit(SessionAnswer(
       result: ok ? SessionResult.passed : SessionResult.failed,
       attempts: 1,
@@ -361,7 +394,7 @@ class _PhraseAssembleCardState extends State<PhraseAssembleCard> {
 
 // ── 32-3 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// ОБРАТНЫЙ ПЕРЕВОД (32-3, шаблон 30-9): фраза на цели со звуком и чтением — четыре варианта на родном.
+/// BACK TRANSLATION (32-3, template 30-9): the target phrase with sound and reading — four native options.
 class PhraseChooseBackCard extends StatefulWidget {
   const PhraseChooseBackCard({super.key, required this.env, required this.payload});
 
@@ -401,8 +434,8 @@ class _PhraseChooseBackCardState extends State<PhraseChooseBackCard> with Choice
 
 // ── 32-4 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// ОКНО · ВСТАВЬ НАПОЛНЕНИЕ (32-4): каркас с пустым окном и предложение на родном; четыре наполнения
-/// Literata 22 со своим «прослушать». Верно — окно шалфеем.
+/// SLOT · INSERT THE FILLER (32-4): the frame with an empty slot and the native sentence; four fillers in
+/// Literata 22, each with its own «Listen». Correct — the slot in sage.
 class PhraseSlotCard extends StatefulWidget {
   const PhraseSlotCard({super.key, required this.env, required this.payload});
 
@@ -450,8 +483,8 @@ class _PhraseSlotCardState extends State<PhraseSlotCard> with ChoiceCardState<Ph
 
 // ── 32-5 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// ОКНО НА СЛУХ (32-5): волна вместо фразы, звучит одно наполнение (при открытии и по тапу по волне),
-/// каркас с пустым окном текстом; варианты молчат.
+/// SLOT BY EAR (32-5): a wave instead of the phrase, one filler plays (on opening and on a tap on the wave), the
+/// frame with an empty slot as text; the options are silent.
 class PhraseSlotListenCard extends StatefulWidget {
   const PhraseSlotListenCard({super.key, required this.env, required this.payload});
 
@@ -519,8 +552,8 @@ class _PhraseSlotListenCardState extends State<PhraseSlotListenCard> with Choice
 
 // ── 32-6 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// ПОВТОРИ ВСЛУХ (32-6): образец на 0.85× при открытии, ключ подчёркнут латунью; микрофон; зачёт — покрытие
-/// `expected_text` по `coverage_min`; две попытки без зачёта — `skipped`.
+/// REPEAT ALOUD (32-6): the sample at 0.85× on opening, the key underlined in brass; microphone; pass — coverage of
+/// `expected_text` by `coverage_min`; two attempts without a pass — `skipped`.
 class PhraseRepeatCard extends StatefulWidget {
   const PhraseRepeatCard({super.key, required this.env, required this.payload});
 
@@ -556,7 +589,7 @@ class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState
     super.dispose();
   }
 
-  /// Ключ в строке — без учёта регистра; не нашёлся — без подчёркивания.
+  /// The key in the line — case-insensitive; not found — no underline.
   TextRange? get _keyRange {
     final key = widget.payload.key;
     if (key == null) return null;
@@ -594,8 +627,11 @@ class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState
 
 // ── 32-7 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// СКАЖИ С ДРУГИМ ОКНОМ (32-7): в окне — задание на родном курсивом, звука у листа нет; зачёт — покрытие
-/// каркаса И все слова `slot_expected`; при зачёте каркас и окно подсвечиваются раздельно.
+/// SAY IT WITH ANOTHER SLOT (32-7, polish pass SESSION-1b′, item 2): task line — «Say it whole — the slot's
+/// meaning is below»; the slot in the English line is EMPTY (brass outline 96 × 30), there is no native text inside
+/// the line; under the phrase, in the «Slot» block, — the whole native sentence, the piece for the slot in bold ink,
+/// the rest in grey. The sheet has no sound. Pass — coverage of the frame AND all the words of `slot_expected`; on a
+/// pass the frame is in sage, the slot — what was heard, in sage.
 class PhraseOtherSlotCard extends StatefulWidget {
   const PhraseOtherSlotCard({super.key, required this.env, required this.payload});
 
@@ -609,6 +645,9 @@ class PhraseOtherSlotCard extends StatefulWidget {
 class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCardState<PhraseOtherSlotCard> {
   ({bool frame, bool slot})? _parts;
 
+  /// What went into the slot on a pass — the heard words beyond the frame.
+  String? _heardSlot;
+
   @override
   CardEnv get env => widget.env;
 
@@ -618,9 +657,15 @@ class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCar
   @override
   bool accepts(String heard) {
     final parts = SessionRules.otherSlotParts(widget.payload, heard, env.articles);
-    setState(() => _parts = parts);
+    setState(() {
+      _parts = parts;
+      _heardSlot = _slotWordsOf(heard, widget.payload.frame, widget.payload.slotExpected);
+    });
     return parts.frame && parts.slot;
   }
+
+  @override
+  bool wouldAccept(String heard) => SessionRules.voiceAccepted(widget.payload, heard, env.articles);
 
   @override
   void initState() {
@@ -640,35 +685,97 @@ class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCar
     if (noMic != null) return noMic;
     final l = AppLocalizations.of(context);
     final p = widget.payload;
-    final asked = p.frame.filler(p.fillerIndex);
     final parts = done && !skippedAfterMisses ? _parts : null;
+    final task = nativeTaskOf(p);
     return CardLayout(
       bodyGap: 12,
       centerBody: true,
       fadeStop: 0.30,
-      task: SessionTask(l.planSessionTaskOtherSlot),
+      task: SessionTask(l.planSessionTaskSayWhole),
       body: _PhraseSheet(
         plate: _PhrasePlate(
           child: SessionFrameText.frame(
             p.frame,
             style: AppTextSession.frame,
             frameColor: parts?.frame == true ? AppColors.verdictKnown : null,
-            slot: parts?.slot == true ? p.slotExpected : p.taskNative,
-            look: parts?.slot == true ? SlotLook.sage : SlotLook.task,
+            slot: parts?.slot == true ? (_heardSlot ?? p.slotExpected) : null,
+            look: parts?.slot == true ? SlotLook.sage : SlotLook.empty,
           ),
         ),
-        footer: _PhraseFooter(eyebrow: l.planSessionBrowSlot, native: _native(p.frame, asked)),
+        footer: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SessionEyebrow(l.planSessionBrowSlot),
+              const SizedBox(height: 4),
+              Text.rich(
+                key: const ValueKey('other-slot-task'),
+                TextSpan(
+                  style: AppTextSession.body.copyWith(color: AppColors.tertiary),
+                  children: [
+                    TextSpan(text: task.before),
+                    TextSpan(text: task.piece, style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700)),
+                    TextSpan(text: task.after),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       bottom: voiceDock(context),
     );
   }
 }
 
+/// The native sentence of the «Say it with another slot» task: the piece for the slot and what surrounds it.
+/// `task_native` is either already the whole sentence (then the piece is what stands in place of `___` of the
+/// native frame), or only the slot's meaning (then the sentence is assembled: the native frame with this meaning
+/// in place of `___`).
+@visibleForTesting
+({String before, String piece, String after}) nativeTaskOf(PhraseOtherSlotPayload p) {
+  final task = p.taskNative.trim();
+  final frame = p.frame.frameNative;
+  final at = frame.indexOf(kSlotMark);
+  if (at < 0) return (before: '', piece: task, after: '');
+  final before = frame.substring(0, at);
+  final after = frame.substring(at + kSlotMark.length);
+  final head = before.trimRight();
+  final tail = after.trimLeft();
+  final whole = (head.isNotEmpty || tail.isNotEmpty) &&
+      task.length > head.length + tail.length &&
+      task.startsWith(head) &&
+      task.endsWith(tail);
+  if (whole) {
+    final piece = task.substring(head.length, task.length - tail.length).trim();
+    return (before: before, piece: piece, after: after);
+  }
+  return (before: before, piece: task, after: after);
+}
+
+/// The heard words beyond the frame [frame] in speech order — what goes into the slot; empty — [fallback].
+String _slotWordsOf(String heard, CardFrame frame, String fallback) {
+  final frameWords = SpeechCoverage.words('${frame.parts.before} ${frame.parts.after}').toSet();
+  final slot = heard
+      .split(RegExp(r'\s+'))
+      .where((w) {
+        final tokens = SpeechCoverage.words(w);
+        return tokens.isNotEmpty && !tokens.every(frameWords.contains);
+      })
+      .join(' ')
+      .replaceAll(RegExp(r'[.!?,;:]+$'), '');
+  return slot.isEmpty ? fallback : slot;
+}
+
 // ── 32-8 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// КОМБИНАЦИЯ (32-8): реплика собеседника звучит, текст открыт; три каркаса — выбор; потом чипы наполнений;
-/// «Дальше» неактивна до обоих выборов. Зачёт — каркас = `correct_frame`, наполнение любое. Неверный каркас
-/// — реакция шаблона 30-9 (контур у выбранного, шалфей у верного) и «Дальше».
+/// COMBINATION (32-8, polish pass SESSION-1b′, item 1): «What will you answer?»; the partner's line plays, its
+/// text is shown. Step 1 — three options as WHOLE phrases (`frames[].said`, no `___`), each with «listen» 28:
+/// wrong — ink outline, sage on the correct one, `failed`, «Next»; correct — sage, and after 600 ms the slot opens
+/// in the sheet. Step 2 — the slot is empty in brass, the filler chips under the sheet; a tap on a chip
+/// puts in and voices the filler, `passed` (`mode = chips`, `filler_index`), «Next» is active.
 class PhraseCombineCard extends StatefulWidget {
   const PhraseCombineCard({super.key, required this.env, required this.payload});
 
@@ -683,8 +790,12 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
   static const _partnerKey = 'combine-partner';
 
   String? _frameRef;
+
+  /// The correct phrase is chosen and the slot is open (step 2).
+  bool _opened = false;
   CardFiller? _filler;
   int _shake = 0;
+  Timer? _openTimer;
 
   PhraseCombinePayload get p => widget.payload;
 
@@ -693,6 +804,12 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
     super.initState();
     final line = p.partnerLine;
     if (line != null) _autoplay(this, widget.env, line.audio, line.textTarget, _partnerKey);
+  }
+
+  @override
+  void dispose() {
+    _openTimer?.cancel();
+    super.dispose();
   }
 
   bool get _frameWrong => _frameRef != null && !SessionRules.combineCorrect(p, _frameRef!);
@@ -704,6 +821,21 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
     return null;
   }
 
+  /// An option as a whole phrase: `frames[].said`, otherwise the day's frame with the filler said in the dialogue,
+  /// otherwise for the correct frame — the filler from the dialogue / the first of the chips; otherwise the frame
+  /// with an ellipsis in the slot.
+  String _sentenceOf(CardFrameText f) {
+    final said = f.said?.textTarget.trim();
+    if (said != null && said.isNotEmpty) return said;
+    final fromDay = widget.env.frameSentence?.call(f.ref)?.trim();
+    if (fromDay != null && fromDay.isNotEmpty) return fromDay;
+    if (f.ref == p.correctFrame && p.chips.isNotEmpty) {
+      final chip = p.chips.where((c) => c.inDialogue).firstOrNull ?? p.chips.first;
+      return f.frameTarget.replaceFirst(kSlotMark, chip.target);
+    }
+    return f.frameTarget.replaceFirst(kSlotMark, '…');
+  }
+
   void _pickFrame(CardFrameText frame) {
     if (_frameRef != null) return;
     final ok = SessionRules.combineCorrect(p, frame.ref);
@@ -713,14 +845,21 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
     });
     if (!ok) {
       AppHaptics.warning();
+      SessionSounds.verdict(correct: false);
       widget.env.submit(const SessionAnswer(result: SessionResult.failed, attempts: 1, response: SessionResponse(mode: 'chips')));
+      return;
     }
+    SessionSounds.verdict(correct: true);
+    _openTimer = Timer(AppMotion.sessionAutoAdvance, () {
+      if (mounted) setState(() => _opened = true);
+    });
   }
 
   void _pickFiller(CardFiller f) {
     if (_filler != null) return;
     final frame = _correctFrame;
     setState(() => _filler = f);
+    // No reaction sound here: the chip voices the assembled phrase at once; the reaction sounded on the phrase choice.
     AppHaptics.success();
     widget.env.submit(SessionAnswer(
       result: SessionResult.passed,
@@ -740,14 +879,14 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
     final env = widget.env;
     final line = p.partnerLine;
     final frame = _correctFrame;
-    final framePicked = _frameRef != null && !_frameWrong && frame != null;
+    final framePicked = _opened && frame != null;
 
     if (!framePicked) {
-      // Шаг 1 — реплика и три каркаса.
+      // Step 1 — the line and three phrases.
       return CardLayout(
         bodyGap: 12,
         centerBody: true,
-        task: SessionTask(l.planSessionTaskReply),
+        task: SessionTask(l.planSessionTaskWhatAnswer),
         body: line == null
             ? const SizedBox.shrink()
             : _PhraseSheet(
@@ -772,8 +911,11 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
               if (f != p.frames.first) const SizedBox(height: 8),
               SessionOption(
                 key: ValueKey('frame-${f.ref}'),
-                text: f.frameTarget,
+                text: _sentenceOf(f),
                 target: true,
+                // «Listen» 28 as in the canvas: the whole phrase (`said.audio`); a day dealt before SESSION-1e has no
+                // file — the phone reads the phrase.
+                listen: CardListen(env: env, audio: f.said?.audio, fallback: _sentenceOf(f), playKey: 'frame-${f.ref}', size: 28),
                 look: _frameRef == null
                     ? OptionLook.idle
                     : f.ref == p.correctFrame
@@ -794,13 +936,13 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
       );
     }
 
-    // Шаг 2 — окно: чипы наполнений верного каркаса.
+    // Step 2 — the slot: the filler chips of the correct frame.
     final parts = splitAtSlot(frame.frameTarget);
     final filled = _filler;
     return CardLayout(
       bodyGap: 0,
       fadeStop: 0.30,
-      task: SessionTask(l.planSessionTaskReply),
+      task: SessionTask(l.planSessionTaskWhatAnswer),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -810,7 +952,12 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text('${line.textTarget} · ${line.textNative}', maxLines: 2, style: AppTextSession.sceneLine),
+                    child: Text(
+                      '${line.textTarget} · ${line.textNative}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextSession.sceneLine,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _partnerKey, size: 28),
@@ -857,7 +1004,7 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
                 children: [
                   SessionWave(heights: SessionWave.five, width: 80, playing: playing == 'combine-filler'),
                   const SizedBox(height: 14),
-                  // «играет» — только пока звучит собранная фраза (32-8 «собрано · играет»); место держится.
+                  // «playing» — only while the assembled phrase plays (32-8 «assembled · playing»); the space is kept.
                   Opacity(
                     opacity: playing == 'combine-filler' ? 1 : 0,
                     child: Text(l.planSessionPlaying, style: AppTextSession.meta),
@@ -880,10 +1027,12 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
 
 // ── 32-9 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// СВОЁ ОКНО (32-9): каркас с пустым окном, чипы известных наполнений и «своё…» рядом с микрофоном. Тап по
-/// чипу — судья с каркасом, сказанным этим наполнением; голос — судья с услышанным. Зачтено — окно шалфеем
-/// со значением судьи и «по смыслу ✓»; нет — причина под строкой, «Ещё раз» / «Пропустить». `hinted` —
-/// всегда false: каркас на экране всегда.
+/// OWN SLOT (32-9, phone pass of SESSION-1b′, item 4): the window is EMPTY when the card opens. A known filler
+/// chip puts its filler into the window without darkening and leaves the microphone waiting for the whole
+/// phrase; «your own…» keeps the window empty with a caret and starts recording, the words heard after the frame
+/// stand frozen in the window until the verdict. Whatever was said goes to the slot judge; accepted — the
+/// window turns sage with the judge's value and «by meaning ✓», rejected — the reason with «Try again» /
+/// «Skip». `hinted` is always false: the frame is always on screen.
 class PhraseOwnSlotCard extends StatefulWidget {
   const PhraseOwnSlotCard({super.key, required this.env, required this.payload});
 
@@ -917,7 +1066,10 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
       _framePart,
       for (final f in p.chips) f.target,
       ...p.examples,
-    ])..onTurn = _onTurn;
+    ])
+      ..onTurn = _onTurn
+      // The frame is said and at least one word follows it: stop after an 800 ms pause and ask the judge.
+      ..autoStop = (partial) => SpeechStop.judge(partial, _framePart, p.coverageMin, widget.env.articles);
     _mic.addListener(_onMic);
   }
 
@@ -961,6 +1113,7 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
       if (verdict.accepted) {
         _mic.settle(accepted: true);
         AppHaptics.success();
+        SessionSounds.verdict(correct: true);
         setState(() {
           _verdict = verdict;
           _done = true;
@@ -972,6 +1125,7 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
       } else {
         _mic.settle(accepted: false);
         AppHaptics.warning();
+        SessionSounds.verdict(correct: false);
         setState(() {
           _reason = verdict.reasonNative;
           _judging = false;
@@ -987,17 +1141,33 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
     }
   }
 
+  /// A known filler: into the window, the chip stays light, the microphone waits for the whole phrase.
   void _pickChip(CardFiller f) {
     if (_judging || _done) return;
+    if (_mic.state == MicState.missed) _mic.reset();
+    _mic.expected = p.frame.filledWith(f.target);
     setState(() {
       _chip = f.index;
       _ownChip = false;
+      _reason = null;
     });
-    unawaited(_judge(p.frame.filledWith(f.target)));
+  }
+
+  /// «your own…»: the window stays empty with a caret, recording starts.
+  void _pickOwn() {
+    if (_judging || _done) return;
+    _mic.expected = _framePart;
+    setState(() {
+      _ownChip = true;
+      _chip = null;
+      _reason = null;
+    });
+    unawaited(_mic.tap());
   }
 
   void _tryAgain() {
     _mic.reset();
+    _mic.expected = _framePart;
     setState(() {
       _reason = null;
       _chip = null;
@@ -1033,67 +1203,87 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
     }
     final accepted = _verdict?.accepted == true;
     final listening = _mic.state == MicState.listening;
-    final slotValue = accepted ? (_verdict!.slotValue ?? _slotFromChip()) : null;
-    // Пока идёт запись «своего», окно заполняется словами сверх каркаса на лету; запись закрыта и ждёт
-    // судью — услышанное стоит в окне замершим, а не пропадает до вердикта.
-    final liveSlot = listening ? _slotWords(_mic.partial) : null;
-    // «своё…» выбран, пока голосом идёт попытка, и остаётся выбранным после зачёта голосом (32-9).
+    final chosen = _slotFromChip();
+    final slotValue = accepted ? (_verdict!.slotValue ?? chosen) : null;
+    // Recording «your own…»: the words said after the frame fill the window live; once the recording is closed
+    // and waiting for the judge they stay there frozen instead of vanishing until the verdict. A chosen chip
+    // keeps its filler in the window.
+    final liveSlot = listening && chosen == null ? _slotWords(_mic.partial) : null;
+    final shownSlot = slotValue ?? chosen ?? (liveSlot == null || liveSlot.isEmpty ? null : liveSlot);
+    // «your own…» is selected while its attempt is recorded or judged and stays selected after a voice pass.
     final ownSelected = _chip == null && (_ownChip || listening || _judging || accepted);
+    // The chips and everything the microphone says are ONE column at the bottom: the live line runs UNDER the
+    // chip row and can never lie over it — idle, recording or verdict (screenshot fixes of 1b). The sheet above
+    // never reaches into that zone; when it does not fit it scrolls.
     return CardLayout(
       bodyGap: 12,
-      fadeStop: 0.30,
-      task: SessionTask(l.planSessionTaskOwnSlot),
-      body: Column(
+      fadeStop: 0.12,
+      overlayDock: false,
+      task: SessionTask(l.planSessionTaskSayOwn),
+      body: _PhraseSheet(
+        plate: _PhrasePlate(
+          child: SessionFrameText.frame(
+            p.frame,
+            style: AppTextSession.frame,
+            frameColor: accepted || (listening && _framePartHeard) ? AppColors.verdictKnown : null,
+            slot: shownSlot,
+            look: accepted ? SlotLook.sage : (shownSlot != null ? SlotLook.filled : SlotLook.empty),
+            caret: listening && !_mic.closed && chosen == null,
+          ),
+        ),
+        footer: _PhraseFooter(
+          eyebrow: l.planSessionBrowOwnSlot,
+          reading: p.frame.framePronunciationNative,
+          native: accepted ? l.planSessionByMeaning : p.frame.frameNative,
+          nativeStyle: accepted ? AppTextSession.body.copyWith(color: AppColors.verdictKnown) : null,
+        ),
+      ),
+      bottom: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _PhraseSheet(
-            plate: _PhrasePlate(
-              child: SessionFrameText.frame(
-                p.frame,
-                style: AppTextSession.frame,
-                frameColor: accepted || (listening && _framePartHeard) ? AppColors.verdictKnown : null,
-                slot: slotValue ?? (liveSlot == null || liveSlot.isEmpty ? null : liveSlot),
-                look: accepted ? SlotLook.sage : (liveSlot != null && liveSlot.isNotEmpty ? SlotLook.filled : SlotLook.empty),
-                caret: listening && !_mic.closed,
-              ),
-            ),
-            footer: _PhraseFooter(
-              eyebrow: l.planSessionBrowOwnSlot,
-              reading: p.frame.framePronunciationNative,
-              native: accepted ? l.planSessionByMeaning : p.frame.frameNative,
-              nativeStyle: accepted ? AppTextSession.body.copyWith(color: AppColors.verdictKnown) : null,
-            ),
-          ),
-          const SizedBox(height: 24),
           _FillerChips(
+            key: const ValueKey('own-slot-chips'),
             fillers: p.chips,
-            selected: _chip,
+            selected: null,
+            neutral: true,
             onTap: _judging || _done || listening ? null : _pickChip,
             extra: SessionTile(
               key: const ValueKey('chip-own'),
               text: l.planSessionOwnChip,
               height: 40,
+              outlined: true,
               selected: ownSelected,
               trailing: Icon(LucideIcons.mic, size: 16, color: ownSelected ? AppColors.paper : AppColors.ink),
-              onTap: _judging || _done || listening
-                  ? null
-                  : () {
-                      setState(() {
-                        _ownChip = true;
-                        _chip = null;
-                        _reason = null;
-                      });
-                      unawaited(_mic.tap());
-                    },
+              onTap: _judging || _done || listening ? null : _pickOwn,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // The zone is at least as tall as its idle state, content pinned to the bottom: a shorter state (the judge's
+          // reason) does not pull the chip row down; recording grows the zone and lifts the row, never covers it.
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: _voiceZone + (kDebugMode ? _debugFieldHeight : 0)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [_dock(context)],
             ),
           ),
         ],
       ),
-      bottom: _dock(context),
     );
   }
 
-  /// Каркас вне окна уже прозвучал — на лету, только для цвета строки (зачёт — у судьи).
+  /// Minimum height of the voice zone under the chips — its idle state: «tap to speak», «Skip», the 72 button and
+  /// the 14 gaps. Reserving the recording height (224) instead cut the sheet's footer on an 844 pt phone (simulator
+  /// pass of SESSION-1b′).
+  static const double _voiceZone = 144;
+
+  /// The debug-build «what was heard» field with the gap above it.
+  static const double _debugFieldHeight = 46;
+
+  /// The frame outside the slot has already been said — live, only for the line's colour (the pass is the judge's).
   bool get _framePartHeard =>
       _mic.partial.isNotEmpty && SpeechCoverage.covers(_mic.partial, _framePart, p.coverageMin, widget.env.articles);
 
@@ -1104,7 +1294,7 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
     return null;
   }
 
-  /// Слова услышанного сверх каркаса — чтобы окно заполнялось на лету (только экран, зачёт — у судьи).
+  /// The heard words beyond the frame — so that the slot fills live (screen only, the pass is the judge's).
   String _slotWords(String heard) {
     final frameWords = SpeechCoverage.words(_framePart).toSet();
     return heard
@@ -1122,7 +1312,7 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(_reason!, textAlign: TextAlign.center, style: AppTextSession.meta),
+          Text(_reason!, key: const ValueKey('own-slot-reason'), textAlign: TextAlign.center, style: AppTextSession.meta),
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1143,7 +1333,7 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
     );
   }
 
-  /// Строка «услышал» после зачёта — каркас со значением окна от судьи.
+  /// The «heard» line after a pass — the frame with the judge's slot value.
   String? _heardLine() {
     final v = _verdict;
     if (v == null || !v.accepted) return null;

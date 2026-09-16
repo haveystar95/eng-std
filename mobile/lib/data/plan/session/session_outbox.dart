@@ -1,11 +1,13 @@
-/// ОТЛОЖЕННЫЕ ОТВЕТЫ СЕССИИ — ответ ученика не теряется, когда падает сеть (наряд SESSION-1b, разд. 1).
+/// DEFERRED SESSION ANSWERS — the learner's answer is not lost when the network drops (work order SESSION-1b,
+/// section 1).
 ///
-/// Ответ уходит в очередь и отправляется по одному, по порядку. Сеть упала — ответ остаётся в очереди,
-/// [offline] поднимает баннер «нет связи», повтор идёт с растущей паузой и сразу, как только сеть
-/// вернулась ([retryNow]). Сессия не открывает следующую карточку, пока очередь не опустела ([drained]).
+/// An answer goes into the queue and is sent one at a time, in order. The network dropped — the answer stays in
+/// the queue, [offline] raises the «no connection» banner, the retry goes with a growing pause and immediately as
+/// soon as the network is back ([retryNow]). The session does not open the next card until the queue is empty
+/// ([drained]).
 ///
-/// Очередь живёт, пока открыт экран: на диск она не пишется. Сервер — источник правды, и карточка, чей
-/// ответ не дошёл до закрытия приложения, при следующем входе просто придёт неотвеченной.
+/// The queue lives while the screen is open: it is not written to disk. The server is the source of truth, and a
+/// card whose answer did not get through before the app was closed simply arrives unanswered on the next entry.
 library;
 
 import 'dart:async';
@@ -17,22 +19,22 @@ import 'package:flutter/foundation.dart';
 import '../../api_client.dart';
 import 'session_outcomes.dart';
 
-/// Отправка одного ответа.
+/// Sending one answer.
 typedef AnswerTransport = Future<SessionAnswerOutcome> Function(String cardId, SessionAnswer answer);
 
-/// Чем кончилась попытка отправки.
+/// How a send attempt ended.
 enum OutboxFailure {
-  /// Нет сети, таймаут, 5xx, 429 — повторить позже.
+  /// No network, timeout, 5xx, 429 — retry later.
   transient,
 
-  /// 409 `plan_card_answered` — сервер ответ уже знает: считать доставленным.
+  /// 409 `plan_card_answered` — the server already knows the answer: treat it as delivered.
   alreadyAnswered,
 
-  /// 4xx, который повтор не исправит (422 — вид такого итога не принимает): выбросить.
+  /// A 4xx that a retry will not fix (422 — the kind does not accept such a result): drop it.
   permanent,
 }
 
-/// Результат доставки: ответ сервера или null (карточка уже отвечена / ответ отбит).
+/// The delivery result: the server's response or null (the card is already answered / the answer was rejected).
 typedef OutboxDelivered = void Function(SessionAnswerOutcome? outcome, OutboxFailure? failure);
 
 class _Pending {
@@ -58,34 +60,34 @@ class AnswerOutbox extends ChangeNotifier {
   Timer? _retry;
   Completer<void>? _drained;
 
-  /// 1, 2, 4, 8 с и дальше не реже раза в 15 с.
+  /// 1, 2, 4, 8 s and after that no less often than once every 15 s.
   static Duration defaultBackoff(int failures) {
     final seconds = failures <= 1 ? 1 : (1 << (failures - 1));
     return Duration(seconds: seconds > 15 ? 15 : seconds);
   }
 
-  /// Последняя попытка упала на сети — баннер «нет связи».
+  /// The last attempt failed on the network — the «no connection» banner.
   bool get offline => _offline;
 
-  /// Ничего не ждёт отправки.
+  /// Nothing is waiting to be sent.
   bool get isEmpty => _queue.isEmpty && !_sending;
 
   int get pending => _queue.length + (_sending ? 1 : 0);
 
-  /// Завершается, когда очередь пуста (сразу, если уже пуста).
+  /// Completes when the queue is empty (immediately if it is already empty).
   Future<void> get drained {
     if (isEmpty) return Future<void>.value();
     return (_drained ??= Completer<void>()).future;
   }
 
-  /// Поставить ответ в очередь; [onDelivered] позовётся ровно один раз.
+  /// Put an answer into the queue; [onDelivered] will be called exactly once.
   void enqueue(String cardId, SessionAnswer answer, OutboxDelivered onDelivered) {
     _queue.add(_Pending(cardId, answer, onDelivered));
     _notify();
     unawaited(_pump());
   }
 
-  /// Сеть вернулась — не ждать паузы.
+  /// The network is back — do not wait for the pause.
   void retryNow() {
     if (_queue.isEmpty || _sending) return;
     _retry?.cancel();
@@ -93,7 +95,7 @@ class AnswerOutbox extends ChangeNotifier {
     unawaited(_pump());
   }
 
-  /// Как читать ошибку отправки.
+  /// How to read a send error.
   static OutboxFailure classify(Object error) {
     if (error is! DioException) return OutboxFailure.transient;
     if (isOffline(error)) return OutboxFailure.transient;

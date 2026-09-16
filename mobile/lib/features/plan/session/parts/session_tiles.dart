@@ -4,41 +4,41 @@ import 'package:eng_std/theme/theme.dart';
 
 import 'session_bits.dart';
 
-/// Кусок строки сборки, как его рисовать.
+/// A piece of the assembly row and how to draw it.
 class RowPiece {
   const RowPiece.word(this.text, {this.wrong = false}) : slot = false, look = SlotLook.filled, tappable = true;
 
   const RowPiece.slot(this.text, {this.look = SlotLook.filled, this.wrong = false}) : slot = true, tappable = true;
 
-  /// Знак конца предложения после собранного — не плитка, не возвращается.
+  /// The end-of-sentence mark after the assembled part — not a tile, does not go back.
   const RowPiece.tail(this.text) : slot = false, look = SlotLook.filled, wrong = false, tappable = false;
 
   final String text;
   final bool slot;
   final SlotLook look;
 
-  /// На этом месте собранное разошлось с ожидаемым — контур чернил.
+  /// At this position the assembled text diverged from the expected one — ink outline.
   final bool wrong;
 
-  /// Тап возвращает кусок в лоток.
+  /// A tap returns the piece to the tray.
   final bool tappable;
 }
 
-/// Плитка лотка.
+/// A tray tile.
 class TrayPiece {
   const TrayPiece(this.text, {this.used = false, this.hint = false});
 
   final String text;
 
-  /// Уже в строке — остаётся в лотке на 28 %.
+  /// Already in the row — stays in the tray at 28 %.
   final bool used;
 
-  /// Верная плитка после ошибки — подчёркнута латунью (30-5 «ошибка»).
+  /// The correct tile after a mistake — underlined in brass (30-5 «mistake»).
   final bool hint;
 }
 
-/// ПЛИТКИ-СБОРКА (кадр 30-5): строка сборки с курсором над хайрлайном и лоток плиток. Тап по плитке лотка
-/// переносит её в строку, тап по слову в строке возвращает; лишние плитки не подсвечиваются.
+/// TILE ASSEMBLY (canvas 30-5): the assembly row with a caret above the hairline and the tile tray. A tap on a tray
+/// tile moves it into the row, a tap on a word in the row returns it; extra tiles are not highlighted.
 class SessionAssembly extends StatelessWidget {
   const SessionAssembly({
     super.key,
@@ -58,17 +58,17 @@ class SessionAssembly extends StatelessWidget {
   final ValueChanged<int>? onTray;
   final ValueChanged<int>? onRow;
 
-  /// Пустой чип окна перед курсором — окно ещё не выбрано (32-2).
+  /// An empty slot chip before the caret — the slot has not been chosen yet (32-2).
   final bool emptySlot;
   final bool caret;
 
-  /// Собрано верно — строка шалфеем.
+  /// Assembled correctly — the row in sage.
   final bool sage;
 
-  /// Покачать строку (ошибка).
+  /// Shake the row (mistake).
   final int shake;
 
-  /// От строки до лотка: 24 у 30-5, 20 у 31-6 / 32-2.
+  /// From the row to the tray: 24 in 30-5, 20 in 31-6 / 32-2.
   final double trayGap;
 
   @override
@@ -89,7 +89,7 @@ class SessionAssembly extends StatelessWidget {
       } else {
         view = Text(p.text, style: rowStyle);
       }
-      // Знак конца не отрывается от последнего куска: одна точка на новой строке читается как поломка.
+      // The end mark is not torn off the last piece: a lone period on a new line reads as a breakage.
       if (!p.slot && !p.tappable && pieces.isNotEmpty) {
         final last = pieces.removeLast();
         pieces.add(Row(mainAxisSize: MainAxisSize.min, children: [last, const SizedBox(width: 8), view]));
@@ -143,7 +143,7 @@ class SessionAssembly extends StatelessWidget {
   }
 }
 
-/// Окно в строке сборки: пустой чип 96 × 30 или наполнение в окне.
+/// The slot in the assembly row: an empty 96 × 30 chip or the filler in the slot.
 class _SlotChip extends StatelessWidget {
   const _SlotChip({required this.text, required this.look});
 
@@ -157,9 +157,9 @@ class _SlotChip extends StatelessWidget {
       SlotLook.wrong => (AppColors.ink, Colors.transparent, AppColors.ink),
       _ => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.ink),
     };
-    // Пустое окно — точного размера 96 × 30: контейнер без ребёнка иначе растягивается на всю строку.
-    // Наполненное — по тексту (строка 34 выше 30), без своих ограничений: анимация между точным размером
-    // и открытой шириной не интерполируется.
+    // An empty slot has the exact size 96 × 30: otherwise a container without a child stretches across the whole
+    // line. A filled one sizes to its text (a 34 line is taller than 30), with no constraints of its own: the
+    // animation between an exact size and an open width does not interpolate.
     return AnimatedContainer(
       duration: AppMotion.sessionChipToSlot,
       width: text == null ? kSessionEmptyWindow.width : null,
@@ -171,20 +171,33 @@ class _SlotChip extends StatelessWidget {
   }
 }
 
-/// ПЛИТКА 44 — бумага с тенью, Literata 15; в строке — на 28 %; верная после ошибки — подчерк латунью.
+/// TILE 44 — paper with a shadow, Literata 15; in the row — at 28 %; correct after a mistake — brass underline.
 class SessionTile extends StatelessWidget {
-  const SessionTile({super.key, required this.text, this.used = false, this.hint = false, this.onTap, this.height = 44, this.selected = false, this.trailing});
+  const SessionTile({
+    super.key,
+    required this.text,
+    this.used = false,
+    this.hint = false,
+    this.onTap,
+    this.height = 44,
+    this.selected = false,
+    this.outlined = false,
+    this.trailing,
+  });
 
   final String text;
   final bool used;
   final bool hint;
   final VoidCallback? onTap;
 
-  /// 44 у плиток сборки, 40 у чипов наполнений.
+  /// 44 for assembly tiles, 40 for filler chips.
   final double height;
 
-  /// Выбранный чип — чернила с текстом бумаги.
+  /// A selected chip — ink with paper text.
   final bool selected;
+
+  /// A neutral chip — paper with an outline instead of a shadow (32-1, 32-9).
+  final bool outlined;
   final Widget? trailing;
 
   @override
@@ -196,7 +209,8 @@ class SessionTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: selected ? AppColors.ink : AppColors.paper,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: selected ? null : kSessionSheetShadow,
+        border: outlined && !selected ? Border.all(color: AppColors.markerOutline) : null,
+        boxShadow: selected || outlined ? null : kSessionSheetShadow,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

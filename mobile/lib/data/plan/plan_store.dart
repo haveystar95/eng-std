@@ -62,8 +62,9 @@ class PlanStore {
   Future<bool> pushEnabled() async => (await _db.getMeta(_kPushEnabled)) == '1';
   Future<void> setPushEnabled(bool enabled) => _db.setMeta(_kPushEnabled, enabled ? '1' : '0');
 
-  /// «БЕЗ ПОДСКАЗОК» (кадр 30-1, наряд SESSION-1b) — на телефоне и на план: это про то, как этот человек
-  /// хочет проходить этот план, а не факт плана на сервере. В 1b ни на что не влияет; в 1c — режим диалога.
+  /// «NO HINTS» (canvas 30-1, work order SESSION-1b) — per device and per plan: it is how this person wants
+  /// to go through this plan, not a fact of the plan on the server. Affects nothing in 1b; in 1c — the
+  /// dialogue mode.
   Future<bool> noHints(String planId) async => (await _db.getMeta('plan_no_hints:$planId')) == '1';
   Future<void> setNoHints(String planId, bool value) => _db.setMeta('plan_no_hints:$planId', value ? '1' : '0');
 }

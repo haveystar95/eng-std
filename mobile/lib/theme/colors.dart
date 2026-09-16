@@ -292,38 +292,38 @@ abstract final class AppColors {
   /// Тень шита — `0 -12px 40px rgba(24,20,16,.18)`.
   static const windowSheetShadow = Color.fromARGB(46, 24, 20, 16);
 
-  // ── Сессия дня — канва `session-canvas.dc.html`, серии 30–32 (наряд SESSION-1b). Цвета те же, что у
-  // ── приложения: бумага, чернила, шалфей (`verdictKnown`), латунь (`brassInk`) — здесь только их доли.
+  // ── Day session — canvas `session-canvas.dc.html`, series 30–32 (work order SESSION-1b). The colors are the
+  // ── app's own: paper, ink, sage (`verdictKnown`), brass (`brassInk`) — only their fractions live here.
 
-  /// Тень листа материала и вариантов — `0 4px 16px rgba(46,38,32,.08)`; она же — подложка неактивной
-  /// кнопки «Дальше» (32-8).
+  /// Shadow of the material sheet and the options — `0 4px 16px rgba(46,38,32,.08)`; it is also the fill of
+  /// the inactive «Next» button (32-8).
   static const sessionSheetShadow = Color.fromARGB(20, _inkR, _inkG, _inkB);
 
-  /// Подложка шалфея 15 % — верный вариант, зачтённое окно.
+  /// Sage wash 15 % — the correct option, a passed slot.
   static const sessionSageWash = Color.fromARGB(38, 78, 107, 82);
 
-  /// Подложка окна каркаса 8 % латуни.
+  /// Frame slot fill, 8 % brass.
   static const sessionWindowFill = Color.fromARGB(20, 140, 106, 58);
 
-  /// Кольцо шалфея 30 % у кнопки «слушаю».
+  /// Sage ring 30 % around the «listening» button.
   static const sessionListenRing = Color.fromARGB(77, 78, 107, 82);
 
-  /// Кольцо латуни 30 % у текущей точки этапа.
+  /// Brass ring 30 % around the current stage dot.
   static const sessionBrassRing = Color.fromARGB(77, 140, 106, 58);
 
-  /// Тень кнопки микрофона 72 — `0 8px 24px rgba(46,38,32,.18)`.
+  /// Shadow of the 72 mic button — `0 8px 24px rgba(46,38,32,.18)`.
   static const sessionMicShadow = Color.fromARGB(46, _inkR, _inkG, _inkB);
 
-  /// Дорожка переключателя «Без подсказок» — `rgba(46,38,32,.16)`.
+  /// Track of the «No hints» switch — `rgba(46,38,32,.16)`.
   static const sessionToggleTrack = Color.fromARGB(41, _inkR, _inkG, _inkB);
 
-  /// Тень ручки переключателя — `0 1px 3px rgba(46,38,32,.25)`.
+  /// Shadow of the switch knob — `0 1px 3px rgba(46,38,32,.25)`.
   static const sessionToggleKnobShadow = Color.fromARGB(64, _inkR, _inkG, _inkB);
 
-  /// Тень шита выхода 30-8 — `0 -12px 40px rgba(24,20,16,.28)`.
+  /// Shadow of the exit sheet 30-8 — `0 -12px 40px rgba(24,20,16,.28)`.
   static const sessionExitSheetShadow = Color.fromARGB(71, 24, 20, 16);
 
-  /// Тень плиты шапки и полосы сцены на канве — `0 2px 8px rgba(46,38,32,.04)`.
+  /// Shadow of the header plate and the scene strip on the canvas — `0 2px 8px rgba(46,38,32,.04)`.
   static const sessionFaintShadow = Color.fromARGB(10, _inkR, _inkG, _inkB);
 
   /// Доминантный тон картинки с провода (`image.tone`, `#RRGGBB`) — заливка круга, пока картинка

@@ -16,6 +16,11 @@ import UIKit
   /// nothing.
   private var soundIds: [String: SystemSoundID] = [:]
 
+  /// THE DAY SESSION'S SOUNDS (SESSION-1b′, item 5; the owner's files and decision of 16.09) — see
+  /// `SessionSounds` in `lib/theme/feedback.dart`. Registered while a session is open, keyed by name.
+  private var sessionSoundIds: [String: SystemSoundID] = [:]
+  private static let sessionSoundNames = ["correct", "miss", "mic_on", "stage_done", "day_done", "ready"]
+
   /// ССЫЛКИ `engstd://…` (наряд DAY-UI) — см. `lib/data/deep_links.dart`. Ссылка холодного старта
   /// лежит здесь, пока Dart не спросит `initial`; тёплая уходит в канал сразу.
   private var linksChannel: FlutterMethodChannel?
@@ -72,6 +77,7 @@ import UIKit
     // `applicationRegistrar` is the app's own registrar (as opposed to a per-plugin one) — this is
     // an application-level channel, not a plugin, so that is the right messenger to hang it on.
     registerFeedbackSoundChannel(engineBridge.applicationRegistrar.messenger())
+    registerSessionSoundsChannel(engineBridge.applicationRegistrar.messenger())
     registerLineAudioChannel(engineBridge.applicationRegistrar.messenger())
     registerSpeechProbeChannel(engineBridge.applicationRegistrar.messenger())
     registerLinksChannel(engineBridge.applicationRegistrar.messenger())
@@ -79,9 +85,9 @@ import UIKit
     registerAppInfoChannel(engineBridge.applicationRegistrar.messenger())
   }
 
-  /// ВЕРСИЯ СБОРКИ (наряд SESSION-1b): «1.0.0 (2)» — `CFBundleShortVersionString` и `CFBundleVersion`
-  /// из Info.plist, то есть `version` из pubspec. Стоит мелко на входе в этап (кадр 30-1, правило
-  /// владельца): по ней видно, та ли сборка на телефоне.
+  /// BUILD VERSION (work order SESSION-1b): "1.0.0 (2)" — `CFBundleShortVersionString` and `CFBundleVersion`
+  /// from Info.plist, i.e. `version` from pubspec. Shown small on the stage entry (canvas 30-1, the owner's
+  /// rule): it tells whether the phone runs the expected build.
   private func registerAppInfoChannel(_ messenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(name: "com.denis.engstd/app_info", binaryMessenger: messenger)
     channel.setMethodCallHandler { call, result in
@@ -260,9 +266,9 @@ import UIKit
           return
         }
 
-        // ТЕМП (наряд SESSION-1b): «Повтори вслух» играет образец на 0.85× — серверный голос всегда
-        // обычного темпа (DECISIONS п. 318), замедление — забота клиента. `enableRate` ставится до
-        // `prepareToPlay`, иначе AVAudioPlayer темп молча не применяет.
+        // RATE (work order SESSION-1b): "Say it aloud" plays the sample at 0.85× — the server voice is always
+        // at normal pace (DECISIONS item 318), slowing down is the client's job. `enableRate` is set before
+        // `prepareToPlay`, otherwise AVAudioPlayer silently ignores the rate.
         let rate = ((call.arguments as? [String: Any])?["rate"] as? NSNumber)?.floatValue ?? 1.0
 
         do {
@@ -349,5 +355,125 @@ import UIKit
 
     soundIds[name] = id
     return id
+  }
+
+  /// `SessionSounds`' side (SESSION-1b′, item 5): `load` decodes the owner's six mp3 from `assets/sounds/` into
+  /// memory, cuts the leading silence, writes each as a PCM CAF into the temporary directory (the asset files are
+  /// never touched) and registers it as a system sound; `play` plays one by name; `release` disposes them.
+  ///
+  /// A system sound, not a player: it follows the silent switch by itself (the app's session is `.playback` for
+  /// the voice, so a player would sound in silent mode), it mixes with the partner's line instead of cutting it,
+  /// and a decoded, trimmed PCM file starts without the mp3 decoder's delay.
+  private func registerSessionSoundsChannel(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "com.denis.engstd/session_sounds", binaryMessenger: messenger)
+
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(nil)
+        return
+      }
+      switch call.method {
+      case "load":
+        DispatchQueue.global(qos: .userInitiated).async {
+          var loaded: [String: SystemSoundID] = [:]
+          for name in Self.sessionSoundNames {
+            if let id = self.decodeSessionSound(name) { loaded[name] = id }
+          }
+          DispatchQueue.main.async {
+            for (name, id) in loaded {
+              if let old = self.sessionSoundIds[name] { AudioServicesDisposeSystemSoundID(old) }
+              self.sessionSoundIds[name] = id
+            }
+            result(loaded.count)
+          }
+        }
+      case "play":
+        guard let name = (call.arguments as? [String: Any])?["sound"] as? String,
+          let id = self.sessionSoundIds[name]
+        else {
+          result(false)
+          return
+        }
+        AudioServicesPlaySystemSound(id)
+        result(true)
+      case "release":
+        for id in self.sessionSoundIds.values { AudioServicesDisposeSystemSoundID(id) }
+        self.sessionSoundIds.removeAll()
+        try? FileManager.default.removeItem(at: Self.sessionSoundsDirectory)
+        result(nil)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  private static var sessionSoundsDirectory: URL {
+    FileManager.default.temporaryDirectory.appendingPathComponent("session_sounds", isDirectory: true)
+  }
+
+  /// One of the owner's mp3 → a trimmed PCM CAF in the temporary directory → a system sound. Nil when the asset is
+  /// missing or does not decode.
+  private func decodeSessionSound(_ name: String) -> SystemSoundID? {
+    let key = FlutterDartProject.lookupKey(forAsset: "assets/sounds/\(name).mp3")
+    guard let path = Bundle.main.path(forResource: key, ofType: nil),
+      let file = try? AVAudioFile(forReading: URL(fileURLWithPath: path)),
+      let buffer = AVAudioPCMBuffer(
+        pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length))
+    else { return nil }
+    do { try file.read(into: buffer) } catch { return nil }
+    guard let samples = buffer.floatChannelData, buffer.frameLength > 0 else { return nil }
+
+    let frames = Int(buffer.frameLength)
+    let channels = Int(buffer.format.channelCount)
+    let rate = buffer.format.sampleRate
+    // Only the leading silence goes: audible = above −50 dBFS in any channel, 2 ms are kept before the first
+    // audible frame; the tail stays as the owner made it.
+    let threshold: Float = 0.003_16
+    func audible(_ frame: Int) -> Bool {
+      for c in 0..<channels where abs(samples[c][frame]) > threshold { return true }
+      return false
+    }
+    guard let first = (0..<frames).first(where: audible) else { return nil }
+    let start = max(0, first - Int(rate * 0.002))
+    let end = frames
+
+    guard let trimmed = AVAudioPCMBuffer(
+      pcmFormat: buffer.format, frameCapacity: AVAudioFrameCount(end - start))
+    else { return nil }
+    trimmed.frameLength = AVAudioFrameCount(end - start)
+    for c in 0..<channels {
+      trimmed.floatChannelData![c].update(from: samples[c] + start, count: end - start)
+    }
+
+    let directory = Self.sessionSoundsDirectory
+    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let url = directory.appendingPathComponent("\(name).caf")
+    guard writePcmCaf(trimmed, to: url) else { return nil }
+
+    var id: SystemSoundID = 0
+    guard AudioServicesCreateSystemSoundID(url as CFURL, &id) == kAudioServicesNoError else { return nil }
+    return id
+  }
+
+  /// Writes [buffer] as 16-bit PCM CAF; the file is closed when this returns (the writer goes out of scope).
+  private func writePcmCaf(_ buffer: AVAudioPCMBuffer, to url: URL) -> Bool {
+    try? FileManager.default.removeItem(at: url)
+    let settings: [String: Any] = [
+      AVFormatIDKey: kAudioFormatLinearPCM,
+      AVSampleRateKey: buffer.format.sampleRate,
+      AVNumberOfChannelsKey: buffer.format.channelCount,
+      AVLinearPCMBitDepthKey: 16,
+      AVLinearPCMIsFloatKey: false,
+      AVLinearPCMIsBigEndianKey: false,
+    ]
+    do {
+      let writer = try AVAudioFile(
+        forWriting: url, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
+      try writer.write(from: buffer)
+      return true
+    } catch {
+      return false
+    }
   }
 }

@@ -15,6 +15,7 @@ import '../../../data/languages.dart' show sttLocaleFor;
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/session/session_models.dart';
 import '../../../data/providers.dart';
+import '../../profile/qa_report_button.dart' show QaReportHidden;
 import '../plan_providers.dart';
 import 'cards/card_host.dart';
 import 'cards/card_kit.dart';
@@ -26,19 +27,19 @@ import 'session_mic.dart';
 import 'session_texts.dart';
 import 'session_voice.dart';
 
-/// СЕССИЯ ДНЯ (наряд SESSION-1b; канва `session-canvas.dc.html`, серии 30–32) — один экран: вход в этап
-/// (30-1), карточки со шапкой (30-2) и полосой сцены (30-2b), итог этапа (30-6), выход (30-8).
+/// DAY SESSION (work order SESSION-1b; canvas `session-canvas.dc.html`, series 30–32) — one screen: stage entry
+/// (30-1), cards with the header (30-2) and the scene strip (30-2b), stage summary (30-6), exit (30-8).
 ///
-/// Экраны есть у слов и фраз; Диалог, Слушаю и отвечаю и Говорю сам стоят «впереди», вход в них заблокирован
-/// подписью «в следующей сборке», ответов по ним нет, день не закрывается. Сервер — источник правды: каждый
-/// вход читает день заново и продолжает с первой неотвеченной карточки.
+/// Words and phrases have screens; Dialogue, Listen and answer and Speak myself stand «ahead», entry into them is
+/// blocked by the caption «in the next build», there are no answers for them, the day does not close. The server
+/// is the source of truth: every entry reads the day anew and continues from the first unanswered card.
 class SessionScreen extends ConsumerStatefulWidget {
   const SessionScreen({super.key, required this.plan, required this.number, this.backend});
 
   final Plan plan;
   final int number;
 
-  /// Сервер сессии; null — настоящий API. Тест подставляет свой.
+  /// The session server; null — the real API. A test substitutes its own.
   final SessionBackend? backend;
 
   @override
@@ -50,7 +51,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   late final SessionVoice _voice;
   StreamSubscription<List<ConnectivityResult>>? _online;
 
-  /// Карточка сказала «микрофона нет» — вместо шапки этапа только крестик и полоса сцены (30-3).
+  /// A card reported «no microphone» — instead of the stage header, only the cross and the scene strip (30-3).
   bool _noMic = false;
   int _preparedFor = -1;
 
@@ -65,10 +66,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     )..addListener(_onSession);
     _voice = SessionVoice(lines: ref.read(lineAudioCacheProvider), targetLang: widget.plan.targetLang);
     unawaited(_voice.warmUp().catchError((Object _) {}));
+    // The owner's six sounds — decoded and registered while the session is open (SessionSounds).
+    unawaited(SessionSounds.load());
     try {
       _online = Connectivity().onConnectivityChanged.listen((_) => _session.outbox.retryNow());
     } catch (_) {
-      // Нет плагина (тест) — повтор идёт по паузе.
+      // No plugin (test) — the retry runs after the pause.
     }
     unawaited(_session.load());
   }
@@ -79,13 +82,30 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     _session.removeListener(_onSession);
     _session.dispose();
     unawaited(_voice.release());
+    unawaited(SessionSounds.release());
     super.dispose();
   }
 
+  /// The phase the last notification left — to hear the transitions the owner's sound map names.
+  SessionPhase _lastPhase = SessionPhase.loading;
+  bool _waitedForLesson = false;
+
   void _onSession() {
     if (!mounted) return;
+    final phase = _session.phase;
+    if (phase != _lastPhase) {
+      if (phase == SessionPhase.failed && problemCodeOf(_session.error) == 'plan_lesson_not_ready') _waitedForLesson = true;
+      // The day is ready after waiting for its lesson to be built.
+      if (phase == SessionPhase.entry && _waitedForLesson) {
+        _waitedForLesson = false;
+        SessionSounds.play(SessionSounds.ready);
+      }
+      // The stage summary (30-6) opens.
+      if (phase == SessionPhase.summary) SessionSounds.play(SessionSounds.stageDone);
+      _lastPhase = phase;
+    }
     final day = _session.day;
-    // Звук этапов с экранами — на диск сразу, как только день прочитан (и после перечитывания).
+    // Audio of the stages that have screens goes to disk at once, as soon as the day is read (and after a re-read).
     if (day != null && identityHashCode(day) != _preparedFor) {
       _preparedFor = identityHashCode(day);
       unawaited(_voice.prepare([
@@ -115,7 +135,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     try {
       await launchUrl(Uri.parse('app-settings:'));
     } catch (_) {
-      // Настройки не открылись — остаётся «Пропустить».
+      // Settings did not open — «Skip» remains.
     }
   }
 
@@ -136,14 +156,18 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   @override
   Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
     value: SystemUiOverlayStyle.dark,
-    child: PopScope(
-      canPop: _session.phase != SessionPhase.card,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(_exit());
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.ground,
-        body: SafeArea(bottom: false, child: _body(context)),
+    // There is no «Report» in the session: not on the cards, not on the stage entry, not in the summary
+    // (a fix from the 1b screenshots).
+    child: QaReportHidden(
+      child: PopScope(
+        canPop: _session.phase != SessionPhase.card,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) unawaited(_exit());
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.ground,
+          body: SafeArea(bottom: false, child: _body(context)),
+        ),
       ),
     ),
   );
@@ -245,6 +269,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       openSettings: _openSettings,
       outcome: _session.outcomeOf(card.id),
       advancing: _session.advancing,
+      frameSentence: (ref) => _session.day?.frameSentence(ref),
+      termText: (ref) => _session.day?.termText(ref),
     );
     final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     return Column(
@@ -309,7 +335,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     );
   }
 
-  /// Подписи единицы для «вернётся завтра» — из карточек этапа: слово — термин и фото, фраза — как сказана.
+  /// A unit's captions for «Coming back tomorrow» — from the stage's cards: a word — its term and photo,
+  /// a phrase — as it was said.
   ReturningUnit _returning(PlanStage stage, String ref) {
     final q = _session.queue!;
     final term = q.payloadOfUnit<WordIntroPayload>(stage, ref)?.term ??

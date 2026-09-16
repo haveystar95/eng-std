@@ -1,8 +1,9 @@
-/// ДЕНЬ ДЛЯ СЕССИИ — тело `GET /plans/{id}/days/{n}` так, как его читает сессия (наряд SESSION-1b):
-/// этапы с карточками по `position`, статус дня, сцена и окно (минуты текущего этапа).
+/// THE DAY FOR THE SESSION — the body of `GET /plans/{id}/days/{n}` as the session reads it (work order
+/// SESSION-1b): stages with cards by `position`, the day status, the scene and the day window (minutes of the
+/// current stage).
 ///
-/// Сервер — источник правды: локального прогресса у сессии нет. Каждый вход в сессию читает день заново,
-/// и сессия продолжает с первой неотвеченной карточки.
+/// The server is the source of truth: the session has no local progress. Every entry into the session reads the
+/// day anew, and the session continues from the first unanswered card.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -11,7 +12,7 @@ import '../day_window.dart';
 import '../plan_models.dart';
 import 'session_models.dart';
 
-/// Этап дня с его карточками.
+/// A day stage with its cards.
 class SessionStageCards {
   const SessionStageCards({
     required this.stage,
@@ -26,11 +27,11 @@ class SessionStageCards {
   final int total;
   final int done;
 
-  /// По `position`; карточки незнакомых видов сюда не попадают.
+  /// By `position`; cards of unknown kinds do not get here.
   final List<SessionCard> cards;
 }
 
-/// Ответ `GET …/days/{n}`, прочитанный сессией.
+/// The `GET …/days/{n}` response as read by the session.
 class SessionDay {
   const SessionDay({
     required this.planId,
@@ -46,13 +47,14 @@ class SessionDay {
   final PlanScene? scene;
   final List<SessionStageCards> stages;
 
-  /// Окно дня — отсюда «≈ N мин» текущего этапа. Null, если окно не разобралось: минут тогда нет.
+  /// The day window — the current stage's «≈ N min» comes from here. Null if the window did not parse: then
+  /// there are no minutes.
   final DayWindow? window;
 
-  /// Сколько карточек пропущено: вид незнаком этой сборке или payload сломан.
+  /// How many cards were skipped: the kind is unknown to this build or the payload is broken.
   final int skipped;
 
-  /// Карточки розданы: у нерозданного дня списки пусты (у контура нет id).
+  /// The cards are dealt: an undealt day has empty lists (the outline has no id).
   bool get dealt => stages.any((s) => s.cards.isNotEmpty);
 
   SessionStageCards? stageOf(PlanStage stage) {
@@ -62,7 +64,43 @@ class SessionDay {
     return null;
   }
 
-  /// «≈ N мин» — только у текущего этапа окна; у остальных сервер цифру не отдаёт.
+  /// The frame [frameRef] as a whole phrase — for the «Combination» options (polish pass SESSION-1b′, item 1),
+  /// whose payload has only the frame itself: what was said in the dialogue, from the intro (`said`), otherwise
+  /// the frame with the filler from the dialogue / the first one, from any card of the day with this frame. The
+  /// frame is not in the day — null.
+  String? frameSentence(String frameRef) {
+    CardFrame? seen;
+    for (final card in stages.expand((s) => s.cards)) {
+      final payload = card.payload;
+      if (payload is PhraseIntroPayload && payload.frame.ref == frameRef) return payload.said.textTarget;
+      final frame = switch (payload) {
+        PhraseAssemblePayload(:final frame) ||
+        PhraseSlotPayload(:final frame) ||
+        PhraseSlotListenPayload(:final frame) ||
+        PhraseRepeatPayload(:final frame) ||
+        PhraseOtherSlotPayload(:final frame) ||
+        PhraseOwnSlotPayload(:final frame) => frame,
+        _ => null,
+      };
+      if (frame != null && frame.ref == frameRef) seen ??= frame;
+    }
+    return seen?.spoken();
+  }
+
+  /// The day's word [unitRef] in the target language, from any card of the day that carries the term. «By ear»
+  /// (31-5) has no target text since SESSION-1e — without a file the phone reads this. Not in the day — null.
+  String? termText(String unitRef) {
+    for (final card in stages.expand((s) => s.cards)) {
+      final term = switch (card.payload) {
+        WordIntroPayload(:final term) || WordRepeatPayload(:final term) || WordAssemblePayload(:final term) => term,
+        _ => null,
+      };
+      if (term != null && term.ref == unitRef) return term.textTarget;
+    }
+    return null;
+  }
+
+  /// «≈ N min» — only for the window's current stage; for the others the server does not send the number.
   int? minutesLeft(PlanStage stage) {
     for (final s in window?.stages ?? const <WindowStage>[]) {
       if (s.stage == stage) return s.minutesLeft;
@@ -83,7 +121,7 @@ class SessionDay {
         try {
           final card = SessionCard.fromJson(c);
           if (card == null) {
-            // Вид, которого эта сборка не знает, — пропуск без запроса к серверу.
+            // A kind this build does not know — skipped without a request to the server.
             skipped++;
             continue;
           }

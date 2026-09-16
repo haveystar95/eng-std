@@ -11,22 +11,22 @@ import '../../../../data/plan/plan_models.dart';
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../ui/plan_marks.dart';
 
-/// ОБЩИЕ КИРПИЧИ СЕССИИ ДНЯ (канва `session-canvas.dc.html`, серии 30–32): лист, бровь, задание, волна,
-/// «прослушать», кнопка действия и её док, фото, строка каркаса с окном, реакции «верно / неверно».
-/// Один виджет на тип — карточки собираются из них и своих стилей не заводят.
+/// SHARED BUILDING BLOCKS OF THE DAY SESSION (canvas `session-canvas.dc.html`, series 30–32): sheet, eyebrow, task
+/// line, wave, «listen», the action button and its dock, photo, frame line with a slot, «correct / wrong» reactions.
+/// One widget per type — cards are assembled from them and do not introduce styles of their own.
 
-/// Поле экрана по бокам — 24.
+/// The screen's side margin — 24.
 const double kSessionGutter = 24;
 
-/// Пустое окно каркаса фразы — 96 × 30 (кадры 32-x).
+/// An empty slot in a phrase frame — 96 × 30 (canvases 32-x).
 const Size kSessionEmptyWindow = Size(96, 30);
 
-/// Тень листа материала — `0 4px 16px rgba(46,38,32,.08)`.
+/// Shadow of the material sheet — `0 4px 16px rgba(46,38,32,.08)`.
 const List<BoxShadow> kSessionSheetShadow = [
   BoxShadow(color: AppColors.sessionSheetShadow, blurRadius: 16, offset: Offset(0, 4)),
 ];
 
-/// ЛИСТ — `#F6F3EC`, скругление 16, тень; поле задаёт вызывающий.
+/// SHEET — `#F6F3EC`, corner radius 16, shadow; the caller sets the padding.
 class SessionSheet extends StatelessWidget {
   const SessionSheet({super.key, required this.child, this.padding = const EdgeInsets.all(20), this.color = AppColors.paper});
 
@@ -43,13 +43,13 @@ class SessionSheet extends StatelessWidget {
   );
 }
 
-/// БРОВЬ ЛИСТА — 11/600 капителью.
+/// SHEET EYEBROW — 11/600 in small caps.
 class SessionEyebrow extends StatelessWidget {
   const SessionEyebrow(this.text, {super.key, this.trailing});
 
   final String text;
 
-  /// Справа — «вернётся завтра» (30-9d).
+  /// On the right — «comes back tomorrow» (30-9d).
   final String? trailing;
 
   @override
@@ -63,7 +63,7 @@ class SessionEyebrow extends StatelessWidget {
   );
 }
 
-/// ЗАДАНИЕ НАД ЛИСТОМ — 17/600 и, если есть, голос спутника 13 под ним.
+/// TASK LINE ABOVE THE SHEET — 17/600 and, if present, the companion's voice 13 below it.
 class SessionTask extends StatelessWidget {
   const SessionTask(this.title, {super.key, this.companion});
 
@@ -84,20 +84,20 @@ class SessionTask extends StatelessWidget {
   );
 }
 
-/// ВОЛНА ЛАТУНЬЮ — столбики живые только пока [playing], потом статичные (таблица «Тайминг · сессия»).
+/// BRASS WAVE — the bars are live only while [playing], static afterwards (table «Timing · session»).
 class SessionWave extends StatefulWidget {
   const SessionWave({super.key, required this.heights, this.barWidth = 3, this.width, this.playing = false, this.color = AppColors.brassInk});
 
-  /// Пять столбиков кнопки «прослушать» и микрофона (10/18/24/14/20).
+  /// Five bars of the «listen» button and of the microphone (10/18/24/14/20).
   static const List<double> five = [10, 18, 24, 14, 20];
 
-  /// Двадцать столбиков плашки «На слух» 80 × 24 (31-5).
+  /// Twenty bars of the «By ear» plate 80 × 24 (31-5).
   static const List<double> twenty = [10, 16, 22, 12, 24, 18, 10, 20, 14, 22, 16, 11, 24, 18, 12, 20, 15, 10, 22, 16];
 
   final List<double> heights;
   final double barWidth;
 
-  /// Ширина всей волны (столбики по ширине `space-between`); null — вплотную с зазором 3.
+  /// Width of the whole wave (bars spread across the width, `space-between`); null — side by side with a gap of 3.
   final double? width;
   final bool playing;
   final Color color;
@@ -168,7 +168,7 @@ class _SessionWaveState extends State<SessionWave> with SingleTickerProviderStat
     );
   }
 
-  /// `om-wave`: масштаб столбика .35 ↔ 1 со своим периодом и сдвигом.
+  /// `om-wave`: bar scale .35 ↔ 1 with its own period and shift.
   double _scale(int i) {
     final period = 0.42 + 0.11 * (i % 6);
     final t = (_c.value * 1.2 / period + i * 0.07) % 1.0;
@@ -176,7 +176,7 @@ class _SessionWaveState extends State<SessionWave> with SingleTickerProviderStat
   }
 }
 
-/// «ПРОСЛУШАТЬ» — круг 44 (у листа) или 28 (у варианта); пока звучит — контур латунью и волна.
+/// «LISTEN» — circle 44 (on a sheet) or 28 (on an option); while it plays — a brass outline and the wave.
 class SessionListenButton extends StatelessWidget {
   const SessionListenButton({super.key, required this.onTap, required this.label, this.size = 44, this.playing = false});
 
@@ -222,7 +222,7 @@ class SessionListenButton extends StatelessWidget {
   }
 }
 
-/// КНОПКА ДЕЙСТВИЯ 56 — `#1B1A18`, скругление 18, 17/600 бумагой; неактивная — подложка 8 %.
+/// ACTION BUTTON 56 — `#1B1A18`, corner radius 18, 17/600 in paper; disabled — an 8 % backing.
 class SessionDockButton extends StatelessWidget {
   const SessionDockButton({super.key, required this.label, required this.onTap, this.enabled = true, this.busy = false});
 
@@ -230,7 +230,7 @@ class SessionDockButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool enabled;
 
-  /// Ответ ещё уходит на сервер — кнопка ждёт.
+  /// The answer is still being sent to the server — the button waits.
   final bool busy;
 
   @override
@@ -264,16 +264,16 @@ class SessionDockButton extends StatelessWidget {
   }
 }
 
-/// ДОК ВНИЗУ ЭКРАНА — бумажный градиент поверх ленты и поле 14 / 24 / 24 (+ безопасная зона).
+/// DOCK AT THE BOTTOM OF THE SCREEN — a paper gradient over the feed and padding 14 / 24 / 24 (+ safe area).
 class SessionDock extends StatelessWidget {
   const SessionDock({super.key, required this.child, this.fadeStop = 0.34});
 
   final Widget child;
 
-  /// Где градиент становится сплошным: 34 % у кнопки, 22 % у вариантов, 30 % у микрофона.
+  /// Where the gradient becomes solid: 34 % for the button, 22 % for options, 30 % for the microphone.
   final double fadeStop;
 
-  /// Верхний отступ дока — прозрачный край, под который заходит поле карточки.
+  /// The dock's top inset — a transparent edge that the card's area goes under.
   static const double topInset = 14;
 
   @override
@@ -291,7 +291,7 @@ class SessionDock extends StatelessWidget {
   );
 }
 
-/// ФОТО СЛОВА — тон, пока фото в пути; нет фото — плашка `#E3DCCF`.
+/// WORD PHOTO — the tone while the photo is on its way; no photo — a `#E3DCCF` plate.
 class SessionPhoto extends StatelessWidget {
   const SessionPhoto({super.key, required this.image, this.height, this.radius = 12});
 
@@ -324,26 +324,27 @@ class SessionPhoto extends StatelessWidget {
   }
 }
 
-/// Что стоит в окне каркаса.
+/// What is shown in the frame's slot.
 enum SlotLook {
-  /// Пустое окно — латунный контур, подложка 8 %.
+  /// Empty slot — brass outline, 8 % backing.
   empty,
 
-  /// Наполнение чернилами в латунном окне.
+  /// Filler in ink in a brass slot.
   filled,
 
-  /// Задание на родном курсивом (32-7).
-  task,
+  /// The filler has just been put in — a 15 % sage backing in a brass slot (32-1, 600 ms).
+  highlight,
 
-  /// Зачтено — шалфей.
+  /// Passed — sage.
   sage,
 
-  /// Ошибка — контур чернил (32-2c).
+  /// Mistake — ink outline (32-2c).
   wrong,
 }
 
-/// СТРОКА КАРКАСА С ОКНОМ — текст до окна, окно ([SlotLook]) и текст после; окно не режется и переносится
-/// целиком. [frameColor] — цвет самого каркаса (шалфей, когда каркас зачтён раздельно с окном).
+/// FRAME LINE WITH A SLOT — the text before the slot, the slot ([SlotLook]) and the text after; the slot is not
+/// split and wraps as a whole. [frameColor] — the color of the frame itself (sage when the frame is passed
+/// separately from the slot).
 class SessionFrameText extends StatelessWidget {
   const SessionFrameText({
     super.key,
@@ -360,7 +361,7 @@ class SessionFrameText extends StatelessWidget {
     this.emptyWindow = kSessionEmptyWindow,
   });
 
-  /// Каркас карточки: окно на месте `___`; у каркаса без окна — строка целиком, без окна.
+  /// The card's frame: the slot in place of `___`; for a frame without a slot — the whole line, no slot.
   factory SessionFrameText.frame(
     CardFrame frame, {
     required TextStyle style,
@@ -382,7 +383,7 @@ class SessionFrameText extends StatelessWidget {
     );
   }
 
-  /// Строка без окна — [before] целиком (ключ можно подчеркнуть).
+  /// A line without a slot — [before] as a whole (the key can be underlined).
   const SessionFrameText.plain(this.before, {super.key, required this.style, this.underline, this.frameColor, this.textAlign = TextAlign.start})
     : after = '',
       window = false,
@@ -395,22 +396,22 @@ class SessionFrameText extends StatelessWidget {
   final String after;
   final TextStyle style;
 
-  /// Рисовать ли окно между [before] и [after].
+  /// Whether to draw the slot between [before] and [after].
   final bool window;
 
-  /// Текст в окне; null — пустое окно.
+  /// Text in the slot; null — an empty slot.
   final String? slot;
   final SlotLook look;
   final Color? frameColor;
 
-  /// Подчеркнуть латунью кусок [before] (ключ фразы, 32-6).
+  /// Underline a piece of [before] in brass (the phrase key, 32-6).
   final TextRange? underline;
 
-  /// Курсор в окне — окно ещё заполняется голосом (32-9b).
+  /// Caret in the slot — the slot is still being filled by voice (32-9b).
   final bool caret;
   final TextAlign textAlign;
 
-  /// Размер пустого окна: 96 × 30 у каркасов фраз, 56 × 28 у слова в реплике (31-7).
+  /// Size of the empty slot: 96 × 30 in phrase frames, 56 × 28 for a word in a line (31-7).
   final Size emptyWindow;
 
   @override
@@ -419,11 +420,12 @@ class SessionFrameText extends StatelessWidget {
     final spans = <InlineSpan>[..._withUnderline(before, base)];
     var rest = after;
     if (window) {
-      // Наполненное окно стоит на строке текста (базовая линия слова в окне — базовая линия фразы),
-      // пустое и с курсором — посередине строки (у курсора нет базовой линии, и сухой расчёт высоты
-      // абзаца на ней падает).
+      // A filled slot sits on the text line (the baseline of the word in the slot is the phrase's baseline),
+      // an empty one and one with a caret — in the middle of the line (the caret has no baseline, and the dry
+      // computation of the paragraph height fails on it).
       final onLine = slot != null && !caret;
-      // Знак сразу после окна едет в том же заместителе: иначе строка переносится между окном и точкой.
+      // The punctuation mark right after the slot rides in the same placeholder: otherwise the line wraps
+      // between the slot and the period.
       final mark = _closingMark.firstMatch(after)?.group(0) ?? '';
       rest = after.substring(mark.length);
       final box = _window(context);
@@ -436,7 +438,7 @@ class SessionFrameText extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: onLine ? CrossAxisAlignment.baseline : CrossAxisAlignment.center,
                 textBaseline: onLine ? TextBaseline.alphabetic : null,
-                // Окно сжимается и переносит свой текст, знак остаётся рядом.
+                // The slot shrinks and wraps its own text, the mark stays next to it.
                 children: [Flexible(child: box), Text(mark, style: base)],
               ),
       ));
@@ -462,13 +464,14 @@ class SessionFrameText extends StatelessWidget {
 
   Widget _window(BuildContext context) {
     final (border, fill, textColor) = switch (look) {
-      SlotLook.empty || SlotLook.filled || SlotLook.task => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.ink),
+      SlotLook.empty || SlotLook.filled => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.ink),
+      SlotLook.highlight => (AppColors.brassInk, AppColors.sessionSageWash, AppColors.ink),
       SlotLook.sage => (AppColors.verdictKnown, AppColors.sessionSageWash, AppColors.verdictKnown),
       SlotLook.wrong => (AppColors.ink, Colors.transparent, AppColors.ink),
     };
     final value = slot;
     final fontSize = style.fontSize ?? 22;
-    // Пустое окно — точного размера: контейнер без ребёнка иначе растягивается на всю строку.
+    // An empty slot has an exact size: otherwise a container without a child stretches across the whole line.
     return AnimatedContainer(
       duration: AppMotion.sessionSlotSage,
       margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -488,11 +491,7 @@ class SessionFrameText extends StatelessWidget {
                 Flexible(
                   child: Text(
                     value,
-                    style: style.copyWith(
-                      color: textColor,
-                      fontStyle: look == SlotLook.task ? FontStyle.italic : null,
-                      height: 34 / fontSize,
-                    ),
+                    style: style.copyWith(color: textColor, height: 34 / fontSize),
                   ),
                 ),
                 if (caret) const _Caret(),
@@ -502,7 +501,7 @@ class SessionFrameText extends StatelessWidget {
   }
 }
 
-/// Курсор в окне, которое заполняется голосом.
+/// Caret in a slot that is being filled by voice.
 class _Caret extends StatelessWidget {
   const _Caret();
 
@@ -510,8 +509,8 @@ class _Caret extends StatelessWidget {
   Widget build(BuildContext context) => const Padding(padding: EdgeInsets.only(left: 2, top: 16), child: SessionCaret());
 }
 
-/// КУРСОР-ПОДЧЕРК — [width] × 2 чернилами, мигает раз в секунду (`om-caret`, steps(1)); под «уменьшением
-/// движения» стоит.
+/// UNDERSCORE CARET — [width] × 2 in ink, blinks once a second (`om-caret`, steps(1)); under «Reduce Motion» it
+/// stands still.
 class SessionCaret extends StatefulWidget {
   const SessionCaret({super.key, this.width = 24});
 
@@ -546,11 +545,11 @@ class _SessionCaretState extends State<SessionCaret> {
       Opacity(opacity: _on ? 1 : 0, child: Container(width: widget.width, height: 2, color: AppColors.ink));
 }
 
-/// ПОКАЧИВАНИЕ «НЕВЕРНО» — ±4 px, 120 мс × 2, когда [trigger] меняется на новое значение.
+/// «WRONG» SHAKE — ±4 px, 120 ms × 2, when [trigger] changes to a new value.
 class SessionShake extends StatefulWidget {
   const SessionShake({super.key, required this.trigger, required this.child});
 
-  /// Новое значение — покачать один раз (0 — не качать).
+  /// A new value — shake once (0 — don't shake).
   final int trigger;
   final Widget child;
 
@@ -579,7 +578,7 @@ class _SessionShakeState extends State<SessionShake> with SingleTickerProviderSt
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: _c,
     builder: (_, child) {
-      // 0 → −4 → +4 → 0 дважды за два такта по 120 мс.
+      // 0 → −4 → +4 → 0 twice, over two beats of 120 ms each.
       final t = _c.value * 2 % 1;
       final dx = _c.isAnimating ? AppMotion.sessionShakeOffset * math.sin(t * 2 * math.pi) * -1 : 0.0;
       return Transform.translate(offset: Offset(dx, 0), child: child);
@@ -588,7 +587,7 @@ class _SessionShakeState extends State<SessionShake> with SingleTickerProviderSt
   );
 }
 
-/// ГАЛКА «ВЕРНО» — круг 28 шалфеем с галкой 17 бумагой, появляется масштабом 0→1 (180 мс, ease-out-back).
+/// «CORRECT» CHECK — a sage circle 28 with a paper check 17, appears by scaling 0→1 (180 ms, ease-out-back).
 class SessionCheckBadge extends StatelessWidget {
   const SessionCheckBadge({super.key, this.size = 28});
 
@@ -614,7 +613,7 @@ class SessionCheckBadge extends StatelessWidget {
   }
 }
 
-/// Точка «вернётся завтра» 8 латунью — вырастает (180 мс, ease-out-back).
+/// The «comes back tomorrow» dot 8 in brass — grows in (180 ms, ease-out-back).
 class SessionReturnDot extends StatelessWidget {
   const SessionReturnDot({super.key});
 
@@ -636,10 +635,10 @@ class SessionReturnDot extends StatelessWidget {
   }
 }
 
-/// Значок этапа 20 одним цветом.
+/// Stage glyph 20 in a single color.
 Widget sessionStageGlyph(PlanStage stage, Color color) => PlanStageGlyph(kind: sessionStageMark(stage), color: color);
 
-/// Значок этапа по имени этапа.
+/// The stage glyph by the stage name.
 PlanStageMarkKind sessionStageMark(PlanStage stage) => switch (stage) {
   PlanStage.words => PlanStageMarkKind.words,
   PlanStage.phrases => PlanStageMarkKind.phrases,

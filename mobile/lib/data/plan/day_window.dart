@@ -226,12 +226,33 @@ class WindowLine {
   final WindowUnitState? state;
 }
 
+/// The kind of a dialogue exchange: who speaks first in it.
+enum WindowExchangeKind {
+  answer,
+  ask,
+  rescue;
+
+  /// `null` on the wire means the scene's lesson was not at hand — the exchange keeps no kind.
+  static WindowExchangeKind? fromWire(Object? s) => switch (s) {
+    null => null,
+    'answer' => answer,
+    'ask' => ask,
+    'rescue' => rescue,
+    _ => throw PlanContractError('window exchange kind «$s»'),
+  };
+}
+
 class WindowPair {
-  const WindowPair({required this.step, this.partner, this.learner});
+  const WindowPair({required this.step, this.kind, this.partner, this.learner});
 
   final int step;
+  final WindowExchangeKind? kind;
   final WindowLine? partner;
   final WindowLine? learner;
+
+  /// In an `ask` and a `rescue` the learner opens the exchange; in an `answer` (and an exchange without a
+  /// kind) the partner speaks first.
+  bool get learnerFirst => kind == WindowExchangeKind.ask || kind == WindowExchangeKind.rescue;
 }
 
 class WindowProgram {
@@ -362,6 +383,7 @@ class DayWindow {
 
     return WindowPair(
       step: _int(d['step'], 'pair.step'),
+      kind: WindowExchangeKind.fromWire(d['kind']),
       partner: partner == null
           ? null
           : WindowLine(

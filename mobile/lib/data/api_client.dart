@@ -662,26 +662,27 @@ class ApiClient {
     return PlanDayRoom.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  // ---- Сессия дня (наряд SESSION-1b, `docs/plan-api.md` «Карточки сессии») ---------------------
+  // ---- Day session (work order SESSION-1b, `docs/plan-api.md`, the session cards section) -------
   //
-  // Окно и таб читают [planDayRoom] выше. Сессии нужен тот же `GET …/days/{n}`, но с карточками этапов
-  // (`stages[].cards[]`), и три записи: раздать день, ответить на карточку, спросить судью окна.
+  // The window and the tab read [planDayRoom] above. The session needs the same `GET …/days/{n}`, but with
+  // the stages' cards (`stages[].cards[]`), and three writes: deal the day, answer a card, ask the slot judge.
 
-  /// День для сессии — этапы с карточками, сцена и окно (`plan/session/session_day.dart`).
+  /// The day for the session — stages with cards, the scene and the window (`plan/session/session_day.dart`).
   Future<SessionDay> sessionDay(String planId, int number) async {
     final r = await _dio.get('/plans/$planId/days/$number');
 
     return SessionDay.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// Раздать день (первый вход) — карточки появляются в `GET …/days/{n}`. 409 `plan_day_locked`,
-  /// `plan_lesson_not_ready` — читает вызывающий по коду ([problemCodeOf]).
+  /// Deal the day (first entry) — the cards then appear in `GET …/days/{n}`. 409 `plan_day_locked`,
+  /// `plan_lesson_not_ready` — the caller reads them by code ([problemCodeOf]).
   Future<void> openPlanDay(String planId, int number) => _dio.post('/plans/$planId/days/$number/open');
 
-  /// Ответ на карточку. 409 `plan_card_answered`, 422 `plan_card_result_not_allowed`.
+  /// Answer a card. 409 `plan_card_answered`, 422 `plan_card_result_not_allowed`.
   Future<SessionAnswerOutcome> answerSessionCard(String planId, int number, String cardId, SessionAnswer answer) async {
-    // Ответ — короткий запрос; зависшая сеть должна поднять «нет связи» за секунды, а не за общие 40 с.
-    // Повтор того же ответа безопасен: принятый сервер отбивает 409 `plan_card_answered`.
+    // An answer is a short request: a hung network must raise "no connection" within seconds, not after the
+    // general 40 s. Resending the same answer is safe: the server rejects an accepted one with 409
+    // `plan_card_answered`.
     final r = await _dio.post(
       '/plans/$planId/days/$number/cards/$cardId/answer',
       data: answer.toJson(),
@@ -691,8 +692,8 @@ class ApiClient {
     return SessionAnswerOutcome.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// Судья окна — `phrase_own_slot` (в 1b), `speak_answer`, `speak_retell`. Синхронный: ученик ждёт
-  /// вердикт стоя на карточке (до 8 с на сервере).
+  /// The slot judge — `phrase_own_slot` (in 1b), `speak_answer`, `speak_retell`. Synchronous: the learner
+  /// waits for the verdict on the card (up to 8 s on the server).
   Future<SessionJudgeOutcome> judgeSessionCard(
     String planId,
     int number,

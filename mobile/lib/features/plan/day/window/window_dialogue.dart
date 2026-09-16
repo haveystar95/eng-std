@@ -5,10 +5,13 @@ import 'package:eng_std/theme/theme.dart';
 import '../../../../data/plan/day_window.dart';
 import 'window_bits.dart';
 
-/// ВКЛАДКА «ДИАЛОГ» (кадр 23-0d): пары пузырей через 12, в паре — через 8. Собеседник — бумага у левой
-/// кромки и через 10 «прослушать» 28; ученик — тёмный пузырь у правой кромки, и маркер состояния стоит у
-/// НЕГО. «Прослушать» — у обеих реплик (DAY-UI-3: у всех реплик есть голос, каждая звучит голосом своего
-/// говорящего); у своей реплики кружок стоит слева от пузыря, маркер — левее кружка.
+/// THE «DIALOGUE» TAB (canvas 23-0d): exchanges 12 apart, the two bubbles of one exchange 8 apart. The partner
+/// is a paper bubble at the left edge with a 28 «listen» button 10 to its right; the learner is a dark bubble
+/// at the right edge and carries the state marker. Both lines have «listen» (DAY-UI-3: every line is voiced
+/// by its own speaker); on the learner's line the button sits left of the bubble, the marker left of it.
+///
+/// The order inside an exchange follows its kind (SESSION-1b′, item 9): in an `answer` the partner speaks
+/// first, in an `ask` and a `rescue` the learner does.
 class WindowDialogue extends StatelessWidget {
   const WindowDialogue({super.key, required this.pairs, required this.onListen});
 
@@ -23,12 +26,23 @@ class WindowDialogue extends StatelessWidget {
     children: [
       for (final (i, pair) in pairs.indexed) ...[
         if (i > 0) const SizedBox(height: 12),
-        if (pair.partner case final partner?) _PartnerRow(line: partner, onListen: onListen),
-        if (pair.partner != null && pair.learner != null) const SizedBox(height: 8),
-        if (pair.learner case final learner?) _LearnerRow(line: learner, onListen: onListen),
+        ..._exchange(pair),
       ],
     ],
   );
+
+  List<Widget> _exchange(WindowPair pair) {
+    final partner = pair.partner == null ? null : _PartnerRow(line: pair.partner!, onListen: onListen);
+    final learner = pair.learner == null ? null : _LearnerRow(line: pair.learner!, onListen: onListen);
+    final rows = (pair.learnerFirst ? [learner, partner] : [partner, learner]).nonNulls.toList();
+
+    return [
+      for (final (i, row) in rows.indexed) ...[
+        if (i > 0) const SizedBox(height: 8),
+        row,
+      ],
+    ];
+  }
 }
 
 class _PartnerRow extends StatelessWidget {

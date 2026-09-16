@@ -1,42 +1,42 @@
-/// КАРТОЧКИ СЕССИИ ДНЯ — реестр 28 тренажёров, как его отдаёт сервер (наряд SESSION-1b).
+/// DAY SESSION CARDS — the registry of 28 trainers, as the server sends it (work order SESSION-1b).
 ///
-/// Контракт — `backend2/docs/plan-api.md`, «Карточки сессии», и схема `PlanCard` тега `Plans` в
-/// `openapi/openapi.yaml`; вход клиента — фикстуры `backend2/docs/fixtures/day-doctor*.json`. Здесь
-/// только чтение: конверт карточки, общие объекты (слово, каркас, наполнение, реплика, звук, фото) и
-/// по одной модели на каждый раздаваемый вид — все 28, хотя экраны в 1b есть только у слов и фраз.
+/// The contract is `backend2/docs/plan-api.md`, «Session cards», and the `PlanCard` schema of the `Plans` tag in
+/// `openapi/openapi.yaml`; the client's input is the fixtures `backend2/docs/fixtures/day-doctor*.json`. Here
+/// there is only reading: the card envelope, the shared objects (word, frame, filler, line, sound, photo) and one
+/// model per dealt kind — all 28, although in 1b only words and phrases have screens.
 ///
-/// Разбор ЗАКРЫТЫЙ там, где карточку иначе нечем показать: у известного вида без обязательного поля
-/// бросается [SessionContractError], и сессия эту карточку пропускает. Вид, которого эта сборка не
-/// знает (и зарезервированный `listen_pairs`, у которого нет payload), — не ошибка: [SessionCard.fromJson]
-/// отдаёт null, и карточка пропускается без запроса к серверу.
+/// Parsing FAILS CLOSED where the card cannot be shown otherwise: for a known kind without a required field
+/// [SessionContractError] is thrown, and the session skips that card. A kind this build does not know (and the
+/// reserved `listen_pairs`, which has no payload) is not an error: [SessionCard.fromJson] returns null, and the
+/// card is skipped without a request to the server.
 library;
 
 import '../plan_models.dart';
 
-/// Сервер прислал известный вид с payload, который этой сборке нечем показать.
+/// The server sent a known kind with a payload that this build has no way to show.
 class SessionContractError extends FormatException {
   const SessionContractError(String what) : super('session card: $what');
 }
 
-/// Как вид зачитывается — и что поэтому клиенту позволено записать (`CardKind::allows` на сервере).
+/// How a kind is graded — and therefore what the client is allowed to write (`CardKind::allows` on the server).
 enum SessionGrading {
-  /// Выбор и плитки: клиент сверяет с `correct` / `expected`.
+  /// Choice and tiles: the client checks against `correct` / `expected`.
   choice,
 
-  /// Голос: покрытие речи по `coverage_min`, две попытки без зачёта — `skipped`.
+  /// Voice: speech coverage by `coverage_min`, two attempts without a pass — `skipped`.
   voice,
 
-  /// По смыслу — только сервер, `POST …/judge`.
+  /// By meaning — only the server, `POST …/judge`.
   judge,
 
-  /// Прохождение: «Понятно» / «Дальше».
+  /// Walkthrough: «Got it» / «Next».
   pass,
 }
 
-/// ВИД КАРТОЧКИ — 29 значений enum на сервере, раздаются 28.
+/// CARD KIND — 29 enum values on the server, 28 are dealt.
 ///
-/// [hasScreen] — у вида есть экран в этой сборке (1b: слова и фразы). Остальные читаются целиком, но
-/// их этапы стоят «впереди», а вход в них заблокирован.
+/// [hasScreen] — the kind has a screen in this build (1b: words and phrases). The rest are read in full, but
+/// their stages stand «ahead», and entry into them is blocked.
 enum SessionKind {
   wordIntro('word_intro', PlanStage.words, SessionGrading.pass),
   wordRepeat('word_repeat', PlanStage.words, SessionGrading.voice),
@@ -73,8 +73,8 @@ enum SessionKind {
   final PlanStage stage;
   final SessionGrading grading;
 
-  /// Вид, которого эта сборка не знает, — null. `listen_pairs` сюда тоже не попадает: он в enum
-  /// сервера, но не раздаётся, и payload у него нет.
+  /// A kind this build does not know — null. `listen_pairs` does not get here either: it is in the server's
+  /// enum, but it is not dealt, and it has no payload.
   static SessionKind? fromWire(Object? wire) {
     for (final k in values) {
       if (k.wire == wire) return k;
@@ -82,13 +82,13 @@ enum SessionKind {
     return null;
   }
 
-  /// Этапы, у которых в этой сборке есть экраны (наряд SESSION-1b, разд. 0).
+  /// The stages that have screens in this build (work order SESSION-1b, section 0).
   static const Set<PlanStage> stagesWithScreens = {PlanStage.words, PlanStage.phrases};
 
   bool get hasScreen => stagesWithScreens.contains(stage);
 }
 
-/// `result` карточки.
+/// The card's `result`.
 enum SessionResult {
   passed,
   hinted,
@@ -105,17 +105,17 @@ enum SessionResult {
   }
 }
 
-/// `unit {kind, ref}` — что карточка учит.
+/// `unit {kind, ref}` — what the card teaches.
 class SessionUnit {
   const SessionUnit({required this.kind, required this.ref, this.isDay = false});
 
-  /// У единицы `day` здесь `unknown`: пункта программы у неё нет (см. [isDay]).
+  /// For the `day` unit this is `unknown`: it has no program item (see [isDay]).
   final PlanUnitKind kind;
 
-  /// `v3`, `p2`, `x4`, `day` или `L2`.
+  /// `v3`, `p2`, `x4`, `day` or `L2`.
   final String ref;
 
-  /// Единица `day` — весь визит: в программе её нет, и она никогда не возвращается.
+  /// The `day` unit is the whole visit: it is not in the program, and it never returns.
   final bool isDay;
 
   factory SessionUnit.fromJson(Map<String, dynamic> j) {
@@ -131,10 +131,10 @@ class SessionUnit {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────────────────────────
-// Общие объекты — одинаковые во всех payload.
+// Shared objects — the same in every payload.
 // ──────────────────────────────────────────────────────────────────────────────────────────────────
 
-/// Звук `{ref, url, duration_ms, voice}`. `url` — null, пока файла нет: тогда читает телефон.
+/// Sound `{ref, url, duration_ms, voice}`. `url` is null while there is no file: then the phone reads it aloud.
 class CardAudio {
   const CardAudio({required this.ref, this.url, this.durationMs, required this.voice});
 
@@ -156,7 +156,7 @@ class CardAudio {
   }
 }
 
-/// Фото слова `{url, tone}`; `url` — null, если фото не нашлось, `tone` рисует подложку.
+/// A word's photo `{url, tone}`; `url` is null if no photo was found, `tone` paints the backdrop.
 class CardImage {
   const CardImage({this.url, this.tone});
 
@@ -169,7 +169,7 @@ class CardImage {
   }
 }
 
-/// Слово `term {ref, text_target, text_native, pronunciation_native, definition_target, image}`.
+/// A word `term {ref, text_target, text_native, pronunciation_native, definition_target, image}`.
 class CardTerm {
   const CardTerm({
     required this.ref,
@@ -185,7 +185,8 @@ class CardTerm {
   final String textNative;
   final String? pronunciationNative;
 
-  /// Определение — на языке ЦЕЛИ: толкования на родном урок не несёт («Чего сервер не даёт»).
+  /// The definition is in the TARGET language: the lesson carries no explanation in the native language
+  /// («What the server does not give»).
   final String? definitionTarget;
   final CardImage? image;
 
@@ -199,7 +200,7 @@ class CardTerm {
   );
 }
 
-/// Наполнение окна каркаса.
+/// A filler of the frame's slot.
 class CardFiller {
   const CardFiller({
     required this.index,
@@ -217,10 +218,10 @@ class CardFiller {
   final String? pronunciationNative;
   final bool inDialogue;
 
-  /// Вся фраза на родном с этим наполнением — «У него болит шея.».
+  /// The whole phrase in the native language with this filler — «His neck hurts.» (native).
   final String? nativeLine;
 
-  /// Каркас, сказанный с этим наполнением (`p2.f3`).
+  /// The frame spoken with this filler (`p2.f3`).
   final CardAudio? audio;
 
   factory CardFiller.fromJson(Map<String, dynamic> j) => CardFiller(
@@ -234,7 +235,7 @@ class CardFiller {
   );
 }
 
-/// Окно каркаса: подсказка и наполнения.
+/// The frame's slot: a hint and the fillers.
 class CardSlot {
   const CardSlot({this.hintNative, required this.fillers});
 
@@ -247,10 +248,10 @@ class CardSlot {
   );
 }
 
-/// Знак окна в тексте каркаса.
+/// The slot mark in the frame's text.
 const String kSlotMark = '___';
 
-/// Каркас `frame {ref, kind, frame_target, frame_native, frame_pronunciation_native, slot}`.
+/// A frame `frame {ref, kind, frame_target, frame_native, frame_pronunciation_native, slot}`.
 class CardFrame {
   const CardFrame({
     required this.ref,
@@ -266,12 +267,12 @@ class CardFrame {
   /// `answer` | `ask`.
   final String kind;
 
-  /// С `___` на месте окна; у каркаса без окна — целая фраза.
+  /// With `___` in place of the slot; for a frame without a slot — the whole phrase.
   final String frameTarget;
   final String frameNative;
   final String? framePronunciationNative;
 
-  /// Null — у каркаса нет окна.
+  /// Null — the frame has no slot.
   final CardSlot? slot;
 
   bool get hasSlot => slot != null && frameTarget.contains(kSlotMark);
@@ -286,11 +287,19 @@ class CardFrame {
     return null;
   }
 
-  /// Текст каркаса до и после окна; у каркаса без окна «после» пустое.
+  /// The frame's text before and after the slot; for a frame without a slot «after» is empty.
   ({String before, String after}) get parts => splitAtSlot(frameTarget);
 
-  /// Каркас, сказанный с [value] в окне; у каркаса без окна — он сам.
+  /// The frame spoken with [value] in the slot; for a frame without a slot — the frame itself.
   String filledWith(String value) => hasSlot ? frameTarget.replaceFirst(kSlotMark, value) : frameTarget;
+
+  /// The frame as a whole phrase: with the filler [fillerIndex] (the one said in the dialogue), otherwise with the
+  /// first filler from the dialogue, otherwise with the first one; for a frame without a slot — the frame itself.
+  String spoken([int? fillerIndex]) {
+    if (!hasSlot || fillers.isEmpty) return frameTarget;
+    final said = filler(fillerIndex) ?? fillers.where((f) => f.inDialogue).firstOrNull ?? fillers.first;
+    return filledWith(said.target);
+  }
 
   factory CardFrame.fromJson(Map<String, dynamic> j) => CardFrame(
     ref: _str(j, 'ref'),
@@ -302,14 +311,14 @@ class CardFrame {
   );
 }
 
-/// Текст до и после первого `___`.
+/// The text before and after the first `___`.
 ({String before, String after}) splitAtSlot(String text) {
   final at = text.indexOf(kSlotMark);
   if (at < 0) return (before: text, after: '');
   return (before: text.substring(0, at), after: text.substring(at + kSlotMark.length));
 }
 
-/// Реплика `{ref, text_target, text_native, audio}`.
+/// A line `{ref, text_target, text_native, audio}`.
 class CardLine {
   const CardLine({required this.ref, required this.textTarget, required this.textNative, this.audio});
 
@@ -328,7 +337,7 @@ class CardLine {
   static CardLine? maybe(Object? j) => j is Map<String, dynamic> ? CardLine.fromJson(j) : null;
 }
 
-/// Своя реплика ученика: реплика плюс каркас, наполнение и ключ произнесения.
+/// The learner's own line: a line plus the frame, the filler and the pronunciation key.
 class CardOwnLine extends CardLine {
   const CardOwnLine({
     required super.ref,
@@ -355,7 +364,7 @@ class CardOwnLine extends CardLine {
   );
 }
 
-/// Реплика визита в ленте слушания: ещё роль и шаг обмена.
+/// A visit line in the listening feed: also the role and the exchange step.
 class CardVisitLine extends CardLine {
   const CardVisitLine({
     required super.ref,
@@ -380,7 +389,7 @@ class CardVisitLine extends CardLine {
   );
 }
 
-/// Обмен `{ref, step, kind}`.
+/// An exchange `{ref, step, kind}`.
 class CardExchange {
   const CardExchange({required this.ref, required this.step, required this.kind});
 
@@ -394,7 +403,7 @@ class CardExchange {
       CardExchange(ref: _str(j, 'ref'), step: _int(j, 'step'), kind: _str(j, 'kind'));
 }
 
-/// Вариант ответа `{id, text, audio?}`.
+/// An answer option `{id, text, audio?}`.
 class CardOption {
   const CardOption({required this.id, required this.text, this.audio});
 
@@ -406,7 +415,7 @@ class CardOption {
       CardOption(id: _str(j, 'id'), text: _str(j, 'text'), audio: CardAudio.maybe(j['audio']));
 }
 
-/// Отрезок `[начало, конец)` в символах строки.
+/// A span `[start, end)` in characters of the string.
 typedef CardSpan = ({int start, int end});
 
 CardSpan? _span(Object? j) {
@@ -415,16 +424,16 @@ CardSpan? _span(Object? j) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────────────────────────
-// Payload по видам.
+// Payload by kind.
 // ──────────────────────────────────────────────────────────────────────────────────────────────────
 
-/// Payload карточки — ровно одна модель на вид.
+/// The card payload — exactly one model per kind.
 sealed class CardPayload {
   const CardPayload({required this.sceneId});
 
   final String sceneId;
 
-  /// Все звуки карточки — докачка при входе в этап.
+  /// All of the card's sounds — downloaded on entering the stage.
   Iterable<CardAudio> get audios;
 
   static CardPayload parse(SessionKind kind, Map<String, dynamic> j) => switch (kind) {
@@ -458,7 +467,7 @@ sealed class CardPayload {
   };
 }
 
-/// Вариантная карточка: варианты и id верного.
+/// An option card: the options and the id of the correct one.
 mixin ChoicePayload on CardPayload {
   List<CardOption> get options;
   String get correct;
@@ -479,9 +488,9 @@ Iterable<CardAudio> _fillerAudios(List<CardFiller> fillers) => [
   for (final f in fillers) ?f.audio,
 ];
 
-// ── Слова ─────────────────────────────────────────────────────────────────────────────────────────
+// ── Words ─────────────────────────────────────────────────────────────────────────────────────────
 
-/// Реплика дня, где звучит слово, и место слова в ней.
+/// The day's line where the word is heard, and the word's position in it.
 class CardUsedIn {
   const CardUsedIn({required this.ref, this.lineRef, this.termSpan, required this.textTarget, required this.textNative});
 
@@ -508,7 +517,7 @@ class WordIntroPayload extends CardPayload {
   final CardUsedIn? usedIn;
   final CardAudio? termAudio;
 
-  /// Null, если слова нет в репликах.
+  /// Null if the word is not in the lines.
   final CardAudio? lineAudio;
 
   @override
@@ -601,25 +610,38 @@ class WordChoosePayload extends CardPayload with ChoicePayload {
   }
 }
 
-/// `word_listen` (31-5): звук — и варианты-слова цели.
+/// `word_listen` (31-5): a sound — and its options: translations in the native language (`direction:
+/// term_to_native`, contract SESSION-1e), or target-language spellings on a day dealt before it (no `direction`).
 class WordListenPayload extends CardPayload with ChoicePayload {
-  const WordListenPayload({required super.sceneId, this.audio, required this.options, required this.correct});
+  const WordListenPayload({required super.sceneId, this.direction, this.audio, required this.options, required this.correct});
 
+  /// `term_to_native`; null — a day dealt before SESSION-1e, whose options are spellings.
+  final String? direction;
   final CardAudio? audio;
   @override
   final List<CardOption> options;
   @override
   final String correct;
 
+  /// The options are translations in the native language — drawn like the options of `word_choose` `term_to_native`.
+  bool get nativeOptions => direction == 'term_to_native';
+
   @override
   Iterable<CardAudio> get audios => [?audio];
 
-  factory WordListenPayload.fromJson(Map<String, dynamic> j) => WordListenPayload(
-    sceneId: _scene(j),
-    audio: CardAudio.maybe(j['audio']),
-    options: _list(j, 'options', CardOption.fromJson),
-    correct: _str(j, 'correct'),
-  );
+  factory WordListenPayload.fromJson(Map<String, dynamic> j) {
+    final direction = j['direction'];
+    if (direction != null && direction != 'term_to_native') {
+      throw SessionContractError('word_listen direction «$direction»');
+    }
+    return WordListenPayload(
+      sceneId: _scene(j),
+      direction: direction as String?,
+      audio: CardAudio.maybe(j['audio']),
+      options: _list(j, 'options', CardOption.fromJson),
+      correct: _str(j, 'correct'),
+    );
+  }
 }
 
 /// `word_assemble` (31-6).
@@ -629,7 +651,7 @@ class WordAssemblePayload extends CardPayload {
   final CardTerm term;
   final List<String> tiles;
 
-  /// Собранное должно совпасть по порядку, слово в слово.
+  /// The assembled result must match in order, word for word.
   final List<String> expected;
 
   @override
@@ -643,7 +665,7 @@ class WordAssemblePayload extends CardPayload {
   );
 }
 
-/// Строка `word_in_line`: текст цели с `___`, перевод, перевод с пропуском, звук.
+/// The `word_in_line` line: the target text with `___`, the translation, the translation with a gap, the sound.
 class CardGappedLine {
   const CardGappedLine({required this.ref, this.lineRef, required this.textTarget, required this.textNative, this.textNativeGapped, this.audio});
 
@@ -685,9 +707,9 @@ class WordInLinePayload extends CardPayload with ChoicePayload {
   );
 }
 
-// ── Фразы ─────────────────────────────────────────────────────────────────────────────────────────
+// ── Phrases ───────────────────────────────────────────────────────────────────────────────────────
 
-/// Фраза дня, как она сказана в диалоге.
+/// The day's phrase as it is said in the dialogue.
 class CardSaid {
   const CardSaid({required this.textTarget, required this.textNative, this.pronunciationNative, this.fillerIndex, this.audio});
 
@@ -738,15 +760,15 @@ class PhraseAssemblePayload extends CardPayload {
 
   final CardFrame frame;
 
-  /// Что собрать — предложение на родном.
+  /// What to assemble — a sentence in the native language.
   final String targetNative;
 
-  /// Слова каркаса и лишние — в нижнем регистре, кроме «I».
+  /// The frame's words and extra ones — lowercase, except «I».
   final List<String> tiles;
   final List<CardFiller> chips;
   final List<String> expectedWords;
 
-  /// Место окна в собранной строке.
+  /// The slot's position in the assembled string.
   final int slotAt;
   final int? fillerIndex;
 
@@ -768,7 +790,7 @@ class PhraseAssemblePayload extends CardPayload {
   }
 }
 
-/// `phrase_choose_back` (32-3): фраза на цели — варианты на родном.
+/// `phrase_choose_back` (32-3): the phrase in the target language — options in the native language.
 class PhraseChooseBackPayload extends CardPayload with ChoicePayload {
   const PhraseChooseBackPayload({
     required super.sceneId,
@@ -842,7 +864,7 @@ class PhraseSlotListenPayload extends CardPayload with ChoicePayload {
 
   final CardFrame frame;
 
-  /// Какое наполнение звучит.
+  /// Which filler is heard.
   final int fillerIndex;
   final CardAudio? audio;
   @override
@@ -879,7 +901,7 @@ class PhraseRepeatPayload extends CardPayload {
   final int? fillerIndex;
   final String expectedText;
 
-  /// Ключ произнесения — подчёркивается латунью.
+  /// The pronunciation key — underlined in brass.
   final String? key;
   final double coverageMin;
   final CardAudio? audio;
@@ -898,7 +920,7 @@ class PhraseRepeatPayload extends CardPayload {
   );
 }
 
-/// `phrase_other_slot` (32-7): каркас с ДРУГИМ наполнением, заданным на родном.
+/// `phrase_other_slot` (32-7): the frame with a DIFFERENT filler, given in the native language.
 class PhraseOtherSlotPayload extends CardPayload {
   const PhraseOtherSlotPayload({
     required super.sceneId,
@@ -934,16 +956,23 @@ class PhraseOtherSlotPayload extends CardPayload {
   );
 }
 
-/// Каркас в `phrase_combine`: только текст.
+/// A frame in `phrase_combine`: text only.
 class CardFrameText {
-  const CardFrameText({required this.ref, required this.frameTarget, required this.frameNative});
+  const CardFrameText({required this.ref, required this.frameTarget, required this.frameNative, this.said});
 
   final String ref;
   final String frameTarget;
   final String frameNative;
 
-  factory CardFrameText.fromJson(Map<String, dynamic> j) =>
-      CardFrameText(ref: _str(j, 'ref'), frameTarget: _str(j, 'frame_target'), frameNative: _str(j, 'frame_native'));
+  /// The phrase said with this frame in the dialogue — if the server sent it (`frames[].said`).
+  final CardSaid? said;
+
+  factory CardFrameText.fromJson(Map<String, dynamic> j) => CardFrameText(
+    ref: _str(j, 'ref'),
+    frameTarget: _str(j, 'frame_target'),
+    frameNative: _str(j, 'frame_native'),
+    said: j['said'] is Map<String, dynamic> ? CardSaid.fromJson(j['said'] as Map<String, dynamic>) : null,
+  );
 }
 
 /// `phrase_combine` (32-8).
@@ -966,7 +995,7 @@ class PhraseCombinePayload extends CardPayload {
   final int? correctFiller;
 
   @override
-  Iterable<CardAudio> get audios => [?partnerLine?.audio, ..._fillerAudios(chips)];
+  Iterable<CardAudio> get audios => [?partnerLine?.audio, for (final f in frames) ?f.said?.audio, ..._fillerAudios(chips)];
 
   factory PhraseCombinePayload.fromJson(Map<String, dynamic> j) => PhraseCombinePayload(
     sceneId: _scene(j),
@@ -979,7 +1008,7 @@ class PhraseCombinePayload extends CardPayload {
   );
 }
 
-/// `phrase_own_slot` (32-9): своё окно, зачёт по смыслу — сервер.
+/// `phrase_own_slot` (32-9): an own slot; the pass by meaning is the server's.
 class PhraseOwnSlotPayload extends CardPayload {
   const PhraseOwnSlotPayload({
     required super.sceneId,
@@ -1015,7 +1044,7 @@ class PhraseOwnSlotPayload extends CardPayload {
   );
 }
 
-// ── Диалог ────────────────────────────────────────────────────────────────────────────────────────
+// ── Dialogue ──────────────────────────────────────────────────────────────────────────────────────
 
 /// `dialogue_partner` (33-1).
 class DialoguePartnerPayload extends CardPayload with ChoicePayload {
@@ -1049,7 +1078,7 @@ class DialoguePartnerPayload extends CardPayload with ChoicePayload {
   );
 }
 
-/// Режимы ответа в диалоге: чипы, голос с подсказкой, голос вслепую.
+/// Answer modes in the dialogue: chips, voice with a hint, blind voice.
 class CardAnswerModes {
   const CardAnswerModes({required this.chips, required this.voiceHint, required this.voiceBlind});
 
@@ -1064,7 +1093,7 @@ class CardAnswerModes {
   );
 }
 
-/// `dialogue_answer` (33-2…33-4) и `dialogue_ask` (33-5) — одни и те же ключи.
+/// `dialogue_answer` (33-2…33-4) and `dialogue_ask` (33-5) — the same keys.
 class DialogueAnswerPayload extends CardPayload {
   const DialogueAnswerPayload({
     required super.sceneId,
@@ -1133,7 +1162,7 @@ class DialogueRescuePayload extends CardPayload {
   );
 }
 
-// ── Слушаю и отвечаю ─────────────────────────────────────────────────────────────────────────────
+// ── Listen and answer ────────────────────────────────────────────────────────────────────────────
 
 /// `listen_dialogue` (34-1).
 class ListenDialoguePayload extends CardPayload {
@@ -1187,7 +1216,7 @@ class ListenQuestionPayload extends CardPayload with ChoicePayload {
   }
 }
 
-/// Где в ленте прозвучал ответ на вопрос.
+/// Where in the feed the answer to the question was heard.
 class CardReviewAnswer {
   const CardReviewAnswer({required this.questionRef, this.exchangeStep, this.lineRef, this.span});
 
@@ -1300,7 +1329,7 @@ class ListenNumberPayload extends CardPayload with ChoicePayload {
   );
 }
 
-// ── Говорю сам ────────────────────────────────────────────────────────────────────────────────────
+// ── Speak myself ──────────────────────────────────────────────────────────────────────────────────
 
 /// `speak_answer` (35-2).
 class SpeakAnswerPayload extends CardPayload {
@@ -1402,10 +1431,10 @@ class SpeakRetellPayload extends CardPayload {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────────────────────────
-// Конверт.
+// Envelope.
 // ──────────────────────────────────────────────────────────────────────────────────────────────────
 
-/// Карточка дня — конверт `{id, stage, position, kind, unit, source, source_day, retry_of, payload,
+/// A day card — the envelope `{id, stage, position, kind, unit, source, source_day, retry_of, payload,
 /// result, attempts, response}`.
 class SessionCard {
   const SessionCard({
@@ -1430,26 +1459,26 @@ class SessionCard {
   final SessionKind kind;
   final SessionUnit unit;
 
-  /// `source: returned` — единица вернулась после двух провалов.
+  /// `source: returned` — the unit returned after two failures.
   final bool returned;
 
-  /// Номер дня, на котором единица провалилась (только у вернувшейся).
+  /// The number of the day on which the unit failed (only for a returned one).
   final int? sourceDay;
   final String? retryOf;
   final CardPayload payload;
   final SessionResult? result;
   final int attempts;
 
-  /// Что осталось от последней попытки — как пришло.
+  /// What is left of the last attempt — as it arrived.
   final Map<String, dynamic>? response;
 
-  /// Провалена дважды — единица вернётся на следующий день.
+  /// Failed twice — the unit will return the next day.
   final bool returns;
 
   bool get isAnswered => result != null;
 
-  /// Null — вид этой сборке не знаком: карточку пропускают, запроса о ней нет. Известный вид со
-  /// сломанным payload — [SessionContractError].
+  /// Null — the kind is unknown to this build: the card is skipped, and there is no request about it. A known
+  /// kind with a broken payload — [SessionContractError].
   static SessionCard? fromJson(Map<String, dynamic> j) {
     final kind = SessionKind.fromWire(j['kind']);
     if (kind == null) return null;
@@ -1483,7 +1512,7 @@ class SessionCard {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────────────────────────
-// Разбор.
+// Parsing.
 // ──────────────────────────────────────────────────────────────────────────────────────────────────
 
 String _scene(Map<String, dynamic> j) => _str(j, 'scene_id');
@@ -1502,7 +1531,7 @@ int _int(Map<String, dynamic> j, String key) {
   throw SessionContractError('«$key» is ${v.runtimeType}');
 }
 
-/// Доли и темпы приходят числом с дробной частью (`1.0` / `0.7`), но целое тоже число.
+/// Shares and rates arrive as a number with a fractional part (`1.0` / `0.7`), but an integer is a number too.
 double _num(Map<String, dynamic> j, String key) {
   final v = j[key];
   if (v is num) return v.toDouble();

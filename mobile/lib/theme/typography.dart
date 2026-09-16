@@ -1233,10 +1233,10 @@ abstract final class AppTextWindow {
   );
 }
 
-/// СЕССИЯ ДНЯ — кадры серий 30–32 канвы `session-canvas.dc.html` (наряд SESSION-1b). Шрифты приложения:
-/// Literata — язык цели и заголовки, Inter — всё остальное. Кегль / строка — как на кадрах.
+/// DAY SESSION — canvases of series 30–32 in `session-canvas.dc.html` (work order SESSION-1b). The app's fonts:
+/// Literata — the target language and headings, Inter — everything else. Size / line height — as on the canvases.
 abstract final class AppTextSession {
-  /// Имя этапа на входе (30-1) и итог этапа (30-6) — Literata 26/500, строка 32, −.01em.
+  /// Stage name on the entry (30-1) and the stage summary (30-6) — Literata 26/500, line 32, −.01em.
   static const stageTitle = TextStyle(
     fontFamily: AppFonts.literata,
     fontWeight: FontWeight.w500,
@@ -1246,13 +1246,13 @@ abstract final class AppTextSession {
     color: AppColors.ink,
   );
 
-  /// Описание этапа, тело листа «Нужен микрофон» — 15, строка 20, secondary.
+  /// Stage description, the body of the «Microphone needed» sheet — 15, line 20, secondary.
   static const body = TextStyle(fontFamily: AppFonts.inter, fontSize: 15, height: 20 / 15, color: AppColors.secondary);
 
-  /// Мелкая подпись 13, строка 18, tertiary — «≈ 6 мин», чтение, «тап — говорить», статус этапа.
+  /// Small caption 13, line 18, tertiary — «≈ 6 min», the reading, «tap to speak», the stage status.
   static const meta = TextStyle(fontFamily: AppFonts.inter, fontSize: 13, height: 18 / 13, color: AppColors.tertiary);
 
-  /// Строка этапа в списке — 15, строка 20; у текущего 600 чернилами, у остальных secondary.
+  /// Stage row in the list — 15, line 20; the current one 600 in ink, the others secondary.
   static const stageRow = TextStyle(fontFamily: AppFonts.inter, fontSize: 15, height: 20 / 15, color: AppColors.secondary);
   static const stageRowCurrent = TextStyle(
     fontFamily: AppFonts.inter,
@@ -1262,19 +1262,19 @@ abstract final class AppTextSession {
     color: AppColors.ink,
   );
 
-  /// Текст 15/20 чернилами — «Без подсказок», определение слова, строка «Дальше: Фразы».
+  /// Text 15/20 in ink — «No hints», the word's definition, the «Next: Phrases» line.
   static const text15 = TextStyle(fontFamily: AppFonts.inter, fontSize: 15, height: 20 / 15, color: AppColors.ink);
 
-  /// Кнопка действия 56 — 17/600 бумагой.
+  /// Action button 56 — 17/600 in paper.
   static const dock = TextStyle(fontFamily: AppFonts.inter, fontWeight: FontWeight.w600, fontSize: 17, color: AppColors.paper);
 
-  /// Шапка: имя этапа — 15/600.
+  /// Header: the stage name — 15/600.
   static const headerStage = TextStyle(fontFamily: AppFonts.inter, fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.ink);
 
-  /// Полоса сцены: «Запись к врачу · Регистратор» — 13, строка 18, secondary.
+  /// Scene strip: «Doctor's appointment · Receptionist» — 13, line 18, secondary.
   static const sceneLine = TextStyle(fontFamily: AppFonts.inter, fontSize: 13, height: 18 / 13, color: AppColors.secondary);
 
-  /// Задание над листом — 17/600, строка 22.
+  /// Task line above the sheet — 17/600, line 22.
   static const task = TextStyle(
     fontFamily: AppFonts.inter,
     fontWeight: FontWeight.w600,
@@ -1283,7 +1283,7 @@ abstract final class AppTextSession {
     color: AppColors.ink,
   );
 
-  /// Бровь листа «СЛОВО» — 11/600, .08em, капитель, tertiary.
+  /// Sheet eyebrow «WORD» — 11/600, .08em, small caps, tertiary.
   static const eyebrow = TextStyle(
     fontFamily: AppFonts.inter,
     fontWeight: FontWeight.w600,
@@ -1292,7 +1292,7 @@ abstract final class AppTextSession {
     color: AppColors.tertiary,
   );
 
-  /// Текст вопроса в листе 30-9 — Literata 26/500, строка 34.
+  /// Question text in the 30-9 sheet — Literata 26/500, line 34.
   static const question = TextStyle(
     fontFamily: AppFonts.literata,
     fontWeight: FontWeight.w500,
@@ -1301,10 +1301,11 @@ abstract final class AppTextSession {
     color: AppColors.ink,
   );
 
-  /// Вариант на родном — 17, строка 22.
+  /// Option in the native language — 17, line 22.
   static const option = TextStyle(fontFamily: AppFonts.inter, fontSize: 17, height: 22 / 17, color: AppColors.ink);
 
-  /// Вариант на языке цели, живая строка, собранная строка, реплика «В разговоре» — Literata 22/500, 28.
+  /// Option in the target language, the live line, the assembled row, the «In the conversation» line — Literata
+  /// 22/500, 28.
   static const target22 = TextStyle(
     fontFamily: AppFonts.literata,
     fontWeight: FontWeight.w500,
@@ -1313,7 +1314,7 @@ abstract final class AppTextSession {
     color: AppColors.ink,
   );
 
-  /// Слово на знакомстве и в «Повтори» — Literata 30/500, строка 36.
+  /// The word on the intro and on «Repeat» — Literata 30/500, line 36.
   static const term = TextStyle(
     fontFamily: AppFonts.literata,
     fontWeight: FontWeight.w500,
@@ -1322,7 +1323,7 @@ abstract final class AppTextSession {
     color: AppColors.ink,
   );
 
-  /// Каркас фразы на плашке — Literata 30/500, строка 38, −.01em.
+  /// The phrase's frame on its plate — Literata 30/500, line 38, −.01em.
   static const frame = TextStyle(
     fontFamily: AppFonts.literata,
     fontWeight: FontWeight.w500,
@@ -1332,13 +1333,13 @@ abstract final class AppTextSession {
     color: AppColors.ink,
   );
 
-  /// Плитка лотка и чип наполнения — Literata 15.
+  /// Tray tile and filler chip — Literata 15.
   static const tile = TextStyle(fontFamily: AppFonts.literata, fontSize: 15, color: AppColors.ink);
 
-  /// «Пропустить» — 15/500 secondary.
+  /// «Skip» — 15/500 secondary.
   static const skip = TextStyle(fontFamily: AppFonts.inter, fontWeight: FontWeight.w500, fontSize: 15, color: AppColors.secondary);
 
-  /// Шит выхода: заголовок — 17/600, строка 22.
+  /// Exit sheet: the title — 17/600, line 22.
   static const sheetTitle = TextStyle(
     fontFamily: AppFonts.inter,
     fontWeight: FontWeight.w600,
@@ -1347,9 +1348,9 @@ abstract final class AppTextSession {
     color: AppColors.ink,
   );
 
-  /// Шит выхода: «Продолжить» — 15/500 латунью.
+  /// Exit sheet: «Continue» — 15/500 in brass.
   static const sheetStay = TextStyle(fontFamily: AppFonts.inter, fontWeight: FontWeight.w500, fontSize: 15, color: AppColors.brassInk);
 
-  /// Версия сборки в подвале входа — мелко серым.
+  /// The build version in the entry's footer — small, in gray.
   static const buildStamp = TextStyle(fontFamily: AppFonts.inter, fontSize: 11, height: 14 / 11, color: AppColors.tertiary);
 }

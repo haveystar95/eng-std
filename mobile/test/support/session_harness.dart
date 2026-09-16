@@ -1,9 +1,10 @@
-/// ХАРНЕСС КАРТОЧЕК СЕССИИ (наряд SESSION-1b): карточка фикстуры сервера → настоящий виджет вида → нажатия
-/// человека → что карточка записала. Звук и микрофон — заглушки: голос ничего не играет, распознаватель
-/// молчит (голос в тестах идёт через поле «что услышал» debug-сборки — той же дорогой, что финальный
-/// транскрипт записи).
+/// SESSION CARD HARNESS (work orders SESSION-1b, SESSION-1b′): a server fixture card → the real widget of its
+/// kind → a person's taps → what the card recorded. Sound and microphone are stubs: the voice plays nothing and
+/// the recognizer stays silent (voice in tests goes through the debug build's «what was heard» field — the same
+/// road as a recording's final transcript).
 library;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -30,15 +31,18 @@ SessionDay sessionFixture(String name) => SessionDay.fromJson(
   jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>,
 );
 
-/// Первая карточка вида [kind] этапа [stage] фикстуры.
+/// The first card of [kind] in the fixture ([skip] cards of that kind are passed over).
 SessionCard fixtureCard(SessionDay day, SessionKind kind, {int skip = 0}) =>
     day.stages.expand((s) => s.cards).where((c) => c.kind == kind).skip(skip).first;
 
-/// Голос, который ничего не играет и помнит, что его просили сыграть.
+/// A voice that plays nothing and remembers what it was asked to play.
 class QuietVoice extends SessionVoice {
   QuietVoice() : super(lines: LineAudioCache(directory: Directory.systemTemp), targetLang: 'en', pronouncer: _QuietPronouncer());
 
   final List<String> played = [];
+
+  /// What the phone would read for each play without a file.
+  final List<String> fallbacks = [];
 
   @override
   Future<void> warmUp() async {}
@@ -49,6 +53,7 @@ class QuietVoice extends SessionVoice {
   @override
   Future<void> play(CardAudio? audio, {required String fallback, double rate = 1.0, Object? key}) async {
     played.add('${audio?.ref ?? '-'}@$rate');
+    fallbacks.add(fallback);
   }
 
   @override
@@ -74,7 +79,8 @@ class _QuietPronouncer extends Pronouncer {
   Future<void> release() async {}
 }
 
-/// Распознаватель, которого нет: запись не начинается (микрофон на симуляторе и в тестах мёртв).
+/// A recognizer that hears nothing: a recording never gets a word (the microphone is dead on the simulator and in
+/// tests).
 class SilentRecognizer implements SpeechRecognizer {
   SilentRecognizer({this.available = true});
 
@@ -107,18 +113,28 @@ class SilentRecognizer implements SpeechRecognizer {
   Future<void> cancel() async {}
 }
 
-/// Что карточка сделала: ответы, «дальше», вопросы судье.
+/// What the card did: answers, «Next» taps, questions to the judge.
 class CardProbe {
   final List<SessionAnswer> answers = [];
   final List<String> judged = [];
   int nexts = 0;
   bool noMic = false;
 
-  /// Ответ судьи на следующий вопрос.
+  /// The judge's answer to the next question.
   SessionJudgeOutcome Function(String heard) verdict = (_) => const SessionJudgeOutcome(accepted: true, attempts: 1);
+
+  /// While set and not completed, the judge holds its verdict — the card stays «waiting for the judge».
+  Completer<void>? judgeGate;
 }
 
-CardEnv probeEnv(SessionCard card, CardProbe probe, {QuietVoice? voice, String role = 'Регистратор', bool micAvailable = true}) => CardEnv(
+CardEnv probeEnv(
+  SessionCard card,
+  CardProbe probe, {
+  QuietVoice? voice,
+  String role = 'Регистратор',
+  bool micAvailable = true,
+  SessionDay? day,
+}) => CardEnv(
   card: card,
   voice: voice ?? QuietVoice(),
   targetLang: 'en',
@@ -128,6 +144,8 @@ CardEnv probeEnv(SessionCard card, CardProbe probe, {QuietVoice? voice, String r
   next: () async => probe.nexts++,
   judge: (heard) async {
     probe.judged.add(heard);
+    final gate = probe.judgeGate;
+    if (gate != null) await gate.future;
     return probe.verdict(heard);
   },
   makeMic: (expected, contextual) => SessionMic(
@@ -138,6 +156,8 @@ CardEnv probeEnv(SessionCard card, CardProbe probe, {QuietVoice? voice, String r
   ),
   reportNoMic: (v) => probe.noMic = v,
   openSettings: () async {},
+  frameSentence: day?.frameSentence,
+  termText: day?.termText,
 );
 
 class _Auth extends AuthController {
@@ -145,11 +165,11 @@ class _Auth extends AuthController {
   Future<AppUser?> build() async => AppUser(id: '01TEST', name: 'Тест');
 }
 
-/// Карточка во весь экран 390 × 1000, анимации выключены, русская локаль. Каждый вызов — НОВАЯ карточка
-/// (свой ключ): второй прогон той же карточки в одном тесте не наследует ответ первого — как в сессии, где
-/// карточки ключуются порядковым номером.
-Future<void> pumpCard(WidgetTester tester, CardEnv env) async {
-  tester.view.physicalSize = const Size(390 * 2, 1000 * 2);
+/// The card on a full 390 × 1000 screen, animations off, Russian locale. Every call is a NEW card (its own key):
+/// a second run of the same card within one test does not inherit the first run's answer — just like the session,
+/// where cards are keyed by their position.
+Future<void> pumpCard(WidgetTester tester, CardEnv env, {Size size = const Size(390, 1000)}) async {
+  tester.view.physicalSize = size * 2;
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
@@ -168,30 +188,55 @@ Future<void> pumpCard(WidgetTester tester, CardEnv env) async {
   await tester.pump();
 }
 
-/// Сказать голосом через поле «что услышал» и дождаться, пока запись «замрёт» и уйдёт на зачёт.
-Future<void> sayDebug(WidgetTester tester, String text) async {
+/// Type [text] into the «what was heard» field: the recording starts with that text as an unchanging partial result.
+Future<void> enterHeard(WidgetTester tester, String text) async {
   await tester.enterText(find.byKey(const ValueKey('session-debug-heard')), text);
   await tester.testTextInput.receiveAction(TextInputAction.done);
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 450));
 }
 
-/// Доиграть таймеры карточки (автозвук, автопереход).
+/// Say [text] through the «what was heard» field and wait until the recording stops and goes to grading: a passing
+/// text stops after 500 ms (a judge-graded one after 800 ms), a failing one after 2 s of silence; the default
+/// [hold] covers all of them.
+Future<void> sayDebug(WidgetTester tester, String text, {Duration hold = const Duration(milliseconds: 2050)}) async {
+  await enterHeard(tester, text);
+  await tester.pump(hold);
+}
+
+/// Let the card's timers run out (autoplay, auto-advance).
 Future<void> settleCard(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 700));
   await tester.pump(const Duration(milliseconds: 700));
 }
 
-/// Нажать вариант по тексту.
+/// Tap an option by its text.
 Future<void> tapText(WidgetTester tester, String text) async {
   await tester.ensureVisible(find.text(text).last);
   await tester.tap(find.text(text).last);
   await tester.pump();
 }
 
-/// Строка кнопки существует и активна.
+/// The button with this label exists and is enabled.
 bool dockEnabled(WidgetTester tester, String label) {
   final finder = find.ancestor(of: find.text(label), matching: find.byType(GestureDetector));
   if (finder.evaluate().isEmpty) return false;
   return tester.widget<GestureDetector>(finder.first).onTap != null;
+}
+
+/// The session's sounds as a session opened them: [SessionSounds] loaded against a mocked
+/// [SessionSounds.channel]; returns the names played, in order.
+List<String> recordSessionSounds(WidgetTester tester) {
+  final sounds = <String>[];
+  final messenger = tester.binding.defaultBinaryMessenger;
+  messenger.setMockMethodCallHandler(SessionSounds.channel, (call) async {
+    if (call.method == 'play') sounds.add('${(call.arguments as Map)['sound']}');
+    return null;
+  });
+  SessionSounds.resetForTest();
+  unawaited(SessionSounds.load());
+  addTearDown(() {
+    SessionSounds.resetForTest();
+    messenger.setMockMethodCallHandler(SessionSounds.channel, null);
+  });
+  return sounds;
 }

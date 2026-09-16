@@ -1,3 +1,5 @@
+import 'dart:math' show max, min;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -654,6 +656,45 @@ void main() {
     expect(scale(), 0, reason: 'до 300 мс галки нет');
     await tester.pump(AppMotion.windowStageCheck + const Duration(milliseconds: 40));
     expect(scale(), 1);
+  });
+
+  // ── 12 · EXCHANGE ORDER BY KIND ───────────────────────────────────────────────────────────
+  // RULE (SESSION-1b′, item 9): inside an exchange the bubbles follow its kind — `answer`: the partner, then
+  // the learner; `ask` and `rescue`: the learner first, then the partner. An exchange without a kind (the
+  // scene's lesson was not at hand) keeps the partner first.
+  // CATCHES: a feed that always opens with the partner, so the learner's question reads as a reply to the
+  // line that answers it.
+  testWidgets('dialogue feed — answer opens with the partner, ask and rescue with the learner', (tester) async {
+    const kinds = ['answer', 'ask', 'rescue'];
+    final room = windowRoom('passed', (j) {
+      for (final (i, pair) in itemsOf(j, 'dialogue').take(kinds.length).indexed) {
+        pair['kind'] = kinds[i];
+      }
+      return j;
+    });
+    await pumpDayWindowServer(tester, WindowServer(room));
+    await scrollToHeader(tester);
+    await openWindowTab(tester, 'Диалог');
+
+    double top(String text) {
+      final line = find.descendant(of: find.byType(WindowDialogue), matching: find.text(text));
+      expect(line, findsOneWidget, reason: 'the fixture line «$text» is unique in the feed');
+      return tester.getTopLeft(line).dy;
+    }
+
+    final pairs = DayWindow.fromJson(room.windowJson).program.dialogue;
+    expect([for (final pair in pairs.take(4)) pair.kind],
+        [WindowExchangeKind.answer, WindowExchangeKind.ask, WindowExchangeKind.rescue, null]);
+    final bottoms = <double>[];
+    for (final pair in pairs.take(4)) {
+      final partner = top(pair.partner!.text);
+      final learner = top(pair.learner!.text);
+      final learnerFirst = pair.kind == WindowExchangeKind.ask || pair.kind == WindowExchangeKind.rescue;
+      expect(learnerFirst ? learner < partner : partner < learner, isTrue,
+          reason: 'step ${pair.step} (${pair.kind?.name ?? 'no kind'}): partner at $partner, learner at $learner');
+      if (bottoms.isNotEmpty) expect(min(partner, learner), greaterThan(bottoms.last), reason: 'exchanges keep their order');
+      bottoms.add(max(partner, learner));
+    }
   });
 
   // ── ОКНО ПО СОСТОЯНИЮ СЕРВЕРА ─────────────────────────────────────────────────────────────

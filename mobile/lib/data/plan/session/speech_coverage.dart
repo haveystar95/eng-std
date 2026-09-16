@@ -1,68 +1,72 @@
-/// ПОКРЫТИЕ РЕЧИ — сказал ли ученик достаточно слов строки (наряд SESSION-1b; на сервере то же правило —
-/// `Plan/Domain/Service/SpeechCoverage` поверх `Shared/Domain/Service/LexicalNormalizer::canonicalize`).
+/// SPEECH COVERAGE — whether the learner said enough words of the string (work order SESSION-1b; the server has
+/// the same rule — `Plan/Domain/Service/SpeechCoverage` on top of
+/// `Shared/Domain/Service/LexicalNormalizer::canonicalize`).
 ///
-/// Правило контракта («Покрытие речи»): ожидаемый текст из ≤ 2 значащих слов требует всех, из 3 и больше —
-/// 70 %; слова сверяются мультимножеством и без порядка (распознаватель роняет и меняет слова местами, но
-/// не переставляет строку); артикли ЯЗЫКА ЦЕЛИ прощаются, у языка без артиклей не прощается ничего. Порог
-/// карточки приходит в payload (`coverage_min`) — клиент его не выбирает, [minFor] здесь ради сверки с
-/// сервером в тестах.
+/// The contract rule («Speech coverage»): an expected text of ≤ 2 significant words requires all of them, of 3
+/// or more — 70 %; words are matched as a multiset and regardless of order (the recognizer drops words and swaps
+/// them around, but does not reorder the string); the TARGET LANGUAGE's articles are forgiven, for a language
+/// without articles nothing is forgiven. The card's threshold arrives in the payload (`coverage_min`) — the client
+/// does not choose it, [minFor] is here for cross-checking against the server in tests.
 ///
-/// Слова сравниваются в той же канонической форме, что на сервере: нижний регистр, раскрытые английские
-/// сокращения («doesn't» → «does not», «he's been» → «he has been»), апостроф снят (соединяет буквы, а не
-/// разделяет слова), остальные знаки и дефисы — пробел («X-ray» — два слова `x ray`), пробелы схлопнуты.
-/// Юникод-свёртка — как у сервера для сравнения: запятая-под-буквой вместо седили, `ß` → `ss`, `œ` → `oe`
-/// (NFC-композиции в Dart нет; распознаватель iOS и так отдаёт составные буквы).
+/// Words are compared in the same canonical form as on the server: lowercase, English contractions expanded
+/// («doesn't» → «does not», «he's been» → «he has been»), the apostrophe removed (it joins letters rather than
+/// separating words), other marks and hyphens — a space («X-ray» — two words `x ray`), spaces collapsed.
+/// Unicode folding — as the server does for comparison: comma-below instead of cedilla, `ß` → `ss`, `œ` → `oe`
+/// (Dart has no NFC composition; the iOS recognizer returns composed letters anyway).
 ///
-/// Чистые функции, ни одного виджета и ни одного обращения к сети.
+/// Gluing (polish pass SESSION-1b′, item 6): the recognizer sometimes loses the space between words
+/// («workschedule»); a heard word that is not in the expected text but equals two ADJACENT expected words without
+/// a space counts as both ([heardWords]). The server does not split gluing — the client is more lenient here, not
+/// stricter.
+///
+/// Pure functions, not a single widget and not a single network call.
 library;
 
 abstract final class SpeechCoverage {
-  /// «Сказать всё».
+  /// «Say everything».
   static const double all = 1.0;
 
-  /// «Сказать большую часть» — 70 %.
+  /// «Say most of it» — 70 %.
   static const double most = 0.7;
 
-  /// До скольких значащих слов строка считается короткой.
+  /// Up to how many significant words a string counts as short.
   static const int shortWords = 2;
 
-  /// Точность сравнения доли с порогом (7 из 10 — ровно 0.7).
+  /// The precision of comparing a share with the threshold (7 of 10 is exactly 0.7).
   static const double _epsilon = 1e-9;
 
-  /// Артикли пакета языка цели. Пакеты живут на сервере; клиенту известен только английский, у
-  /// остальных языков артиклей в пакете нет или пакета нет вовсе — не прощается ничего.
+  /// The articles of the target language's pack. Packs live on the server; the client knows only English; the
+  /// other languages have no articles in their pack or no pack at all — nothing is forgiven.
   static Set<String> articlesFor(String targetLang) => switch (targetLang) {
     'en' => const {'a', 'an', 'the'},
     _ => const {},
   };
 
-  /// Сравнимые слова текста — каноническая форма, по одному.
+  /// The comparable words of a text — canonical form, one by one.
   static List<String> words(String text) {
     final canonical = canonicalize(text);
     if (canonical.isEmpty) return const [];
     return canonical.split(' ');
   }
 
-  /// Сколько слов ожидаемого текста считается: все, кроме артиклей.
+  /// How many words of the expected text count: all except articles.
   static int countedWords(String expected, Set<String> articles) =>
       _withoutArticles(words(expected), articles).length;
 
-  /// Доля, которую просит строка: всё у короткой, большая часть у длинной.
+  /// The share a string asks for: all for a short one, most for a long one.
   static double minFor(String expected, Set<String> articles) =>
       countedWords(expected, articles) <= shortWords ? all : most;
 
-  /// Услышано ли не меньше [min] слов [expected] (без артиклей), каждое услышанное слово — один раз.
+  /// Whether no less than [min] of the words of [expected] (without articles) were heard, each heard word once.
   static bool covers(String heard, String expected, double min, Set<String> articles) =>
       coverageOf(heard, expected, articles) + _epsilon >= min && _withoutArticles(words(expected), articles).isNotEmpty;
 
-  /// Доля слов [expected] (без артиклей), которые есть в [heard], — мультимножеством. Пустое ожидаемое — 0.
+  /// The share of the words of [expected] (without articles) that are in [heard] — as a multiset. An empty
+  /// expected text — 0.
   static double coverageOf(String heard, String expected, Set<String> articles) {
     final wanted = _withoutArticles(words(expected), articles);
     if (wanted.isEmpty) return 0;
-    final available = <String, int>{};
-    for (final w in words(heard)) {
-      available[w] = (available[w] ?? 0) + 1;
-    }
+    final available = _counts(heardWords(heard, expected));
     var found = 0;
     for (final w in wanted) {
       final left = available[w] ?? 0;
@@ -74,10 +78,56 @@ abstract final class SpeechCoverage {
     return found / wanted.length;
   }
 
-  /// Стоят ли слова [value] в [heard] подряд — артикли не в счёт с обеих сторон.
+  /// How many words of [heard] (without articles) remain beyond the words of [expected] — as a multiset.
+  static int extraWords(String heard, String expected, Set<String> articles) {
+    final left = _counts(_withoutArticles(words(expected), articles));
+    var extra = 0;
+    for (final w in _withoutArticles(heardWords(heard, expected), articles)) {
+      final n = left[w] ?? 0;
+      if (n > 0) {
+        left[w] = n - 1;
+      } else {
+        extra++;
+      }
+    }
+    return extra;
+  }
+
+  /// The comparable words of [heard] with gluings split: a word that is not in [expected] but equals two
+  /// adjacent words of [expected] without a space is both of them.
+  static List<String> heardWords(String heard, String expected) {
+    final got = words(heard);
+    final want = words(expected);
+    if (got.isEmpty || want.length < 2) return got;
+    final known = want.toSet();
+    return [
+      for (final w in got)
+        if (known.contains(w)) w else ...(unglue(w, want) ?? [w]),
+    ];
+  }
+
+  /// Two adjacent words of [expected] (in comparable form) glued into [token] — or null.
+  static List<String>? unglue(String token, List<String> expected) {
+    for (var i = 0; i + 1 < expected.length; i++) {
+      final a = expected[i];
+      final b = expected[i + 1];
+      if (a.length + b.length == token.length && token.startsWith(a) && token.endsWith(b)) return [a, b];
+    }
+    return null;
+  }
+
+  static Map<String, int> _counts(List<String> words) {
+    final out = <String, int>{};
+    for (final w in words) {
+      out[w] = (out[w] ?? 0) + 1;
+    }
+    return out;
+  }
+
+  /// Whether the words of [value] stand consecutively in [heard] — articles do not count on either side.
   static bool containsSequence(String heard, String value, Set<String> articles) {
     final needle = _withoutArticles(words(value), articles);
-    final haystack = _withoutArticles(words(heard), articles);
+    final haystack = _withoutArticles(heardWords(heard, value), articles);
     final n = needle.length;
     if (n == 0 || n > haystack.length) return false;
     for (var i = 0; i + n <= haystack.length; i++) {
@@ -93,7 +143,7 @@ abstract final class SpeechCoverage {
     return false;
   }
 
-  /// Каноническая форма строки — зеркало серверного `LexicalNormalizer::canonicalize()`.
+  /// The canonical form of a string — a mirror of the server's `LexicalNormalizer::canonicalize()`.
   static String canonicalize(String value) {
     var v = _fold(value).toLowerCase().trim();
     v = _expandContractions(v);
@@ -108,7 +158,7 @@ abstract final class SpeechCoverage {
 
   static const List<String> _apostrophes = ['’', '‘', '´', '`', "'"];
 
-  /// Свёртка сервера для сравнения: седиль → запятая под буквой, `ß` → `ss`, `œ` → `oe`.
+  /// The server's folding for comparison: cedilla → comma below, `ß` → `ss`, `œ` → `oe`.
   static String _fold(String value) => value
       .replaceAll('ş', 'ș')
       .replaceAll('Ş', 'Ș')
@@ -119,13 +169,13 @@ abstract final class SpeechCoverage {
       .replaceAll('œ', 'oe')
       .replaceAll('Œ', 'OE');
 
-  /// Английские сокращения — тот же выверенный список, что на сервере, и то же правило «перед been».
+  /// English contractions — the same vetted list as on the server, and the same «before been» rule.
   static String _expandContractions(String value) {
     var v = value;
     for (final glyph in const ['’', '‘', '´', '`']) {
       v = v.replaceAll(glyph, "'");
     }
-    // «he's been» — только «he has been», «I'd been» — только «I had been»: здесь грамматика решает сама.
+    // «he's been» — only «he has been», «I'd been» — only «I had been»: here the grammar decides by itself.
     v = v.replaceAllMapped(RegExp(r"\b([a-z]+)'s(\s+been\b)"), (m) => '${m[1]} has${m[2]}');
     v = v.replaceAllMapped(RegExp(r"\b([a-z]+)'d(\s+been\b)"), (m) => '${m[1]} had${m[2]}');
     return v.replaceAllMapped(RegExp(r"\b[a-z]+'[a-z]+\b"), (m) => _contractions[m[0]] ?? m[0]!);

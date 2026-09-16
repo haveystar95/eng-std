@@ -14,12 +14,12 @@ import '../parts/session_tiles.dart';
 import '../session_texts.dart';
 import 'card_kit.dart';
 
-/// СЛОВА — серия 31 канвы: по виджету на вид.
+/// WORDS — canvas series 31: one widget per kind.
 
-/// Звук образца «Повтори» — 0.85× (серверный голос всегда обычного темпа, DECISIONS п. 318).
+/// The sample sound of «Repeat» — 0.85× (the server voice is always at normal tempo, DECISIONS item 318).
 const double kRepeatRate = 0.85;
 
-/// Пауза перед автозвуком — после смены карточки, чтобы канал звука не стоил кадра перехода.
+/// Pause before autoplay — after a card change, so that the audio channel does not cause jank in the transition.
 const Duration kAutoplayDelay = Duration(milliseconds: 280);
 
 void _autoplay(State state, CardEnv env, CardAudio? audio, String fallback, Object key, {double rate = 1.0}) {
@@ -30,8 +30,8 @@ void _autoplay(State state, CardEnv env, CardAudio? audio, String fallback, Obje
 
 // ── 31-1 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// ЗНАКОМСТВО СО СЛОВОМ (31-1): фото, слово, чтение, перевод, определение; «В разговоре» — реплика дня со
-/// словом, подчёркнутым латунью, и «прослушать». Слово звучит само при появлении. «Понятно» → `passed`.
+/// WORD INTRO (31-1): photo, word, reading, translation, definition; «In the conversation» — the day's line with
+/// the word underlined in brass, and «Listen». The word plays by itself when it appears. «Got it» → `passed`.
 class WordIntroCard extends StatefulWidget {
   const WordIntroCard({super.key, required this.env, required this.payload});
 
@@ -138,7 +138,7 @@ class _WordIntroCardState extends State<WordIntroCard> {
   }
 }
 
-/// Реплика «В разговоре» — Literata 22, слово подчёркнуто латунью 2 px по `term_span`.
+/// The «In the conversation» line — Literata 22, the word underlined in brass 2 px by `term_span`.
 class _UnderlinedLine extends StatelessWidget {
   const _UnderlinedLine({required this.text, required this.span});
 
@@ -171,8 +171,8 @@ class _UnderlinedLine extends StatelessWidget {
 
 // ── 31-2 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// ПОВТОРИ СЛОВО (31-2): образец звучит при открытии на 0.85×, повтор — «прослушать»; микрофон; зачёт —
-/// покрытие `expected_text` по `coverage_min`; две попытки без зачёта — `skipped`. Услышано — эхо под листом.
+/// REPEAT THE WORD (31-2): the sample plays on opening at 0.85×, replay — «Listen»; microphone; pass — coverage of
+/// `expected_text` by `coverage_min`; two attempts without a pass — `skipped`. Heard — an echo under the sheet.
 class WordRepeatCard extends StatefulWidget {
   const WordRepeatCard({super.key, required this.env, required this.payload});
 
@@ -288,8 +288,9 @@ class _WordRepeatCardState extends State<WordRepeatCard> with VoiceCardState<Wor
 
 // ── 31-3 / 31-4 ───────────────────────────────────────────────────────────────────────────────────
 
-/// ВЫБОР ИЗ ЧЕТЫРЁХ (шаблон 30-9): `term_to_native` (31-3) — фото, слово и звук у вопроса, варианты на
-/// родном; `native_to_term` (31-4) — фото и перевод без звука, варианты — слова цели со своим звуком.
+/// CHOICE OF FOUR (template 30-9): `term_to_native` (31-3) — photo, word and sound on the question, options in the
+/// native language; `native_to_term` (31-4) — photo and translation without sound, options — target words with
+/// their own sound.
 class WordChooseCard extends StatefulWidget {
   const WordChooseCard({super.key, required this.env, required this.payload});
 
@@ -338,7 +339,9 @@ class _WordChooseCardState extends State<WordChooseCard> with ChoiceCardState<Wo
 
 // ── 31-5 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// НА СЛУХ (31-5): волна вместо фото, звук только у вопроса (играет при открытии), четыре слова цели молчат.
+/// BY EAR (31-5): a wave instead of the photo, sound only on the question (plays on opening), the options are
+/// silent — translations in the native language drawn like those of 31-3 (contract SESSION-1e), or target
+/// spellings on a day dealt before it.
 class WordListenCard extends StatefulWidget {
   const WordListenCard({super.key, required this.env, required this.payload});
 
@@ -358,8 +361,13 @@ class _WordListenCardState extends State<WordListenCard> with ChoiceCardState<Wo
   @override
   ChoicePayload get choice => widget.payload;
 
-  /// Без файла телефон читает верное слово — другого текста у звука нет.
-  String get _fallback => widget.payload.correctOption?.text ?? '';
+  /// Without a file the phone reads the word: spellings — the correct option; translations — the day's word by the
+  /// card's unit, never the correct option (that would read the answer aloud). Not found — silence.
+  String get _fallback {
+    final p = widget.payload;
+    if (!p.nativeOptions) return p.correctOption?.text ?? '';
+    return env.termText?.call(env.card.unit.ref) ?? '';
+  }
 
   @override
   void initState() {
@@ -389,15 +397,15 @@ class _WordListenCardState extends State<WordListenCard> with ChoiceCardState<Wo
         text: Text(l.planSessionWhatHeard, style: AppTextSession.question),
         listen: CardListen(env: env, audio: p.audio, fallback: _fallback, playKey: _key),
       ),
-      bottom: optionsDock(context, target: true),
+      bottom: optionsDock(context, target: !p.nativeOptions),
     );
   }
 }
 
 // ── 31-6 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// СОБЕРИ ИЗ ПЛИТОК (31-6): фото и перевод держат смысл, плитки 30-5; «Проверить»; зачёт — собранное =
-/// `expected` по порядку. Неверно — покачивание, контур у места ошибки, верная плитка подчёркнута латунью.
+/// BUILD FROM TILES (31-6): photo and translation carry the meaning, tiles 30-5; «Check»; pass — the assembled =
+/// `expected` in order. Wrong — a shake, an outline at the mistake's place, the correct tile underlined in brass.
 class WordAssembleCard extends StatefulWidget {
   const WordAssembleCard({super.key, required this.env, required this.payload});
 
@@ -409,7 +417,7 @@ class WordAssembleCard extends StatefulWidget {
 }
 
 class _WordAssembleCardState extends State<WordAssembleCard> {
-  /// Места плиток лотка в порядке, в котором их положили.
+  /// Positions of the tray tiles in the order they were placed.
   final List<int> _placed = [];
   bool? _correct;
   int _shake = 0;
@@ -437,6 +445,7 @@ class _WordAssembleCardState extends State<WordAssembleCard> {
     } else {
       AppHaptics.warning();
     }
+    SessionSounds.verdict(correct: ok);
     widget.env.submit(SessionAnswer(
       result: ok ? SessionResult.passed : SessionResult.failed,
       attempts: 1,
@@ -455,7 +464,7 @@ class _WordAssembleCardState extends State<WordAssembleCard> {
     final env = widget.env;
     final answered = _correct != null;
     final wrongAt = _correct == false ? _mismatch : -1;
-    // Верная плитка на месте ошибки — первая неиспользованная с этим текстом.
+    // The correct tile for the mistake's place — the first unused one with this text.
     int? hintTray;
     if (wrongAt >= 0 && wrongAt < p.expected.length) {
       final want = p.expected[wrongAt];
@@ -517,8 +526,9 @@ class _WordAssembleCardState extends State<WordAssembleCard> {
 
 // ── 31-7 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// СЛОВО В ОКНЕ (31-7): реплика с окном латунью на месте слова, полный перевод `text_native` со словом,
-/// четыре термина со своим звуком. У карточки нет фото (payload его не несёт) — верх листа текстом.
+/// WORD IN THE SLOT (31-7): the line with a brass slot in place of the word, the full translation `text_native`
+/// with the word, four terms with their own sound. The card has no photo (the payload does not carry one) —
+/// text-only sheet top.
 class WordInLineCard extends StatefulWidget {
   const WordInLineCard({super.key, required this.env, required this.payload});
 
@@ -564,8 +574,9 @@ class _WordInLineCardState extends State<WordInLineCard> with ChoiceCardState<Wo
           fallback: correct == null ? p.line.textTarget : p.line.textTarget.replaceFirst(kSlotMark, correct),
           playKey: 'in-line',
         ),
-        // Полный перевод со словом, а не `text_native_gapped`: окно реплики принимает несколько слов дня, и
-        // только перевод делает ответ единственным (уточнение владельца к 31-7; канва здесь ошибается).
+        // The full translation with the word, not `text_native_gapped`: the line's slot accepts several words of
+        // the day, and only the translation makes the answer unique (owner's clarification to 31-7; the canvas is
+        // wrong here).
         translation: p.line.textNative,
       ),
       bottom: optionsDock(

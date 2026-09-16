@@ -10,8 +10,8 @@ import 'package:eng_std/data/plan/session/session_outcomes.dart';
 import 'package:eng_std/data/plan/session/session_rules.dart';
 import 'package:eng_std/data/plan/session/speech_coverage.dart';
 
-/// ПРАВИЛА ЗАЧЁТА СЕССИИ (наряд SESSION-1b, разд. 1 и 6): матрица «что клиент вправе записать», сверка
-/// выбора и плиток, зачёт голоса.
+/// THE SESSION'S GRADING RULES (work order SESSION-1b §1 and §6): the «what the client may write» matrix, checking
+/// choices and tiles, the voice pass.
 void main() {
   final day = SessionDay.fromJson(
     jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>,
@@ -19,8 +19,8 @@ void main() {
   T first<T extends CardPayload>(PlanStage stage) => day.stageOf(stage)!.cards.map((c) => c.payload).whereType<T>().first;
   final en = SpeechCoverage.articlesFor('en');
 
-  group('что клиент вправе записать', () {
-    test('голос никогда не пишет failed; судейский вид — только skipped; прохождение — passed', () {
+  group('what the client may write', () {
+    test('voice never writes failed; a judge-graded kind only skipped; a walkthrough — passed', () {
       for (final kind in SessionKind.values) {
         final writes = SessionRules.clientWrites(kind);
         switch (kind.grading) {
@@ -34,12 +34,12 @@ void main() {
           case SessionGrading.choice:
             expect(writes, {SessionResult.passed, SessionResult.failed}, reason: kind.wire);
         }
-        // То, что пишет клиент, сервер всегда принимает — иначе 422.
+        // Whatever the client writes, the server always accepts — otherwise a 422.
         expect(SessionRules.serverAccepts(kind).containsAll(writes), isTrue, reason: kind.wire);
       }
     });
 
-    test('виды 1b разложены по способам зачёта как на сервере', () {
+    test('the 1b kinds are sorted by grading method as on the server', () {
       expect(SessionKind.phraseOwnSlot.grading, SessionGrading.judge);
       expect(SessionKind.speakAnswer.grading, SessionGrading.judge);
       expect(SessionKind.speakRetell.grading, SessionGrading.judge);
@@ -56,13 +56,13 @@ void main() {
     });
   });
 
-  test('выбор: id варианта = correct', () {
+  test('choice: the option id equals correct', () {
     final p = first<WordChoosePayload>(PlanStage.words);
     expect(SessionRules.choiceCorrect(p, 'o2'), isTrue);
     expect(SessionRules.choiceCorrect(p, 'o1'), isFalse);
   });
 
-  test('word_assemble: собранное = expected по порядку, слово в слово', () {
+  test('word_assemble: the assembly equals expected in order, word for word', () {
     expect(SessionRules.wordAssembled(['lower', 'back'], ['lower', 'back']), isTrue);
     expect(SessionRules.wordAssembled(['back', 'lower'], ['lower', 'back']), isFalse);
     expect(SessionRules.wordAssembled(['lower'], ['lower', 'back']), isFalse);
@@ -71,46 +71,47 @@ void main() {
 
   group('phrase_assemble', () {
     final p = first<PhraseAssemblePayload>(PlanStage.phrases);
-    // tiles: in, his, it, the, started, hurts; expected: it hurts in his + окно 4 наполнение 0.
+    // tiles: in, his, it, the, started, hurts; expected: it hurts in his + slot at 4, filler 1.
     TilePiece t(String word) => TilePiece(p.tiles.indexOf(word), word);
     SlotPiece s(int index) => SlotPiece(p.chips.firstWhere((f) => f.index == index));
 
-    test('слова, место окна и наполнение совпали — зачёт', () {
-      expect(SessionRules.phraseAssembled(p, [t('it'), t('hurts'), t('in'), t('his'), s(0)]), isTrue);
+    test('words, the slot\'s place and the filler match — pass', () {
+      expect(SessionRules.phraseAssembled(p, [t('it'), t('hurts'), t('in'), t('his'), s(1)]), isTrue);
     });
 
-    test('другое наполнение, другое место окна или лишняя плитка — не зачёт', () {
-      expect(SessionRules.phraseAssembled(p, [t('it'), t('hurts'), t('in'), t('his'), s(1)]), isFalse);
-      expect(SessionRules.phraseAssembled(p, [t('it'), t('hurts'), t('in'), s(0), t('his')]), isFalse);
-      expect(SessionRules.phraseAssembled(p, [t('it'), t('hurts'), t('in'), t('the'), s(0)]), isFalse);
+    test('another filler, another slot place or an extra tile — no pass', () {
+      expect(SessionRules.phraseAssembled(p, [t('it'), t('hurts'), t('in'), t('his'), s(0)]), isFalse);
+      expect(SessionRules.phraseAssembled(p, [t('it'), t('hurts'), t('in'), s(1), t('his')]), isFalse);
+      expect(SessionRules.phraseAssembled(p, [t('it'), t('hurts'), t('in'), t('the'), s(1)]), isFalse);
       expect(SessionRules.phraseAssembled(p, [t('it'), t('hurts'), t('in'), t('his')]), isFalse);
     });
 
-    test('место первой ошибки и что там должно было стоять', () {
-      final wrong = [t('it'), t('hurts'), t('in'), t('the'), s(0)];
+    test('the place of the first mistake and what should have stood there', () {
+      final wrong = [t('it'), t('hurts'), t('in'), t('the'), s(1)];
       expect(SessionRules.phraseMismatch(p, wrong), 3);
       expect(SessionRules.phraseExpectedAt(p, 3), (word: 'his', fillerIndex: null));
-      expect(SessionRules.phraseExpectedAt(p, 4), (word: null, fillerIndex: 0));
-      expect(SessionRules.phraseMismatch(p, [t('it'), t('hurts'), t('in'), t('his'), s(0)]), -1);
+      expect(SessionRules.phraseExpectedAt(p, 4), (word: null, fillerIndex: 1));
+      expect(SessionRules.phraseMismatch(p, [t('it'), t('hurts'), t('in'), t('his'), s(1)]), -1);
     });
   });
 
-  test('phrase_combine: каркас = correct_frame, наполнение любое', () {
+  test('phrase_combine: the frame equals correct_frame, any filler', () {
     final p = first<PhraseCombinePayload>(PlanStage.phrases);
-    expect(SessionRules.combineCorrect(p, 'p2'), isTrue);
-    expect(SessionRules.combineCorrect(p, 'p1'), isFalse);
+    expect(SessionRules.combineCorrect(p, 'p1'), isTrue);
+    expect(SessionRules.combineCorrect(p, 'p5'), isFalse);
   });
 
-  group('голос', () {
-    test('word_repeat: короткое слово — все слова', () {
+  group('voice', () {
+    test('word_repeat: a short word — all words', () {
       final p = first<WordRepeatPayload>(PlanStage.words);
       expect(p.coverageMin, 1.0);
       expect(SessionRules.voiceAccepted(p, 'Lower back', en), isTrue);
+      expect(SessionRules.voiceAccepted(p, 'lowerback', en), isTrue, reason: 'gluing counts as both words');
       expect(SessionRules.voiceAccepted(p, 'lower', en), isFalse);
       expect(SessionRules.voiceAccepted(p, '', en), isFalse);
     });
 
-    test('phrase_other_slot: каркас покрыт И все слова окна услышаны — считаются раздельно', () {
+    test('phrase_other_slot: the frame covered AND every slot word heard — counted separately', () {
       final p = first<PhraseOtherSlotPayload>(PlanStage.phrases);
       expect(p.expectedText, 'It hurts in his shoulder.');
       expect(SessionRules.voiceAccepted(p, 'it hurts in his shoulder', en), isTrue);
@@ -120,13 +121,13 @@ void main() {
       expect(SessionRules.voiceAccepted(p, 'shoulder', en), isFalse);
     });
 
-    test('ожидаемая речь вида', () {
+    test('the kind\'s expected speech', () {
       expect(SessionRules.expectedSpeech(first<WordRepeatPayload>(PlanStage.words)), 'lower back');
       expect(SessionRules.expectedSpeech(first<PhraseOwnSlotPayload>(PlanStage.phrases)), 'It started .');
     });
   });
 
-  test('ответ на провод: attempts ≥ 1, response — только ключи контракта и не пустые', () {
+  test('the answer on the wire: attempts ≥ 1, response — only the contract\'s keys, never empty', () {
     expect(const SessionAnswer(result: SessionResult.passed, attempts: 0).toJson(), {'result': 'passed', 'attempts': 1});
     expect(
       const SessionAnswer(

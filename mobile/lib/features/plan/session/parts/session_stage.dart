@@ -8,15 +8,16 @@ import '../../../../data/plan/session/session_models.dart';
 import 'session_bits.dart';
 import 'session_chrome.dart';
 
-/// Статус этапа в списке пяти (30-1).
+/// A stage's status in the list of five (30-1).
 enum StageRowStatus { done, current, ahead }
 
-/// Строка списка этапов.
+/// A row of the stage list.
 typedef StageRow = ({PlanStage stage, StageRowStatus status, bool started});
 
-/// ВХОД В ЭТАП (кадр 30-1): стрелка назад, полоса сцены, имя этапа Literata, описание, «≈ N мин», пять точек
-/// этапов (текущая латунью), список пяти этапов со статусами, «Без подсказок», «Начать». У этапа без экранов в
-/// этой сборке — вместо «Начать» подпись «в следующей сборке». В подвале мелко — версия сборки.
+/// STAGE ENTRY (canvas 30-1): back arrow, scene strip, the stage name in Literata, description, «≈ N min», five
+/// stage dots (the current one in brass), the list of five stages with statuses, «No hints», «Start». For a stage
+/// without screens in this build — the caption «in the next build» instead of «Start». In the footer, small — the
+/// build version.
 class SessionStageEntry extends StatelessWidget {
   const SessionStageEntry({
     super.key,
@@ -37,18 +38,18 @@ class SessionStageEntry extends StatelessWidget {
   final String Function(PlanStage) stageName;
   final String description;
 
-  /// «≈ N мин» — только у текущего этапа окна; null — не рисуется.
+  /// «≈ N min» — only for the day window's current stage; null — not drawn.
   final int? minutes;
   final List<StageRow> rows;
   final PlanScene? scene;
   final bool noHints;
   final ValueChanged<bool> onNoHints;
 
-  /// Null — этап заблокирован в этой сборке.
+  /// Null — the stage is locked in this build.
   final VoidCallback? onStart;
   final VoidCallback onBack;
 
-  /// «сборка 1.0.0 (2)».
+  /// «build 1.0.0 (2)».
   final String? buildLabel;
 
   @override
@@ -121,7 +122,7 @@ class SessionStageEntry extends StatelessWidget {
   }
 }
 
-/// ПЯТЬ ТОЧЕК ЭТАПОВ (30-1, 30-6): пройденные 8 шалфеем, текущая 10 латунью с кольцом 3, впереди контуром.
+/// FIVE STAGE DOTS (30-1, 30-6): done ones 8 in sage, the current one 10 in brass with a 3 ring, ahead — outlined.
 class SessionStageDots extends StatelessWidget {
   const SessionStageDots({super.key, required this.rows});
 
@@ -262,11 +263,11 @@ class _NoHintsCard extends StatelessWidget {
   }
 }
 
-/// Единица, которая вернётся завтра, — парой строк словами (и фото у слова).
+/// A unit that comes back tomorrow — as a pair of text lines (and a photo for a word).
 typedef ReturningUnit = ({String target, String native, CardImage? image});
 
-/// ИТОГ ЭТАПА (кадр 30-6): крестик, полоса сцены, «Слова пройдены · 6 минут», точки этапов; «Вернётся
-/// завтра» — единицы с возвратом; «Остальные N слов закрыты.»; «Дальше» — следующий этап и его минуты.
+/// STAGE SUMMARY (canvas 30-6): cross, scene strip, «Words done · 6 minutes», stage dots; «Coming back
+/// tomorrow» — the units with a return; «The other N words are done.»; «Next» — the next stage and its minutes.
 class SessionStageSummary extends StatelessWidget {
   const SessionStageSummary({
     super.key,
@@ -399,8 +400,8 @@ class _ReturningRow extends StatelessWidget {
   );
 }
 
-/// ВЫХОД ИЗ ЭТАПА (кадр 30-8): шит с одним предложением и двумя кнопками — «Продолжить» текстом латунью и
-/// «Выйти». Выход ничего не теряет: ответы уже на сервере. True — выйти.
+/// STAGE EXIT (canvas 30-8): a sheet with one sentence and two buttons — «Continue» as brass text and
+/// «Leave». Leaving loses nothing: the answers are already on the server. True — leave.
 Future<bool> showSessionExitSheet(BuildContext context, {required String stageName}) async {
   final l = AppLocalizations.of(context);
   final leave = await showModalBottomSheet<bool>(

@@ -5,27 +5,27 @@ import 'package:eng_std/theme/theme.dart';
 
 import 'session_bits.dart';
 
-/// Состояние листа варианта (кадры 30-4, 30-9).
+/// State of an option sheet (canvases 30-4, 30-9).
 enum OptionLook {
-  /// Ещё не ответили.
+  /// Not answered yet.
   idle,
 
-  /// Верный: подложка шалфея 15 % и галка.
+  /// Correct: a 15 % sage backing and a check.
   correct,
 
-  /// Выбранный неверный: контур чернил и покачивание.
+  /// Chosen and wrong: an ink outline and a shake.
   wrong,
 
-  /// Верный у единицы, которая вернётся завтра: подложка шалфея и точка латунью.
+  /// Correct for a unit that comes back tomorrow: a sage backing and a brass dot.
   returns,
 
-  /// Ответ уже дан, вариант не участвует.
+  /// The answer has already been given, the option takes no part.
   settled,
 }
 
-/// ЛИСТ ВАРИАНТА 56 — текст (на родном 17 или на языке цели Literata 22) и, если у варианта есть звук,
-/// «прослушать» 28 справа (31-4, 31-7, 32-4). Звук у варианта не выдаёт ответ: тап по кругу играет, тап по
-/// листу отвечает.
+/// OPTION SHEET 56 — the text (native 17 or target-language Literata 22) and, if the option has audio,
+/// «listen» 28 on the right (31-4, 31-7, 32-4). The option's audio does not give the answer away: a tap on the
+/// circle plays, a tap on the sheet answers.
 class SessionOption extends StatelessWidget {
   const SessionOption({
     super.key,
@@ -41,13 +41,13 @@ class SessionOption extends StatelessWidget {
   final OptionLook look;
   final VoidCallback? onTap;
 
-  /// Вариант на языке цели — Literata 22.
+  /// An option in the target language — Literata 22.
   final bool target;
 
-  /// «Прослушать» 28 справа; null — вариант молчит.
+  /// «Listen» 28 on the right; null — the option is silent.
   final Widget? listen;
 
-  /// Счётчик покачиваний — растёт, когда этот вариант выбран неверно.
+  /// Shake counter — grows when this option is chosen wrongly.
   final int shake;
 
   @override
@@ -88,8 +88,8 @@ class SessionOption extends StatelessWidget {
   }
 }
 
-/// ЛИСТ ВОПРОСА ШАБЛОНА 30-9 — один на всех кадрах: верх (фото / волна / текст), бровь, зона текста в две
-/// строки Literata 26 с «прослушать» 44 и строка перевода 20.
+/// QUESTION SHEET OF TEMPLATE 30-9 — one for all canvases: the top (photo / wave / text), eyebrow, a two-line
+/// Literata 26 text zone with «listen» 44, and a translation line 20.
 class SessionQuestionSheet extends StatelessWidget {
   const SessionQuestionSheet({
     super.key,
@@ -103,19 +103,19 @@ class SessionQuestionSheet extends StatelessWidget {
     this.translationStyle,
   });
 
-  /// Фото или плашка с волной; null — верх текстом (без зоны медиа).
+  /// A photo or a wave plate; null — a text top (no media zone).
   final Widget? media;
 
-  /// 208 в вопросе и «верно», 160 — когда под вариантами стоит «Дальше».
+  /// 208 in the question and «correct», 160 — when «Next» stands under the options.
   final double mediaHeight;
   final String eyebrow;
   final String? eyebrowTrailing;
 
-  /// Текст вопроса — обычно Text Literata 26 или строка каркаса с окном.
+  /// The question text — usually a Literata 26 Text or a frame line with a slot.
   final Widget text;
   final Widget? listen;
 
-  /// Строка перевода под текстом (слот 20 держится всегда).
+  /// Translation line under the text (the 20-high space is always kept).
   final String? translation;
   final TextStyle? translationStyle;
 
@@ -162,7 +162,7 @@ class SessionQuestionSheet extends StatelessWidget {
   );
 }
 
-/// ПЛАШКА С ВОЛНОЙ «НА СЛУХ» — `#EFEBE3` во всё поле, волна 80 × 24 посередине; тап — звук ещё раз.
+/// «BY EAR» WAVE PLATE — `#EFEBE3` across the whole area, an 80 × 24 wave in the middle; tap — the audio once more.
 class SessionWavePlate extends StatelessWidget {
   const SessionWavePlate({super.key, required this.playing, required this.onTap, this.heights = SessionWave.twenty, this.label});
 

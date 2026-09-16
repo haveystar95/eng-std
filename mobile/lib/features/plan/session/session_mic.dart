@@ -2,38 +2,43 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:eng_std/theme/feedback.dart' show SessionSounds;
+
 import '../../../data/speech/speech_diagnostics.dart';
 import '../../../data/speech/speech_recognizer.dart';
 import '../../../data/speech/speech_turn.dart';
 
-/// Состояние микрофона карточки (кадр 30-3).
+/// State of the card's microphone (canvas 30-3).
 enum MicState {
-  /// Покой — «тап — говорить».
+  /// Idle — «tap to speak».
   idle,
 
-  /// Запись идёт: пусто (курсор) или текст идёт (живая строка).
+  /// Recording is on: empty (caret) or text is coming in (live line).
   listening,
 
-  /// Услышал — зачёт: кнопка шалфеем с галкой.
+  /// Heard — pass: the button in sage with a check mark.
   heard,
 
-  /// Не расслышал (или сказано не то) — «ещё раз».
+  /// Didn't catch it (or the wrong thing was said) — «once more».
   missed,
 
-  /// Микрофона нет: нет разрешения или распознаватель не поднялся — экран «Нужен микрофон».
+  /// No microphone: no permission or the recognizer did not start — the «Microphone needed» screen.
   unavailable,
 }
 
-/// Чем кончилась одна запись.
+/// How one recording ended.
 typedef MicTurn = ({String transcript, SpeechTurnOutcome outcome});
 
-/// МИКРОФОН КАРТОЧКИ СЕССИИ (наряд SESSION-1b, кадр 30-3) — поверх существующего движка записи
-/// ([SpeechTurn]: запись только по нажатию, тишина 2 с после речи закрывает запись, сторож длины, склейка
-/// кусков распознавателя). Здесь только состояние кнопки и живая строка; зачёт считает карточка по
-/// [onTurn] и отвечает [settle].
+/// SESSION CARD MICROPHONE (work order SESSION-1b, canvas 30-3) — on top of the existing recording engine
+/// ([SpeechTurn]: recording only on a tap, 2 s of silence after speech closes the recording, a length guard,
+/// gluing of recognizer chunks). Here only the button state and the live line; the card computes the pass from
+/// [onTurn] and answers with [settle].
 ///
-/// Отладочная дверь [submitDebug] — поле «что услышал» debug-сборки на симуляторе, где микрофона нет:
-/// текст идёт той же дорогой, что финальный транскрипт живой записи.
+/// Early stop (polish pass SESSION-1b′, item 6): the card provides [autoStop] — how long to wait on an unchanged
+/// partial result once it already passes ([SpeechStop]); if it does not pass, 2 s of silence closes the recording.
+///
+/// Debug door [submitDebug] — the debug build's «what was heard» field on the simulator, where there is no
+/// microphone: the text takes the same road — early stop or silence, then the final transcript.
 class SessionMic extends ChangeNotifier {
   SessionMic({
     required this._recognizer,
@@ -46,17 +51,26 @@ class SessionMic extends ChangeNotifier {
   final SpeechRecognizer _recognizer;
   final SpeechDiagnostics? _diagnostics;
 
-  /// Локаль распознавания — `en_US`.
+  /// Recognition locale — `en_US`.
   final String localeId;
 
-  /// Что должно прозвучать — подсказка движку и эталон живой строки.
-  final String expected;
+  /// What should be said — a hint to the engine and the reference for the live line (for «Your slot» a chip
+  /// changes it).
+  String expected;
 
-  /// Слова карточки — `SFSpeechRecognitionRequest.contextualStrings`.
+  /// The card's words — `SFSpeechRecognitionRequest.contextualStrings`.
   final List<String> contextualStrings;
 
-  /// Запись закрыта — карточка судит и зовёт [settle].
+  /// The recording is closed — the card judges and calls [settle].
   void Function(MicTurn turn)? onTurn;
+
+  /// How long to wait on an unchanged partial result before stopping; null — wait for silence.
+  Duration? Function(String partial)? autoStop;
+
+  /// Silence without coverage — same as the recording engine.
+  static final Duration silence = const SpeechTurnConfig().silenceAfterSpeech;
+
+  Timer? _stopTimer;
 
   MicState _state = MicState.idle;
   String _partial = '';
@@ -69,21 +83,22 @@ class SessionMic extends ChangeNotifier {
 
   MicState get state => _state;
 
-  /// Запись закрыта и ждёт вердикта (судья окна отвечает по сети): строка замерла, кнопка не пульсирует.
+  /// The recording is closed and awaits the verdict (the slot judge answers over the network): the line is frozen,
+  /// the button does not pulse.
   bool get closed => _closed;
 
-  /// Что услышано на этот момент (живая строка) или итог записи.
+  /// What has been heard so far (live line) or the recording's result.
   String get partial => _partial;
 
-  /// Громкость 0…1 — только пока идёт запись.
+  /// Loudness 0…1 — only while recording.
   double get level => _level;
 
-  /// Разрешение отказано насовсем: помогут только «Настройки».
+  /// Permission denied for good: only «Settings» can help.
   bool get blockedInSettings => _blockedInSettings;
 
   bool get isListening => _state == MicState.listening;
 
-  /// Тап по кнопке: покой / «ещё раз» — начать запись; запись — закрыть её тем, что услышано.
+  /// Tap on the button: idle / «once more» — start recording; recording — close it with what has been heard.
   Future<void> tap() async {
     switch (_state) {
       case MicState.listening:
@@ -101,6 +116,7 @@ class SessionMic extends ChangeNotifier {
     _level = 0;
     _closed = false;
     _set(MicState.listening);
+    SessionSounds.play(SessionSounds.micOn);
     final turn = SpeechTurn(_recognizer, diagnostics: _diagnostics);
     _turn = turn;
     SpeechTurnResult result;
@@ -112,9 +128,10 @@ class SessionMic extends ChangeNotifier {
         onPartial: (text) {
           if (_turn != turn) return;
           _partial = text;
+          _armStop(() => unawaited(turn.stop()));
           _notify();
         },
-        // iOS отдаёт децибелы примерно от −2 до 10.
+        // iOS reports decibels roughly from −2 to 10.
         onLevel: (db) {
           if (_turn != turn) return;
           _level = ((db + 2) / 12).clamp(0.0, 1.0);
@@ -125,6 +142,7 @@ class SessionMic extends ChangeNotifier {
       result = const SpeechTurnResult(SpeechTurnOutcome.unavailable);
     }
     if (_disposed || _turn != turn) return;
+    _stopTimer?.cancel();
     _turn = null;
     _level = 0;
     if (result.outcome == SpeechTurnOutcome.unavailable) {
@@ -139,7 +157,17 @@ class SessionMic extends ChangeNotifier {
     onTurn?.call((transcript: result.transcript, outcome: result.outcome));
   }
 
-  /// Вердикт карточки по закрытой записи.
+  /// The partial result changed: passes — stop recording after [autoStop]; does not — wait for silence.
+  void _armStop(void Function() stop) {
+    _stopTimer?.cancel();
+    final wait = autoStop?.call(_partial);
+    if (wait == null) return;
+    _stopTimer = Timer(wait, () {
+      if (!_disposed && _state == MicState.listening && !_closed) stop();
+    });
+  }
+
+  /// The card's verdict on a closed recording.
   void settle({required bool accepted}) {
     _closed = false;
     if (accepted) {
@@ -149,14 +177,14 @@ class SessionMic extends ChangeNotifier {
     }
   }
 
-  /// Вернуть кнопку в покой (новая попытка после отказа судьи и т. п.).
+  /// Return the button to idle (a new attempt after the judge's rejection, etc.).
   void reset() {
     _partial = '';
     _closed = false;
     _set(MicState.idle);
   }
 
-  /// «Разрешить» на экране «Нужен микрофон»: спросить систему ещё раз.
+  /// «Allow» on the «Microphone needed» screen: ask the system again.
   Future<bool> askAgain() async {
     final ok = await _recognizer.prepare();
     if (_disposed) return ok;
@@ -174,7 +202,9 @@ class SessionMic extends ChangeNotifier {
     _blockedInSettings = probe?.blockedInSettings ?? false;
   }
 
-  /// DEBUG-ПОЛЕ «ЧТО УСЛЫШАЛ» (только debug-сборка): текст — как финальный транскрипт записи.
+  /// DEBUG FIELD «WHAT WAS HEARD» (debug build only): the text acts as a partial result that no longer changes:
+  /// passes — the recording stops after [autoStop], does not — after the silence [silence]; then the final
+  /// transcript goes to the card.
   void submitDebug(String text) {
     if (!kDebugMode) return;
     final heard = text.trim();
@@ -183,12 +213,13 @@ class SessionMic extends ChangeNotifier {
     _turn = null;
     if (turn != null) unawaited(turn.cancel());
     _debugClose?.cancel();
+    _stopTimer?.cancel();
     _partial = heard;
     _level = 0;
     _closed = false;
     _set(MicState.listening);
-    // Строка успевает показаться живой, потом «замирает» и уходит на зачёт — как после тишины.
-    _debugClose = Timer(const Duration(milliseconds: 400), () {
+    SessionSounds.play(SessionSounds.micOn);
+    _debugClose = Timer(autoStop?.call(heard) ?? silence, () {
       if (_disposed) return;
       _closed = true;
       _notify();
@@ -210,6 +241,7 @@ class SessionMic extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _debugClose?.cancel();
+    _stopTimer?.cancel();
     final turn = _turn;
     _turn = null;
     if (turn != null) unawaited(turn.cancel());

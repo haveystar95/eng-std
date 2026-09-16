@@ -12,25 +12,25 @@ import '../../../data/plan/session/session_outcomes.dart';
 import '../../../data/plan/session/session_queue.dart';
 import '../../../data/plan/session/session_rules.dart';
 
-/// Где стоит сессия.
+/// Where the session stands.
 enum SessionPhase {
-  /// Читаем день.
+  /// Reading the day.
   loading,
 
-  /// День не загрузился — «Повторить».
+  /// The day did not load — «Retry».
   failed,
 
-  /// Вход в этап (30-1).
+  /// Stage entry (30-1).
   entry,
 
-  /// Карточка.
+  /// A card.
   card,
 
-  /// Итог этапа (30-6).
+  /// Stage summary (30-6).
   summary,
 }
 
-/// Что сессия делает с сервером. Отдельно от [ApiClient] — тест подставляет свой.
+/// What the session does with the server. Separate from [ApiClient] — a test substitutes its own.
 abstract interface class SessionBackend {
   Future<SessionDay> day(String planId, int number);
   Future<void> open(String planId, int number);
@@ -38,7 +38,7 @@ abstract interface class SessionBackend {
   Future<SessionJudgeOutcome> judge(String planId, int number, String cardId, {required String heard, required bool hinted});
 }
 
-/// Сервер через [ApiClient].
+/// The server via [ApiClient].
 class ApiSessionBackend implements SessionBackend {
   const ApiSessionBackend(this.api);
 
@@ -59,15 +59,15 @@ class ApiSessionBackend implements SessionBackend {
       api.judgeSessionCard(planId, number, cardId, heard: heard, hinted: hinted);
 }
 
-/// СЕССИЯ ДНЯ — состояние одного экрана (наряд SESSION-1b, разд. 1). Ничего не рисует.
+/// DAY SESSION — the state of one screen (work order SESSION-1b, section 1). Draws nothing.
 ///
-/// Сервер — источник правды: каждый вход читает день (`GET …/days/{n}`; нерозданный день сначала
-/// раздаётся `POST …/open`) и продолжает с первой неотвеченной карточки первого незаконченного этапа.
-/// Ответ уходит в очередь отложенных ответов ([AnswerOutbox]); следующая карточка не открывается, пока
-/// очередь не опустела ([next]). Копия после первого провала встаёт в конец этапа ответом сервера.
+/// The server is the source of truth: every entry reads the day (`GET …/days/{n}`; an undealt day is first
+/// dealt by `POST …/open`) and continues from the first unanswered card of the first unfinished stage.
+/// An answer goes into the queue of deferred answers ([AnswerOutbox]); the next card does not open until the
+/// queue is empty ([next]). The copy after a first failure is placed at the end of the stage by the server's answer.
 ///
-/// Этапы без экранов в этой сборке (Диалог, Слушаю и отвечаю, Говорю сам) — вход заблокирован, ответов по
-/// ним нет, день не закрывается.
+/// Stages without screens in this build (Dialogue, Listen and answer, Speak myself) — entry is blocked, there are
+/// no answers for them, the day does not close.
 class SessionController extends ChangeNotifier {
   SessionController({
     required this.backend,
@@ -99,15 +99,15 @@ class SessionController extends ChangeNotifier {
   bool _noHints = false;
   bool _disposed = false;
 
-  /// Ответы сервера по id карточки — «вернётся завтра» на карточке после второго провала.
+  /// Server answers by card id — «comes back tomorrow» on the card after the second failure.
   final Map<String, SessionAnswerOutcome> _outcomes = {};
 
-  /// Минуты этапа из последнего ответа по этапу — итог этапа (30-6).
+  /// A stage's minutes from the latest answer in that stage — the stage summary (30-6).
   final Map<PlanStage, int> _stageMinutes = {};
 
-  /// Сервер ответил «карточка уже отвечена» (409 `plan_card_answered`): ответ дошёл раньше — повтор после
-  /// обрыва, чей первый запрос сервер всё-таки принял, — а его итог (копия в конец этапа) до телефона не
-  /// доехал. Перед следующей карточкой день перечитывается.
+  /// The server answered «card already answered» (409 `plan_card_answered`): the answer arrived earlier — a retry
+  /// after a dropped connection whose first request the server did accept — but its outcome (the copy at the end
+  /// of the stage) never reached the phone. Before the next card the day is re-read.
   bool _resync = false;
 
   SessionPhase get phase => _phase;
@@ -115,14 +115,14 @@ class SessionController extends ChangeNotifier {
   SessionDay? get day => _day;
   SessionQueue? get queue => _queue;
 
-  /// Этап входа, карточек или итога.
+  /// The stage of the entry, the cards or the summary.
   PlanStage get stage => _stage;
   SessionCard? get card => _card;
 
-  /// Растёт с каждой новой карточкой — ключ её виджета.
+  /// Grows with every new card — the key of its widget.
   int get cardSerial => _cardSerial;
 
-  /// «Дальше» ждёт, пока уйдёт ответ.
+  /// «Next» waits until the answer is sent.
   bool get advancing => _advancing;
   bool get offline => outbox.offline;
   bool get noHints => _noHints;
@@ -131,10 +131,10 @@ class SessionController extends ChangeNotifier {
   SessionAnswerOutcome? outcomeOf(String cardId) => _outcomes[cardId];
   int? minutesOf(PlanStage stage) => _stageMinutes[stage];
 
-  /// У этапа есть экран в этой сборке.
+  /// The stage has a screen in this build.
   static bool hasScreens(PlanStage stage) => SessionKind.stagesWithScreens.contains(stage);
 
-  /// Прочитать день и встать на вход первого незаконченного этапа.
+  /// Read the day and stand at the entry of the first unfinished stage.
   Future<void> load() async {
     _phase = SessionPhase.loading;
     _error = null;
@@ -168,14 +168,14 @@ class SessionController extends ChangeNotifier {
     return PlanStage.speak;
   }
 
-  /// «Без подсказок» — на телефоне, на план; в 1b ни на что не влияет.
+  /// «No hints» — on the phone, per plan; in 1b it affects nothing.
   Future<void> setNoHints(bool value) async {
     _noHints = value;
     _notify();
     await store?.setNoHints(plan.id, value);
   }
 
-  /// «Начать» на входе в этап.
+  /// «Start» at the stage entry.
   void startStage() {
     if (!hasScreens(_stage)) return;
     final next = _queue?.nextIn(_stage);
@@ -189,7 +189,7 @@ class SessionController extends ChangeNotifier {
     _notify();
   }
 
-  /// Ответ карточки: локально отмечен, на сервер — через очередь отложенных ответов.
+  /// A card's answer: marked locally, to the server — via the queue of deferred answers.
   void submit(SessionCard card, SessionAnswer answer) {
     if (!SessionRules.mayWrite(card.kind, answer.result)) {
       throw StateError('${card.kind.wire} may not write ${answer.result.wire}');
@@ -208,7 +208,8 @@ class SessionController extends ChangeNotifier {
     _notify();
   }
 
-  /// Судья окна: синхронный запрос, ученик ждёт вердикт на карточке. Ошибка сети — исключение вызывающему.
+  /// The slot judge: a synchronous request, the learner waits for the verdict on the card. A network error — an
+  /// exception to the caller.
   Future<SessionJudgeOutcome> judge(SessionCard card, String heard) async {
     final outcome = await backend.judge(plan.id, number, card.id, heard: heard, hinted: false);
     if (outcome.accepted && outcome.card != null) _queue?.apply(answered: outcome.card);
@@ -216,7 +217,7 @@ class SessionController extends ChangeNotifier {
     return outcome;
   }
 
-  /// К следующей карточке: сначала дождаться, пока уйдёт ответ; карточек этапа не осталось — итог этапа.
+  /// To the next card: first wait until the answer is sent; no cards of the stage left — the stage summary.
   Future<void> next() async {
     if (_advancing || _phase != SessionPhase.card) return;
     _advancing = true;
@@ -242,8 +243,8 @@ class SessionController extends ChangeNotifier {
     _notify();
   }
 
-  /// Очередь — заново с сервера (все ответы уже ушли: вызывается после `outbox.drained`). Сеть не ответила —
-  /// остаётся прежняя очередь.
+  /// The queue — afresh from the server (all answers have already been sent: called after `outbox.drained`). The
+  /// network did not answer — the previous queue stays.
   Future<void> _reloadQueue() async {
     try {
       final day = await backend.day(plan.id, number);
@@ -254,7 +255,7 @@ class SessionController extends ChangeNotifier {
     }
   }
 
-  /// Этап отвечен — перечитать день: минуты следующего этапа знает только окно дня.
+  /// The stage is answered — re-read the day: only the day window knows the next stage's minutes.
   Future<void> _refreshAfterStage() async {
     try {
       final day = await backend.day(plan.id, number);
@@ -266,10 +267,10 @@ class SessionController extends ChangeNotifier {
     }
   }
 
-  /// Этап после текущего — на итоге этапа.
+  /// The stage after the current one — on the stage summary.
   PlanStage? get nextStage => _queue?.stageAfter(_stage);
 
-  /// «Дальше» на итоге этапа — вход в следующий этап (у этапов без экранов вход заблокирован).
+  /// «Next» on the stage summary — entry to the next stage (stages without screens have their entry blocked).
   void continueAfterSummary() {
     final next = nextStage;
     if (next == null) return;

@@ -5139,6 +5139,18 @@ abstract class AppLocalizations {
   /// **'Верно · неверно · этап закрыт · день закрыт'**
   String get profileSoundsHint;
 
+  /// Строка профиля: выключатель шести звуков сессии дня владельца (верно, мимо, старт записи, итог этапа, день пройден, день готов; наряд SESSION-1b′); хранится на телефоне, по умолчанию включён; выключен — сессия звуки не загружает.
+  ///
+  /// In ru, this message translates to:
+  /// **'Звуки в сессии'**
+  String get profileRowSessionSounds;
+
+  /// Подпись выключателя «Звуки в сессии»: главные события, которые звучат; карточки знакомства молчат.
+  ///
+  /// In ru, this message translates to:
+  /// **'Верно · мимо · запись · этап пройден'**
+  String get profileSessionSoundsHint;
+
   /// No description provided for @dayCards.
   ///
   /// In ru, this message translates to:
@@ -5301,11 +5313,17 @@ abstract class AppLocalizations {
   /// **'Вставь слово в окно'**
   String get planSessionTaskInsertWord;
 
-  /// Сессия, знакомство с каркасом (32-1): задание.
+  /// Сессия, знакомство с каркасом (32-1): задание (наряд SESSION-1b′).
   ///
   /// In ru, this message translates to:
-  /// **'Запомни фразу'**
-  String get planSessionTaskRememberPhrase;
+  /// **'Посмотри и послушай'**
+  String get planSessionTaskLookListen;
+
+  /// Сессия, знакомство с каркасом (32-1): серая подпись над нейтральными чипами наполнений.
+  ///
+  /// In ru, this message translates to:
+  /// **'эту часть можно менять'**
+  String get planSessionChangeable;
 
   /// Сессия, перевод → сборка (32-2): задание.
   ///
@@ -5325,23 +5343,23 @@ abstract class AppLocalizations {
   /// **'Скажи фразу вслух'**
   String get planSessionTaskSayPhrase;
 
-  /// Сессия, «Скажи с другим окном» (32-7): задание; кадровое «Скажи про шею» требует склонения задания, которого сервер не отдаёт.
+  /// Сессия, «Скажи с другим окном» (32-7): задание; окно в строке пустое, его значение — в русском предложении под фразой (наряд SESSION-1b′).
   ///
   /// In ru, this message translates to:
-  /// **'Скажи с другим окном'**
-  String get planSessionTaskOtherSlot;
+  /// **'Скажи целиком — окно по-русски ниже'**
+  String get planSessionTaskSayWhole;
 
-  /// Сессия, комбинация (32-8): задание; кадровое «Ответь врачу» требует дательного падежа роли, которого сервер не отдаёт.
+  /// Сессия, комбинация (32-8): задание над тремя целыми предложениями-ответами (наряд SESSION-1b′).
   ///
   /// In ru, this message translates to:
-  /// **'Ответь собеседнику'**
-  String get planSessionTaskReply;
+  /// **'Что ты ответишь?'**
+  String get planSessionTaskWhatAnswer;
 
-  /// Сессия, своё окно (32-9): задание.
+  /// Сессия, своё окно (32-9): задание; окно пустое, наполнение — чипом или своим словом (наряд SESSION-1b′).
   ///
   /// In ru, this message translates to:
-  /// **'Скажи своё'**
-  String get planSessionTaskOwnSlot;
+  /// **'Скажи целиком — значение выбери сам'**
+  String get planSessionTaskSayOwn;
 
   /// Сессия, лист вопроса (30-9, 31-3): бровь над словом.
   ///

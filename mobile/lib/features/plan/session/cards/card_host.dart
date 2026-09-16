@@ -5,8 +5,8 @@ import 'card_kit.dart';
 import 'phrase_cards.dart';
 import 'word_cards.dart';
 
-/// КАРТОЧКА ПО ВИДУ — 15 экранов 1b (слова 6, фразы 9). Виды этапов без экранов сюда не доезжают: вход в их
-/// этапы заблокирован; на всякий случай у них пусто.
+/// CARD BY KIND — the 15 screens of 1b (words 6, phrases 9). Kinds of stages without screens never get here: entry
+/// to their stages is blocked; just in case, they render empty.
 Widget sessionCardFor(CardEnv env) {
   final card = env.card;
   return switch (card.payload) {
@@ -25,7 +25,7 @@ Widget sessionCardFor(CardEnv env) {
     final PhraseOtherSlotPayload p => PhraseOtherSlotCard(env: env, payload: p),
     final PhraseCombinePayload p => PhraseCombineCard(env: env, payload: p),
     final PhraseOwnSlotPayload p => PhraseOwnSlotCard(env: env, payload: p),
-    // Диалог, слушание, речь — экранов в 1b нет.
+    // Dialogue, listening, speech — no screens in 1b.
     _ => const SizedBox.shrink(),
   };
 }

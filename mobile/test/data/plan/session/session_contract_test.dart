@@ -7,10 +7,10 @@ import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 
-/// КОНТРАКТ СЕССИИ ДНЯ НА ВХОДЕ КЛИЕНТА (наряд SESSION-1b, разд. 6): обе фикстуры сервера
-/// (`backend2/docs/fixtures/day-doctor*.json` — тело `GET /plans/{id}/days/1`, сервер держит их байт-в-байт)
-/// разбираются целиком — 150 карточек, все 28 раздаваемых видов; карточка незнакомого вида пропускается без
-/// ошибки.
+/// THE DAY SESSION CONTRACT AT THE CLIENT'S DOOR (work order SESSION-1b §6): both server fixtures
+/// (`backend2/docs/fixtures/day-doctor*.json` — the body of `GET /plans/{id}/days/1`, kept byte-for-byte by the
+/// server) parse in full — 170 cards since SESSION-1d (rebuilt by SESSION-1e), all 28 dealt kinds; a card of an
+/// unknown kind is skipped without an error.
 Map<String, dynamic> _fixture(String name) =>
     jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
 
@@ -18,18 +18,18 @@ void main() {
   final intermediate = _fixture('day-doctor');
   final beginner = _fixture('day-doctor-beginner');
 
-  test('обе фикстуры разбираются целиком: 75 + 75 карточек, ни одна не пропущена', () {
+  test('both fixtures parse in full: 85 + 85 cards, none skipped', () {
     final a = SessionDay.fromJson(intermediate);
     final b = SessionDay.fromJson(beginner);
 
     int count(SessionDay d) => d.stages.fold(0, (n, s) => n + s.cards.length);
-    expect(count(a), 75);
-    expect(count(b), 75);
+    expect(count(a), 85);
+    expect(count(b), 85);
     expect(a.skipped + b.skipped, 0);
-    expect(count(a) + count(b), 150);
+    expect(count(a) + count(b), 170);
   });
 
-  test('в двух фикстурах встречаются все 28 раздаваемых видов', () {
+  test('the two fixtures carry all 28 dealt kinds', () {
     final kinds = <SessionKind>{
       for (final day in [SessionDay.fromJson(intermediate), SessionDay.fromJson(beginner)])
         for (final s in day.stages)
@@ -39,7 +39,7 @@ void main() {
     expect(SessionKind.values, hasLength(28));
   });
 
-  test('конверт: этап, позиция, единица, источник; payload — модель своего вида', () {
+  test('the envelope: stage, position, unit, source; the payload is its kind\'s model', () {
     final day = SessionDay.fromJson(intermediate);
     for (final s in day.stages) {
       var last = 0;
@@ -63,7 +63,7 @@ void main() {
     expect(day.minutesLeft(PlanStage.phrases), isNull);
   });
 
-  test('payload слов и фраз — поля контракта на своих местах', () {
+  test('word and phrase payloads — the contract\'s fields in their places', () {
     final day = SessionDay.fromJson(intermediate);
     final phrases = day.stageOf(PlanStage.phrases)!.cards;
     final intro = day.stageOf(PlanStage.words)!.cards.first.payload as WordIntroPayload;
@@ -74,7 +74,7 @@ void main() {
     final assemble = phrases.map((c) => c.payload).whereType<PhraseAssemblePayload>().first;
     expect(assemble.expectedWords, ['it', 'hurts', 'in', 'his']);
     expect(assemble.slotAt, 4);
-    expect(assemble.fillerIndex, 0);
+    expect(assemble.fillerIndex, 1);
 
     final other = phrases.map((c) => c.payload).whereType<PhraseOtherSlotPayload>().first;
     expect(other.coverageMin, 0.7);
@@ -86,15 +86,59 @@ void main() {
 
     final combine = phrases.map((c) => c.payload).whereType<PhraseCombinePayload>().single;
     expect(combine.frames, hasLength(3));
-    expect(combine.correctFrame, 'p2');
-
-    final choose = SessionDay.fromJson(beginner).stageOf(PlanStage.words)!.cards.map((c) => c.payload).whereType<WordChoosePayload>().single;
-    expect(choose.termToNative, isTrue);
-    expect(choose.promptAudio, isNotNull);
-    expect(choose.correctOption!.text, 'рентген');
+    expect(combine.correctFrame, 'p1');
+    expect([for (final f in combine.frames) f.said?.textTarget], ['He will rest at home.', 'Do we need an X-ray?', 'It hurts in his lower back.']);
+    expect(combine.frames.every((f) => f.said?.audio != null), isTrue);
   });
 
-  test('доли читаются числом: 1.0 и целое 1 — одно и то же', () {
+  // SESSION-1e contract: word_choose comes in both directions at any level — the card's `direction` decides, not
+  // the plan's level.
+  test('word_choose — both directions on both levels, the prompt sound only on term_to_native', () {
+    for (final fixture in [intermediate, beginner]) {
+      final chooses = SessionDay.fromJson(fixture).stageOf(PlanStage.words)!.cards.map((c) => c.payload).whereType<WordChoosePayload>().toList();
+      expect([for (final c in chooses) c.direction], ['term_to_native', 'native_to_term']);
+      expect([for (final c in chooses) c.correctOption!.text], ['температура', 'X-ray']);
+      expect([for (final c in chooses) c.promptAudio != null], [true, false]);
+    }
+  });
+
+  // SESSION-1e contract: word_listen — sound → translation, `direction: term_to_native`, native options; a day dealt
+  // before it has no `direction` and spellings; any other direction is a broken card.
+  // CATCHES: native options drawn as target spellings; a stored pre-1e day whose «By ear» cards stop loading.
+  test('word_listen — native options with term_to_native; no direction — spellings; another direction — skipped', () {
+    final listens = SessionDay.fromJson(intermediate).stageOf(PlanStage.words)!.cards.map((c) => c.payload).whereType<WordListenPayload>().toList();
+    expect(listens, hasLength(2));
+    expect(listens.every((l) => l.nativeOptions), isTrue);
+    expect(listens.first.correctOption!.text, 'растяжение мышцы');
+
+    final raw = jsonDecode(jsonEncode(intermediate)) as Map<String, dynamic>;
+    final card = ((raw['stages'] as List).first['cards'] as List).cast<Map<String, dynamic>>().firstWhere((c) => c['kind'] == 'word_listen');
+    final payload = card['payload'] as Map<String, dynamic>;
+    payload.remove('direction');
+    expect((SessionCard.fromJson(card)!.payload as WordListenPayload).nativeOptions, isFalse);
+    payload['direction'] = 'native_to_term';
+    expect(() => SessionCard.fromJson(card), throwsA(isA<SessionContractError>()));
+  });
+
+  // SESSION-1b′, item 1: a combination option is a whole sentence — `frames[].said`, otherwise the day's frame with
+  // the filler said in the dialogue.
+  test('the day\'s frame as a whole sentence — the intro\'s said line, otherwise the frame with its dialogue filler', () {
+    final day = SessionDay.fromJson(intermediate);
+    expect(day.frameSentence('p1'), 'It hurts in his lower back.');
+    expect(day.frameSentence('p2'), 'It started three days ago.');
+    expect(day.frameSentence('p5'), 'He will rest at home.');
+    expect(day.frameSentence('p6'), 'Do we need an X-ray?');
+    expect(day.frameSentence('p404'), isNull);
+  });
+
+  test('the day\'s word by its unit — what «By ear» reads without a file', () {
+    final day = SessionDay.fromJson(intermediate);
+    expect(day.termText('v4'), 'muscle strain');
+    expect(day.termText('v8'), 'sick note');
+    expect(day.termText('v404'), isNull);
+  });
+
+  test('fractions read as numbers: 1.0 and the integer 1 are the same', () {
     final day = SessionDay.fromJson(intermediate);
     final repeat = day.stageOf(PlanStage.words)!.cards.map((c) => c.payload).whereType<WordRepeatPayload>().first;
     expect(repeat.coverageMin, 1.0);
@@ -107,7 +151,7 @@ void main() {
     expect(parsed.coverageMin, 1.0);
   });
 
-  test('незнакомый вид — пропуск без ошибки и без карточки; listen_pairs тоже', () {
+  test('an unknown kind — skipped without an error and without a card; listen_pairs too', () {
     final raw = jsonDecode(jsonEncode(intermediate)) as Map<String, dynamic>;
     final words = (raw['stages'] as List).first as Map<String, dynamic>;
     final cards = words['cards'] as List;
@@ -121,7 +165,7 @@ void main() {
     expect(day.skipped, 2);
   });
 
-  test('известный вид со сломанным payload — пропуск этой карточки, остальные целы', () {
+  test('a known kind with a broken payload — that card is skipped, the rest intact', () {
     final raw = jsonDecode(jsonEncode(intermediate)) as Map<String, dynamic>;
     final words = (raw['stages'] as List).first as Map<String, dynamic>;
     ((words['cards'] as List).first as Map<String, dynamic>)['payload'] = {'scene_id': 'x'};

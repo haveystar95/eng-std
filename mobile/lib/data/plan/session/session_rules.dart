@@ -1,10 +1,11 @@
-/// ПРАВИЛА ЗАЧЁТА СЕССИИ — что клиент вправе записать и как он сверяет ответ (наряд SESSION-1b).
+/// SESSION PASS RULES — what the client is entitled to write and how it checks an answer (work order SESSION-1b).
 ///
-/// Зачитывает клиент, без сети: выбор — id варианта против `correct`, плитки — против `expected`, голос —
-/// покрытие речи по `coverage_min` ([SpeechCoverage]). Судейские виды зачитывает только сервер. Последствия
-/// (копия в конце этапа, возврат единицы) ведёт сервер — здесь их нет.
+/// The client grades, without the network: choice — the option id against `correct`, tiles — against `expected`,
+/// voice — speech coverage by `coverage_min` ([SpeechCoverage]). Judged kinds are graded only by the server. The
+/// consequences (the copy at the end of the stage, the unit's return) are handled by the server — they are not
+/// here.
 ///
-/// Чистые функции, ни одного виджета.
+/// Pure functions, not a single widget.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -12,12 +13,12 @@ import 'package:flutter/foundation.dart';
 import 'session_models.dart';
 import 'speech_coverage.dart';
 
-/// Кусок собранной строки фразы: плитка или окно с наполнением.
+/// A piece of the assembled phrase string: a tile or a slot with a filler.
 sealed class AssemblyPiece {
   const AssemblyPiece();
 }
 
-/// Плитка лотка — по месту в `tiles`: две одинаковые плитки остаются разными плитками.
+/// A tray tile — by its position in `tiles`: two identical tiles remain different tiles.
 class TilePiece extends AssemblyPiece {
   const TilePiece(this.index, this.text);
 
@@ -31,7 +32,7 @@ class TilePiece extends AssemblyPiece {
   int get hashCode => Object.hash(index, text);
 }
 
-/// Окно каркаса с выбранным наполнением.
+/// The frame's slot with the chosen filler.
 class SlotPiece extends AssemblyPiece {
   const SlotPiece(this.filler);
 
@@ -45,10 +46,11 @@ class SlotPiece extends AssemblyPiece {
 }
 
 abstract final class SessionRules {
-  /// Голосовая карточка: после стольких попыток без зачёта она закрывается `skipped`.
+  /// Voice card: after this many attempts without a pass it is closed as `skipped`.
   static const int voiceAttempts = 2;
 
-  /// ЧТО ПРИНИМАЕТ СЕРВЕР (`CardKind::allows`, `docs/plan-api.md` «Что клиент шлёт»); чужой итог — 422.
+  /// WHAT THE SERVER ACCEPTS (`CardKind::allows`, `docs/plan-api.md` «What the client sends»); any other
+  /// result — 422.
   static Set<SessionResult> serverAccepts(SessionKind kind) => switch (kind.grading) {
     SessionGrading.choice => const {SessionResult.passed, SessionResult.hinted, SessionResult.failed, SessionResult.skipped},
     SessionGrading.voice => const {SessionResult.passed, SessionResult.hinted, SessionResult.skipped},
@@ -56,9 +58,9 @@ abstract final class SessionRules {
     SessionGrading.pass => const {SessionResult.passed, SessionResult.skipped},
   };
 
-  /// ЧТО ЭТОТ КЛИЕНТ ПИШЕТ (наряд SESSION-1b, разд. 1) — уже, чем принимает сервер: выбор и плитки —
-  /// `passed` | `failed`; голос — `passed` | `skipped` и никогда `failed`; судейский вид — только
-  /// `skipped` («Пропустить»); прохождение — `passed`.
+  /// WHAT THIS CLIENT WRITES (work order SESSION-1b, section 1) — narrower than what the server accepts: choice
+  /// and tiles — `passed` | `failed`; voice — `passed` | `skipped` and never `failed`; judged kind — only
+  /// `skipped` («Skip»); walkthrough — `passed`.
   static Set<SessionResult> clientWrites(SessionKind kind) => switch (kind.grading) {
     SessionGrading.choice => const {SessionResult.passed, SessionResult.failed},
     SessionGrading.voice => const {SessionResult.passed, SessionResult.skipped},
@@ -66,16 +68,16 @@ abstract final class SessionRules {
     SessionGrading.pass => const {SessionResult.passed},
   };
 
-  /// Проверка перед отправкой: итог, которого этот клиент не пишет, — ошибка программы, а не ответ.
+  /// A check before sending: a result this client does not write is a program error, not an answer.
   static bool mayWrite(SessionKind kind, SessionResult result) => clientWrites(kind).contains(result);
 
-  /// Выбор: id варианта = `correct`.
+  /// Choice: the option id = `correct`.
   static bool choiceCorrect(ChoicePayload payload, String optionId) => optionId == payload.correct;
 
-  /// `word_assemble`: собранное = `expected` по порядку, слово в слово (одно написание с плитками).
+  /// `word_assemble`: the assembled result = `expected` in order, word for word (one spelling with the tiles).
   static bool wordAssembled(List<String> placed, List<String> expected) => listEquals(placed, expected);
 
-  /// Ожидаемая строка фразы: слова каркаса и окно на месте `slot_at`.
+  /// The expected phrase string: the frame's words and the slot at position `slot_at`.
   static List<Object> _expectedSequence(PhraseAssemblePayload p) {
     final seq = <Object>[...p.expectedWords];
     final at = p.slotAt.clamp(0, seq.length);
@@ -88,12 +90,13 @@ abstract final class SessionRules {
     SlotPiece(:final filler) => _Slot(filler.index),
   };
 
-  /// `phrase_assemble`: слова = `expected.words` по порядку, окно на месте `slot_at`, наполнение —
+  /// `phrase_assemble`: the words = `expected.words` in order, the slot at position `slot_at`, the filler —
   /// `expected.filler_index`.
   static bool phraseAssembled(PhraseAssemblePayload payload, List<AssemblyPiece> pieces) =>
       listEquals(pieces.map(_asSequenceItem).toList(), _expectedSequence(payload));
 
-  /// Первое место, где собранное разошлось с ожидаемым (или где его не хватает), — для контура ошибки.
+  /// The first position where the assembled result diverged from the expected one (or where it falls short) —
+  /// for the error outline.
   static int firstMismatch(List<Object> placed, List<Object> expected) {
     for (var i = 0; i < placed.length; i++) {
       if (i >= expected.length || placed[i] != expected[i]) return i;
@@ -101,11 +104,11 @@ abstract final class SessionRules {
     return placed.length < expected.length ? placed.length : -1;
   }
 
-  /// Место первой ошибки во фразе, собранной плитками; -1 — ошибки нет.
+  /// The position of the first error in a phrase assembled from tiles; -1 — there is no error.
   static int phraseMismatch(PhraseAssemblePayload payload, List<AssemblyPiece> pieces) =>
       firstMismatch(pieces.map(_asSequenceItem).toList(), _expectedSequence(payload));
 
-  /// Что должно было стоять на месте ошибки: слово плитки или наполнение окна (null — лишнее в конце).
+  /// What should have stood at the error's position: a tile word or the slot's filler (null — an extra at the end).
   static ({String? word, int? fillerIndex})? phraseExpectedAt(PhraseAssemblePayload payload, int at) {
     final seq = _expectedSequence(payload);
     if (at < 0 || at >= seq.length) return null;
@@ -113,13 +116,13 @@ abstract final class SessionRules {
     return item is _Slot ? (word: null, fillerIndex: item.fillerIndex) : (word: item as String, fillerIndex: null);
   }
 
-  /// `phrase_combine`: каркас = `correct_frame`; наполнение — любое из `chips`.
+  /// `phrase_combine`: the frame = `correct_frame`; the filler — any of `chips`.
   static bool combineCorrect(PhraseCombinePayload payload, String frameRef) => frameRef == payload.correctFrame;
 
-  /// Зачёт голосовой карточки слов и фраз по услышанному.
+  /// The pass of a word or phrase voice card by what was heard.
   ///
-  /// `phrase_other_slot` — каркас и окно раздельно: покрытие `expected_text` по `coverage_min` И все
-  /// слова `slot_expected` в услышанном.
+  /// `phrase_other_slot` — the frame and the slot separately: coverage of `expected_text` by `coverage_min` AND
+  /// all the words of `slot_expected` in what was heard.
   static bool voiceAccepted(CardPayload payload, String heard, Set<String> articles) => switch (payload) {
     WordRepeatPayload(:final expectedText, :final coverageMin) =>
       SpeechCoverage.covers(heard, expectedText, coverageMin, articles),
@@ -131,13 +134,14 @@ abstract final class SessionRules {
     _ => false,
   };
 
-  /// Раздельный зачёт `phrase_other_slot`: каркас (покрытие строки) и окно (все слова окна).
+  /// The separate pass of `phrase_other_slot`: the frame (coverage of the string) and the slot (all the words of
+  /// the slot).
   static ({bool frame, bool slot}) otherSlotParts(PhraseOtherSlotPayload p, String heard, Set<String> articles) => (
     frame: SpeechCoverage.covers(heard, p.expectedText, p.coverageMin, articles),
     slot: SpeechCoverage.covers(heard, p.slotExpected, SpeechCoverage.all, articles),
   );
 
-  /// Что должно прозвучать — для живой строки и подсказки распознавателю.
+  /// What should be spoken — for the live line and the hint to the recognizer.
   static String expectedSpeech(CardPayload payload) => switch (payload) {
     WordRepeatPayload(:final expectedText) => expectedText,
     PhraseRepeatPayload(:final expectedText) => expectedText,
@@ -146,7 +150,7 @@ abstract final class SessionRules {
     _ => '',
   };
 
-  /// Первое слово строки — с заглавной, когда строка собрана целиком (плитки приходят строчными).
+  /// The first word of the string — capitalized when the string is assembled in full (tiles arrive lowercase).
   static String capitalized(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);

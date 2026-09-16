@@ -4484,6 +4484,14 @@
   "@profileSoundsHint": {
     "description": "Подпись выключателя «Звуки» — четыре события 4к-3."
   },
+  "profileRowSessionSounds": "Звуки в сессии",
+  "@profileRowSessionSounds": {
+    "description": "Строка профиля: выключатель шести звуков сессии дня владельца (верно, мимо, старт записи, итог этапа, день пройден, день готов; наряд SESSION-1b′); хранится на телефоне, по умолчанию включён; выключен — сессия звуки не загружает."
+  },
+  "profileSessionSoundsHint": "Верно · мимо · запись · этап пройден",
+  "@profileSessionSoundsHint": {
+    "description": "Подпись выключателя «Звуки в сессии»: главные события, которые звучат; карточки знакомства молчат."
+  },
   "dayCards": "{n, plural, one{{n} карточка} few{{n} карточки} other{{n} карточек}}",
   "@dayCards": {
     "placeholders": {
@@ -4643,9 +4651,13 @@
   "@planSessionTaskInsertWord": {
     "description": "Сессия, слово в окне (31-7): задание."
   },
-  "planSessionTaskRememberPhrase": "Запомни фразу",
-  "@planSessionTaskRememberPhrase": {
-    "description": "Сессия, знакомство с каркасом (32-1): задание."
+  "planSessionTaskLookListen": "Посмотри и послушай",
+  "@planSessionTaskLookListen": {
+    "description": "Сессия, знакомство с каркасом (32-1): задание (наряд SESSION-1b′)."
+  },
+  "planSessionChangeable": "эту часть можно менять",
+  "@planSessionChangeable": {
+    "description": "Сессия, знакомство с каркасом (32-1): серая подпись над нейтральными чипами наполнений."
   },
   "planSessionTaskAssemblePhrase": "Собери фразу",
   "@planSessionTaskAssemblePhrase": {
@@ -4659,17 +4671,17 @@
   "@planSessionTaskSayPhrase": {
     "description": "Сессия, «Повтори вслух» (32-6): задание."
   },
-  "planSessionTaskOtherSlot": "Скажи с другим окном",
-  "@planSessionTaskOtherSlot": {
-    "description": "Сессия, «Скажи с другим окном» (32-7): задание; кадровое «Скажи про шею» требует склонения задания, которого сервер не отдаёт."
+  "planSessionTaskSayWhole": "Скажи целиком — окно по-русски ниже",
+  "@planSessionTaskSayWhole": {
+    "description": "Сессия, «Скажи с другим окном» (32-7): задание; окно в строке пустое, его значение — в русском предложении под фразой (наряд SESSION-1b′)."
   },
-  "planSessionTaskReply": "Ответь собеседнику",
-  "@planSessionTaskReply": {
-    "description": "Сессия, комбинация (32-8): задание; кадровое «Ответь врачу» требует дательного падежа роли, которого сервер не отдаёт."
+  "planSessionTaskWhatAnswer": "Что ты ответишь?",
+  "@planSessionTaskWhatAnswer": {
+    "description": "Сессия, комбинация (32-8): задание над тремя целыми предложениями-ответами (наряд SESSION-1b′)."
   },
-  "planSessionTaskOwnSlot": "Скажи своё",
-  "@planSessionTaskOwnSlot": {
-    "description": "Сессия, своё окно (32-9): задание."
+  "planSessionTaskSayOwn": "Скажи целиком — значение выбери сам",
+  "@planSessionTaskSayOwn": {
+    "description": "Сессия, своё окно (32-9): задание; окно пустое, наполнение — чипом или своим словом (наряд SESSION-1b′)."
   },
   "planSessionBrowWord": "Слово",
   "@planSessionBrowWord": {

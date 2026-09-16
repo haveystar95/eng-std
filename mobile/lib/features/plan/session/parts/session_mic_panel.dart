@@ -13,12 +13,12 @@ import '../../../../data/plan/session/live_line.dart';
 import '../session_mic.dart';
 import 'session_bits.dart';
 
-/// МИКРОФОН (кадр 30-3) — нижняя зона голосовой карточки: подпись, живая строка, волна, «Пропустить» и
-/// кнопка 72. Запись только по нажатию; «Пропустить» — только здесь.
+/// MICROPHONE (canvas 30-3) — the bottom zone of a voice card: caption, live line, wave, «Skip» and the
+/// 72 button. Recording only on a press; «Skip» — only here.
 ///
-/// Состояния — по кадру: покой («тап — говорить») · слушаю, пусто (курсор, «говори, я слушаю») · слушаю,
-/// текст идёт (живая строка: совпавшее шалфеем, последнее слово серым) · услышал (кнопка шалфеем с
-/// галкой) · не расслышал («ещё раз»). В debug-сборке под кнопкой — поле «что услышал».
+/// States — per the canvas: idle («tap to speak») · listening, empty (caret, «go ahead, I'm listening») ·
+/// listening, text coming in (live line: the matched part in sage, the last word in grey) · heard (sage button
+/// with a check) · didn't catch («once more»). In a debug build, under the button — the «what was heard» field.
 class SessionMicPanel extends StatelessWidget {
   const SessionMicPanel({
     super.key,
@@ -32,19 +32,19 @@ class SessionMicPanel extends StatelessWidget {
 
   final SessionMic mic;
 
-  /// Эталон живой строки.
+  /// The reference text for the live line.
   final String expected;
 
-  /// «Пропустить»; null — не показывать.
+  /// «Skip»; null — don't show it.
   final VoidCallback? onSkip;
 
-  /// Подпись вместо «не расслышал, ещё раз» (причина отказа судьи, 32-9).
+  /// Caption instead of «didn't catch that, once more» (the judge's rejection reason, 32-9).
   final String? missedCaption;
 
-  /// Строка услышанного над «услышал» (у 31-2 её место занимает эхо в листе).
+  /// The line with what was heard, above «heard» (in 31-2 its place is taken by the echo in the sheet).
   final bool showHeardLine;
 
-  /// Что писать в строке «услышал» — по умолчанию сам транскрипт.
+  /// What to write in the «heard» line — by default the transcript itself.
   final String? heardText;
 
   @override
@@ -65,7 +65,7 @@ class SessionMicPanel extends StatelessWidget {
           }
         case MicState.listening:
           final words = LiveLine.of(mic.partial, expected, listening: !mic.closed);
-          children.add(_LiveLineText(words: words));
+          children.add(_LiveLineText(key: const ValueKey('session-live-line'), words: words));
           gap();
           if (mic.partial.trim().isEmpty) {
             children.add(Text(l.planSessionMicListening, style: AppTextSession.meta));
@@ -80,6 +80,7 @@ class SessionMicPanel extends StatelessWidget {
           if (showHeardLine) {
             children.add(Text(
               heardText ?? mic.partial,
+              key: const ValueKey('session-heard-line'),
               textAlign: TextAlign.center,
               style: AppTextSession.target22.copyWith(color: AppColors.verdictKnown),
             ));
@@ -127,9 +128,9 @@ class _Skip extends StatelessWidget {
   );
 }
 
-/// ЖИВАЯ СТРОКА — Literata 22: совпавшее шалфеем, последнее слово серым, пустая — курсор.
+/// LIVE LINE — Literata 22: the matched part in sage, the last word in grey, empty — a caret.
 class _LiveLineText extends StatelessWidget {
-  const _LiveLineText({required this.words});
+  const _LiveLineText({super.key, required this.words});
 
   final List<LiveWord> words;
 
@@ -162,8 +163,8 @@ class _LiveLineText extends StatelessWidget {
   }
 }
 
-/// КНОПКА МИКРОФОНА 72: покой — угольная с микрофоном; слушаю — «стоп» и кольцо шалфея 30 % с пульсом
-/// 1,2 с; услышал — шалфей с галкой; не расслышал — «повторить».
+/// MICROPHONE BUTTON 72: idle — charcoal with a microphone; listening — «stop» and a 30 % sage ring with a
+/// 1.2 s pulse; heard — sage with a check; didn't catch — «repeat».
 class _MicButton extends StatefulWidget {
   const _MicButton({required this.mic});
 
@@ -188,7 +189,7 @@ class _MicButtonState extends State<_MicButton> with SingleTickerProviderStateMi
     _syncPulse();
   }
 
-  /// Пульс кольца — только пока идёт запись; под «уменьшением движения» кольцо стоит.
+  /// The ring pulse — only while recording is on; under «Reduce Motion» the ring stands still.
   void _syncPulse() {
     final mic = widget.mic;
     final listening = mic.state == MicState.listening && !mic.closed;
@@ -231,7 +232,7 @@ class _MicButtonState extends State<_MicButton> with SingleTickerProviderStateMi
         child: AnimatedBuilder(
           animation: _pulse,
           builder: (_, child) {
-            // om-pulse: кольцо 8 → 12 → 8, прозрачность .30 → .14 → .30.
+            // om-pulse: ring 8 → 12 → 8, opacity .30 → .14 → .30.
             final t = listening ? (0.5 - 0.5 * math.cos(_pulse.value * 2 * math.pi)) : 0.0;
             return Container(
               width: 72,
@@ -259,7 +260,7 @@ class _MicButtonState extends State<_MicButton> with SingleTickerProviderStateMi
   }
 }
 
-/// ПОЛЕ «ЧТО УСЛЫШАЛ» — только debug-сборка: текст уходит как распознанный (симулятор без микрофона).
+/// «WHAT WAS HEARD» FIELD — debug build only: the text is sent as if recognized (a simulator has no microphone).
 class _DebugHeardField extends StatefulWidget {
   const _DebugHeardField({required this.mic});
 
@@ -313,8 +314,8 @@ class _DebugHeardFieldState extends State<_DebugHeardField> {
   );
 }
 
-/// «НУЖЕН МИКРОФОН» (кадр 30-3, «нет разрешения · экран»): заголовок, текст, лист двух этапов, которые без
-/// микрофона не пройти, кнопка микрофона; внизу «Пропустить» и «Разрешить».
+/// «MICROPHONE NEEDED» (canvas 30-3, «no permission · screen»): title, text, a sheet with the two stages that
+/// cannot be passed without a microphone, the microphone button; at the bottom «Skip» and «Allow».
 class SessionNoMicView extends StatelessWidget {
   const SessionNoMicView({super.key, required this.onAllow, required this.onSkip, required this.stageName});
 

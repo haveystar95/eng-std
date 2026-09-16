@@ -3,7 +3,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/session/session_models.dart';
 
-/// СЛОВА СЕССИИ — выбор строки ARB по этапу, уровню и числу. Ни одного слова здесь, только выбор.
+/// SESSION WORDING — choosing the ARB string by stage, level and count. Not a single word here, only the choice.
 abstract final class SessionTexts {
   static String stage(AppLocalizations l, PlanStage s) => switch (s) {
     PlanStage.words => l.planPlateStageWords,
@@ -13,7 +13,7 @@ abstract final class SessionTexts {
     PlanStage.speak || PlanStage.unknown => l.planPlateStageSpeak,
   };
 
-  /// Описание этапа на входе (30-1); [units] — единицы этапа.
+  /// The stage description on entry (30-1); [units] — the stage's units.
   static String description(AppLocalizations l, PlanStage s, int units) => switch (s) {
     PlanStage.words => l.planSessionDescWords(units),
     PlanStage.phrases => l.planSessionDescPhrases(units),
@@ -22,19 +22,19 @@ abstract final class SessionTexts {
     PlanStage.speak || PlanStage.unknown => l.planSessionDescSpeak,
   };
 
-  /// «ещё 4 слова» — справа в шапке (30-2).
+  /// «4 words left» — on the right of the header (30-2).
   static String left(AppLocalizations l, PlanStage s, int units) => switch (s) {
     PlanStage.phrases => l.planSessionLeftPhrases(units),
     _ => l.planSessionLeftWords(units),
   };
 
-  /// «Слова пройдены · 6 минут» (30-6).
+  /// «Words done · 6 minutes» (30-6).
   static String done(AppLocalizations l, PlanStage s, int minutes) {
     final m = l.planMinutesCount(minutes);
     return s == PlanStage.phrases ? l.planSessionDonePhrases(m) : l.planSessionDoneWords(m);
   }
 
-  /// «Остальные 6 слов закрыты.» / «Все 8 слов закрыты.» (30-6).
+  /// «The other 6 words are done.» / «All 8 words done.» (30-6).
   static String closed(AppLocalizations l, PlanStage s, {required int closed, required bool someReturn}) =>
       switch ((s, someReturn)) {
         (PlanStage.phrases, true) => l.planSessionRestPhrases(closed),
@@ -43,9 +43,9 @@ abstract final class SessionTexts {
         (_, false) => l.planSessionAllWords(closed),
       };
 
-  /// Роль в строке спутника — со строчной («регистратор поймёт»); склонения нет.
+  /// The role in the companion line — with a lowercase first letter («receptionist will understand»); no declension.
   static String roleInline(String role) => role.isEmpty ? role : role[0].toLowerCase() + role.substring(1);
 
-  /// Карточки этого вида — экран есть в этой сборке.
+  /// Cards of this kind — there is a screen for them in this build.
   static bool screened(SessionKind k) => k.hasScreen;
 }

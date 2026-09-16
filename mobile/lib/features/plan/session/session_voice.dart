@@ -7,16 +7,16 @@ import '../../../data/line_audio.dart';
 import '../../../data/plan/session/session_models.dart';
 import '../../../data/pronouncer.dart';
 
-/// ГОЛОС СЕССИИ ДНЯ (наряд SESSION-1b) — звук карточки файлом сервера по его АДРЕСУ, а без файла —
-/// системным голосом по тексту, который карточка показывает.
+/// DAY SESSION VOICE (work order SESSION-1b) — a card's sound as the server file by its URL, and without a file —
+/// the system voice reading the text the card shows.
 ///
-/// Почему адрес, а не текст (как у окна дня): у карточки звук варианта — это не всегда его текст. Вариант
-/// `phrase_slot` «sharp» звучит всей фразой своего каркаса («The pain is sharp when he bends.»), и
-/// текст этого файла из карточки не выводится. Файлы лежат в том же общем загрузчике звука
-/// (`AudioLoader`: диск, шесть докачек, повторы), что и у окна: окно, открытое перед сессией, уже
-/// положило их на диск.
+/// Why the URL and not the text (as in the day window): on a card, an option's sound is not always its text. The
+/// `phrase_slot` option «sharp» sounds as the whole phrase of its frame («The pain is sharp when he bends.»), and
+/// the text of that file cannot be derived from the card. The files live in the same shared audio loader
+/// (`AudioLoader`: disk, six downloads, retries) as the window's: a window opened before the session has already
+/// put them on disk.
 ///
-/// [playing] — что звучит сейчас (ключ, который дал вызывающий): по нему живут волны «прослушать».
+/// [playing] — what is sounding now (the key the caller gave): the «Listen» waves live off it.
 class SessionVoice {
   SessionVoice({required LineAudioCache lines, required this.targetLang, Pronouncer? pronouncer})
     : _lines = lines,
@@ -26,10 +26,10 @@ class SessionVoice {
   final Pronouncer _pronouncer;
   final String targetLang;
 
-  /// Сколько ждать файл, который ещё качается, прежде чем читать телефоном.
+  /// How long to wait for a file that is still downloading before the phone reads the text itself.
   static const Duration fileWait = Duration(milliseconds: 1500);
 
-  /// Ключ того, что звучит сейчас; null — тишина.
+  /// Key of what is sounding now; null — silence.
   final ValueNotifier<Object?> playing = ValueNotifier(null);
 
   int _serial = 0;
@@ -37,7 +37,7 @@ class SessionVoice {
 
   Future<void> warmUp() => _pronouncer.warmUp(targetLang: targetLang);
 
-  /// Докачать звуки карточек на диск — ничего не ждёт.
+  /// Download the cards' sounds to disk — waits for nothing.
   Future<void> prepare(Iterable<CardAudio> audios) async {
     await _lines.load();
     final loader = _lines.loader;
@@ -49,8 +49,8 @@ class SessionVoice {
     unawaited(loader.prefetch(urls).catchError((Object e) => debugPrint('[session-voice] prefetch: $e')));
   }
 
-  /// Сыграть [audio] и дождаться конца. Нет файла — [fallback] системным голосом. [rate] — темп файла
-  /// (0.85× у «Повтори вслух»); системный голос читает своим темпом.
+  /// Play [audio] and wait for it to end. No file — [fallback] in the system voice. [rate] — the file's tempo
+  /// (0.85× for «Repeat aloud»); the system voice reads at its own tempo.
   Future<void> play(CardAudio? audio, {required String fallback, double rate = 1.0, Object? key}) async {
     if (_released) return;
     final serial = ++_serial;

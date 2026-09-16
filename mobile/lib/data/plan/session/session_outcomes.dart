@@ -1,30 +1,30 @@
-/// ЧТО СЕССИЯ ШЛЁТ И ЧТО ЕЙ ОТВЕЧАЮТ — `POST …/cards/{id}/answer` и `POST …/cards/{id}/judge`
-/// (наряд SESSION-1b; схемы `PlanAnswerOutcome`, `PlanJudgeOutcome`, `PlanCardAnswerResponse`).
+/// WHAT THE SESSION SENDS AND WHAT IT GETS BACK — `POST …/cards/{id}/answer` and `POST …/cards/{id}/judge`
+/// (work order SESSION-1b; schemas `PlanAnswerOutcome`, `PlanJudgeOutcome`, `PlanCardAnswerResponse`).
 library;
 
 import '../plan_models.dart';
 import 'session_models.dart';
 
-/// `response` ответа — только ключи контракта, пустые не шлются.
+/// The answer's `response` — only the contract's keys; empty ones are not sent.
 class SessionResponse {
   const SessionResponse({this.heard, this.hintedAt, this.slotValue, this.fillerIndex, this.mode, this.noMic});
 
-  /// Что распознал микрофон (≤ 1000).
+  /// What the microphone recognized (≤ 1000).
   final String? heard;
 
-  /// Какая подсказка была открыта (≤ 40).
+  /// Which hint was opened (≤ 40).
   final String? hintedAt;
 
-  /// Что сказано в окне (≤ 200).
+  /// What was said in the slot (≤ 200).
   final String? slotValue;
 
-  /// Выбранное наполнение (0…9).
+  /// The chosen filler (0…9).
   final int? fillerIndex;
 
   /// `chips` | `tiles` | `voice_hint` | `voice_blind`.
   final String? mode;
 
-  /// Микрофона не было.
+  /// There was no microphone.
   final bool? noMic;
 
   static const int heardMax = 1000;
@@ -45,13 +45,13 @@ class SessionResponse {
   static String _cut(String s, int max) => s.length <= max ? s : s.substring(0, max);
 }
 
-/// Тело `POST …/answer`: итог, число попыток, что осталось от попытки.
+/// The body of `POST …/answer`: the result, the number of attempts, what is left of the attempt.
 class SessionAnswer {
   const SessionAnswer({required this.result, required this.attempts, this.response});
 
   final SessionResult result;
 
-  /// ≥ 1 — сколько попыток было на карточке, включая эту.
+  /// ≥ 1 — how many attempts there were on the card, including this one.
   final int attempts;
   final SessionResponse? response;
 
@@ -62,18 +62,18 @@ class SessionAnswer {
   };
 }
 
-/// Что ответ изменил в единице.
+/// What the answer changed in the unit.
 class SessionUnitOutcome {
   const SessionUnitOutcome({required this.ref, required this.returnsTomorrow, this.returnsDay});
 
   final String ref;
 
-  /// Провалена дважды — единица вернётся (ровно один раз, в ближайший следующий день).
+  /// Failed twice — the unit will return (exactly once, on the nearest following day).
   final bool returnsTomorrow;
   final int? returnsDay;
 }
 
-/// Ответ `POST …/answer`: `{card, requeued, unit, day, stage}`.
+/// The `POST …/answer` response: `{card, requeued, unit, day, stage}`.
 class SessionAnswerOutcome {
   const SessionAnswerOutcome({
     required this.card,
@@ -86,10 +86,12 @@ class SessionAnswerOutcome {
     required this.stageMinutesSpent,
   });
 
-  /// Карточка после ответа; null — вид незнаком этой сборке (так не бывает у отвеченной ею карточки).
+  /// The card after the answer; null — the kind is unknown to this build (this does not happen for a card this
+  /// build answered).
   final SessionCard? card;
 
-  /// Копия в конце этапа после ПЕРВОГО провала выбора; null — иначе и всегда в этапе слушания.
+  /// The copy at the end of the stage after the FIRST failure of a choice; null — otherwise, and always in the
+  /// listening stage.
   final SessionCard? requeued;
   final SessionUnitOutcome unit;
   final int dayCardsTotal;
@@ -97,7 +99,7 @@ class SessionAnswerOutcome {
   final int dayMinutesSpent;
   final PlanStage stage;
 
-  /// Минуты этапа — итог этапа (30-6) пишется отсюда.
+  /// The stage's minutes — the stage summary (30-6) is written from here.
   final int stageMinutesSpent;
 
   factory SessionAnswerOutcome.fromJson(Map<String, dynamic> j) {
@@ -121,7 +123,7 @@ class SessionAnswerOutcome {
   }
 }
 
-/// Ответ `POST …/judge`: `{accepted, slot_value, reason_native, result, attempts, card}`.
+/// The `POST …/judge` response: `{accepted, slot_value, reason_native, result, attempts, card}`.
 class SessionJudgeOutcome {
   const SessionJudgeOutcome({
     required this.accepted,
@@ -134,13 +136,14 @@ class SessionJudgeOutcome {
 
   final bool accepted;
 
-  /// Что сервер услышал в окне.
+  /// What the server heard in the slot.
   final String? slotValue;
 
-  /// Одна фраза на родном, чего не хватило; null при зачёте.
+  /// One sentence in the native language about what was missing; null on a pass.
   final String? reasonNative;
 
-  /// `passed` (`hinted` у каркаса на экране не пишется); null — попытка не зачтена, карточка ждёт.
+  /// `passed` (`hinted` is not written for a frame shown on screen); null — the attempt did not pass, the card
+  /// waits.
   final SessionResult? result;
   final int attempts;
   final SessionCard? card;

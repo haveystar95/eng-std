@@ -26,6 +26,7 @@ class AppSettings {
     required this.autoPronounce,
     this.transliteration,
     this.soundsEnabled = true,
+    this.sessionSoundsEnabled = true,
   });
 
   final bool remindersEnabled;
@@ -49,6 +50,11 @@ class AppSettings {
   /// хаптика остаётся).
   final bool soundsEnabled;
 
+  /// «Sounds in the session» (polish pass SESSION-1b′, item 5) — the owner's six sounds of the day session
+  /// ([SessionSounds]). On by default, stored on the device; off — the session registers none; the phone's silent
+  /// switch still wins.
+  final bool sessionSoundsEnabled;
+
   static const defaults = AppSettings(
     remindersEnabled: false,
     reminderTime: '20:00',
@@ -61,12 +67,14 @@ class AppSettings {
     bool? autoPronounce,
     bool? transliteration,
     bool? soundsEnabled,
+    bool? sessionSoundsEnabled,
   }) => AppSettings(
     remindersEnabled: remindersEnabled ?? this.remindersEnabled,
     reminderTime: reminderTime ?? this.reminderTime,
     autoPronounce: autoPronounce ?? this.autoPronounce,
     transliteration: transliteration ?? this.transliteration,
     soundsEnabled: soundsEnabled ?? this.soundsEnabled,
+    sessionSoundsEnabled: sessionSoundsEnabled ?? this.sessionSoundsEnabled,
   );
 }
 
@@ -76,6 +84,7 @@ abstract final class _Keys {
   static const autoPronounce = 'autopronounce';
   static const transliteration = 'transliteration';
   static const sounds = 'sounds_enabled';
+  static const sessionSounds = 'session_sounds_enabled';
 }
 
 class AppSettingsController extends AsyncNotifier<AppSettings> {
@@ -93,8 +102,10 @@ class AppSettingsController extends AsyncNotifier<AppSettings> {
         _ => null,
       },
       soundsEnabled: (await db.getMeta(_Keys.sounds)) != '0', // default on
+      sessionSoundsEnabled: (await db.getMeta(_Keys.sessionSounds)) != '0', // default on
     );
     AppFeedback.soundsEnabled = settings.soundsEnabled;
+    SessionSounds.enabled = settings.sessionSoundsEnabled;
 
     return settings;
   }
@@ -103,6 +114,12 @@ class AppSettingsController extends AsyncNotifier<AppSettings> {
     AppFeedback.soundsEnabled = on;
     await ref.read(appDatabaseProvider).setMeta(_Keys.sounds, on ? '1' : '0');
     state = AsyncData((state.value ?? AppSettings.defaults).copyWith(soundsEnabled: on));
+  }
+
+  Future<void> setSessionSoundsEnabled(bool on) async {
+    SessionSounds.enabled = on;
+    await ref.read(appDatabaseProvider).setMeta(_Keys.sessionSounds, on ? '1' : '0');
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(sessionSoundsEnabled: on));
   }
 
   Future<void> setRemindersEnabled(bool on) async {
@@ -136,8 +153,10 @@ final appSettingsProvider = AsyncNotifierProvider<AppSettingsController, AppSett
 /// его смотрел корень приложения: настройка выставляется в момент загрузки и при каждом тапе по
 /// тумблеру, и ни один экран не решает сам, звучать ему или нет.
 final soundsEnabledProvider = Provider<bool>((ref) {
-  final on = ref.watch(appSettingsProvider).value?.soundsEnabled ?? true;
+  final settings = ref.watch(appSettingsProvider).value;
+  final on = settings?.soundsEnabled ?? true;
   AppFeedback.soundsEnabled = on;
+  SessionSounds.enabled = settings?.sessionSoundsEnabled ?? true;
   return on;
 });
 

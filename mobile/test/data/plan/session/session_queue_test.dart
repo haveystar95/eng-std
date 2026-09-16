@@ -14,9 +14,9 @@ import 'package:eng_std/data/plan/session/session_outcomes.dart';
 import 'package:eng_std/data/plan/session/session_queue.dart';
 import 'package:eng_std/features/plan/session/session_controller.dart';
 
-/// ОЧЕРЕДЬ СЕССИИ (наряд SESSION-1b, разд. 1 и 6): копия после провала встаёт в конец этапа; после повторного
-/// GET сессия продолжает с первой неотвеченной; отложенный ответ уходит после восстановления сети и держит
-/// следующую карточку, пока не ушёл.
+/// THE SESSION QUEUE (work order SESSION-1b §1 and §6): the copy after a failure goes to the end of the stage;
+/// after a repeated GET the session resumes at the first unanswered card; a deferred answer is sent once the network
+/// is back and holds the next card until it has gone.
 Map<String, dynamic> _raw() =>
     jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
 
@@ -25,7 +25,7 @@ Map<String, dynamic> _cardJson(Map<String, dynamic> raw, String stage, int posit
   return (s['cards'] as List).cast<Map<String, dynamic>>().firstWhere((c) => c['position'] == position);
 }
 
-/// Ответ сервера на карточку — как `POST …/answer`.
+/// The server's response to a card — as `POST …/answer`.
 SessionAnswerOutcome _outcome(Map<String, dynamic> card, String result, {Map<String, dynamic>? requeued, bool returns = false, int minutes = 3}) =>
     SessionAnswerOutcome.fromJson({
       'card': {...card, 'result': result, 'attempts': 1, 'returns': returns},
@@ -46,7 +46,7 @@ DioException _status(int code, String problem) => DioException(
 class _FakeBackend implements SessionBackend {
   _FakeBackend(this.days);
 
-  /// Ответы `GET` по очереди; последний повторяется.
+  /// `GET` responses in turn; the last one repeats.
   final List<Map<String, dynamic>> days;
   int gets = 0;
   int opens = 0;
@@ -92,14 +92,14 @@ Plan _plan() => Plan.fromJson({
 
 void main() {
   group('SessionQueue', () {
-    test('очередь этапа — неотвеченные по позиции; копия после провала — в конец этапа', () {
+    test('the stage queue — unanswered cards by position; the copy after a failure — at the end of the stage', () {
       final raw = _raw();
       final q = SessionQueue(SessionDay.fromJson(raw).stages);
       expect(q.firstOpenStage(), PlanStage.words);
       final first = q.nextIn(PlanStage.words)!;
       expect(first.position, 1);
 
-      // Первый провал выбора: сервер отвечает карточкой и копией с новой позицией 25.
+      // The first failure of a choice: the server answers with the card and a copy at the new position 25.
       final choose = _cardJson(raw, 'words', 21);
       final copy = {...choose, 'id': 'ulid-copy', 'position': 25, 'retry_of': choose['id']};
       final out = _outcome(choose, 'failed', requeued: copy);
@@ -110,7 +110,7 @@ void main() {
       expect(cards.last.id, 'ulid-copy');
       expect(cards.last.retryOf, choose['id']);
 
-      // Всё, кроме копии, отвечено — следующая карточка этапа — копия.
+      // Everything but the copy is answered — the stage's next card is the copy.
       for (final c in cards.where((c) => c.id != 'ulid-copy')) {
         q.markAnswered(c, SessionResult.passed, 1);
       }
@@ -122,7 +122,7 @@ void main() {
       expect(q.stageAfter(PlanStage.words), PlanStage.phrases);
     });
 
-    test('счёт шапки — по единицам: «ещё N слов», бусины, полоса по карточкам', () {
+    test('the header counts units: «N words left», the beads; the bar counts cards', () {
       final q = SessionQueue(SessionDay.fromJson(_raw()).stages);
       expect(q.unitsOf(PlanStage.words), ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']);
       expect(q.unitsLeft(PlanStage.words), 8);
@@ -136,7 +136,7 @@ void main() {
       expect(q.progress(PlanStage.words), closeTo(3 / 24, 1e-9));
     });
 
-    test('«вернётся завтра» — единицы, у чьей карточки сервер поставил returns', () {
+    test('«comes back tomorrow» — the units whose card the server marked returns', () {
       final raw = _raw();
       final q = SessionQueue(SessionDay.fromJson(raw).stages);
       final assemble = _cardJson(raw, 'words', 6);
@@ -146,7 +146,7 @@ void main() {
   });
 
   group('SessionController', () {
-    test('после повторного GET — продолжение с первой неотвеченной; нерозданный день раздаётся', () async {
+    test('after a repeated GET — resume at the first unanswered card; an undealt day gets dealt', () async {
       final raw = _raw();
       final words = (raw['stages'] as List).first as Map<String, dynamic>;
       for (final c in (words['cards'] as List).cast<Map<String, dynamic>>().take(3)) {
@@ -177,7 +177,7 @@ void main() {
       fresh.dispose();
     });
 
-    test('вид прохождения с failed — отказ до отправки', () async {
+    test('a walkthrough kind with failed — refused before sending', () async {
       final session = SessionController(backend: _FakeBackend([_raw()]), plan: _plan(), number: 1);
       await session.load();
       session.startStage();
@@ -188,7 +188,7 @@ void main() {
       session.dispose();
     });
 
-    test('«дальше» ждёт ответа сервера; копия после провала — последняя карточка этапа', () {
+    test('«Next» waits for the server\'s response; the copy after a failure — the stage\'s last card', () {
       fakeAsync((async) {
         final raw = _raw();
         final backend = _FakeBackend([raw]);
@@ -208,14 +208,14 @@ void main() {
         async.flushMicrotasks();
         session.startStage();
 
-        // Отвечаем на выбор (позиция 21) — сразу, чтобы проверить копию.
+        // Answer the choice (position 21) right away, to check the copy.
         final chooseCard = session.queue!.cardsOf(PlanStage.words).firstWhere((c) => c.id == choose['id']);
         session.submit(chooseCard, const SessionAnswer(result: SessionResult.failed, attempts: 1));
         var advanced = false;
         unawaited(session.next().then((_) => advanced = true));
         async.flushMicrotasks();
         expect(session.advancing, isTrue);
-        expect(advanced, isFalse, reason: 'следующая карточка не открывается, пока ответ не ушёл');
+        expect(advanced, isFalse, reason: 'the next card does not open until the answer has gone');
 
         gate.complete();
         async.flushMicrotasks();
@@ -226,9 +226,10 @@ void main() {
       }, initialTime: DateTime(2026, 9, 16));
     });
 
-    // Живой прогон SESSION-1b: сервер завис, клиент повторил ответ, после возврата сети первый запрос был
-    // принят, а повтор получил 409 — итог ответа (копия в конец этапа) до телефона не доехал.
-    test('409 «уже отвечена» после обрыва — день перечитывается до следующей карточки, копия приходит с сервера', () async {
+    // Live run of SESSION-1b: the server hung, the client resent the answer, once the network was back the first
+    // request was accepted and the resend got a 409 — the answer's outcome (the copy at the end of the stage) never
+    // reached the phone.
+    test('409 «already answered» after a drop — the day is re-read before the next card, the copy comes from the server', () async {
       final raw = _raw();
       final choose = _cardJson(raw, 'words', 21);
       final after = _raw();
@@ -247,7 +248,7 @@ void main() {
       session.submit(chooseCard, const SessionAnswer(result: SessionResult.failed, attempts: 1));
       await session.next();
 
-      expect(backend.gets, 2, reason: 'после 409 день перечитан до следующей карточки');
+      expect(backend.gets, 2, reason: 'after the 409 the day is re-read before the next card');
       final queue = session.queue!.cardsOf(PlanStage.words);
       expect(queue.last.id, 'ulid-copy');
       expect(queue.firstWhere((c) => c.id == choose['id']).result, SessionResult.failed);
@@ -257,7 +258,7 @@ void main() {
   });
 
   group('AnswerOutbox', () {
-    test('сеть упала — ответ ждёт, «нет связи»; сеть вернулась — уходит, очередь опустела', () {
+    test('network down — the answer waits, «no connection»; network back — it goes, the queue is empty', () {
       fakeAsync((async) {
         var fails = 2;
         final raw = _raw();
@@ -280,12 +281,12 @@ void main() {
         expect(outbox.isEmpty, isFalse);
         expect(drained, isFalse);
 
-        // Первый повтор — через секунду; снова мимо.
+        // The first retry — after a second; misses again.
         async.elapse(const Duration(seconds: 1));
         expect(outbox.offline, isTrue);
         expect(delivered, isNull);
 
-        // Сеть вернулась — не ждать паузы.
+        // The network is back — do not wait for the pause.
         outbox.retryNow();
         async.flushMicrotasks();
         expect(outbox.offline, isFalse);
@@ -296,7 +297,7 @@ void main() {
       });
     });
 
-    test('409 plan_card_answered — доставлено; 422 — выброшено; ответы уходят по порядку', () async {
+    test('409 plan_card_answered — delivered; 422 — dropped; answers go in order', () async {
       final order = <String>[];
       final outbox = AnswerOutbox(
         send: (id, a) async {
@@ -315,7 +316,7 @@ void main() {
       outbox.dispose();
     });
 
-    test('разбор ошибок: сеть, 5xx и 429 — повторить', () {
+    test('error triage: network, 5xx and 429 — retry', () {
       expect(AnswerOutbox.classify(_offline()), OutboxFailure.transient);
       expect(AnswerOutbox.classify(_status(503, 'x')), OutboxFailure.transient);
       expect(AnswerOutbox.classify(_status(429, 'x')), OutboxFailure.transient);

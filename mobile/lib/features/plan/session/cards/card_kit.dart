@@ -10,6 +10,7 @@ import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/plan/session/speech_coverage.dart';
+import '../../../../data/plan/session/speech_stop.dart';
 import '../../../../data/speech/speech_turn.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_choice.dart';
@@ -17,11 +18,11 @@ import '../parts/session_mic_panel.dart';
 import '../session_mic.dart';
 import '../session_voice.dart';
 
-/// ЧТО КАРТОЧКА ЗНАЕТ СВЕРХ СВОЕГО PAYLOAD — один объект на все 15 видов 1b.
+/// WHAT A CARD KNOWS BEYOND ITS PAYLOAD — one object for all 15 kinds of 1b.
 ///
-/// Карточка сама судит ответ (выбор, плитки, голос — [SessionRules]) и отдаёт итог в [submit]; дальше —
-/// [next] (ждёт, пока ответ уйдёт на сервер). Судейский вид спрашивает [judge]. Ничего из сессии, кроме
-/// этого, карточке не видно.
+/// The card judges the answer itself (choice, tiles, voice — [SessionRules]) and hands the result to [submit]; then
+/// [next] (waits until the answer is sent to the server). The judge-graded kind asks [judge]. Nothing else of the
+/// session is visible to the card.
 class CardEnv {
   const CardEnv({
     required this.card,
@@ -37,46 +38,54 @@ class CardEnv {
     required this.openSettings,
     this.outcome,
     this.advancing = false,
+    this.frameSentence,
+    this.termText,
   });
 
   final SessionCard card;
   final SessionVoice voice;
   final String targetLang;
 
-  /// Локаль распознавания — `en_US`.
+  /// Recognition locale — `en_US`.
   final String localeId;
 
-  /// Роль собеседника в именительном, как отдал сервер («Регистратор»); пустая — роли нет.
+  /// The partner's role in the nominative case, as the server sent it (native «Receptionist»); empty — no role.
   final String role;
   final void Function(SessionAnswer answer) submit;
   final Future<void> Function() next;
   final Future<SessionJudgeOutcome> Function(String heard) judge;
 
-  /// Микрофон карточки: что должно прозвучать и слова-подсказки распознавателю.
+  /// The card's microphone: what should be said and hint words for the recognizer.
   final SessionMic Function(String expected, List<String> contextual) makeMic;
 
-  /// Микрофона нет — экран показывает «Нужен микрофон» вместо шапки этапа.
+  /// No microphone — the screen shows «Microphone needed» instead of the stage header.
   final ValueChanged<bool> reportNoMic;
 
-  /// «Разрешить», когда разрешение отказано насовсем, — настройки телефона.
+  /// «Allow» when permission is denied for good — the phone's settings.
   final Future<void> Function() openSettings;
 
-  /// Ответ сервера по этой карточке, когда он пришёл (`unit.returns_tomorrow`).
+  /// The server's answer for this card, once it has arrived (`unit.returns_tomorrow`).
   final SessionAnswerOutcome? outcome;
 
-  /// «Дальше» ждёт, пока уйдёт ответ.
+  /// «Next» waits until the answer is sent.
   final bool advancing;
+
+  /// The day's frame as a whole phrase by its `ref` ([SessionDay.frameSentence]) — the «Combination» options.
+  final String? Function(String frameRef)? frameSentence;
+
+  /// The day's word by its unit `ref` ([SessionDay.termText]) — what the phone reads on «By ear» without a file.
+  final String? Function(String unitRef)? termText;
 
   Set<String> get articles => SpeechCoverage.articlesFor(targetLang);
 
-  /// После второго провала единица вернётся завтра — сервер сказал это в ответе.
+  /// After the second failure the unit comes back tomorrow — the server said so in its answer.
   bool get returnsTomorrow => outcome?.unit.returnsTomorrow ?? false;
 }
 
-/// ОБЩАЯ РАСКЛАДКА КАРТОЧКИ: задание сверху, лист материала (прижат к заданию или по центру свободного
-/// поля), зона ответа прижата к низу доком. Док лежит ПОВЕРХ поля, как в канве (`position:absolute`,
-/// градиент сверху): поле заходит под прозрачный верхний отступ дока, а что не влезло — уходит под его
-/// сплошную часть, а не режется краем прокрутки.
+/// SHARED CARD LAYOUT: the task line on top, the material sheet (pinned to the task line or centred in the free
+/// field), the answer zone pinned to the bottom as a dock. The dock lies OVER the field, as in the canvas
+/// (`position:absolute`, gradient on top): the field runs under the dock's transparent top inset, and whatever
+/// does not fit goes under its solid part instead of being cut by the scroll edge.
 class CardLayout extends StatelessWidget {
   const CardLayout({
     super.key,
@@ -85,6 +94,7 @@ class CardLayout extends StatelessWidget {
     this.bottom,
     this.centerBody = false,
     this.taskInBody = false,
+    this.overlayDock = true,
     this.taskGap = 8,
     this.bodyGap = 12,
     this.fadeStop = 0.22,
@@ -94,17 +104,22 @@ class CardLayout extends StatelessWidget {
   final Widget body;
   final Widget? bottom;
 
-  /// Лист по центру свободного поля (голосовые карточки, плитки), а не под заданием.
+  /// The sheet centred in the free field (voice cards, tiles) rather than under the task line.
   final bool centerBody;
 
-  /// Верх листа текстом (30-9 «вопрос · верх текстом»): задание и лист — одна группа по центру свободного
-  /// поля.
+  /// Text-only sheet top (30-9 «question · text top»): the task line and the sheet are one group centred in the
+  /// free field.
   final bool taskInBody;
 
-  /// От полосы сцены до задания.
+  /// The dock lies over the field (default). `false` — the dock sits flush under the field, the field is clipped
+  /// by its own edge: that is for a card whose dock is tall and changes height across states (32-9 — chips, live
+  /// line, microphone), and nothing of the field may end up under it.
+  final bool overlayDock;
+
+  /// From the scene strip to the task line.
   final double taskGap;
 
-  /// От задания до листа.
+  /// From the task line to the sheet.
   final double bodyGap;
   final double fadeStop;
 
@@ -112,8 +127,8 @@ class CardLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final dock = bottom;
     final field = CustomScrollView(
-      // Под доком поле не режется: низ, который не влез, закрывает сам док.
-      clipBehavior: dock == null ? Clip.hardEdge : Clip.none,
+      // Under an overlay dock the field is not clipped: the bottom that did not fit is covered by the dock itself.
+      clipBehavior: dock == null || !overlayDock ? Clip.hardEdge : Clip.none,
       slivers: [
         if (!taskInBody)
           SliverPadding(
@@ -140,6 +155,20 @@ class CardLayout extends StatelessWidget {
       ],
     );
     if (dock == null) return field;
+    if (!overlayDock) {
+      // The dock never overflows the card: taller than the whole card (a low phone, the debug field) it scrolls
+      // inside its own height, and the field gets what is left.
+      return CustomMultiChildLayout(
+        delegate: _DockUnderField(),
+        children: [
+          LayoutId(id: _CardSlot.field, child: field),
+          LayoutId(
+            id: _CardSlot.dock,
+            child: SingleChildScrollView(primary: false, child: SessionDock(fadeStop: fadeStop, child: dock)),
+          ),
+        ],
+      );
+    }
     return ClipRect(
       child: CustomMultiChildLayout(
         delegate: _DockOverField(),
@@ -154,7 +183,7 @@ class CardLayout extends StatelessWidget {
 
 enum _CardSlot { field, dock }
 
-/// Док прижат к низу; поле — от верха до верха дока плюс его прозрачный верхний отступ.
+/// The dock is pinned to the bottom; the field spans from the top to the dock's top plus its transparent top inset.
 class _DockOverField extends MultiChildLayoutDelegate {
   @override
   void performLayout(Size size) {
@@ -169,12 +198,26 @@ class _DockOverField extends MultiChildLayoutDelegate {
   bool shouldRelayout(_DockOverField oldDelegate) => false;
 }
 
-/// ГОЛОСОВАЯ КАРТОЧКА — общий ход «запись → зачёт → две попытки → пропуск» для `word_repeat`,
-/// `phrase_repeat`, `phrase_other_slot` (кадры 31-2, 32-6, 32-7).
+/// The dock is pinned to the bottom at most as tall as the card; the field takes the rest above it.
+class _DockUnderField extends MultiChildLayoutDelegate {
+  @override
+  void performLayout(Size size) {
+    final dock = layoutChild(_CardSlot.dock, BoxConstraints(minWidth: size.width, maxWidth: size.width, maxHeight: size.height));
+    positionChild(_CardSlot.dock, Offset(0, size.height - dock.height));
+    layoutChild(_CardSlot.field, BoxConstraints.tight(Size(size.width, size.height - dock.height)));
+    positionChild(_CardSlot.field, Offset.zero);
+  }
+
+  @override
+  bool shouldRelayout(_DockUnderField oldDelegate) => false;
+}
+
+/// VOICE CARD — the shared flow «recording → pass → two attempts → skip» for `word_repeat`, `phrase_repeat`,
+/// `phrase_other_slot` (canvases 31-2, 32-6, 32-7).
 ///
-/// Голос никогда не пишет `failed`: зачёт — `passed` и автопереход через 600 мс; вторая попытка без
-/// зачёта — `skipped` и «Дальше» вручную; «Пропустить» — `skipped` сразу. Микрофона нет — «Нужен
-/// микрофон», «Пропустить» там пишет `skipped` с `no_mic`.
+/// Voice never writes `failed`: pass — `passed` and auto-advance after 600 ms; a second attempt without a pass —
+/// `skipped` and «Next» by hand; «Skip» — `skipped` at once. No microphone — «Microphone needed», where «Skip»
+/// writes `skipped` with `no_mic`.
 mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   CardEnv get env;
 
@@ -183,30 +226,36 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   bool _done = false;
   String _heard = '';
 
-  /// Карточка закрыта пропуском после второй попытки — «Дальше» вручную.
+  /// The card is closed by a skip after the second attempt — «Next» by hand.
   bool skippedAfterMisses = false;
 
   bool get done => _done;
   int get attempts => _attempts;
   String get heard => _heard;
 
-  /// Что должно прозвучать.
+  /// What should be said.
   String get expectedSpeech;
 
-  /// Слова-подсказки распознавателю — по умолчанию слова ожидаемого текста.
+  /// Hint words for the recognizer — by default the words of the expected text.
   List<String> get contextual => [
     expectedSpeech,
     ...expectedSpeech.split(RegExp(r'\s+')).where((w) => w.trim().isNotEmpty),
   ];
 
-  /// Зачёт услышанного — правило вида.
+  /// Pass for what was heard — the kind's rule (may update the card's screen).
   bool accepts(String heard);
 
-  /// Зачтено — карточке показать своё «услышал».
+  /// The same rule without side effects — for stopping the recording early on a partial result.
+  bool wouldAccept(String heard) => accepts(heard);
+
+  /// Passed — the card shows its own «heard».
   void onAccepted(String heard) {}
 
   void initVoice() {
-    mic = env.makeMic(expectedSpeech, contextual)..onTurn = _onTurn;
+    mic = env.makeMic(expectedSpeech, contextual)
+      ..onTurn = _onTurn
+      // Passed on a partial result — the recording stops after 500 ms without waiting for silence (1b′, item 6).
+      ..autoStop = (partial) => SpeechStop.voice(partial, wouldAccept);
     mic.addListener(_onMic);
   }
 
@@ -234,6 +283,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     if (ok) {
       _done = true;
       mic.settle(accepted: true);
+      SessionSounds.verdict(correct: true);
       onAccepted(turn.transcript);
       env.submit(SessionAnswer(result: SessionResult.passed, attempts: _attempts, response: SessionResponse(heard: turn.transcript)));
       unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
@@ -255,7 +305,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     setState(() {});
   }
 
-  /// «Пропустить» у микрофона.
+  /// «Skip» at the microphone.
   void skip({bool noMic = false}) {
     if (_done) return;
     _done = true;
@@ -269,16 +319,16 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     unawaited(env.next());
   }
 
-  /// «Разрешить» на экране «Нужен микрофон».
+  /// «Allow» on the «Microphone needed» screen.
   Future<void> allowMic() async {
     final ok = await mic.askAgain();
     if (!ok && mic.blockedInSettings) await env.openSettings();
   }
 
-  /// Док голосовой карточки: микрофон, или «Дальше» после второй попытки.
+  /// The voice card's dock: the microphone, or «Next» after the second attempt.
   Widget voiceDock(BuildContext context, {bool showHeardLine = true, String? heardText}) {
     final l = AppLocalizations.of(context);
-    // Вторая попытка без зачёта: «ещё раз» уже не предлагается — только «Дальше».
+    // Second attempt without a pass: «once more» is no longer offered — only «Next».
     if (skippedAfterMisses) {
       return SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()));
     }
@@ -291,15 +341,15 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     );
   }
 
-  /// Тело карточки без микрофона — «Нужен микрофон» (30-3).
+  /// The card body without a microphone — «Microphone needed» (30-3).
   Widget? noMicBody(String Function(PlanStage) stageName) => mic.state == MicState.unavailable
       ? SessionNoMicView(onAllow: () => unawaited(allowMic()), onSkip: () => skip(noMic: true), stageName: stageName)
       : null;
 }
 
-/// КАРТОЧКА ВЫБОРА — шаблон 30-9: тап по варианту — ответ; верно — подложка шалфея и автопереход через
-/// 600 мс; неверно — контур чернил у выбранного, шалфей у верного и «Дальше» вручную; вторая ошибка по
-/// единице — у верного точка «вернётся завтра», когда сервер это сказал.
+/// CHOICE CARD — template 30-9: a tap on an option is the answer; correct — a sage backing and auto-advance after
+/// 600 ms; wrong — an ink outline on the chosen one, sage on the correct one and «Next» by hand; the second mistake
+/// on a unit — the correct one gets the «comes back tomorrow» dot, when the server said so.
 mixin ChoiceCardState<T extends StatefulWidget> on State<T> {
   CardEnv get env;
   ChoicePayload get choice;
@@ -323,6 +373,7 @@ mixin ChoiceCardState<T extends StatefulWidget> on State<T> {
     } else {
       AppHaptics.warning();
     }
+    SessionSounds.verdict(correct: correct);
     env.submit(SessionAnswer(result: correct ? SessionResult.passed : SessionResult.failed, attempts: 1));
     if (correct) {
       unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
@@ -340,7 +391,7 @@ mixin ChoiceCardState<T extends StatefulWidget> on State<T> {
 
   int shakeOf(String optionId) => optionId == _chosen ? _shake : 0;
 
-  /// Варианты и, после неверного, «Дальше».
+  /// The options and, after a wrong one, «Next».
   Widget optionsDock(BuildContext context, {bool target = false, Widget? Function(CardOption option)? listen}) {
     final l = AppLocalizations.of(context);
     return Column(
@@ -367,11 +418,11 @@ mixin ChoiceCardState<T extends StatefulWidget> on State<T> {
     );
   }
 
-  /// Бровь «вернётся завтра» справа, когда сервер сказал, что единица вернётся.
+  /// The «comes back tomorrow» eyebrow on the right, when the server said the unit comes back.
   String? eyebrowTrailing(AppLocalizations l) => env.returnsTomorrow ? l.planWindowSheetReturnsTomorrow : null;
 }
 
-/// «Прослушать» с волной, пока звучит именно этот звук.
+/// «Listen» with a wave while exactly this sound is playing.
 class CardListen extends StatelessWidget {
   const CardListen({super.key, required this.env, required this.audio, required this.fallback, required this.playKey, this.size = 44, this.rate = 1.0});
 

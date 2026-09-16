@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ^3.12.2
@@ -126,6 +126,7 @@ flutter:
   # `dart run tool/gen_feedback_sounds.dart`, which is where their pitch, length and fade live.
   # Played natively through AudioServices (ios/Runner/AppDelegate.swift), not by a pub package.
   assets:
+    # The trainers' four wav and the day session's six mp3 of the owner (SESSION-1b′, `SessionSounds`).
     - assets/sounds/
     # The offline autocomplete dictionary (~47k words, 363 KB). Regenerate with
     # scripts/build_wordlist.sh — the source and the filtering rules live in its header.

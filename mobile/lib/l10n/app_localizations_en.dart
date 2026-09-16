@@ -3338,6 +3338,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSoundsHint => 'Correct · wrong · stage closed · day closed';
 
   @override
+  String get profileRowSessionSounds => 'Sounds in the session';
+
+  @override
+  String get profileSessionSoundsHint => 'Correct · miss · recording · stage done';
+
+  @override
   String dayCards(int n) {
     String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n cards', one: '$n card');
     return '$_temp0';
@@ -3472,7 +3478,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskInsertWord => 'Put the word in the slot';
 
   @override
-  String get planSessionTaskRememberPhrase => 'Remember the phrase';
+  String get planSessionTaskLookListen => 'Look and listen';
+
+  @override
+  String get planSessionChangeable => 'this part can change';
 
   @override
   String get planSessionTaskAssemblePhrase => 'Build the phrase';
@@ -3484,13 +3493,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskSayPhrase => 'Say the phrase aloud';
 
   @override
-  String get planSessionTaskOtherSlot => 'Say it with another slot';
+  String get planSessionTaskSayWhole => 'Say it whole — the slot\'s meaning is below';
 
   @override
-  String get planSessionTaskReply => 'Reply';
+  String get planSessionTaskWhatAnswer => 'What will you answer?';
 
   @override
-  String get planSessionTaskOwnSlot => 'Say your own';
+  String get planSessionTaskSayOwn => 'Say it whole — pick the meaning yourself';
 
   @override
   String get planSessionBrowWord => 'Word';

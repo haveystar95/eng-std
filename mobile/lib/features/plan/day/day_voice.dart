@@ -5,13 +5,13 @@ import 'package:flutter/foundation.dart';
 import '../../../data/line_audio.dart';
 import '../../../data/pronouncer.dart';
 
-/// ГОЛОС ОКНА ДНЯ — всё, что звучит в окне, — файлом сервера (DAY-UI-3: реплики обоих говорящих, фразы и
-/// слова; окно докачивает их все при открытии), а системный синтез — замена, пока файла нет. Ключ файла —
-/// текст строки (`LineAudioCache`), поэтому слово окна звучит тем же файлом, что и шит слова. Один экземпляр
-/// держит аудиосессию, пока окно открыто.
+/// THE DAY WINDOW'S VOICE — everything the window says is a server file (DAY-UI-3: both speakers' lines,
+/// phrases and words; the window fetches them all on open), and system synthesis stands in while a file is
+/// missing. A file is keyed by the line's text (`LineAudioCache`), so a word in the window plays the same file
+/// as the word sheet. One instance holds the audio session while the window is open.
 ///
-/// Голос СЕССИИ дня — свой (`features/plan/session/session_voice.dart`, наряд SESSION-1b): у карточек звук
-/// приходит адресом, а текст звука из карточки не всегда выводится.
+/// The day SESSION has its own voice (`features/plan/session/session_voice.dart`, work order SESSION-1b):
+/// a card's sound arrives as a URL, and the sound's text cannot always be derived from the card.
 class DayVoice {
   DayVoice({required LineAudioCache lines, required this.targetLang, Pronouncer? pronouncer})
     : _lines = lines,

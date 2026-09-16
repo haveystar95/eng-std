@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -71,5 +73,84 @@ abstract final class AppFeedback {
     channel.invokeMethod<void>('play', {'sound': sound}).catchError((Object e) {
       debugPrint('[feedback] $sound did not play: $e');
     });
+  }
+}
+
+/// THE DAY SESSION'S SOUNDS (SESSION-1b′, item 5; the owner's files and decisions of 16.09) — the owner's six mp3 in
+/// `assets/sounds/`, wired by the owner's map:
+///
+/// * [correct] / [miss] — the 30-4 reactions (choice, tiles) and the verdict of the voice and of the slot judge;
+/// * [micOn] — a recording starts;
+/// * [stageDone] — the stage summary (30-6) opens;
+/// * [dayDone] — «Day done» ([dayCompleted] is reserved: the day summary screen comes in 1c);
+/// * [ready] — the day is ready after waiting for its lesson to be built.
+///
+/// Played as iOS system sounds (`ios/Runner/AppDelegate.swift`, channel `com.denis.engstd/session_sounds`): [load]
+/// decodes the six into memory when the session opens (leading silence cut, the asset files untouched) and
+/// registers them, [release] frees them when it closes. A system sound follows the silent switch by itself, mixes
+/// with the partner's line instead of cutting it and starts without the mp3 decoder's delay. «Sounds in the
+/// session» off — nothing is registered at all.
+abstract final class SessionSounds {
+  @visibleForTesting
+  static const MethodChannel channel = MethodChannel('com.denis.engstd/session_sounds');
+
+  static const String correct = 'correct';
+  static const String miss = 'miss';
+  static const String micOn = 'mic_on';
+  static const String stageDone = 'stage_done';
+  static const String dayDone = 'day_done';
+  static const String ready = 'ready';
+
+  /// «Sounds in the session» — set by the settings controller.
+  static bool get enabled => _enabled;
+  static bool _enabled = true;
+  static bool _loaded = false;
+
+  static set enabled(bool on) {
+    _enabled = on;
+    if (!on && _loaded) unawaited(release());
+  }
+
+  /// The session opened: decode and register the six sounds — unless «Sounds in the session» is off.
+  static Future<void> load() async {
+    if (!_enabled || _loaded) return;
+    _loaded = true;
+    final count = await _invoke('load');
+    debugPrint('[session-sounds] registered $count of 6');
+  }
+
+  /// The session closed: free the registered sounds.
+  static Future<void> release() async {
+    if (!_loaded) return;
+    _loaded = false;
+    await _invoke('release');
+  }
+
+  /// Play one of the six. Not registered (switch off, no session) — silence.
+  static void play(String sound) {
+    if (!_enabled || !_loaded) return;
+    unawaited(_invoke('play', {'sound': sound}));
+  }
+
+  /// The reaction to an answer: «correct» or «miss».
+  static void verdict({required bool correct}) => play(correct ? SessionSounds.correct : miss);
+
+  /// Reserved for «Day done» — the day summary screen of 1c calls it.
+  static void dayCompleted() => play(dayDone);
+
+  /// A sound that fails is not something the learner can act on — swallowed, as with [AppFeedback].
+  static Future<Object?> _invoke(String method, [Map<String, Object?>? arguments]) async {
+    try {
+      return await channel.invokeMethod<Object?>(method, arguments);
+    } catch (e) {
+      debugPrint('[session-sounds] $method: $e');
+      return null;
+    }
+  }
+
+  @visibleForTesting
+  static void resetForTest() {
+    _enabled = true;
+    _loaded = false;
   }
 }

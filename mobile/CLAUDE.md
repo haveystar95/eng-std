@@ -13,6 +13,12 @@ Keychain), `flutter_animate`. Fonts (Literata + Inter) are **bundled** in `asset
 (offline-first) — `google_fonts` was removed at the A3 close. `lib/core/` is **gone** (the old dark
 theme); the «Слова» paper/ink design lives in `lib/theme/` (tokens) + `lib/ui/` (components).
 
+## Code language
+
+**Comments, doc comments, names and error messages — English only; Russian only in UI strings (`.arb`),
+test data and documents** (owner's rule, SESSION-1b′, 16.09.2026). Older files still carry Russian
+comments from before the rule; new and rewritten ones are English.
+
 ## Structure (`lib/`)
 
 - `theme/` — paper/ink design tokens (colors, typography, geometry, motion, haptics, shadows) + `buildAppTheme()`. `ui/` — base components (PaperCard, buttons, chips, InkSegments, FloatingTabBar, CenterAlert, …).
@@ -191,6 +197,14 @@ part of that answer. It reads ONE payload — `GET /home-plan`, cached into `syn
 
 Замер, кандидаты и цены голоса — `../docs/research/tts-1.md`; два голоса, один вызов на диалог, нарезка по
 паузам и лимиты вендора — `../backend2/docs/research/day-ui-3/README.md`.
+
+**Звуки сессии дня** (SESSION-1b′) — шесть mp3 владельца в `assets/sounds/` (`correct`, `miss`, `mic_on`,
+`stage_done`, `day_done`, `ready`; не менять и не нормализовать), `SessionSounds` в `lib/theme/feedback.dart` +
+канал `com.denis.engstd/session_sounds` в `AppDelegate.swift`. Это **системные звуки, а не плеер**: вход в сессию
+декодирует mp3, срезает тишину в начале и регистрирует их, выход освобождает. Системный звук сам слушается
+беззвучного режима (сессия приложения — `.playback` ради голоса, плеер звучал бы и в беззвучном) и не режет реплику.
+Во время записи iOS глушит системные звуки — отсюда `enableHapticFeedback: true` у распознавателя. «Звуки в сессии»
+выключены — не регистрируется ничего. Карта «звук → момент» — `../backend2/docs/research/session-1b/README.md` §15.
 
 ## Design
 
