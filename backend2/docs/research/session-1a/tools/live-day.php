@@ -83,5 +83,5 @@ foreach (Stage::ordered() as $stage) {
 
 $room = app(GetDayRoomHandler::class)(new GetDayRoom(PlanId::fromString($planId), 1, $actor));
 $out = __DIR__.'/../e2e-day-doctor.json';
-file_put_contents($out, json_encode(PlanJson::room($room), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)."\n");
+file_put_contents($out, json_encode(PlanJson::room($room), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR)."\n");
 echo "\nroom → ".realpath($out).' (window.day.minutes_estimate='.json_encode(PlanJson::room($room)['window']['day']['minutes_estimate']).")\n";

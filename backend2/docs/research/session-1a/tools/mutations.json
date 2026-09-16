@@ -294,8 +294,8 @@
   "rule": "listen_predict — по одной на каждый ask-обмен (наряд, разд. 1–2).",
   "defect": "вид обмена не проверяется: догадка о реплике партнёра раздаётся и на answer-обменах, где ученик отвечает, а не спрашивает.",
   "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
-  "find": "if ($exchange->kind !== ExchangeKind::Ask || $own === null || $partner === null || $right === null) {",
-  "replace": "if ($own === null || $partner === null || $right === null) {",
+  "find": "if ($exchange->kind !== ExchangeKind::Ask || $own === null || $partner === null) {",
+  "replace": "if ($own === null || $partner === null) {",
   "tests": [
    {
     "path": "tests/Unit/Plan/Session/ListenStageTest.php",
@@ -462,7 +462,7 @@
   "rule": "Выбор и сборка: неверно первый раз → failed и копия в конец этапа; неверно второй раз → failed, returns = true (наряд, разд. 3).",
   "defect": "копии нет: первый же промах помечает единицу «вернётся завтра», второй попытки не будет.",
   "file": "app/Modules/Plan/Domain/Entity/DayCard.php",
-  "find": "        if ($this->retryOf === null) {\n            return true;\n        }\n",
+  "find": "        if ($this->retryOf === null && $this->kind->requeues()) {\n            return true;\n        }\n",
   "replace": "",
   "tests": [
    {
@@ -722,6 +722,126 @@
    {
     "path": "tests/Feature/Plan/SlotJudgeTest.php",
     "filter": "refuses a retelling that was never said"
+   }
+  ]
+ },
+ {
+  "name": "50. listen_predict: варианты — переводы реплик собеседника, верный — его ответ",
+  "rule": "listen_predict: options = text_native ответа A этого ask-обмена + text_native двух других реплик A; check обмена не используется (SESSION-1a, хвост; D-19 отменён).",
+  "defect": "верный вариант снова берётся из check обмена, а не из реплики собеседника.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+  "find": "$chosen = Options::choose($seed, ['text' => $partner->textNative], Shuffle::seeded($seed.':others', $candidates), self::PREDICT_OPTIONS);",
+  "replace": "$chosen = Options::choose($seed, ['text' => $exchange->check->correctOption()->textNative ?? $partner->textNative], Shuffle::seeded($seed.':others', $candidates), self::PREDICT_OPTIONS);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "among the translations of two other partner lines"
+   }
+  ]
+ },
+ {
+  "name": "51. listen_predict: ложные — другие реплики собеседника, не варианты check",
+  "rule": "listen_predict: два ложных варианта — переводы двух других реплик A, не совпадающие по тексту (SESSION-1a, хвост).",
+  "defect": "ложные варианты берутся из check обмена.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+  "find": "                $candidates[] = ['text' => $line['message']->textNative];",
+  "replace": "                $candidates[] = ['text' => $exchange->check->options[0]->textNative ?? $line['message']->textNative];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "among the translations of two other partner lines"
+   }
+  ]
+ },
+ {
+  "name": "52. возврат один раз: карточка-возврат не помечает единицу снова",
+  "rule": "Возврат единицы — ровно один раз (SESSION-1a, хвост).",
+  "defect": "провал возвращённой карточки снова помечает единицу «вернётся завтра».",
+  "file": "app/Modules/Plan/Domain/Entity/DayCard.php",
+  "find": "        $this->returns = $this->unitKind->returns() && $this->source === CardSource::Today;",
+  "replace": "        $this->returns = $this->unitKind->returns();",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DayCardSessionTest.php",
+    "filter": "never marks a unit to return again"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionReturnsTest.php",
+    "filter": "brings a unit back once"
+   }
+  ]
+ },
+ {
+  "name": "53. повторение берёт только то, что ещё никуда не возвращалось",
+  "rule": "День повторения берёт возвраты двух предыдущих сцен, которые ещё никуда не возвращались; цепочка сцена → повторение → сцена — единица встречается один раз (SESSION-1a, хвост).",
+  "defect": "уже вернувшиеся единицы не отсеиваются: единица дня 1 приходит и на день 2, и на повторение.",
+  "file": "app/Modules/Plan/Application/Service/DayDealer.php",
+  "find": "if (! is_string($sceneId) || isset($back[self::returnKey($card, $source->id())])) {",
+  "replace": "if (! is_string($sceneId)) {",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionReturnsTest.php",
+    "filter": "brings a unit back once"
+   }
+  ]
+ },
+ {
+  "name": "54. возврат — в ближайший следующий день любого типа, репетиция тоже",
+  "rule": "Возврат — в ближайший следующий день любого типа (SESSION-1a, хвост): последний день-сцена отдаёт свои возвраты репетиции.",
+  "defect": "репетиция не берёт вчерашние возвраты, как до хвоста. (Мутант «вчерашний день-сцена вместо вчерашнего дня» эквивалентен: сегодня день повторения не может сам пометить единицу — его карточки судейские, а провал возврата единицу не помечает; см. отчёт §14.)",
+  "file": "app/Modules/Plan/Application/Service/DayDealer.php",
+  "find": "        return $this->assembler->rehearsalDay($day->id(), $scenes, $material, $plan->level(), $returned, $ids);",
+  "replace": "        return $this->assembler->rehearsalDay($day->id(), $scenes, $material, $plan->level(), [], $ids);",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionReturnsTest.php",
+    "filter": "brings yesterday"
+   }
+  ]
+ },
+ {
+  "name": "55. «вернётся в день N» называет и репетицию",
+  "rule": "День возврата — ближайший следующий любого типа, репетиция тоже (SESSION-1a, хвост).",
+  "defect": "репетиция снова не считается днём возврата.",
+  "file": "app/Modules/Plan/Domain/Service/ReturnDay.php",
+  "find": "                return $next->number();",
+  "replace": "                return $next->number() === count($plan->days()) ? null : $next->number();",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionWindowTest.php",
+    "filter": "names the next day a unit comes back on"
+   }
+  ]
+ },
+ {
+  "name": "56. этап слушания без копий",
+  "rule": "Этап «Слушаю и отвечаю» без копий: неверный listen_question → failed без requeue (SESSION-1a, хвост).",
+  "defect": "неверный ответ этапа слушания снова раздаётся копией в конец этапа.",
+  "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+  "find": "        return $this->isChoice() && $this->stage() !== Stage::Listen;",
+  "replace": "        return $this->isChoice();",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DayCardSessionTest.php",
+    "filter": "deals no copy of a failed listening choice"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionReturnsTest.php",
+    "filter": "deals no copy of a wrong listening answer"
+   }
+  ]
+ },
+ {
+  "name": "57. coverage_min на проводе — с дробной частью",
+  "rule": "coverage_min на проводе — число с дробной частью (1.0 / 0.7), фикстуры байт-в-байт (SESSION-1a, хвост).",
+  "defect": "ответ кабинета дня сериализуется без JSON_PRESERVE_ZERO_FRACTION: 1.0 уезжает целым 1.",
+  "file": "app/Modules/Plan/Presentation/Http/Controller/PlanDayController.php",
+  "find": "        return response()->json(['data' => $data], 200, [], JSON_PRESERVE_ZERO_FRACTION);",
+  "replace": "        return response()->json(['data' => $data]);",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionDayFixtureTest.php",
+    "filter": "holds day 1 of the clean doctor lesson"
    }
   ]
  }

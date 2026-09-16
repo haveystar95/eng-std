@@ -85,7 +85,7 @@
             "state": "current",
             "cards": [
                 {
-                    "id": "01M2KPF58KG0JTC4JA9HV105TZ",
+                    "id": "01M2MS8YFTM4JTFZNJVYRBJQKR",
                     "stage": "words",
                     "position": 1,
                     "kind": "word_intro",
@@ -144,7 +144,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58K0GYK0YFA69EGSSXR",
+                    "id": "01M2MS8YFTNE2023HM8MV183BY",
                     "stage": "words",
                     "position": 2,
                     "kind": "word_intro",
@@ -203,7 +203,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KCK2W2BNJE8B1DSCY",
+                    "id": "01M2MS8YFTNENSGXV5BHWGCFGK",
                     "stage": "words",
                     "position": 3,
                     "kind": "word_repeat",
@@ -235,7 +235,7 @@
                             }
                         },
                         "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "fever"
                     },
                     "result": null,
@@ -248,7 +248,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KBSR3XKSQQ2JJ6M1H",
+                    "id": "01M2MS8YFTEF479BT56TWPE8Z1",
                     "stage": "words",
                     "position": 4,
                     "kind": "word_intro",
@@ -307,7 +307,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KFCMSREDAF065GM67",
+                    "id": "01M2MS8YFTGE4W02RZ65QQNQ3X",
                     "stage": "words",
                     "position": 5,
                     "kind": "word_repeat",
@@ -339,7 +339,7 @@
                             }
                         },
                         "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "sore throat"
                     },
                     "result": null,
@@ -352,7 +352,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KT26JZR6VQVW3XPXB",
+                    "id": "01M2MS8YFTA4E5VD54E7NRBQHC",
                     "stage": "words",
                     "position": 6,
                     "kind": "word_in_line",
@@ -432,7 +432,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KRVD4CDQFVQQK21Z3",
+                    "id": "01M2MS8YFT6C10A90WBPSR6RR6",
                     "stage": "words",
                     "position": 7,
                     "kind": "word_intro",
@@ -491,7 +491,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58K7VV6CN6XXP8C9V7Q",
+                    "id": "01M2MS8YFT4RT7WPFQQGG64YQK",
                     "stage": "words",
                     "position": 8,
                     "kind": "word_repeat",
@@ -523,7 +523,7 @@
                             }
                         },
                         "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "throat infection"
                     },
                     "result": null,
@@ -536,7 +536,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KSH7C5M3Z0HVFDWWX",
+                    "id": "01M2MS8YFTPWQ19MQDT1KCFRC3",
                     "stage": "words",
                     "position": 9,
                     "kind": "word_assemble",
@@ -582,7 +582,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KAJ2XH1HXR13VTMN6",
+                    "id": "01M2MS8YFTPYXBT7T2XWFH0GDP",
                     "stage": "words",
                     "position": 10,
                     "kind": "word_intro",
@@ -641,7 +641,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KRXX185R8RVGMW4XY",
+                    "id": "01M2MS8YFT6HXEP97138WCW6HZ",
                     "stage": "words",
                     "position": 11,
                     "kind": "word_repeat",
@@ -673,7 +673,7 @@
                             }
                         },
                         "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "paracetamol"
                     },
                     "result": null,
@@ -686,7 +686,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KRNQRFEPFHQRFV76H",
+                    "id": "01M2MS8YFT4H5RG359XKW151J0",
                     "stage": "words",
                     "position": 12,
                     "kind": "word_assemble",
@@ -732,7 +732,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KXPSQ2ZNQ55CHZ1XT",
+                    "id": "01M2MS8YFT5PWRHE0NK85HAYMX",
                     "stage": "words",
                     "position": 13,
                     "kind": "word_intro",
@@ -791,7 +791,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KDDS0R0QCGGBN7ZPE",
+                    "id": "01M2MS8YFT8C54KSW3FEDT8GKK",
                     "stage": "words",
                     "position": 14,
                     "kind": "word_repeat",
@@ -823,7 +823,7 @@
                             }
                         },
                         "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "warm drinks"
                     },
                     "result": null,
@@ -836,7 +836,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KV7DT1NC9KMKNEVNH",
+                    "id": "01M2MS8YFTA82YSWBPAYB5NK49",
                     "stage": "words",
                     "position": 15,
                     "kind": "word_choose",
@@ -911,7 +911,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KRC9G6RQP1PCX52S6",
+                    "id": "01M2MS8YFTG3Q5Q0C49TYBPR93",
                     "stage": "words",
                     "position": 16,
                     "kind": "word_intro",
@@ -970,7 +970,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KTFTD1QYV3TKPF6R3",
+                    "id": "01M2MS8YFT8DS3SE76RANKFJBB",
                     "stage": "words",
                     "position": 17,
                     "kind": "word_repeat",
@@ -1015,7 +1015,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58K8TSNAVWCS2HWTCYH",
+                    "id": "01M2MS8YFTYA4J9CHDNDEYM7TZ",
                     "stage": "words",
                     "position": 18,
                     "kind": "word_assemble",
@@ -1061,7 +1061,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KV5M481GXP5SX7YC4",
+                    "id": "01M2MS8YFT8KVG175V74AZYNH3",
                     "stage": "words",
                     "position": 19,
                     "kind": "word_intro",
@@ -1120,7 +1120,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KZTSP3AZNDAQVZQQQ",
+                    "id": "01M2MS8YFTQGK241THPB907MCV",
                     "stage": "words",
                     "position": 20,
                     "kind": "word_repeat",
@@ -1165,7 +1165,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KKK38H0PY3E1R9CDZ",
+                    "id": "01M2MS8YFTTHE9B8S3NC8RDBG0",
                     "stage": "words",
                     "position": 21,
                     "kind": "word_assemble",
@@ -1213,7 +1213,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KVW5PMAFFEHF9YB19",
+                    "id": "01M2MS8YFTHHSSHY73PDWS3PEZ",
                     "stage": "words",
                     "position": 22,
                     "kind": "word_repeat",
@@ -1245,7 +1245,7 @@
                             }
                         },
                         "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "trouble breathing"
                     },
                     "result": null,
@@ -1258,7 +1258,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58K8TWB0JGPEBSAX0B1",
+                    "id": "01M2MS8YFTJ1RBF4E5TVZ6XSN5",
                     "stage": "words",
                     "position": 23,
                     "kind": "word_assemble",
@@ -1306,7 +1306,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KST8ZWCSMHS3T84KV",
+                    "id": "01M2MS8YFTXSZF08SN5WFZ76EA",
                     "stage": "words",
                     "position": 24,
                     "kind": "word_assemble",
@@ -1360,7 +1360,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "01M2KPF58KDDRTP53QKGPJ9QE4",
+                    "id": "01M2MS8YFT7Y88ANM58XBY5GVV",
                     "stage": "phrases",
                     "position": 1,
                     "kind": "phrase_intro",
@@ -1450,7 +1450,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KC8W6XV1BGWVQFZYD",
+                    "id": "01M2MS8YFTB5FFAD022M83WVA2",
                     "stage": "phrases",
                     "position": 2,
                     "kind": "phrase_intro",
@@ -1540,7 +1540,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58K3GRWPS0DR7ZGPA9G",
+                    "id": "01M2MS8YFT7YKR3BPH5SZHXC88",
                     "stage": "phrases",
                     "position": 3,
                     "kind": "phrase_choose_back",
@@ -1594,7 +1594,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58K6CDCY6AY52X3ERCP",
+                    "id": "01M2MS8YFTWCRAD32A8HV5PNZH",
                     "stage": "phrases",
                     "position": 4,
                     "kind": "phrase_intro",
@@ -1684,7 +1684,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KNZ2WC1XJXZ3812PS",
+                    "id": "01M2MS8YFTP3024NJ7ZZ7RN3C5",
                     "stage": "phrases",
                     "position": 5,
                     "kind": "phrase_assemble",
@@ -1825,7 +1825,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58K2YFRWZKSTP467F03",
+                    "id": "01M2MS8YFT5QMDZQ2A8HDQXZYJ",
                     "stage": "phrases",
                     "position": 6,
                     "kind": "phrase_other_slot",
@@ -1909,7 +1909,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58K9Z21BDQGGF5EMAK1",
+                    "id": "01M2MS8YFTG7A2DQ1ETPGPEX5X",
                     "stage": "phrases",
                     "position": 7,
                     "kind": "phrase_intro",
@@ -1999,7 +1999,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KB8GBZVRF6CMFH8AF",
+                    "id": "01M2MS8YFTXBHZF1ZSQG5HNDNS",
                     "stage": "phrases",
                     "position": 8,
                     "kind": "phrase_slot",
@@ -2121,7 +2121,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KM83X46K46Q1QB9QN",
+                    "id": "01M2MS8YFTAW4J17FCJBR2SZ0F",
                     "stage": "phrases",
                     "position": 9,
                     "kind": "phrase_own_slot",
@@ -2263,7 +2263,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58KDD5NGAA5E15M6BJT",
+                    "id": "01M2MS8YFTKV9VJ7GH1JB2JEZ1",
                     "stage": "phrases",
                     "position": 10,
                     "kind": "phrase_intro",
@@ -2353,7 +2353,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58K7KEJ5GCHC692P640",
+                    "id": "01M2MS8YFTRCD0SZ0KJDESPXN9",
                     "stage": "phrases",
                     "position": 11,
                     "kind": "phrase_slot_listen",
@@ -2457,7 +2457,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M7E99C9EZ3SK55Q0H",
+                    "id": "01M2MS8YFT2BQY7X6PDHYFD325",
                     "stage": "phrases",
                     "position": 12,
                     "kind": "phrase_other_slot",
@@ -2541,7 +2541,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M7DZQ1FEM4NRAK69P",
+                    "id": "01M2MS8YFTYGVD8J7XVGT5TRQ7",
                     "stage": "phrases",
                     "position": 13,
                     "kind": "phrase_intro",
@@ -2631,7 +2631,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MVQ2RE8DBT5BSZE9T",
+                    "id": "01M2MS8YFTJNNXN5P67G9XMBQ4",
                     "stage": "phrases",
                     "position": 14,
                     "kind": "phrase_choose_back",
@@ -2685,7 +2685,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MYQD9P2HT7DBTTW9C",
+                    "id": "01M2MS8YFTPBA4K5HZ2D7614BD",
                     "stage": "phrases",
                     "position": 15,
                     "kind": "phrase_own_slot",
@@ -2827,7 +2827,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M89F8ZX0NM4QDD141",
+                    "id": "01M2MS8YFTQVFNWYHAKW48KAS8",
                     "stage": "phrases",
                     "position": 16,
                     "kind": "phrase_intro",
@@ -2917,7 +2917,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MMR8D3HPC0N1QR4G2",
+                    "id": "01M2MS8YFTAKGSD3GJZX84QKTS",
                     "stage": "phrases",
                     "position": 17,
                     "kind": "phrase_assemble",
@@ -3060,7 +3060,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MSS94H3ZSF5K75427",
+                    "id": "01M2MS8YFT7RC3PJQNX8VZ14K5",
                     "stage": "phrases",
                     "position": 18,
                     "kind": "phrase_other_slot",
@@ -3144,7 +3144,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MD3M65KPTS4K5WBZJ",
+                    "id": "01M2MS8YFT4YKDFG1G21BN6YWH",
                     "stage": "phrases",
                     "position": 19,
                     "kind": "phrase_slot",
@@ -3266,7 +3266,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MGBBX3M470E407S55",
+                    "id": "01M2MS8YFTX71Z4KQJ27WQY56F",
                     "stage": "phrases",
                     "position": 20,
                     "kind": "phrase_own_slot",
@@ -3408,7 +3408,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M11PSYQKGQCC32WJ3",
+                    "id": "01M2MS8YFTQYHK02FJ5B6670T1",
                     "stage": "phrases",
                     "position": 21,
                     "kind": "phrase_other_slot",
@@ -3492,7 +3492,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MBQSJE5PBBDYJBGGS",
+                    "id": "01M2MS8YFTSZXVAKG9ZMZDJ9KW",
                     "stage": "phrases",
                     "position": 22,
                     "kind": "phrase_combine",
@@ -3603,7 +3603,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "01M2KPF58MJ7HKSH8C1SPKSDB2",
+                    "id": "01M2MS8YFTQPJEZBH5PMTC035T",
                     "stage": "dialogue",
                     "position": 1,
                     "kind": "dialogue_partner",
@@ -3663,7 +3663,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MAWKV6CZMAYE4XZDY",
+                    "id": "01M2MS8YFTW4FWZX2KVY6VZ6N5",
                     "stage": "dialogue",
                     "position": 2,
                     "kind": "dialogue_answer",
@@ -3820,7 +3820,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MT7JWK0KTBN2D5XZ9",
+                    "id": "01M2MS8YFT86NDD7FHGRNK5WN2",
                     "stage": "dialogue",
                     "position": 3,
                     "kind": "dialogue_partner",
@@ -3880,7 +3880,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MYTVXKH9GZE7MDT3C",
+                    "id": "01M2MS8YFTAEAYMZGPD53YFHMG",
                     "stage": "dialogue",
                     "position": 4,
                     "kind": "dialogue_answer",
@@ -4037,7 +4037,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M0FA9QWFZB3WZ5DH1",
+                    "id": "01M2MS8YFTBT411B3F0BS9V0PS",
                     "stage": "dialogue",
                     "position": 5,
                     "kind": "dialogue_partner",
@@ -4097,7 +4097,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MZA6VK11NXKJJNNHB",
+                    "id": "01M2MS8YFTRHKPRQN61B49S2K5",
                     "stage": "dialogue",
                     "position": 6,
                     "kind": "dialogue_answer",
@@ -4254,7 +4254,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MA68AWGK7V298TKS8",
+                    "id": "01M2MS8YFTE3SHMQ6F7YK8HW7A",
                     "stage": "dialogue",
                     "position": 7,
                     "kind": "dialogue_partner",
@@ -4314,7 +4314,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MG40SGD0N6WJPJFTQ",
+                    "id": "01M2MS8YFTZZN7G7WFFEZA01K9",
                     "stage": "dialogue",
                     "position": 8,
                     "kind": "dialogue_answer",
@@ -4471,7 +4471,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MBTDYY8RN4Q8FX6QM",
+                    "id": "01M2MS8YFTNZ75REW4JV17X1PC",
                     "stage": "dialogue",
                     "position": 9,
                     "kind": "dialogue_partner",
@@ -4531,7 +4531,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M5G6PZRTG6THQCAHS",
+                    "id": "01M2MS8YFTDTJDJBM85T35S6TB",
                     "stage": "dialogue",
                     "position": 10,
                     "kind": "dialogue_rescue",
@@ -4596,7 +4596,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M2BBCMV0GEVW5XXAY",
+                    "id": "01M2MS8YFT85E0P4294F00VJX1",
                     "stage": "dialogue",
                     "position": 11,
                     "kind": "dialogue_answer",
@@ -4753,7 +4753,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MY9WRS0D1PQE1GFBH",
+                    "id": "01M2MS8YFTVJP80RDZ5RDWD4NW",
                     "stage": "dialogue",
                     "position": 12,
                     "kind": "dialogue_ask",
@@ -4910,7 +4910,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M9PGQV0VCX8QCE7VW",
+                    "id": "01M2MS8YFTRX4Q71B8M15DSSNT",
                     "stage": "dialogue",
                     "position": 13,
                     "kind": "dialogue_partner",
@@ -4970,7 +4970,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MKV2X1P03WBW20Y4P",
+                    "id": "01M2MS8YFTJH4KZG821D6B8X4Z",
                     "stage": "dialogue",
                     "position": 14,
                     "kind": "dialogue_ask",
@@ -5127,7 +5127,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MF246548A247WDNBJ",
+                    "id": "01M2MS8YFT5AWKCYNS8DG5XQ4A",
                     "stage": "dialogue",
                     "position": 15,
                     "kind": "dialogue_partner",
@@ -5195,7 +5195,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "01M2KPF58M7J7B32WKJMKPNZ1D",
+                    "id": "01M2MS8YFT1Q6K4DK083MEN3DS",
                     "stage": "listen",
                     "position": 1,
                     "kind": "listen_dialogue",
@@ -5430,7 +5430,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M8C26C39YGEQF9S89",
+                    "id": "01M2MS8YFTVFCX6SVJ1QTPWXGF",
                     "stage": "listen",
                     "position": 2,
                     "kind": "listen_question",
@@ -5478,7 +5478,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MBMBZC7G5WTG52YBQ",
+                    "id": "01M2MS8YFT2S39Q4GSMYTN9ZYD",
                     "stage": "listen",
                     "position": 3,
                     "kind": "listen_question",
@@ -5526,7 +5526,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MC3X9S2NWVH3D7MV4",
+                    "id": "01M2MS8YFTG62TXASJG1GKRSRT",
                     "stage": "listen",
                     "position": 4,
                     "kind": "listen_question",
@@ -5574,7 +5574,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MR217C8WWKX8BZ95K",
+                    "id": "01M2MS8YFTNSFBN57SQFZFWT6A",
                     "stage": "listen",
                     "position": 5,
                     "kind": "listen_question",
@@ -5622,7 +5622,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MGQ2A7XY5WFM5F624",
+                    "id": "01M2MS8YFT60Q5WPANMJ9RYD17",
                     "stage": "listen",
                     "position": 6,
                     "kind": "listen_review",
@@ -5883,7 +5883,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M9Z9169YW7CHXQXA9",
+                    "id": "01M2MS8YFTWCY0H1V52MFJMKYJ",
                     "stage": "listen",
                     "position": 7,
                     "kind": "listen_predict",
@@ -5899,15 +5899,15 @@
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "После каждого приёма пищи"
+                                "text": "Какая у него температура?"
                             },
                             {
                                 "id": "o2",
-                                "text": "Каждые шесть часов, но только если температура остаётся высокой"
+                                "text": "Давайте его каждые шесть часов, если температура остаётся высокой."
                             },
                             {
                                 "id": "o3",
-                                "text": "Один раз каждое утро"
+                                "text": "У него болит горло?"
                             }
                         ],
                         "exchange": {
@@ -5949,7 +5949,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MGTN8MCKGFCRX6CGB",
+                    "id": "01M2MS8YFT3472N4892XKJMP87",
                     "stage": "listen",
                     "position": 8,
                     "kind": "listen_predict",
@@ -5965,15 +5965,15 @@
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Он спит дольше обычного"
+                                "text": "Давайте парацетамол, тёплое питьё и пусть отдыхает дома."
                             },
                             {
                                 "id": "o2",
-                                "text": "Он просит мягкую еду"
+                                "text": "У него болит горло?"
                             },
                             {
                                 "id": "o3",
-                                "text": "Ему трудно дышать"
+                                "text": "Приходите раньше, если ему трудно дышать или он не может пить."
                             }
                         ],
                         "exchange": {
@@ -6015,7 +6015,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MBTGJHV1SVQFGTN45",
+                    "id": "01M2MS8YFTAAKCTZ6FFR2WJAGX",
                     "stage": "listen",
                     "position": 9,
                     "kind": "listen_pace",
@@ -6029,7 +6029,7 @@
                     "payload": {
                         "rates": [
                             0.75,
-                            1
+                            1.0
                         ],
                         "exchange": {
                             "ref": "x7",
@@ -6059,7 +6059,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MT720TACS66CDN09G",
+                    "id": "01M2MS8YFTJD6GWVYK1Y8E3E57",
                     "stage": "listen",
                     "position": 10,
                     "kind": "listen_number",
@@ -6123,7 +6123,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "01M2KPF58MV0GV5ND7REJRHT1M",
+                    "id": "01M2MS8YFT2CF43X8DRDM8MJNP",
                     "stage": "speak",
                     "position": 1,
                     "kind": "speak_answer",
@@ -6236,7 +6236,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MGBQHDN06KNFTYB5Q",
+                    "id": "01M2MS8YFTTDWZGC4NQPJ4F62S",
                     "stage": "speak",
                     "position": 2,
                     "kind": "speak_answer",
@@ -6349,7 +6349,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MG2P8BYJS7Z3HR1JM",
+                    "id": "01M2MS8YFTH20J0E0NP5ND5E7B",
                     "stage": "speak",
                     "position": 3,
                     "kind": "speak_answer",
@@ -6462,7 +6462,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MS2KSWFWKQPSEQTHB",
+                    "id": "01M2MS8YFTB4Y7M5F9RJ9RW4XQ",
                     "stage": "speak",
                     "position": 4,
                     "kind": "speak_answer",
@@ -6575,7 +6575,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M9413Y6DMRNFE5544",
+                    "id": "01M2MS8YFTT0ZRF40KEPNWM2B8",
                     "stage": "speak",
                     "position": 5,
                     "kind": "speak_answer",
@@ -6688,7 +6688,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58M7G2JN74AK72JM8V5",
+                    "id": "01M2MS8YFT1CFW4WB145BP1MV1",
                     "stage": "speak",
                     "position": 6,
                     "kind": "speak_answer",
@@ -6801,7 +6801,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MV5P7CHNS8AZG0803",
+                    "id": "01M2MS8YFT6AA8B06BPT12CY5H",
                     "stage": "speak",
                     "position": 7,
                     "kind": "speak_echo",
@@ -6844,7 +6844,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M2KPF58MH3DZTCBQRBMPBKT2",
+                    "id": "01M2MS8YFT4P85R1DHH4A80NV2",
                     "stage": "speak",
                     "position": 8,
                     "kind": "speak_retell",
@@ -7056,7 +7056,7 @@
                 "done_count": 0,
                 "total": 24,
                 "minutes_left": 5,
-                "share": 0
+                "share": 0.0
             },
             {
                 "stage": "phrases",
@@ -7064,7 +7064,7 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0
+                "share": 0.0
             },
             {
                 "stage": "dialogue",
@@ -7072,7 +7072,7 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0
+                "share": 0.0
             },
             {
                 "stage": "listen",
@@ -7080,7 +7080,7 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0
+                "share": 0.0
             },
             {
                 "stage": "speak",
@@ -7088,10 +7088,10 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0
+                "share": 0.0
             }
         ],
-        "day_progress": 0,
+        "day_progress": 0.0,
         "program": {
             "words": {
                 "summary": {

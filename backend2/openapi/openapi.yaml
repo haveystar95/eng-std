@@ -2135,8 +2135,10 @@ paths:
         The client grades (the payload carries everything needed) and reports the verdict, and what
         the attempt left behind (`response`). A first `failed` on a CHOICE deals the same card again
         at the end of its stage — it comes back as `requeued`, with a new id, a new position and its
-        options and tiles in another order; a second `failed` stays and marks the unit to return on
-        the next content day (`returns: true`, and `unit.returns_day` says on which). `skipped` is a
+        options and tiles in another order — except in the listen stage, whose review shows the
+        answers: there a first `failed` is final and `requeued` is null. A second `failed` stays and
+        marks the unit to return ONCE, on the nearest following day of any type (`returns: true`, and
+        `unit.returns_day` says on which); a failed card that is itself a return marks nothing. `skipped` is a
         card given up on: neither consequence. A card answered once is refused again (409
         `plan_card_answered`); a day that is not open, 409 `plan_day_not_open`.
 
@@ -4187,7 +4189,7 @@ components:
         own_line: { $ref: '#/components/schemas/PlanCardLine' }
         options:
           type: array
-          description: 'Три варианта на родном — варианты проверки этого обмена'
+          description: 'Три варианта на родном — перевод ответа партнёра этого обмена и переводы двух других его реплик; неверно — окончательно, без копии'
           items: { $ref: '#/components/schemas/PlanCardOption' }
         correct: { type: string, description: '`id` верного варианта' }
         partner_line: { $ref: '#/components/schemas/PlanCardLine' }
@@ -4315,7 +4317,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/PlanCard'
             - type: 'null'
-          description: The same card dealt again at the end of its stage after a FIRST failure — a new id, a new position, its options and tiles reshuffled; null otherwise
+          description: The same card dealt again at the end of its stage after a FIRST failure — a new id, a new position, its options and tiles reshuffled; null otherwise, and always null in the listen stage
         unit:
           type: object
           description: The unit this card teaches, and what the answer did to it
@@ -4323,7 +4325,7 @@ components:
           properties:
             kind: { type: string, enum: [word, phrase, exchange, day] }
             ref: { type: string }
-            returns_tomorrow: { type: boolean, description: 'Failed twice — the unit comes back on the next content day (never a `day` unit)' }
+            returns_tomorrow: { type: boolean, description: 'Failed twice — the unit comes back once, on the nearest following day of any type (never a `day` unit, never from a card that is itself a return)' }
             returns_day: { type: [integer, 'null'], description: 'The number of the day it comes back on; null when it is not coming back, or no day is left to deal it' }
         day:
           type: object
