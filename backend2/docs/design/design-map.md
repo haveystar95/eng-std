@@ -72,12 +72,12 @@ test/features/plan/`) и смотри на него. Живые снимки с�
 
 | виджет | код | токен / кадр | статус |
 |---|---|---|---|
-| Вариант ответа 60 с маркером 22 | [answer_option.dart](../../../mobile/lib/ui/answer_option.dart) | 4л; 12a, 16c, 23-7a–d | совпадает |
+| Вариант ответа 60 с маркером 22 | [answer_option.dart](../../../mobile/lib/ui/answer_option.dart) | 4л; 12a, 16c | совпадает; у сессии дня свой вариант 30-9 (`SessionOption`, SESSION-1b) |
 | Маркер вердикта 22 (шалфей · охра · терракота · контур) | [verdict_marker.dart](../../../mobile/lib/ui/verdict_marker.dart) | 4л, 4к-2 | совпадает |
-| Блок задания (лейбл caps + текст, полоса 3 px) | [task_block.dart](../../../mobile/lib/ui/task_block.dart) | 4м; 12a, 12b, 12i, 23-3, 23-5, 23-7, 23-8 | совпадает |
-| Плитка 44 · подложка сборки · ряд плиток | [assembly_board.dart](../../../mobile/lib/ui/assembly_board.dart) | 4л; 12b, 23-7e–h | совпадает; в коллекциях чужое слово в собранной строке подчёркнуто волной (поведение тренажёра сохранено) |
+| Блок задания (лейбл caps + текст, полоса 3 px) | [task_block.dart](../../../mobile/lib/ui/task_block.dart) | 4м; 12a, 12b, 12i | совпадает; кадры 23-x старой сессии дня сняты нарядом SESSION-1b |
+| Плитка 44 · подложка сборки · ряд плиток | [assembly_board.dart](../../../mobile/lib/ui/assembly_board.dart) | 4л; 12b | совпадает; в коллекциях чужое слово в собранной строке подчёркнуто волной (поведение тренажёра сохранено); у сессии дня свои плитки 30-5 (`SessionAssembly`) |
 | Плита дня на табе + полоска этапа в трёх цветах | [day_plate.dart](../../../mobile/lib/ui/day_plate.dart) | 4н; 21-x | совпадает; шапка старого кабинета (`DayRoomPlate`) снесена нарядом DAY-UI-2 — у окна дня своя плита |
-| Знакомство во весь экран | [intro_layout.dart](../../../mobile/lib/ui/intro_layout.dart) | 16a; 23-1, 23-13 | совпадает |
+| Знакомство во весь экран | [intro_layout.dart](../../../mobile/lib/ui/intro_layout.dart) | 16a | совпадает; 23-1 / 23-13 старой сессии дня сняты нарядом SESSION-1b |
 | Микрофон 80 с амплитудой | [record_button.dart](../../../mobile/lib/ui/record_button.dart), [speech_wave.dart](../../../mobile/lib/ui/speech_wave.dart) | 2б «Микрофон», 4е | совпадает |
 | Воспроизведение 44/28 | [play_circle.dart](../../../mobile/lib/ui/play_circle.dart) | 4л | совпадает |
 | Пример с пропуском по ширине слова | [cloze_sentence.dart](../../../mobile/lib/ui/cloze_sentence.dart) | 12i | совпадает |
@@ -101,21 +101,24 @@ test/features/plan/`) и смотри на него. Живые снимки с�
 | Стык с табом «План»: плита дня → окно дня | [plan_tab_screen.dart](../../../mobile/lib/features/plan/plan_tab_screen.dart) · `_openDay` → [day/open_day.dart](../../../mobile/lib/features/plan/day/open_day.dart) | 21-2 → 23-0a | совпадает: тап по плите и её кнопке открывает окно того же дня |
 
 
-## Сессия дня — «План · день», 23-1 … 23-13
+## Сессия дня — серии 30 · 31 · 32 (наряд SESSION-1b)
+
+Канва — `session-canvas.dc.html` (серии 30, 31, 32, таблица «Тайминг · сессия»), карта видов — `docs/session-map.md`,
+контракт — `docs/plan-api.md` «Карточки сессии». Старая сессия дня (23-1…23-13: `day_session_screen.dart`,
+`day/cards/*`, `speech_attempt.dart`, модели 13 старых видов) снесена целиком. Экраны есть у 15 видов (слова 6, фразы 9);
+Диалог, «Слушаю и отвечаю», «Говорю сам» — вход заблокирован подписью «в следующей сборке» (1c). Отчёт —
+`docs/research/session-1b/README.md`, снимки — там же `shots/`.
 
 | экран | код | кадры | статус |
 |---|---|---|---|
-| Каркас: шапка «Слова · 12 из 32», пять сегментов, вход в этап, итог этапа, выход | [day/day_session_screen.dart](../../../mobile/lib/features/plan/day/day_session_screen.dart) | 23-2a, 23-2b, 23-9, 23-11 | совпадает; 409 `plan_day_locked` / `plan_lesson_not_ready` печатаются словами (`day.locked.*`, `day.lesson.*`), «Повторить» зовёт `…/lesson/retry` |
-| Знакомство со словом · вернувшееся слово | [day/cards/word_cards.dart](../../../mobile/lib/features/plan/day/cards/word_cards.dart) · `WordIntroCard` | 23-1, 23-13 | совпадает |
-| Произнеси (до записи · пишу · услышали · ещё раз / пропустить) | `WordSayCard` | 23-3a, 23-3b, 23-3c, 23-3d | совпадает; «Услышали» — шалфейная подложка на слове и строка «Услышали: …», карточка уходит сама через 600 мс |
-| Выбор из четырёх (перевод / по определению) | `WordChooseCard` | 12a («База») | совпадает |
-| Слово в пример | `WordClozeCard` | 12i («База») | совпадает |
-| Знакомство с фразой · повтори вслух · собери | [day/cards/phrase_cards.dart](../../../mobile/lib/features/plan/day/cards/phrase_cards.dart) | 23-4, 23-5, 12b | совпадает |
-| Диалог — весь разговор (переводы открыты / свёрнуты) | [day/cards/dialogue_read_card.dart](../../../mobile/lib/features/plan/day/cards/dialogue_read_card.dart) | 23-6a, 23-6b | совпадает |
-| Слушаю и отвечаю: что он спросил (верно / неверно), что ответишь, ты начинаешь, услышал → собери | [day/cards/listen_cards.dart](../../../mobile/lib/features/plan/day/cards/listen_cards.dart) | 23-7a, 23-7b, 23-7c, 23-7d, 23-7e, 23-7f, 23-7g, 23-7h | совпадает; звук вердикта ждёт конца реплики (4к-3) |
-| Говорю сам: лента, подсказка-ключ, подсказка-текст, пропуск, ответ собеседника | [day/cards/speak_card.dart](../../../mobile/lib/features/plan/day/cards/speak_card.dart) | 23-8a, 23-8b, 23-8c, 23-8d, 23-8e | совпадает; после записи следующая реплика звучит сама, «Дальше» нет |
-| Микрофон: один контроллер на три карточки речи, дев-ряд QA | [day/speech_attempt.dart](../../../mobile/lib/features/plan/day/speech_attempt.dart) | 2б, 4е | совпадает; на симуляторе микрофон мёртв — ход подставляется дев-рядом `QA · said / part / miss` (только у QA-аккаунта) |
-| Голос дня: реплики файлом по `audio_id`, слова синтезом | [day/day_voice.dart](../../../mobile/lib/features/plan/day/day_voice.dart) | 2б «Реплика собеседника» | совпадает; без файла — читает телефон, под волной тихая строка «без озвучки — читает телефон» |
+| Сессия: вход → карточки → итог этапа; сервер — источник правды (GET дня на каждом входе, POST ответа через очередь отложенных, 409 → перечитать день) | [session/session_screen.dart](../../../mobile/lib/features/plan/session/session_screen.dart), [session_controller.dart](../../../mobile/lib/features/plan/session/session_controller.dart) · данные [data/plan/session/](../../../mobile/lib/data/plan/session/) | 30-1…30-9 | совпадает (живой проход e2e, снимки `session-1b/shots`); расхождения — в отчёте §4 |
+| Вход в этап: сцена, имя Literata, описание, «≈ N мин», точки пяти этапов, список со статусами, «Без подсказок», «Начать», номер сборки мелко | [parts/session_stage.dart](../../../mobile/lib/features/plan/session/parts/session_stage.dart) · `SessionStageEntry` | 30-1 | совпадает; точки — по этапам (канва), а не по единицам (наряд) |
+| Шапка: ×, имя этапа, полоса по карточкам, «ещё N слов» по единицам, бусины единиц · полоса сцены · «нет связи» | [parts/session_chrome.dart](../../../mobile/lib/features/plan/session/parts/session_chrome.dart) · `SessionHeader`, `SessionSceneStrip`, `SessionOfflineBanner` | 30-2, 30-2b | совпадает; справа в полосе сцены — кружок ученика (портрета собеседника в контракте нет) |
+| Микрофон 72 (покой · слушаю · услышал · не расслышал), живая строка, «Пропустить», «Нужен микрофон», поле «что услышал» (debug) | [parts/session_mic_panel.dart](../../../mobile/lib/features/plan/session/parts/session_mic_panel.dart), [session_mic.dart](../../../mobile/lib/features/plan/session/session_mic.dart) | 30-3 | совпадает; запись — существующий `SpeechTurn`; на симуляторе микрофон мёртв → «Нужен микрофон» (проверено живьём) |
+| Реакции, плитки, итог этапа, выход, шаблон «вопрос → четыре варианта» | [parts/session_bits.dart](../../../mobile/lib/features/plan/session/parts/session_bits.dart), [session_tiles.dart](../../../mobile/lib/features/plan/session/parts/session_tiles.dart), [session_choice.dart](../../../mobile/lib/features/plan/session/parts/session_choice.dart), `SessionStageSummary`, `showSessionExitSheet` | 30-4, 30-5, 30-6, 30-8, 30-9 | совпадает; тайминги — `AppMotion.session*` по таблице «Тайминг · сессия» |
+| Слова: знакомство, повтори вслух (0.85×), выбор из четырёх (оба направления), на слух, собери, слово в окне | [cards/word_cards.dart](../../../mobile/lib/features/plan/session/cards/word_cards.dart) | 31-1…31-7 | совпадает; 31-7 — под строкой полный `text_native` (уточнение владельца), у карточки нет фото |
+| Фразы: знакомство с каркасом, собери, перевод назад, окно, окно на слух, повтори, с другим окном, комбинация, своё окно (судья) | [cards/phrase_cards.dart](../../../mobile/lib/features/plan/session/cards/phrase_cards.dart) | 32-1…32-9 | совпадает; расхождения 32-3, 32-4, 32-7, 32-8, 32-9 — в отчёте |
+| Голос сессии: файл по адресу (темп 0.85× — нативный плеер), без файла — телефон | [session_voice.dart](../../../mobile/lib/features/plan/session/session_voice.dart), `LineAudioCache.playFile` | 31-2, 32-6 | код; на e2e у карточек нет файлов — живьём звучал только системный голос |
 
 ## Правки «Базы» у тренажёров коллекций (16a, 12a, 12b, 12i)
 
