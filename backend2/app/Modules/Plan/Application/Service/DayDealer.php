@@ -20,6 +20,7 @@ use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\LessonStatus;
+use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
@@ -97,7 +98,7 @@ final readonly class DayDealer
             );
         }
 
-        $returned = $this->returnedUnits($plan, $day, 1);
+        $returned = $this->returnedUnits($plan, $day);
         $material = $this->material($plan, [$scene->id(), ...array_map(static fn (ReturnedUnit $u): PlanSceneId => $u->sceneId, $returned)]);
         $today = $material[$scene->id()->value];
 
@@ -114,7 +115,7 @@ final readonly class DayDealer
     private function reviewDay(Plan $plan, PlanDay $day, callable $ids, bool $withNativeTopUp): array
     {
         $previous = $plan->sceneDaysBefore($day->number(), 2);
-        $returned = $this->returnedUnits($plan, $day, 2);
+        $returned = $this->returnedUnits($plan, $day);
         $sceneIds = [];
         foreach ($previous as $sceneDay) {
             $sceneIds[] = $sceneDay->sceneId();
@@ -153,29 +154,65 @@ final readonly class DayDealer
         foreach ($ready as $scene) {
             $scenes[] = $material[$scene->id()->value];
         }
+        // The rehearsal is a day like any other for what failed yesterday: it takes it back (SESSION-1a, хвост).
+        $returned = array_values(array_filter(
+            $this->returnedUnits($plan, $day),
+            static fn (ReturnedUnit $u): bool => isset($material[$u->sceneId->value]),
+        ));
 
-        return $this->assembler->rehearsalDay($day->id(), $scenes, $ids);
+        return $this->assembler->rehearsalDay($day->id(), $scenes, $material, $plan->level(), $returned, $ids);
     }
 
     /**
-     * The units that failed twice on the previous `$howMany` scene days.
+     * THE UNITS THAT COME BACK TODAY — each ONCE, on the nearest following day of whatever type (SESSION-1a, хвост).
+     *
+     * A unit that failed twice comes back on the very next day: yesterday's failures, whether yesterday was a scene, a
+     * review or the rehearsal. A review day also looks at the two scene days before it, for units that have come back
+     * nowhere yet; a unit already dealt back on an earlier day — found by the returns that name its day as their
+     * source — is not dealt again, so the scene after a review takes nothing of the scenes the review has covered. A
+     * card that was itself a return never marks its unit again ({@see DayCard::answer()}).
      *
      * @return list<ReturnedUnit>
      */
-    private function returnedUnits(Plan $plan, PlanDay $day, int $howMany): array
+    private function returnedUnits(Plan $plan, PlanDay $day): array
     {
+        $sources = [];
+        if ($day->number() > 1) {
+            $yesterday = $plan->day($day->number() - 1);
+            $sources[$yesterday->number()] = $yesterday;
+        }
+        if ($day->type() === DayType::Review) {
+            foreach ($plan->sceneDaysBefore($day->number(), 2) as $sceneDay) {
+                $sources[$sceneDay->number()] = $sceneDay;
+            }
+        }
+        ksort($sources);
+
+        $back = [];
+        foreach ($this->cards->returnedFrom(array_values(array_map(static fn (PlanDay $d): PlanDayId => $d->id(), $sources))) as $card) {
+            $back[self::returnKey($card, $card->sourceDayId())] = true;
+        }
+
         $out = [];
-        foreach ($plan->sceneDaysBefore($day->number(), $howMany) as $previous) {
-            foreach ($this->cards->returningFrom($previous->id()) as $card) {
+        foreach ($sources as $source) {
+            foreach ($this->cards->returningFrom($source->id()) as $card) {
                 $sceneId = $card->payload()['scene_id'] ?? null;
-                if (! is_string($sceneId)) {
+                if (! is_string($sceneId) || isset($back[self::returnKey($card, $source->id())])) {
                     continue;
                 }
-                $out[] = new ReturnedUnit(PlanSceneId::fromString($sceneId), $card->unitKind(), $card->unitRef(), $previous->id());
+                $out[] = new ReturnedUnit(PlanSceneId::fromString($sceneId), $card->unitKind(), $card->unitRef(), $source->id());
             }
         }
 
         return $out;
+    }
+
+    /** One unit of one scene, failed on one day: what «already came back» is matched by. */
+    private static function returnKey(DayCard $card, ?PlanDayId $sourceDay): string
+    {
+        $sceneId = $card->payload()['scene_id'] ?? '';
+
+        return ($sourceDay->value ?? '').':'.(is_string($sceneId) ? $sceneId : '').':'.$card->unitKind()->value.':'.$card->unitRef();
     }
 
     /**

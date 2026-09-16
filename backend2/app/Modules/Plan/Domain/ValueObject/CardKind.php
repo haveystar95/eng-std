@@ -87,6 +87,16 @@ enum CardKind: string
     }
 
     /**
+     * A choice answered wrong is dealt once more at the end of its stage — except in «Слушаю и отвечаю»: its review
+     * (34-3) shows every answer, so a copy after it would test what the learner has just been shown (SESSION-1a, хвост).
+     * There the first failure is the only one.
+     */
+    public function requeues(): bool
+    {
+        return $this->isChoice() && $this->stage() !== Stage::Listen;
+    }
+
+    /**
      * A card the learner SAYS and passes by coverage — two attempts without a pass are a skip, not a failure: the
      * recogniser's silence is not evidence of a lapse.
      */

@@ -234,7 +234,7 @@
                             }
                         },
                         "scene_id": "ulid-0003",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "lower back"
                     },
                     "result": null,
@@ -338,7 +338,7 @@
                             }
                         },
                         "scene_id": "ulid-0003",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "sharp"
                     },
                     "result": null,
@@ -488,7 +488,7 @@
                             }
                         },
                         "scene_id": "ulid-0003",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "fever"
                     },
                     "result": null,
@@ -641,7 +641,7 @@
                             }
                         },
                         "scene_id": "ulid-0003",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "muscle strain"
                     },
                     "result": null,
@@ -825,7 +825,7 @@
                             }
                         },
                         "scene_id": "ulid-0003",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "heating pad"
                     },
                     "result": null,
@@ -975,7 +975,7 @@
                             }
                         },
                         "scene_id": "ulid-0003",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "X-ray"
                     },
                     "result": null,
@@ -1231,7 +1231,7 @@
                             }
                         },
                         "scene_id": "ulid-0003",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "expected_text": "sick note"
                     },
                     "result": null,
@@ -2228,7 +2228,7 @@
                         ],
                         "scene_id": "ulid-0003",
                         "task_native": "Началось ___.",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "partner_line": {
                             "ref": "x2",
                             "audio": {
@@ -3552,7 +3552,7 @@
                             "filler_index": 0
                         },
                         "scene_id": "ulid-0003",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "partner_line": {
                             "ref": "x2",
                             "audio": {
@@ -5297,15 +5297,15 @@
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Сломана кость"
+                                "text": "У него есть температура?"
                             },
                             {
                                 "id": "o2",
-                                "text": "Клиника закрыта"
+                                "text": "Где болит: вверху спины или в пояснице?"
                             },
                             {
                                 "id": "o3",
-                                "text": "Это просто растяжение мышцы"
+                                "text": "Нет, при растяжении мышцы рентген не нужен."
                             }
                         ],
                         "exchange": {
@@ -5363,15 +5363,15 @@
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Через год"
+                                "text": "Боль острая или скорее ноющая?"
                             },
                             {
                                 "id": "o2",
-                                "text": "Завтра утром"
+                                "text": "Началось сегодня или раньше на этой неделе?"
                             },
                             {
                                 "id": "o3",
-                                "text": "Если боль не пройдёт через семь дней"
+                                "text": "Только если через неделю ещё будет болеть."
                             }
                         ],
                         "exchange": {
@@ -5427,7 +5427,7 @@
                     "payload": {
                         "rates": [
                             0.75,
-                            1
+                            1.0
                         ],
                         "exchange": {
                             "ref": "x3",
@@ -5724,7 +5724,7 @@
                         },
                         "scene_id": "ulid-0003",
                         "task_native": "Началось три дня назад.",
-                        "coverage_min": 1,
+                        "coverage_min": 1.0,
                         "partner_line": {
                             "ref": "x2",
                             "audio": {
@@ -6399,7 +6399,7 @@
                 "done_count": 0,
                 "total": 24,
                 "minutes_left": 5,
-                "share": 0
+                "share": 0.0
             },
             {
                 "stage": "phrases",
@@ -6407,7 +6407,7 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0
+                "share": 0.0
             },
             {
                 "stage": "dialogue",
@@ -6415,7 +6415,7 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0
+                "share": 0.0
             },
             {
                 "stage": "listen",
@@ -6423,7 +6423,7 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0
+                "share": 0.0
             },
             {
                 "stage": "speak",
@@ -6431,10 +6431,10 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0
+                "share": 0.0
             }
         ],
-        "day_progress": 0,
+        "day_progress": 0.0,
         "program": {
             "words": {
                 "summary": {

@@ -102,11 +102,16 @@ final class SpeakStage
      * card for each scene that has two. Which exchanges a scene gives is a shuffle seeded by the scene, served by step.
      *
      * @param  list<SceneMaterial>  $scenes
+     * @param  list<string>  $excludedKeys  exchanges coming back today as returns ({@see UnitStates::key()})
      * @return list<CardDraft>
      */
-    public function rehearsal(array $scenes): array
+    public function rehearsal(array $scenes, array $excludedKeys = []): array
     {
-        $eligible = array_map(fn (SceneMaterial $scene): array => $this->eligible($scene), $scenes);
+        $excluded = array_fill_keys($excludedKeys, true);
+        $eligible = array_map(fn (SceneMaterial $scene): array => array_filter(
+            $this->eligible($scene),
+            static fn (CardDraft $draft): bool => ! isset($excluded[UnitStates::key($scene->sceneId->value, UnitKind::Exchange, $draft->unitRef)]),
+        ), $scenes);
         $quota = array_fill(0, count($scenes), 0);
         $total = 0;
         foreach ([1, 2] as $round) {

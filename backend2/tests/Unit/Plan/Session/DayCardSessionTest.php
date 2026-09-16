@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Exception\CardAlreadyAnswered;
+use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\CardResult;
 use App\Modules\Plan\Domain\ValueObject\CardSource;
@@ -45,21 +46,53 @@ it('deals a failed choice again once, and marks its unit to return when the copy
 });
 
 it('returns a word, a frame and an exchange failed twice, never the day\'s listening', function () {
-    $cases = [
-        [CardKind::WordChoose, UnitKind::Word, 'v2', true],
-        [CardKind::PhraseSlot, UnitKind::Phrase, 'p1', true],
-        [CardKind::DialoguePartner, UnitKind::Exchange, 'x3', true],
-        [CardKind::ListenQuestion, UnitKind::Day, 'L2', false],
-        [CardKind::ListenNumber, UnitKind::Day, 'day', false],
-    ];
-    foreach ($cases as [$kind, $unit, $ref, $returns]) {
+    foreach ([
+        [CardKind::WordChoose, UnitKind::Word, 'v2'],
+        [CardKind::PhraseSlot, UnitKind::Phrase, 'p1'],
+        [CardKind::DialoguePartner, UnitKind::Exchange, 'x3'],
+    ] as [$kind, $unit, $ref]) {
         $first = s1Card($kind, $unit, $ref);
         expect($first->answer(CardResult::Failed, 1, null, s1Now()))->toBeTrue($kind->value);
         $copy = $first->retry(DayCardId::generate(), 10, $first->payload());
 
         expect($copy->answer(CardResult::Failed, 2, null, s1Now()))->toBeFalse($kind->value)
-            ->and($copy->returns())->toBe($returns, $kind->value);
+            ->and($copy->returns())->toBeTrue($kind->value);
     }
+});
+
+// Canon (SESSION-1a, хвост): «Слушаю и отвечаю» deals no copies — its review shows every answer, so the first failure is
+// the only one, and the day's listening has no next day to come back on.
+it('deals no copy of a failed listening choice and never returns the day\'s listening', function () {
+    foreach ([
+        [CardKind::ListenQuestion, 'L2'],
+        [CardKind::ListenPredict, 'day'],
+        [CardKind::ListenNumber, 'day'],
+    ] as [$kind, $ref]) {
+        $card = s1Card($kind, UnitKind::Day, $ref);
+
+        expect($kind->requeues())->toBeFalse($kind->value)
+            ->and($card->answer(CardResult::Failed, 1, null, s1Now()))->toBeFalse($kind->value)
+            ->and($card->result())->toBe(CardResult::Failed)
+            ->and($card->returns())->toBeFalse($kind->value);
+    }
+    expect(CardKind::WordChoose->requeues())->toBeTrue()
+        ->and(CardKind::DialoguePartner->requeues())->toBeTrue()
+        ->and(CardKind::SpeakAnswer->requeues())->toBeFalse();
+});
+
+// Canon (SESSION-1a, хвост): a unit comes back ONCE — a card that is itself a return never marks its unit again.
+it('never marks a unit to return again from a card that is itself a return', function () {
+    $returned = s1Card(CardKind::WordChoose, UnitKind::Word, 'v2')->retry(DayCardId::generate(), 1, []);
+    $return = DayCard::dealt(DayCardId::generate(), PlanDayId::generate(), Stage::Words, 30, CardKind::WordChoose, ['scene_id' => 's'],
+        CardSource::Returned, PlanDayId::generate(), UnitKind::Word, 'v2');
+
+    expect($return->answer(CardResult::Failed, 1, null, s1Now()))->toBeTrue();
+    $copy = $return->retry(DayCardId::generate(), 31, $return->payload());
+
+    expect($copy->answer(CardResult::Failed, 2, null, s1Now()))->toBeFalse()
+        ->and($copy->source())->toBe(CardSource::Returned)
+        ->and($copy->returns())->toBeFalse()
+        ->and($returned->source())->toBe(CardSource::Today);
 });
 
 it('gives a failure of a card that is not a choice no consequence', function () {

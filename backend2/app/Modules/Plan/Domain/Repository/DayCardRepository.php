@@ -39,4 +39,13 @@ interface DayCardRepository
      * @return list<DayCard>
      */
     public function returningFrom(PlanDayId $dayId): array;
+
+    /**
+     * The cards already dealt back from these days — returns (`source = returned`) whose `source_day_id` is one of
+     * them, on any day. What «ещё никуда не возвращались» is read from.
+     *
+     * @param  list<PlanDayId>  $sourceDays
+     * @return list<DayCard>
+     */
+    public function returnedFrom(array $sourceDays): array;
 }

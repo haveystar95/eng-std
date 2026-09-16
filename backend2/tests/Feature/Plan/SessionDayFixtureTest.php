@@ -70,7 +70,8 @@ function s1fxPinScenes(string $planId): void
  */
 function s1fxNormalise(array $reply): string
 {
-    $json = json_encode($reply, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    // A share stays a share in the file, as on the wire: `coverage_min` 1.0, not 1.
+    $json = json_encode($reply, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR);
     $tokens = [];
     $json = (string) preg_replace_callback('/(?<![0-9A-Za-z])[0-9A-HJKMNP-TV-Z]{26}(?![0-9A-Za-z])/', static function (array $m) use (&$tokens): string {
         return $tokens[$m[0]] ??= sprintf('ulid-%04d', count($tokens) + 1);

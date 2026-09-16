@@ -109,23 +109,25 @@ final class ListenCards
 
     /**
      * 34-5: an ask exchange — the learner's question sounds with its text, and the learner guesses what the partner
-     * will answer from the exchange's own check (D-19); the partner's answer opens after.
+     * will answer: the translation of the partner's own answer among the translations of two other partner lines of
+     * the day (SESSION-1a, хвост — the exchange's check stays with `dialogue_partner`, so the day never shows one set
+     * of options twice). Which two lines is a shuffle seeded by the card's address; the partner's answer opens after.
      */
     public static function predict(SceneMaterial $scene, Exchange $exchange): ?CardDraft
     {
         $own = $exchange->learner();
         $partner = $exchange->partner();
-        $right = $exchange->check->correctOption();
-        if ($exchange->kind !== ExchangeKind::Ask || $own === null || $partner === null || $right === null) {
+        if ($exchange->kind !== ExchangeKind::Ask || $own === null || $partner === null) {
             return null;
         }
         $candidates = [];
-        foreach ($exchange->check->options as $i => $option) {
-            if ($i !== $exchange->check->correctOptionIndex) {
-                $candidates[] = ['text' => $option->textNative];
+        foreach ($scene->partnerLines() as $line) {
+            if ($line['step'] !== $exchange->step) {
+                $candidates[] = ['text' => $line['message']->textNative];
             }
         }
-        $chosen = Options::choose($scene->seed('x'.$exchange->step.':predict'), ['text' => $right->textNative], $candidates, self::PREDICT_OPTIONS);
+        $seed = $scene->seed('x'.$exchange->step.':predict');
+        $chosen = Options::choose($seed, ['text' => $partner->textNative], Shuffle::seeded($seed.':others', $candidates), self::PREDICT_OPTIONS);
         if (count($chosen['options']) < Options::MIN) {
             return null;
         }

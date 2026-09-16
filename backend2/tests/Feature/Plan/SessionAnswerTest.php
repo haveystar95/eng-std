@@ -267,7 +267,9 @@ it('deals a choice failed once again at the end of its stage, reshuffled with th
 
 // Canon (D-05): «day-единица никогда не возвращается». Catches the day's listening marked to come back tomorrow — the
 // next day has another dialogue — and the listening listed among the programme's units.
-it('never returns the day’s listening: a question failed twice is failed and nothing more, and the room lists no day unit', function () {
+// Canon (SESSION-1a, хвост): «Слушаю и отвечаю» deals no copy — its review shows the answer — and the day's listening
+// never returns.
+it('never returns the day’s listening and deals it no copy: a wrong question is failed and nothing more, and the room lists no day unit', function () {
     $day = s1aDay($this);
     $question = s1aDeal($day, CardKind::ListenQuestion, UnitKind::Day, 'L1', 2, [
         'question' => ['ref' => 'L1', 'text_native' => 'Где болит?'], 'exchange_step' => 2,
@@ -277,20 +279,19 @@ it('never returns the day’s listening: a question failed twice is failed and n
     s1aDeal($day, CardKind::ListenDialogue, UnitKind::Day, 'day', 1, ['lines' => [], 'total_ms' => null]);
     s1aDeal($day, CardKind::WordIntro, UnitKind::Word, 'v1', 1);
 
-    $copy = s1aAnswer($this, $day, $question->id()->value, 'failed')->assertOk()->json('data.requeued');
-    $second = s1aAnswer($this, $day, $copy['id'], 'failed')->assertOk()->json('data');
+    $reply = s1aAnswer($this, $day, $question->id()->value, 'failed')->assertOk()->json('data');
 
-    expect($copy['position'])->toBe(3)
-        ->and($second['card']['result'])->toBe('failed')
-        ->and($second['card']['returns'])->toBeFalse()
-        ->and($second['card']['unit'])->toBe(['kind' => 'day', 'ref' => 'L1'])
-        ->and($second['unit'])->toBe(['kind' => 'day', 'ref' => 'L1', 'returns_tomorrow' => false, 'returns_day' => null])
-        ->and($second['stage']['stage'])->toBe('listen');
+    expect($reply['requeued'])->toBeNull()
+        ->and($reply['card']['result'])->toBe('failed')
+        ->and($reply['card']['returns'])->toBeFalse()
+        ->and($reply['card']['unit'])->toBe(['kind' => 'day', 'ref' => 'L1'])
+        ->and($reply['unit'])->toBe(['kind' => 'day', 'ref' => 'L1', 'returns_tomorrow' => false, 'returns_day' => null])
+        ->and($reply['stage']['stage'])->toBe('listen');
 
     $room = $this->withHeader('Authorization', "Bearer {$day['token']}")->getJson("/api/v1/plans/{$day['id']}/days/1")->assertOk()->json('data');
 
     expect(array_unique(array_column($room['program'], 'unit_kind')))->toBe(['word'])
-        ->and(collect($room['stages'])->firstWhere('stage', 'listen')['cards'])->toHaveCount(3);
+        ->and(collect($room['stages'])->firstWhere('stage', 'listen')['cards'])->toHaveCount(2);
 });
 
 // Canon (разд. 3): «POST результата отвечает {card, unit, day: {cards_done, minutes_spent}}» — the stage's summary too

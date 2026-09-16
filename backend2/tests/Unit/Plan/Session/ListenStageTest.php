@@ -261,7 +261,8 @@ it('reads no exchange for a question in a learner language without a pack, and d
 });
 
 // D-19: a guess at the partner's answer on every ask exchange, from that exchange's own check.
-it('predicts the partner\'s answer on ask exchanges only, with the exchange\'s own check', function () {
+// Canon (SESSION-1a, хвост — D-19 снят): the options are translations of partner lines, never the exchange's check.
+it('predicts the partner\'s answer on ask exchanges only, among the translations of two other partner lines', function () {
     $scene = s1lScene();
     $predicts = s1lCards($scene, CardKind::ListenPredict);
 
@@ -271,7 +272,13 @@ it('predicts the partner\'s answer on ask exchanges only, with the exchange\'s o
     ]);
     foreach ($predicts as $card) {
         $exchange = $scene->exchange($card->payload['exchange']['step']);
-        $check = $exchange->check;
+        $others = [];
+        foreach ($scene->partnerLines() as $line) {
+            if ($line['step'] !== $exchange->step) {
+                $others[] = mb_strtolower($line['message']->textNative);
+            }
+        }
+        $checkTexts = array_map(static fn ($o): string => $o->textNative, $exchange->check->options);
 
         expect(array_keys($card->payload))->toBe(['scene_id', 'exchange', 'own_line', 'options', 'correct', 'partner_line'])
             ->and($card->payload['own_line'])->toBe([
@@ -283,9 +290,17 @@ it('predicts the partner\'s answer on ask exchanges only, with the exchange\'s o
                 'text_native' => $exchange->partner()->textNative, 'audio' => Audio::of('x'.$exchange->step),
             ])
             ->and($card->payload['options'])->toHaveCount(3)
-            ->and(s1lTexts($card->payload))->toEqualCanonicalizing(array_map(static fn ($o): string => $o->textNative, $check->options))
-            ->and(s1lRight($card->payload))->toBe($check->correctOption()->textNative);
+            ->and(s1lRight($card->payload))->toBe($exchange->partner()->textNative);
+        $wrong = array_values(array_filter(s1lTexts($card->payload), static fn (string $t): bool => $t !== $exchange->partner()->textNative));
+        expect($wrong)->toHaveCount(2)
+            ->and(array_unique(array_map(mb_strtolower(...), s1lTexts($card->payload))))->toHaveCount(3);
+        foreach ($wrong as $text) {
+            expect(in_array(mb_strtolower($text), $others, true))->toBeTrue($text)
+                ->and(in_array($text, $checkTexts, true))->toBeFalse($text);
+        }
     }
+    // The same address, the same two lines.
+    expect(s1lCards(s1lScene(), CardKind::ListenPredict)[0]->payload['options'])->toBe($predicts[0]->payload['options']);
 
     // Exchange 7 turned into an answer: one predict is left, on exchange 8.
     $answered = s1lScene(payload: static function (array $answer): array {

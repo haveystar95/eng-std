@@ -112,6 +112,25 @@ final class EloquentDayCardRepository implements DayCardRepository
         return array_values($rows->map(fn (DayCardModel $r): DayCard => $this->toDomain($r))->all());
     }
 
+    /**
+     * Read by the partial index on `source_day_id` (only returns carry one).
+     *
+     * @param  list<PlanDayId>  $sourceDays
+     * @return list<DayCard>
+     */
+    public function returnedFrom(array $sourceDays): array
+    {
+        if ($sourceDays === []) {
+            return [];
+        }
+        $rows = DayCardModel::query()
+            ->whereIn('source_day_id', array_map(static fn (PlanDayId $id): string => $id->value, $sourceDays))
+            ->where('source', 'returned')
+            ->get();
+
+        return array_values($rows->map(fn (DayCardModel $r): DayCard => $this->toDomain($r))->all());
+    }
+
     /** @return array<string, mixed> */
     private function columns(DayCard $card): array
     {
@@ -120,7 +139,8 @@ final class EloquentDayCardRepository implements DayCardRepository
             'stage' => $card->stage()->value,
             'position' => $card->position(),
             'kind' => $card->kind()->value,
-            'payload' => json_encode($card->payload(), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+            // A share stays a share on the way to jsonb: `coverage_min` 1.0 must not come back as the integer 1.
+            'payload' => json_encode($card->payload(), JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR),
             'source' => $card->source()->value,
             'source_day_id' => $card->sourceDayId()?->value,
             'unit_kind' => $card->unitKind()->value,
@@ -130,7 +150,7 @@ final class EloquentDayCardRepository implements DayCardRepository
             'attempts' => $card->attempts(),
             'answered_at' => $card->answeredAt()?->format(DATE_ATOM),
             'returns' => $card->returns(),
-            'response' => $card->response() === null ? null : json_encode($card->response(), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+            'response' => $card->response() === null ? null : json_encode($card->response(), JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR),
         ];
     }
 

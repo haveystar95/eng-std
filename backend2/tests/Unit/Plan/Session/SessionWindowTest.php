@@ -161,7 +161,8 @@ it('computes the day metrics from cards of any kind: dealt, done, minutes withou
 
 // Canon (DAY-UI-3; разд. 3): «вернётся в день N». Catches a return named on the rehearsal (it deals no returns) and a
 // day after the last one.
-it('names the next day a unit comes back on — a scene or a review day, never the rehearsal, none after the last day', function () {
+// Canon (SESSION-1a, хвост): a unit comes back once, on the nearest following day of whatever type — the rehearsal too.
+it('names the next day a unit comes back on — any type, the rehearsal too, none after the last day', function () {
     $plan = Plan::create(
         PlanId::generate(), UserId::generate(), 'Иду к врачу', new LanguageCode('en'), new LanguageCode('ru'), PlanLevel::Beginner,
         5, null, new DateTimeImmutable('2026-09-16'), new DateTimeImmutable('2026-09-16T10:00:00Z'), static fn (): PlanDayId => PlanDayId::generate(),
@@ -171,6 +172,6 @@ it('names the next day a unit comes back on — a scene or a review day, never t
         ->and(ReturnDay::of($plan, $plan->day(1)))->toBe(2)
         ->and(ReturnDay::of($plan, $plan->day(2)))->toBe(3)
         ->and(ReturnDay::of($plan, $plan->day(3)))->toBe(4)
-        ->and(ReturnDay::of($plan, $plan->day(4)))->toBeNull()
+        ->and(ReturnDay::of($plan, $plan->day(4)))->toBe(5)
         ->and(ReturnDay::of($plan, $plan->day(5)))->toBeNull();
 });

@@ -67,16 +67,10 @@ final class DayAssembler
      */
     public function reviewDay(PlanDayId $dayId, array $scenes, array $material, PlanLevel $level, array $returned, array $nativeTopUp, callable $ids): array
     {
-        $excluded = [];
-        foreach ($returned as $unit) {
-            if ($unit->kind === UnitKind::Exchange) {
-                $excluded[] = UnitStates::key($unit->sceneId->value, UnitKind::Exchange, $unit->ref);
-            }
-        }
         $seed = 'review:'.implode(':', array_map(static fn (SceneMaterial $s): string => $s->sceneId->value, $scenes));
 
         $drafts = [
-            ...$this->speak->review($scenes, array_values(array_unique($excluded)), $seed),
+            ...$this->speak->review($scenes, self::returnedExchanges($returned), $seed),
             ...$this->returns($material, $level, $returned, $nativeTopUp),
         ];
 
@@ -84,13 +78,43 @@ final class DayAssembler
     }
 
     /**
+     * The exchanges of every scene said aloud, and what failed on the day before at the end of its stage — the
+     * rehearsal is the nearest following day for yesterday's units like any other day (SESSION-1a, хвост). An exchange
+     * already returned is not dealt twice.
+     *
      * @param  list<SceneMaterial>  $scenes  every ready scene of the plan, in order
+     * @param  array<string, SceneMaterial>  $material
+     * @param  list<ReturnedUnit>  $returned
      * @param  callable(): DayCardId  $ids
      * @return list<DayCard>
      */
-    public function rehearsalDay(PlanDayId $dayId, array $scenes, callable $ids): array
+    public function rehearsalDay(PlanDayId $dayId, array $scenes, array $material, PlanLevel $level, array $returned, callable $ids): array
     {
-        return $this->deal($dayId, $this->speak->rehearsal($scenes), $ids);
+        $drafts = [
+            ...$this->speak->rehearsal($scenes, self::returnedExchanges($returned)),
+            ...$this->returns($material, $level, $returned, []),
+        ];
+
+        return $this->deal($dayId, $drafts, $ids);
+    }
+
+    /**
+     * The unit keys of the exchanges among the returns — what the speaking selections of a review and a rehearsal leave
+     * out, so an exchange coming back is not said twice in one day.
+     *
+     * @param  list<ReturnedUnit>  $returned
+     * @return list<string>
+     */
+    private static function returnedExchanges(array $returned): array
+    {
+        $keys = [];
+        foreach ($returned as $unit) {
+            if ($unit->kind === UnitKind::Exchange) {
+                $keys[] = UnitStates::key($unit->sceneId->value, UnitKind::Exchange, $unit->ref);
+            }
+        }
+
+        return array_values(array_unique($keys));
     }
 
     /**

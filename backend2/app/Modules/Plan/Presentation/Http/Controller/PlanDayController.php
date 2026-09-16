@@ -44,7 +44,7 @@ final class PlanDayController
 
     public function room(Request $request, string $id, int $number): JsonResponse
     {
-        return response()->json(['data' => PlanJson::room(($this->room)(new GetDayRoom($this->planId($id), $number, $this->actorId($request))))]);
+        return self::reply(PlanJson::room(($this->room)(new GetDayRoom($this->planId($id), $number, $this->actorId($request)))));
     }
 
     /** «Открыть» / «Продолжить»: deals the cards on the first call, returns the full list every time. */
@@ -91,7 +91,7 @@ final class PlanDayController
             $outcome->dayNumbers,
         );
 
-        return response()->json(['data' => PlanJson::answer(
+        return self::reply(PlanJson::answer(
             card: $views[0],
             requeued: $views[1] ?? null,
             returnsTomorrow: $outcome->unitReturns,
@@ -100,7 +100,7 @@ final class PlanDayController
             cardsDone: $outcome->metrics->cardsDone,
             minutesSpent: $outcome->metrics->minutesSpent,
             stageMinutesSpent: $outcome->stageMinutes,
-        )]);
+        ));
     }
 
     public function closeStage(Request $request, string $id, int $number, string $stage): JsonResponse
@@ -113,7 +113,7 @@ final class PlanDayController
         $planId = $this->planId($id);
         ($this->closeStage)(new CloseStage($planId, $number, $parsed, $actor));
 
-        return response()->json(['data' => PlanJson::room(($this->room)(new GetDayRoom($planId, $number, $actor)))]);
+        return self::reply(PlanJson::room(($this->room)(new GetDayRoom($planId, $number, $actor))));
     }
 
     public function close(Request $request, string $id, int $number): JsonResponse
@@ -122,20 +122,31 @@ final class PlanDayController
         $planId = $this->planId($id);
         ($this->closeDay)(new CloseDay($planId, $number, $actor));
 
-        return response()->json(['data' => PlanJson::room(($this->room)(new GetDayRoom($planId, $number, $actor)))]);
+        return self::reply(PlanJson::room(($this->room)(new GetDayRoom($planId, $number, $actor))));
     }
 
     private function cardList(PlanId $planId, int $number, UserId $actor): JsonResponse
     {
         $view = ($this->cards)(new GetDayCards($planId, $number, $actor));
 
-        return response()->json(['data' => [
+        return self::reply([
             'plan_id' => $view->planId,
             'day_id' => $view->dayId,
             'number' => $view->number,
             'status' => $view->status,
             'cards' => array_map(PlanJson::card(...), $view->cards),
-        ]]);
+        ]);
+    }
+
+    /**
+     * Every reply that carries cards keeps a share a share: `coverage_min` 1.0 goes out as `1.0`, not as the integer
+     * `1` a client reading a double would stumble on (SESSION-1a, хвост).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private static function reply(array $data): JsonResponse
+    {
+        return response()->json(['data' => $data], 200, [], JSON_PRESERVE_ZERO_FRACTION);
     }
 
     private function planId(string $id): PlanId

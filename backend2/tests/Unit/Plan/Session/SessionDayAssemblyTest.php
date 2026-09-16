@@ -281,7 +281,11 @@ it('deals a review day of at most ten speak_answer over two scenes in their orde
 // while there is room.
 it('deals a rehearsal of at most twelve speak_answer — one a scene first, then a second in order while there is room', function (int $scenes, array $perScene) {
     $material = array_map(static fn (int $n): SceneMaterial => s1daScene(PlanLevel::Intermediate, $n), range(1, $scenes));
-    $cards = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, s1daIds());
+    $byId = [];
+    foreach ($material as $scene) {
+        $byId[$scene->sceneId->value] = $scene;
+    }
+    $cards = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, PlanLevel::Intermediate, [], s1daIds());
 
     $counts = [];
     foreach ($material as $scene) {
@@ -305,6 +309,35 @@ it('deals a rehearsal of at most twelve speak_answer — one a scene first, then
     // Thirteen scenes: the first twelve get one card, the thirteenth none.
     'thirteen scenes' => [13, [...array_fill(0, 12, 1), 0]],
 ]);
+
+// Canon (SESSION-1a, хвост): a unit comes back on the nearest following day of ANY type — the rehearsal takes yesterday's
+// returns at the end of their stages, and an exchange coming back is not also one of the rehearsal's own cards.
+it('deals yesterday\'s returns on a rehearsal at the end of their stages, the returned exchange left to its return', function () {
+    $material = array_map(static fn (int $n): SceneMaterial => s1daScene(PlanLevel::Beginner, $n), [1, 2]);
+    $byId = [];
+    foreach ($material as $scene) {
+        $byId[$scene->sceneId->value] = $scene;
+    }
+    $failedOn = PlanDayId::fromString('01J8SESSDAY000000000000003');
+    $returned = [
+        new ReturnedUnit($material[1]->sceneId, UnitKind::Word, 'v3', $failedOn),
+        new ReturnedUnit($material[0]->sceneId, UnitKind::Exchange, 'x1', $failedOn),
+    ];
+    $plain = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, PlanLevel::Beginner, [], s1daIds());
+    $cards = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, PlanLevel::Beginner, $returned, s1daIds());
+
+    $back = array_values(array_filter($cards, static fn (DayCard $c): bool => $c->source() === CardSource::Returned));
+    $speak = s1daIn($cards, Stage::Speak);
+    $own = array_values(array_filter($speak, static fn (DayCard $c): bool => $c->source() === CardSource::Today));
+
+    expect(s1daShape($back))->toBe(['word_choose@v3', 'speak_answer@x1'])
+        ->and(s1daShape(s1daIn($cards, Stage::Words)))->toBe(['word_choose@v3'])
+        ->and(end($speak)->source())->toBe(CardSource::Returned)
+        ->and(end($speak)->unitRef())->toBe('x1')
+        // The returned exchange is not also a rehearsal card of its scene.
+        ->and(array_filter($own, static fn (DayCard $c): bool => $c->unitRef() === 'x1' && $c->payload()['scene_id'] === $material[0]->sceneId->value))->toBe([])
+        ->and(count($own))->toBe(count($plain));
+});
 
 // Moved from the assembly test of the old registry (its kinds are gone): the day's numbers are its dealt cards'.
 // Catches a pause over ten minutes counted, and a total or a count that is not the cards'.
