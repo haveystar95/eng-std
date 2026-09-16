@@ -416,7 +416,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played.single, endsWith('@0.85'));
       await sayDebug(tester, 'it hurts in his back');
-      expect(results(probe), [SessionResult.passed], reason: '4 of 5 significant words — above 0.7');
+      expect(probe.answers, isEmpty, reason: '4 of 5 significant words — round 1 of 2 passed, the answer waits for round 2');
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+      await sayDebug(tester, 'it hurts in his shoulder');
+      expect(results(probe), [SessionResult.passed]);
       await settleCard(tester);
 
       final miss = CardProbe();
@@ -455,12 +459,23 @@ void main() {
 
       await enterHeard(tester, 'It hurts in his shoulder');
       await tester.pump(const Duration(milliseconds: 450));
-      expect(probe.answers, isEmpty);
+      expect(frameLine(tester).slot, isNull, reason: 'still recording at 450 ms — nothing graded yet');
       await tester.pump(const Duration(milliseconds: 60));
-      expect(results(probe), [SessionResult.passed], reason: 'frame and slot covered — stop after 500 ms');
       await tester.pump();
-      expect(frameLine(tester).slot, 'shoulder', reason: 'the heard filler fills the slot');
+      expect(frameLine(tester).slot, 'shoulder', reason: 'frame and slot covered — stop after 500 ms; the heard filler fills the slot');
       expect(frameLine(tester).look, SlotLook.sage);
+      expect(probe.answers, isEmpty, reason: 'round 1 of 2 — the answer waits for round 2');
+
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+      expect(frameLine(tester).slot, isNull, reason: 'round 2 — the slot is empty again');
+      final round2 = tester.widget<Text>(find.byKey(const ValueKey('other-slot-task'))).textSpan! as TextSpan;
+      expect(round2.toPlainText(), 'У него болит шея.');
+      await enterHeard(tester, 'It hurts in his neck');
+      await tester.pump(const Duration(milliseconds: 510));
+      expect(results(probe), [SessionResult.passed]);
+      await tester.pump();
+      expect(frameLine(tester).slot, 'neck');
       await settleCard(tester);
     });
 

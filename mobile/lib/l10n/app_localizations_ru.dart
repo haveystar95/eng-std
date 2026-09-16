@@ -3718,6 +3718,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionPlaying => 'играет';
 
   @override
+  String planSessionRound(int current, int total) {
+    return '$current из $total';
+  }
+
+  @override
   String get planSessionMicMissed => 'не расслышал, ещё раз';
 
   @override

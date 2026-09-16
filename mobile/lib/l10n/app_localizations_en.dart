@@ -3558,6 +3558,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionPlaying => 'playing';
 
   @override
+  String planSessionRound(int current, int total) {
+    return '$current of $total';
+  }
+
+  @override
   String get planSessionMicMissed => 'didn\'t catch that, once more';
 
   @override

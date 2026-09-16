@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart';
 
 import 'session_models.dart';
 import 'speech_coverage.dart';
+import 'voice_rounds.dart';
 
 /// A piece of the assembled phrase string: a tile or a slot with a filler.
 sealed class AssemblyPiece {
@@ -139,6 +140,21 @@ abstract final class SessionRules {
   static ({bool frame, bool slot}) otherSlotParts(PhraseOtherSlotPayload p, String heard, Set<String> articles) => (
     frame: SpeechCoverage.covers(heard, p.expectedText, p.coverageMin, articles),
     slot: SpeechCoverage.covers(heard, p.slotExpected, SpeechCoverage.all, articles),
+  );
+
+  /// A round of `phrase_repeat` / `phrase_other_slot` (polish pass SESSION-1b′, item 12): the round's phrase covered
+  /// by the card's `coverage_min`, and for `phrase_other_slot` — all the words of the round's slot. Round 1 is the
+  /// card's own pass ([voiceAccepted]).
+  static bool roundAccepted(CardPayload payload, VoiceRound round, String heard, Set<String> articles) => switch (payload) {
+    PhraseRepeatPayload(:final coverageMin) => SpeechCoverage.covers(heard, round.expectedText, coverageMin, articles),
+    PhraseOtherSlotPayload() => otherSlotRoundParts(payload, round, heard, articles) == (frame: true, slot: true),
+    _ => false,
+  };
+
+  /// [otherSlotParts] for a round.
+  static ({bool frame, bool slot}) otherSlotRoundParts(PhraseOtherSlotPayload p, VoiceRound round, String heard, Set<String> articles) => (
+    frame: SpeechCoverage.covers(heard, round.expectedText, p.coverageMin, articles),
+    slot: SpeechCoverage.covers(heard, round.slotExpected ?? p.slotExpected, SpeechCoverage.all, articles),
   );
 
   /// What should be spoken — for the live line and the hint to the recognizer.

@@ -92,8 +92,11 @@ void main() {
     });
     final probe = CardProbe();
     await pumpCard(tester, probeEnv(other, probe), size: narrow);
-    await sayDebug(tester, 'It hurts in his $apartment');
-    expect(results(probe), [SessionResult.passed]);
+    // Graded 500 ms after the words; the passed round stays 600 ms before round 2 (item 12) — check inside that beat.
+    await enterHeard(tester, 'It hurts in his $apartment');
+    await tester.pump(const Duration(milliseconds: 510));
+    await tester.pump();
+    expect(probe.answers, isEmpty, reason: 'round 1 of 2 passed — the slot shows what was heard');
     expectSlotFits(tester, apartment);
     await settleCard(tester);
   });
@@ -122,5 +125,3 @@ void main() {
     await settleCard(tester);
   });
 }
-
-List<SessionResult> results(CardProbe probe) => [for (final a in probe.answers) a.result];

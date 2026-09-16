@@ -2198,6 +2198,7 @@
   "planSessionMicListening": "go ahead, I'm listening",
   "planSessionMicHeard": "heard",
   "planSessionPlaying": "playing",
+  "planSessionRound": "{current} of {total}",
   "planSessionMicMissed": "didn't catch that, once more",
   "planSessionEcho": "heard — just like the recording",
   "planSessionSkip": "Skip",

@@ -12,6 +12,7 @@ import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/plan/session/speech_coverage.dart';
 import '../../../../data/plan/session/speech_stop.dart';
+import '../../../../data/plan/session/voice_rounds.dart';
 import '../../../../data/speech/speech_turn.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_choice.dart';
@@ -564,7 +565,8 @@ class _PhraseSlotListenCardState extends State<PhraseSlotListenCard> with Choice
 // ── 32-6 ──────────────────────────────────────────────────────────────────────────────────────────
 
 /// REPEAT ALOUD (32-6): the sample at 0.85× on opening, the key underlined in brass; microphone; pass — coverage of
-/// `expected_text` by `coverage_min`; two attempts without a pass — `skipped`.
+/// `expected_text` by `coverage_min`; two attempts without a pass — `skipped`. Rounds (item 12, [VoiceRounds]):
+/// round 2 — the frame with the next filler, its own sample at 0.85×, «1 of 2 · 2 of 2» above the sheet.
 class PhraseRepeatCard extends StatefulWidget {
   const PhraseRepeatCard({super.key, required this.env, required this.payload});
 
@@ -578,21 +580,36 @@ class PhraseRepeatCard extends StatefulWidget {
 class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState<PhraseRepeatCard> {
   static const _key = 'phrase-repeat';
 
+  late final List<VoiceRound> _rounds = VoiceRounds.ofRepeat(widget.payload);
+
+  VoiceRound get _current => _rounds[round];
+
   @override
   CardEnv get env => widget.env;
 
   @override
-  String get expectedSpeech => widget.payload.expectedText;
+  int get roundCount => _rounds.length;
 
   @override
-  bool accepts(String heard) => SessionRules.voiceAccepted(widget.payload, heard, env.articles);
+  int? fillerIndexOfRound(int round) => _rounds[round].fillerIndex;
+
+  @override
+  String get expectedSpeech => _current.expectedText;
+
+  @override
+  bool accepts(String heard) => SessionRules.roundAccepted(widget.payload, _current, heard, env.articles);
 
   @override
   void initState() {
     super.initState();
     initVoice();
-    _autoplay(this, env, widget.payload.audio, widget.payload.expectedText, _key, rate: kRepeatRate);
+    _playSample();
   }
+
+  @override
+  void onRoundStarted(int round) => _playSample();
+
+  void _playSample() => _autoplay(this, env, _current.audio, _current.expectedText, _key, rate: kRepeatRate);
 
   @override
   void dispose() {
@@ -604,7 +621,8 @@ class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState
   TextRange? get _keyRange {
     final key = widget.payload.key;
     if (key == null) return null;
-    final at = widget.payload.expectedText.toLowerCase().indexOf(key.toLowerCase());
+    final text = _current.expectedText;
+    final at = text.toLowerCase().indexOf(key.toLowerCase());
     return at < 0 ? null : TextRange(start: at, end: at + key.length);
   }
 
@@ -614,24 +632,52 @@ class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState
     if (noMic != null) return noMic;
     final l = AppLocalizations.of(context);
     final p = widget.payload;
-    final filler = p.frame.filler(p.fillerIndex);
+    final r = _current;
+    final filler = r.filler;
     return CardLayout(
       bodyGap: 12,
       centerBody: true,
       fadeStop: 0.30,
       task: SessionTask(l.planSessionTaskSayPhrase),
-      body: _PhraseSheet(
-        plate: _PhrasePlate(
-          listen: CardListen(env: env, audio: p.audio, fallback: p.expectedText, playKey: _key, rate: kRepeatRate),
-          child: SessionFrameText.plain(p.expectedText, style: AppTextSession.frame, underline: _keyRange),
-        ),
-        footer: _PhraseFooter(
-          eyebrow: l.planSessionBrowPhrase,
-          reading: _pronunciation(p.frame, filler),
-          native: _native(p.frame, filler),
+      body: _Rounds(
+        round: round,
+        count: roundCount,
+        child: _PhraseSheet(
+          plate: _PhrasePlate(
+            listen: CardListen(env: env, audio: r.audio, fallback: r.expectedText, playKey: _key, rate: kRepeatRate),
+            child: SessionFrameText.plain(r.expectedText, style: AppTextSession.frame, underline: _keyRange),
+          ),
+          footer: _PhraseFooter(
+            eyebrow: l.planSessionBrowPhrase,
+            reading: _pronunciation(p.frame, filler),
+            native: r.native ?? _native(p.frame, filler),
+          ),
         ),
       ),
       bottom: voiceDock(context),
+    );
+  }
+}
+
+/// The sheet of a card with rounds (item 12) — «1 of 2 · 2 of 2» small and grey above it; one round — the sheet alone.
+class _Rounds extends StatelessWidget {
+  const _Rounds({required this.round, required this.count, required this.child});
+
+  final int round;
+  final int count;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (count < 2) return child;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(AppLocalizations.of(context).planSessionRound(round + 1, count), key: const ValueKey('voice-round'), style: AppTextSession.meta),
+        const SizedBox(height: 8),
+        child,
+      ],
     );
   }
 }
@@ -642,7 +688,8 @@ class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState
 /// meaning is below»; the slot in the English line is EMPTY (brass outline 96 × 30), there is no native text inside
 /// the line; under the phrase, in the «Slot» block, — the whole native sentence, the piece for the slot in bold ink,
 /// the rest in grey. The sheet has no sound. Pass — coverage of the frame AND all the words of `slot_expected`; on a
-/// pass the frame is in sage, the slot — what was heard, in sage.
+/// pass the frame is in sage, the slot — what was heard, in sage. Rounds (item 12, [VoiceRounds]): round 2 — the next
+/// filler the dialogue does not say; the slot empties and the native sentence becomes `frame_native` with its native.
 class PhraseOtherSlotCard extends StatefulWidget {
   const PhraseOtherSlotCard({super.key, required this.env, required this.payload});
 
@@ -659,24 +706,40 @@ class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCar
   /// What went into the slot on a pass — the heard words beyond the frame.
   String? _heardSlot;
 
+  late final List<VoiceRound> _rounds = VoiceRounds.ofOtherSlot(widget.payload);
+
+  VoiceRound get _current => _rounds[round];
+
   @override
   CardEnv get env => widget.env;
 
   @override
-  String get expectedSpeech => widget.payload.expectedText;
+  int get roundCount => _rounds.length;
+
+  @override
+  int? fillerIndexOfRound(int round) => _rounds[round].fillerIndex;
+
+  @override
+  String get expectedSpeech => _current.expectedText;
 
   @override
   bool accepts(String heard) {
-    final parts = SessionRules.otherSlotParts(widget.payload, heard, env.articles);
+    final parts = SessionRules.otherSlotRoundParts(widget.payload, _current, heard, env.articles);
     setState(() {
       _parts = parts;
-      _heardSlot = _slotWordsOf(heard, widget.payload.frame, widget.payload.slotExpected);
+      _heardSlot = _slotWordsOf(heard, widget.payload.frame, _current.slotExpected ?? widget.payload.slotExpected);
     });
     return parts.frame && parts.slot;
   }
 
   @override
-  bool wouldAccept(String heard) => SessionRules.voiceAccepted(widget.payload, heard, env.articles);
+  bool wouldAccept(String heard) => SessionRules.roundAccepted(widget.payload, _current, heard, env.articles);
+
+  @override
+  void onRoundStarted(int round) => setState(() {
+    _parts = null;
+    _heardSlot = null;
+  });
 
   @override
   void initState() {
@@ -690,49 +753,66 @@ class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCar
     super.dispose();
   }
 
+  /// The round's native sentence: round 1 — the card's task ([nativeTaskOf]); round 2 — `frame_native` split at the
+  /// slot with the filler's native as the bold piece.
+  ({String before, String piece, String after}) get _task {
+    final p = widget.payload;
+    final r = _current;
+    final filler = r.filler;
+    if (r.native == null || filler == null) return nativeTaskOf(p);
+    final frame = p.frame.frameNative;
+    final at = frame.indexOf(kSlotMark);
+    if (at < 0) return (before: '', piece: r.native!, after: '');
+    return (before: frame.substring(0, at), piece: filler.native, after: frame.substring(at + kSlotMark.length));
+  }
+
   @override
   Widget build(BuildContext context) {
     final noMic = noMicBody((s) => SessionTexts.stage(AppLocalizations.of(context), s));
     if (noMic != null) return noMic;
     final l = AppLocalizations.of(context);
     final p = widget.payload;
-    final parts = done && !skippedAfterMisses ? _parts : null;
-    final task = nativeTaskOf(p);
+    final parts = (done && !skippedAfterMisses) || roundPassed ? _parts : null;
+    final task = _task;
     return CardLayout(
       bodyGap: 12,
       centerBody: true,
       fadeStop: 0.30,
       task: SessionTask(l.planSessionTaskSayWhole),
-      body: _PhraseSheet(
-        plate: _PhrasePlate(
-          child: SessionFrameText.frame(
-            p.frame,
-            style: AppTextSession.frame,
-            frameColor: parts?.frame == true ? AppColors.verdictKnown : null,
-            slot: parts?.slot == true ? (_heardSlot ?? p.slotExpected) : null,
-            look: parts?.slot == true ? SlotLook.sage : SlotLook.empty,
+      body: _Rounds(
+        round: round,
+        count: roundCount,
+        child: _PhraseSheet(
+          plate: _PhrasePlate(
+            child: SessionFrameText.frame(
+              p.frame,
+              style: AppTextSession.frame,
+              frameColor: parts?.frame == true ? AppColors.verdictKnown : null,
+              slot: parts?.slot == true ? (_heardSlot ?? _current.slotExpected) : null,
+              look: parts?.slot == true ? SlotLook.sage : SlotLook.empty,
+            ),
           ),
-        ),
-        footer: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SessionEyebrow(l.planSessionBrowSlot),
-              const SizedBox(height: 4),
-              Text.rich(
-                key: const ValueKey('other-slot-task'),
-                TextSpan(
-                  style: AppTextSession.body.copyWith(color: AppColors.tertiary),
-                  children: [
-                    TextSpan(text: task.before),
-                    TextSpan(text: task.piece, style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700)),
-                    TextSpan(text: task.after),
-                  ],
+          footer: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SessionEyebrow(l.planSessionBrowSlot),
+                const SizedBox(height: 4),
+                Text.rich(
+                  key: const ValueKey('other-slot-task'),
+                  TextSpan(
+                    style: AppTextSession.body.copyWith(color: AppColors.tertiary),
+                    children: [
+                      TextSpan(text: task.before),
+                      TextSpan(text: task.piece, style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700)),
+                      TextSpan(text: task.after),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -5469,6 +5469,12 @@ abstract class AppLocalizations {
   /// **'играет'**
   String get planSessionPlaying;
 
+  /// Сессия, «Повтори фразу» (32-6) и «Скажи целиком» (32-7) с раундами (доводка SESSION-1b′, п. 12): шапка раунда мелко серым над листом — «1 из 2», «2 из 2». У карточки с одним раундом не показывается.
+  ///
+  /// In ru, this message translates to:
+  /// **'{current} из {total}'**
+  String planSessionRound(int current, int total);
+
   /// Сессия, микрофон (30-3) «не расслышал»: подпись.
   ///
   /// In ru, this message translates to:

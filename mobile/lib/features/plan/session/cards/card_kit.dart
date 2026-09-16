@@ -218,13 +218,37 @@ class _DockUnderField extends MultiChildLayoutDelegate {
 /// Voice never writes `failed`: pass — `passed` and auto-advance after 600 ms; a second attempt without a pass —
 /// `skipped` and «Next» by hand; «Skip» — `skipped` at once. No microphone — «Microphone needed», where «Skip»
 /// writes `skipped` with `no_mic`.
+///
+/// Rounds (polish pass SESSION-1b′, item 12): a card with [roundCount] > 1 is said round by round — a passed round
+/// stays on screen for a beat, then the next one starts with its own phrase ([onRoundStarted]); two misses in any round
+/// close the card as `skipped`; one answer goes to the server at the end, `filler_index` — the last filler said.
 mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   CardEnv get env;
 
-  late final SessionMic mic;
+  late SessionMic mic;
   int _attempts = 0;
   bool _done = false;
   String _heard = '';
+
+  int _round = 0;
+  int _roundAttempts = 0;
+  int _lastPassedRound = -1;
+  bool _roundPassed = false;
+
+  /// How many rounds the card has; one — a card without rounds.
+  int get roundCount => 1;
+
+  /// The round being said, from 0.
+  int get round => _round;
+
+  /// A round other than the last has just been passed — it stays on screen until the next one starts.
+  bool get roundPassed => _roundPassed;
+
+  /// The round's `filler_index` — for the answer of a card with rounds.
+  int? fillerIndexOfRound(int round) => null;
+
+  /// The next round has started — the card shows its phrase.
+  void onRoundStarted(int round) {}
 
   /// The card is closed by a skip after the second attempt — «Next» by hand.
   bool skippedAfterMisses = false;
@@ -259,6 +283,27 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     mic.addListener(_onMic);
   }
 
+  /// The answer's response. A card with rounds carries the last filler said (none said — none); `mode = "rounds"`
+  /// of item 12 is NOT sent: the server accepts only `chips` / `tiles` / `voice_hint` / `voice_blind`
+  /// (`AnswerCardRequest::MODES`) and answers anything else with 422, which drops the answer.
+  SessionResponse _response({String? heard, bool noMic = false}) => SessionResponse(
+    heard: heard == null || heard.isEmpty ? null : heard,
+    noMic: noMic ? true : null,
+    fillerIndex: roundCount > 1 && _lastPassedRound >= 0 ? fillerIndexOfRound(_lastPassedRound) : null,
+  );
+
+  void _startRound(int next) {
+    mic.removeListener(_onMic);
+    mic.dispose();
+    _round = next;
+    _roundAttempts = 0;
+    _roundPassed = false;
+    _heard = '';
+    initVoice();
+    onRoundStarted(next);
+    setState(() {});
+  }
+
   void disposeVoice() {
     mic.removeListener(_onMic);
     mic.dispose();
@@ -276,16 +321,28 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   }
 
   void _onTurn(MicTurn turn) {
-    if (_done || !mounted) return;
+    if (_done || _roundPassed || !mounted) return;
     _heard = turn.transcript;
     _attempts++;
+    _roundAttempts++;
     final ok = turn.outcome == SpeechTurnOutcome.heard && accepts(turn.transcript);
     if (ok) {
-      _done = true;
       mic.settle(accepted: true);
       SessionSounds.verdict(correct: true);
+      _lastPassedRound = _round;
       onAccepted(turn.transcript);
-      env.submit(SessionAnswer(result: SessionResult.passed, attempts: _attempts, response: SessionResponse(heard: turn.transcript)));
+      if (_round < roundCount - 1) {
+        // The passed round stays for a beat, then the next one starts; no answer until the last round.
+        _roundPassed = true;
+        final next = _round + 1;
+        unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
+          if (mounted && !_done && _roundPassed) _startRound(next);
+        }));
+        setState(() {});
+        return;
+      }
+      _done = true;
+      env.submit(SessionAnswer(result: SessionResult.passed, attempts: _attempts, response: _response(heard: turn.transcript)));
       unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
         if (mounted) unawaited(env.next());
       }));
@@ -293,14 +350,10 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
       return;
     }
     mic.settle(accepted: false);
-    if (_attempts >= SessionRules.voiceAttempts) {
+    if (_roundAttempts >= SessionRules.voiceAttempts) {
       _done = true;
       skippedAfterMisses = true;
-      env.submit(SessionAnswer(
-        result: SessionResult.skipped,
-        attempts: _attempts,
-        response: SessionResponse(heard: turn.transcript.isEmpty ? null : turn.transcript),
-      ));
+      env.submit(SessionAnswer(result: SessionResult.skipped, attempts: _attempts, response: _response(heard: turn.transcript)));
     }
     setState(() {});
   }
@@ -313,7 +366,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     env.submit(SessionAnswer(
       result: SessionResult.skipped,
       attempts: _attempts < 1 ? 1 : _attempts,
-      response: SessionResponse(heard: _heard.isEmpty ? null : _heard, noMic: noMic ? true : null),
+      response: _response(heard: _heard, noMic: noMic),
     ));
     env.reportNoMic(false);
     unawaited(env.next());
