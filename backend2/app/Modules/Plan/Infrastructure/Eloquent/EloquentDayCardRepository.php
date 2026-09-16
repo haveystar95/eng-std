@@ -130,6 +130,7 @@ final class EloquentDayCardRepository implements DayCardRepository
             'attempts' => $card->attempts(),
             'answered_at' => $card->answeredAt()?->format(DATE_ATOM),
             'returns' => $card->returns(),
+            'response' => $card->response() === null ? null : json_encode($card->response(), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
         ];
     }
 
@@ -151,6 +152,7 @@ final class EloquentDayCardRepository implements DayCardRepository
             attempts: $row->attempts,
             answeredAt: $row->answered_at === null ? null : new DateTimeImmutable($row->answered_at),
             returns: $row->returns,
+            response: $row->response,
         );
     }
 }

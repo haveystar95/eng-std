@@ -9,6 +9,7 @@ use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
 use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
+use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use Closure;
 
@@ -17,8 +18,9 @@ use Closure;
  *
  * The default answers are a valid plan of exactly SCENES_COUNT scenes and a clean lesson — every rule
  * the lesson validator counts honoured — so a day can be dealt from them; the seam judge reads every native
- * sentence as fine. A goal containing «unclear» comes back `unclear`, the way the prompt answers a
- * non-situation. A test that wants a BROKEN answer hands in its own closure for any call.
+ * sentence as fine; the slot judge accepts every attempt, taking what was heard for the slot. A goal containing
+ * «unclear» comes back `unclear`, the way the prompt answers a non-situation. A test that wants a BROKEN answer hands
+ * in its own closure for any call — or a closure that throws, for a model that does not answer.
  */
 final class FakePlanModel implements PlanModelPort
 {
@@ -32,6 +34,11 @@ final class FakePlanModel implements PlanModelPort
     public int $repairCalls = 0;
 
     public int $judgeCalls = 0;
+
+    public int $slotJudgeCalls = 0;
+
+    /** @var list<SlotJudgeRequest> */
+    public array $slotJudgeRequests = [];
 
     /** @var list<LessonCardRepairRequest> */
     public array $repairRequests = [];
@@ -50,6 +57,7 @@ final class FakePlanModel implements PlanModelPort
      * @param  (Closure(LessonRequest, int): array<string, mixed>)|null  $lesson
      * @param  (Closure(LessonCardRepairRequest, int): array<string, mixed>)|null  $repair  the default returns the card as written
      * @param  (Closure(NativeSeamJudgeRequest, int): array<string, mixed>)|null  $judge  the default reads every sentence as fine
+     * @param  (Closure(SlotJudgeRequest, int): array<string, mixed>)|null  $slotJudge  the default accepts; a closure that throws is a silent model
      */
     public function __construct(
         private readonly ?Closure $plan = null,
@@ -58,6 +66,7 @@ final class FakePlanModel implements PlanModelPort
         private readonly string $planVersion = 'plan-builder-v2',
         private readonly string $lessonVersion = 'lesson_day.v4.5',
         private readonly ?Closure $judge = null,
+        private readonly ?Closure $slotJudge = null,
     ) {}
 
     public function buildPlan(PlanRequest $request): ModelReply
@@ -98,6 +107,21 @@ final class FakePlanModel implements PlanModelPort
         return new ModelReply($payload, 'lesson_seam_judge.v1.1', self::MODEL, 400, 120, '0.000000', 2, '');
     }
 
+    public function judgeSlot(SlotJudgeRequest $request): ModelReply
+    {
+        $this->slotJudgeCalls++;
+        $this->slotJudgeRequests[] = $request;
+        $payload = $this->slotJudge !== null
+            ? ($this->slotJudge)($request, $this->slotJudgeCalls)
+            : [
+                'accepted' => true,
+                'slot_value' => $request->task === SlotJudgeRequest::TASK_RETELL ? null : $request->heard,
+                'reason_native' => null,
+            ];
+
+        return new ModelReply($payload, 'slot_judge.v1', self::MODEL, 350, 40, '0.000000', 1, '');
+    }
+
     public function planPromptVersion(): string
     {
         return $this->planVersion;
@@ -111,6 +135,11 @@ final class FakePlanModel implements PlanModelPort
     public function judgePromptVersion(): string
     {
         return 'lesson_seam_judge.v1.1';
+    }
+
+    public function slotJudgePromptVersion(): string
+    {
+        return 'slot_judge.v1';
     }
 
     public function lessonPromptVersion(): string

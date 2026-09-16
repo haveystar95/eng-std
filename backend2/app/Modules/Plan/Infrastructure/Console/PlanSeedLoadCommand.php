@@ -26,12 +26,22 @@ final class PlanSeedLoadCommand extends Command
 
     protected $description = 'Seed a synthetic plan load (plans, days, scenes, cards, terms) for query analysis';
 
+    /** The kinds of the session registry (SESSION-1a) the load cycles through, per stage. */
     private const KINDS = [
-        'words' => ['word_intro', 'word_say', 'word_choose', 'word_cloze'],
-        'phrases' => ['phrase_intro', 'phrase_repeat', 'phrase_assemble'],
-        'dialogue' => ['dialogue_read'],
-        'listen' => ['listen_question', 'answer_choose'],
-        'speak' => ['speak'],
+        'words' => ['word_intro', 'word_repeat', 'word_choose'],
+        'phrases' => ['phrase_intro', 'phrase_slot', 'phrase_repeat'],
+        'dialogue' => ['dialogue_partner', 'dialogue_answer'],
+        'listen' => ['listen_dialogue', 'listen_question'],
+        'speak' => ['speak_answer'],
+    ];
+
+    /** What each stage's cards are about: a word, a frame, an exchange — the listening is the day's. */
+    private const UNIT_KINDS = [
+        'words' => 'word',
+        'phrases' => 'phrase',
+        'dialogue' => 'exchange',
+        'listen' => 'day',
+        'speak' => 'exchange',
     ];
 
     public function handle(): int
@@ -48,8 +58,6 @@ final class PlanSeedLoadCommand extends Command
         $now = now();
         $daysTotal = 6;
         $created = ['plans' => 0, 'days' => 0, 'cards' => 0, 'terms' => 0];
-        /** @var array<string, list<string>> $phraseTermIds scene id → its phrase terms p1…p6 */
-        $phraseTermIds = [];
         // A real lesson shape: the mapper re-parses every stored lesson, and a stub would be a 500.
         $lessonJson = json_encode(FakePlanModel::lessonPayload(new LessonRequest('Сцена', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8)), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
 
@@ -109,7 +117,6 @@ final class PlanSeedLoadCommand extends Command
                     }
                     DB::table('plan_terms')->insert($terms);
                     $created['terms'] += count($terms);
-                    $phraseTermIds[$sceneId] = array_column(array_slice($terms, 8), 'id');
                 }
                 $dayStatus = $index === 0 ? 'closed' : ($index === 1 ? 'in_progress' : 'locked');
                 DB::table('plan_days')->insert([
@@ -127,22 +134,22 @@ final class PlanSeedLoadCommand extends Command
                     $position[$stage] = ($position[$stage] ?? 0) + 1;
                     $answered = $index === 0;
                     $cardScene = $sceneId ?? $sceneIds[0] ?? '';
-                    $payload = ['scene_id' => $cardScene, 'text_target' => "card {$c}"];
-                    $unitRef = 'u'.($c % 8);
-                    if ($stage === 'phrases' && isset($phraseTermIds[$cardScene])) {
-                        // A phrase card points at its term, the way the dealer writes it: the window reads the frame there.
-                        $at = ($position[$stage] - 1) % count($phraseTermIds[$cardScene]);
-                        $payload['plan_term_id'] = $phraseTermIds[$cardScene][$at];
-                        $unitRef = 'p'.($at + 1);
-                    }
+                    // The minimal payload: the readers find a card's term and lines by its scene and its unit.
+                    $payload = ['scene_id' => $cardScene];
+                    $unitRef = match ($stage) {
+                        'words' => 'v'.(($position[$stage] - 1) % 8 + 1),
+                        'phrases' => 'p'.(($position[$stage] - 1) % 6 + 1),
+                        'listen' => $kind === 'listen_question' ? 'L'.(($position[$stage] - 1) % 3 + 1) : 'day',
+                        default => 'x'.(($position[$stage] - 1) % 8 + 1),
+                    };
                     $cards[] = [
                         'id' => Ulid::generate(), 'day_id' => $dayId, 'user_id' => $userId, 'stage' => $stage,
                         'position' => $position[$stage], 'kind' => $kind,
                         'payload' => json_encode($payload, JSON_THROW_ON_ERROR),
-                        'source' => 'today', 'unit_kind' => $stage === 'words' ? 'word' : ($stage === 'phrases' ? 'phrase' : 'exchange'),
+                        'source' => 'today', 'unit_kind' => self::UNIT_KINDS[$stage],
                         'unit_ref' => $unitRef, 'result' => $answered ? ($c % 9 === 0 ? 'failed' : 'passed') : null,
                         'attempts' => $answered ? 1 : 0, 'answered_at' => $answered ? $now : null,
-                        'returns' => $answered && $c % 9 === 0, 'created_at' => $now, 'updated_at' => $now,
+                        'returns' => $answered && $c % 9 === 0 && $stage !== 'listen', 'created_at' => $now, 'updated_at' => $now,
                     ];
                 }
                 DB::table('day_cards')->insert($cards);

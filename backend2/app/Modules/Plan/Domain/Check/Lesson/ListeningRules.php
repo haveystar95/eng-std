@@ -13,8 +13,6 @@ use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
-use App\Modules\Plan\Domain\Lesson\ListeningQuestion;
-use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\Lesson\Phrase;
 use App\Modules\Plan\Domain\Service\Words;
 
@@ -32,7 +30,8 @@ use App\Modules\Plan\Domain\Service\Words;
  *
  * The questions are in the learner's language, so every word is read by that language's pack: a question belongs
  * to the exchange whose two lines share the most content words with it and its right option. A language with no
- * pack counts only the number of questions.
+ * pack counts only the number of questions. Which exchange a question is about is {@see ListeningExchange}'s reading — the
+ * same one the day's listening cards name.
  */
 final class ListeningRules implements LessonRule
 {
@@ -59,7 +58,7 @@ final class ListeningRules implements LessonRule
         if ($sameExchange) {
             $taken = [];
             foreach ($answer->listening as $index => $question) {
-                $step = self::exchangeOf($answer, $question, $words);
+                $step = ListeningExchange::of($answer, $question, $words);
                 if ($step === null) {
                     continue;
                 }
@@ -110,24 +109,6 @@ final class ListeningRules implements LessonRule
         }
 
         return $out;
-    }
-
-    /** The exchange a question is about: the most content words shared with its two lines; none shared — none. */
-    private static function exchangeOf(Lesson $answer, ListeningQuestion $question, LanguageWords $words): ?int
-    {
-        $asked = $question->textNative.' '.($question->correctOption() ?? '');
-        $best = null;
-        $bestScore = 0;
-        foreach ($answer->exchanges as $exchange) {
-            $lines = implode(' ', array_map(static fn (Message $m): string => $m->textNative, $exchange->messages));
-            $score = $words->shared($asked, $lines);
-            if ($score > $bestScore) {
-                $best = $exchange->step;
-                $bestScore = $score;
-            }
-        }
-
-        return $best;
     }
 
     /**

@@ -34,10 +34,19 @@ final readonly class SceneAudioIndex
     /** The audio id of what `$ref` voices in scene `$sceneId`, or null — not voiced yet (the phone reads it). */
     public function idOf(string $sceneId, string $ref): ?string
     {
+        return $this->rowOf($sceneId, $ref)?->id;
+    }
+
+    /**
+     * The stored file of what `$ref` voices in scene `$sceneId`, in its speaker's voice there — its id and its length
+     * (наряд SESSION-1a, разд. 5: every sound of a card says how long it plays); null while it is not voiced.
+     */
+    public function rowOf(string $sceneId, string $ref): ?LineAudioRow
+    {
         $speaker = SpokenLines::speakerOf($ref);
         $gender = ($this->casts[$sceneId] ?? VoiceCast::of(null))->genderOf($speaker);
         $key = $this->keys[$speaker->value][$gender->value] ?? null;
 
-        return $key === null ? null : ($this->rows[$sceneId.':'.$ref.':'.$key] ?? null)?->id;
+        return $key === null ? null : ($this->rows[$sceneId.':'.$ref.':'.$key] ?? null);
     }
 }

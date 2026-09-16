@@ -18,10 +18,10 @@ use App\Modules\Plan\Application\Dto\WindowStageView;
 use App\Modules\Plan\Application\Dto\WindowSummaryView;
 use App\Modules\Plan\Application\Dto\WindowUsageView;
 use App\Modules\Plan\Application\Dto\WindowWordView;
-use App\Modules\Plan\Domain\Assembly\CardPayloads;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanDay;
+use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Exception\SceneNotFound;
 use App\Modules\Plan\Domain\Lesson\Exchange;
@@ -29,15 +29,15 @@ use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
+use App\Modules\Plan\Domain\Service\DayPace;
 use App\Modules\Plan\Domain\Service\DayWindowStages;
 use App\Modules\Plan\Domain\Service\ImageTones;
+use App\Modules\Plan\Domain\Service\ReturnDay;
 use App\Modules\Plan\Domain\Service\RouteStages;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\Service\UnitStates;
 use App\Modules\Plan\Domain\Service\WordUsage;
-use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
-use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\ProgramSummary;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
@@ -49,11 +49,14 @@ use App\Modules\Plan\Domain\ValueObject\WindowStage;
 use App\Modules\Plan\Domain\ValueObject\WindowStatus;
 
 /**
- * THE DAY WINDOW, READ OFF THE DAY'S CARDS (DAY-UI-2, DAY-UI-3).
+ * THE DAY WINDOW, READ OFF THE DAY'S CARDS (DAY-UI-2, DAY-UI-3; наряд SESSION-1a).
  *
  * The cards are the day's truth — dealt ones for an opened day, the dealer's outline for a day not
  * opened yet — so the programme lists exactly what the day deals, returned units included, and a
- * unit's state is its cards'. Two more reads for any number of cards: the terms of the scenes the
+ * unit's state is its cards'. What a unit IS — a word's or a phrase's texts, a line of the dialogue —
+ * is read off the scene, not off a card's payload: the terms by scene and ref, the dialogue of the
+ * day's own scene exchange by exchange from its served lesson (a card of the registry carries only
+ * what its trainer shows). Two more reads for any number of cards: the terms of the scenes the
  * cards touch (a word's photo and tone, how it reads, what it means) and the spoken files of those
  * scenes — every line of the dialogue, every phrase and word, each in its speaker's voice (DAY-UI-3).
  * Stages, minutes, states and summaries are the Domain's rules (`DayWindowStages`, `DayPace`,
@@ -65,14 +68,16 @@ final readonly class DayWindowViews
     public function __construct(
         private PlanTermRepository $terms,
         private SceneVoices $voices,
+        private DayPace $pace,
     ) {}
 
     /** @param list<DayCard> $cards */
     public function of(Plan $plan, PlanDay $day, DayStatus $effective, ?SceneView $scene, array $cards): DayWindowView
     {
         $status = WindowStatus::of($effective, $plan->status(), $day->number());
-        $stages = DayWindowStages::of($cards, RouteStages::dealtBy($day->type()), $status);
+        $stages = DayWindowStages::of($cards, RouteStages::dealtBy($day->type()), $status, $this->pace);
         $states = UnitStates::of($cards);
+        $ownScene = $plan->sceneOf($day);
 
         $sceneIds = [];
         foreach ($cards as $card) {
@@ -80,6 +85,9 @@ final readonly class DayWindowViews
             if ($sceneId !== '') {
                 $sceneIds[$sceneId] = true;
             }
+        }
+        if ($ownScene !== null && $cards !== []) {
+            $sceneIds[$ownScene->id()->value] = true;
         }
         $sceneIds = array_map('strval', array_keys($sceneIds));
         $casts = [];
@@ -92,19 +100,19 @@ final readonly class DayWindowViews
         }
         $audio = $this->voices->index($plan->targetLang()->value, $casts);
 
-        $termsById = [];
-        $terms = $sceneIds === [] ? [] : $this->terms->forScenes(array_map(static fn (string $id): PlanSceneId => PlanSceneId::fromString($id), $sceneIds));
-        foreach ($terms as $sceneTerms) {
+        /** @var array<string, array<string, PlanTerm>> $termsByRef scene id → ref → term */
+        $termsByRef = [];
+        $known = array_values(array_filter($sceneIds, static fn (string $id): bool => isset($casts[$id])));
+        $terms = $known === [] ? [] : $this->terms->forScenes(array_map(static fn (string $id): PlanSceneId => PlanSceneId::fromString($id), $known));
+        foreach ($terms as $sceneId => $sceneTerms) {
             foreach ($sceneTerms as $term) {
-                $termsById[$term->id()->value] = $term;
+                $termsByRef[(string) $sceneId][$term->ref()] = $term;
             }
         }
 
-        [$words, $wordStates] = $this->words($plan, $day, $cards, $states, $sceneTones, $termsById, $audio);
-        [$phrases, $phraseStates] = $this->phrases($cards, $states, $termsById, $audio);
-        [$dialogue, $lineStates] = $this->dialogue($plan, $cards, $states, $audio);
-
-        $ownScene = $plan->sceneOf($day);
+        [$words, $wordStates] = $this->words($plan, $day, $cards, $states, $sceneTones, $termsByRef, $audio);
+        [$phrases, $phraseStates] = $this->phrases($cards, $states, $termsByRef, $audio);
+        [$dialogue, $lineStates] = $this->dialogue($plan, $cards === [] ? null : $ownScene, $cards, $states, $audio);
 
         return new DayWindowView(
             day: new WindowDayView(
@@ -113,7 +121,7 @@ final readonly class DayWindowViews
                 scene: $scene,
                 imageTone: ImageTones::first($ownScene?->image()?->tone, $plan->coverImage()?->tone),
                 status: $status->value,
-                minutesEstimate: DayWindowStages::minutesEstimate($cards, $status),
+                minutesEstimate: DayWindowStages::minutesEstimate($cards, $status, $this->pace),
                 minutesSpent: $status === WindowStatus::Passed ? $day->metrics()->minutesSpent : null,
                 goals: array_map(
                     static fn (string $goal): WindowGoalView => new WindowGoalView($goal, $status === WindowStatus::Passed),
@@ -187,15 +195,18 @@ final readonly class DayWindowViews
     }
 
     /**
+     * The words and chunks the day deals, in the order their first card comes, each read off its term (by scene and
+     * ref) — never off a card's payload, which carries only what its trainer shows.
+     *
      * @param  list<DayCard>  $cards
      * @param  array<string, UnitState>  $states
      * @param  array<string, string|null>  $sceneTones
-     * @param  array<string, PlanTerm>  $termsById
+     * @param  array<string, array<string, PlanTerm>>  $termsByRef
      * @return array{0: list<WindowWordView>, 1: list<UnitState>}
      */
-    private function words(Plan $plan, PlanDay $day, array $cards, array $states, array $sceneTones, array $termsById, SceneAudioIndex $audio): array
+    private function words(Plan $plan, PlanDay $day, array $cards, array $states, array $sceneTones, array $termsByRef, SceneAudioIndex $audio): array
     {
-        $returnsDay = self::returnsDay($plan, $day);
+        $returnsDay = ReturnDay::of($plan, $day);
         $out = [];
         $unitStates = [];
         foreach ($cards as $card) {
@@ -207,16 +218,14 @@ final readonly class DayWindowViews
             if (isset($out[$key])) {
                 continue;
             }
-            $payload = $card->payload();
-            $termId = $payload['plan_term_id'] ?? null;
-            $term = is_string($termId) ? ($termsById[$termId] ?? null) : null;
+            $term = $termsByRef[$sceneId][$card->unitRef()] ?? null;
             $photo = $term?->image();
             $state = $states[$key] ?? UnitState::Pending;
-            $text = self::text($payload, 'text_target');
+            $text = $term?->textTarget() ?? '';
             $out[$key] = new WindowWordView(
                 ref: $card->unitRef(),
                 term: $text,
-                translation: self::text($payload, 'text_native'),
+                translation: $term?->textNative() ?? '',
                 image: $photo === null ? null : [...$photo->toArray(), 'tone' => $photo->tone],
                 imageTone: ImageTones::first($term?->imageTone(), $sceneTones[$sceneId] ?? null, $plan->coverImage()?->tone),
                 state: $state->value,
@@ -256,27 +265,15 @@ final readonly class DayWindowViews
     }
 
     /**
-     * The day a unit failed twice today comes back on: the next day, when it is a scene or a review
-     * day (they deal the returns of the scene days before them); none after the last scene day.
-     */
-    private static function returnsDay(Plan $plan, PlanDay $day): ?int
-    {
-        foreach ($plan->days() as $next) {
-            if ($next->number() === $day->number() + 1) {
-                return $next->type() === DayType::Rehearsal ? null : $next->number();
-            }
-        }
-
-        return null;
-    }
-
-    /**
+     * The phrases the day deals, in the order their first card comes, each read off its term (by scene and ref): the
+     * frame said with the dialogue's filler, its reading, its voice, and the frame itself.
+     *
      * @param  list<DayCard>  $cards
      * @param  array<string, UnitState>  $states
-     * @param  array<string, PlanTerm>  $termsById
+     * @param  array<string, array<string, PlanTerm>>  $termsByRef
      * @return array{0: list<WindowPhraseView>, 1: list<UnitState>}
      */
-    private function phrases(array $cards, array $states, array $termsById, SceneAudioIndex $audio): array
+    private function phrases(array $cards, array $states, array $termsByRef, SceneAudioIndex $audio): array
     {
         $out = [];
         $unitStates = [];
@@ -289,16 +286,14 @@ final readonly class DayWindowViews
             if (isset($out[$key])) {
                 continue;
             }
-            $payload = $card->payload();
-            $termId = $payload['plan_term_id'] ?? null;
-            $term = is_string($termId) ? ($termsById[$termId] ?? null) : null;
+            $term = $termsByRef[$sceneId][$card->unitRef()] ?? null;
             $state = $states[$key] ?? UnitState::Pending;
             $out[$key] = new WindowPhraseView(
                 ref: $card->unitRef(),
-                text: self::text($payload, 'text_target'),
-                translation: self::text($payload, 'text_native'),
+                text: $term?->textTarget() ?? '',
+                translation: $term?->textNative() ?? '',
                 state: $state->value,
-                pronunciation: $term?->pronunciationNative() ?? self::nullableText($payload, 'pronunciation_native'),
+                pronunciation: $term?->pronunciationNative(),
                 audioId: $audio->idOf($sceneId, $card->unitRef()),
                 frame: self::frame($term, $sceneId, $audio),
             );
@@ -309,86 +304,103 @@ final readonly class DayWindowViews
     }
 
     /**
-     * The dialogue in its own order: a scene day's dialogue read carries every exchange, the lines
-     * of a day without one (a review, the rehearsal) come from its exchange cards, and an exchange
-     * returned from yesterday is appended after today's. The learner's line takes its exchange's
-     * state; an exchange with no practice card of its own is walked when the dialogue was read. Both
-     * lines carry their voice — each in its speaker's — and, from the scene's served lesson, the
-     * exchange's kind and the frame and filler of the learner's line (GEN-2a, additive).
+     * THE DIALOGUE TAB (наряд SESSION-1a, разд. 5 «Window»): every exchange of the day's OWN scene, in the order of its
+     * served lesson — an exchange the day deals no card on is still a line of the visit — and after them the exchanges
+     * of other scenes the day's cards are about (a return, a review, the rehearsal), in the order their first card
+     * comes. Texts, the kind, the frame and filler of the learner's line are the lesson's; both lines carry their
+     * voice, each in its speaker's.
      *
+     * The learner's line takes its exchange's state: over the exchange's cards ({@see UnitStates}) when it has any;
+     * an exchange without cards is walked once every card of the dialogue stage is answered — the stage is where the
+     * visit is walked through — and pending until then.
+     *
+     * @param  PlanScene|null  $own  the day's own scene — null for a review or the rehearsal, and for a day with no card
      * @param  list<DayCard>  $cards
      * @param  array<string, UnitState>  $states
      * @return array{0: list<WindowPairView>, 1: list<UnitState>}
      */
-    private function dialogue(Plan $plan, array $cards, array $states, SceneAudioIndex $audio): array
+    private function dialogue(Plan $plan, ?PlanScene $own, array $cards, array $states, SceneAudioIndex $audio): array
     {
-        /** @var array<string, array{scene: string, step: int, partner: array{0: string, 1: string}|null, learner: array{0: string, 1: string}|null}> $pairs */
-        $pairs = [];
-        $read = [];
+        $ownId = $own?->id()->value;
+        $withCards = [];
+        /** @var array<string, array{scene: string, step: int, card: DayCard}> $others */
+        $others = [];
+        $dialogueCards = 0;
+        $dialogueAnswered = 0;
         foreach ($cards as $card) {
-            if ($card->kind() !== CardKind::DialogueRead) {
+            if ($card->stage() === Stage::Dialogue) {
+                $dialogueCards++;
+                $dialogueAnswered += $card->isAnswered() ? 1 : 0;
+            }
+            $step = SpokenLines::stepOfRef($card->unitRef());
+            if ($card->unitKind() !== UnitKind::Exchange || $step === null) {
                 continue;
             }
             $sceneId = UnitStates::sceneOf($card);
-            $read[$sceneId] = $card->isAnswered();
-            $exchanges = $card->payload()['exchanges'] ?? [];
-            foreach (is_array($exchanges) ? $exchanges : [] as $exchange) {
-                if (! is_array($exchange) || ! is_int($exchange['step'] ?? null)) {
-                    continue;
-                }
-                $partner = null;
-                $learner = null;
-                foreach (is_array($exchange['messages'] ?? null) ? $exchange['messages'] : [] as $message) {
-                    if (! is_array($message)) {
-                        continue;
-                    }
-                    if (($message['speaker'] ?? null) === Message::SPEAKER_LEARNER) {
-                        $learner ??= self::line($message, 'text_target', 'text_native');
-                    } else {
-                        $partner ??= self::line($message, 'text_target', 'text_native');
-                    }
-                }
-                self::addPair($pairs, $sceneId, $exchange['step'], $partner, $learner);
+            $withCards[$sceneId.':'.$step] = true;
+            if ($sceneId !== $ownId) {
+                $others[$sceneId.':'.$step] ??= ['scene' => $sceneId, 'step' => $step, 'card' => $card];
             }
         }
-        foreach ($cards as $card) {
-            $step = CardPayloads::stepOfRef($card->unitRef());
-            if ($card->unitKind() !== UnitKind::Exchange || $card->kind() === CardKind::DialogueRead || $step === null) {
-                continue;
-            }
-            $payload = $card->payload();
-            $partner = is_array($payload['partner'] ?? null) ? self::line($payload['partner'], 'text_target', 'text_native') : null;
-            self::addPair($pairs, UnitStates::sceneOf($card), $step, $partner, self::learnerLineOf($card));
-        }
+        $walked = $dialogueCards > 0 && $dialogueAnswered === $dialogueCards ? UnitState::Done : UnitState::Pending;
 
         $out = [];
         $unitStates = [];
-        foreach ($pairs as $pair) {
-            $ref = CardPayloads::exchangeRef($pair['step']);
-            $exchange = self::exchangeOf($plan, $pair['scene'], $pair['step']);
-            $said = $exchange?->learner();
-            $learner = null;
-            if ($pair['learner'] !== null) {
-                $state = $states[UnitStates::key($pair['scene'], UnitKind::Exchange, $ref)]
-                    ?? (($read[$pair['scene']] ?? false) ? UnitState::Done : UnitState::Pending);
-                $learner = new WindowLineView(
-                    $pair['learner'][0], $pair['learner'][1],
-                    $audio->idOf($pair['scene'], SpokenLines::learnerRef($pair['step'])), $state->value,
-                    $said?->phraseId, $said?->filler,
-                );
-                $unitStates[] = $state;
+        $seen = [];
+        foreach ($own?->lesson()->exchanges ?? [] as $exchange) {
+            if ($ownId === null || isset($seen[$exchange->step])) {
+                continue;
             }
-            $out[] = new WindowPairView(
-                $pair['step'],
-                $pair['partner'] === null ? null : new WindowLineView(
-                    $pair['partner'][0], $pair['partner'][1], $audio->idOf($pair['scene'], SpokenLines::partnerRef($pair['step'])), null,
-                ),
-                $learner,
-                $exchange?->kind->value,
+            $seen[$exchange->step] = true;
+            $state = isset($withCards[$ownId.':'.$exchange->step])
+                ? ($states[UnitStates::key($ownId, UnitKind::Exchange, SpokenLines::exchangeRef($exchange->step))] ?? UnitState::Pending)
+                : $walked;
+            [$pair, $learnerState] = self::pair($ownId, $exchange->step, $exchange, null, $state, $audio);
+            $out[] = $pair;
+            if ($learnerState !== null) {
+                $unitStates[] = $learnerState;
+            }
+        }
+        foreach ($others as $other) {
+            $state = $states[UnitStates::key($other['scene'], UnitKind::Exchange, SpokenLines::exchangeRef($other['step']))] ?? UnitState::Pending;
+            [$pair, $learnerState] = self::pair(
+                $other['scene'], $other['step'], self::exchangeOf($plan, $other['scene'], $other['step']), $other['card'], $state, $audio,
             );
+            $out[] = $pair;
+            if ($learnerState !== null) {
+                $unitStates[] = $learnerState;
+            }
         }
 
         return [$out, $unitStates];
+    }
+
+    /**
+     * One exchange of the tab, its texts from the lesson — or, when the scene's lesson is not there to read, from the
+     * lines the exchange's card carries.
+     *
+     * @return array{0: WindowPairView, 1: UnitState|null} the pair, and the state of its learner's line when it has one
+     */
+    private static function pair(string $sceneId, int $step, ?Exchange $exchange, ?DayCard $card, UnitState $state, SceneAudioIndex $audio): array
+    {
+        $partner = $exchange !== null ? self::messageLine($exchange->partner()) : self::payloadLine($card?->payload()['partner_line'] ?? null);
+        $learner = $exchange !== null ? self::messageLine($exchange->learner()) : self::learnerLineOf($card);
+        $said = $exchange?->learner();
+
+        return [
+            new WindowPairView(
+                $step,
+                $partner === null ? null : new WindowLineView(
+                    $partner[0], $partner[1], $audio->idOf($sceneId, SpokenLines::partnerRef($step)), null,
+                ),
+                $learner === null ? null : new WindowLineView(
+                    $learner[0], $learner[1], $audio->idOf($sceneId, SpokenLines::learnerRef($step)), $state->value,
+                    $said?->phraseId, $said?->filler,
+                ),
+                $exchange?->kind->value,
+            ),
+            $learner === null ? null : $state,
+        ];
     }
 
     /** The exchange of a scene's served lesson, or null when the scene or its lesson is not there. */
@@ -401,75 +413,43 @@ final readonly class DayWindowViews
         }
     }
 
-    /**
-     * @param  array<string, array{scene: string, step: int, partner: array{0: string, 1: string}|null, learner: array{0: string, 1: string}|null}>  $pairs
-     * @param  array{0: string, 1: string}|null  $partner
-     * @param  array{0: string, 1: string}|null  $learner
-     */
-    private static function addPair(array &$pairs, string $sceneId, int $step, ?array $partner, ?array $learner): void
+    /** @return array{0: string, 1: string}|null */
+    private static function messageLine(?Message $message): ?array
     {
-        $key = $sceneId.':'.$step;
-        $pairs[$key] ??= ['scene' => $sceneId, 'step' => $step, 'partner' => null, 'learner' => null];
-        $pairs[$key]['partner'] ??= $partner;
-        $pairs[$key]['learner'] ??= $learner;
+        if ($message === null || trim($message->textTarget) === '') {
+            return null;
+        }
+
+        return [trim($message->textTarget), $message->textNative];
     }
 
     /**
-     * The learner's line as an exchange card carries it: what is said aloud, what is assembled, the
-     * right option of a choice. The cards about the partner's line (the exchange's check) carry none.
+     * The learner's line as an exchange card carries it: the own line of an answer, an ask or a speak card, the rescue
+     * line of a rescue. The cards about the partner's line alone carry none.
      *
      * @return array{0: string, 1: string}|null
      */
-    private static function learnerLineOf(DayCard $card): ?array
+    private static function learnerLineOf(?DayCard $card): ?array
     {
-        $payload = $card->payload();
-
-        return match ($card->kind()) {
-            CardKind::Speak => self::line($payload, 'expected', 'task_native'),
-            CardKind::AnswerAssemble => self::line($payload, 'answer', 'prompt_native'),
-            CardKind::AnswerChoose => self::chosenLine($payload),
-            default => null,
-        };
-    }
-
-    /**
-     * @param  array<string, mixed>  $payload
-     * @return array{0: string, 1: string}|null
-     */
-    private static function chosenLine(array $payload): ?array
-    {
-        foreach (is_array($payload['options'] ?? null) ? $payload['options'] : [] as $option) {
-            if (is_array($option) && ($option['correct'] ?? false) === true) {
-                return self::line($option, 'text_target', 'text_native');
+        $payload = $card?->payload() ?? [];
+        foreach (['own_line', 'rescue_line'] as $key) {
+            if (is_array($payload[$key] ?? null)) {
+                return self::payloadLine($payload[$key]);
             }
         }
 
         return null;
     }
 
-    /**
-     * @param  array<mixed>  $source
-     * @return array{0: string, 1: string}|null
-     */
-    private static function line(array $source, string $text, string $translation): ?array
+    /** @return array{0: string, 1: string}|null */
+    private static function payloadLine(mixed $source): ?array
     {
-        $value = is_string($source[$text] ?? null) ? trim($source[$text]) : '';
+        if (! is_array($source)) {
+            return null;
+        }
+        $value = is_string($source['text_target'] ?? null) ? trim($source['text_target']) : '';
 
-        return $value === '' ? null : [$value, is_string($source[$translation] ?? null) ? $source[$translation] : ''];
-    }
-
-    /** @param array<string, mixed> $payload */
-    private static function text(array $payload, string $key): string
-    {
-        return is_string($payload[$key] ?? null) ? $payload[$key] : '';
-    }
-
-    /** @param array<string, mixed> $payload */
-    private static function nullableText(array $payload, string $key): ?string
-    {
-        $value = is_string($payload[$key] ?? null) ? trim($payload[$key]) : '';
-
-        return $value === '' ? null : $value;
+        return $value === '' ? null : [$value, is_string($source['text_native'] ?? null) ? $source['text_native'] : ''];
     }
 
     /** @param list<UnitState> $states */

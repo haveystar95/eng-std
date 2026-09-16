@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $attempts
  * @property string|null $answered_at
  * @property bool $returns
+ * @property array<string, mixed>|null $response
  */
 final class DayCardModel extends Model
 {
@@ -34,5 +35,5 @@ final class DayCardModel extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['payload' => 'array', 'position' => 'int', 'attempts' => 'int', 'returns' => 'bool'];
+    protected $casts = ['payload' => 'array', 'response' => 'array', 'position' => 'int', 'attempts' => 'int', 'returns' => 'bool'];
 }

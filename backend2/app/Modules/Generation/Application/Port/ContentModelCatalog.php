@@ -46,6 +46,11 @@ interface ContentModelCatalog
      *        `model_timeout`. The learning plan promises its client an answer within 90 seconds
      *        and must fail at ITS limit, not sit on a 180-second one that the comparison stack
      *        needs for a reasoning model. Null keeps the shared value.
+     * @param  int|null  $retries  how many HTTP ATTEMPTS the call may make, the first one included. The
+     *        plan's slot judge answers a learner who is waiting on a card (наряд SESSION-1a, D-28): one
+     *        attempt within its 8 seconds, and past them the verdict is the code's — a retry would
+     *        only double the wait for an answer nobody reads any more. Null keeps the adapter's own
+     *        escalating retries, which every other caller wants.
      */
-    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null): ?ContentModelPort;
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null): ?ContentModelPort;
 }

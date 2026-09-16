@@ -26,19 +26,23 @@ use App\Modules\Plan\Application\Port\PlanListReader;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\SceneImageStore;
 use App\Modules\Plan\Application\Port\SceneLocator;
+use App\Modules\Plan\Application\Port\SlotJudgeQuota;
 use App\Modules\Plan\Domain\Check\BlueprintChecker;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
+use App\Modules\Plan\Domain\Service\DayPace;
 use App\Modules\Plan\Domain\ValueObject\CheckModes;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
+use App\Modules\Plan\Infrastructure\Adapter\ArraySlotJudgeQuota;
 use App\Modules\Plan\Infrastructure\Adapter\CdnSceneImageStore;
 use App\Modules\Plan\Infrastructure\Adapter\GenerationLineSpeaker;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerCalendar;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerGender;
 use App\Modules\Plan\Infrastructure\Adapter\PexelsPlanImageFinder;
 use App\Modules\Plan\Infrastructure\Adapter\QueuedPlanDispatcher;
+use App\Modules\Plan\Infrastructure\Adapter\RedisSlotJudgeQuota;
 use App\Modules\Plan\Infrastructure\Adapter\StampedBuildVersion;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyNativeDistractorSource;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyPlanCollectionWriter;
@@ -141,13 +145,32 @@ final class PlanServiceProvider extends ServiceProvider
                 static fn (string $code): bool => preg_match('/^[a-z]{2,5}$/', $code) === 1,
             )));
 
+            $pace = [];
+            foreach ((array) config('plan.pace', DayPace::DEFAULTS) as $kind => $seconds) {
+                if (is_string($kind) && is_numeric($seconds)) {
+                    $pace[$kind] = (int) $seconds;
+                }
+            }
+
             return new PlanConfig(
                 counts: $counts,
                 buildStaleSeconds: (int) config('plan.build_stale_seconds', 240),
                 rescueKit: $kit,
                 languages: $languages,
+                pace: $pace,
+                slotJudgeDailyCap: (int) config('plan.slot_judge.daily_cap', 60),
             );
         });
+
+        // THE PACE OF A DAY (SESSION-1a): seconds per card by kind, from `plan.pace` — tuned in config, never in code.
+        $this->app->singleton(DayPace::class, fn (Container $app): DayPace => new DayPace($app->make(PlanConfig::class)->pace));
+
+        // THE SLOT JUDGE'S DAILY QUOTA (SESSION-1a): Redis in the stack, the process's memory under test
+        // (phpunit.xml) — one instance per application, so a test's calls add up and the next test starts at zero.
+        $this->app->singleton(ArraySlotJudgeQuota::class);
+        $this->app->bind(SlotJudgeQuota::class, fn (Container $app): SlotJudgeQuota => (string) config('plan.slot_judge.quota_store', 'redis') === 'array'
+            ? $app->make(ArraySlotJudgeQuota::class)
+            : $app->make(RedisSlotJudgeQuota::class));
 
         // THE PLAN CHECKS' MODES come from config and nowhere else: a mode flipped in code is a mode
         // nobody can flip back without a deploy. The lesson validator has no modes — it only counts.
@@ -180,6 +203,7 @@ final class PlanServiceProvider extends ServiceProvider
                 lessonTimeout: (int) config('plan.model.lesson_timeout', 90),
                 repairModel: (string) config('plan.model.repair_model', 'gpt-5.4'),
                 judgeModel: (string) config('plan.model.judge_model', 'gpt-5.4-mini'),
+                slotJudgeTimeout: (int) config('plan.slot_judge.timeout', ContentModelPlanBuilder::SLOT_JUDGE_TIMEOUT),
             );
         });
 

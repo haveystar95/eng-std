@@ -9,6 +9,7 @@ use App\Modules\Plan\Application\Service\CardViews;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 
+/** The whole day's cards in walking order, each in the registry's envelope (наряд SESSION-1a, D-03, D-04). */
 final readonly class GetDayCardsHandler
 {
     public function __construct(
@@ -21,13 +22,17 @@ final readonly class GetDayCardsHandler
     {
         $plan = $this->access->owned($query->planId, $query->actorId);
         $day = $plan->day($query->number);
+        $dayNumbers = [];
+        foreach ($plan->days() as $planDay) {
+            $dayNumbers[$planDay->id()->value] = $planDay->number();
+        }
 
         return new DayCardsView(
             planId: $plan->id()->value,
             dayId: $day->id()->value,
             number: $day->number(),
             status: $day->status()->value,
-            cards: $this->views->forCards($this->cards->forDay($day->id()), $plan->targetLang()->value),
+            cards: $this->views->forCards($this->cards->forDay($day->id()), $plan->targetLang()->value, $dayNumbers),
         );
     }
 }

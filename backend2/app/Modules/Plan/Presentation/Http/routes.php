@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Presentation\Http\Controller\PlanAudioController;
+use App\Modules\Plan\Presentation\Http\Controller\PlanCardJudgeController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanDayController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanImageController;
@@ -40,6 +41,8 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::post('/plans/{id}/days/{number}/open', [PlanDayController::class, 'open'])->whereNumber('number');
     Route::get('/plans/{id}/days/{number}/cards', [PlanDayController::class, 'cards'])->whereNumber('number');
     Route::post('/plans/{id}/days/{number}/cards/{cardId}/answer', [PlanDayController::class, 'answer'])->whereNumber('number');
+    // The slot judge (SESSION-1a): one attempt at a card judged by meaning — a synchronous model call, capped per day.
+    Route::post('/plans/{id}/days/{number}/cards/{cardId}/judge', [PlanCardJudgeController::class, 'judge'])->whereNumber('number');
     Route::post('/plans/{id}/days/{number}/stages/{stage}/close', [PlanDayController::class, 'closeStage'])->whereNumber('number');
     Route::post('/plans/{id}/days/{number}/close', [PlanDayController::class, 'close'])->whereNumber('number');
 });

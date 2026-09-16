@@ -113,6 +113,28 @@ final class EloquentLineAudioStore implements LineAudioStore
         return (int) DB::table('plan_line_audios')->where('created_at', '>=', $since)->sum('credits');
     }
 
+    /**
+     * A one-off backfill's scan, not a reader's path: no index on `duration_ms` — the writer fills the length at write
+     * time, so the rows without one are the few written before it could.
+     */
+    public function withoutDuration(): array
+    {
+        $out = [];
+        $rows = DB::table('plan_line_audios')->whereNull('duration_ms')
+            ->orderBy('scene_id')->orderBy('line_ref')->orderBy('voice_key')
+            ->get();
+        foreach ($rows as $row) {
+            $out[] = self::row((array) $row);
+        }
+
+        return $out;
+    }
+
+    public function setDuration(string $audioId, int $durationMs): void
+    {
+        DB::table('plan_line_audios')->where('id', $audioId)->whereNull('duration_ms')->update(['duration_ms' => $durationMs]);
+    }
+
     /** @param array<string, mixed> $row */
     private static function row(array $row): LineAudioRow
     {

@@ -15,11 +15,16 @@ beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
  * listening, used_in, kind, phrase_ref, filler) are additive.
  *
  * What the phone reads is its own fixtures, captured from the server and parsed by its golden tests:
- * `mobile/test/fixtures/plan/room_window_in_progress.json` and `cards_window_passed.json` (client commit `4816a034`),
- * copied into `tests/Fixtures/plan-client/` — the backend container does not see the client's tree. The copy
- * changes one value, never a key: `scene.prompt_version` names the current prompt (only kinds are compared).
- * Catches a key renamed or dropped by the new lesson (a phrase without `pronunciation`, a learner line without
- * `state`, a check card without `options`), and a key whose value changed its kind.
+ * `mobile/test/fixtures/plan/room_window_in_progress.json` (client commit `4816a034`), copied into
+ * `tests/Fixtures/plan-client/` — the backend container does not see the client's tree. The copy changes one value,
+ * never a key: `scene.prompt_version` names the current prompt (only kinds are compared). Catches a key renamed or
+ * dropped by the new lesson (a phrase without `pronunciation`, a learner line without `state`), and a key whose value
+ * changed its kind.
+ *
+ * The cards are no longer held against the phone's copy (наряд SESSION-1a): the thirteen kinds that fixture captured
+ * are gone without compatibility (DECISIONS п. 325), and the day's cards of the registry are held byte for byte by
+ * `docs/fixtures/day-doctor*.json` ({@see SessionDayFixtureTest}) — the input of the client's next order. `stages[]`
+ * gains `cards` additively, which the room's comparison tolerates.
  */
 
 /**
@@ -123,17 +128,6 @@ it('gives the day read every key the phone reads, of the kind it reads — a day
         ->and($room['window']['program']['dialogue']['items'][0]['kind'])->toBe('answer')
         ->and($room['window']['program']['dialogue']['items'][0]['learner'])->toHaveKeys(['phrase_ref', 'filler'])
         ->and($room['window']['listening'])->toHaveCount(3);
-});
-
-it('gives the day\'s cards every key the phone reads, of the kind it reads — a day walked through', function () {
-    [, $token] = planLearner();
-    $id = planCreate($this, $token, ['days_total' => 2])['id'];
-    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/start")->assertOk();
-    planWalkDay($this, $token, $id, 1);
-
-    $cards = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1/cards")->assertOk()->json('data');
-
-    expect(dccMissing(dccFixture('cards_window_passed'), $cards))->toBe([]);
 });
 
 // The comparison itself must catch a key that went away — or it proves nothing.

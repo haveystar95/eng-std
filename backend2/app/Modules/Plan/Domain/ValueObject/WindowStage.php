@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\ValueObject;
 
-use App\Modules\Plan\Domain\Service\DayPace;
-
 /**
  * ONE STAGE ROW OF THE DAY WINDOW (кадры 23-0a…0c). The count, the minutes left and a share that is
  * neither empty nor full belong to the CURRENT stage only: a done stage is a full bar and the word
@@ -33,7 +31,8 @@ final readonly class WindowStage
         return new self($stage, StageState::Locked, null, null, null, 0.0);
     }
 
-    public static function current(Stage $stage, int $answered, int $total): self
+    /** @param int $minutesLeft the minutes the stage's unanswered cards take by the day's pace ({@see \App\Modules\Plan\Domain\Service\DayPace}) */
+    public static function current(Stage $stage, int $answered, int $total, int $minutesLeft): self
     {
         $answered = max(0, min($answered, $total));
 
@@ -42,7 +41,7 @@ final readonly class WindowStage
             StageState::Current,
             $answered,
             $total,
-            DayPace::minutes(DayPace::seconds($stage, $total - $answered)),
+            max(0, $minutesLeft),
             $total > 0 ? round($answered / $total, 2) : 0.0,
         );
     }

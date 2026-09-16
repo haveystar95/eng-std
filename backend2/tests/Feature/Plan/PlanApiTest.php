@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Port\PlanModelPort;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
@@ -135,7 +133,8 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
     expect($day['status'])->toBe('in_progress')
         ->and(count($day['cards']))->toBeGreaterThan(60)
         ->and($day['cards'][0]['kind'])->toBe('word_intro')
-        ->and($day['cards'][0]['payload']['image'])->not->toBeNull();
+        // The registry's word card carries its photo inside the term (наряд SESSION-1a, разд. 1), resolved at read time.
+        ->and($day['cards'][0]['payload']['term']['image']['url'])->not->toBeNull();
 
     // Opening day 1 wrote day 2's lesson (§4).
     expect(planRead($this, $token, $id)['days'][1]['lesson_status'])->toBe('ready');
@@ -152,16 +151,21 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
     // Closing a stage with cards still open is refused.
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/stages/words/close")->assertStatus(409)->assertJsonPath('code', 'plan_stage_incomplete');
 
-    // Two errors on a word (choose), one skip on a spoken card.
+    // Two errors on a word (a choice — the day's single word checked by word_choose), one skip on a spoken card
+    // (word_repeat).
     $choose = array_values(array_filter($day['cards'], static fn (array $c): bool => $c['kind'] === 'word_choose'))[0];
-    $say = array_values(array_filter($day['cards'], static fn (array $c): bool => $c['kind'] === 'word_say'))[0];
+    $say = array_values(array_filter($day['cards'], static fn (array $c): bool => $c['kind'] === 'word_repeat'))[0];
     $first = planAnswer($this, $token, $id, 1, $choose['id'], 'failed');
     expect($first['card']['result'])->toBe('failed')
         ->and($first['requeued'])->not->toBeNull()
         ->and($first['requeued']['retry_of'])->toBe($choose['id'])
-        ->and($first['requeued']['stage'])->toBe('words');
+        ->and($first['requeued']['stage'])->toBe('words')
+        ->and($first['unit'])->toBe(['kind' => 'word', 'ref' => $choose['unit']['ref'], 'returns_tomorrow' => false, 'returns_day' => null]);
     $again = planAnswer($this, $token, $id, 1, $first['requeued']['id'], 'failed', 2);
-    expect($again['card']['returns'])->toBeTrue()->and($again['requeued'])->toBeNull();
+    expect($again['card']['returns'])->toBeTrue()->and($again['requeued'])->toBeNull()
+        // The reply says the unit comes back, and on which day (D-02): day 2 is the next scene day.
+        ->and($again['unit']['returns_tomorrow'])->toBeTrue()
+        ->and($again['unit']['returns_day'])->toBe(2);
     $skipped = planAnswer($this, $token, $id, 1, $say['id'], 'skipped', 2);
     expect($skipped['card']['result'])->toBe('skipped')->and($skipped['requeued'])->toBeNull();
 
@@ -200,6 +204,8 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
         ->and($returned[0]['kind'])->toBe('word_choose')
         ->and($returned[0]['unit_ref'])->toBe($choose['unit_ref'])
         ->and($returned[0]['source_day_id'])->toBe($closed['day']['id'])
+        // D-03: рядом с id — НОМЕР дня, на котором карточка провалилась (CardViews: $dayNumbers).
+        ->and($returned[0]['source_day'])->toBe(1)
         // The returned card sits at the end of its stage, after today's words.
         ->and($returned[0]['position'])->toBe(count(array_filter($two['cards'], static fn (array $c): bool => $c['stage'] === 'words')));
 
@@ -209,7 +215,7 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
         ->and($window['program']['phrases']['items'])->toHaveCount(6);
 });
 
-it('walks a three-day plan through to the rehearsal, which is every scene said aloud', function () {
+it('walks a three-day plan through to the rehearsal, which says every scene aloud, one or two exchanges a scene', function () {
     [, $token] = planLearner('Europe/Kyiv');
     $build = planCreate($this, $token, ['days_total' => 3, 'level' => 'intermediate']);
     $id = $build['id'];
@@ -222,15 +228,20 @@ it('walks a three-day plan through to the rehearsal, which is every scene said a
     expect($two['day']['status'])->toBe('closed');
     planShiftDay($id);
 
+    // The registry's rehearsal (наряд SESSION-1a, разд. 2): speak_answer, one or two a scene, ≤ 12 — two scenes give
+    // one each, then a second each: 4 (the old one said every exchange of both, 16).
     $rehearsal = planOpenDay($this, $token, $id, 3);
     expect(array_unique(array_column($rehearsal['cards'], 'stage')))->toBe(['speak'])
-        ->and(count($rehearsal['cards']))->toBe(16)
+        ->and(array_unique(array_column($rehearsal['cards'], 'kind')))->toBe(['speak_answer'])
+        ->and(count($rehearsal['cards']))->toBe(4)
         ->and(count(array_unique(array_column(array_column($rehearsal['cards'], 'payload'), 'scene_id'))))->toBe(2);
 
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/3")->assertOk()->json('data');
     expect(array_column($room['stages'], 'state'))->toBe(['absent', 'absent', 'absent', 'absent', 'current'])
         ->and($room['window']['program']['words']['items'])->toBe([])
-        ->and($room['window']['program']['dialogue']['items'])->toHaveCount(16);
+        // The window's dialogue of a day with no scene of its own: the exchanges its cards say — the four rehearsed.
+        ->and($room['window']['program']['dialogue']['items'])->toHaveCount(4)
+        ->and($room['stages'][4]['cards'])->toHaveCount(4);
 
     $closed = planWalkDay($this, $token, $id, 3);
     expect($closed['day']['status'])->toBe('closed');

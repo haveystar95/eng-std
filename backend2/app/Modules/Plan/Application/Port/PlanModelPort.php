@@ -9,6 +9,7 @@ use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
 use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
+use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
 
 /**
  * The model calls of the plan, behind one seam: which vendor, which model, which prompt file, which schema and
@@ -30,6 +31,13 @@ interface PlanModelPort
     /** The seam judge: `{verdicts: [{id, reads}]}` — does each native sentence of the day read. Once a day. */
     public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply;
 
+    /**
+     * The slot judge (`slot_judge.v1`, наряд SESSION-1a, разд. 4): `{accepted, slot_value, reason_native}` — what the
+     * learner put into the slot and whether it answers, or whether a retelling keeps the partner's meaning. ONE
+     * attempt within the judge's own timeout, synchronously inside the learner's request; a silence throws.
+     */
+    public function judgeSlot(SlotJudgeRequest $request): ModelReply;
+
     /** The versions stamped on every plan and lesson — read from the prompt files' names. */
     public function planPromptVersion(): string;
 
@@ -38,4 +46,7 @@ interface PlanModelPort
     public function repairPromptVersion(): string;
 
     public function judgePromptVersion(): string;
+
+    /** The slot judge's version — what its counters (`judge.unavailable`) are kept under. */
+    public function slotJudgePromptVersion(): string;
 }

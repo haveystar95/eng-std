@@ -33,7 +33,6 @@ use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
-use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Tests\Doubles\FakeDefaultTargetLangReader;
@@ -430,14 +429,32 @@ function planOpenDay(object $ctx, string $token, string $id, int $number): array
     return $ctx->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/{$number}/open")->assertOk()->json('data');
 }
 
-function planAnswer(object $ctx, string $token, string $id, int $number, string $cardId, string $result, int $attempts = 1): array
+/**
+ * One answer over HTTP, and its reply (наряд SESSION-1a, D-02): `{card, requeued, unit {kind, ref, returns_tomorrow,
+ * returns_day}, day {cards_total, cards_done, minutes_spent}, stage {stage, minutes_spent}}`.
+ *
+ * @param  array<string, mixed>|null  $response  what the answer left behind (D-30), sent only when given
+ */
+function planAnswer(object $ctx, string $token, string $id, int $number, string $cardId, string $result, int $attempts = 1, ?array $response = null): array
 {
     return $ctx->withHeader('Authorization', "Bearer {$token}")
-        ->postJson("/api/v1/plans/{$id}/days/{$number}/cards/{$cardId}/answer", ['result' => $result, 'attempts' => $attempts])
+        ->postJson("/api/v1/plans/{$id}/days/{$number}/cards/{$cardId}/answer", ['result' => $result, 'attempts' => $attempts] + ($response === null ? [] : ['response' => $response]))
         ->assertOk()->json('data');
 }
 
-/** Walk the whole day: every card passed, except what `$script` says (card index → [result, attempts]). */
+/**
+ * The result a walk gives a card of this kind when nothing else is asked (наряд SESSION-1a, D-31): a judged card is
+ * given up — its pass is the judge's, not the client's; a spoken card, a walkthrough and a choice pass.
+ */
+function planWalkResult(string $kind): string
+{
+    return App\Modules\Plan\Domain\ValueObject\CardKind::from($kind)->isJudged() ? 'skipped' : 'passed';
+}
+
+/**
+ * Walk the whole day: every card given its kind's result ({@see planWalkResult}), except what `$script` says (card
+ * index in walking order → [result, attempts]); a copy dealt at the end of a stage is walked too.
+ */
 function planWalkDay(object $ctx, string $token, string $id, int $number, array $script = []): array
 {
     $cards = planOpenDay($ctx, $token, $id, $number)['cards'];
@@ -450,7 +467,7 @@ function planWalkDay(object $ctx, string $token, string $id, int $number, array 
             continue;
         }
         $seen[$card['id']] = true;
-        [$result, $attempts] = $script[$index] ?? ['passed', 1];
+        [$result, $attempts] = $script[$index] ?? [planWalkResult($card['kind']), 1];
         $index++;
         $outcome = planAnswer($ctx, $token, $id, $number, $card['id'], $result, $attempts);
         if ($outcome['requeued'] !== null) {

@@ -6,25 +6,35 @@ namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Dto\AnswerOutcome;
 use App\Modules\Plan\Application\Service\PlanAccess;
+use App\Modules\Plan\Domain\Assembly\Retry;
+use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Exception\CardNotFound;
+use App\Modules\Plan\Domain\Exception\CardResultNotAllowed;
 use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Service\DayMetricsCalculator;
+use App\Modules\Plan\Domain\Service\ReturnDay;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
 /**
- * Records one answer. A first failure deals the same card again at the end of its stage; a
- * second one marks the unit to return on the next content day. The card is locked for the
- * transaction so a replayed answer is refused rather than counted twice.
+ * Records one answer. A first failure of a choice deals the same card again at the end of its stage — its options and
+ * tiles in another order, seeded by the original card (наряд SESSION-1a, D-06) — and a second one marks the unit to
+ * return on the next content day. The card is locked for the transaction so a replayed answer is refused rather than
+ * counted twice.
+ *
+ * What the client may write is the kind's (D-31): a judged card's pass is the judge's, so the client only gives it
+ * up; a walkthrough is walked or skipped; the voice never fails. Anything else is refused before the card is touched —
+ * a pass nobody judged is not stored.
  *
  * The day's numbers are refolded here, from the day's own cards — the same calculator that closes
  * the day, over the same rows. They are a projection of the answer log and not a second tally
  * beside it: nothing is incremented, everything is counted again. That is what makes «39 из 75»
- * true while the day is still being walked, instead of appearing only at the close.
+ * true while the day is still being walked, instead of appearing only at the close. The card's stage
+ * is counted the same way, for the stage's summary.
  */
 final readonly class AnswerCardHandler
 {
@@ -52,8 +62,11 @@ final readonly class AnswerCardHandler
             if ($card === null || ! $card->dayId()->equals($day->id())) {
                 throw CardNotFound::withId($command->cardId);
             }
+            if (! $card->kind()->allows($command->result)) {
+                throw CardResultNotAllowed::of($card->kind(), $command->result);
+            }
 
-            $requeue = $card->answer($command->result, $command->attempts, $now);
+            $requeue = $card->answer($command->result, $command->attempts, $command->response, $now);
             $this->cards->save($card);
 
             $dealt = $this->cards->forDay($day->id());
@@ -66,14 +79,30 @@ final readonly class AnswerCardHandler
                         $lastPosition = max($lastPosition, $other->position());
                     }
                 }
-                $retry = $card->retry(DayCardId::generate(), $lastPosition + 1);
+                $retry = $card->retry(DayCardId::generate(), $lastPosition + 1, Retry::payload($card->payload(), $card->id()->value.':retry'));
                 $this->cards->insertAll([$retry]);
                 $dealt[] = $retry;
             }
 
-            $this->plans->saveDayMetrics($day->id(), $this->metrics->calculate($dealt));
+            $metrics = $this->metrics->calculate($dealt);
+            $this->plans->saveDayMetrics($day->id(), $metrics);
+            $stage = array_values(array_filter($dealt, static fn (DayCard $c): bool => $c->stage() === $card->stage()));
 
-            return new AnswerOutcome($card, $retry);
+            $dayNumbers = [];
+            foreach ($plan->days() as $planDay) {
+                $dayNumbers[$planDay->id()->value] = $planDay->number();
+            }
+
+            return new AnswerOutcome(
+                card: $card,
+                requeued: $retry,
+                unitReturns: $card->returns(),
+                returnsDay: $card->returns() ? ReturnDay::of($plan, $day) : null,
+                metrics: $metrics,
+                stageMinutes: $this->metrics->calculate($stage)->minutesSpent,
+                targetLang: $plan->targetLang()->value,
+                dayNumbers: $dayNumbers,
+            );
         });
     }
 }

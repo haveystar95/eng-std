@@ -8,6 +8,7 @@ use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
+use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
 use RuntimeException;
 
 /**
@@ -28,6 +29,9 @@ final class PlanPromptFiles
     private const REPAIR_FILE = 'lesson_card_repair.v1.1.md';
 
     private const JUDGE_FILE = 'lesson_seam_judge.v1.1.md';
+
+    /** The slot judge of the day's spoken cards (наряд SESSION-1a, разд. 4) — accepted byte for byte from the order. */
+    public const SLOT_JUDGE_FILE = 'slot_judge.v1.md';
 
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their
@@ -72,6 +76,11 @@ final class PlanPromptFiles
     public function judgeVersion(): string
     {
         return pathinfo(self::JUDGE_FILE, PATHINFO_FILENAME);
+    }
+
+    public function slotJudgeVersion(): string
+    {
+        return pathinfo(self::SLOT_JUDGE_FILE, PATHINFO_FILENAME);
     }
 
     /**
@@ -133,6 +142,34 @@ final class PlanPromptFiles
             '',
             'ITEMS (id · the pattern with its slot · the value put into the slot · the sentence they make):',
             self::json($request->items),
+        ]);
+    }
+
+    /** The slot judge's rules — the file as it is. */
+    public function slotJudgeSystem(): string
+    {
+        return $this->text(self::SLOT_JUDGE_FILE);
+    }
+
+    /**
+     * The slot judge's data: one line per INPUT of the prompt, in its order, each value as it is — the recogniser's
+     * text is not collapsed, because a doubled word or a stray mark is the recognition noise the prompt tells the
+     * model to forgive, and the model can only forgive what it sees.
+     */
+    public function slotJudgeUser(SlotJudgeRequest $request): string
+    {
+        return implode("\n", [
+            'TASK: '.$request->task,
+            'TARGET_LANGUAGE: '.$request->targetLanguage,
+            'NATIVE_LANGUAGE: '.$request->nativeLanguage,
+            'LEVEL: '.$request->level,
+            'PARTNER_LINE: '.$request->partnerLine,
+            'PARTNER_LINE_NATIVE: '.$request->partnerLineNative,
+            'PATTERN: '.$request->pattern,
+            'PATTERN_NATIVE: '.$request->patternNative,
+            'SLOT_HINT: '.$request->slotHint,
+            'EXAMPLE_VALUES: '.$request->exampleValues,
+            'HEARD: '.$request->heard,
         ]);
     }
 

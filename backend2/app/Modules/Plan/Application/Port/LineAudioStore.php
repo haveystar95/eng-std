@@ -41,4 +41,17 @@ interface LineAudioStore
 
     /** Credits the vendor debited for every line stored since this moment — the fuse's count when the vendor would not say. */
     public function creditsSince(DateTimeImmutable $since): int;
+
+    /**
+     * Every stored line whose length is not known (SESSION-1a, разд. 5) — the backfill's work list, in a stable order.
+     *
+     * @return list<LineAudioRow>
+     */
+    public function withoutDuration(): array;
+
+    /**
+     * Writes how long the line sounds — only where no length is stored yet: a length already handed to a phone is not
+     * rewritten by a second run.
+     */
+    public function setDuration(string $audioId, int $durationMs): void;
 }

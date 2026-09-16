@@ -4,20 +4,24 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Query;
 
+use App\Modules\Plan\Application\Dto\CardView;
 use App\Modules\Plan\Application\Dto\DayMetricsView;
 use App\Modules\Plan\Application\Dto\DayRoomView;
 use App\Modules\Plan\Application\Dto\ProgramUnitView;
 use App\Modules\Plan\Application\Dto\StageProgressView;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
+use App\Modules\Plan\Application\Service\CardViews;
 use App\Modules\Plan\Application\Service\DayDealer;
 use App\Modules\Plan\Application\Service\DayWindowViews;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Application\Service\PlanViews;
 use App\Modules\Plan\Domain\Entity\DayCard;
+use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\ValueObject\CardResult;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\Stage;
+use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Shared\Domain\Service\Clock;
 
 /**
@@ -28,6 +32,9 @@ use App\Modules\Shared\Domain\Service\Clock;
  * `POST …/open` will deal. The room asks the dealer for that outline instead of reporting five
  * absent stages and an empty programme at a day the learner is looking straight at. `open` moves
  * the day's status; it is not what makes the day exist.
+ *
+ * A dealt day also carries its cards in every stage, in the registry's envelope (наряд SESSION-1a,
+ * D-04) — the outline's cards are never shown: they have no ids to answer.
  */
 final readonly class GetDayRoomHandler
 {
@@ -39,6 +46,7 @@ final readonly class GetDayRoomHandler
         private DayWindowViews $windows,
         private LearnerCalendar $calendar,
         private Clock $clock,
+        private CardViews $cardViews,
     ) {}
 
     public function __invoke(GetDayRoom $query): DayRoomView
@@ -47,7 +55,8 @@ final readonly class GetDayRoomHandler
         $day = $plan->day($query->number);
         $today = $this->calendar->todayFor($query->actorId, $this->clock->now());
         $scene = $plan->sceneOf($day);
-        $cards = $day->openedAt() === null ? $this->dealer->outline($plan, $day) : $this->cards->forDay($day->id());
+        $dealt = $day->openedAt() !== null;
+        $cards = $dealt ? $this->cards->forDay($day->id()) : $this->dealer->outline($plan, $day);
         $metrics = $day->metrics();
         $route = $this->views->day($plan, $day, $today, null, $cards);
         $sceneView = $scene === null ? null : $this->views->scene($plan, $scene);
@@ -56,11 +65,11 @@ final readonly class GetDayRoomHandler
             planId: $plan->id()->value,
             day: $route,
             scene: $sceneView,
-            stages: $this->stages($cards),
+            stages: $this->stages($cards, $dealt ? $this->cardViews->forCards($cards, $plan->targetLang()->value, self::dayNumbers($plan->days())) : []),
             // The numbers of a day that is being walked, not only of one that is over: they are
             // refreshed on every answer, and «сколько уже сделано» is the question of a day in
             // progress. A day not yet opened has nothing to count.
-            metrics: $day->openedAt() === null ? null : new DayMetricsView($metrics->cardsTotal, $metrics->minutesSpent),
+            metrics: $dealt ? new DayMetricsView($metrics->cardsTotal, $metrics->minutesSpent) : null,
             program: $this->program($cards),
             window: $this->windows->of($plan, $day, DayStatus::from($route->status), $sceneView, $cards),
         );
@@ -68,13 +77,24 @@ final readonly class GetDayRoomHandler
 
     /**
      * Every stage in order; the first one with an unanswered card is `current`, the ones before it
-     * `done`, the ones after `locked`, and a stage with no cards `absent`.
+     * `done`, the ones after `locked`, and a stage with no cards `absent`. Each with its dealt cards in
+     * position order — none for a day not opened.
      *
      * @param  list<DayCard>  $cards
+     * @param  list<CardView>  $views  the views of a dealt day's cards, in walking order; empty for the outline
      * @return list<StageProgressView>
      */
-    private function stages(array $cards): array
+    private function stages(array $cards, array $views): array
     {
+        $byStage = [];
+        foreach ($views as $view) {
+            $byStage[$view->stage][] = $view;
+        }
+        foreach ($byStage as $stage => $stageViews) {
+            usort($stageViews, static fn (CardView $a, CardView $b): int => $a->position <=> $b->position);
+            $byStage[$stage] = $stageViews;
+        }
+
         $totals = [];
         $done = [];
         foreach ($cards as $card) {
@@ -97,14 +117,15 @@ final readonly class GetDayRoomHandler
             if ($state === StageProgressView::CURRENT) {
                 $currentFound = true;
             }
-            $out[] = new StageProgressView($stage->value, $total, $answered, $state);
+            $out[] = new StageProgressView($stage->value, $total, $answered, $state, $byStage[$stage->value] ?? []);
         }
 
         return $out;
     }
 
     /**
-     * The program: one line per unit (word, phrase, exchange) with where its cards have gone.
+     * The program: one line per unit (word, phrase, exchange) with where its cards have gone. The day's
+     * listening is not a unit of it (D-05): nothing of it returns, no tab lists it.
      *
      * @param  list<DayCard>  $cards
      * @return list<ProgramUnitView>
@@ -113,6 +134,9 @@ final readonly class GetDayRoomHandler
     {
         $units = [];
         foreach ($cards as $card) {
+            if ($card->unitKind() === UnitKind::Day) {
+                continue;
+            }
             $sceneId = $card->payload()['scene_id'] ?? null;
             $key = (is_string($sceneId) ? $sceneId : '').':'.$card->unitKind()->value.':'.$card->unitRef();
             $units[$key] ??= ['kind' => $card->unitKind()->value, 'source' => $card->source()->value, 'total' => 0, 'done' => 0, 'failed' => false];
@@ -134,5 +158,19 @@ final readonly class GetDayRoomHandler
                 default => ProgramUnitView::PENDING,
             },
         ), $units));
+    }
+
+    /**
+     * @param  list<PlanDay>  $days
+     * @return array<string, int> day id → number
+     */
+    private static function dayNumbers(array $days): array
+    {
+        $out = [];
+        foreach ($days as $day) {
+            $out[$day->id()->value] = $day->number();
+        }
+
+        return $out;
     }
 }

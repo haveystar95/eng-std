@@ -22,6 +22,7 @@ use App\Modules\Generation\Presentation\Console\RecoverLostTermsCommand;
 use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanAudioDurationsCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanImagesBackfillCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanSeedLoadCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanSpeakBackfillCommand;
@@ -75,6 +76,8 @@ return Application::configure(basePath: dirname(__DIR__))
         PlanImagesBackfillCommand::class,
         PlanSpeakBackfillCommand::class,
         PlanSpeakReportCommand::class,
+        // The length of every stored voice file (SESSION-1a): idempotent, buys nothing.
+        PlanAudioDurationsCommand::class,
         VerificationStatsCommand::class,
         StorePublishCommand::class,
         BatchAgeProgressCommand::class,

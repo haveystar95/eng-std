@@ -210,6 +210,7 @@ final class PlanJson
             'scene' => $r->scene === null ? null : self::scene($r->scene),
             'stages' => array_map(static fn (StageProgressView $s): array => [
                 'stage' => $s->stage, 'total' => $s->total, 'done' => $s->done, 'state' => $s->state,
+                'cards' => array_map(self::card(...), $s->cards),
             ], $r->stages),
             'metrics' => $r->metrics === null ? null : ['cards_total' => $r->metrics->cardsTotal, 'minutes_spent' => $r->metrics->minutesSpent],
             'program' => array_map(static fn (ProgramUnitView $u): array => [
@@ -333,7 +334,14 @@ final class PlanJson
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * One card on the wire (наряд SESSION-1a, разд. 0; D-03 — additive): the envelope of the registry — `unit`,
+     * `source_day` (the day NUMBER a returned card failed on), `response` — beside the keys the client already reads
+     * (`unit_kind`, `unit_ref`, `source_day_id`, `answered_at`, `returns`). Every sound of the payload is written
+     * `{ref, url, duration_ms, voice}`, the url an absolute address built from the request, like the window's.
+     *
+     * @return array<string, mixed>
+     */
     public static function card(CardView $c): array
     {
         return [
@@ -341,16 +349,114 @@ final class PlanJson
             'stage' => $c->stage,
             'position' => $c->position,
             'kind' => $c->kind,
+            'unit' => ['kind' => $c->unitKind, 'ref' => $c->unitRef],
             'source' => $c->source,
-            'source_day_id' => $c->sourceDayId,
-            'unit_kind' => $c->unitKind,
-            'unit_ref' => $c->unitRef,
-            'payload' => $c->payload,
+            'source_day' => $c->sourceDay,
             'retry_of' => $c->retryOf,
+            'payload' => self::sounds($c->payload),
             'result' => $c->result,
             'attempts' => $c->attempts,
+            'response' => $c->response,
+            'unit_kind' => $c->unitKind,
+            'unit_ref' => $c->unitRef,
+            'source_day_id' => $c->sourceDayId,
             'answered_at' => $c->answeredAt,
             'returns' => $c->returns,
         ];
+    }
+
+    /**
+     * The reply of `POST …/cards/{cardId}/answer` (наряд SESSION-1a, D-02 — additive): the card and its copy at the end
+     * of the stage, whether the unit comes back and on which day, the day's numbers and the minutes of the card's stage
+     * — what the client writes a stage's and a day's summary from without counting anything itself.
+     *
+     * @return array<string, mixed>
+     */
+    public static function answer(
+        CardView $card,
+        ?CardView $requeued,
+        bool $returnsTomorrow,
+        ?int $returnsDay,
+        int $cardsTotal,
+        int $cardsDone,
+        int $minutesSpent,
+        int $stageMinutesSpent,
+    ): array {
+        return [
+            'card' => self::card($card),
+            'requeued' => $requeued === null ? null : self::card($requeued),
+            'unit' => [
+                'kind' => $card->unitKind,
+                'ref' => $card->unitRef,
+                'returns_tomorrow' => $returnsTomorrow,
+                'returns_day' => $returnsDay,
+            ],
+            'day' => ['cards_total' => $cardsTotal, 'cards_done' => $cardsDone, 'minutes_spent' => $minutesSpent],
+            'stage' => ['stage' => $card->stage, 'minutes_spent' => $stageMinutesSpent],
+        ];
+    }
+
+    /**
+     * The reply of `POST …/cards/{cardId}/judge` (наряд SESSION-1a, разд. 4): the verdict, and the card as it stands
+     * after it — answered when accepted, one attempt more when not.
+     *
+     * @return array<string, mixed>
+     */
+    public static function judge(bool $accepted, ?string $slotValue, ?string $reasonNative, CardView $card): array
+    {
+        return [
+            'accepted' => $accepted,
+            'slot_value' => $slotValue,
+            'reason_native' => $reasonNative,
+            'result' => $card->result,
+            'attempts' => $card->attempts,
+            'card' => self::card($card),
+        ];
+    }
+
+    /**
+     * Every audio stub of a payload, wherever it stands, in the wire's shape: `{ref, voice, url, duration_ms}` as dealt
+     * and `audio_id` as resolved at read time become `{ref, url, duration_ms, voice}` — the url of the stored file, or
+     * null while there is none. Nothing else of the payload is touched.
+     *
+     * @param  array<array-key, mixed>  $value
+     * @return array<array-key, mixed>
+     */
+    private static function sounds(array $value): array
+    {
+        if (self::isAudioStub($value)) {
+            $id = $value['audio_id'] ?? null;
+
+            return [
+                'ref' => $value['ref'],
+                'url' => is_string($id) && $id !== '' ? url("/api/v1/plans/audio/{$id}") : null,
+                'duration_ms' => $value['duration_ms'],
+                'voice' => $value['voice'],
+            ];
+        }
+        foreach ($value as $key => $item) {
+            if (is_array($item)) {
+                $value[$key] = self::sounds($item);
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * The four keys of a dealt stub (`Domain/Assembly/Audio`) with the read side's `audio_id`, or without it while the
+     * url is still unset.
+     *
+     * @param  array<array-key, mixed>  $value
+     */
+    private static function isAudioStub(array $value): bool
+    {
+        $keys = array_map('strval', array_keys($value));
+        sort($keys);
+        if ($keys === ['audio_id', 'duration_ms', 'ref', 'url', 'voice']) {
+            return is_string($value['ref']);
+        }
+
+        return $keys === ['duration_ms', 'ref', 'url', 'voice'] && is_string($value['ref']) && $value['url'] === null;
     }
 }

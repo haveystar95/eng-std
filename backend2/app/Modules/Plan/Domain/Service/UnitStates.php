@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Service;
 
 use App\Modules\Plan\Domain\Entity\DayCard;
-use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Domain\ValueObject\UnitState;
 
@@ -14,9 +13,9 @@ use App\Modules\Plan\Domain\ValueObject\UnitState;
  * its cards in the day: a card failed twice (its `returns`) → `returns_tomorrow`, whatever else
  * happened; every card answered → `done` (a skip is an answer); otherwise `pending`.
  *
- * The dialogue read is not a unit card. It carries every exchange and is filed under the first
- * one's reference, and reading the dialogue does not walk exchange one — counting it would mark the
- * first line «пройдено» while its own practice has not begun.
+ * The day's listening is not a unit of the programme (наряд SESSION-1a, D-05): its cards are about
+ * the visit as a whole (`unit_kind = day`), no tab lists it and nothing of it returns tomorrow — so
+ * it is not counted here at all.
  */
 final class UnitStates
 {
@@ -29,7 +28,7 @@ final class UnitStates
         $answered = [];
         $returns = [];
         foreach ($cards as $card) {
-            if ($card->kind() === CardKind::DialogueRead) {
+            if ($card->unitKind() === UnitKind::Day) {
                 continue;
             }
             $key = self::key(self::sceneOf($card), $card->unitKind(), $card->unitRef());

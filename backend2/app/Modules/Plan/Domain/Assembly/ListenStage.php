@@ -4,80 +4,40 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Assembly;
 
-use App\Modules\Plan\Domain\Entity\PlanTerm;
-use App\Modules\Plan\Domain\Lesson\Exchange;
-use App\Modules\Plan\Domain\Service\Words;
-use App\Modules\Plan\Domain\ValueObject\CardKind;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
-use App\Modules\Plan\Domain\ValueObject\UnitKind;
-
 /**
- * «Слушаю и отвечаю»: two cards per exchange.
+ * «СЛУШАЮ И ОТВЕЧАЮ» (наряд SESSION-1a, разд. 1–2; кадры 34-1…34-8): the whole visit by ear, then what was heard.
  *
- * The first is about what the partner said — a question in the learner's language (Beginner); on
- * Intermediate a question in the target language when the partner asked one, «heard it → assemble
- * it» when the partner made a statement of at most ten words, a question otherwise. The second is
- * the learner's own move: choose the reply among three when the partner started, assemble it from
- * tiles when the learner started.
+ * In this order: the dialogue once without text (`listen_dialogue`), every listening question of the lesson
+ * (`listen_question`, three to five), the dialogue again with its texts and where the answers were
+ * (`listen_review`), a guess at the partner's answer on every ask exchange (`listen_predict`), the longest short
+ * partner line at two tempos (`listen_pace`) and the number or time of the visit (`listen_number`) — eight to eleven
+ * cards on a clean lesson. A card whose material the lesson lacks is left out, the rest keep their order.
+ * `listen_pairs` is reserved and never dealt: the lesson has no two similar lines to pair (v4.6).
  */
 final class ListenStage
 {
-    public const ASSEMBLE_MAX_WORDS = 10;
-
     /** @return list<CardDraft> */
-    public function build(SceneMaterial $scene, PlanLevel $level): array
+    public function build(SceneMaterial $scene): array
     {
-        $exchanges = $scene->completeExchanges();
-        $dayWords = array_map(static fn (PlanTerm $t): string => $t->textTarget(), $scene->vocabulary());
-        $out = [];
-        foreach ($exchanges as $exchange) {
-            $out[] = $this->partnerCard($scene, $exchange, $level, $dayWords);
-            $out[] = $this->reply($scene, $exchange, $exchanges, $dayWords);
+        $cards = [ListenCards::dialogue($scene)];
+
+        $asked = [];
+        foreach (array_keys($scene->lesson->listening) as $index) {
+            $question = ListenCards::question($scene, $index);
+            if ($question !== null) {
+                $asked[] = $index;
+                $cards[] = $question;
+            }
         }
+        $cards[] = ListenCards::review($scene, $asked);
 
-        return $out;
-    }
-
-    /** @param list<string> $dayWords */
-    private function partnerCard(SceneMaterial $scene, Exchange $exchange, PlanLevel $level, array $dayWords): CardDraft
-    {
-        $ref = CardPayloads::exchangeRef($exchange->step);
-        $seed = $scene->sceneId->value.':'.$ref.':listen';
-        $partner = $exchange->partner();
-
-        if ($level === PlanLevel::Intermediate
-            && $partner !== null
-            && ! $partner->isQuestion()
-            && Words::count($partner->textTarget) <= self::ASSEMBLE_MAX_WORDS) {
-            return new CardDraft(CardKind::ListenAssemble, UnitKind::Exchange, $ref, CardPayloads::listenAssemble($scene->sceneId, $exchange, $dayWords, $seed));
+        // Only a complete ask exchange has a guess: the card itself says which ({@see ListenCards::predict()}).
+        foreach ($scene->lesson->exchanges as $exchange) {
+            $cards[] = ListenCards::predict($scene, $exchange);
         }
+        $cards[] = ListenCards::pace($scene);
+        $cards[] = ListenCards::number($scene);
 
-        return new CardDraft(
-            CardKind::ListenQuestion,
-            UnitKind::Exchange,
-            $ref,
-            CardPayloads::listenQuestion($scene->sceneId, $exchange, inNative: $level === PlanLevel::Beginner, seed: $seed),
-        );
-    }
-
-    /**
-     * @param  list<Exchange>  $all
-     * @param  list<string>  $dayWords
-     */
-    private function reply(SceneMaterial $scene, Exchange $exchange, array $all, array $dayWords): CardDraft
-    {
-        $ref = CardPayloads::exchangeRef($exchange->step);
-        $seed = $scene->sceneId->value.':'.$ref.':reply';
-
-        if ($exchange->partnerStarts()) {
-            return new CardDraft(
-                CardKind::AnswerChoose,
-                UnitKind::Exchange,
-                $ref,
-                CardPayloads::answerChoose($scene->sceneId, $exchange, CardPayloads::otherReplies($exchange, $all), $seed),
-            );
-        }
-
-        return new CardDraft(CardKind::AnswerAssemble, UnitKind::Exchange, $ref, CardPayloads::answerAssemble($scene->sceneId, $exchange, $dayWords, $seed));
+        return array_values(array_filter($cards, static fn (?CardDraft $card): bool => $card !== null));
     }
 }

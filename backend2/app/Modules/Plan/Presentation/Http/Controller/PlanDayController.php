@@ -16,7 +16,6 @@ use App\Modules\Plan\Application\Query\GetDayCards;
 use App\Modules\Plan\Application\Query\GetDayCardsHandler;
 use App\Modules\Plan\Application\Query\GetDayRoom;
 use App\Modules\Plan\Application\Query\GetDayRoomHandler;
-use App\Modules\Plan\Application\Query\GetPlanTargetLang;
 use App\Modules\Plan\Application\Service\CardViews;
 use App\Modules\Plan\Domain\ValueObject\CardResult;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
@@ -41,7 +40,6 @@ final class PlanDayController
         private readonly CloseStageHandler $closeStage,
         private readonly CloseDayHandler $closeDay,
         private readonly CardViews $cardViews,
-        private readonly GetPlanTargetLang $targetLang,
     ) {}
 
     public function room(Request $request, string $id, int $number): JsonResponse
@@ -64,6 +62,10 @@ final class PlanDayController
         return $this->cardList($this->planId($id), $number, $this->actorId($request));
     }
 
+    /**
+     * One answer (наряд SESSION-1a, D-02): the card and its copy at the end of the stage, whether the unit comes back
+     * and on which day, the day's numbers and the minutes of the card's stage.
+     */
     public function answer(AnswerCardRequest $request, string $id, int $number, string $cardId): JsonResponse
     {
         $data = $request->validated();
@@ -80,15 +82,25 @@ final class PlanDayController
             result: CardResult::from((string) $data['result']),
             attempts: (int) $data['attempts'],
             actorId: $actor,
+            response: $request->cardResponse(),
         ));
 
-        $lang = ($this->targetLang)($planId, $actor);
-        $views = $this->cardViews->forCards(array_filter([$outcome->card, $outcome->requeued]), $lang);
+        $views = $this->cardViews->forCards(
+            $outcome->requeued === null ? [$outcome->card] : [$outcome->card, $outcome->requeued],
+            $outcome->targetLang,
+            $outcome->dayNumbers,
+        );
 
-        return response()->json(['data' => [
-            'card' => PlanJson::card($views[0]),
-            'requeued' => isset($views[1]) ? PlanJson::card($views[1]) : null,
-        ]]);
+        return response()->json(['data' => PlanJson::answer(
+            card: $views[0],
+            requeued: $views[1] ?? null,
+            returnsTomorrow: $outcome->unitReturns,
+            returnsDay: $outcome->returnsDay,
+            cardsTotal: $outcome->metrics->cardsTotal,
+            cardsDone: $outcome->metrics->cardsDone,
+            minutesSpent: $outcome->metrics->minutesSpent,
+            stageMinutesSpent: $outcome->stageMinutes,
+        )]);
     }
 
     public function closeStage(Request $request, string $id, int $number, string $stage): JsonResponse

@@ -36,7 +36,9 @@ use App\Modules\Plan\Domain\ValueObject\WindowStatus;
 
 /**
  * THE DAY WINDOW'S RULES (DAY-UI-2, кадры 23-0a…0c) — pure: statuses, stage rows, minutes, unit
- * states, tones and the photo ladder. The HTTP side is `tests/Feature/Plan/PlanDayWindowTest.php`.
+ * states, tones and the photo ladder, over the cards of the registry (наряд SESSION-1a). The HTTP side
+ * is `tests/Feature/Plan/PlanDayWindowTest.php`; the pace by kind, the day's listening outside the
+ * programme and the day a unit returns on — `tests/Unit/Plan/Session/SessionWindowTest.php`.
  */
 
 /** A card of scene S1; `answered` passes it, `returns` fails it twice. */
@@ -44,13 +46,13 @@ function windowCard(Stage $stage, CardKind $kind, UnitKind $unit, string $ref, b
 {
     $card = DayCard::dealt(DayCardId::generate(), PlanDayId::generate(), $stage, 1, $kind, ['scene_id' => 'S1'], CardSource::Today, null, $unit, $ref);
     if ($returns) {
-        $retry = $card->retry(DayCardId::generate(), 2);
-        $retry->answer(CardResult::Failed, 2, new DateTimeImmutable);
+        $retry = $card->retry(DayCardId::generate(), 2, $card->payload());
+        $retry->answer(CardResult::Failed, 2, null, new DateTimeImmutable);
 
         return $retry;
     }
     if ($answered) {
-        $card->answer(CardResult::Passed, 1, new DateTimeImmutable);
+        $card->answer(CardResult::Passed, 1, null, new DateTimeImmutable);
     }
 
     return $card;
@@ -64,7 +66,7 @@ function windowCard(Stage $stage, CardKind $kind, UnitKind $unit, string $ref, b
  */
 function windowDay(array $stages): array
 {
-    $kinds = ['words' => CardKind::WordIntro, 'phrases' => CardKind::PhraseIntro, 'dialogue' => CardKind::DialogueRead, 'listen' => CardKind::ListenQuestion, 'speak' => CardKind::Speak];
+    $kinds = ['words' => CardKind::WordIntro, 'phrases' => CardKind::PhraseIntro, 'dialogue' => CardKind::DialoguePartner, 'listen' => CardKind::ListenQuestion, 'speak' => CardKind::SpeakAnswer];
     $cards = [];
     foreach ($stages as $stage => [$total, $answered]) {
         for ($i = 0; $i < $total; $i++) {
@@ -81,7 +83,11 @@ function windowRows(array $rows): array
     return array_map(static fn (WindowStage $s): array => [$s->stage->value, $s->state->value, $s->doneCount, $s->total], $rows);
 }
 
-const WINDOW_FULL_DAY = ['words' => [32, 0], 'phrases' => [18, 0], 'dialogue' => [1, 0], 'listen' => [16, 0], 'speak' => [8, 0]];
+/** The clean lesson's day of the registry (наряд SESSION-1a, разд. 2): 24 word, 19 phrase, 15 dialogue, 9 listen, 8 speak cards. */
+const WINDOW_FULL_DAY = ['words' => [24, 0], 'phrases' => [19, 0], 'dialogue' => [15, 0], 'listen' => [9, 0], 'speak' => [8, 0]];
+
+/** The same day walked into its listening: three of its nine cards answered. */
+const WINDOW_WALKED_DAY = ['words' => [24, 24], 'phrases' => [19, 19], 'dialogue' => [15, 15], 'listen' => [9, 3], 'speak' => [8, 0]];
 
 it('reads the day in one of three words — day one of a built, unstarted plan is «не начат», any other locked day is refused', function () {
     expect(WindowStatus::of(DayStatus::Open, PlanStatus::Active, 2))->toBe(WindowStatus::NotStarted)
@@ -101,7 +107,7 @@ it('has one action per status — «Ещё раз» only for a passed day that h
 });
 
 it('prints no number on a day not started — every row «впереди», the first one too (23-0a)', function () {
-    $rows = DayWindowStages::of(windowDay(WINDOW_FULL_DAY), [], WindowStatus::NotStarted);
+    $rows = DayWindowStages::of(windowDay(WINDOW_FULL_DAY), [], WindowStatus::NotStarted, new DayPace);
 
     expect(windowRows($rows))->toBe([
         ['words', 'locked', null, null], ['phrases', 'locked', null, null], ['dialogue', 'locked', null, null],
@@ -110,21 +116,22 @@ it('prints no number on a day not started — every row «впереди», the 
 });
 
 it('puts the count, the minutes left and a partial bar on the current row only — catches a number on every row (23-0b)', function () {
-    $rows = DayWindowStages::of(windowDay(['words' => [32, 32], 'phrases' => [18, 18], 'dialogue' => [1, 1], 'listen' => [16, 6], 'speak' => [8, 0]]), [], WindowStatus::InProgress);
+    $rows = DayWindowStages::of(windowDay(WINDOW_WALKED_DAY), [], WindowStatus::InProgress, new DayPace);
 
+    // Listen: 3 of 9 answered → a share of 0.33; the six left at listen_question's 12 s.
     expect(windowRows($rows))->toBe([
         ['words', 'done', null, null], ['phrases', 'done', null, null], ['dialogue', 'done', null, null],
-        ['listen', 'current', 6, 16], ['speak', 'locked', null, null],
+        ['listen', 'current', 3, 9], ['speak', 'locked', null, null],
     ])
-        ->and($rows[3]->share)->toBe(0.38)
-        ->and($rows[3]->minutesLeft)->toBe(DayPace::minutes(10 * 13))
+        ->and($rows[3]->share)->toBe(0.33)
+        ->and($rows[3]->minutesLeft)->toBe(DayPace::minutes(6 * 12))
         ->and($rows[0]->share)->toBe(1.0)
         ->and($rows[4]->share)->toBe(0.0)
         ->and(DayWindowStages::progress($rows))->toBe(0.6);
 });
 
 it('fills every row of a passed day and prints no number on any (23-0c)', function () {
-    $rows = DayWindowStages::of(windowDay(WINDOW_FULL_DAY), [], WindowStatus::Passed);
+    $rows = DayWindowStages::of(windowDay(WINDOW_FULL_DAY), [], WindowStatus::Passed, new DayPace);
 
     expect(array_unique(array_map(static fn (WindowStage $s): string => $s->state->value, $rows)))->toBe(['done'])
         ->and(array_filter(array_map(static fn (WindowStage $s): ?int => $s->doneCount ?? $s->total ?? $s->minutesLeft, $rows)))->toBe([])
@@ -132,24 +139,26 @@ it('fills every row of a passed day and prints no number on any (23-0c)', functi
 });
 
 it('rows a day with no cards yet by what its type deals — nothing walked, nothing counted', function () {
-    $rows = DayWindowStages::of([], [Stage::Words, Stage::Speak], WindowStatus::NotStarted);
+    $rows = DayWindowStages::of([], [Stage::Words, Stage::Speak], WindowStatus::NotStarted, new DayPace);
 
     expect(windowRows($rows))->toBe([['words', 'locked', null, null], ['speak', 'locked', null, null]])
-        ->and(DayWindowStages::minutesEstimate([], WindowStatus::NotStarted))->toBeNull();
+        ->and(DayWindowStages::minutesEstimate([], WindowStatus::NotStarted, new DayPace))->toBeNull();
 });
 
-it('estimates the day by the pace of its stages: all of it before the start, what is left while walked, nothing once passed', function () {
+it('estimates the day by the pace of its kinds: all of it before the start, what is left while walked, nothing once passed', function () {
     $fresh = windowDay(WINDOW_FULL_DAY);
-    $walked = windowDay(['words' => [32, 32], 'phrases' => [18, 18], 'dialogue' => [1, 1], 'listen' => [16, 6], 'speak' => [8, 0]]);
+    $walked = windowDay(WINDOW_WALKED_DAY);
+    $pace = new DayPace;
 
-    expect(DayWindowStages::minutesEstimate($fresh, WindowStatus::NotStarted))->toBe(DayPace::minutes(32 * 8 + 18 * 29 + 34 + 16 * 13 + 8 * 41))
-        ->and(DayWindowStages::minutesEstimate($walked, WindowStatus::InProgress))->toBe(DayPace::minutes(10 * 13 + 8 * 41))
-        ->and(DayWindowStages::minutesEstimate($walked, WindowStatus::Passed))->toBeNull()
+    // word_intro 8 · phrase_intro 12 · dialogue_partner 15 · listen_question 12 · speak_answer 35 (наряд SESSION-1a, разд. 2).
+    expect(DayWindowStages::minutesEstimate($fresh, WindowStatus::NotStarted, $pace))->toBe(DayPace::minutes(24 * 8 + 19 * 12 + 15 * 15 + 9 * 12 + 8 * 35))
+        ->and(DayWindowStages::minutesEstimate($walked, WindowStatus::InProgress, $pace))->toBe(DayPace::minutes(6 * 12 + 8 * 35))
+        ->and(DayWindowStages::minutesEstimate($walked, WindowStatus::Passed, $pace))->toBeNull()
         ->and(DayPace::minutes(1))->toBe(1)
         ->and(DayPace::minutes(0))->toBe(0);
 });
 
-it('reads a unit over all its cards: a second failure returns it, all answered walks it — and the dialogue read walks no exchange', function () {
+it('reads a unit over all its cards: a second failure returns it, all answered walks it — and a walked partner card walks no exchange', function () {
     $cards = [
         windowCard(Stage::Words, CardKind::WordIntro, UnitKind::Word, 'v1', answered: true),
         windowCard(Stage::Words, CardKind::WordChoose, UnitKind::Word, 'v1', answered: true),
@@ -157,8 +166,8 @@ it('reads a unit over all its cards: a second failure returns it, all answered w
         windowCard(Stage::Words, CardKind::WordChoose, UnitKind::Word, 'v2', returns: true),
         windowCard(Stage::Words, CardKind::WordIntro, UnitKind::Word, 'v3', answered: true),
         windowCard(Stage::Words, CardKind::WordChoose, UnitKind::Word, 'v3'),
-        windowCard(Stage::Dialogue, CardKind::DialogueRead, UnitKind::Exchange, 'x1', answered: true),
-        windowCard(Stage::Speak, CardKind::Speak, UnitKind::Exchange, 'x1'),
+        windowCard(Stage::Dialogue, CardKind::DialoguePartner, UnitKind::Exchange, 'x1', answered: true),
+        windowCard(Stage::Speak, CardKind::SpeakAnswer, UnitKind::Exchange, 'x1'),
     ];
     $states = UnitStates::of($cards);
 

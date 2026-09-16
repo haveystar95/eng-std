@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Service;
 
-use App\Modules\Plan\Domain\Assembly\CardPayloads;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
@@ -22,14 +21,29 @@ use App\Modules\Plan\Domain\ValueObject\TermKind;
  */
 final class SpokenLines
 {
+    /**
+     * The reference of an exchange — the unit its cards are about (`x3`), and the name of its partner's file: one
+     * address for the exchange a card practises and the line that card plays.
+     */
+    public static function exchangeRef(int $step): string
+    {
+        return 'x'.$step;
+    }
+
+    /** The step an exchange reference names; null for any other reference (a learner's line `x3b`, a phrase, a word). */
+    public static function stepOfRef(string $ref): ?int
+    {
+        return preg_match('/^x(\d+)$/', $ref, $m) === 1 ? (int) $m[1] : null;
+    }
+
     public static function partnerRef(int $step): string
     {
-        return CardPayloads::exchangeRef($step);
+        return self::exchangeRef($step);
     }
 
     public static function learnerRef(int $step): string
     {
-        return CardPayloads::exchangeRef($step).'b';
+        return self::exchangeRef($step).'b';
     }
 
     public static function fillerRef(string $phraseRef, int $index): string
@@ -122,6 +136,6 @@ final class SpokenLines
      */
     public static function speakerOf(string $ref): Speaker
     {
-        return CardPayloads::stepOfRef($ref) !== null ? Speaker::Partner : Speaker::Learner;
+        return self::stepOfRef($ref) !== null ? Speaker::Partner : Speaker::Learner;
     }
 }

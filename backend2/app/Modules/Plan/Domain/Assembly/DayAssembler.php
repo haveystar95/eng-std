@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Assembly;
 
 use App\Modules\Plan\Domain\Entity\DayCard;
+use App\Modules\Plan\Domain\Service\SpokenLines;
+use App\Modules\Plan\Domain\Service\UnitStates;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
@@ -12,13 +14,14 @@ use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 
 /**
- * THE DAY, DEALT — deterministically, from stored material (`docs/plan-v2.md` §6).
+ * THE DAY, DEALT — deterministically, from stored material (`docs/plan-v2.md` §6; наряд SESSION-1a, разд. 2).
  *
- * A scene day is five stages over one lesson plus the units that failed twice on the previous
- * content day; a review day is the returns of the two previous scene days and every exchange of
- * their scenes, said aloud; the rehearsal is every exchange of the plan, said aloud. The assembler
- * tolerates whatever the checks left in the lesson: a card whose material is missing is simply
- * not dealt, and nothing about a broken mark drops the day.
+ * A scene day is the five stages of the registry over one lesson, plus the units that failed twice on the previous
+ * content day, each at the end of its own stage; a review day is the returns of the two previous scene days and
+ * `speak_answer` over their exchanges; the rehearsal is `speak_answer` over every scene of the plan. Every shuffle and
+ * rotation inside is seeded by the card's own address, so a day dealt twice is the same day. The assembler tolerates
+ * whatever the checks left in the lesson: a card whose material is missing is simply not dealt, and nothing about a
+ * broken mark drops the day.
  */
 final class DayAssembler
 {
@@ -33,38 +36,49 @@ final class DayAssembler
     /**
      * @param  array<string, SceneMaterial>  $material  by scene id — today's scene and the scenes the returns come from
      * @param  list<ReturnedUnit>  $returned
-     * @param  list<string>  $extraTranslations  catalogue top-up for the Beginner choice card
+     * @param  list<string>  $nativeTopUp  catalogue translations for the Beginner choice card
      * @param  callable(): DayCardId  $ids
      * @return list<DayCard>
      */
-    public function sceneDay(PlanDayId $dayId, SceneMaterial $scene, array $material, PlanLevel $level, array $returned, array $extraTranslations, callable $ids): array
+    public function sceneDay(PlanDayId $dayId, SceneMaterial $scene, array $material, PlanLevel $level, array $returned, array $nativeTopUp, callable $ids): array
     {
         $drafts = [
-            ...$this->words->build($scene, $level, $extraTranslations),
-            ...$this->phrases->build($scene),
-            ...$this->dialogue->build($scene, $level),
-            ...$this->listen->build($scene, $level),
+            ...$this->words->build($scene, $level, $nativeTopUp),
+            ...$this->phrases->build($scene, $level),
+            ...$this->dialogue->build($scene),
+            ...$this->listen->build($scene),
             ...$this->speak->build($scene),
-            ...$this->returns($material, $level, $returned, $extraTranslations),
+            ...$this->returns($material, $level, $returned, $nativeTopUp),
         ];
 
         return $this->deal($dayId, $drafts, $ids);
     }
 
     /**
+     * The exchanges of the two previous scene days said aloud, and their returns at the end of their stages — an
+     * exchange already returned is not dealt twice.
+     *
      * @param  list<SceneMaterial>  $scenes  the two previous scene days' scenes
      * @param  array<string, SceneMaterial>  $material
      * @param  list<ReturnedUnit>  $returned
-     * @param  list<string>  $extraTranslations
+     * @param  list<string>  $nativeTopUp
      * @param  callable(): DayCardId  $ids
      * @return list<DayCard>
      */
-    public function reviewDay(PlanDayId $dayId, array $scenes, array $material, PlanLevel $level, array $returned, array $extraTranslations, callable $ids): array
+    public function reviewDay(PlanDayId $dayId, array $scenes, array $material, PlanLevel $level, array $returned, array $nativeTopUp, callable $ids): array
     {
-        $drafts = $this->returns($material, $level, $returned, $extraTranslations);
-        foreach ($scenes as $scene) {
-            $drafts = [...$drafts, ...$this->speak->build($scene)];
+        $excluded = [];
+        foreach ($returned as $unit) {
+            if ($unit->kind === UnitKind::Exchange) {
+                $excluded[] = UnitStates::key($unit->sceneId->value, UnitKind::Exchange, $unit->ref);
+            }
         }
+        $seed = 'review:'.implode(':', array_map(static fn (SceneMaterial $s): string => $s->sceneId->value, $scenes));
+
+        $drafts = [
+            ...$this->speak->review($scenes, array_values(array_unique($excluded)), $seed),
+            ...$this->returns($material, $level, $returned, $nativeTopUp),
+        ];
 
         return $this->deal($dayId, $drafts, $ids);
     }
@@ -76,28 +90,27 @@ final class DayAssembler
      */
     public function rehearsalDay(PlanDayId $dayId, array $scenes, callable $ids): array
     {
-        $drafts = [];
-        foreach ($scenes as $scene) {
-            $drafts = [...$drafts, ...$this->speak->build($scene)];
-        }
-
-        return $this->deal($dayId, $drafts, $ids);
+        return $this->deal($dayId, $this->speak->rehearsal($scenes), $ids);
     }
 
     /**
-     * One card per returned unit — choose for a word, assemble for a phrase, speak for an exchange.
+     * One card per returned unit — `word_choose` for a word, `phrase_slot` for a frame, `speak_answer` for an exchange.
+     * The day's listening never returns; a unit returned twice (two earlier days) is dealt once.
      *
      * @param  array<string, SceneMaterial>  $material
      * @param  list<ReturnedUnit>  $returned
-     * @param  list<string>  $extraTranslations
+     * @param  list<string>  $nativeTopUp
      * @return list<CardDraft>
      */
-    private function returns(array $material, PlanLevel $level, array $returned, array $extraTranslations): array
+    private function returns(array $material, PlanLevel $level, array $returned, array $nativeTopUp): array
     {
         $out = [];
         $seen = [];
         foreach ($returned as $unit) {
-            $key = $unit->sceneId->value.':'.$unit->kind->value.':'.$unit->ref;
+            if (! $unit->kind->returns()) {
+                continue;
+            }
+            $key = UnitStates::key($unit->sceneId->value, $unit->kind, $unit->ref);
             if (isset($seen[$key])) {
                 continue;
             }
@@ -107,11 +120,12 @@ final class DayAssembler
                 continue;
             }
             $draft = match ($unit->kind) {
-                UnitKind::Word => ($term = $scene->term($unit->ref)) === null ? null : $this->words->returned($scene, $term, $level, $extraTranslations),
-                UnitKind::Phrase => ($term = $scene->term($unit->ref)) === null ? null : $this->phrases->returned($scene, $term),
-                UnitKind::Exchange => (($step = CardPayloads::stepOfRef($unit->ref)) === null || ($exchange = $scene->exchange($step)) === null)
+                UnitKind::Word => ($term = $scene->term($unit->ref)) === null ? null : $this->words->returned($scene, $term, $level, $nativeTopUp),
+                UnitKind::Phrase => ($term = $scene->phraseTerm($unit->ref)) === null || $term->frame() === null ? null : $this->phrases->returned($scene, $term),
+                UnitKind::Exchange => (($step = SpokenLines::stepOfRef($unit->ref)) === null || ($exchange = $scene->exchange($step)) === null)
                     ? null
-                    : $this->speak->speak($scene, $exchange),
+                    : $this->speak->speakAnswer($scene, $exchange),
+                UnitKind::Day => null,
             };
             if ($draft !== null) {
                 $out[] = $draft->returned($unit->sourceDayId);

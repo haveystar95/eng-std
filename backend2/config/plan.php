@@ -90,4 +90,52 @@ return [
     // Where the square copies of scene photos land (`plan-images/<scene>/<112|448>.jpg`) — fetched
     // once from the photo's CDN and served by `GET /plans/images/{scene}/{size}` (PLAN-UI-3).
     'image_disk' => env('PLAN_IMAGE_DISK', 'local'),
+
+    /*
+     * THE PACE OF A DAY — seconds per card, by kind (наряд SESSION-1a, разд. 2): what every «≈ N мин» of the
+     * day window is counted from. Initial values from the order — tune them here after the phone, never in
+     * code. A kind missing from the table costs nothing (`Domain/Service/DayPace`).
+     */
+    'pace' => [
+        'word_intro' => 8,
+        'word_repeat' => 12,
+        'word_choose' => 10,
+        'word_listen' => 10,
+        'word_assemble' => 20,
+        'word_in_line' => 10,
+        'phrase_intro' => 12,
+        'phrase_assemble' => 25,
+        'phrase_choose_back' => 12,
+        'phrase_slot' => 12,
+        'phrase_slot_listen' => 12,
+        'phrase_repeat' => 25,
+        'phrase_other_slot' => 25,
+        'phrase_combine' => 20,
+        'phrase_own_slot' => 25,
+        'dialogue_partner' => 15,
+        'dialogue_answer' => 30,
+        'dialogue_ask' => 30,
+        'dialogue_rescue' => 15,
+        'listen_dialogue' => 110,
+        'listen_question' => 12,
+        'listen_review' => 30,
+        'listen_predict' => 15,
+        'listen_pace' => 25,
+        'listen_number' => 15,
+        'speak_answer' => 35,
+        'speak_echo' => 25,
+        'speak_retell' => 30,
+    ],
+
+    /*
+     * THE SLOT JUDGE — `slot_judge.v1` (наряд SESSION-1a, разд. 4): one synchronous call inside
+     * `POST …/cards/{card}/judge` for the cards judged by meaning. `daily_cap` calls per learner per
+     * local day, counted in `quota_store` (`redis` in the stack; `array` under test, phpunit.xml);
+     * `timeout` seconds of the ONE attempt — past it the verdict is the code's, never a wait.
+     */
+    'slot_judge' => [
+        'daily_cap' => (int) env('PLAN_SLOT_JUDGE_DAILY_CAP', 60),
+        'quota_store' => env('PLAN_SLOT_JUDGE_QUOTA_STORE', 'redis'),
+        'timeout' => (int) env('PLAN_SLOT_JUDGE_TIMEOUT', 8),
+    ],
 ];

@@ -19,6 +19,12 @@ use App\Modules\Observability\Application\Support\OutboundCallContext;
  */
 final readonly class ConfiguredContentModelCatalog implements ContentModelCatalog
 {
+    /**
+     * The attempts of a call whose caller names none — the adapters' own default, the escalating backoff that
+     * crosses a vendor's per-minute window. Only a caller with a learner waiting asks for fewer (D-28).
+     */
+    private const DEFAULT_ATTEMPTS = 4;
+
     /** @var array<string, array{key: string, model: string, base: string, env: string, default_model: string}> */
     private array $config;
 
@@ -94,7 +100,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         return $out;
     }
 
-    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null): ?ContentModelPort
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null): ?ContentModelPort
     {
         $row = $this->config[$provider->value];
         $key = trim($row['key']);
@@ -117,6 +123,9 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         // every caller but the learning plan wants.
         $purpose = $purpose !== null && trim($purpose) !== '' ? trim($purpose) : 'generation';
 
+        // Null keeps the adapters' escalating retries; a caller's own number is the attempts, never fewer than one.
+        $attempts = $retries === null ? self::DEFAULT_ATTEMPTS : max(1, $retries);
+
         return match ($provider) {
             ProviderId::Gemini => new GeminiContentModel(
                 context: $this->context,
@@ -125,6 +134,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 baseUrl: $row['base'],
                 timeoutSeconds: $timeout,
                 purpose: $purpose,
+                retries: $attempts,
             ),
             ProviderId::Anthropic => new AnthropicContentModel(
                 context: $this->context,
@@ -133,6 +143,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 baseUrl: $row['base'],
                 timeoutSeconds: $timeout,
                 purpose: $purpose,
+                retries: $attempts,
             ),
             // OpenAI and xAI speak the same wire format — see OpenAiCompatibleContentModel.
             ProviderId::OpenAi, ProviderId::Xai => new OpenAiCompatibleContentModel(
@@ -143,6 +154,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 baseUrl: $row['base'],
                 timeoutSeconds: $timeout,
                 purpose: $purpose,
+                retries: $attempts,
             ),
         };
     }

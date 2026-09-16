@@ -44,6 +44,10 @@ final readonly class OpenAiCompatibleContentModel implements ContentModelPort
          * with the adapter, and the default keeps every existing caller unchanged.
          */
         private string $purpose = 'generation',
+        /**
+         * HOW MANY ATTEMPTS the call may make, the first one included (Laravel's `retry` counts attempts). One
+         * is the plan's slot judge (D-28): a learner waits on its answer, and past its timeout the code rules.
+         */
         private int $retries = 4,
     ) {}
 

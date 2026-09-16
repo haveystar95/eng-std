@@ -21,7 +21,7 @@ use App\Modules\Plan\Domain\ValueObject\WindowStatus;
  *   prints no number, because nothing is being walked yet (the route's first node may be current:
  *   there it says «start here», here the button says it);
  * - in progress: a stage with every card answered is `done`, the first one that is not is
- *   `current`, the rest `locked`;
+ *   `current` — with the minutes its unanswered cards take by kind ({@see DayPace}) — the rest `locked`;
  * - passed: every stage `done`.
  */
 final class DayWindowStages
@@ -31,7 +31,7 @@ final class DayWindowStages
      * @param  list<Stage>  $withoutCards  what the day's type deals, for a day with no card yet
      * @return list<WindowStage>
      */
-    public static function of(array $cards, array $withoutCards, WindowStatus $status): array
+    public static function of(array $cards, array $withoutCards, WindowStatus $status, DayPace $pace): array
     {
         $tallies = RouteStages::tally($cards);
         $out = [];
@@ -44,7 +44,10 @@ final class DayWindowStages
                 $status !== WindowStatus::InProgress => WindowStage::locked($stage),
                 $total > 0 && $answered >= $total => WindowStage::done($stage),
                 $currentFound => WindowStage::locked($stage),
-                default => WindowStage::current($stage, $answered, $total),
+                default => WindowStage::current($stage, $answered, $total, DayPace::minutes($pace->secondsOf(array_filter(
+                    $cards,
+                    static fn (DayCard $c): bool => $c->stage() === $stage && ! $c->isAnswered(),
+                )))),
             };
             $currentFound = $currentFound || $row->state === StageState::Current;
             $out[] = $row;
@@ -76,17 +79,15 @@ final class DayWindowStages
      *
      * @param  list<DayCard>  $cards
      */
-    public static function minutesEstimate(array $cards, WindowStatus $status): ?int
+    public static function minutesEstimate(array $cards, WindowStatus $status, DayPace $pace): ?int
     {
         if ($cards === [] || ! in_array($status, [WindowStatus::NotStarted, WindowStatus::InProgress], true)) {
             return null;
         }
-        $seconds = 0;
-        foreach (RouteStages::tally($cards) as $stage => $tally) {
-            $left = $status === WindowStatus::NotStarted ? $tally['total'] : $tally['total'] - $tally['answered'];
-            $seconds += DayPace::seconds(Stage::from($stage), $left);
-        }
+        $left = $status === WindowStatus::NotStarted
+            ? $cards
+            : array_filter($cards, static fn (DayCard $c): bool => ! $c->isAnswered());
 
-        return DayPace::minutes($seconds);
+        return DayPace::minutes($pace->secondsOf($left));
     }
 }

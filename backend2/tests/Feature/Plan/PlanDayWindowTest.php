@@ -55,7 +55,11 @@ function windowOf(object $ctx, string $token, string $id, int $number): array
     return $ctx->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/{$number}")->assertOk()->json('data.window');
 }
 
-/** Answer every open card of one stage; the choose card of `$failRef` fails twice (it returns tomorrow). */
+/**
+ * Answer every open card of one stage, each with its kind's result ({@see planWalkResult}); the choice card of
+ * `$failRef` — its check: `word_choose`, `word_listen` or `word_in_line` by the scene's seeded rotation, `word_assemble`
+ * for a term of two words (наряд SESSION-1a, разд. 2) — fails twice (it returns tomorrow).
+ */
 function windowWalkStage(object $ctx, string $token, string $id, string $stage, ?string $failRef = null): void
 {
     $queue = array_values(array_filter(
@@ -64,8 +68,8 @@ function windowWalkStage(object $ctx, string $token, string $id, string $stage, 
     ));
     while ($queue !== []) {
         $card = array_shift($queue);
-        $fail = $card['unit_ref'] === $failRef && $card['kind'] === 'word_choose';
-        $outcome = planAnswer($ctx, $token, $id, 1, $card['id'], $fail ? 'failed' : 'passed', $fail ? 2 : 1);
+        $fail = $card['unit_ref'] === $failRef && App\Modules\Plan\Domain\ValueObject\CardKind::from($card['kind'])->isChoice();
+        $outcome = planAnswer($ctx, $token, $id, 1, $card['id'], $fail ? 'failed' : planWalkResult($card['kind']), $fail ? 2 : 1);
         if ($outcome['requeued'] !== null) {
             $queue[] = $outcome['requeued'];
         }
@@ -200,9 +204,10 @@ it('numbers the current row only while the day is walked, and words the brow fro
     $window = windowOf($this, $token, $id, 1);
     $rows = array_map(static fn (array $s): array => [$s['stage'], $s['state'], $s['done_count'], $s['total']], $window['stages']);
 
+    // Phrases: 6 frames × 3 + the day's one phrase_combine = 19 (the old registry dealt 18).
     expect($window['day']['status'])->toBe('in_progress')
         ->and($rows)->toBe([
-            ['words', 'done', null, null], ['phrases', 'current', 0, 18], ['dialogue', 'locked', null, null],
+            ['words', 'done', null, null], ['phrases', 'current', 0, 19], ['dialogue', 'locked', null, null],
             ['listen', 'locked', null, null], ['speak', 'locked', null, null],
         ])
         ->and($window['stages'][1]['minutes_left'])->toBeGreaterThan(0)
@@ -570,6 +575,16 @@ it('backfills real learners before QA accounts, and --plan only the plans named'
         public function creditsSince(\DateTimeImmutable $since): int
         {
             return $this->inner->creditsSince($since);
+        }
+
+        public function withoutDuration(): array
+        {
+            return $this->inner->withoutDuration();
+        }
+
+        public function setDuration(string $audioId, int $durationMs): void
+        {
+            $this->inner->setDuration($audioId, $durationMs);
         }
     };
     app()->instance(LineAudioStore::class, $store);
