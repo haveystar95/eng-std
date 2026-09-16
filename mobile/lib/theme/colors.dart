@@ -292,6 +292,40 @@ abstract final class AppColors {
   /// Тень шита — `0 -12px 40px rgba(24,20,16,.18)`.
   static const windowSheetShadow = Color.fromARGB(46, 24, 20, 16);
 
+  // ── Сессия дня — канва `session-canvas.dc.html`, серии 30–32 (наряд SESSION-1b). Цвета те же, что у
+  // ── приложения: бумага, чернила, шалфей (`verdictKnown`), латунь (`brassInk`) — здесь только их доли.
+
+  /// Тень листа материала и вариантов — `0 4px 16px rgba(46,38,32,.08)`; она же — подложка неактивной
+  /// кнопки «Дальше» (32-8).
+  static const sessionSheetShadow = Color.fromARGB(20, _inkR, _inkG, _inkB);
+
+  /// Подложка шалфея 15 % — верный вариант, зачтённое окно.
+  static const sessionSageWash = Color.fromARGB(38, 78, 107, 82);
+
+  /// Подложка окна каркаса 8 % латуни.
+  static const sessionWindowFill = Color.fromARGB(20, 140, 106, 58);
+
+  /// Кольцо шалфея 30 % у кнопки «слушаю».
+  static const sessionListenRing = Color.fromARGB(77, 78, 107, 82);
+
+  /// Кольцо латуни 30 % у текущей точки этапа.
+  static const sessionBrassRing = Color.fromARGB(77, 140, 106, 58);
+
+  /// Тень кнопки микрофона 72 — `0 8px 24px rgba(46,38,32,.18)`.
+  static const sessionMicShadow = Color.fromARGB(46, _inkR, _inkG, _inkB);
+
+  /// Дорожка переключателя «Без подсказок» — `rgba(46,38,32,.16)`.
+  static const sessionToggleTrack = Color.fromARGB(41, _inkR, _inkG, _inkB);
+
+  /// Тень ручки переключателя — `0 1px 3px rgba(46,38,32,.25)`.
+  static const sessionToggleKnobShadow = Color.fromARGB(64, _inkR, _inkG, _inkB);
+
+  /// Тень шита выхода 30-8 — `0 -12px 40px rgba(24,20,16,.28)`.
+  static const sessionExitSheetShadow = Color.fromARGB(71, 24, 20, 16);
+
+  /// Тень плиты шапки и полосы сцены на канве — `0 2px 8px rgba(46,38,32,.04)`.
+  static const sessionFaintShadow = Color.fromARGB(10, _inkR, _inkG, _inkB);
+
   /// Доминантный тон картинки с провода (`image.tone`, `#RRGGBB`) — заливка круга, пока картинка
   /// в пути (наряд PLAN-UI-3). Не цвет палитры, а цвет фотографии: поэтому он приходит с сервера и
   /// читается здесь, где hex законен. Кривой ответ — null, и круг остаётся бумажным.

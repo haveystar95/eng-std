@@ -8,8 +8,9 @@ import '../features/search/search_pair.dart' show SearchLanguages;
 import 'config.dart';
 import 'exposure_sync.dart';
 import 'models.dart';
-import 'plan/day_contract.dart';
 import 'plan/plan_models.dart';
+import 'plan/session/session_day.dart';
+import 'plan/session/session_outcomes.dart';
 import 'review_queue.dart';
 import 'speech/speech_grading_config.dart';
 import 'token_store.dart';
@@ -661,58 +662,52 @@ class ApiClient {
     return PlanDayRoom.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  // ---- Карточки дня (наряд DAY-UI, `docs/plan-api.md`) ----------------------------------------
+  // ---- Сессия дня (наряд SESSION-1b, `docs/plan-api.md` «Карточки сессии») ---------------------
   //
-  // Кабинет дня читает [planDayRoom] выше — он один на таб и на кабинет. Здесь то, что нужно
-  // только сессии: раздача карточек, вердикты, закрытия. Модели — `plan/day_contract.dart`.
+  // Окно и таб читают [planDayRoom] выше. Сессии нужен тот же `GET …/days/{n}`, но с карточками этапов
+  // (`stages[].cards[]`), и три записи: раздать день, ответить на карточку, спросить судью окна.
 
-  /// Открыть / продолжить день — ВЕСЬ список карточек с состоянием. 409 `plan_day_locked`,
+  /// День для сессии — этапы с карточками, сцена и окно (`plan/session/session_day.dart`).
+  Future<SessionDay> sessionDay(String planId, int number) async {
+    final r = await _dio.get('/plans/$planId/days/$number');
+
+    return SessionDay.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// Раздать день (первый вход) — карточки появляются в `GET …/days/{n}`. 409 `plan_day_locked`,
   /// `plan_lesson_not_ready` — читает вызывающий по коду ([problemCodeOf]).
-  Future<DayCards> openDay(String planId, int number) async {
-    final r = await _dio.post('/plans/$planId/days/$number/open');
+  Future<void> openPlanDay(String planId, int number) => _dio.post('/plans/$planId/days/$number/open');
 
-    return DayCards.fromJson(_data(r) as Map<String, dynamic>);
+  /// Ответ на карточку. 409 `plan_card_answered`, 422 `plan_card_result_not_allowed`.
+  Future<SessionAnswerOutcome> answerSessionCard(String planId, int number, String cardId, SessionAnswer answer) async {
+    // Ответ — короткий запрос; зависшая сеть должна поднять «нет связи» за секунды, а не за общие 40 с.
+    // Повтор того же ответа безопасен: принятый сервер отбивает 409 `plan_card_answered`.
+    final r = await _dio.post(
+      '/plans/$planId/days/$number/cards/$cardId/answer',
+      data: answer.toJson(),
+      options: Options(sendTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 10)),
+    );
+
+    return SessionAnswerOutcome.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  Future<DayCards> dayCards(String planId, int number) async {
-    final r = await _dio.get('/plans/$planId/days/$number/cards');
-
-    return DayCards.fromJson(_data(r) as Map<String, dynamic>);
-  }
-
-  /// Вердикт по карточке. `requeued` — та же карточка в конце этапа после первой ошибки.
-  Future<DayAnswerOutcome> answerDayCard(
+  /// Судья окна — `phrase_own_slot` (в 1b), `speak_answer`, `speak_retell`. Синхронный: ученик ждёт
+  /// вердикт стоя на карточке (до 8 с на сервере).
+  Future<SessionJudgeOutcome> judgeSessionCard(
     String planId,
     int number,
     String cardId, {
-    required DayCardResult result,
-    required int attempts,
+    required String heard,
+    required bool hinted,
   }) async {
     final r = await _dio.post(
-      '/plans/$planId/days/$number/cards/$cardId/answer',
-      data: {'result': result.wire, 'attempts': attempts},
+      '/plans/$planId/days/$number/cards/$cardId/judge',
+      data: {'heard': heard, 'hinted': hinted},
+      options: Options(receiveTimeout: const Duration(seconds: 20)),
     );
 
-    return DayAnswerOutcome.fromJson(_data(r) as Map<String, dynamic>);
+    return SessionJudgeOutcome.fromJson(_data(r) as Map<String, dynamic>);
   }
-
-  /// Этап пройден — кабинет с обновлёнными этапами. 409 `plan_stage_incomplete`.
-  Future<PlanDayRoom> closeStage(String planId, int number, PlanStage stage) async {
-    final r = await _dio.post('/plans/$planId/days/$number/stages/${stage.wire}/close');
-
-    return PlanDayRoom.fromJson(_data(r) as Map<String, dynamic>);
-  }
-
-  /// День пройден — кабинет с метриками.
-  Future<PlanDayRoom> closeDay(String planId, int number) async {
-    final r = await _dio.post('/plans/$planId/days/$number/close');
-
-    return PlanDayRoom.fromJson(_data(r) as Map<String, dynamic>);
-  }
-
-  /// Адрес файла озвучки реплики — `GET /plans/audio/{audioId}`; качает [LineAudioCache] с
-  /// токеном.
-  static String planAudioUrl(String audioId) => '${AppConfig.apiBaseUrl}/api/v1/plans/audio/$audioId';
 
   /// ДЕВ-ДВЕРЬ СМЕНЫ ДНЕЙ (наряд DAY-FIX-2): сдвинуть «сегодня» QA-аккаунта на [days] дней.
   ///

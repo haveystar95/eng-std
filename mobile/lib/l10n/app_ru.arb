@@ -4500,337 +4500,383 @@
       }
     }
   },
-  "dayApproxMinutes": "≈ {n, plural, one{{n} минута} few{{n} минуты} other{{n} минут}}",
-  "@dayApproxMinutes": {
+  "planSessionStateDone": "пройден",
+  "@planSessionStateDone": {
+    "description": "Сессия, вход в этап (30-1): статус этапа в списке пяти — все карточки отвечены."
+  },
+  "planSessionStateAhead": "впереди",
+  "@planSessionStateAhead": {
+    "description": "Сессия, вход в этап (30-1) и «Нужен микрофон» (30-3): статус этапа, до которого ещё не дошли."
+  },
+  "planSessionApproxMinutes": "≈ {n} мин",
+  "@planSessionApproxMinutes": {
+    "description": "Сессия, вход в этап (30-1) и «Дальше» итога этапа (30-6): минуты этапа из окна дня (stage.minutes_left).",
     "placeholders": {
       "n": {
         "type": "int"
       }
     }
   },
-  "dayApproxMin": "≈ {n} мин",
-  "@dayApproxMin": {
+  "planSessionDescWords": "{n, plural, one{{n} слово дня} few{{n} слова дня} many{{n} слов дня} other{{n} слова дня}} — посмотри, послушай и скажи вслух",
+  "@planSessionDescWords": {
+    "description": "Сессия, вход в этап «Слова» (30-1): описание под названием; число — единицы этапа.",
     "placeholders": {
       "n": {
         "type": "int"
       }
     }
   },
-  "dayStageWords": "Слова",
-  "dayStagePhrases": "Фразы",
-  "dayStageDialogue": "Диалог",
-  "dayStageListen": "Слушаю и отвечаю",
-  "dayStageSpeak": "Говорю сам",
-  "dayFromDay": "из дня {n}",
-  "@dayFromDay": {
+  "planSessionDescPhrases": "{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся",
+  "@planSessionDescPhrases": {
+    "description": "Сессия, вход в этап «Фразы» (30-1): описание под названием; число — каркасы этапа.",
     "placeholders": {
       "n": {
         "type": "int"
       }
     }
   },
-  "dayWordsCount": "{n, plural, one{{n} слово} few{{n} слова} other{{n} слов}}",
-  "@dayWordsCount": {
+  "planSessionDescDialogue": "Разговор по шагам: пойми реплику и ответь фразами дня",
+  "@planSessionDescDialogue": {
+    "description": "Сессия, вход в этап «Диалог» (30-1): описание (этап в этой сборке заблокирован)."
+  },
+  "planSessionDescListen": "Весь разговор на слух, потом вопросы о нём",
+  "@planSessionDescListen": {
+    "description": "Сессия, вход в этап «Слушаю и отвечаю» (30-1): описание (этап в этой сборке заблокирован)."
+  },
+  "planSessionDescSpeak": "Собеседник спрашивает — отвечай про себя, своими словами. Каркасы ты знаешь, окно — твоё",
+  "@planSessionDescSpeak": {
+    "description": "Сессия, вход в этап «Говорю сам» (30-1): описание по кадру 30-1b; роль без склонения — «собеседник»."
+  },
+  "planSessionNoHints": "Без подсказок",
+  "@planSessionNoHints": {
+    "description": "Сессия, вход в этап (30-1): переключатель; хранится на телефоне на план."
+  },
+  "planSessionNoHintsSub": "Диалог и «Говорю сам» — сразу голосом",
+  "@planSessionNoHintsSub": {
+    "description": "Сессия, вход в этап (30-1): подпись под переключателем «Без подсказок»."
+  },
+  "planSessionStart": "Начать",
+  "@planSessionStart": {
+    "description": "Сессия, вход в этап (30-1): кнопка."
+  },
+  "planSessionNextBuild": "в следующей сборке",
+  "@planSessionNextBuild": {
+    "description": "Сессия, вход в этапы «Диалог», «Слушаю и отвечаю», «Говорю сам» (наряд SESSION-1b): вместо «Начать» — экранов у этих этапов в этой сборке нет."
+  },
+  "planSessionBuild": "сборка {version}",
+  "@planSessionBuild": {
+    "description": "Сессия, вход в этап (30-1): версия сборки мелко серым в подвале — правило владельца.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "planSessionLeftWords": "{n, plural, one{ещё {n} слово} few{ещё {n} слова} many{ещё {n} слов} other{ещё {n} слова}}",
+  "@planSessionLeftWords": {
+    "description": "Сессия, шапка (30-2): справа словами — сколько единиц этапа ещё не закрыто.",
     "placeholders": {
       "n": {
         "type": "int"
       }
     }
   },
-  "dayPhrasesCount": "{n, plural, one{{n} фраза} few{{n} фразы} other{{n} фраз}}",
-  "@dayPhrasesCount": {
+  "planSessionLeftPhrases": "{n, plural, one{ещё {n} фраза} few{ещё {n} фразы} many{ещё {n} фраз} other{ещё {n} фразы}}",
+  "@planSessionLeftPhrases": {
+    "description": "Сессия, шапка (30-2) этапа «Фразы»: сколько каркасов ещё не закрыто.",
     "placeholders": {
       "n": {
         "type": "int"
       }
     }
   },
-  "dayExchangesCount": "{n, plural, one{{n} обмен} few{{n} обмена} other{{n} обменов}}",
-  "@dayExchangesCount": {
+  "planSessionSceneLine": "{scene} · {role}",
+  "@planSessionSceneLine": {
+    "description": "Сессия, полоса сцены (30-2b): название сцены и роль собеседника в именительном, как отдал сервер.",
     "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayShellCounter": "{stage} · {done} из {total}",
-  "@dayShellCounter": {
-    "placeholders": {
-      "stage": {
+      "scene": {
         "type": "String"
       },
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "dayEntryLabel": "Этап {n} из 5",
-  "@dayEntryLabel": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayEntryLine": "{units} · {cards} · {minutes}",
-  "@dayEntryLine": {
-    "placeholders": {
-      "units": {
-        "type": "String"
-      },
-      "cards": {
-        "type": "String"
-      },
-      "minutes": {
+      "role": {
         "type": "String"
       }
     }
   },
-  "dayEntryWordsSteps": "познакомься · произнеси · выбери перевод · вставь в пример",
-  "dayEntryPhrasesSteps": "познакомься · повтори вслух · собери",
-  "dayEntryDialogueSteps": "прочитай и послушай весь разговор",
-  "dayEntryListenSteps": "послушай · выбери, что он спросил · ответь",
-  "dayEntrySpeakSteps": "скажи свою реплику в каждом обмене — текста не будет",
-  "dayEntryNew": "{n, plural, one{{n} новое} few{{n} новых} other{{n} новых}}",
-  "@dayEntryNew": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
+  "planSessionClose": "Закрыть",
+  "@planSessionClose": {
+    "description": "Сессия, крестик шапки (30-2) и итога этапа (30-6): подпись для читалки экрана."
   },
-  "dayEntryReturned": "{r, plural, one{{r} вернулось из дня {d}} few{{r} вернулись из дня {d}} other{{r} вернулись из дня {d}}}",
-  "@dayEntryReturned": {
-    "placeholders": {
-      "r": {
-        "type": "int"
-      },
-      "d": {
-        "type": "int"
-      }
-    }
+  "planSessionTaskRememberWord": "Запомни слово",
+  "@planSessionTaskRememberWord": {
+    "description": "Сессия, знакомство со словом (31-1): задание над листом."
   },
-  "dayEntryResume": "продолжаем · осталось {n} из {total} · {minutes}",
-  "@dayEntryResume": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      },
-      "minutes": {
-        "type": "String"
-      }
-    }
+  "planSessionTaskSayWord": "Скажи слово вслух",
+  "@planSessionTaskSayWord": {
+    "description": "Сессия, «Повтори слово» (31-2): задание над листом."
   },
-  "dayEntryCta": "Начать",
-  "dayEntryResumeCta": "Продолжить",
-  "dayIntroBadgeNew": "новое слово",
-  "dayIntroCta": "Понятно",
-  "dayReturnedBadge": "Вернулось из дня {n}",
-  "@dayReturnedBadge": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayPhraseBadgeNew": "новая фраза",
-  "dayPhraseInTalk": "в разговоре",
-  "dayTaskPronounce": "Произнеси",
-  "dayTaskRepeat": "Повтори вслух",
-  "dayTaskAsked": "Что он спросил",
-  "dayTaskAnswer": "Ответь {lang}",
-  "@dayTaskAnswer": {
-    "description": "«Ответь по-английски» — наречие языка карточки.",
-    "placeholders": {
-      "lang": {
-        "type": "String"
-      }
-    }
-  },
-  "dayTaskSay": "Скажи {lang}",
-  "@dayTaskSay": {
-    "placeholders": {
-      "lang": {
-        "type": "String"
-      }
-    }
-  },
-  "dayTaskAssemble": "Собери, что он сказал",
-  "dayTaskChoose": "Выбери перевод",
-  "dayTaskChooseWord": "Выбери слово",
-  "dayTaskCloze": "Вставь слово",
-  "dayTaskAssemblePhrase": "Собери {lang}",
-  "@dayTaskAssemblePhrase": {
-    "placeholders": {
-      "lang": {
-        "type": "String"
-      }
-    }
-  },
-  "daySayMic": "Скажи вслух",
-  "daySayListening": "Слушаем…",
-  "daySayThinking": "…",
-  "daySayHeard": "Услышали: {word}",
-  "@daySayHeard": {
-    "placeholders": {
-      "word": {
-        "type": "String"
-      }
-    }
-  },
-  "daySayHeardShort": "Услышали",
-  "daySayRetry": "Не расслышали. Ещё раз",
-  "daySaySkip": "Пропустить",
-  "dayReturnDay": "Вернётся в день {n}",
-  "@dayReturnDay": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayReturnStage": "Вернётся в конце этапа",
-  "dayNext": "Дальше",
-  "dayDialogTitle": "Весь разговор",
-  "dayDialogSub": "Прочитай и послушай — потом будешь отвечать сам",
-  "dayDialogRoleYou": "Ты",
-  "dayDialogTranslate": "перевод",
-  "daySpeakerSays": "{role} говорит",
-  "@daySpeakerSays": {
+  "planSessionCompanionSayWord": "Скажи, как слышишь — {role} поймёт",
+  "@planSessionCompanionSayWord": {
+    "description": "Сессия, «Повтори слово» (31-2): голос спутника под заданием; роль собеседника в именительном со строчной.",
     "placeholders": {
       "role": {
         "type": "String"
       }
     }
   },
-  "daySpeakerAnswers": "{role} отвечает",
-  "@daySpeakerAnswers": {
+  "planSessionTaskChooseTranslation": "Выбери перевод",
+  "@planSessionTaskChooseTranslation": {
+    "description": "Сессия, выбор слово → перевод (31-3) и обратный перевод фразы (32-3): задание."
+  },
+  "planSessionTaskChooseWord": "Выбери слово",
+  "@planSessionTaskChooseWord": {
+    "description": "Сессия, выбор перевод → слово (31-4): задание."
+  },
+  "planSessionTaskChooseHeard": "Выбери, что услышал",
+  "@planSessionTaskChooseHeard": {
+    "description": "Сессия, «На слух» (31-5) и «Окно на слух» (32-5): задание."
+  },
+  "planSessionTaskAssembleParts": "Собери из частей",
+  "@planSessionTaskAssembleParts": {
+    "description": "Сессия, сборка слова из плиток (31-6): задание."
+  },
+  "planSessionTaskInsertWord": "Вставь слово в окно",
+  "@planSessionTaskInsertWord": {
+    "description": "Сессия, слово в окне (31-7): задание."
+  },
+  "planSessionTaskRememberPhrase": "Запомни фразу",
+  "@planSessionTaskRememberPhrase": {
+    "description": "Сессия, знакомство с каркасом (32-1): задание."
+  },
+  "planSessionTaskAssemblePhrase": "Собери фразу",
+  "@planSessionTaskAssemblePhrase": {
+    "description": "Сессия, перевод → сборка (32-2): задание."
+  },
+  "planSessionTaskInsert": "Вставь в окно",
+  "@planSessionTaskInsert": {
+    "description": "Сессия, окно · вставь наполнение (32-4): задание."
+  },
+  "planSessionTaskSayPhrase": "Скажи фразу вслух",
+  "@planSessionTaskSayPhrase": {
+    "description": "Сессия, «Повтори вслух» (32-6): задание."
+  },
+  "planSessionTaskOtherSlot": "Скажи с другим окном",
+  "@planSessionTaskOtherSlot": {
+    "description": "Сессия, «Скажи с другим окном» (32-7): задание; кадровое «Скажи про шею» требует склонения задания, которого сервер не отдаёт."
+  },
+  "planSessionTaskReply": "Ответь собеседнику",
+  "@planSessionTaskReply": {
+    "description": "Сессия, комбинация (32-8): задание; кадровое «Ответь врачу» требует дательного падежа роли, которого сервер не отдаёт."
+  },
+  "planSessionTaskOwnSlot": "Скажи своё",
+  "@planSessionTaskOwnSlot": {
+    "description": "Сессия, своё окно (32-9): задание."
+  },
+  "planSessionBrowWord": "Слово",
+  "@planSessionBrowWord": {
+    "description": "Сессия, лист вопроса (30-9, 31-3): бровь над словом."
+  },
+  "planSessionBrowTranslation": "Перевод",
+  "@planSessionBrowTranslation": {
+    "description": "Сессия, лист вопроса (31-4, 32-2, 32-4): бровь над переводом."
+  },
+  "planSessionBrowByEar": "На слух",
+  "@planSessionBrowByEar": {
+    "description": "Сессия, лист вопроса «На слух» (31-5, 32-5): бровь."
+  },
+  "planSessionBrowSlot": "Окно",
+  "@planSessionBrowSlot": {
+    "description": "Сессия, лист вопроса (31-7, 32-7): бровь над строкой с окном."
+  },
+  "planSessionBrowFrame": "Каркас",
+  "@planSessionBrowFrame": {
+    "description": "Сессия, знакомство с каркасом (32-1) и выбор окна комбинации (32-8): бровь."
+  },
+  "planSessionBrowPhrase": "Фраза",
+  "@planSessionBrowPhrase": {
+    "description": "Сессия, обратный перевод (32-3) и «Повтори вслух» (32-6): бровь."
+  },
+  "planSessionBrowAssembled": "Собрано",
+  "@planSessionBrowAssembled": {
+    "description": "Сессия, комбинация собрана (32-8): бровь."
+  },
+  "planSessionBrowOwnSlot": "Своё окно",
+  "@planSessionBrowOwnSlot": {
+    "description": "Сессия, своё окно (32-9): бровь."
+  },
+  "planSessionBrowPartnerAsks": "{role} · спрашивает",
+  "@planSessionBrowPartnerAsks": {
+    "description": "Сессия, комбинация (32-8): бровь над репликой собеседника; роль в именительном.",
     "placeholders": {
       "role": {
         "type": "String"
       }
     }
   },
-  "daySpeakHint": "Подсказка",
-  "daySpeakHinted": "Засчитано с подсказкой · вернётся в день {n}",
-  "@daySpeakHinted": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
+  "planSessionWhatHeard": "Что ты услышал?",
+  "@planSessionWhatHeard": {
+    "description": "Сессия, «На слух» (31-5): текст вопроса в листе."
   },
-  "dayStageDoneWords": "Слова закрыты",
-  "dayStageDonePhrases": "Фразы закрыты",
-  "dayStageDoneDialogue": "Диалог закрыт",
-  "dayStageDoneListen": "«Слушаю и отвечаю» закрыт",
-  "dayStageDoneSpeak": "«Говорю сам» закрыт",
-  "dayStageDoneMeta": "{cards} · {minutes}",
-  "@dayStageDoneMeta": {
+  "planSessionUnderstood": "Понятно",
+  "@planSessionUnderstood": {
+    "description": "Сессия, знакомство со словом (31-1) и каркасом (32-1): кнопка."
+  },
+  "planSessionCheck": "Проверить",
+  "@planSessionCheck": {
+    "description": "Сессия, плитки (30-5, 31-6, 32-2): кнопка."
+  },
+  "planSessionNext": "Дальше",
+  "@planSessionNext": {
+    "description": "Сессия: кнопка после неверного ответа (30-9), итога этапа (30-6), комбинации (32-8); бровь «Дальше» на итоге этапа."
+  },
+  "planSessionByParts": "по частям",
+  "@planSessionByParts": {
+    "description": "Сессия, сборка слова (31-6): подпись справа от перевода."
+  },
+  "planSessionMicTap": "тап — говорить",
+  "@planSessionMicTap": {
+    "description": "Сессия, микрофон (30-3) в покое: подпись над кнопкой."
+  },
+  "planSessionMicListening": "говори, я слушаю",
+  "@planSessionMicListening": {
+    "description": "Сессия, микрофон (30-3) «слушаю · пусто»: подпись."
+  },
+  "planSessionMicHeard": "услышал",
+  "@planSessionMicHeard": {
+    "description": "Сессия, микрофон (30-3) «услышал»: подпись над кнопкой-галкой."
+  },
+  "planSessionPlaying": "играет",
+  "@planSessionPlaying": {
+    "description": "Сессия, «Комбинация» (32-8) «собрано · играет»: подпись под волной, пока звучит собранная фраза."
+  },
+  "planSessionMicMissed": "не расслышал, ещё раз",
+  "@planSessionMicMissed": {
+    "description": "Сессия, микрофон (30-3) «не расслышал»: подпись."
+  },
+  "planSessionEcho": "услышал — так же, как в записи",
+  "@planSessionEcho": {
+    "description": "Сессия, «Повтори слово» (31-2c): подпись эха под услышанным словом."
+  },
+  "planSessionSkip": "Пропустить",
+  "@planSessionSkip": {
+    "description": "Сессия, микрофон (30-3) и «Нужен микрофон»: текст над кнопкой — карточка закрывается «пропущено»."
+  },
+  "planSessionDebugHeard": "что услышал",
+  "@planSessionDebugHeard": {
+    "description": "Сессия, голосовые карточки: поле debug-сборки на симуляторе — текст идёт как распознанный; в release поля нет."
+  },
+  "planSessionNoMicTitle": "Нужен микрофон",
+  "@planSessionNoMicTitle": {
+    "description": "Сессия, «нет разрешения · экран» (30-3): заголовок."
+  },
+  "planSessionNoMicBody": "Без него этапы «Слушаю и отвечаю» и «Говорю сам» не пройти. Слова и фразы можно делать выбором и плитками.",
+  "@planSessionNoMicBody": {
+    "description": "Сессия, «нет разрешения · экран» (30-3): текст под заголовком."
+  },
+  "planSessionNoMicAllow": "Разрешить",
+  "@planSessionNoMicAllow": {
+    "description": "Сессия, «нет разрешения · экран» (30-3): кнопка — спросить систему или открыть настройки."
+  },
+  "planSessionOwnChip": "своё…",
+  "@planSessionOwnChip": {
+    "description": "Сессия, своё окно (32-9): чип с микрофоном рядом с известными наполнениями."
+  },
+  "planSessionByMeaning": "по смыслу ✓",
+  "@planSessionByMeaning": {
+    "description": "Сессия, своё окно зачтено (32-9): строка шалфеем вместо перевода."
+  },
+  "planSessionTryAgain": "Ещё раз",
+  "@planSessionTryAgain": {
+    "description": "Сессия, своё окно не зачтено (32-9): кнопка новой попытки под причиной отказа."
+  },
+  "planSessionReturnsTomorrow": "Вернётся завтра",
+  "@planSessionReturnsTomorrow": {
+    "description": "Сессия, итог этапа (30-6): лейбл над единицами, которые вернутся на следующий день."
+  },
+  "planSessionDoneWords": "Слова пройдены · {minutes}",
+  "@planSessionDoneWords": {
+    "description": "Сессия, итог этапа «Слова» (30-6): заголовок с минутами этапа от сервера.",
     "placeholders": {
-      "cards": {
-        "type": "String"
-      },
       "minutes": {
         "type": "String"
       }
     }
   },
-  "dayStageFactsInWork": "{n, plural, one{{n} слово в работе} few{{n} слова в работе} other{{n} слов в работе}}",
-  "@dayStageFactsInWork": {
+  "planSessionDonePhrases": "Фразы пройдены · {minutes}",
+  "@planSessionDonePhrases": {
+    "description": "Сессия, итог этапа «Фразы» (30-6): заголовок с минутами этапа от сервера.",
     "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayStageFactsPhrasesInWork": "{n, plural, one{{n} фраза в работе} few{{n} фразы в работе} other{{n} фраз в работе}}",
-  "@dayStageFactsPhrasesInWork": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayStageFactsExchangesInWork": "{n, plural, one{{n} обмен в работе} few{{n} обмена в работе} other{{n} обменов в работе}}",
-  "@dayStageFactsExchangesInWork": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayStageFactsHinted": "{n} с подсказкой",
-  "@dayStageFactsHinted": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayStageFactsReturn": "{n, plural, one{{n} вернётся} other{{n} вернутся}}",
-  "@dayStageFactsReturn": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "dayStageNext": "Дальше: {stage} · {cards} · {minutes}",
-  "@dayStageNext": {
-    "placeholders": {
-      "stage": {
-        "type": "String"
-      },
-      "cards": {
-        "type": "String"
-      },
       "minutes": {
         "type": "String"
       }
     }
   },
-  "dayExitTitle": "Продолжить позже?",
-  "dayExitBody": "Ты на этапе {stage} · {done} из {total}. Прогресс сохранится",
-  "@dayExitBody": {
-    "placeholders": {
-      "stage": {
-        "type": "String"
-      },
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "dayExitStay": "Остаться",
-  "dayExitLeave": "Выйти",
-  "dayNoVoice": "без озвучки — читает телефон",
-  "dayLockedByDay": "Сначала закончи день {n}",
-  "@dayLockedByDay": {
+  "planSessionRestWords": "{n, plural, one{Остальное {n} слово закрыто.} few{Остальные {n} слова закрыты.} many{Остальные {n} слов закрыты.} other{Остальные {n} слова закрыты.}}",
+  "@planSessionRestWords": {
+    "description": "Сессия, итог этапа «Слова» (30-6): под списком возвратов.",
     "placeholders": {
       "n": {
         "type": "int"
       }
     }
   },
-  "dayLockedUntil": "Откроется {date}",
-  "@dayLockedUntil": {
+  "planSessionAllWords": "{n, plural, one{{n} слово закрыто.} few{Все {n} слова закрыты.} many{Все {n} слов закрыты.} other{Все {n} слова закрыты.}}",
+  "@planSessionAllWords": {
+    "description": "Сессия, итог этапа «Слова» (30-6) без возвратов.",
     "placeholders": {
-      "date": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionRestPhrases": "{n, plural, one{Остальная {n} фраза закрыта.} few{Остальные {n} фразы закрыты.} many{Остальные {n} фраз закрыты.} other{Остальные {n} фразы закрыты.}}",
+  "@planSessionRestPhrases": {
+    "description": "Сессия, итог этапа «Фразы» (30-6): под списком возвратов.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionAllPhrases": "{n, plural, one{{n} фраза закрыта.} few{Все {n} фразы закрыты.} many{Все {n} фраз закрыты.} other{Все {n} фразы закрыты.}}",
+  "@planSessionAllPhrases": {
+    "description": "Сессия, итог этапа «Фразы» (30-6) без возвратов.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionExitTitle": "Выйти? Прогресс сохранится",
+  "@planSessionExitTitle": {
+    "description": "Сессия, шит выхода (30-8): заголовок."
+  },
+  "planSessionExitBody": "Сделанные карточки этапа «{stage}» останутся закрытыми — продолжишь с того же места.",
+  "@planSessionExitBody": {
+    "description": "Сессия, шит выхода (30-8): одно предложение; кадровое «вернёшься к пятой» требует порядкового числительного в падеже — заменено «с того же места».",
+    "placeholders": {
+      "stage": {
         "type": "String"
       }
     }
   },
-  "dayLessonBuilding": "Собираем день · около минуты",
-  "dayLessonFailed": "День не собрался",
-  "dayLessonRetry": "Повторить"
+  "planSessionExitStay": "Продолжить",
+  "@planSessionExitStay": {
+    "description": "Сессия, шит выхода (30-8): остаться в этапе, текст латунью."
+  },
+  "planSessionExitLeave": "Выйти",
+  "@planSessionExitLeave": {
+    "description": "Сессия, шит выхода (30-8): кнопка."
+  },
+  "planSessionOffline": "нет связи — ответ отправится, как только сеть вернётся",
+  "@planSessionOffline": {
+    "description": "Сессия: баннер под шапкой, пока ответ ждёт отправки (очередь отложенных ответов)."
+  },
+  "planSessionLoadFailed": "День не загрузился",
+  "@planSessionLoadFailed": {
+    "description": "Сессия: вход, когда сервер не ответил."
+  },
+  "planSessionLessonBuilding": "Собираем день · около минуты",
+  "@planSessionLessonBuilding": {
+    "description": "Сессия: вход, пока урок дня ещё пишется (409 plan_lesson_not_ready)."
+  }
 }

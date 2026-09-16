@@ -15,7 +15,7 @@ import '../../../data/plan/plan_models.dart';
 import '../../../data/providers.dart';
 import '../plan_providers.dart';
 import '../plan_tab_parts.dart' show PlanLoadFailedCard;
-import 'day_session_screen.dart';
+import '../session/session_screen.dart';
 import 'day_voice.dart';
 import 'window/window_action_bar.dart';
 import 'window/window_scroll.dart';
@@ -149,15 +149,14 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
       }
       if (!mounted) return;
     }
-    final exit = await Navigator.of(context).push<DaySessionExit>(
-      MaterialPageRoute(
-        builder: (_) => DaySessionScreen(plan: _plan, room: current, rehearsal: action == WindowAction.again),
-      ),
+    // СЕССИЯ ДНЯ (наряд SESSION-1b): «Начать», «Продолжить» и «Ещё раз» ведут в одну сессию — она сама читает
+    // день и встаёт на первую неотвеченную карточку; день в этой сборке не закрывается.
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => SessionScreen(plan: _plan, number: current.day.number)),
     );
     if (!mounted) return;
     ref.invalidate(dayRoomProvider(_address));
     unawaited(ref.read(planTabProvider.notifier).refresh());
-    if (exit == DaySessionExit.dayClosed) AppFeedback.dayClosed();
   }
 
   @override

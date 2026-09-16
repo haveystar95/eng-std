@@ -76,6 +76,25 @@ import UIKit
     registerSpeechProbeChannel(engineBridge.applicationRegistrar.messenger())
     registerLinksChannel(engineBridge.applicationRegistrar.messenger())
     registerPushChannel(engineBridge.applicationRegistrar.messenger())
+    registerAppInfoChannel(engineBridge.applicationRegistrar.messenger())
+  }
+
+  /// ВЕРСИЯ СБОРКИ (наряд SESSION-1b): «1.0.0 (2)» — `CFBundleShortVersionString` и `CFBundleVersion`
+  /// из Info.plist, то есть `version` из pubspec. Стоит мелко на входе в этап (кадр 30-1, правило
+  /// владельца): по ней видно, та ли сборка на телефоне.
+  private func registerAppInfoChannel(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "com.denis.engstd/app_info", binaryMessenger: messenger)
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "version" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      let info = Bundle.main.infoDictionary
+      result([
+        "name": info?["CFBundleShortVersionString"] as? String ?? "",
+        "build": info?["CFBundleVersion"] as? String ?? "",
+      ])
+    }
   }
 
   /// PUSH-ТОКЕН APNs (наряд PLAN-UI-3 §4) — `lib/data/plan/push_registration.dart`.
@@ -241,12 +260,21 @@ import UIKit
           return
         }
 
+        // ТЕМП (наряд SESSION-1b): «Повтори вслух» играет образец на 0.85× — серверный голос всегда
+        // обычного темпа (DECISIONS п. 318), замедление — забота клиента. `enableRate` ставится до
+        // `prepareToPlay`, иначе AVAudioPlayer темп молча не применяет.
+        let rate = ((call.arguments as? [String: Any])?["rate"] as? NSNumber)?.floatValue ?? 1.0
+
         do {
           self.linePlayer?.stop()
           self.finishLinePlay()
           let player = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
           self.linePlayer = player
           player.delegate = self
+          if rate != 1.0 {
+            player.enableRate = true
+            player.rate = max(0.5, min(2.0, rate))
+          }
           player.prepareToPlay()
           self.linePlayResult = result
           if !player.play() {

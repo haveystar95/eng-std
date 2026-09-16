@@ -5151,479 +5151,449 @@ abstract class AppLocalizations {
   /// **'{n, plural, one{{n} минута} few{{n} минуты} other{{n} минут}}'**
   String dayMinutes(int n);
 
-  /// No description provided for @dayApproxMinutes.
+  /// Сессия, вход в этап (30-1): статус этапа в списке пяти — все карточки отвечены.
   ///
   /// In ru, this message translates to:
-  /// **'≈ {n, plural, one{{n} минута} few{{n} минуты} other{{n} минут}}'**
-  String dayApproxMinutes(int n);
+  /// **'пройден'**
+  String get planSessionStateDone;
 
-  /// No description provided for @dayApproxMin.
+  /// Сессия, вход в этап (30-1) и «Нужен микрофон» (30-3): статус этапа, до которого ещё не дошли.
+  ///
+  /// In ru, this message translates to:
+  /// **'впереди'**
+  String get planSessionStateAhead;
+
+  /// Сессия, вход в этап (30-1) и «Дальше» итога этапа (30-6): минуты этапа из окна дня (stage.minutes_left).
   ///
   /// In ru, this message translates to:
   /// **'≈ {n} мин'**
-  String dayApproxMin(int n);
+  String planSessionApproxMinutes(int n);
 
-  /// No description provided for @dayStageWords.
+  /// Сессия, вход в этап «Слова» (30-1): описание под названием; число — единицы этапа.
   ///
   /// In ru, this message translates to:
-  /// **'Слова'**
-  String get dayStageWords;
+  /// **'{n, plural, one{{n} слово дня} few{{n} слова дня} many{{n} слов дня} other{{n} слова дня}} — посмотри, послушай и скажи вслух'**
+  String planSessionDescWords(int n);
 
-  /// No description provided for @dayStagePhrases.
+  /// Сессия, вход в этап «Фразы» (30-1): описание под названием; число — каркасы этапа.
   ///
   /// In ru, this message translates to:
-  /// **'Фразы'**
-  String get dayStagePhrases;
+  /// **'{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся'**
+  String planSessionDescPhrases(int n);
 
-  /// No description provided for @dayStageDialogue.
+  /// Сессия, вход в этап «Диалог» (30-1): описание (этап в этой сборке заблокирован).
   ///
   /// In ru, this message translates to:
-  /// **'Диалог'**
-  String get dayStageDialogue;
+  /// **'Разговор по шагам: пойми реплику и ответь фразами дня'**
+  String get planSessionDescDialogue;
 
-  /// No description provided for @dayStageListen.
+  /// Сессия, вход в этап «Слушаю и отвечаю» (30-1): описание (этап в этой сборке заблокирован).
   ///
   /// In ru, this message translates to:
-  /// **'Слушаю и отвечаю'**
-  String get dayStageListen;
+  /// **'Весь разговор на слух, потом вопросы о нём'**
+  String get planSessionDescListen;
 
-  /// No description provided for @dayStageSpeak.
+  /// Сессия, вход в этап «Говорю сам» (30-1): описание по кадру 30-1b; роль без склонения — «собеседник».
   ///
   /// In ru, this message translates to:
-  /// **'Говорю сам'**
-  String get dayStageSpeak;
+  /// **'Собеседник спрашивает — отвечай про себя, своими словами. Каркасы ты знаешь, окно — твоё'**
+  String get planSessionDescSpeak;
 
-  /// No description provided for @dayFromDay.
+  /// Сессия, вход в этап (30-1): переключатель; хранится на телефоне на план.
   ///
   /// In ru, this message translates to:
-  /// **'из дня {n}'**
-  String dayFromDay(int n);
+  /// **'Без подсказок'**
+  String get planSessionNoHints;
 
-  /// No description provided for @dayWordsCount.
+  /// Сессия, вход в этап (30-1): подпись под переключателем «Без подсказок».
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} слово} few{{n} слова} other{{n} слов}}'**
-  String dayWordsCount(int n);
+  /// **'Диалог и «Говорю сам» — сразу голосом'**
+  String get planSessionNoHintsSub;
 
-  /// No description provided for @dayPhrasesCount.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} фраза} few{{n} фразы} other{{n} фраз}}'**
-  String dayPhrasesCount(int n);
-
-  /// No description provided for @dayExchangesCount.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} обмен} few{{n} обмена} other{{n} обменов}}'**
-  String dayExchangesCount(int n);
-
-  /// No description provided for @dayShellCounter.
-  ///
-  /// In ru, this message translates to:
-  /// **'{stage} · {done} из {total}'**
-  String dayShellCounter(String stage, int done, int total);
-
-  /// No description provided for @dayEntryLabel.
-  ///
-  /// In ru, this message translates to:
-  /// **'Этап {n} из 5'**
-  String dayEntryLabel(int n);
-
-  /// No description provided for @dayEntryLine.
-  ///
-  /// In ru, this message translates to:
-  /// **'{units} · {cards} · {minutes}'**
-  String dayEntryLine(String units, String cards, String minutes);
-
-  /// No description provided for @dayEntryWordsSteps.
-  ///
-  /// In ru, this message translates to:
-  /// **'познакомься · произнеси · выбери перевод · вставь в пример'**
-  String get dayEntryWordsSteps;
-
-  /// No description provided for @dayEntryPhrasesSteps.
-  ///
-  /// In ru, this message translates to:
-  /// **'познакомься · повтори вслух · собери'**
-  String get dayEntryPhrasesSteps;
-
-  /// No description provided for @dayEntryDialogueSteps.
-  ///
-  /// In ru, this message translates to:
-  /// **'прочитай и послушай весь разговор'**
-  String get dayEntryDialogueSteps;
-
-  /// No description provided for @dayEntryListenSteps.
-  ///
-  /// In ru, this message translates to:
-  /// **'послушай · выбери, что он спросил · ответь'**
-  String get dayEntryListenSteps;
-
-  /// No description provided for @dayEntrySpeakSteps.
-  ///
-  /// In ru, this message translates to:
-  /// **'скажи свою реплику в каждом обмене — текста не будет'**
-  String get dayEntrySpeakSteps;
-
-  /// No description provided for @dayEntryNew.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} новое} few{{n} новых} other{{n} новых}}'**
-  String dayEntryNew(int n);
-
-  /// No description provided for @dayEntryReturned.
-  ///
-  /// In ru, this message translates to:
-  /// **'{r, plural, one{{r} вернулось из дня {d}} few{{r} вернулись из дня {d}} other{{r} вернулись из дня {d}}}'**
-  String dayEntryReturned(int r, int d);
-
-  /// No description provided for @dayEntryResume.
-  ///
-  /// In ru, this message translates to:
-  /// **'продолжаем · осталось {n} из {total} · {minutes}'**
-  String dayEntryResume(int n, int total, String minutes);
-
-  /// No description provided for @dayEntryCta.
+  /// Сессия, вход в этап (30-1): кнопка.
   ///
   /// In ru, this message translates to:
   /// **'Начать'**
-  String get dayEntryCta;
+  String get planSessionStart;
 
-  /// No description provided for @dayEntryResumeCta.
+  /// Сессия, вход в этапы «Диалог», «Слушаю и отвечаю», «Говорю сам» (наряд SESSION-1b): вместо «Начать» — экранов у этих этапов в этой сборке нет.
   ///
   /// In ru, this message translates to:
-  /// **'Продолжить'**
-  String get dayEntryResumeCta;
+  /// **'в следующей сборке'**
+  String get planSessionNextBuild;
 
-  /// No description provided for @dayIntroBadgeNew.
+  /// Сессия, вход в этап (30-1): версия сборки мелко серым в подвале — правило владельца.
   ///
   /// In ru, this message translates to:
-  /// **'новое слово'**
-  String get dayIntroBadgeNew;
+  /// **'сборка {version}'**
+  String planSessionBuild(String version);
 
-  /// No description provided for @dayIntroCta.
+  /// Сессия, шапка (30-2): справа словами — сколько единиц этапа ещё не закрыто.
   ///
   /// In ru, this message translates to:
-  /// **'Понятно'**
-  String get dayIntroCta;
+  /// **'{n, plural, one{ещё {n} слово} few{ещё {n} слова} many{ещё {n} слов} other{ещё {n} слова}}'**
+  String planSessionLeftWords(int n);
 
-  /// No description provided for @dayReturnedBadge.
+  /// Сессия, шапка (30-2) этапа «Фразы»: сколько каркасов ещё не закрыто.
   ///
   /// In ru, this message translates to:
-  /// **'Вернулось из дня {n}'**
-  String dayReturnedBadge(int n);
+  /// **'{n, plural, one{ещё {n} фраза} few{ещё {n} фразы} many{ещё {n} фраз} other{ещё {n} фразы}}'**
+  String planSessionLeftPhrases(int n);
 
-  /// No description provided for @dayPhraseBadgeNew.
+  /// Сессия, полоса сцены (30-2b): название сцены и роль собеседника в именительном, как отдал сервер.
   ///
   /// In ru, this message translates to:
-  /// **'новая фраза'**
-  String get dayPhraseBadgeNew;
+  /// **'{scene} · {role}'**
+  String planSessionSceneLine(String scene, String role);
 
-  /// No description provided for @dayPhraseInTalk.
+  /// Сессия, крестик шапки (30-2) и итога этапа (30-6): подпись для читалки экрана.
   ///
   /// In ru, this message translates to:
-  /// **'в разговоре'**
-  String get dayPhraseInTalk;
+  /// **'Закрыть'**
+  String get planSessionClose;
 
-  /// No description provided for @dayTaskPronounce.
+  /// Сессия, знакомство со словом (31-1): задание над листом.
   ///
   /// In ru, this message translates to:
-  /// **'Произнеси'**
-  String get dayTaskPronounce;
+  /// **'Запомни слово'**
+  String get planSessionTaskRememberWord;
 
-  /// No description provided for @dayTaskRepeat.
+  /// Сессия, «Повтори слово» (31-2): задание над листом.
   ///
   /// In ru, this message translates to:
-  /// **'Повтори вслух'**
-  String get dayTaskRepeat;
+  /// **'Скажи слово вслух'**
+  String get planSessionTaskSayWord;
 
-  /// No description provided for @dayTaskAsked.
+  /// Сессия, «Повтори слово» (31-2): голос спутника под заданием; роль собеседника в именительном со строчной.
   ///
   /// In ru, this message translates to:
-  /// **'Что он спросил'**
-  String get dayTaskAsked;
+  /// **'Скажи, как слышишь — {role} поймёт'**
+  String planSessionCompanionSayWord(String role);
 
-  /// «Ответь по-английски» — наречие языка карточки.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ответь {lang}'**
-  String dayTaskAnswer(String lang);
-
-  /// No description provided for @dayTaskSay.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажи {lang}'**
-  String dayTaskSay(String lang);
-
-  /// No description provided for @dayTaskAssemble.
-  ///
-  /// In ru, this message translates to:
-  /// **'Собери, что он сказал'**
-  String get dayTaskAssemble;
-
-  /// No description provided for @dayTaskChoose.
+  /// Сессия, выбор слово → перевод (31-3) и обратный перевод фразы (32-3): задание.
   ///
   /// In ru, this message translates to:
   /// **'Выбери перевод'**
-  String get dayTaskChoose;
+  String get planSessionTaskChooseTranslation;
 
-  /// No description provided for @dayTaskChooseWord.
+  /// Сессия, выбор перевод → слово (31-4): задание.
   ///
   /// In ru, this message translates to:
   /// **'Выбери слово'**
-  String get dayTaskChooseWord;
+  String get planSessionTaskChooseWord;
 
-  /// No description provided for @dayTaskCloze.
+  /// Сессия, «На слух» (31-5) и «Окно на слух» (32-5): задание.
   ///
   /// In ru, this message translates to:
-  /// **'Вставь слово'**
-  String get dayTaskCloze;
+  /// **'Выбери, что услышал'**
+  String get planSessionTaskChooseHeard;
 
-  /// No description provided for @dayTaskAssemblePhrase.
+  /// Сессия, сборка слова из плиток (31-6): задание.
   ///
   /// In ru, this message translates to:
-  /// **'Собери {lang}'**
-  String dayTaskAssemblePhrase(String lang);
+  /// **'Собери из частей'**
+  String get planSessionTaskAssembleParts;
 
-  /// No description provided for @daySayMic.
+  /// Сессия, слово в окне (31-7): задание.
   ///
   /// In ru, this message translates to:
-  /// **'Скажи вслух'**
-  String get daySayMic;
+  /// **'Вставь слово в окно'**
+  String get planSessionTaskInsertWord;
 
-  /// No description provided for @daySayListening.
+  /// Сессия, знакомство с каркасом (32-1): задание.
   ///
   /// In ru, this message translates to:
-  /// **'Слушаем…'**
-  String get daySayListening;
+  /// **'Запомни фразу'**
+  String get planSessionTaskRememberPhrase;
 
-  /// No description provided for @daySayThinking.
+  /// Сессия, перевод → сборка (32-2): задание.
   ///
   /// In ru, this message translates to:
-  /// **'…'**
-  String get daySayThinking;
+  /// **'Собери фразу'**
+  String get planSessionTaskAssemblePhrase;
 
-  /// No description provided for @daySayHeard.
+  /// Сессия, окно · вставь наполнение (32-4): задание.
   ///
   /// In ru, this message translates to:
-  /// **'Услышали: {word}'**
-  String daySayHeard(String word);
+  /// **'Вставь в окно'**
+  String get planSessionTaskInsert;
 
-  /// No description provided for @daySayHeardShort.
+  /// Сессия, «Повтори вслух» (32-6): задание.
   ///
   /// In ru, this message translates to:
-  /// **'Услышали'**
-  String get daySayHeardShort;
+  /// **'Скажи фразу вслух'**
+  String get planSessionTaskSayPhrase;
 
-  /// No description provided for @daySayRetry.
+  /// Сессия, «Скажи с другим окном» (32-7): задание; кадровое «Скажи про шею» требует склонения задания, которого сервер не отдаёт.
   ///
   /// In ru, this message translates to:
-  /// **'Не расслышали. Ещё раз'**
-  String get daySayRetry;
+  /// **'Скажи с другим окном'**
+  String get planSessionTaskOtherSlot;
 
-  /// No description provided for @daySaySkip.
+  /// Сессия, комбинация (32-8): задание; кадровое «Ответь врачу» требует дательного падежа роли, которого сервер не отдаёт.
   ///
   /// In ru, this message translates to:
-  /// **'Пропустить'**
-  String get daySaySkip;
+  /// **'Ответь собеседнику'**
+  String get planSessionTaskReply;
 
-  /// No description provided for @dayReturnDay.
+  /// Сессия, своё окно (32-9): задание.
   ///
   /// In ru, this message translates to:
-  /// **'Вернётся в день {n}'**
-  String dayReturnDay(int n);
+  /// **'Скажи своё'**
+  String get planSessionTaskOwnSlot;
 
-  /// No description provided for @dayReturnStage.
+  /// Сессия, лист вопроса (30-9, 31-3): бровь над словом.
   ///
   /// In ru, this message translates to:
-  /// **'Вернётся в конце этапа'**
-  String get dayReturnStage;
+  /// **'Слово'**
+  String get planSessionBrowWord;
 
-  /// No description provided for @dayNext.
+  /// Сессия, лист вопроса (31-4, 32-2, 32-4): бровь над переводом.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перевод'**
+  String get planSessionBrowTranslation;
+
+  /// Сессия, лист вопроса «На слух» (31-5, 32-5): бровь.
+  ///
+  /// In ru, this message translates to:
+  /// **'На слух'**
+  String get planSessionBrowByEar;
+
+  /// Сессия, лист вопроса (31-7, 32-7): бровь над строкой с окном.
+  ///
+  /// In ru, this message translates to:
+  /// **'Окно'**
+  String get planSessionBrowSlot;
+
+  /// Сессия, знакомство с каркасом (32-1) и выбор окна комбинации (32-8): бровь.
+  ///
+  /// In ru, this message translates to:
+  /// **'Каркас'**
+  String get planSessionBrowFrame;
+
+  /// Сессия, обратный перевод (32-3) и «Повтори вслух» (32-6): бровь.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фраза'**
+  String get planSessionBrowPhrase;
+
+  /// Сессия, комбинация собрана (32-8): бровь.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрано'**
+  String get planSessionBrowAssembled;
+
+  /// Сессия, своё окно (32-9): бровь.
+  ///
+  /// In ru, this message translates to:
+  /// **'Своё окно'**
+  String get planSessionBrowOwnSlot;
+
+  /// Сессия, комбинация (32-8): бровь над репликой собеседника; роль в именительном.
+  ///
+  /// In ru, this message translates to:
+  /// **'{role} · спрашивает'**
+  String planSessionBrowPartnerAsks(String role);
+
+  /// Сессия, «На слух» (31-5): текст вопроса в листе.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что ты услышал?'**
+  String get planSessionWhatHeard;
+
+  /// Сессия, знакомство со словом (31-1) и каркасом (32-1): кнопка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Понятно'**
+  String get planSessionUnderstood;
+
+  /// Сессия, плитки (30-5, 31-6, 32-2): кнопка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверить'**
+  String get planSessionCheck;
+
+  /// Сессия: кнопка после неверного ответа (30-9), итога этапа (30-6), комбинации (32-8); бровь «Дальше» на итоге этапа.
   ///
   /// In ru, this message translates to:
   /// **'Дальше'**
-  String get dayNext;
+  String get planSessionNext;
 
-  /// No description provided for @dayDialogTitle.
+  /// Сессия, сборка слова (31-6): подпись справа от перевода.
   ///
   /// In ru, this message translates to:
-  /// **'Весь разговор'**
-  String get dayDialogTitle;
+  /// **'по частям'**
+  String get planSessionByParts;
 
-  /// No description provided for @dayDialogSub.
+  /// Сессия, микрофон (30-3) в покое: подпись над кнопкой.
   ///
   /// In ru, this message translates to:
-  /// **'Прочитай и послушай — потом будешь отвечать сам'**
-  String get dayDialogSub;
+  /// **'тап — говорить'**
+  String get planSessionMicTap;
 
-  /// No description provided for @dayDialogRoleYou.
+  /// Сессия, микрофон (30-3) «слушаю · пусто»: подпись.
   ///
   /// In ru, this message translates to:
-  /// **'Ты'**
-  String get dayDialogRoleYou;
+  /// **'говори, я слушаю'**
+  String get planSessionMicListening;
 
-  /// No description provided for @dayDialogTranslate.
+  /// Сессия, микрофон (30-3) «услышал»: подпись над кнопкой-галкой.
   ///
   /// In ru, this message translates to:
-  /// **'перевод'**
-  String get dayDialogTranslate;
+  /// **'услышал'**
+  String get planSessionMicHeard;
 
-  /// No description provided for @daySpeakerSays.
+  /// Сессия, «Комбинация» (32-8) «собрано · играет»: подпись под волной, пока звучит собранная фраза.
   ///
   /// In ru, this message translates to:
-  /// **'{role} говорит'**
-  String daySpeakerSays(String role);
+  /// **'играет'**
+  String get planSessionPlaying;
 
-  /// No description provided for @daySpeakerAnswers.
+  /// Сессия, микрофон (30-3) «не расслышал»: подпись.
   ///
   /// In ru, this message translates to:
-  /// **'{role} отвечает'**
-  String daySpeakerAnswers(String role);
+  /// **'не расслышал, ещё раз'**
+  String get planSessionMicMissed;
 
-  /// No description provided for @daySpeakHint.
+  /// Сессия, «Повтори слово» (31-2c): подпись эха под услышанным словом.
   ///
   /// In ru, this message translates to:
-  /// **'Подсказка'**
-  String get daySpeakHint;
+  /// **'услышал — так же, как в записи'**
+  String get planSessionEcho;
 
-  /// No description provided for @daySpeakHinted.
+  /// Сессия, микрофон (30-3) и «Нужен микрофон»: текст над кнопкой — карточка закрывается «пропущено».
   ///
   /// In ru, this message translates to:
-  /// **'Засчитано с подсказкой · вернётся в день {n}'**
-  String daySpeakHinted(int n);
+  /// **'Пропустить'**
+  String get planSessionSkip;
 
-  /// No description provided for @dayStageDoneWords.
+  /// Сессия, голосовые карточки: поле debug-сборки на симуляторе — текст идёт как распознанный; в release поля нет.
   ///
   /// In ru, this message translates to:
-  /// **'Слова закрыты'**
-  String get dayStageDoneWords;
+  /// **'что услышал'**
+  String get planSessionDebugHeard;
 
-  /// No description provided for @dayStageDonePhrases.
+  /// Сессия, «нет разрешения · экран» (30-3): заголовок.
   ///
   /// In ru, this message translates to:
-  /// **'Фразы закрыты'**
-  String get dayStageDonePhrases;
+  /// **'Нужен микрофон'**
+  String get planSessionNoMicTitle;
 
-  /// No description provided for @dayStageDoneDialogue.
+  /// Сессия, «нет разрешения · экран» (30-3): текст под заголовком.
   ///
   /// In ru, this message translates to:
-  /// **'Диалог закрыт'**
-  String get dayStageDoneDialogue;
+  /// **'Без него этапы «Слушаю и отвечаю» и «Говорю сам» не пройти. Слова и фразы можно делать выбором и плитками.'**
+  String get planSessionNoMicBody;
 
-  /// No description provided for @dayStageDoneListen.
+  /// Сессия, «нет разрешения · экран» (30-3): кнопка — спросить систему или открыть настройки.
   ///
   /// In ru, this message translates to:
-  /// **'«Слушаю и отвечаю» закрыт'**
-  String get dayStageDoneListen;
+  /// **'Разрешить'**
+  String get planSessionNoMicAllow;
 
-  /// No description provided for @dayStageDoneSpeak.
+  /// Сессия, своё окно (32-9): чип с микрофоном рядом с известными наполнениями.
   ///
   /// In ru, this message translates to:
-  /// **'«Говорю сам» закрыт'**
-  String get dayStageDoneSpeak;
+  /// **'своё…'**
+  String get planSessionOwnChip;
 
-  /// No description provided for @dayStageDoneMeta.
+  /// Сессия, своё окно зачтено (32-9): строка шалфеем вместо перевода.
   ///
   /// In ru, this message translates to:
-  /// **'{cards} · {minutes}'**
-  String dayStageDoneMeta(String cards, String minutes);
+  /// **'по смыслу ✓'**
+  String get planSessionByMeaning;
 
-  /// No description provided for @dayStageFactsInWork.
+  /// Сессия, своё окно не зачтено (32-9): кнопка новой попытки под причиной отказа.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} слово в работе} few{{n} слова в работе} other{{n} слов в работе}}'**
-  String dayStageFactsInWork(int n);
+  /// **'Ещё раз'**
+  String get planSessionTryAgain;
 
-  /// No description provided for @dayStageFactsPhrasesInWork.
+  /// Сессия, итог этапа (30-6): лейбл над единицами, которые вернутся на следующий день.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} фраза в работе} few{{n} фразы в работе} other{{n} фраз в работе}}'**
-  String dayStageFactsPhrasesInWork(int n);
+  /// **'Вернётся завтра'**
+  String get planSessionReturnsTomorrow;
 
-  /// No description provided for @dayStageFactsExchangesInWork.
+  /// Сессия, итог этапа «Слова» (30-6): заголовок с минутами этапа от сервера.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} обмен в работе} few{{n} обмена в работе} other{{n} обменов в работе}}'**
-  String dayStageFactsExchangesInWork(int n);
+  /// **'Слова пройдены · {minutes}'**
+  String planSessionDoneWords(String minutes);
 
-  /// No description provided for @dayStageFactsHinted.
+  /// Сессия, итог этапа «Фразы» (30-6): заголовок с минутами этапа от сервера.
   ///
   /// In ru, this message translates to:
-  /// **'{n} с подсказкой'**
-  String dayStageFactsHinted(int n);
+  /// **'Фразы пройдены · {minutes}'**
+  String planSessionDonePhrases(String minutes);
 
-  /// No description provided for @dayStageFactsReturn.
+  /// Сессия, итог этапа «Слова» (30-6): под списком возвратов.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} вернётся} other{{n} вернутся}}'**
-  String dayStageFactsReturn(int n);
+  /// **'{n, plural, one{Остальное {n} слово закрыто.} few{Остальные {n} слова закрыты.} many{Остальные {n} слов закрыты.} other{Остальные {n} слова закрыты.}}'**
+  String planSessionRestWords(int n);
 
-  /// No description provided for @dayStageNext.
+  /// Сессия, итог этапа «Слова» (30-6) без возвратов.
   ///
   /// In ru, this message translates to:
-  /// **'Дальше: {stage} · {cards} · {minutes}'**
-  String dayStageNext(String stage, String cards, String minutes);
+  /// **'{n, plural, one{{n} слово закрыто.} few{Все {n} слова закрыты.} many{Все {n} слов закрыты.} other{Все {n} слова закрыты.}}'**
+  String planSessionAllWords(int n);
 
-  /// No description provided for @dayExitTitle.
+  /// Сессия, итог этапа «Фразы» (30-6): под списком возвратов.
   ///
   /// In ru, this message translates to:
-  /// **'Продолжить позже?'**
-  String get dayExitTitle;
+  /// **'{n, plural, one{Остальная {n} фраза закрыта.} few{Остальные {n} фразы закрыты.} many{Остальные {n} фраз закрыты.} other{Остальные {n} фразы закрыты.}}'**
+  String planSessionRestPhrases(int n);
 
-  /// No description provided for @dayExitBody.
+  /// Сессия, итог этапа «Фразы» (30-6) без возвратов.
   ///
   /// In ru, this message translates to:
-  /// **'Ты на этапе {stage} · {done} из {total}. Прогресс сохранится'**
-  String dayExitBody(String stage, int done, int total);
+  /// **'{n, plural, one{{n} фраза закрыта.} few{Все {n} фразы закрыты.} many{Все {n} фраз закрыты.} other{Все {n} фразы закрыты.}}'**
+  String planSessionAllPhrases(int n);
 
-  /// No description provided for @dayExitStay.
+  /// Сессия, шит выхода (30-8): заголовок.
   ///
   /// In ru, this message translates to:
-  /// **'Остаться'**
-  String get dayExitStay;
+  /// **'Выйти? Прогресс сохранится'**
+  String get planSessionExitTitle;
 
-  /// No description provided for @dayExitLeave.
+  /// Сессия, шит выхода (30-8): одно предложение; кадровое «вернёшься к пятой» требует порядкового числительного в падеже — заменено «с того же места».
+  ///
+  /// In ru, this message translates to:
+  /// **'Сделанные карточки этапа «{stage}» останутся закрытыми — продолжишь с того же места.'**
+  String planSessionExitBody(String stage);
+
+  /// Сессия, шит выхода (30-8): остаться в этапе, текст латунью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить'**
+  String get planSessionExitStay;
+
+  /// Сессия, шит выхода (30-8): кнопка.
   ///
   /// In ru, this message translates to:
   /// **'Выйти'**
-  String get dayExitLeave;
+  String get planSessionExitLeave;
 
-  /// No description provided for @dayNoVoice.
+  /// Сессия: баннер под шапкой, пока ответ ждёт отправки (очередь отложенных ответов).
   ///
   /// In ru, this message translates to:
-  /// **'без озвучки — читает телефон'**
-  String get dayNoVoice;
+  /// **'нет связи — ответ отправится, как только сеть вернётся'**
+  String get planSessionOffline;
 
-  /// No description provided for @dayLockedByDay.
+  /// Сессия: вход, когда сервер не ответил.
   ///
   /// In ru, this message translates to:
-  /// **'Сначала закончи день {n}'**
-  String dayLockedByDay(int n);
+  /// **'День не загрузился'**
+  String get planSessionLoadFailed;
 
-  /// No description provided for @dayLockedUntil.
-  ///
-  /// In ru, this message translates to:
-  /// **'Откроется {date}'**
-  String dayLockedUntil(String date);
-
-  /// No description provided for @dayLessonBuilding.
+  /// Сессия: вход, пока урок дня ещё пишется (409 plan_lesson_not_ready).
   ///
   /// In ru, this message translates to:
   /// **'Собираем день · около минуты'**
-  String get dayLessonBuilding;
-
-  /// No description provided for @dayLessonFailed.
-  ///
-  /// In ru, this message translates to:
-  /// **'День не собрался'**
-  String get dayLessonFailed;
-
-  /// No description provided for @dayLessonRetry.
-  ///
-  /// In ru, this message translates to:
-  /// **'Повторить'**
-  String get dayLessonRetry;
+  String get planSessionLessonBuilding;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

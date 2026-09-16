@@ -127,6 +127,70 @@ abstract final class AppMotion {
   /// Фото: тон → картинка растворением 200 мс (слоты слов, плита, шит, круг компактной шапки).
   static const windowPhotoFade = Duration(milliseconds: 200);
 
+  // ── Сессия дня — таблица «Тайминг · сессия» канвы `session-canvas.dc.html` (наряд SESSION-1b): одна ──
+  // ── константа на строку таблицы. Пульсы и волны — ПЕРИОДЫ повторяющихся движений, не переходы.   ──
+
+  /// «Смена карточки» — 220 мс, ease-out `cubic-bezier(0,0,.58,1)`, сдвиг 24 px и затухание.
+  static const sessionCardChange = Duration(milliseconds: 220);
+  static const sessionCardShift = 24.0;
+  static const sessionEaseOut = Cubic(0, 0, .58, 1);
+
+  /// «Галка „верно“» — 180 мс, ease-out-back `cubic-bezier(.34,1.56,.64,1)`, масштаб 0→1.
+  static const sessionCheckPop = Duration(milliseconds: 180);
+  static const sessionEaseOutBack = Cubic(.34, 1.56, .64, 1);
+
+  /// «Подъём листа „верно“» — 220 мс, подъём 2 px и возврат.
+  static const sessionLift = Duration(milliseconds: 220);
+
+  /// «Полоса прогресса доливается» — 260 мс после 120 мс, ease-in-out.
+  static const sessionBarFill = Duration(milliseconds: 260);
+  static const sessionBarFillDelay = Duration(milliseconds: 120);
+
+  /// «Бусина этапа перекрашивается в шалфей» — 180 мс после 120 мс, ease-out.
+  static const sessionBeadFill = Duration(milliseconds: 180);
+
+  /// «Автопереход после верного» — задержка перед сменой карточки.
+  static const sessionAutoAdvance = Duration(milliseconds: 600);
+
+  /// «Покачивание „неверно“» — 120 мс × 2, ±4 px, ease-in-out.
+  static const sessionShake = Duration(milliseconds: 120);
+  static const sessionShakeOffset = 4.0;
+
+  /// «Подложка шалфея у верного варианта» — 160 мс после 120 мс, 0→15 %.
+  static const sessionSageWash = Duration(milliseconds: 160);
+  static const sessionSageWashDelay = Duration(milliseconds: 120);
+
+  /// «Точка „вернётся завтра“ вырастает» — 180 мс, ease-out-back.
+  static const sessionReturnDot = Duration(milliseconds: 180);
+
+  /// «Плитка в строку сборки» — 160 мс, ease-out.
+  static const sessionTileMove = Duration(milliseconds: 160);
+
+  /// «Волна микрофона», «Волна „прослушать“ / „На слух“» — кадр 60 мс, linear, только пока идёт звук.
+  static const sessionWaveFrame = Duration(milliseconds: 60);
+
+  /// «Живая строка: слово появляется» — 120 мс; «Совпавшее слово перекрашивается в шалфей» — 160 мс.
+  static const sessionLiveWord = Duration(milliseconds: 120);
+  static const sessionMatchedWord = Duration(milliseconds: 160);
+
+  /// «Курсор-подчерк до первого звука» — период 1000 мс, steps(1).
+  static const sessionCaretPeriod = Duration(milliseconds: 1000);
+
+  /// «Кольцо шалфея у кнопки „слушаю“» — период 1200 мс, только пока идёт запись.
+  static const sessionListenPulse = Duration(milliseconds: 1200);
+
+  /// «Шит выхода 30-8» — 280 мс; «Фон под шитом до 40 %» — 320 мс; оба ease-out-cubic.
+  static const sessionExitSheet = Duration(milliseconds: 280);
+  static const sessionExitScrim = Duration(milliseconds: 320);
+
+  /// «Подстановка в окно (чип → окно)» — 160 мс; «Чип выбран (чернила)» — 120 мс.
+  static const sessionChipToSlot = Duration(milliseconds: 160);
+  static const sessionChipSelect = Duration(milliseconds: 120);
+
+  /// «Окно зачтено шалфеем» — 160 мс после 120 мс; каркас и окно перекрашиваются раздельно.
+  static const sessionSlotSage = Duration(milliseconds: 160);
+  static const sessionSlotSageDelay = Duration(milliseconds: 120);
+
   /// Ни одна анимация не длиннее этого.
   static const maxDuration = Duration(milliseconds: 420);
 

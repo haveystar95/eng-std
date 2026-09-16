@@ -370,6 +370,25 @@ class LineAudioCache {
     }
   }
 
+  /// Сыграть файл по пути — сессия дня (наряд SESSION-1b) знает звук карточки по АДРЕСУ, а не по
+  /// тексту. [rate] — темп воспроизведения (0.85× у «Повтори вслух»). Ждёт конца файла; false — играть
+  /// нечем (не iOS, файл пропал), зовите системный голос.
+  Future<bool> playFile(String path, {double rate = 1.0}) async {
+    try {
+      await _channel.invokeMethod<void>('play', {'path': path, if (rate != 1.0) 'rate': rate});
+
+      return true;
+    } on PlatformException catch (e) {
+      debugPrint('[line-audio] play file failed: ${e.code}');
+      _silentFallbacks++;
+      _lastReason = 'play: ${e.code}';
+
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
   Future<void> stop() async {
     try {
       await _channel.invokeMethod<void>('stop');
