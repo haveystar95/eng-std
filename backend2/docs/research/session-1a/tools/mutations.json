@@ -1,0 +1,728 @@
+[
+ {
+  "name": "1. разнесение A_i / B_{i−1} / C_{i−2}",
+  "rule": "Разнесение этапа: на шаге i выдаётся A_i, потом B_{i−1}, потом C_{i−2}; чего нет — пропускается (наряд, разд. 2).",
+  "defect": "три карточки единицы выдаются подряд: на шаге i берутся A_i, B_i, C_i — «интро → повтори → проверка» одного слова встык.",
+  "file": "app/Modules/Plan/Domain/Assembly/Spacing.php",
+  "find": "[$a[$i] ?? null, $b[$i - 1] ?? null, $c[$i - 2] ?? null]",
+  "replace": "[$a[$i] ?? null, $b[$i] ?? null, $c[$i] ?? null]",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/HelpersTest.php",
+    "filter": "spaces three lists of four as A_i"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "deals three cards per word, spaced A_i"
+   }
+  ]
+ },
+ {
+  "name": "2a. ротация начинается с места, которое сидит сцена",
+  "rule": "Ротации сидятся адресом карточки: каждая сцена открывает круг видов со своего места, повторная сборка даёт тот же день (наряд, разд. 0 и 2).",
+  "defect": "круг всегда начинается с первого вида: все сцены проверяют первое слово одинаково.",
+  "file": "app/Modules/Plan/Domain/Assembly/Rotation.php",
+  "find": "$offset = (crc32($seed) & 0x7FFFFFFF) % $count;",
+  "replace": "$offset = 0;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/HelpersTest.php",
+    "filter": "rotates reproducibly from a seeded place"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "rotates recognition from a seeded place over the frames with a window"
+   }
+  ]
+ },
+ {
+  "name": "2b. ротация идёт по кругу от единицы к единице",
+  "rule": "Проверка слова и узнавание каркаса идут «по кругу» по индексу единицы: соседние единицы получают разные виды (наряд, разд. 2).",
+  "defect": "индекс единицы выброшен: все слова дня проверяются одним и тем же видом.",
+  "file": "app/Modules/Plan/Domain/Assembly/Rotation.php",
+  "find": "return $cycle[($offset + max(0, $index)) % $count];",
+  "replace": "return $cycle[$offset % $count];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/HelpersTest.php",
+    "filter": "rotates reproducibly from a seeded place"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "rotates the check of a single word from a place the scene seeds"
+   }
+  ]
+ },
+ {
+  "name": "3a. word_assemble только у термина из двух слов и больше",
+  "rule": "Проверка: термин из 2+ слов → word_assemble; иначе по кругу word_choose → word_listen → word_in_line (наряд, разд. 2).",
+  "defect": "порог сборки — одно слово: однословные термины тоже «собираются», ротация проверок исчезает.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "return count(self::words($term->textTarget(), $scene->target)) >= 2;",
+  "replace": "return count(self::words($term->textTarget(), $scene->target)) >= 1;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "assembles only a term of two words or more"
+   }
+  ]
+ },
+ {
+  "name": "3b. артикли пакета цели не считаются словами термина",
+  "rule": "Артикли a/an/the прощаются и берутся из пакета языка цели, ничто их не зашивает в код (наряд, разд. 0; DECISIONS п. 89).",
+  "defect": "артикли считаются словами: «a fever» становится двусловным термином и уходит в сборку, плитка «a» попадает на экран.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "static fn (string $word): bool => ! $articles || ! $target->listed('articles', $word),",
+  "replace": "static fn (string $word): bool => true,",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "assembles only a term of two words or more"
+   }
+  ]
+ },
+ {
+  "name": "4. word_in_line без строки дня → word_choose",
+  "rule": "word_in_line раздаётся только у слова со строкой дня; нет строки — на его место встаёт word_choose (наряд, разд. 2).",
+  "defect": "запасной word_choose снят: слово, которому круг выдал word_in_line без строки (или word_listen без второго слова), остаётся без проверки.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordsStage.php",
+  "find": "} ?? $this->cards->choose($scene, $term, $level, $nativeTopUp);",
+  "replace": "};",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "deals word_choose where a word has no line of the day"
+   }
+  ]
+ },
+ {
+  "name": "5. карточка выбора без двух вариантов не раздаётся",
+  "rule": "Выбор с одним вариантом — не проверка: карточка, у которой осталось меньше двух вариантов, не раздаётся вовсе (доводка ревью, Options::MIN).",
+  "defect": "порог опущен до одного варианта: единственное слово дня получает word_choose с одним ответом.",
+  "file": "app/Modules/Plan/Domain/Assembly/Options.php",
+  "find": "public const MIN = 2;",
+  "replace": "public const MIN = 1;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "deals no word_choose with nothing to choose between"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "deals no phrase_choose_back with nothing to choose between"
+   }
+  ]
+ },
+ {
+  "name": "6. ложные варианты не совпадают с верным и друг с другом",
+  "rule": "Ложные варианты никогда не совпадают с верным и друг с другом по тексту без учёта регистра (наряд, разд. 0).",
+  "defect": "сравнение вариантов по сырому тексту: «В спине» и «в спине » стоят рядом как разные ответы.",
+  "file": "app/Modules/Plan/Domain/Assembly/Options.php",
+  "find": "return mb_strtolower(trim($text));",
+  "replace": "return $text;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "skips a wrong option of another question that equals one of the three"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/DialogueStageTest.php",
+    "filter": "skips a fourth option that reads like one of the three"
+   }
+  ]
+ },
+ {
+  "name": "7a. каркас без окна узнаётся через phrase_choose_back",
+  "rule": "Каркас без окна: узнавание — phrase_choose_back (наряд, разд. 1, «Каркас без окна»).",
+  "defect": "запасной choose_back снят: каркас без окна остаётся без узнавания, у него две карточки вместо трёх.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "return $draft ?? $this->cards->chooseBack($scene, $phrase);",
+  "replace": "return $draft;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "recognises a frame without a window back and has it repeated"
+   }
+  ]
+ },
+ {
+  "name": "7b. каркас без окна произносится через phrase_repeat",
+  "rule": "Каркас без окна: произнесение — phrase_repeat; beginner повторяет каждый каркас (наряд, разд. 2).",
+  "defect": "запасное произнесение — не phrase_repeat: на месте «скажи фразу» второй раз стоит интро.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "return $draft ?? $this->cards->repeat($scene, $phrase);",
+  "replace": "return $draft ?? $this->cards->intro($scene, $phrase);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "recognises a frame without a window back and has it repeated"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "has a beginner repeat every frame"
+   }
+  ]
+ },
+ {
+  "name": "8a. одна phrase_combine на день",
+  "rule": "После всех карточек фраз — ОДНА phrase_combine (наряд, разд. 1–2).",
+  "defect": "карточка кладётся дважды: день получает две одинаковые phrase_combine в конце этапа.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "        $combine = $this->cards->combine($scene);\n        if ($combine !== null) {\n            $drafts[] = $combine;\n        }",
+  "replace": "        $combine = $this->cards->combine($scene);\n        if ($combine !== null) {\n            $drafts[] = $combine;\n            $drafts[] = $combine;\n        }",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "deals three cards per frame spaced A_i"
+   }
+  ]
+ },
+ {
+  "name": "8b. обмен phrase_combine выбирается сидом среди подходящих",
+  "rule": "phrase_combine — обмен answer, чей каркас в дне единственный на своём обмене; среди таких выбор сидится сценой (наряд, разд. 1; SPEC D-15).",
+  "defect": "берётся первый подходящий обмен: сид не участвует, все сцены собирают фразу на одном и том же обмене.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "$exchange = Rotation::pick($scene->seed('phrases:combine'), 0, $once);",
+  "replace": "$exchange = $once[0];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "builds phrase_combine on an answer exchange whose frame is said once"
+   }
+  ]
+ },
+ {
+  "name": "8c. без второго каркаса с окном phrase_combine не раздаётся",
+  "rule": "phrase_combine показывает три каркаса — нужный и два других с окном; других нет — карточки нет (наряд, разд. 1; SPEC D-15).",
+  "defect": "охрана «нет других каркасов» снята: карточка выбора каркаса раздаётся с одним-единственным вариантом.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "        if ($wrong === []) {\n            return null;\n        }\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "falls back to exchange 1 when no answer frame is said once"
+   }
+  ]
+ },
+ {
+  "name": "9a. ask — ученик говорит первым",
+  "rule": "Диалог: ask → dialogue_ask, затем dialogue_partner на ответ партнёра (наряд, разд. 2).",
+  "defect": "порядок обмена ask перевёрнут: сначала «что он ответил», потом реплика ученика — ответ открыт до вопроса.",
+  "file": "app/Modules/Plan/Domain/Assembly/DialogueStage.php",
+  "find": "                    $drafts[] = DialogueCards::ask($scene, $exchange);\n                    $drafts[] = DialogueCards::partner($scene, $exchange);",
+  "replace": "                    $drafts[] = DialogueCards::partner($scene, $exchange);\n                    $drafts[] = DialogueCards::ask($scene, $exchange);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DialogueStageTest.php",
+    "filter": "deals the visit in its order"
+   }
+  ]
+ },
+ {
+  "name": "9b. rescue раздаётся один раз",
+  "rule": "Обмен rescue сразу за answer раздаётся одной карточкой внутри этого answer: partner(k), rescue(k+1), answer(k) — и второй раз не раздаётся (SPEC D-17).",
+  "defect": "отметка «этот rescue уже раздан» снята: обмен-подмога получает две карточки — внутри ответа и своим чередом.",
+  "file": "app/Modules/Plan/Domain/Assembly/DialogueStage.php",
+  "find": "                        $dealtRescue[$i + 1] = true;\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DialogueStageTest.php",
+    "filter": "deals a rescue once"
+   }
+  ]
+ },
+ {
+  "name": "9c. обмен с одним сообщением карточек не даёт",
+  "rule": "Обмен с одним сообщением — в диалоге только лентой, карточек нет (наряд, разд. 2).",
+  "defect": "достаточно любой одной реплики: половинчатый обмен раздаётся как полный.",
+  "file": "app/Modules/Plan/Domain/Assembly/DialogueStage.php",
+  "find": "return count($exchange->messages) >= 2 && $exchange->partner() !== null && $exchange->learner() !== null;",
+  "replace": "return $exchange->partner() !== null || $exchange->learner() !== null;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DialogueStageTest.php",
+    "filter": "deals no card for an exchange with one message"
+   }
+  ]
+ },
+ {
+  "name": "10a. четвёртый вариант dialogue_partner — верный вариант самого дальнего обмена",
+  "rule": "dialogue_partner: три варианта check своего обмена и четвёртый — верный вариант check самого дальнего по шагу обмена (наряд, разд. 1; SPEC D-18).",
+  "defect": "берётся ближайший обмен, а не дальний: ложный вариант из соседней реплики, по смыслу почти верный.",
+  "file": "app/Modules/Plan/Domain/Assembly/DialogueCards.php",
+  "find": "[abs($b->step - $exchange->step), $a->step] <=> [abs($a->step - $exchange->step), $b->step]",
+  "replace": "[abs($a->step - $exchange->step), $a->step] <=> [abs($b->step - $exchange->step), $b->step]",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DialogueStageTest.php",
+    "filter": "fourth, the right option of the farthest exchange"
+   }
+  ]
+ },
+ {
+  "name": "10b. четвёртый вариант не совпадает с тремя",
+  "rule": "Четвёртый вариант пропускается, если читается как один из трёх (регистр и пробелы в стороне) — берётся следующий дальний обмен (наряд, разд. 1; SPEC D-18).",
+  "defect": "совпадение не проверяется: дубликат отсеивается уже в Options, и карточка выходит с тремя вариантами вместо четырёх.",
+  "file": "app/Modules/Plan/Domain/Assembly/DialogueCards.php",
+  "find": "if ($text !== '' && ! isset($taken[self::key($text)])) {",
+  "replace": "if ($text !== '') {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DialogueStageTest.php",
+    "filter": "skips a fourth option that reads like one of the three"
+   }
+  ]
+ },
+ {
+  "name": "10c. четвёртый вариант listen_question — ложный вариант другого вопроса",
+  "rule": "listen_question: три варианта своего вопроса и один неверный вариант другого вопроса listening, со следующего по кругу (наряд, разд. 1).",
+  "defect": "добор из других вопросов снят: у вопроса остаётся три варианта вместо четырёх.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+  "find": "        $count = count($scene->lesson->listening);\n        for ($k = 1; $k < $count; $k++) {\n            $texts = [...$texts, ...self::wrongOptions($scene->lesson->listening[($index + $k) % $count])];\n        }\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "asks every question with its three options and a wrong option of the next question"
+   }
+  ]
+ },
+ {
+  "name": "11. listen_predict только на ask-обменах",
+  "rule": "listen_predict — по одной на каждый ask-обмен (наряд, разд. 1–2).",
+  "defect": "вид обмена не проверяется: догадка о реплике партнёра раздаётся и на answer-обменах, где ученик отвечает, а не спрашивает.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+  "find": "if ($exchange->kind !== ExchangeKind::Ask || $own === null || $partner === null || $right === null) {",
+  "replace": "if ($own === null || $partner === null || $right === null) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "predicts the partner"
+   }
+  ]
+ },
+ {
+  "name": "12a. listen_number только там, где пакет цели видит число или время",
+  "rule": "listen_number — реплика с числом или временем по number_pattern/time_pattern пакета цели; нет такой реплики — карточки нет (наряд, разд. 1).",
+  "defect": "образец числа не спрашивается — числом считается любое слово: карточка «число дня» раздаётся на визите, где чисел нет.",
+  "file": "app/Modules/Plan/Domain/Assembly/NumberValues.php",
+  "find": "return $this->numberPattern !== null && preg_match($this->numberPattern, LanguagePack::normal($word)) === 1;",
+  "replace": "return $this->numberPattern !== null && preg_match('/^\\p{L}+$/u', LanguagePack::normal($word)) === 1;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "deals no number card when no line says a number"
+   }
+  ]
+ },
+ {
+  "name": "12b. listen_number не раздаётся без двух ложных значений",
+  "rule": "listen_number: верное значение и два других числа или времени дня; нет двух ложных — карточки нет (наряд, разд. 1).",
+  "defect": "хватает одного ложного значения: карточка выходит с двумя вариантами вместо трёх.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+  "find": "if (count($chosen['options']) < self::NUMBER_OPTIONS) {",
+  "replace": "if (count($chosen['options']) < Options::MIN) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "deals the number card with exactly two other values and none with one"
+   }
+  ]
+ },
+ {
+  "name": "12c. пакет без образцов чисел и времени значений не читает",
+  "rule": "Язык, у которого в пакете нет ни number_pattern, ни time_pattern, значений не читает — чужие образцы не одалживаются (наряд, разд. 1; DECISIONS п. 89).",
+  "defect": "читатель создаётся и без образцов: язык без правил делает вид, что умеет находить числа.",
+  "file": "app/Modules/Plan/Domain/Assembly/NumberValues.php",
+  "find": "return $number === null && $time === null ? null : new self($number, $time);",
+  "replace": "return new self($number, $time);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "reads a value as a run of number and time words standing together"
+   }
+  ]
+ },
+ {
+  "name": "13. порядок «Слушаю и отвечаю»",
+  "rule": "listen_dialogue → listen_question по каждому вопросу → listen_review → listen_predict по ask-обменам → listen_pace → listen_number (наряд, разд. 2).",
+  "defect": "число идёт раньше темпов: этап заканчивается не той карточкой, на которой построен экран 34-6/34-7.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenStage.php",
+  "find": "        $cards[] = ListenCards::pace($scene);\n        $cards[] = ListenCards::number($scene);",
+  "replace": "        $cards[] = ListenCards::number($scene);\n        $cards[] = ListenCards::pace($scene);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "deals the dialogue, every question, the review, predict per ask, the pace and the number"
+   }
+  ]
+ },
+ {
+  "name": "14a. «Говорю сам» — не больше шести speak_answer, всего ≤ 8",
+  "rule": "speak_answer на обмены answer/ask с каркасом по порядку визита, не больше 6; итого на этапе ≤ 8 карточек (наряд, разд. 2).",
+  "defect": "порог поднят до восьми: этап «Говорю сам» вырастает до десяти карточек.",
+  "file": "app/Modules/Plan/Domain/Assembly/SpeakStage.php",
+  "find": "public const MAX_ANSWERS = 6;",
+  "replace": "public const MAX_ANSWERS = 8;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SpeakStageTest.php",
+    "filter": "deals six answers in the order of the visit"
+   }
+  ]
+ },
+ {
+  "name": "14b. порядок «Говорю сам»: ответы, эхо, пересказ",
+  "rule": "Сначала speak_answer по порядку визита, затем speak_echo на самую длинную реплику ≤ 18 слов, затем speak_retell на следующую (наряд, разд. 2).",
+  "defect": "эхо и пересказ поменялись местами: пересказ берёт реплику эха и идёт первым.",
+  "file": "app/Modules/Plan/Domain/Assembly/SpeakStage.php",
+  "find": "foreach ([CardKind::SpeakEcho, CardKind::SpeakRetell] as $kind) {",
+  "replace": "foreach ([CardKind::SpeakRetell, CardKind::SpeakEcho] as $kind) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SpeakStageTest.php",
+    "filter": "deals six answers in the order of the visit"
+   }
+  ]
+ },
+ {
+  "name": "15. listen_pace и speak_echo не делят реплику",
+  "rule": "speak_echo берёт самую длинную реплику A ≤ 18 слов, НЕ занятую listen_pace (наряд, разд. 2).",
+  "defect": "реплика темпов не исключается: одну и ту же реплику партнёра день проигрывает в «Слушаю» и просит повторить в «Говорю сам».",
+  "file": "app/Modules/Plan/Domain/Assembly/SpeakStage.php",
+  "find": "$taken = $pace === null ? [] : [$pace['step']];",
+  "replace": "$taken = [];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SpeakStageTest.php",
+    "filter": "echoes the longest partner line of at most eighteen words that is not the pace line"
+   }
+  ]
+ },
+ {
+  "name": "16. день повторения — не больше десяти speak_answer",
+  "rule": "День повторения: speak_answer по обменам двух предыдущих сцен, ≤ 10 (seeded) (наряд, разд. 2).",
+  "defect": "кап повторения поднят: день повторения раздаёт все обмены двух сцен.",
+  "file": "app/Modules/Plan/Domain/Assembly/SpeakStage.php",
+  "find": "public const REVIEW_MAX = 10;",
+  "replace": "public const REVIEW_MAX = 14;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SpeakStageTest.php",
+    "filter": "reviews two scenes with at most ten answers"
+   }
+  ]
+ },
+ {
+  "name": "17. репетиция — не больше двенадцати speak_answer",
+  "rule": "Репетиция: speak_answer по всем сценам плана, ≤ 12 (по одному-два на сцену, seeded) (наряд, разд. 2).",
+  "defect": "кап репетиции поднят: тринадцать сцен дают больше двенадцати карточек.",
+  "file": "app/Modules/Plan/Domain/Assembly/SpeakStage.php",
+  "find": "public const REHEARSAL_MAX = 12;",
+  "replace": "public const REHEARSAL_MAX = 26;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SpeakStageTest.php",
+    "filter": "rehearses thirteen scenes with exactly twelve answers"
+   }
+  ]
+ },
+ {
+  "name": "18a. возврат единицы раздаётся один раз",
+  "rule": "Провал дважды → в следующий день-сцену ОДНОЙ карточкой; единица, провалённая на двух прежних днях, возвращается один раз (наряд, разд. 2).",
+  "defect": "дедупликация возвратов снята: слово, провалённое на двух днях, приходит двумя карточками.",
+  "file": "app/Modules/Plan/Domain/Assembly/DayAssembler.php",
+  "find": "            if (isset($seen[$key])) {\n                continue;\n            }\n            $seen[$key] = true;\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionDayAssemblyTest.php",
+    "filter": "deals the returns once each at the end of their stage"
+   }
+  ]
+ },
+ {
+  "name": "18b. возврат стоит в конце своего этапа",
+  "rule": "Возвращённая карточка стоит в конце своего этапа, после сегодняшних, source = returned (наряд, разд. 2).",
+  "defect": "возвраты кладутся перед сегодняшними: день начинается со вчерашних провалов, позиции этапа сдвинуты.",
+  "file": "app/Modules/Plan/Domain/Assembly/DayAssembler.php",
+  "find": "            ...$this->speak->build($scene),\n            ...$this->returns($material, $level, $returned, $nativeTopUp),\n        ];\n\n        return $this->deal($dayId, $drafts, $ids);",
+  "replace": "            ...$this->speak->build($scene),\n        ];\n\n        return $this->deal($dayId, [...$this->returns($material, $level, $returned, $nativeTopUp), ...$drafts], $ids);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionDayAssemblyTest.php",
+    "filter": "deals the returns once each at the end of their stage"
+   }
+  ]
+ },
+ {
+  "name": "19. выбор возвращается один раз, помечает единицу только копия",
+  "rule": "Выбор и сборка: неверно первый раз → failed и копия в конец этапа; неверно второй раз → failed, returns = true (наряд, разд. 3).",
+  "defect": "копии нет: первый же промах помечает единицу «вернётся завтра», второй попытки не будет.",
+  "file": "app/Modules/Plan/Domain/Entity/DayCard.php",
+  "find": "        if ($this->retryOf === null) {\n            return true;\n        }\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DayCardSessionTest.php",
+    "filter": "deals a failed choice again once"
+   }
+  ]
+ },
+ {
+  "name": "20. day-единица никогда не возвращается",
+  "rule": "Единица day (лента, вопросы listening) не возвращается: у следующего дня другой диалог (наряд, разд. 1; SPEC D-05).",
+  "defect": "возвращается любая единица: вопрос listening, провалённый дважды, просится в завтрашний день, которого у него нет.",
+  "file": "app/Modules/Plan/Domain/ValueObject/UnitKind.php",
+  "find": "return $this !== self::Day;",
+  "replace": "return true;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DayCardSessionTest.php",
+    "filter": "returns a word, a frame and an exchange failed twice"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionAnswerTest.php",
+    "filter": "never returns the day"
+   }
+  ]
+ },
+ {
+  "name": "21. судейские виды принимают только skipped",
+  "rule": "Судья (phrase_own_slot, speak_answer, speak_retell): результат пишет сервер на …/judge; клиент вправе только «Пропустить» (наряд, разд. 3; SPEC D-31).",
+  "defect": "судейская карточка принимает любой результат: клиент записывает passed, которого никто не судил.",
+  "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+  "find": "$this->isJudged() => $result === CardResult::Skipped,",
+  "replace": "$this->isJudged() => true,",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/CardKindTest.php",
+    "filter": "lets the client write only the results the kind can have"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionAnswerTest.php",
+    "filter": "refuses a result the kind cannot have with 422"
+   }
+  ]
+ },
+ {
+  "name": "22. голос не бывает failed — две попытки без зачёта дают skipped",
+  "rule": "Голос: passed по покрытию; две попытки без зачёта → skipped (провал без последствий, возвратов нет) (наряд, разд. 3; SPEC D-31).",
+  "defect": "голосовая карточка принимает failed: молчание распознавателя становится провалом и тянет за собой возврат единицы.",
+  "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+  "find": "$this->isSpoken() => $result !== CardResult::Failed,",
+  "replace": "$this->isSpoken() => true,",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/CardKindTest.php",
+    "filter": "lets the client write only the results the kind can have"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionAnswerTest.php",
+    "filter": "refuses a result the kind cannot have with 422"
+   }
+  ]
+ },
+ {
+  "name": "23. судья: без покрытия каркаса модель не зовётся",
+  "rule": "Судья, шаг 1: нет покрытия слов каркаса по heard → accepted=false, slot_value=null, «Каркас не прозвучал», модель не зовётся и кап не тратится (наряд, разд. 4).",
+  "defect": "проверка покрытия снята: пустая или чужая реплика уходит в модель и тратит суточный кап.",
+  "file": "app/Modules/Plan/Application/Service/SlotJudge.php",
+  "find": "if (! $this->coverage->covers($heard, $part, $this->minimum($payload['coverage_min'] ?? null, $part, $target), $target)) {",
+  "replace": "if (false) {",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SlotJudgeTest.php",
+    "filter": "rejects by code an attempt without the frame"
+   }
+  ]
+ },
+ {
+  "name": "24. судья: известное наполнение — зачёт кодом",
+  "rule": "Судья, шаг 2: наполнение, которое урок знает, услышанное подряд, — зачёт кодом, бесплатно и без модели (наряд, разд. 4; SPEC D-16).",
+  "defect": "зачёт кодом по наполнению снят: каждая правильная реплика идёт в модель за деньги.",
+  "file": "app/Modules/Plan/Application/Service/SlotJudge.php",
+  "find": "        foreach ($values as $value) {\n            if ($this->coverage->containsSequence($heard, $value, $target)) {\n                return SlotJudgeVerdict::byCode(true, $value, null);\n            }\n        }\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SlotJudgeTest.php",
+    "filter": "accepts by code a value the lesson knows"
+   }
+  ]
+ },
+ {
+  "name": "25. судья: hinted → hinted, не passed",
+  "rule": "Подсказка до зачёта → клиент шлёт hinted: true, итог карточки — hinted, не passed (наряд, разд. 3–4).",
+  "defect": "подсказка не учитывается: зачёт с открытым каркасом пишется как чистый passed.",
+  "file": "app/Modules/Plan/Domain/Entity/DayCard.php",
+  "find": "$this->result = $hinted ? CardResult::Hinted : CardResult::Passed;",
+  "replace": "$this->result = CardResult::Passed;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DayCardSessionTest.php",
+    "filter": "answers a judged card with the accepted verdict"
+   },
+   {
+    "path": "tests/Feature/Plan/SlotJudgeTest.php",
+    "filter": "asks the model about a value the lesson does not know"
+   }
+  ]
+ },
+ {
+  "name": "26. судья: молчание модели — зачёт кодом и +1 judge.unavailable",
+  "rule": "Модель не ответила за 8 с / не по форме / кап исчерпан → accepted=true по коду и +1 judge.unavailable в plan_check_counters (наряд, разд. 4).",
+  "defect": "счётчик не пишется: молчание вендора становится невидимым, админка не отличает зачёт модели от зачёта кодом.",
+  "file": "app/Modules/Plan/Application/Service/SlotJudge.php",
+  "find": "        $this->counters->recordCodes($this->model->slotJudgePromptVersion(), [LessonCodes::JUDGE_UNAVAILABLE]);\n\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SlotJudgeTest.php",
+    "filter": "when the model is silent or off the shape"
+   }
+  ]
+ },
+ {
+  "name": "27. судья: суточный кап на пользователя",
+  "rule": "Кап 60 вызовов на пользователя в сутки (Redis, TTL до полуночи зоны): дальше — зачёт кодом без вызова (наряд, разд. 4).",
+  "defect": "кап не спрашивается: судья ходит в модель без счёта, суточный расход ничем не ограничен.",
+  "file": "app/Modules/Plan/Application/Service/SlotJudge.php",
+  "find": "        if (! $this->quota->take($user, $now, $this->calendar->timezoneFor($user), $this->config->slotJudgeDailyCap)) {\n            return $this->unavailable($fallbackSlot);\n        }",
+  "replace": "        if (false) {\n            return $this->unavailable($fallbackSlot);\n        }",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SlotJudgeTest.php",
+    "filter": "stops asking the model past the day"
+   }
+  ]
+ },
+ {
+  "name": "28. судья: 422 на неподсудном виде",
+  "rule": "…/judge только для phrase_own_slot, speak_answer, speak_retell — у других 422 plan_card_not_judged (наряд, разд. 4).",
+  "defect": "вид карточки не проверяется: судить можно любую карточку дня, включая выбор и сквозные.",
+  "file": "app/Modules/Plan/Application/Command/JudgeCardHandler.php",
+  "find": "        if (! $card->kind()->isJudged()) {\n            throw CardNotJudged::of($card->kind());\n        }\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SlotJudgeTest.php",
+    "filter": "judges only the judged kinds"
+   }
+  ]
+ },
+ {
+  "name": "29. UnitStates: карточки дня — не единицы программы",
+  "rule": "Единицы программы окна дня — слово, каркас, обмен; карточки с unit_kind = day не считаются (наряд, разд. 3; SPEC D-05).",
+  "defect": "лента и вопросы listening считаются единицами: «слушаю» встаёт в программу как непройденная единица и может «вернуться завтра».",
+  "file": "app/Modules/Plan/Domain/Service/UnitStates.php",
+  "find": "            if ($card->unitKind() === UnitKind::Day) {\n                continue;\n            }\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionWindowTest.php",
+    "filter": "leaves the day"
+   }
+  ]
+ },
+ {
+  "name": "30. ProgramSummary: пройдено считается по состоянию done",
+  "rule": "Бровь вкладки: сколько единиц всего, сколько пройдено, сколько вернётся завтра — правила прежние на новых видах (наряд, разд. 3).",
+  "defect": "возвращающаяся единица считается пройденной: «6 пройдено · 2 вернутся завтра» превращается в «8 пройдено».",
+  "file": "app/Modules/Plan/Domain/ValueObject/ProgramSummary.php",
+  "find": "count(array_filter($states, static fn (UnitState $s): bool => $s === UnitState::Done)),",
+  "replace": "count(array_filter($states, static fn (UnitState $s): bool => $s !== UnitState::Pending)),",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionWindowTest.php",
+    "filter": "summarises a tab by its states"
+   }
+  ]
+ },
+ {
+  "name": "31. DayPace: минуты округляются вверх",
+  "rule": "Окно дня показывает минуты по таблице секунд на вид; минуты вверх — этап с оставшейся карточкой не говорит «0» (наряд, разд. 2).",
+  "defect": "минуты округляются вниз: 36 секунд работы показываются как «0 мин».",
+  "file": "app/Modules/Plan/Domain/Service/DayPace.php",
+  "find": "return $seconds <= 0 ? 0 : (int) ceil($seconds / 60);",
+  "replace": "return $seconds <= 0 ? 0 : (int) floor($seconds / 60);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionWindowTest.php",
+    "filter": "prices what is left by kind"
+   }
+  ]
+ },
+ {
+  "name": "32. таблица темпа — все раздаваемые виды, та же в коде и в config/plan.php",
+  "rule": "DayPace — секунды на карточку по ВИДУ, 28 раздаваемых видов, начальные значения в config/plan.php (наряд, разд. 2).",
+  "defect": "вид выпал из таблицы: listen_number считается бесплатным, а код и конфиг расходятся.",
+  "file": "app/Modules/Plan/Domain/Service/DayPace.php",
+  "find": "        'listen_number' => 15,\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/CardKindTest.php",
+    "filter": "prices every dealt kind and nothing else"
+   }
+  ]
+ },
+ {
+  "name": "33. метрики дня: длинные паузы не считаются",
+  "rule": "Метрики дня (DayMetricsCalculator) на новых видах, правила прежние: карточек роздано, сделано, минуты без длинных пауз (наряд, разд. 3).",
+  "defect": "паузы считаются целиком: отложенный на час день показывает минуты стояния, а не работы.",
+  "file": "app/Modules/Plan/Domain/Service/DayMetricsCalculator.php",
+  "find": "if ($gap <= self::PAUSE_SECONDS) {",
+  "replace": "if (true) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionWindowTest.php",
+    "filter": "computes the day metrics from cards of any kind"
+   }
+  ]
+ },
+ {
+  "name": "34. фикстуры полного дня — байт-в-байт",
+  "rule": "docs/fixtures/day-doctor.json и day-doctor-beginner.json — полный раздатый день, детерминированный, тест держит их байт-в-байт (наряд, разд. 6).",
+  "defect": "длительность ленты складывается из нулей: total_ms уходит в 0 — провод меняется там, где юнит-тесты сборки его не видят.",
+  "file": "app/Modules/Plan/Application/Service/CardViews.php",
+  "find": "$total += $ms;",
+  "replace": "$total += 0;",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionDayFixtureTest.php",
+    "filter": "holds day 1 of the clean doctor lesson byte for byte"
+   }
+  ]
+ },
+ {
+  "name": "35. покрытие речи: ≤ 2 слов — все, дальше 70 %",
+  "rule": "Покрытие речи: ожидаемый текст ≤ 2 слов — все слова; 3+ слов — ≥ 70 % мультимножеством; coverage_min сервер кладёт в payload (наряд, разд. 0).",
+  "defect": "порог «короткой строки» поднят до трёх слов: фраза из трёх слов засчитывается по двум.",
+  "file": "app/Modules/Plan/Domain/Service/SpeechCoverage.php",
+  "find": "public const SHORT_WORDS = 2;",
+  "replace": "public const SHORT_WORDS = 3;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SpeechCoverageTest.php",
+    "filter": "asks all of a line of at most two counted words"
+   }
+  ]
+ },
+ {
+  "name": "49. пустой пересказ отклоняется кодом",
+  "rule": "speak_retell: молчание ученика — не пересказ; деградация судьи не должна засчитывать пустое (находка invariant-reviewer)",
+  "defect": "порог пустого heard снят — пустой пересказ уходит модели и при её молчании засчитывается",
+  "file": "app/Modules/Plan/Application/Service/SlotJudge.php",
+  "find": "            if (trim($heard) === '') {\n                return SlotJudgeVerdict::byCode(false, null, self::NOTHING_SAID);\n            }",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SlotJudgeTest.php",
+    "filter": "refuses a retelling that was never said"
+   }
+  ]
+ }
+]

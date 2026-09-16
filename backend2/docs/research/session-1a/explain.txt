@@ -1,0 +1,70 @@
+rows: day_cards=20179 plan_check_counters=46 plan_line_audios=122
+
+  day_cards_pkey: CREATE UNIQUE INDEX day_cards_pkey ON public.day_cards USING btree (id)
+  day_cards_position_uidx: CREATE UNIQUE INDEX day_cards_position_uidx ON public.day_cards USING btree (day_id, stage, "position")
+  day_cards_returns_idx: CREATE INDEX day_cards_returns_idx ON public.day_cards USING btree (day_id) WHERE (returns = true)
+  day_cards_source_day_idx: CREATE INDEX day_cards_source_day_idx ON public.day_cards USING btree (source_day_id) WHERE (source_day_id IS NOT NULL)
+  day_cards_user_idx: CREATE INDEX day_cards_user_idx ON public.day_cards USING btree (user_id)
+  plan_check_counters_pkey: CREATE UNIQUE INDEX plan_check_counters_pkey ON public.plan_check_counters USING btree (id)
+  plan_check_counters_uidx: CREATE UNIQUE INDEX plan_check_counters_uidx ON public.plan_check_counters USING btree (prompt_version, check_name, action)
+  plan_line_audios_pkey: CREATE UNIQUE INDEX plan_line_audios_pkey ON public.plan_line_audios USING btree (id)
+  plan_line_audios_uidx: CREATE UNIQUE INDEX plan_line_audios_uidx ON public.plan_line_audios USING btree (scene_id, line_ref, voice_key)
+  plan_line_audios_user_idx: CREATE INDEX plan_line_audios_user_idx ON public.plan_line_audios USING btree (user_id)
+
+=== 1. day cards by day, in stage order and position (forDay)
+    select * from "day_cards" where "day_id" = ? order by CASE stage WHEN 'words' THEN 0 WHEN 'phrases' THEN 1 WHEN 'dialogue' THEN 2 WHEN 'listen' THEN 3 ELSE 4 END, "position" asc
+    Sort  (cost=155.58..155.77 rows=79 width=773) (actual time=0.115..0.120 rows=79 loops=1)
+    Sort Key: (CASE stage WHEN 'words'::text THEN 0 WHEN 'phrases'::text THEN 1 WHEN 'dialogue'::text THEN 2 WHEN 'listen'::text THEN 3 ELSE 4 END), "position"
+    Sort Method: quicksort  Memory: 112kB
+    Buffers: shared hit=26
+    ->  Index Scan using day_cards_position_uidx on day_cards  (cost=0.29..153.09 rows=79 width=773) (actual time=0.017..0.051 rows=79 loops=1)
+    Index Cond: (day_id = '01M2H13E1VTNH5CMN1SARPRWHE'::bpchar)
+    Buffers: shared hit=26
+    Planning:
+    Buffers: shared hit=1
+    Planning Time: 0.087 ms
+    Execution Time: 0.147 ms
+
+=== 2. slot judge counter upsert (recordCodes, rolled back)
+    INSERT INTO plan_check_counters (id, prompt_version, check_name, action, hits, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (prompt_version, check_name, action) DO UPDATE SET hits = plan_check_counters.hits + EXCLUDED.hits, updated_at = EXCLUDED.updated_at
+    Insert on plan_check_counters  (cost=0.00..0.01 rows=0 width=0) (actual time=0.022..0.022 rows=0 loops=1)
+    Conflict Resolution: UPDATE
+    Conflict Arbiter Indexes: plan_check_counters_uidx
+    Tuples Inserted: 0
+    Conflicting Tuples: 1
+    Buffers: shared hit=4
+    ->  Result  (cost=0.00..0.01 rows=1 width=430) (actual time=0.001..0.001 rows=1 loops=1)
+    Planning Time: 0.015 ms
+    Execution Time: 0.029 ms
+
+=== 3. the voice of the scenes (forScenes)
+    select * from "plan_line_audios" where "scene_id" in (?) and "voice_key" in (?)
+    Seq Scan on plan_line_audios  (cost=0.00..19.83 rows=2 width=257) (actual time=0.015..0.032 rows=8 loops=1)
+    Filter: ((scene_id = '01M2H13KSAS23K4YPF1M65SJQD'::bpchar) AND ((voice_key)::text = 'elevenlabs:eleven_v3_conversational:4NejU5DwQjevnR6mh3mb:s50'::text))
+    Rows Removed by Filter: 114
+    Buffers: shared hit=18
+    Planning Time: 0.050 ms
+    Execution Time: 0.040 ms
+
+=== 1b. forDay with enable_seqscan = off
+    select * from "day_cards" where "day_id" = ? order by CASE stage WHEN 'words' THEN 0 WHEN 'phrases' THEN 1 WHEN 'dialogue' THEN 2 WHEN 'listen' THEN 3 ELSE 4 END, "position" asc
+    Sort  (cost=155.58..155.77 rows=79 width=773) (actual time=0.141..0.146 rows=79 loops=1)
+    Sort Key: (CASE stage WHEN 'words'::text THEN 0 WHEN 'phrases'::text THEN 1 WHEN 'dialogue'::text THEN 2 WHEN 'listen'::text THEN 3 ELSE 4 END), "position"
+    Sort Method: quicksort  Memory: 112kB
+    Buffers: shared hit=26
+    ->  Index Scan using day_cards_position_uidx on day_cards  (cost=0.29..153.09 rows=79 width=773) (actual time=0.014..0.074 rows=79 loops=1)
+    Index Cond: (day_id = '01M2H13E1VTNH5CMN1SARPRWHE'::bpchar)
+    Buffers: shared hit=26
+    Planning:
+    Buffers: shared hit=1
+    Planning Time: 0.064 ms
+    Execution Time: 0.170 ms
+
+=== 3b. forScenes with enable_seqscan = off
+    select * from "plan_line_audios" where "scene_id" in (?) and "voice_key" in (?)
+    Index Scan using plan_line_audios_uidx on plan_line_audios  (cost=0.27..187.26 rows=2 width=257) (actual time=0.004..0.005 rows=8 loops=1)
+    Index Cond: ((scene_id = '01M2H13KSAS23K4YPF1M65SJQD'::bpchar) AND ((voice_key)::text = 'elevenlabs:eleven_v3_conversational:4NejU5DwQjevnR6mh3mb:s50'::text))
+    Buffers: shared hit=3
+    Planning Time: 0.028 ms
+    Execution Time: 0.010 ms
+

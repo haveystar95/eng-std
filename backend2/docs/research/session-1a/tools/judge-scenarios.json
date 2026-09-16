@@ -1,0 +1,13 @@
+[
+  {"name": "answer-meaning", "kind": "speak_answer", "ref": "x1", "heard": "My son has a stomach ache", "hinted": false, "expect": "model: accepted — a symptom the lesson did not name"},
+  {"name": "answer-kind", "kind": "speak_answer", "ref": "x1", "heard": "My son has yesterday", "hinted": false, "expect": "model: rejected — a time where a symptom is asked"},
+  {"name": "answer-noframe", "kind": "speak_answer", "ref": "x1", "heard": "he is not feeling well", "hinted": false, "expect": "code: rejected — the frame was not said, no call"},
+  {"name": "answer-filler", "kind": "speak_answer", "ref": "x2", "heard": "He has had it since yesterday", "hinted": false, "expect": "code: accepted — a filler of the lesson, no call"},
+  {"name": "answer-hinted", "kind": "speak_answer", "ref": "x5", "heard": "He should rest in bed", "hinted": true, "expect": "model: accepted, result hinted"},
+  {"name": "own-meaning", "kind": "phrase_own_slot", "ref": "p4", "heard": "He also has a runny nose", "hinted": false, "expect": "model: accepted — a symptom the lesson did not name"},
+  {"name": "own-kind", "kind": "phrase_own_slot", "ref": "p2", "heard": "He has had it a headache", "hinted": false, "expect": "model: rejected — a symptom where a duration is asked"},
+  {"name": "retell-right", "kind": "speak_retell", "ref": "x8", "heard": "Приходите раньше, если ему тяжело дышать или он не может пить", "hinted": false, "expect": "model: accepted"},
+  {"name": "retell-opposite", "kind": "speak_retell", "ref": "x8", "heard": "Приходить не нужно, даже если ему трудно дышать", "hinted": false, "expect": "model: rejected"},
+  {"name": "no-key", "kind": "speak_answer", "ref": "x3", "heard": "His temperature is thirty eight", "hinted": false, "expect": "unavailable: no model key → accepted by code, judge.unavailable +1"},
+  {"name": "over-cap", "kind": "speak_answer", "ref": "x4", "heard": "He also has a runny nose", "hinted": false, "expect": "unavailable: cap 1 spent → accepted by code, no call, judge.unavailable +1"}
+]

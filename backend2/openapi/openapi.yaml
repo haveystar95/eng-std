@@ -2132,11 +2132,29 @@ paths:
       tags: [Plans]
       summary: Record the answer to one card
       description: >-
-        The client grades (the payload carries everything needed) and reports the verdict. A first
-        `failed` on a unit deals the same card again at the end of its stage — it comes back as
-        `requeued`, with a new id and position; a second `failed` stays and marks the unit to return
-        on the next content day (`returns: true`). `skipped` is a spoken card given up on after two
-        attempts: neither consequence. A card answered once is refused again (409 `plan_card_answered`).
+        The client grades (the payload carries everything needed) and reports the verdict, and what
+        the attempt left behind (`response`). A first `failed` on a CHOICE deals the same card again
+        at the end of its stage — it comes back as `requeued`, with a new id, a new position and its
+        options and tiles in another order; a second `failed` stays and marks the unit to return on
+        the next content day (`returns: true`, and `unit.returns_day` says on which). `skipped` is a
+        card given up on: neither consequence. A card answered once is refused again (409
+        `plan_card_answered`); a day that is not open, 409 `plan_day_not_open`.
+
+
+        WHAT MAY BE WRITTEN IS THE KIND'S (наряд SESSION-1a, D-31) — anything else is refused with
+        422 `plan_card_result_not_allowed` (`meta.kind`, `meta.result`) before the card is touched:
+
+          * choice (`word_choose`, `word_listen`, `word_assemble`, `word_in_line`, `phrase_assemble`,
+            `phrase_choose_back`, `phrase_slot`, `phrase_slot_listen`, `phrase_combine`,
+            `dialogue_partner`, `listen_question`, `listen_predict`, `listen_number`) — all four:
+            `passed`, `hinted`, `failed`, `skipped`;
+          * spoken (`word_repeat`, `phrase_repeat`, `phrase_other_slot`, `dialogue_answer`,
+            `dialogue_ask`, `speak_echo`) — `passed`, `hinted`, `skipped`; the voice never `failed`:
+            two attempts without coverage are a skip, not a lapse, and nothing returns;
+          * judged (`phrase_own_slot`, `speak_answer`, `speak_retell`) — only `skipped`: the pass is
+            the judge's (`POST …/judge`), never the client's word;
+          * walkthrough (`word_intro`, `phrase_intro`, `dialogue_rescue`, `listen_dialogue`,
+            `listen_review`, `listen_pace`) — `passed` or `skipped`, never right or wrong.
       parameters:
         - $ref: '#/components/parameters/PlanId'
         - $ref: '#/components/parameters/PlanDayNumber'
@@ -2154,6 +2172,14 @@ paths:
               properties:
                 result: { type: string, enum: [passed, hinted, failed, skipped] }
                 attempts: { type: integer, minimum: 1, maximum: 20 }
+                response:
+                  oneOf:
+                    - $ref: '#/components/schemas/PlanCardAnswerResponse'
+                    - type: 'null'
+                  description: >-
+                    Optional, additive (наряд SESSION-1a, D-30): what the attempt left behind. Only
+                    the keys of `PlanCardAnswerResponse` are kept — anything else is dropped, not
+                    stored — and they come back in the card's `response`.
       responses:
         '200':
           description: The answered card and the requeued one, if any
@@ -2166,7 +2192,112 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: 'No such plan, day or card' }
         '409': { $ref: '#/components/responses/Problem' }
-        '422': { $ref: '#/components/responses/ValidationError' }
+        '422':
+          description: >-
+            `plan_card_result_not_allowed` — the kind does not take this result (`meta.kind`,
+            `meta.result`, RFC 7807); or the body itself is invalid (Laravel shape).
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string }
+
+  /plans/{id}/days/{number}/cards/{cardId}/judge:
+    post:
+      tags: [Plans]
+      summary: «Судья окна» — the server's verdict on one spoken attempt
+      description: >-
+        The one pass a client cannot write itself (наряд SESSION-1a, разд. 4). `phrase_own_slot`,
+        `speak_answer` and `speak_retell` are judged by MEANING: send what the recogniser heard
+        (`heard` — present, and possibly empty: silence is an attempt too) and whether the frame was
+        on screen before the attempt (`hinted`), and the server rules. Every other kind is 422
+        `plan_card_not_judged`.
+
+
+        The code rules first, and for free: the words of the frame outside its slot must be covered
+        (the card's `payload.coverage_min`) — otherwise `accepted: false`, `reason_native` «Каркас не
+        прозвучал — скажи его целиком», and no model is called; a frame with no slot, or a value the
+        lesson knows heard whole in the slot, is accepted by the code. Only what is left goes to the
+        model — one call, eight seconds, a daily cap per learner. A model that is silent, answers off
+        the shape or has no call left leaves the attempt ACCEPTED on the code's word, with the words
+        heard beyond the frame as `slot_value`: a learner who said the frame is not failed by a vendor.
+
+
+        `accepted` → the card is answered: `result` is `hinted` when `hinted` was true, else `passed`
+        (`phrase_own_slot` always shows its frame, so there `hinted` means nothing and is not kept).
+        Not accepted → `attempts` is one more and `result` stays null: «Ещё раз» is another call to
+        this endpoint, «Пропустить» an ordinary `POST …/answer` with `skipped`.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanDayNumber'
+        - name: cardId
+          in: path
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [heard, hinted]
+              properties:
+                heard:
+                  type: [string, 'null']
+                  maxLength: 1000
+                  description: 'Что распознал микрофон, как пришло; пустая строка приходит как null — молчание тоже попытка'
+                hinted:
+                  type: boolean
+                  description: 'Каркас был открыт до попытки («Подсказать» или 5 с молчания) — тогда итог `hinted`, а не `passed`'
+      responses:
+        '200':
+          description: The verdict and the card as it stands after it
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PlanJudgeOutcome' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: >-
+            `plan_not_found` — no such plan for this learner; `plan_card_not_found` — no such card on
+            that day.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '409':
+          description: >-
+            `plan_day_not_open` — the day is not being walked (`meta.status`); `plan_card_answered` —
+            this card already has its result.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: >-
+            `plan_card_not_judged` (`meta.kind`) — this kind is graded by the client without the
+            network; or the body itself is invalid (Laravel shape).
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string }
 
   /plans/{id}/days/{number}/stages/{stage}/close:
     post:
@@ -2895,7 +3026,7 @@ components:
 
     PlanStageProgress:
       type: object
-      required: [stage, total, done, state]
+      required: [stage, total, done, state, cards]
       properties:
         stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
         total: { type: integer }
@@ -2908,13 +3039,21 @@ components:
             ones after `locked`. A day whose lesson is written knows its stages BEFORE it is opened
             — the totals are what `POST …/open` will deal — so `absent` means «no lesson yet», not
             «not opened yet».
+        cards:
+          type: array
+          description: >-
+            Карточки этапа в порядке `position` — с ними этап можно проходить, не спрашивая
+            `…/cards` отдельно (наряд SESSION-1a, D-04, аддитивно). Пустой список у дня, который ещё
+            не открывали: у его наброска есть числа, но нет id, а отвечать можно только по id.
+          items: { $ref: '#/components/schemas/PlanCard' }
 
     PlanProgramUnit:
       type: object
       description: >-
         One unit of the day's program — a word, a phrase or an exchange — and where it stands: what
         the tab's plate counts («8 новых слов», «вернутся в день N»). The words of the programme are
-        the window's (`PlanDayWindow.program`).
+        the window's (`PlanDayWindow.program`). The listen stage's `day` unit is not a unit of the
+        programme and is never listed here (наряд SESSION-1a, D-05).
       required: [unit_kind, source, state]
       properties:
         unit_kind: { type: string, enum: [word, phrase, exchange] }
@@ -2940,7 +3079,10 @@ components:
     PlanWindowUnitState:
       type: string
       enum: [pending, done, returns_tomorrow]
-      description: Where a unit stands, over all its cards of the day (the dialogue read walks no exchange). Any other word is a contract error on the client.
+      description: >-
+        Where a unit stands, over all its cards of the day. The listen stage's own cards are about
+        the visit as a whole (`unit.kind = day`) and walk no unit of the programme. Any other word
+        is a contract error on the client.
 
     PlanWindowStage:
       type: object
@@ -3212,43 +3354,939 @@ components:
     PlanCard:
       type: object
       description: >-
-        One card of a day, with its payload resolved at read time (a term's `image`, a line's
-        `audio_id` — `GET /plans/audio/{audioId}`). The payload is everything the client needs to
-        show AND grade the card; it never points back at the model. Every payload carries
-        `scene_id`; exchange cards carry `exchange_step` and `partner` (the partner's line with
-        `text_target`, `text_native`, `role_*`) and `audio_id`; term cards carry `plan_term_id`,
-        `text_target`, `text_native`, `pronunciation_native`, `image`.
+        ONE CARD OF A DAY, in the envelope of the registry of trainers (наряд SESSION-1a, разд. 0).
+        `payload` is everything the client needs to SHOW and to GRADE the card — it holds no id, no
+        address and nothing that points back at the model — and what could not be known when the day
+        was dealt is resolved at read time: every sound of it is a `PlanCardAudio` with the address
+        of its file and its length, every photo slot of a word card a `PlanCardImage`. Which schema
+        `payload` has is decided by `kind`, one schema per kind.
 
-        Per kind — words: `word_intro` (+ `definition_target`, `example_target`, `example_native`),
-        `word_say` (`expected`, `coverage` 1.0), `word_choose` (`mode` translation|definition,
-        `prompt`, `options[{text, correct}]` ×4), `word_cloze` (`sentence_target` with `___`,
-        `sentence_native`, `answer`, `options`); phrases: `phrase_intro` (`speaking_key`,
-        `example_*`), `phrase_repeat` (`expected`, `coverage` 0.9), `phrase_assemble`
-        (`prompt_native`, `answer`, `tiles` — the phrase's words shuffled plus one extra word of the
-        day); dialogue: `dialogue_read` (`translations_collapsed`, `exchanges[{step, initiator,
-        messages[], audio_id}]`); listen: `listen_question` (`language` native|target, `question`,
-        `options[{text, correct}]` ×3, `explanation_native`), `listen_assemble` (`answer`,
-        `text_native`, `tiles`), `answer_choose` (`options[{text_target, text_native, correct}]`
-        ×3), `answer_assemble` (`prompt_native`, `answer`, `tiles`); speak: `speak` (`task_native`,
-        `expected`, `speaking_key`, `variants`, `coverage` 0.7, `hints{key, text}` — pass by the
-        key or ≥ 70 % of the words of the line or any variant; hint 1 the key, hint 2 the text →
-        result `hinted`).
-      required: [id, stage, position, kind, source, unit_kind, unit_ref, payload, attempts, returns]
+
+        The card does not choose the mode: chips, tiles or voice are all in the payload, and the
+        client picks by the plan's level and the «Без подсказок» switch. `unit` is what the card
+        teaches — the word `v3`, the frame `p2`, the exchange `x4` of the scene in
+        `payload.scene_id`, or the whole visit (`day`), which teaches no unit of the programme and
+        never returns.
+
+
+        The flat keys `unit_kind`, `unit_ref`, `source_day_id`, `answered_at` and `returns` stay
+        beside the new ones and say the same thing — the move is additive (D-03).
+      required:
+        [id, stage, position, kind, unit, source, source_day, retry_of, payload, result, attempts,
+         response, unit_kind, unit_ref, source_day_id, answered_at, returns]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
         stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
         position: { type: integer, minimum: 1, description: 'Within the stage; a requeued card takes the next position' }
-        kind: { type: string, enum: [word_intro, word_say, word_choose, word_cloze, phrase_intro, phrase_repeat, phrase_assemble, dialogue_read, listen_question, listen_assemble, answer_choose, answer_assemble, speak] }
-        source: { type: string, enum: [today, returned] }
-        source_day_id: { type: [string, 'null'], description: 'For a returned card: the day it failed twice on' }
-        unit_kind: { type: string, enum: [word, phrase, exchange] }
-        unit_ref: { type: string }
-        payload: { type: object, additionalProperties: true }
-        retry_of: { type: [string, 'null'], description: 'The card this one re-deals after a first failure' }
-        result: { type: [string, 'null'], enum: [passed, hinted, failed, skipped, null] }
-        attempts: { type: integer }
+        kind:
+          type: string
+          description: >-
+            Which trainer this is — the 29 values of the registry: the 28 that are dealt, and
+            `listen_pairs`, which is RESERVED in the enum and never dealt (the lesson has no two
+            alike lines to pair; its source is v4.6). A client that meets a kind it does not know
+            shows nothing rather than guessing.
+          enum:
+            [word_intro, word_repeat, word_choose, word_listen, word_assemble, word_in_line,
+             phrase_intro, phrase_assemble, phrase_choose_back, phrase_slot, phrase_slot_listen,
+             phrase_repeat, phrase_other_slot, phrase_combine, phrase_own_slot,
+             dialogue_partner, dialogue_answer, dialogue_ask, dialogue_rescue,
+             listen_dialogue, listen_question, listen_review, listen_pairs, listen_predict,
+             listen_pace, listen_number,
+             speak_answer, speak_echo, speak_retell]
+        unit: { $ref: '#/components/schemas/PlanCardUnit' }
+        source: { type: string, enum: [today, returned], description: 'A card of today''s scene, or a unit coming back after failing twice' }
+        source_day: { type: [integer, 'null'], description: 'The NUMBER of the day the unit failed on — only on `source: returned`' }
+        retry_of: { type: [string, 'null'], description: 'The card this one re-deals after a first failure (its options and tiles in another order)' }
+        payload:
+          description: >-
+            The schema is the one of this card's `kind` — `PlanCardPayloadWordIntro` for
+            `word_intro`, and so on for each of the 28 dealt kinds (the schema's `title` IS the
+            kind). Every payload carries `scene_id`, holds every key it names and no other
+            (`additionalProperties: false`), so exactly one of the schemas below fits a given
+            payload: `dialogue_answer` and `dialogue_ask` carry the same keys and are told apart by
+            `exchange.kind` (`answer` / `ask`), as the dealer deals them.
+          oneOf:
+            - $ref: '#/components/schemas/PlanCardPayloadWordIntro'
+            - $ref: '#/components/schemas/PlanCardPayloadWordRepeat'
+            - $ref: '#/components/schemas/PlanCardPayloadWordChoose'
+            - $ref: '#/components/schemas/PlanCardPayloadWordListen'
+            - $ref: '#/components/schemas/PlanCardPayloadWordAssemble'
+            - $ref: '#/components/schemas/PlanCardPayloadWordInLine'
+            - $ref: '#/components/schemas/PlanCardPayloadPhraseIntro'
+            - $ref: '#/components/schemas/PlanCardPayloadPhraseAssemble'
+            - $ref: '#/components/schemas/PlanCardPayloadPhraseChooseBack'
+            - $ref: '#/components/schemas/PlanCardPayloadPhraseSlot'
+            - $ref: '#/components/schemas/PlanCardPayloadPhraseSlotListen'
+            - $ref: '#/components/schemas/PlanCardPayloadPhraseRepeat'
+            - $ref: '#/components/schemas/PlanCardPayloadPhraseOtherSlot'
+            - $ref: '#/components/schemas/PlanCardPayloadPhraseCombine'
+            - $ref: '#/components/schemas/PlanCardPayloadPhraseOwnSlot'
+            - $ref: '#/components/schemas/PlanCardPayloadDialoguePartner'
+            - $ref: '#/components/schemas/PlanCardPayloadDialogueAnswer'
+            - $ref: '#/components/schemas/PlanCardPayloadDialogueAsk'
+            - $ref: '#/components/schemas/PlanCardPayloadDialogueRescue'
+            - $ref: '#/components/schemas/PlanCardPayloadListenDialogue'
+            - $ref: '#/components/schemas/PlanCardPayloadListenQuestion'
+            - $ref: '#/components/schemas/PlanCardPayloadListenReview'
+            - $ref: '#/components/schemas/PlanCardPayloadListenPredict'
+            - $ref: '#/components/schemas/PlanCardPayloadListenPace'
+            - $ref: '#/components/schemas/PlanCardPayloadListenNumber'
+            - $ref: '#/components/schemas/PlanCardPayloadSpeakAnswer'
+            - $ref: '#/components/schemas/PlanCardPayloadSpeakEcho'
+            - $ref: '#/components/schemas/PlanCardPayloadSpeakRetell'
+        result:
+          type: [string, 'null']
+          enum: [passed, hinted, failed, skipped, null]
+          description: >-
+            Null while the card is unanswered — and on a judged card whose attempt the judge did not
+            accept: that is another attempt, not a result. What each kind may be given is D-31, on
+            `POST …/cards/{cardId}/answer`.
+        attempts: { type: integer, minimum: 0, description: 'How many attempts the card took; a judged card counts one more on every call to `…/judge`' }
+        response:
+          oneOf:
+            - $ref: '#/components/schemas/PlanCardResponse'
+            - type: 'null'
+          description: 'What the last attempt left behind — the client''s (`…/answer`) or the judge''s (`…/judge`); null while the card is untouched'
+        unit_kind: { type: string, enum: [word, phrase, exchange, day], description: 'The same as `unit.kind` (kept)' }
+        unit_ref: { type: string, description: 'The same as `unit.ref` (kept)' }
+        source_day_id: { type: [string, 'null'], description: 'For a returned card: the id of the day it failed twice on (kept; `source_day` is its number)' }
         answered_at: { type: [string, 'null'], format: date-time }
-        returns: { type: boolean, description: 'Failed twice — the unit returns on the next content day' }
+        returns: { type: boolean, description: 'Failed twice — the unit returns on the next content day (never a `day` unit)' }
+
+    PlanCardUnit:
+      type: object
+      description: >-
+        Что карточка учит: слово `v3`, каркас `p2`, обмен `x4` сцены из `payload.scene_id` — или весь
+        визит (`day`, у карточек «Слушаю и отвечаю»; у listen_question ref вида `L2` — номер вопроса).
+        По единице клиент сводит карточки этапа в один пункт программы; единица `day` в программе не
+        показывается и никогда не возвращается.
+      required: [kind, ref]
+      properties:
+        kind: { type: string, enum: [word, phrase, exchange, day] }
+        ref: { type: string, description: '`v3`, `p2`, `x4`, `day` или `L2`' }
+
+    PlanCardAnswerResponse:
+      type: object
+      description: >-
+        Что клиент прикладывает к ответу (наряд SESSION-1a, D-30). Все ключи необязательны, любой
+        другой отбрасывается и не хранится; сервер возвращает их в `PlanCard.response` как есть.
+      properties:
+        heard: { type: [string, 'null'], maxLength: 1000, description: 'Что распознал микрофон на голосовой карточке' }
+        hinted_at: { type: [string, 'null'], maxLength: 40, description: 'Какая подсказка была открыта до ответа — почему итог `hinted`' }
+        slot_value: { type: [string, 'null'], maxLength: 200, description: 'Что клиент считает сказанным в окне каркаса' }
+        filler_index: { type: [integer, 'null'], minimum: 0, maximum: 9, description: 'Какое наполнение каркаса выбрано чипом' }
+        mode: { type: [string, 'null'], enum: [chips, tiles, voice_hint, voice_blind, null], description: 'В каком режиме карточка пройдена — чипы, плитки, голос по подсказке или вслепую' }
+        no_mic: { type: [boolean, 'null'], description: 'Микрофона не было — карточка пройдена без голоса' }
+
+    PlanCardResponse:
+      type: object
+      description: >-
+        Что осталось от последней попытки. Обычный ответ кладёт сюда присланное клиентом
+        (`PlanCardAnswerResponse`); карточку по смыслу пишет судья — `heard`, `slot_value`, `hinted`
+        и `judge`. Клиент читает это, чтобы показать услышанное и причину отказа, когда возвращается
+        к карточке.
+      properties:
+        heard: { type: [string, 'null'], description: 'Что было услышано на последней попытке' }
+        hinted_at: { type: [string, 'null'], description: 'Какая подсказка была открыта до ответа' }
+        slot_value: { type: [string, 'null'], description: 'Значение окна: слова клиента или то, что выделил судья' }
+        filler_index: { type: [integer, 'null'], description: 'Выбранное наполнение каркаса' }
+        mode: { type: [string, 'null'], enum: [chips, tiles, voice_hint, voice_blind, null], description: 'Режим, в котором карточка пройдена' }
+        no_mic: { type: [boolean, 'null'], description: 'Попытка без микрофона' }
+        hinted: { type: boolean, description: 'Каркас был на экране до попытки — судья пишет `hinted`, а не `passed` (пишет только судья)' }
+        judge: { $ref: '#/components/schemas/PlanCardJudgeVerdict' }
+
+    PlanCardJudgeVerdict:
+      type: object
+      description: >-
+        Вердикт судьи окна по последней попытке и чей он (наряд SESSION-1a, разд. 4): `code` — решила
+        программа (каркас не прозвучал, окна нет или в окне услышано наполнение урока), `model` —
+        решила модель, `unavailable` — модель молчала, ответила не по форме или кончился суточный кап,
+        и попытка зачтена по коду. Поля вызова заполнены только у `model`; клиент показывает
+        `reason_native` и больше ничего из этого не читает.
+      required: [accepted, reason_native, by]
+      properties:
+        accepted: { type: boolean, description: 'Зачтена ли попытка' }
+        reason_native: { type: [string, 'null'], description: 'Одна фраза на родном, чего не хватило; null при зачёте' }
+        by: { type: string, enum: [code, model, unavailable], description: 'Кто вынес вердикт' }
+        model: { type: [string, 'null'], description: 'Имя модели, если звали её' }
+        prompt_version: { type: [string, 'null'], description: 'Версия промта судьи — `slot_judge.v1`' }
+        cost_usd: { type: [string, 'null'], description: 'Цена вызова, шесть знаков после точки' }
+        latency_ms: { type: [integer, 'null'], description: 'Сколько отвечала модель' }
+        tokens_in: { type: [integer, 'null'] }
+        tokens_out: { type: [integer, 'null'] }
+
+    PlanCardAudio:
+      type: object
+      description: >-
+        Звучащий элемент карточки. `ref` — имя файла так, как его называет сцена: `x3` — реплика
+        партнёра третьего обмена, `x3b` — своя реплика, `p2` — каркас с наполнением первой реплики,
+        `p2.f3` — он же с наполнением 3, `v5` — слово. Клиент играет по `url`; пока файла нет, `url` и
+        `duration_ms` null — телефон читает текст сам.
+      required: [ref, url, duration_ms, voice]
+      properties:
+        ref: { type: string, description: 'Имя файла в сцене — по нему звук узнаётся между карточками' }
+        url: { type: [string, 'null'], format: uri, description: 'Адрес файла (`GET /plans/audio/{audioId}`); null, пока звук не записан' }
+        duration_ms: { type: [integer, 'null'], description: 'Длительность файла в миллисекундах — оценка по байтам; null, пока звука нет' }
+        voice: { type: string, enum: [partner, learner], description: 'Чей это голос — партнёра или ученика' }
+
+    PlanCardImage:
+      type: object
+      description: 'Фото слова: адрес и тон. Тоном заливается место фото, пока картинка грузится и если её нет вовсе.'
+      required: [url, tone]
+      properties:
+        url: { type: [string, 'null'], format: uri, description: 'Адрес фото у поставщика; null, если фото нет' }
+        tone: { type: [string, 'null'], pattern: '^#[0-9A-F]{6}$', description: 'Тон фото — им красят пустое место' }
+
+    PlanCardTerm:
+      type: object
+      description: 'Слово или чанк так, как его показывают карточки слов: сам термин, его чтение, перевод, определение на языке цели и фото.'
+      required: [ref, text_target, pronunciation_native, text_native, definition_target, image]
+      properties:
+        ref: { type: string, description: '`v3` — адрес слова в сцене' }
+        text_target: { type: string, description: 'Слово на языке цели — что показать крупно' }
+        pronunciation_native: { type: [string, 'null'], description: 'Как слово читается родным алфавитом — под словом' }
+        text_native: { type: string, description: 'Перевод — что слово значит' }
+        definition_target: { type: [string, 'null'], description: 'Определение на языке цели — вторая строка карточки знакомства' }
+        image: { $ref: '#/components/schemas/PlanCardImage' }
+
+    PlanCardFiller:
+      type: object
+      description: >-
+        Наполнение окна каркаса. Из наполнений клиент делает чипы и варианты выбора; `index` — то, чем
+        выбор называют в ответе (`filler_index`).
+      required: [index, target, native, pronunciation_native, in_dialogue, native_line, audio]
+      properties:
+        index: { type: integer, minimum: 0, description: 'Номер наполнения в окне — им называют выбор' }
+        target: { type: string, description: 'Значение на языке цели — что произнести или написать в окне' }
+        native: { type: string, description: 'Оно же на родном — чем просят заполнить окно' }
+        pronunciation_native: { type: string, description: 'Как значение читается родным алфавитом' }
+        in_dialogue: { type: boolean, description: 'Этим наполнением каркас звучит в диалоге дня' }
+        native_line: { type: string, description: 'Каркас с этим наполнением целиком на родном — так наполнение выглядит вариантом' }
+        audio:
+          oneOf:
+            - $ref: '#/components/schemas/PlanCardAudio'
+            - type: 'null'
+          description: 'Каркас, сказанный с этим наполнением; null, если такой строки не записано'
+
+    PlanCardFrame:
+      type: object
+      description: >-
+        Каркас реплики: текст с окном `___` на языке цели, его перевод и чтение, и само окно. Клиент
+        показывает `frame_target` и подставляет в окно выбранное наполнение; `slot` null у каркаса без
+        окна — такой показывают целиком.
+      required: [ref, kind, frame_target, frame_native, frame_pronunciation_native, slot]
+      properties:
+        ref: { type: string, description: '`p2` — адрес каркаса в сцене' }
+        kind: { type: string, enum: [answer, ask], description: 'Этим каркасом ученик отвечает или спрашивает' }
+        frame_target: { type: string, description: 'Каркас на языке цели с `___` — что показать и что произнести' }
+        frame_native: { type: string, description: 'Он же на родном — задание словами ученика' }
+        frame_pronunciation_native: { type: string, description: 'Как каркас читается родным алфавитом' }
+        slot:
+          description: 'Окно каркаса; null — окна нет'
+          oneOf:
+            - type: object
+              required: [hint_native, fillers]
+              properties:
+                hint_native: { type: string, description: 'Что кладут в окно, на родном — «где болит»' }
+                fillers:
+                  type: array
+                  description: 'Наполнения окна в порядке урока'
+                  items: { $ref: '#/components/schemas/PlanCardFiller' }
+            - type: 'null'
+
+    PlanCardSaid:
+      type: object
+      description: 'Фраза так, как её говорят в диалоге дня — каркас с наполнением своей первой реплики. Это то, что ученик слышит и повторяет.'
+      required: [filler_index, text_target, text_native, pronunciation_native, audio]
+      properties:
+        filler_index: { type: [integer, 'null'], description: 'Каким наполнением сказано; null у каркаса без окна — он сказан сам собой' }
+        text_target: { type: string, description: 'Фраза целиком на языке цели' }
+        text_native: { type: string, description: 'Она же на родном' }
+        pronunciation_native: { type: [string, 'null'], description: 'Как фраза читается родным алфавитом' }
+        audio: { $ref: '#/components/schemas/PlanCardAudio' }
+
+    PlanCardExchange:
+      type: object
+      description: 'Обмен диалога, о котором карточка: адрес, шаг и вид — ученик отвечает, спрашивает или просит повторить.'
+      required: [ref, step, kind]
+      properties:
+        ref: { type: string, description: '`x3`' }
+        step: { type: integer, minimum: 1, description: 'Номер обмена в визите — им карточки одного обмена держатся вместе' }
+        kind: { type: string, enum: [answer, ask, rescue] }
+
+    PlanCardLine:
+      type: object
+      description: 'Реплика обмена: адрес (`x3` — партнёра, `x3b` — своя), оба текста и звук. Что из текстов показать до ответа, решает кадр.'
+      required: [ref, text_target, text_native, audio]
+      properties:
+        ref: { type: string, description: 'Адрес реплики — он же имя её файла' }
+        text_target: { type: string, description: 'Реплика на языке цели' }
+        text_native: { type: string, description: 'Её перевод' }
+        audio: { $ref: '#/components/schemas/PlanCardAudio' }
+
+    PlanCardOwnLine:
+      type: object
+      description: 'Своя реплика обмена и всё, что сервер о ней знает: на каком каркасе она стоит, каким наполнением сказана и с каких слов её просят начать.'
+      required: [ref, text_target, text_native, frame_ref, filler_index, key, audio]
+      properties:
+        ref: { type: string, description: '`x3b` — адрес своей реплики' }
+        text_target: { type: string, description: 'Что ученик говорит, целиком' }
+        text_native: { type: string, description: 'Перевод своей реплики — из него делают задание' }
+        frame_ref: { type: [string, 'null'], description: 'Каркас реплики — `p3`; null у реплики вне каркаса' }
+        filler_index: { type: [integer, 'null'], description: 'Каким наполнением каркаса сказана; null, если не определено' }
+        key: { type: [string, 'null'], description: 'Ключ произнесения — до четырёх слов каркаса, с которых просят начать; наполнения в нём нет' }
+        audio: { $ref: '#/components/schemas/PlanCardAudio' }
+
+    PlanCardVisitLine:
+      type: object
+      description: 'Реплика визита так, как её играет лента слушания: кто говорит и в каком обмене, оба текста и звук.'
+      required: [ref, role, exchange_step, text_target, text_native, audio]
+      properties:
+        ref: { type: string, description: '`x3` или `x3b`' }
+        role: { type: string, enum: [partner, learner], description: 'Чья реплика — по ней рисуют сторону пузыря' }
+        exchange_step: { type: integer, minimum: 1, description: 'Обмен, к которому реплика относится' }
+        text_target: { type: string, description: 'Реплика на языке цели — лента её не показывает, разбор показывает' }
+        text_native: { type: string, description: 'Её перевод' }
+        audio: { $ref: '#/components/schemas/PlanCardAudio' }
+
+    PlanCardOption:
+      type: object
+      description: >-
+        Один вариант выбора: `id` вида `o1` в показанном порядке и текст. `audio` есть только там, где
+        вариант можно послушать. Верный назван в `correct` тем же `id`; тексты вариантов не совпадают
+        между собой без учёта регистра.
+      required: [id, text]
+      properties:
+        id: { type: string, description: '`o1`…`o4` в порядке показа — этим же id назван верный' }
+        text: { type: string, description: 'Что написано на варианте' }
+        audio: { $ref: '#/components/schemas/PlanCardAudio' }
+
+    PlanCardPayloadWordIntro:
+      type: object
+      title: word_intro
+      additionalProperties: false
+      description: 'Знакомство со словом (31-1): слово, фото, чтение, определение и строка дня, в которой оно звучит. Зачёта нет — «Дальше».'
+      required: [scene_id, term, used_in, audio]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки — по ней карточки одного дня держатся вместе' }
+        term: { $ref: '#/components/schemas/PlanCardTerm' }
+        used_in:
+          description: 'Строка дня, в которой слово звучит; null — такой строки нет, блок «В разговоре» не показывают'
+          oneOf:
+            - type: object
+              required: [ref, line_ref, text_target, text_native, term_span]
+              properties:
+                ref: { type: string, description: 'Чем строка названа: `A3` — реплика партнёра, `p3` — каркас своей реплики, `B3` — своя реплика без каркаса' }
+                line_ref: { type: string, description: 'Имя звукового файла строки — `x3` или `x3b`' }
+                text_target: { type: string, description: 'Строка целиком на языке цели' }
+                text_native: { type: string, description: 'Её перевод' }
+                term_span:
+                  type: array
+                  description: 'Место слова в `text_target`, [начало, конец) в символах — им подсвечивают слово'
+                  items: { type: integer, minimum: 0 }
+                  minItems: 2
+                  maxItems: 2
+            - type: 'null'
+        audio:
+          type: object
+          description: 'Звук слова и звук строки — две кнопки карточки'
+          required: [term, line]
+          properties:
+            term: { $ref: '#/components/schemas/PlanCardAudio' }
+            line:
+              description: 'Звук строки дня; null, когда строки нет'
+              oneOf:
+                - $ref: '#/components/schemas/PlanCardAudio'
+                - type: 'null'
+
+    PlanCardPayloadWordRepeat:
+      type: object
+      title: word_repeat
+      additionalProperties: false
+      description: 'Повтори слово вслух (31-2). Клиент зачитывает сам — покрытие услышанного по `expected_text`; две попытки без зачёта — `skipped`.'
+      required: [scene_id, term, expected_text, coverage_min, audio]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        term: { $ref: '#/components/schemas/PlanCardTerm' }
+        expected_text: { type: string, description: 'Что должно прозвучать — слово на языке цели' }
+        coverage_min: { type: number, description: 'Доля слов `expected_text`, которой хватает для зачёта: 1.0 для двух слов и меньше, иначе 0.7' }
+        audio:
+          type: object
+          description: 'Образец — как слово звучит'
+          required: [term]
+          properties:
+            term: { $ref: '#/components/schemas/PlanCardAudio' }
+
+    PlanCardPayloadWordChoose:
+      type: object
+      title: word_choose
+      additionalProperties: false
+      description: >-
+        Выбор перевода или слова (31-3 / 31-4). Направление задано сервером: beginner видит слово с
+        фото и звуком и выбирает перевод, intermediate читает перевод под фото и выбирает слово —
+        тогда звук у вариантов, а не у вопроса. Зачёт у клиента по `correct`.
+      required: [scene_id, direction, prompt, options, correct]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        direction: { type: string, enum: [term_to_native, native_to_term], description: 'Что показано в вопросе и что выбирают: слово → перевод или перевод → слово' }
+        prompt:
+          description: 'Вопрос — по направлению'
+          oneOf:
+            - type: object
+              description: '`term_to_native`: слово, фото и звук'
+              required: [text_target, image, audio]
+              properties:
+                text_target: { type: string, description: 'Слово на языке цели — вопрос' }
+                image: { $ref: '#/components/schemas/PlanCardImage' }
+                audio: { $ref: '#/components/schemas/PlanCardAudio' }
+            - type: object
+              description: '`native_to_term`: перевод под фото, звука нет — он у вариантов'
+              required: [text_native, image]
+              properties:
+                text_native: { type: string, description: 'Перевод — вопрос' }
+                image: { $ref: '#/components/schemas/PlanCardImage' }
+        options:
+          type: array
+          description: 'Четыре варианта в показанном порядке; при `native_to_term` каждый со своим звуком'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта — по нему клиент зачитывает' }
+
+    PlanCardPayloadWordListen:
+      type: object
+      title: word_listen
+      additionalProperties: false
+      description: 'Звук → написание (31-5): играет слово, ученик выбирает его написание. В вопросе нет ни текста, ни фото, ни перевода; у вариантов звука нет.'
+      required: [scene_id, audio, options, correct]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        audio: { $ref: '#/components/schemas/PlanCardAudio' }
+        options:
+          type: array
+          description: 'Четыре написания слов дня в показанном порядке'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта' }
+
+    PlanCardPayloadWordAssemble:
+      type: object
+      title: word_assemble
+      additionalProperties: false
+      description: 'Собери чанк из плиток (31-6) — только для терминов из двух слов и больше. Зачёт у клиента: собранное должно совпасть с `expected` по порядку.'
+      required: [scene_id, term, tiles, expected]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        term: { $ref: '#/components/schemas/PlanCardTerm' }
+        tiles:
+          type: array
+          description: 'Плитки в лотке, уже перемешанные: слова термина и до трёх лишних из других слов дня'
+          items: { type: string }
+        expected:
+          type: array
+          description: 'Слова термина по порядку без артиклей языка цели — с этим сравнивают собранное'
+          items: { type: string }
+
+    PlanCardPayloadWordInLine:
+      type: object
+      title: word_in_line
+      additionalProperties: false
+      description: 'Слово в строке дня (31-7): строка с пропуском `___` на месте слова и четыре слова дня на выбор. Зачёт у клиента по `correct`.'
+      required: [scene_id, line, options, correct]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        line:
+          type: object
+          description: 'Строка дня с пропуском'
+          required: [ref, line_ref, text_target, text_native, text_native_gapped, audio]
+          properties:
+            ref: { type: string, description: 'Чем строка названа: `A3`, `p3` или `B3`' }
+            line_ref: { type: string, description: 'Имя звукового файла строки — `x3` или `x3b`' }
+            text_target: { type: string, description: 'Строка на языке цели, где на месте слова стоит `___`' }
+            text_native: { type: string, description: 'Перевод строки целиком' }
+            text_native_gapped: { type: [string, 'null'], description: 'Перевод с `___` на месте перевода слова; null, когда строка переводит слово иначе' }
+            audio: { $ref: '#/components/schemas/PlanCardAudio' }
+        options:
+          type: array
+          description: 'Четыре слова дня, каждое со своим звуком; верное — в той форме, в какой оно стоит в строке'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта' }
+
+    PlanCardPayloadPhraseIntro:
+      type: object
+      title: phrase_intro
+      additionalProperties: false
+      description: 'Знакомство с каркасом (32-1): каркас с окном, его наполнения и фраза так, как её говорят в диалоге. Зачёта нет — «Дальше».'
+      required: [scene_id, frame, said]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        frame: { $ref: '#/components/schemas/PlanCardFrame' }
+        said: { $ref: '#/components/schemas/PlanCardSaid' }
+
+    PlanCardPayloadPhraseAssemble:
+      type: object
+      title: phrase_assemble
+      additionalProperties: false
+      description: >-
+        Собери фразу из плиток (32-2): плитки — слова каркаса вне окна и два лишних слова соседних
+        каркасов, окно в строке — пустой чип до выбора наполнения. Зачёт у клиента: `expected.words`
+        по порядку и `expected.filler_index` в окне.
+      required: [scene_id, frame, target_native, tiles, chips, expected]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        frame: { $ref: '#/components/schemas/PlanCardFrame' }
+        target_native: { type: string, description: 'Предложение целиком на родном — что нужно собрать' }
+        tiles:
+          type: array
+          description: 'Плитки в лотке, уже перемешанные и в том же написании, что и `expected.words`'
+          items: { type: string }
+        chips:
+          type: array
+          description: 'Наполнения окна — из них выбирают то, что встаёт в пустой чип'
+          items: { $ref: '#/components/schemas/PlanCardFiller' }
+        expected:
+          type: object
+          description: 'С чем сравнивать собранное'
+          required: [words, slot_at, filler_index]
+          properties:
+            words:
+              type: array
+              description: 'Слова каркаса по порядку — в написании плиток'
+              items: { type: string }
+            slot_at: { type: integer, minimum: 0, description: 'Сколько слов стоит до окна — куда встаёт чип' }
+            filler_index: { type: integer, minimum: 0, description: 'Номер верного наполнения — того, которым фраза сказана в диалоге' }
+
+    PlanCardPayloadPhraseChooseBack:
+      type: object
+      title: phrase_choose_back
+      additionalProperties: false
+      description: 'Узнавание фразы назад (32-3): фраза на языке цели звучит и показана, ученик выбирает её перевод. Зачёт у клиента по `correct`.'
+      required: [scene_id, prompt, options, correct]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        prompt:
+          type: object
+          description: 'Вопрос — сказанная фраза'
+          required: [text_target, pronunciation_native, filler_index, audio]
+          properties:
+            text_target: { type: string, description: 'Фраза на языке цели' }
+            pronunciation_native: { type: [string, 'null'], description: 'Как она читается родным алфавитом' }
+            filler_index: { type: [integer, 'null'], description: 'Каким наполнением сказана; null у каркаса без окна' }
+            audio: { $ref: '#/components/schemas/PlanCardAudio' }
+        options:
+          type: array
+          description: 'Четыре предложения на родном: верное, тот же каркас с другими наполнениями и чужая фраза'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта' }
+
+    PlanCardPayloadPhraseSlot:
+      type: object
+      title: phrase_slot
+      additionalProperties: false
+      description: 'Наполнение окна выбором (32-4): каркас с `___` и задание на родном, варианты — наполнения на языке цели, каждое можно послушать. Зачёт у клиента по `correct`.'
+      required: [scene_id, frame, prompt_native, options, correct]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        frame: { $ref: '#/components/schemas/PlanCardFrame' }
+        prompt_native: { type: string, description: 'Что нужно сказать, на родном — целиком' }
+        options:
+          type: array
+          description: 'До четырёх наполнений со звуком: свои и наполнения соседнего каркаса'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта — наполнения из диалога' }
+
+    PlanCardPayloadPhraseSlotListen:
+      type: object
+      title: phrase_slot_listen
+      additionalProperties: false
+      description: 'Окно на слух (32-5): звучит каркас с одним наполнением, ученик выбирает, какое это было. Текста наполнения в вопросе нет, у вариантов звука нет.'
+      required: [scene_id, frame, filler_index, audio, options, correct]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        frame: { $ref: '#/components/schemas/PlanCardFrame' }
+        filler_index: { type: integer, minimum: 0, description: 'Какое наполнение прозвучало — ответ, клиенту нужен для разбора после выбора' }
+        audio: { $ref: '#/components/schemas/PlanCardAudio' }
+        options:
+          type: array
+          description: 'До четырёх наполнений без звука: свои и наполнения соседнего каркаса'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта' }
+
+    PlanCardPayloadPhraseRepeat:
+      type: object
+      title: phrase_repeat
+      additionalProperties: false
+      description: 'Повтори фразу вслух (32-6). Клиент зачитывает сам — покрытие услышанного по `expected_text`; две попытки без зачёта — `skipped`.'
+      required: [scene_id, frame, filler_index, expected_text, key, coverage_min, audio]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        frame: { $ref: '#/components/schemas/PlanCardFrame' }
+        filler_index: { type: [integer, 'null'], description: 'Каким наполнением сказана фраза; null у каркаса без окна' }
+        expected_text: { type: string, description: 'Что должно прозвучать — фраза целиком' }
+        key: { type: [string, 'null'], description: 'Ключ произнесения — слова, с которых просят начать' }
+        coverage_min: { type: number, description: 'Доля слов `expected_text` для зачёта: 1.0 для двух слов и меньше, иначе 0.7' }
+        audio: { $ref: '#/components/schemas/PlanCardAudio' }
+
+    PlanCardPayloadPhraseOtherSlot:
+      type: object
+      title: phrase_other_slot
+      additionalProperties: false
+      description: >-
+        Тот же каркас с ДРУГИМ наполнением (32-7), заданным переводом; звука у карточки нет. Клиент
+        зачитывает сам: покрытие каркаса по `expected_text` И все слова `slot_expected` в услышанном.
+      required: [scene_id, frame, filler_index, task_native, expected_text, slot_expected, key, coverage_min]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        frame: { $ref: '#/components/schemas/PlanCardFrame' }
+        filler_index: { type: integer, minimum: 0, description: 'Какое наполнение просят — не то, что звучит в диалоге' }
+        task_native: { type: string, description: 'Значение окна на родном — задание' }
+        expected_text: { type: string, description: 'Что должно прозвучать целиком — каркас с этим наполнением' }
+        slot_expected: { type: string, description: 'Значение окна на языке цели — оно должно прозвучать целиком' }
+        key: { type: [string, 'null'], description: 'Ключ произнесения — слова, с которых просят начать' }
+        coverage_min: { type: number, description: 'Доля слов каркаса для зачёта — 1.0 или 0.7' }
+
+    PlanCardPayloadPhraseCombine:
+      type: object
+      title: phrase_combine
+      additionalProperties: false
+      description: >-
+        Собери ответ на реплику (32-8), одна на день: звучит реплика партнёра, ученик выбирает нужный
+        каркас из трёх и наполнение к нему. Зачёт у клиента: каркас должен быть `correct_frame`,
+        наполнение — любое из `chips`.
+      required: [scene_id, exchange, partner_line, frames, correct_frame, chips, correct_filler]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        exchange: { $ref: '#/components/schemas/PlanCardExchange' }
+        partner_line:
+          description: 'Реплика партнёра, на которую отвечают; null, если её нет'
+          oneOf:
+            - $ref: '#/components/schemas/PlanCardLine'
+            - type: 'null'
+        frames:
+          type: array
+          description: 'Три каркаса в показанном порядке — нужный и два чужих с окнами'
+          items:
+            type: object
+            required: [ref, frame_target, frame_native]
+            properties:
+              ref: { type: string, description: '`p2` — по нему сверяют выбор с `correct_frame`' }
+              frame_target: { type: string, description: 'Каркас на языке цели с `___`' }
+              frame_native: { type: string, description: 'Он же на родном' }
+        correct_frame: { type: string, description: '`ref` верного каркаса' }
+        chips:
+          type: array
+          description: 'Наполнения верного каркаса — годится любое'
+          items: { $ref: '#/components/schemas/PlanCardFiller' }
+        correct_filler: { type: [integer, 'null'], description: 'Каким наполнением ответили в этом обмене — для разбора после выбора; null, если не определено' }
+
+    PlanCardPayloadPhraseOwnSlot:
+      type: object
+      title: phrase_own_slot
+      additionalProperties: false
+      description: >-
+        Своё значение в окне (32-9), говорят вслух: каркас открыт с самого начала, наполнения — только
+        примеры. Зачёт ТОЛЬКО сервером (`judge: true`, `POST …/judge`); клиенту остаётся «Пропустить».
+      required: [scene_id, frame, partner_line, task_native, key, coverage_min, examples, chips, judge]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        frame: { $ref: '#/components/schemas/PlanCardFrame' }
+        partner_line:
+          description: 'Реплика партнёра, в ответ на которую каркас звучит в диалоге; null, если такой нет'
+          oneOf:
+            - $ref: '#/components/schemas/PlanCardLine'
+            - type: 'null'
+        task_native: { type: string, description: 'Каркас с окном на родном — задание' }
+        key: { type: [string, 'null'], description: 'Ключ произнесения — слова, с которых просят начать' }
+        coverage_min: { type: number, description: 'Доля слов каркаса, которую судья требует прежде, чем смотреть на окно' }
+        examples:
+          type: array
+          description: 'Наполнения урока на родном — показать как примеры, не как ответы'
+          items: { type: string }
+        chips:
+          type: array
+          description: 'Те же наполнения целиком — чипами, если ученик не хочет придумывать своё'
+          items: { $ref: '#/components/schemas/PlanCardFiller' }
+        judge: { type: boolean, description: 'Всегда true: зачёт этой карточки пишет сервер' }
+
+    PlanCardPayloadDialoguePartner:
+      type: object
+      title: dialogue_partner
+      additionalProperties: false
+      description: 'Что имел в виду партнёр (33-1): звучит его реплика, ученик выбирает пересказ на родном. Текст реплики открывают после верного ответа — это решает клиент.'
+      required: [scene_id, exchange, partner_line, question_native, options, correct]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        exchange: { $ref: '#/components/schemas/PlanCardExchange' }
+        partner_line: { $ref: '#/components/schemas/PlanCardLine' }
+        question_native: { type: string, description: 'Вопрос проверки на родном — заголовок карточки' }
+        options:
+          type: array
+          description: 'Четыре варианта на родном: три от проверки этого обмена и верный вариант самого дальнего обмена'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта' }
+
+    PlanCardPayloadDialogueAnswer:
+      type: object
+      title: dialogue_answer
+      additionalProperties: false
+      description: >-
+        Ответь партнёру своей репликой (33-2 / 33-3 / 33-4). Режим выбирает клиент: beginner — чипы,
+        intermediate — голос по подсказке, «Без подсказок» — голос по пустому каркасу. Зачёт у клиента:
+        покрытие слов каркаса; окно — любое.
+      required: [scene_id, exchange, partner_line, own_line, frame, modes, coverage_min]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        exchange:
+          description: 'Обмен, в котором отвечает ученик — всегда `answer`'
+          allOf:
+            - $ref: '#/components/schemas/PlanCardExchange'
+            - properties: { kind: { const: answer } }
+        partner_line: { $ref: '#/components/schemas/PlanCardLine' }
+        own_line: { $ref: '#/components/schemas/PlanCardOwnLine' }
+        frame: { $ref: '#/components/schemas/PlanCardFrame' }
+        modes:
+          type: object
+          description: 'Данные для всех трёх режимов сразу — карточка режим не выбирает'
+          required: [chips, voice_hint, voice_blind]
+          properties:
+            chips:
+              type: array
+              description: 'Наполнения каркаса — верны все; пустой список у каркаса без окна'
+              items: { $ref: '#/components/schemas/PlanCardFiller' }
+            voice_hint: { type: string, description: 'Своя реплика целиком — подсказка на экране, пока говорят' }
+            voice_blind: { type: string, description: 'Каркас с пустым окном — то же без подсказки' }
+        coverage_min: { type: number, description: 'Доля слов каркаса (без окна) для зачёта — 1.0 или 0.7' }
+
+    PlanCardPayloadDialogueAsk:
+      type: object
+      title: dialogue_ask
+      additionalProperties: false
+      description: >-
+        Спроси первым (33-5): ученик говорит, ответ партнёра звучит после. Данные те же, что у
+        `dialogue_answer` — по форме payload их не различить, различает `kind`.
+      required: [scene_id, exchange, partner_line, own_line, frame, modes, coverage_min]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        exchange:
+          description: 'Обмен, в котором ученик спрашивает первым — всегда `ask`'
+          allOf:
+            - $ref: '#/components/schemas/PlanCardExchange'
+            - properties: { kind: { const: ask } }
+        partner_line: { $ref: '#/components/schemas/PlanCardLine' }
+        own_line: { $ref: '#/components/schemas/PlanCardOwnLine' }
+        frame: { $ref: '#/components/schemas/PlanCardFrame' }
+        modes:
+          type: object
+          description: 'Данные для всех трёх режимов сразу'
+          required: [chips, voice_hint, voice_blind]
+          properties:
+            chips:
+              type: array
+              description: 'Наполнения каркаса — верны все; пустой список у каркаса без окна'
+              items: { $ref: '#/components/schemas/PlanCardFiller' }
+            voice_hint: { type: string, description: 'Своя реплика целиком — подсказка на экране' }
+            voice_blind: { type: string, description: 'Каркас с пустым окном' }
+        coverage_min: { type: number, description: 'Доля слов каркаса (без окна) для зачёта' }
+
+    PlanCardPayloadDialogueRescue:
+      type: object
+      title: dialogue_rescue
+      additionalProperties: false
+      description: >-
+        «Не понял» (33-6): ученик просит повторить, партнёр говорит то же медленнее. Микрофона у кадра
+        нет — карточку проходят насквозь: `passed` или `skipped`.
+      required: [scene_id, exchange, asked_line, rescue_line, partner_repeat, slow_rate, expected_text, coverage_min]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        exchange: { $ref: '#/components/schemas/PlanCardExchange' }
+        asked_line:
+          description: 'Реплика партнёра из предыдущего обмена — та, которую не поняли; null, если её нет'
+          oneOf:
+            - $ref: '#/components/schemas/PlanCardLine'
+            - type: 'null'
+        rescue_line: { $ref: '#/components/schemas/PlanCardLine' }
+        partner_repeat: { $ref: '#/components/schemas/PlanCardLine' }
+        slow_rate: { type: number, description: 'Темп, которым переигрывают реплику партнёра — 0.75' }
+        expected_text: { type: string, description: 'Что говорит ученик — реплика-выручалка целиком' }
+        coverage_min: { type: number, description: 'Доля её слов, если карточку всё же проходят голосом' }
+
+    PlanCardPayloadListenDialogue:
+      type: object
+      title: listen_dialogue
+      additionalProperties: false
+      description: 'Весь визит один раз на слух (34-1). Текстов клиент не показывает — только метки говорящих и время; итог — `passed` по «Дальше».'
+      required: [scene_id, lines, total_ms]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        lines:
+          type: array
+          description: 'Все реплики визита по порядку — их и играют подряд'
+          items: { $ref: '#/components/schemas/PlanCardVisitLine' }
+        total_ms: { type: [integer, 'null'], description: 'Сколько длится вся лента; null, пока хотя бы у одной реплики нет звука' }
+
+    PlanCardPayloadListenQuestion:
+      type: object
+      title: listen_question
+      additionalProperties: false
+      description: 'Вопрос по услышанному (34-2): вопрос на родном и четыре ответа на родном. Зачёт у клиента по `correct`.'
+      required: [scene_id, question, options, correct, exchange_step]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        question:
+          type: object
+          description: 'Вопрос листенинга'
+          required: [ref, text_native]
+          properties:
+            ref: { type: string, description: '`L2` — адрес вопроса; он же `unit.ref` карточки' }
+            text_native: { type: string, description: 'Вопрос на родном' }
+        options:
+          type: array
+          description: 'Четыре варианта на родном: три от этого вопроса и один неверный от другого'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта' }
+        exchange_step: { type: [integer, 'null'], description: 'Обмен, о котором вопрос — для разбора; null, когда сервер его не определил' }
+
+    PlanCardPayloadListenReview:
+      type: object
+      title: listen_review
+      additionalProperties: false
+      description: 'Разбор услышанного (34-3): та же лента, но с текстами, и указание, где стоял ответ на каждый вопрос. Зачёта нет — «Дальше».'
+      required: [scene_id, lines, total_ms, answers]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        lines:
+          type: array
+          description: 'Все реплики визита по порядку — теперь с текстами'
+          items: { $ref: '#/components/schemas/PlanCardVisitLine' }
+        total_ms: { type: [integer, 'null'], description: 'Сколько длится вся лента; null, пока хотя бы у одной реплики нет звука' }
+        answers:
+          type: array
+          description: 'Где в ленте стоял ответ на каждый вопрос — это подсвечивают'
+          items:
+            type: object
+            required: [question_ref, exchange_step, line_ref, span]
+            properties:
+              question_ref: { type: string, description: '`L2` — какой это вопрос' }
+              exchange_step: { type: [integer, 'null'], description: 'Обмен с ответом; null, когда он не определён' }
+              line_ref: { type: [string, 'null'], description: 'Реплика с ответом — `x3` или `x3b`; null, когда обмен не определён' }
+              span:
+                description: 'Место ответа внутри `text_target` реплики, [начало, конец) в символах; null — подсвечивать нечего, показывают всю реплику'
+                oneOf:
+                  - type: array
+                    items: { type: integer, minimum: 0 }
+                    minItems: 2
+                    maxItems: 2
+                  - type: 'null'
+
+    PlanCardPayloadListenPredict:
+      type: object
+      title: listen_predict
+      additionalProperties: false
+      description: 'Предскажи ответ (34-5): своя реплика-вопрос звучит и показана, ученик выбирает, что ответит партнёр. Реплику партнёра открывают после ответа.'
+      required: [scene_id, exchange, own_line, options, correct, partner_line]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        exchange: { $ref: '#/components/schemas/PlanCardExchange' }
+        own_line: { $ref: '#/components/schemas/PlanCardLine' }
+        options:
+          type: array
+          description: 'Три варианта на родном — варианты проверки этого обмена'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта' }
+        partner_line: { $ref: '#/components/schemas/PlanCardLine' }
+
+    PlanCardPayloadListenPace:
+      type: object
+      title: listen_pace
+      additionalProperties: false
+      description: 'Темп речи (34-6): одна длинная реплика партнёра, сначала медленно, потом обычно. Зачёта нет — `passed` по «Понял».'
+      required: [scene_id, exchange, partner_line, rates]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        exchange: { $ref: '#/components/schemas/PlanCardExchange' }
+        partner_line: { $ref: '#/components/schemas/PlanCardLine' }
+        rates:
+          type: array
+          description: 'Темпы, которыми играют реплику, по порядку — 0.75 и 1.0'
+          items: { type: number }
+
+    PlanCardPayloadListenNumber:
+      type: object
+      title: listen_number
+      additionalProperties: false
+      description: 'Число или время на слух (34-7): звучит реплика с числом, ученик выбирает его значение на родном. Зачёт у клиента по `correct`.'
+      required: [scene_id, line, span, options, correct]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        line: { $ref: '#/components/schemas/PlanCardVisitLine' }
+        span:
+          type: array
+          description: 'Место числа в `line.text_target`, [начало, конец) в символах — его подсвечивают при разборе'
+          items: { type: integer, minimum: 0 }
+          minItems: 2
+          maxItems: 2
+        options:
+          type: array
+          description: 'Три значения на родном: верное и два других числа или времени этого дня'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта' }
+
+    PlanCardPayloadSpeakAnswer:
+      type: object
+      title: speak_answer
+      additionalProperties: false
+      description: >-
+        Ответь сам (35-2): звучит реплика партнёра, ученик говорит свою по смыслу; каркас — подсказка,
+        которую открывают по кнопке или после 5 с молчания. Зачёт ТОЛЬКО сервером (`judge: true`,
+        `POST …/judge`, `hinted: true`, если каркас открывали); клиенту остаётся «Пропустить».
+      required: [scene_id, exchange, partner_line, own_line, task_native, frame, key, coverage_min, hint, judge]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        exchange: { $ref: '#/components/schemas/PlanCardExchange' }
+        partner_line:
+          description: 'Реплика, на которую отвечают; у обмена-вопроса — реплика партнёра из предыдущего обмена, у первого обмена null'
+          oneOf:
+            - $ref: '#/components/schemas/PlanCardLine'
+            - type: 'null'
+        own_line: { $ref: '#/components/schemas/PlanCardOwnLine' }
+        task_native: { type: string, description: 'Что нужно сказать, на родном — задание' }
+        frame: { $ref: '#/components/schemas/PlanCardFrame' }
+        key: { type: [string, 'null'], description: 'Ключ произнесения — слова, с которых просят начать' }
+        coverage_min: { type: number, description: 'Доля слов каркаса, которую судья требует прежде, чем смотреть на окно' }
+        hint: { type: string, description: 'Каркас с окном — это и открывают подсказкой' }
+        judge: { type: boolean, description: 'Всегда true: зачёт этой карточки пишет сервер' }
+
+    PlanCardPayloadSpeakEcho:
+      type: object
+      title: speak_echo
+      additionalProperties: false
+      description: 'Повтори за партнёром (35-3): реплика звучит, текст скрыт до ответа, после паузы ученик говорит её сам. Клиент зачитывает сам по покрытию.'
+      required: [scene_id, exchange, partner_line, expected_text, coverage_min, pause_ms]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        exchange: { $ref: '#/components/schemas/PlanCardExchange' }
+        partner_line: { $ref: '#/components/schemas/PlanCardLine' }
+        expected_text: { type: string, description: 'Что должно прозвучать — реплика целиком' }
+        coverage_min: { type: number, description: 'Доля её слов для зачёта — 0.7, какой бы длинной реплика ни была' }
+        pause_ms: { type: integer, description: 'Пауза после звука, прежде чем ждать речь — 3000 мс' }
+
+    PlanCardPayloadSpeakRetell:
+      type: object
+      title: speak_retell
+      additionalProperties: false
+      description: >-
+        Перескажи своими словами (35-4): реплика звучит, текст скрыт, ученик пересказывает её на
+        родном. Зачёт ТОЛЬКО сервером (`judge: true`); текст открывают после вердикта.
+      required: [scene_id, exchange, partner_line, reveal, judge]
+      properties:
+        scene_id: { type: string, description: 'Сцена карточки' }
+        exchange: { $ref: '#/components/schemas/PlanCardExchange' }
+        partner_line: { $ref: '#/components/schemas/PlanCardLine' }
+        reveal:
+          type: object
+          description: 'Что показать после вердикта'
+          required: [text_target, text_native]
+          properties:
+            text_target: { type: string, description: 'Реплика на языке цели' }
+            text_native: { type: string, description: 'Её перевод' }
+        judge: { type: boolean, description: 'Всегда true: зачёт этой карточки пишет сервер' }
 
     PlanDayCards:
       type: object
@@ -3265,14 +4303,58 @@ components:
 
     PlanAnswerOutcome:
       type: object
-      required: [card]
+      description: >-
+        What one answer changed (наряд SESSION-1a, D-02 — additive): the card, its copy at the end of
+        the stage if there is one, whether the unit comes back and on which day, the day's numbers and
+        the minutes of this card's stage. A stage's summary (30-6 / 33-8 / 34-8 / 35-6) and the day's
+        (30-7) are written from these — the client counts nothing itself.
+      required: [card, requeued, unit, day, stage]
       properties:
         card: { $ref: '#/components/schemas/PlanCard' }
         requeued:
           oneOf:
             - $ref: '#/components/schemas/PlanCard'
             - type: 'null'
-          description: The same card dealt again at the end of its stage after a FIRST failure; null otherwise
+          description: The same card dealt again at the end of its stage after a FIRST failure — a new id, a new position, its options and tiles reshuffled; null otherwise
+        unit:
+          type: object
+          description: The unit this card teaches, and what the answer did to it
+          required: [kind, ref, returns_tomorrow, returns_day]
+          properties:
+            kind: { type: string, enum: [word, phrase, exchange, day] }
+            ref: { type: string }
+            returns_tomorrow: { type: boolean, description: 'Failed twice — the unit comes back on the next content day (never a `day` unit)' }
+            returns_day: { type: [integer, 'null'], description: 'The number of the day it comes back on; null when it is not coming back, or no day is left to deal it' }
+        day:
+          type: object
+          description: The day as it stands after the answer — refolded from its cards, never incremented
+          required: [cards_total, cards_done, minutes_spent]
+          properties:
+            cards_total: { type: integer }
+            cards_done: { type: integer }
+            minutes_spent: { type: integer, description: 'From answer timestamps; pauses over ten minutes not counted' }
+        stage:
+          type: object
+          description: This card's stage, counted the same way
+          required: [stage, minutes_spent]
+          properties:
+            stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+            minutes_spent: { type: integer }
+
+    PlanJudgeOutcome:
+      type: object
+      description: >-
+        The judge's ruling on one attempt (наряд SESSION-1a, разд. 4) and the card as it stands after
+        it: answered when accepted, one attempt more when not. `result` and `attempts` are the card's
+        own, repeated at the top for the screen that shows nothing else.
+      required: [accepted, slot_value, reason_native, result, attempts, card]
+      properties:
+        accepted: { type: boolean, description: 'Whether this attempt passes' }
+        slot_value: { type: [string, 'null'], description: 'What the judge read as the value of the slot; null for a retelling, and when there was none' }
+        reason_native: { type: [string, 'null'], description: 'One sentence in the learner''s language saying what was missing; null when accepted' }
+        result: { type: [string, 'null'], enum: [passed, hinted, failed, skipped, null], description: '`passed`, or `hinted` when the frame was shown; null while no attempt has been accepted' }
+        attempts: { type: integer, minimum: 0, description: 'Attempts at this card so far, this one counted' }
+        card: { $ref: '#/components/schemas/PlanCard' }
 
     Problem:
       type: object
