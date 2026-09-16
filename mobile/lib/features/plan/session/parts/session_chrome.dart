@@ -181,8 +181,9 @@ class SessionSceneStrip extends ConsumerWidget {
     final name = user?.name.trim() ?? '';
     return Padding(
       padding: const EdgeInsets.fromLTRB(kSessionGutter, 14, kSessionGutter, 0),
-      child: SizedBox(
-        height: 48,
+      // The line wraps in full — nothing above a session card is cut; the canvas height 48 is only the minimum.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
         child: Row(
           children: [
             SceneCircle(
@@ -191,7 +192,7 @@ class SessionSceneStrip extends ConsumerWidget {
               size: 32,
             ),
             const SizedBox(width: 12),
-            Expanded(child: Text(line, maxLines: 2, style: AppTextSession.sceneLine)),
+            Expanded(child: Text(line, style: AppTextSession.sceneLine)),
             const SizedBox(width: 12),
             Container(
               width: 32,

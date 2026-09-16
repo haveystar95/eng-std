@@ -21,6 +21,10 @@ const double kSessionGutter = 24;
 /// An empty slot in a phrase frame — 96 × 30 (canvases 32-x).
 const Size kSessionEmptyWindow = Size(96, 30);
 
+/// Inside a slot with text: 8 on the sides, 4 above and below — the slot is sized by its text and the text never
+/// touches the outline (polish pass SESSION-1b′, item 10).
+const EdgeInsets kSessionSlotPadding = EdgeInsets.symmetric(horizontal: 8, vertical: 4);
+
 /// Shadow of the material sheet — `0 4px 16px rgba(46,38,32,.08)`.
 const List<BoxShadow> kSessionSheetShadow = [
   BoxShadow(color: AppColors.sessionSheetShadow, blurRadius: 16, offset: Offset(0, 4)),
@@ -470,12 +474,15 @@ class SessionFrameText extends StatelessWidget {
       SlotLook.wrong => (AppColors.ink, Colors.transparent, AppColors.ink),
     };
     final value = slot;
-    final fontSize = style.fontSize ?? 22;
-    // An empty slot has an exact size: otherwise a container without a child stretches across the whole line.
+    // An empty slot has the canvas size: otherwise a container without a child stretches across the whole line. A
+    // slot with text is sized by the text — its own line height plus [kSessionSlotPadding] — and grows with it. The
+    // padding is the same in every state: a tweened padding would put the text against the outline while the slot
+    // fills.
     return AnimatedContainer(
+      key: const ValueKey('session-slot'),
       duration: AppMotion.sessionSlotSage,
       margin: const EdgeInsets.symmetric(horizontal: 2),
-      padding: EdgeInsets.symmetric(horizontal: value == null && !caret ? 0 : 10),
+      padding: kSessionSlotPadding,
       width: value == null ? emptyWindow.width : null,
       height: value == null ? emptyWindow.height : null,
       decoration: BoxDecoration(
@@ -488,12 +495,7 @@ class SessionFrameText extends StatelessWidget {
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Flexible(
-                  child: Text(
-                    value,
-                    style: style.copyWith(color: textColor, height: 34 / fontSize),
-                  ),
-                ),
+                Flexible(child: Text(value, key: const ValueKey('session-slot-text'), style: style.copyWith(color: textColor))),
                 if (caret) const _Caret(),
               ],
             ),

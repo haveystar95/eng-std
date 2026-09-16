@@ -28,10 +28,20 @@ void _autoplay(State state, CardEnv env, CardAudio? audio, String fallback, Obje
   });
 }
 
+/// A lesson card's sound ONCE on open (polish pass SESSION-1b′, item 11): the server file, without a file — the
+/// phone. The returned timer is cancelled when the card goes away; nothing plays if [skip] says the learner has
+/// already chosen what to hear, or if a sound is already playing.
+Timer autoplayOnce(State state, CardEnv env, CardAudio? audio, String fallback, Object key, {bool Function()? skip}) =>
+    Timer(kAutoplayDelay, () {
+      if (!state.mounted || (skip?.call() ?? false) || env.voice.playing.value != null) return;
+      unawaited(env.voice.play(audio, fallback: fallback, key: key));
+    });
+
 // ── 31-1 ──────────────────────────────────────────────────────────────────────────────────────────
 
 /// WORD INTRO (31-1): photo, word, reading, translation, definition; «In the conversation» — the day's line with
-/// the word underlined in brass, and «Listen». The word plays by itself when it appears. «Got it» → `passed`.
+/// the word underlined in brass, and «Listen». The word plays by itself once when it appears ([autoplayOnce]), then
+/// only by «Listen». «Got it» → `passed`.
 class WordIntroCard extends StatefulWidget {
   const WordIntroCard({super.key, required this.env, required this.payload});
 
@@ -46,11 +56,19 @@ class _WordIntroCardState extends State<WordIntroCard> {
   static const _termKey = 'intro-term';
   static const _lineKey = 'intro-line';
 
+  Timer? _autoplayTimer;
+
   @override
   void initState() {
     super.initState();
     final p = widget.payload;
-    _autoplay(this, widget.env, p.termAudio, p.term.textTarget, _termKey);
+    _autoplayTimer = autoplayOnce(this, widget.env, p.termAudio, p.term.textTarget, _termKey);
+  }
+
+  @override
+  void dispose() {
+    _autoplayTimer?.cancel();
+    super.dispose();
   }
 
   @override

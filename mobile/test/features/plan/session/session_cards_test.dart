@@ -45,6 +45,24 @@ void main() {
       expect(probe.nexts, 1);
     });
 
+    // RULE (SESSION-1b′, item 11): a lesson card plays its word once by itself on open — the server file, without a
+    // file the phone — then only by «Listen».
+    // CATCHES: an intro that stays silent, one that plays again by itself, one that starts during the card change.
+    testWidgets('word_intro: the word plays by itself once on open, then only by «Listen»', (tester) async {
+      final voice = QuietVoice();
+      await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.wordIntro), CardProbe(), voice: voice));
+      expect(voice.played, isEmpty, reason: 'after a short pause, not during the card change');
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(voice.played, ['v1@1.0']);
+      expect(voice.fallbacks, ['lower back'], reason: 'without a file the phone reads the word');
+      await tester.pump(const Duration(seconds: 3));
+      expect(voice.played, ['v1@1.0'], reason: 'once');
+      await tester.tap(find.byType(CardListen).first);
+      await tester.pump();
+      expect(voice.played, ['v1@1.0', 'v1@1.0'], reason: '«Listen» plays it again');
+      await settleCard(tester);
+    });
+
     testWidgets('word_repeat (31-2): sample at 0.85×; heard — echo and passed; two misses — skipped, not failed', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.wordRepeat);
       final probe = CardProbe();
@@ -266,6 +284,33 @@ void main() {
 
       await tapText(tester, 'Понятно');
       expect(results(probe), [SessionResult.passed]);
+      await settleCard(tester);
+    });
+
+    // RULE (SESSION-1b′, item 11): the frame intro plays the phrase as the dialogue says it once on open, then only by
+    // «Listen» and the chips; a chip tapped before the pause is what the learner hears — nothing plays over it.
+    // CATCHES: a silent intro, a replay by itself after a chip, an autoplay that talks over the chosen chip.
+    testWidgets('phrase_intro: the phrase plays by itself once on open, then only by «Listen» and the chips', (tester) async {
+      final card = fixtureCard(intermediate, SessionKind.phraseIntro);
+      final said = (card.payload as PhraseIntroPayload).said;
+      final voice = QuietVoice();
+      await pumpCard(tester, probeEnv(card, CardProbe(), voice: voice));
+      expect(voice.played, isEmpty);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(voice.played, ['${said.audio!.ref}@1.0']);
+      expect(voice.fallbacks, [said.textTarget], reason: 'without a file the phone reads the phrase');
+      await tester.tap(find.byKey(const ValueKey('chip-1')));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      expect(voice.played, ['${said.audio!.ref}@1.0', 'p1.f2@1.0'], reason: 'the chip plays; nothing plays by itself again');
+      await settleCard(tester);
+
+      final early = QuietVoice();
+      await pumpCard(tester, probeEnv(card, CardProbe(), voice: early));
+      await tester.tap(find.byKey(const ValueKey('chip-2')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(early.played, ['p1.f3@1.0'], reason: 'a chip before the pause — no autoplay over it');
       await settleCard(tester);
     });
 
@@ -498,9 +543,10 @@ void main() {
       expect(wrong.nexts, 0);
     });
 
-    // CATCHES: options that lean on the day when the server already sent the sentence, and a day dealt before
-    // SESSION-1e (no `frames[].said`) whose options fall back to «___».
-    testWidgets('phrase_combine: `frames[].said` needs no day; without it — the day\'s frame, never «___»', (tester) async {
+    // CATCHES: options that lean on the day when the server already sent the sentence, a day dealt before SESSION-1e
+    // (no `frames[].said`) whose options fall back to «___», and a frame with no whole phrase at all shown with an
+    // ellipsis instead of not being drawn.
+    testWidgets('phrase_combine: `frames[].said` needs no day; without it — the day\'s frame, never «___» or «…»', (tester) async {
       await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.phraseCombine), CardProbe()));
       for (final sentence in _combineSentences) {
         expect(find.text(sentence), findsOneWidget);
@@ -512,6 +558,15 @@ void main() {
         expect(find.text(sentence), findsOneWidget, reason: 'the day\'s frame with its dialogue filler');
       }
       expect(find.textContaining('___'), findsNothing);
+      await settleCard(tester);
+
+      // Neither `said` nor the day: only the correct frame has a whole phrase (its dialogue chip) — the others are
+      // not drawn.
+      await pumpCard(tester, probeEnv(_withoutSaid(fixtureCard(intermediate, SessionKind.phraseCombine)), CardProbe()));
+      expect(find.text('It hurts in his lower back.'), findsOneWidget);
+      expect(find.byType(SessionOption), findsOneWidget);
+      expect(find.textContaining('___'), findsNothing);
+      expect(find.textContaining('…'), findsNothing);
       await settleCard(tester);
     });
 

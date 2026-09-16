@@ -20,7 +20,7 @@ import '../parts/session_tiles.dart';
 import '../session_mic.dart';
 import '../session_texts.dart';
 import 'card_kit.dart';
-import 'word_cards.dart' show kAutoplayDelay, kRepeatRate;
+import 'word_cards.dart' show autoplayOnce, kAutoplayDelay, kRepeatRate;
 
 /// PHRASES — canvas series 32: a frame with a slot, one widget per kind.
 
@@ -146,7 +146,8 @@ class _FillerChips extends StatelessWidget {
 /// FRAME INTRO (32-1) — a lesson card, not a task (polish pass SESSION-1b′, item 3): «Look and listen»; the frame
 /// right away with the filler said in the dialogue in the slot; above the chips, in grey, «this part can change»;
 /// the chips are neutral and do not darken when selected — a tap puts the filler into the slot, voices it and
-/// highlights the slot in sage for 600 ms. «Got it» → `passed`, no reaction sound.
+/// highlights the slot in sage for 600 ms. On open the phrase plays by itself once (item 11), then only by «Listen»
+/// and the chips. «Got it» → `passed`, no reaction sound.
 class PhraseIntroCard extends StatefulWidget {
   const PhraseIntroCard({super.key, required this.env, required this.payload});
 
@@ -164,10 +165,20 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
   /// The slot is highlighted after a tap on a chip.
   bool _flash = false;
   Timer? _flashTimer;
+  Timer? _autoplayTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    final said = widget.payload.said;
+    // The phrase as the dialogue says it — the same sound «Listen» plays before a chip is chosen.
+    _autoplayTimer = autoplayOnce(this, widget.env, said.audio, said.textTarget, 'intro-phrase', skip: () => _filler != null);
+  }
 
   @override
   void dispose() {
     _flashTimer?.cancel();
+    _autoplayTimer?.cancel();
     super.dispose();
   }
 
@@ -822,9 +833,10 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
   }
 
   /// An option as a whole phrase: `frames[].said`, otherwise the day's frame with the filler said in the dialogue,
-  /// otherwise for the correct frame — the filler from the dialogue / the first of the chips; otherwise the frame
-  /// with an ellipsis in the slot.
-  String _sentenceOf(CardFrameText f) {
+  /// otherwise for the correct frame — the filler from the dialogue / the first of the chips. Null — the frame has
+  /// no whole phrase (neither the contract nor the day allows that): the option is not drawn rather than shown with
+  /// `___` or an ellipsis.
+  String? _sentenceOf(CardFrameText f) {
     final said = f.said?.textTarget.trim();
     if (said != null && said.isNotEmpty) return said;
     final fromDay = widget.env.frameSentence?.call(f.ref)?.trim();
@@ -833,7 +845,7 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
       final chip = p.chips.where((c) => c.inDialogue).firstOrNull ?? p.chips.first;
       return f.frameTarget.replaceFirst(kSlotMark, chip.target);
     }
-    return f.frameTarget.replaceFirst(kSlotMark, '…');
+    return null;
   }
 
   void _pickFrame(CardFrameText frame) {
@@ -907,15 +919,18 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final f in p.frames) ...[
-              if (f != p.frames.first) const SizedBox(height: 8),
+            for (final (i, (f, sentence)) in [
+              for (final f in p.frames)
+                if (_sentenceOf(f) case final sentence?) (f, sentence),
+            ].indexed) ...[
+              if (i > 0) const SizedBox(height: 8),
               SessionOption(
                 key: ValueKey('frame-${f.ref}'),
-                text: _sentenceOf(f),
+                text: sentence,
                 target: true,
                 // «Listen» 28 as in the canvas: the whole phrase (`said.audio`); a day dealt before SESSION-1e has no
                 // file — the phone reads the phrase.
-                listen: CardListen(env: env, audio: f.said?.audio, fallback: _sentenceOf(f), playKey: 'frame-${f.ref}', size: 28),
+                listen: CardListen(env: env, audio: f.said?.audio, fallback: sentence, playKey: 'frame-${f.ref}', size: 28),
                 look: _frameRef == null
                     ? OptionLook.idle
                     : f.ref == p.correctFrame
@@ -947,15 +962,16 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (line != null)
-            SizedBox(
-              height: 48,
+            // The partner's line wraps in full — nothing on a session card is cut (the owner's rule of 16.09); the
+            // canvas height 48 is only the minimum.
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       '${line.textTarget} · ${line.textNative}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      key: const ValueKey('combine-partner-line'),
                       style: AppTextSession.sceneLine,
                     ),
                   ),
