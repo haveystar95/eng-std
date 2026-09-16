@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Assembly;
 
+use App\Modules\Plan\Domain\Check\Language\LanguageWords;
 use App\Modules\Plan\Domain\Check\Lesson\ListeningExchange;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\ListeningQuestion;
@@ -111,7 +112,10 @@ final class ListenCards
      * 34-5: an ask exchange — the learner's question sounds with its text, and the learner guesses what the partner
      * will answer: the translation of the partner's own answer among the translations of two other partner lines of
      * the day (SESSION-1a, хвост — the exchange's check stays with `dialogue_partner`, so the day never shows one set
-     * of options twice). Which two lines is a shuffle seeded by the card's address; the partner's answer opens after.
+     * of options twice). The wrong lines are of the answer's own FORM (SESSION-1d): a question beside a question, a
+     * statement beside a statement — whether a line asks is the mark its text ends with by the target pack's
+     * `sentence_ends`; too few of that form — any others top it up, and that is no fault. Which lines is a shuffle seeded
+     * by the card's address; the partner's answer opens after.
      */
     public static function predict(SceneMaterial $scene, Exchange $exchange): ?CardDraft
     {
@@ -123,11 +127,21 @@ final class ListenCards
         $candidates = [];
         foreach ($scene->partnerLines() as $line) {
             if ($line['step'] !== $exchange->step) {
-                $candidates[] = ['text' => $line['message']->textNative];
+                $candidates[] = $line['message'];
             }
         }
         $seed = $scene->seed('x'.$exchange->step.':predict');
-        $chosen = Options::choose($seed, ['text' => $partner->textNative], Shuffle::seeded($seed.':others', $candidates), self::PREDICT_OPTIONS);
+        $asks = self::asks($scene, $partner->textTarget);
+        $same = [];
+        $other = [];
+        foreach (Shuffle::seeded($seed.':others', $candidates) as $message) {
+            if (self::asks($scene, $message->textTarget) === $asks) {
+                $same[] = ['text' => $message->textNative];
+            } else {
+                $other[] = ['text' => $message->textNative];
+            }
+        }
+        $chosen = Options::choose($seed, ['text' => $partner->textNative], [...$same, ...$other], self::PREDICT_OPTIONS);
         if (count($chosen['options']) < Options::MIN) {
             return null;
         }
@@ -238,6 +252,15 @@ final class ListenCards
             'options' => $chosen['options'],
             'correct' => $chosen['correct'],
         ]);
+    }
+
+    /**
+     * Does a line of the visit ask — its text ends with a mark the target pack's `sentence_ends` calls a question? A
+     * target without that key asks nothing: every line is of one form, and the wrong options are simply the shuffle.
+     */
+    private static function asks(SceneMaterial $scene, string $text): bool
+    {
+        return $scene->target->has('sentence_ends') && (new LanguageWords($scene->target))->terminalKind($text) === 'question';
     }
 
     /** The unit of a listening question: `L1`, `L2`… */

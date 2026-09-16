@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
+use App\Modules\Plan\Domain\Assembly\PhraseSeries;
 use App\Modules\Plan\Domain\Assembly\ReturnedUnit;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Entity\DayCard;
@@ -120,10 +121,10 @@ function s1daSnapshot(array $cards): array
     ], $cards);
 }
 
-// Canon (разд. 2; the order's «8 + 8: ≈ 24 + 25 + 15 + 10 + 8»): the day's stages, counted exactly on the clean lesson.
-// Catches a stage dealing a card too many or too few — a lost spacing slot, a second phrase_combine, a rescue dealt
-// twice, a listen card per ask missing, a seventh speak_answer.
-it('deals the clean lesson in five stages of exactly 24, 19, 15, 9 and 8 cards, at either level', function (PlanLevel $level) {
+// Canon (разд. 2; SESSION-1d «Фразы» через разные окна): the day's stages, counted exactly on the clean lesson. Catches a
+// stage dealing a card too many or too few — a lost spacing slot, a recognition too many or too few, a second
+// phrase_combine, a rescue dealt twice, a listen card per ask missing, a seventh speak_answer.
+it('deals the clean lesson in five stages of exactly 24, 29, 15, 9 and 8 cards, at either level', function (PlanLevel $level) {
     $cards = s1daDeal(s1daScene($level), $level);
     $words = s1daIn($cards, Stage::Words);
     $phrases = s1daIn($cards, Stage::Phrases);
@@ -136,10 +137,13 @@ it('deals the clean lesson in five stages of exactly 24, 19, 15, 9 and 8 cards, 
         ->and(s1daKinds($words)['word_assemble'])->toBe(5)
         ->and(array_sum(array_intersect_key(s1daKinds($words), array_flip(['word_choose', 'word_listen', 'word_in_line']))))->toBe(3);
 
-    // Phrases: 6 frames × 3 (intro, recognition, production) = 18, + one phrase_combine = 19. p4 has no slot: it is
-    // recognised by phrase_choose_back and repeated at both levels.
+    // Phrases (SESSION-1d): five frames with a window × (intro, three recognitions — two to every frame, a third while the
+    // stage fits in 540 s — production) = 25, p4 without a slot: intro, phrase_choose_back, phrase_repeat = 3, + one
+    // phrase_combine = 29.
     $production = array_values(array_filter($phrases, static fn (DayCard $c): bool => in_array($c->kind(), [CardKind::PhraseRepeat, CardKind::PhraseOtherSlot, CardKind::PhraseOwnSlot], true)));
-    expect(count($phrases))->toBe(19)
+    $recognitions = array_values(array_filter($phrases, static fn (DayCard $c): bool => in_array($c->kind(), PhraseSeries::CYCLE, true)));
+    expect(count($phrases))->toBe(29)
+        ->and(count($recognitions))->toBe(16)
         ->and(s1daKinds($phrases)['phrase_intro'])->toBe(6)
         ->and(s1daKinds($phrases)['phrase_combine'])->toBe(1)
         ->and(end($phrases)->kind())->toBe(CardKind::PhraseCombine)
@@ -176,7 +180,7 @@ it('deals the clean lesson in five stages of exactly 24, 19, 15, 9 and 8 cards, 
             'speak_answer@x1', 'speak_answer@x2', 'speak_answer@x3', 'speak_answer@x4', 'speak_answer@x5', 'speak_answer@x7',
             'speak_echo@x5', 'speak_retell@x1',
         ])
-        ->and(count($cards))->toBe(24 + 19 + 15 + 9 + 8);
+        ->and(count($cards))->toBe(24 + 29 + 15 + 9 + 8);
 
     foreach (Stage::ordered() as $stage) {
         expect(array_map(static fn (DayCard $c): int => $c->position(), s1daIn($cards, $stage)))->toBe(range(1, count(s1daIn($cards, $stage))));
@@ -196,21 +200,24 @@ it('deals the same day twice with the same ids: every card, its position and its
         ->and($first[0]->id()->value)->toBe('01J8SESSCARD00000000000001');
 })->with([PlanLevel::Beginner, PlanLevel::Intermediate]);
 
-// Canon (§6, разд. 2): «провал дважды → в следующий день-сцену одной карточкой в конце своего этапа». Catches a return
-// dealt in the middle of its stage, dealt twice, dealt as the old kind, a day unit brought back, a lost source day.
-it('deals the returns once each at the end of their stage: a word as word_choose, a frame as phrase_slot, an exchange as speak_answer, never the day', function () {
+// Canon (§6, разд. 2; SESSION-1d разд. 4): «провал дважды → в следующий день одной карточкой в конце своего этапа; фраза —
+// видом последнего провала, с другим наполнением». Catches a return dealt in the middle of its stage, dealt twice, a frame
+// dealt as another kind than it failed as or with the failed filler, a day unit brought back, a lost source day.
+it('deals the returns once each at the end of their stage: a word as word_choose, a frame as it failed, an exchange as speak_answer, never the day', function () {
     $today = s1daScene(PlanLevel::Beginner);
     $yesterday = s1daScene(PlanLevel::Beginner, 2);
     $failedOn = PlanDayId::fromString('01J8SESSDAY000000000000000');
-    $from = static fn (UnitKind $kind, string $ref, ?PlanSceneId $scene = null): ReturnedUnit => new ReturnedUnit($scene ?? $yesterday->sceneId, $kind, $ref, $failedOn);
+    $from = static fn (UnitKind $kind, string $ref, ?PlanSceneId $scene = null, ?CardKind $as = null, ?int $filler = null): ReturnedUnit => new ReturnedUnit($scene ?? $yesterday->sceneId, $kind, $ref, $failedOn, $as, $filler);
 
     $cards = s1daDeal($today, PlanLevel::Beginner, [
         $from(UnitKind::Word, 'v3'),
         $from(UnitKind::Day, 'day'),            // the day's listening never returns
         $from(UnitKind::Day, 'L1'),             // nor one of its questions
-        $from(UnitKind::Phrase, 'p2'),
+        $from(UnitKind::Phrase, 'p2', null, CardKind::PhraseSlotListen, 1),   // failed as slot_listen said with filler 1
         $from(UnitKind::Exchange, 'x4'),
-        $from(UnitKind::Phrase, 'p4'),          // a frame without a slot comes back as phrase_choose_back
+        $from(UnitKind::Phrase, 'p4', null, CardKind::PhraseChooseBack),     // a frame without a slot: said as itself
+        $from(UnitKind::Phrase, 'p3', null, CardKind::PhraseRepeat, 1),       // said aloud and given up on: said again
+        $from(UnitKind::Phrase, 'p5'),          // failed as a kind not known: its first recognition
         $from(UnitKind::Word, 'v3'),            // failed on two earlier days: dealt once
         $from(UnitKind::Exchange, 'x6'),        // a rescue has no speak_answer: nothing to deal
         $from(UnitKind::Word, 'v99'),           // a ref the scene does not have
@@ -222,16 +229,18 @@ it('deals the returns once each at the end of their stage: a word as word_choose
     $phrases = s1daIn($cards, Stage::Phrases);
     $speak = s1daIn($cards, Stage::Speak);
 
-    expect(s1daShape($back))->toBe(['word_choose@v3', 'phrase_slot@p2', 'phrase_choose_back@p4', 'speak_answer@x4'])
-        ->and(array_map(static fn (DayCard $c): ?string => $c->sourceDayId()?->value, $back))->toBe(array_fill(0, 4, $failedOn->value))
+    $firstOfP5 = PhraseSeries::kind($yesterday, $yesterday->term('p5'), 0)->value;
+    expect(s1daShape($back))->toBe(['word_choose@v3', 'phrase_slot_listen@p2', 'phrase_choose_back@p4', 'phrase_repeat@p3', $firstOfP5.'@p5', 'speak_answer@x4'])
+        ->and(array_map(static fn (DayCard $c): ?int => PhraseSeries::fillerOf($c->kind(), $c->payload()), array_slice($back, 1, 4)))->toBe([2, null, 2, 0])
+        ->and(array_map(static fn (DayCard $c): ?string => $c->sourceDayId()?->value, $back))->toBe(array_fill(0, 6, $failedOn->value))
         ->and(array_unique(array_map(static fn (DayCard $c): string => $c->payload()['scene_id'], $back)))->toBe([$yesterday->sceneId->value])
         // Today's stages as they were, the returns after them.
         ->and(count($words))->toBe(24 + 1)
         ->and(end($words)->source())->toBe(CardSource::Returned)
         ->and(end($words)->position())->toBe(25)
-        ->and(count($phrases))->toBe(19 + 2)
-        ->and(s1daShape(array_slice($phrases, 19)))->toBe(['phrase_slot@p2', 'phrase_choose_back@p4'])
-        ->and(array_slice($phrases, 18, 1)[0]->kind())->toBe(CardKind::PhraseCombine)
+        ->and(count($phrases))->toBe(29 + 4)
+        ->and(s1daShape(array_slice($phrases, 29)))->toBe(['phrase_slot_listen@p2', 'phrase_choose_back@p4', 'phrase_repeat@p3', $firstOfP5.'@p5'])
+        ->and(array_slice($phrases, 28, 1)[0]->kind())->toBe(CardKind::PhraseCombine)
         ->and(count(s1daIn($cards, Stage::Dialogue)))->toBe(15)
         ->and(count(s1daIn($cards, Stage::Listen)))->toBe(9)
         ->and(count($speak))->toBe(8 + 1)
@@ -351,7 +360,7 @@ it('computes the day metrics from a dealt day: dealt, done, minutes without the 
 
     $metrics = (new DayMetricsCalculator)->calculate($cards);
 
-    expect($metrics->cardsTotal)->toBe(75)
+    expect($metrics->cardsTotal)->toBe(85)
         ->and($metrics->cardsDone)->toBe(20)
         ->and($metrics->minutesSpent)->toBe(9);
 });

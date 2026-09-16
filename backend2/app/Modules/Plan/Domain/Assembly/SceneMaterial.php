@@ -112,6 +112,21 @@ final readonly class SceneMaterial
     }
 
     /**
+     * The other exchanges of the visit, the FARTHEST from `$step` first — between two as far, the lower step: where a
+     * card looks for a wrong option that is surely wrong here because it belongs elsewhere (`dialogue_partner`'s fourth,
+     * `phrase_combine`'s wrong frames).
+     *
+     * @return list<Exchange>
+     */
+    public function farthestFrom(int $step): array
+    {
+        $others = array_values(array_filter($this->lesson->exchanges, static fn (Exchange $other): bool => $other->step !== $step));
+        usort($others, static fn (Exchange $a, Exchange $b): int => [abs($b->step - $step), $a->step] <=> [abs($a->step - $step), $b->step]);
+
+        return $others;
+    }
+
+    /**
      * The seed of a shuffle or a rotation in this scene: the scene and the card's own address, so a day dealt again
      * deals the same card and two scenes do not rotate in step.
      */

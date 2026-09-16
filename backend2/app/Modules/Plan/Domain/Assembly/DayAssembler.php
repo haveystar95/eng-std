@@ -118,8 +118,39 @@ final class DayAssembler
     }
 
     /**
-     * One card per returned unit — `word_choose` for a word, `phrase_slot` for a frame, `speak_answer` for an exchange.
-     * The day's listening never returns; a unit returned twice (two earlier days) is dealt once.
+     * The payload of a card dealt again at the end of its stage after its first lapse (D-06; SESSION-1d): a phrase card
+     * said with a filler comes back as the same kind said with another one — the next no card of its frame has taken
+     * today ({@see PhrasesStage::again()}) — and any other card as it was; the options and the tiles of either are
+     * shuffled again by the failed card's own `<id>:retry`.
+     *
+     * @param  SceneMaterial|null  $scene  the scene of the failed card; null when it is not needed (not a phrase)
+     * @param  list<DayCard>  $dealt  the day's cards, the failed one and its earlier copies among them
+     * @return array<string, mixed>
+     */
+    public function again(DayCard $failed, ?SceneMaterial $scene, array $dealt): array
+    {
+        $payload = $failed->payload();
+        $phrase = $scene === null || $failed->unitKind() !== UnitKind::Phrase ? null : $scene->phraseTerm($failed->unitRef());
+        if ($scene !== null && $phrase !== null) {
+            $used = [];
+            foreach ($dealt as $card) {
+                $index = PhraseSeries::fillerOf($card->kind(), $card->payload());
+                if ($index !== null && $card->unitKind() === UnitKind::Phrase && $card->unitRef() === $failed->unitRef()
+                    && UnitStates::sceneOf($card) === $scene->sceneId->value && ! in_array($index, $used, true)) {
+                    $used[] = $index;
+                }
+            }
+            $draft = $this->phrases->again($scene, $phrase, $failed->kind(), PhraseSeries::fillerOf($failed->kind(), $payload), $used);
+            $payload = $draft === null ? $payload : $draft->payload;
+        }
+
+        return Retry::payload($payload, $failed->id()->value.':retry');
+    }
+
+    /**
+     * One card per returned unit — `word_choose` for a word, `speak_answer` for an exchange, and a frame as the kind it
+     * failed as the last time said with another filler (SESSION-1d, {@see PhrasesStage::returned()}). The day's
+     * listening never returns; a unit returned twice (two earlier days) is dealt once.
      *
      * @param  array<string, SceneMaterial>  $material
      * @param  list<ReturnedUnit>  $returned
@@ -145,7 +176,9 @@ final class DayAssembler
             }
             $draft = match ($unit->kind) {
                 UnitKind::Word => ($term = $scene->term($unit->ref)) === null ? null : $this->words->returned($scene, $term, $level, $nativeTopUp),
-                UnitKind::Phrase => ($term = $scene->phraseTerm($unit->ref)) === null || $term->frame() === null ? null : $this->phrases->returned($scene, $term),
+                UnitKind::Phrase => ($term = $scene->phraseTerm($unit->ref)) === null || $term->frame() === null
+                    ? null
+                    : $this->phrases->returned($scene, $term, $unit->failedAs, $unit->failedFiller),
                 UnitKind::Exchange => (($step = SpokenLines::stepOfRef($unit->ref)) === null || ($exchange = $scene->exchange($step)) === null)
                     ? null
                     : $this->speak->speakAnswer($scene, $exchange),

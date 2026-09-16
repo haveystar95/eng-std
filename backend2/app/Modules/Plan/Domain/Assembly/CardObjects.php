@@ -248,6 +248,43 @@ final class CardObjects
     }
 
     /**
+     * The frame said with ONE of its fillers, the way a card shows it (SESSION-1d): the same shape as {@see said()} —
+     * `{filler_index, text_target, text_native, pronunciation_native, audio}`. The said filler (and a frame without a
+     * window, `$index` null) is the phrase itself; any other is the frame with that filler, its translation the
+     * filler's `native_line`, its reading the frame's with the filler's, its sound the file the frame is voiced as with
+     * it (`p1.f2`). Null when `$index` is no filler of the frame, or the frame cannot be said with it (no sound: a
+     * second slot left).
+     *
+     * @return array{filler_index: int|null, text_target: string, text_native: string, pronunciation_native: string|null, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}}|null
+     */
+    public static function sentence(SceneMaterial $scene, PlanTerm $phrase, ?int $index): ?array
+    {
+        $frame = $phrase->frame();
+        $said = $scene->saidIndex($phrase);
+        if ($index === $said || ($index === null && ($frame === null || $frame->slot === null || ! FrameText::hasSlot($frame->frameTarget)))) {
+            return self::said($scene, $phrase);
+        }
+        $filler = null;
+        foreach (self::fillers($phrase) as $candidate) {
+            if ($candidate['index'] === $index) {
+                $filler = $candidate;
+            }
+        }
+        if ($frame === null || $filler === null || $filler['audio'] === null) {
+            return null;
+        }
+        $reading = FrameText::fill($frame->pronunciationNative, $filler['pronunciation_native']);
+
+        return [
+            'filler_index' => $index,
+            'text_target' => FrameText::withEndMarkOf(FrameText::fill($frame->frameTarget, $filler['target']), $phrase->textTarget()),
+            'text_native' => $filler['native_line'],
+            'pronunciation_native' => trim($reading) === '' ? null : $reading,
+            'audio' => $filler['audio'],
+        ];
+    }
+
+    /**
      * Which filler of the frame a learner line is said with — the served `filler` (the server found it in the text)
      * matched among the frame's fillers; null for no frame, no slot or no filler.
      */

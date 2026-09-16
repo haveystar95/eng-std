@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Port\NativeDistractorSource;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
+use App\Modules\Plan\Domain\Assembly\PhraseSeries;
 use App\Modules\Plan\Domain\Assembly\ReturnedUnit;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
@@ -17,6 +18,7 @@ use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Exception\LessonNotReady;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
+use App\Modules\Plan\Domain\Service\UnitStates;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\LessonStatus;
@@ -24,6 +26,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
+use App\Modules\Plan\Domain\ValueObject\UnitKind;
 
 /**
  * Gathers what a day is dealt from — the scene's served lesson and terms, the packs of the plan's two
@@ -69,6 +72,26 @@ final readonly class DayDealer
         } catch (LessonNotReady) {
             return [];
         }
+    }
+
+    /**
+     * The payload of the copy a card's first lapse deals at the end of its stage (D-06; SESSION-1d): a phrase card is
+     * said again with another filler of its frame — the scene it belongs to is read for that, and only for that — any
+     * other card is the same card with its options and tiles shuffled again.
+     *
+     * @param  list<DayCard>  $dealt  the day's cards as they stand
+     * @return array<string, mixed>
+     */
+    public function again(Plan $plan, DayCard $failed, array $dealt): array
+    {
+        $sceneId = $failed->payload()['scene_id'] ?? null;
+        $scene = null;
+        $known = array_filter($plan->scenes(), static fn (PlanScene $s): bool => $s->id()->value === $sceneId);
+        if ($failed->unitKind() === UnitKind::Phrase && is_string($sceneId) && $known !== []) {
+            $scene = $this->material($plan, [PlanSceneId::fromString($sceneId)])[$sceneId] ?? null;
+        }
+
+        return $this->assembler->again($failed, $scene, $dealt);
     }
 
     /** @return list<DayCard> */
@@ -172,6 +195,9 @@ final readonly class DayDealer
      * source — is not dealt again, so the scene after a review takes nothing of the scenes the review has covered. A
      * card that was itself a return never marks its unit again ({@see DayCard::answer()}).
      *
+     * A unit two of whose cards failed twice — a frame failed as a recognition and as said aloud (SESSION-1d) — comes
+     * back once, as the card it failed as the LAST time: the one answered latest (on one moment, the later place).
+     *
      * @return list<ReturnedUnit>
      */
     private function returnedUnits(Plan $plan, PlanDay $day): array
@@ -193,18 +219,38 @@ final readonly class DayDealer
             $back[self::returnKey($card, $card->sourceDayId())] = true;
         }
 
-        $out = [];
+        /** @var array<string, array{card: DayCard, source: PlanDay}> $last the latest failure of every unit, in the order units first failed */
+        $last = [];
         foreach ($sources as $source) {
             foreach ($this->cards->returningFrom($source->id()) as $card) {
                 $sceneId = $card->payload()['scene_id'] ?? null;
                 if (! is_string($sceneId) || isset($back[self::returnKey($card, $source->id())])) {
                     continue;
                 }
-                $out[] = new ReturnedUnit(PlanSceneId::fromString($sceneId), $card->unitKind(), $card->unitRef(), $source->id());
+                $unit = UnitStates::key($sceneId, $card->unitKind(), $card->unitRef());
+                $held = $last[$unit]['card'] ?? null;
+                if ($held === null || self::failedLater($card, $held)) {
+                    $last[$unit] = ['card' => $card, 'source' => $source];
+                }
             }
         }
 
+        $out = [];
+        foreach ($last as ['card' => $card, 'source' => $source]) {
+            $out[] = new ReturnedUnit(
+                PlanSceneId::fromString((string) $card->payload()['scene_id']), $card->unitKind(), $card->unitRef(), $source->id(),
+                $card->kind(), PhraseSeries::fillerOf($card->kind(), $card->payload()),
+            );
+        }
+
         return $out;
+    }
+
+    /** Was `$card` answered after `$than` — later in time, or at one moment later in its day's order? */
+    private static function failedLater(DayCard $card, DayCard $than): bool
+    {
+        return [$card->answeredAt()?->getTimestamp() ?? 0, $card->stage() === $than->stage() ? $card->position() : 0]
+            > [$than->answeredAt()?->getTimestamp() ?? 0, $card->stage() === $than->stage() ? $than->position() : 0];
     }
 
     /** One unit of one scene, failed on one day: what «already came back» is matched by. */

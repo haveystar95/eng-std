@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Assembly;
 
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
+use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Service\Shuffle;
 use App\Modules\Plan\Domain\Service\SpeechCoverage;
 use App\Modules\Plan\Domain\Service\SpokenLines;
@@ -176,24 +177,33 @@ final readonly class WordCards
     }
 
     /**
-     * `word_in_line` (31-7, D-10): the line of the day the word is said in, with a gap where it stands, and the day's
-     * words to fill it with. The right option is the word as the line says it (a form of it — «hurting» for «hurt»);
-     * the wrong ones are the other terms, each option with its own sound. The translation is given whole, and gapped
-     * too when the word's translation stands in it. Null when no line says the word, or the day has no other word.
+     * `word_in_line` (31-7, D-10; SESSION-1d): a line of the day the word is said in, with a gap where it stands, and
+     * the day's words to fill it with. The line is one where the word stands OUTSIDE a frame's window — a partner's line
+     * first, then a learner's line whose window says something else — so the gap asks for the word and not for a value
+     * a window would take; no such line — the line the word is said in ({@see usedIn()}). The right option is the word
+     * as the line says it (a form of it — «hurting» for «hurt»); the wrong ones are the other terms, each with its own
+     * sound, but never a filler of the frame the word itself fills — another value of that window would fit the gap
+     * too. Under the line its whole translation, the word's translation in it. Null when no line says the word, or the
+     * day has no other word to offer.
      */
     public function inLine(SceneMaterial $scene, PlanTerm $term): ?CardDraft
     {
-        $usedIn = $this->usedIn($scene, $term);
+        $usedIn = $this->outsideWindow($scene, $term) ?? $this->usedIn($scene, $term);
         if ($usedIn === null) {
             return null;
         }
         [$start, $end] = $usedIn['term_span'];
         $text = $usedIn['text_target'];
+        $windows = self::windowsOf($scene, $term);
+        $others = array_values(array_filter(
+            $this->others($scene, $term, 'in_line'),
+            static fn (PlanTerm $other): bool => ! self::fills($other->textTarget(), $windows),
+        ));
 
         $chosen = Options::choose(
             $scene->seed($term->ref().':in_line'),
             ['text' => mb_substr($text, $start, $end - $start), 'audio' => Audio::of($term->ref())],
-            array_map(self::spoken(...), $this->others($scene, $term, 'in_line')),
+            array_map(self::spoken(...), $others),
             self::OPTIONS,
         );
         if (count($chosen['options']) < Options::MIN) {
@@ -206,7 +216,6 @@ final readonly class WordCards
                 'line_ref' => $usedIn['line_ref'],
                 'text_target' => mb_substr($text, 0, $start).self::GAP.mb_substr($text, $end),
                 'text_native' => $usedIn['text_native'],
-                'text_native_gapped' => self::gapped($usedIn['text_native'], $term->textNative()),
                 'audio' => Audio::of($usedIn['line_ref']),
             ],
             'options' => $chosen['options'],
@@ -233,6 +242,80 @@ final readonly class WordCards
             Words::surface($text),
             static fn (string $word): bool => ! $articles || ! $target->listed('articles', $word),
         ));
+    }
+
+    /**
+     * A line where the word stands outside every window (SESSION-1d): a partner's line that says it, in the order of
+     * the visit; else a learner's line that says it outside the filler the line is said with (a line on a frame
+     * without a window, or on none, has no window at all). Named and placed as {@see usedIn()} names and places a line;
+     * null when every line that says the word says it in a window.
+     *
+     * @return array{ref: string, line_ref: string, text_target: string, text_native: string, term_span: array{0: int, 1: int}}|null
+     */
+    private function outsideWindow(SceneMaterial $scene, PlanTerm $term): ?array
+    {
+        $learners = [];
+        foreach ($scene->lesson->exchanges as $exchange) {
+            foreach ($exchange->messages as $message) {
+                $span = Words::spanOfTerm($term->textTarget(), $message->textTarget);
+                if ($span === null) {
+                    continue;
+                }
+                $line = [
+                    'ref' => $message->isLearner() ? ($message->phraseId ?? 'B'.$exchange->step) : 'A'.$exchange->step,
+                    'line_ref' => $message->isLearner() ? SpokenLines::learnerRef($exchange->step) : SpokenLines::partnerRef($exchange->step),
+                    'text_target' => $message->textTarget,
+                    'text_native' => $message->textNative,
+                    'term_span' => [$span[0], $span[0] + $span[1]],
+                ];
+                if (! $message->isLearner()) {
+                    return $line;
+                }
+                $window = $message->filler === null ? null : Words::spanOfTerm($message->filler, $message->textTarget);
+                if ($window === null || $span[0] + $span[1] <= $window[0] || $window[0] + $window[1] <= $span[0]) {
+                    $learners[] = $line;
+                }
+            }
+        }
+
+        return $learners[0] ?? null;
+    }
+
+    /**
+     * The windows the word fills: every frame of the day with a filler that says the word — each as the list of its
+     * fillers' texts.
+     *
+     * @return list<list<string>>
+     */
+    private static function windowsOf(SceneMaterial $scene, PlanTerm $term): array
+    {
+        $windows = [];
+        foreach ($scene->lesson->phrases as $phrase) {
+            $fillers = array_map(static fn (Filler $filler): string => $filler->target, $phrase->fillers());
+            if (self::fills($term->textTarget(), [$fillers])) {
+                $windows[] = $fillers;
+            }
+        }
+
+        return $windows;
+    }
+
+    /**
+     * Does a filler of one of these windows say the text?
+     *
+     * @param  list<list<string>>  $windows
+     */
+    private static function fills(string $text, array $windows): bool
+    {
+        foreach ($windows as $fillers) {
+            foreach ($fillers as $filler) {
+                if (Words::spanOfTerm($text, $filler) !== null) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -310,24 +393,5 @@ final readonly class WordCards
     private static function spoken(PlanTerm $term): array
     {
         return ['text' => $term->textTarget(), 'audio' => Audio::of($term->ref())];
-    }
-
-    /**
-     * The translation of the line with the word's translation gapped, when it stands there as whole words (case aside);
-     * null when the line translates the word some other way («температуры» for «температура»).
-     */
-    private static function gapped(string $line, string $native): ?string
-    {
-        $needle = trim($native);
-        if ($needle === '') {
-            return null;
-        }
-        $pattern = '/(?<![\p{L}\p{N}])'.preg_quote($needle, '/').'(?![\p{L}\p{N}])/iu';
-        if (preg_match($pattern, $line, $match, PREG_OFFSET_CAPTURE) !== 1) {
-            return null;
-        }
-        [$found, $byte] = $match[0];
-
-        return substr($line, 0, $byte).self::GAP.substr($line, $byte + strlen($found));
     }
 }

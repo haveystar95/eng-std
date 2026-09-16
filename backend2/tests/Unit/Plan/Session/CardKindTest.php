@@ -80,15 +80,39 @@ it('lets the client write only the results the kind can have', function () {
     }
 });
 
-it('returns a word as word_choose, a frame as phrase_slot, an exchange as speak_answer — and never the day', function () {
-    expect(CardKind::returnedFor(UnitKind::Word))->toBe(CardKind::WordChoose)
-        ->and(CardKind::returnedFor(UnitKind::Phrase))->toBe(CardKind::PhraseSlot)
-        ->and(CardKind::returnedFor(UnitKind::Exchange))->toBe(CardKind::SpeakAnswer)
-        ->and(CardKind::returnedFor(UnitKind::Day))->toBeNull()
-        ->and(UnitKind::Day->returns())->toBeFalse()
+it('returns a word, a frame and an exchange — never the day', function () {
+    expect(UnitKind::Day->returns())->toBeFalse()
         ->and(UnitKind::Word->returns())->toBeTrue()
         ->and(UnitKind::Phrase->returns())->toBeTrue()
         ->and(UnitKind::Exchange->returns())->toBeTrue();
+});
+
+// Canon (SESSION-1d, DECISIONS п. 327): «провал произнесения = skipped с attempts ≥ 2 и без no_mic — только phrase_repeat и
+// phrase_other_slot; «Пропустить» до второй попытки и отказ микрофона — без последствий». Catches any skip counted as a
+// lapse, a lapse without the second attempt, a dead microphone counted against the learner, and the rule spread to the
+// other voice cards.
+it('counts a lapse: a wrong choice, or a phrase said aloud given up on after two attempts with a microphone — nothing else', function () {
+    foreach ([CardKind::PhraseRepeat, CardKind::PhraseOtherSlot] as $kind) {
+        expect($kind->lapses(CardResult::Skipped, 2, false))->toBeTrue($kind->value)
+            ->and($kind->lapses(CardResult::Skipped, 3, false))->toBeTrue($kind->value)
+            ->and($kind->lapses(CardResult::Skipped, 1, false))->toBeFalse($kind->value)
+            ->and($kind->lapses(CardResult::Skipped, 2, true))->toBeFalse($kind->value)
+            ->and($kind->lapses(CardResult::Passed, 2, false))->toBeFalse($kind->value)
+            ->and($kind->lapses(CardResult::Hinted, 2, false))->toBeFalse($kind->value)
+            ->and($kind->requeues())->toBeTrue($kind->value)
+            // The voice still never writes `failed` (422): a lapse of the voice is a skip.
+            ->and($kind->allows(CardResult::Failed))->toBeFalse($kind->value);
+    }
+    foreach ([CardKind::WordRepeat, CardKind::DialogueAnswer, CardKind::DialogueAsk, CardKind::SpeakEcho, CardKind::PhraseOwnSlot, CardKind::SpeakAnswer] as $kind) {
+        expect($kind->lapses(CardResult::Skipped, 2, false))->toBeFalse($kind->value)
+            ->and($kind->requeues())->toBeFalse($kind->value);
+    }
+    expect(CardKind::WordChoose->lapses(CardResult::Failed, 1, false))->toBeTrue()
+        ->and(CardKind::WordChoose->lapses(CardResult::Skipped, 2, false))->toBeFalse()
+        ->and(CardKind::PhraseSlot->lapses(CardResult::Failed, 1, true))->toBeTrue()
+        ->and(CardKind::ListenQuestion->lapses(CardResult::Failed, 1, false))->toBeTrue()
+        ->and(CardKind::ListenQuestion->requeues())->toBeFalse()
+        ->and(CardKind::PhraseIntro->lapses(CardResult::Skipped, 2, false))->toBeFalse();
 });
 
 // Catches a dealt kind the window would price at 0 s, and a pace table in config drifting from the code's defaults.

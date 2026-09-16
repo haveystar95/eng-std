@@ -146,13 +146,7 @@ final class DialogueCards
      */
     private static function farthestRightOption(SceneMaterial $scene, Exchange $exchange, array $taken): ?string
     {
-        $others = array_values(array_filter(
-            $scene->lesson->exchanges,
-            static fn (Exchange $other): bool => $other->step !== $exchange->step,
-        ));
-        usort($others, static fn (Exchange $a, Exchange $b): int => [abs($b->step - $exchange->step), $a->step] <=> [abs($a->step - $exchange->step), $b->step]);
-
-        foreach ($others as $other) {
+        foreach ($scene->farthestFrom($exchange->step) as $other) {
             $text = trim((string) $other->check->correctOption()?->textNative);
             if ($text !== '' && ! isset($taken[self::key($text)])) {
                 return $text;

@@ -204,10 +204,11 @@ it('numbers the current row only while the day is walked, and words the brow fro
     $window = windowOf($this, $token, $id, 1);
     $rows = array_map(static fn (array $s): array => [$s['stage'], $s['state'], $s['done_count'], $s['total']], $window['stages']);
 
-    // Phrases: 6 frames × 3 + the day's one phrase_combine = 19 (the old registry dealt 18).
+    // Phrases (SESSION-1d): five frames with a window × (intro, three recognitions, production) + p4 × 3 + the day's one
+    // phrase_combine = 29.
     expect($window['day']['status'])->toBe('in_progress')
         ->and($rows)->toBe([
-            ['words', 'done', null, null], ['phrases', 'current', 0, 19], ['dialogue', 'locked', null, null],
+            ['words', 'done', null, null], ['phrases', 'current', 0, 29], ['dialogue', 'locked', null, null],
             ['listen', 'locked', null, null], ['speak', 'locked', null, null],
         ])
         ->and($window['stages'][1]['minutes_left'])->toBeGreaterThan(0)

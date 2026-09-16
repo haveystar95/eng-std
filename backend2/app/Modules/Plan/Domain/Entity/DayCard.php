@@ -91,12 +91,13 @@ final class DayCard
      * Record the answer the client wrote, with what it heard or chose (`response`, наряд SESSION-1a, разд. 3).
      * Returns true when the card must be dealt AGAIN at the end of its stage.
      *
-     * Only a choice has consequences, because only a choice is evidence of a lapse: its first failure comes back at
-     * the end of the stage (not in «Слушаю и отвечаю», whose review shows the answers — there one failure is final,
-     * {@see CardKind::requeues()}), and the failure of that copy marks the unit to return on the next day. A unit
-     * comes back ONCE (SESSION-1a, хвост): a card that is itself a return never marks its unit again, and the day's
-     * listening has no next day to return to. A spoken card's skip, a walkthrough, a judged card given up on: an
-     * answer, and nothing more.
+     * Only a LAPSE has consequences ({@see CardKind::lapses()}): a choice answered wrong, or a phrase said aloud given
+     * up on after two attempts with a microphone (SESSION-1d, DECISIONS п. 327). Its first one comes back at the end of
+     * the stage (not in «Слушаю и отвечаю», whose review shows the answers — there one failure is final,
+     * {@see CardKind::requeues()}), and the lapse of that copy marks the unit to return on the next day. A unit comes
+     * back ONCE (SESSION-1a, хвост): a card that is itself a return never marks its unit again, and the day's
+     * listening has no next day to return to. Any other skip, a walkthrough, a judged card given up on: an answer,
+     * and nothing more.
      *
      * @param  array<string, mixed>|null  $response
      */
@@ -110,7 +111,7 @@ final class DayCard
         $this->answeredAt = $now;
         $this->response = $response;
 
-        if (! $this->kind->isChoice() || $result !== CardResult::Failed) {
+        if (! $this->kind->lapses($result, $this->attempts, ($response['no_mic'] ?? false) === true)) {
             return false;
         }
         if ($this->retryOf === null && $this->kind->requeues()) {

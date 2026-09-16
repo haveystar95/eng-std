@@ -312,6 +312,54 @@ it('predicts the partner\'s answer on ask exchanges only, among the translations
     expect(array_map(static fn (CardDraft $d): string => $d->payload['exchange']['ref'], s1lCards($answered, CardKind::ListenPredict)))->toBe(['x8']);
 });
 
+// Canon (SESSION-1d, 5.3): «ложные варианты той же формы, что верный — вопрос к вопросу, утверждение к утверждению (знак
+// вопроса по sentence_ends пакета цели); подходящих не хватает — добираются любые». Catches a question offered beside a
+// statement while statements are there, and a card left short when the form runs out.
+it('predicts among lines of the answer\'s own form — statements beside a statement, questions beside a question — topped up with any', function () {
+    $asks = static fn (SceneMaterial $scene, string $native): bool => (function () use ($scene, $native): bool {
+        foreach ($scene->partnerLines() as $line) {
+            if ($line['message']->textNative === $native) {
+                return str_ends_with(rtrim($line['message']->textTarget), '?');
+            }
+        }
+
+        return false;
+    })();
+
+    // On the clean lesson both answers (x7, x8) are statements, and four of the other lines are questions (x1–x4).
+    $scene = s1lScene();
+    foreach (s1lCards($scene, CardKind::ListenPredict) as $card) {
+        expect(array_map(static fn (string $t): bool => $asks($scene, $t), s1lTexts($card->payload)))->toBe([false, false, false], $card->payload['exchange']['ref']);
+    }
+
+    // x8 answered with a question: its wrong options are questions too.
+    $question = s1lScene(payload: static function (array $answer): array {
+        $answer['dialogue'][7]['messages'][1]['text_target'] = 'Do you want a note for school?';
+        $answer['dialogue'][7]['messages'][1]['text_native'] = 'Вам нужна справка для школы?';
+
+        return $answer;
+    });
+    $x8 = s1lCards($question, CardKind::ListenPredict)[1]->payload;
+    expect(s1lRight($x8))->toBe('Вам нужна справка для школы?')
+        ->and(array_map(static fn (string $t): bool => $asks($question, $t), s1lTexts($x8)))->toBe([true, true, true]);
+
+    // Only one other question left: it is taken, and a statement tops the card up.
+    $short = s1lScene(payload: static function (array $answer): array {
+        $answer['dialogue'][7]['messages'][1]['text_target'] = 'Do you want a note for school?';
+        $answer['dialogue'][7]['messages'][1]['text_native'] = 'Вам нужна справка для школы?';
+        foreach ([1, 2, 3] as $i) {
+            $answer['dialogue'][$i]['messages'][0]['text_target'] = rtrim($answer['dialogue'][$i]['messages'][0]['text_target'], '?').'.';
+        }
+
+        return $answer;
+    });
+    $topped = s1lCards($short, CardKind::ListenPredict)[1]->payload;
+    expect($topped['options'])->toHaveCount(3)
+        ->and(array_values(array_filter(s1lTexts($topped), static fn (string $t): bool => $t !== 'Вам нужна справка для школы?')))
+        ->toContain('Где болит: вверху спины или в пояснице?')
+        ->and(count(array_filter(s1lTexts($topped), static fn (string $t): bool => $asks($short, $t))))->toBe(2);
+});
+
 // Canon: the partner's longest line of at most ten words; between equals the lower step.
 it('plays the longest partner line of at most ten words at two tempos', function () {
     $scene = s1lScene();

@@ -109,6 +109,32 @@ it('gives a failure of a card that is not a choice no consequence', function () 
         ->and($passed->answeredAt())->toEqual(s1Now());
 });
 
+// Canon (SESSION-1d, DECISIONS п. 327): a phrase said aloud and given up on after two attempts with a microphone is a lapse
+// of its frame like a wrong choice — the first deals a copy, the copy's marks the frame to return; a skip before the second
+// attempt, a skip for want of a microphone and the other voice cards' skips have no consequence.
+it('deals a phrase said aloud and given up on after two attempts again, and returns its frame when the copy is given up on too', function () {
+    foreach ([CardKind::PhraseRepeat, CardKind::PhraseOtherSlot] as $kind) {
+        $card = s1Card($kind, UnitKind::Phrase, 'p2');
+        expect($card->answer(CardResult::Skipped, 2, ['heard' => 'it started'], s1Now()))->toBeTrue($kind->value)
+            ->and($card->returns())->toBeFalse($kind->value);
+
+        $copy = $card->retry(DayCardId::generate(), 9, $card->payload());
+        expect($copy->answer(CardResult::Skipped, 2, null, s1Now()))->toBeFalse($kind->value)
+            ->and($copy->returns())->toBeTrue($kind->value);
+
+        $early = s1Card($kind, UnitKind::Phrase, 'p2');
+        $noMic = s1Card($kind, UnitKind::Phrase, 'p2');
+        expect($early->answer(CardResult::Skipped, 1, null, s1Now()))->toBeFalse($kind->value)
+            ->and($early->returns())->toBeFalse($kind->value)
+            ->and($noMic->answer(CardResult::Skipped, 2, ['no_mic' => true], s1Now()))->toBeFalse($kind->value)
+            ->and($noMic->returns())->toBeFalse($kind->value);
+    }
+
+    $word = s1Card(CardKind::WordRepeat);
+    expect($word->answer(CardResult::Skipped, 2, null, s1Now()))->toBeFalse()
+        ->and($word->returns())->toBeFalse();
+});
+
 it('answers a judged card with the accepted verdict — passed, or hinted when the frame was shown', function () {
     $card = s1Card(CardKind::SpeakAnswer, UnitKind::Exchange, 'x2');
     $response = ['heard' => 'I have a headache', 'slot_value' => 'a headache', 'hinted' => false, 'judge' => ['accepted' => true]];

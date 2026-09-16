@@ -460,19 +460,20 @@ it('gives every kind exactly its keys, and the line of the day where the word is
     $inLine = $cards->inLine($scene, $scene->term('v2'))->payload;
     $right = s1wAssertOptions($inLine, 'in line');
     expect(array_keys($inLine))->toBe(['scene_id', 'line', 'options', 'correct'])
+        // «sharp» fills p3's window in x3b; the partner's x3 says it outside any window, and goes first (SESSION-1d).
         ->and($inLine['line'])->toBe([
-            'ref' => 'p3', 'line_ref' => 'x3b', 'text_target' => 'The pain is ___ when he bends.',
-            'text_native' => 'Боль острая, когда он наклоняется.', 'text_native_gapped' => 'Боль ___, когда он наклоняется.',
-            'audio' => Audio::of('x3b'),
+            'ref' => 'A3', 'line_ref' => 'x3', 'text_target' => 'Is the pain ___, or more of a dull ache?',
+            'text_native' => 'Боль острая или скорее ноющая?', 'audio' => Audio::of('x3'),
         ])
         ->and($right)->toBe(['id' => $inLine['correct'], 'text' => 'sharp', 'audio' => Audio::of('v2')])
         ->and($inLine['options'])->toHaveCount(4)
         ->and(array_map(static fn (array $o): array => array_keys($o), $inLine['options']))->each->toBe(['id', 'text', 'audio'])
-        // «температура» is said «температуры» in the line: nothing to gap.
-        ->and($cards->inLine($scene, $scene->term('v3'))->payload['line']['text_native_gapped'])->toBeNull()
-        ->and($cards->inLine($scene, $scene->term('v3'))->payload['line']['text_target'])->toBe('No, he doesn\'t have a ___.')
+        ->and($cards->inLine($scene, $scene->term('v3'))->payload['line'])->toMatchArray([
+            'ref' => 'A4', 'line_ref' => 'x4', 'text_target' => 'Does he have a ___?', 'text_native' => 'У него есть температура?',
+        ])
         ->and($cards->inLine($scene, $scene->term('v6'))->payload['line'])->toMatchArray([
-            'ref' => 'p6', 'line_ref' => 'x7b', 'text_target' => 'Do we need an ___?', 'text_native_gapped' => 'Нам нужно сделать ___?',
+            'ref' => 'A7', 'line_ref' => 'x7', 'text_target' => 'No, an ___ is not needed for a muscle strain.',
+            'text_native' => 'Нет, при растяжении мышцы рентген не нужен.',
         ]);
 
     // The word as the line says it: an inflected form is the right option, not the term.
@@ -480,4 +481,67 @@ it('gives every kind exactly its keys, and the line of the day where the word is
     $formed = $cards->inLine($form, $form->term('v2'))->payload;
     expect(s1wAssertOptions($formed, 'form')['text'])->toBe('bends')
         ->and($formed['line']['text_target'])->toBe('The pain is sharp when he ___.');
+});
+
+// Canon (SESSION-1d, 5.1): «строка для слова — сначала реплика, где слово стоит ВНЕ окна каркаса (реплика собеседника — в
+// первую очередь), иначе как сейчас». Catches the line the word's `used_in` names taken though the word fills its window
+// there, and a partner's line passed over for a learner's.
+it('puts word_in_line on a line where the word stands outside a window — a partner\'s first, else a learner\'s outside its filler', function () {
+    $cards = new WordCards;
+
+    // «neck» fills p1's window in x1b («It hurts in his neck.») and no partner says it; the rescue line x6b says it
+    // outside any window — that line is the card's, though x1b comes first in the visit.
+    $neck = s1wScene(static function (array $p): array {
+        $p = s1wEditTerm($p, 'v2', ['term_target' => 'neck', 'translation_native' => 'шея', 'used_in' => ['p1']]);
+        $p['dialogue'][0]['messages'][1]['text_target'] = 'It hurts in his neck.';
+        $p['dialogue'][0]['messages'][1]['text_native'] = 'У него болит шея.';
+        $p['dialogue'][5]['messages'][0]['text_target'] = 'Sorry, my neck, could you say that more slowly?';
+
+        return $p;
+    });
+    expect($cards->inLine($neck, $neck->term('v2'))->payload['line'])->toMatchArray([
+        'ref' => 'B6', 'line_ref' => 'x6b', 'text_target' => 'Sorry, my ___, could you say that more slowly?',
+    ])
+        // The word card still shows the line its `used_in` names — the rule is the check's alone.
+        ->and($cards->intro($neck, $neck->term('v2'))->payload['used_in']['ref'])->toBe('p1');
+
+    // «heating pad» is said outside a window first by the learner, in x2's glue («Heating pad, it started three days
+    // ago.»), and later by the partner in x5 and x6: the partner's line goes first, though it comes later in the visit.
+    $partnerFirst = s1wScene(static function (array $p): array {
+        $p['dialogue'][1]['messages'][1]['text_target'] = 'Heating pad, it started three days ago.';
+
+        return $p;
+    });
+    expect($partnerFirst->exchange(2)?->learner()?->filler)->toBe('three days ago')
+        ->and($cards->inLine($partnerFirst, $partnerFirst->term('v5'))->payload['line'])->toMatchArray([
+            'ref' => 'A5', 'line_ref' => 'x5', 'text_target' => 'It looks like a muscle strain, so he should rest and use a ___.',
+        ]);
+
+    // No line says it outside a window: the line it is said in, as before.
+    $inside = s1wScene(static function (array $p): array {
+        $p = s1wEditTerm($p, 'v2', ['term_target' => 'neck', 'translation_native' => 'шея', 'used_in' => ['p1']]);
+        $p['dialogue'][0]['messages'][1]['text_target'] = 'It hurts in his neck.';
+        $p['dialogue'][0]['messages'][1]['text_native'] = 'У него болит шея.';
+
+        return $p;
+    });
+    expect($cards->inLine($inside, $inside->term('v2'))->payload['line'])->toMatchArray([
+        'ref' => 'p1', 'line_ref' => 'x1b', 'text_target' => 'It hurts in his ___.', 'text_native' => 'У него болит шея.',
+    ]);
+});
+
+// Canon (SESSION-1d, 5.1): «под строкой — ПОЛНЫЙ перевод, text_native_gapped убрать; ложные варианты не берутся из
+// наполнений того же каркаса, что и верный». Catches a gapped translation left in the payload and a wrong option another
+// value of the very window the word fills — it would fit the gap as well.
+it('keeps the whole translation under the line and never offers a filler of the frame the word itself fills', function () {
+    $cards = new WordCards;
+    // «X-ray» fills p6 («an X-ray»); «follow-up appointment» and «sick note» are p6's other fillers, «sharp» fills p3.
+    $scene = s1wScene(only: ['v2', 'v6', 'v7', 'v8']);
+    $card = $cards->inLine($scene, $scene->term('v6'))->payload;
+
+    expect(array_keys($card['line']))->toBe(['ref', 'line_ref', 'text_target', 'text_native', 'audio'])
+        ->and($card['line']['text_native'])->toBe('Нет, при растяжении мышцы рентген не нужен.')
+        ->and(array_column($card['options'], 'text'))->toEqualCanonicalizing(['X-ray', 'sharp'])
+        // Nothing but the frame's own fillers to offer: no choice, no card.
+        ->and($cards->inLine(s1wScene(only: ['v6', 'v7', 'v8']), $scene->term('v6')))->toBeNull();
 });

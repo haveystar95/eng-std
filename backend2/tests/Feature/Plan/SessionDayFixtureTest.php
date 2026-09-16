@@ -116,7 +116,7 @@ it('holds day 1 of the clean doctor lesson byte for byte, every card of the regi
     $sounds = s1fxSounds($cards);
 
     // What the file is for: the day of the registry, dealt and voiced — checked here, not only by eye.
-    expect(array_map(static fn (array $s): int => count($s['cards']), $room['stages']))->toBe([24, 19, 15, 9, 8])
+    expect(array_map(static fn (array $s): int => count($s['cards']), $room['stages']))->toBe([24, 29, 15, 9, 8])
         ->and(array_diff(array_unique(array_column($cards, 'kind')), array_map(static fn (CardKind $k): string => $k->value, CardKind::dealt())))->toBe([])
         ->and($sounds)->not->toBeEmpty()
         ->and(array_filter($sounds, static fn (array $s): bool => ! is_string($s['url']) || ! is_int($s['duration_ms'])))->toBe([]);

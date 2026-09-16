@@ -15,7 +15,9 @@ namespace App\Modules\Plan\Domain\ValueObject;
  * - CHOICE — a choice or an assembly the client grades without the network: right, right with a hint, wrong (the
  *   first wrong one comes back at the end of the stage, the second marks the unit to return), or given up on;
  * - SPOKEN — said aloud and passed by coverage: two attempts without a pass are a skip, not a failure — the
- *   recogniser's silence is no evidence of a lapse;
+ *   recogniser's silence is no evidence of a lapse. Except for a PHRASE said aloud (`phrase_repeat`,
+ *   `phrase_other_slot`; SESSION-1d, DECISIONS п. 327): given up on after two attempts, with a microphone, it is a
+ *   lapse of its frame like a wrong choice — see {@see lapses()};
  * - JUDGED — the slot said aloud and judged by meaning: only the server writes the pass (`…/judge`), the client may
  *   only give up;
  * - WALKTHROUGH — read, listened to or tapped through: walked or skipped, never right or wrong.
@@ -56,6 +58,9 @@ enum CardKind: string
     case SpeakEcho = 'speak_echo';
     case SpeakRetell = 'speak_retell';
 
+    /** The attempts after which a phrase said aloud and given up on is a lapse, not the learner's will (п. 327). */
+    public const SPOKEN_LAPSE_ATTEMPTS = 2;
+
     public function stage(): Stage
     {
         return match ($this) {
@@ -87,13 +92,37 @@ enum CardKind: string
     }
 
     /**
-     * A choice answered wrong is dealt once more at the end of its stage — except in «Слушаю и отвечаю»: its review
-     * (34-3) shows every answer, so a copy after it would test what the learner has just been shown (SESSION-1a, хвост).
-     * There the first failure is the only one.
+     * A lapse is dealt once more at the end of its stage — except in «Слушаю и отвечаю»: its review (34-3) shows every
+     * answer, so a copy after it would test what the learner has just been shown (SESSION-1a, хвост). There the first
+     * failure is the only one.
      */
     public function requeues(): bool
     {
-        return $this->isChoice() && $this->stage() !== Stage::Listen;
+        return ($this->isChoice() && $this->stage() !== Stage::Listen) || $this->lapsesOnSkip();
+    }
+
+    /**
+     * A phrase said aloud whose give-up is a lapse of its frame (SESSION-1d, DECISIONS п. 327): `phrase_repeat` and
+     * `phrase_other_slot`. The other voice cards keep «two attempts without a pass — a skip, nothing more».
+     */
+    public function lapsesOnSkip(): bool
+    {
+        return $this === self::PhraseRepeat || $this === self::PhraseOtherSlot;
+    }
+
+    /**
+     * Is this answer a LAPSE — the evidence that deals a copy and, the second time, returns the unit? A choice answered
+     * wrong; a phrase said aloud given up on after two attempts ({@see SPOKEN_LAPSE_ATTEMPTS}) — not a skip before the
+     * second attempt, and not a skip for want of a microphone (`no_mic`): the learner's will and a dead microphone
+     * prove nothing (DECISIONS п. 327). Nothing else is.
+     */
+    public function lapses(CardResult $result, int $attempts, bool $noMic): bool
+    {
+        return match (true) {
+            $this->isChoice() => $result === CardResult::Failed,
+            $this->lapsesOnSkip() => $result === CardResult::Skipped && $attempts >= self::SPOKEN_LAPSE_ATTEMPTS && ! $noMic,
+            default => false,
+        };
     }
 
     /**
@@ -133,17 +162,6 @@ enum CardKind: string
             $this->isWalkthrough() => in_array($result, [CardResult::Passed, CardResult::Skipped], true),
             $this->isSpoken() => $result !== CardResult::Failed,
             default => true,
-        };
-    }
-
-    /** Which card a unit comes back as on the next content day, after failing twice; a day unit never comes back. */
-    public static function returnedFor(UnitKind $unit): ?self
-    {
-        return match ($unit) {
-            UnitKind::Word => self::WordChoose,
-            UnitKind::Phrase => self::PhraseSlot,
-            UnitKind::Exchange => self::SpeakAnswer,
-            UnitKind::Day => null,
         };
     }
 

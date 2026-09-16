@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Dto\AnswerOutcome;
+use App\Modules\Plan\Application\Service\DayDealer;
 use App\Modules\Plan\Application\Service\PlanAccess;
-use App\Modules\Plan\Domain\Assembly\Retry;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Exception\CardNotFound;
 use App\Modules\Plan\Domain\Exception\CardResultNotAllowed;
@@ -21,14 +21,15 @@ use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
 /**
- * Records one answer. A first failure of a choice deals the same card again at the end of its stage — its options and
- * tiles in another order, seeded by the original card (наряд SESSION-1a, D-06) — and a second one marks the unit to
- * return on the next content day. The card is locked for the transaction so a replayed answer is refused rather than
- * counted twice.
+ * Records one answer. A first lapse — a choice answered wrong, a phrase said aloud given up on after two attempts
+ * (SESSION-1d, DECISIONS п. 327) — deals the same card again at the end of its stage: its options and tiles in another
+ * order, seeded by the original card (наряд SESSION-1a, D-06), and a phrase card said with another filler of its frame
+ * ({@see DayDealer::again()}); a second one marks the unit to return on the next day. The card is locked for the
+ * transaction so a replayed answer is refused rather than counted twice.
  *
  * What the client may write is the kind's (D-31): a judged card's pass is the judge's, so the client only gives it
- * up; a walkthrough is walked or skipped; the voice never fails. Anything else is refused before the card is touched —
- * a pass nobody judged is not stored.
+ * up; a walkthrough is walked or skipped; the voice never writes `failed`. Anything else is refused before the card is
+ * touched — a pass nobody judged is not stored.
  *
  * The day's numbers are refolded here, from the day's own cards — the same calculator that closes
  * the day, over the same rows. They are a projection of the answer log and not a second tally
@@ -41,6 +42,7 @@ final readonly class AnswerCardHandler
     public function __construct(
         private PlanAccess $access,
         private DayCardRepository $cards,
+        private DayDealer $dealer,
         private PlanRepository $plans,
         private DayMetricsCalculator $metrics,
         private Clock $clock,
@@ -79,7 +81,7 @@ final readonly class AnswerCardHandler
                         $lastPosition = max($lastPosition, $other->position());
                     }
                 }
-                $retry = $card->retry(DayCardId::generate(), $lastPosition + 1, Retry::payload($card->payload(), $card->id()->value.':retry'));
+                $retry = $card->retry(DayCardId::generate(), $lastPosition + 1, $this->dealer->again($plan, $card, $dealt));
                 $this->cards->insertAll([$retry]);
                 $dealt[] = $retry;
             }
