@@ -71,15 +71,19 @@ repaired) and serves the assembled lesson in the plan's target language.
 Pure services: `PlanCalendar` (layout 1…10, days until the event), `DayAssembler` + the five stages of the
 REGISTRY OF DAY TRAINERS (наряд SESSION-1a: `WordsStage`, `PhrasesStage`, `DialogueStage`, `ListenStage`,
 `SpeakStage` — 28 dealt kinds over one served lesson; three cards per word spaced by `Spacing::interleave`
-(`A[i]`, `B[i−1]`, `C[i−2]`), the checks walking seeded `Rotation` cycles; per frame an intro, two or three
+(`A[i]`, `B[i−1]`, `C[i−2]`), the words' checks walking ONE seeded circle over all the words — `WordChecks`
+(SESSION-1e): a kind a word cannot have swapped with the nearest word that can, `word_choose` asked both ways by turns,
+`word_listen` answered in the learner's language; per frame an intro, two or three
 recognitions and a production — `PhraseSeries` (SESSION-1d) decides which filler and which kind each is, for the day,
 a failed card's copy and a frame that comes back — spaced by `Spacing::apart` (`SpacingSearch`: at least two other
 frames' cards between two of one frame); the units that failed twice returned at the end of their own stage, a frame
 as the kind it failed as last with another filler; the review's ten and the rehearsal's twelve `speak_answer`),
 their card builders (`WordCards`, `PhraseCards`, `DialogueCards`, `ListenCards`, `SpeakCards` — and `CardObjects`,
 the one place a frame, a line, an exchange and the phrase as it is said are drawn, so no two stages show them
-differently) and the helpers every kind shares: `SceneMaterial` (a scene's served lesson, its terms and the packs
-of the plan's two languages), `Options` (the wrong ones never equal to the right one or to each other, ids `o1…`
+differently, and the one list of a frame's fillers every card shows — without a filler the seam judge said does not
+read, unless the dialogue says it, SESSION-1e) and the helpers every kind shares: `SceneMaterial` (a scene's served
+lesson, its terms, the packs of the plan's two languages and its `filler.native_seam` findings — `hides()`; whether a
+line asks — `asks()`, which `phrase_combine` is dealt on), `Options` (the wrong ones never equal to the right one or to each other, ids `o1…`
 in the SHOWN order, a card left with fewer than two options is not dealt), `Audio` (the sound stub a payload
 carries until it is read), `PartnerLines` (the longest partner line — one helper, so `listen_pace` and
 `speak_echo` cannot share a line), `NumberValues`, `Retry` (the reshuffled options and tiles of a copy),

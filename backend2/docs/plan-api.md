@@ -246,8 +246,8 @@ job `failed` с кодом вендора, письмо в лог. Остато�
 | **Слова** — `unit.kind = word`, ref `v3` | | | | |
 | `word_intro` | 31-1 | `term`, `used_in` (реплика дня со словом и место слова в ней, или `null`), `audio {term, line}` (`line` — `null`, если слова нет в репликах) | чтение + звук | тап «Дальше» → `passed` |
 | `word_repeat` | 31-2 | `term`, `expected_text`, `coverage_min`, `audio {term}` | голос | клиент: покрытие речи → `passed`; две попытки без зачёта → `skipped` |
-| `word_choose` | 31-3 (`term_to_native`) / 31-4 (`native_to_term`) | `direction`, `prompt`, `options[4]`, `correct`. beginner — `term_to_native`: `prompt {text_target, image, audio}`, варианты на родном; intermediate — `native_to_term`: `prompt {text_native, image}` без звука, варианты — слова цели, у каждого свой `audio` | тап по варианту (30-9) | клиент: id варианта = `correct` |
-| `word_listen` | 31-5 | `audio` (только звук: ни текста, ни перевода, ни фото), `options[4]` — **слова цели** (звук → написание, кадр 31-5), `correct` | тап | клиент: сверка с `correct` |
+| `word_choose` | 31-3 (`term_to_native`) / 31-4 (`native_to_term`) | `direction`, `prompt`, `options[4]`, `correct`. Направление **чередуется по выборам дня у любого уровня** (SESSION-1e; было — по уровню): `term_to_native` — `prompt {text_target, image, audio}`, варианты на родном; `native_to_term` — `prompt {text_native, image}` без звука, варианты — слова цели, у каждого свой `audio` | тап по варианту (30-9) | клиент: id варианта = `correct` |
+| `word_listen` | 31-5 | `direction` (`term_to_native` — единственное значение), `audio` (только звук: ни текста, ни фото), `options` (до четырёх, **на родном**, без звука: перевод этого слова и переводы других слов дня, добор из каталога, когда слов дня меньше четырёх — рисуются как у `word_choose` `term_to_native`), `correct`. Звук → перевод (SESSION-1e); текста цели на карточке нет | тап | клиент: сверка с `correct` |
 | `word_assemble` | 31-6 | `term`, `tiles[]`, `expected[]` | плитки (30-5) | клиент: собранное = `expected` по порядку |
 | `word_in_line` | 31-7 | `line` (текст цели с `___`, `text_native` — **полный** перевод строки, со словом, `audio`), `options` (до четырёх, у каждого свой `audio`), `correct`. Строка — где слово стоит **вне окна каркаса**: сначала реплика собеседника, потом реплика ученика вне её наполнения; такой нет — строка, где слово звучит. Ложные — не наполнения того каркаса, окно которого слово заполняет (SESSION-1d; `text_native_gapped` снят) | тап | клиент: сверка с `correct` |
 | **Фразы** — `unit.kind = phrase`, ref `p3` | | | | |
@@ -258,7 +258,7 @@ job `failed` с кодом вендора, письмо в лог. Остато�
 | `phrase_slot_listen` | 32-5 | `frame`, `filler_index`, `audio` (звучит каркас с этим наполнением: `p3` или `p3.f2`), `options` (до четырёх, без звука), `correct` | тап | клиент: сверка с `correct` |
 | `phrase_repeat` | 32-6 | `frame`, `filler_index` (у раздачи дня — наполнение, которого ученик ещё не говорил; `null` у каркаса без окна), `expected_text` и `audio` — с этим наполнением, `key`, `coverage_min` | голос | клиент: покрытие `expected_text`; две попытки → `skipped` — **провал каркаса** (копия, возврат; п. 327) |
 | `phrase_other_slot` | 32-7 | `frame`, `filler_index` (НЕ сказанное; у раздачи дня — не занятое узнаваниями, когда такое есть), `task_native`, `expected_text`, `slot_expected`, `key`, `coverage_min` | голос, звука у листа нет | клиент: покрытие каркаса вне окна **И** все слова `slot_expected` услышаны (каркас и окно считаются отдельно); две попытки → `skipped` — **провал каркаса** (п. 327) |
-| `phrase_combine` | 32-8 | `exchange`, `partner_line`, `frames[3]` (нужный и два каркаса самых далёких по шагу обменов), `correct_frame`, `chips[]`, `correct_filler` | тап: каркас → чип | клиент: каркас = `correct_frame`, наполнение — **любое** из `chips` |
+| `phrase_combine` | 32-8 | `exchange` (**только** `answer`-обмен, чья реплика собеседника кончается вопросом, SESSION-1e), `partner_line`, `frames[3]` (нужный и два каркаса самых далёких по шагу обменов; у каждого `said {index, text_target, text_native, audio}` — каркас целой фразой: у нужного — с наполнением этого обмена, у чужого — с наполнением, которым его говорит диалог), `correct_frame`, `chips[]`, `correct_filler` | тап: каркас (целой фразой по `said`) → чип | клиент: каркас = `correct_frame`, наполнение — **любое** из `chips` |
 | `phrase_own_slot` | 32-9 | `frame`, `partner_line` (может быть `null`), `task_native`, `examples[]`, `chips[]`, `key`, `coverage_min`, `judge: true` | чипы или «сказать своё» голосом | **сервер**, `POST …/judge` |
 | **Диалог** — `unit.kind = exchange`, ref `x3` | | | | |
 | `dialogue_partner` | 33-1 | `exchange`, `partner_line`, `question_native`, `options[4]` (на родном), `correct` | тап | клиент: сверка с `correct`; текст реплики открывается после верного |
@@ -284,6 +284,11 @@ frame_pronunciation_native, slot}`, где `slot` — `null` или `{hint_nativ
 — `{index, target, native, pronunciation_native, in_dialogue, native_line, audio}`; `exchange {ref,
 step, kind}`; реплика — `{ref, text_target, text_native, audio}`; `own_line` дополнительно несёт
 `frame_ref`, `filler_index` и `key` (серверный ключ произнесения).
+
+**Наполнения, которых карточки не показывают** (SESSION-1e): наполнение, чей родной шов судья швов не принял
+(находка `filler.native_seam` у сцены), в карточках дня **отсутствует** — его нет в `frame.slot.fillers`, в `chips`,
+`modes.chips`, `examples`, среди вариантов, и ни одна карточка не сказана с ним. Остальные наполнения сохраняют свой
+`index` — искать наполнение по `index`, а не по месту в списке. Наполнение, которое говорит диалог, остаётся всегда.
 
 ### Режим ввода выбирает клиент
 
@@ -406,16 +411,21 @@ step, kind}`; реплика — `{ref, text_target, text_native, audio}`; `own_
   обмена остаются только у `dialogue_partner` (33-1);
 - `word_in_line` (31-7) показывает под строкой **полный перевод** — со словом; строка часто реплика
   собеседника, а не строка, где слово стоит в окне каркаса. Канва 31-7 рисует перевод с пропуском —
-  её правит архитектор (SESSION-1d).
+  её правит архитектор (SESSION-1d);
+- `word_listen` (31-5) — **звук → перевод**: варианты на родном (SESSION-1e). Канва 31-5 рисует написание слов
+  цели — её правит архитектор;
+- `word_choose` (31-3 / 31-4) приходит в обоих направлениях на любом уровне — `direction` у карточки, а не у плана.
 
 ### Входные фикстуры клиента
 
 `docs/fixtures/day-doctor.json` (intermediate) и `docs/fixtures/day-doctor-beginner.json`
 (beginner) — полный раздатый день «Приём у врача»: тело `data` ответа
 `GET /api/v1/plans/{id}/days/1` как есть (`plan_id`, `day`, `scene`, `stages[]` с карточками,
-`metrics`, `program`, `window`). Оба дня — 85 карточек (с SESSION-1d): слова 24, фразы 29 (6 интро,
-16 узнаваний — `phrase_slot_listen` 5, `phrase_assemble` 5, `phrase_choose_back` 3, `phrase_slot` 3 —
-6 произнесений, `phrase_combine`), диалог 15, слушание 9, речь 8; окно ≈ 28 мин. Id и адреса в фикстурах подставные и детерминированные (`ulid-0001…`,
+`metrics`, `program`, `window`). Оба дня — 85 карточек (с SESSION-1d): слова 24 (с SESSION-1e проверки —
+по две каждого вида: `word_choose` — одна `term_to_native`, одна `native_to_term`, `word_listen`, `word_in_line`,
+`word_assemble`), фразы 29 (6 интро, 16 узнаваний — `phrase_slot_listen` 5, `phrase_assemble` 5,
+`phrase_choose_back` 3, `phrase_slot` 3 — 6 произнесений, `phrase_combine` на `x1`), диалог 15, слушание 9, речь 8;
+окно ≈ 27 мин. Id и адреса в фикстурах подставные и детерминированные (`ulid-0001…`,
 `http://localhost/api/v1/plans/audio/…`), тест держит файлы байт-в-байт — на них и пишется разбор
 на клиенте.
 

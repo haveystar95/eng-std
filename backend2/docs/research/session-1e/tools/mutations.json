@@ -1,0 +1,547 @@
+[
+ {
+  "name": "1. круг по индексу слова",
+  "rule": "Слово получает вид, на который указывает круг по его индексу (разд. 1).",
+  "defect": "круг не идёт по словам: все слова указывают на стартовый вид.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "$kinds[] = Rotation::pick($seed, $i, $circle);",
+  "replace": "$kinds[] = Rotation::pick($seed, 0, $circle);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "walks one circle"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "gives every one of the four kinds"
+   }
+  ]
+ },
+ {
+  "name": "2. старт круга — зерно сцены",
+  "rule": "Круг начинается с места, которое выбирает зерно сцены (разд. 1, «seeded»).",
+  "defect": "старт круга не зависит от сцены (всегда word_choose).",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "$kinds[] = Rotation::pick($seed, $i, $circle);",
+  "replace": "$kinds[] = $circle[$i % count($circle)];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "walks one circle"
+   }
+  ]
+ },
+ {
+  "name": "3. неподходящий вид — обмен, а не «следующий по кругу»",
+  "rule": "Вид не подходит — обмен с ближайшим словом, которому он подходит (решение архитектора 16.09); 2/2/2/2 при любом старте.",
+  "defect": "обмена нет: сразу следующий подходящий по кругу (буквальное правило наряда).",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "$with = self::swapWith($fits, $kinds, $i);",
+  "replace": "$with = null;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "swaps a kind"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "gives every one of the four kinds"
+   }
+  ]
+ },
+ {
+  "name": "4. при равном расстоянии — следующее слово",
+  "rule": "Ближайшее — по индексу, при равном расстоянии — следующее (вперёд).",
+  "defect": "при равном расстоянии берётся предыдущее слово.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "foreach ([$i + $distance, $i - $distance] as $j) {",
+  "replace": "foreach ([$i - $distance, $i + $distance] as $j) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "swaps a kind"
+   }
+  ]
+ },
+ {
+  "name": "5. обмен — с ближайшим",
+  "rule": "Обмен — с ближайшим по индексу словом.",
+  "defect": "поиск идёт от самого дальнего слова.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "for ($distance = 1; $distance < $count; $distance++) {",
+  "replace": "for ($distance = $count - 1; $distance >= 1; $distance--) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "swaps a kind"
+   }
+  ]
+ },
+ {
+  "name": "6. обмен не ломает второе слово",
+  "rule": "Обмен — только со словом, которому подходит этот вид.",
+  "defect": "обмен со словом, которому вид не подходит.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "isset($fits[$j][$kind->value], $fits[$i][$other->value])",
+  "replace": "isset($fits[$i][$other->value])",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "swaps a kind"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "never assembles a single word"
+   }
+  ]
+ },
+ {
+  "name": "7. обменяться не с кем — следующий подходящий по кругу",
+  "rule": "Обменяться не с кем — следующий по кругу вид, который слову подходит.",
+  "defect": "слово без обмена остаётся без проверки.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "$kinds[$i] = self::nextFitting($circle, $kind, $fits[$i]);",
+  "replace": "$kinds[$i] = null;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "swaps a kind"
+   }
+  ]
+ },
+ {
+  "name": "8. вид без материала выпадает, остальные поровну",
+  "rule": "Материала нет — вид выпадает, остальные делят поровну.",
+  "defect": "вид без материала остаётся в круге (его слова уходят на следующий вид: 4/2/2).",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "        $circle = array_values(array_filter(\n            self::CYCLE,\n            static fn (CardKind $kind): bool => array_filter($fits, static fn (array $can): bool => isset($can[$kind->value])) !== [],\n        ));",
+  "replace": "        $circle = self::CYCLE;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "drops a kind"
+   }
+  ]
+ },
+ {
+  "name": "9. сборка — не однословному",
+  "rule": "assemble однословному не подходит; артикли пакета цели не слова.",
+  "defect": "сборка подходит любому слову.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "if ($this->cards->isMultiWord($scene, $term)) {",
+  "replace": "if (true) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "never assembles a single word"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "gives every one of the four kinds"
+   }
+  ]
+ },
+ {
+  "name": "10. направление чередуется по выборам дня",
+  "rule": "word_choose: направление чередуется по словам seeded — у всех уровней.",
+  "defect": "все выборы дня спрашиваются одним направлением.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "CardKind::WordChoose => $this->choose($scene, $term, $chosen++, $nativeTopUp),",
+  "replace": "CardKind::WordChoose => $this->choose($scene, $term, 0, $nativeTopUp),",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "alternates word_choose"
+   }
+  ]
+ },
+ {
+  "name": "11. старт направлений — зерно сцены",
+  "rule": "Чередование направлений — seeded.",
+  "defect": "первый выбор любого дня — term_to_native.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "$direction = Rotation::pick($scene->seed('words:direction'), $ordinal, self::DIRECTIONS);",
+  "replace": "$direction = self::DIRECTIONS[$ordinal % 2];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "alternates word_choose"
+   }
+  ]
+ },
+ {
+  "name": "12. возврат слова — направлением дня",
+  "rule": "Возврат слова — word_choose тем направлением, которым его спрашивает день.",
+  "defect": "возврат всегда — направление первого выбора дня.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordChecks.php",
+  "find": "return $this->choose($scene, $term, $before, $nativeTopUp);",
+  "replace": "return $this->choose($scene, $term, 0, $nativeTopUp);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "returns a word as word_choose"
+   }
+  ]
+ },
+ {
+  "name": "13. word_listen — варианты на родном",
+  "rule": "word_listen: варианты — переводы на родном, ни одного варианта на цели (разд. 2).",
+  "defect": "старые варианты: написания слов цели.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "            ['text' => $term->textNative()],\n            self::translations($this->others($scene, $term, 'listen'), $nativeTopUp),",
+  "replace": "            ['text' => $term->textTarget()],\n            array_map(static fn (PlanTerm $t): array => ['text' => $t->textTarget()], $this->others($scene, $term, 'listen')),",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "plays the word in word_listen"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionDayFixtureTest.php"
+   }
+  ]
+ },
+ {
+  "name": "14. word_listen — верный = перевод этого термина",
+  "rule": "Верный вариант word_listen — перевод этого термина.",
+  "defect": "верный вариант — определение слова, а не его перевод.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "            ['text' => $term->textNative()],\n            self::translations($this->others($scene, $term, 'listen'), $nativeTopUp),",
+  "replace": "            ['text' => $term->definitionTarget() ?? $term->textNative()],\n            self::translations($this->others($scene, $term, 'listen'), $nativeTopUp),",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "plays the word in word_listen"
+   }
+  ]
+ },
+ {
+  "name": "15. word_listen — direction в payload",
+  "rule": "В payload word_listen — direction: term_to_native (контракт).",
+  "defect": "ключ direction не кладётся.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "            'direction' => self::TERM_TO_NATIVE,\n            'audio' => Audio::of($term->ref()),",
+  "replace": "            'audio' => Audio::of($term->ref()),",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "plays the word in word_listen"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionDayFixtureTest.php"
+   }
+  ]
+ },
+ {
+  "name": "16. word_listen — добор из каталога",
+  "rule": "Добор вариантов word_listen из NativeDistractorSource, как у word_choose.",
+  "defect": "word_listen не берёт каталожный добор.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "self::translations($this->others($scene, $term, 'listen'), $nativeTopUp),",
+  "replace": "self::translations($this->others($scene, $term, 'listen'), []),",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "tops up the translations"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionWordChecksTest.php"
+   }
+  ]
+ },
+ {
+  "name": "17. добор — у любого уровня",
+  "rule": "Направления у всех уровней → каталожный добор переводов у любого уровня.",
+  "defect": "DayDealer спрашивает каталог только у beginner (как было).",
+  "file": "app/Modules/Plan/Application/Service/DayDealer.php",
+  "find": "        $words = $scene->vocabulary();\n        if (count($words) - 1 >= self::CHOICE_TOP_UP) {",
+  "replace": "        $words = $scene->vocabulary();\n        if ($plan->level() !== \\App\\Modules\\Plan\\Domain\\ValueObject\\PlanLevel::Beginner || count($words) - 1 >= self::CHOICE_TOP_UP) {",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionWordChecksTest.php"
+   }
+  ]
+ },
+ {
+  "name": "18. combine — только на вопрос",
+  "rule": "phrase_combine ставится только на answer-обмен, чья реплика A кончается вопросом (разд. 3).",
+  "defect": "вопрос не проверяется: комбинация и на утверждение.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "|| ! $scene->asks($partner->textTarget) || ($for !== null && $phrase->ref() !== $for->ref())) {",
+  "replace": "|| ($for !== null && $phrase->ref() !== $for->ref())) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "deals no phrase_combine when no answer exchange asks"
+   }
+  ]
+ },
+ {
+  "name": "19. combine в возврате — тоже только на вопрос",
+  "rule": "Ни одного обмена на вопрос — карточки нет, и в возврате тоже.",
+  "defect": "возврат каркаса комбинацией не проверяет вопрос.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "|| ! $scene->asks($partner->textTarget) || ($for !== null && $phrase->ref() !== $for->ref())) {",
+  "replace": "|| ($for === null && ! $scene->asks($partner->textTarget)) || ($for !== null && $phrase->ref() !== $for->ref())) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "deals no phrase_combine when no answer exchange asks"
+   }
+  ]
+ },
+ {
+  "name": "20. combine — первый по визиту",
+  "rule": "Выбор — тот, чей каркас в дне единственный на своём обмене, иначе первый по визиту (не по зерну).",
+  "defect": "старый выбор: seeded среди сказанных один раз.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "$exchange = $once[0] ?? $asked[0] ?? null;",
+  "replace": "$exchange = $once === [] ? ($asked[0] ?? null) : Rotation::pick($scene->seed('phrases:combine'), 0, $once);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "builds phrase_combine on the first answer"
+   }
+  ]
+ },
+ {
+  "name": "21. combine — единственный каркас раньше повторённого",
+  "rule": "Каркас, сказанный только на своём обмене, берётся раньше первого по визиту.",
+  "defect": "всегда первый по визиту обмен-вопрос.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "$exchange = $once[0] ?? $asked[0] ?? null;",
+  "replace": "$exchange = $asked[0] ?? null;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "builds phrase_combine on the first answer"
+   }
+  ]
+ },
+ {
+  "name": "22. said у каждого каркаса",
+  "rule": "У каждого из frames[] — said {index, text_target, text_native, audio}.",
+  "defect": "frames[] без said.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "                    'said' => CardObjects::whole($scene, $t, $said),\n",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "says every frame of phrase_combine whole"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionDayFixtureTest.php"
+   }
+  ]
+ },
+ {
+  "name": "23. said верного — наполнение этого обмена",
+  "rule": "said верного каркаса — наполнение, которым ответили в этом обмене.",
+  "defect": "said верного — наполнение первой реплики каркаса.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "$said = $t->ref() === $phrase->ref() && $correctFiller !== null",
+  "replace": "$said = false",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "says every frame of phrase_combine whole"
+   }
+  ]
+ },
+ {
+  "name": "24. said чужого — сказанное диалогом",
+  "rule": "said чужого каркаса — наполнение, сказанное им в диалоге; нет сказанного — первое.",
+  "defect": "said чужого — всегда первое наполнение.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": ": $scene->saidIndex($t) ?? (CardObjects::fillers($scene, $t)[0]['index'] ?? null);",
+  "replace": ": (CardObjects::fillers($scene, $t)[0]['index'] ?? null);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "says every frame of phrase_combine whole"
+   }
+  ]
+ },
+ {
+  "name": "25. вопрос — знак конца по sentence_ends",
+  "rule": "Реплика A кончается вопросом по sentence_ends пакета цели.",
+  "defect": "вопрос читается наоборот.",
+  "file": "app/Modules/Plan/Domain/Assembly/SceneMaterial.php",
+  "find": "terminalKind($text) === 'question';",
+  "replace": "terminalKind($text) !== 'question';",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "builds phrase_combine on the first answer"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "predicts among lines of the answer"
+   }
+  ]
+ },
+ {
+  "name": "26. находка — адрес pN.fK с единицы",
+  "rule": "Находка filler.native_seam по адресу pN.fK (K — место в окне с единицы).",
+  "defect": "адрес читается с нуля.",
+  "file": "app/Modules/Plan/Domain/Assembly/SceneMaterial.php",
+  "find": "if (! isset($this->unreadable[SpokenLines::fillerRef($phraseRef, $index)])) {",
+  "replace": "if (! isset($this->unreadable[$phraseRef.'.f'.$index])) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "hides a filler the seam judge said does not read"
+   }
+  ]
+ },
+ {
+  "name": "27. said остаётся",
+  "rule": "Исключение — наполнение said: остаётся как есть.",
+  "defect": "наполнение, которым сказана фраза, скрывается, если диалог его не говорит.",
+  "file": "app/Modules/Plan/Domain/Assembly/SceneMaterial.php",
+  "find": "&& ($term === null || $this->saidIndex($term) !== $index)",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "hides a filler the seam judge said does not read"
+   }
+  ]
+ },
+ {
+  "name": "28. сказанное диалогом остаётся",
+  "rule": "Наполнение, которое говорит диалог, остаётся как есть.",
+  "defect": "in_dialogue не спасает наполнение.",
+  "file": "app/Modules/Plan/Domain/Assembly/SceneMaterial.php",
+  "find": "return $filler !== null && ! $filler->inDialogue && ",
+  "replace": "return $filler !== null && ",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "hides a filler the seam judge said does not read"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "shows a hidden filler on no card"
+   }
+  ]
+ },
+ {
+  "name": "29. нигде в карточках",
+  "rule": "Такое наполнение не показывается нигде, где виден его родной текст (узнавания, произнесения, варианты, чипы).",
+  "defect": "CardObjects::fillers не скрывает помеченные.",
+  "file": "app/Modules/Plan/Domain/Assembly/CardObjects.php",
+  "find": "            if ($scene->hides($phrase->ref(), $index)) {\n                continue;\n            }",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "shows a hidden filler on no card"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "recognises a frame whose other fillers all do not read once"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "says no copy and no return"
+   }
+  ]
+ },
+ {
+  "name": "30. серия короче, когда помечены все несказанные",
+  "rule": "Помечены все несказанные — серия узнаваний короче (одно узнавание на said).",
+  "defect": "серия считается по всем наполнениям окна.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseSeries.php",
+  "find": "$indexes = array_column(CardObjects::fillers($scene, $phrase), 'index');",
+  "replace": "$indexes = array_keys($phrase->frame()?->fillers() ?? []);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "recognises a frame whose other fillers all do not read once"
+   }
+  ]
+ },
+ {
+  "name": "31. произнесение — не «другое окно», которого нет",
+  "rule": "Каркас без других видимых наполнений произносится как фраза (phrase_repeat), а не other_slot/own_slot.",
+  "defect": "«вариативность» каркаса считается по всем наполнениям окна.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "count(CardObjects::fillers($scene, $phrase)) >= self::MIN_FILLERS_TO_VARY",
+  "replace": "count($phrase->frame()?->fillers() ?? []) >= self::MIN_FILLERS_TO_VARY",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "recognises a frame whose other fillers all do not read once"
+   }
+  ]
+ },
+ {
+  "name": "32. listen_number — без значений скрытых наполнений",
+  "rule": "Нигде, где виден родной текст наполнения: и среди значений listen_number.",
+  "defect": "listen_number берёт значения всех наполнений.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+  "find": "                if ($scene->hides($phrase->id, $index)) {\n                    continue;\n                }",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "leaves the value of a hidden filler out of listen_number"
+   }
+  ]
+ },
+ {
+  "name": "33. находки читаются из сцены",
+  "rule": "Новых вызовов нет — находки читаются из сцены (checks_json).",
+  "defect": "DayDealer не передаёт находки сцены сборке.",
+  "file": "app/Modules/Plan/Application/Service/DayDealer.php",
+  "find": "$target, $native, $scene->unreadableFillers());",
+  "replace": "$target, $native);",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionSeamFillersTest.php"
+   }
+  ]
+ },
+ {
+  "name": "34. фикстуры байт-в-байт",
+  "rule": "Фикстуры дня держатся байт-в-байт (разд. 6).",
+  "defect": "зерно вариантов word_listen другое.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "$scene->seed($term->ref().':listen'),",
+  "replace": "$scene->seed($term->ref().':listened'),",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionDayFixtureTest.php"
+   }
+  ]
+ },
+ {
+  "name": "35. (SESSION-1d, перенацелена) ложные — сначала свои наполнения",
+  "rule": "Ложные варианты: сначала другие наполнения ЭТОГО каркаса, добор — наполнения других каркасов (SESSION-1d, мутация 13 — фрагмент сдвинут подписью CardObjects::fillers).",
+  "defect": "сначала наполнения следующих каркасов, свои — потом.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "        $out = array_values(array_filter(CardObjects::fillers($scene, $phrase), static fn (array $f): bool => $f['index'] !== $index));\n        foreach ($this->othersFromNext($scene, $phrase) as $other) {\n            foreach (CardObjects::fillers($scene, $other) as $filler) {\n                $out[] = $filler;\n            }\n        }",
+  "replace": "        $out = [];\n        foreach ($this->othersFromNext($scene, $phrase) as $other) {\n            foreach (CardObjects::fillers($scene, $other) as $filler) {\n                $out[] = $filler;\n            }\n        }\n        $out = [...$out, ...array_values(array_filter(CardObjects::fillers($scene, $phrase), static fn (array $f): bool => $f['index'] !== $index))];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "offers the frame's other fillers first"
+   }
+  ]
+ },
+ {
+  "name": "36. (SESSION-1d, перенацелена) listen_predict: та же форма",
+  "rule": "5.3 SESSION-1d: ложные варианты той же формы, что верный (вопрос/утверждение по sentence_ends пакета цели); не хватает — любые (мутация 34 SESSION-1d — `asks` переехал в SceneMaterial).",
+  "defect": "форма не учитывается.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+  "find": "if ($scene->asks($message->textTarget) === $asks) {",
+  "replace": "if (true) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "predicts among lines of the answer"
+   }
+  ]
+ }
+]
