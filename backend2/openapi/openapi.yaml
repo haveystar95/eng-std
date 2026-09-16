@@ -3597,7 +3597,7 @@ components:
                 hint_native: { type: string, description: 'Что кладут в окно, на родном — «где болит»' }
                 fillers:
                   type: array
-                  description: 'Наполнения окна в порядке урока'
+                  description: 'Наполнения окна в порядке урока — без тех, чей родной шов судья швов не принял (`filler.native_seam`) и которых диалог не говорит (SESSION-1e); `index` у оставшихся прежний'
                   items: { $ref: '#/components/schemas/PlanCardFiller' }
             - type: 'null'
 
@@ -3729,9 +3729,10 @@ components:
       title: word_choose
       additionalProperties: false
       description: >-
-        Выбор перевода или слова (31-3 / 31-4). Направление задано сервером: beginner видит слово с
-        фото и звуком и выбирает перевод, intermediate читает перевод под фото и выбирает слово —
-        тогда звук у вариантов, а не у вопроса. Зачёт у клиента по `correct`.
+        Выбор перевода или слова (31-3 / 31-4). Направление задано сервером и чередуется по выборам дня
+        (SESSION-1e) у любого уровня: `term_to_native` — слово с фото и звуком, выбирают перевод;
+        `native_to_term` — перевод под фото, выбирают слово, звук у вариантов, а не у вопроса. Зачёт у
+        клиента по `correct`.
       required: [scene_id, direction, prompt, options, correct]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
@@ -3762,14 +3763,15 @@ components:
       type: object
       title: word_listen
       additionalProperties: false
-      description: 'Звук → написание (31-5): играет слово, ученик выбирает его написание. В вопросе нет ни текста, ни фото, ни перевода; у вариантов звука нет.'
-      required: [scene_id, audio, options, correct]
+      description: 'Звук → перевод (31-5, SESSION-1e): играет слово, ученик выбирает, что оно значит. В вопросе нет ни текста, ни фото; варианты — на родном языке, без звука; текста цели на карточке нет.'
+      required: [scene_id, direction, audio, options, correct]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
+        direction: { type: string, enum: [term_to_native], description: 'Что звучит и что выбирают: слово → перевод; варианты — родной язык (рисуются как у `word_choose` с `term_to_native`)' }
         audio: { $ref: '#/components/schemas/PlanCardAudio' }
         options:
           type: array
-          description: 'Четыре написания слов дня в показанном порядке'
+          description: 'До четырёх вариантов в показанном порядке — родной язык: перевод этого слова и переводы других слов дня (добор из каталога, когда слов дня меньше четырёх)'
           items: { $ref: '#/components/schemas/PlanCardOption' }
         correct: { type: string, description: '`id` верного варианта' }
 
@@ -3956,9 +3958,10 @@ components:
       title: phrase_combine
       additionalProperties: false
       description: >-
-        Собери ответ на реплику (32-8), одна на день: звучит реплика партнёра, ученик выбирает нужный
-        каркас из трёх и наполнение к нему. Зачёт у клиента: каркас должен быть `correct_frame`,
-        наполнение — любое из `chips`.
+        Собери ответ на реплику (32-8), одна на день и только на вопрос (SESSION-1e): звучит вопрос
+        партнёра, ученик выбирает нужный каркас из трёх — каждый показан целой фразой (`said`) — и
+        наполнение к нему. Зачёт у клиента: каркас должен быть `correct_frame`, наполнение — любое из
+        `chips`.
       required: [scene_id, exchange, partner_line, frames, correct_frame, chips, correct_filler]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
@@ -3973,11 +3976,20 @@ components:
           description: 'Три каркаса в показанном порядке — нужный и два чужих с окнами: каркасы самых далёких по шагу обменов (SESSION-1d)'
           items:
             type: object
-            required: [ref, frame_target, frame_native]
+            required: [ref, frame_target, frame_native, said]
             properties:
               ref: { type: string, description: '`p2` — по нему сверяют выбор с `correct_frame`' }
               frame_target: { type: string, description: 'Каркас на языке цели с `___`' }
               frame_native: { type: string, description: 'Он же на родном' }
+              said:
+                type: object
+                description: 'Каркас целой фразой — так вариант показывают (SESSION-1e): у нужного — с наполнением, которым ответили в этом обмене; у чужого — с наполнением, которым его говорит диалог (не говорит — с первым)'
+                required: [index, text_target, text_native, audio]
+                properties:
+                  index: { type: [integer, 'null'], description: 'Номер наполнения фразы; null — фраза сказана не наполнением окна' }
+                  text_target: { type: string, description: 'Фраза целиком на языке цели' }
+                  text_native: { type: string, description: 'Она же на родном' }
+                  audio: { $ref: '#/components/schemas/PlanCardAudio' }
         correct_frame: { type: string, description: '`ref` верного каркаса' }
         chips:
           type: array

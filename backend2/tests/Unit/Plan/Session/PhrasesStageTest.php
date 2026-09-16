@@ -11,6 +11,7 @@ use App\Modules\Plan\Domain\Assembly\PhraseSeries;
 use App\Modules\Plan\Domain\Assembly\PhrasesStage;
 use App\Modules\Plan\Domain\Assembly\Rotation;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
@@ -367,7 +368,7 @@ it('has a beginner say the frame with a filler not said yet, its sample playing 
 
     expect($repeat($drafts, 'p1'))->toBe([
         'scene_id' => s1pSceneId(),
-        'frame' => CardObjects::frame(s1pTerm($scene, 'p1')),
+        'frame' => CardObjects::frame($scene, s1pTerm($scene, 'p1')),
         'filler_index' => 1,
         'expected_text' => 'It hurts in his neck.',
         'key' => s1pTerm($scene, 'p1')->speakingKey(),
@@ -443,62 +444,57 @@ it('keeps at least two cards of other frames between any two cards of a frame, t
     }
 });
 
-it('builds phrase_combine on an answer exchange whose frame is said once, its two wrong frames from the farthest exchanges', function () {
+// Canon (SESSION-1e, разд. 3): «phrase_combine — только на вопрос собеседника: answer-обмен, чья реплика A кончается вопросом
+// (sentence_ends пакета цели); кандидаты — все такие обмены с каркасом с окном; выбор — тот, чей каркас в дне единственный на
+// своём обмене, иначе первый по визиту»; ложные — каркасы самых далёких обменов (SESSION-1d). Catches a combine on a
+// statement, a choice seeded among the once-said frames instead of the first in the visit, a frame said twice taken over one
+// said once, and wrong frames that are not the farthest exchanges'.
+it('builds phrase_combine on the first answer whose partner asks and whose frame is said there only, its wrong frames from the farthest exchanges', function () {
     $scene = s1pScene();
     $drafts = s1pStage()->build($scene, PlanLevel::Intermediate);
     $card = end($drafts);
     $payload = $card->payload;
-    $step = $payload['exchange']['step'];
-    $exchange = $scene->exchange($step);
-    $correct = s1pTerm($scene, $payload['correct_frame']);
-    $eligible = array_values(array_filter($scene->lesson->exchanges, static fn (Exchange $e): bool => in_array($e->step, [1, 2, 3, 5], true)));
-    // Canon (SESSION-1d, 5.2): the frames of the farthest exchanges by |Δstep|, the lower step between two as far.
-    $far = [];
-    foreach ($scene->farthestFrom($step) as $other) {
-        $term = $scene->phraseTerm($other->learner()?->phraseId);
-        if ($term !== null && PhraseCards::hasSlot($term) && $term->ref() !== $correct->ref() && ! in_array($term->ref(), $far, true)) {
-            $far[] = $term->ref();
-        }
-    }
+    $exchange = $scene->exchange(1);
+    $correct = s1pTerm($scene, 'p1');
 
+    // x1…x4 ask, x5 does not; p1 is said once, in x1 — the first such exchange of the visit.
     expect(array_keys($payload))->toBe(['scene_id', 'exchange', 'partner_line', 'frames', 'correct_frame', 'chips', 'correct_filler'])
         ->and($card->kind)->toBe(CardKind::PhraseCombine)
-        ->and($card->unitRef)->toBe($payload['correct_frame'])
-        ->and($exchange?->kind)->toBe(ExchangeKind::Answer)
-        ->and($step)->toBe(Rotation::pick($scene->seed('phrases:combine'), 0, $eligible)->step)
-        ->and($payload['exchange'])->toBe(['ref' => 'x'.$step, 'step' => $step, 'kind' => 'answer'])
-        ->and($exchange?->learner()?->phraseId)->toBe($payload['correct_frame'])
-        ->and($scene->lesson->linesOf($payload['correct_frame']))->toHaveCount(1)
+        ->and($card->unitRef)->toBe('p1')
+        ->and($payload['exchange'])->toBe(['ref' => 'x1', 'step' => 1, 'kind' => 'answer'])
+        ->and($scene->asks((string) $exchange?->partner()?->textTarget))->toBeTrue()
+        ->and($scene->asks((string) $scene->exchange(5)?->partner()?->textTarget))->toBeFalse()
         ->and($payload['partner_line'])->toBe([
-            'ref' => 'x'.$step, 'text_target' => $exchange?->partner()?->textTarget, 'text_native' => $exchange?->partner()?->textNative, 'audio' => Audio::of('x'.$step),
+            'ref' => 'x1', 'text_target' => $exchange?->partner()?->textTarget, 'text_native' => $exchange?->partner()?->textNative, 'audio' => Audio::of('x1'),
         ])
-        ->and($payload['frames'])->toHaveCount(3)
-        ->and(array_column($payload['frames'], 'ref'))->toEqualCanonicalizing([$correct->ref(), ...array_slice($far, 0, 2)])
-        ->and($payload['frames'])->toBe(array_map(static function (PlanTerm $t): array {
-            return ['ref' => $t->ref(), 'frame_target' => $t->frame()?->frameTarget, 'frame_native' => $t->frame()?->frameNative];
-        }, Shuffle::seeded($scene->seed('phrases:combine:frames'), [$correct, ...array_map(static fn (string $r): PlanTerm => s1pTerm($scene, $r), array_slice($far, 0, 2))])))
-        ->and($payload['chips'])->toBe(CardObjects::fillers($correct))
+        ->and($payload['correct_frame'])->toBe('p1')
+        // x1's farthest exchanges: x8 and x7 (both p6), x6 (a rescue, no frame), x5 (p5).
+        ->and(array_column($payload['frames'], 'ref'))->toBe(array_map(
+            static fn (PlanTerm $t): string => $t->ref(),
+            Shuffle::seeded($scene->seed('phrases:combine:frames'), [$correct, s1pTerm($scene, 'p6'), s1pTerm($scene, 'p5')]),
+        ))
+        ->and($payload['chips'])->toBe(CardObjects::fillers($scene, $correct))
         ->and($payload['correct_filler'])->toBe(0);
 
-    // p2 is answered in x2: the farthest exchanges are x8 and x7 (both p6), x6 (a rescue, no frame), x5 (p5) — never
-    // the neighbours x1 and x3.
-    $forP2 = (new PhraseCards)->combine($scene, s1pTerm($scene, 'p2'))?->payload;
+    // The same on every scene: the choice is the visit's, not a seed's.
+    foreach (range(10, 21) as $n) {
+        expect((new PhraseCards)->combine(s1pScene(null, '01J8SESS10N1APHRASES0000'.$n))?->payload['exchange']['step'])->toBe(1, (string) $n);
+    }
+
+    // p1 said twice (x1 and x3): the first asking exchange whose frame is said there only is x2.
+    $twice = s1pScene(static function (array $payload): array {
+        $payload['dialogue'][2]['messages'][1]['phrase_id'] = 'p1';
+        $payload['dialogue'][2]['messages'][1]['text_target'] = 'It hurts in his neck.';
+
+        return $payload;
+    });
+    $forP2 = (new PhraseCards)->combine($twice)?->payload;
     expect($forP2['exchange']['step'] ?? null)->toBe(2)
+        ->and($forP2['correct_frame'] ?? null)->toBe('p2')
+        // p2 is answered in x2: the farthest exchanges are x8 and x7 (both p6), x6 (a rescue), x5 (p5) — never x1 and x3.
         ->and(array_column($forP2['frames'] ?? [], 'ref'))->toEqualCanonicalizing(['p2', 'p6', 'p5']);
 
-    // Seeded by the scene; never x4 (no window), x6 (a rescue), x7/x8 (an ask frame said twice).
-    $steps = [];
-    foreach (range(10, 21) as $n) {
-        $combine = (new PhraseCards)->combine(s1pScene(null, '01J8SESS10N1APHRASES0000'.$n));
-        $steps[$combine?->payload['exchange']['step']] = true;
-        expect($combine?->unitRef)->not->toBe('p6');
-    }
-    expect(array_diff(array_keys($steps), [1, 2, 3, 5]))->toBe([])
-        ->and(count($steps))->toBeGreaterThan(1);
-});
-
-it('falls back to exchange 1 when no answer frame is said once, and deals no combine without another frame with a window', function () {
-    // Every answer line now stands on p1 — said four times; x1 says it with its second filler.
+    // Every asking exchange's frame said more than once: the first asking exchange of the visit, its own filler.
     $saidOften = s1pScene(static function (array $payload): array {
         foreach ([0 => 'It hurts in his neck.', 1 => 'It hurts in his shoulder.', 2 => 'It hurts in his lower back.', 4 => 'It hurts in his neck.'] as $i => $text) {
             $payload['dialogue'][$i]['messages'][1]['phrase_id'] = 'p1';
@@ -507,13 +503,56 @@ it('falls back to exchange 1 when no answer frame is said once, and deals no com
 
         return $payload;
     });
-    $combine = (new PhraseCards)->combine($saidOften);
+    $often = (new PhraseCards)->combine($saidOften);
+    expect($often?->payload['exchange'])->toBe(['ref' => 'x1', 'step' => 1, 'kind' => 'answer'])
+        ->and($often?->payload['correct_frame'])->toBe('p1')
+        ->and($often?->payload['correct_filler'])->toBe(1)
+        ->and($often?->payload['chips'])->toBe(CardObjects::fillers($saidOften, s1pTerm($saidOften, 'p1')));
+});
 
-    expect($combine?->payload['exchange'])->toBe(['ref' => 'x1', 'step' => 1, 'kind' => 'answer'])
-        ->and($combine?->payload['correct_frame'])->toBe('p1')
-        ->and($combine?->payload['correct_filler'])->toBe(1)
-        ->and($combine?->payload['chips'])->toBe(CardObjects::fillers(s1pTerm($saidOften, 'p1')));
+// Canon (SESSION-1e, разд. 3): «ни одного обмена на вопрос — карточки нет (и в возврате тоже)». Catches a combine dealt on a
+// statement when nothing asks, a return built on a statement, and a target without `sentence_ends` read as asking.
+it('deals no phrase_combine when no answer exchange asks — not as a return either — nor without another frame with a window', function () {
+    // x1, x2 and x4 now say; x3 alone asks: the combine is x3's.
+    $say = static fn (string $text): string => rtrim($text, '?').'.';
+    $onlyX3 = s1pScene(static function (array $payload) use ($say): array {
+        foreach ([0, 1, 3] as $i) {
+            $payload['dialogue'][$i]['messages'][0]['text_target'] = $say($payload['dialogue'][$i]['messages'][0]['text_target']);
+        }
 
+        return $payload;
+    });
+    expect((new PhraseCards)->combine($onlyX3)?->payload['exchange']['step'])->toBe(3)
+        // A frame coming back as a combine: its own asking exchange, or none — p1's x1 says now.
+        ->and((new PhraseCards)->combine($onlyX3, s1pTerm($onlyX3, 'p3'))?->payload['exchange']['step'])->toBe(3)
+        ->and((new PhraseCards)->combine($onlyX3, s1pTerm($onlyX3, 'p1')))->toBeNull()
+        ->and((new PhraseCards)->combine($onlyX3, s1pTerm($onlyX3, 'p5')))->toBeNull()
+        ->and(s1pStage()->returned($onlyX3, s1pTerm($onlyX3, 'p1'), CardKind::PhraseCombine, 0)?->kind)
+        ->toBe(PhraseSeries::kind($onlyX3, s1pTerm($onlyX3, 'p1'), 0));
+
+    // Nothing asks: no combine, today or back.
+    $noQuestion = s1pScene(static function (array $payload) use ($say): array {
+        foreach ([0, 1, 2, 3] as $i) {
+            $payload['dialogue'][$i]['messages'][0]['text_target'] = $say($payload['dialogue'][$i]['messages'][0]['text_target']);
+        }
+
+        return $payload;
+    });
+    foreach ([PlanLevel::Beginner, PlanLevel::Intermediate] as $level) {
+        $drafts = s1pStage()->build($noQuestion, $level);
+        expect(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseCombine))->toBe([], $level->value)
+            ->and($drafts)->toHaveCount(28, $level->value);
+    }
+    expect((new PhraseCards)->combine($noQuestion))->toBeNull()
+        ->and((new PhraseCards)->combine($noQuestion, s1pTerm($noQuestion, 'p2')))->toBeNull()
+        ->and(s1pStage()->returned($noQuestion, s1pTerm($noQuestion, 'p2'), CardKind::PhraseCombine, 0)?->kind)->not->toBe(CardKind::PhraseCombine);
+
+    // A target whose pack names no sentence ends cannot tell a question: no combine.
+    $clean = s1pScene();
+    $unmarked = new SceneMaterial($clean->sceneId, $clean->lesson, $clean->terms, LanguagePack::none('en'), $clean->native);
+    expect((new PhraseCards)->combine($unmarked))->toBeNull();
+
+    // No other frame with a window to tell the right one from.
     $alone = s1pScene(static function (array $payload): array {
         foreach ([1, 2, 4, 5] as $i) {
             $payload['phrases'][$i]['slot'] = null;
@@ -521,10 +560,46 @@ it('falls back to exchange 1 when no answer frame is said once, and deals no com
 
         return $payload;
     });
-    $drafts = s1pStage()->build($alone, PlanLevel::Beginner);
-
     expect((new PhraseCards)->combine($alone))->toBeNull()
-        ->and(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseCombine))->toBe([]);
+        ->and(array_filter(s1pStage()->build($alone, PlanLevel::Beginner), static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseCombine))->toBe([]);
+});
+
+// Canon (SESSION-1e, разд. 3): «у каждого из frames[] — said {index, text_target, text_native, audio}: наполнение, сказанное
+// этим каркасом в диалоге; нет сказанного — первое». Catches frames without their whole phrase, the right frame said with
+// another filler than the exchange answers with, a wrong frame said with its first filler though the dialogue says another,
+// and a sound that is not that phrase's.
+it('says every frame of phrase_combine whole — the right one with the filler its exchange says, a wrong one with the filler the dialogue says it with', function () {
+    // x1 says; p1 answers x2 with «shoulder» and x3 with «neck» (first said, in x1, with «lower back»); p5 is said «for two days».
+    $scene = s1pScene(static function (array $payload): array {
+        $payload['dialogue'][0]['messages'][0]['text_target'] = 'Tell me where it hurts.';
+        foreach ([1 => 'It hurts in his shoulder.', 2 => 'It hurts in his neck.'] as $i => $text) {
+            $payload['dialogue'][$i]['messages'][1]['phrase_id'] = 'p1';
+            $payload['dialogue'][$i]['messages'][1]['text_target'] = $text;
+        }
+        $payload['dialogue'][4]['messages'][1]['text_target'] = 'Okay, he will rest for two days.';
+
+        return $payload;
+    });
+    $payload = (new PhraseCards)->combine($scene)?->payload;
+    $frames = array_column($payload['frames'] ?? [], null, 'ref');
+
+    expect($payload['exchange']['step'] ?? null)->toBe(2)
+        ->and($payload['correct_frame'] ?? null)->toBe('p1')
+        ->and($payload['correct_filler'] ?? null)->toBe(2)
+        ->and($scene->saidIndex(s1pTerm($scene, 'p1')))->toBe(0)
+        ->and(array_keys($frames))->toEqualCanonicalizing(['p1', 'p6', 'p5'])
+        ->and(array_map(static fn (array $f): array => array_keys($f), $frames))->each->toBe(['ref', 'frame_target', 'frame_native', 'said'])
+        ->and($frames['p1']['said'])->toBe(['index' => 2, 'text_target' => 'It hurts in his shoulder.', 'text_native' => 'У него болит плечо.', 'audio' => Audio::of('p1.f3')])
+        ->and($frames['p5']['said'])->toBe(['index' => 1, 'text_target' => 'He will rest for two days.', 'text_native' => 'Он будет отдыхать два дня.', 'audio' => Audio::of('p5')])
+        ->and($frames['p6']['said'])->toBe(['index' => 0, 'text_target' => 'Do we need an X-ray?', 'text_native' => 'Нам нужно сделать рентген?', 'audio' => Audio::of('p6')]);
+
+    // A frame the dialogue does not say: its phrase is the frame with its first filler.
+    $p2 = s1pTerm($scene, 'p2');
+    expect($scene->lesson->linesOf('p2'))->toBe([])
+        ->and(CardObjects::whole($scene, $p2, $scene->saidIndex($p2)))->toBe([
+            'index' => 0, 'text_target' => 'It started three days ago.', 'text_native' => 'Началось три дня назад.', 'audio' => Audio::of('p2'),
+        ])
+        ->and(CardObjects::whole($scene, $p2, null))->toBe(CardObjects::whole($scene, $p2, 0));
 });
 
 it('recognises a frame without a window back and has it repeated, at both levels', function () {
@@ -657,7 +732,7 @@ it('lays out the frame, every filler with the file it sounds as, and the said ph
         ->and(array_column($fillers, 'native_line'))->toBe(['Нам нужно сделать рентген?', 'Нам нужно прийти на повторный приём?', 'Нам нужно взять справку для школы?'])
         ->and($p6['said']['text_target'])->toBe('Do we need an X-ray?')
         ->and($p6['frame']['kind'])->toBe('ask')
-        ->and(CardObjects::fillers(s1pTerm($scene, 'p3'))[1]['native_line'])->toBe('Боль ноющая, когда он наклоняется.');
+        ->and(CardObjects::fillers($scene, s1pTerm($scene, 'p3'))[1]['native_line'])->toBe('Боль ноющая, когда он наклоняется.');
 });
 
 it('asks phrase_assemble for the frame\'s words and two words of the frames after it, lower-cased but «I»', function () {
@@ -666,11 +741,11 @@ it('asks phrase_assemble for the frame\'s words and two words of the frames afte
     $p3 = $cards->assemble($scene, s1pTerm($scene, 'p3'), 0)?->payload;
 
     expect(array_keys($p3))->toBe(['scene_id', 'frame', 'target_native', 'tiles', 'chips', 'expected'])
-        ->and($p3['frame'])->toBe(CardObjects::frame(s1pTerm($scene, 'p3')))
+        ->and($p3['frame'])->toBe(CardObjects::frame($scene, s1pTerm($scene, 'p3')))
         ->and($p3['target_native'])->toBe('Боль острая, когда он наклоняется.')
         // The next frame p4 gives two words p3 does not have («he» it has).
         ->and($p3['tiles'])->toBe(Shuffle::seeded($scene->seed('p3:assemble'), ['the', 'pain', 'is', 'when', 'he', 'bends', "doesn't", 'have']))
-        ->and($p3['chips'])->toBe(CardObjects::fillers(s1pTerm($scene, 'p3')))
+        ->and($p3['chips'])->toBe(CardObjects::fillers($scene, s1pTerm($scene, 'p3')))
         // The answer is spelled the way the tiles are: the client matches what it assembled tile by tile.
         ->and($p3['expected'])->toBe(['words' => ['the', 'pain', 'is', 'when', 'he', 'bends'], 'slot_at' => 3, 'filler_index' => 0]);
 
@@ -695,7 +770,7 @@ it('asks for a filler other than the said one on phrase_other_slot, by its trans
 
     expect((new PhraseCards)->otherSlot($scene, s1pTerm($scene, 'p1'), 2)?->payload)->toBe([
         'scene_id' => s1pSceneId(),
-        'frame' => CardObjects::frame(s1pTerm($scene, 'p1')),
+        'frame' => CardObjects::frame($scene, s1pTerm($scene, 'p1')),
         'filler_index' => 2,
         'task_native' => 'плечо',
         'expected_text' => 'It hurts in his shoulder.',
@@ -712,7 +787,7 @@ it('has the learner\'s own value judged on phrase_own_slot, with the partner lin
 
     expect($p1)->toBe([
         'scene_id' => s1pSceneId(),
-        'frame' => CardObjects::frame(s1pTerm($scene, 'p1')),
+        'frame' => CardObjects::frame($scene, s1pTerm($scene, 'p1')),
         'partner_line' => [
             'ref' => 'x1', 'text_target' => 'Where does it hurt: his upper back or his lower back?',
             'text_native' => 'Где болит: вверху спины или в пояснице?', 'audio' => Audio::of('x1'),
@@ -721,7 +796,7 @@ it('has the learner\'s own value judged on phrase_own_slot, with the partner lin
         'key' => s1pTerm($scene, 'p1')->speakingKey(),
         'coverage_min' => 0.7,
         'examples' => ['поясница', 'шея', 'плечо'],
-        'chips' => CardObjects::fillers(s1pTerm($scene, 'p1')),
+        'chips' => CardObjects::fillers($scene, s1pTerm($scene, 'p1')),
         'judge' => true,
     ])
         // «It started» — two words: all of them.
@@ -757,6 +832,10 @@ it('gives every one of the nine kinds its exact keys over the deals of both leve
                 foreach ($draft->payload['options'] ?? [] as $option) {
                     expect(array_slice(array_keys($option), 0, 2))->toBe(['id', 'text']);
                 }
+                foreach ($draft->payload['frames'] ?? [] as $frame) {
+                    expect(array_keys($frame))->toBe(['ref', 'frame_target', 'frame_native', 'said'])
+                        ->and(array_keys($frame['said']))->toBe(['index', 'text_target', 'text_native', 'audio']);
+                }
                 if (isset($draft->payload['correct'])) {
                     expect(array_column($draft->payload['options'], 'id'))->toContain($draft->payload['correct'])
                         ->and(array_unique(array_map('mb_strtolower', array_column($draft->payload['options'], 'text'))))->toHaveCount(count($draft->payload['options']));
@@ -766,5 +845,5 @@ it('gives every one of the nine kinds its exact keys over the deals of both leve
     }
 
     expect(array_keys($seen))->toEqualCanonicalizing(array_keys($keys))
-        ->and(array_keys(CardObjects::fillers(s1pTerm(s1pScene(), 'p2'))[0]))->toBe(['index', 'target', 'native', 'pronunciation_native', 'in_dialogue', 'native_line', 'audio']);
+        ->and(array_keys(CardObjects::fillers(s1pScene(), s1pTerm(s1pScene(), 'p2'))[0]))->toBe(['index', 'target', 'native', 'pronunciation_native', 'in_dialogue', 'native_line', 'audio']);
 });

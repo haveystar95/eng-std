@@ -64,7 +64,7 @@ final class PhrasesStage
                     $recognitions[$ref][] = $card;
                 }
             }
-            $produce[$ref] = $level === PlanLevel::Intermediate && self::varies($phrase)
+            $produce[$ref] = $level === PlanLevel::Intermediate && self::varies($scene, $phrase)
                 ? Rotation::pick($scene->seed('phrases:produce'), $varied++, self::PRODUCE)
                 : CardKind::PhraseRepeat;
             $seconds += $this->pace->seconds(CardKind::PhraseIntro) + $this->pace->seconds($produce[$ref])
@@ -178,9 +178,9 @@ final class PhrasesStage
         return array_column($frames, 'phrase');
     }
 
-    /** A frame said with other values than its own: a window and at least two fillers for it. */
-    private static function varies(PlanTerm $phrase): bool
+    /** A frame said with other values than its own: a window and at least two fillers for it that a card may show. */
+    private static function varies(SceneMaterial $scene, PlanTerm $phrase): bool
     {
-        return PhraseCards::hasSlot($phrase) && count($phrase->frame()?->fillers() ?? []) >= self::MIN_FILLERS_TO_VARY;
+        return PhraseCards::hasSlot($phrase) && count(CardObjects::fillers($scene, $phrase)) >= self::MIN_FILLERS_TO_VARY;
     }
 }

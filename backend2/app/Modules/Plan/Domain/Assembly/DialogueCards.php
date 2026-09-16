@@ -118,7 +118,7 @@ final class DialogueCards
         $partnerLine = CardObjects::partnerLine($exchange);
         $ownLine = CardObjects::ownLine($scene, $exchange);
         $phrase = $scene->phraseTerm($exchange->learner()?->phraseId);
-        $frame = $phrase === null ? null : CardObjects::frame($phrase);
+        $frame = $phrase === null ? null : CardObjects::frame($scene, $phrase);
         $pattern = $phrase?->frame();
         if ($partnerLine === null || $ownLine === null || $phrase === null || $frame === null || $pattern === null) {
             return null;
@@ -131,7 +131,7 @@ final class DialogueCards
             'own_line' => $ownLine,
             'frame' => $frame,
             'modes' => [
-                'chips' => $pattern->slot === null ? [] : CardObjects::fillers($phrase),
+                'chips' => $pattern->slot === null ? [] : CardObjects::fillers($scene, $phrase),
                 'voice_hint' => $ownLine['text_target'],
                 'voice_blind' => $pattern->frameTarget,
             ],

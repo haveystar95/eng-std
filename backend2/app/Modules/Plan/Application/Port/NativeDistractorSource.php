@@ -7,8 +7,9 @@ namespace App\Modules\Plan\Application\Port;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 
 /**
- * The catalogue top-up for the Beginner choice card: translations of OTHER words of the same
- * kind and about the same length, when the day's own words are too few.
+ * The catalogue top-up for a choice among translations — `word_choose` asked `term_to_native` and
+ * `word_listen`, at any level (SESSION-1e): translations of OTHER words of the same kind and about
+ * the same length, when the day's own words are too few.
  */
 interface NativeDistractorSource
 {

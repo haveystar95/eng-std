@@ -55,7 +55,7 @@ final class PhraseCards
     {
         return $this->draft(CardKind::PhraseIntro, $phrase, [
             'scene_id' => $scene->sceneId->value,
-            'frame' => CardObjects::frame($phrase),
+            'frame' => CardObjects::frame($scene, $phrase),
             'said' => CardObjects::said($scene, $phrase),
         ]);
     }
@@ -70,7 +70,7 @@ final class PhraseCards
     public function assemble(SceneMaterial $scene, PlanTerm $phrase, ?int $filler): ?CardDraft
     {
         $frame = $phrase->frame();
-        $right = self::fillerAt($phrase, $filler);
+        $right = self::fillerAt($scene, $phrase, $filler);
         if ($frame === null || $right === null) {
             return null;
         }
@@ -105,10 +105,10 @@ final class PhraseCards
 
         return $this->draft(CardKind::PhraseAssemble, $phrase, [
             'scene_id' => $scene->sceneId->value,
-            'frame' => CardObjects::frame($phrase),
+            'frame' => CardObjects::frame($scene, $phrase),
             'target_native' => $right['native_line'],
             'tiles' => $tiles,
-            'chips' => CardObjects::fillers($phrase),
+            'chips' => CardObjects::fillers($scene, $phrase),
             'expected' => [
                 // The SAME spelling the tiles carry: the client compares what it assembled tile by tile, and a word
                 // that reads «It» on the answer and «it» on its tile would never match it. The capital of the first
@@ -135,13 +135,13 @@ final class PhraseCards
             return null;
         }
         $candidates = [];
-        foreach (CardObjects::fillers($phrase) as $other) {
+        foreach (CardObjects::fillers($scene, $phrase) as $other) {
             if ($other['index'] !== $sentence['filler_index']) {
                 $candidates[] = ['text' => $other['native_line']];
             }
         }
         foreach ($this->othersFromNext($scene, $phrase) as $other) {
-            $fillers = self::hasSlot($other) ? CardObjects::fillers($other) : [];
+            $fillers = self::hasSlot($other) ? CardObjects::fillers($scene, $other) : [];
             foreach ($fillers === [] ? [$other->textNative()] : array_column($fillers, 'native_line') as $text) {
                 $candidates[] = ['text' => $text];
             }
@@ -171,7 +171,7 @@ final class PhraseCards
      */
     public function slot(SceneMaterial $scene, PlanTerm $phrase, ?int $filler): ?CardDraft
     {
-        $right = self::fillerAt($phrase, $filler);
+        $right = self::fillerAt($scene, $phrase, $filler);
         if ($right === null) {
             return null;
         }
@@ -191,7 +191,7 @@ final class PhraseCards
 
         return $this->draft(CardKind::PhraseSlot, $phrase, [
             'scene_id' => $scene->sceneId->value,
-            'frame' => CardObjects::frame($phrase),
+            'frame' => CardObjects::frame($scene, $phrase),
             'prompt_native' => $right['native_line'],
             'options' => $chosen['options'],
             'correct' => $chosen['correct'],
@@ -205,7 +205,7 @@ final class PhraseCards
      */
     public function slotListen(SceneMaterial $scene, PlanTerm $phrase, ?int $filler): ?CardDraft
     {
-        $right = self::fillerAt($phrase, $filler);
+        $right = self::fillerAt($scene, $phrase, $filler);
         if ($right === null || $right['audio'] === null) {
             return null;
         }
@@ -220,7 +220,7 @@ final class PhraseCards
 
         return $this->draft(CardKind::PhraseSlotListen, $phrase, [
             'scene_id' => $scene->sceneId->value,
-            'frame' => CardObjects::frame($phrase),
+            'frame' => CardObjects::frame($scene, $phrase),
             'filler_index' => $right['index'],
             'audio' => $right['audio'],
             'options' => $chosen['options'],
@@ -253,7 +253,7 @@ final class PhraseCards
 
         return $this->draft(CardKind::PhraseRepeat, $phrase, [
             'scene_id' => $scene->sceneId->value,
-            'frame' => CardObjects::frame($phrase),
+            'frame' => CardObjects::frame($scene, $phrase),
             'filler_index' => $sentence['filler_index'],
             'expected_text' => $expected,
             'key' => $phrase->speakingKey(),
@@ -270,7 +270,7 @@ final class PhraseCards
     public function otherSlot(SceneMaterial $scene, PlanTerm $phrase, ?int $filler): ?CardDraft
     {
         $frame = $phrase->frame();
-        $right = self::fillerAt($phrase, $filler);
+        $right = self::fillerAt($scene, $phrase, $filler);
         if ($frame === null || $right === null || $right['index'] === $scene->saidIndex($phrase)) {
             return null;
         }
@@ -278,7 +278,7 @@ final class PhraseCards
 
         return $this->draft(CardKind::PhraseOtherSlot, $phrase, [
             'scene_id' => $scene->sceneId->value,
-            'frame' => CardObjects::frame($phrase),
+            'frame' => CardObjects::frame($scene, $phrase),
             'filler_index' => $right['index'],
             'task_native' => $right['native'],
             'expected_text' => $expected,
@@ -289,40 +289,39 @@ final class PhraseCards
     }
 
     /**
-     * 32-8 (D-15) — ONE per day: a partner's line of the dialogue, three frames to answer it with and the chips of
-     * the right one. The exchange is an answer whose frame the dialogue says once (a frame said twice has no single
-     * right filler), seeded among such; none — exchange 1 when it is an answer on a framed window, else the first
-     * such answer. For a frame that comes back as this card (`$for`, SESSION-1d) — the first answer that frame is said
-     * in. The two wrong frames have windows too and are the frames of the exchanges FARTHEST from this one by step
+     * 32-8 (D-15; SESSION-1e) — ONE per day, and only ON A QUESTION: a partner's line that asks, three frames to answer
+     * it with — each as a whole phrase — and the chips of the right one.
+     *
+     * The exchange is an answer whose partner's line ends with a question (the target pack's `sentence_ends`,
+     * {@see SceneMaterial::asks()}) and whose learner's line stands on a frame with a window: the first such exchange in
+     * the visit whose frame the dialogue says there only (a frame said twice has no single right filler), else the first
+     * such exchange. For a frame that comes back as this card (`$for`, SESSION-1d) — the first such exchange of that
+     * frame. The two wrong frames have windows too and are the frames of the exchanges FARTHEST from this one by step
      * (SESSION-1d, as `dialogue_partner`'s fourth option): a frame said in a far exchange belongs to another moment of
-     * the visit. Null when there is no such exchange or no other frame with a window.
+     * the visit.
+     *
+     * Every frame carries `said` — the frame as a whole phrase ({@see CardObjects::whole()}): the right one said with
+     * the filler this exchange says it with, a wrong one with the filler the dialogue says it with (none — its first).
+     * Null when no exchange asks so, or no other frame has a window.
      */
     public function combine(SceneMaterial $scene, ?PlanTerm $for = null): ?CardDraft
     {
-        $framed = [];
+        $asked = [];
         $once = [];
         foreach ($scene->lesson->exchanges as $exchange) {
             $learner = $exchange->learner();
+            $partner = $exchange->partner();
             $phrase = $learner === null ? null : $scene->phraseTerm($learner->phraseId);
-            if ($exchange->kind !== ExchangeKind::Answer || $exchange->partner() === null || $phrase === null || ! self::hasSlot($phrase)) {
+            if ($exchange->kind !== ExchangeKind::Answer || $partner === null || $phrase === null || ! self::hasSlot($phrase)
+                || ! $scene->asks($partner->textTarget) || ($for !== null && $phrase->ref() !== $for->ref())) {
                 continue;
             }
-            if ($for !== null && $phrase->ref() !== $for->ref()) {
-                continue;
-            }
-            $framed[] = $exchange;
+            $asked[] = $exchange;
             if (count($scene->lesson->linesOf($phrase->ref())) === 1) {
                 $once[] = $exchange;
             }
         }
-        if ($for !== null) {
-            $exchange = $framed[0] ?? null;
-        } elseif ($once !== []) {
-            $exchange = Rotation::pick($scene->seed('phrases:combine'), 0, $once);
-        } else {
-            $first = array_values(array_filter($framed, static fn (Exchange $e): bool => $e->step === 1));
-            $exchange = $first[0] ?? $framed[0] ?? null;
-        }
+        $exchange = $once[0] ?? $asked[0] ?? null;
         $learner = $exchange?->learner();
         $phrase = $learner === null ? null : $scene->phraseTerm($learner->phraseId);
         if ($exchange === null || $learner === null || $phrase === null) {
@@ -333,14 +332,19 @@ final class PhraseCards
         if ($wrong === []) {
             return null;
         }
+        $correctFiller = CardObjects::fillerIndexOf($phrase, $learner->filler);
         $frames = array_map(
-            static function (PlanTerm $t): array {
+            static function (PlanTerm $t) use ($scene, $phrase, $correctFiller): array {
                 $frame = $t->frame();
+                $said = $t->ref() === $phrase->ref() && $correctFiller !== null
+                    ? $correctFiller
+                    : $scene->saidIndex($t) ?? (CardObjects::fillers($scene, $t)[0]['index'] ?? null);
 
                 return [
                     'ref' => $t->ref(),
                     'frame_target' => $frame === null ? '' : $frame->frameTarget,
                     'frame_native' => $frame === null ? '' : $frame->frameNative,
+                    'said' => CardObjects::whole($scene, $t, $said),
                 ];
             },
             Shuffle::seeded($scene->seed('phrases:combine:frames'), [$phrase, ...$wrong]),
@@ -352,8 +356,8 @@ final class PhraseCards
             'partner_line' => CardObjects::partnerLine($exchange),
             'frames' => $frames,
             'correct_frame' => $phrase->ref(),
-            'chips' => CardObjects::fillers($phrase),
-            'correct_filler' => CardObjects::fillerIndexOf($phrase, $learner->filler),
+            'chips' => CardObjects::fillers($scene, $phrase),
+            'correct_filler' => $correctFiller,
         ]);
     }
 
@@ -369,11 +373,11 @@ final class PhraseCards
             return null;
         }
         $first = $scene->lesson->linesOf($phrase->ref())[0]['exchange'] ?? null;
-        $fillers = CardObjects::fillers($phrase);
+        $fillers = CardObjects::fillers($scene, $phrase);
 
         return $this->draft(CardKind::PhraseOwnSlot, $phrase, [
             'scene_id' => $scene->sceneId->value,
-            'frame' => CardObjects::frame($phrase),
+            'frame' => CardObjects::frame($scene, $phrase),
             'partner_line' => $first === null ? null : CardObjects::cueLine($scene, $first),
             'task_native' => $frame->frameNative,
             'key' => $phrase->speakingKey(),
@@ -393,17 +397,17 @@ final class PhraseCards
     }
 
     /**
-     * The filler at `$index` of a frame with a window, as the cards show it; null for a frame without one or an index
-     * the slot does not have.
+     * The filler at `$index` of a frame with a window, as the cards show it; null for a frame without one, an index the
+     * slot does not have, or a filler no card shows ({@see CardObjects::fillers()}).
      *
      * @return array{index: int, target: string, native: string, pronunciation_native: string, in_dialogue: bool, native_line: string, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}|null}|null
      */
-    private static function fillerAt(PlanTerm $phrase, ?int $index): ?array
+    private static function fillerAt(SceneMaterial $scene, PlanTerm $phrase, ?int $index): ?array
     {
         if ($index === null || ! self::hasSlot($phrase)) {
             return null;
         }
-        foreach (CardObjects::fillers($phrase) as $filler) {
+        foreach (CardObjects::fillers($scene, $phrase) as $filler) {
             if ($filler['index'] === $index) {
                 return $filler;
             }
@@ -420,9 +424,9 @@ final class PhraseCards
      */
     private function wrongFillers(SceneMaterial $scene, PlanTerm $phrase, int $index): array
     {
-        $out = array_values(array_filter(CardObjects::fillers($phrase), static fn (array $f): bool => $f['index'] !== $index));
+        $out = array_values(array_filter(CardObjects::fillers($scene, $phrase), static fn (array $f): bool => $f['index'] !== $index));
         foreach ($this->othersFromNext($scene, $phrase) as $other) {
-            foreach (CardObjects::fillers($other) as $filler) {
+            foreach (CardObjects::fillers($scene, $other) as $filler) {
                 $out[] = $filler;
             }
         }

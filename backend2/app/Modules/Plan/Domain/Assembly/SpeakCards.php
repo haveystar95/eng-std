@@ -40,7 +40,7 @@ final class SpeakCards
     public static function answer(SceneMaterial $scene, Exchange $exchange, PlanTerm $phrase): ?array
     {
         $pattern = $phrase->frame();
-        $frame = CardObjects::frame($phrase);
+        $frame = CardObjects::frame($scene, $phrase);
         $ownLine = CardObjects::ownLine($scene, $exchange);
         if ($pattern === null || $frame === null || $ownLine === null) {
             return null;

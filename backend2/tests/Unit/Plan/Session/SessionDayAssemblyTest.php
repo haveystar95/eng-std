@@ -31,7 +31,7 @@ use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
  * rehearsal's twelve — and the day's numbers read off the dealt cards.
  *
  * The fake lesson (`FakePlanModel::lessonPayload`, 8 words, 8 exchanges): v1–v8 of which «lower back», «muscle strain»,
- * «heating pad», «follow-up appointment», «sick note» have two words; p1–p6 of which p4 has no slot; x1–x5 answer,
+ * «heating pad», «follow-up appointment», «sick note» have two words (the checks of all eight walk one circle, SESSION-1e); p1–p6 of which p4 has no slot; x1–x5 answer,
  * x6 rescue, x7–x8 ask on p6; three listening questions.
  */
 
@@ -129,13 +129,12 @@ it('deals the clean lesson in five stages of exactly 24, 29, 15, 9 and 8 cards, 
     $words = s1daIn($cards, Stage::Words);
     $phrases = s1daIn($cards, Stage::Phrases);
 
-    // Words: 8 terms × 3 (intro, repeat, check) = 24. The five terms of two words check by word_assemble; the three
-    // single words (sharp, fever, X-ray) walk the seeded cycle choose → listen → in_line.
+    // Words: 8 terms × 3 (intro, repeat, check) = 24. The checks walk one circle over all the words (SESSION-1e): every
+    // kind twice — a chunk is not always assembled, a single word not always chosen.
     expect(count($words))->toBe(24)
-        ->and(s1daKinds($words)['word_intro'])->toBe(8)
-        ->and(s1daKinds($words)['word_repeat'])->toBe(8)
-        ->and(s1daKinds($words)['word_assemble'])->toBe(5)
-        ->and(array_sum(array_intersect_key(s1daKinds($words), array_flip(['word_choose', 'word_listen', 'word_in_line']))))->toBe(3);
+        ->and(s1daKinds($words))->toBe([
+            'word_assemble' => 2, 'word_choose' => 2, 'word_in_line' => 2, 'word_intro' => 8, 'word_listen' => 2, 'word_repeat' => 8,
+        ]);
 
     // Phrases (SESSION-1d): five frames with a window × (intro, three recognitions — two to every frame, a third while the
     // stage fits in 540 s — production) = 25, p4 without a slot: intro, phrase_choose_back, phrase_repeat = 3, + one
@@ -263,7 +262,7 @@ it('deals a review day of at most ten speak_answer over two scenes in their orde
     ];
     $review = static fn (): array => (new DayAssembler)->reviewDay(
         PlanDayId::fromString('01J8SESSDAY000000000000003'), [$a, $b], [$a->sceneId->value => $a, $b->sceneId->value => $b],
-        PlanLevel::Beginner, $returned, [], s1daIds(),
+        $returned, [], s1daIds(),
     );
     $cards = $review();
     $speak = s1daIn($cards, Stage::Speak);
@@ -294,7 +293,7 @@ it('deals a rehearsal of at most twelve speak_answer — one a scene first, then
     foreach ($material as $scene) {
         $byId[$scene->sceneId->value] = $scene;
     }
-    $cards = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, PlanLevel::Intermediate, [], s1daIds());
+    $cards = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, [], s1daIds());
 
     $counts = [];
     foreach ($material as $scene) {
@@ -332,8 +331,8 @@ it('deals yesterday\'s returns on a rehearsal at the end of their stages, the re
         new ReturnedUnit($material[1]->sceneId, UnitKind::Word, 'v3', $failedOn),
         new ReturnedUnit($material[0]->sceneId, UnitKind::Exchange, 'x1', $failedOn),
     ];
-    $plain = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, PlanLevel::Beginner, [], s1daIds());
-    $cards = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, PlanLevel::Beginner, $returned, s1daIds());
+    $plain = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, [], s1daIds());
+    $cards = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, $returned, s1daIds());
 
     $back = array_values(array_filter($cards, static fn (DayCard $c): bool => $c->source() === CardSource::Returned));
     $speak = s1daIn($cards, Stage::Speak);

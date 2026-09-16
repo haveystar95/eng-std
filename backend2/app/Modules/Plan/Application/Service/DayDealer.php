@@ -23,7 +23,6 @@ use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\LessonStatus;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
@@ -59,9 +58,10 @@ final readonly class DayDealer
      * A day whose lesson is not ready has no shape yet, and says so with an empty list rather
      * than an exception: the room draws that as five absent stages.
      *
-     * The Beginner top-up is not asked for here. It fills the wrong options of a choice card and
-     * changes neither how many cards a day has nor which units they belong to — the two things
-     * the room reads off this.
+     * The native top-up is not asked for here. It fills the wrong options of a choice card and,
+     * on a day of four words or more, changes neither how many cards a day has nor which units
+     * they belong to — the two things the room reads off this (a smaller day may outline a word
+     * without the check the catalogue would give it).
      *
      * @return list<DayCard>
      */
@@ -127,7 +127,7 @@ final readonly class DayDealer
 
         return $this->assembler->sceneDay(
             $day->id(), $today, $material, $plan->level(), $returned,
-            $withNativeTopUp ? $this->nativeTopUp($plan, $today, $plan->level()) : [], $ids,
+            $withNativeTopUp ? $this->nativeTopUp($plan, $today) : [], $ids,
         );
     }
 
@@ -158,8 +158,8 @@ final readonly class DayDealer
         $first = $scenes[0] ?? null;
 
         return $this->assembler->reviewDay(
-            $day->id(), $scenes, $material, $plan->level(), $returned,
-            $first === null || ! $withNativeTopUp ? [] : $this->nativeTopUp($plan, $first, $plan->level()), $ids,
+            $day->id(), $scenes, $material, $returned,
+            $first === null || ! $withNativeTopUp ? [] : $this->nativeTopUp($plan, $first), $ids,
         );
     }
 
@@ -183,7 +183,7 @@ final readonly class DayDealer
             static fn (ReturnedUnit $u): bool => isset($material[$u->sceneId->value]),
         ));
 
-        return $this->assembler->rehearsalDay($day->id(), $scenes, $material, $plan->level(), $returned, $ids);
+        return $this->assembler->rehearsalDay($day->id(), $scenes, $material, $returned, $ids);
     }
 
     /**
@@ -283,24 +283,21 @@ final readonly class DayDealer
             if ($lesson === null) {
                 continue;
             }
-            $out[$key] = new SceneMaterial($id, $lesson, $terms[$key] ?? [], $target, $native);
+            $out[$key] = new SceneMaterial($id, $lesson, $terms[$key] ?? [], $target, $native, $scene->unreadableFillers());
         }
 
         return $out;
     }
 
     /**
-     * The native top-up of the Beginner `word_choose` (`term_to_native`, D-07): the card wants three
-     * wrong translations; a day of eight words has seven, so the catalogue is asked only when the day
-     * itself is too small. Intermediate chooses among target terms and never asks.
+     * The native top-up of the choices made among translations — `word_choose` asked `term_to_native` and
+     * `word_listen` (D-07; SESSION-1e: at any level): the card wants three wrong translations; a day of
+     * eight words has seven, so the catalogue is asked only when the day itself is too small.
      *
      * @return list<string>
      */
-    private function nativeTopUp(Plan $plan, SceneMaterial $scene, PlanLevel $level): array
+    private function nativeTopUp(Plan $plan, SceneMaterial $scene): array
     {
-        if ($level !== PlanLevel::Beginner) {
-            return [];
-        }
         $words = $scene->vocabulary();
         if (count($words) - 1 >= self::CHOICE_TOP_UP) {
             return [];

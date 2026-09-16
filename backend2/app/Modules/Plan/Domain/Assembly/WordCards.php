@@ -13,14 +13,13 @@ use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\Service\Words;
 use App\Modules\Plan\Domain\Service\WordUsage;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 
 /**
- * THE CARDS OF ONE WORD (наряд SESSION-1a, разд. 1, кадры 31-1…31-7): meet it, say it, and the checks — choose its
- * translation or the word, hear it and pick its spelling, put a chunk together from its words, find it in the line of
- * the day it is said in.
+ * THE CARDS OF ONE WORD (наряд SESSION-1a, разд. 1, кадры 31-1…31-7; SESSION-1e): meet it, say it, and the checks —
+ * choose its translation or the word, hear it and choose what it means, put a chunk together from its words, find it in
+ * the line of the day it is said in.
  *
  * Every card is built from the scene alone: the word, the other words of the same scene as the wrong options, the
  * served lesson for its line. A payload holds no id and no address — every sound is an {@see Audio} stub and every
@@ -29,14 +28,18 @@ use App\Modules\Plan\Domain\ValueObject\UnitKind;
  * the same card.
  *
  * A check that cannot be made — no line says the word, the day has no other word to offer as a wrong one — is not
- * made (`null`), and the stage deals `word_choose` in its place; a `word_choose` left with fewer than {@see Options::MIN}
- * options (the only word of an Intermediate day, a Beginner's with no catalogue to top it up) is not made either, and
- * the word goes without a check.
+ * made (`null`); which check a word gets, and what stands in for one it cannot have, is {@see WordChecks}'.
  */
 final readonly class WordCards
 {
     /** How many options a choice shows: the right one and three wrong ones. */
     public const OPTIONS = 4;
+
+    /** `word_choose` / `word_listen`: the word (or its sound) is asked, its translation chosen. */
+    public const TERM_TO_NATIVE = 'term_to_native';
+
+    /** `word_choose`: the translation is asked, the word chosen. */
+    public const NATIVE_TO_TERM = 'native_to_term';
 
     /** How many words of other terms an assembly mixes into the term's own. */
     public const EXTRA_TILES = 3;
@@ -69,32 +72,30 @@ final readonly class WordCards
     }
 
     /**
-     * `word_choose` (31-3 / 31-4, D-07). A Beginner sees the word, its picture and hears it, and chooses among
-     * translations — the other words' own first, the catalogue's after, for a day too small to offer three. An
-     * Intermediate reads the translation under the picture, hears nothing, and chooses among the words of the day, each
+     * `word_choose` (31-3 / 31-4, D-07; SESSION-1e) in the direction it is given — at any level, the day alternates
+     * them word by word ({@see WordChecks}). `term_to_native`: the word, its picture and its sound, and the translations
+     * to choose among — the other words' own first, the catalogue's after, for a day too small to offer three.
+     * `native_to_term`: the translation under the picture, no sound, and the words of the day to choose among, each
      * option with its own sound: the sound is the answer, so it is on the options, never on the question.
      *
      * Null when there is nothing to choose between — fewer than {@see Options::MIN} options.
      *
+     * @param  string  $direction  {@see TERM_TO_NATIVE} or {@see NATIVE_TO_TERM}
      * @param  list<string>  $nativeTopUp  catalogue translations, asked for only when the day has fewer than four words
      */
-    public function choose(SceneMaterial $scene, PlanTerm $term, PlanLevel $level, array $nativeTopUp): ?CardDraft
+    public function choose(SceneMaterial $scene, PlanTerm $term, string $direction, array $nativeTopUp): ?CardDraft
     {
         $others = $this->others($scene, $term, 'choose');
         $image = ['url' => null, 'tone' => null];
 
-        if ($level === PlanLevel::Beginner) {
-            $candidates = [
-                ...array_map(static fn (PlanTerm $t): array => ['text' => $t->textNative()], $others),
-                ...array_map(static fn (string $text): array => ['text' => $text], $nativeTopUp),
-            ];
-            $chosen = Options::choose($scene->seed($term->ref().':choose'), ['text' => $term->textNative()], $candidates, self::OPTIONS);
+        if ($direction === self::TERM_TO_NATIVE) {
+            $chosen = Options::choose($scene->seed($term->ref().':choose'), ['text' => $term->textNative()], self::translations($others, $nativeTopUp), self::OPTIONS);
             if (count($chosen['options']) < Options::MIN) {
                 return null;
             }
 
             return $this->draft(CardKind::WordChoose, $scene, $term, [
-                'direction' => 'term_to_native',
+                'direction' => self::TERM_TO_NATIVE,
                 'prompt' => ['text_target' => $term->textTarget(), 'image' => $image, 'audio' => Audio::of($term->ref())],
                 'options' => $chosen['options'],
                 'correct' => $chosen['correct'],
@@ -112,7 +113,7 @@ final readonly class WordCards
         }
 
         return $this->draft(CardKind::WordChoose, $scene, $term, [
-            'direction' => 'native_to_term',
+            'direction' => self::NATIVE_TO_TERM,
             'prompt' => ['text_native' => $term->textNative(), 'image' => $image],
             'options' => $chosen['options'],
             'correct' => $chosen['correct'],
@@ -120,15 +121,20 @@ final readonly class WordCards
     }
 
     /**
-     * `word_listen` (31-5, D-08): the sound of the word and four spellings of the day's words. The question is only the
-     * sound — no text, no picture, no translation — and the options carry no sound. Null when the day has no other word.
+     * `word_listen` (31-5, D-08; SESSION-1e): the sound of the word and four translations to choose what it means —
+     * sound → meaning. The question is only the sound — no text, no picture — and the options are in the learner's
+     * language, silent: this word's translation and the other words' own, the catalogue's after for a day too small to
+     * offer three ({@see choose()}'s `term_to_native` options). No word of the target is written on the card. Null when
+     * there is nothing to choose between.
+     *
+     * @param  list<string>  $nativeTopUp
      */
-    public function listen(SceneMaterial $scene, PlanTerm $term): ?CardDraft
+    public function listen(SceneMaterial $scene, PlanTerm $term, array $nativeTopUp): ?CardDraft
     {
         $chosen = Options::choose(
             $scene->seed($term->ref().':listen'),
-            ['text' => $term->textTarget()],
-            array_map(static fn (PlanTerm $t): array => ['text' => $t->textTarget()], $this->others($scene, $term, 'listen')),
+            ['text' => $term->textNative()],
+            self::translations($this->others($scene, $term, 'listen'), $nativeTopUp),
             self::OPTIONS,
         );
         if (count($chosen['options']) < Options::MIN) {
@@ -136,6 +142,7 @@ final readonly class WordCards
         }
 
         return $this->draft(CardKind::WordListen, $scene, $term, [
+            'direction' => self::TERM_TO_NATIVE,
             'audio' => Audio::of($term->ref()),
             'options' => $chosen['options'],
             'correct' => $chosen['correct'],
@@ -393,5 +400,21 @@ final readonly class WordCards
     private static function spoken(PlanTerm $term): array
     {
         return ['text' => $term->textTarget(), 'audio' => Audio::of($term->ref())];
+    }
+
+    /**
+     * The translations offered against a word's own: the other words' first, in their seeded order, the catalogue's
+     * after.
+     *
+     * @param  list<PlanTerm>  $others
+     * @param  list<string>  $nativeTopUp
+     * @return list<array{text: string}>
+     */
+    private static function translations(array $others, array $nativeTopUp): array
+    {
+        return [
+            ...array_map(static fn (PlanTerm $t): array => ['text' => $t->textNative()], $others),
+            ...array_map(static fn (string $text): array => ['text' => $text], $nativeTopUp),
+        ];
     }
 }

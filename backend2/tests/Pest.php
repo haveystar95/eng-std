@@ -507,3 +507,41 @@ function lessonContext(string $native = 'ru', string $target = 'en', ?App\Module
 
     return new App\Modules\Plan\Domain\Check\LessonValidationContext(8, 8, $packs->for($native), $packs->for($target), $gender);
 }
+
+/**
+ * THE LIVE DOCTOR'S LESSON (наряд SESSION-1e) — the model's answer of day 1 of the e2e plan «врач»
+ * (`01M2H13E1QT6F5D4FKJSEKTAD7`, scene `01M2H13KSAS23K4YPF1M65SJQD`, `lesson_day.v4.4`) as stored, copied into
+ * `tests/Fixtures/plan-lesson/doctor-e2e-v4.4.json`: the day the phone found the check of a word always an assembly on.
+ * Served under the scene id given (seeds depend on it), with its terms, in English for a Russian learner — and the
+ * seam-judge findings given, when a test wants some.
+ *
+ * @param  list<string>  $unreadable
+ */
+function planLiveDoctorScene(string $sceneId = '01M2H13KSAS23K4YPF1M65SJQD', array $unreadable = []): App\Modules\Plan\Domain\Assembly\SceneMaterial
+{
+    $id = App\Modules\Plan\Domain\ValueObject\PlanSceneId::fromString($sceneId);
+    $packs = lessonPacks();
+    $payload = json_decode((string) file_get_contents(__DIR__.'/Fixtures/plan-lesson/doctor-e2e-v4.4.json'), true, flags: JSON_THROW_ON_ERROR);
+    $lesson = App\Modules\Plan\Domain\Lesson\LessonAssembly::serve((new App\Modules\Plan\Domain\Lesson\LessonParser)->parse($payload), $id->value, $packs->for('en'));
+    $terms = App\Modules\Plan\Domain\Entity\PlanTerm::fromLesson($id, $lesson, static fn (): App\Modules\Plan\Domain\ValueObject\PlanTermId => App\Modules\Plan\Domain\ValueObject\PlanTermId::generate());
+
+    return new App\Modules\Plan\Domain\Assembly\SceneMaterial($id, $lesson, $terms, $packs->for('en'), $packs->for('ru'), $unreadable);
+}
+
+/**
+ * Scene ids under which the words' circle starts at each of its four places (наряд SESSION-1e): the start is picked by
+ * the scene's seed, so «at any start» is tried by dealing the same lesson under these ids.
+ *
+ * @return array<string, string> the kind the circle starts with → a scene id
+ */
+function planCircleStarts(): array
+{
+    $found = [];
+    for ($n = 1; count($found) < 4; $n++) {
+        $id = sprintf('01J8SESS1ESTART%011d', $n);
+        $found[App\Modules\Plan\Domain\Assembly\Rotation::pick($id.':words:check', 0, App\Modules\Plan\Domain\Assembly\WordChecks::CYCLE)->value] ??= $id;
+    }
+    ksort($found);
+
+    return $found;
+}

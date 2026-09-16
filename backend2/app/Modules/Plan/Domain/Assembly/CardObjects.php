@@ -167,12 +167,13 @@ final class CardObjects
 
     /**
      * The frame as every card shows it: `{ref, kind, frame_target, frame_native, frame_pronunciation_native, slot}`,
-     * the slot `{hint_native, fillers}` or null. Null for a term that carries no frame (a word, a phrase stored
-     * before frames) — there is nothing to show.
+     * the slot `{hint_native, fillers}` or null — the fillers as {@see fillers()} gives them, the ones no card shows
+     * left out. Null for a term that carries no frame (a word, a phrase stored before frames) — there is nothing to
+     * show.
      *
      * @return array<string, mixed>|null
      */
-    public static function frame(PlanTerm $phrase): ?array
+    public static function frame(SceneMaterial $scene, PlanTerm $phrase): ?array
     {
         $frame = $phrase->frame();
         if ($frame === null) {
@@ -187,22 +188,26 @@ final class CardObjects
             'frame_pronunciation_native' => $frame->pronunciationNative,
             'slot' => $frame->slot === null ? null : [
                 'hint_native' => $frame->slot->hintNative,
-                'fillers' => self::fillers($phrase),
+                'fillers' => self::fillers($scene, $phrase),
             ],
         ];
     }
 
     /**
-     * The fillers of a frame in the slot's order: `{index, target, native, pronunciation_native, in_dialogue,
-     * native_line, audio}`. `native_line` is the whole sentence in the learner's language — the frame's translation
-     * with the filler's, ending as the phrase ends; `in_dialogue` is the served mark (what the dialogue says);
-     * `audio` is the file the frame said with this filler is voiced as ({@see SpokenLines::fillers()}, `voicedAs`:
-     * the filler the phrase itself is said with sounds as the phrase `p1`, every other one as `p1.f2`), null for a
-     * filler the frame cannot be said with.
+     * The fillers of a frame in the slot's order, as every card shows them: `{index, target, native,
+     * pronunciation_native, in_dialogue, native_line, audio}`. `native_line` is the whole sentence in the learner's
+     * language — the frame's translation with the filler's, ending as the phrase ends; `in_dialogue` is the served mark
+     * (what the dialogue says); `audio` is the file the frame said with this filler is voiced as
+     * ({@see SpokenLines::fillers()}, `voicedAs`: the filler the phrase itself is said with sounds as the phrase `p1`,
+     * every other one as `p1.f2`), null for a filler the frame cannot be said with.
+     *
+     * A filler whose native sentence does not read and which the dialogue does not say ({@see SceneMaterial::hides()},
+     * SESSION-1e) is not among them — so no chip, no option, no card of the day shows it; `index` stays its place in
+     * the slot, and the others keep theirs.
      *
      * @return list<array{index: int, target: string, native: string, pronunciation_native: string, in_dialogue: bool, native_line: string, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}|null}>
      */
-    public static function fillers(PlanTerm $phrase): array
+    public static function fillers(SceneMaterial $scene, PlanTerm $phrase): array
     {
         $frame = $phrase->frame();
         if ($frame === null) {
@@ -215,6 +220,9 @@ final class CardObjects
 
         $out = [];
         foreach ($frame->fillers() as $index => $filler) {
+            if ($scene->hides($phrase->ref(), $index)) {
+                continue;
+            }
             $out[] = [
                 'index' => $index,
                 'target' => $filler->target,
@@ -252,8 +260,8 @@ final class CardObjects
      * `{filler_index, text_target, text_native, pronunciation_native, audio}`. The said filler (and a frame without a
      * window, `$index` null) is the phrase itself; any other is the frame with that filler, its translation the
      * filler's `native_line`, its reading the frame's with the filler's, its sound the file the frame is voiced as with
-     * it (`p1.f2`). Null when `$index` is no filler of the frame, or the frame cannot be said with it (no sound: a
-     * second slot left).
+     * it (`p1.f2`). Null when `$index` is no filler of the frame, one no card shows ({@see fillers()}), or the frame
+     * cannot be said with it (no sound: a second slot left).
      *
      * @return array{filler_index: int|null, text_target: string, text_native: string, pronunciation_native: string|null, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}}|null
      */
@@ -265,7 +273,7 @@ final class CardObjects
             return self::said($scene, $phrase);
         }
         $filler = null;
-        foreach (self::fillers($phrase) as $candidate) {
+        foreach (self::fillers($scene, $phrase) as $candidate) {
             if ($candidate['index'] === $index) {
                 $filler = $candidate;
             }
@@ -281,6 +289,25 @@ final class CardObjects
             'text_native' => $filler['native_line'],
             'pronunciation_native' => trim($reading) === '' ? null : $reading,
             'audio' => $filler['audio'],
+        ];
+    }
+
+    /**
+     * A frame as a whole phrase to answer with (`phrase_combine`, SESSION-1e): `{index, text_target, text_native,
+     * audio}` — the frame said with the filler at `$index` ({@see sentence()}); no such filler, or one it cannot be
+     * said with — the phrase as the dialogue says it ({@see said()}), `index` its filler.
+     *
+     * @return array{index: int|null, text_target: string, text_native: string, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}}
+     */
+    public static function whole(SceneMaterial $scene, PlanTerm $phrase, ?int $index): array
+    {
+        $sentence = ($index === null ? null : self::sentence($scene, $phrase, $index)) ?? self::said($scene, $phrase);
+
+        return [
+            'index' => $sentence['filler_index'],
+            'text_target' => $sentence['text_target'],
+            'text_native' => $sentence['text_native'],
+            'audio' => $sentence['audio'],
         ];
     }
 

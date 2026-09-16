@@ -26,7 +26,10 @@ use App\Modules\Plan\Domain\ValueObject\CardKind;
  *   any but the said one;
  * - AGAIN (the copy of a failed card, a frame that comes back): the same kind with the next filler round the slot after
  *   the failed one that no card of the frame has taken; none free — the next one other than the failed one; a frame
- *   with nothing else — the failed one again.
+ *   with nothing else — the failed one again;
+ * - every filler here is one a card may show ({@see CardObjects::fillers()}, SESSION-1e): a filler the seam judge said
+ *   does not read and the dialogue does not say is neither recognised, nor repeated, nor asked for, nor given as an
+ *   option — a frame whose other fillers are all such is recognised once, with the said one.
  *
  * Every kind is built by its own {@see PhraseCards} method of one signature — (scene, frame, filler) → card or null —
  * and {@see card()} is the only place that picks the method by kind.
@@ -52,7 +55,7 @@ final readonly class PhraseSeries
         if (! PhraseCards::hasSlot($phrase)) {
             return [];
         }
-        $indexes = array_column(CardObjects::fillers($phrase), 'index');
+        $indexes = array_column(CardObjects::fillers($scene, $phrase), 'index');
         $said = $scene->saidIndex($phrase);
         if (! in_array($said, $indexes, true)) {
             return $indexes;
@@ -150,7 +153,7 @@ final readonly class PhraseSeries
         $free = [];
         $taken = [];
         $last = [];
-        foreach (self::round(array_column(CardObjects::fillers($phrase), 'index'), $failed) as $index) {
+        foreach (self::round(array_column(CardObjects::fillers($scene, $phrase), 'index'), $failed) as $index) {
             if ($index === $said) {
                 continue;
             }
@@ -179,7 +182,7 @@ final readonly class PhraseSeries
             return [];
         }
         $said = $scene->saidIndex($phrase);
-        $inDialogue = array_column(CardObjects::fillers($phrase), 'in_dialogue', 'index');
+        $inDialogue = array_column(CardObjects::fillers($scene, $phrase), 'in_dialogue', 'index');
         $unsaid = [];
         $saidToo = [];
         foreach (self::round(array_keys($inDialogue), $said) as $index) {

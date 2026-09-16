@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Assembly;
 
-use App\Modules\Plan\Domain\Check\Language\LanguageWords;
 use App\Modules\Plan\Domain\Check\Lesson\ListeningExchange;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\ListeningQuestion;
@@ -131,11 +130,11 @@ final class ListenCards
             }
         }
         $seed = $scene->seed('x'.$exchange->step.':predict');
-        $asks = self::asks($scene, $partner->textTarget);
+        $asks = $scene->asks($partner->textTarget);
         $same = [];
         $other = [];
         foreach (Shuffle::seeded($seed.':others', $candidates) as $message) {
-            if (self::asks($scene, $message->textTarget) === $asks) {
+            if ($scene->asks($message->textTarget) === $asks) {
                 $same[] = ['text' => $message->textNative];
             } else {
                 $other[] = ['text' => $message->textNative];
@@ -174,8 +173,9 @@ final class ListenCards
     /**
      * 34-7: the longest line of the visit that says a number or a time in the target language (either speaker; one
      * length — the lower step, the partner first), the value marked in its text, and the value as the learner reads it
-     * among two other values of the day — the other lines and every filler, a value of its own kind first (a number
-     * beside numbers, a time beside times). No such line, no value in its translation, fewer than two other values, or
+     * among two other values of the day — the other lines and every filler a card may show (SESSION-1e: not one whose
+     * native sentence does not read, {@see SceneMaterial::hides()}), a value of its own kind first (a number beside
+     * numbers, a time beside times). No such line, no value in its translation, fewer than two other values, or
      * a language whose pack has no patterns — no card.
      */
     public static function number(SceneMaterial $scene): ?CardDraft
@@ -218,7 +218,10 @@ final class ListenCards
             }
         }
         foreach ($scene->lesson->phrases as $phrase) {
-            foreach ($phrase->fillers() as $filler) {
+            foreach ($phrase->fillers() as $index => $filler) {
+                if ($scene->hides($phrase->id, $index)) {
+                    continue;
+                }
                 $others = [...$others, ...$read->values($filler->native)];
             }
         }
@@ -252,15 +255,6 @@ final class ListenCards
             'options' => $chosen['options'],
             'correct' => $chosen['correct'],
         ]);
-    }
-
-    /**
-     * Does a line of the visit ask — its text ends with a mark the target pack's `sentence_ends` calls a question? A
-     * target without that key asks nothing: every line is of one form, and the wrong options are simply the shuffle.
-     */
-    private static function asks(SceneMaterial $scene, string $text): bool
-    {
-        return $scene->target->has('sentence_ends') && (new LanguageWords($scene->target))->terminalKind($text) === 'question';
     }
 
     /** The unit of a listening question: `L1`, `L2`… */

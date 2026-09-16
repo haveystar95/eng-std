@@ -43,12 +43,12 @@ final class DayAssembler
     public function sceneDay(PlanDayId $dayId, SceneMaterial $scene, array $material, PlanLevel $level, array $returned, array $nativeTopUp, callable $ids): array
     {
         $drafts = [
-            ...$this->words->build($scene, $level, $nativeTopUp),
+            ...$this->words->build($scene, $nativeTopUp),
             ...$this->phrases->build($scene, $level),
             ...$this->dialogue->build($scene),
             ...$this->listen->build($scene),
             ...$this->speak->build($scene),
-            ...$this->returns($material, $level, $returned, $nativeTopUp),
+            ...$this->returns($material, $returned, $nativeTopUp),
         ];
 
         return $this->deal($dayId, $drafts, $ids);
@@ -65,13 +65,13 @@ final class DayAssembler
      * @param  callable(): DayCardId  $ids
      * @return list<DayCard>
      */
-    public function reviewDay(PlanDayId $dayId, array $scenes, array $material, PlanLevel $level, array $returned, array $nativeTopUp, callable $ids): array
+    public function reviewDay(PlanDayId $dayId, array $scenes, array $material, array $returned, array $nativeTopUp, callable $ids): array
     {
         $seed = 'review:'.implode(':', array_map(static fn (SceneMaterial $s): string => $s->sceneId->value, $scenes));
 
         $drafts = [
             ...$this->speak->review($scenes, self::returnedExchanges($returned), $seed),
-            ...$this->returns($material, $level, $returned, $nativeTopUp),
+            ...$this->returns($material, $returned, $nativeTopUp),
         ];
 
         return $this->deal($dayId, $drafts, $ids);
@@ -88,11 +88,11 @@ final class DayAssembler
      * @param  callable(): DayCardId  $ids
      * @return list<DayCard>
      */
-    public function rehearsalDay(PlanDayId $dayId, array $scenes, array $material, PlanLevel $level, array $returned, callable $ids): array
+    public function rehearsalDay(PlanDayId $dayId, array $scenes, array $material, array $returned, callable $ids): array
     {
         $drafts = [
             ...$this->speak->rehearsal($scenes, self::returnedExchanges($returned)),
-            ...$this->returns($material, $level, $returned, []),
+            ...$this->returns($material, $returned, []),
         ];
 
         return $this->deal($dayId, $drafts, $ids);
@@ -157,7 +157,7 @@ final class DayAssembler
      * @param  list<string>  $nativeTopUp
      * @return list<CardDraft>
      */
-    private function returns(array $material, PlanLevel $level, array $returned, array $nativeTopUp): array
+    private function returns(array $material, array $returned, array $nativeTopUp): array
     {
         $out = [];
         $seen = [];
@@ -175,7 +175,7 @@ final class DayAssembler
                 continue;
             }
             $draft = match ($unit->kind) {
-                UnitKind::Word => ($term = $scene->term($unit->ref)) === null ? null : $this->words->returned($scene, $term, $level, $nativeTopUp),
+                UnitKind::Word => ($term = $scene->term($unit->ref)) === null ? null : $this->words->returned($scene, $term, $nativeTopUp),
                 UnitKind::Phrase => ($term = $scene->phraseTerm($unit->ref)) === null || $term->frame() === null
                     ? null
                     : $this->phrases->returned($scene, $term, $unit->failedAs, $unit->failedFiller),

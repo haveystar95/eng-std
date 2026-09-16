@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Entity;
 
 use App\Modules\Plan\Domain\Blueprint\SceneBrief;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
+use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\ValueObject\Image;
@@ -347,6 +348,24 @@ final class PlanScene
     public function findings(): array
     {
         return $this->findings;
+    }
+
+    /**
+     * The fillers whose native sentence the seam judge said does not read — the addresses (`p3.f2`) of the lesson's
+     * `filler.native_seam` findings (SESSION-1e): what the day's cards do not show.
+     *
+     * @return list<string>
+     */
+    public function unreadableFillers(): array
+    {
+        $out = [];
+        foreach ($this->findings as $finding) {
+            if ($finding['code'] === LessonCodes::FILLER_NATIVE_SEAM && ! in_array($finding['address'], $out, true)) {
+                $out[] = $finding['address'];
+            }
+        }
+
+        return $out;
     }
 
     public function failReason(): ?string
