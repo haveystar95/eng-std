@@ -6,6 +6,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../../data/plan/plan_models.dart';
+import '../../../../data/plan/session/dialogue_feed.dart';
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
@@ -18,7 +19,7 @@ import '../parts/session_mic_panel.dart';
 import '../session_mic.dart';
 import '../session_voice.dart';
 
-/// WHAT A CARD KNOWS BEYOND ITS PAYLOAD — one object for all 15 kinds of 1b.
+/// WHAT A CARD KNOWS BEYOND ITS PAYLOAD — one object for all 28 kinds (work orders SESSION-1b, SESSION-1c).
 ///
 /// The card judges the answer itself (choice, tiles, voice — [SessionRules]) and hands the result to [submit]; then
 /// [next] (waits until the answer is sent to the server). The judge-graded kind asks [judge]. Nothing else of the
@@ -40,20 +41,29 @@ class CardEnv {
     this.advancing = false,
     this.frameSentence,
     this.termText,
+    this.level = PlanLevel.intermediate,
+    this.noHints = false,
+    this.feed = const [],
+    this.stageCards = const [],
+    this.scene,
+    this.stageDone,
   });
 
   final SessionCard card;
   final SessionVoice voice;
   final String targetLang;
 
-  /// Recognition locale — `en_US`.
+  /// Recognition locale of THIS card — `en_US`, and the native one for a retelling (`ru_RU`,
+  /// [SessionRules.speechLang]).
   final String localeId;
 
   /// The partner's role in the nominative case, as the server sent it (native «Receptionist»); empty — no role.
   final String role;
   final void Function(SessionAnswer answer) submit;
   final Future<void> Function() next;
-  final Future<SessionJudgeOutcome> Function(String heard) judge;
+
+  /// The slot judge; [hinted] — the frame was on screen before this attempt.
+  final Future<SessionJudgeOutcome> Function(String heard, {bool hinted}) judge;
 
   /// The card's microphone: what should be said and hint words for the recognizer.
   final SessionMic Function(String expected, List<String> contextual) makeMic;
@@ -75,6 +85,25 @@ class CardEnv {
 
   /// The day's word by its unit `ref` ([SessionDay.termText]) — what the phone reads on «By ear» without a file.
   final String? Function(String unitRef)? termText;
+
+  /// The plan's level — the dialogue's mode (SESSION-1c, section 2).
+  final PlanLevel level;
+
+  /// «No hints» (30-1, per plan): the dialogue asks blind, «Speak myself» shows no frame.
+  final bool noHints;
+
+  /// The conversation so far — the bubbles above a dialogue card (33-7, [DialogueFeed.before]).
+  final List<FeedLine> feed;
+
+  /// The cards of this card's stage as the session holds them — the review's results (34-3).
+  final List<SessionCard> stageCards;
+
+  /// The day's scene — the partner's circle of the visit player (34-1).
+  final PlanScene? scene;
+
+  /// Whether a stage of the day is answered in full — «Microphone needed» names the voice stages' state; null — both
+  /// voice stages stand ahead (the words and phrases never see them done).
+  final bool Function(PlanStage stage)? stageDone;
 
   Set<String> get articles => SpeechCoverage.articlesFor(targetLang);
 
@@ -98,6 +127,7 @@ class CardLayout extends StatelessWidget {
     this.taskGap = 8,
     this.bodyGap = 12,
     this.fadeStop = 0.22,
+    this.feed = false,
   });
 
   final Widget task;
@@ -110,6 +140,11 @@ class CardLayout extends StatelessWidget {
   /// Text-only sheet top (30-9 «question · text top»): the task line and the sheet are one group centred in the
   /// free field.
   final bool taskInBody;
+
+  /// A conversation (series 33, 34-3, 34-5, 35-2, SESSION-1c): the task line and the bubbles are one group pinned
+  /// to the dock — it grows upward, the beginning is reached by scrolling up, the air stands above the task (the
+  /// canvas's own exception to «no empty field»).
+  final bool feed;
 
   /// The dock lies over the field (default). `false` — the dock sits flush under the field, the field is clipped
   /// by its own edge: that is for a card whose dock is tall and changes height across states (32-9 — chips, live
@@ -126,34 +161,59 @@ class CardLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dock = bottom;
-    final field = CustomScrollView(
-      // Under an overlay dock the field is not clipped: the bottom that did not fit is covered by the dock itself.
-      clipBehavior: dock == null || !overlayDock ? Clip.hardEdge : Clip.none,
-      slivers: [
-        if (!taskInBody)
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(kSessionGutter, taskGap, kSessionGutter, 0),
-            sliver: SliverToBoxAdapter(child: task),
-          ),
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(kSessionGutter, taskInBody ? taskGap : bodyGap, kSessionGutter, dock == null ? 16 : 0),
-            child: switch ((taskInBody, centerBody)) {
-              (true, _) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [task, SizedBox(height: bodyGap), body],
+    final field = feed
+        ? CustomScrollView(
+            reverse: true,
+            clipBehavior: dock == null || !overlayDock ? Clip.hardEdge : Clip.none,
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  // 16 of air above the dock's solid part (33-1: the group stands 16 over the dock).
+                  padding: EdgeInsets.fromLTRB(kSessionGutter, taskGap, kSessionGutter, dock == null ? 16 : SessionDock.topInset + 16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [task, SizedBox(height: bodyGap), body],
+                  ),
                 ),
               ),
-              (false, true) => Center(child: body),
-              (false, false) => Align(alignment: Alignment.topCenter, child: body),
-            },
-          ),
+            ],
+          )
+        : _field(dock);
+    return _withDock(field, dock);
+  }
+
+  Widget _field(Widget? dock) => CustomScrollView(
+    // Under an overlay dock the field is not clipped: the bottom that did not fit is covered by the dock itself.
+    clipBehavior: dock == null || !overlayDock ? Clip.hardEdge : Clip.none,
+    slivers: [
+      if (!taskInBody)
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(kSessionGutter, taskGap, kSessionGutter, 0),
+          sliver: SliverToBoxAdapter(child: task),
         ),
-      ],
-    );
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(kSessionGutter, taskInBody ? taskGap : bodyGap, kSessionGutter, dock == null ? 16 : 0),
+          child: switch ((taskInBody, centerBody)) {
+            (true, _) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [task, SizedBox(height: bodyGap), body],
+              ),
+            ),
+            (false, true) => Center(child: body),
+            (false, false) => Align(alignment: Alignment.topCenter, child: body),
+          },
+        ),
+      ),
+    ],
+  );
+
+  Widget _withDock(Widget field, Widget? dock) {
     if (dock == null) return field;
     if (!overlayDock) {
       // The dock never overflows the card: taller than the whole card (a low phone, the debug field) it scrolls
@@ -275,11 +335,24 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   /// Passed — the card shows its own «heard».
   void onAccepted(String heard) {}
 
+  /// How long to wait on an unchanged partial result before stopping; null — wait for silence. By default: passed on
+  /// a partial result — the recording stops after 500 ms without waiting for silence (1b′, item 6).
+  Duration? stopAfter(String partial) => SpeechStop.voice(partial, wouldAccept);
+
+  /// `response.mode` of the answer — the dialogue's voice mode (SESSION-1c); null — none.
+  String? get responseMode => null;
+
+  /// A pass leaves by itself after 600 ms; false — the card keeps what the pass opened (the echo's revealed line,
+  /// 35-3) and waits for «Next».
+  bool get autoAdvanceOnPass => true;
+
+  /// Every attempt ended — the card may show what was said (33-3: in the own bubble; 35-3: the revealed line).
+  void onAttempt(String heard, {required bool accepted}) {}
+
   void initVoice() {
     mic = env.makeMic(expectedSpeech, contextual)
       ..onTurn = _onTurn
-      // Passed on a partial result — the recording stops after 500 ms without waiting for silence (1b′, item 6).
-      ..autoStop = (partial) => SpeechStop.voice(partial, wouldAccept);
+      ..autoStop = stopAfter;
     mic.addListener(_onMic);
   }
 
@@ -290,6 +363,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     heard: heard == null || heard.isEmpty ? null : heard,
     noMic: noMic ? true : null,
     fillerIndex: roundCount > 1 && _lastPassedRound >= 0 ? fillerIndexOfRound(_lastPassedRound) : null,
+    mode: responseMode,
   );
 
   void _startRound(int next) {
@@ -326,6 +400,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     _attempts++;
     _roundAttempts++;
     final ok = turn.outcome == SpeechTurnOutcome.heard && accepts(turn.transcript);
+    onAttempt(turn.transcript, accepted: ok);
     if (ok) {
       mic.settle(accepted: true);
       SessionSounds.verdict(correct: true);
@@ -343,9 +418,11 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
       }
       _done = true;
       env.submit(SessionAnswer(result: SessionResult.passed, attempts: _attempts, response: _response(heard: turn.transcript)));
-      unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
-        if (mounted) unawaited(env.next());
-      }));
+      if (autoAdvanceOnPass) {
+        unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
+          if (mounted) unawaited(env.next());
+        }));
+      }
       setState(() {});
       return;
     }
@@ -378,8 +455,9 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     if (!ok && mic.blockedInSettings) await env.openSettings();
   }
 
-  /// The voice card's dock: the microphone, or «Next» after the second attempt.
-  Widget voiceDock(BuildContext context, {bool showHeardLine = true, String? heardText}) {
+  /// The voice card's dock: the microphone, or «Next» after the second attempt. [liveLineInDock] false — the live
+  /// line stands in the card itself (the own bubble of the dialogue, 33-3), the dock keeps the wave and the captions.
+  Widget voiceDock(BuildContext context, {bool showHeardLine = true, String? heardText, bool liveLineInDock = true}) {
     final l = AppLocalizations.of(context);
     // Second attempt without a pass: «once more» is no longer offered — only «Next».
     if (skippedAfterMisses) {
@@ -391,12 +469,19 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
       onSkip: _done ? null : () => skip(),
       showHeardLine: showHeardLine,
       heardText: heardText,
+      liveLine: liveLineInDock ? MicLiveLine.target : MicLiveLine.none,
     );
   }
 
   /// The card body without a microphone — «Microphone needed» (30-3).
   Widget? noMicBody(String Function(PlanStage) stageName) => mic.state == MicState.unavailable
-      ? SessionNoMicView(onAllow: () => unawaited(allowMic()), onSkip: () => skip(noMic: true), stageName: stageName)
+      ? SessionNoMicView(
+          onAllow: () => unawaited(allowMic()),
+          onSkip: () => skip(noMic: true),
+          stageName: stageName,
+          current: env.card.stage,
+          done: env.stageDone,
+        )
       : null;
 }
 
@@ -414,6 +499,12 @@ mixin ChoiceCardState<T extends StatefulWidget> on State<T> {
   bool get answeredCorrectly => _chosen != null && _chosen == choice.correct;
   bool get answeredWrong => _chosen != null && _chosen != choice.correct;
 
+  /// A correct answer leaves by itself after 600 ms; false — the card decides when ([onChosen]).
+  bool get autoAdvanceOnCorrect => true;
+
+  /// The answer is given and sent — the card may open what the answer revealed (34-5: the partner's reply sounds).
+  void onChosen({required bool correct}) {}
+
   void choose(String optionId) {
     if (_chosen != null) return;
     final correct = SessionRules.choiceCorrect(choice, optionId);
@@ -428,7 +519,8 @@ mixin ChoiceCardState<T extends StatefulWidget> on State<T> {
     }
     SessionSounds.verdict(correct: correct);
     env.submit(SessionAnswer(result: correct ? SessionResult.passed : SessionResult.failed, attempts: 1));
-    if (correct) {
+    onChosen(correct: correct);
+    if (correct && autoAdvanceOnCorrect) {
       unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
         if (mounted) unawaited(env.next());
       }));
@@ -475,9 +567,18 @@ mixin ChoiceCardState<T extends StatefulWidget> on State<T> {
   String? eyebrowTrailing(AppLocalizations l) => env.returnsTomorrow ? l.planWindowSheetReturnsTomorrow : null;
 }
 
-/// «Listen» with a wave while exactly this sound is playing.
+/// «Listen» with a wave while exactly this sound is playing; [brass] — the bubble's «listen» 28 (23-0d).
 class CardListen extends StatelessWidget {
-  const CardListen({super.key, required this.env, required this.audio, required this.fallback, required this.playKey, this.size = 44, this.rate = 1.0});
+  const CardListen({
+    super.key,
+    required this.env,
+    required this.audio,
+    required this.fallback,
+    required this.playKey,
+    this.size = 44,
+    this.rate = 1.0,
+    this.brass = false,
+  });
 
   final CardEnv env;
   final CardAudio? audio;
@@ -485,12 +586,14 @@ class CardListen extends StatelessWidget {
   final Object playKey;
   final double size;
   final double rate;
+  final bool brass;
 
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<Object?>(
     valueListenable: env.voice.playing,
     builder: (context, playing, _) => SessionListenButton(
       size: size,
+      brass: brass,
       label: AppLocalizations.of(context).planWindowListen,
       playing: playing == playKey,
       onTap: () => unawaited(env.voice.play(audio, fallback: fallback, rate: rate, key: playKey)),

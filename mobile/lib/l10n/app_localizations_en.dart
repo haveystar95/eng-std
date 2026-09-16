@@ -3414,9 +3414,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionStart => 'Start';
 
   @override
-  String get planSessionNextBuild => 'in the next build';
-
-  @override
   String planSessionBuild(String version) {
     return 'build $version';
   }
@@ -3673,4 +3670,254 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionLessonBuilding => 'Building the day · about a minute';
+
+  @override
+  String planSessionLeftExchanges(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n lines left',
+      one: '$n line left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionLeftQuestions(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n questions left',
+      one: '$n question left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planSessionLastQuestion => 'last question';
+
+  @override
+  String get planSessionWholeTalk => 'the whole conversation';
+
+  @override
+  String get planSessionReviewLabel => 'review';
+
+  @override
+  String get planSessionPaceLabel => 'pace';
+
+  @override
+  String get planSessionTaskCollectAnswer => 'Build your answer';
+
+  @override
+  String get planSessionTaskSayAnswer => 'Say your answer aloud';
+
+  @override
+  String get planSessionTaskAnswerVoice => 'Answer by voice';
+
+  @override
+  String get planSessionTaskAskSelf => 'Ask it yourself';
+
+  @override
+  String get planSessionTaskRescue => 'Didn\'t catch it — ask again';
+
+  @override
+  String get planSessionAnyChip => 'any of them is your answer';
+
+  @override
+  String get planSessionNotUnderstood => 'Didn\'t catch that';
+
+  @override
+  String get planSessionSlowly => 'slowly';
+
+  @override
+  String get planSessionTaskListenTalk => 'Listen to the conversation';
+
+  @override
+  String get planSessionByPartsAction => 'In parts';
+
+  @override
+  String get planSessionContinue => 'Continue';
+
+  @override
+  String get planSessionReplay => 'Once more';
+
+  @override
+  String planSessionExchangesCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n exchanges',
+      one: '$n exchange',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionPlayerPaused(int n) {
+    return 'paused · exchange $n';
+  }
+
+  @override
+  String get planSessionPlayerDone => 'listened to the end';
+
+  @override
+  String get planSessionYou => 'you';
+
+  @override
+  String get planSessionTaskWhatUnderstood => 'What did you understand?';
+
+  @override
+  String get planSessionBrowQuestion => 'Question';
+
+  @override
+  String get planSessionFromMemory => 'from memory · no sound';
+
+  @override
+  String get planSessionTaskWhereHeard => 'Where it was said';
+
+  @override
+  String get planSessionTaskWhatNext => 'What will the answer be?';
+
+  @override
+  String get planSessionTaskNormalPace => 'Now at normal speed';
+
+  @override
+  String planSessionBrowSlowRate(String rate) {
+    return 'Slow · $rate×';
+  }
+
+  @override
+  String get planSessionBrowNormalPace => 'Normal speed';
+
+  @override
+  String get planSessionTextOpen => 'text shown';
+
+  @override
+  String get planSessionTextClosed => 'text hidden';
+
+  @override
+  String get planSessionUnderstoodAction => 'Got it';
+
+  @override
+  String get planSessionTaskCatchNumber => 'Catch the number';
+
+  @override
+  String get planSessionTaskAnswerOwnWords => 'Answer in your own words';
+
+  @override
+  String get planSessionTaskRepeatPause => 'Repeat after a pause';
+
+  @override
+  String get planSessionTaskRetell => 'Say in your language what you heard';
+
+  @override
+  String get planSessionBrowLine => 'Line';
+
+  @override
+  String get planSessionMatchedSage => 'what you said is marked';
+
+  @override
+  String get planSessionListenCue => 'listen';
+
+  @override
+  String get planSessionWaiting => 'waiting';
+
+  @override
+  String get planSessionOnNative => 'in your language';
+
+  @override
+  String get planSessionUnderstoodCheck => 'understood ✓';
+
+  @override
+  String get planSessionHintSilence => 'here\'s the frame — the slot is yours';
+
+  @override
+  String get planSessionHintOpened => 'the frame is open — the slot is yours';
+
+  @override
+  String get planSessionNotThat => 'not that — let\'s try again';
+
+  @override
+  String get planSessionHintAction => 'Hint';
+
+  @override
+  String planSessionDoneDialogue(String minutes) {
+    return 'Dialogue done · $minutes';
+  }
+
+  @override
+  String get planSessionRestExchanges => 'The other lines are done.';
+
+  @override
+  String get planSessionAllExchanges => 'All lines are done.';
+
+  @override
+  String planSessionUnderstoodCount(int n, int m) {
+    return 'Understood $n of $m questions';
+  }
+
+  @override
+  String planSessionSpokeCount(int n, int m) {
+    return 'Said $n of $m lines myself';
+  }
+
+  @override
+  String get planSessionDayTotal => 'Day total';
+
+  @override
+  String get planSessionDayDoneAction => 'Day done';
+
+  @override
+  String planSessionDayDoneTitle(String minutes) {
+    return 'Day done · $minutes';
+  }
+
+  @override
+  String get planSessionCloseDay => 'Close the day';
+
+  @override
+  String planSessionDayReturns(String cards, String parts) {
+    return '$cards: $parts.';
+  }
+
+  @override
+  String planSessionReturnWords(int n) {
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n words', one: '$n word');
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionReturnPhrases(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n phrases',
+      one: '$n phrase',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionReturnExchanges(int n) {
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n lines', one: '$n line');
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionAnd(String a, String b) {
+    return '$a and $b';
+  }
+
+  @override
+  String planSessionNextDayBuilding(int n) {
+    return 'Day $n — building';
+  }
+
+  @override
+  String planSessionNextDayReady(int n) {
+    return 'Day $n — ready';
+  }
+
+  @override
+  String get planSessionCloseFailed => 'The day didn\'t close — no connection';
 }

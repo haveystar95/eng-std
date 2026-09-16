@@ -1,0 +1,533 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/theme/theme.dart';
+
+import '../../../../data/plan/session/dialogue_feed.dart';
+import '../../../../data/plan/session/live_line.dart';
+import '../../../../data/plan/session/session_models.dart';
+import '../../../../data/plan/session/session_outcomes.dart';
+import '../../../../data/plan/session/session_rules.dart';
+import '../../../../data/plan/session/speech_coverage.dart';
+import '../../../../data/plan/session/speech_stop.dart';
+import '../parts/session_bits.dart';
+import '../parts/session_bubbles.dart';
+import '../parts/session_tiles.dart';
+import '../session_texts.dart';
+import 'card_kit.dart';
+import 'word_cards.dart' show autoplayOnce;
+
+/// DIALOGUE — canvas series 33 (work order SESSION-1c, section 2): one exchange per card, in the order of the visit,
+/// with the conversation so far standing above it ([CardEnv.feed], 33-7) and growing from the bottom.
+
+/// The conversation above the card and the gap to the card's own bubbles.
+List<Widget> _feed(CardEnv env) => [
+  if (env.feed.isNotEmpty) ...[
+    SessionFeedView(
+      lines: env.feed,
+      listen: (line) => CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: 'feed-${line.ref}', size: 28, brass: true),
+    ),
+    const SizedBox(height: 16),
+  ],
+];
+
+/// The partner's bubble with its text and «listen» 28.
+Widget _partnerRow(CardEnv env, CardLine line, {required Object playKey, double rate = 1.0}) => SessionPartnerRow(
+  bubble: SessionBubble(own: false, text: line.textTarget, translation: line.textNative),
+  listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: playKey, size: 28, brass: true, rate: rate),
+);
+
+/// The pronunciation key inside [text] — case-insensitive; not found — no underline.
+TextRange? _keyIn(String text, String? key) {
+  if (key == null || key.trim().isEmpty) return null;
+  final at = text.toLowerCase().indexOf(key.trim().toLowerCase());
+  return at < 0 ? null : TextRange(start: at, end: at + key.trim().length);
+}
+
+// ── 33-1 ──────────────────────────────────────────────────────────────────────────────────────────
+
+/// UNDERSTAND THE PARTNER (33-1): the partner's line sounds once when the card opens; its bubble holds a wave, the
+/// text is closed; four paraphrases in the native language (template 30-9). Correct — the text opens in the bubble,
+/// auto-advance after 600 ms; wrong — an outline on the chosen one, sage on the correct one, «Next». The task line is
+/// the server's `question_native`: the options answer it.
+class DialoguePartnerCard extends StatefulWidget {
+  const DialoguePartnerCard({super.key, required this.env, required this.payload});
+
+  final CardEnv env;
+  final DialoguePartnerPayload payload;
+
+  @override
+  State<DialoguePartnerCard> createState() => _DialoguePartnerCardState();
+}
+
+class _DialoguePartnerCardState extends State<DialoguePartnerCard> with ChoiceCardState<DialoguePartnerCard> {
+  static const _key = 'partner-line';
+
+  Timer? _autoplay;
+
+  @override
+  CardEnv get env => widget.env;
+
+  @override
+  ChoicePayload get choice => widget.payload;
+
+  @override
+  void initState() {
+    super.initState();
+    final line = widget.payload.partnerLine;
+    _autoplay = autoplayOnce(this, env, line.audio, line.textTarget, _key);
+  }
+
+  @override
+  void dispose() {
+    _autoplay?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.payload;
+    final line = p.partnerLine;
+    final open = answeredCorrectly;
+    return CardLayout(
+      feed: true,
+      bodyGap: 16,
+      task: SessionTask(p.questionNative),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ..._feed(env),
+          SessionPartnerRow(
+            bubble: ValueListenableBuilder<Object?>(
+              valueListenable: env.voice.playing,
+              builder: (_, playing, _) => SessionBubble(
+                own: false,
+                translation: open ? line.textNative : null,
+                child: AnimatedSwitcher(
+                  duration: AppMotion.sessionTextReveal,
+                  switchInCurve: AppMotion.sessionEaseOut,
+                  child: open
+                      ? Text(line.textTarget, key: const ValueKey('partner-text'), style: SessionBubble.lineStyle(own: false))
+                      : SessionWave(key: const ValueKey('partner-wave'), heights: SessionWave.five, width: 80, playing: playing == _key),
+                ),
+              ),
+            ),
+            listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _key, size: 28, brass: true),
+          ),
+        ],
+      ),
+      bottom: optionsDock(context),
+    );
+  }
+}
+
+// ── 33-2 · 33-3 · 33-4 · 33-5 ──────────────────────────────────────────────────────────────────────
+
+/// ANSWER THE PARTNER / ASK (33-2 chips · 33-3 voice with the line · 33-4 blind voice; 33-5 — the learner speaks first):
+/// the own bubble is ink. The mode is the plan's level and «No hints» ([SessionRules.dialogueMode]):
+/// * chips — the frame with an empty slot, `modes.chips` under the bubble; any chip is right → `passed`
+///   (`mode = chips`, `filler_index`), «Next»;
+/// * voice with the line — `modes.voice_hint` in the bubble, the key underlined in brass; the frame's own words
+///   covered → `passed` (`mode = voice_hint`);
+/// * blind voice — the frame with an empty slot; the frame covered, any slot → `passed` (`mode = voice_blind`).
+///
+/// Two misses — `skipped`. The live line stands in the own bubble, not over the button. An `ask` (33-5): after the pass
+/// the partner's reply appears and sounds, then «Next»; an `answer` leaves by itself after a voice pass.
+class DialogueAnswerCard extends StatefulWidget {
+  const DialogueAnswerCard({super.key, required this.env, required this.payload});
+
+  final CardEnv env;
+  final DialogueAnswerPayload payload;
+
+  @override
+  State<DialogueAnswerCard> createState() => _DialogueAnswerCardState();
+}
+
+class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardState<DialogueAnswerCard> {
+  static const _replyKey = 'partner-reply';
+
+  late final DialogueMode _mode = SessionRules.dialogueMode(widget.payload, level: env.level, noHints: env.noHints);
+
+  /// The chip chosen (chips mode) — the answer; the chips lock.
+  CardFiller? _chip;
+
+  /// What went into the slot on a blind voice pass — a known filler heard whole, otherwise the words beyond the frame.
+  ({String target, String? native})? _heardSlot;
+
+  /// `dialogue_ask`: the partner's reply has appeared.
+  bool _reply = false;
+
+  DialogueAnswerPayload get p => widget.payload;
+
+  bool get _ask => env.card.kind == SessionKind.dialogueAsk;
+
+  String get _framePart => SessionRules.framePart(p.frame.frameTarget);
+
+  @override
+  CardEnv get env => widget.env;
+
+  @override
+  String get expectedSpeech => SessionRules.dialogueExpected(p, _mode);
+
+  @override
+  List<String> get contextual => [
+    p.ownLine.textTarget,
+    _framePart,
+    for (final f in p.frame.fillers) f.target,
+    ...p.ownLine.textTarget.split(RegExp(r'\s+')).where((w) => w.trim().isNotEmpty),
+  ];
+
+  @override
+  bool accepts(String heard) => SessionRules.voiceAccepted(p, heard, env.articles);
+
+  /// With the line on screen — stop once the whole line is covered; blind — once the frame and a word of the slot
+  /// are heard (the frame alone would cut the slot); a frame without a slot — once it is covered.
+  @override
+  Duration? stopAfter(String partial) => _mode == DialogueMode.voiceHint
+      ? SpeechStop.voice(partial, (h) => SpeechCoverage.covers(h, p.modes.voiceHint, SpeechCoverage.minFor(p.modes.voiceHint, env.articles), env.articles))
+      : SpeechStop.judge(partial, _framePart, p.coverageMin, env.articles, slot: p.frame.hasSlot);
+
+  @override
+  String? get responseMode => _mode.wire;
+
+  @override
+  bool get autoAdvanceOnPass => !_ask;
+
+  @override
+  void initState() {
+    super.initState();
+    initVoice();
+  }
+
+  @override
+  void dispose() {
+    disposeVoice();
+    super.dispose();
+  }
+
+  /// A voice attempt passed (a «Skip» also closes the card, but is not a pass).
+  bool _voicePassed = false;
+
+  @override
+  void onAccepted(String heard) {
+    _voicePassed = true;
+    _heardSlot = _slotOf(heard);
+    if (_ask) unawaited(_showReply());
+  }
+
+  /// The slot as heard: a filler of the frame said whole, otherwise the words beyond the frame; none — null.
+  ({String target, String? native})? _slotOf(String heard) {
+    if (!p.frame.hasSlot) return null;
+    for (final f in p.frame.fillers) {
+      if (SpeechCoverage.containsSequence(heard, f.target, env.articles)) return (target: f.target, native: f.nativeLine);
+    }
+    final frameWords = SpeechCoverage.words(_framePart).toSet();
+    final words = heard
+        .split(RegExp(r'\s+'))
+        .where((w) {
+          final tokens = SpeechCoverage.words(w);
+          return tokens.isNotEmpty && !tokens.every(frameWords.contains);
+        })
+        .join(' ')
+        .replaceAll(RegExp(r'[.!?,;:]+$'), '');
+    return words.isEmpty ? null : (target: words, native: null);
+  }
+
+  Future<void> _showReply() async {
+    final line = p.partnerLine;
+    if (line == null || !mounted) return;
+    setState(() => _reply = true);
+    await env.voice.play(line.audio, fallback: line.textTarget, key: _replyKey);
+  }
+
+  Future<void> _pickChip(CardFiller f) async {
+    if (_chip != null) return;
+    setState(() => _chip = f);
+    AppHaptics.success();
+    SessionSounds.verdict(correct: true);
+    env.submit(SessionAnswer(result: SessionResult.passed, attempts: 1, response: SessionResponse(mode: DialogueMode.chips.wire, fillerIndex: f.index)));
+    await env.voice.play(f.audio, fallback: DialogueFeed.filledSentence(p.frame, f), key: 'chip-${f.index}');
+    if (_ask && mounted) await _showReply();
+  }
+
+  bool get _passed => _chip != null || _voicePassed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    if (_mode != DialogueMode.chips) {
+      final noMic = noMicBody((s) => SessionTexts.stage(l, s));
+      if (noMic != null) return noMic;
+    }
+    final own = SessionOwnRow(mark: _passed ? FeedMark.passed : FeedMark.none, bubble: _ownBubble());
+    // After a rescue of this line the partner's bubble already stands in the feed, before the slow repeat.
+    final partner = p.partnerLine == null || (!_ask && DialogueFeed.partnerInFeed(env.feed, p.partnerLine))
+        ? null
+        : _partnerRow(env, p.partnerLine!, playKey: _ask ? _replyKey : 'partner-line');
+    final rows = _ask
+        ? [own, if (_reply && partner != null) SessionAppear(child: partner)]
+        : [?partner, own];
+    return CardLayout(
+      feed: true,
+      bodyGap: 16,
+      fadeStop: _mode == DialogueMode.chips ? 0.34 : 0.30,
+      task: SessionTask(switch (_mode) {
+        _ when _ask => l.planSessionTaskAskSelf,
+        DialogueMode.chips => l.planSessionTaskCollectAnswer,
+        DialogueMode.voiceHint => l.planSessionTaskSayAnswer,
+        DialogueMode.voiceBlind => l.planSessionTaskAnswerVoice,
+      }),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ..._feed(env),
+          for (final (i, row) in rows.indexed) ...[if (i > 0) const SizedBox(height: 8), row],
+        ],
+      ),
+      bottom: _dock(context),
+    );
+  }
+
+  /// The own bubble in every state of the mode.
+  Widget _ownBubble() {
+    final style = SessionBubble.lineStyle(own: true);
+    final listening = mic.isListening && mic.partial.trim().isNotEmpty;
+    switch (_mode) {
+      case DialogueMode.chips:
+        final chip = _chip;
+        return SessionBubble(
+          own: true,
+          translation: chip == null ? p.frame.frameNative : (chip.nativeLine ?? p.ownLine.textNative),
+          child: _frame(style, slot: chip?.target, look: chip == null ? SlotLook.empty : SlotLook.filled),
+        );
+      case DialogueMode.voiceHint:
+        final line = p.modes.voiceHint;
+        return SessionBubble(
+          own: true,
+          translation: p.ownLine.textNative,
+          child: listening && !_passed
+              ? SessionHeardLine(text: line, heard: mic.partial)
+              : SessionFrameText.plain(line, style: style, underline: _keyIn(line, p.ownLine.key), onInk: true),
+        );
+      case DialogueMode.voiceBlind:
+        if (listening && !_passed) {
+          return SessionBubble(own: true, child: SessionInkLiveLine(words: LiveLine.of(mic.partial, _framePart, listening: !mic.closed)));
+        }
+        if (!_passed) {
+          return SessionBubble(own: true, translation: p.frame.frameNative, child: _frame(style, look: SlotLook.empty));
+        }
+        // Passed: the frame with what was heard in the slot — a known filler with its native line, other words without
+        // a translation (nobody wrote one); nothing beyond the frame (a frame without a slot) — the line itself.
+        final slot = _heardSlot;
+        if (slot == null) return SessionBubble(own: true, text: p.ownLine.textTarget, translation: p.ownLine.textNative);
+        return SessionBubble(own: true, translation: slot.native, child: _frame(style, slot: slot.target, look: SlotLook.filled));
+    }
+  }
+
+  /// The frame in the own bubble with its slot; the key — the frame's words before the slot — underlined in brass.
+  Widget _frame(TextStyle style, {String? slot, required SlotLook look}) {
+    final parts = p.frame.parts;
+    return SessionFrameText(
+      before: parts.before,
+      after: parts.after,
+      style: style,
+      window: p.frame.hasSlot,
+      slot: slot,
+      look: look,
+      onInk: true,
+      underline: _keyIn(parts.before, p.ownLine.key),
+    );
+  }
+
+  Widget _dock(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    if (_mode == DialogueMode.chips) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final f in p.modes.chips)
+                SessionTile(
+                  key: ValueKey('chip-${f.index}'),
+                  text: f.target,
+                  height: 40,
+                  selected: _chip?.index == f.index,
+                  onTap: _chip == null ? () => unawaited(_pickChip(f)) : null,
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(l.planSessionAnyChip, style: AppTextSession.meta),
+          const SizedBox(height: 14),
+          if (_ask && _reply) ...[_playingLine(l), const SizedBox(height: 14)],
+          SessionDockButton(
+            label: l.planSessionNext,
+            enabled: _chip != null,
+            busy: env.advancing,
+            onTap: _chip == null ? null : () => unawaited(env.next()),
+          ),
+        ],
+      );
+    }
+    if (_ask && _passed) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _playingLine(l),
+          const SizedBox(height: 14),
+          SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
+        ],
+      );
+    }
+    return voiceDock(context, liveLineInDock: false);
+  }
+
+  /// «playing» under the partner's reply — the wave moves only while it sounds.
+  Widget _playingLine(AppLocalizations l) => ValueListenableBuilder<Object?>(
+    valueListenable: env.voice.playing,
+    builder: (_, playing, _) => Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SessionWave(heights: SessionWave.five, width: 80, playing: playing == _replyKey),
+        const SizedBox(width: 12),
+        Text(l.planSessionPlaying, style: AppTextSession.meta),
+      ],
+    ),
+  );
+}
+
+// ── 33-6 ──────────────────────────────────────────────────────────────────────────────────────────
+
+/// «DIDN'T CATCH THAT» (33-6): the line the learner did not catch (`asked_line`) sounds in the partner's bubble, and
+/// the bubble holds «Didn't catch that» 44 (a screen reader says the rescue line itself). A tap — the rescue line
+/// appears in the own bubble and sounds, then the partner repeats (`partner_repeat`) at `slow_rate` with its text; the
+/// wave «slowly» moves while it sounds. No microphone on the frame: «Next» → `passed`.
+class DialogueRescueCard extends StatefulWidget {
+  const DialogueRescueCard({super.key, required this.env, required this.payload});
+
+  final CardEnv env;
+  final DialogueRescuePayload payload;
+
+  @override
+  State<DialogueRescueCard> createState() => _DialogueRescueCardState();
+}
+
+class _DialogueRescueCardState extends State<DialogueRescueCard> {
+  static const _askedKey = 'asked-line';
+  static const _rescueKey = 'rescue-line';
+  static const _repeatKey = 'partner-repeat';
+
+  bool _asked = false;
+  bool _repeat = false;
+  Timer? _autoplay;
+
+  DialogueRescuePayload get p => widget.payload;
+
+  @override
+  void initState() {
+    super.initState();
+    final asked = p.askedLine;
+    if (asked != null) _autoplay = autoplayOnce(this, widget.env, asked.audio, asked.textTarget, _askedKey);
+  }
+
+  @override
+  void dispose() {
+    _autoplay?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _notUnderstood() async {
+    if (_asked) return;
+    _autoplay?.cancel();
+    final env = widget.env;
+    setState(() => _asked = true);
+    await env.voice.play(p.rescueLine.audio, fallback: p.rescueLine.textTarget, key: _rescueKey);
+    if (!mounted) return;
+    setState(() => _repeat = true);
+    await env.voice.play(p.partnerRepeat.audio, fallback: p.partnerRepeat.textTarget, rate: p.slowRate, slowFallback: true, key: _repeatKey);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final env = widget.env;
+    final asked = p.askedLine;
+    final button = SessionBrassButton(
+      key: const ValueKey('rescue-not-understood'),
+      label: l.planSessionNotUnderstood,
+      semanticsLabel: p.rescueLine.textTarget,
+      onTap: _asked ? null : () => unawaited(_notUnderstood()),
+    );
+    return CardLayout(
+      feed: true,
+      bodyGap: 16,
+      fadeStop: 0.34,
+      task: SessionTask(l.planSessionTaskRescue),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ..._feed(env),
+          if (asked != null)
+            SessionPartnerRow(
+              bubble: SessionBubble(
+                own: false,
+                text: asked.textTarget,
+                translation: asked.textNative,
+                footer: _asked ? null : Padding(padding: const EdgeInsets.only(top: 12), child: Align(alignment: Alignment.centerLeft, child: button)),
+              ),
+              listen: CardListen(env: env, audio: asked.audio, fallback: asked.textTarget, playKey: _askedKey, size: 28, brass: true),
+            )
+          else if (!_asked)
+            Align(alignment: Alignment.centerLeft, child: button),
+          if (_asked) ...[
+            const SizedBox(height: 8),
+            SessionAppear(
+              child: SessionOwnRow(
+                bubble: SessionBubble(own: true, text: p.rescueLine.textTarget, translation: p.rescueLine.textNative),
+              ),
+            ),
+          ],
+          if (_repeat) ...[
+            const SizedBox(height: 8),
+            SessionAppear(child: _partnerRow(env, p.partnerRepeat, playKey: _repeatKey, rate: p.slowRate)),
+          ],
+        ],
+      ),
+      bottom: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_repeat) ...[
+            ValueListenableBuilder<Object?>(
+              valueListenable: env.voice.playing,
+              builder: (_, playing, _) => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SessionWave(heights: SessionWave.five, width: 80, playing: playing == _repeatKey),
+                  const SizedBox(width: 12),
+                  Text(l.planSessionSlowly, style: AppTextSession.meta),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+          SessionDockButton(
+            label: l.planSessionNext,
+            busy: env.advancing,
+            onTap: () {
+              env.submit(const SessionAnswer(result: SessionResult.passed, attempts: 1));
+              unawaited(env.next());
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}

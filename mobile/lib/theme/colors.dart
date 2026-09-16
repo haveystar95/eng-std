@@ -326,6 +326,21 @@ abstract final class AppColors {
   /// Shadow of the header plate and the scene strip on the canvas — `0 2px 8px rgba(46,38,32,.04)`.
   static const sessionFaintShadow = Color.fromARGB(10, _inkR, _inkG, _inkB);
 
+  // ── Series 33–35 and the day summary 30-7 (work order SESSION-1c).
+
+  /// Sage on ink — `#9CBF9F`: the matched words of the live line in the own (dark) bubble, a slot passed «by
+  /// meaning» there, «by meaning ✓» (35-2).
+  static const sessionSageOnInk = Color(0xFF9CBF9F);
+
+  /// Paper 45 % on ink — the words of the own bubble that did not match (35-2, 35-5).
+  static const sessionPaperDim = Color.fromARGB(115, 246, 243, 236);
+
+  /// An empty slot on ink — 18 % brass (33-2, 33-4).
+  static const sessionWindowFillOnInk = Color.fromARGB(46, 140, 106, 58);
+
+  /// The divider between the rows of the day plate 30-7 — `rgba(246,243,236,.14)`.
+  static const sessionPlateDivider = Color.fromARGB(36, 246, 243, 236);
+
   /// Доминантный тон картинки с провода (`image.tone`, `#RRGGBB`) — заливка круга, пока картинка
   /// в пути (наряд PLAN-UI-3). Не цвет палитры, а цвет фотографии: поэтому он приходит с сервера и
   /// читается здесь, где hex законен. Кривой ответ — null, и круг остаётся бумажным.

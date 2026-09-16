@@ -5193,13 +5193,13 @@ abstract class AppLocalizations {
   /// **'{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся'**
   String planSessionDescPhrases(int n);
 
-  /// Сессия, вход в этап «Диалог» (30-1): описание (этап в этой сборке заблокирован).
+  /// Сессия, вход в этап «Диалог» (30-1): описание.
   ///
   /// In ru, this message translates to:
   /// **'Разговор по шагам: пойми реплику и ответь фразами дня'**
   String get planSessionDescDialogue;
 
-  /// Сессия, вход в этап «Слушаю и отвечаю» (30-1): описание (этап в этой сборке заблокирован).
+  /// Сессия, вход в этап «Слушаю и отвечаю» (30-1): описание.
   ///
   /// In ru, this message translates to:
   /// **'Весь разговор на слух, потом вопросы о нём'**
@@ -5228,12 +5228,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Начать'**
   String get planSessionStart;
-
-  /// Сессия, вход в этапы «Диалог», «Слушаю и отвечаю», «Говорю сам» (наряд SESSION-1b): вместо «Начать» — экранов у этих этапов в этой сборке нет.
-  ///
-  /// In ru, this message translates to:
-  /// **'в следующей сборке'**
-  String get planSessionNextBuild;
 
   /// Сессия, вход в этап (30-1): версия сборки мелко серым в подвале — правило владельца.
   ///
@@ -5618,6 +5612,390 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Собираем день · около минуты'**
   String get planSessionLessonBuilding;
+
+  /// Сессия, шапка (30-2) этапов «Диалог» и «Говорю сам»: сколько обменов ещё не закрыто.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{ещё {n} реплика} few{ещё {n} реплики} many{ещё {n} реплик} other{ещё {n} реплики}}'**
+  String planSessionLeftExchanges(int n);
+
+  /// Сессия, шапка (30-2) этапа «Слушаю и отвечаю» на вопросе: сколько вопросов слушания ещё без ответа, текущий тоже (34-2, 34-5).
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{ещё {n} вопрос} few{ещё {n} вопроса} many{ещё {n} вопросов} other{ещё {n} вопроса}}'**
+  String planSessionLeftQuestions(int n);
+
+  /// Сессия, шапка этапа «Слушаю и отвечаю»: вопрос слушания — последний (34-7).
+  ///
+  /// In ru, this message translates to:
+  /// **'последний вопрос'**
+  String get planSessionLastQuestion;
+
+  /// Сессия, шапка этапа «Слушаю и отвечаю» на плеере визита (34-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'разговор целиком'**
+  String get planSessionWholeTalk;
+
+  /// Сессия, шапка этапа «Слушаю и отвечаю» на разборе (34-3).
+  ///
+  /// In ru, this message translates to:
+  /// **'разбор'**
+  String get planSessionReviewLabel;
+
+  /// Сессия, шапка этапа «Слушаю и отвечаю» на карточке «быстро / медленно» (34-6).
+  ///
+  /// In ru, this message translates to:
+  /// **'темп'**
+  String get planSessionPaceLabel;
+
+  /// Сессия, строка задания 33-2: ответ собеседнику чипами (beginner).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собери ответ'**
+  String get planSessionTaskCollectAnswer;
+
+  /// Сессия, строка задания 33-3: ответ голосом, реплика на экране (intermediate).
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи ответ вслух'**
+  String get planSessionTaskSayAnswer;
+
+  /// Сессия, строка задания 33-4: ответ голосом вслепую — каркас с пустым окном («Без подсказок»). Канва — «Ответь врачу»: склонения роли контракт не отдаёт.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ответь голосом'**
+  String get planSessionTaskAnswerVoice;
+
+  /// Сессия, строка задания 33-5: ученик спрашивает первым. Канва — «Спроси про работу»: текста задания контракт не отдаёт, клиент формулирует сам.
+  ///
+  /// In ru, this message translates to:
+  /// **'Спроси сам'**
+  String get planSessionTaskAskSelf;
+
+  /// Сессия, строка задания 33-6: «Не понял» в пузыре собеседника и медленный повтор. Канва — «Слушай назначение»: текста задания контракт не отдаёт.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не понял — переспроси'**
+  String get planSessionTaskRescue;
+
+  /// Сессия, 33-2: подпись под чипами наполнений — верен любой.
+  ///
+  /// In ru, this message translates to:
+  /// **'любое — твой ответ'**
+  String get planSessionAnyChip;
+
+  /// Сессия, 33-6: кнопка 44 в пузыре собеседника — переспросить.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не понял'**
+  String get planSessionNotUnderstood;
+
+  /// Сессия: подпись волны медленного повтора (33-6) и кнопка «медленно» 44 в листе 34-6.
+  ///
+  /// In ru, this message translates to:
+  /// **'медленно'**
+  String get planSessionSlowly;
+
+  /// Сессия, строка задания 34-1: плеер визита.
+  ///
+  /// In ru, this message translates to:
+  /// **'Послушай разговор'**
+  String get planSessionTaskListenTalk;
+
+  /// Сессия, 34-1: текст над кнопкой — пауза после каждого обмена.
+  ///
+  /// In ru, this message translates to:
+  /// **'По частям'**
+  String get planSessionByPartsAction;
+
+  /// Сессия, 34-1: кнопка на паузе «по частям» — следующий обмен.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить'**
+  String get planSessionContinue;
+
+  /// Сессия: проиграть ещё раз — весь визит (34-1), реплику в темпе (34-6), реплику после зачёта (35-3, 35-4).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ещё раз'**
+  String get planSessionReplay;
+
+  /// Сессия, 34-1: сколько обменов в визите — справа под полосой плеера.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} обмен} few{{n} обмена} many{{n} обменов} other{{n} обмена}}'**
+  String planSessionExchangesCount(int n);
+
+  /// Сессия, 34-1: плеер стоит на паузе «по частям» после обмена N.
+  ///
+  /// In ru, this message translates to:
+  /// **'пауза · обмен {n}'**
+  String planSessionPlayerPaused(int n);
+
+  /// Сессия, 34-1: визит проигран до конца.
+  ///
+  /// In ru, this message translates to:
+  /// **'дослушал'**
+  String get planSessionPlayerDone;
+
+  /// Сессия, 34-1: подпись кружка ученика в плеере.
+  ///
+  /// In ru, this message translates to:
+  /// **'ты'**
+  String get planSessionYou;
+
+  /// Сессия, строка задания 34-2: вопрос о визите по памяти.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что ты понял?'**
+  String get planSessionTaskWhatUnderstood;
+
+  /// Сессия, бровь листа вопроса (34-2, 34-7).
+  ///
+  /// In ru, this message translates to:
+  /// **'Вопрос'**
+  String get planSessionBrowQuestion;
+
+  /// Сессия, 34-2: подпись под вопросом — переслушать нельзя.
+  ///
+  /// In ru, this message translates to:
+  /// **'по памяти · звука нет'**
+  String get planSessionFromMemory;
+
+  /// Сессия, строка задания 34-3: разбор визита с подсветкой ответов.
+  ///
+  /// In ru, this message translates to:
+  /// **'Где это прозвучало'**
+  String get planSessionTaskWhereHeard;
+
+  /// Сессия, строка задания 34-5: пауза-предсказание. Канва — «Что он скажет дальше?»: пол собеседника клиенту не известен.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что прозвучит в ответ?'**
+  String get planSessionTaskWhatNext;
+
+  /// Сессия, строка задания 34-6.
+  ///
+  /// In ru, this message translates to:
+  /// **'А теперь в обычном темпе'**
+  String get planSessionTaskNormalPace;
+
+  /// Сессия, 34-6: бровь листа на медленном темпе, rate — темп из карточки («0.75»).
+  ///
+  /// In ru, this message translates to:
+  /// **'Медленно · {rate}×'**
+  String planSessionBrowSlowRate(String rate);
+
+  /// Сессия, 34-6: бровь листа на обычном темпе.
+  ///
+  /// In ru, this message translates to:
+  /// **'В обычном темпе'**
+  String get planSessionBrowNormalPace;
+
+  /// Сессия, мета листа: текст реплики виден (34-6).
+  ///
+  /// In ru, this message translates to:
+  /// **'текст открыт'**
+  String get planSessionTextOpen;
+
+  /// Сессия, мета листа: текст реплики скрыт (34-6, 35-3, 35-4).
+  ///
+  /// In ru, this message translates to:
+  /// **'текст закрыт'**
+  String get planSessionTextClosed;
+
+  /// Сессия, 34-6: кнопка — реплика понята на обоих темпах.
+  ///
+  /// In ru, this message translates to:
+  /// **'Понял'**
+  String get planSessionUnderstoodAction;
+
+  /// Сессия, строка задания 34-7: число в реплике на слух.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поймай число'**
+  String get planSessionTaskCatchNumber;
+
+  /// Сессия, строка задания 35-2 и 35-5. Канва — «Ответь врачу»: склонения роли контракт не отдаёт.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ответь своими словами'**
+  String get planSessionTaskAnswerOwnWords;
+
+  /// Сессия, строка задания 35-3: эхо с задержкой.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повтори через паузу'**
+  String get planSessionTaskRepeatPause;
+
+  /// Сессия, строка задания 35-4: пересказ на родном. Канва — «…что он сказал»: пол собеседника клиенту не известен.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи по-русски, что услышал'**
+  String get planSessionTaskRetell;
+
+  /// Сессия, бровь листа 35-3 / 35-4.
+  ///
+  /// In ru, this message translates to:
+  /// **'Реплика'**
+  String get planSessionBrowLine;
+
+  /// Сессия, 35-3: мета открытого листа — совпавшие слова подсвечены.
+  ///
+  /// In ru, this message translates to:
+  /// **'совпавшее — шалфеем'**
+  String get planSessionMatchedSage;
+
+  /// Сессия, 35-3: подпись над микрофоном, пока звучит реплика.
+  ///
+  /// In ru, this message translates to:
+  /// **'слушай'**
+  String get planSessionListenCue;
+
+  /// Сессия, 35-3: подпись над микрофоном в паузе 3 с (кольцо).
+  ///
+  /// In ru, this message translates to:
+  /// **'жду'**
+  String get planSessionWaiting;
+
+  /// Сессия, 35-4: подпись над микрофоном — пересказ на родном языке.
+  ///
+  /// In ru, this message translates to:
+  /// **'на родном'**
+  String get planSessionOnNative;
+
+  /// Сессия, 35-4: пересказ зачтён.
+  ///
+  /// In ru, this message translates to:
+  /// **'понял ✓'**
+  String get planSessionUnderstoodCheck;
+
+  /// Сессия, 35-2: подсказка-каркас встала сама после 5 с молчания.
+  ///
+  /// In ru, this message translates to:
+  /// **'подскажу каркас — окно твоё'**
+  String get planSessionHintSilence;
+
+  /// Сессия, 35-5: подсказка-каркас после «Подсказать».
+  ///
+  /// In ru, this message translates to:
+  /// **'каркас открыт — окно твоё'**
+  String get planSessionHintOpened;
+
+  /// Сессия, 35-5: отказ судьи, когда сервер не прислал своей причины.
+  ///
+  /// In ru, this message translates to:
+  /// **'не то — попробуем ещё'**
+  String get planSessionNotThat;
+
+  /// Сессия, 35-5: второй из трёх выходов — открыть каркас.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подсказать'**
+  String get planSessionHintAction;
+
+  /// Сессия, итог этапа «Диалог» (33-8); minutes — planMinutesCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Диалог пройден · {minutes}'**
+  String planSessionDoneDialogue(String minutes);
+
+  /// Сессия, итог этапа (33-8, 35-6): под репликами, которые вернутся завтра.
+  ///
+  /// In ru, this message translates to:
+  /// **'Остальные реплики закрыты.'**
+  String get planSessionRestExchanges;
+
+  /// Сессия, итог этапа (33-8, 35-6): ничего не вернётся.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все реплики закрыты.'**
+  String get planSessionAllExchanges;
+
+  /// Сессия, итог этапа «Слушаю и отвечаю» (34-8): верно отвеченные вопросы слушания из всех.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{Понял {n} вопрос из {m}} few{Понял {n} вопроса из {m}} many{Понял {n} вопросов из {m}} other{Понял {n} вопроса из {m}}}'**
+  String planSessionUnderstoodCount(int n, int m);
+
+  /// Сессия, итог этапа «Говорю сам» (35-6): зачтённые карточки этапа из всех.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{Сказал сам {n} реплику из {m}} few{Сказал сам {n} реплики из {m}} many{Сказал сам {n} реплик из {m}} other{Сказал сам {n} реплики из {m}}}'**
+  String planSessionSpokeCount(int n, int m);
+
+  /// Сессия, 35-6: строка над кнопкой — минуты дня справа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Итог дня'**
+  String get planSessionDayTotal;
+
+  /// Сессия, 35-6: кнопка — к итогу дня 30-7.
+  ///
+  /// In ru, this message translates to:
+  /// **'День пройден'**
+  String get planSessionDayDoneAction;
+
+  /// Сессия, итог дня (30-7); minutes — planMinutesCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'День пройден · {minutes}'**
+  String planSessionDayDoneTitle(String minutes);
+
+  /// Сессия, 30-7: кнопка — POST …/days/{n}/close и назад в окно дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрыть день'**
+  String get planSessionCloseDay;
+
+  /// Сессия, 30-7: сколько карточек вернётся завтра и из чего; cards — planCardsCount, parts — planSessionReturn* через planSessionAnd.
+  ///
+  /// In ru, this message translates to:
+  /// **'{cards}: {parts}.'**
+  String planSessionDayReturns(String cards, String parts);
+
+  /// Сессия, 30-7: слова, которые вернутся завтра.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} слово} few{{n} слова} many{{n} слов} other{{n} слова}}'**
+  String planSessionReturnWords(int n);
+
+  /// Сессия, 30-7: фразы, которые вернутся завтра.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} фраза} few{{n} фразы} many{{n} фраз} other{{n} фразы}}'**
+  String planSessionReturnPhrases(int n);
+
+  /// Сессия, 30-7: реплики (обмены), которые вернутся завтра.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}}'**
+  String planSessionReturnExchanges(int n);
+
+  /// Сессия, 30-7: последняя пара перечисления.
+  ///
+  /// In ru, this message translates to:
+  /// **'{a} и {b}'**
+  String planSessionAnd(String a, String b);
+
+  /// Сессия, 30-7: следующий день плана, урок которого ещё пишется (или встанет в очередь при закрытии).
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n} — собираю'**
+  String planSessionNextDayBuilding(int n);
+
+  /// Сессия, 30-7: следующий день плана, урок которого уже написан.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n} — готов'**
+  String planSessionNextDayReady(int n);
+
+  /// Сессия, 30-7: POST закрытия дня не дошёл; кнопка остаётся.
+  ///
+  /// In ru, this message translates to:
+  /// **'День не закрылся — нет связи'**
+  String get planSessionCloseFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

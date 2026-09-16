@@ -1,9 +1,9 @@
-/// DAY SESSION CARDS — the registry of 28 trainers, as the server sends it (work order SESSION-1b).
+/// DAY SESSION CARDS — the registry of 28 trainers, as the server sends it (work orders SESSION-1b, SESSION-1c).
 ///
 /// The contract is `backend2/docs/plan-api.md`, «Session cards», and the `PlanCard` schema of the `Plans` tag in
 /// `openapi/openapi.yaml`; the client's input is the fixtures `backend2/docs/fixtures/day-doctor*.json`. Here
 /// there is only reading: the card envelope, the shared objects (word, frame, filler, line, sound, photo) and one
-/// model per dealt kind — all 28, although in 1b only words and phrases have screens.
+/// model per dealt kind — all 28, and since SESSION-1c every one of them has a screen.
 ///
 /// Parsing FAILS CLOSED where the card cannot be shown otherwise: for a known kind without a required field
 /// [SessionContractError] is thrown, and the session skips that card. A kind this build does not know (and the
@@ -33,10 +33,7 @@ enum SessionGrading {
   pass,
 }
 
-/// CARD KIND — 29 enum values on the server, 28 are dealt.
-///
-/// [hasScreen] — the kind has a screen in this build (1b: words and phrases). The rest are read in full, but
-/// their stages stand «ahead», and entry into them is blocked.
+/// CARD KIND — 29 enum values on the server, 28 are dealt; `listen_pairs` is never dealt and is not here.
 enum SessionKind {
   wordIntro('word_intro', PlanStage.words, SessionGrading.pass),
   wordRepeat('word_repeat', PlanStage.words, SessionGrading.voice),
@@ -81,11 +78,6 @@ enum SessionKind {
     }
     return null;
   }
-
-  /// The stages that have screens in this build (work order SESSION-1b, section 0).
-  static const Set<PlanStage> stagesWithScreens = {PlanStage.words, PlanStage.phrases};
-
-  bool get hasScreen => stagesWithScreens.contains(stage);
 }
 
 /// The card's `result`.

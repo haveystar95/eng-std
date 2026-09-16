@@ -180,14 +180,23 @@ class _SessionWaveState extends State<SessionWave> with SingleTickerProviderStat
   }
 }
 
-/// «LISTEN» — circle 44 (on a sheet) or 28 (on an option); while it plays — a brass outline and the wave.
+/// «LISTEN» — circle 44 (on a sheet) or 28 (on an option); while it plays — a brass outline and the wave. [brass] —
+/// the bubble's «listen» 28 of the dialogue (23-0d, series 33–35): a brass outline and a brass glyph on the ground.
 class SessionListenButton extends StatelessWidget {
-  const SessionListenButton({super.key, required this.onTap, required this.label, this.size = 44, this.playing = false});
+  const SessionListenButton({
+    super.key,
+    required this.onTap,
+    required this.label,
+    this.size = 44,
+    this.playing = false,
+    this.brass = false,
+  });
 
   final VoidCallback? onTap;
   final String label;
   final double size;
   final bool playing;
+  final bool brass;
 
   @override
   Widget build(BuildContext context) {
@@ -208,8 +217,8 @@ class SessionListenButton extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.paper,
-                border: Border.all(color: playing ? AppColors.brassInk : AppColors.markerOutline, width: 1.5),
+                color: brass ? null : AppColors.paper,
+                border: Border.all(color: playing || brass ? AppColors.brassInk : AppColors.markerOutline, width: 1.5),
               ),
               child: playing
                   ? SessionWave(
@@ -217,6 +226,8 @@ class SessionListenButton extends StatelessWidget {
                       barWidth: big ? 2.5 : 1.5,
                       playing: true,
                     )
+                  : brass
+                  ? Icon(LucideIcons.volume1, size: size / 2, color: AppColors.brassInk)
                   : Icon(LucideIcons.volume2, size: big ? 20 : 13, color: AppColors.ink),
             ),
           ),
@@ -363,6 +374,7 @@ class SessionFrameText extends StatelessWidget {
     this.caret = false,
     this.textAlign = TextAlign.start,
     this.emptyWindow = kSessionEmptyWindow,
+    this.onInk = false,
   });
 
   /// The card's frame: the slot in place of `___`; for a frame without a slot — the whole line, no slot.
@@ -373,6 +385,8 @@ class SessionFrameText extends StatelessWidget {
     SlotLook look = SlotLook.empty,
     Color? frameColor,
     bool caret = false,
+    bool onInk = false,
+    TextAlign textAlign = TextAlign.start,
   }) {
     final parts = frame.parts;
     return SessionFrameText(
@@ -384,17 +398,26 @@ class SessionFrameText extends StatelessWidget {
       look: look,
       frameColor: frameColor,
       caret: caret,
+      onInk: onInk,
+      textAlign: textAlign,
     );
   }
 
   /// A line without a slot — [before] as a whole (the key can be underlined).
-  const SessionFrameText.plain(this.before, {super.key, required this.style, this.underline, this.frameColor, this.textAlign = TextAlign.start})
-    : after = '',
-      window = false,
-      slot = null,
-      look = SlotLook.empty,
-      caret = false,
-      emptyWindow = kSessionEmptyWindow;
+  const SessionFrameText.plain(
+    this.before, {
+    super.key,
+    required this.style,
+    this.underline,
+    this.frameColor,
+    this.textAlign = TextAlign.start,
+    this.onInk = false,
+  }) : after = '',
+       window = false,
+       slot = null,
+       look = SlotLook.empty,
+       caret = false,
+       emptyWindow = kSessionEmptyWindow;
 
   final String before;
   final String after;
@@ -417,6 +440,10 @@ class SessionFrameText extends StatelessWidget {
 
   /// Size of the empty slot: 96 × 30 in phrase frames, 56 × 28 for a word in a line (31-7).
   final Size emptyWindow;
+
+  /// The frame stands in the own (dark) bubble of the dialogue (33-2, 33-4, 35-2): an empty slot is filled with 18 %
+  /// brass, a filled one keeps paper text, a passed one is sage on ink.
+  final bool onInk;
 
   @override
   Widget build(BuildContext context) {
@@ -467,12 +494,19 @@ class SessionFrameText extends StatelessWidget {
   }
 
   Widget _window(BuildContext context) {
-    final (border, fill, textColor) = switch (look) {
-      SlotLook.empty || SlotLook.filled => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.ink),
-      SlotLook.highlight => (AppColors.brassInk, AppColors.sessionSageWash, AppColors.ink),
-      SlotLook.sage => (AppColors.verdictKnown, AppColors.sessionSageWash, AppColors.verdictKnown),
-      SlotLook.wrong => (AppColors.ink, Colors.transparent, AppColors.ink),
-    };
+    final (border, fill, textColor) = onInk
+        ? switch (look) {
+            SlotLook.empty => (AppColors.brassInk, AppColors.sessionWindowFillOnInk, AppColors.paper),
+            SlotLook.filled || SlotLook.highlight => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.paper),
+            SlotLook.sage => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.sessionSageOnInk),
+            SlotLook.wrong => (AppColors.paper, Colors.transparent, AppColors.paper),
+          }
+        : switch (look) {
+            SlotLook.empty || SlotLook.filled => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.ink),
+            SlotLook.highlight => (AppColors.brassInk, AppColors.sessionSageWash, AppColors.ink),
+            SlotLook.sage => (AppColors.verdictKnown, AppColors.sessionSageWash, AppColors.verdictKnown),
+            SlotLook.wrong => (AppColors.ink, Colors.transparent, AppColors.ink),
+          };
     final value = slot;
     // An empty slot has the canvas size: otherwise a container without a child stretches across the whole line. A
     // slot with text is sized by the text — its own line height plus [kSessionSlotPadding] — and grows with it. The

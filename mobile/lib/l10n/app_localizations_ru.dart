@@ -3570,9 +3570,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionStart => 'Начать';
 
   @override
-  String get planSessionNextBuild => 'в следующей сборке';
-
-  @override
   String planSessionBuild(String version) {
     return 'сборка $version';
   }
@@ -3840,4 +3837,292 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionLessonBuilding => 'Собираем день · около минуты';
+
+  @override
+  String planSessionLeftExchanges(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'ещё $n реплики',
+      many: 'ещё $n реплик',
+      few: 'ещё $n реплики',
+      one: 'ещё $n реплика',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionLeftQuestions(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'ещё $n вопроса',
+      many: 'ещё $n вопросов',
+      few: 'ещё $n вопроса',
+      one: 'ещё $n вопрос',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planSessionLastQuestion => 'последний вопрос';
+
+  @override
+  String get planSessionWholeTalk => 'разговор целиком';
+
+  @override
+  String get planSessionReviewLabel => 'разбор';
+
+  @override
+  String get planSessionPaceLabel => 'темп';
+
+  @override
+  String get planSessionTaskCollectAnswer => 'Собери ответ';
+
+  @override
+  String get planSessionTaskSayAnswer => 'Скажи ответ вслух';
+
+  @override
+  String get planSessionTaskAnswerVoice => 'Ответь голосом';
+
+  @override
+  String get planSessionTaskAskSelf => 'Спроси сам';
+
+  @override
+  String get planSessionTaskRescue => 'Не понял — переспроси';
+
+  @override
+  String get planSessionAnyChip => 'любое — твой ответ';
+
+  @override
+  String get planSessionNotUnderstood => 'Не понял';
+
+  @override
+  String get planSessionSlowly => 'медленно';
+
+  @override
+  String get planSessionTaskListenTalk => 'Послушай разговор';
+
+  @override
+  String get planSessionByPartsAction => 'По частям';
+
+  @override
+  String get planSessionContinue => 'Продолжить';
+
+  @override
+  String get planSessionReplay => 'Ещё раз';
+
+  @override
+  String planSessionExchangesCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n обмена',
+      many: '$n обменов',
+      few: '$n обмена',
+      one: '$n обмен',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionPlayerPaused(int n) {
+    return 'пауза · обмен $n';
+  }
+
+  @override
+  String get planSessionPlayerDone => 'дослушал';
+
+  @override
+  String get planSessionYou => 'ты';
+
+  @override
+  String get planSessionTaskWhatUnderstood => 'Что ты понял?';
+
+  @override
+  String get planSessionBrowQuestion => 'Вопрос';
+
+  @override
+  String get planSessionFromMemory => 'по памяти · звука нет';
+
+  @override
+  String get planSessionTaskWhereHeard => 'Где это прозвучало';
+
+  @override
+  String get planSessionTaskWhatNext => 'Что прозвучит в ответ?';
+
+  @override
+  String get planSessionTaskNormalPace => 'А теперь в обычном темпе';
+
+  @override
+  String planSessionBrowSlowRate(String rate) {
+    return 'Медленно · $rate×';
+  }
+
+  @override
+  String get planSessionBrowNormalPace => 'В обычном темпе';
+
+  @override
+  String get planSessionTextOpen => 'текст открыт';
+
+  @override
+  String get planSessionTextClosed => 'текст закрыт';
+
+  @override
+  String get planSessionUnderstoodAction => 'Понял';
+
+  @override
+  String get planSessionTaskCatchNumber => 'Поймай число';
+
+  @override
+  String get planSessionTaskAnswerOwnWords => 'Ответь своими словами';
+
+  @override
+  String get planSessionTaskRepeatPause => 'Повтори через паузу';
+
+  @override
+  String get planSessionTaskRetell => 'Скажи по-русски, что услышал';
+
+  @override
+  String get planSessionBrowLine => 'Реплика';
+
+  @override
+  String get planSessionMatchedSage => 'совпавшее — шалфеем';
+
+  @override
+  String get planSessionListenCue => 'слушай';
+
+  @override
+  String get planSessionWaiting => 'жду';
+
+  @override
+  String get planSessionOnNative => 'на родном';
+
+  @override
+  String get planSessionUnderstoodCheck => 'понял ✓';
+
+  @override
+  String get planSessionHintSilence => 'подскажу каркас — окно твоё';
+
+  @override
+  String get planSessionHintOpened => 'каркас открыт — окно твоё';
+
+  @override
+  String get planSessionNotThat => 'не то — попробуем ещё';
+
+  @override
+  String get planSessionHintAction => 'Подсказать';
+
+  @override
+  String planSessionDoneDialogue(String minutes) {
+    return 'Диалог пройден · $minutes';
+  }
+
+  @override
+  String get planSessionRestExchanges => 'Остальные реплики закрыты.';
+
+  @override
+  String get planSessionAllExchanges => 'Все реплики закрыты.';
+
+  @override
+  String planSessionUnderstoodCount(int n, int m) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Понял $n вопроса из $m',
+      many: 'Понял $n вопросов из $m',
+      few: 'Понял $n вопроса из $m',
+      one: 'Понял $n вопрос из $m',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionSpokeCount(int n, int m) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Сказал сам $n реплики из $m',
+      many: 'Сказал сам $n реплик из $m',
+      few: 'Сказал сам $n реплики из $m',
+      one: 'Сказал сам $n реплику из $m',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planSessionDayTotal => 'Итог дня';
+
+  @override
+  String get planSessionDayDoneAction => 'День пройден';
+
+  @override
+  String planSessionDayDoneTitle(String minutes) {
+    return 'День пройден · $minutes';
+  }
+
+  @override
+  String get planSessionCloseDay => 'Закрыть день';
+
+  @override
+  String planSessionDayReturns(String cards, String parts) {
+    return '$cards: $parts.';
+  }
+
+  @override
+  String planSessionReturnWords(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n слова',
+      many: '$n слов',
+      few: '$n слова',
+      one: '$n слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionReturnPhrases(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n фразы',
+      many: '$n фраз',
+      few: '$n фразы',
+      one: '$n фраза',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionReturnExchanges(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n реплики',
+      many: '$n реплик',
+      few: '$n реплики',
+      one: '$n реплика',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planSessionAnd(String a, String b) {
+    return '$a и $b';
+  }
+
+  @override
+  String planSessionNextDayBuilding(int n) {
+    return 'День $n — собираю';
+  }
+
+  @override
+  String planSessionNextDayReady(int n) {
+    return 'День $n — готов';
+  }
+
+  @override
+  String get planSessionCloseFailed => 'День не закрылся — нет связи';
 }

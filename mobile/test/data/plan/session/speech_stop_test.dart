@@ -39,6 +39,20 @@ void main() {
     expect(SpeechStop.judge('', 'It started', 1.0, en), isNull);
   });
 
+  // SESSION-1c: a judged frame without a slot (`speak_answer` x4) has nothing beyond it to wait for; the retelling has
+  // no frame — a word heard is enough.
+  // CATCHES: a no-slot answer that waits 2 s of silence after being said whole, a retelling that never stops early,
+  // and a retelling stopped on silence alone.
+  test('judge: a frame without a slot — covered is enough; no frame (the retelling) — any word', () {
+    const noSlot = "He doesn't have a fever";
+    expect(SpeechStop.judge("he doesn't have a fever", noSlot, 0.7, en, slot: false), SpeechStop.judged);
+    expect(SpeechStop.judge('he', noSlot, 0.7, en, slot: false), isNull);
+    expect(SpeechStop.judge("he doesn't have a fever", noSlot, 0.7, en), isNull, reason: 'with a slot the frame alone waits');
+    expect(SpeechStop.judge('Отдыхать два дня', '', 1.0, const {}), SpeechStop.judged);
+    expect(SpeechStop.judge('', '', 1.0, const {}), isNull);
+    expect(SpeechStop.judge('  ', '', 1.0, const {}), isNull);
+  });
+
   test('the pauses are the owner\'s numbers', () {
     expect(SpeechStop.covered, const Duration(milliseconds: 500));
     expect(SpeechStop.judged, const Duration(milliseconds: 800));

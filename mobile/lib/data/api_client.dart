@@ -692,6 +692,16 @@ class ApiClient {
     return SessionAnswerOutcome.fromJson(_data(r) as Map<String, dynamic>);
   }
 
+  /// «Close the day» (day summary 30-7, work order SESSION-1c): `POST …/days/{n}/close` — the metrics written, the
+  /// day's words filed into the plan's collection, the next day opened for tomorrow. The answer is the closed day's
+  /// room. 409 `plan_stage_incomplete` — a card is still unanswered; 409 `plan_day_not_open` — the day is not being
+  /// walked (already closed).
+  Future<SessionDay> closePlanDay(String planId, int number) async {
+    final r = await _dio.post('/plans/$planId/days/$number/close');
+
+    return SessionDay.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
   /// The slot judge — `phrase_own_slot` (in 1b), `speak_answer`, `speak_retell`. Synchronous: the learner
   /// waits for the verdict on the card (up to 8 s on the server).
   Future<SessionJudgeOutcome> judgeSessionCard(

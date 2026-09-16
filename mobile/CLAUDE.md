@@ -204,7 +204,8 @@ part of that answer. It reads ONE payload — `GET /home-plan`, cached into `syn
 декодирует mp3, срезает тишину в начале и регистрирует их, выход освобождает. Системный звук сам слушается
 беззвучного режима (сессия приложения — `.playback` ради голоса, плеер звучал бы и в беззвучном) и не режет реплику.
 Во время записи iOS глушит системные звуки — отсюда `enableHapticFeedback: true` у распознавателя. «Звуки в сессии»
-выключены — не регистрируется ничего. Карта «звук → момент» — `../backend2/docs/research/session-1b/README.md` §15.
+выключены — не регистрируется ничего. Карта «звук → момент» — `../backend2/docs/research/session-1b/README.md` §15;
+`stage_done` на 33-8/34-8/35-6 и `day_done` на 30-7 — наряд SESSION-1c, отчёт `../backend2/docs/research/session-1c/README.md`.
 
 ## Design
 

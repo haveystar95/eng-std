@@ -69,9 +69,34 @@ class _FakeBackend implements SessionBackend {
     return onAnswer!(cardId, answer);
   }
 
+  final List<({String cardId, String heard, bool hinted})> judged = [];
+  SessionJudgeOutcome Function(String cardId)? onJudge;
+
   @override
-  Future<SessionJudgeOutcome> judge(String planId, int number, String cardId, {required String heard, required bool hinted}) =>
-      throw UnimplementedError();
+  Future<SessionJudgeOutcome> judge(String planId, int number, String cardId, {required String heard, required bool hinted}) async {
+    judged.add((cardId: cardId, heard: heard, hinted: hinted));
+    return onJudge!(cardId);
+  }
+
+  int closes = 0;
+  Future<SessionDay> Function()? onClose;
+
+  @override
+  Future<SessionDay> close(String planId, int number) {
+    closes++;
+    return onClose!();
+  }
+}
+
+/// [raw] with every card answered `passed`.
+Map<String, dynamic> _allAnswered(Map<String, dynamic> raw) {
+  for (final s in (raw['stages'] as List).cast<Map<String, dynamic>>()) {
+    for (final c in (s['cards'] as List).cast<Map<String, dynamic>>()) {
+      c['result'] = 'passed';
+      c['attempts'] = 1;
+    }
+  }
+  return raw;
 }
 
 Plan _plan() => Plan.fromJson({
@@ -134,6 +159,19 @@ void main() {
       expect(q.unitsLeft(PlanStage.words), 7);
       expect(q.beads(PlanStage.words, currentUnit: 'v2').take(3), [SessionBead.done, SessionBead.current, SessionBead.ahead]);
       expect(q.progress(PlanStage.words), closeTo(3 / 24, 1e-9));
+    });
+
+    // CATCHES: «0 lines left» on the last exchange of «Speak myself» once its card is answered but still on screen
+    // (live pass, SESSION-1c) — the canvas keeps one count across a card's states.
+    test('the conversation stages count the unit on screen as left until its card is left', () {
+      final q = SessionQueue(SessionDay.fromJson(_raw()).stages);
+      final units = q.unitsOf(PlanStage.speak);
+      for (final c in q.cardsOf(PlanStage.speak)) {
+        q.markAnswered(c, SessionResult.passed, 1);
+      }
+      expect(q.unitsLeft(PlanStage.speak), 0);
+      expect(q.unitsLeft(PlanStage.speak, openUnit: units.last), 1);
+      expect(q.unitsLeft(PlanStage.words, openUnit: null), q.unitsLeft(PlanStage.words), reason: 'words and phrases unchanged');
     });
 
     test('«comes back tomorrow» — the units whose card the server marked returns', () {
@@ -253,6 +291,111 @@ void main() {
       expect(queue.last.id, 'ulid-copy');
       expect(queue.firstWhere((c) => c.id == choose['id']).result, SessionResult.failed);
       expect(session.card!.position, 1);
+      session.dispose();
+    });
+  });
+
+  group('SessionController · SESSION-1c', () {
+    // CATCHES: a listening question that waits for a copy the server never deals (the stage would never end), and a
+    // client that invents one.
+    test('listen_question failed — final: no copy, the next card is the next position', () async {
+      final raw = _raw();
+      for (final s in (raw['stages'] as List).cast<Map<String, dynamic>>()) {
+        if (s['stage'] == 'listen') break;
+        for (final c in (s['cards'] as List).cast<Map<String, dynamic>>()) {
+          c['result'] = 'passed';
+          c['attempts'] = 1;
+        }
+      }
+      final backend = _FakeBackend([raw]);
+      backend.onAnswer = (cardId, answer) async {
+        final card = [
+          for (final s in (raw['stages'] as List).cast<Map<String, dynamic>>()) ...(s['cards'] as List).cast<Map<String, dynamic>>(),
+        ].firstWhere((c) => c['id'] == cardId);
+        return _outcome(card, answer.result.wire);
+      };
+      final session = SessionController(backend: backend, plan: _plan(), number: 1);
+      await session.load();
+      expect(session.stage, PlanStage.listen);
+      session.startStage();
+      expect(session.card!.kind, SessionKind.listenDialogue);
+      session.submit(session.card!, const SessionAnswer(result: SessionResult.passed, attempts: 1));
+      await session.next();
+      final question = session.card!;
+      expect(question.kind, SessionKind.listenQuestion);
+      session.submit(question, const SessionAnswer(result: SessionResult.failed, attempts: 1));
+      await session.next();
+      expect(session.card!.position, question.position + 1);
+      expect(session.queue!.cardsOf(PlanStage.listen), hasLength(9), reason: 'no copy at the end of the stage');
+      session.dispose();
+    });
+
+    test('every card answered — the day summary on entry; the last stage\'s summary leads to it', () async {
+      final session = SessionController(backend: _FakeBackend([_allAnswered(_raw())]), plan: _plan(), number: 1);
+      await session.load();
+      expect(session.phase, SessionPhase.daySummary);
+      expect(session.stage, PlanStage.speak);
+      session.continueAfterSummary();
+      expect(session.phase, SessionPhase.daySummary);
+      session.dispose();
+    });
+
+    // CATCHES: a close sent before the last answer is delivered, a closed day that stays open on the phone, an already
+    // closed day reported as an error, and a network failure that pops the learner out as if the day had closed.
+    test('closeDay: the answers first, then POST …/close; 409 not open — closed; 409 incomplete — back to the stage; offline — stays', () async {
+      final raw = _allAnswered(_raw());
+      final closed = jsonDecode(jsonEncode(raw)) as Map<String, dynamic>;
+      (closed['day'] as Map<String, dynamic>)['status'] = 'closed';
+      final backend = _FakeBackend([raw])..onClose = () async => SessionDay.fromJson(closed);
+      final session = SessionController(backend: backend, plan: _plan(), number: 1);
+      await session.load();
+      expect(await session.closeDay(), isTrue);
+      expect(backend.closes, 1);
+      expect(session.day!.day.status, PlanDayStatus.closed);
+      expect(await session.closeDay(), isTrue, reason: 'a closed day is not sent again');
+      expect(backend.closes, 1);
+      session.dispose();
+
+      final notOpen = _FakeBackend([_allAnswered(_raw())])..onClose = () async => throw _status(409, 'plan_day_not_open');
+      final again = SessionController(backend: notOpen, plan: _plan(), number: 1);
+      await again.load();
+      expect(await again.closeDay(), isTrue);
+      again.dispose();
+
+      final incomplete = _raw();
+      final missing = _FakeBackend([_allAnswered(_raw()), incomplete])..onClose = () async => throw _status(409, 'plan_stage_incomplete');
+      final back = SessionController(backend: missing, plan: _plan(), number: 1);
+      await back.load();
+      expect(await back.closeDay(), isFalse);
+      expect(back.phase, SessionPhase.entry);
+      expect(back.stage, PlanStage.words);
+      back.dispose();
+
+      final offline = _FakeBackend([_allAnswered(_raw())])..onClose = () async => throw _offline();
+      final stays = SessionController(backend: offline, plan: _plan(), number: 1);
+      await stays.load();
+      expect(await stays.closeDay(), isFalse);
+      expect(stays.closeFailed, isTrue);
+      expect(stays.phase, SessionPhase.daySummary);
+      stays.dispose();
+    });
+
+    test('the judge gets the card\'s real hinted; the day\'s minutes — the freshest server number', () async {
+      final raw = _raw();
+      final backend = _FakeBackend([raw])
+        ..onJudge = ((id) => const SessionJudgeOutcome(accepted: false, attempts: 1))
+        ..onAnswer = ((id, a) async => _outcome(_cardJson(raw, 'words', 1), 'passed', minutes: 7));
+      final session = SessionController(backend: backend, plan: _plan(), number: 1);
+      await session.load();
+      session.startStage();
+      final card = session.card!;
+      await session.judge(card, 'It hurts in his knee', hinted: true);
+      await session.judge(card, 'It hurts in his knee');
+      expect([for (final j in backend.judged) j.hinted], [true, false]);
+      expect(session.dayMinutes, 0);
+      session.submit(card, const SessionAnswer(result: SessionResult.passed, attempts: 1));
+      await session.outbox.drained;
+      expect(session.dayMinutes, 7);
       session.dispose();
     });
   });

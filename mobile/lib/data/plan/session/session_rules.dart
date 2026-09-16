@@ -1,4 +1,5 @@
-/// SESSION PASS RULES — what the client is entitled to write and how it checks an answer (work order SESSION-1b).
+/// SESSION PASS RULES — what the client is entitled to write and how it checks an answer (work orders SESSION-1b,
+/// SESSION-1c).
 ///
 /// The client grades, without the network: choice — the option id against `correct`, tiles — against `expected`,
 /// voice — speech coverage by `coverage_min` ([SpeechCoverage]). Judged kinds are graded only by the server. The
@@ -10,9 +11,28 @@ library;
 
 import 'package:flutter/foundation.dart';
 
+import '../plan_models.dart';
 import 'session_models.dart';
 import 'speech_coverage.dart';
 import 'voice_rounds.dart';
+
+/// HOW A DIALOGUE VOICE CARD ASKS (`dialogue_answer` / `dialogue_ask`, work order SESSION-1c, section 2). The card
+/// carries data for every mode (`modes`); the client picks one by the plan's level and «No hints» (30-1).
+enum DialogueMode {
+  /// Beginner: the frame with an empty slot in the own bubble, `modes.chips` under it — any chip is right.
+  chips('chips'),
+
+  /// Intermediate: the whole own line (`modes.voice_hint`) in the bubble, the answer by voice.
+  voiceHint('voice_hint'),
+
+  /// «No hints»: the frame with an empty slot, the answer by voice — the frame covered, any slot.
+  voiceBlind('voice_blind');
+
+  const DialogueMode(this.wire);
+
+  /// `response.mode` of the answer.
+  final String wire;
+}
 
 /// A piece of the assembled phrase string: a tile or a slot with a filler.
 sealed class AssemblyPiece {
@@ -59,15 +79,44 @@ abstract final class SessionRules {
     SessionGrading.pass => const {SessionResult.passed, SessionResult.skipped},
   };
 
-  /// WHAT THIS CLIENT WRITES (work order SESSION-1b, section 1) — narrower than what the server accepts: choice
-  /// and tiles — `passed` | `failed`; voice — `passed` | `skipped` and never `failed`; judged kind — only
-  /// `skipped` («Skip»); walkthrough — `passed`.
-  static Set<SessionResult> clientWrites(SessionKind kind) => switch (kind.grading) {
-    SessionGrading.choice => const {SessionResult.passed, SessionResult.failed},
-    SessionGrading.voice => const {SessionResult.passed, SessionResult.skipped},
-    SessionGrading.judge => const {SessionResult.skipped},
-    SessionGrading.pass => const {SessionResult.passed},
+  /// WHAT THIS CLIENT WRITES (work orders SESSION-1b, section 1; SESSION-1c, section 1) — narrower than what the
+  /// server accepts, kind by kind, so a new kind cannot slip in without a decision: choice and tiles — `passed` |
+  /// `failed` (a chips answer of the dialogue is always right — `passed`); voice — `passed` | `skipped`, never
+  /// `failed`; judged — only `skipped` («Skip»: the pass is the judge's); walkthrough — `passed`.
+  static Set<SessionResult> clientWrites(SessionKind kind) => switch (kind) {
+    SessionKind.wordChoose ||
+    SessionKind.wordListen ||
+    SessionKind.wordAssemble ||
+    SessionKind.wordInLine ||
+    SessionKind.phraseAssemble ||
+    SessionKind.phraseChooseBack ||
+    SessionKind.phraseSlot ||
+    SessionKind.phraseSlotListen ||
+    SessionKind.phraseCombine ||
+    SessionKind.dialoguePartner ||
+    // Listening questions: the first failure is final — the server deals no copy (`requeued: null`).
+    SessionKind.listenQuestion ||
+    SessionKind.listenPredict ||
+    SessionKind.listenNumber => _choice,
+    SessionKind.wordRepeat ||
+    SessionKind.phraseRepeat ||
+    SessionKind.phraseOtherSlot ||
+    SessionKind.dialogueAnswer ||
+    SessionKind.dialogueAsk ||
+    SessionKind.speakEcho => _voice,
+    SessionKind.phraseOwnSlot || SessionKind.speakAnswer || SessionKind.speakRetell => _judged,
+    SessionKind.wordIntro ||
+    SessionKind.phraseIntro ||
+    SessionKind.dialogueRescue ||
+    SessionKind.listenDialogue ||
+    SessionKind.listenReview ||
+    SessionKind.listenPace => _walkthrough,
   };
+
+  static const Set<SessionResult> _choice = {SessionResult.passed, SessionResult.failed};
+  static const Set<SessionResult> _voice = {SessionResult.passed, SessionResult.skipped};
+  static const Set<SessionResult> _judged = {SessionResult.skipped};
+  static const Set<SessionResult> _walkthrough = {SessionResult.passed};
 
   /// A check before sending: a result this client does not write is a program error, not an answer.
   static bool mayWrite(SessionKind kind, SessionResult result) => clientWrites(kind).contains(result);
@@ -132,8 +181,46 @@ abstract final class SessionRules {
     PhraseOtherSlotPayload(:final expectedText, :final slotExpected, :final coverageMin) =>
       SpeechCoverage.covers(heard, expectedText, coverageMin, articles) &&
           SpeechCoverage.covers(heard, slotExpected, SpeechCoverage.all, articles),
+    // The dialogue (SESSION-1c, section 2): the frame's own words covered by `coverage_min` — the slot is anyone's,
+    // in either voice mode; the server measured `coverage_min` on the same part (`FrameParts::part`).
+    DialogueAnswerPayload(:final frame, :final coverageMin) =>
+      SpeechCoverage.covers(heard, framePart(frame.frameTarget), coverageMin, articles),
+    SpeakEchoPayload(:final expectedText, :final coverageMin) =>
+      SpeechCoverage.covers(heard, expectedText, coverageMin, articles),
     _ => false,
   };
+
+  /// THE FRAME'S OWN WORDS — the frame outside its slot, without the closing mark: what must be heard for the frame
+  /// to have been said, whatever went into the slot. A mirror of the server's `FrameParts::part()`:
+  /// `I'd like a ___, please.` → `I'd like a, please`.
+  static String framePart(String frameTarget) {
+    var text = frameTarget.trim().replaceFirst(RegExp(r'[.!?…]+$'), '').trimRight();
+    text = text.replaceAll(RegExp(r'_{3,}'), ' ');
+    text = text.replaceAll(RegExp(r'\s+'), ' ');
+    text = text.replaceAllMapped(RegExp(r'\s+([.,!?;:…])'), (m) => m[1]!);
+    return text.trim();
+  }
+
+  /// The mode a dialogue voice card asks in (SESSION-1c, section 2): «No hints» — blind voice at any level; beginner
+  /// — chips; intermediate — voice with the whole line as a hint. A frame without a slot has no chips to choose
+  /// from, so a beginner answers it by voice with the line on screen.
+  static DialogueMode dialogueMode(DialogueAnswerPayload payload, {required PlanLevel level, required bool noHints}) {
+    if (noHints) return DialogueMode.voiceBlind;
+    if (level == PlanLevel.beginner && payload.frame.hasSlot && payload.modes.chips.isNotEmpty) return DialogueMode.chips;
+    return DialogueMode.voiceHint;
+  }
+
+  /// What a dialogue voice card expects to hear — the reference of the live line: the whole own line when it is on
+  /// screen, the frame's own words when the slot is blind.
+  static String dialogueExpected(DialogueAnswerPayload payload, DialogueMode mode) => switch (mode) {
+    DialogueMode.voiceHint => payload.modes.voiceHint,
+    DialogueMode.chips || DialogueMode.voiceBlind => framePart(payload.frame.frameTarget),
+  };
+
+  /// THE RECOGNIZER'S LANGUAGE BY KIND (SESSION-1c, section 1): the target language everywhere, except the retelling
+  /// (`speak_retell`), which is said in the native language.
+  static String speechLang(SessionKind kind, {required String targetLang, required String nativeLang}) =>
+      kind == SessionKind.speakRetell ? nativeLang : targetLang;
 
   /// The separate pass of `phrase_other_slot`: the frame (coverage of the string) and the slot (all the words of
   /// the slot).
@@ -163,6 +250,10 @@ abstract final class SessionRules {
     PhraseRepeatPayload(:final expectedText) => expectedText,
     PhraseOtherSlotPayload(:final expectedText) => expectedText,
     PhraseOwnSlotPayload(:final frame) => frame.parts.before + frame.parts.after,
+    DialogueAnswerPayload(:final ownLine) => ownLine.textTarget,
+    SpeakEchoPayload(:final expectedText) => expectedText,
+    SpeakAnswerPayload(:final frame) => framePart(frame.frameTarget),
+    // The retelling is in the native language and judged by meaning — there is nothing to match word by word.
     _ => '',
   };
 

@@ -4545,11 +4545,11 @@
   },
   "planSessionDescDialogue": "Разговор по шагам: пойми реплику и ответь фразами дня",
   "@planSessionDescDialogue": {
-    "description": "Сессия, вход в этап «Диалог» (30-1): описание (этап в этой сборке заблокирован)."
+    "description": "Сессия, вход в этап «Диалог» (30-1): описание."
   },
   "planSessionDescListen": "Весь разговор на слух, потом вопросы о нём",
   "@planSessionDescListen": {
-    "description": "Сессия, вход в этап «Слушаю и отвечаю» (30-1): описание (этап в этой сборке заблокирован)."
+    "description": "Сессия, вход в этап «Слушаю и отвечаю» (30-1): описание."
   },
   "planSessionDescSpeak": "Собеседник спрашивает — отвечай про себя, своими словами. Каркасы ты знаешь, окно — твоё",
   "@planSessionDescSpeak": {
@@ -4566,10 +4566,6 @@
   "planSessionStart": "Начать",
   "@planSessionStart": {
     "description": "Сессия, вход в этап (30-1): кнопка."
-  },
-  "planSessionNextBuild": "в следующей сборке",
-  "@planSessionNextBuild": {
-    "description": "Сессия, вход в этапы «Диалог», «Слушаю и отвечаю», «Говорю сам» (наряд SESSION-1b): вместо «Начать» — экранов у этих этапов в этой сборке нет."
   },
   "planSessionBuild": "сборка {version}",
   "@planSessionBuild": {
@@ -4902,5 +4898,353 @@
   "planSessionLessonBuilding": "Собираем день · около минуты",
   "@planSessionLessonBuilding": {
     "description": "Сессия: вход, пока урок дня ещё пишется (409 plan_lesson_not_ready)."
+  },
+  "planSessionLeftExchanges": "{n, plural, one{ещё {n} реплика} few{ещё {n} реплики} many{ещё {n} реплик} other{ещё {n} реплики}}",
+  "@planSessionLeftExchanges": {
+    "description": "Сессия, шапка (30-2) этапов «Диалог» и «Говорю сам»: сколько обменов ещё не закрыто.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionLeftQuestions": "{n, plural, one{ещё {n} вопрос} few{ещё {n} вопроса} many{ещё {n} вопросов} other{ещё {n} вопроса}}",
+  "@planSessionLeftQuestions": {
+    "description": "Сессия, шапка (30-2) этапа «Слушаю и отвечаю» на вопросе: сколько вопросов слушания ещё без ответа, текущий тоже (34-2, 34-5).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionLastQuestion": "последний вопрос",
+  "@planSessionLastQuestion": {
+    "description": "Сессия, шапка этапа «Слушаю и отвечаю»: вопрос слушания — последний (34-7)."
+  },
+  "planSessionWholeTalk": "разговор целиком",
+  "@planSessionWholeTalk": {
+    "description": "Сессия, шапка этапа «Слушаю и отвечаю» на плеере визита (34-1)."
+  },
+  "planSessionReviewLabel": "разбор",
+  "@planSessionReviewLabel": {
+    "description": "Сессия, шапка этапа «Слушаю и отвечаю» на разборе (34-3)."
+  },
+  "planSessionPaceLabel": "темп",
+  "@planSessionPaceLabel": {
+    "description": "Сессия, шапка этапа «Слушаю и отвечаю» на карточке «быстро / медленно» (34-6)."
+  },
+  "planSessionTaskCollectAnswer": "Собери ответ",
+  "@planSessionTaskCollectAnswer": {
+    "description": "Сессия, строка задания 33-2: ответ собеседнику чипами (beginner)."
+  },
+  "planSessionTaskSayAnswer": "Скажи ответ вслух",
+  "@planSessionTaskSayAnswer": {
+    "description": "Сессия, строка задания 33-3: ответ голосом, реплика на экране (intermediate)."
+  },
+  "planSessionTaskAnswerVoice": "Ответь голосом",
+  "@planSessionTaskAnswerVoice": {
+    "description": "Сессия, строка задания 33-4: ответ голосом вслепую — каркас с пустым окном («Без подсказок»). Канва — «Ответь врачу»: склонения роли контракт не отдаёт."
+  },
+  "planSessionTaskAskSelf": "Спроси сам",
+  "@planSessionTaskAskSelf": {
+    "description": "Сессия, строка задания 33-5: ученик спрашивает первым. Канва — «Спроси про работу»: текста задания контракт не отдаёт, клиент формулирует сам."
+  },
+  "planSessionTaskRescue": "Не понял — переспроси",
+  "@planSessionTaskRescue": {
+    "description": "Сессия, строка задания 33-6: «Не понял» в пузыре собеседника и медленный повтор. Канва — «Слушай назначение»: текста задания контракт не отдаёт."
+  },
+  "planSessionAnyChip": "любое — твой ответ",
+  "@planSessionAnyChip": {
+    "description": "Сессия, 33-2: подпись под чипами наполнений — верен любой."
+  },
+  "planSessionNotUnderstood": "Не понял",
+  "@planSessionNotUnderstood": {
+    "description": "Сессия, 33-6: кнопка 44 в пузыре собеседника — переспросить."
+  },
+  "planSessionSlowly": "медленно",
+  "@planSessionSlowly": {
+    "description": "Сессия: подпись волны медленного повтора (33-6) и кнопка «медленно» 44 в листе 34-6."
+  },
+  "planSessionTaskListenTalk": "Послушай разговор",
+  "@planSessionTaskListenTalk": {
+    "description": "Сессия, строка задания 34-1: плеер визита."
+  },
+  "planSessionByPartsAction": "По частям",
+  "@planSessionByPartsAction": {
+    "description": "Сессия, 34-1: текст над кнопкой — пауза после каждого обмена."
+  },
+  "planSessionContinue": "Продолжить",
+  "@planSessionContinue": {
+    "description": "Сессия, 34-1: кнопка на паузе «по частям» — следующий обмен."
+  },
+  "planSessionReplay": "Ещё раз",
+  "@planSessionReplay": {
+    "description": "Сессия: проиграть ещё раз — весь визит (34-1), реплику в темпе (34-6), реплику после зачёта (35-3, 35-4)."
+  },
+  "planSessionExchangesCount": "{n, plural, one{{n} обмен} few{{n} обмена} many{{n} обменов} other{{n} обмена}}",
+  "@planSessionExchangesCount": {
+    "description": "Сессия, 34-1: сколько обменов в визите — справа под полосой плеера.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionPlayerPaused": "пауза · обмен {n}",
+  "@planSessionPlayerPaused": {
+    "description": "Сессия, 34-1: плеер стоит на паузе «по частям» после обмена N.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionPlayerDone": "дослушал",
+  "@planSessionPlayerDone": {
+    "description": "Сессия, 34-1: визит проигран до конца."
+  },
+  "planSessionYou": "ты",
+  "@planSessionYou": {
+    "description": "Сессия, 34-1: подпись кружка ученика в плеере."
+  },
+  "planSessionTaskWhatUnderstood": "Что ты понял?",
+  "@planSessionTaskWhatUnderstood": {
+    "description": "Сессия, строка задания 34-2: вопрос о визите по памяти."
+  },
+  "planSessionBrowQuestion": "Вопрос",
+  "@planSessionBrowQuestion": {
+    "description": "Сессия, бровь листа вопроса (34-2, 34-7)."
+  },
+  "planSessionFromMemory": "по памяти · звука нет",
+  "@planSessionFromMemory": {
+    "description": "Сессия, 34-2: подпись под вопросом — переслушать нельзя."
+  },
+  "planSessionTaskWhereHeard": "Где это прозвучало",
+  "@planSessionTaskWhereHeard": {
+    "description": "Сессия, строка задания 34-3: разбор визита с подсветкой ответов."
+  },
+  "planSessionTaskWhatNext": "Что прозвучит в ответ?",
+  "@planSessionTaskWhatNext": {
+    "description": "Сессия, строка задания 34-5: пауза-предсказание. Канва — «Что он скажет дальше?»: пол собеседника клиенту не известен."
+  },
+  "planSessionTaskNormalPace": "А теперь в обычном темпе",
+  "@planSessionTaskNormalPace": {
+    "description": "Сессия, строка задания 34-6."
+  },
+  "planSessionBrowSlowRate": "Медленно · {rate}×",
+  "@planSessionBrowSlowRate": {
+    "description": "Сессия, 34-6: бровь листа на медленном темпе, rate — темп из карточки («0.75»).",
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "planSessionBrowNormalPace": "В обычном темпе",
+  "@planSessionBrowNormalPace": {
+    "description": "Сессия, 34-6: бровь листа на обычном темпе."
+  },
+  "planSessionTextOpen": "текст открыт",
+  "@planSessionTextOpen": {
+    "description": "Сессия, мета листа: текст реплики виден (34-6)."
+  },
+  "planSessionTextClosed": "текст закрыт",
+  "@planSessionTextClosed": {
+    "description": "Сессия, мета листа: текст реплики скрыт (34-6, 35-3, 35-4)."
+  },
+  "planSessionUnderstoodAction": "Понял",
+  "@planSessionUnderstoodAction": {
+    "description": "Сессия, 34-6: кнопка — реплика понята на обоих темпах."
+  },
+  "planSessionTaskCatchNumber": "Поймай число",
+  "@planSessionTaskCatchNumber": {
+    "description": "Сессия, строка задания 34-7: число в реплике на слух."
+  },
+  "planSessionTaskAnswerOwnWords": "Ответь своими словами",
+  "@planSessionTaskAnswerOwnWords": {
+    "description": "Сессия, строка задания 35-2 и 35-5. Канва — «Ответь врачу»: склонения роли контракт не отдаёт."
+  },
+  "planSessionTaskRepeatPause": "Повтори через паузу",
+  "@planSessionTaskRepeatPause": {
+    "description": "Сессия, строка задания 35-3: эхо с задержкой."
+  },
+  "planSessionTaskRetell": "Скажи по-русски, что услышал",
+  "@planSessionTaskRetell": {
+    "description": "Сессия, строка задания 35-4: пересказ на родном. Канва — «…что он сказал»: пол собеседника клиенту не известен."
+  },
+  "planSessionBrowLine": "Реплика",
+  "@planSessionBrowLine": {
+    "description": "Сессия, бровь листа 35-3 / 35-4."
+  },
+  "planSessionMatchedSage": "совпавшее — шалфеем",
+  "@planSessionMatchedSage": {
+    "description": "Сессия, 35-3: мета открытого листа — совпавшие слова подсвечены."
+  },
+  "planSessionListenCue": "слушай",
+  "@planSessionListenCue": {
+    "description": "Сессия, 35-3: подпись над микрофоном, пока звучит реплика."
+  },
+  "planSessionWaiting": "жду",
+  "@planSessionWaiting": {
+    "description": "Сессия, 35-3: подпись над микрофоном в паузе 3 с (кольцо)."
+  },
+  "planSessionOnNative": "на родном",
+  "@planSessionOnNative": {
+    "description": "Сессия, 35-4: подпись над микрофоном — пересказ на родном языке."
+  },
+  "planSessionUnderstoodCheck": "понял ✓",
+  "@planSessionUnderstoodCheck": {
+    "description": "Сессия, 35-4: пересказ зачтён."
+  },
+  "planSessionHintSilence": "подскажу каркас — окно твоё",
+  "@planSessionHintSilence": {
+    "description": "Сессия, 35-2: подсказка-каркас встала сама после 5 с молчания."
+  },
+  "planSessionHintOpened": "каркас открыт — окно твоё",
+  "@planSessionHintOpened": {
+    "description": "Сессия, 35-5: подсказка-каркас после «Подсказать»."
+  },
+  "planSessionNotThat": "не то — попробуем ещё",
+  "@planSessionNotThat": {
+    "description": "Сессия, 35-5: отказ судьи, когда сервер не прислал своей причины."
+  },
+  "planSessionHintAction": "Подсказать",
+  "@planSessionHintAction": {
+    "description": "Сессия, 35-5: второй из трёх выходов — открыть каркас."
+  },
+  "planSessionDoneDialogue": "Диалог пройден · {minutes}",
+  "@planSessionDoneDialogue": {
+    "description": "Сессия, итог этапа «Диалог» (33-8); minutes — planMinutesCount.",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "planSessionRestExchanges": "Остальные реплики закрыты.",
+  "@planSessionRestExchanges": {
+    "description": "Сессия, итог этапа (33-8, 35-6): под репликами, которые вернутся завтра."
+  },
+  "planSessionAllExchanges": "Все реплики закрыты.",
+  "@planSessionAllExchanges": {
+    "description": "Сессия, итог этапа (33-8, 35-6): ничего не вернётся."
+  },
+  "planSessionUnderstoodCount": "{n, plural, one{Понял {n} вопрос из {m}} few{Понял {n} вопроса из {m}} many{Понял {n} вопросов из {m}} other{Понял {n} вопроса из {m}}}",
+  "@planSessionUnderstoodCount": {
+    "description": "Сессия, итог этапа «Слушаю и отвечаю» (34-8): верно отвеченные вопросы слушания из всех.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionSpokeCount": "{n, plural, one{Сказал сам {n} реплику из {m}} few{Сказал сам {n} реплики из {m}} many{Сказал сам {n} реплик из {m}} other{Сказал сам {n} реплики из {m}}}",
+  "@planSessionSpokeCount": {
+    "description": "Сессия, итог этапа «Говорю сам» (35-6): зачтённые карточки этапа из всех.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionDayTotal": "Итог дня",
+  "@planSessionDayTotal": {
+    "description": "Сессия, 35-6: строка над кнопкой — минуты дня справа."
+  },
+  "planSessionDayDoneAction": "День пройден",
+  "@planSessionDayDoneAction": {
+    "description": "Сессия, 35-6: кнопка — к итогу дня 30-7."
+  },
+  "planSessionDayDoneTitle": "День пройден · {minutes}",
+  "@planSessionDayDoneTitle": {
+    "description": "Сессия, итог дня (30-7); minutes — planMinutesCount.",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "planSessionCloseDay": "Закрыть день",
+  "@planSessionCloseDay": {
+    "description": "Сессия, 30-7: кнопка — POST …/days/{n}/close и назад в окно дня."
+  },
+  "planSessionDayReturns": "{cards}: {parts}.",
+  "@planSessionDayReturns": {
+    "description": "Сессия, 30-7: сколько карточек вернётся завтра и из чего; cards — planCardsCount, parts — planSessionReturn* через planSessionAnd.",
+    "placeholders": {
+      "cards": {
+        "type": "String"
+      },
+      "parts": {
+        "type": "String"
+      }
+    }
+  },
+  "planSessionReturnWords": "{n, plural, one{{n} слово} few{{n} слова} many{{n} слов} other{{n} слова}}",
+  "@planSessionReturnWords": {
+    "description": "Сессия, 30-7: слова, которые вернутся завтра.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionReturnPhrases": "{n, plural, one{{n} фраза} few{{n} фразы} many{{n} фраз} other{{n} фразы}}",
+  "@planSessionReturnPhrases": {
+    "description": "Сессия, 30-7: фразы, которые вернутся завтра.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionReturnExchanges": "{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}}",
+  "@planSessionReturnExchanges": {
+    "description": "Сессия, 30-7: реплики (обмены), которые вернутся завтра.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionAnd": "{a} и {b}",
+  "@planSessionAnd": {
+    "description": "Сессия, 30-7: последняя пара перечисления.",
+    "placeholders": {
+      "a": {
+        "type": "String"
+      },
+      "b": {
+        "type": "String"
+      }
+    }
+  },
+  "planSessionNextDayBuilding": "День {n} — собираю",
+  "@planSessionNextDayBuilding": {
+    "description": "Сессия, 30-7: следующий день плана, урок которого ещё пишется (или встанет в очередь при закрытии).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionNextDayReady": "День {n} — готов",
+  "@planSessionNextDayReady": {
+    "description": "Сессия, 30-7: следующий день плана, урок которого уже написан.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionCloseFailed": "День не закрылся — нет связи",
+  "@planSessionCloseFailed": {
+    "description": "Сессия, 30-7: POST закрытия дня не дошёл; кнопка остаётся."
   }
 }

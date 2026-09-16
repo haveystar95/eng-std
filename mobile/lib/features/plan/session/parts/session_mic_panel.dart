@@ -19,6 +19,12 @@ import 'session_bits.dart';
 /// States — per the canvas: idle («tap to speak») · listening, empty (caret, «go ahead, I'm listening») ·
 /// listening, text coming in (live line: the matched part in sage, the last word in grey) · heard (sage button
 /// with a check) · didn't catch («once more»). In a debug build, under the button — the «what was heard» field.
+///
+/// Series 33–35 (SESSION-1c) set the same panel differently: the live line may stand in the card ([liveLine]
+/// `none` — the own bubble of the dialogue) or be the native retelling ([liveLine] `native`, 35-4); the captions of
+/// a state may be the card's own («listen», «waiting», «in the native language»); [top] stands over everything (the
+/// frame hint of 35-2); [exits] replace «Skip» (the three exits of 35-5); [ring] wraps the button (the pause ring
+/// of 35-3) and [enabled] false leaves it inactive.
 class SessionMicPanel extends StatelessWidget {
   const SessionMicPanel({
     super.key,
@@ -28,6 +34,14 @@ class SessionMicPanel extends StatelessWidget {
     this.missedCaption,
     this.showHeardLine = true,
     this.heardText,
+    this.liveLine = MicLiveLine.target,
+    this.idleCaption,
+    this.listeningCaption,
+    this.heardCaption,
+    this.top,
+    this.exits,
+    this.ring,
+    this.enabled = true,
   });
 
   final SessionMic mic;
@@ -47,6 +61,26 @@ class SessionMicPanel extends StatelessWidget {
   /// What to write in the «heard» line — by default the transcript itself.
   final String? heardText;
 
+  /// Where the live line stands and how it reads.
+  final MicLiveLine liveLine;
+
+  /// Captions instead of «tap to speak» / «go ahead, I'm listening» / «heard».
+  final String? idleCaption;
+  final String? listeningCaption;
+  final String? heardCaption;
+
+  /// Over everything in the panel — the frame hint (35-2, 35-5).
+  final Widget? top;
+
+  /// Instead of «Skip» — the card's own exits, in their order (35-5).
+  final List<Widget>? exits;
+
+  /// Wraps the 72 button (the pause ring, 35-3).
+  final Widget Function(Widget button)? ring;
+
+  /// False — the button does not record (the pause of 35-3).
+  final bool enabled;
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: mic,
@@ -55,29 +89,58 @@ class SessionMicPanel extends StatelessWidget {
       final state = mic.state;
       final children = <Widget>[];
       void gap() => children.add(const SizedBox(height: 14));
+      void skipOrExits({required bool active}) {
+        if (exits case final list?) {
+          for (final exit in list) {
+            gap();
+            children.add(exit);
+          }
+          return;
+        }
+        if (onSkip != null) {
+          gap();
+          children.add(_Skip(onTap: active ? onSkip! : null));
+        }
+      }
 
+      if (top case final widget?) children.add(widget);
+      if (children.isNotEmpty) gap();
       switch (state) {
         case MicState.idle || MicState.unavailable:
-          children.add(Text(l.planSessionMicTap, style: AppTextSession.meta));
-          if (onSkip != null) {
-            gap();
-            children.add(_Skip(onTap: onSkip!));
-          }
+          children.add(Text(idleCaption ?? l.planSessionMicTap, key: const ValueKey('session-mic-caption'), style: AppTextSession.meta));
+          skipOrExits(active: true);
         case MicState.listening:
-          final words = LiveLine.of(mic.partial, expected, listening: !mic.closed);
-          children.add(_LiveLineText(key: const ValueKey('session-live-line'), words: words));
-          gap();
-          if (mic.partial.trim().isEmpty) {
-            children.add(Text(l.planSessionMicListening, style: AppTextSession.meta));
-            gap();
+          switch (liveLine) {
+            case MicLiveLine.target:
+              final words = LiveLine.of(mic.partial, expected, listening: !mic.closed);
+              children.add(_LiveLineText(key: const ValueKey('session-live-line'), words: words));
+              gap();
+              if (mic.partial.trim().isEmpty) {
+                children.add(Text(listeningCaption ?? l.planSessionMicListening, style: AppTextSession.meta));
+                gap();
+              }
+              children.add(SessionWave(heights: SessionWave.five, playing: !mic.closed));
+            case MicLiveLine.native:
+              if (mic.partial.trim().isNotEmpty) {
+                children.add(Text(
+                  mic.partial,
+                  key: const ValueKey('session-live-line'),
+                  textAlign: TextAlign.center,
+                  style: AppTextSession.option,
+                ));
+                gap();
+              }
+              children.add(SessionWave(heights: SessionWave.five, playing: !mic.closed));
+              gap();
+              children.add(Text(listeningCaption ?? l.planSessionMicListening, style: AppTextSession.meta));
+            case MicLiveLine.none:
+              children.add(SessionWave(heights: SessionWave.five, playing: !mic.closed));
+              gap();
+              children.add(Text(listeningCaption ?? l.planSessionMicListening, style: AppTextSession.meta));
           }
-          children.add(SessionWave(heights: SessionWave.five, playing: !mic.closed));
-          if (onSkip != null) {
-            gap();
-            children.add(_Skip(onTap: mic.closed ? null : onSkip!));
-          }
+          skipOrExits(active: !mic.closed);
         case MicState.heard:
-          if (showHeardLine) {
+          if (showHeardLine && liveLine == MicLiveLine.target) {
             children.add(Text(
               heardText ?? mic.partial,
               key: const ValueKey('session-heard-line'),
@@ -86,26 +149,65 @@ class SessionMicPanel extends StatelessWidget {
             ));
             gap();
           }
-          children.add(Text(l.planSessionMicHeard, style: AppTextSession.meta));
+          children.add(Text(heardCaption ?? l.planSessionMicHeard, key: const ValueKey('session-mic-caption'), style: AppTextSession.meta));
+          if (exits case final list?) {
+            for (final exit in list) {
+              gap();
+              children.add(exit);
+            }
+          }
         case MicState.missed:
           children.add(Text(
             missedCaption ?? l.planSessionMicMissed,
+            key: const ValueKey('session-mic-caption'),
             textAlign: TextAlign.center,
             style: AppTextSession.meta,
           ));
-          if (onSkip != null) {
-            gap();
-            children.add(_Skip(onTap: onSkip!));
-          }
+          skipOrExits(active: true);
       }
       gap();
-      children.add(_MicButton(mic: mic));
-      if (kDebugMode && state != MicState.heard) {
+      final button = _MicButton(mic: mic, enabled: enabled);
+      children.add(ring == null ? button : ring!(button));
+      if (kDebugMode && state != MicState.heard && enabled) {
         children.add(const SizedBox(height: 10));
         children.add(_DebugHeardField(mic: mic));
       }
       return Column(mainAxisSize: MainAxisSize.min, children: children);
     },
+  );
+}
+
+/// Where the microphone's live line stands (30-3).
+enum MicLiveLine {
+  /// In the dock, Literata 22: the matched words in sage, the last one grey (1b).
+  target,
+
+  /// In the card itself — the own bubble of the dialogue (33-3, 35-2); the dock keeps the wave and the caption.
+  none,
+
+  /// In the dock, Inter 17 in ink: the retelling in the native language, nothing to match (35-4).
+  native,
+}
+
+/// A text exit of the dock — «Try again» in brass, «Hint», «Skip» (35-5); [brass] — the one brass exit.
+class SessionTextExit extends StatelessWidget {
+  const SessionTextExit({super.key, required this.label, required this.onTap, this.brass = false});
+
+  final String label;
+  final VoidCallback? onTap;
+  final bool brass;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Text(label, style: AppTextSession.skip.copyWith(color: brass ? AppColors.brassInk : null)),
+      ),
+    ),
   );
 }
 
@@ -166,9 +268,12 @@ class _LiveLineText extends StatelessWidget {
 /// MICROPHONE BUTTON 72: idle — charcoal with a microphone; listening — «stop» and a 30 % sage ring with a
 /// 1.2 s pulse; heard — sage with a check; didn't catch — «repeat».
 class _MicButton extends StatefulWidget {
-  const _MicButton({required this.mic});
+  const _MicButton({required this.mic, this.enabled = true});
 
   final SessionMic mic;
+
+  /// False — the button looks the same and does not record (the pause ring of 35-3 holds it).
+  final bool enabled;
 
   @override
   State<_MicButton> createState() => _MicButtonState();
@@ -228,7 +333,7 @@ class _MicButtonState extends State<_MicButton> with SingleTickerProviderStateMi
       button: true,
       label: l.planSessionMicTap,
       child: GestureDetector(
-        onTap: heard ? null : () => unawaited(mic.tap()),
+        onTap: heard || !widget.enabled ? null : () => unawaited(mic.tap()),
         child: AnimatedBuilder(
           animation: _pulse,
           builder: (_, child) {
@@ -315,13 +420,34 @@ class _DebugHeardFieldState extends State<_DebugHeardField> {
 }
 
 /// «MICROPHONE NEEDED» (canvas 30-3, «no permission · screen»): title, text, a sheet with the two stages that
-/// cannot be passed without a microphone, the microphone button; at the bottom «Skip» and «Allow».
+/// cannot be passed without a microphone and their state — «ahead» from the words and phrases, as the canvas draws
+/// it; met inside «Listen and answer» or «Speak myself» (SESSION-1c) the stage passed says so and the one under way
+/// says «in progress» — the microphone button; at the bottom «Skip» and «Allow».
 class SessionNoMicView extends StatelessWidget {
-  const SessionNoMicView({super.key, required this.onAllow, required this.onSkip, required this.stageName});
+  const SessionNoMicView({
+    super.key,
+    required this.onAllow,
+    required this.onSkip,
+    required this.stageName,
+    this.current,
+    this.done,
+  });
 
   final VoidCallback onAllow;
   final VoidCallback onSkip;
   final String Function(PlanStage stage) stageName;
+
+  /// The stage the card belongs to.
+  final PlanStage? current;
+
+  /// Whether a stage is answered in full; null — none is.
+  final bool Function(PlanStage stage)? done;
+
+  String _state(AppLocalizations l, PlanStage stage) {
+    if (done?.call(stage) ?? false) return l.planSessionStateDone;
+    if (stage == current) return l.planWindowStateInProgress;
+    return l.planSessionStateAhead;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -351,7 +477,7 @@ class SessionNoMicView extends StatelessWidget {
                               _StageGlyph(stage: s),
                               const SizedBox(width: 12),
                               Expanded(child: Text(stageName(s), style: AppTextSession.text15)),
-                              Text(l.planSessionStateAhead, style: AppTextSession.meta),
+                              Text(_state(l, s), key: ValueKey('no-mic-state-${s.name}'), style: AppTextSession.meta),
                             ],
                           ),
                         ),

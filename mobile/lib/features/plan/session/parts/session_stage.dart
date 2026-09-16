@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
@@ -15,9 +18,8 @@ enum StageRowStatus { done, current, ahead }
 typedef StageRow = ({PlanStage stage, StageRowStatus status, bool started});
 
 /// STAGE ENTRY (canvas 30-1): back arrow, scene strip, the stage name in Literata, description, «≈ N min», five
-/// stage dots (the current one in brass), the list of five stages with statuses, «No hints», «Start». For a stage
-/// without screens in this build — the caption «in the next build» instead of «Start». In the footer, small — the
-/// build version.
+/// stage dots (the current one in brass), the list of five stages with statuses, «No hints», «Start». In the footer,
+/// small — the build version.
 class SessionStageEntry extends StatelessWidget {
   const SessionStageEntry({
     super.key,
@@ -45,7 +47,7 @@ class SessionStageEntry extends StatelessWidget {
   final bool noHints;
   final ValueChanged<bool> onNoHints;
 
-  /// Null — the stage is locked in this build.
+  /// Null — the stage has nothing left to start.
   final VoidCallback? onStart;
   final VoidCallback onBack;
 
@@ -104,19 +106,7 @@ class SessionStageEntry extends StatelessWidget {
             ),
           ),
         ),
-        SessionDock(
-          child: onStart == null
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(l.planSessionNextBuild, textAlign: TextAlign.center, style: AppTextSession.meta),
-                    const SizedBox(height: 14),
-                    SessionDockButton(label: l.planSessionStart, enabled: false, onTap: null),
-                  ],
-                )
-              : SessionDockButton(label: l.planSessionStart, onTap: onStart),
-        ),
+        SessionDock(child: SessionDockButton(label: l.planSessionStart, enabled: onStart != null, onTap: onStart)),
       ],
     );
   }
@@ -397,6 +387,301 @@ class _ReturningRow extends StatelessWidget {
         const SessionReturnDot(),
       ],
     ),
+  );
+}
+
+/// THE SUMMARY OF A CONVERSATION STAGE (canvases 33-8, 34-8, 35-6; work order SESSION-1c): cross, scene strip, the
+/// title in Literata («Dialogue done · 7 minutes», «Understood 4 questions of 5», «Said 5 lines of 6 myself»), no stage
+/// dots; «Coming back tomorrow» — the returning exchanges as pairs of bubbles; the line about the rest; at the bottom
+/// the row of what comes next («Listen and answer · ≈ 4 min», «Day total · 19 minutes») over the button.
+class SessionTalkSummary extends StatelessWidget {
+  const SessionTalkSummary({
+    super.key,
+    required this.title,
+    required this.returning,
+    required this.closedLine,
+    required this.nextLabel,
+    required this.nextValue,
+    required this.buttonLabel,
+    required this.scene,
+    required this.onClose,
+    required this.onNext,
+    this.busy = false,
+  });
+
+  final String title;
+
+  /// Each returning exchange as its pair of bubbles.
+  final List<Widget> returning;
+
+  /// «The other lines are done.»; null — no line.
+  final String? closedLine;
+  final String? nextLabel;
+  final String? nextValue;
+  final String buttonLabel;
+  final PlanScene? scene;
+  final VoidCallback onClose;
+  final VoidCallback? onNext;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(kSessionGutter, 4, kSessionGutter, 0),
+                  child: Align(alignment: Alignment.centerLeft, child: SessionCloseButton(onTap: onClose, label: l.planSessionClose)),
+                ),
+                SessionSceneStrip(scene: scene),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(kSessionGutter, 24, kSessionGutter, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(title, key: const ValueKey('talk-summary-title'), style: AppTextSession.stageTitle),
+                      if (returning.isNotEmpty) ...[
+                        const SizedBox(height: 72),
+                        SessionEyebrow(l.planSessionReturnsTomorrow),
+                        const SizedBox(height: 14),
+                        for (final (i, pair) in returning.indexed) ...[if (i > 0) const SizedBox(height: 16), pair],
+                      ],
+                      if (closedLine != null) ...[
+                        SizedBox(height: returning.isEmpty ? 72 : 56),
+                        Text(closedLine!, style: AppTextSession.body),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SessionDock(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (nextLabel != null) ...[
+                Row(
+                  key: const ValueKey('talk-summary-next'),
+                  children: [
+                    Expanded(child: Text(nextLabel!, style: AppTextSession.body)),
+                    if (nextValue != null) Text(nextValue!, style: AppTextSession.meta),
+                  ],
+                ),
+                const SizedBox(height: 14),
+              ],
+              SessionDockButton(label: buttonLabel, busy: busy, onTap: onNext),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// THE DAY SUMMARY (canvas 30-7): cross, scene strip, «Day done · 19 minutes»; the dark plate of the day's stages, each
+/// with a sage check (it fades in, 200 ms after 80); «Coming back tomorrow» — one sentence of what returns; the next
+/// day of the plan with a pulsing brass dot; «Close the day».
+class SessionDaySummary extends StatelessWidget {
+  const SessionDaySummary({
+    super.key,
+    required this.title,
+    required this.stages,
+    required this.stageName,
+    required this.returnsLine,
+    required this.nextDay,
+    required this.scene,
+    required this.onClose,
+    required this.onCloseDay,
+    this.closing = false,
+    this.closeFailed = false,
+  });
+
+  final String title;
+
+  /// The day's stages, in walking order — every one of them is done.
+  final List<PlanStage> stages;
+  final String Function(PlanStage stage) stageName;
+
+  /// «5 cards: 2 words, 2 phrases and 1 line.»; null — nothing comes back, the block is not drawn.
+  final String? returnsLine;
+
+  /// «Day 3 — building»; null — this is the plan's last day.
+  final String? nextDay;
+  final PlanScene? scene;
+  final VoidCallback onClose;
+  final VoidCallback? onCloseDay;
+  final bool closing;
+  final bool closeFailed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final plate = _DayPlate(stages: stages, stageName: stageName);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(kSessionGutter, 4, kSessionGutter, 0),
+                  child: Align(alignment: Alignment.centerLeft, child: SessionCloseButton(onTap: onClose, label: l.planSessionClose)),
+                ),
+                SessionSceneStrip(scene: scene),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(kSessionGutter, 14, kSessionGutter, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(title, key: const ValueKey('day-summary-title'), style: AppTextSession.stageTitle),
+                      const SizedBox(height: 32),
+                      if (reduce)
+                        plate
+                      else
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: 1),
+                          duration: AppMotion.sessionDayPlateDelay + AppMotion.sessionDayPlate,
+                          curve: const Interval(80 / 280, 1, curve: Curves.easeOut),
+                          builder: (_, t, child) => Opacity(opacity: t, child: child),
+                          child: plate,
+                        ),
+                      if (returnsLine != null || nextDay != null) const SizedBox(height: 100),
+                      if (returnsLine != null) ...[
+                        SessionEyebrow(l.planSessionReturnsTomorrow),
+                        const SizedBox(height: 14),
+                        Text(returnsLine!, key: const ValueKey('day-summary-returns'), style: AppTextSession.body),
+                      ],
+                      if (nextDay != null) ...[
+                        if (returnsLine != null) const SizedBox(height: 32),
+                        Row(
+                          children: [
+                            const SizedBox(width: 20, height: 20, child: Center(child: _PulseDot())),
+                            const SizedBox(width: 12),
+                            Expanded(child: Text(nextDay!, key: const ValueKey('day-summary-next'), style: AppTextSession.text15)),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SessionDock(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (closeFailed) ...[
+                Text(l.planSessionCloseFailed, key: const ValueKey('day-summary-failed'), textAlign: TextAlign.center, style: AppTextSession.meta),
+                const SizedBox(height: 14),
+              ],
+              SessionDockButton(key: const ValueKey('day-summary-close'), label: l.planSessionCloseDay, busy: closing, onTap: onCloseDay),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The dark plate of 30-7: radius 22, rows 44 — the stage glyph in `#BDB6AC`, the name in paper, a sage check 20.
+class _DayPlate extends StatelessWidget {
+  const _DayPlate({required this.stages, required this.stageName});
+
+  final List<PlanStage> stages;
+  final String Function(PlanStage stage) stageName;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: const ValueKey('day-summary-plate'),
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+    decoration: BoxDecoration(color: AppColors.windowInk, borderRadius: BorderRadius.circular(22)),
+    child: Column(
+      children: [
+        for (final (i, stage) in stages.indexed)
+          Container(
+            height: 44,
+            decoration: BoxDecoration(
+              border: i == 0 ? null : const Border(top: BorderSide(color: AppColors.sessionPlateDivider)),
+            ),
+            child: Row(
+              children: [
+                sessionStageGlyph(stage, AppColors.windowAhead),
+                const SizedBox(width: 12),
+                Expanded(child: Text(stageName(stage), style: AppTextSession.text15.copyWith(color: AppColors.paper))),
+                Container(
+                  width: 20,
+                  height: 20,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.verdictKnown),
+                  child: const Icon(LucideIcons.check, size: 13, color: AppColors.paper),
+                ),
+              ],
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+/// The brass dot 10 of the next day — a ring pulse (1.6 s); under «Reduce Motion» it stands still.
+class _PulseDot extends StatefulWidget {
+  const _PulseDot();
+
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: AppMotion.sessionRolePulse);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      unawaited(_c.repeat());
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _c,
+    builder: (_, _) {
+      final t = Curves.easeOut.transform(_c.value);
+      return Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.brassInk,
+          boxShadow: [if (_c.isAnimating) BoxShadow(color: AppColors.sessionBrassRing.withValues(alpha: .30 * (1 - t)), spreadRadius: 6 * t)],
+        ),
+      );
+    },
   );
 }
 

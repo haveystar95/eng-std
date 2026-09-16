@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/languages.dart' show sttLocaleFor;
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
@@ -20,39 +21,139 @@ void main() {
   final en = SpeechCoverage.articlesFor('en');
 
   group('what the client may write', () {
-    test('voice never writes failed; a judge-graded kind only skipped; a walkthrough — passed', () {
+    const choice = {SessionResult.passed, SessionResult.failed};
+    const voice = {SessionResult.passed, SessionResult.skipped};
+    const judged = {SessionResult.skipped};
+    const walkthrough = {SessionResult.passed};
+
+    // The matrix of the work orders SESSION-1b §1 and SESSION-1c §1, kind by kind — the server's table
+    // (`CardKind::allows`, plan-api «What the client sends») narrowed to what this client does.
+    const matrix = <SessionKind, Set<SessionResult>>{
+      SessionKind.wordIntro: walkthrough,
+      SessionKind.wordRepeat: voice,
+      SessionKind.wordChoose: choice,
+      SessionKind.wordListen: choice,
+      SessionKind.wordAssemble: choice,
+      SessionKind.wordInLine: choice,
+      SessionKind.phraseIntro: walkthrough,
+      SessionKind.phraseAssemble: choice,
+      SessionKind.phraseChooseBack: choice,
+      SessionKind.phraseSlot: choice,
+      SessionKind.phraseSlotListen: choice,
+      SessionKind.phraseRepeat: voice,
+      SessionKind.phraseOtherSlot: voice,
+      SessionKind.phraseCombine: choice,
+      SessionKind.phraseOwnSlot: judged,
+      SessionKind.dialoguePartner: choice,
+      SessionKind.dialogueAnswer: voice,
+      SessionKind.dialogueAsk: voice,
+      SessionKind.dialogueRescue: walkthrough,
+      SessionKind.listenDialogue: walkthrough,
+      SessionKind.listenQuestion: choice,
+      SessionKind.listenReview: walkthrough,
+      SessionKind.listenPredict: choice,
+      SessionKind.listenPace: walkthrough,
+      SessionKind.listenNumber: choice,
+      SessionKind.speakAnswer: judged,
+      SessionKind.speakEcho: voice,
+      SessionKind.speakRetell: judged,
+    };
+
+    // CATCHES: a voice kind that may write `failed` (422 and a dropped answer), a judged kind that writes its own pass,
+    // a walkthrough that is skipped, and a new kind added without a row.
+    test('the matrix on all 28 kinds: choice passed | failed, voice passed | skipped, judged only skipped, walkthrough passed', () {
+      expect(matrix.keys.toSet(), SessionKind.values.toSet());
+      expect(SessionKind.values, hasLength(28));
       for (final kind in SessionKind.values) {
         final writes = SessionRules.clientWrites(kind);
-        switch (kind.grading) {
-          case SessionGrading.voice:
-            expect(writes, {SessionResult.passed, SessionResult.skipped}, reason: kind.wire);
-            expect(writes, isNot(contains(SessionResult.failed)), reason: kind.wire);
-          case SessionGrading.judge:
-            expect(writes, {SessionResult.skipped}, reason: kind.wire);
-          case SessionGrading.pass:
-            expect(writes, {SessionResult.passed}, reason: kind.wire);
-          case SessionGrading.choice:
-            expect(writes, {SessionResult.passed, SessionResult.failed}, reason: kind.wire);
-        }
+        expect(writes, matrix[kind], reason: kind.wire);
+        expect(writes, isNot(contains(SessionResult.hinted)), reason: '${kind.wire}: hinted is the judge\'s word');
         // Whatever the client writes, the server always accepts — otherwise a 422.
         expect(SessionRules.serverAccepts(kind).containsAll(writes), isTrue, reason: kind.wire);
+        for (final result in SessionResult.values) {
+          expect(SessionRules.mayWrite(kind, result), writes.contains(result), reason: '${kind.wire} ${result.wire}');
+        }
       }
     });
 
-    test('the 1b kinds are sorted by grading method as on the server', () {
-      expect(SessionKind.phraseOwnSlot.grading, SessionGrading.judge);
-      expect(SessionKind.speakAnswer.grading, SessionGrading.judge);
-      expect(SessionKind.speakRetell.grading, SessionGrading.judge);
-      for (final k in [SessionKind.wordRepeat, SessionKind.phraseRepeat, SessionKind.phraseOtherSlot]) {
-        expect(k.grading, SessionGrading.voice);
-        expect(SessionRules.mayWrite(k, SessionResult.failed), isFalse);
+    test('the kinds are sorted by grading method as on the server', () {
+      for (final k in [SessionKind.phraseOwnSlot, SessionKind.speakAnswer, SessionKind.speakRetell]) {
+        expect(k.grading, SessionGrading.judge, reason: k.wire);
       }
-      expect(SessionRules.mayWrite(SessionKind.phraseOwnSlot, SessionResult.passed), isFalse);
-      expect(SessionRules.mayWrite(SessionKind.wordIntro, SessionResult.passed), isTrue);
-      expect(
-        [for (final k in SessionKind.values) if (k.hasScreen) k],
-        hasLength(15),
-      );
+      for (final k in [SessionKind.wordRepeat, SessionKind.phraseRepeat, SessionKind.phraseOtherSlot, SessionKind.dialogueAnswer, SessionKind.dialogueAsk, SessionKind.speakEcho]) {
+        expect(k.grading, SessionGrading.voice, reason: k.wire);
+      }
+      for (final k in [SessionKind.dialogueRescue, SessionKind.listenDialogue, SessionKind.listenReview, SessionKind.listenPace]) {
+        expect(k.grading, SessionGrading.pass, reason: k.wire);
+      }
+      for (final k in [SessionKind.listenQuestion, SessionKind.listenPredict, SessionKind.listenNumber, SessionKind.dialoguePartner]) {
+        expect(k.grading, SessionGrading.choice, reason: k.wire);
+      }
+      for (final kind in SessionKind.values) {
+        expect(matrix[kind], SessionRules.clientWrites(kind), reason: kind.wire);
+      }
+    });
+  });
+
+  group('SESSION-1c', () {
+    final dialogue = day.stageOf(PlanStage.dialogue)!.cards;
+    DialogueAnswerPayload answerOf(String exchange) =>
+        dialogue.map((c) => c.payload).whereType<DialogueAnswerPayload>().firstWhere((p) => p.exchange.ref == exchange);
+
+    // CATCHES: a retelling recognized in English (the Russian speech comes back as garbage and the judge refuses it),
+    // and a target-language card listened to in the native locale.
+    test('the recognizer\'s language by kind: the target everywhere, the native language only for speak_retell', () {
+      for (final kind in SessionKind.values) {
+        final lang = SessionRules.speechLang(kind, targetLang: 'en', nativeLang: 'ru');
+        expect(lang, kind == SessionKind.speakRetell ? 'ru' : 'en', reason: kind.wire);
+      }
+      expect(sttLocaleFor(SessionRules.speechLang(SessionKind.speakRetell, targetLang: 'en', nativeLang: 'ru')), 'ru_RU');
+      expect(sttLocaleFor(SessionRules.speechLang(SessionKind.speakEcho, targetLang: 'en', nativeLang: 'ru')), 'en_US');
+    });
+
+    // CATCHES: «No hints» that changes nothing, a beginner asked by voice, an intermediate given chips, and chips drawn
+    // for a frame that has none.
+    test('the dialogue mode: beginner — chips, intermediate — the line as a hint, «No hints» — blind at any level', () {
+      final slot = answerOf('x1');
+      final noSlot = answerOf('x4');
+      expect(noSlot.frame.hasSlot, isFalse);
+      expect(noSlot.modes.chips, isEmpty);
+      expect(SessionRules.dialogueMode(slot, level: PlanLevel.beginner, noHints: false), DialogueMode.chips);
+      expect(SessionRules.dialogueMode(slot, level: PlanLevel.intermediate, noHints: false), DialogueMode.voiceHint);
+      expect(SessionRules.dialogueMode(slot, level: PlanLevel.beginner, noHints: true), DialogueMode.voiceBlind);
+      expect(SessionRules.dialogueMode(slot, level: PlanLevel.intermediate, noHints: true), DialogueMode.voiceBlind);
+      expect(SessionRules.dialogueMode(noSlot, level: PlanLevel.beginner, noHints: false), DialogueMode.voiceHint,
+          reason: 'a frame without a slot has no chips — the beginner says the line');
+      expect([for (final m in DialogueMode.values) m.wire], ['chips', 'voice_hint', 'voice_blind']);
+      expect(SessionRules.dialogueExpected(slot, DialogueMode.voiceHint), 'It hurts in his lower back.');
+      expect(SessionRules.dialogueExpected(slot, DialogueMode.voiceBlind), 'It hurts in his');
+    });
+
+    test('the frame\'s own words — the server\'s FrameParts::part', () {
+      expect(SessionRules.framePart('It hurts in his ___.'), 'It hurts in his');
+      expect(SessionRules.framePart("I'd like a ___, please."), "I'd like a, please");
+      expect(SessionRules.framePart('The pain is ___ when he bends.'), 'The pain is when he bends');
+      expect(SessionRules.framePart("He doesn't have a fever."), "He doesn't have a fever");
+      expect(SessionRules.framePart('Do we need ___?'), 'Do we need');
+    });
+
+    // CATCHES: a dialogue answer that demands the lesson's own filler (the slot is anyone's), and one that passes without
+    // the frame.
+    test('dialogue voice: the frame covered by coverage_min, any slot; the echo — coverage of the line', () {
+      final x1 = answerOf('x1');
+      expect(SessionRules.voiceAccepted(x1, 'it hurts in his knee', en), isTrue, reason: 'any slot');
+      expect(SessionRules.voiceAccepted(x1, 'It hurts in his lower back', en), isTrue);
+      expect(SessionRules.voiceAccepted(x1, 'lower back', en), isFalse, reason: 'no frame');
+      final x2 = answerOf('x2');
+      expect(x2.coverageMin, 1.0);
+      expect(SessionRules.voiceAccepted(x2, 'it started yesterday', en), isTrue);
+      expect(SessionRules.voiceAccepted(x2, 'started yesterday', en), isFalse, reason: 'a two-word frame needs both words');
+
+      final echo = day.stageOf(PlanStage.speak)!.cards.map((c) => c.payload).whereType<SpeakEchoPayload>().single;
+      expect(echo.coverageMin, 0.7);
+      expect(SessionRules.voiceAccepted(echo, 'It looks like a muscle strain so he should rest and use a heating pad', en), isTrue);
+      expect(SessionRules.voiceAccepted(echo, 'muscle strain rest', en), isFalse);
+      expect(SessionRules.expectedSpeech(echo), echo.expectedText);
     });
   });
 

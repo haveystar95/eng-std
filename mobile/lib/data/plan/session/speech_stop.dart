@@ -1,10 +1,13 @@
-/// WHEN TO STOP RECORDING (polish pass SESSION-1b′ on the phone, item 6) — without waiting for silence.
+/// WHEN TO STOP RECORDING (polish pass SESSION-1b′ on the phone, item 6; SESSION-1c, section 1) — without waiting for
+/// silence.
 ///
 /// Voice pass: as soon as the recognizer's partial result already passes the kind's rule (coverage of the
 /// expected text — all words for a string of up to two words, 70 % for a longer one, and for `phrase_other_slot`
 /// also all the words of the slot) and has not changed for [covered], recording stops and a pass is recorded. No
-/// coverage — recording is closed by 2 s of silence, as before. Judged kind (`phrase_own_slot`): the frame is
-/// covered and at least one word beyond it is heard — pause [judged], stop, and a question to the judge.
+/// coverage — recording is closed by 2 s of silence, as before. Judged kind (`phrase_own_slot`, `speak_answer`): the
+/// frame is covered and at least one word beyond it is heard — pause [judged], stop, and a question to the judge; a
+/// judged kind without a frame (`speak_retell`) — at least one word heard. A frame passed by voice with any slot
+/// (the dialogue) stops like a judged frame: the frame alone would cut the slot before it is said.
 ///
 /// Pure functions: the time «how long to wait for an unchanged partial result», or null — wait for silence.
 library;
@@ -22,9 +25,14 @@ abstract final class SpeechStop {
   static Duration? voice(String heard, bool Function(String heard) accepts) =>
       heard.trim().isNotEmpty && accepts(heard) ? covered : null;
 
-  /// Judged card: the frame without the slot [framePart] is covered to [min] and ≥ 1 word beyond it is heard.
-  static Duration? judge(String heard, String framePart, double min, Set<String> articles) {
-    if (heard.trim().isEmpty || !SpeechCoverage.covers(heard, framePart, min, articles)) return null;
+  /// Judged card: the frame without the slot [framePart] is covered to [min] and ≥ 1 word beyond it is heard. A frame
+  /// without a slot ([slot] false) has nothing beyond it to wait for — covered is enough. No frame at all (the
+  /// retelling) — any word heard.
+  static Duration? judge(String heard, String framePart, double min, Set<String> articles, {bool slot = true}) {
+    if (heard.trim().isEmpty) return null;
+    if (SpeechCoverage.words(framePart).isEmpty) return SpeechCoverage.words(heard).isEmpty ? null : judged;
+    if (!SpeechCoverage.covers(heard, framePart, min, articles)) return null;
+    if (!slot) return judged;
     return SpeechCoverage.extraWords(heard, framePart, articles) >= 1 ? judged : null;
   }
 }

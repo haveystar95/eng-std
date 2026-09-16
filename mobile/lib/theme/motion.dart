@@ -191,6 +191,37 @@ abstract final class AppMotion {
   static const sessionSlotSage = Duration(milliseconds: 160);
   static const sessionSlotSageDelay = Duration(milliseconds: 120);
 
+  // ── Series 33–35 and 30-7 (work order SESSION-1c) — the same table.
+
+  /// «Partner bubble · appears» — 200 ms, ease-out, fade and an 8 px shift.
+  static const sessionBubbleIn = Duration(milliseconds: 200);
+  static const sessionBubbleShift = 8.0;
+
+  /// «Dialogue feed · a line» — 180 ms after 60 ms, ease-out, one by one top down.
+  static const sessionFeedLine = Duration(milliseconds: 180);
+  static const sessionFeedLineDelay = Duration(milliseconds: 60);
+
+  /// «Player · time bar» — a 250 ms frame, linear; the exchange marks do not move.
+  static const sessionPlayerFrame = Duration(milliseconds: 250);
+
+  /// «Active role pulse» — period 1600 ms, ease-out, only while playing.
+  static const sessionRolePulse = Duration(milliseconds: 1600);
+
+  /// «The line's text opens» — 200 ms, ease-out, a fade in place of the wave.
+  static const sessionTextReveal = Duration(milliseconds: 200);
+
+  /// «The pause ring around the microphone» — 3000 ms, linear, brass 1.5, the ring shrinks to 72 (the card's
+  /// `pause_ms` wins when it differs).
+  static const sessionPauseRing = Duration(milliseconds: 3000);
+
+  /// «The frame hint after silence» — 200 ms after 5000 ms, ease-out, a fade above the microphone.
+  static const sessionHintIn = Duration(milliseconds: 200);
+  static const sessionHintSilence = Duration(milliseconds: 5000);
+
+  /// «Day summary plate 30-7» — 200 ms after 80 ms, ease-out, a fade.
+  static const sessionDayPlate = Duration(milliseconds: 200);
+  static const sessionDayPlateDelay = Duration(milliseconds: 80);
+
   /// Ни одна анимация не длиннее этого.
   static const maxDuration = Duration(milliseconds: 420);
 

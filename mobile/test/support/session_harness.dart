@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/line_audio.dart';
 import 'package:eng_std/data/models.dart' show AppUser;
+import 'package:eng_std/data/plan/plan_models.dart';
+import 'package:eng_std/data/plan/session/dialogue_feed.dart';
 import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
@@ -27,9 +29,13 @@ import 'package:eng_std/features/plan/session/session_voice.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
-SessionDay sessionFixture(String name) => SessionDay.fromJson(
-  jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>,
-);
+SessionDay sessionFixture(String name) => SessionDay.fromJson(sessionFixtureJson(name));
+
+/// The fixture's raw JSON — to answer cards before parsing it ([sessionDayOf]).
+Map<String, dynamic> sessionFixtureJson(String name) =>
+    jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
+
+SessionDay sessionDayOf(Map<String, dynamic> json) => SessionDay.fromJson(json);
 
 /// The first card of [kind] in the fixture ([skip] cards of that kind are passed over).
 SessionCard fixtureCard(SessionDay day, SessionKind kind, {int skip = 0}) =>
@@ -51,7 +57,7 @@ class QuietVoice extends SessionVoice {
   Future<void> prepare(Iterable<CardAudio> audios) async {}
 
   @override
-  Future<void> play(CardAudio? audio, {required String fallback, double rate = 1.0, Object? key}) async {
+  Future<void> play(CardAudio? audio, {required String fallback, double rate = 1.0, Object? key, bool slowFallback = false}) async {
     played.add('${audio?.ref ?? '-'}@$rate');
     fallbacks.add(fallback);
   }
@@ -117,8 +123,14 @@ class SilentRecognizer implements SpeechRecognizer {
 class CardProbe {
   final List<SessionAnswer> answers = [];
   final List<String> judged = [];
+
+  /// `hinted` of every question to the judge, in order.
+  final List<bool> hinted = [];
   int nexts = 0;
   bool noMic = false;
+
+  /// The microphones the card made — their locale and hint words.
+  final List<SessionMic> mics = [];
 
   /// The judge's answer to the next question.
   SessionJudgeOutcome Function(String heard) verdict = (_) => const SessionJudgeOutcome(accepted: true, attempts: 1);
@@ -134,30 +146,46 @@ CardEnv probeEnv(
   String role = 'Регистратор',
   bool micAvailable = true,
   SessionDay? day,
+  PlanLevel level = PlanLevel.intermediate,
+  bool noHints = false,
+  List<FeedLine> feed = const [],
+  String localeId = 'en_US',
+  bool Function(PlanStage stage)? stageDone,
 }) => CardEnv(
   card: card,
   voice: voice ?? QuietVoice(),
   targetLang: 'en',
-  localeId: 'en_US',
+  localeId: localeId,
   role: role,
   submit: probe.answers.add,
   next: () async => probe.nexts++,
-  judge: (heard) async {
+  judge: (heard, {bool hinted = false}) async {
     probe.judged.add(heard);
+    probe.hinted.add(hinted);
     final gate = probe.judgeGate;
     if (gate != null) await gate.future;
     return probe.verdict(heard);
   },
-  makeMic: (expected, contextual) => SessionMic(
-    recognizer: SilentRecognizer(available: micAvailable),
-    localeId: 'en_US',
-    expected: expected,
-    contextualStrings: contextual,
-  ),
+  makeMic: (expected, contextual) {
+    final mic = SessionMic(
+      recognizer: SilentRecognizer(available: micAvailable),
+      localeId: localeId,
+      expected: expected,
+      contextualStrings: contextual,
+    );
+    probe.mics.add(mic);
+    return mic;
+  },
   reportNoMic: (v) => probe.noMic = v,
   openSettings: () async {},
   frameSentence: day?.frameSentence,
   termText: day?.termText,
+  level: level,
+  noHints: noHints,
+  feed: feed,
+  stageCards: day == null ? const [] : day.stages.firstWhere((s) => s.stage == card.stage).cards,
+  scene: day?.scene,
+  stageDone: stageDone,
 );
 
 class _Auth extends AuthController {

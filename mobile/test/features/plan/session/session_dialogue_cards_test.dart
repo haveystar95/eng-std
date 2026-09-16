@@ -1,0 +1,263 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:eng_std/data/plan/plan_models.dart';
+import 'package:eng_std/data/plan/session/dialogue_feed.dart';
+import 'package:eng_std/data/plan/session/session_day.dart';
+import 'package:eng_std/data/plan/session/session_models.dart';
+import 'package:eng_std/features/plan/session/parts/session_bits.dart';
+import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
+import 'package:eng_std/features/plan/session/parts/session_tiles.dart';
+
+import '../../../support/session_harness.dart';
+
+/// DIALOGUE (work order SESSION-1c §2, canvas series 33): each kind from a fixture card — its states, the modes of
+/// `dialogue_answer` by the plan's level and «No hints», the answers it writes, the conversation above it.
+void main() {
+  final day = sessionFixture('day-doctor');
+
+  SessionCard dialogueAt(int position) => day.stageOf(PlanStage.dialogue)!.cards.firstWhere((c) => c.position == position);
+  List<SessionResult> results(CardProbe probe) => [for (final a in probe.answers) a.result];
+  SessionFrameText ownFrame(WidgetTester tester) =>
+      tester.widget<SessionFrameText>(find.descendant(of: find.byType(SessionOwnRow), matching: find.byType(SessionFrameText)).first);
+
+  group('33-1 dialogue_partner', () {
+    // CATCHES: the partner's text shown before the answer, a card that stays silent, a wrong answer that reveals the line
+    // or leaves by itself.
+    testWidgets('the line sounds, a wave instead of the text; correct — the text opens, passed, auto-advance', (tester) async {
+      final card = dialogueAt(1);
+      final probe = CardProbe();
+      final voice = QuietVoice();
+      await pumpCard(tester, probeEnv(card, probe, voice: voice));
+      expect(find.text('О каких двух местах спрашивает врач?'), findsOneWidget, reason: 'the task line is the server\'s question');
+      expect(find.byKey(const ValueKey('partner-wave')), findsOneWidget);
+      expect(find.text('Where does it hurt: his upper back or his lower back?'), findsNothing);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(voice.played, ['x1@1.0'], reason: 'the partner\'s line plays once when the card opens');
+
+      await tapText(tester, 'Верх или низ спины');
+      expect(results(probe), [SessionResult.passed]);
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(find.text('Where does it hurt: his upper back or his lower back?'), findsOneWidget);
+      expect(find.text('Где болит: вверху спины или в пояснице?'), findsOneWidget);
+      await settleCard(tester);
+      expect(probe.nexts, 1);
+    });
+
+    testWidgets('wrong — failed, the text stays closed, «Next» by hand', (tester) async {
+      final probe = CardProbe();
+      await pumpCard(tester, probeEnv(dialogueAt(1), probe));
+      await tapText(tester, 'Колени или ступни');
+      expect(results(probe), [SessionResult.failed]);
+      await settleCard(tester);
+      expect(find.byKey(const ValueKey('partner-wave')), findsOneWidget);
+      expect(probe.nexts, 0);
+      await tapText(tester, 'Дальше');
+      expect(probe.nexts, 1);
+    });
+  });
+
+  group('33-2 · 33-3 · 33-4 dialogue_answer', () {
+    // CATCHES: a beginner asked by voice, a chip that is «wrong», an answer without its mode and filler, «Next» open
+    // with an empty slot.
+    testWidgets('beginner — chips: the frame with an empty slot; any chip — passed (chips, filler_index); «Next»', (tester) async {
+      final probe = CardProbe();
+      final voice = QuietVoice();
+      await pumpCard(tester, probeEnv(dialogueAt(2), probe, voice: voice, level: PlanLevel.beginner));
+      expect(find.text('Собери ответ'), findsOneWidget);
+      expect(find.text('любое — твой ответ'), findsOneWidget);
+      expect(ownFrame(tester).slot, isNull);
+      expect(ownFrame(tester).look, SlotLook.empty);
+      expect(find.text('У него болит ___.'), findsOneWidget);
+      expect(dockEnabled(tester, 'Дальше'), isFalse);
+
+      await tester.tap(find.byKey(const ValueKey('chip-1')));
+      await tester.pump();
+      expect(results(probe), [SessionResult.passed]);
+      expect(probe.answers.single.response?.mode, 'chips');
+      expect(probe.answers.single.response?.fillerIndex, 1);
+      expect(ownFrame(tester).slot, 'neck');
+      expect(find.text('У него болит шея.'), findsOneWidget);
+      expect(tester.widget<SessionTile>(find.byKey(const ValueKey('chip-1'))).selected, isTrue);
+      expect(voice.played, contains('p1.f2@1.0'), reason: 'the chip voices the phrase with its filler');
+      expect(dockEnabled(tester, 'Дальше'), isTrue);
+      expect(probe.nexts, 0);
+      await tapText(tester, 'Дальше');
+      expect(probe.nexts, 1);
+      await settleCard(tester);
+    });
+
+    // CATCHES: the line of 33-3 not on screen, the pass demanding the lesson's filler, the key not underlined.
+    testWidgets('intermediate — voice with the line: the key underlined; the frame covered, any slot — passed (voice_hint)', (tester) async {
+      final probe = CardProbe();
+      await pumpCard(tester, probeEnv(dialogueAt(2), probe));
+      expect(find.text('Скажи ответ вслух'), findsOneWidget);
+      expect(find.text('У него болит поясница.'), findsOneWidget);
+      final line = tester.widget<SessionFrameText>(find.byType(SessionFrameText).first);
+      expect(line.before, 'It hurts in his lower back.');
+      expect(line.underline, const TextRange(start: 0, end: 15), reason: 'the key «It hurts in his»');
+
+      await sayDebug(tester, 'It hurts in his knee');
+      expect(results(probe), [SessionResult.passed]);
+      expect(probe.answers.single.response?.mode, 'voice_hint');
+      expect(probe.answers.single.response?.heard, 'It hurts in his knee');
+      expect(find.byKey(const ValueKey('bubble-mark-passed')), findsOneWidget);
+      await settleCard(tester);
+      expect(probe.nexts, 1, reason: 'a voice pass leaves by itself');
+    });
+
+    // CATCHES: «No hints» that still shows the line, a blind answer without its mode, two misses written as failed.
+    testWidgets('«No hints» — blind at any level: an empty slot, passed (voice_blind); two misses — skipped', (tester) async {
+      for (final level in PlanLevel.values) {
+        final probe = CardProbe();
+        await pumpCard(tester, probeEnv(dialogueAt(2), probe, level: level, noHints: true));
+        expect(find.text('Ответь голосом'), findsOneWidget, reason: level.name);
+        expect(find.text('It hurts in his lower back.'), findsNothing);
+        expect(ownFrame(tester).look, SlotLook.empty);
+        expect(find.byType(SessionTile), findsNothing, reason: 'no chips');
+        await sayDebug(tester, 'It hurts in his neck');
+        expect(results(probe), [SessionResult.passed]);
+        expect(probe.answers.single.response?.mode, 'voice_blind');
+        expect(ownFrame(tester).slot, 'neck');
+        expect(find.text('У него болит шея.'), findsOneWidget);
+        await settleCard(tester);
+      }
+
+      final miss = CardProbe();
+      await pumpCard(tester, probeEnv(dialogueAt(2), miss, noHints: true));
+      await sayDebug(tester, 'lower back');
+      expect(miss.answers, isEmpty);
+      await sayDebug(tester, 'neck');
+      expect(results(miss), [SessionResult.skipped]);
+      expect(miss.answers.single.attempts, 2);
+      expect(miss.answers.single.response?.mode, 'voice_blind');
+      await tapText(tester, 'Дальше');
+      expect(miss.nexts, 1);
+      await settleCard(tester);
+    });
+  });
+
+  group('33-5 dialogue_ask', () {
+    // CATCHES: the partner's reply before the question, a reply that does not sound, an ask that leaves before the reply.
+    testWidgets('the learner first; after the pass the reply appears and sounds; «Next» by hand', (tester) async {
+      final probe = CardProbe();
+      final voice = QuietVoice();
+      await pumpCard(tester, probeEnv(dialogueAt(12), probe, voice: voice));
+      expect(find.text('Спроси сам'), findsOneWidget);
+      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing);
+      await sayDebug(tester, 'Do we need an X-ray');
+      expect(results(probe), [SessionResult.passed]);
+      await tester.pump();
+      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget);
+      expect(voice.played, contains('x7@1.0'));
+      await settleCard(tester);
+      expect(probe.nexts, 0, reason: 'the ask waits for «Next»');
+      await tapText(tester, 'Дальше');
+      expect(probe.nexts, 1);
+    });
+  });
+
+  group('33-6 dialogue_rescue', () {
+    // CATCHES: a rescue with a microphone, a repeat at the normal tempo, a rescue that writes anything but passed.
+    testWidgets('«Didn\'t catch that» in the bubble — the rescue line, the slow repeat with its text; «Next» → passed', (tester) async {
+      final probe = CardProbe();
+      final voice = QuietVoice();
+      await pumpCard(tester, probeEnv(dialogueAt(10), probe, voice: voice));
+      expect(find.text('Не понял — переспроси'), findsOneWidget);
+      expect(find.text('It looks like a muscle strain, so he should rest and use a heating pad.'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(voice.played, ['x5@1.0']);
+      expect(find.text('Sorry, could you say that more slowly?'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('rescue-not-understood')));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Sorry, could you say that more slowly?'), findsOneWidget);
+      expect(find.text('He should rest and use a heating pad.'), findsOneWidget);
+      expect(voice.played, ['x5@1.0', 'x6b@1.0', 'x6@0.75']);
+      expect(find.text('медленно'), findsOneWidget);
+      expect(find.byKey(const ValueKey('session-debug-heard')), findsNothing, reason: 'no microphone on the frame');
+
+      await tapText(tester, 'Дальше');
+      expect(results(probe), [SessionResult.passed]);
+      expect(probe.nexts, 1);
+      await settleCard(tester);
+    });
+  });
+
+  group('33-7 the conversation above the card', () {
+    // CATCHES: a card drawn without the exchanges before it, and a passed answer without its mark.
+    testWidgets('the exchanges before stand above the card, the own lines with their marks', (tester) async {
+      final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+      final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
+      for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 4)) {
+        c['result'] = 'passed';
+        c['attempts'] = 1;
+      }
+      final answered = SessionDay.fromJson(raw);
+      final cards = answered.stageOf(PlanStage.dialogue)!.cards;
+      final current = cards.firstWhere((c) => c.position == 4);
+      await pumpCard(tester, probeEnv(current, CardProbe(), feed: DialogueFeed.before(cards, current)));
+      expect(find.byKey(const ValueKey('session-feed')), findsOneWidget);
+      expect(find.text('Where does it hurt: his upper back or his lower back?'), findsOneWidget);
+      expect(find.text('It hurts in his lower back.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('bubble-mark-passed')), findsOneWidget);
+      expect(find.text('Did it start today, or earlier this week?'), findsOneWidget, reason: 'the current exchange once');
+      expect(
+        tester.getRect(find.text('It hurts in his lower back.')).bottom,
+        lessThan(tester.getRect(find.text('Did it start today, or earlier this week?')).top),
+        reason: 'the conversation grows from the bottom: the past above, the current exchange by the dock',
+      );
+      await settleCard(tester);
+    });
+
+    // CATCHES: the answer after a rescue repeating the rescued line under the slow repeat (live pass, SESSION-1c).
+    testWidgets('after «Didn\'t catch that»: the partner line once, above the rescue; the own answer by the dock', (tester) async {
+      final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+      final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
+      for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 11)) {
+        c['result'] = 'passed';
+        c['attempts'] = 1;
+      }
+      final cards = SessionDay.fromJson(raw).stageOf(PlanStage.dialogue)!.cards;
+      final current = cards.firstWhere((c) => c.position == 11);
+      await pumpCard(tester, probeEnv(current, CardProbe(), feed: DialogueFeed.before(cards, current)));
+      const asked = 'It looks like a muscle strain, so he should rest and use a heating pad.';
+      expect(find.text(asked), findsOneWidget);
+      final rescue = tester.getRect(find.text('Sorry, could you say that more slowly?'));
+      final repeat = tester.getRect(find.text('He should rest and use a heating pad.'));
+      expect(tester.getRect(find.text(asked)).bottom, lessThan(rescue.top));
+      expect(rescue.bottom, lessThan(repeat.top));
+      expect(repeat.bottom, lessThan(tester.getRect(find.byType(SessionOwnRow).last).top), reason: 'the own answer stands after the repeat');
+      await settleCard(tester);
+    });
+
+    // CATCHES: a conversation taller than the screen measured a line short per bubble (the bubble's 274 cap left out of
+    // its measured height) and cut at the bottom instead of scrolling back to its beginning.
+    testWidgets('the last exchange on a small phone: nothing cut, the beginning is reached by scrolling up', (tester) async {
+      final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+      final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
+      final all = (dialogue['cards'] as List).cast<Map<String, dynamic>>();
+      for (final c in all.where((c) => (c['position'] as int) < all.length)) {
+        c['result'] = 'passed';
+        c['attempts'] = 1;
+      }
+      final cards = SessionDay.fromJson(raw).stageOf(PlanStage.dialogue)!.cards;
+      final current = cards.last;
+      await pumpCard(tester, probeEnv(current, CardProbe(), feed: DialogueFeed.before(cards, current)), size: const Size(375, 667));
+      expect(tester.takeException(), isNull);
+      final first = find.text('Where does it hurt: his upper back or his lower back?');
+      expect(tester.getRect(first).top, lessThan(0), reason: 'the beginning stands above the screen');
+      expect(tester.getRect(find.byType(SessionTask)).bottom, lessThan(667), reason: 'the current exchange stands on the screen');
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, 20000));
+      await tester.pump(const Duration(seconds: 1));
+      expect(tester.takeException(), isNull);
+      expect(tester.getRect(first).top, greaterThanOrEqualTo(0), reason: 'scrolled back to the beginning');
+      await settleCard(tester);
+    });
+  });
+}

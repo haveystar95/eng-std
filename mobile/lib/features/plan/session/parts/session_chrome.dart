@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -45,13 +47,13 @@ class SessionHeader extends StatelessWidget {
         children: [
           SizedBox(
             height: 24,
-            child: Row(
+            child: CustomMultiChildLayout(
+              delegate: _HeaderRow(),
               children: [
-                SessionCloseButton(onTap: onClose, label: l.planSessionClose),
-                const SizedBox(width: 12 - kSessionCloseInset),
-                Text(stageName, style: AppTextSession.headerStage),
-                const SizedBox(width: 12),
-                Expanded(
+                LayoutId(id: _HeaderSlot.close, child: SessionCloseButton(onTap: onClose, label: l.planSessionClose)),
+                LayoutId(id: _HeaderSlot.stage, child: Text(stageName, style: AppTextSession.headerStage)),
+                LayoutId(
+                  id: _HeaderSlot.bar,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(2),
                     child: SizedBox(
@@ -81,8 +83,14 @@ class SessionHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text(left, style: AppTextSession.meta.copyWith(height: 1)),
+                LayoutId(
+                  id: _HeaderSlot.left,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(left, style: AppTextSession.meta.copyWith(height: 1)),
+                  ),
+                ),
               ],
             ),
           ),
@@ -106,6 +114,37 @@ class SessionHeader extends StatelessWidget {
 
 /// How far the cross's tap area (44) extends beyond its icon (24) to the left.
 const double kSessionCloseInset = 10;
+
+enum _HeaderSlot { close, stage, bar, left }
+
+/// THE HEADER ROW: the cross, the stage name and the count at their own widths, 12 between them and the bar, the bar
+/// takes what is left. A long name with a long count on a 375 phone («Слушаю и отвечаю» + «последний вопрос», SESSION-1c)
+/// is a few pixels wider than the row: then the count scales down into the room left rather than running past the
+/// gutter; wherever it fits, the row is the one the canvas draws.
+class _HeaderRow extends MultiChildLayoutDelegate {
+  static const double _gap = 12;
+
+  @override
+  void performLayout(Size size) {
+    final loose = BoxConstraints.loose(size);
+    final close = layoutChild(_HeaderSlot.close, loose);
+    final stage = layoutChild(_HeaderSlot.stage, loose);
+    final barStart = close.width + _gap - kSessionCloseInset + stage.width + _gap;
+    final left = layoutChild(
+      _HeaderSlot.left,
+      BoxConstraints(maxWidth: math.max(0, size.width - barStart - _gap), maxHeight: size.height),
+    );
+    final bar = layoutChild(_HeaderSlot.bar, BoxConstraints.tightFor(width: math.max(0, size.width - barStart - _gap - left.width)));
+    double middle(Size child) => (size.height - child.height) / 2;
+    positionChild(_HeaderSlot.close, Offset(0, middle(close)));
+    positionChild(_HeaderSlot.stage, Offset(close.width + _gap - kSessionCloseInset, middle(stage)));
+    positionChild(_HeaderSlot.bar, Offset(barStart, middle(bar)));
+    positionChild(_HeaderSlot.left, Offset(size.width - left.width, middle(left)));
+  }
+
+  @override
+  bool shouldRelayout(_HeaderRow oldDelegate) => false;
+}
 
 class _Bead extends StatelessWidget {
   const _Bead(this.state);

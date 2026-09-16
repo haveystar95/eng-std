@@ -50,15 +50,16 @@ class SessionVoice {
   }
 
   /// Play [audio] and wait for it to end. No file — [fallback] in the system voice. [rate] — the file's tempo
-  /// (0.85× for «Repeat aloud»); the system voice reads at its own tempo.
-  Future<void> play(CardAudio? audio, {required String fallback, double rate = 1.0, Object? key}) async {
+  /// (0.85× for «Repeat aloud»); the system voice reads at its own tempo, unless [slowFallback] asks for its slow
+  /// repeat (the partner's slow repeat of 33-6 and 34-6, SESSION-1c).
+  Future<void> play(CardAudio? audio, {required String fallback, double rate = 1.0, Object? key, bool slowFallback = false}) async {
     if (_released) return;
     final serial = ++_serial;
     playing.value = key ?? audio?.ref ?? fallback;
     try {
       if (await _playFile(audio, rate)) return;
       if (fallback.trim().isEmpty) return;
-      await _pronouncer.speakText(fallback, targetLang: targetLang, awaitDone: true);
+      await _pronouncer.speakText(fallback, targetLang: targetLang, slow: slowFallback, awaitDone: true);
     } finally {
       if (serial == _serial && !_released) playing.value = null;
     }

@@ -117,8 +117,11 @@ class SessionQueue {
   /// The unit is closed in the stage — all of its cards are answered.
   bool unitDone(PlanStage stage, String ref) => cardsOf(stage).where((c) => c.unit.ref == ref).every((c) => c.isAnswered);
 
-  /// «N words left» — units that still have an unanswered card in the stage (the current one too).
-  int unitsLeft(PlanStage stage) => unitsOf(stage).where((ref) => !unitDone(stage, ref)).length;
+  /// «N words left» — units that still have an unanswered card in the stage (the current one too). [openUnit] — a unit
+  /// counted as left even once its cards are answered: the conversation stages keep the count of the card on screen
+  /// until it is left (33-5, 35-3, 35-4 hold one number across all their states; «0 lines left» is never drawn).
+  int unitsLeft(PlanStage stage, {String? openUnit}) =>
+      unitsOf(stage).where((ref) => ref == openUnit || !unitDone(stage, ref)).length;
 
   /// The stage's beads by unit: completed ones in sage, the current one in brass.
   List<SessionBead> beads(PlanStage stage, {String? currentUnit}) => [
@@ -129,6 +132,19 @@ class SessionQueue {
         SessionBead.done
       else
         SessionBead.ahead,
+  ];
+
+  /// Beads by CARD, for a stage whose unit is the whole visit («Listen and answer», SESSION-1c): one bead per card of
+  /// [kinds] — answered in sage, [currentCardId] in brass, the rest outlined.
+  List<SessionBead> cardBeads(PlanStage stage, {required Set<SessionKind> kinds, String? currentCardId}) => [
+    for (final c in cardsOf(stage))
+      if (kinds.contains(c.kind))
+        if (c.id == currentCardId && !c.isAnswered)
+          SessionBead.current
+        else if (c.isAnswered)
+          SessionBead.done
+        else
+          SessionBead.ahead,
   ];
 
   /// The header bar: the share of the stage's cards that are answered.

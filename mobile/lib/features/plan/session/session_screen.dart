@@ -13,13 +13,17 @@ import '../../../data/api_client.dart';
 import '../../../data/app_version.dart';
 import '../../../data/languages.dart' show sttLocaleFor;
 import '../../../data/plan/plan_models.dart';
+import '../../../data/plan/session/dialogue_feed.dart';
 import '../../../data/plan/session/session_models.dart';
+import '../../../data/plan/session/session_rules.dart';
+import '../../../data/plan/session/session_summary.dart';
 import '../../../data/providers.dart';
 import '../../profile/qa_report_button.dart' show QaReportHidden;
 import '../plan_providers.dart';
 import 'cards/card_host.dart';
 import 'cards/card_kit.dart';
 import 'parts/session_bits.dart';
+import 'parts/session_bubbles.dart';
 import 'parts/session_chrome.dart';
 import 'parts/session_stage.dart';
 import 'session_controller.dart';
@@ -27,12 +31,13 @@ import 'session_mic.dart';
 import 'session_texts.dart';
 import 'session_voice.dart';
 
-/// DAY SESSION (work order SESSION-1b; canvas `session-canvas.dc.html`, series 30–32) — one screen: stage entry
-/// (30-1), cards with the header (30-2) and the scene strip (30-2b), stage summary (30-6), exit (30-8).
+/// DAY SESSION (work orders SESSION-1b, SESSION-1c; canvas `session-canvas.dc.html`, series 30–35) — one screen: stage
+/// entry (30-1), cards with the header (30-2) and the scene strip (30-2b), stage summaries (30-6, 33-8, 34-8, 35-6),
+/// the day summary with «Close the day» (30-7), exit (30-8).
 ///
-/// Words and phrases have screens; Dialogue, Listen and answer and Speak myself stand «ahead», entry into them is
-/// blocked by the caption «in the next build», there are no answers for them, the day does not close. The server
-/// is the source of truth: every entry reads the day anew and continues from the first unanswered card.
+/// Every stage has its screens. The server is the source of truth: every entry reads the day anew and continues from
+/// the first unanswered card; a day with every card answered opens on its summary. «Close the day» returns to the day
+/// window, which reads the plan again.
 class SessionScreen extends ConsumerStatefulWidget {
   const SessionScreen({super.key, required this.plan, required this.number, this.backend});
 
@@ -100,24 +105,26 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         _waitedForLesson = false;
         SessionSounds.play(SessionSounds.ready);
       }
-      // The stage summary (30-6) opens.
+      // A stage summary (30-6, 33-8, 34-8, 35-6) opens.
       if (phase == SessionPhase.summary) SessionSounds.play(SessionSounds.stageDone);
+      // The day summary (30-7) opens.
+      if (phase == SessionPhase.daySummary) SessionSounds.dayCompleted();
       _lastPhase = phase;
     }
     final day = _session.day;
-    // Audio of the stages that have screens goes to disk at once, as soon as the day is read (and after a re-read).
+    // Every card's audio goes to disk at once, as soon as the day is read (and after a re-read).
     if (day != null && identityHashCode(day) != _preparedFor) {
       _preparedFor = identityHashCode(day);
       unawaited(_voice.prepare([
         for (final s in day.stages)
-          if (SessionController.hasScreens(s.stage))
-            for (final c in s.cards) ...c.payload.audios,
+          for (final c in s.cards) ...c.payload.audios,
       ]));
     }
     setState(() {});
   }
 
-  SessionMic _makeMic(String expected, List<String> contextual) {
+  /// The card's microphone in the card's recognition locale ([SessionRules.speechLang]).
+  SessionMic Function(String expected, List<String> contextual) _makeMic(String localeId) => (expected, contextual) {
     final strings = <String>{
       for (final s in contextual)
         if (s.trim().isNotEmpty) s.trim(),
@@ -125,11 +132,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     return SessionMic(
       recognizer: ref.read(speechRecognizerProvider),
       diagnostics: ref.read(speechDiagnosticsProvider),
-      localeId: sttLocaleFor(widget.plan.targetLang),
+      localeId: localeId,
       expected: expected,
       contextualStrings: strings.take(50).toList(),
     );
-  }
+  };
 
   Future<void> _openSettings() async {
     try {
@@ -204,6 +211,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         return _cardPhase(context);
       case SessionPhase.summary:
         return _summary(context);
+      case SessionPhase.daySummary:
+        return _daySummary(context);
     }
   }
 
@@ -228,7 +237,6 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final stage = _session.stage;
     final q = _session.queue!;
     final version = ref.watch(appVersionProvider).value;
-    final open = SessionController.hasScreens(stage) && q.nextIn(stage) != null;
     return SessionStageEntry(
       stage: stage,
       stageName: (s) => SessionTexts.stage(l, s),
@@ -238,7 +246,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       scene: _session.scene,
       noHints: _session.noHints,
       onNoHints: (v) => unawaited(_session.setNoHints(v)),
-      onStart: open ? _session.startStage : null,
+      onStart: q.nextIn(stage) != null ? _session.startStage : null,
       onBack: () => Navigator.of(context).maybePop(),
       buildLabel: version == null ? null : l.planSessionBuild(version),
     );
@@ -249,11 +257,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final stage = _session.stage;
     final q = _session.queue!;
     final card = _session.card!;
+    final plan = widget.plan;
+    final stageCards = q.cardsOf(stage);
+    final localeId = sttLocaleFor(SessionRules.speechLang(card.kind, targetLang: plan.targetLang, nativeLang: plan.nativeLang));
     final env = CardEnv(
       card: card,
       voice: _voice,
-      targetLang: widget.plan.targetLang,
-      localeId: sttLocaleFor(widget.plan.targetLang),
+      targetLang: plan.targetLang,
+      localeId: localeId,
       role: _session.scene?.partnerRoleNative?.trim() ?? '',
       submit: (answer) => _session.submit(card, answer),
       next: () async {
@@ -261,8 +272,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         await _session.next();
         if (mounted && _noMic) setState(() => _noMic = false);
       },
-      judge: (heard) => _session.judge(card, heard),
-      makeMic: _makeMic,
+      judge: (heard, {bool hinted = false}) => _session.judge(card, heard, hinted: hinted),
+      makeMic: _makeMic(localeId),
       reportNoMic: (value) {
         if (mounted && value != _noMic) setState(() => _noMic = value);
       },
@@ -271,7 +282,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       advancing: _session.advancing,
       frameSentence: (ref) => _session.day?.frameSentence(ref),
       termText: (ref) => _session.day?.termText(ref),
+      level: plan.level,
+      noHints: _session.noHints,
+      feed: stage == PlanStage.dialogue ? DialogueFeed.before(stageCards, card) : const [],
+      stageCards: stageCards,
+      scene: _session.scene,
+      stageDone: q.isDone,
     );
+    final listen = stage == PlanStage.listen;
     final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -285,8 +303,16 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
           SessionHeader(
             stageName: SessionTexts.stage(l, stage),
             progress: q.progress(stage),
-            left: SessionTexts.left(l, stage, q.unitsLeft(stage)),
-            beads: q.beads(stage, currentUnit: card.unit.ref),
+            left: listen
+                ? SessionTexts.listenLeft(l, card.kind, stageCards)
+                : SessionTexts.left(
+                    l,
+                    stage,
+                    q.unitsLeft(stage, openUnit: stage == PlanStage.dialogue || stage == PlanStage.speak ? card.unit.ref : null),
+                  ),
+            beads: listen
+                ? q.cardBeads(stage, kinds: SessionSummaries.listenQuestions, currentCardId: card.id)
+                : q.beads(stage, currentUnit: card.unit.ref),
             onClose: () => unawaited(_exit()),
           ),
         SessionSceneStrip(scene: _session.scene),
@@ -318,20 +344,118 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final l = AppLocalizations.of(context);
     final stage = _session.stage;
     final q = _session.queue!;
-    final units = q.unitsOf(stage);
-    final returning = [for (final ref in q.returningUnits(stage)) _returning(stage, ref)];
     final next = _session.nextStage;
-    return SessionStageSummary(
-      title: SessionTexts.done(l, stage, _session.minutesOf(stage) ?? 0),
-      rows: _rows(current: next ?? stage),
+    switch (stage) {
+      case PlanStage.dialogue || PlanStage.listen || PlanStage.speak:
+        return _talkSummary(context, stage, next);
+      case PlanStage.words || PlanStage.phrases || PlanStage.unknown:
+        final units = q.unitsOf(stage);
+        final returning = [for (final ref in q.returningUnits(stage)) _returning(stage, ref)];
+        return SessionStageSummary(
+          title: SessionTexts.done(l, stage, _session.minutesOf(stage) ?? 0),
+          rows: _rows(current: next ?? stage),
+          returning: returning,
+          closedLine: SessionTexts.closed(l, stage, closed: units.length - returning.length, someReturn: returning.isNotEmpty),
+          nextStage: next,
+          nextName: next == null ? null : SessionTexts.stage(l, next),
+          nextMinutes: next == null ? null : _session.day?.minutesLeft(next),
+          scene: _session.scene,
+          onClose: () => Navigator.of(context).maybePop(),
+          onNext: _session.continueAfterSummary,
+        );
+    }
+  }
+
+  /// 33-8 · 34-8 · 35-6.
+  Widget _talkSummary(BuildContext context, PlanStage stage, PlanStage? next) {
+    final l = AppLocalizations.of(context);
+    final q = _session.queue!;
+    final cards = q.cardsOf(stage);
+    final understood = SessionSummaries.understood(cards);
+    final spoke = SessionSummaries.spoke(cards);
+    final title = switch (stage) {
+      PlanStage.listen => l.planSessionUnderstoodCount(understood.right, understood.total),
+      PlanStage.speak => l.planSessionSpokeCount(spoke.said, spoke.total),
+      _ => SessionTexts.done(l, stage, _session.minutesOf(stage) ?? 0),
+    };
+    final nextMinutes = next == null ? null : _session.day?.minutesLeft(next);
+    // «Listen and answer» never returns anything: its unit is the whole visit.
+    final returningRefs = stage == PlanStage.listen ? const <String>[] : q.returningUnits(stage);
+    final allCards = [for (final s in PlanStage.known) ...q.cardsOf(s)];
+    final returning = [for (final ref in returningRefs) _pair(DialogueFeed.pairOf(allCards, ref))];
+    final units = q.unitsOf(stage);
+    return SessionTalkSummary(
+      title: title,
       returning: returning,
-      closedLine: SessionTexts.closed(l, stage, closed: units.length - returning.length, someReturn: returning.isNotEmpty),
-      nextStage: next,
-      nextName: next == null ? null : SessionTexts.stage(l, next),
-      nextMinutes: next == null ? null : _session.day?.minutesLeft(next),
+      closedLine: stage == PlanStage.listen || units.isEmpty
+          ? null
+          : SessionTexts.closed(l, stage, closed: units.length - returning.length, someReturn: returning.isNotEmpty),
+      nextLabel: next == null ? l.planSessionDayTotal : SessionTexts.stage(l, next),
+      nextValue: next == null
+          ? l.planMinutesCount(_session.dayMinutes)
+          : nextMinutes == null
+          ? null
+          : l.planSessionApproxMinutes(nextMinutes),
+      buttonLabel: next == null ? l.planSessionDayDoneAction : l.planSessionNext,
       scene: _session.scene,
       onClose: () => Navigator.of(context).maybePop(),
-      onNext: next == null ? null : _session.continueAfterSummary,
+      onNext: _session.continueAfterSummary,
+    );
+  }
+
+  /// A returning exchange as its two bubbles — the partner's line and the learner's, with the brass mark.
+  Widget _pair(ExchangePair pair) {
+    final partner = pair.partner;
+    final own = pair.own;
+    final rows = <Widget>[
+      if (partner != null)
+        SessionPartnerRow(
+          bubble: SessionBubble(own: false, text: partner.textTarget, translation: partner.textNative),
+          listen: SessionListenButton(
+            size: 28,
+            brass: true,
+            label: AppLocalizations.of(context).planWindowListen,
+            onTap: () => unawaited(_voice.play(partner.audio, fallback: partner.textTarget, key: 'summary-${partner.ref}')),
+          ),
+        ),
+      if (own != null)
+        SessionOwnRow(
+          mark: FeedMark.returns,
+          bubble: SessionBubble(own: true, text: own.textTarget, translation: own.textNative),
+        ),
+    ];
+    final ordered = pair.learnerFirst ? rows.reversed.toList() : rows;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [for (final (i, row) in ordered.indexed) ...[if (i > 0) const SizedBox(height: 8), row]],
+    );
+  }
+
+  /// 30-7.
+  Widget _daySummary(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final q = _session.queue!;
+    final nextDay = SessionSummaries.nextDay(widget.plan, widget.number);
+    return SessionDaySummary(
+      title: l.planSessionDayDoneTitle(l.planMinutesCount(_session.dayMinutes)),
+      stages: [for (final s in PlanStage.known) if (q.hasCards(s)) s],
+      stageName: (s) => SessionTexts.stage(l, s),
+      returnsLine: SessionTexts.dayReturns(l, SessionSummaries.dayReturns(q)),
+      nextDay: nextDay == null
+          ? null
+          : nextDay.lessonStatus == LessonStatus.ready
+          ? l.planSessionNextDayReady(nextDay.number)
+          : l.planSessionNextDayBuilding(nextDay.number),
+      scene: _session.scene,
+      closing: _session.closing,
+      closeFailed: _session.closeFailed,
+      onClose: () => Navigator.of(context).maybePop(),
+      onCloseDay: () async {
+        final closed = await _session.closeDay();
+        if (!closed || !context.mounted) return;
+        await _voice.stop();
+        if (context.mounted) Navigator.of(context).pop();
+      },
     );
   }
 
