@@ -120,7 +120,7 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 | день | `GET /plans/{id}/days/{n}` | `PlanDayRoom`: `day`, `scene`, `stages[]` (`locked`/`current`/`done`/`absent`, **и `cards[]`** — карточки этапа по `position`, в конверте разд. «Карточки сессии»; у нерозданного дня список пуст: у контура нет id, которым отвечают), `metrics` (`cards_total`, `minutes_spent`), `program[]` (`unit_kind`, `source`, `state` `pending`/`passed`/`failed`) — это читают плита таба и сессия; **`window`** — окно дня (ниже) |
 | открыть / продолжить | `POST /plans/{id}/days/{n}/open` | `PlanDayCards` — **весь** плоский список карточек с состоянием; 409 `plan_day_locked` (`meta.blocked_by_day` или `meta.opens_on`), 409 `plan_lesson_not_ready` (`meta.lesson_status`: `building` — подождать, `failed` — предложить `POST …/scenes/{sceneId}/lesson/retry`) |
 | перечитать карточки | `GET /plans/{id}/days/{n}/cards` | `PlanDayCards` (тот же плоский `cards[]`) |
-| ответить | `POST …/cards/{cardId}/answer` `{result, attempts, response?}` | `{card, requeued, unit {kind, ref, returns_tomorrow, returns_day}, day {cards_total, cards_done, minutes_spent}, stage {stage, minutes_spent}}` — из этого клиент пишет итог этапа (30-6/33-8/34-8/35-6) и итог дня (30-7), не считая ничего сам. `requeued` — та же карточка в конце этапа после первого `failed` (новый `id`, `retry_of`), иначе `null`; 409 `plan_card_answered`, 422 `plan_card_result_not_allowed` (вид такого итога не принимает) |
+| ответить | `POST …/cards/{cardId}/answer` `{result, attempts, response?}` | `{card, requeued, unit {kind, ref, returns_tomorrow, returns_day}, day {cards_total, cards_done, minutes_spent}, stage {stage, minutes_spent}}` — из этого клиент пишет итог этапа (30-6/33-8/34-8/35-6) и итог дня (30-7), не считая ничего сам. `requeued` — та же карточка в конце этапа после первого провала (новый `id`, `retry_of`; у карточки фразы — того же вида с другим наполнением; провал голоса фразы — `skipped` после двух попыток с микрофоном, SESSION-1d), иначе `null`; 409 `plan_card_answered`, 422 `plan_card_result_not_allowed` (вид такого итога не принимает) |
 | зачесть окно или пересказ | `POST …/cards/{cardId}/judge` `{heard, hinted}` | `{accepted, slot_value, reason_native, result, attempts, card}` — судья окна `slot_judge.v1`, только `phrase_own_slot` / `speak_answer` / `speak_retell`; 422 `plan_card_not_judged` у любого другого вида, 409 `plan_card_answered`, 409 `plan_day_not_open` |
 | этап пройден | `POST …/stages/{stage}/close` | `PlanDayRoom`; 409 `plan_stage_incomplete` (`meta.remaining`) |
 | день пройден | `POST …/close` | `PlanDayRoom` с `metrics`; 409 `plan_stage_incomplete`; после этого `Plan.collection_id` заполнен |
@@ -249,16 +249,16 @@ job `failed` с кодом вендора, письмо в лог. Остато�
 | `word_choose` | 31-3 (`term_to_native`) / 31-4 (`native_to_term`) | `direction`, `prompt`, `options[4]`, `correct`. beginner — `term_to_native`: `prompt {text_target, image, audio}`, варианты на родном; intermediate — `native_to_term`: `prompt {text_native, image}` без звука, варианты — слова цели, у каждого свой `audio` | тап по варианту (30-9) | клиент: id варианта = `correct` |
 | `word_listen` | 31-5 | `audio` (только звук: ни текста, ни перевода, ни фото), `options[4]` — **слова цели** (звук → написание, кадр 31-5), `correct` | тап | клиент: сверка с `correct` |
 | `word_assemble` | 31-6 | `term`, `tiles[]`, `expected[]` | плитки (30-5) | клиент: собранное = `expected` по порядку |
-| `word_in_line` | 31-7 | `line` (текст цели с `___`, `text_native`, `text_native_gapped` — может быть `null`, `audio`), `options[4]` (у каждого свой `audio`), `correct` | тап | клиент: сверка с `correct` |
+| `word_in_line` | 31-7 | `line` (текст цели с `___`, `text_native` — **полный** перевод строки, со словом, `audio`), `options` (до четырёх, у каждого свой `audio`), `correct`. Строка — где слово стоит **вне окна каркаса**: сначала реплика собеседника, потом реплика ученика вне её наполнения; такой нет — строка, где слово звучит. Ложные — не наполнения того каркаса, окно которого слово заполняет (SESSION-1d; `text_native_gapped` снят) | тап | клиент: сверка с `correct` |
 | **Фразы** — `unit.kind = phrase`, ref `p3` | | | | |
 | `phrase_intro` | 32-1 | `frame`, `said` | чтение + звук + чипы | тап «Дальше» → `passed` |
-| `phrase_assemble` | 32-2 | `frame`, `target_native`, `tiles[]`, `chips[]`, `expected {words, slot_at, filler_index}` | плитки + чип в окно | клиент: слова = `expected.words` по порядку, окно на месте `slot_at`, наполнение — `expected.filler_index` |
-| `phrase_choose_back` | 32-3 | `prompt` (цель: `text_target`, `pronunciation_native`, `filler_index` — может быть `null`, `audio`), `options[4]` (на родном), `correct` | тап | клиент: сверка с `correct` |
-| `phrase_slot` | 32-4 | `frame`, `prompt_native`, `options[4]` (наполнения, у каждого `audio`), `correct` | тап | клиент: сверка с `correct` |
-| `phrase_slot_listen` | 32-5 | `frame`, `filler_index`, `audio` (звучит одно наполнение), `options[4]` (без звука), `correct` | тап | клиент: сверка с `correct` |
-| `phrase_repeat` | 32-6 | `frame`, `filler_index` (может быть `null` у каркаса без окна), `expected_text`, `key`, `coverage_min`, `audio` | голос | клиент: покрытие `expected_text`; две попытки → `skipped` |
-| `phrase_other_slot` | 32-7 | `frame`, `filler_index` (НЕ сказанное), `task_native`, `expected_text`, `slot_expected`, `key`, `coverage_min` | голос, звука у листа нет | клиент: покрытие каркаса вне окна **И** все слова `slot_expected` услышаны (каркас и окно считаются отдельно) |
-| `phrase_combine` | 32-8 | `exchange`, `partner_line`, `frames[3]`, `correct_frame`, `chips[]`, `correct_filler` | тап: каркас → чип | клиент: каркас = `correct_frame`, наполнение — **любое** из `chips` |
+| `phrase_assemble` | 32-2 | `frame`, `target_native` (предложение наполнения `expected.filler_index`), `tiles[]`, `chips[]`, `expected {words, slot_at, filler_index}` | плитки + чип в окно | клиент: слова = `expected.words` по порядку, окно на месте `slot_at`, наполнение — `expected.filler_index` |
+| `phrase_choose_back` | 32-3 | `prompt` (цель — каркас с наполнением карточки: `text_target`, `pronunciation_native`, `filler_index` — `null` у каркаса без окна, `audio` этого наполнения), `options` (до четырёх, на родном), `correct` | тап | клиент: сверка с `correct` |
+| `phrase_slot` | 32-4 | `frame`, `prompt_native` (`frame_native` с `native` верного наполнения), `options` (до четырёх наполнений, у каждого `audio`), `correct` | тап | клиент: сверка с `correct` |
+| `phrase_slot_listen` | 32-5 | `frame`, `filler_index`, `audio` (звучит каркас с этим наполнением: `p3` или `p3.f2`), `options` (до четырёх, без звука), `correct` | тап | клиент: сверка с `correct` |
+| `phrase_repeat` | 32-6 | `frame`, `filler_index` (у раздачи дня — наполнение, которого ученик ещё не говорил; `null` у каркаса без окна), `expected_text` и `audio` — с этим наполнением, `key`, `coverage_min` | голос | клиент: покрытие `expected_text`; две попытки → `skipped` — **провал каркаса** (копия, возврат; п. 327) |
+| `phrase_other_slot` | 32-7 | `frame`, `filler_index` (НЕ сказанное; у раздачи дня — не занятое узнаваниями, когда такое есть), `task_native`, `expected_text`, `slot_expected`, `key`, `coverage_min` | голос, звука у листа нет | клиент: покрытие каркаса вне окна **И** все слова `slot_expected` услышаны (каркас и окно считаются отдельно); две попытки → `skipped` — **провал каркаса** (п. 327) |
+| `phrase_combine` | 32-8 | `exchange`, `partner_line`, `frames[3]` (нужный и два каркаса самых далёких по шагу обменов), `correct_frame`, `chips[]`, `correct_filler` | тап: каркас → чип | клиент: каркас = `correct_frame`, наполнение — **любое** из `chips` |
 | `phrase_own_slot` | 32-9 | `frame`, `partner_line` (может быть `null`), `task_native`, `examples[]`, `chips[]`, `key`, `coverage_min`, `judge: true` | чипы или «сказать своё» голосом | **сервер**, `POST …/judge` |
 | **Диалог** — `unit.kind = exchange`, ref `x3` | | | | |
 | `dialogue_partner` | 33-1 | `exchange`, `partner_line`, `question_native`, `options[4]` (на родном), `correct` | тап | клиент: сверка с `correct`; текст реплики открывается после верного |
@@ -270,7 +270,7 @@ job `failed` с кодом вендора, письмо в лог. Остато�
 | `listen_question` | 34-2 | `question {ref, text_native}`, `options[4]`, `correct`, `exchange_step` (может быть `null`) | тап | клиент: сверка с `correct` |
 | `listen_review` | 34-3 | `lines[]`, `total_ms`, `answers[{question_ref, exchange_step, line_ref, span}]` (`line_ref` и `span` — где подсветить ответ; могут быть `null`) | разбор с подсветкой | тап «Дальше» → `passed` |
 | `listen_pairs` | 34-4 | — | — | **не раздаётся**, зарезервирован в enum |
-| `listen_predict` | 34-5 | `exchange`, `own_line`, `options[3]` (на родном: перевод ответа собеседника + переводы двух других его реплик), `correct`, `partner_line` | тап | клиент: сверка с `correct`; реплика собеседника открывается после; неверно — окончательно, без копии |
+| `listen_predict` | 34-5 | `exchange`, `own_line`, `options[3]` (на родном: перевод ответа собеседника + переводы двух других его реплик **той же формы** — вопрос к вопросу, утверждение к утверждению; не хватает — любые), `correct`, `partner_line` | тап | клиент: сверка с `correct`; реплика собеседника открывается после; неверно — окончательно, без копии |
 | `listen_pace` | 34-6 | `exchange`, `partner_line`, `rates [0.75, 1.0]` | плеер на двух темпах | тап «Понял» → `passed` |
 | `listen_number` | 34-7 | `line`, `span` (число внутри `line.text_target`), `options[3]` (на родном), `correct` | тап | клиент: сверка с `correct` |
 | **Говорю сам** — `unit.kind = exchange` | | | | |
@@ -328,22 +328,29 @@ step, kind}`; реплика — `{ref, text_target, text_native, audio}`; `own_
 | группа видов | что принимает `…/answer` |
 |---|---|
 | выбор и сборка (`word_choose`, `word_listen`, `word_assemble`, `word_in_line`, `phrase_assemble`, `phrase_choose_back`, `phrase_slot`, `phrase_slot_listen`, `phrase_combine`, `dialogue_partner`, `listen_question`, `listen_predict`, `listen_number`) | все четыре |
-| голос (`word_repeat`, `phrase_repeat`, `phrase_other_slot`, `dialogue_answer`, `dialogue_ask`, `speak_echo`) | `passed`, `hinted`, `skipped`. **`failed` — 422**: две попытки без зачёта это `skipped`, молчание распознавателя не доказывает провала, и возврата у него нет |
+| голос (`word_repeat`, `phrase_repeat`, `phrase_other_slot`, `dialogue_answer`, `dialogue_ask`, `speak_echo`) | `passed`, `hinted`, `skipped`. **`failed` — 422**: две попытки без зачёта это `skipped`. У `word_repeat`, `dialogue_answer`, `dialogue_ask`, `speak_echo` последствий нет — молчание распознавателя не доказывает провала. **У `phrase_repeat` и `phrase_other_slot` `skipped` с `attempts` ≥ 2 и без `response.no_mic` — провал каркаса** (SESSION-1d, DECISIONS п. 327): копия и возврат, как у выбора ниже; «Пропустить» до второй попытки и `no_mic: true` — без последствий |
 | прохождение (`word_intro`, `phrase_intro`, `dialogue_rescue`, `listen_dialogue`, `listen_review`, `listen_pace`) | `passed` или `skipped` — «Дальше» и «Понял» это `passed` |
 | судья (`phrase_own_slot`, `speak_answer`, `speak_retell`) | **только `skipped`** («Пропустить»). Зачёт этих видов пишет сервер в `…/judge`; `passed` от клиента — 422 |
 
 «Пропустить» на любой карточке — это `skipped`.
 
-Последствия ведёт сервер: **первый** `failed` выбора возвращает ту же карточку копией в конец
-своего этапа (`requeued` в ответе, у копии свой `id` и `retry_of`; `cards_total` дня растёт).
-**Копия перемешана заново** — её `options` и `tiles` в другом порядке (сид — id исходной карточки),
-id вариантов и `correct` остаются верными, так что запомнить «правильный был второй» нельзя.
+Последствия ведёт сервер: **первый** провал — `failed` выбора или `skipped` произнесения фразы после
+двух попыток — возвращает ту же карточку копией в конец своего этапа (`requeued` в ответе, у копии свой
+`id` и `retry_of`; `cards_total` дня растёт). **Копия перемешана заново** — её `options` и `tiles` в
+другом порядке (сид — id исходной карточки), id вариантов и `correct` остаются верными, так что
+запомнить «правильный был второй» нельзя. **Копия карточки фразы — того же вида с другим
+наполнением** (SESSION-1d): следующим по кругу после проваленного, которого ещё не было ни в одной
+карточке каркаса сегодня; свободных нет — любым, кроме проваленного (у каркаса с одним наполнением и без
+окна — тем же; `phrase_combine` — той же карточкой). Её `payload` другой: другой верный вариант, другой
+`filler_index`, другой звук — клиент берёт карточку из `requeued` целиком.
 **Этап «Слушаю и отвечаю» копий не раздаёт**: его разбор (34-3) показывает ответы, поэтому неверный
 `listen_question` / `listen_predict` / `listen_number` — сразу окончательный `failed`, `requeued: null`.
 **Второй** `failed` возвращает единицу — **ровно один раз, на ближайший следующий день любого
 типа** (сцена, повторение или репетиция): `unit.returns_tomorrow: true` и `unit.returns_day` — номер
-этого дня; там она придёт одной карточкой (слово → `word_choose`, каркас → `phrase_slot`, обмен →
-`speak_answer`, `source: returned`). Провал самой карточки-возврата единицу снова не отправляет
+этого дня; там она придёт одной карточкой (слово → `word_choose`, обмен → `speak_answer`, **каркас —
+видом последнего провала с другим наполнением**: узнавание — тем же узнаванием, произнесение — тем же
+произнесением, `phrase_combine` — комбинацией на этот каркас; `source: returned`). Каркас, проваленный
+за день двумя видами, приходит один раз — последним провалом. Провал самой карточки-возврата единицу снова не отправляет
 (`returns_tomorrow: false`), единица `day` не возвращается никогда. День повторения берёт ещё и
 единицы двух предыдущих сцен, которые никуда не возвращались; сцена после него их уже не берёт.
 
@@ -395,15 +402,20 @@ id вариантов и `correct` остаются верными, так чт�
   проверки самого дальнего по шагу обмена, у `listen_question` — неверный вариант другого вопроса.
   Варианты никогда не совпадают ни с верным, ни друг с другом (без учёта регистра);
 - `listen_predict` (34-5) предлагает переводы **реплик собеседника**: его ответ этого ask-обмена и две
-  другие его реплики дня; варианты `check` обмена остаются только у `dialogue_partner` (33-1).
+  другие его реплики дня той же формы (вопрос к вопросу, утверждение к утверждению); варианты `check`
+  обмена остаются только у `dialogue_partner` (33-1);
+- `word_in_line` (31-7) показывает под строкой **полный перевод** — со словом; строка часто реплика
+  собеседника, а не строка, где слово стоит в окне каркаса. Канва 31-7 рисует перевод с пропуском —
+  её правит архитектор (SESSION-1d).
 
 ### Входные фикстуры клиента
 
 `docs/fixtures/day-doctor.json` (intermediate) и `docs/fixtures/day-doctor-beginner.json`
 (beginner) — полный раздатый день «Приём у врача»: тело `data` ответа
 `GET /api/v1/plans/{id}/days/1` как есть (`plan_id`, `day`, `scene`, `stages[]` с карточками,
-`metrics`, `program`, `window`). Оба дня — 75 карточек: слова 24, фразы 19, диалог 15, слушание 9,
-речь 8. Id и адреса в фикстурах подставные и детерминированные (`ulid-0001…`,
+`metrics`, `program`, `window`). Оба дня — 85 карточек (с SESSION-1d): слова 24, фразы 29 (6 интро,
+16 узнаваний — `phrase_slot_listen` 5, `phrase_assemble` 5, `phrase_choose_back` 3, `phrase_slot` 3 —
+6 произнесений, `phrase_combine`), диалог 15, слушание 9, речь 8; окно ≈ 28 мин. Id и адреса в фикстурах подставные и детерминированные (`ulid-0001…`,
 `http://localhost/api/v1/plans/audio/…`), тест держит файлы байт-в-байт — на них и пишется разбор
 на клиенте.
 

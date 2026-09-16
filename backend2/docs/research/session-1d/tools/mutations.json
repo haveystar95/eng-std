@@ -1,0 +1,591 @@
+[
+ {
+  "name": "1. N: два узнавания каждому каркасу с окном",
+  "rule": "Каждому каркасу с окном — по узнаванию на наполнение, до двух; без окна или с одним наполнением — одно (разд. 1, решение архитектора 16.09).",
+  "defect": "каждому каркасу — одно узнавание (RECOGNITIONS = 1).",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "    public const RECOGNITIONS = 2;",
+  "replace": "    public const RECOGNITIONS = 1;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "gives every frame with a window two recognitions"
+   }
+  ]
+ },
+ {
+  "name": "2. третье — пока этап ≤ 540 с (граница включительно)",
+  "rule": "Третье узнавание добавляется, пока этап вместе с ним укладывается в 540 с по DayPace (решение архитектора 16.09).",
+  "defect": "граница строгая: этап ровно в 540 с третье уже не получает.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "if ($seconds + $this->pace->seconds($third->kind) > self::THIRD_BUDGET) {",
+  "replace": "if ($seconds + $this->pace->seconds($third->kind) >= self::THIRD_BUDGET) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "adds a third recognition to the most said frames first"
+   }
+  ]
+ },
+ {
+  "name": "3. третье — не сверх бюджета",
+  "rule": "Первое не уместившееся в 540 с третье узнавание останавливает очередь.",
+  "defect": "бюджет не проверяется: третье получают все каркасы с тремя наполнениями.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "if ($seconds + $this->pace->seconds($third->kind) > self::THIRD_BUDGET) {",
+  "replace": "if (false) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "adds a third recognition to the most said frames first"
+   }
+  ]
+ },
+ {
+  "name": "4. третье — самым частым каркасам",
+  "rule": "Третье — каркасам с наибольшим числом реплик, при равенстве — раньше в визите.",
+  "defect": "очередь третьих — по порядку каркасов, без числа реплик.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "[$b['lines'], $a['first'], $a['order']] <=> [$a['lines'], $b['first'], $b['order']]",
+  "replace": "[$a['order']] <=> [$b['order']]",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "adds a third recognition to the most said frames first"
+   }
+  ]
+ },
+ {
+  "name": "5. своё наполнение каждому узнаванию",
+  "rule": "Каждое узнавание берёт своё наполнение, ни одно не повторяется в пределах каркаса.",
+  "defect": "все узнавания каркаса говорят первым наполнением.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseSeries.php",
+  "find": "$filler = self::fillers($scene, $phrase)[$i] ?? null;",
+  "replace": "$filler = self::fillers($scene, $phrase)[0] ?? null;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "says every recognition with its own filler"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "deals every frame its intro, then its recognitions"
+   }
+  ]
+ },
+ {
+  "name": "6. первым — сказанное",
+  "rule": "Порядок наполнений узнаваний: первым — сказанное в диалоге, дальше остальные по индексу.",
+  "defect": "наполнения идут по индексу, что бы ни было сказано.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseSeries.php",
+  "find": "        if (! in_array($said, $indexes, true)) {\n            return $indexes;\n        }",
+  "replace": "        if (true) {\n            return $indexes;\n        }",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "says every recognition with its own filler"
+   }
+  ]
+ },
+ {
+  "name": "7. вид чередуется по кругу",
+  "rule": "Виды узнаваний каркаса идут по кругу slot → choose_back → slot_listen → assemble от открывающего.",
+  "defect": "все узнавания каркаса — одного вида (открывающего).",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseSeries.php",
+  "find": "return self::CYCLE[($start + max(0, $i)) % count(self::CYCLE)];",
+  "replace": "return self::CYCLE[$start];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "walks the recognitions round the cycle"
+   }
+  ]
+ },
+ {
+  "name": "8. начало круга — по зерну каркаса",
+  "rule": "Открывающий вид выбирает зерно самого каркаса, у разных каркасов он разный.",
+  "defect": "зерно сцены: все каркасы дня открываются одним видом.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseSeries.php",
+  "find": "$scene->seed(\"{$phrase->ref()}:recognize\")",
+  "replace": "$scene->seed('phrases:recognize')",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "walks the recognitions round the cycle"
+   }
+  ]
+ },
+ {
+  "name": "9. сборка не открывает каркас",
+  "rule": "Первым узнаванием каркаса сборка не бывает — только один из трёх выборов (решение архитектора 16.09).",
+  "defect": "открывающий вид выбирается из всех четырёх, сборка может быть первой.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseSeries.php",
+  "find": "$opener = Rotation::pick($scene->seed(\"{$phrase->ref()}:recognize\"), 0, self::OPENERS);",
+  "replace": "$opener = Rotation::pick($scene->seed(\"{$phrase->ref()}:recognize\"), 0, self::CYCLE);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "walks the recognitions round the cycle"
+   }
+  ]
+ },
+ {
+  "name": "10. phrase_slot: prompt_native своего наполнения",
+  "rule": "phrase_slot — prompt_native из frame_native с native ЭТОГО наполнения.",
+  "defect": "prompt_native — сказанная фраза, какое бы наполнение ни было верным.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "            'prompt_native' => $right['native_line'],",
+  "replace": "            'prompt_native' => $phrase->textNative(),",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "makes every recognition right by its own filler"
+   }
+  ]
+ },
+ {
+  "name": "11. phrase_choose_back: верный — перевод своего наполнения",
+  "rule": "phrase_choose_back — верный вариант и вопрос собраны из ЭТОГО наполнения.",
+  "defect": "верный вариант — перевод сказанной фразы.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "['text' => $sentence['text_native']], $candidates, self::OPTIONS);",
+  "replace": "['text' => $phrase->textNative()], $candidates, self::OPTIONS);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "makes every recognition right by its own filler"
+   }
+  ]
+ },
+ {
+  "name": "12. phrase_slot_listen: звук своего наполнения",
+  "rule": "phrase_slot_listen — звучит audio этого наполнения (p{N}.f{K}).",
+  "defect": "звучит файл сказанной фразы p{N}.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "            'filler_index' => $right['index'],\n            'audio' => $right['audio'],",
+  "replace": "            'filler_index' => $right['index'],\n            'audio' => Audio::of($phrase->ref()),",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "makes every recognition right by its own filler"
+   }
+  ]
+ },
+ {
+  "name": "13. ложные — сначала свои наполнения",
+  "rule": "Ложные варианты: сначала другие наполнения ЭТОГО каркаса, добор — наполнения других каркасов.",
+  "defect": "сначала наполнения следующих каркасов, свои — потом.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "        $out = array_values(array_filter(CardObjects::fillers($phrase), static fn (array $f): bool => $f['index'] !== $index));\n        foreach ($this->othersFromNext($scene, $phrase) as $other) {\n            foreach (CardObjects::fillers($other) as $filler) {\n                $out[] = $filler;\n            }\n        }",
+  "replace": "        $out = [];\n        foreach ($this->othersFromNext($scene, $phrase) as $other) {\n            foreach (CardObjects::fillers($other) as $filler) {\n                $out[] = $filler;\n            }\n        }\n        $out = [...$out, ...array_values(array_filter(CardObjects::fillers($phrase), static fn (array $f): bool => $f['index'] !== $index))];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "offers the frame's other fillers first"
+   }
+  ]
+ },
+ {
+  "name": "14. разнесение: минимум две чужие",
+  "rule": "Между двумя карточками одного каркаса — минимум две карточки других каркасов (разд. 2).",
+  "defect": "зазор 0: этап идёт волнами без правила.",
+  "file": "app/Modules/Plan/Domain/Assembly/Spacing.php",
+  "find": "new SpacingSearch($units, $index, $last !== null, $lastUnit, self::GAP, self::BUDGET)",
+  "replace": "new SpacingSearch($units, $index, $last !== null, $lastUnit, 0, self::BUDGET)",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/HelpersTest.php",
+    "filter": "spaces units of any length at least two apart"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "keeps at least two cards of other frames"
+   }
+  ]
+ },
+ {
+  "name": "15. разнесение: интро открывают свои волны",
+  "rule": "Интро всех каркасов идут первыми в своей волне — карточка своей или более поздней волны интро не обгоняет.",
+  "defect": "интро не держат волну и уступают любым свободным карточкам.",
+  "file": "app/Modules/Plan/Domain/Assembly/SpacingSearch.php",
+  "find": "            if ($c >= count($cards) || $this->index[$u][$c] > $firstIntro) {\n                continue;\n            }\n            $short = $this->short($u, $pos);\n            if (! $short || $allowed > 0) {\n                $candidates[] = [(int) $short, $this->index[$u][$c], $u];\n            }",
+  "replace": "            if ($c >= count($cards)) {\n                continue;\n            }\n            $short = $this->short($u, $pos);\n            if (! $short || $allowed > 0) {\n                $candidates[] = [(int) $short, $c === 0 ? PHP_INT_MAX - 1 : $this->index[$u][$c], $u];\n            }",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/HelpersTest.php",
+    "filter": "spaces units of any length at least two apart"
+   }
+  ]
+ },
+ {
+  "name": "16. разнесение: насколько возможно",
+  "rule": "Где правило не выдержать — раскладка с наименьшим числом мест, где карточки каркаса стоят ближе.",
+  "defect": "поиск сразу разрешает пять нарушений и берёт первую попавшуюся раскладку.",
+  "file": "app/Modules/Plan/Domain/Assembly/SpacingSearch.php",
+  "find": "for ($allowed = 0; $allowed <= $this->total; $allowed++) {",
+  "replace": "for ($allowed = 5; $allowed <= $this->total + 5; $allowed++) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/HelpersTest.php",
+    "filter": "spaces what cannot be held apart"
+   }
+  ]
+ },
+ {
+  "name": "17. beginner: phrase_repeat не со сказанным",
+  "rule": "beginner: phrase_repeat с наполнением, которого ученик ещё не говорил (у каркаса с одним наполнением — said).",
+  "defect": "повторяют сказанную фразу.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "foreach (PhraseSeries::repeatFillers($scene, $phrase) as $filler) {",
+  "replace": "foreach ([] as $filler) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "has a beginner say the frame with a filler not said yet"
+   }
+  ]
+ },
+ {
+  "name": "18. beginner: сначала не сказанное в диалоге",
+  "rule": "Каркас, сказанный дважды, повторяют с наполнением, которого нет в диалоге.",
+  "defect": "следующее по кругу, даже если диалог его говорит.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseSeries.php",
+  "find": "            if ($inDialogue[$index]) {",
+  "replace": "            if (false) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "has a beginner say the frame with a filler not said yet"
+   }
+  ]
+ },
+ {
+  "name": "19. other_slot: не занятое узнаваниями",
+  "rule": "intermediate: phrase_other_slot берёт наполнение, не занятое ни узнаваниями, ни said; свободных нет — любое, кроме said.",
+  "defect": "любое, кроме said, даже когда свободное есть.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseSeries.php",
+  "find": "$free === [] ? $rest : $free",
+  "replace": "$rest",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "has phrase_other_slot ask for a filler no recognition took"
+   }
+  ]
+ },
+ {
+  "name": "20. копия — другое наполнение, сначала свободное",
+  "rule": "Копия в своём дне — тот же вид, следующее по кругу наполнение, которого ещё не было в карточках каркаса; свободных нет — любое, кроме проваленного.",
+  "defect": "занятые наполнения идут раньше свободных.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseSeries.php",
+  "find": "return [...$free, ...$taken, ...$last];",
+  "replace": "return [...$taken, ...$free, ...$last];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "says the copy of a failed phrase card as the same kind"
+   }
+  ]
+ },
+ {
+  "name": "21. копия фразы собирается заново",
+  "rule": "Копия проваленной карточки фразы — тот же вид с другим наполнением (по HTTP).",
+  "defect": "копия — та же карточка, только перемешанная.",
+  "file": "app/Modules/Plan/Domain/Assembly/DayAssembler.php",
+  "find": "            $payload = $draft === null ? $payload : $draft->payload;",
+  "replace": "            $payload = $draft === null ? $payload : $payload;",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionPhraseWindowsTest.php",
+    "filter": "deals a failed phrase recognition again as the same kind"
+   }
+  ]
+ },
+ {
+  "name": "22. возврат — видом провала",
+  "rule": "В день возврата фраза приходит видом, которым её провалили последний раз, с другим наполнением.",
+  "defect": "фраза возвращается первым узнаванием, как бы её ни провалили.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "            $failedAs !== null => $this->series->again($failedAs, $scene, $phrase, $failedFiller, $failedFiller === null ? [] : [$failedFiller]),",
+  "replace": "            $failedAs !== null => null,",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "brings a frame back as the kind it failed as"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/SessionDayAssemblyTest.php",
+    "filter": "deals the returns once each at the end of their stage"
+   }
+  ]
+ },
+ {
+  "name": "23. возврат — последний провал",
+  "rule": "Единица, провалившаяся двумя видами, возвращается один раз — видом последнего провала.",
+  "defect": "берётся первый провал дня.",
+  "file": "app/Modules/Plan/Application/Service/DayDealer.php",
+  "find": "        return [$card->answeredAt()?->getTimestamp() ?? 0, $card->stage() === $than->stage() ? $card->position() : 0]\n            > [$than->answeredAt()",
+  "replace": "        return [$card->answeredAt()?->getTimestamp() ?? 0, $card->stage() === $than->stage() ? $card->position() : 0]\n            < [$than->answeredAt()",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionPhraseWindowsTest.php",
+    "filter": "brings a frame failed as a recognition and then as said aloud back once"
+   }
+  ]
+ },
+ {
+  "name": "24. единица возвращается один раз",
+  "rule": "Карточка-возврат единицу снова не помечает (правило хвоста 1a) — и для фраз.",
+  "defect": "возврат, проваленный дважды, снова помечает каркас.",
+  "file": "app/Modules/Plan/Domain/Entity/DayCard.php",
+  "find": "$this->returns = $this->unitKind->returns() && $this->source === CardSource::Today;",
+  "replace": "$this->returns = $this->unitKind->returns();",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionPhraseWindowsTest.php",
+    "filter": "deals a failed phrase recognition again as the same kind"
+   }
+  ]
+ },
+ {
+  "name": "25. провал голоса — после двух попыток",
+  "rule": "Провал произнесения = skipped с attempts ≥ 2 (п. 327).",
+  "defect": "любой skipped — провал, даже с первой попытки.",
+  "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+  "find": "$result === CardResult::Skipped && $attempts >= self::SPOKEN_LAPSE_ATTEMPTS && ! $noMic,",
+  "replace": "$result === CardResult::Skipped && ! $noMic,",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/CardKindTest.php",
+    "filter": "counts a lapse"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/DayCardSessionTest.php",
+    "filter": "deals a phrase said aloud and given up on"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionPhraseWindowsTest.php",
+    "filter": "deals a phrase said aloud and given up on"
+   }
+  ]
+ },
+ {
+  "name": "26. провал голоса — не без микрофона",
+  "rule": "Отказ микрофона (no_mic) — без последствий (п. 327).",
+  "defect": "skipped без микрофона после двух попыток — провал.",
+  "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+  "find": "$result === CardResult::Skipped && $attempts >= self::SPOKEN_LAPSE_ATTEMPTS && ! $noMic,",
+  "replace": "$result === CardResult::Skipped && $attempts >= self::SPOKEN_LAPSE_ATTEMPTS,",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/CardKindTest.php",
+    "filter": "counts a lapse"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/DayCardSessionTest.php",
+    "filter": "deals a phrase said aloud and given up on"
+   }
+  ]
+ },
+ {
+  "name": "27. провал голоса — только у фраз",
+  "rule": "Провал голоса есть только у phrase_repeat и phrase_other_slot; копия и возврат — у них.",
+  "defect": "голос фраз снова без последствий.",
+  "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+  "find": "return $this === self::PhraseRepeat || $this === self::PhraseOtherSlot;",
+  "replace": "return false;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/CardKindTest.php",
+    "filter": "counts a lapse"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionPhraseWindowsTest.php",
+    "filter": "deals a phrase said aloud and given up on"
+   }
+  ]
+ },
+ {
+  "name": "28. провал голоса не расползается",
+  "rule": "word_repeat, dialogue_answer/ask, speak_echo — две попытки без зачёта по-прежнему без последствий.",
+  "defect": "провал после двух попыток у всех голосовых видов.",
+  "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+  "find": "return $this === self::PhraseRepeat || $this === self::PhraseOtherSlot;",
+  "replace": "return $this->isSpoken();",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/CardKindTest.php",
+    "filter": "counts a lapse"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/DayCardSessionTest.php",
+    "filter": "deals a phrase said aloud and given up on"
+   }
+  ]
+ },
+ {
+  "name": "29. word_in_line: строка вне окна",
+  "rule": "5.1: строка для слова — сначала реплика, где слово стоит вне окна каркаса.",
+  "defect": "строка — как раньше (по used_in), даже если слово там в окне.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "$usedIn = $this->outsideWindow($scene, $term) ?? $this->usedIn($scene, $term);",
+  "replace": "$usedIn = $this->usedIn($scene, $term);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "puts word_in_line on a line where the word stands outside"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "gives every kind exactly its keys"
+   }
+  ]
+ },
+ {
+  "name": "30. word_in_line: собеседник первым",
+  "rule": "5.1: реплика собеседника — в первую очередь.",
+  "defect": "первая по визиту реплика вне окна, чья бы ни была.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "                if (! $message->isLearner()) {\n                    return $line;\n                }",
+  "replace": "                if (false) {\n                    return $line;\n                }",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "puts word_in_line on a line where the word stands outside"
+   }
+  ]
+ },
+ {
+  "name": "31. word_in_line: полный перевод, без text_native_gapped",
+  "rule": "5.1: под строкой — полный перевод; text_native_gapped из payload убран.",
+  "defect": "ключ text_native_gapped снова в строке.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "                'text_native' => $usedIn['text_native'],\n                'audio' => Audio::of($usedIn['line_ref']),",
+  "replace": "                'text_native' => $usedIn['text_native'],\n                'text_native_gapped' => null,\n                'audio' => Audio::of($usedIn['line_ref']),",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "keeps the whole translation under the line"
+   }
+  ]
+ },
+ {
+  "name": "32. word_in_line: ложные не из своего каркаса",
+  "rule": "5.1: ложные варианты не берутся из наполнений того же каркаса, что и верный.",
+  "defect": "наполнения того же окна среди ложных.",
+  "file": "app/Modules/Plan/Domain/Assembly/WordCards.php",
+  "find": "static fn (PlanTerm $other): bool => ! self::fills($other->textTarget(), $windows),",
+  "replace": "static fn (PlanTerm $other): bool => true,",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/WordsStageTest.php",
+    "filter": "keeps the whole translation under the line"
+   }
+  ]
+ },
+ {
+  "name": "33. phrase_combine: далёкие каркасы",
+  "rule": "5.2: два ложных каркаса — из самых далёких по |Δstep| обменов.",
+  "defect": "ближние обмены первыми.",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "            $scene->farthestFrom($exchange->step),\n        );",
+  "replace": "            array_reverse($scene->farthestFrom($exchange->step)),\n        );",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "builds phrase_combine on an answer exchange"
+   }
+  ]
+ },
+ {
+  "name": "34. listen_predict: та же форма",
+  "rule": "5.3: ложные варианты той же формы, что верный (вопрос/утверждение по sentence_ends пакета цели); не хватает — любые.",
+  "defect": "форма не учитывается.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+  "find": "if (self::asks($scene, $message->textTarget) === $asks) {",
+  "replace": "if (true) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "predicts among lines of the answer"
+   }
+  ]
+ },
+ {
+  "name": "35. фикстуры дня держатся байт-в-байт",
+  "rule": "Фикстуры docs/fixtures/day-doctor*.json пересобраны под новый состав и держатся тестом байт-в-байт.",
+  "defect": "бюджет третьих 480 с — фикстура теряет третьи узнавания (первая версия дефекта, 500 с, эквивалентна: фразы фикстуры стоят 499 с).",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "    public const THIRD_BUDGET = 540;",
+  "replace": "    public const THIRD_BUDGET = 480;",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/SessionDayFixtureTest.php"
+   }
+  ]
+ },
+ {
+  "name": "36. самый далёкий обмен — общий для dialogue_partner и combine",
+  "rule": "Четвёртый вариант dialogue_partner и ложные каркасы phrase_combine — из самых далёких по |Δstep| обменов (SceneMaterial::farthestFrom; перенацеленная мутация 10a SESSION-1a).",
+  "defect": "ближние обмены первыми — в общей сортировке.",
+  "file": "app/Modules/Plan/Domain/Assembly/SceneMaterial.php",
+  "find": "[abs($b->step - $step), $a->step] <=> [abs($a->step - $step), $b->step]",
+  "replace": "[abs($a->step - $step), $a->step] <=> [abs($b->step - $step), $b->step]",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DialogueStageTest.php",
+    "filter": "fourth, the right option of the farthest exchange"
+   },
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "builds phrase_combine on an answer exchange"
+   }
+  ]
+ },
+ {
+  "name": "37. listen_predict: верный — ответ собеседника",
+  "rule": "listen_predict: верный вариант — перевод ответа собеседника этого ask-обмена (перенацеленная мутация 50 SESSION-1a).",
+  "defect": "верный — перевод своей реплики ученика.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+  "find": "$chosen = Options::choose($seed, ['text' => $partner->textNative], [...$same, ...$other], self::PREDICT_OPTIONS);",
+  "replace": "$chosen = Options::choose($seed, ['text' => $own->textNative], [...$same, ...$other], self::PREDICT_OPTIONS);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "among the translations of two other partner lines"
+   }
+  ]
+ },
+ {
+  "name": "38. listen_predict: ложные — другие реплики собеседника",
+  "rule": "listen_predict: ложные — переводы других реплик собеседника, не варианты check (перенацеленная мутация 51 SESSION-1a).",
+  "defect": "ложные — варианты check обмена.",
+  "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+  "find": "                $candidates[] = $line['message'];",
+  "replace": "                $candidates[] = $exchange->check->options[0] ?? $line['message'];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+    "filter": "among the translations of two other partner lines"
+   }
+  ]
+ },
+ {
+  "name": "39. этап слушания без копий",
+  "rule": "«Слушаю и отвечаю» копий не раздаёт — и с новым правилом провала голоса (перенацеленная мутация 56 SESSION-1a).",
+  "defect": "копия и для выбора этапа слушания.",
+  "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+  "find": "return ($this->isChoice() && $this->stage() !== Stage::Listen) || $this->lapsesOnSkip();",
+  "replace": "return $this->isChoice() || $this->lapsesOnSkip();",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/DayCardSessionTest.php",
+    "filter": "deals no copy of a failed listening choice"
+   },
+   {
+    "path": "tests/Feature/Plan/SessionReturnsTest.php",
+    "filter": "deals no copy of a wrong listening answer"
+   }
+  ]
+ }
+]
