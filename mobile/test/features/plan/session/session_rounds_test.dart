@@ -10,10 +10,12 @@ import 'package:eng_std/features/plan/session/parts/session_bits.dart';
 
 import '../../../support/session_harness.dart';
 
-/// ROUNDS OF PHRASE_REPEAT AND PHRASE_OTHER_SLOT (polish pass SESSION-1b′, item 12): round 1 — the card's filler,
-/// round 2 — the frame's next visible filler by index (for 32-7 — one the dialogue does not say); both rounds pass
-/// by coverage; two misses in any round — `skipped`; one answer at the end with the last filler said; a frame
-/// without a second filler — one round, as before.
+/// ROUNDS OF PHRASE_REPEAT (polish pass SESSION-1b′, item 12): round 1 — the card's filler, round 2 — the frame's
+/// next visible filler by index; both rounds pass by coverage; two misses in any round — `skipped`; one answer at the
+/// end with the last filler said; a frame without a second filler — one round, as before.
+///
+/// `phrase_other_slot` (32-7) lost its rounds with SESSION-2b: the learner chooses the meaning with a chip, and the
+/// card asks once — the tests of that card live in `session_cards_test.dart`.
 void main() {
   final intermediate = sessionFixture('day-doctor');
   final beginner = sessionFixture('day-doctor-beginner');
@@ -23,9 +25,9 @@ void main() {
   String roundLabel(WidgetTester tester) => tester.widget<Text>(find.byKey(const ValueKey('voice-round'))).data!;
 
   group('VoiceRounds', () {
-    // CATCHES: a round 2 that repeats round 1, takes a filler the dialogue says (32-7), stops at the last index
-    // instead of wrapping, or appears for a frame with nothing to change.
-    test('round 2 — the next visible filler by index, cyclically; 32-7 skips the dialogue\'s fillers', () {
+    // CATCHES: a round 2 that repeats round 1, stops at the last index instead of wrapping, or appears for a frame
+    // with nothing to change.
+    test('round 2 — the next visible filler by index, cyclically', () {
       final repeats = beginner.stages.expand((s) => s.cards).map((c) => c.payload).whereType<PhraseRepeatPayload>().toList();
       final p1 = VoiceRounds.ofRepeat(repeats.firstWhere((p) => p.frame.ref == 'p1'));
       expect([for (final r in p1) r.fillerIndex], [1, 2]);
@@ -39,14 +41,6 @@ void main() {
 
       final p4 = VoiceRounds.ofRepeat(repeats.firstWhere((p) => p.frame.ref == 'p4'));
       expect(p4, hasLength(1), reason: 'a frame without a slot — one round');
-
-      final others = intermediate.stages.expand((s) => s.cards).map((c) => c.payload).whereType<PhraseOtherSlotPayload>().toList();
-      final o1 = VoiceRounds.ofOtherSlot(others.firstWhere((p) => p.frame.ref == 'p1'));
-      expect([for (final r in o1) r.fillerIndex], [2, 1], reason: 'after 2 — 0 is said in the dialogue, so 1');
-      expect(o1.last.slotExpected, 'neck');
-      expect(o1.last.native, 'У него болит шея.');
-      final o6 = VoiceRounds.ofOtherSlot(others.firstWhere((p) => p.frame.ref == 'p6'));
-      expect(o6, hasLength(1), reason: 'every other filler of p6 is said in the dialogue');
     });
   });
 
@@ -82,31 +76,32 @@ void main() {
     expect(probe.nexts, 1);
   });
 
-  // CATCHES: misses counted across rounds (one miss in each closing the card), a card that passes on round 1 alone.
-  testWidgets('phrase_other_slot: a pass, then two misses in round 2 — skipped, the filler of round 1', (tester) async {
+  // RULE (SESSION-2b §1): 32-7 asks ONCE — the chip chooses the meaning, and two misses close the card as `skipped`,
+  // with the chosen meaning in the answer. No round header and no second forced filler.
+  // CATCHES: rounds coming back to the card (the chip's choice taken away), misses counted per round.
+  testWidgets('phrase_other_slot: no rounds — two misses close the card, the chosen meaning in the answer', (tester) async {
     final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
     final probe = CardProbe();
     await pumpCard(tester, probeEnv(card, probe));
-    await sayDebug(tester, 'It hurts in his shoulder');
-    expect(probe.answers, isEmpty);
-    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byKey(const ValueKey('voice-round')), findsNothing, reason: 'one round');
+    await tester.tap(find.byKey(const ValueKey('chip-1')));
     await tester.pump();
-    expect(roundLabel(tester), '2 из 2');
-    expect(slotOf(tester), isNull);
 
     await sayDebug(tester, 'hello');
-    expect(probe.answers, isEmpty, reason: 'one miss in round 2 — once more');
+    expect(probe.answers, isEmpty, reason: 'one miss — once more');
+    expect(slotOf(tester), 'neck', reason: 'the chosen meaning stays in the slot');
     await sayDebug(tester, 'it hurts in his shoulder');
-    expect(results(probe), [SessionResult.skipped], reason: 'round 1\'s filler is not round 2\'s — a second miss');
+    expect(results(probe), [SessionResult.skipped], reason: 'the chosen meaning was not said twice');
     final answer = probe.answers.single;
-    expect(answer.attempts, 3);
-    expect(answer.response?.fillerIndex, 2, reason: 'the last filler said — round 1\'s');
+    expect(answer.attempts, 2);
+    expect(answer.response?.fillerIndex, 1, reason: 'the meaning the learner chose');
     expect(find.text('Дальше'), findsOneWidget);
     await settleCard(tester);
   });
 
-  // CATCHES: rounds invented for a frame with a single visible filler, and a header on a one-round card.
-  testWidgets('one visible filler — one round, as before: no header, the answer at once', (tester) async {
+  // CATCHES: a chip row on a frame with a single visible meaning (there is nothing to choose), and an answer that
+  // names a filler the card never offered.
+  testWidgets('one visible filler — no chips, the answer at once', (tester) async {
     final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
     final json = [
       for (final stage in (raw['stages'] as List).cast<Map<String, dynamic>>()) ...(stage['cards'] as List).cast<Map<String, dynamic>>(),
@@ -116,9 +111,10 @@ void main() {
     final probe = CardProbe();
     await pumpCard(tester, probeEnv(SessionCard.fromJson(json)!, probe));
     expect(find.byKey(const ValueKey('voice-round')), findsNothing);
+    expect(find.byKey(const ValueKey('chip-2')), findsNothing, reason: 'one meaning — nothing to choose');
     await sayDebug(tester, 'It hurts in his shoulder');
     expect(results(probe), [SessionResult.passed]);
-    expect(probe.answers.single.response?.fillerIndex, isNull, reason: 'the answer as before rounds');
+    expect(probe.answers.single.response?.fillerIndex, 2, reason: 'the only meaning of the frame');
     await settleCard(tester);
   });
 }

@@ -38,6 +38,7 @@ class CardEnv {
     required this.openSettings,
     this.outcome,
     this.advancing = false,
+    this.replay = false,
     this.frameSentence,
     this.termText,
     this.level = PlanLevel.intermediate,
@@ -79,6 +80,10 @@ class CardEnv {
   /// «Next» waits until the answer is sent.
   final bool advancing;
 
+  /// «Once more» from the day summary (SESSION-2a §4): the stage is walked again on the phone and nothing is sent.
+  /// A free answer says so under its task — there is nobody to grade it ([replayNote]).
+  final bool replay;
+
   /// The day's frame as a whole phrase by its `ref` ([SessionDay.frameSentence]) — the «Combination» options.
   final String? Function(String frameRef)? frameSentence;
 
@@ -108,6 +113,12 @@ class CardEnv {
 
   /// After the second failure the unit comes back tomorrow — the server said so in its answer.
   bool get returnsTomorrow => outcome?.unit.returnsTomorrow ?? false;
+
+  /// «Replay, not graded» under the task of a FREE answer (32-9, 35-2, 35-4) while the stage is being walked again:
+  /// the judge is not asked and nothing goes to the server, so the card must not promise a verdict. Null — the card
+  /// is graded as usual.
+  String? replayNote(AppLocalizations l) =>
+      replay && card.kind.grading == SessionGrading.judge ? l.planSessionReplayNoGrade : null;
 }
 
 /// SHARED CARD LAYOUT: the task line on top, the material sheet (pinned to the task line or centred in the free
@@ -306,6 +317,10 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   /// The round's `filler_index` — for the answer of a card with rounds.
   int? fillerIndexOfRound(int round) => null;
 
+  /// The `filler_index` the answer carries: a card with rounds names the last filler said; 32-7 names the meaning
+  /// the learner chose. Null — the card names no filler.
+  int? get answerFillerIndex => roundCount > 1 && _lastPassedRound >= 0 ? fillerIndexOfRound(_lastPassedRound) : null;
+
   /// The next round has started — the card shows its phrase.
   void onRoundStarted(int round) {}
 
@@ -346,13 +361,22 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     mic.addListener(_onMic);
   }
 
+  /// What must be said has changed while the card is open (32-7 — another chip): a new microphone with the new
+  /// reference. The attempts already made stay: it is the same card.
+  void refreshVoice() {
+    mic.removeListener(_onMic);
+    mic.dispose();
+    initVoice();
+    setState(() {});
+  }
+
   /// The answer's response. A card with rounds carries the last filler said (none said — none); `mode = "rounds"`
   /// of item 12 is NOT sent: the server accepts only `chips` / `tiles` / `voice_hint` / `voice_blind`
   /// (`AnswerCardRequest::MODES`) and answers anything else with 422, which drops the answer.
   SessionResponse _response({String? heard, bool noMic = false}) => SessionResponse(
     heard: heard == null || heard.isEmpty ? null : heard,
     noMic: noMic ? true : null,
-    fillerIndex: roundCount > 1 && _lastPassedRound >= 0 ? fillerIndexOfRound(_lastPassedRound) : null,
+    fillerIndex: answerFillerIndex,
     mode: responseMode,
   );
 
@@ -446,8 +470,15 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   }
 
   /// The voice card's dock: the microphone, or «Next» after the second attempt. [liveLineInDock] false — the live
-  /// line stands in the card itself (the own bubble of the dialogue, 33-3), the dock keeps the wave and the captions.
-  Widget voiceDock(BuildContext context, {bool showHeardLine = true, String? heardText, bool liveLineInDock = true}) {
+  /// line stands in the card itself (the own bubble of the dialogue, 33-3), the dock keeps the wave and the captions;
+  /// [showIdleCaption] false — no «tap to speak» at all, the card's task line says it (32-7).
+  Widget voiceDock(
+    BuildContext context, {
+    bool showHeardLine = true,
+    String? heardText,
+    bool liveLineInDock = true,
+    bool showIdleCaption = true,
+  }) {
     final l = AppLocalizations.of(context);
     // Second attempt without a pass: «once more» is no longer offered — only «Next».
     if (skippedAfterMisses) {
@@ -459,6 +490,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
       onSkip: _done ? null : () => skip(),
       showHeardLine: showHeardLine,
       heardText: heardText,
+      showIdleCaption: showIdleCaption,
       liveLine: liveLineInDock ? MicLiveLine.target : MicLiveLine.none,
     );
   }

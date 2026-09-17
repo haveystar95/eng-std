@@ -7,7 +7,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
 import 'package:eng_std/features/plan/session/cards/card_kit.dart' show CardListen;
-import 'package:eng_std/features/plan/session/cards/phrase_cards.dart' show nativeTaskOf;
 import 'package:eng_std/features/plan/session/parts/session_bits.dart';
 import 'package:eng_std/features/plan/session/parts/session_choice.dart';
 import 'package:eng_std/features/plan/session/parts/session_tiles.dart';
@@ -254,36 +253,55 @@ void main() {
     // dialogue; «this part can change» above neutral chips; a chip substitutes and voices its filler, the chip does
     // not darken — the slot flashes for 600 ms; «Got it» → passed.
     // CATCHES: an empty slot on open, a chip that turns ink as if it were an answer, a flash that never ends.
-    testWidgets('phrase_intro (32-1): said filler in the slot, neutral chips substitute and voice, the slot flashes', (tester) async {
+    // RULE (SESSION-2b §1, кадр 32-1): a meaning is ALWAYS in the slot and its chip is ink; the reading and the
+    // translation change with it; the grey «this part can change» and the «FRAME» eyebrow are gone.
+    // CATCHES: a chip that does not darken (the old neutral row), a reading or a translation left at the filler the
+    // card opened with, the eyebrow and the caption coming back.
+    testWidgets('phrase_intro (32-1): the chosen chip is ink and stands in the slot; reading and translation follow it', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.phraseIntro), probe, voice: voice));
       expect(find.text('Посмотри и послушай'), findsOneWidget);
-      expect(find.text('КАРКАС'), findsOneWidget);
-      expect(find.text('эту часть можно менять'), findsOneWidget);
+      expect(find.text('КАРКАС'), findsNothing);
+      expect(find.text('эту часть можно менять'), findsNothing);
       expect(frameLine(tester).slot, 'lower back', reason: 'the frame opens with the filler said in the dialogue');
       expect(frameLine(tester).look, SlotLook.filled);
       expect(find.text('У него болит поясница.'), findsOneWidget);
-      for (final key in ['chip-0', 'chip-1', 'chip-2']) {
-        expect(chip(tester, key).outlined, isTrue, reason: '$key is neutral');
-        expect(chip(tester, key).selected, isFalse, reason: 'no chip is selected on open');
+      expect(chip(tester, 'chip-0').selected, isTrue, reason: 'one chip is always chosen');
+      for (final key in ['chip-1', 'chip-2']) {
+        expect(chip(tester, key).selected, isFalse);
       }
 
       await tester.tap(find.byKey(const ValueKey('chip-1')));
       await tester.pump();
       expect(voice.played, ['p1.f2@1.0']);
       expect(frameLine(tester).slot, 'neck');
-      expect(frameLine(tester).look, SlotLook.highlight, reason: 'the slot flashes');
-      expect(chip(tester, 'chip-1').selected, isFalse, reason: 'the chip does not darken');
+      expect(frameLine(tester).look, SlotLook.filled, reason: 'the slot stays a brass window');
+      expect(chip(tester, 'chip-1').selected, isTrue, reason: 'the chosen chip is ink');
+      expect(chip(tester, 'chip-0').selected, isFalse);
       expect(find.text('У него болит шея.'), findsOneWidget);
       expect(find.text('ит хёртс ин хиз нэк'), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump();
-      expect(frameLine(tester).look, SlotLook.filled, reason: 'the flash lasts 600 ms');
-      expect(frameLine(tester).slot, 'neck');
 
       await tapText(tester, 'Понятно');
       expect(results(probe), [SessionResult.passed]);
+      await settleCard(tester);
+    });
+
+    // RULE (SESSION-2b §1, кадр 32-1, third state): one meaning — no slot and no chips, the phrase whole.
+    // CATCHES: a window with a single chip under it (there is nothing to choose), an empty window on a frame whose
+    // only meaning the day names.
+    testWidgets('phrase_intro (32-1): one meaning — the phrase whole, no slot and no chips', (tester) async {
+      final one = fixtureCardEdited('day-doctor', 'phrase_intro', (p) {
+        final frame = p['frame'] as Map<String, dynamic>;
+        final slot = frame['slot'] as Map<String, dynamic>;
+        slot['fillers'] = [(slot['fillers'] as List).first];
+      });
+      await pumpCard(tester, probeEnv(one, CardProbe()));
+      expect(find.byType(SessionFrameText), findsOneWidget);
+      expect(frameLine(tester).window, isFalse, reason: 'no window: there is nothing to change');
+      expect(frameLine(tester).before, 'It hurts in his lower back.', reason: 'the phrase as the dialogue says it');
+      expect(find.byKey(const ValueKey('chip-0')), findsNothing);
+      expect(find.text('У него болит поясница.'), findsOneWidget);
       await settleCard(tester);
     });
 
@@ -392,12 +410,21 @@ void main() {
       expect(reverse.played, isEmpty, reason: '31-4 has no sound on the question');
     });
 
-    testWidgets('phrase_slot (32-4): a filler into the slot; correct — the slot in sage', (tester) async {
+    // RULE (SESSION-2b §1, кадр 32-4): the translation stands OVER the card in Literata 26 — it is the task; the grey
+    // «Перевод» eyebrow under the card is gone.
+    // CATCHES: the translation back inside the sheet, the eyebrow coming back, the translation set in the small
+    // 15 body type.
+    testWidgets('phrase_slot (32-4): a filler into the slot; the translation is the task over the card', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.phraseSlot);
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
       expect(find.text('Вставь в окно'), findsOneWidget);
-      expect(find.text('У него болит плечо.'), findsOneWidget);
+      expect(find.text('ПЕРЕВОД'), findsNothing);
+      final native = tester.widget<Text>(find.byKey(const ValueKey('slot-native')));
+      expect(native.data, 'У него болит плечо.');
+      expect(native.style, AppTextSession.question, reason: 'Literata 26 — the task itself');
+      final sheet = tester.getRect(find.byType(SessionSheet).first);
+      expect(tester.getRect(find.byKey(const ValueKey('slot-native'))).bottom, lessThan(sheet.top), reason: 'over the card');
       expect(frameLine(tester).slot, isNull);
       await tapText(tester, 'shoulder');
       expect(results(probe), [SessionResult.passed]);
@@ -456,72 +483,40 @@ void main() {
       await settleCard(tester);
     });
 
-    // RULE (SESSION-1b′, item 2): nothing in the slot — an empty brass window; the whole native sentence under the
-    // phrase with the slot's piece in bold ink; no native text inside the English line; the pass is the frame's
-    // coverage AND every word of `slot_expected`, and the heard filler then fills the slot in sage.
-    // CATCHES: the native value inside the English line (the old native word in the slot), a pass on the frame alone.
-    testWidgets('phrase_other_slot (32-7): empty slot, the native sentence below; frame and slot graded together', (tester) async {
+    // RULE (SESSION-2b §1, кадр 32-7): the chips only CHOOSE — one is always chosen and stands in the slot, and the
+    // microphone is the only action; the native sentence, what is said and what is graded all follow the chosen chip.
+    // CATCHES: an empty window on open (the old layout), a «tap to speak» caption under the chips, a card that keeps
+    // grading the filler it came with after another chip was chosen.
+    testWidgets('phrase_other_slot (32-7): the chip chooses the meaning — slot, sentence and grading follow it', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
-      expect(find.text('Скажи целиком — окно по-русски ниже'), findsOneWidget);
-      expect(frameLine(tester).slot, isNull, reason: 'the slot is empty');
-      expect(frameLine(tester).look, SlotLook.empty);
-      expect(find.text('плечо'), findsNothing, reason: 'no native text inside the English line');
-      final task = tester.widget<Text>(find.byKey(const ValueKey('other-slot-task'))).textSpan! as TextSpan;
-      expect(task.toPlainText(), 'У него болит плечо.');
-      final bold = task.children!.cast<TextSpan>().singleWhere((s) => s.style?.fontWeight == FontWeight.w700);
-      expect(bold.text, 'плечо', reason: 'the slot piece is bold');
-      expect(bold.style?.color, AppColors.ink);
-      expect(task.style?.color, AppColors.tertiary, reason: 'the rest of the sentence is gray');
+      expect(find.text('Выбери, что вставить, и скажи фразу целиком'), findsOneWidget);
+      expect(find.text('тап — говорить'), findsNothing, reason: 'the microphone is the only action');
+      expect(find.text('ОКНО'), findsNothing);
+      expect(frameLine(tester).slot, 'shoulder', reason: 'the card opens with its own filler in the slot');
+      expect(frameLine(tester).look, SlotLook.filled);
+      expect(chip(tester, 'chip-2').selected, isTrue);
+      expect(find.text('У него болит плечо.'), findsOneWidget);
 
-      await enterHeard(tester, 'it hurts in his neck');
-      await tester.pump(const Duration(milliseconds: 950));
-      expect(find.text('не расслышал, ещё раз'), findsNothing, reason: 'still recording until the pause');
-      await tester.pump(const Duration(milliseconds: 60));
-      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: 'the pause; the frame alone does not pass');
-      expect(probe.answers, isEmpty);
-
-      await enterHeard(tester, 'It hurts in his shoulder');
-      await tester.pump(const Duration(milliseconds: 950));
-      expect(frameLine(tester).slot, isNull, reason: 'covered, still recording until the pause — nothing graded yet');
-      await tester.pump(const Duration(milliseconds: 60));
-      await tester.pump();
-      expect(frameLine(tester).slot, 'shoulder', reason: 'graded after the pause; the heard filler fills the slot');
-      expect(frameLine(tester).look, SlotLook.sage);
-      expect(probe.answers, isEmpty, reason: 'round 1 of 2 — the answer waits for round 2');
-
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump();
-      expect(frameLine(tester).slot, isNull, reason: 'round 2 — the slot is empty again');
-      final round2 = tester.widget<Text>(find.byKey(const ValueKey('other-slot-task'))).textSpan! as TextSpan;
-      expect(round2.toPlainText(), 'У него болит шея.');
-      await enterHeard(tester, 'It hurts in his neck');
-      await tester.pump(const Duration(milliseconds: 1010));
-      expect(results(probe), [SessionResult.passed]);
+      await tester.tap(find.byKey(const ValueKey('chip-1')));
       await tester.pump();
       expect(frameLine(tester).slot, 'neck');
+      expect(chip(tester, 'chip-1').selected, isTrue);
+      expect(find.text('У него болит шея.'), findsOneWidget);
+
+      // The card was dealt for «shoulder» — after the chip it grades «neck».
+      await sayDebug(tester, 'It hurts in his shoulder');
+      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: 'the chosen meaning was not said');
+      expect(probe.answers, isEmpty);
+
+      await sayDebug(tester, 'It hurts in his neck');
+      await tester.pump();
+      expect(results(probe), [SessionResult.passed]);
+      expect(probe.answers.single.response?.fillerIndex, 1, reason: 'the answer carries the chosen meaning');
+      expect(frameLine(tester).slot, 'neck', reason: 'the heard filler fills the slot');
+      expect(frameLine(tester).look, SlotLook.sage);
       await settleCard(tester);
-    });
-
-    test('phrase_other_slot: the native sentence — assembled from the slot value or split out of a whole sentence', () {
-      final p = fixtureCard(intermediate, SessionKind.phraseOtherSlot).payload as PhraseOtherSlotPayload;
-      expect(p.taskNative, 'плечо', reason: 'the fixture sends only the slot value');
-      final assembled = nativeTaskOf(p);
-      expect((assembled.before, assembled.piece, assembled.after), ('У него болит ', 'плечо', '.'));
-
-      final whole = PhraseOtherSlotPayload(
-        sceneId: p.sceneId,
-        frame: p.frame,
-        fillerIndex: p.fillerIndex,
-        taskNative: 'У него болит плечо.',
-        expectedText: p.expectedText,
-        slotExpected: p.slotExpected,
-        key: p.key,
-        coverageMin: p.coverageMin,
-      );
-      final split = nativeTaskOf(whole);
-      expect((split.before, split.piece, split.after), ('У него болит ', 'плечо', '.'));
     });
 
     // RULE (SESSION-1b′, item 1): step 1 — three WHOLE sentences (`frames[].said`, no «___»), each with «listen» 28

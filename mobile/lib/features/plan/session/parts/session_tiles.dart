@@ -202,20 +202,30 @@ class SessionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tile = AnimatedContainer(
+    // The fill goes paper ↔ ink over [AppMotion.sessionChipSelect], and the label follows the FILL, not the flag:
+    // switched by the flag it spends the whole animation as paper on paper (the chip just chosen) or ink on ink
+    // (the one just let go) — an invisible chip at every tap on the choosing rows (32-1, 32-7).
+    final tile = TweenAnimationBuilder<double>(
+      tween: Tween(end: selected ? 1 : 0),
       duration: AppMotion.sessionChipSelect,
-      height: height,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: selected ? AppColors.ink : AppColors.paper,
-        borderRadius: BorderRadius.circular(12),
-        border: outlined && !selected ? Border.all(color: AppColors.markerOutline) : null,
-        boxShadow: selected || outlined ? null : kSessionSheetShadow,
+      builder: (context, t, child) => Container(
+        height: height,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: Color.lerp(AppColors.paper, AppColors.ink, t),
+          borderRadius: BorderRadius.circular(12),
+          border: outlined && !selected ? Border.all(color: AppColors.markerOutline) : null,
+          boxShadow: selected || outlined ? null : kSessionSheetShadow,
+        ),
+        child: DefaultTextStyle(
+          style: AppTextSession.tile.copyWith(color: t < 0.5 ? AppColors.ink : AppColors.paper),
+          child: child!,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(text, style: AppTextSession.tile.copyWith(color: selected ? AppColors.paper : AppColors.ink)),
+          Text(text),
           if (trailing != null) ...[const SizedBox(width: 8), trailing!],
         ],
       ),

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -73,54 +73,60 @@ class _PhrasePlate extends StatelessWidget {
   );
 }
 
-/// The text part of the phrase sheet — eyebrow, reading, translation.
+/// The text part of the phrase sheet — eyebrow, reading, translation. A sheet may carry no eyebrow at all (32-1,
+/// 32-7): the frame with its filler in the slot already says what the card is about.
 class _PhraseFooter extends StatelessWidget {
-  const _PhraseFooter({required this.eyebrow, this.reading, this.native, this.nativeStyle});
+  const _PhraseFooter({this.eyebrow, this.reading, this.native, this.nativeStyle});
 
-  final String eyebrow;
+  final String? eyebrow;
   final String? reading;
   final String? native;
   final TextStyle? nativeStyle;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.all(20),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SessionEyebrow(eyebrow),
-        if (reading != null) ...[const SizedBox(height: 4), Text(reading!, style: AppTextSession.meta)],
-        if (native != null) ...[const SizedBox(height: 4), Text(native!, style: nativeStyle ?? AppTextSession.body)],
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final rows = <Widget>[
+      if (eyebrow case final text?) SessionEyebrow(text),
+      if (reading case final text?) Text(text, style: AppTextSession.meta),
+      if (native case final text?) Text(text, style: nativeStyle ?? AppTextSession.body),
+    ];
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (i, row) in rows.indexed) ...[if (i > 0) const SizedBox(height: 4), row],
+        ],
+      ),
+    );
+  }
 }
 
-/// The phrase sheet: the plate on top and the text part.
+/// The phrase sheet: the plate on top and the text part; no text part (32-4) — the plate alone.
 class _PhraseSheet extends StatelessWidget {
-  const _PhraseSheet({required this.plate, required this.footer});
+  const _PhraseSheet({required this.plate, this.footer});
 
   final Widget plate;
-  final Widget footer;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) => SessionSheet(
     padding: EdgeInsets.zero,
-    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [plate, footer]),
+    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [plate, ?footer]),
   );
 }
 
-/// A row of filler chips 40: the selected one — ink; [neutral] — paper with an outline, they do not darken when
-/// selected (32-1, 32-9 — polish pass SESSION-1b′).
+/// A row of filler chips 40: the chosen one is ink, the rest paper (32-1, 32-7); [outlined] — the chips of «my own
+/// slot» (32-9), which fill the slot instead of choosing a meaning.
 class _FillerChips extends StatelessWidget {
-  const _FillerChips({super.key, required this.fillers, required this.selected, required this.onTap, this.extra, this.neutral = false});
+  const _FillerChips({super.key, required this.fillers, required this.selected, required this.onTap, this.extra, this.outlined = false});
 
   final List<CardFiller> fillers;
   final int? selected;
   final ValueChanged<CardFiller>? onTap;
   final Widget? extra;
-  final bool neutral;
+  final bool outlined;
 
   @override
   Widget build(BuildContext context) => Wrap(
@@ -132,8 +138,8 @@ class _FillerChips extends StatelessWidget {
           key: ValueKey('chip-${f.index}'),
           text: f.target,
           height: 40,
-          outlined: neutral,
-          selected: !neutral && selected == f.index,
+          outlined: outlined,
+          selected: selected == f.index,
           onTap: onTap == null ? null : () => onTap!(f),
         ),
       ?extra,
@@ -143,11 +149,12 @@ class _FillerChips extends StatelessWidget {
 
 // ── 32-1 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// FRAME INTRO (32-1) — a lesson card, not a task (polish pass SESSION-1b′, item 3): «Look and listen»; the frame
-/// right away with the filler said in the dialogue in the slot; above the chips, in grey, «this part can change»;
-/// the chips are neutral and do not darken when selected — a tap puts the filler into the slot, voices it and
-/// highlights the slot in sage for 600 ms. On open the phrase plays by itself once (item 11), then only by «Listen»
-/// and the chips. «Got it» → `passed`, no reaction sound.
+/// FRAME INTRO (32-1) — a lesson card, not a task: «Look and listen»; the frame with a filler ALWAYS in its slot —
+/// the one the dialogue says, until a chip is tapped. The chosen chip is ink and the same word stands in the brass
+/// slot; the reading and the translation change with it. A tap voices the phrase with that filler. A frame with one
+/// meaning (or none) is the third state of the canvas: the phrase whole, no slot and no chips. On open the phrase
+/// plays by itself once (SESSION-1b′, item 11), then only by «Listen» and the chips. «Got it» → `passed`, no
+/// reaction sound.
 class PhraseIntroCard extends StatefulWidget {
   const PhraseIntroCard({super.key, required this.env, required this.payload});
 
@@ -162,10 +169,19 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
   /// The filler the learner put in themselves; null — the one said in the dialogue.
   CardFiller? _filler;
 
-  /// The slot is highlighted after a tap on a chip.
-  bool _flash = false;
-  Timer? _flashTimer;
   Timer? _autoplayTimer;
+
+  /// The card offers a choice: a slot with more than one meaning. One meaning (or a frame without a slot) is the
+  /// canvas' third state — the phrase whole, no slot and no chips.
+  bool get _choosable => widget.payload.frame.hasSlot && widget.payload.frame.fillers.length > 1;
+
+  /// What stands in the slot — always something while there is a choice: the learner's chip, the filler the dialogue
+  /// says, otherwise the first one (the one the dialogue says may be missing from the card, SESSION-1e).
+  CardFiller? get _shown {
+    final frame = widget.payload.frame;
+    if (!_choosable) return frame.filler(widget.payload.said.fillerIndex);
+    return _filler ?? frame.filler(widget.payload.said.fillerIndex) ?? frame.fillers.first;
+  }
 
   @override
   void initState() {
@@ -177,21 +193,13 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
 
   @override
   void dispose() {
-    _flashTimer?.cancel();
     _autoplayTimer?.cancel();
     super.dispose();
   }
 
   void _pick(CardFiller f) {
     final frame = widget.payload.frame;
-    _flashTimer?.cancel();
-    setState(() {
-      _filler = f;
-      _flash = true;
-    });
-    _flashTimer = Timer(AppMotion.sessionAutoAdvance, () {
-      if (mounted) setState(() => _flash = false);
-    });
+    setState(() => _filler = f);
     unawaited(widget.env.voice.play(f.audio, fallback: frame.filledWith(f.target), key: 'chip-${f.index}'));
   }
 
@@ -201,7 +209,7 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
     final env = widget.env;
     final p = widget.payload;
     final frame = p.frame;
-    final shown = _filler ?? frame.filler(p.said.fillerIndex);
+    final shown = _shown;
     final listenAudio = _filler?.audio ?? p.said.audio;
     final listenText = _filler == null ? p.said.textTarget : frame.filledWith(_filler!.target);
     return CardLayout(
@@ -215,26 +223,15 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
             plate: _PhrasePlate(
               height: 288,
               listen: CardListen(env: env, audio: listenAudio, fallback: listenText, playKey: 'intro-phrase'),
-              child: frame.hasSlot && shown != null
-                  ? SessionFrameText.frame(
-                      frame,
-                      style: AppTextSession.frame,
-                      slot: shown.target,
-                      look: _flash ? SlotLook.highlight : SlotLook.filled,
-                    )
+              child: _choosable && shown != null
+                  ? SessionFrameText.frame(frame, style: AppTextSession.frame, slot: shown.target, look: SlotLook.filled)
                   : SessionFrameText.plain(frame.hasSlot ? p.said.textTarget : frame.frameTarget, style: AppTextSession.frame),
             ),
-            footer: _PhraseFooter(
-              eyebrow: l.planSessionBrowFrame,
-              reading: _pronunciation(frame, shown),
-              native: _native(frame, shown),
-            ),
+            footer: _PhraseFooter(reading: _pronunciation(frame, shown), native: _native(frame, shown)),
           ),
-          if (frame.hasSlot) ...[
-            const SizedBox(height: 20),
-            Text(l.planSessionChangeable, key: const ValueKey('intro-changeable'), style: AppTextSession.meta),
-            const SizedBox(height: 8),
-            _FillerChips(fillers: frame.fillers, selected: null, neutral: true, onTap: _pick),
+          if (_choosable) ...[
+            const SizedBox(height: 24),
+            _FillerChips(fillers: frame.fillers, selected: shown?.index, onTap: _pick),
           ],
         ],
       ),
@@ -462,8 +459,9 @@ class _PhraseChooseBackCardState extends State<PhraseChooseBackCard> with Choice
 
 // ── 32-4 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// SLOT · INSERT THE FILLER (32-4): the frame with an empty slot and the native sentence; four fillers in
-/// Literata 22, each with its own «Listen». Correct — the slot in sage.
+/// SLOT · INSERT THE FILLER (32-4): the native sentence stands OVER the card in Literata 26 — it is the task
+/// itself, and the sheet below is the frame with an empty slot; four fillers in Literata 22, each with its own
+/// «Listen». Correct — the slot in sage.
 class PhraseSlotCard extends StatefulWidget {
   const PhraseSlotCard({super.key, required this.env, required this.payload});
 
@@ -486,19 +484,32 @@ class _PhraseSlotCardState extends State<PhraseSlotCard> with ChoiceCardState<Ph
     final l = AppLocalizations.of(context);
     final p = widget.payload;
     return CardLayout(
-      bodyGap: 12,
+      bodyGap: 40,
       centerBody: true,
       task: SessionTask(l.planSessionTaskInsert),
-      body: _PhraseSheet(
-        plate: _PhrasePlate(
-          child: SessionFrameText.frame(
-            p.frame,
-            style: AppTextSession.frame,
-            slot: answered ? p.correctOption?.text : null,
-            look: answered ? SlotLook.sage : SlotLook.empty,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 68),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(p.promptNative, key: const ValueKey('slot-native'), style: AppTextSession.question),
+            ),
           ),
-        ),
-        footer: _PhraseFooter(eyebrow: l.planSessionBrowTranslation, native: p.promptNative),
+          const SizedBox(height: 20),
+          _PhraseSheet(
+            plate: _PhrasePlate(
+              child: SessionFrameText.frame(
+                p.frame,
+                style: AppTextSession.frame,
+                slot: answered ? p.correctOption?.text : null,
+                look: answered ? SlotLook.sage : SlotLook.empty,
+              ),
+            ),
+          ),
+        ],
       ),
       bottom: optionsDock(
         context,
@@ -700,12 +711,12 @@ class _Rounds extends StatelessWidget {
 
 // ── 32-7 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// SAY IT WITH ANOTHER SLOT (32-7, polish pass SESSION-1b′, item 2): task line — «Say it whole — the slot's
-/// meaning is below»; the slot in the English line is EMPTY (brass outline 96 × 30), there is no native text inside
-/// the line; under the phrase, in the «Slot» block, — the whole native sentence, the piece for the slot in bold ink,
-/// the rest in grey. The sheet has no sound. Pass — coverage of the frame AND all the words of `slot_expected`; on a
-/// pass the frame is in sage, the slot — what was heard, in sage. Rounds (item 12, [VoiceRounds]): round 2 — the next
-/// filler the dialogue does not say; the slot empties and the native sentence becomes `frame_native` with its native.
+/// SAY IT WHOLE · CHOOSE THE MEANING (32-7): task line — «Choose what goes in and say the whole phrase». The chips
+/// only CHOOSE: one is always chosen and stands in the brass slot of the English line, and under the phrase the
+/// whole native sentence with that meaning. The microphone is the only action on the card — no sound on the sheet
+/// and no caption under the chips. Pass — coverage of the phrase with the chosen filler AND all of that filler's
+/// words; on a pass the frame is in sage and the slot holds what was heard, in sage. The answer carries the chosen
+/// `filler_index`.
 class PhraseOtherSlotCard extends StatefulWidget {
   const PhraseOtherSlotCard({super.key, required this.env, required this.payload});
 
@@ -722,37 +733,44 @@ class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCar
   /// What went into the slot on a pass — the heard words beyond the frame.
   String? _heardSlot;
 
-  late final List<VoiceRound> _rounds = VoiceRounds.ofOtherSlot(widget.payload);
+  /// The chip the learner chose; null — the filler the card came with.
+  CardFiller? _chosen;
 
-  VoiceRound get _current => _rounds[round];
+  PhraseOtherSlotPayload get p => widget.payload;
 
   @override
   CardEnv get env => widget.env;
 
-  @override
-  int get roundCount => _rounds.length;
+  /// There is something to choose from: a slot with more than one meaning.
+  bool get _choosable => p.frame.hasSlot && p.frame.fillers.length > 1;
 
-  @override
-  int? fillerIndexOfRound(int round) => _rounds[round].fillerIndex;
+  /// What stands in the slot — always one: the chosen chip, the card's own filler, otherwise the first.
+  CardFiller? get _filler => _chosen ?? p.frame.filler(p.fillerIndex) ?? p.frame.fillers.firstOrNull;
 
-  @override
-  String get expectedSpeech => _current.expectedText;
-
-  @override
-  bool accepts(String heard) {
-    final parts = SessionRules.otherSlotRoundParts(widget.payload, _current, heard, env.articles);
-    setState(() {
-      _parts = parts;
-      _heardSlot = _slotWordsOf(heard, widget.payload.frame, _current.slotExpected ?? widget.payload.slotExpected);
-    });
-    return parts.frame && parts.slot;
+  /// The card's own filler is said with the server's own strings; another chip — the frame with that chip.
+  bool get _ownFiller {
+    final f = _filler;
+    return f == null || f.index == p.fillerIndex;
   }
 
   @override
-  void onRoundStarted(int round) => setState(() {
-    _parts = null;
-    _heardSlot = null;
-  });
+  String get expectedSpeech => _ownFiller ? p.expectedText : p.frame.filledWith(_filler!.target);
+
+  /// All of these words must be heard — the meaning in the slot.
+  String get _slotExpected => _ownFiller ? p.slotExpected : _filler!.target;
+
+  @override
+  int? get answerFillerIndex => _filler?.index;
+
+  @override
+  bool accepts(String heard) {
+    final parts = SessionRules.otherSlotParts(p, heard, env.articles, expectedText: expectedSpeech, slotExpected: _slotExpected);
+    setState(() {
+      _parts = parts;
+      _heardSlot = _slotWordsOf(heard, p.frame, _slotExpected);
+    });
+    return parts.frame && parts.slot;
+  }
 
   @override
   void initState() {
@@ -766,17 +784,14 @@ class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCar
     super.dispose();
   }
 
-  /// The round's native sentence: round 1 — the card's task ([nativeTaskOf]); round 2 — `frame_native` split at the
-  /// slot with the filler's native as the bold piece.
-  ({String before, String piece, String after}) get _task {
-    final p = widget.payload;
-    final r = _current;
-    final filler = r.filler;
-    if (r.native == null || filler == null) return nativeTaskOf(p);
-    final frame = p.frame.frameNative;
-    final at = frame.indexOf(kSlotMark);
-    if (at < 0) return (before: '', piece: r.native!, after: '');
-    return (before: frame.substring(0, at), piece: filler.native, after: frame.substring(at + kSlotMark.length));
+  /// Another chip: the slot, the native sentence and what the microphone listens for change together.
+  void _pick(CardFiller f) {
+    setState(() {
+      _chosen = f;
+      _parts = null;
+      _heardSlot = null;
+    });
+    refreshVoice();
   }
 
   @override
@@ -784,79 +799,39 @@ class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCar
     final noMic = noMicBody((s) => SessionTexts.stage(AppLocalizations.of(context), s));
     if (noMic != null) return noMic;
     final l = AppLocalizations.of(context);
-    final p = widget.payload;
-    final parts = (done && !skippedAfterMisses) || roundPassed ? _parts : null;
-    final task = _task;
+    final filler = _filler;
+    final parts = done && !skippedAfterMisses ? _parts : null;
+    final chipsOpen = !done && !mic.isListening;
     return CardLayout(
       bodyGap: 12,
       centerBody: true,
       fadeStop: 0.30,
-      task: SessionTask(l.planSessionTaskSayWhole),
-      body: _Rounds(
-        round: round,
-        count: roundCount,
-        child: _PhraseSheet(
-          plate: _PhrasePlate(
-            child: SessionFrameText.frame(
-              p.frame,
-              style: AppTextSession.frame,
-              frameColor: parts?.frame == true ? AppColors.verdictKnown : null,
-              slot: parts?.slot == true ? (_heardSlot ?? _current.slotExpected) : null,
-              look: parts?.slot == true ? SlotLook.sage : SlotLook.empty,
+      task: SessionTask(l.planSessionTaskSayOwn),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PhraseSheet(
+            plate: _PhrasePlate(
+              child: SessionFrameText.frame(
+                p.frame,
+                style: AppTextSession.frame,
+                frameColor: parts?.frame == true ? AppColors.verdictKnown : null,
+                slot: parts?.slot == true ? (_heardSlot ?? _slotExpected) : filler?.target,
+                look: parts?.slot == true ? SlotLook.sage : SlotLook.filled,
+              ),
             ),
+            footer: _PhraseFooter(native: _native(p.frame, filler), nativeStyle: AppTextSession.body),
           ),
-          footer: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SessionEyebrow(l.planSessionBrowSlot),
-                const SizedBox(height: 4),
-                Text.rich(
-                  key: const ValueKey('other-slot-task'),
-                  TextSpan(
-                    style: AppTextSession.body.copyWith(color: AppColors.tertiary),
-                    children: [
-                      TextSpan(text: task.before),
-                      TextSpan(text: task.piece, style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700)),
-                      TextSpan(text: task.after),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+          if (_choosable) ...[
+            const SizedBox(height: 20),
+            _FillerChips(fillers: p.frame.fillers, selected: filler?.index, onTap: chipsOpen ? _pick : null),
+          ],
+        ],
       ),
-      bottom: voiceDock(context),
+      bottom: voiceDock(context, showIdleCaption: false),
     );
   }
-}
-
-/// The native sentence of the «Say it with another slot» task: the piece for the slot and what surrounds it.
-/// `task_native` is either already the whole sentence (then the piece is what stands in place of `___` of the
-/// native frame), or only the slot's meaning (then the sentence is assembled: the native frame with this meaning
-/// in place of `___`).
-@visibleForTesting
-({String before, String piece, String after}) nativeTaskOf(PhraseOtherSlotPayload p) {
-  final task = p.taskNative.trim();
-  final frame = p.frame.frameNative;
-  final at = frame.indexOf(kSlotMark);
-  if (at < 0) return (before: '', piece: task, after: '');
-  final before = frame.substring(0, at);
-  final after = frame.substring(at + kSlotMark.length);
-  final head = before.trimRight();
-  final tail = after.trimLeft();
-  final whole = (head.isNotEmpty || tail.isNotEmpty) &&
-      task.length > head.length + tail.length &&
-      task.startsWith(head) &&
-      task.endsWith(tail);
-  if (whole) {
-    final piece = task.substring(head.length, task.length - tail.length).trim();
-    return (before: before, piece: piece, after: after);
-  }
-  return (before: before, piece: task, after: after);
 }
 
 /// The heard words beyond the frame [frame] in speech order — what goes into the slot; empty — [fallback].
@@ -1325,7 +1300,7 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
       bodyGap: 12,
       fadeStop: 0.12,
       overlayDock: false,
-      task: SessionTask(l.planSessionTaskSayOwn),
+      task: SessionTask(l.planSessionTaskSayOwn, companion: env.replayNote(l)),
       body: _PhraseSheet(
         plate: _PhrasePlate(
           child: SessionFrameText.frame(
@@ -1352,7 +1327,7 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
             key: const ValueKey('own-slot-chips'),
             fillers: p.chips,
             selected: null,
-            neutral: true,
+            outlined: true,
             onTap: _judging || _done || listening ? null : _pickChip,
             extra: SessionTile(
               key: const ValueKey('chip-own'),

@@ -323,6 +323,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       openSettings: _openSettings,
       outcome: _session.outcomeOf(card.id),
       advancing: _session.advancing,
+      replay: widget.replay,
       frameSentence: (ref) => _session.day?.frameSentence(ref),
       termText: (ref) => _session.day?.termText(ref),
       level: plan.level,

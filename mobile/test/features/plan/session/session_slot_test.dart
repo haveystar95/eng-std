@@ -87,16 +87,18 @@ void main() {
 
   testWidgets('32-7 phrase_other_slot: the heard long filler in sage', (tester) async {
     final other = card('phrase_other_slot', (p) {
+      // The chosen meaning stands in the slot from the start (SESSION-2b) — it is the filler that must be long.
+      filler(p, 2)['target'] = apartment;
       p['slot_expected'] = apartment;
       p['expected_text'] = 'It hurts in his $apartment.';
     });
     final probe = CardProbe();
     await pumpCard(tester, probeEnv(other, probe), size: narrow);
-    // Graded after the 1 s pause; the passed round stays 600 ms before round 2 (item 12) — check inside that beat.
-    await enterHeard(tester, 'It hurts in his $apartment');
-    await tester.pump(const Duration(milliseconds: 1010));
+    // The slot is filled from the start (SESSION-2b): first the chosen meaning, then what was heard.
+    expectSlotFits(tester, apartment);
+    await sayDebug(tester, 'It hurts in his $apartment');
     await tester.pump();
-    expect(probe.answers, isEmpty, reason: 'round 1 of 2 passed — the slot shows what was heard');
+    expect(probe.answers.single.result, SessionResult.passed);
     expectSlotFits(tester, apartment);
     await settleCard(tester);
   });

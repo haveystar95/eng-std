@@ -222,27 +222,24 @@ abstract final class SessionRules {
   static String speechLang(SessionKind kind, {required String targetLang, required String nativeLang}) =>
       kind == SessionKind.speakRetell ? nativeLang : targetLang;
 
-  /// The separate pass of `phrase_other_slot`: the frame (coverage of the string) and the slot (all the words of
-  /// the slot).
-  static ({bool frame, bool slot}) otherSlotParts(PhraseOtherSlotPayload p, String heard, Set<String> articles) => (
-    frame: SpeechCoverage.covers(heard, p.expectedText, p.coverageMin, articles),
-    slot: SpeechCoverage.covers(heard, p.slotExpected, SpeechCoverage.all, articles),
+  /// The separate pass of `phrase_other_slot`: the frame (coverage of the phrase) and the slot (all the words of the
+  /// meaning in it). [expectedText] and [slotExpected] — the chip the learner chose (32-7, SESSION-2b §1); by
+  /// default the filler the card came with.
+  static ({bool frame, bool slot}) otherSlotParts(
+    PhraseOtherSlotPayload p,
+    String heard,
+    Set<String> articles, {
+    String? expectedText,
+    String? slotExpected,
+  }) => (
+    frame: SpeechCoverage.covers(heard, expectedText ?? p.expectedText, p.coverageMin, articles),
+    slot: SpeechCoverage.covers(heard, slotExpected ?? p.slotExpected, SpeechCoverage.all, articles),
   );
 
-  /// A round of `phrase_repeat` / `phrase_other_slot` (polish pass SESSION-1b′, item 12): the round's phrase covered
-  /// by the card's `coverage_min`, and for `phrase_other_slot` — all the words of the round's slot. Round 1 is the
-  /// card's own pass ([voiceAccepted]).
-  static bool roundAccepted(CardPayload payload, VoiceRound round, String heard, Set<String> articles) => switch (payload) {
-    PhraseRepeatPayload(:final coverageMin) => SpeechCoverage.covers(heard, round.expectedText, coverageMin, articles),
-    PhraseOtherSlotPayload() => otherSlotRoundParts(payload, round, heard, articles) == (frame: true, slot: true),
-    _ => false,
-  };
-
-  /// [otherSlotParts] for a round.
-  static ({bool frame, bool slot}) otherSlotRoundParts(PhraseOtherSlotPayload p, VoiceRound round, String heard, Set<String> articles) => (
-    frame: SpeechCoverage.covers(heard, round.expectedText, p.coverageMin, articles),
-    slot: SpeechCoverage.covers(heard, round.slotExpected ?? p.slotExpected, SpeechCoverage.all, articles),
-  );
+  /// A round of `phrase_repeat` (polish pass SESSION-1b′, item 12): the round's phrase covered by the card's
+  /// `coverage_min`. Round 1 is the card's own pass ([voiceAccepted]).
+  static bool roundAccepted(PhraseRepeatPayload payload, VoiceRound round, String heard, Set<String> articles) =>
+      SpeechCoverage.covers(heard, round.expectedText, payload.coverageMin, articles);
 
   /// What should be spoken — for the live line and the hint to the recognizer.
   static String expectedSpeech(CardPayload payload) => switch (payload) {

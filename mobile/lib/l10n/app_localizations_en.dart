@@ -3483,9 +3483,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskLookListen => 'Look and listen';
 
   @override
-  String get planSessionChangeable => 'this part can change';
-
-  @override
   String get planSessionTaskAssemblePhrase => 'Build the phrase';
 
   @override
@@ -3493,9 +3490,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionTaskSayPhrase => 'Say the phrase aloud';
-
-  @override
-  String get planSessionTaskSayWhole => 'Say it whole — the slot\'s meaning is below';
 
   @override
   String get planSessionTaskWhatAnswer => 'What will you answer?';
@@ -3760,6 +3754,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get planSessionPause => 'Pause';
+
+  @override
+  String planSessionPlayerRoles(String role) {
+    return '$role and you';
+  }
+
+  @override
   String get planSessionPlayerDone => 'listened to the end';
 
   @override
@@ -3805,6 +3807,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionWhichNumber => 'Which number did you hear?';
+
+  @override
+  String get planSessionReplayNoGrade => 'replay, not graded';
 
   @override
   String get planSessionTaskAnswerOwnWords => 'Answer in your own words';

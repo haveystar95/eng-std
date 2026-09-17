@@ -228,4 +228,28 @@ void main() {
       await settleCard(tester);
     });
   });
+
+  // RULE (SESSION-2b §4): in a replay («Once more» from the day summary) a FREE answer says «replay, not graded»
+  // under its task — the judge is not asked and nothing goes to the server. A graded card says nothing of the kind.
+  // CATCHES: the caption missing in a replay (the card promises a verdict it will not get), and the caption standing
+  // on an ordinary walk or on a card the client grades itself.
+  group('replay of a stage', () {
+    testWidgets('a free answer says «replay, not graded»; a graded card and an ordinary walk say nothing', (tester) async {
+      await pumpCard(tester, probeEnv(speakAt(2), CardProbe(), replay: true));
+      expect(find.text('повтор без оценки'), findsOneWidget, reason: '35-2 is judged by meaning');
+      await settleCard(tester);
+
+      await pumpCard(tester, probeEnv(speakAt(8), CardProbe(), replay: true, localeId: 'ru_RU'));
+      expect(find.text('повтор без оценки'), findsOneWidget, reason: '35-4 is judged by meaning');
+      await settleCard(tester);
+
+      await pumpCard(tester, probeEnv(speakAt(7), CardProbe(), replay: true));
+      expect(find.text('повтор без оценки'), findsNothing, reason: '35-3 (the echo) is graded by coverage on the phone');
+      await settleCard(tester);
+
+      await pumpCard(tester, probeEnv(speakAt(2), CardProbe()));
+      expect(find.text('повтор без оценки'), findsNothing, reason: 'an ordinary walk is graded');
+      await settleCard(tester);
+    });
+  });
 }

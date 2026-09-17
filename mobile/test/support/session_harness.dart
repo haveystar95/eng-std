@@ -42,6 +42,17 @@ SessionDay sessionDayOf(Map<String, dynamic> json) => SessionDay.fromJson(json);
 SessionCard fixtureCard(SessionDay day, SessionKind kind, {int skip = 0}) =>
     day.stages.expand((s) => s.cards).where((c) => c.kind == kind).skip(skip).first;
 
+/// The first card of the wire [kind] in fixture [name], with its payload edited before it is parsed — a state the
+/// fixture does not carry (a frame with one meaning, a long filler).
+SessionCard fixtureCardEdited(String name, String kind, void Function(Map<String, dynamic> payload) edit) {
+  final json = [
+    for (final stage in (sessionFixtureJson(name)['stages'] as List).cast<Map<String, dynamic>>())
+      ...(stage['cards'] as List).cast<Map<String, dynamic>>(),
+  ].firstWhere((c) => c['kind'] == kind);
+  edit(json['payload'] as Map<String, dynamic>);
+  return SessionCard.fromJson(json)!;
+}
+
 /// A voice that plays nothing and remembers what it was asked to play.
 class QuietVoice extends SessionVoice {
   QuietVoice() : super(lines: LineAudioCache(directory: Directory.systemTemp), targetLang: 'en', pronouncer: _QuietPronouncer());
@@ -152,6 +163,7 @@ CardEnv probeEnv(
   List<FeedLine> feed = const [],
   String localeId = 'en_US',
   bool Function(PlanStage stage)? stageDone,
+  bool replay = false,
 }) => CardEnv(
   card: card,
   voice: voice ?? QuietVoice(),
@@ -182,6 +194,7 @@ CardEnv probeEnv(
   frameSentence: day?.frameSentence,
   termText: day?.termText,
   level: level,
+  replay: replay,
   noHints: noHints,
   feed: feed,
   stageCards: day == null ? const [] : day.stages.firstWhere((s) => s.stage == card.stage).cards,

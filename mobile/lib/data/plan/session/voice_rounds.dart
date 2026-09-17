@@ -1,9 +1,11 @@
-/// ROUNDS OF A VOICE CARD (polish pass SESSION-1b′, item 12) — `phrase_repeat` and `phrase_other_slot` are a series
-/// of rounds in one card. Round 1 is the card's own filler (`filler_index`, `expected_text`); round 2 — the frame's
-/// next visible filler by `index`, cyclically (for `phrase_other_slot` — one the dialogue does not say; for
-/// `phrase_repeat` — any). Round 2 says `frame_target` with that filler; its native sentence is `frame_native` with
-/// the filler's native; the `phrase_repeat` sample is the filler's own audio. A frame without such a second filler —
-/// one round, as before. The card is passed when every round is covered; one answer goes to the server at the end.
+/// ROUNDS OF A VOICE CARD (polish pass SESSION-1b′, item 12) — `phrase_repeat` is a series of rounds in one card.
+/// Round 1 is the card's own filler (`filler_index`, `expected_text`); round 2 — the frame's next visible filler by
+/// `index`, cyclically. Round 2 says `frame_target` with that filler; its native sentence is `frame_native` with the
+/// filler's native, and its sample is the filler's own audio. A frame without such a second filler — one round, as
+/// before. The card is passed when every round is covered; one answer goes to the server at the end.
+///
+/// `phrase_other_slot` had rounds too until SESSION-2b: on 32-7 the learner now CHOOSES the meaning with a chip, and
+/// a second forced round would take that choice back.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -57,34 +59,13 @@ abstract final class VoiceRounds {
     ];
   }
 
-  static List<VoiceRound> ofOtherSlot(PhraseOtherSlotPayload p) {
-    final first = VoiceRound(
-      expectedText: p.expectedText,
-      filler: p.frame.filler(p.fillerIndex),
-      fillerIndex: p.fillerIndex,
-      slotExpected: p.slotExpected,
-    );
-    final second = next(p.frame, p.fillerIndex, fits: (f) => !f.inDialogue);
-    if (second == null) return [first];
-    return [
-      first,
-      VoiceRound(
-        expectedText: p.frame.filledWith(second.target),
-        filler: second,
-        fillerIndex: second.index,
-        slotExpected: second.target,
-        native: nativeOf(p.frame, second),
-      ),
-    ];
-  }
-
-  /// The frame's next visible filler after [index] by `index`, cyclically, that [fits]; null — the frame has no slot,
-  /// the card has no filler, or no other filler fits.
-  static CardFiller? next(CardFrame frame, int? index, {bool Function(CardFiller filler)? fits}) {
+  /// The frame's next visible filler after [index] by `index`, cyclically; null — the frame has no slot, the card
+  /// has no filler, or there is no other filler.
+  static CardFiller? next(CardFrame frame, int? index) {
     if (!frame.hasSlot || index == null) return null;
     final sorted = [...frame.fillers]..sort((a, b) => a.index.compareTo(b.index));
     for (final f in [...sorted.where((f) => f.index > index), ...sorted.where((f) => f.index < index)]) {
-      if (fits?.call(f) ?? true) return f;
+      return f;
     }
     return null;
   }

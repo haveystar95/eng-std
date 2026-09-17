@@ -3643,9 +3643,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskLookListen => 'Посмотри и послушай';
 
   @override
-  String get planSessionChangeable => 'эту часть можно менять';
-
-  @override
   String get planSessionTaskAssemblePhrase => 'Собери фразу';
 
   @override
@@ -3653,9 +3650,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionTaskSayPhrase => 'Скажи фразу вслух';
-
-  @override
-  String get planSessionTaskSayWhole => 'Скажи целиком — окно по-русски ниже';
 
   @override
   String get planSessionTaskWhatAnswer => 'Что ты ответишь?';
@@ -3933,6 +3927,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get planSessionPause => 'Пауза';
+
+  @override
+  String planSessionPlayerRoles(String role) {
+    return '$role и ты';
+  }
+
+  @override
   String get planSessionPlayerDone => 'дослушал';
 
   @override
@@ -3978,6 +3980,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionWhichNumber => 'Какое число прозвучало?';
+
+  @override
+  String get planSessionReplayNoGrade => 'повтор без оценки';
 
   @override
   String get planSessionTaskAnswerOwnWords => 'Ответь своими словами';

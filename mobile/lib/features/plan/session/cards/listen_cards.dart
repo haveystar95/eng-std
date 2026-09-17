@@ -33,11 +33,15 @@ String _clock(Duration d) {
 
 enum _Player { idle, playing, paused, done }
 
-/// THE VISIT PLAYER (34-1): two roles as circles (the scene's photo — the partner, the learner's circle), a brass ring
-/// with a pulse on the one that speaks; the bar with the exchange marks (`exchange_step`) and the time (`total_ms`, or
-/// the sum of the lines' `duration_ms`); the files play one after another as one stream, 300 ms apart
-/// ([AppMotion.sessionVisitLineGap]). «In parts» pauses after every
-/// exchange — «Continue»; «Once more» starts over; no text of the lines. Listened to the end — «Next» → `passed`.
+/// THE VISIT PLAYER (34-1): the two roles as ONE PAIR of circles, overlapping (the scene's photo — the partner, the
+/// learner's circle behind it) under a single caption «the doctor and you»; a brass ring with a pulse on the one that
+/// speaks; the bar with the exchange marks (`exchange_step`) and the time (`total_ms`, or the sum of the lines'
+/// `duration_ms`); the files play one after another as one stream, 300 ms apart ([AppMotion.sessionVisitLineGap]).
+///
+/// The main action follows the state: playing — «Pause», paused — «Continue», listened to the end — «Next» →
+/// `passed`. «In parts» (secondary, brass) pauses after every exchange and stands while the visit goes; «Once more»
+/// is offered at the end only. A pause takes the line that was sounding out of the air, and «Continue» says it from
+/// its beginning: a line is the smallest piece the visit is made of.
 class ListenDialogueCard extends StatefulWidget {
   const ListenDialogueCard({super.key, required this.env, required this.payload});
 
@@ -56,6 +60,10 @@ class _ListenDialogueCardState extends State<ListenDialogueCard> {
   /// The line playing, or the next one to play (on a pause); `lines.length` — played to the end.
   int _line = 0;
   bool _byParts = false;
+
+  /// The pause came by hand, in the middle of [_line] — «Continue» says that line again. False — the «in parts»
+  /// pause, which stands between two exchanges.
+  bool _midLine = false;
 
   /// A new run cuts the loop of the old one.
   int _run = 0;
@@ -91,7 +99,10 @@ class _ListenDialogueCardState extends State<ListenDialogueCard> {
     _frame = Timer.periodic(AppMotion.sessionPlayerFrame, (_) {
       if (mounted) setState(() {});
     });
-    setState(() => _state = _Player.playing);
+    setState(() {
+      _state = _Player.playing;
+      _midLine = false;
+    });
     for (var i = from; i < _lines.length; i++) {
       if (!mounted || run != _run) return;
       setState(() {
@@ -133,6 +144,20 @@ class _ListenDialogueCardState extends State<ListenDialogueCard> {
     await _play(from: 0);
   }
 
+  /// «Pause»: the loop is cut and the line that was sounding stops; [_line] stays as the line «Continue» starts from.
+  Future<void> _pauseNow() async {
+    _run++;
+    _autostart?.cancel();
+    _frame?.cancel();
+    await env.voice.stop();
+    if (!mounted) return;
+    setState(() {
+      _midLine = true;
+      _lineStarted = null;
+      _state = _Player.paused;
+    });
+  }
+
   Duration get _intoLine => _lineStarted == null ? Duration.zero : DateTime.now().difference(_lineStarted!);
 
   double get _progress => switch (_state) {
@@ -155,12 +180,17 @@ class _ListenDialogueCardState extends State<ListenDialogueCard> {
     }
   }
 
-  /// Who speaks now — the ring; on a pause the role of the line just played keeps it without the pulse.
+  /// Who speaks now — the ring; on a pause the role of the line the player stands on keeps it without the pulse: the
+  /// one cut in the middle (by hand) or the one just played («in parts»).
   String? get _activeRole => switch (_state) {
     _Player.playing when _line < _lines.length => _lines[_line].role,
-    _Player.paused when _line > 0 => _lines[_line - 1].role,
+    _Player.paused when _midLine && _line < _lines.length => _lines[_line].role,
+    _Player.paused when !_midLine && _line > 0 => _lines[_line - 1].role,
     _ => null,
   };
+
+  /// The exchange the pause stands at — the one being said (by hand) or the one just finished («in parts»).
+  int get _pausedAt => _timeline.exchangeOrdinal(_midLine ? _line : _line - 1);
 
   @override
   Widget build(BuildContext context) {
@@ -185,37 +215,54 @@ class _ListenDialogueCardState extends State<ListenDialogueCard> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(20),
-                child: Row(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _Role(
-                      key: const ValueKey('player-role-partner'),
-                      label: role,
-                      active: active == 'partner',
-                      pulsing: pulsing,
-                      child: SceneCircle(
-                        image: photo == null ? null : CachedNetworkImage(photo.urlFor(64, dpr)),
-                        tone: AppColors.wireTone(photo?.tone),
-                        size: 64,
+                    SizedBox(
+                      // The pair: a circle 64 and the second one 12 into it — 116 wide, or the Stack clips the one
+                      // that overlaps.
+                      width: 116,
+                      height: 68,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.centerLeft,
+                        children: [
+                          // The learner stands behind the partner, overlapping by 12 — one pair, not two portraits.
+                          Positioned(
+                            left: 52,
+                            child: _Face(
+                              key: const ValueKey('player-role-learner'),
+                              active: active == 'learner',
+                              pulsing: pulsing,
+                              child: const DecoratedBox(
+                                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.photoPlaceholder),
+                                child: SizedBox(
+                                  width: 60,
+                                  height: 60,
+                                  child: Center(child: Icon(LucideIcons.user, size: 24, color: AppColors.ink)),
+                                ),
+                              ),
+                            ),
+                          ),
+                          _Face(
+                            key: const ValueKey('player-role-partner'),
+                            active: active == 'partner',
+                            pulsing: pulsing,
+                            child: SceneCircle(
+                              image: photo == null ? null : CachedNetworkImage(photo.urlFor(60, dpr)),
+                              tone: AppColors.wireTone(photo?.tone),
+                              size: 60,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 24),
-                    _Role(
-                      key: const ValueKey('player-role-learner'),
-                      label: l.planSessionYou,
-                      active: active == 'learner',
-                      pulsing: pulsing,
-                      child: Container(
-                        width: 64,
-                        height: 64,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.paper,
-                          border: Border.all(color: AppColors.markerOutline, width: 1.5),
-                        ),
-                        child: const Icon(LucideIcons.user, size: 24, color: AppColors.ink),
-                      ),
+                    const SizedBox(height: 10),
+                    Text(
+                      role.isEmpty ? l.planSessionYou : l.planSessionPlayerRoles(role),
+                      key: const ValueKey('player-roles'),
+                      style: AppTextSession.meta,
                     ),
                   ],
                 ),
@@ -259,7 +306,7 @@ class _ListenDialogueCardState extends State<ListenDialogueCard> {
                         Text(l.planSessionPlaying, style: AppTextSession.meta),
                       ],
                     ),
-                    _Player.paused => Text(l.planSessionPlayerPaused(_timeline.exchangeOrdinal(_line - 1)), key: const ValueKey('player-status'), style: AppTextSession.meta),
+                    _Player.paused => Text(l.planSessionPlayerPaused(_pausedAt), key: const ValueKey('player-status'), style: AppTextSession.meta),
                     _Player.done => Text(l.planSessionPlayerDone, key: const ValueKey('player-status'), style: AppTextSession.meta),
                   },
                 ),
@@ -273,23 +320,23 @@ class _ListenDialogueCardState extends State<ListenDialogueCard> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           switch (_state) {
-            _Player.idle || _Player.playing => _byParts
-                ? const SizedBox.shrink()
-                : Center(
-                    child: SessionTextExit(
-                      key: const ValueKey('player-by-parts'),
-                      label: l.planSessionByPartsAction,
-                      brass: true,
-                      onTap: () => setState(() => _byParts = true),
-                    ),
-                  ),
-            _Player.paused || _Player.done => Center(
+            // «In parts» stands while the visit goes and on a pause — the canvas draws it on the «in parts» pause
+            // itself; asking for it again changes nothing.
+            _Player.idle || _Player.playing || _Player.paused => Center(
+              child: SessionTextExit(
+                key: const ValueKey('player-by-parts'),
+                label: l.planSessionByPartsAction,
+                brass: true,
+                onTap: () => setState(() => _byParts = true),
+              ),
+            ),
+            _Player.done => Center(
               child: SessionTextExit(key: const ValueKey('player-again'), label: l.planSessionReplay, brass: true, onTap: () => unawaited(_again())),
             ),
           },
           const SizedBox(height: 14),
           switch (_state) {
-            _Player.idle || _Player.playing => SessionDockButton(label: l.planSessionReplay, onTap: () => unawaited(_again())),
+            _Player.idle || _Player.playing => SessionDockButton(label: l.planSessionPause, onTap: () => unawaited(_pauseNow())),
             _Player.paused => SessionDockButton(label: l.planSessionContinue, onTap: () => unawaited(_play(from: _line))),
             _Player.done => SessionDockButton(
               label: l.planSessionNext,
@@ -306,21 +353,21 @@ class _ListenDialogueCardState extends State<ListenDialogueCard> {
   }
 }
 
-/// A role of the player: the circle 64 and its name; the one speaking wears a brass ring 3 at 30 % with a pulse (1.6 s,
-/// only while playing; under «Reduce Motion» the ring stands still).
-class _Role extends StatefulWidget {
-  const _Role({super.key, required this.label, required this.active, required this.pulsing, required this.child});
+/// A face of the pair: the circle 60 in a paper rim 2 (so the two read as separate where they overlap); the one
+/// speaking wears a brass ring 3 at 30 % with a pulse (1.6 s, only while playing; under «Reduce Motion» the ring
+/// stands still).
+class _Face extends StatefulWidget {
+  const _Face({super.key, required this.active, required this.pulsing, required this.child});
 
-  final String label;
   final bool active;
   final bool pulsing;
   final Widget child;
 
   @override
-  State<_Role> createState() => _RoleState();
+  State<_Face> createState() => _FaceState();
 }
 
-class _RoleState extends State<_Role> with SingleTickerProviderStateMixin {
+class _FaceState extends State<_Face> with SingleTickerProviderStateMixin {
   late final AnimationController _pulse = AnimationController(vsync: this, duration: AppMotion.sessionRolePulse);
 
   @override
@@ -330,7 +377,7 @@ class _RoleState extends State<_Role> with SingleTickerProviderStateMixin {
   }
 
   @override
-  void didUpdateWidget(_Role old) {
+  void didUpdateWidget(_Face old) {
     super.didUpdateWidget(old);
     _sync();
   }
@@ -352,31 +399,27 @@ class _RoleState extends State<_Role> with SingleTickerProviderStateMixin {
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      AnimatedBuilder(
-        animation: _pulse,
-        builder: (_, child) {
-          final t = Curves.easeOut.transform(_pulse.value);
-          return Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: widget.active
-                  ? [
-                      const BoxShadow(color: AppColors.sessionBrassRing, spreadRadius: 3),
-                      if (_pulse.isAnimating) BoxShadow(color: AppColors.sessionBrassRing.withValues(alpha: .30 * (1 - t)), spreadRadius: 3 + 6 * t),
-                    ]
-                  : null,
-            ),
-            child: child,
-          );
-        },
-        child: widget.child,
-      ),
-      const SizedBox(height: 8),
-      Text(widget.label, style: AppTextSession.meta),
-    ],
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _pulse,
+    builder: (_, child) {
+      final t = Curves.easeOut.transform(_pulse.value);
+      return Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.paper,
+          boxShadow: widget.active
+              ? [
+                  const BoxShadow(color: AppColors.sessionBrassRing, spreadRadius: 3),
+                  if (_pulse.isAnimating) BoxShadow(color: AppColors.sessionBrassRing.withValues(alpha: .30 * (1 - t)), spreadRadius: 3 + 6 * t),
+                ]
+              : null,
+        ),
+        // The paper rim 2 around the circle 60 — the pair overlaps and must not merge into one blot.
+        padding: const EdgeInsets.all(2),
+        child: child,
+      );
+    },
+    child: widget.child,
   );
 }
 

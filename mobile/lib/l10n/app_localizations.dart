@@ -5319,12 +5319,6 @@ abstract class AppLocalizations {
   /// **'Посмотри и послушай'**
   String get planSessionTaskLookListen;
 
-  /// Сессия, знакомство с каркасом (32-1): серая подпись над нейтральными чипами наполнений.
-  ///
-  /// In ru, this message translates to:
-  /// **'эту часть можно менять'**
-  String get planSessionChangeable;
-
   /// Сессия, перевод → сборка (32-2): задание.
   ///
   /// In ru, this message translates to:
@@ -5343,19 +5337,13 @@ abstract class AppLocalizations {
   /// **'Скажи фразу вслух'**
   String get planSessionTaskSayPhrase;
 
-  /// Сессия, «Скажи с другим окном» (32-7): задание; окно в строке пустое, его значение — в русском предложении под фразой (наряд SESSION-1b′).
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажи целиком — окно по-русски ниже'**
-  String get planSessionTaskSayWhole;
-
   /// Сессия, комбинация (32-8): задание над тремя целыми предложениями-ответами (наряд SESSION-1b′).
   ///
   /// In ru, this message translates to:
   /// **'Что ты ответишь?'**
   String get planSessionTaskWhatAnswer;
 
-  /// Сессия, своё окно (32-9): задание; окно пустое, наполнение — чипом или своим словом (наряд SESSION-1b′; текст — SESSION-2a §5).
+  /// Сессия, «Скажи целиком» (32-7) и своё окно (32-9): задание; значение выбирается плашкой, сказать нужно фразу целиком (наряд SESSION-2b §1).
   ///
   /// In ru, this message translates to:
   /// **'Выбери, что вставить, и скажи фразу целиком'**
@@ -5367,7 +5355,7 @@ abstract class AppLocalizations {
   /// **'Слово'**
   String get planSessionBrowWord;
 
-  /// Сессия, лист вопроса (31-4, 32-2, 32-4): бровь над переводом.
+  /// Сессия, лист вопроса (31-4, 32-2): бровь над переводом.
   ///
   /// In ru, this message translates to:
   /// **'Перевод'**
@@ -5379,13 +5367,13 @@ abstract class AppLocalizations {
   /// **'На слух'**
   String get planSessionBrowByEar;
 
-  /// Сессия, лист вопроса (31-7, 32-7): бровь над строкой с окном.
+  /// Сессия, лист вопроса (31-7): бровь над строкой с окном.
   ///
   /// In ru, this message translates to:
   /// **'Окно'**
   String get planSessionBrowSlot;
 
-  /// Сессия, знакомство с каркасом (32-1) и выбор окна комбинации (32-8): бровь.
+  /// Сессия, выбор каркаса комбинации (32-8): бровь.
   ///
   /// In ru, this message translates to:
   /// **'Каркас'**
@@ -5733,13 +5721,25 @@ abstract class AppLocalizations {
   /// **'пауза · обмен {n}'**
   String planSessionPlayerPaused(int n);
 
+  /// Сессия, 34-1: главное действие плеера, пока разговор играет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пауза'**
+  String get planSessionPause;
+
+  /// Сессия, 34-1: подпись пары кружков — кто говорит в разговоре.
+  ///
+  /// In ru, this message translates to:
+  /// **'{role} и ты'**
+  String planSessionPlayerRoles(String role);
+
   /// Сессия, 34-1: визит проигран до конца.
   ///
   /// In ru, this message translates to:
   /// **'дослушал'**
   String get planSessionPlayerDone;
 
-  /// Сессия, 34-1: подпись кружка ученика в плеере.
+  /// Сессия, 34-1: подпись пары кружков, когда роль собеседника не названа.
   ///
   /// In ru, this message translates to:
   /// **'ты'**
@@ -5822,6 +5822,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Какое число прозвучало?'**
   String get planSessionWhichNumber;
+
+  /// Сессия в режиме повтора («Ещё раз» с итога дня): подпись под заданием у свободных ответов — сказанное никуда не идёт (наряд SESSION-2b §4).
+  ///
+  /// In ru, this message translates to:
+  /// **'повтор без оценки'**
+  String get planSessionReplayNoGrade;
 
   /// Сессия, строка задания 35-2 и 35-5. Канва — «Ответь врачу»: склонения роли контракт не отдаёт.
   ///

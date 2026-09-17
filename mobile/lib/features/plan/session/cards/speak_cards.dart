@@ -278,7 +278,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
       feed: true,
       bodyGap: 16,
       fadeStop: 0.30,
-      task: SessionTask(l.planSessionTaskAnswerOwnWords),
+      task: SessionTask(l.planSessionTaskAnswerOwnWords, companion: env.replayNote(l)),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -637,7 +637,7 @@ class _SpeakRetellCardState extends State<SpeakRetellCard> with _JudgedCardState
       bodyGap: 12,
       centerBody: true,
       fadeStop: 0.30,
-      task: SessionTask(l.planSessionTaskRetell),
+      task: SessionTask(l.planSessionTaskRetell, companion: env.replayNote(l)),
       body: ValueListenableBuilder<Object?>(
         valueListenable: env.voice.playing,
         builder: (_, playing, _) => SessionLineSheet(

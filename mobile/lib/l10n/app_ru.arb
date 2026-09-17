@@ -4660,10 +4660,6 @@
   "@planSessionTaskLookListen": {
     "description": "Сессия, знакомство с каркасом (32-1): задание (наряд SESSION-1b′)."
   },
-  "planSessionChangeable": "эту часть можно менять",
-  "@planSessionChangeable": {
-    "description": "Сессия, знакомство с каркасом (32-1): серая подпись над нейтральными чипами наполнений."
-  },
   "planSessionTaskAssemblePhrase": "Собери фразу",
   "@planSessionTaskAssemblePhrase": {
     "description": "Сессия, перевод → сборка (32-2): задание."
@@ -4676,17 +4672,13 @@
   "@planSessionTaskSayPhrase": {
     "description": "Сессия, «Повтори вслух» (32-6): задание."
   },
-  "planSessionTaskSayWhole": "Скажи целиком — окно по-русски ниже",
-  "@planSessionTaskSayWhole": {
-    "description": "Сессия, «Скажи с другим окном» (32-7): задание; окно в строке пустое, его значение — в русском предложении под фразой (наряд SESSION-1b′)."
-  },
   "planSessionTaskWhatAnswer": "Что ты ответишь?",
   "@planSessionTaskWhatAnswer": {
     "description": "Сессия, комбинация (32-8): задание над тремя целыми предложениями-ответами (наряд SESSION-1b′)."
   },
   "planSessionTaskSayOwn": "Выбери, что вставить, и скажи фразу целиком",
   "@planSessionTaskSayOwn": {
-    "description": "Сессия, своё окно (32-9): задание; окно пустое, наполнение — чипом или своим словом (наряд SESSION-1b′; текст — SESSION-2a §5)."
+    "description": "Сессия, «Скажи целиком» (32-7) и своё окно (32-9): задание; значение выбирается плашкой, сказать нужно фразу целиком (наряд SESSION-2b §1)."
   },
   "planSessionBrowWord": "Слово",
   "@planSessionBrowWord": {
@@ -4694,7 +4686,7 @@
   },
   "planSessionBrowTranslation": "Перевод",
   "@planSessionBrowTranslation": {
-    "description": "Сессия, лист вопроса (31-4, 32-2, 32-4): бровь над переводом."
+    "description": "Сессия, лист вопроса (31-4, 32-2): бровь над переводом."
   },
   "planSessionBrowByEar": "На слух",
   "@planSessionBrowByEar": {
@@ -4702,11 +4694,11 @@
   },
   "planSessionBrowSlot": "Окно",
   "@planSessionBrowSlot": {
-    "description": "Сессия, лист вопроса (31-7, 32-7): бровь над строкой с окном."
+    "description": "Сессия, лист вопроса (31-7): бровь над строкой с окном."
   },
   "planSessionBrowFrame": "Каркас",
   "@planSessionBrowFrame": {
-    "description": "Сессия, знакомство с каркасом (32-1) и выбор окна комбинации (32-8): бровь."
+    "description": "Сессия, выбор каркаса комбинации (32-8): бровь."
   },
   "planSessionBrowPhrase": "Фраза",
   "@planSessionBrowPhrase": {
@@ -5004,13 +4996,26 @@
       }
     }
   },
+  "planSessionPause": "Пауза",
+  "@planSessionPause": {
+    "description": "Сессия, 34-1: главное действие плеера, пока разговор играет."
+  },
+  "planSessionPlayerRoles": "{role} и ты",
+  "@planSessionPlayerRoles": {
+    "description": "Сессия, 34-1: подпись пары кружков — кто говорит в разговоре.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "planSessionPlayerDone": "дослушал",
   "@planSessionPlayerDone": {
     "description": "Сессия, 34-1: визит проигран до конца."
   },
   "planSessionYou": "ты",
   "@planSessionYou": {
-    "description": "Сессия, 34-1: подпись кружка ученика в плеере."
+    "description": "Сессия, 34-1: подпись пары кружков, когда роль собеседника не названа."
   },
   "planSessionTaskWhatUnderstood": "Что ты понял?",
   "@planSessionTaskWhatUnderstood": {
@@ -5068,6 +5073,10 @@
   "planSessionWhichNumber": "Какое число прозвучало?",
   "@planSessionWhichNumber": {
     "description": "Сессия, «Поймай число» (34-7): текст вопроса в листе; контракт вопроса не отдаёт (наряд SESSION-2a §5)."
+  },
+  "planSessionReplayNoGrade": "повтор без оценки",
+  "@planSessionReplayNoGrade": {
+    "description": "Сессия в режиме повтора («Ещё раз» с итога дня): подпись под заданием у свободных ответов — сказанное никуда не идёт (наряд SESSION-2b §4)."
   },
   "planSessionTaskAnswerOwnWords": "Ответь своими словами",
   "@planSessionTaskAnswerOwnWords": {

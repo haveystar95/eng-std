@@ -68,11 +68,67 @@ void main() {
       await tester.pump();
       expect(voice.played, ['x1@1.0', 'x1b@1.0', 'x2@1.0', 'x2b@1.0']);
       expect(find.text('пауза · обмен 2'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('player-again')));
+      await settleCard(tester);
+    });
+
+    // RULE (SESSION-2b §3, кадр 34-1): the main action follows the state — «Pause» while it plays, «Continue» on a
+    // pause, «Next» at the end; «In parts» stands beside the first two and «Once more» only at the end. A pause takes
+    // the line out of the air and «Continue» says that line again.
+    // CATCHES: «Once more» offered as the main action while the visit plays, «Once more» on a pause (it started the
+    // visit over by a fat finger), a «Pause» that lets the next line start anyway.
+    testWidgets('«Pause» — the line stops and «Continue» says it again; «Once more» only at the end', (tester) async {
+      final voice = QuietVoice();
+      await pumpCard(tester, probeEnv(listenAt(1), CardProbe(), voice: voice, day: day));
+      expect(dockEnabled(tester, 'Пауза'), isTrue, reason: 'the main action while the visit plays');
+      expect(find.text('Ещё раз'), findsNothing, reason: 'nothing to replay yet');
+      expect(find.byKey(const ValueKey('player-by-parts')), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
-      await tester.pump(AppMotion.sessionVisitLineGap);
+      expect(voice.played, ['x1@1.0']);
+      await tapText(tester, 'Пауза');
       await tester.pump();
-      expect(voice.played.skip(4).take(2), ['x1@1.0', 'x1b@1.0'], reason: '«Once more» starts over');
+      expect(find.text('пауза · обмен 1'), findsOneWidget);
+      expect(find.text('Ещё раз'), findsNothing, reason: 'on a pause only «Continue» and «In parts»');
+      expect(find.byKey(const ValueKey('player-by-parts')), findsOneWidget);
+      await tester.pump(AppMotion.sessionVisitLineGap * 4);
+      expect(voice.played, ['x1@1.0'], reason: 'the visit stands: no next line while paused');
+
+      await tapText(tester, 'Продолжить');
+      await tester.pump();
+      expect(voice.played, ['x1@1.0', 'x1@1.0'], reason: '«Continue» says the line the pause cut');
+      await tester.pump(AppMotion.sessionVisitLineGap * 20);
+      await tester.pump();
+      expect(find.text('дослушал'), findsOneWidget);
+      expect(find.byKey(const ValueKey('player-again')), findsOneWidget, reason: '«Once more» at the end');
+      expect(find.byKey(const ValueKey('player-by-parts')), findsNothing);
+      expect(dockEnabled(tester, 'Дальше'), isTrue);
+      await settleCard(tester);
+    });
+
+    // RULE (SESSION-2b §3, кадр 34-1): the two roles are ONE PAIR — the circles overlap under a single caption
+    // «the receptionist and you», and the brass ring stands on whoever speaks.
+    // CATCHES: two captions under two portraits (the old layout), a ring on both at once or on nobody.
+    testWidgets('the pair of faces: one caption, the ring on the one that speaks', (tester) async {
+      final voice = QuietVoice();
+      await pumpCard(tester, probeEnv(listenAt(1), CardProbe(), voice: voice, day: day));
+      expect(find.text('регистратор и ты'), findsOneWidget);
+      expect(find.text('ты'), findsNothing, reason: 'one caption for the pair, not a label per circle');
+      expect(find.byKey(const ValueKey('player-role-partner')), findsOneWidget);
+      expect(find.byKey(const ValueKey('player-role-learner')), findsOneWidget);
+
+      Color? ring(String key) => (tester
+                  .widget<Container>(find.descendant(of: find.byKey(ValueKey(key)), matching: find.byType(Container)).first)
+                  .decoration!
+              as BoxDecoration)
+          .boxShadow
+          ?.first
+          .color;
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+      expect(ring('player-role-partner'), AppColors.sessionBrassRing, reason: 'the partner speaks first');
+      expect(ring('player-role-learner'), isNull);
+      await tapText(tester, 'Пауза');
       await settleCard(tester);
     });
   });
