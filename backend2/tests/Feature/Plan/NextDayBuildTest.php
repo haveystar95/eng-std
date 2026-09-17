@@ -122,3 +122,28 @@ it('shows the next day building while its lesson is on its way, with no button, 
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/2/open")
         ->assertStatus(409)->assertJsonPath('code', 'plan_day_building');
 });
+
+// Addendum C: «автоповтора после таймаута нет — повтор только руками». A lesson that failed — a call lost to a timeout among the
+// ways — may have been billed; nothing but the learner's retry asks for it again. Catches a failed day 1 bought again by a
+// change of the plan's schedule, and a retry that does not buy it.
+it('asks again for a failed lesson only when the learner retries it', function () {
+    $fake = new FakePlanModel(lesson: static function ($request, int $call): array {
+        if ($call === 1) {
+            throw new RuntimeException('cURL error 28: Operation timed out after 180000 milliseconds with 0 bytes received');
+        }
+
+        return FakePlanModel::lessonPayload($request);
+    });
+    app()->instance(PlanModelPort::class, $fake);
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 2])['id'];
+    $plan = planRead($this, $token, $id);
+    expect($plan['scenes'][0]['lesson_status'])->toBe('failed')->and($fake->lessonCalls)->toBe(1);
+
+    $this->withHeader('Authorization', "Bearer {$token}")->patchJson("/api/v1/plans/{$id}/schedule", ['event_date' => now()->addDays(20)->toDateString()])->assertOk();
+    expect($fake->lessonCalls)->toBe(1);
+
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/scenes/{$plan['scenes'][0]['id']}/lesson/retry")->assertStatus(202);
+    expect($fake->lessonCalls)->toBe(2)
+        ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready');
+});

@@ -40,7 +40,7 @@ Nothing in Domain imports Laravel.
 
 | Aggregate | Invariants it protects |
 |---|---|
-| `Plan` (+ `PlanScene`, `PlanDay`) | one status machine (building → ready/unclear/failed → active → finished; overdue derived); the calendar layout by `PlanCalendar`; days open one per calendar day in the learner's zone and never ahead of an unclosed day; the core scene (priority 1) is never dropped or removed; a reschedule never cuts a walked day; a scene is claimed (`building`) before the model is asked |
+| `Plan` (+ `PlanScene`, `PlanDay`) | one status machine (building → ready/unclear/failed → active → finished; overdue derived); the calendar layout by `PlanCalendar`; days open one per calendar day in the learner's zone — day N+1 on the calendar day after day N was OPENED — and never ahead of an unclosed day, except that a plan catching up with its event (`isCatchingUp`: calendar days left to the event, its own day included, ≤ days not closed) waits for no date (GEN-3 §11); the day next in line whose lesson is not written is `building` and does not open (`PlanDayBuilding`); the core scene (priority 1) is never dropped or removed; a reschedule never cuts a walked day; a scene is claimed (`building`) before the model is asked |
 
 **No job writes the aggregate.** `PlanRepository::save()` writes the whole plan — row, scenes and
 days — from the snapshot in hand, so only a handler that read the plan under a lock and writes it
@@ -55,7 +55,7 @@ plan fell to `ready` with no start date and day 1 locked again (`docs/research/p
 | `PlanTerm` | written once from the served lesson (`fromLesson`), refs `v*`/`p*` are how cards point at terms; a phrase keeps its frame (`frame_*`, `slot`) and reads as the frame said with its dialogue filler, a word keeps `used_in`; a P2R `--apply` rewrites the texts by ref, never the row or its photo |
 | `PlanEvent` | a journal line, written once and never changed (no mutator; `PlanEventRepository` has `append`/`has`/`forPlan` only); a day event names its day; a rebuild carries `{from, to}` with `to < from`. Written inside the transaction of the handler whose change it records (`BuildPlanHandler`, `BuildLessonHandler`, `CloseDayHandler`, `ReschedulePlanHandler`) or by the tick; the letter is queued after the commit |
 
-The lesson (`Domain/Lesson`, `lesson_day.v4.5`): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
+The lesson (`Domain/Lesson`, `lesson_day.v4.6`): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
 `check`), phrases as frames (`Phrase` + `Slot` + `Filler`), the listening (`ListeningQuestion`, the lesson's own,
 not an exchange's), vocabulary with `used_in`; `LessonParser` (shape only); `LessonAssembly` — the SERVED lesson
 every reader deals from: the filler of a learner line is the one the server finds in its text among its frame's
@@ -66,7 +66,10 @@ shuffled places; `LessonCard` — one repairable card by its address (P2R: a fra
 its line stands on, together or not at all — a learner line, a check, a listening question); `LessonCardContext` — the
 part of the lesson a repair of that card is shown, as the server reads it; `NativeSeams` — every native sentence a
 frame makes with its fillers (what the seam judge reads). A scene keeps the model's answer (stored, validated,
-repaired) and serves the assembled lesson in the plan's target language.
+repaired) and serves the assembled lesson in the plan's target language. The story so far (GEN-3): `EarlierDay` / `EarlierDays` —
+the scene days before this one whose lesson is written, read from their served lessons (`Plan::earlierDaysOf`), the words and
+frames they taught (what `StoryRules` holds a new day to); `LessonRoles` — the plan's learner role and the scene's partner role,
+written over the model's (`Lesson::withRoles`) after the answer and after every repair.
 
 Pure services: `PlanCalendar` (layout 1…10, days until the event), `DayAssembler` + the five stages of the
 REGISTRY OF DAY TRAINERS (наряд SESSION-1a: `WordsStage`, `PhrasesStage`, `DialogueStage`, `ListenStage`,
@@ -92,8 +95,8 @@ stands — from card tallies, the dealer's outline or the day type), `BlueprintC
 checks in observe/drop/gate), `LessonValidator` + `Check/Lesson/*Rules` (the lesson's codes, each with its
 card's address, `LessonCodes`), `Check/Language` — the rules' languages: `LanguagePack` (one language's words, marks
 and patterns from `config/lesson/lang/<code>.php`; a key it lacks is a check skipped, `PackSkips`, never a finding),
-`LanguageWords` (the same questions of any language, answered off its pack), `LessonGate` (the seven fatal codes, the
-card order a repair takes, at most two cards, the `fatal: …` reason), `Words` / `FrameText` / `FrameParts` (the text
+`LanguageWords` (the same questions of any language, answered off its pack), `LessonGate` (the ten fatal codes, the
+card order a repair takes — a word last —, at most two cards, the `fatal: …` reason), `Words` / `FrameText` / `FrameParts` (the text
 rules the validator and the assembly share — and, since SESSION-1a, the frame without its window: its words, where
 the slot stands), `SpeechCoverage` (how much of the expected text must be heard — 1.0 up to two words, else 0.7,
 the target pack's articles forgiven; also what of the heard text falls OUTSIDE the frame, which is what the judge
@@ -155,7 +158,7 @@ reads plan tables.
 
 | Module | How | Why |
 |---|---|---|
-| `Generation` | `ContentModelCatalog` → `ContentModelPort` (purpose `plan`, own timeout — and, since SESSION-1a, its own retry count: the slot judge asks for exactly ONE attempt, every other caller keeps the default); `ImageSearchPort`; `SpeechSynthesizerPort` | the plan's model calls — the plan, the lesson, the P2R repair, the seam judge, the slot judge — the photos (`searchMany`), the day's voice (`speakLines`, `balance`) |
+| `Generation` | `ContentModelCatalog` → `ContentModelPort` (purpose `plan`, own timeout — 180 s for the plan, the lesson, P2R and the seam judge since GEN-3, the vendor's `VendorCall` connects in 10 s, retries only an ANSWERED 408/409/429/5xx and journals every call in `model_calls` before it is made — and, since SESSION-1a, its own retry count: the slot judge asks for exactly ONE attempt, every other caller keeps the default); `ImageSearchPort`; `SpeechSynthesizerPort` | the plan's model calls — the plan, the lesson, the P2R repair, the seam judge, the slot judge — the photos (`searchMany`), the day's voice (`speakLines`, `balance`) |
 | `Identity` | `UserReader`; `GetPushTokens` + `RemovePushToken`; `GetUsualVisitTime` | the learner's timezone, native language and gender (the lesson's LEARNER_GENDER); the device addresses a letter goes to (and forgetting a dead one); when the daily reminder is due |
 | `Vocabulary` | `ImportTerm`; `NativeDistractorReader` | a closed day's words and phrases become terms (dedup, provenance); catalogue translations as wrong options for a thin Beginner choice |
 | `Collections` | `CreateGeneratedCollection` (origin `plan`), `AddTermToCollection`; `DeleteCollection` | the plan's collection; its tombstone when the plan is dropped by the GEN-2a purge migration |
@@ -168,6 +171,7 @@ reads plan tables.
 | `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
 | `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice: waits out the concurrency limit, fails with the vendor's code on a refusal of the account, stops at the fuse) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
+| `NextDayAccess` | `EveryNextDayAllowed` — may the learner have the next day; asked by `CloseDayHandler` before the next day's lesson is queued (GEN-3 §11). Always yes until PAY-1, whose paywall is this one method |
 | `LearnerGender` | `IdentityLearnerGender` (the profile's gender, read when a lesson is written) |
 | `BuildVersion` | `StampedBuildVersion` (`APP_COMMIT` / `storage/app/commit`) |
 | `PlanImageFinder` | `PexelsPlanImageFinder` (search → photo + tone; `findMany` — a batch, six on the wire, over Generation's `searchMany`; `tone(url)` → Pexels `GET /photos/{id}` for the backfill) |
@@ -190,17 +194,23 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.5`, `lesson_card_repair.v1.1`, `lesson_seam_judge.v1.1`, `slot_judge.v1`). The
-  loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message; the repair wrapper
-  quotes the lesson prompt's own sections for the card's kind and is shown only the part of the lesson the card
-  needs; the slot judge's user message is one line per INPUT of its prompt, values as they are — `HEARD` is not
+  (`plan-builder-v2`, `lesson_day.v4.6`, `lesson_card_repair.v1.2`, `lesson_seam_judge.v1.1`, `slot_judge.v1`; `lesson_day.v4.5`
+  and `lesson_card_repair.v1.1` stay beside them — a rollback is one constant of `PlanPromptFiles`). The
+  loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
+  message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
+  `LessonRequests` (roles, `EARLIER_DAYS`) for the build and for a repair alike; the repair wrapper
+  quotes the lesson prompt's own sections for the card's kind (a section the lesson prompt lacks is skipped), is shown only
+  the part of the lesson the card needs, an exchange's `NEIGHBOURS`, and the earlier days' frames and words; its schema
+  is one per kind, with no address in it; the slot judge's user message is one line per INPUT of its prompt, values as they are — `HEARD` is not
   collapsed, because the recognition noise the prompt forgives can only be forgiven if it is seen.
 - The lesson is stored as the model wrote it (`plan_scenes.lesson_json`), re-parsed on read and served assembled.
 - Every plan check ships in `observe`; modes are flipped in `config/plan.php`, never in code. The lesson validator
   has no modes: it counts (`checks_json` of the scene, `plan_check_counters` by code, `lang.pack_missing` for a check
-  its languages' packs cannot run); seven codes are fatal by the architect's decisions after GEN-2a and in GEN-2b
-  (`LessonGate`) — a lesson with them is never stored before P2R repairs their card (at most two a day), else it
-  fails `fatal: <codes>`. A lesson that passed is read once by the seam judge (`Application/Service/LessonSeamJudge`,
+  its languages' packs cannot run); ten codes are fatal by the architect's decisions after GEN-2a, in GEN-2b and in GEN-3
+  (`LessonGate`) — a lesson with them is never stored before P2R repairs their card (at most two a day; a repaired WORD
+  is checked again by the server and refused when it is still a known word, an abbreviation, a second id of a word or
+  not where `used_in` says), else it fails `fatal: <codes>`. A failed lesson is asked for again only by the learner's
+  retry — no open, close, reschedule or extension rebuilds it. A lesson that passed is read once by the seam judge (`Application/Service/LessonSeamJudge`,
   `filler.native_seam`, a warning; `judge.unavailable` when it does not answer). The SLOT judge counts in the same
   table under its own prompt version (`slot_judge.v1`) and has that one code only: it judges a learner's attempt,
   not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene.

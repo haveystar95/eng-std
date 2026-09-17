@@ -1,0 +1,953 @@
+{
+    "slug": "restaurant",
+    "version": "lesson_day.v4.6",
+    "earlier_days": 1,
+    "roles": {
+        "learnerTarget": "Parent",
+        "learnerNative": "Родитель",
+        "partnerTarget": "Waiter",
+        "partnerNative": "Официант"
+    },
+    "status": "ready",
+    "fail_reason": null,
+    "cost_usd": "0.074011",
+    "latency_ms": 43997,
+    "attempts": 1,
+    "findings": [
+        {
+            "code": "frame.native_agreement",
+            "address": "p2",
+            "detail": "«Всего ___ .»: «всего» agrees with the slot — it changes with the filler"
+        },
+        {
+            "code": "partner.two_questions",
+            "address": "A7",
+            "detail": "«Will one person pay, or are you splitting it?» asks two things at once"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x4.check",
+            "detail": "the right option «At the table.» repeats «the table» of the partner's line"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "address": "v6",
+            "detail": "«card machine» is not in the partner's line of exchange 5"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "address": "v7",
+            "detail": "«split the bill» is not in the partner's line of exchange 7"
+        },
+        {
+            "code": "vocab.nested",
+            "address": "v1",
+            "detail": "«bill» is inside «split the bill» (v7)"
+        },
+        {
+            "code": "frame.known_native_repeat",
+            "address": "p1",
+            "detail": "the native «Можно нам ___?» is the native pattern of «Can we get ___?», learned on day 1"
+        },
+        {
+            "code": "filler.native_seam",
+            "address": "p7.f1",
+            "detail": "«Я приложу здесь.» («Я приложу ___ .» with «здесь») does not read as Russian, the seam judge says"
+        },
+        {
+            "code": "filler.native_seam",
+            "address": "p7.f2",
+            "detail": "«Я приложу там.» («Я приложу ___ .» with «там») does not read as Russian, the seam judge says"
+        }
+    ],
+    "wall_s": 44.0,
+    "started_at": "2026-09-17T13:26:13+00:00",
+    "finished_at": "2026-09-17T13:26:57+00:00",
+    "calls": [
+        {
+            "call": "lesson",
+            "at": "2026-09-17T13:26:13+00:00",
+            "prompt_version": "lesson_day.v4.6",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 8566,
+            "cached_tokens": 7936,
+            "tokens_out": 3679,
+            "cost_usd": "0.058744",
+            "latency_ms": 40051,
+            "asked": {
+                "violations": [],
+                "earlier_days": 1,
+                "roles": {
+                    "learnerTarget": "Parent",
+                    "learnerNative": "Родитель",
+                    "partnerTarget": "Waiter",
+                    "partnerNative": "Официант"
+                }
+            },
+            "payload": {
+                "topic": {
+                    "title_target": "The bill",
+                    "title_native": "Счёт",
+                    "description_target": "Ask for the bill, understand the total, and pay for a family meal.",
+                    "description_native": "Попросить счёт, понять итоговую сумму и оплатить семейный ужин."
+                },
+                "learner_role": {
+                    "role_target": "Parent",
+                    "role_native": "Родитель"
+                },
+                "role_gender": "male",
+                "dialogue": [
+                    {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Parent",
+                                "role_native": "Родитель",
+                                "phrase_id": "p1",
+                                "filler": "the bill",
+                                "text_target": "Could we have the bill?",
+                                "text_native": "Можно нам счёт?",
+                                "pronunciation_native": "куд ви хэв зэ бил",
+                                "speaking_key": "Could we have",
+                                "simplified_variants": [
+                                    "Can we have the bill?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Waiter",
+                                "role_native": "Официант",
+                                "text_target": "Of course. I'll bring it now.",
+                                "text_native": "Конечно. Сейчас принесу."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What will the waiter do now?",
+                            "text_native": "Что официант сейчас сделает?",
+                            "options": [
+                                {
+                                    "text_target": "He will bring the check to the table.",
+                                    "text_native": "Он принесёт счёт к столу."
+                                },
+                                {
+                                    "text_target": "He will pack the food to go.",
+                                    "text_native": "Он упакует еду с собой."
+                                },
+                                {
+                                    "text_target": "He will bring the dessert menu.",
+                                    "text_native": "Он принесёт меню десертов."
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Официант сказал, что сейчас принесёт счёт."
+                        }
+                    },
+                    {
+                        "step": 2,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Waiter",
+                                "role_native": "Официант",
+                                "text_target": "Here is your bill. The total is forty-eight pounds.",
+                                "text_native": "Вот ваш счёт. Итого сорок восемь фунтов."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Parent",
+                                "role_native": "Родитель",
+                                "phrase_id": "p2",
+                                "filler": "forty-eight pounds",
+                                "text_target": "Okay, that's forty-eight pounds.",
+                                "text_native": "Хорошо, это сорок восемь фунтов.",
+                                "pronunciation_native": "оукэй, зэтс форти-эйт паундз",
+                                "speaking_key": "that's",
+                                "simplified_variants": [
+                                    "It's forty-eight pounds."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "How much is the meal altogether?",
+                            "text_native": "Сколько всего стоит ужин?",
+                            "options": [
+                                {
+                                    "text_target": "Fifty-four pounds.",
+                                    "text_native": "Пятьдесят четыре фунта."
+                                },
+                                {
+                                    "text_target": "Forty-eight pounds.",
+                                    "text_native": "Сорок восемь фунтов."
+                                },
+                                {
+                                    "text_target": "Thirty-eight pounds.",
+                                    "text_native": "Тридцать восемь фунтов."
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Официант назвал общую сумму: сорок восемь фунтов."
+                        }
+                    },
+                    {
+                        "step": 3,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Parent",
+                                "role_native": "Родитель",
+                                "phrase_id": "p3",
+                                "filler": "by card",
+                                "text_target": "Can I pay by card?",
+                                "text_native": "Можно оплатить картой?",
+                                "pronunciation_native": "кэн ай пэй бай кард",
+                                "speaking_key": "Can I pay",
+                                "simplified_variants": [
+                                    "Can I use a card?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Waiter",
+                                "role_native": "Официант",
+                                "text_target": "Yes, card is fine. I can bring the card machine.",
+                                "text_native": "Да, картой можно. Я могу принести терминал."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What payment method does the waiter accept?",
+                            "text_native": "Какой способ оплаты принимает официант?",
+                            "options": [
+                                {
+                                    "text_target": "Only cash.",
+                                    "text_native": "Только наличные."
+                                },
+                                {
+                                    "text_target": "A bank card.",
+                                    "text_native": "Банковскую карту."
+                                },
+                                {
+                                    "text_target": "A phone transfer.",
+                                    "text_native": "Перевод по телефону."
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Официант сказал, что картой оплатить можно."
+                        }
+                    },
+                    {
+                        "step": 4,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Parent",
+                                "role_native": "Родитель",
+                                "phrase_id": "p4",
+                                "filler": "cash",
+                                "text_target": "Do you take cash?",
+                                "text_native": "Вы принимаете наличные?",
+                                "pronunciation_native": "ду ю тэйк кэш",
+                                "speaking_key": "take cash",
+                                "simplified_variants": [
+                                    "Can I pay cash?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Waiter",
+                                "role_native": "Официант",
+                                "text_target": "Yes, we take cash too. You can pay at the table.",
+                                "text_native": "Да, наличные тоже принимаем. Можете оплатить за столом."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Where can the customer pay with cash?",
+                            "text_native": "Где клиент может заплатить наличными?",
+                            "options": [
+                                {
+                                    "text_target": "At the table.",
+                                    "text_native": "За столом."
+                                },
+                                {
+                                    "text_target": "At the bar.",
+                                    "text_native": "У бара."
+                                },
+                                {
+                                    "text_target": "At the front desk.",
+                                    "text_native": "У стойки."
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Официант сказал, что оплатить можно за столом."
+                        }
+                    },
+                    {
+                        "step": 5,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Waiter",
+                                "role_native": "Официант",
+                                "text_target": "If you pay by card, I'll bring the machine here.",
+                                "text_native": "Если будете платить картой, я принесу терминал сюда."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Parent",
+                                "role_native": "Родитель",
+                                "phrase_id": "p5",
+                                "filler": "by card",
+                                "text_target": "We'll pay by card.",
+                                "text_native": "Мы оплатим картой.",
+                                "pronunciation_native": "уил пэй бай кард",
+                                "speaking_key": "pay by",
+                                "simplified_variants": [
+                                    "By card, please."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What will the waiter bring for card payment?",
+                            "text_native": "Что официант принесёт для оплаты картой?",
+                            "options": [
+                                {
+                                    "text_target": "A receipt folder.",
+                                    "text_native": "Папку для счёта."
+                                },
+                                {
+                                    "text_target": "A card reader.",
+                                    "text_native": "Терминал для карты."
+                                },
+                                {
+                                    "text_target": "A menu.",
+                                    "text_native": "Меню."
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Официант сказал, что принесёт терминал."
+                        }
+                    },
+                    {
+                        "step": 6,
+                        "kind": "rescue",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Parent",
+                                "role_native": "Родитель",
+                                "phrase_id": null,
+                                "filler": null,
+                                "text_target": "Sorry, could you say that again?",
+                                "text_native": "Извините, повторите, пожалуйста.",
+                                "pronunciation_native": "сори, куд ю сэй зэт эгэн",
+                                "speaking_key": "say that again",
+                                "simplified_variants": [
+                                    "Sorry, again, please."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Waiter",
+                                "role_native": "Официант",
+                                "text_target": "I’ll bring the card machine here.",
+                                "text_native": "Я принесу терминал сюда."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Where will the waiter bring the machine?",
+                            "text_native": "Куда официант принесёт терминал?",
+                            "options": [
+                                {
+                                    "text_target": "To this table.",
+                                    "text_native": "К этому столу."
+                                },
+                                {
+                                    "text_target": "To the kitchen.",
+                                    "text_native": "На кухню."
+                                },
+                                {
+                                    "text_target": "To the door.",
+                                    "text_native": "К двери."
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "В повторе официант сказал, что принесёт терминал сюда, к столу."
+                        }
+                    },
+                    {
+                        "step": 7,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Waiter",
+                                "role_native": "Официант",
+                                "text_target": "Will one person pay, or are you splitting it?",
+                                "text_native": "Платит один человек или будете делить счёт?"
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Parent",
+                                "role_native": "Родитель",
+                                "phrase_id": "p6",
+                                "filler": "one person",
+                                "text_target": "One person will pay.",
+                                "text_native": "Оплатит один человек.",
+                                "pronunciation_native": "уан пёрсон уил пэй",
+                                "speaking_key": "will pay",
+                                "simplified_variants": [
+                                    "I'll pay for everyone."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What two payment options does the waiter ask about?",
+                            "text_native": "О каких двух вариантах оплаты спрашивает официант?",
+                            "options": [
+                                {
+                                    "text_target": "Paying together or dividing the amount.",
+                                    "text_native": "Оплатить одному или разделить сумму."
+                                },
+                                {
+                                    "text_target": "Paying now or later.",
+                                    "text_native": "Оплатить сейчас или позже."
+                                },
+                                {
+                                    "text_target": "Paying by card or by cash.",
+                                    "text_native": "Оплатить картой или наличными."
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Официант спросил, будет ли платить один человек или счёт разделят."
+                        }
+                    },
+                    {
+                        "step": 8,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Waiter",
+                                "role_native": "Официант",
+                                "text_target": "All right. Please tap your card here.",
+                                "text_native": "Хорошо. Пожалуйста, приложите карту здесь."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Parent",
+                                "role_native": "Родитель",
+                                "phrase_id": "p7",
+                                "filler": "here",
+                                "text_target": "Okay, I'll tap here.",
+                                "text_native": "Хорошо, я приложу здесь.",
+                                "pronunciation_native": "оукэй, айл тэп хиэ",
+                                "speaking_key": "I'll tap",
+                                "simplified_variants": [
+                                    "Okay, here."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the waiter ask the customer to do?",
+                            "text_native": "Что официант просит сделать клиента?",
+                            "options": [
+                                {
+                                    "text_target": "Sign the paper bill.",
+                                    "text_native": "Подписать бумажный счёт."
+                                },
+                                {
+                                    "text_target": "Touch the reader with the card.",
+                                    "text_native": "Приложить карту к терминалу."
+                                },
+                                {
+                                    "text_target": "Show an ID card.",
+                                    "text_native": "Показать удостоверение."
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Официант просит приложить карту к терминалу."
+                        }
+                    }
+                ],
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "frame_target": "Could we have ___?",
+                        "frame_native": "Можно нам ___?",
+                        "pronunciation_native": "куд ви хэв ___",
+                        "slot": {
+                            "hint_native": "что попросить",
+                            "fillers": [
+                                {
+                                    "target": "the bill",
+                                    "native": "счёт",
+                                    "pronunciation_native": "зэ бил",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the receipt",
+                                    "native": "чек",
+                                    "pronunciation_native": "зэ рисит",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "frame_target": "That's ___.",
+                        "frame_native": "Это ___.",
+                        "pronunciation_native": "зэтс ___",
+                        "slot": {
+                            "hint_native": "сумма",
+                            "fillers": [
+                                {
+                                    "target": "forty-eight pounds",
+                                    "native": "сорок восемь фунтов",
+                                    "pronunciation_native": "форти-эйт паундз",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "fifty-two pounds",
+                                    "native": "пятьдесят два фунта",
+                                    "pronunciation_native": "фифти-ту паундз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "frame_target": "Can I pay ___?",
+                        "frame_native": "Можно оплатить ___?",
+                        "pronunciation_native": "кэн ай пэй ___",
+                        "slot": {
+                            "hint_native": "способ оплаты",
+                            "fillers": [
+                                {
+                                    "target": "by card",
+                                    "native": "картой",
+                                    "pronunciation_native": "бай кард",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "in cash",
+                                    "native": "наличными",
+                                    "pronunciation_native": "ин кэш",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "frame_target": "Do you take ___?",
+                        "frame_native": "Вы принимаете ___?",
+                        "pronunciation_native": "ду ю тэйк ___",
+                        "slot": {
+                            "hint_native": "способ оплаты",
+                            "fillers": [
+                                {
+                                    "target": "cash",
+                                    "native": "наличные",
+                                    "pronunciation_native": "кэш",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "cards",
+                                    "native": "карты",
+                                    "pronunciation_native": "кардз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "frame_target": "We'll pay ___ .",
+                        "frame_native": "Мы оплатим ___ .",
+                        "pronunciation_native": "уил пэй ___",
+                        "slot": {
+                            "hint_native": "как платить",
+                            "fillers": [
+                                {
+                                    "target": "by card",
+                                    "native": "картой",
+                                    "pronunciation_native": "бай кард",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "in cash",
+                                    "native": "наличными",
+                                    "pronunciation_native": "ин кэш",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "answer",
+                        "frame_target": "___ will pay.",
+                        "frame_native": "Оплатит ___.",
+                        "pronunciation_native": "___ уил пэй",
+                        "slot": {
+                            "hint_native": "кто платит",
+                            "fillers": [
+                                {
+                                    "target": "one person",
+                                    "native": "один человек",
+                                    "pronunciation_native": "уан пёрсон",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "my partner",
+                                    "native": "мой партнёр",
+                                    "pronunciation_native": "май партнэр",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "answer",
+                        "frame_target": "I'll tap ___.",
+                        "frame_native": "Я приложу ___ .",
+                        "pronunciation_native": "айл тэп ___",
+                        "slot": {
+                            "hint_native": "где приложить",
+                            "fillers": [
+                                {
+                                    "target": "here",
+                                    "native": "здесь",
+                                    "pronunciation_native": "хиэ",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "there",
+                                    "native": "там",
+                                    "pronunciation_native": "зээр",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "listening": {
+                    "questions": [
+                        {
+                            "text_native": "Какую сумму назвал официант за весь ужин?",
+                            "options_native": [
+                                "Сорок восемь фунтов",
+                                "Тридцать восемь фунтов",
+                                "Пятьдесят восемь фунтов"
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Официант сказал, что всего сорок восемь фунтов."
+                        },
+                        {
+                            "text_native": "Как сказал родитель, чем они будут платить?",
+                            "options_native": [
+                                "Наличными",
+                                "Картой",
+                                "Переводом"
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Родитель сказал: «We’ll pay by card.»"
+                        },
+                        {
+                            "text_native": "Что официант принесёт к столу для оплаты?",
+                            "options_native": [
+                                "Десертное меню",
+                                "Терминал",
+                                "Сдачу"
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Официант сказал, что принесёт терминал для карты."
+                        },
+                        {
+                            "text_native": "Как будет оплачен счёт?",
+                            "options_native": [
+                                "Каждый платит за себя",
+                                "Счёт оплатит один человек",
+                                "Половину сейчас, половину позже"
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Родитель сказал, что оплатит один человек."
+                        }
+                    ]
+                },
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "bill",
+                        "translation_native": "счёт",
+                        "pronunciation_native": "бил",
+                        "definition_target": "the paper that shows how much you need to pay",
+                        "kind": "word",
+                        "image_prompt": "restaurant bill on a table beside plates and glasses",
+                        "used_in": [
+                            "p1",
+                            "A2"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "total",
+                        "translation_native": "итоговая сумма",
+                        "pronunciation_native": "тоутэл",
+                        "definition_target": "the full amount to pay",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "A2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "pounds",
+                        "translation_native": "фунты",
+                        "pronunciation_native": "паундз",
+                        "definition_target": "money used in the UK",
+                        "kind": "word",
+                        "image_prompt": "British pound coins and notes on a restaurant table",
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "pay by card",
+                        "translation_native": "платить картой",
+                        "pronunciation_native": "пэй бай кард",
+                        "definition_target": "to use a bank card for payment",
+                        "kind": "chunk",
+                        "image_prompt": "customer holding a bank card near a card reader at a restaurant table",
+                        "used_in": [
+                            "p3",
+                            "p5",
+                            "A5"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "cash",
+                        "translation_native": "наличные",
+                        "pronunciation_native": "кэш",
+                        "definition_target": "money in notes and coins",
+                        "kind": "word",
+                        "image_prompt": "cash notes and coins beside a restaurant bill",
+                        "used_in": [
+                            "p4",
+                            "A4"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "card machine",
+                        "translation_native": "терминал",
+                        "pronunciation_native": "кард мэшин",
+                        "definition_target": "a device used to take card payments",
+                        "kind": "chunk",
+                        "image_prompt": "portable card machine on a restaurant table",
+                        "used_in": [
+                            "A3",
+                            "A5",
+                            "A6"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "split the bill",
+                        "translation_native": "разделить счёт",
+                        "pronunciation_native": "сплит зэ бил",
+                        "definition_target": "to divide the cost between people",
+                        "kind": "chunk",
+                        "image_prompt": "two people looking at a restaurant bill and bank cards",
+                        "used_in": [
+                            "A7"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "tap",
+                        "translation_native": "приложить",
+                        "pronunciation_native": "тэп",
+                        "definition_target": "to touch a card or phone to a reader to pay",
+                        "kind": "word",
+                        "image_prompt": "hand tapping a bank card on a payment terminal",
+                        "used_in": [
+                            "p7",
+                            "A8"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "call": "repair",
+            "at": "2026-09-17T13:26:53+00:00",
+            "prompt_version": "lesson_card_repair.v1.2",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4688,
+            "cached_tokens": 0,
+            "tokens_out": 132,
+            "cost_usd": "0.013700",
+            "latency_ms": 2647,
+            "asked": {
+                "address": "p2",
+                "kind": "frame",
+                "findings": [
+                    {
+                        "code": "frame.known_repeat",
+                        "detail": "p2: «That's ___.» is the frame «That's ___.» the learner already learned on day 1"
+                    }
+                ],
+                "card": {
+                    "id": "p2",
+                    "kind": "answer",
+                    "frame_target": "That's ___.",
+                    "frame_native": "Это ___.",
+                    "pronunciation_native": "зэтс ___",
+                    "slot": {
+                        "hint_native": "сумма",
+                        "fillers": [
+                            {
+                                "target": "forty-eight pounds",
+                                "native": "сорок восемь фунтов",
+                                "pronunciation_native": "форти-эйт паундз",
+                                "in_dialogue": true
+                            },
+                            {
+                                "target": "fifty-two pounds",
+                                "native": "пятьдесят два фунта",
+                                "pronunciation_native": "фифти-ту паундз",
+                                "in_dialogue": false
+                            }
+                        ]
+                    }
+                },
+                "neighbours": null
+            },
+            "payload": {
+                "card": {
+                    "id": "p2",
+                    "kind": "answer",
+                    "frame_target": "It's ___ altogether.",
+                    "frame_native": "Всего ___ .",
+                    "pronunciation_native": "итс ___ олтэгэзэр",
+                    "slot": {
+                        "hint_native": "сумма",
+                        "fillers": [
+                            {
+                                "target": "forty-eight pounds",
+                                "native": "сорок восемь фунтов",
+                                "pronunciation_native": "форти-эйт паундз",
+                                "in_dialogue": true
+                            },
+                            {
+                                "target": "fifty-two pounds",
+                                "native": "пятьдесят два фунта",
+                                "pronunciation_native": "фифти-ту паундз",
+                                "in_dialogue": false
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "call": "judge",
+            "at": "2026-09-17T13:26:56+00:00",
+            "prompt_version": "lesson_seam_judge.v1.1",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "tokens_in": 1051,
+            "cached_tokens": 0,
+            "tokens_out": 173,
+            "cost_usd": "0.001567",
+            "latency_ms": 1299,
+            "asked": {
+                "items": 14
+            },
+            "payload": {
+                "verdicts": [
+                    {
+                        "id": "p1.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f1",
+                        "reads": false
+                    },
+                    {
+                        "id": "p7.f2",
+                        "reads": false
+                    }
+                ]
+            }
+        }
+    ]
+}

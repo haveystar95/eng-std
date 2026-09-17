@@ -1,0 +1,542 @@
+[
+  {
+    "name": "1. первому дню уходит пустая история вместо «none»",
+    "rule": "EARLIER_DAYS на первом дне — строка none",
+    "defect": "первому дню уходит пустая история вместо «none»",
+    "file": "app/Modules/Plan/Infrastructure/Prompt/PlanPromptFiles.php",
+    "find": "            return 'none';",
+    "replace": "            return '';",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonRequestPromptTest.php",
+        "filter": "writes the roles and the story so far"
+      }
+    ]
+  },
+  {
+    "name": "2. в Frames прошлого дня уходит только frame_target",
+    "rule": "Frames прошлых дней — в обоих языках",
+    "defect": "в Frames прошлого дня уходит только frame_target",
+    "file": "app/Modules/Plan/Domain/Lesson/EarlierDay.php",
+    "find": "['target' => $p->frameTarget, 'native' => $p->frameNative]",
+    "replace": "['target' => $p->frameTarget, 'native' => '']",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/StorySoFarTest.php",
+        "filter": "tells each earlier day its lines"
+      },
+      {
+        "path": "tests/Unit/Plan/LessonRequestPromptTest.php",
+        "filter": "writes the roles and the story so far"
+      }
+    ]
+  },
+  {
+    "name": "3. дни истории в обратном порядке",
+    "rule": "прошлые дни — по порядку календаря",
+    "defect": "дни истории в обратном порядке",
+    "file": "app/Modules/Plan/Domain/Entity/Plan.php",
+    "find": "                return new EarlierDays($days);",
+    "replace": "                return new EarlierDays(array_reverse($days));",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/StorySoFarTest.php",
+        "filter": "tells a scene day every earlier scene day"
+      }
+    ]
+  },
+  {
+    "name": "4. день видит и дни после себя",
+    "rule": "в историю — только дни раньше этого",
+    "defect": "день видит и дни после себя",
+    "file": "app/Modules/Plan/Domain/Entity/Plan.php",
+    "find": "            if ($day->sceneId()?->equals($sceneId) === true) {\n                return new EarlierDays($days);\n            }",
+    "replace": "            if ($day->sceneId()?->equals($sceneId) === true) {\n                continue;\n            }",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/StorySoFarTest.php",
+        "filter": "tells a scene day every earlier scene day"
+      }
+    ]
+  },
+  {
+    "name": "5. сборка хранит роли, как их написала модель",
+    "rule": "роли ответа перезаписывает сервер",
+    "defect": "сборка хранит роли, как их написала модель",
+    "file": "app/Modules/Plan/Application/Service/LessonBuildService.php",
+    "find": "$this->parser->parse($reply->payload)->withRoles($request->roles)",
+    "replace": "$this->parser->parse($reply->payload)",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/StoryBuildTest.php",
+        "filter": "asks day 2 with day 1"
+      }
+    ]
+  },
+  {
+    "name": "6. собеседник получает роль ученика",
+    "rule": "реплики собеседника — в роли сцены",
+    "defect": "собеседник получает роль ученика",
+    "file": "app/Modules/Plan/Domain/Lesson/Lesson.php",
+    "find": ": $message->withRole($roles->partnerTarget, $roles->partnerNative),",
+    "replace": ": $message->withRole($roles->learnerTarget, $roles->learnerNative),",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/StorySoFarTest.php",
+        "filter": "speaks a lesson in the plan"
+      }
+    ]
+  },
+  {
+    "name": "7. повтор термина сверяется строкой как есть",
+    "rule": "тождество термина — регистр, пробелы, знак конца не участвуют",
+    "defect": "повтор термина сверяется строкой как есть",
+    "file": "app/Modules/Plan/Domain/Check/Lesson/StoryRules.php",
+    "find": "            $day = $words[FrameText::identity($item->termTarget)] ?? null;",
+    "replace": "            $day = $words[$item->termTarget] ?? null;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "holds the words and frames an earlier day taught"
+      }
+    ]
+  },
+  {
+    "name": "8. известный каркас — предупреждение",
+    "rule": "frame.known_repeat фатален",
+    "defect": "известный каркас — предупреждение",
+    "file": "app/Modules/Plan/Domain/Check/LessonGate.php",
+    "find": "        LessonCodes::FRAME_KNOWN_REPEAT,\n",
+    "replace": "",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonGateTest.php",
+        "filter": "holds the day for exactly the ten fatal codes"
+      }
+    ]
+  },
+  {
+    "name": "9. совпавший родной каркас держит день",
+    "rule": "frame.known_native_repeat — только предупреждение",
+    "defect": "совпавший родной каркас держит день",
+    "file": "app/Modules/Plan/Domain/Check/LessonGate.php",
+    "find": "        LessonCodes::VOCAB_ABBREVIATION,\n    ];",
+    "replace": "        LessonCodes::VOCAB_ABBREVIATION,\n        LessonCodes::FRAME_KNOWN_NATIVE_REPEAT,\n    ];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonGateTest.php",
+        "filter": "holds the day for exactly the ten fatal codes"
+      }
+    ]
+  },
+  {
+    "name": "10. близнец ищется только по frame_target",
+    "rule": "frame.twin — по любому из языков",
+    "defect": "близнец ищется только по frame_target",
+    "file": "app/Modules/Plan/Domain/Check/Lesson/FrameRules.php",
+    "find": "            if ($native !== '' && $native === $theirNative) {",
+    "replace": "            if (false) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "knows two frames of one pattern"
+      }
+    ]
+  },
+  {
+    "name": "11. один каркас в любых двух обменах считается «подряд»",
+    "rule": "frame.adjacent_repeat — только обмены подряд",
+    "defect": "один каркас в любых двух обменах считается «подряд»",
+    "file": "app/Modules/Plan/Domain/Check/Lesson/VisitRules.php",
+    "find": "            $previous = [$exchange->step, $frame];",
+    "replace": "            $previous = $frame === null ? $previous : [$exchange->step, $frame];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "counts a frame in two exchanges in a row"
+      }
+    ]
+  },
+  {
+    "name": "12. пол сверяется с любым прошлым днём",
+    "rule": "role_gender.changed — против дня с той же ролью",
+    "defect": "пол сверяется с любым прошлым днём",
+    "file": "app/Modules/Plan/Domain/Check/Lesson/StoryRules.php",
+    "find": "if (FrameText::identity($day->partnerRoleTarget) === $role && $day->partnerGender !== $answer->roleGender) {",
+    "replace": "if ($day->partnerGender !== $answer->roleGender) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "reads the partner"
+      }
+    ]
+  },
+  {
+    "name": "13. аббревиатура только из подряд идущих заглавных",
+    "rule": "vocab.abbreviation — с точками и слэшем",
+    "defect": "аббревиатура только из подряд идущих заглавных",
+    "file": "app/Modules/Plan/Domain/Check/Lesson/VocabularyRules.php",
+    "find": "(?:[./]?\\p{Lu})+",
+    "replace": "(?:\\p{Lu})+",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "counts an abbreviation or an acronym"
+      }
+    ]
+  },
+  {
+    "name": "14. аббревиатура — предупреждение",
+    "rule": "vocab.abbreviation фатален",
+    "defect": "аббревиатура — предупреждение",
+    "file": "app/Modules/Plan/Domain/Check/LessonGate.php",
+    "find": "        LessonCodes::VOCAB_ABBREVIATION,\n    ];",
+    "replace": "    ];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonGateTest.php",
+        "filter": "holds the day for exactly the ten fatal codes"
+      }
+    ]
+  },
+  {
+    "name": "15. NEIGHBOURS не уходят в вызов",
+    "rule": "P2R обмена видит NEIGHBOURS",
+    "defect": "NEIGHBOURS не уходят в вызов",
+    "file": "app/Modules/Plan/Application/Service/LessonCardRepairer.php",
+    "find": "            neighbours: $card->kind === LessonCard::EXCHANGE ? LessonCardContext::neighbours($read, $card) : null,",
+    "replace": "            neighbours: null,",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/LessonGateBuildTest.php",
+        "filter": "holds a repeated exchange"
+      }
+    ]
+  },
+  {
+    "name": "16. блок NEIGHBOURS не пишется в сообщение",
+    "rule": "P2R: соседи — отдельным блоком",
+    "defect": "блок NEIGHBOURS не пишется в сообщение",
+    "file": "app/Modules/Plan/Infrastructure/Prompt/PlanPromptFiles.php",
+    "find": "        if ($request->neighbours !== null) {",
+    "replace": "        if (false) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonRequestPromptTest.php",
+        "filter": "sends a repair its neighbours"
+      }
+    ]
+  },
+  {
+    "name": "17. P2R получает диалоги прошлых дней целиком",
+    "rule": "P2R: EARLIER_DAYS в короткой форме",
+    "defect": "P2R получает диалоги прошлых дней целиком",
+    "file": "app/Modules/Plan/Infrastructure/Prompt/PlanPromptFiles.php",
+    "find": "self::earlierDays($request->earlierDays, short: true)",
+    "replace": "self::earlierDays($request->earlierDays, short: false)",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonRequestPromptTest.php",
+        "filter": "sends a repair its neighbours"
+      }
+    ]
+  },
+  {
+    "name": "18. починённое слово-аббревиатура принимается",
+    "rule": "перепроверка term: не аббревиатура",
+    "defect": "починённое слово-аббревиатура принимается",
+    "file": "app/Modules/Plan/Application/Service/LessonCardRepairer.php",
+    "find": ", LessonCodes::VOCAB_ABBREVIATION], true)",
+    "replace": "], true)",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/StoryBuildTest.php",
+        "filter": "refuses a repaired word"
+      }
+    ]
+  },
+  {
+    "name": "19. повтор слова дня под другим id принимается",
+    "rule": "перепроверка term: не дважды в дне",
+    "defect": "повтор слова дня под другим id принимается",
+    "file": "app/Modules/Plan/Application/Service/LessonCardRepairer.php",
+    "find": "&& FrameText::identity($other->termTarget) === FrameText::identity($word->termTarget)) {",
+    "replace": "&& false) {",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/StoryBuildTest.php",
+        "filter": "refuses a repaired word"
+      }
+    ]
+  },
+  {
+    "name": "20. тема дня дописывается в системное сообщение",
+    "rule": "кэш: правила первыми и одинаковы",
+    "defect": "тема дня дописывается в системное сообщение",
+    "file": "app/Modules/Plan/Infrastructure/Model/ContentModelPlanBuilder.php",
+    "find": "        $text = $this->prompts->lessonSystem();",
+    "replace": "        $text = $this->prompts->lessonSystem().\"\\nTOPIC: \".$request->topic;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonRequestPromptTest.php",
+        "filter": "sends two days the same rules"
+      }
+    ]
+  },
+  {
+    "name": "21. в схеме починки id карточки — enum адреса",
+    "rule": "кэш: схема починки без адреса",
+    "defect": "в схеме починки id карточки — enum адреса",
+    "file": "app/Modules/Plan/Infrastructure/Prompt/PlanSchemas.php",
+    "find": "            'frame' => self::frame($frames),",
+    "replace": "            'frame' => self::frame([$kind.(string) hrtime(true)]),",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonRequestPromptTest.php",
+        "filter": "sends a repair its neighbours"
+      }
+    ]
+  },
+  {
+    "name": "22. адаптер не читает cached_tokens",
+    "rule": "журнал: cached_tokens из usage",
+    "defect": "адаптер не читает cached_tokens",
+    "file": "app/Modules/Generation/Infrastructure/Adapter/OpenAiCompatibleContentModel.php",
+    "find": "        $cached = is_int($response->json('usage.prompt_tokens_details.cached_tokens')) ? $response->json('usage.prompt_tokens_details.cached_tokens') : null;",
+    "replace": "        $cached = null;",
+    "tests": [
+      {
+        "path": "tests/Feature/Observability/ModelCallJournalTest.php",
+        "filter": "writes a model call down before it is made"
+      }
+    ]
+  },
+  {
+    "name": "23. строка журнала пишется после ответа",
+    "rule": "журнал: запись ДО вызова",
+    "defect": "строка журнала пишется после ответа",
+    "file": "app/Modules/Generation/Infrastructure/Adapter/VendorCall.php",
+    "find": "        $id = $this->journal->started(new ModelCallStart($provider->value, $model, $purpose, ModelCallStart::estimateTokens($body), $timeoutSeconds));\n        $startedAt = hrtime(true);\n\n        try {\n            $response = $send();",
+    "replace": "        $startedAt = hrtime(true);\n\n        try {\n            $response = $send();\n            $id = $this->journal->started(new ModelCallStart($provider->value, $model, $purpose, ModelCallStart::estimateTokens($body), $timeoutSeconds));",
+    "tests": [
+      {
+        "path": "tests/Feature/Observability/ModelCallJournalTest.php",
+        "filter": "writes a model call down before it is made"
+      }
+    ]
+  },
+  {
+    "name": "24. оборванный вызов повторяется (прежний when)",
+    "rule": "обрыв — lost, без повтора",
+    "defect": "оборванный вызов повторяется (прежний when)",
+    "file": "app/Modules/Generation/Infrastructure/Adapter/VendorCall.php",
+    "find": "        return $e instanceof RequestException && in_array($e->response->status(), self::RETRY_STATUSES, true);",
+    "replace": "        return ! $e instanceof RequestException || in_array($e->response->status(), self::RETRY_STATUSES, true);",
+    "tests": [
+      {
+        "path": "tests/Feature/Observability/ModelCallJournalTest.php",
+        "filter": "keeps a call our client gave up on as lost"
+      }
+    ]
+  },
+  {
+    "name": "25. таймаут урока по умолчанию 60 с",
+    "rule": "ожидание ответа урока — 180 с",
+    "defect": "таймаут урока по умолчанию 60 с",
+    "file": "config/plan.php",
+    "find": "'lesson_timeout' => (int) env('PLAN_LESSON_TIMEOUT', 180),",
+    "replace": "'lesson_timeout' => (int) env('PLAN_LESSON_TIMEOUT', 60),",
+    "tests": [
+      {
+        "path": "tests/Feature/Observability/ModelCallJournalTest.php",
+        "filter": "waits 180 seconds for the answer"
+      }
+    ]
+  },
+  {
+    "name": "26. connect timeout 30 с",
+    "rule": "connect timeout — 10 с",
+    "defect": "connect timeout 30 с",
+    "file": "app/Modules/Generation/Infrastructure/Adapter/VendorCall.php",
+    "find": "    public const CONNECT_TIMEOUT = 10;",
+    "replace": "    public const CONNECT_TIMEOUT = 30;",
+    "tests": [
+      {
+        "path": "tests/Feature/Observability/ModelCallJournalTest.php",
+        "filter": "waits 180 seconds for the answer"
+      }
+    ]
+  },
+  {
+    "name": "27. job урока считает только два вызова",
+    "rule": "job урока переживает все свои вызовы",
+    "defect": "job урока считает только два вызова",
+    "file": "app/Modules/Plan/Infrastructure/Job/BuildLessonJob.php",
+    "find": "        $calls = LessonBuildService::MAX_ATTEMPTS + LessonGate::MAX_CARDS + 1;",
+    "replace": "        $calls = 2;",
+    "tests": [
+      {
+        "path": "tests/Feature/Observability/ModelCallJournalTest.php",
+        "filter": "lets a lesson job outlive every call it makes"
+      }
+    ]
+  },
+  {
+    "name": "28. needsLesson снова включает failed",
+    "rule": "упавший урок сам не пересобирается",
+    "defect": "needsLesson снова включает failed",
+    "file": "app/Modules/Plan/Domain/Entity/PlanScene.php",
+    "find": "        return $this->lessonStatus === LessonStatus::Pending;",
+    "replace": "        return $this->lessonStatus === LessonStatus::Pending || $this->lessonStatus === LessonStatus::Failed;",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/NextDayBuildTest.php",
+        "filter": "asks again for a failed lesson only when the learner retries it"
+      }
+    ]
+  },
+  {
+    "name": "29. следующий день датируется от закрытия",
+    "rule": "день N+1 — от ОТКРЫТИЯ дня N",
+    "defect": "следующий день датируется от закрытия",
+    "file": "app/Modules/Plan/Domain/Entity/Plan.php",
+    "find": "        $next?->unlockOn($opened->setTime(0, 0)->modify('+1 day'));",
+    "replace": "        $next?->unlockOn($today->setTime(0, 0)->modify('+1 day'));",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/PlanScheduleTest.php",
+        "filter": "opens day 2 at 01:00"
+      }
+    ]
+  },
+  {
+    "name": "30. строгое «меньше»",
+    "rule": "догоняем: дней до события ≤ непройденных",
+    "defect": "строгое «меньше»",
+    "file": "app/Modules/Plan/Domain/Entity/Plan.php",
+    "find": "PlanCalendar::calendarDaysBetween($today, $this->eventDate) + 1 <= $left;",
+    "replace": "PlanCalendar::calendarDaysBetween($today, $this->eventDate) + 1 < $left;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/PlanScheduleTest.php",
+        "filter": "does not lock the next day while"
+      }
+    ]
+  },
+  {
+    "name": "31. план без даты всегда «догоняет»",
+    "rule": "без даты события — обычный замок",
+    "defect": "план без даты всегда «догоняет»",
+    "file": "app/Modules/Plan/Domain/Entity/Plan.php",
+    "find": "        if ($this->eventDate === null || $this->eventDate->format('Y-m-d') < $today->format('Y-m-d')) {\n            return false;\n        }",
+    "replace": "        if ($this->eventDate === null) {\n            return true;\n        }\n        if ($this->eventDate->format('Y-m-d') < $today->format('Y-m-d')) {\n            return false;\n        }",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/PlanScheduleTest.php",
+        "filter": "locks the next day of a plan with no event date"
+      }
+    ]
+  },
+  {
+    "name": "32. в день события «догоняем» выключен",
+    "rule": "день события — учебный",
+    "defect": "в день события «догоняем» выключен",
+    "file": "app/Modules/Plan/Domain/Entity/Plan.php",
+    "find": "$this->eventDate->format('Y-m-d') < $today->format('Y-m-d')) {\n            return false;",
+    "replace": "$this->eventDate->format('Y-m-d') <= $today->format('Y-m-d')) {\n            return false;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/PlanScheduleTest.php",
+        "filter": "opens the rehearsal on the event"
+      }
+    ]
+  },
+  {
+    "name": "33. building и у дней дальше",
+    "rule": "building — только день следующим в очереди",
+    "defect": "building и у дней дальше",
+    "file": "app/Modules/Plan/Domain/Entity/Plan.php",
+    "find": "        return ($previous === null || $previous->isClosed()) && $scene !== null && $scene->isAwaitingLesson();",
+    "replace": "        return $scene !== null && $scene->isAwaitingLesson();",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/PlanScheduleTest.php",
+        "filter": "shows the day next in line as building"
+      }
+    ]
+  },
+  {
+    "name": "34. проверка сборки при открытии снята",
+    "rule": "открыть собирающийся день — 409 plan_day_building",
+    "defect": "проверка сборки при открытии снята",
+    "file": "app/Modules/Plan/Domain/Entity/Plan.php",
+    "find": "        if ($this->isDayBuilding($day)) {\n            throw PlanDayBuilding::day(",
+    "replace": "        if (false) {\n            throw PlanDayBuilding::day(",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/PlanScheduleTest.php",
+        "filter": "shows the day next in line as building"
+      },
+      {
+        "path": "tests/Feature/Plan/NextDayBuildTest.php",
+        "filter": "shows the next day building"
+      }
+    ]
+  },
+  {
+    "name": "35. закрытие строит следующий день-сцену через голову повторения",
+    "rule": "сборка N+1 — на закрытии дня N, не дальше",
+    "defect": "закрытие строит следующий день-сцену через голову повторения",
+    "file": "app/Modules/Plan/Application/Command/CloseDayHandler.php",
+    "find": "            $nextScene = $next !== null && $next->type() === DayType::Scene ? $plan->sceneOf($next) : null;",
+    "replace": "            $next = $plan->nextSceneDayAfter($day->number());\n            $nextScene = $next !== null && $next->type() === DayType::Scene ? $plan->sceneOf($next) : null;",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/NextDayBuildTest.php",
+        "filter": "asks for the scene day after a review"
+      }
+    ]
+  },
+  {
+    "name": "36. сборка ставится мимо NextDayAccess",
+    "rule": "доступ к следующему дню спрашивается",
+    "defect": "сборка ставится мимо NextDayAccess",
+    "file": "app/Modules/Plan/Application/Command/CloseDayHandler.php",
+    "find": " && $this->nextDay->nextDayAllowed($plan, $next) ? $nextScene->id() : null;",
+    "replace": " ? $nextScene->id() : null;",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/NextDayBuildTest.php",
+        "filter": "asks for no lesson of a next day"
+      }
+    ]
+  },
+  {
+    "name": "37. открытие дня снова ставит урок следующего",
+    "rule": "открытие дня сборку не ставит",
+    "defect": "открытие дня снова ставит урок следующего",
+    "file": "app/Modules/Plan/Application/Command/OpenDayHandler.php",
+    "find": "            $this->plans->save($plan);\n\n            return $day->id();",
+    "replace": "            $this->plans->save($plan);\n            $next = $plan->nextSceneDayAfter($day->number());\n            if ($next !== null && ($s = $plan->sceneOf($next)) !== null && $s->needsLesson()) {\n                app(\\App\\Modules\\Plan\\Application\\Port\\PlanDispatcher::class)->buildLesson($s->id());\n            }\n\n            return $day->id();",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/NextDayBuildTest.php",
+        "filter": "asks for the next day's lesson once"
+      }
+    ]
+  },
+  {
+    "name": "38. вызов песочницы делается в самом запросе",
+    "rule": "песочница — job, не веб-запрос",
+    "defect": "вызов песочницы делается в самом запросе",
+    "file": "app/Modules/Generation/Application/Service/PlaygroundRuns.php",
+    "find": "        $this->dispatcher->dispatch(new PlaygroundRunRequest($id, $provider, $model, $prompt, $temperature));",
+    "replace": "        $this->run(new PlaygroundRunRequest($id, $provider, $model, $prompt, $temperature));",
+    "tests": [
+      {
+        "path": "tests/Feature/Admin/AdminPlaygroundTest.php",
+        "filter": "starts a run without calling the model"
+      }
+    ]
+  }
+]

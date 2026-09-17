@@ -1,0 +1,867 @@
+{
+    "slug": "airport",
+    "version": "lesson_day.v4.6",
+    "earlier_days": 1,
+    "roles": {
+        "learnerTarget": "Passenger",
+        "learnerNative": "Пассажир",
+        "partnerTarget": "Check-in agent",
+        "partnerNative": "Сотрудник регистрации"
+    },
+    "status": "ready",
+    "fail_reason": null,
+    "cost_usd": "0.063836",
+    "latency_ms": 50684,
+    "attempts": 1,
+    "findings": [
+        {
+            "code": "variant.longer",
+            "address": "B7",
+            "detail": "the variant «My shampoo goes in checked baggage.» has 6 words, the line 4"
+        },
+        {
+            "code": "variant.longer",
+            "address": "B8",
+            "detail": "the variant «Okay, it's under the limit now.» has 6 words, the line 5"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x3.check",
+            "detail": "the right option «It can stay with the passenger.» repeats «can stay» of the partner's line"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x4.check",
+            "detail": "the right option «Some things into the backpack.» repeats «the backpack» of the partner's line"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "address": "v1",
+            "detail": "«overweight» is not in the partner's line of exchange 1"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "address": "v2",
+            "detail": "«extra fee» is not in the partner's line of exchange 2"
+        }
+    ],
+    "wall_s": 50.7,
+    "started_at": "2026-09-17T13:26:57+00:00",
+    "finished_at": "2026-09-17T13:27:48+00:00",
+    "calls": [
+        {
+            "call": "lesson",
+            "at": "2026-09-17T13:26:57+00:00",
+            "prompt_version": "lesson_day.v4.6",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 8597,
+            "cached_tokens": 7936,
+            "tokens_out": 3907,
+            "cost_usd": "0.062242",
+            "latency_ms": 47798,
+            "asked": {
+                "violations": [],
+                "earlier_days": 1,
+                "roles": {
+                    "learnerTarget": "Passenger",
+                    "learnerNative": "Пассажир",
+                    "partnerTarget": "Check-in agent",
+                    "partnerNative": "Сотрудник регистрации"
+                }
+            },
+            "payload": {
+                "topic": {
+                    "title_target": "Overweight baggage",
+                    "title_native": "Лишний вес багажа",
+                    "description_target": "Your suitcase is over the limit at check-in. Ask about the fee and move items between your suitcase and backpack.",
+                    "description_native": "На регистрации чемодан оказался тяжелее нормы. Узнайте про доплату и переложите вещи между чемоданом и рюкзаком."
+                },
+                "learner_role": {
+                    "role_target": "Passenger",
+                    "role_native": "Пассажир"
+                },
+                "role_gender": "female",
+                "dialogue": [
+                    {
+                        "step": 1,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудник регистрации",
+                                "text_target": "Your suitcase is three kilos over the limit.",
+                                "text_native": "Ваш чемодан на три килограмма тяжелее нормы."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": "p1",
+                                "filler": "three kilos",
+                                "text_target": "It's over by three kilos.",
+                                "text_native": "Перевес на три килограмма.",
+                                "pronunciation_native": "итс оувэр бай сри килоуз",
+                                "speaking_key": "It's over by",
+                                "simplified_variants": [
+                                    "Three kilos over.",
+                                    "It's three kilos over."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "How much is the suitcase over?",
+                            "text_native": "Насколько чемодан тяжелее нормы?",
+                            "options": [
+                                {
+                                    "text_target": "By one kilo.",
+                                    "text_native": "На один килограмм."
+                                },
+                                {
+                                    "text_target": "By three kilos.",
+                                    "text_native": "На три килограмма."
+                                },
+                                {
+                                    "text_target": "By five kilos.",
+                                    "text_native": "На пять килограммов."
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Сотрудница регистрации сказала, что чемодан тяжелее нормы на три килограмма."
+                        }
+                    },
+                    {
+                        "step": 2,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": "p2",
+                                "filler": "the extra fee",
+                                "text_target": "How much is the extra fee?",
+                                "text_native": "Сколько стоит доплата?",
+                                "pronunciation_native": "хау мач из зи экстра фи",
+                                "speaking_key": "How much is",
+                                "simplified_variants": [
+                                    "What is the extra fee?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудник регистрации",
+                                "text_target": "It's thirty dollars for up to five extra kilos.",
+                                "text_native": "Это тридцать долларов за перевес до пяти килограммов."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What charge does the agent give?",
+                            "text_native": "Какую сумму назвала сотрудница?",
+                            "options": [
+                                {
+                                    "text_target": "Twenty dollars.",
+                                    "text_native": "Двадцать долларов."
+                                },
+                                {
+                                    "text_target": "Thirty dollars.",
+                                    "text_native": "Тридцать долларов."
+                                },
+                                {
+                                    "text_target": "Fifty dollars.",
+                                    "text_native": "Пятьдесят долларов."
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Сотрудница сказала, что доплата составит тридцать долларов."
+                        }
+                    },
+                    {
+                        "step": 3,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": "p3",
+                                "filler": "in the cabin",
+                                "text_target": "Can this stay in the cabin?",
+                                "text_native": "Это можно оставить в салоне?",
+                                "pronunciation_native": "кэн зис стэй ин зэ кэбин",
+                                "speaking_key": "stay in the",
+                                "simplified_variants": [
+                                    "Can this go in the cabin?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудник регистрации",
+                                "text_target": "Yes, your backpack can stay with you in the cabin.",
+                                "text_native": "Да, ваш рюкзак может остаться с вами в салоне."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the agent say about the backpack?",
+                            "text_native": "Что сотрудница сказала про рюкзак?",
+                            "options": [
+                                {
+                                    "text_target": "It must go under the plane.",
+                                    "text_native": "Его нужно сдать в багаж."
+                                },
+                                {
+                                    "text_target": "It can stay with the passenger.",
+                                    "text_native": "Его можно оставить при себе."
+                                },
+                                {
+                                    "text_target": "It has to be weighed again.",
+                                    "text_native": "Его нужно снова взвесить."
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Сотрудница сказала, что рюкзак можно взять с собой в салон."
+                        }
+                    },
+                    {
+                        "step": 4,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудник регистрации",
+                                "text_target": "You can move some items from the suitcase to the backpack.",
+                                "text_native": "Вы можете переложить часть вещей из чемодана в рюкзак."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": "p4",
+                                "filler": "some items",
+                                "text_target": "I'll move some items.",
+                                "text_native": "Я переложу несколько вещей.",
+                                "pronunciation_native": "айл мув сам айтэмз",
+                                "speaking_key": "I'll move",
+                                "simplified_variants": [
+                                    "I'll move things."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the agent suggest moving?",
+                            "text_native": "Что сотрудница предлагает переложить?",
+                            "options": [
+                                {
+                                    "text_target": "Some things into the backpack.",
+                                    "text_native": "Несколько вещей в рюкзак."
+                                },
+                                {
+                                    "text_target": "Travel papers into a pocket.",
+                                    "text_native": "Документы в карман."
+                                },
+                                {
+                                    "text_target": "Shoes into another suitcase.",
+                                    "text_native": "Обувь в другой чемодан."
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница предложила переложить часть вещей из чемодана в рюкзак."
+                        }
+                    },
+                    {
+                        "step": 5,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": "p5",
+                                "filler": "my laptop",
+                                "text_target": "Can I keep my laptop with me?",
+                                "text_native": "Можно мне оставить ноутбук при себе?",
+                                "pronunciation_native": "кэн ай кип май лэптоп уиз ми",
+                                "speaking_key": "keep my",
+                                "simplified_variants": [
+                                    "Can I keep the laptop?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудник регистрации",
+                                "text_target": "Yes, keep your laptop and charger in the backpack.",
+                                "text_native": "Да, оставьте ноутбук и зарядку в рюкзаке."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Which two things should stay in the backpack?",
+                            "text_native": "Какие две вещи должны остаться в рюкзаке?",
+                            "options": [
+                                {
+                                    "text_target": "A laptop and its charger.",
+                                    "text_native": "Ноутбук и зарядка."
+                                },
+                                {
+                                    "text_target": "A jacket and a book.",
+                                    "text_native": "Куртка и книга."
+                                },
+                                {
+                                    "text_target": "Toothpaste and keys.",
+                                    "text_native": "Зубная паста и ключи."
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала оставить в рюкзаке ноутбук и зарядку."
+                        }
+                    },
+                    {
+                        "step": 6,
+                        "kind": "rescue",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": null,
+                                "filler": null,
+                                "text_target": "Sorry, could you say that more slowly?",
+                                "text_native": "Извините, можно помедленнее?",
+                                "pronunciation_native": "сорри, куд ю сэй зэт мор слоули",
+                                "speaking_key": "say that more slowly",
+                                "simplified_variants": [
+                                    "Sorry, more slowly, please.",
+                                    "Could you repeat that?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудник регистрации",
+                                "text_target": "Keep the laptop and charger in the backpack.",
+                                "text_native": "Оставьте ноутбук и зарядку в рюкзаке."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What should the passenger keep with them?",
+                            "text_native": "Что пассажиру нужно оставить при себе?",
+                            "options": [
+                                {
+                                    "text_target": "A laptop and charger.",
+                                    "text_native": "Ноутбук и зарядку."
+                                },
+                                {
+                                    "text_target": "A coat and passport.",
+                                    "text_native": "Пальто и паспорт."
+                                },
+                                {
+                                    "text_target": "A wallet and headphones.",
+                                    "text_native": "Кошелёк и наушники."
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "В повторе сотрудница снова сказала оставить ноутбук и зарядку в рюкзаке."
+                        }
+                    },
+                    {
+                        "step": 7,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудник регистрации",
+                                "text_target": "Liquids over one hundred milliliters must be checked.",
+                                "text_native": "Жидкости больше ста миллилитров нужно сдавать в багаж."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": "p6",
+                                "filler": "my shampoo",
+                                "text_target": "I'll check my shampoo.",
+                                "text_native": "Я сдам свой шампунь в багаж.",
+                                "pronunciation_native": "айл чек май шампу",
+                                "speaking_key": "I'll check",
+                                "simplified_variants": [
+                                    "My shampoo goes in checked baggage."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Which item rule does the agent mention?",
+                            "text_native": "Какое правило про вещи назвала сотрудница?",
+                            "options": [
+                                {
+                                    "text_target": "Large liquids cannot stay in the cabin.",
+                                    "text_native": "Большие ёмкости с жидкостью нельзя брать в салон."
+                                },
+                                {
+                                    "text_target": "All electronics must go under the plane.",
+                                    "text_native": "Всю электронику нужно сдавать в багаж."
+                                },
+                                {
+                                    "text_target": "Food is not allowed in backpacks.",
+                                    "text_native": "Еду нельзя класть в рюкзаки."
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала, что жидкости больше 100 мл нужно сдавать в багаж."
+                        }
+                    },
+                    {
+                        "step": 8,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Check-in agent",
+                                "role_native": "Сотрудник регистрации",
+                                "text_target": "That works. Your suitcase is within the limit now.",
+                                "text_native": "Так подходит. Теперь ваш чемодан в пределах нормы."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Passenger",
+                                "role_native": "Пассажир",
+                                "phrase_id": "p7",
+                                "filler": "within the limit",
+                                "text_target": "Great, it's within the limit.",
+                                "text_native": "Отлично, теперь всё в пределах нормы.",
+                                "pronunciation_native": "грэйт, итс уизин зэ лимит",
+                                "speaking_key": "within the limit",
+                                "simplified_variants": [
+                                    "Great, it's fine now.",
+                                    "Okay, it's under the limit now."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What is the baggage situation now?",
+                            "text_native": "Какая теперь ситуация с багажом?",
+                            "options": [
+                                {
+                                    "text_target": "The bag now meets the allowed weight.",
+                                    "text_native": "Багаж теперь соответствует допустимому весу."
+                                },
+                                {
+                                    "text_target": "The bag still needs another payment.",
+                                    "text_native": "За багаж всё ещё нужно доплатить."
+                                },
+                                {
+                                    "text_target": "The bag must be opened again.",
+                                    "text_native": "Багаж нужно снова открыть."
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала, что теперь чемодан в пределах нормы."
+                        }
+                    }
+                ],
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "answer",
+                        "frame_target": "It's over by ___.",
+                        "frame_native": "Перевес на ___.",
+                        "pronunciation_native": "итс оувэр бай ___",
+                        "slot": {
+                            "hint_native": "на сколько больше нормы",
+                            "fillers": [
+                                {
+                                    "target": "three kilos",
+                                    "native": "три килограмма",
+                                    "pronunciation_native": "сри килоуз",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "two kilos",
+                                    "native": "два килограмма",
+                                    "pronunciation_native": "ту килоуз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "ask",
+                        "frame_target": "How much is ___?",
+                        "frame_native": "Сколько стоит ___?",
+                        "pronunciation_native": "хау мач из ___",
+                        "slot": {
+                            "hint_native": "что нужно оплатить",
+                            "fillers": [
+                                {
+                                    "target": "the extra fee",
+                                    "native": "доплата",
+                                    "pronunciation_native": "зи экстра фи",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the second bag",
+                                    "native": "второй багаж",
+                                    "pronunciation_native": "зи сэконд бэг",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "frame_target": "Can this stay ___?",
+                        "frame_native": "Это можно оставить ___?",
+                        "pronunciation_native": "кэн зис стэй ___",
+                        "slot": {
+                            "hint_native": "где можно оставить вещь",
+                            "fillers": [
+                                {
+                                    "target": "in the cabin",
+                                    "native": "в салоне",
+                                    "pronunciation_native": "ин зэ кэбин",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "with me",
+                                    "native": "при себе",
+                                    "pronunciation_native": "уиз ми",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "answer",
+                        "frame_target": "I'll move ___.",
+                        "frame_native": "Я переложу ___.",
+                        "pronunciation_native": "айл мув ___",
+                        "slot": {
+                            "hint_native": "что переложить",
+                            "fillers": [
+                                {
+                                    "target": "some items",
+                                    "native": "несколько вещей",
+                                    "pronunciation_native": "сам айтэмз",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a few clothes",
+                                    "native": "немного одежды",
+                                    "pronunciation_native": "э фью клоуз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "ask",
+                        "frame_target": "Can I keep ___ with me?",
+                        "frame_native": "Можно мне оставить ___ при себе?",
+                        "pronunciation_native": "кэн ай кип ___ уиз ми",
+                        "slot": {
+                            "hint_native": "какую вещь оставить при себе",
+                            "fillers": [
+                                {
+                                    "target": "my laptop",
+                                    "native": "ноутбук",
+                                    "pronunciation_native": "май лэптоп",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "my medicine",
+                                    "native": "лекарство",
+                                    "pronunciation_native": "май мэдисин",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "answer",
+                        "frame_target": "I'll check ___.",
+                        "frame_native": "Я сдам в багаж ___.",
+                        "pronunciation_native": "айл чек ___",
+                        "slot": {
+                            "hint_native": "что сдать в багаж",
+                            "fillers": [
+                                {
+                                    "target": "my shampoo",
+                                    "native": "свой шампунь",
+                                    "pronunciation_native": "май шампу",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "my water bottle",
+                                    "native": "свою бутылку воды",
+                                    "pronunciation_native": "май уотэр ботл",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "answer",
+                        "frame_target": "It's ___.",
+                        "frame_native": "Теперь всё ___.",
+                        "pronunciation_native": "итс ___",
+                        "slot": {
+                            "hint_native": "какая теперь ситуация",
+                            "fillers": [
+                                {
+                                    "target": "within the limit",
+                                    "native": "в пределах нормы",
+                                    "pronunciation_native": "уизин зэ лимит",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "fine now",
+                                    "native": "в порядке",
+                                    "pronunciation_native": "файн нау",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "listening": {
+                    "questions": [
+                        {
+                            "text_native": "Насколько чемодан был тяжелее нормы?",
+                            "options_native": [
+                                "На три килограмма",
+                                "На один килограмм",
+                                "На пять килограммов"
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "В начале разговора сотрудница сказала про перевес в три килограмма."
+                        },
+                        {
+                            "text_native": "Сколько стоит доплата за перевес?",
+                            "options_native": [
+                                "Двадцать долларов",
+                                "Тридцать долларов",
+                                "Пятьдесят долларов"
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Сотрудница назвала сумму тридцать долларов."
+                        },
+                        {
+                            "text_native": "Что пассажир решил оставить при себе?",
+                            "options_native": [
+                                "Ноутбук",
+                                "Бутылку воды",
+                                "Шампунь"
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Пассажир спросил про ноутбук, и сотрудница сказала оставить его в рюкзаке."
+                        },
+                        {
+                            "text_native": "Что в итоге стало с чемоданом?",
+                            "options_native": [
+                                "Его всё равно нужно было оплачивать",
+                                "Он оказался в пределах нормы",
+                                "Его нельзя было сдавать"
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "В конце сотрудница сказала, что чемодан теперь в пределах нормы."
+                        }
+                    ]
+                },
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "overweight",
+                        "translation_native": "с перевесом",
+                        "pronunciation_native": "оувэруэйт",
+                        "definition_target": "heavier than the allowed limit",
+                        "kind": "word",
+                        "image_prompt": "airport suitcase on a check-in scale showing excess weight",
+                        "used_in": [
+                            "A1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "extra fee",
+                        "translation_native": "доплата",
+                        "pronunciation_native": "экстра фи",
+                        "definition_target": "additional money you must pay",
+                        "kind": "chunk",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2",
+                            "A2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "cabin",
+                        "translation_native": "салон самолёта",
+                        "pronunciation_native": "кэбин",
+                        "definition_target": "the part of the plane where passengers sit",
+                        "kind": "word",
+                        "image_prompt": "airplane cabin with passenger seats and overhead bins",
+                        "used_in": [
+                            "p3",
+                            "A3"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "move",
+                        "translation_native": "переложить",
+                        "pronunciation_native": "мув",
+                        "definition_target": "to put something in a different place",
+                        "kind": "word",
+                        "image_prompt": "traveler moving clothes from a suitcase into a backpack at the airport",
+                        "used_in": [
+                            "p4",
+                            "A4"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "charger",
+                        "translation_native": "зарядка",
+                        "pronunciation_native": "чарджэр",
+                        "definition_target": "a device or cable used to power a battery",
+                        "kind": "word",
+                        "image_prompt": "laptop charger next to a backpack on an airport seat",
+                        "used_in": [
+                            "A5",
+                            "A6"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "liquids",
+                        "translation_native": "жидкости",
+                        "pronunciation_native": "ликвидз",
+                        "definition_target": "drinks or other substances that flow, like shampoo or water",
+                        "kind": "word",
+                        "image_prompt": "small travel liquid bottles in an airport security tray",
+                        "used_in": [
+                            "A7"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "milliliters",
+                        "translation_native": "миллилитры",
+                        "pronunciation_native": "милилитэрз",
+                        "definition_target": "a unit used to measure small amounts of liquid",
+                        "kind": "word",
+                        "image_prompt": "100 ml travel bottle beside larger toiletry bottle",
+                        "used_in": [
+                            "A7"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "within the limit",
+                        "translation_native": "в пределах нормы",
+                        "pronunciation_native": "уизин зэ лимит",
+                        "definition_target": "inside the allowed amount or weight",
+                        "kind": "chunk",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p7",
+                            "A8"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "call": "judge",
+            "at": "2026-09-17T13:27:45+00:00",
+            "prompt_version": "lesson_seam_judge.v1.1",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "tokens_in": 1087,
+            "cached_tokens": 0,
+            "tokens_out": 173,
+            "cost_usd": "0.001594",
+            "latency_ms": 2886,
+            "asked": {
+                "items": 14
+            },
+            "payload": {
+                "verdicts": [
+                    {
+                        "id": "p1.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f2",
+                        "reads": true
+                    }
+                ]
+            }
+        }
+    ]
+}

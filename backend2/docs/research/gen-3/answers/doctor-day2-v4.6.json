@@ -1,0 +1,745 @@
+{
+    "topic": {
+        "title_target": "Checking in at reception",
+        "title_native": "Регистрация в регистратуре",
+        "description_target": "Check in for your son, give brief details, and find the right room.",
+        "description_native": "Зарегистрируйтесь на приёме для сына, кратко сообщите детали и узнайте нужный кабинет."
+    },
+    "learner_role": {
+        "role_target": "Parent",
+        "role_native": "Родитель"
+    },
+    "role_gender": "female",
+    "dialogue": [
+        {
+            "step": 1,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Администратор",
+                    "text_target": "Good morning. Who is the appointment for?",
+                    "text_native": "Доброе утро. На кого запись?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p1",
+                    "filler": "my son",
+                    "text_target": "It's for my son.",
+                    "text_native": "Это для моего сына.",
+                    "pronunciation_native": "Итс фор май сан.",
+                    "speaking_key": "It's for",
+                    "simplified_variants": [
+                        "For my son.",
+                        "The appointment is for my son."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "Who does the receptionist ask about?",
+                "text_native": "О ком спрашивает администратор?",
+                "options": [
+                    {
+                        "text_target": "About the child who has the visit",
+                        "text_native": "О ребёнке, который пришёл на приём"
+                    },
+                    {
+                        "text_target": "About the doctor on duty",
+                        "text_native": "О враче, который сегодня дежурит"
+                    },
+                    {
+                        "text_target": "About the parent’s insurance company",
+                        "text_native": "О страховой компании родителя"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор спрашивает, на кого записан приём."
+            }
+        },
+        {
+            "step": 2,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Администратор",
+                    "text_target": "What is his full name?",
+                    "text_native": "Как его полное имя?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p2",
+                    "filler": "Ivan Petrov",
+                    "text_target": "His name is Ivan Petrov.",
+                    "text_native": "Его зовут Иван Петров.",
+                    "pronunciation_native": "Хиз нэйм из Иван Петров.",
+                    "speaking_key": "His name is",
+                    "simplified_variants": [
+                        "It's Ivan Petrov.",
+                        "He is Ivan Petrov."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What exact detail does the receptionist need?",
+                "text_native": "Какая именно информация нужна администратору?",
+                "options": [
+                    {
+                        "text_target": "The child's complete name",
+                        "text_native": "Полное имя ребёнка"
+                    },
+                    {
+                        "text_target": "The child's home address",
+                        "text_native": "Домашний адрес ребёнка"
+                    },
+                    {
+                        "text_target": "The child's school name",
+                        "text_native": "Название школы ребёнка"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор просит назвать полное имя ребёнка."
+            }
+        },
+        {
+            "step": 3,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Администратор",
+                    "text_target": "What time is the appointment?",
+                    "text_native": "На какое время запись?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p3",
+                    "filler": "for ten thirty",
+                    "text_target": "We are booked for ten thirty.",
+                    "text_native": "Мы записаны на десять тридцать.",
+                    "pronunciation_native": "Уи ар букт фор тэн сэрти.",
+                    "speaking_key": "We are booked",
+                    "simplified_variants": [
+                        "It's at ten thirty.",
+                        "We have ten thirty."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "Which detail does the receptionist ask for?",
+                "text_native": "Какую деталь спрашивает администратор?",
+                "options": [
+                    {
+                        "text_target": "The scheduled hour of the visit",
+                        "text_native": "Назначенное время приёма"
+                    },
+                    {
+                        "text_target": "The doctor's lunch break",
+                        "text_native": "Время обеденного перерыва врача"
+                    },
+                    {
+                        "text_target": "The child's bedtime",
+                        "text_native": "Во сколько ребёнок ложится спать"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор уточняет время записи."
+            }
+        },
+        {
+            "step": 4,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p4",
+                    "filler": "a fever and a sore throat",
+                    "text_target": "He has a fever and a sore throat.",
+                    "text_native": "У него температура и болит горло.",
+                    "pronunciation_native": "Хи хэз э фивэр энд э сор сроут.",
+                    "speaking_key": "He has",
+                    "simplified_variants": [
+                        "My son has a fever.",
+                        "He is sick with a fever."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Администратор",
+                    "text_target": "I understand. The doctor will see him soon.",
+                    "text_native": "Понимаю. Врач скоро его примет."
+                }
+            ],
+            "check": {
+                "text_target": "What does the receptionist say about timing?",
+                "text_native": "Что администратор говорит о времени?",
+                "options": [
+                    {
+                        "text_target": "The doctor should see him shortly",
+                        "text_native": "Врач должен принять его в ближайшее время"
+                    },
+                    {
+                        "text_target": "The doctor is finished for today",
+                        "text_native": "Врач на сегодня уже закончил приём"
+                    },
+                    {
+                        "text_target": "The visit has been moved to tomorrow",
+                        "text_native": "Приём перенесли на завтра"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор говорит, что врач примет ребёнка скоро."
+            }
+        },
+        {
+            "step": 5,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p5",
+                    "filler": "the doctor's room",
+                    "text_target": "Where is the doctor's room?",
+                    "text_native": "Где кабинет врача?",
+                    "pronunciation_native": "Уээр из зэ доктэрз рум?",
+                    "speaking_key": "Where is",
+                    "simplified_variants": [
+                        "Which room is it?",
+                        "Where do we go?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Администратор",
+                    "text_target": "Room twelve, at the end of the hall.",
+                    "text_native": "Кабинет двенадцать, в конце коридора."
+                }
+            ],
+            "check": {
+                "text_target": "Where does the receptionist direct them?",
+                "text_native": "Куда их направляет администратор?",
+                "options": [
+                    {
+                        "text_target": "To room 12 at the end of the corridor",
+                        "text_native": "В кабинет 12 в конце коридора"
+                    },
+                    {
+                        "text_target": "To room 2 near the entrance",
+                        "text_native": "В кабинет 2 у входа"
+                    },
+                    {
+                        "text_target": "To the lab on the second floor",
+                        "text_native": "В лабораторию на втором этаже"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор направляет их в кабинет 12 в конце коридора."
+            }
+        },
+        {
+            "step": 6,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p6",
+                    "filler": "long",
+                    "text_target": "Will we wait long?",
+                    "text_native": "Нам долго ждать?",
+                    "pronunciation_native": "Уилл уи уэйт лонг?",
+                    "speaking_key": "Will we wait",
+                    "simplified_variants": [
+                        "Is the wait long?",
+                        "Will it take long?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Администратор",
+                    "text_target": "About fifteen minutes. There is one patient before you.",
+                    "text_native": "Около пятнадцати минут. Перед вами ещё один пациент."
+                }
+            ],
+            "check": {
+                "text_target": "How long is the expected wait?",
+                "text_native": "Сколько примерно придётся ждать?",
+                "options": [
+                    {
+                        "text_target": "Around a quarter of an hour",
+                        "text_native": "Около четверти часа"
+                    },
+                    {
+                        "text_target": "About forty-five minutes",
+                        "text_native": "Около сорока пяти минут"
+                    },
+                    {
+                        "text_target": "Less than five minutes",
+                        "text_native": "Меньше пяти минут"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор говорит, что ждать примерно пятнадцать минут."
+            }
+        },
+        {
+            "step": 7,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p7",
+                    "filler": "any ID",
+                    "text_target": "Do you need any ID?",
+                    "text_native": "Вам нужен какой-нибудь документ?",
+                    "pronunciation_native": "Ду ю нид эни ай-ди?",
+                    "speaking_key": "Do you need",
+                    "simplified_variants": [
+                        "Do you need ID?",
+                        "Should I show ID?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Администратор",
+                    "text_target": "Yes, your son's ID and the insurance card, please.",
+                    "text_native": "Да, пожалуйста, документ сына и страховую карту."
+                }
+            ],
+            "check": {
+                "text_target": "Which documents does the receptionist ask for?",
+                "text_native": "Какие документы просит администратор?",
+                "options": [
+                    {
+                        "text_target": "The child's ID and insurance card",
+                        "text_native": "Документ ребёнка и страховую карту"
+                    },
+                    {
+                        "text_target": "The parent's passport and bank card",
+                        "text_native": "Паспорт родителя и банковскую карту"
+                    },
+                    {
+                        "text_target": "The child's school pass and notebook",
+                        "text_native": "Школьный пропуск ребёнка и тетрадь"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор просит документ сына и страховую карту."
+            }
+        },
+        {
+            "step": 8,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Parent",
+                    "role_native": "Родитель",
+                    "phrase_id": "p8",
+                    "filler": "pay now",
+                    "text_target": "Do I need to pay now?",
+                    "text_native": "Мне нужно платить сейчас?",
+                    "pronunciation_native": "Ду ай нид ту пэй нау?",
+                    "speaking_key": "Do I need",
+                    "simplified_variants": [
+                        "Should I pay now?",
+                        "Do we pay now?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Администратор",
+                    "text_target": "No, payment is after the consultation.",
+                    "text_native": "Нет, оплата после консультации."
+                }
+            ],
+            "check": {
+                "text_target": "When does the receptionist say payment happens?",
+                "text_native": "Когда, по словам администратора, происходит оплата?",
+                "options": [
+                    {
+                        "text_target": "After the doctor visit",
+                        "text_native": "После приёма у врача"
+                    },
+                    {
+                        "text_target": "Before going to the room",
+                        "text_native": "До того, как идти в кабинет"
+                    },
+                    {
+                        "text_target": "When booking by phone",
+                        "text_native": "Во время записи по телефону"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор говорит, что платить нужно после консультации."
+            }
+        }
+    ],
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "frame_target": "It's for ___.",
+            "frame_native": "Это для ___.",
+            "pronunciation_native": "Итс фор ___.",
+            "slot": {
+                "hint_native": "для кого приём",
+                "fillers": [
+                    {
+                        "target": "my son",
+                        "native": "моего сына",
+                        "pronunciation_native": "май сан",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "my daughter",
+                        "native": "моей дочери",
+                        "pronunciation_native": "май дотэр",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "His name is ___.",
+            "frame_native": "Его зовут ___.",
+            "pronunciation_native": "Хиз нэйм из ___.",
+            "slot": {
+                "hint_native": "имя ребёнка",
+                "fillers": [
+                    {
+                        "target": "Ivan Petrov",
+                        "native": "Иван Петров",
+                        "pronunciation_native": "Иван Петров",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "Maksim Sokolov",
+                        "native": "Максим Соколов",
+                        "pronunciation_native": "Максим Соколов",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "frame_target": "We are booked ___.",
+            "frame_native": "Мы записаны ___.",
+            "pronunciation_native": "Уи ар букт ___.",
+            "slot": {
+                "hint_native": "время записи",
+                "fillers": [
+                    {
+                        "target": "for ten thirty",
+                        "native": "на десять тридцать",
+                        "pronunciation_native": "фор тэн сэрти",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "for eleven",
+                        "native": "на одиннадцать",
+                        "pronunciation_native": "фор илевэн",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p4",
+            "kind": "ask",
+            "frame_target": "He has ___.",
+            "frame_native": "У него ___.",
+            "pronunciation_native": "Хи хэз ___.",
+            "slot": {
+                "hint_native": "что с ребёнком",
+                "fillers": [
+                    {
+                        "target": "a fever and a sore throat",
+                        "native": "температура и болит горло",
+                        "pronunciation_native": "э фивэр энд э сор сроут",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "a bad cough",
+                        "native": "сильный кашель",
+                        "pronunciation_native": "э бэд коф",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "frame_target": "Where is ___?",
+            "frame_native": "Где ___?",
+            "pronunciation_native": "Уээр из ___?",
+            "slot": {
+                "hint_native": "нужное место",
+                "fillers": [
+                    {
+                        "target": "the doctor's room",
+                        "native": "кабинет врача",
+                        "pronunciation_native": "зэ доктэрз рум",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "the lab",
+                        "native": "лаборатория",
+                        "pronunciation_native": "зэ лэб",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "frame_target": "Will we wait ___?",
+            "frame_native": "Нам ждать ___?",
+            "pronunciation_native": "Уилл уи уэйт ___?",
+            "slot": {
+                "hint_native": "сколько ждать",
+                "fillers": [
+                    {
+                        "target": "long",
+                        "native": "долго",
+                        "pronunciation_native": "лонг",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "outside",
+                        "native": "снаружи",
+                        "pronunciation_native": "аутсайд",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "frame_target": "Do you need ___?",
+            "frame_native": "Вам нужен ___?",
+            "pronunciation_native": "Ду ю нид ___?",
+            "slot": {
+                "hint_native": "что нужно показать",
+                "fillers": [
+                    {
+                        "target": "any ID",
+                        "native": "какой-нибудь документ",
+                        "pronunciation_native": "эни ай-ди",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "the appointment code",
+                        "native": "код записи",
+                        "pronunciation_native": "зи эпойнтмэнт коуд",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p8",
+            "kind": "ask",
+            "frame_target": "Do I need to ___?",
+            "frame_native": "Мне нужно ___?",
+            "pronunciation_native": "Ду ай нид ту ___?",
+            "slot": {
+                "hint_native": "что нужно сделать",
+                "fillers": [
+                    {
+                        "target": "pay now",
+                        "native": "платить сейчас",
+                        "pronunciation_native": "пэй нау",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "fill this out",
+                        "native": "заполнить это",
+                        "pronunciation_native": "фил зис аут",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Для кого записан приём?",
+                "options_native": [
+                    "Для сына",
+                    "Для самого родителя",
+                    "Для бабушки"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Родитель говорит, что приём для сына."
+            },
+            {
+                "text_native": "Куда администратор направляет их?",
+                "options_native": [
+                    "В кабинет 12 в конце коридора",
+                    "В кабинет 2 рядом со входом",
+                    "В лабораторию на втором этаже"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор говорит идти в кабинет 12 в конце коридора."
+            },
+            {
+                "text_native": "Сколько примерно ждать?",
+                "options_native": [
+                    "Около пятнадцати минут",
+                    "Около часа",
+                    "Сразу без ожидания"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор предупреждает, что ждать примерно пятнадцать минут."
+            },
+            {
+                "text_native": "Когда нужно платить?",
+                "options_native": [
+                    "После консультации",
+                    "Сразу на стойке",
+                    "Завтра онлайн"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Администратор говорит, что оплата после консультации."
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "term_target": "appointment",
+            "translation_native": "запись на приём",
+            "pronunciation_native": "эпойнтмэнт",
+            "definition_target": "a scheduled time to see a doctor",
+            "kind": "word",
+            "image_prompt": "clinic reception desk with an appointment list on a computer screen",
+            "used_in": [
+                "A1",
+                "A3",
+                "p3"
+            ]
+        },
+        {
+            "id": "v2",
+            "term_target": "full name",
+            "translation_native": "полное имя",
+            "pronunciation_native": "фул нэйм",
+            "definition_target": "a person's first name and last name together",
+            "kind": "chunk",
+            "image_prompt": "reception form with a field for full name",
+            "used_in": [
+                "A2"
+            ]
+        },
+        {
+            "id": "v3",
+            "term_target": "booked",
+            "translation_native": "записан",
+            "pronunciation_native": "букт",
+            "definition_target": "having a reserved time for a visit",
+            "kind": "word",
+            "image_prompt": null,
+            "used_in": [
+                "p3"
+            ]
+        },
+        {
+            "id": "v4",
+            "term_target": "doctor's room",
+            "translation_native": "кабинет врача",
+            "pronunciation_native": "доктэрз рум",
+            "definition_target": "the room where the doctor sees patients",
+            "kind": "chunk",
+            "image_prompt": "clinic hallway with a doctor's room door and number sign",
+            "used_in": [
+                "p5"
+            ]
+        },
+        {
+            "id": "v5",
+            "term_target": "hall",
+            "translation_native": "коридор",
+            "pronunciation_native": "хол",
+            "definition_target": "a passage inside a building with rooms along it",
+            "kind": "word",
+            "image_prompt": "long clinic hall with doors on both sides",
+            "used_in": [
+                "A5"
+            ]
+        },
+        {
+            "id": "v6",
+            "term_target": "patient",
+            "translation_native": "пациент",
+            "pronunciation_native": "пэйшент",
+            "definition_target": "a person receiving medical care",
+            "kind": "word",
+            "image_prompt": "seated patient waiting in a clinic reception area",
+            "used_in": [
+                "A6"
+            ]
+        },
+        {
+            "id": "v7",
+            "term_target": "insurance card",
+            "translation_native": "страховая карта",
+            "pronunciation_native": "иншурэнс кард",
+            "definition_target": "a card that shows medical insurance information",
+            "kind": "chunk",
+            "image_prompt": "insurance card held above a clinic reception counter",
+            "used_in": [
+                "A7"
+            ]
+        },
+        {
+            "id": "v8",
+            "term_target": "consultation",
+            "translation_native": "консультация",
+            "pronunciation_native": "консалтэйшн",
+            "definition_target": "a meeting with a doctor for advice or examination",
+            "kind": "word",
+            "image_prompt": "doctor speaking with a parent and child in a clinic office",
+            "used_in": [
+                "A8"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,807 @@
+{
+    "topic": {
+        "title_native": "Открытие студенческого счёта",
+        "title_target": "Opening a student account",
+        "description_native": "Откройте базовый студенческий счёт в отделении банка и спросите о карте и комиссиях.",
+        "description_target": "Open a basic student account at a bank branch and ask about a card and fees."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "студенческий счёт",
+                        "target": "a student account",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э стьюдэнт экаунт"
+                    },
+                    {
+                        "native": "банковский счёт",
+                        "target": "a bank account",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э бэнк экаунт"
+                    },
+                    {
+                        "native": "совместный счёт",
+                        "target": "a joint account",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э джойнт экаунт"
+                    }
+                ],
+                "hint_native": "что открыть"
+            },
+            "frame_native": "Я хочу открыть ___.",
+            "frame_target": "I’d like to open ___.",
+            "pronunciation_native": "Айд лайк ту оупэн ___."
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "учёбы",
+                        "target": "my studies",
+                        "in_dialogue": true,
+                        "pronunciation_native": "май стадиз"
+                    },
+                    {
+                        "native": "оплаты аренды",
+                        "target": "rent payments",
+                        "in_dialogue": false,
+                        "pronunciation_native": "рэнт пэймэнтс"
+                    },
+                    {
+                        "native": "повседневных расходов",
+                        "target": "daily expenses",
+                        "in_dialogue": false,
+                        "pronunciation_native": "дэйли икспэнсиз"
+                    }
+                ],
+                "hint_native": "для чего нужен счёт"
+            },
+            "frame_native": "Он нужен мне для ___.",
+            "frame_target": "I need it for ___.",
+            "pronunciation_native": "Ай нид ит фор ___."
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "один год",
+                        "target": "one year",
+                        "in_dialogue": true,
+                        "pronunciation_native": "уан йир"
+                    },
+                    {
+                        "native": "шесть месяцев",
+                        "target": "six months",
+                        "in_dialogue": false,
+                        "pronunciation_native": "сикс манс"
+                    },
+                    {
+                        "native": "два семестра",
+                        "target": "two semesters",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ту сэмэстэрз"
+                    }
+                ],
+                "hint_native": "срок пребывания"
+            },
+            "frame_native": "Я буду здесь ___.",
+            "frame_target": "I’ll stay for ___.",
+            "pronunciation_native": "Айл стэй фор ___."
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "мой паспорт",
+                        "target": "passport",
+                        "in_dialogue": true,
+                        "pronunciation_native": "паспорт"
+                    },
+                    {
+                        "native": "моя виза",
+                        "target": "visa",
+                        "in_dialogue": false,
+                        "pronunciation_native": "виза"
+                    },
+                    {
+                        "native": "моё письмо из вуза",
+                        "target": "student letter",
+                        "in_dialogue": false,
+                        "pronunciation_native": "стьюдэнт летэр"
+                    }
+                ],
+                "hint_native": "документ"
+            },
+            "frame_native": "Вот ___.",
+            "frame_target": "Here is my ___.",
+            "pronunciation_native": "Хиэр из май ___."
+        },
+        {
+            "id": "p5",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "виза",
+                        "target": "my visa",
+                        "in_dialogue": true,
+                        "pronunciation_native": "май виза"
+                    },
+                    {
+                        "native": "подтверждение адреса",
+                        "target": "proof of address",
+                        "in_dialogue": false,
+                        "pronunciation_native": "пруф ов эдрэс"
+                    },
+                    {
+                        "native": "письмо из вуза",
+                        "target": "my student letter",
+                        "in_dialogue": false,
+                        "pronunciation_native": "май стьюдэнт летэр"
+                    }
+                ],
+                "hint_native": "что у вас есть"
+            },
+            "frame_native": "У меня есть ___.",
+            "frame_target": "I have ___.",
+            "pronunciation_native": "Ай хэв ___."
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "письмо из учебного заведения",
+                        "target": "a student letter",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э стьюдэнт летэр"
+                    },
+                    {
+                        "native": "подтверждение адреса",
+                        "target": "proof of address",
+                        "in_dialogue": false,
+                        "pronunciation_native": "пруф ов эдрэс"
+                    },
+                    {
+                        "native": "мою визу",
+                        "target": "my visa",
+                        "in_dialogue": false,
+                        "pronunciation_native": "май виза"
+                    }
+                ],
+                "hint_native": "какой документ нужен"
+            },
+            "frame_native": "Вам нужно ___?",
+            "frame_target": "Do you need ___?",
+            "pronunciation_native": "Ду ю нид ___?"
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "банковскую карту",
+                        "target": "a bank card",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э бэнк кард"
+                    },
+                    {
+                        "native": "дебетовую карту",
+                        "target": "a debit card",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э дэбит кард"
+                    },
+                    {
+                        "native": "бумажную выписку",
+                        "target": "a paper statement",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э пэйпэр стейтмэнт"
+                    }
+                ],
+                "hint_native": "что можно получить"
+            },
+            "frame_native": "Я могу получить ___?",
+            "frame_target": "Can I get ___?",
+            "pronunciation_native": "Кэн ай гет ___?"
+        },
+        {
+            "id": "p8",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "ежемесячные комиссии",
+                        "target": "any monthly fees",
+                        "in_dialogue": true,
+                        "pronunciation_native": "эни мансли физ"
+                    },
+                    {
+                        "native": "комиссии за карту",
+                        "target": "any card fees",
+                        "in_dialogue": false,
+                        "pronunciation_native": "эни кард физ"
+                    },
+                    {
+                        "native": "комиссии по счёту",
+                        "target": "any account charges",
+                        "in_dialogue": false,
+                        "pronunciation_native": "эни экаунт чарджиз"
+                    }
+                ],
+                "hint_native": "какие комиссии есть"
+            },
+            "frame_native": "Есть ли ___?",
+            "frame_target": "Are there ___?",
+            "pronunciation_native": "Ар зэр ___?"
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "answer",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Объяснить сегодняшний курс",
+                        "text_target": "Explain today’s exchange rate"
+                    },
+                    {
+                        "text_native": "Помочь с визитом",
+                        "text_target": "Help with the visit"
+                    },
+                    {
+                        "text_native": "Распечатать банковскую карту",
+                        "text_target": "Print a bank card"
+                    }
+                ],
+                "text_native": "Что предлагает сделать сотрудница банка?",
+                "text_target": "What does the bank clerk offer to do?",
+                "explanation_native": "Сотрудница банка спрашивает, чем она может помочь сегодня.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Сотрудник банка",
+                    "role_target": "Bank clerk",
+                    "text_native": "Здравствуйте. Чем я могу вам помочь сегодня?",
+                    "text_target": "Hello. How can I help you today?"
+                },
+                {
+                    "filler": "a student account",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Студент",
+                    "role_target": "Student",
+                    "text_native": "Я хочу открыть студенческий счёт.",
+                    "text_target": "I’d like to open a student account.",
+                    "speaking_key": "like to open",
+                    "simplified_variants": [
+                        "I want to open a student account.",
+                        "I need a student account."
+                    ],
+                    "pronunciation_native": "Айд лайк ту оупэн э стьюдэнт экаунт."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Причину открытия счёта",
+                        "text_target": "The reason for the account"
+                    },
+                    {
+                        "text_native": "Домашний адрес ученика",
+                        "text_target": "The learner’s home address"
+                    },
+                    {
+                        "text_native": "Срок доставки карты",
+                        "text_target": "The card delivery time"
+                    }
+                ],
+                "text_native": "О чём спрашивает сотрудница?",
+                "text_target": "What does the clerk ask about?",
+                "explanation_native": "Сотрудница спрашивает, зачем нужен счёт.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Сотрудник банка",
+                    "role_target": "Bank clerk",
+                    "text_native": "Для чего вам нужен счёт?",
+                    "text_target": "What do you need the account for?"
+                },
+                {
+                    "filler": "my studies",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Студент",
+                    "role_target": "Student",
+                    "text_native": "Он нужен мне для учёбы.",
+                    "text_target": "I need it for my studies.",
+                    "speaking_key": "need it for",
+                    "simplified_variants": [
+                        "It is for my studies.",
+                        "I need it for school."
+                    ],
+                    "pronunciation_native": "Ай нид ит фор май стадиз."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Как часто ученик учится",
+                        "text_target": "How often the learner studies"
+                    },
+                    {
+                        "text_native": "Как долго ученик останется",
+                        "text_target": "How long the learner will remain"
+                    },
+                    {
+                        "text_native": "Когда ученик пришёл сегодня",
+                        "text_target": "When the learner arrived today"
+                    }
+                ],
+                "text_native": "О каком сроке спрашивает сотрудница?",
+                "text_target": "What time period does the clerk ask about?",
+                "explanation_native": "Сотрудница спрашивает о сроке пребывания.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Сотрудник банка",
+                    "role_target": "Bank clerk",
+                    "text_native": "Как долго вы будете здесь?",
+                    "text_target": "How long will you stay here?"
+                },
+                {
+                    "filler": "one year",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Студент",
+                    "role_target": "Student",
+                    "text_native": "Я буду здесь один год.",
+                    "text_target": "I’ll stay for one year.",
+                    "speaking_key": "stay for",
+                    "simplified_variants": [
+                        "I’m here for one year.",
+                        "I will stay one year."
+                    ],
+                    "pronunciation_native": "Айл стэй фор уан йир."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Студенческий билет",
+                        "text_target": "A student card"
+                    },
+                    {
+                        "text_native": "Паспорт",
+                        "text_target": "A passport"
+                    },
+                    {
+                        "text_native": "Банковскую выписку",
+                        "text_target": "A bank statement"
+                    }
+                ],
+                "text_native": "Какой документ просит показать сотрудница?",
+                "text_target": "Which document does the clerk ask to see?",
+                "explanation_native": "Сотрудница просит показать паспорт.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Сотрудник банка",
+                    "role_target": "Bank clerk",
+                    "text_native": "Пожалуйста, покажите мне ваш паспорт.",
+                    "text_target": "Please show me your passport."
+                },
+                {
+                    "filler": "passport",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Студент",
+                    "role_target": "Student",
+                    "text_native": "Вот мой паспорт.",
+                    "text_target": "Here is my passport.",
+                    "speaking_key": "Here is my",
+                    "simplified_variants": [
+                        "This is my passport."
+                    ],
+                    "pronunciation_native": "Хиэр из май паспорт."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Страховка и билет на поезд",
+                        "text_target": "Travel insurance and a train ticket"
+                    },
+                    {
+                        "text_native": "Виза и подтверждение адреса",
+                        "text_target": "A visa and address proof"
+                    },
+                    {
+                        "text_native": "Фото на паспорт и наличные",
+                        "text_target": "A passport photo and cash"
+                    }
+                ],
+                "text_native": "Какие две вещи говорит, что ей нужны, сотрудница?",
+                "text_target": "What two things does the clerk say she needs?",
+                "explanation_native": "Сотрудница говорит, что ей нужны виза и подтверждение адреса.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Сотрудник банка",
+                    "role_target": "Bank clerk",
+                    "text_native": "Мне также нужны ваша виза и подтверждение адреса.",
+                    "text_target": "I also need your visa and proof of address."
+                },
+                {
+                    "filler": "my visa",
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Студент",
+                    "role_target": "Student",
+                    "text_native": "У меня есть виза.",
+                    "text_target": "I have my visa.",
+                    "speaking_key": "I have",
+                    "simplified_variants": [
+                        "I have the visa.",
+                        "My visa is here."
+                    ],
+                    "pronunciation_native": "Ай хэв май виза."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Чтобы отправить карту домой",
+                        "text_target": "To send the card home"
+                    },
+                    {
+                        "text_native": "Чтобы оформить студенческий тип счёта",
+                        "text_target": "To check the student account type"
+                    },
+                    {
+                        "text_native": "Чтобы изменить даты визы",
+                        "text_target": "To change the visa dates"
+                    }
+                ],
+                "text_native": "Зачем сотруднице нужно это письмо?",
+                "text_target": "Why does the clerk need that letter?",
+                "explanation_native": "Письмо нужно для оформления студенческого счёта.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": "student letter",
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Студент",
+                    "role_target": "Student",
+                    "text_native": "Вам нужно письмо из учебного заведения?",
+                    "text_target": "Do you need a student letter?",
+                    "speaking_key": "Do you need",
+                    "simplified_variants": [
+                        "Do you need my student letter?"
+                    ],
+                    "pronunciation_native": "Ду ю нид э стьюдэнт летэр?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Сотрудник банка",
+                    "role_target": "Bank clerk",
+                    "text_native": "Да, пожалуйста. Оно нужно для студенческого счёта.",
+                    "text_target": "Yes, please. I need it for the student account."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Студенческая карта",
+                        "text_target": "A student ID card"
+                    },
+                    {
+                        "text_native": "Кредитная карта",
+                        "text_target": "A credit card"
+                    },
+                    {
+                        "text_native": "Дебетовая карта",
+                        "text_target": "A debit card"
+                    }
+                ],
+                "text_native": "Какая карта идёт к этому счёту?",
+                "text_target": "What kind of card comes with the account?",
+                "explanation_native": "Сотрудница говорит, что к счёту идёт дебетовая карта.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "filler": "a bank card",
+                    "speaker": "B",
+                    "phrase_id": "p7",
+                    "role_native": "Студент",
+                    "role_target": "Student",
+                    "text_native": "Я могу получить банковскую карту?",
+                    "text_target": "Can I get a bank card?",
+                    "speaking_key": "Can I get",
+                    "simplified_variants": [
+                        "Can I get a card?"
+                    ],
+                    "pronunciation_native": "Кэн ай гет э бэнк кард?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Сотрудник банка",
+                    "role_target": "Bank clerk",
+                    "text_native": "Да. К этому счёту идёт дебетовая карта.",
+                    "text_target": "Yes. A debit card comes with this account."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 8,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Их не списывают каждый месяц",
+                        "text_target": "They are not charged each month"
+                    },
+                    {
+                        "text_native": "Их списывают раз в неделю",
+                        "text_target": "They are taken once a week"
+                    },
+                    {
+                        "text_native": "Их нужно оплатить наличными сегодня",
+                        "text_target": "They are paid in cash today"
+                    }
+                ],
+                "text_native": "Что сотрудница говорит о регулярных списаниях?",
+                "text_target": "What does the clerk say about regular charges?",
+                "explanation_native": "Сотрудница говорит, что ежемесячной комиссии нет.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "any monthly fees",
+                    "speaker": "B",
+                    "phrase_id": "p8",
+                    "role_native": "Студент",
+                    "role_target": "Student",
+                    "text_native": "Есть ли ежемесячные комиссии?",
+                    "text_target": "Are there any monthly fees?",
+                    "speaking_key": "monthly fees",
+                    "simplified_variants": [
+                        "Do I pay monthly fees?"
+                    ],
+                    "pronunciation_native": "Ар зэр эни мансли физ?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Сотрудник банка",
+                    "role_target": "Bank clerk",
+                    "text_native": "Нет. У этого студенческого счёта нет ежемесячной комиссии.",
+                    "text_target": "No. This student account has no monthly fee."
+                }
+            ],
+            "initiator": "B"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Какой счёт хочет открыть студент?",
+                "options_native": [
+                    "Совместный счёт",
+                    "Студенческий счёт",
+                    "Бизнес-счёт"
+                ],
+                "explanation_native": "Студент говорит, что хочет открыть студенческий счёт.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "На какой срок студент приехал?",
+                "options_native": [
+                    "На один год",
+                    "На шесть месяцев",
+                    "На два года"
+                ],
+                "explanation_native": "Студент говорит, что останется на один год.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Какой документ сотрудница просит дополнительно к паспорту?",
+                "options_native": [
+                    "Страховку",
+                    "Визу",
+                    "Билет"
+                ],
+                "explanation_native": "Сотрудница говорит, что ей нужна виза.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Что сотрудница говорит о карте?",
+                "options_native": [
+                    "Её нужно заказывать отдельно",
+                    "К счёту идёт дебетовая карта",
+                    "Карту нельзя получить студенту"
+                ],
+                "explanation_native": "Сотрудница объясняет, что к этому счёту идёт дебетовая карта.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Что сотрудница говорит о ежемесячной комиссии?",
+                "options_native": [
+                    "Она есть каждую неделю",
+                    "Её нужно оплатить сегодня",
+                    "Её нет"
+                ],
+                "explanation_native": "Сотрудница говорит, что ежемесячной комиссии нет.",
+                "correct_option_index": 2
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "chunk",
+            "used_in": [
+                "p1",
+                "A6",
+                "A8"
+            ],
+            "term_target": "student account",
+            "image_prompt": "student holding bank papers at a desk in a bank branch",
+            "definition_target": "a bank account for students",
+            "translation_native": "студенческий счёт",
+            "pronunciation_native": "стьюдэнт экаунт"
+        },
+        {
+            "id": "v2",
+            "kind": "word",
+            "used_in": [
+                "p2"
+            ],
+            "term_target": "studies",
+            "image_prompt": "student studying with books and a laptop in a dorm room",
+            "definition_target": "school or university work",
+            "translation_native": "учёба",
+            "pronunciation_native": "стадиз"
+        },
+        {
+            "id": "v3",
+            "kind": "word",
+            "used_in": [
+                "A4",
+                "p4"
+            ],
+            "term_target": "passport",
+            "image_prompt": "passport on a bank counter next to a form",
+            "definition_target": "an official document for identity and travel",
+            "translation_native": "паспорт",
+            "pronunciation_native": "паспорт"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "A5",
+                "p5"
+            ],
+            "term_target": "visa",
+            "image_prompt": "open passport showing a visa sticker on a counter",
+            "definition_target": "official permission to enter or stay in a country",
+            "translation_native": "виза",
+            "pronunciation_native": "виза"
+        },
+        {
+            "id": "v5",
+            "kind": "chunk",
+            "used_in": [
+                "A5",
+                "p5",
+                "p6"
+            ],
+            "term_target": "proof of address",
+            "image_prompt": "utility bill and rental letter on a desk in a bank office",
+            "definition_target": "a document that shows where you live",
+            "translation_native": "подтверждение адреса",
+            "pronunciation_native": "пруф ов эдрэс"
+        },
+        {
+            "id": "v6",
+            "kind": "chunk",
+            "used_in": [
+                "p4",
+                "p5",
+                "p6"
+            ],
+            "term_target": "student letter",
+            "image_prompt": "official university letter on a bank desk next to documents",
+            "definition_target": "a letter from a school or university confirming student status",
+            "translation_native": "письмо из учебного заведения",
+            "pronunciation_native": "стьюдэнт летэр"
+        },
+        {
+            "id": "v7",
+            "kind": "chunk",
+            "used_in": [
+                "A7",
+                "p7"
+            ],
+            "term_target": "debit card",
+            "image_prompt": "debit card on a bank desk beside account papers",
+            "definition_target": "a bank card linked to money in your account",
+            "translation_native": "дебетовая карта",
+            "pronunciation_native": "дэбит кард"
+        },
+        {
+            "id": "v8",
+            "kind": "chunk",
+            "used_in": [
+                "p8",
+                "A8"
+            ],
+            "term_target": "monthly fee",
+            "image_prompt": "bank fee notice on a desk with a calculator",
+            "definition_target": "a charge paid every month",
+            "translation_native": "ежемесячная комиссия",
+            "pronunciation_native": "мансли фи"
+        }
+    ],
+    "role_gender": "female",
+    "learner_role": {
+        "role_native": "Студент",
+        "role_target": "Student"
+    }
+}

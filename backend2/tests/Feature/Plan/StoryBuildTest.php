@@ -39,6 +39,8 @@ function sbTeachesSharpAgain(LessonRequest $request): array
     $p = planCleanLesson($request);
     if (! $request->earlierDays->isEmpty()) {
         $p['vocabulary'][1]['term_target'] = 'sharp';
+        // An acronym the day says, so that a repair may take it for a word and only the acronym rule refuses it.
+        $p['dialogue'][2]['messages'][0]['text_target'] .= ' An MRI is not needed yet.';
     }
 
     return $p;

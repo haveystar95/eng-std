@@ -1,0 +1,7 @@
+database=wordtrainer_e2e_test plan.driver=openai lesson=gpt-5.4 repair=gpt-5.4 judge=gpt-5.4-mini timeout=180
+13:18:53 interview plan $0.019230 (13.7s) · day 1 illustrating · lesson $0.086365 repair $0.000000 judge $0.002039 · 51.8s
+13:19:54 rent plan $0.012779 (12.6s) · day 1 illustrating · lesson $0.064601 repair $0.000000 judge $0.002343 · 49.3s
+13:21:03 bank plan $0.012679 (11.9s) · day 1 illustrating · lesson $0.095174 repair $0.000000 judge $0.002363 · 56.8s
+13:21:53 restaurant plan $0.011864 (9.4s) · day 1 illustrating · lesson $0.061837 repair $0.000000 judge $0.001929 · 40.0s
+13:22:39 airport plan $0.012137 (9.9s) · day 1 illustrating · lesson $0.057616 repair $0.000000 judge $0.001494 · 36.4s
+13:23:40 doctor plan $0.012706 (9.9s) · day 1 illustrating · lesson $0.081370 repair $0.034048 judge $0.002164 · 51.2s

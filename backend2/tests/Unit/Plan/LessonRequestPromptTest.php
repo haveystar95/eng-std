@@ -147,10 +147,10 @@ it('sends a repair its neighbours, the short story and a schema that names no ca
     );
     $catalog = new LrpCapturingCatalog;
     $builder = lrpBuilder($catalog);
-    foreach (['x3', 'x8', 'x1', 'p2', 'v4'] as $address) {
+    foreach (['x3', 'x8', 'x1', 'p2', 'v4', 'p5'] as $address) {
         $builder->repairLessonCard($request($address));
     }
-    [$x3, $x8, $x1, $p2, $v4] = $catalog->sent;
+    [$x3, $x8, $x1, $p2, $v4, $p5] = $catalog->sent;
 
     expect($x3['user'])->toContain("NEIGHBOURS (the exchange before and the exchange after the card, as they lie in the lesson; for reading only):\nbefore: {\"step\":2,")
         ->and($x3['user'])->toContain("\nafter: {\"step\":4,")
@@ -167,6 +167,8 @@ it('sends a repair its neighbours, the short story and a schema that names no ca
         ->and($x3['prompt']->text)->toBe($x8['prompt']->text)
         ->and(json_encode($x3['schema']))->toBe(json_encode($x8['schema']))
         ->and(json_encode($x3['schema']))->toBe(json_encode($x1['schema']))
+        ->and(json_encode($p2['schema']))->toBe(json_encode($p5['schema']))
+        ->and($p2['prompt']->text)->toBe($p5['prompt']->text)
         ->and($x3['prompt']->text)->toContain(lrpPrompts()->lessonSection('THE STORY SO FAR'))
         ->and($v4['prompt']->text)->toContain(lrpPrompts()->lessonSection('VOCABULARY'))
         ->and($v4['schema']['properties']['card']['properties']['id']['enum'])->toBe(['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']);

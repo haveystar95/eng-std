@@ -73,7 +73,15 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 обычный `Plan`. `data: null` — только когда плана нет вовсе.
 
 `current_day` — первый незакрытый день; каждый день несёт **эффективный** `status`
-(`locked` / `open` / `in_progress` / `closed`), `slot` и `stages`.
+(`locked` / `building` / `open` / `in_progress` / `closed`), `slot` и `stages`.
+
+**Расписание (наряд GEN-3 §11).** День N+1 доступен, когда день N закрыт и пришёл **календарный день после ОТКРЫТИЯ дня N**
+в зоне ученика (открыл в 23:00, закрыл в 01:00 — день N+1 доступен в 01:00). **`catch_up`** (boolean) — «догоняем»:
+календарных дней до события, включая день события, не больше незакрытых дней плана — даты не держат, следующий день
+открывается сразу после закрытия текущего; день события учебный (оставшиеся дни и репетиция открываются и в него); без даты
+события и после неё — `false`. Урок дня N+1 сервер заказывает **при закрытии дня N** (не при открытии). Пока его нет — день,
+следующий в очереди, приходит со **`status: building`** (не `locked`, не `failed`): плита «собираем урок», опрашивать план до
+`lesson_status: ready`; `allowed_action` окна — `null`; открыть — 409 `plan_day_building`.
 
 **`reminder_hour`** (доработка PLAN-UI-3) — локальный час ежедневного напоминания и «сегодня
 разговор», **одно правило для сервера и телефона** (`Identity\Domain\Service\UsualVisitTime`): час
@@ -118,7 +126,7 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 | действие | вызов | ответ |
 |---|---|---|
 | день | `GET /plans/{id}/days/{n}` | `PlanDayRoom`: `day`, `scene`, `stages[]` (`locked`/`current`/`done`/`absent`, **и `cards[]`** — карточки этапа по `position`, в конверте разд. «Карточки сессии»; у нерозданного дня список пуст: у контура нет id, которым отвечают), `metrics` (`cards_total`, `minutes_spent`), `program[]` (`unit_kind`, `source`, `state` `pending`/`passed`/`failed`) — это читают плита таба и сессия; **`window`** — окно дня (ниже) |
-| открыть / продолжить | `POST /plans/{id}/days/{n}/open` | `PlanDayCards` — **весь** плоский список карточек с состоянием; 409 `plan_day_locked` (`meta.blocked_by_day` или `meta.opens_on`), 409 `plan_lesson_not_ready` (`meta.lesson_status`: `building` — подождать, `failed` — предложить `POST …/scenes/{sceneId}/lesson/retry`) |
+| открыть / продолжить | `POST /plans/{id}/days/{n}/open` | `PlanDayCards` — **весь** плоский список карточек с состоянием; 409 `plan_day_locked` (`meta.blocked_by_day` или `meta.opens_on`), 409 `plan_day_building` (урок дня ещё пишется, `meta.lesson_status` — подождать и опросить план), 409 `plan_lesson_not_ready` (`meta.lesson_status: failed` — предложить `POST …/scenes/{sceneId}/lesson/retry`) |
 | перечитать карточки | `GET /plans/{id}/days/{n}/cards` | `PlanDayCards` (тот же плоский `cards[]`) |
 | ответить | `POST …/cards/{cardId}/answer` `{result, attempts, response?}` | `{card, requeued, unit {kind, ref, returns_tomorrow, returns_day}, day {cards_total, cards_done, minutes_spent}, stage {stage, minutes_spent}}` — из этого клиент пишет итог этапа (30-6/33-8/34-8/35-6) и итог дня (30-7), не считая ничего сам. `requeued` — та же карточка в конце этапа после первого провала (новый `id`, `retry_of`; у карточки фразы — того же вида с другим наполнением; провал голоса фразы — `skipped` после двух попыток с микрофоном, SESSION-1d), иначе `null`; 409 `plan_card_answered`, 422 `plan_card_result_not_allowed` (вид такого итога не принимает) |
 | зачесть окно или пересказ | `POST …/cards/{cardId}/judge` `{heard, hinted}` | `{accepted, slot_value, reason_native, result, attempts, card}` — судья окна `slot_judge.v1`, только `phrase_own_slot` / `speak_answer` / `speak_retell`; 422 `plan_card_not_judged` у любого другого вида, 409 `plan_card_answered`, 409 `plan_day_not_open` |
@@ -491,7 +499,7 @@ step, kind}`; реплика — `{ref, text_target, text_native, audio}`; `own_
 
 ## Коды 409
 
-`plan_state`, `plan_already_active`, `plan_core_scene`, `plan_day_locked`, `plan_day_not_open`,
+`plan_state`, `plan_already_active`, `plan_core_scene`, `plan_day_locked`, `plan_day_building` (GEN-3), `plan_day_not_open`,
 `plan_lesson_not_ready`, `plan_stage_incomplete`, `plan_card_answered`, `plan_too_short`. 404:
 `plan_not_found`, `plan_scene_not_found`, `plan_day_not_found`, `plan_card_not_found`,
 `plan_scene_image_not_found`. 503: `plan_scene_image_unavailable`.

@@ -1,0 +1,718 @@
+{
+    "topic": {
+        "title_target": "Interview with the team lead",
+        "title_native": "Интервью с тимлидом",
+        "description_target": "Talk about real projects, delivery, priorities, and teamwork in a project manager interview.",
+        "description_native": "Поговорите о реальных проектах, сроках, приоритетах и работе с командой на собеседовании менеджера проектов."
+    },
+    "learner_role": {
+        "role_target": "Project manager",
+        "role_native": "Менеджер проектов"
+    },
+    "role_gender": "male",
+    "dialogue": [
+        {
+            "step": 1,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Team lead",
+                    "role_native": "Тимлид",
+                    "text_target": "Can you give me one delivery example from a recent project?",
+                    "text_native": "Можете привести один пример сдачи результата из недавнего проекта?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Project manager",
+                    "role_native": "Менеджер проектов",
+                    "phrase_id": "p1",
+                    "filler": "a mobile app launch",
+                    "text_target": "I can share a mobile app launch.",
+                    "text_native": "Я могу рассказать про запуск мобильного приложения.",
+                    "pronunciation_native": "Ай кэн шэр э мобайл эп лонч.",
+                    "speaking_key": "I can share",
+                    "simplified_variants": [
+                        "I can share one project.",
+                        "I'll share a recent project."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What example does the team lead ask for?",
+                "text_native": "Какой пример просит тимлид?",
+                "options": [
+                    {
+                        "text_target": "A case of releasing work on a project",
+                        "text_native": "Случай со сдачей результата по проекту"
+                    },
+                    {
+                        "text_target": "A reason for changing jobs",
+                        "text_native": "Причину смены работы"
+                    },
+                    {
+                        "text_target": "A salary expectation",
+                        "text_native": "Ожидание по зарплате"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Тимлид просит пример того, как был доведён до результата недавний проект."
+            }
+        },
+        {
+            "step": 2,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Team lead",
+                    "role_native": "Тимлид",
+                    "text_target": "What was the main challenge on that project?",
+                    "text_native": "Какая была главная сложность в этом проекте?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Project manager",
+                    "role_native": "Менеджер проектов",
+                    "phrase_id": "p2",
+                    "filler": "changing priorities",
+                    "text_target": "The main challenge was changing priorities.",
+                    "text_native": "Главной сложностью были меняющиеся приоритеты.",
+                    "pronunciation_native": "Зэ мейн челиндж уоз чейнджинг прайоритиз.",
+                    "speaking_key": "main challenge was",
+                    "simplified_variants": [
+                        "The challenge was changing priorities."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the team lead want to hear about?",
+                "text_native": "О чём хочет услышать тимлид?",
+                "options": [
+                    {
+                        "text_target": "The biggest problem in that work",
+                        "text_native": "О самой большой проблеме в этой работе"
+                    },
+                    {
+                        "text_target": "The size of the office",
+                        "text_native": "О размере офиса"
+                    },
+                    {
+                        "text_target": "The learner's vacation plans",
+                        "text_native": "О планах ученика на отпуск"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Тимлид спрашивает именно о главной трудности в этом проекте."
+            }
+        },
+        {
+            "step": 3,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Team lead",
+                    "role_native": "Тимлид",
+                    "text_target": "How did you keep the team on schedule?",
+                    "text_native": "Как вы удерживали команду в графике?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Project manager",
+                    "role_native": "Менеджер проектов",
+                    "phrase_id": "p3",
+                    "filler": "weekly planning",
+                    "text_target": "I relied on weekly planning.",
+                    "text_native": "Я опирался на еженедельное планирование.",
+                    "pronunciation_native": "Ай рилайд он уикли плэнинг.",
+                    "speaking_key": "relied on",
+                    "simplified_variants": [
+                        "I used weekly planning.",
+                        "Weekly planning helped a lot."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the team lead ask about?",
+                "text_native": "О чём спрашивает тимлид?",
+                "options": [
+                    {
+                        "text_target": "How the learner kept work moving on time",
+                        "text_native": "Как кандидат удерживал работу в сроках"
+                    },
+                    {
+                        "text_target": "How the learner chose a laptop",
+                        "text_native": "Как кандидат выбирал ноутбук"
+                    },
+                    {
+                        "text_target": "How the learner found the company",
+                        "text_native": "Как кандидат нашёл компанию"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Вопрос о том, как кандидат помогал команде идти по графику."
+            }
+        },
+        {
+            "step": 4,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Team lead",
+                    "role_native": "Тимлид",
+                    "text_target": "What did you do when a deadline was at risk?",
+                    "text_native": "Что вы делали, когда дедлайн был под угрозой?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Project manager",
+                    "role_native": "Менеджер проектов",
+                    "phrase_id": "p4",
+                    "filler": "the scope",
+                    "text_target": "I reduced the scope.",
+                    "text_native": "Я сокращал объём задач.",
+                    "pronunciation_native": "Ай ридьюст зэ скоуп.",
+                    "speaking_key": "reduced the",
+                    "simplified_variants": [
+                        "I cut the scope.",
+                        "I made the scope smaller."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "In which situation does the team lead ask what the learner did?",
+                "text_native": "В какой ситуации тимлид спрашивает, что делал кандидат?",
+                "options": [
+                    {
+                        "text_target": "When the timeline might slip",
+                        "text_native": "Когда сроки могли сорваться"
+                    },
+                    {
+                        "text_target": "When the budget increased",
+                        "text_native": "Когда бюджет вырос"
+                    },
+                    {
+                        "text_target": "When a new office opened",
+                        "text_native": "Когда открылся новый офис"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Речь о ситуации, когда был риск не успеть к сроку."
+            }
+        },
+        {
+            "step": 5,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Project manager",
+                    "role_native": "Менеджер проектов",
+                    "phrase_id": "p5",
+                    "filler": "the team structure",
+                    "text_target": "Could you tell me about the team structure?",
+                    "text_native": "Можете рассказать о структуре команды?",
+                    "pronunciation_native": "Куд ю тэл ми эбаут зэ тим стракчер?",
+                    "speaking_key": "tell me about",
+                    "simplified_variants": [
+                        "Could you describe the team structure?",
+                        "What's the team structure?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Team lead",
+                    "role_native": "Тимлид",
+                    "text_target": "We have six engineers, one designer, and one analyst.",
+                    "text_native": "У нас шесть инженеров, один дизайнер и один аналитик."
+                }
+            ],
+            "check": {
+                "text_target": "Who is on the team?",
+                "text_native": "Кто входит в команду?",
+                "options": [
+                    {
+                        "text_target": "Six developers, a designer, and an analyst",
+                        "text_native": "Шесть разработчиков, дизайнер и аналитик"
+                    },
+                    {
+                        "text_target": "Three testers and two recruiters",
+                        "text_native": "Три тестировщика и два рекрутера"
+                    },
+                    {
+                        "text_target": "One marketer and one sales manager",
+                        "text_native": "Маркетолог и менеджер по продажам"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Тимлид описал состав команды: шесть инженеров, дизайнер и аналитик."
+            }
+        },
+        {
+            "step": 6,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Project manager",
+                    "role_native": "Менеджер проектов",
+                    "phrase_id": "p6",
+                    "filler": "delivery",
+                    "text_target": "What do you expect from delivery?",
+                    "text_native": "Что вы ожидаете от процесса поставки результата?",
+                    "pronunciation_native": "Уот ду ю икспект фром диливери?",
+                    "speaking_key": "expect from",
+                    "simplified_variants": [
+                        "What are your expectations for delivery?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Team lead",
+                    "role_native": "Тимлид",
+                    "text_target": "I expect clear priorities, visible risks, and honest updates every week.",
+                    "text_native": "Я ожидаю чётких приоритетов, видимых рисков и честных обновлений каждую неделю."
+                }
+            ],
+            "check": {
+                "text_target": "Which update frequency does the team lead mention?",
+                "text_native": "Какую частоту обновлений называет тимлид?",
+                "options": [
+                    {
+                        "text_target": "Once each week",
+                        "text_native": "Раз в неделю"
+                    },
+                    {
+                        "text_target": "Twice a day",
+                        "text_native": "Два раза в день"
+                    },
+                    {
+                        "text_target": "At the end of each month",
+                        "text_native": "В конце каждого месяца"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Тимлид говорит о честных обновлениях каждую неделю."
+            }
+        },
+        {
+            "step": 7,
+            "kind": "rescue",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Project manager",
+                    "role_native": "Менеджер проектов",
+                    "phrase_id": null,
+                    "filler": null,
+                    "text_target": "Could you say that more slowly, please?",
+                    "text_native": "Можете сказать это помедленнее, пожалуйста?",
+                    "pronunciation_native": "Куд ю сэй зэт мор слоули, плиз?",
+                    "speaking_key": "say that more slowly",
+                    "simplified_variants": [
+                        "Could you repeat that, please?",
+                        "Please say that more slowly."
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Team lead",
+                    "role_native": "Тимлид",
+                    "text_target": "Clear priorities, visible risks, and weekly updates.",
+                    "text_native": "Чёткие приоритеты, видимые риски и еженедельные обновления."
+                }
+            ],
+            "check": {
+                "text_target": "What three areas does the team lead repeat?",
+                "text_native": "Какие три пункта повторяет тимлид?",
+                "options": [
+                    {
+                        "text_target": "Priorities, risks, and regular updates",
+                        "text_native": "Приоритеты, риски и регулярные обновления"
+                    },
+                    {
+                        "text_target": "Budgets, hiring, and office plans",
+                        "text_native": "Бюджеты, найм и планы по офису"
+                    },
+                    {
+                        "text_target": "Design, testing, and support shifts",
+                        "text_native": "Дизайн, тестирование и смены поддержки"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "В повторе тимлид снова называет приоритеты, риски и обновления."
+            }
+        },
+        {
+            "step": 8,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Team lead",
+                    "role_native": "Тимлид",
+                    "text_target": "If you joined us, what would you improve first?",
+                    "text_native": "Если бы вы присоединились к нам, что бы вы улучшили в первую очередь?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Project manager",
+                    "role_native": "Менеджер проектов",
+                    "phrase_id": "p7",
+                    "filler": "risk tracking",
+                    "text_target": "I would improve risk tracking first.",
+                    "text_native": "Я бы сначала улучшил отслеживание рисков.",
+                    "pronunciation_native": "Ай вуд импрув риск трэкинг фёрст.",
+                    "speaking_key": "would improve",
+                    "simplified_variants": [
+                        "I'd improve risk tracking first.",
+                        "First, I'd improve risk tracking."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the team lead ask the learner to name?",
+                "text_native": "Что просит назвать тимлид?",
+                "options": [
+                    {
+                        "text_target": "The first thing they would make better",
+                        "text_native": "Что кандидат улучшил бы в первую очередь"
+                    },
+                    {
+                        "text_target": "Their university degree",
+                        "text_native": "Их университетское образование"
+                    },
+                    {
+                        "text_target": "Their preferred vacation month",
+                        "text_native": "Предпочитаемый месяц отпуска"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Тимлид спрашивает, что кандидат стал бы улучшать прежде всего."
+            }
+        }
+    ],
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "frame_target": "I can share ___.",
+            "frame_native": "Я могу рассказать про ___.",
+            "pronunciation_native": "Ай кэн шэр ___.",
+            "slot": {
+                "hint_native": "пример проекта",
+                "fillers": [
+                    {
+                        "target": "a mobile app launch",
+                        "native": "запуск мобильного приложения",
+                        "pronunciation_native": "э мобайл эп лонч",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "a platform migration",
+                        "native": "миграцию платформы",
+                        "pronunciation_native": "э პლэтформ майгрейшн",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "The main challenge was ___.",
+            "frame_native": "Главной сложностью были ___.",
+            "pronunciation_native": "Зэ мейн челиндж уоз ___.",
+            "slot": {
+                "hint_native": "главная сложность",
+                "fillers": [
+                    {
+                        "target": "changing priorities",
+                        "native": "меняющиеся приоритеты",
+                        "pronunciation_native": "чейнджинг прайоритиз",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "limited resources",
+                        "native": "ограниченные ресурсы",
+                        "pronunciation_native": "лимитид рисорсиз",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "frame_target": "I relied on ___.",
+            "frame_native": "Я опирался на ___.",
+            "pronunciation_native": "Ай рилайд он ___.",
+            "slot": {
+                "hint_native": "подход или инструмент",
+                "fillers": [
+                    {
+                        "target": "weekly planning",
+                        "native": "еженедельное планирование",
+                        "pronunciation_native": "уикли плэнинг",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "daily check-ins",
+                        "native": "ежедневные короткие созвоны",
+                        "pronunciation_native": "дейли чек-инз",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "frame_target": "I reduced ___.",
+            "frame_native": "Я сокращал ___.",
+            "pronunciation_native": "Ай ридьюст ___.",
+            "slot": {
+                "hint_native": "что сократили",
+                "fillers": [
+                    {
+                        "target": "the scope",
+                        "native": "объём задач",
+                        "pronunciation_native": "зэ скоуп",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "nonessential tasks",
+                        "native": "второстепенные задачи",
+                        "pronunciation_native": "нон-эссеншэл таскс",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "frame_target": "Could you tell me about ___?",
+            "frame_native": "Можете рассказать о ___?",
+            "pronunciation_native": "Куд ю тэл ми эбаут ___?",
+            "slot": {
+                "hint_native": "тема вопроса",
+                "fillers": [
+                    {
+                        "target": "the team structure",
+                        "native": "структуре команды",
+                        "pronunciation_native": "зэ тим стракчер",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "your workflow",
+                        "native": "вашем рабочем процессе",
+                        "pronunciation_native": "ёр уоркфлоу",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "frame_target": "What do you expect from ___?",
+            "frame_native": "Что вы ожидаете от ___?",
+            "pronunciation_native": "Уот ду ю икспект фром ___?",
+            "slot": {
+                "hint_native": "область ожиданий",
+                "fillers": [
+                    {
+                        "target": "delivery",
+                        "native": "процесса поставки результата",
+                        "pronunciation_native": "диливери",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "cross-team communication",
+                        "native": "взаимодействия между командами",
+                        "pronunciation_native": "крос-тим комьюникейшн",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p7",
+            "kind": "answer",
+            "frame_target": "I would improve ___ first.",
+            "frame_native": "Я бы сначала улучшил ___.",
+            "pronunciation_native": "Ай вуд импрув ___ фёрст.",
+            "slot": {
+                "hint_native": "что улучшить",
+                "fillers": [
+                    {
+                        "target": "risk tracking",
+                        "native": "отслеживание рисков",
+                        "pronunciation_native": "риск трэкинг",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "sprint planning",
+                        "native": "планирование спринтов",
+                        "pronunciation_native": "спринт плэнинг",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Какой пример проекта привёл кандидат?",
+                "options_native": [
+                    "Запуск мобильного приложения",
+                    "Переезд офиса",
+                    "Найм новой команды"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Кандидат сказал, что может рассказать про запуск мобильного приложения."
+            },
+            {
+                "text_native": "Что тимлид назвал ожиданием от delivery?",
+                "options_native": [
+                    "Честные еженедельные обновления",
+                    "Ежедневные отчёты для HR",
+                    "Свободный график без дедлайнов"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Тимлид ожидает честных обновлений каждую неделю."
+            },
+            {
+                "text_native": "Что кандидат сказал о главной сложности проекта?",
+                "options_native": [
+                    "Меняющиеся приоритеты",
+                    "Недостаток переговорных комнат",
+                    "Слишком длинный отпуск команды"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Кандидат назвал главной сложностью меняющиеся приоритеты."
+            },
+            {
+                "text_native": "Что кандидат хотел бы улучшить в первую очередь?",
+                "options_native": [
+                    "Отслеживание рисков",
+                    "Бренд работодателя",
+                    "Систему бонусов"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "В конце кандидат сказал, что сначала улучшил бы отслеживание рисков."
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "term_target": "launch",
+            "translation_native": "запуск",
+            "pronunciation_native": "лонч",
+            "definition_target": "the release of a product or feature to users",
+            "kind": "word",
+            "image_prompt": "a product team watching a mobile app go live on laptops",
+            "used_in": [
+                "p1"
+            ]
+        },
+        {
+            "id": "v2",
+            "term_target": "changing priorities",
+            "translation_native": "меняющиеся приоритеты",
+            "pronunciation_native": "чейнджинг прайоритиз",
+            "definition_target": "a situation where the most important tasks keep shifting",
+            "kind": "chunk",
+            "image_prompt": null,
+            "used_in": [
+                "p2"
+            ]
+        },
+        {
+            "id": "v3",
+            "term_target": "on schedule",
+            "translation_native": "по графику",
+            "pronunciation_native": "он скеджул",
+            "definition_target": "moving according to the planned timeline",
+            "kind": "chunk",
+            "image_prompt": null,
+            "used_in": [
+                "A3"
+            ]
+        },
+        {
+            "id": "v4",
+            "term_target": "deadline",
+            "translation_native": "дедлайн",
+            "pronunciation_native": "дэдлайн",
+            "definition_target": "the time by which work must be finished",
+            "kind": "word",
+            "image_prompt": "a project deadline marked on a computer calendar",
+            "used_in": [
+                "A4"
+            ]
+        },
+        {
+            "id": "v5",
+            "term_target": "scope",
+            "translation_native": "объём задач",
+            "pronunciation_native": "скоуп",
+            "definition_target": "the amount of work or features included in a project",
+            "kind": "word",
+            "image_prompt": null,
+            "used_in": [
+                "p4"
+            ]
+        },
+        {
+            "id": "v6",
+            "term_target": "team structure",
+            "translation_native": "структура команды",
+            "pronunciation_native": "тим стракчер",
+            "definition_target": "how a team is organized and which roles are in it",
+            "kind": "chunk",
+            "image_prompt": "an org chart on a screen during a team meeting",
+            "used_in": [
+                "p5"
+            ]
+        },
+        {
+            "id": "v7",
+            "term_target": "visible risks",
+            "translation_native": "видимые риски",
+            "pronunciation_native": "визибл рискс",
+            "definition_target": "project problems that are clearly identified and tracked",
+            "kind": "chunk",
+            "image_prompt": null,
+            "used_in": [
+                "A6",
+                "A7"
+            ]
+        },
+        {
+            "id": "v8",
+            "term_target": "risk tracking",
+            "translation_native": "отслеживание рисков",
+            "pronunciation_native": "риск трэкинг",
+            "definition_target": "the process of monitoring project risks over time",
+            "kind": "chunk",
+            "image_prompt": "a project risk board with status columns on a monitor",
+            "used_in": [
+                "p7"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,752 @@
+{
+    "topic": {
+        "title_native": "Заказ за столом",
+        "title_target": "Ordering at the table",
+        "description_native": "Закажите ужин для семьи, спросите о блюдах и уточните, что безопасно для вашей дочки.",
+        "description_target": "Order dinner for the family, ask about dishes, and check what is safe for your daughter."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "ещё несколько минут",
+                        "target": "a few minutes",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э фью минутс"
+                    },
+                    {
+                        "native": "ещё время",
+                        "target": "more time",
+                        "in_dialogue": false,
+                        "pronunciation_native": "мор тайм"
+                    }
+                ],
+                "hint_native": "сколько времени"
+            },
+            "frame_native": "Нам нужно ___.",
+            "frame_target": "We need ___.",
+            "pronunciation_native": "Уи нид ___."
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "grilled chicken",
+                        "target": "the grilled chicken",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ грилд чикен"
+                    },
+                    {
+                        "native": "рыбу",
+                        "target": "the fish",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ фиш"
+                    },
+                    {
+                        "native": "суп",
+                        "target": "the soup",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ суп"
+                    }
+                ],
+                "hint_native": "блюдо"
+            },
+            "frame_native": "Я бы взял ___.",
+            "frame_target": "I'd like ___.",
+            "pronunciation_native": "Айд лайк ___."
+        },
+        {
+            "id": "p3",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "пасте",
+                        "target": "the pasta",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ паста"
+                    },
+                    {
+                        "native": "супе",
+                        "target": "the soup",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ суп"
+                    },
+                    {
+                        "native": "салате",
+                        "target": "the salad",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ сэлэд"
+                    }
+                ],
+                "hint_native": "блюдо"
+            },
+            "frame_native": "Что в ___?",
+            "frame_target": "What's in ___?",
+            "pronunciation_native": "Уотс ин ___?"
+        },
+        {
+            "id": "p4",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "орехи",
+                        "target": "nuts",
+                        "in_dialogue": true,
+                        "pronunciation_native": "натс"
+                    },
+                    {
+                        "native": "сыр",
+                        "target": "cheese",
+                        "in_dialogue": false,
+                        "pronunciation_native": "чиз"
+                    },
+                    {
+                        "native": "яйца",
+                        "target": "eggs",
+                        "in_dialogue": false,
+                        "pronunciation_native": "эгз"
+                    }
+                ],
+                "hint_native": "ингредиент"
+            },
+            "frame_native": "Там есть ___?",
+            "frame_target": "Does it have ___?",
+            "pronunciation_native": "Даз ит хэв ___?"
+        },
+        {
+            "id": "p5",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "аллергия на орехи",
+                        "target": "a nut allergy",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э нат элэрджи"
+                    },
+                    {
+                        "native": "аллергия на молоко",
+                        "target": "a milk allergy",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э милк элэрджи"
+                    },
+                    {
+                        "native": "аллергия на яйца",
+                        "target": "an egg allergy",
+                        "in_dialogue": false,
+                        "pronunciation_native": "эн эг элэрджи"
+                    }
+                ],
+                "hint_native": "что за аллергия"
+            },
+            "frame_native": "У моей дочки ___.",
+            "frame_target": "My daughter has ___.",
+            "pronunciation_native": "Май дотэр хэз ___."
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "два лимонада",
+                        "target": "two lemonades",
+                        "in_dialogue": true,
+                        "pronunciation_native": "ту лемонэйдс"
+                    },
+                    {
+                        "native": "три воды",
+                        "target": "three waters",
+                        "in_dialogue": false,
+                        "pronunciation_native": "сри уотэрз"
+                    },
+                    {
+                        "native": "один сок",
+                        "target": "one juice",
+                        "in_dialogue": false,
+                        "pronunciation_native": "уан джус"
+                    }
+                ],
+                "hint_native": "напитки"
+            },
+            "frame_native": "Можно нам ___?",
+            "frame_target": "Can we get ___?",
+            "pronunciation_native": "Кэн уи гет ___?"
+        },
+        {
+            "id": "p7",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "верно",
+                        "target": "right",
+                        "in_dialogue": true,
+                        "pronunciation_native": "райт"
+                    },
+                    {
+                        "native": "хорошо",
+                        "target": "fine",
+                        "in_dialogue": false,
+                        "pronunciation_native": "файн"
+                    }
+                ],
+                "hint_native": "подтверждение"
+            },
+            "frame_native": "Это ___.",
+            "frame_target": "That's ___.",
+            "pronunciation_native": "Зэтс ___."
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "ask",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Через недолгое время",
+                        "text_target": "After a short wait"
+                    },
+                    {
+                        "text_native": "В конце ужина",
+                        "text_target": "At the end of dinner"
+                    },
+                    {
+                        "text_native": "Сразу",
+                        "text_target": "Right away"
+                    }
+                ],
+                "text_native": "Когда официант вернётся?",
+                "text_target": "When will the waiter return?",
+                "explanation_native": "Официант сказал, что подойдёт снова через несколько минут.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "a few minutes",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Родитель",
+                    "role_target": "Parent",
+                    "text_native": "Нам нужно ещё несколько минут.",
+                    "text_target": "We need a few minutes.",
+                    "speaking_key": "We need",
+                    "simplified_variants": [
+                        "A little more time, please.",
+                        "We need more time."
+                    ],
+                    "pronunciation_native": "Уи нид э фью минутс."
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Официант",
+                    "role_target": "Waiter",
+                    "text_native": "Конечно. Я подойду снова через несколько минут.",
+                    "text_target": "Of course. I'll come back in a few minutes."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Хочет ли семья десерт",
+                        "text_target": "Whether the family wants dessert"
+                    },
+                    {
+                        "text_native": "Готовы ли они заказать сейчас",
+                        "text_target": "Whether they can order now"
+                    },
+                    {
+                        "text_native": "Нужен ли им другой стол",
+                        "text_target": "Whether they need another table"
+                    }
+                ],
+                "text_native": "О чём спрашивает официант?",
+                "text_target": "What does the waiter ask?",
+                "explanation_native": "Официант спрашивает, готовы ли вы сделать заказ сейчас.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Официант",
+                    "role_target": "Waiter",
+                    "text_native": "Вы уже готовы сделать заказ?",
+                    "text_target": "Are you ready to order now?"
+                },
+                {
+                    "filler": "the grilled chicken",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Родитель",
+                    "role_target": "Parent",
+                    "text_native": "Я бы взял grilled chicken.",
+                    "text_target": "I'd like the grilled chicken.",
+                    "speaking_key": "I'd like the",
+                    "simplified_variants": [
+                        "The grilled chicken, please.",
+                        "I'd like grilled chicken."
+                    ],
+                    "pronunciation_native": "Айд лайк зэ грилд чикен."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Сливки, грибы и лук",
+                        "text_target": "Cream, mushrooms, and onion"
+                    },
+                    {
+                        "text_native": "Томатный соус, сыр и базилик",
+                        "text_target": "Tomato, cheese, and basil"
+                    },
+                    {
+                        "text_native": "Курица, рис и фасоль",
+                        "text_target": "Chicken, rice, and beans"
+                    }
+                ],
+                "text_native": "Какие ингредиенты есть в пасте?",
+                "text_target": "What ingredients does the pasta have?",
+                "explanation_native": "Официант сказал, что в пасте томатный соус, сыр и базилик.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": "the pasta",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Родитель",
+                    "role_target": "Parent",
+                    "text_native": "Что в пасте?",
+                    "text_target": "What's in the pasta?",
+                    "speaking_key": "What's in the",
+                    "simplified_variants": [
+                        "What is in the pasta?",
+                        "The pasta has what?"
+                    ],
+                    "pronunciation_native": "Уотс ин зэ паста?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Официант",
+                    "role_target": "Waiter",
+                    "text_native": "В ней томатный соус, сыр и базилик.",
+                    "text_target": "It has tomato sauce, cheese, and basil."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Её подают холодной",
+                        "text_target": "It is served cold"
+                    },
+                    {
+                        "text_native": "В ней нет орехов",
+                        "text_target": "It has no nuts"
+                    },
+                    {
+                        "text_native": "К ней подают хлеб",
+                        "text_target": "It comes with bread"
+                    }
+                ],
+                "text_native": "Что официант подтверждает о пасте?",
+                "text_target": "What does the waiter confirm about the pasta?",
+                "explanation_native": "Официант сказал, что в пасте нет орехов.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": "nuts",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Родитель",
+                    "role_target": "Parent",
+                    "text_native": "Там есть орехи?",
+                    "text_target": "Does it have nuts?",
+                    "speaking_key": "Does it have",
+                    "simplified_variants": [
+                        "Are there nuts in it?",
+                        "Any nuts in it?"
+                    ],
+                    "pronunciation_native": "Даз ит хэв натс?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Официант",
+                    "role_target": "Waiter",
+                    "text_native": "Нет, паста не содержит орехов.",
+                    "text_target": "No, the pasta doesn't contain nuts."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Пищевые аллергии",
+                        "text_target": "Food allergies"
+                    },
+                    {
+                        "text_native": "Любимые блюда",
+                        "text_target": "Favorite dishes"
+                    },
+                    {
+                        "text_native": "Возраст детей",
+                        "text_target": "The children's ages"
+                    }
+                ],
+                "text_native": "О чём спрашивает официант?",
+                "text_target": "What does the waiter ask about?",
+                "explanation_native": "Официант спрашивает, есть ли аллергии, о которых важно знать.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Официант",
+                    "role_target": "Waiter",
+                    "text_native": "Есть ли у вас аллергия, о которой мне нужно знать?",
+                    "text_target": "Do you have any allergies I should know about?"
+                },
+                {
+                    "filler": "a nut allergy",
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Родитель",
+                    "role_target": "Parent",
+                    "text_native": "У моей дочки аллергия на орехи.",
+                    "text_target": "My daughter has a nut allergy.",
+                    "speaking_key": "My daughter has",
+                    "simplified_variants": [
+                        "My daughter is allergic to nuts.",
+                        "She has a nut allergy."
+                    ],
+                    "pronunciation_native": "Май дотэр хэз э нат элэрджи."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "С рисом и салатом",
+                        "text_target": "Rice and salad"
+                    },
+                    {
+                        "text_native": "С картофелем и овощами",
+                        "text_target": "Potatoes and vegetables"
+                    },
+                    {
+                        "text_native": "С пастой и сыром",
+                        "text_target": "Pasta and cheese"
+                    }
+                ],
+                "text_native": "С чем подают рыбу?",
+                "text_target": "What side dishes come with the fish?",
+                "explanation_native": "Официант сказал, что рыбу подают с картофелем и овощами.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Официант",
+                    "role_target": "Waiter",
+                    "text_native": "Тогда рыба безопаснее. Она подаётся с картофелем и овощами.",
+                    "text_target": "Then the fish is safer. It comes with potatoes and vegetables."
+                },
+                {
+                    "filler": "the fish",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Родитель",
+                    "role_target": "Parent",
+                    "text_native": "Я бы взял рыбу.",
+                    "text_target": "I'd like the fish.",
+                    "speaking_key": "I'd like the",
+                    "simplified_variants": [
+                        "The fish, please.",
+                        "I'd like fish."
+                    ],
+                    "pronunciation_native": "Айд лайк зэ фиш."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Один напиток будет без сахара",
+                        "text_target": "One drink has no sugar"
+                    },
+                    {
+                        "text_native": "Оба напитка будут горячими",
+                        "text_target": "Both drinks are hot"
+                    },
+                    {
+                        "text_native": "Напитки подают с мороженым",
+                        "text_target": "The drinks come with ice cream"
+                    }
+                ],
+                "text_native": "Какую дополнительную деталь говорит официант?",
+                "text_target": "What special detail does the waiter add?",
+                "explanation_native": "Официант уточняет, что один лимонад будет без сахара.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "two lemonades",
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Родитель",
+                    "role_target": "Parent",
+                    "text_native": "Можно нам два лимонада?",
+                    "text_target": "Can we get two lemonades?",
+                    "speaking_key": "Can we get",
+                    "simplified_variants": [
+                        "Two lemonades, please.",
+                        "Can we have two lemonades?"
+                    ],
+                    "pronunciation_native": "Кэн уи гет ту лемонэйдс?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Официант",
+                    "role_target": "Waiter",
+                    "text_native": "Да, и один лимонад будет без сахара.",
+                    "text_target": "Yes, and one lemonade is sugar-free."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 8,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Рыба, салат и чай",
+                        "text_target": "Fish, salad, and tea"
+                    },
+                    {
+                        "text_native": "Курица, рыба, паста и два лимонада",
+                        "text_target": "Chicken, fish, pasta, and two lemonades"
+                    },
+                    {
+                        "text_native": "Суп, хлеб и вода",
+                        "text_target": "Soup, bread, and water"
+                    }
+                ],
+                "text_native": "Какие позиции повторяет официант?",
+                "text_target": "Which items does the waiter repeat?",
+                "explanation_native": "Официант повторяет весь заказ: курицу, рыбу, пасту и два лимонада.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Официант",
+                    "role_target": "Waiter",
+                    "text_native": "Итак, это курица, рыба, паста и два лимонада.",
+                    "text_target": "So that's chicken, fish, pasta, and two lemonades."
+                },
+                {
+                    "filler": "that's right",
+                    "speaker": "B",
+                    "phrase_id": "p7",
+                    "role_native": "Родитель",
+                    "role_target": "Parent",
+                    "text_native": "Да, всё верно.",
+                    "text_target": "Yes, that's right.",
+                    "speaking_key": "that's right",
+                    "simplified_variants": [
+                        "Yes, correct.",
+                        "Yes, that's correct."
+                    ],
+                    "pronunciation_native": "Йес, зэтс райт."
+                }
+            ],
+            "initiator": "A"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Что попросил родитель в начале?",
+                "options_native": [
+                    "Счёт",
+                    "Ещё несколько минут",
+                    "Детский стул"
+                ],
+                "explanation_native": "В начале родитель просит ещё немного времени, чтобы выбрать.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Какое блюдо официант назвал более безопасным для дочки?",
+                "options_native": [
+                    "Пасту",
+                    "Рыбу",
+                    "Курицу"
+                ],
+                "explanation_native": "После информации об аллергии официант предлагает рыбу как более безопасный вариант.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Что родитель заказал попить?",
+                "options_native": [
+                    "Два лимонада",
+                    "Три воды",
+                    "Один сок"
+                ],
+                "explanation_native": "Родитель просит два лимонада.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Что входит в пасту?",
+                "options_native": [
+                    "Томатный соус, сыр и базилик",
+                    "Сливки, грибы и лук",
+                    "Курица, рис и фасоль"
+                ],
+                "explanation_native": "Официант говорит, что в пасте томатный соус, сыр и базилик.",
+                "correct_option_index": 0
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "chunk",
+            "used_in": [
+                "p2"
+            ],
+            "term_target": "grilled chicken",
+            "image_prompt": "grilled chicken fillet on a white plate in a restaurant",
+            "definition_target": "chicken cooked on a grill",
+            "translation_native": "курица на гриле",
+            "pronunciation_native": "грилд чикен"
+        },
+        {
+            "id": "v2",
+            "kind": "chunk",
+            "used_in": [
+                "A3"
+            ],
+            "term_target": "tomato sauce",
+            "image_prompt": "bowl of tomato sauce beside a pasta dish on a restaurant table",
+            "definition_target": "a sauce made from tomatoes",
+            "translation_native": "томатный соус",
+            "pronunciation_native": "томэйто сос"
+        },
+        {
+            "id": "v3",
+            "kind": "word",
+            "used_in": [
+                "A3"
+            ],
+            "term_target": "basil",
+            "image_prompt": "fresh basil leaves next to a plate of pasta",
+            "definition_target": "a green herb used in cooking",
+            "translation_native": "базилик",
+            "pronunciation_native": "бэзэл"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "p4",
+                "A4",
+                "p5"
+            ],
+            "term_target": "nuts",
+            "image_prompt": "small bowl of mixed nuts on a restaurant table",
+            "definition_target": "hard dry fruits such as almonds or walnuts",
+            "translation_native": "орехи",
+            "pronunciation_native": "натс"
+        },
+        {
+            "id": "v5",
+            "kind": "word",
+            "used_in": [
+                "A5",
+                "p5"
+            ],
+            "term_target": "allergy",
+            "image_prompt": null,
+            "definition_target": "a health problem caused by certain foods or substances",
+            "translation_native": "аллергия",
+            "pronunciation_native": "элэрджи"
+        },
+        {
+            "id": "v6",
+            "kind": "word",
+            "used_in": [
+                "A6"
+            ],
+            "term_target": "safer",
+            "image_prompt": null,
+            "definition_target": "less likely to cause harm",
+            "translation_native": "безопаснее",
+            "pronunciation_native": "сэйфер"
+        },
+        {
+            "id": "v7",
+            "kind": "word",
+            "used_in": [
+                "A6"
+            ],
+            "term_target": "vegetables",
+            "image_prompt": "side dish of mixed vegetables next to fish in a restaurant",
+            "definition_target": "plants eaten as food, such as carrots or beans",
+            "translation_native": "овощи",
+            "pronunciation_native": "веджтэбэлз"
+        },
+        {
+            "id": "v8",
+            "kind": "chunk",
+            "used_in": [
+                "A7"
+            ],
+            "term_target": "sugar-free",
+            "image_prompt": "glass of lemonade with a small sugar-free note on a restaurant table",
+            "definition_target": "made without sugar",
+            "translation_native": "без сахара",
+            "pronunciation_native": "шугэр фри"
+        }
+    ],
+    "role_gender": "male",
+    "learner_role": {
+        "role_native": "Родитель",
+        "role_target": "Parent"
+    }
+}

@@ -148,6 +148,10 @@ it('holds a repeated exchange, repairs the whole exchange and stores it together
         // The repair is shown the part of the lesson it needs, never the whole answer — and as the server reads it: the
         // filler each line says, not what the model wrote in the field.
         ->and(array_keys($fits->repairRequests[0]->context))->toBe(['frames', 'words', 'exchanges'])
+        // Наряд GEN-3 §5: «для вида exchange в вызов уходят NEIGHBOURS: обмен до и обмен после (или none)» — exchange 8 is the last.
+        ->and($fits->repairRequests[0]->neighbours['before']['step'] ?? null)->toBe(7)
+        ->and($fits->repairRequests[0]->neighbours)->toHaveKey('after')
+        ->and($fits->repairRequests[0]->neighbours['after'] ?? null)->toBeNull()
         ->and($fits->repairRequests[0]->card['messages'][0]['filler'])->toBe('an X-ray')
         ->and(array_column(array_column($fits->repairRequests[0]->context['exchanges'], null, 'step')[4]['messages'], 'filler', 'speaker'))->toBe(['B' => 'an X-ray'])
         ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')

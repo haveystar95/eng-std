@@ -35,6 +35,7 @@ scoped to `admin/api/*` for the `ADMIN_ORIGIN` browser origin (config/cors.php).
 | `Learning` | Query `GetUserStats` | mastered/learned/due/streak (Mastery is the single source of «усвоено») |
 | `Learning` | Service `LadderStepResolver` | the ladder rung on the live progress screen — derived by `LearningLadder`, never re-expressed in SQL |
 | `Identity` | Port `UserTierWriter` / `UserTierReader` | the tier mutation goes through the tier's owner (same path as `practice:grant-premium`) |
+| `Generation` | Service `PlaygroundRuns` (start / find a run), Port `PlaygroundModelCatalog`; Service `DistractorDryRun`; Command handler `BuildTermEnrichmentsHandler` | the playground — a run is queued and polled (`POST /playground/generate` → 202, `GET /playground/runs/{id}`, наряд GEN-3), its providers; the distractor dry run; the content top-up |
 
 ## Ports (outbound interfaces)
 

@@ -1,0 +1,152 @@
+- 1. первому дню уходит пустая история вместо «none»: FAILED (caught)
+- 2. в Frames прошлого дня уходит только frame_target: FAILED (caught)
+- 3. дни истории в обратном порядке: FAILED (caught)
+- 4. день видит и дни после себя: FAILED (caught)
+- 5. сборка хранит роли, как их написала модель: FAILED (caught)
+- 6. собеседник получает роль ученика: FAILED (caught)
+- 7. повтор термина сверяется строкой как есть: FAILED (caught)
+- 8. известный каркас — предупреждение: FAILED (caught)
+- 9. совпавший родной каркас держит день: FAILED (caught)
+- 10. близнец ищется только по frame_target: FAILED (caught)
+- 11. один каркас в любых двух обменах считается «подряд»: FAILED (caught)
+- 12. пол сверяется с любым прошлым днём: FAILED (caught)
+- 13. аббревиатура только из подряд идущих заглавных: FAILED (caught)
+- 14. аббревиатура — предупреждение: FAILED (caught)
+- 15. NEIGHBOURS не уходят в вызов: FAILED (caught)
+- 16. блок NEIGHBOURS не пишется в сообщение: FAILED (caught)
+- 17. P2R получает диалоги прошлых дней целиком: FAILED (caught)
+- 18. починённое слово-аббревиатура принимается: FAILED (caught)
+- 19. повтор слова дня под другим id принимается: FAILED (caught)
+- 20. тема дня дописывается в системное сообщение: FAILED (caught)
+- 21. в схеме починки id карточки — enum адреса: FAILED (caught)
+- 22. адаптер не читает cached_tokens: FAILED (caught)
+- 23. строка журнала пишется после ответа: FAILED (caught)
+- 24. оборванный вызов повторяется (прежний when): FAILED (caught)
+- 25. таймаут урока по умолчанию 60 с: FAILED (caught)
+- 26. connect timeout 30 с: FAILED (caught)
+- 27. job урока считает только два вызова: FAILED (caught)
+- 28. needsLesson снова включает failed: FAILED (caught)
+- 29. следующий день датируется от закрытия: FAILED (caught)
+- 30. строгое «меньше»: FAILED (caught)
+- 31. план без даты всегда «догоняет»: FAILED (caught)
+- 32. в день события «догоняем» выключен: FAILED (caught)
+- 33. building и у дней дальше: FAILED (caught)
+- 34. проверка сборки при открытии снята: FAILED (caught)
+- 35. закрытие строит следующий день-сцену через голову повторения: FAILED (caught)
+- 36. сборка ставится мимо NextDayAccess: FAILED (caught)
+- 37. открытие дня снова ставит урок следующего: FAILED (caught)
+- 38. вызов песочницы делается в самом запросе: FAILED (caught)
+- 1. первому дню уходит пустая история вместо «none»: FAILED (caught)
+    Tests:    1 failed (3 assertions)
+    Failed asserting that 'TOPIC: Звонок агенту\n
+- 2. в Frames прошлого дня уходит только frame_target: FAILED (caught)
+    Tests:    1 failed (4 assertions) | Tests:    1 failed (5 assertions)
+    Failed asserting that two arrays are identical.
+- 3. дни истории в обратном порядке: FAILED (caught)
+    Tests:    1 failed (4 assertions)
+    Failed asserting that two arrays are identical.
+- 4. день видит и дни после себя: FAILED (caught)
+    Tests:    1 failed (2 assertions)
+    Failed asserting that two arrays are identical.
+- 5. сборка хранит роли, как их написала модель: FAILED (caught)
+    Tests:    1 failed (102 assertions)
+    Failed asserting that two arrays are identical.
+- 6. собеседник получает роль ученика: FAILED (caught)
+    Tests:    1 failed (4 assertions)
+    Failed asserting that two arrays are identical.
+- 7. повтор термина сверяется строкой как есть: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that two arrays are identical.
+- 8. известный каркас — предупреждение: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that two arrays are equal.
+- 9. совпавший родной каркас держит день: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that two arrays are equal.
+- 10. близнец ищется только по frame_target: FAILED (caught)
+    Tests:    1 failed (2 assertions)
+    Failed asserting that an array contains 'frame.twin@p5'.
+- 11. один каркас в любых двух обменах считается «подряд»: FAILED (caught)
+    Tests:    1 failed (3 assertions)
+    Failed asserting that two arrays are identical.
+- 12. пол сверяется с любым прошлым днём: FAILED (caught)
+    Tests:    1 failed (2 assertions)
+    
+- 13. аббревиатура только из подряд идущих заглавных: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that two arrays are identical.
+- 14. аббревиатура — предупреждение: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that two arrays are equal.
+- 15. NEIGHBOURS не уходят в вызов: FAILED (caught)
+    Tests:    1 failed (7 assertions)
+    Failed asserting that null is identical to 7.
+- 16. блок NEIGHBOURS не пишется в сообщение: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    
+- 17. P2R получает диалоги прошлых дней целиком: FAILED (caught)
+    Tests:    1 failed (5 assertions)
+    Failed asserting that 2 is identical to 1.
+- 18. починённое слово-аббревиатура принимается: FAILED (caught)
+    Tests:    1 failed, 3 passed (394 assertions)
+    Failed asserting that two strings are identical.
+- 19. повтор слова дня под другим id принимается: FAILED (caught)
+    Tests:    1 failed, 3 passed (393 assertions)
+    Failed asserting that two strings are identical.
+- 20. тема дня дописывается в системное сообщение: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that two strings are identical.
+- 21. в схеме починки id карточки — enum адреса: FAILED (caught)
+    Tests:    1 failed (15 assertions)
+    Failed asserting that two strings are identical.
+- 22. адаптер не читает cached_tokens: FAILED (caught)
+    Tests:    1 failed (8 assertions)
+    Failed asserting that two arrays are identical.
+- 23. строка журнала пишется после ответа: FAILED (caught)
+    Tests:    1 failed (2 assertions)
+    Failed asserting that null is identical to 'started'.
+- 24. оборванный вызов повторяется (прежний when): FAILED (caught)
+    Tests:    1 failed (3 assertions)
+    Failed asserting that actual size 4 matches expected size 1.
+- 25. таймаут урока по умолчанию 60 с: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that two arrays are identical.
+- 26. connect timeout 30 с: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that two arrays are identical.
+- 27. job урока считает только два вызова: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that 420 is identical to 960.
+- 28. needsLesson снова включает failed: FAILED (caught)
+    Tests:    1 failed (6 assertions)
+    Failed asserting that 2 is identical to 1.
+- 29. следующий день датируется от закрытия: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that two strings are identical.
+- 30. строгое «меньше»: FAILED (caught)
+    Tests:    1 failed (2 assertions)
+    Failed asserting that false is true.
+- 31. план без даты всегда «догоняет»: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that true is false.
+- 32. в день события «догоняем» выключен: FAILED (caught)
+    Tests:    1 failed (2 assertions)
+    Failed asserting that false is true.
+- 33. building и у дней дальше: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that true is false.
+- 34. проверка сборки при открытии снята: FAILED (caught)
+    Tests:    1 failed (3 assertions) | Tests:    1 failed (104 assertions)
+    Exception "App\Modules\Plan\Domain\Exception\PlanDayBuilding" not thrown. | Failed asserting that two strings are identical.
+- 35. закрытие строит следующий день-сцену через голову повторения: FAILED (caught)
+    Tests:    1 failed (186 assertions)
+    Failed asserting that two arrays are identical.
+- 36. сборка ставится мимо NextDayAccess: FAILED (caught)
+    Tests:    1 failed (95 assertions)
+    Failed asserting that two arrays are identical.
+- 37. открытие дня снова ставит урок следующего: FAILED (caught)
+    Tests:    1 failed (5 assertions)
+    Failed asserting that two arrays are identical.
+- 38. вызов песочницы делается в самом запросе: FAILED (caught)
+    Tests:    1 failed (2 assertions)
+    Failed asserting that an array is empty.

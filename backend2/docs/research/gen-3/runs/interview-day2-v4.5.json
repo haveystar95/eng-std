@@ -1,0 +1,944 @@
+{
+    "slug": "interview",
+    "version": "lesson_day.v4.5",
+    "code": "f02cbc64",
+    "status": "ready",
+    "fail_reason": null,
+    "cost_usd": "0.084960",
+    "latency_ms": 46670,
+    "attempts": 1,
+    "findings": [
+        {
+            "code": "vocab.used_in_wrong",
+            "address": "v3",
+            "detail": "«reprioritize» is not in the partner's line of exchange 3"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "address": "v7",
+            "detail": "«two-week sprint» is not in the partner's line of exchange 6"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "address": "v7",
+            "detail": "«two-week sprint» is not in the partner's line of exchange 7"
+        },
+        {
+            "code": "native.gendered_past",
+            "address": "B2",
+            "detail": "«Я руководил командой из шести человек.» says «руководил» about the learner while the learner's gender is unknown"
+        },
+        {
+            "code": "native.gendered_past",
+            "address": "B3",
+            "detail": "«Я пересматривал приоритеты в роадмапе.» says «пересматривал» about the learner while the learner's gender is unknown"
+        },
+        {
+            "code": "native.gendered_past",
+            "address": "B4",
+            "detail": "«Я давал еженедельные обновления.» says «давал» about the learner while the learner's gender is unknown"
+        },
+        {
+            "code": "native.gendered_past",
+            "address": "p2",
+            "detail": "«Я руководил ___.» says «руководил» about the learner while the learner's gender is unknown"
+        },
+        {
+            "code": "native.gendered_past",
+            "address": "p3",
+            "detail": "«Я пересматривал приоритеты в ___.» says «пересматривал» about the learner while the learner's gender is unknown"
+        },
+        {
+            "code": "native.gendered_past",
+            "address": "p4",
+            "detail": "«Я давал ___.» says «давал» about the learner while the learner's gender is unknown"
+        },
+        {
+            "code": "filler.native_seam",
+            "address": "p2.f3",
+            "detail": "«Я руководил двумя продуктовой командами.» («Я руководил ___.» with «двумя продуктовой командами») does not read as Russian, the seam judge says"
+        }
+    ],
+    "wall_s": 46.7,
+    "started_at": "2026-09-17T13:28:53+00:00",
+    "finished_at": "2026-09-17T13:29:40+00:00",
+    "calls": [
+        {
+            "call": "lesson",
+            "at": "2026-09-17T13:28:53+00:00",
+            "prompt_version": "lesson_day.v4.5",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 7496,
+            "tokens_out": 4270,
+            "cost_usd": "0.082790",
+            "latency_ms": 44962,
+            "asked": {
+                "violations": []
+            },
+            "payload": {
+                "topic": {
+                    "title_target": "Interview with a Team Lead",
+                    "title_native": "Интервью с тимлидом",
+                    "description_target": "Talk about project experience, team leadership, delivery, risks, and team workflow.",
+                    "description_native": "Разговор об опыте в проектах, управлении командой, сроках, рисках и процессе работы команды."
+                },
+                "learner_role": {
+                    "role_target": "Job candidate",
+                    "role_native": "Кандидат"
+                },
+                "role_gender": "male",
+                "dialogue": [
+                    {
+                        "step": 1,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Team lead",
+                                "role_native": "Тимлид",
+                                "text_target": "Could you tell me about your experience with project delivery?",
+                                "text_native": "Расскажите, пожалуйста, о вашем опыте с доставкой проектов."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Job candidate",
+                                "role_native": "Кандидат",
+                                "phrase_id": "p1",
+                                "filler": "five years",
+                                "text_target": "I have five years of experience.",
+                                "text_native": "У меня пять лет опыта.",
+                                "pronunciation_native": "Ай хэв файв йирз ов икспириэнс.",
+                                "speaking_key": "have five years of",
+                                "simplified_variants": [
+                                    "I have five years' experience.",
+                                    "My experience is five years."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the team lead ask about?",
+                            "text_native": "О чём спрашивает тимлид?",
+                            "options": [
+                                {
+                                    "text_target": "Your background in delivering projects",
+                                    "text_native": "О вашем опыте в доведении проектов до результата"
+                                },
+                                {
+                                    "text_target": "Your preferred development language",
+                                    "text_native": "О вашем любимом языке разработки"
+                                },
+                                {
+                                    "text_target": "Your education after university",
+                                    "text_native": "О вашем образовании после университета"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Тимлид просит рассказать именно об опыте доведения проектов до результата."
+                        }
+                    },
+                    {
+                        "step": 2,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Team lead",
+                                "role_native": "Тимлид",
+                                "text_target": "What size team did you lead in your last project?",
+                                "text_native": "Командой какого размера вы руководили в последнем проекте?"
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Job candidate",
+                                "role_native": "Кандидат",
+                                "phrase_id": "p2",
+                                "filler": "a team of six",
+                                "text_target": "I led a team of six.",
+                                "text_native": "Я руководил командой из шести человек.",
+                                "pronunciation_native": "Ай лед э тим ов сикс.",
+                                "speaking_key": "led a team of",
+                                "simplified_variants": [
+                                    "I managed six people.",
+                                    "The team had six people."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the team lead want to know?",
+                            "text_native": "Что хочет узнать тимлид?",
+                            "options": [
+                                {
+                                    "text_target": "How many people were on your team",
+                                    "text_native": "Сколько человек было в вашей команде"
+                                },
+                                {
+                                    "text_target": "How long the project lasted",
+                                    "text_native": "Сколько длился проект"
+                                },
+                                {
+                                    "text_target": "Which office the team worked from",
+                                    "text_native": "Из какого офиса работала команда"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Тимлид спрашивает именно о размере команды."
+                        }
+                    },
+                    {
+                        "step": 3,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Team lead",
+                                "role_native": "Тимлид",
+                                "text_target": "How did you keep delivery on track when priorities changed?",
+                                "text_native": "Как вы удерживали сроки, когда приоритеты менялись?"
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Job candidate",
+                                "role_native": "Кандидат",
+                                "phrase_id": "p3",
+                                "filler": "the roadmap",
+                                "text_target": "I reprioritized the roadmap.",
+                                "text_native": "Я пересматривал приоритеты в роадмапе.",
+                                "pronunciation_native": "Ай рипрайоритайзд зэ роудмэп.",
+                                "speaking_key": "reprioritized the",
+                                "simplified_variants": [
+                                    "I changed the plan.",
+                                    "I reset priorities."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What situation does the team lead mention?",
+                            "text_native": "Какую ситуацию упоминает тимлид?",
+                            "options": [
+                                {
+                                    "text_target": "Goals changed during the project",
+                                    "text_native": "Цели менялись по ходу проекта"
+                                },
+                                {
+                                    "text_target": "The budget was cut in half",
+                                    "text_native": "Бюджет сократили вдвое"
+                                },
+                                {
+                                    "text_target": "Two developers left the company",
+                                    "text_native": "Два разработчика ушли из компании"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Вопрос про работу в ситуации, когда приоритеты менялись."
+                        }
+                    },
+                    {
+                        "step": 4,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Team lead",
+                                "role_native": "Тимлид",
+                                "text_target": "How did you communicate those changes to the team?",
+                                "text_native": "Как вы доносили эти изменения до команды?"
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Job candidate",
+                                "role_native": "Кандидат",
+                                "phrase_id": "p4",
+                                "filler": "weekly updates",
+                                "text_target": "I shared weekly updates.",
+                                "text_native": "Я давал еженедельные обновления.",
+                                "pronunciation_native": "Ай шерд уикли апдейтс.",
+                                "speaking_key": "shared weekly",
+                                "simplified_variants": [
+                                    "I sent weekly updates.",
+                                    "I gave regular updates."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What is the team lead asking about?",
+                            "text_native": "О чём спрашивает тимлид?",
+                            "options": [
+                                {
+                                    "text_target": "How you informed the team",
+                                    "text_native": "Как вы информировали команду"
+                                },
+                                {
+                                    "text_target": "How you estimated project costs",
+                                    "text_native": "Как вы оценивали стоимость проекта"
+                                },
+                                {
+                                    "text_target": "How you hired new people",
+                                    "text_native": "Как вы нанимали новых людей"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Тимлид спрашивает про способ коммуникации изменений команде."
+                        }
+                    },
+                    {
+                        "step": 5,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Team lead",
+                                "role_native": "Тимлид",
+                                "text_target": "Tell me about a risk you noticed early and how you handled it.",
+                                "text_native": "Расскажите о риске, который вы заметили заранее, и как вы с ним справились."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Job candidate",
+                                "role_native": "Кандидат",
+                                "phrase_id": "p5",
+                                "filler": "a delay risk",
+                                "text_target": "I flagged a delay risk.",
+                                "text_native": "Я заранее отметил риск задержки.",
+                                "pronunciation_native": "Ай флэгд э дилэй риск.",
+                                "speaking_key": "flagged a",
+                                "simplified_variants": [
+                                    "I spotted a delay risk.",
+                                    "I raised a risk early."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What example does the team lead ask for?",
+                            "text_native": "Какой пример просит тимлид?",
+                            "options": [
+                                {
+                                    "text_target": "A problem you identified in advance",
+                                    "text_native": "Проблему, которую вы заметили заранее"
+                                },
+                                {
+                                    "text_target": "A client you worked with longest",
+                                    "text_native": "Клиента, с которым вы работали дольше всего"
+                                },
+                                {
+                                    "text_target": "A tool your team stopped using",
+                                    "text_native": "Инструмент, которым команда перестала пользоваться"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Он просит пример риска, замеченного заранее, и ваших действий."
+                        }
+                    },
+                    {
+                        "step": 6,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Job candidate",
+                                "role_native": "Кандидат",
+                                "phrase_id": "p6",
+                                "filler": "your workflow",
+                                "text_target": "Could you describe your workflow?",
+                                "text_native": "Можете описать ваш рабочий процесс?",
+                                "pronunciation_native": "Куд ю дискрайб ёр уоркфлоу?",
+                                "speaking_key": "Could you describe",
+                                "simplified_variants": [
+                                    "Can you describe your workflow?",
+                                    "How does your workflow look?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Team lead",
+                                "role_native": "Тимлид",
+                                "text_target": "We plan in two-week sprints and review progress every Friday.",
+                                "text_native": "Мы планируем двухнедельными спринтами и проверяем прогресс каждую пятницу."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "How often does the team review progress?",
+                            "text_native": "Как часто команда проверяет прогресс?",
+                            "options": [
+                                {
+                                    "text_target": "At the end of each month",
+                                    "text_native": "В конце каждого месяца"
+                                },
+                                {
+                                    "text_target": "Once every Friday",
+                                    "text_native": "Каждую пятницу"
+                                },
+                                {
+                                    "text_target": "Twice a day",
+                                    "text_native": "Два раза в день"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Тимлид сказал, что прогресс проверяют каждую пятницу."
+                        }
+                    },
+                    {
+                        "step": 7,
+                        "kind": "rescue",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Job candidate",
+                                "role_native": "Кандидат",
+                                "phrase_id": null,
+                                "filler": null,
+                                "text_target": "Could you say that more slowly, please.",
+                                "text_native": "Можете сказать это помедленнее, пожалуйста.",
+                                "pronunciation_native": "Куд ю сэй зэт мор слоули, плиз.",
+                                "speaking_key": "say that more slowly",
+                                "simplified_variants": [
+                                    "Please say that slower.",
+                                    "Could you repeat that slowly?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Team lead",
+                                "role_native": "Тимлид",
+                                "text_target": "We use two-week sprints and review progress on Fridays.",
+                                "text_native": "Мы работаем двухнедельными спринтами и проверяем прогресс по пятницам."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What schedule does the team use?",
+                            "text_native": "Какой график использует команда?",
+                            "options": [
+                                {
+                                    "text_target": "One-week cycles with daily reviews",
+                                    "text_native": "Недельные циклы с ежедневными проверками"
+                                },
+                                {
+                                    "text_target": "Two-week cycles with Friday reviews",
+                                    "text_native": "Двухнедельные циклы с проверками по пятницам"
+                                },
+                                {
+                                    "text_target": "Monthly planning with one final demo",
+                                    "text_native": "Ежемесячное планирование с одной финальной демонстрацией"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "В повторе тимлид сказал про двухнедельные спринты и проверки по пятницам."
+                        }
+                    },
+                    {
+                        "step": 8,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Job candidate",
+                                "role_native": "Кандидат",
+                                "phrase_id": "p7",
+                                "filler": "success",
+                                "text_target": "What does success look like?",
+                                "text_native": "Как у вас выглядит успех?",
+                                "pronunciation_native": "Уот даз саксэс лук лайк?",
+                                "speaking_key": "does success look",
+                                "simplified_variants": [
+                                    "How do you measure success?",
+                                    "What counts as success?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Team lead",
+                                "role_native": "Тимлид",
+                                "text_target": "Success means clear priorities, predictable delivery, and open communication across the team.",
+                                "text_native": "Успех у нас — это ясные приоритеты, предсказуемая поставка и открытая коммуникация в команде."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Which point is part of success here?",
+                            "text_native": "Что здесь считается частью успеха?",
+                            "options": [
+                                {
+                                    "text_target": "Frequent overtime from everyone",
+                                    "text_native": "Частые переработки у всей команды"
+                                },
+                                {
+                                    "text_target": "Clear goals for the team",
+                                    "text_native": "Понятные цели для команды"
+                                },
+                                {
+                                    "text_target": "Changing tools every quarter",
+                                    "text_native": "Смена инструментов каждый квартал"
+                                }
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Тимлид называет ясные приоритеты частью успеха команды."
+                        }
+                    }
+                ],
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "answer",
+                        "frame_target": "I have ___ of experience.",
+                        "frame_native": "У меня ___ опыта.",
+                        "pronunciation_native": "Ай хэв ___ ов икспириэнс.",
+                        "slot": {
+                            "hint_native": "срок опыта",
+                            "fillers": [
+                                {
+                                    "target": "five years",
+                                    "native": "пять лет",
+                                    "pronunciation_native": "файв йирз",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "three years",
+                                    "native": "три года",
+                                    "pronunciation_native": "сри йирз",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "seven years",
+                                    "native": "семь лет",
+                                    "pronunciation_native": "сэвэн йирз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "frame_target": "I led ___.",
+                        "frame_native": "Я руководил ___.",
+                        "pronunciation_native": "Ай лед ___.",
+                        "slot": {
+                            "hint_native": "команда или группа",
+                            "fillers": [
+                                {
+                                    "target": "a team of six",
+                                    "native": "командой из шести человек",
+                                    "pronunciation_native": "э тим ов сикс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a cross-functional team",
+                                    "native": "кросс-функциональной командой",
+                                    "pronunciation_native": "э крос-фанкшэнэл тим",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "two product teams",
+                                    "native": "двумя продуктовой командами",
+                                    "pronunciation_native": "ту продакт тимз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "answer",
+                        "frame_target": "I reprioritized ___.",
+                        "frame_native": "Я пересматривал приоритеты в ___.",
+                        "pronunciation_native": "Ай рипрайоритайзд ___.",
+                        "slot": {
+                            "hint_native": "что вы перестраивали",
+                            "fillers": [
+                                {
+                                    "target": "the roadmap",
+                                    "native": "роадмапе",
+                                    "pronunciation_native": "зэ роудмэп",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the backlog",
+                                    "native": "бэклоге",
+                                    "pronunciation_native": "зэ бэклог",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the sprint plan",
+                                    "native": "плане спринта",
+                                    "pronunciation_native": "зэ спринт плэн",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "answer",
+                        "frame_target": "I shared ___.",
+                        "frame_native": "Я давал ___.",
+                        "pronunciation_native": "Ай шерд ___.",
+                        "slot": {
+                            "hint_native": "формат обновлений",
+                            "fillers": [
+                                {
+                                    "target": "weekly updates",
+                                    "native": "еженедельные обновления",
+                                    "pronunciation_native": "уикли апдейтс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "status notes",
+                                    "native": "статус-заметки",
+                                    "pronunciation_native": "стейтэс ноутс",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "short summaries",
+                                    "native": "короткие сводки",
+                                    "pronunciation_native": "шорт самэриз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "frame_target": "I flagged ___.",
+                        "frame_native": "Я заранее отметил ___.",
+                        "pronunciation_native": "Ай флэгд ___.",
+                        "slot": {
+                            "hint_native": "какой риск или проблему",
+                            "fillers": [
+                                {
+                                    "target": "a delay risk",
+                                    "native": "риск задержки",
+                                    "pronunciation_native": "э дилэй риск",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a budget issue",
+                                    "native": "проблему с бюджетом",
+                                    "pronunciation_native": "э баджит ишью",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "a staffing gap",
+                                    "native": "нехватку людей",
+                                    "pronunciation_native": "э стафинг гэп",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "frame_target": "Could you describe ___?",
+                        "frame_native": "Можете описать ___?",
+                        "pronunciation_native": "Куд ю дискрайб ___?",
+                        "slot": {
+                            "hint_native": "что вы хотите понять о команде",
+                            "fillers": [
+                                {
+                                    "target": "your workflow",
+                                    "native": "ваш рабочий процесс",
+                                    "pronunciation_native": "ёр уоркфлоу",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "your tools",
+                                    "native": "ваши инструменты",
+                                    "pronunciation_native": "ёр тулз",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "your planning cycle",
+                                    "native": "ваш цикл планирования",
+                                    "pronunciation_native": "ёр плэнинг сайкл",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "frame_target": "What does ___ look like?",
+                        "frame_native": "Как у вас выглядит ___?",
+                        "pronunciation_native": "Уот даз ___ лук лайк?",
+                        "slot": {
+                            "hint_native": "критерий или ожидание",
+                            "fillers": [
+                                {
+                                    "target": "success",
+                                    "native": "успех",
+                                    "pronunciation_native": "саксэс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "ownership",
+                                    "native": "ответственность за результат",
+                                    "pronunciation_native": "оунэршип",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "good delivery",
+                                    "native": "хорошая поставка",
+                                    "pronunciation_native": "гуд деливэри",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "listening": {
+                    "questions": [
+                        {
+                            "text_native": "Сколько опыта у кандидата?",
+                            "options_native": [
+                                "Три года",
+                                "Пять лет",
+                                "Семь лет"
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Кандидат сказал, что у него пять лет опыта."
+                        },
+                        {
+                            "text_native": "Какого размера командой руководил кандидат?",
+                            "options_native": [
+                                "Из четырёх человек",
+                                "Из шести человек",
+                                "Из десяти человек"
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Кандидат сказал, что руководил командой из шести человек."
+                        },
+                        {
+                            "text_native": "Как команда тимлида проверяет прогресс?",
+                            "options_native": [
+                                "Каждую пятницу",
+                                "Раз в месяц",
+                                "После каждого релиза"
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Тимлид сказал, что прогресс проверяют каждую пятницу."
+                        },
+                        {
+                            "text_native": "Что тимлид считает признаком успеха?",
+                            "options_native": [
+                                "Постоянные переработки",
+                                "Открытую коммуникацию",
+                                "Редкие встречи"
+                            ],
+                            "correct_option_index": 1,
+                            "explanation_native": "Тимлид назвал открытое общение одной из частей успеха."
+                        }
+                    ]
+                },
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "project delivery",
+                        "translation_native": "доведение проекта до результата",
+                        "pronunciation_native": "проджект деливэри",
+                        "definition_target": "the process of completing and releasing a project successfully",
+                        "kind": "chunk",
+                        "image_prompt": "project manager reviewing a release plan on a laptop with a team board nearby",
+                        "used_in": [
+                            "A1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "team of six",
+                        "translation_native": "команда из шести человек",
+                        "pronunciation_native": "тим ов сикс",
+                        "definition_target": "a group with six team members",
+                        "kind": "chunk",
+                        "image_prompt": "six office coworkers standing together near a planning board",
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "reprioritize",
+                        "translation_native": "пересматривать приоритеты",
+                        "pronunciation_native": "рипрайоритайз",
+                        "definition_target": "to change the order of importance of tasks or goals",
+                        "kind": "word",
+                        "image_prompt": "project board with task cards being moved into a new order",
+                        "used_in": [
+                            "p3",
+                            "A3"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "roadmap",
+                        "translation_native": "роадмап",
+                        "pronunciation_native": "роудмэп",
+                        "definition_target": "a high-level plan showing project goals and timing",
+                        "kind": "word",
+                        "image_prompt": "product roadmap on a screen with timeline and milestones",
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "weekly updates",
+                        "translation_native": "еженедельные обновления",
+                        "pronunciation_native": "уикли апдейтс",
+                        "definition_target": "regular information shared once a week about progress",
+                        "kind": "chunk",
+                        "image_prompt": "manager sending a weekly project update from a laptop",
+                        "used_in": [
+                            "p4"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "delay risk",
+                        "translation_native": "риск задержки",
+                        "pronunciation_native": "дилей риск",
+                        "definition_target": "a possibility that work will finish later than planned",
+                        "kind": "chunk",
+                        "image_prompt": "project timeline with a warning mark near a delayed milestone",
+                        "used_in": [
+                            "p5"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "two-week sprint",
+                        "translation_native": "двухнедельный спринт",
+                        "pronunciation_native": "ту-уик спринт",
+                        "definition_target": "a work cycle that lasts two weeks",
+                        "kind": "chunk",
+                        "image_prompt": "scrum board in an office with a two-week sprint schedule",
+                        "used_in": [
+                            "A6",
+                            "A7"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "open communication",
+                        "translation_native": "открытая коммуникация",
+                        "pronunciation_native": "оупэн комьюникейшэн",
+                        "definition_target": "clear and honest sharing of information in a team",
+                        "kind": "chunk",
+                        "image_prompt": "team members talking around a table during a project meeting",
+                        "used_in": [
+                            "A8"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "call": "judge",
+            "at": "2026-09-17T13:29:38+00:00",
+            "prompt_version": "lesson_seam_judge.v1.1",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "tokens_in": 1430,
+            "tokens_out": 244,
+            "cost_usd": "0.002170",
+            "latency_ms": 1708,
+            "asked": {
+                "items": 21
+            },
+            "payload": {
+                "verdicts": [
+                    {
+                        "id": "p1.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f3",
+                        "reads": false
+                    },
+                    {
+                        "id": "p3.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f3",
+                        "reads": true
+                    }
+                ]
+            }
+        }
+    ]
+}

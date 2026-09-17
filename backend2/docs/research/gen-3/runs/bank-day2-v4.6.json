@@ -1,0 +1,974 @@
+{
+    "slug": "bank",
+    "version": "lesson_day.v4.6",
+    "earlier_days": 1,
+    "roles": {
+        "learnerTarget": "Student",
+        "learnerNative": "Студент",
+        "partnerTarget": "Bank clerk",
+        "partnerNative": "Сотрудник банка"
+    },
+    "status": "ready",
+    "fail_reason": null,
+    "cost_usd": "0.083281",
+    "latency_ms": 43402,
+    "attempts": 1,
+    "findings": [
+        {
+            "code": "frame.unresolved_pronoun",
+            "address": "p2",
+            "detail": "«Does it come ___?» leans on «it», and nothing in the frame is what it stands for"
+        },
+        {
+            "code": "learner.restates_partner",
+            "address": "B8",
+            "detail": "«The limit is three hundred euros.» repeats 6 of 9 words of the partner's «The daily cash withdrawal limit is three hundred euros.» (the, limit, is, three, hundred, euros)"
+        },
+        {
+            "code": "rescue.new_fact",
+            "address": "A6",
+            "detail": "the repeat says «card», «enter», which exchange 5 did not"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x2.check",
+            "detail": "the right option «To your address» repeats «your address» of the partner's line"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "address": "v8",
+            "detail": "«withdrawal limit» is not in frame p7 or its fillers"
+        },
+        {
+            "code": "vocab.nested",
+            "address": "v4",
+            "detail": "«activate» is inside «activation code» (v5)"
+        },
+        {
+            "code": "filler.native_seam",
+            "address": "p5.f1",
+            "detail": "«Я могу оплатить в магазине.» («Я могу оплатить ___.» with «в магазине») does not read as Russian, the seam judge says"
+        },
+        {
+            "code": "filler.native_seam",
+            "address": "p5.f2",
+            "detail": "«Я могу оплатить в столовой.» («Я могу оплатить ___.» with «в столовой») does not read as Russian, the seam judge says"
+        }
+    ],
+    "wall_s": 43.5,
+    "started_at": "2026-09-17T13:25:30+00:00",
+    "finished_at": "2026-09-17T13:26:13+00:00",
+    "calls": [
+        {
+            "call": "lesson",
+            "at": "2026-09-17T13:25:30+00:00",
+            "prompt_version": "lesson_day.v4.6",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 8611,
+            "cached_tokens": 7936,
+            "tokens_out": 3849,
+            "cost_usd": "0.061407",
+            "latency_ms": 38601,
+            "asked": {
+                "violations": [],
+                "earlier_days": 1,
+                "roles": {
+                    "learnerTarget": "Student",
+                    "learnerNative": "Студент",
+                    "partnerTarget": "Bank clerk",
+                    "partnerNative": "Сотрудник банка"
+                }
+            },
+            "payload": {
+                "topic": {
+                    "title_target": "Getting your bank card",
+                    "title_native": "Получение банковской карты",
+                    "description_target": "Ask when the card arrives, how to activate it, and how to use the app and ATMs.",
+                    "description_native": "Спросите, когда придёт карта, как её активировать и как пользоваться приложением и банкоматами."
+                },
+                "learner_role": {
+                    "role_target": "Student",
+                    "role_native": "Студент"
+                },
+                "role_gender": "female",
+                "dialogue": [
+                    {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Student",
+                                "role_native": "Студент",
+                                "phrase_id": "p1",
+                                "filler": "my card",
+                                "text_target": "When will my card arrive?",
+                                "text_native": "Когда придёт моя карта?",
+                                "pronunciation_native": "Уэн вил май кард эрайв?",
+                                "speaking_key": "When will",
+                                "simplified_variants": [
+                                    "When does my card come?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудник банка",
+                                "text_target": "It usually arrives in five to seven business days.",
+                                "text_native": "Обычно она приходит через пять-семь рабочих дней."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "How long does the clerk say delivery usually takes?",
+                            "text_native": "Сколько обычно занимает доставка, по словам сотрудницы?",
+                            "options": [
+                                {
+                                    "text_target": "About one working week",
+                                    "text_native": "Около одной рабочей недели"
+                                },
+                                {
+                                    "text_target": "The same afternoon",
+                                    "text_native": "В тот же день после обеда"
+                                },
+                                {
+                                    "text_target": "Around two full weeks",
+                                    "text_native": "Примерно две полные недели"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала, что карта обычно приходит через пять-семь рабочих дней."
+                        }
+                    },
+                    {
+                        "step": 2,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Student",
+                                "role_native": "Студент",
+                                "phrase_id": "p2",
+                                "filler": "by mail",
+                                "text_target": "Does it come by mail?",
+                                "text_native": "Она приходит по почте?",
+                                "pronunciation_native": "Даз ит кам бай мэйл?",
+                                "speaking_key": "Does it come",
+                                "simplified_variants": [
+                                    "Is it sent by mail?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудник банка",
+                                "text_target": "Yes, we send it to your address by mail.",
+                                "text_native": "Да, мы отправляем её по почте на ваш адрес."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Where does the clerk say the card is sent?",
+                            "text_native": "Куда, по словам сотрудницы, отправляют карту?",
+                            "options": [
+                                {
+                                    "text_target": "To your address",
+                                    "text_native": "На ваш адрес"
+                                },
+                                {
+                                    "text_target": "To your university office",
+                                    "text_native": "В офис вашего университета"
+                                },
+                                {
+                                    "text_target": "To this branch for pickup",
+                                    "text_native": "В это отделение для получения"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала, что карту отправляют по почте на адрес клиента."
+                        }
+                    },
+                    {
+                        "step": 3,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудник банка",
+                                "text_target": "You need to activate it in the mobile app.",
+                                "text_native": "Вам нужно активировать её в мобильном приложении."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Student",
+                                "role_native": "Студент",
+                                "phrase_id": "p3",
+                                "filler": "the mobile app",
+                                "text_target": "I can use the mobile app.",
+                                "text_native": "Я могу пользоваться мобильным приложением.",
+                                "pronunciation_native": "Ай кэн юз зэ моубайл эп.",
+                                "speaking_key": "can use the",
+                                "simplified_variants": [
+                                    "I can use the app."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "How does the clerk say you activate the card?",
+                            "text_native": "Как, по словам сотрудницы, активировать карту?",
+                            "options": [
+                                {
+                                    "text_target": "Through the bank's app",
+                                    "text_native": "Через банковское приложение"
+                                },
+                                {
+                                    "text_target": "By calling customer support",
+                                    "text_native": "Позвонив в поддержку"
+                                },
+                                {
+                                    "text_target": "At the front desk only",
+                                    "text_native": "Только у стойки в отделении"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала, что карту нужно активировать в мобильном приложении."
+                        }
+                    },
+                    {
+                        "step": 4,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Student",
+                                "role_native": "Студент",
+                                "phrase_id": "p4",
+                                "filler": "my PIN",
+                                "text_target": "How do I get my PIN?",
+                                "text_native": "Как мне получить ПИН-код?",
+                                "pronunciation_native": "Хау ду ай гет май пин?",
+                                "speaking_key": "How do I get",
+                                "simplified_variants": [
+                                    "Where do I get my PIN?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудник банка",
+                                "text_target": "You choose it in the app after activation.",
+                                "text_native": "Вы выбираете его в приложении после активации."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "When does the clerk say you choose the PIN?",
+                            "text_native": "Когда, по словам сотрудницы, выбирают ПИН-код?",
+                            "options": [
+                                {
+                                    "text_target": "After the card is activated",
+                                    "text_native": "После активации карты"
+                                },
+                                {
+                                    "text_target": "Before the card is mailed",
+                                    "text_native": "До отправки карты по почте"
+                                },
+                                {
+                                    "text_target": "At the first cash withdrawal",
+                                    "text_native": "При первом снятии наличных"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала, что ПИН-код выбирают в приложении после активации."
+                        }
+                    },
+                    {
+                        "step": 5,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудник банка",
+                                "text_target": "For the first use, pay once in a shop with the PIN.",
+                                "text_native": "Для первого использования один раз оплатите покупку в магазине с ПИН-кодом."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Student",
+                                "role_native": "Студент",
+                                "phrase_id": "p5",
+                                "filler": "in a shop",
+                                "text_target": "I can pay in a shop.",
+                                "text_native": "Я могу оплатить в магазине.",
+                                "pronunciation_native": "Ай кэн пэй ин э шоп.",
+                                "speaking_key": "can pay in",
+                                "simplified_variants": [
+                                    "I can pay at a shop."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What first use does the clerk recommend?",
+                            "text_native": "Какое первое действие с картой рекомендует сотрудница?",
+                            "options": [
+                                {
+                                    "text_target": "Make one store payment with the code",
+                                    "text_native": "Один раз оплатить покупку в магазине с кодом"
+                                },
+                                {
+                                    "text_target": "Transfer money to another account",
+                                    "text_native": "Перевести деньги на другой счёт"
+                                },
+                                {
+                                    "text_target": "Use contactless payment three times",
+                                    "text_native": "Три раза оплатить бесконтактно"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала, что для первого использования нужно один раз оплатить покупку в магазине с ПИН-кодом."
+                        }
+                    },
+                    {
+                        "step": 6,
+                        "kind": "rescue",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Student",
+                                "role_native": "Студент",
+                                "phrase_id": null,
+                                "filler": null,
+                                "text_target": "Could you repeat that more slowly?",
+                                "text_native": "Можете повторить это помедленнее?",
+                                "pronunciation_native": "Куд ю рипит зэт мор слоули?",
+                                "speaking_key": "repeat that",
+                                "simplified_variants": [
+                                    "Please say that again.",
+                                    "Could you say it slowly?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудник банка",
+                                "text_target": "Use the card once in a shop, and enter your PIN.",
+                                "text_native": "Один раз используйте карту в магазине и введите ПИН-код."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Where does the clerk say to use the card first?",
+                            "text_native": "Где, по словам сотрудницы, сначала нужно использовать карту?",
+                            "options": [
+                                {
+                                    "text_target": "At a store checkout",
+                                    "text_native": "На кассе в магазине"
+                                },
+                                {
+                                    "text_target": "At an ATM outside",
+                                    "text_native": "У банкомата на улице"
+                                },
+                                {
+                                    "text_target": "In the mobile app",
+                                    "text_native": "В мобильном приложении"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "В повторе сотрудница сказала, что сначала нужно использовать карту в магазине."
+                        }
+                    },
+                    {
+                        "step": 7,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Student",
+                                "role_native": "Студент",
+                                "phrase_id": "p6",
+                                "filler": "cash",
+                                "text_target": "Can I withdraw cash?",
+                                "text_native": "Я могу снимать наличные?",
+                                "pronunciation_native": "Кэн ай уиздро кэш?",
+                                "speaking_key": "Can I withdraw",
+                                "simplified_variants": [
+                                    "Can I get cash?"
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудник банка",
+                                "text_target": "Yes, you can use any ATM with the Visa sign.",
+                                "text_native": "Да, вы можете использовать любой банкомат со знаком Visa."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "Which ATMs does the clerk say you can use?",
+                            "text_native": "Какими банкоматами, по словам сотрудницы, можно пользоваться?",
+                            "options": [
+                                {
+                                    "text_target": "Machines showing the Visa logo",
+                                    "text_native": "Банкоматами со знаком Visa"
+                                },
+                                {
+                                    "text_target": "Only this bank's indoor machines",
+                                    "text_native": "Только банкоматами этого банка в помещении"
+                                },
+                                {
+                                    "text_target": "Only airport ATMs",
+                                    "text_native": "Только банкоматами в аэропорту"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала, что можно пользоваться любым банкоматом со знаком Visa."
+                        }
+                    },
+                    {
+                        "step": 8,
+                        "kind": "answer",
+                        "initiator": "A",
+                        "messages": [
+                            {
+                                "speaker": "A",
+                                "role_target": "Bank clerk",
+                                "role_native": "Сотрудник банка",
+                                "text_target": "The daily cash withdrawal limit is three hundred euros.",
+                                "text_native": "Дневной лимит снятия наличных — триста евро."
+                            },
+                            {
+                                "speaker": "B",
+                                "role_target": "Student",
+                                "role_native": "Студент",
+                                "phrase_id": "p7",
+                                "filler": "three hundred euros",
+                                "text_target": "The limit is three hundred euros.",
+                                "text_native": "Лимит — триста евро.",
+                                "pronunciation_native": "Зэ лимит из сри хандрид юэроуз.",
+                                "speaking_key": "The limit is",
+                                "simplified_variants": [
+                                    "It is three hundred euros."
+                                ]
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What daily amount does the clerk mention?",
+                            "text_native": "Какую сумму в день назвала сотрудница?",
+                            "options": [
+                                {
+                                    "text_target": "Three hundred euros",
+                                    "text_native": "Триста евро"
+                                },
+                                {
+                                    "text_target": "One hundred euros",
+                                    "text_native": "Сто евро"
+                                },
+                                {
+                                    "text_target": "Five hundred euros",
+                                    "text_native": "Пятьсот евро"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала, что дневной лимит снятия наличных составляет триста евро."
+                        }
+                    }
+                ],
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "frame_target": "When will ___ arrive?",
+                        "frame_native": "Когда придёт ___?",
+                        "pronunciation_native": "Уэн вил ___ эрайв?",
+                        "slot": {
+                            "hint_native": "что придёт",
+                            "fillers": [
+                                {
+                                    "target": "my card",
+                                    "native": "моя карта",
+                                    "pronunciation_native": "май кард",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the PIN letter",
+                                    "native": "письмо с ПИН-кодом",
+                                    "pronunciation_native": "зэ пин летэр",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "ask",
+                        "frame_target": "Does it come ___?",
+                        "frame_native": "Она приходит ___?",
+                        "pronunciation_native": "Даз ит кам ___?",
+                        "slot": {
+                            "hint_native": "каким способом",
+                            "fillers": [
+                                {
+                                    "target": "by mail",
+                                    "native": "по почте",
+                                    "pronunciation_native": "бай мэйл",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "by courier",
+                                    "native": "курьером",
+                                    "pronunciation_native": "бай куриэр",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "answer",
+                        "frame_target": "I can use ___.",
+                        "frame_native": "Я могу пользоваться ___.",
+                        "pronunciation_native": "Ай кэн юз ___.",
+                        "slot": {
+                            "hint_native": "чем можно пользоваться",
+                            "fillers": [
+                                {
+                                    "target": "the mobile app",
+                                    "native": "мобильным приложением",
+                                    "pronunciation_native": "зэ моубайл эп",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "online banking",
+                                    "native": "интернет-банком",
+                                    "pronunciation_native": "онлайн бэнкинг",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "frame_target": "How do I get ___?",
+                        "frame_native": "Как мне получить ___?",
+                        "pronunciation_native": "Хау ду ай гет ___?",
+                        "slot": {
+                            "hint_native": "что получить",
+                            "fillers": [
+                                {
+                                    "target": "my PIN",
+                                    "native": "ПИН-код",
+                                    "pronunciation_native": "май пин",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the activation code",
+                                    "native": "код активации",
+                                    "pronunciation_native": "зэ эктивейшн коуд",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "frame_target": "I can pay ___.",
+                        "frame_native": "Я могу оплатить ___.",
+                        "pronunciation_native": "Ай кэн пэй ___.",
+                        "slot": {
+                            "hint_native": "где оплатить",
+                            "fillers": [
+                                {
+                                    "target": "in a shop",
+                                    "native": "в магазине",
+                                    "pronunciation_native": "ин э шоп",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "at the cafeteria",
+                                    "native": "в столовой",
+                                    "pronunciation_native": "эт зэ кафитириа",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "frame_target": "Can I withdraw ___?",
+                        "frame_native": "Я могу снимать ___?",
+                        "pronunciation_native": "Кэн ай уиздро ___?",
+                        "slot": {
+                            "hint_native": "что снять",
+                            "fillers": [
+                                {
+                                    "target": "cash",
+                                    "native": "наличные",
+                                    "pronunciation_native": "кэш",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "euros",
+                                    "native": "евро",
+                                    "pronunciation_native": "юэроуз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "answer",
+                        "frame_target": "The limit is ___.",
+                        "frame_native": "Лимит — ___.",
+                        "pronunciation_native": "Зэ лимит из ___.",
+                        "slot": {
+                            "hint_native": "какой лимит",
+                            "fillers": [
+                                {
+                                    "target": "three hundred euros",
+                                    "native": "триста евро",
+                                    "pronunciation_native": "сри хандрид юэроуз",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "five hundred euros",
+                                    "native": "пятьсот евро",
+                                    "pronunciation_native": "файв хандрид юэроуз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "listening": {
+                    "questions": [
+                        {
+                            "text_native": "Через сколько обычно приходит карта?",
+                            "options_native": [
+                                "Через пять–семь рабочих дней",
+                                "Через две недели",
+                                "В тот же день"
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница сказала, что карта обычно приходит через пять–семь рабочих дней."
+                        },
+                        {
+                            "text_native": "Как студенту сказали активировать карту?",
+                            "options_native": [
+                                "В мобильном приложении",
+                                "По телефону",
+                                "В университете"
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Карту нужно активировать в мобильном приложении."
+                        },
+                        {
+                            "text_native": "О чём студент спросил сотрудницу?",
+                            "options_native": [
+                                "Можно ли снимать наличные",
+                                "Можно ли открыть второй счёт",
+                                "Нужен ли паспорт"
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Студент спросил, можно ли снимать наличные."
+                        },
+                        {
+                            "text_native": "Какой дневной лимит снятия наличных назвала сотрудница?",
+                            "options_native": [
+                                "Триста евро",
+                                "Сто евро",
+                                "Пятьсот евро"
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Сотрудница назвала лимит триста евро в день."
+                        }
+                    ]
+                },
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "business days",
+                        "translation_native": "рабочие дни",
+                        "pronunciation_native": "бизнис дэйз",
+                        "definition_target": "days when banks and offices are open for work",
+                        "kind": "chunk",
+                        "image_prompt": null,
+                        "used_in": [
+                            "A1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "by mail",
+                        "translation_native": "по почте",
+                        "pronunciation_native": "бай мэйл",
+                        "definition_target": "sent through the postal service",
+                        "kind": "chunk",
+                        "image_prompt": "letters and envelopes in a home mailbox",
+                        "used_in": [
+                            "p2",
+                            "A2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "mobile app",
+                        "translation_native": "мобильное приложение",
+                        "pronunciation_native": "моубайл эп",
+                        "definition_target": "a bank application on a smartphone",
+                        "kind": "chunk",
+                        "image_prompt": "smartphone screen with a banking app login page",
+                        "used_in": [
+                            "A3",
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "activate",
+                        "translation_native": "активировать",
+                        "pronunciation_native": "эктивейт",
+                        "definition_target": "to make a card ready to use",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "A3",
+                            "A4"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "PIN",
+                        "translation_native": "ПИН-код",
+                        "pronunciation_native": "пин",
+                        "definition_target": "a secret number used with a bank card",
+                        "kind": "word",
+                        "image_prompt": "hand entering a four-digit code on a payment terminal",
+                        "used_in": [
+                            "p4",
+                            "A5",
+                            "A6"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "withdraw cash",
+                        "translation_native": "снимать наличные",
+                        "pronunciation_native": "уиздро кэш",
+                        "definition_target": "to take money out from an ATM or bank account",
+                        "kind": "chunk",
+                        "image_prompt": "person taking euro banknotes from an ATM",
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "ATM",
+                        "translation_native": "банкомат",
+                        "pronunciation_native": "эй-ти-эм",
+                        "definition_target": "a machine that gives cash and basic bank services",
+                        "kind": "word",
+                        "image_prompt": "bank ATM on a city street",
+                        "used_in": [
+                            "A7"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "withdrawal limit",
+                        "translation_native": "лимит снятия",
+                        "pronunciation_native": "уиздрол лимит",
+                        "definition_target": "the maximum amount of cash you can take out",
+                        "kind": "chunk",
+                        "image_prompt": null,
+                        "used_in": [
+                            "A8",
+                            "p7"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "call": "repair",
+            "at": "2026-09-17T13:26:08+00:00",
+            "prompt_version": "lesson_card_repair.v1.2",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 3620,
+            "cached_tokens": 0,
+            "tokens_out": 75,
+            "cost_usd": "0.010175",
+            "latency_ms": 1735,
+            "asked": {
+                "address": "v5",
+                "kind": "term",
+                "findings": [
+                    {
+                        "code": "vocab.abbreviation",
+                        "detail": "v5: «PIN» is an abbreviation or an acronym — there is nothing to translate"
+                    }
+                ],
+                "card": {
+                    "id": "v5",
+                    "term_target": "PIN",
+                    "translation_native": "ПИН-код",
+                    "pronunciation_native": "пин",
+                    "definition_target": "a secret number used with a bank card",
+                    "kind": "word",
+                    "image_prompt": "hand entering a four-digit code on a payment terminal",
+                    "used_in": [
+                        "p4",
+                        "A5",
+                        "A6"
+                    ]
+                },
+                "neighbours": null
+            },
+            "payload": {
+                "card": {
+                    "id": "v5",
+                    "term_target": "activation code",
+                    "translation_native": "код активации",
+                    "pronunciation_native": "эктивейшн коуд",
+                    "definition_target": "a code used to activate something",
+                    "kind": "chunk",
+                    "image_prompt": "activation code on a phone screen during bank app setup",
+                    "used_in": [
+                        "p4"
+                    ]
+                }
+            }
+        },
+        {
+            "call": "repair",
+            "at": "2026-09-17T13:26:10+00:00",
+            "prompt_version": "lesson_card_repair.v1.2",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 3609,
+            "cached_tokens": 0,
+            "tokens_out": 74,
+            "cost_usd": "0.010133",
+            "latency_ms": 1893,
+            "asked": {
+                "address": "v7",
+                "kind": "term",
+                "findings": [
+                    {
+                        "code": "vocab.abbreviation",
+                        "detail": "v7: «ATM» is an abbreviation or an acronym — there is nothing to translate"
+                    }
+                ],
+                "card": {
+                    "id": "v7",
+                    "term_target": "ATM",
+                    "translation_native": "банкомат",
+                    "pronunciation_native": "эй-ти-эм",
+                    "definition_target": "a machine that gives cash and basic bank services",
+                    "kind": "word",
+                    "image_prompt": "bank ATM on a city street",
+                    "used_in": [
+                        "A7"
+                    ]
+                },
+                "neighbours": null
+            },
+            "payload": {
+                "card": {
+                    "id": "v7",
+                    "term_target": "Visa sign",
+                    "translation_native": "знак Visa",
+                    "pronunciation_native": "ви́за сайн",
+                    "definition_target": "the Visa logo shown on a machine or door to show card acceptance",
+                    "kind": "chunk",
+                    "image_prompt": "Visa sign on an ATM machine",
+                    "used_in": [
+                        "A7"
+                    ]
+                }
+            }
+        },
+        {
+            "call": "judge",
+            "at": "2026-09-17T13:26:12+00:00",
+            "prompt_version": "lesson_seam_judge.v1.1",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "tokens_in": 1086,
+            "cached_tokens": 0,
+            "tokens_out": 167,
+            "cost_usd": "0.001566",
+            "latency_ms": 1173,
+            "asked": {
+                "items": 14
+            },
+            "payload": {
+                "verdicts": [
+                    {
+                        "id": "p1.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f1",
+                        "reads": false
+                    },
+                    {
+                        "id": "p5.f2",
+                        "reads": false
+                    },
+                    {
+                        "id": "p6.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f2",
+                        "reads": true
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1023,18 +1023,17 @@ paths:
   /playground/generate:
     post:
       tags: [Playground]
-      summary: Send one prompt to one model, verbatim
+      summary: Start a run — one prompt to one model, verbatim
       description: >
         The prompt goes AS WRITTEN — no system message, no template, no JSON schema. That is the
         point of the sandbox: anything this endpoint added would be measured as the model's
         behaviour.
 
-        A vendor failure is an ANSWER, not a 500. Expired keys, exhausted credits, stale model names
-        and timeouts all come back as 200 with `error` set, because each of them is a result the
-        person running the experiment needs to read.
-
-        `error` (nothing came back) and `parse_error` (something came back, just not JSON) are
-        different fields on purpose. Writes nothing.
+        The call is made by a queued job, never inside this request (GEN-3): a prompt the size of a lesson takes a
+        strong model 30–51 s, and the synchronous sandbox cut such a call off at 60 s after the vendor had billed it.
+        This answers 202 with the run's id; the screen polls `GET /playground/runs/{id}`. The model's answer is waited
+        for 180 s; a call that got no answer is not repeated and stays in the journal of model calls as `lost`.
+        Writes nothing of the catalogue: the run waits in the cache for a day, its spend is in the journal.
       requestBody:
         required: true
         content:
@@ -1045,7 +1044,7 @@ paths:
               properties:
                 provider: { type: string, description: wire name from /playground/providers }
                 model: { type: string, description: must be one the registry offers for that provider }
-                prompt: { type: string, maxLength: 32000 }
+                prompt: { type: string, maxLength: 65000 }
                 temperature:
                   type: [number, 'null']
                   minimum: 0
@@ -1054,13 +1053,47 @@ paths:
                     Omitted from the vendor request entirely when absent — several current models
                     accept only their default and refuse the parameter.
       responses:
-        '200':
-          description: The answer, or the reason there is none
+        '202':
+          description: The run is queued
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PlaygroundResult' }
+              schema:
+                type: object
+                required: [id, status]
+                properties:
+                  id: { type: string, minLength: 26, maxLength: 26 }
+                  status: { type: string, enum: [queued] }
         '401': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
+
+  /playground/runs/{id}:
+    get:
+      tags: [Playground]
+      summary: A sandbox run as it stands
+      description: >
+        `queued` — the job has not picked the run up; `running` — the call is out; `done` — `result` holds what came back.
+        A vendor failure is an ANSWER, not a 500: expired keys, exhausted credits, stale model names and timeouts come
+        back as a `done` run with `result.error` set. `error` (nothing came back) and `parse_error` (something came back,
+        just not JSON) are different fields on purpose. 404 for an id nobody started, or a run older than a day.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The run
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, status, result]
+                properties:
+                  id: { type: string }
+                  status: { type: string, enum: [queued, running, done] }
+                  result:
+                    oneOf:
+                      - $ref: '#/components/schemas/PlaygroundResult'
+                      - type: 'null'
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { description: No such run }
 
   /playground/validate:
     post:

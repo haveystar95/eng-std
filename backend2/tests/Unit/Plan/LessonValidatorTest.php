@@ -561,8 +561,13 @@ it('knows a closing question by its word order when its question mark is gone, a
 it('counts a frame in two exchanges in a row at the later one, and not a frame said twice apart', function () {
     $atAdjacent = static fn (array $p): array => array_values(array_filter(lvAt($p), static fn (string $f): bool => str_starts_with($f, LessonCodes::FRAME_ADJACENT_REPEAT.'@')));
 
+    // A rescue between two exchanges on one frame keeps them apart: 5 and 7 are not in a row.
+    $acrossRescue = lvApart();
+    $acrossRescue['dialogue'][6]['messages'][1] = [...$acrossRescue['dialogue'][6]['messages'][1], 'phrase_id' => 'p5', 'filler' => 'for two days', 'text_target' => 'He will rest for two days.'];
+
     expect($atAdjacent(lvPayload()))->toBe(['frame.adjacent_repeat@x8'])
-        ->and($atAdjacent(lvApart()))->toBe([]);
+        ->and($atAdjacent(lvApart()))->toBe([])
+        ->and($atAdjacent($acrossRescue))->toBe([]);
 });
 
 // Наряд GEN-3, v4.6 FRAMES: «one pattern = one frame … the TARGET_LANGUAGE pattern or the NATIVE_LANGUAGE pattern». Catches

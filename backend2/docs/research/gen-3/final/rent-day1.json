@@ -1,0 +1,790 @@
+{
+    "topic": {
+        "title_native": "Просмотр квартиры",
+        "title_target": "Apartment Viewing",
+        "description_native": "На просмотре квартиры спросите про депозит, коммунальные платежи, удалённую работу и можно ли держать кошку.",
+        "description_target": "Ask about the deposit, utilities, remote work, and keeping a cat during a flat viewing."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "год",
+                        "target": "a year",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э йир"
+                    },
+                    {
+                        "native": "шесть месяцев",
+                        "target": "six months",
+                        "in_dialogue": false,
+                        "pronunciation_native": "сикс манс"
+                    },
+                    {
+                        "native": "два года",
+                        "target": "two years",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ту йирз"
+                    }
+                ],
+                "hint_native": "срок аренды"
+            },
+            "frame_native": "Мне нужна квартира на ___.",
+            "frame_target": "I need it for ___.",
+            "pronunciation_native": "Ай нид ит фор ___."
+        },
+        {
+            "id": "p2",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "депозит",
+                        "target": "the deposit",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ дипозит"
+                    },
+                    {
+                        "native": "ежемесячная аренда",
+                        "target": "the monthly rent",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ мансли рент"
+                    },
+                    {
+                        "native": "комиссия агентства",
+                        "target": "the agency fee",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ эйдженси фи"
+                    }
+                ],
+                "hint_native": "платёж или сумма"
+            },
+            "frame_native": "Сколько составляет ___?",
+            "frame_target": "How much is ___?",
+            "pronunciation_native": "Хау мач из ___?"
+        },
+        {
+            "id": "p3",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "коммунальные платежи",
+                        "target": "the utility charges",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ ютилити чарджиз"
+                    },
+                    {
+                        "native": "аренду",
+                        "target": "the rent",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ рент"
+                    },
+                    {
+                        "native": "цену",
+                        "target": "the price",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ прайс"
+                    }
+                ],
+                "hint_native": "платёж или пакет"
+            },
+            "frame_native": "Что входит в ___?",
+            "frame_target": "What's included in ___?",
+            "pronunciation_native": "Уотс инклюдид ин ___?"
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "из дома",
+                        "target": "from home",
+                        "in_dialogue": true,
+                        "pronunciation_native": "фром хоум"
+                    },
+                    {
+                        "native": "в офисе",
+                        "target": "in an office",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ин эн офис"
+                    },
+                    {
+                        "native": "в гибридном формате",
+                        "target": "hybrid",
+                        "in_dialogue": false,
+                        "pronunciation_native": "хайбрид"
+                    }
+                ],
+                "hint_native": "откуда вы работаете"
+            },
+            "frame_native": "Я работаю ___.",
+            "frame_target": "I work ___.",
+            "pronunciation_native": "Ай уорк ___."
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "это",
+                        "target": "that",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэт"
+                    },
+                    {
+                        "native": "удалённая работа",
+                        "target": "remote work",
+                        "in_dialogue": false,
+                        "pronunciation_native": "римоут уорк"
+                    },
+                    {
+                        "native": "поздние созвоны",
+                        "target": "late calls",
+                        "in_dialogue": false,
+                        "pronunciation_native": "лэйт колз"
+                    }
+                ],
+                "hint_native": "ситуация или правило"
+            },
+            "frame_native": "___ здесь нормально?",
+            "frame_target": "Is ___ acceptable here?",
+            "pronunciation_native": "Из ___ аксептэбл хиэ?"
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "кошкой",
+                        "target": "a cat",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э кэт"
+                    },
+                    {
+                        "native": "маленькой собакой",
+                        "target": "a small dog",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э смол дог"
+                    },
+                    {
+                        "native": "велосипедом",
+                        "target": "a bike",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э байк"
+                    }
+                ],
+                "hint_native": "животное или вещь"
+            },
+            "frame_native": "Можно с ___?",
+            "frame_target": "Is ___ allowed?",
+            "pronunciation_native": "Из ___ элауд?"
+        },
+        {
+            "id": "p7",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "в следующем месяце",
+                        "target": "next month",
+                        "in_dialogue": true,
+                        "pronunciation_native": "некст манс"
+                    },
+                    {
+                        "native": "в понедельник",
+                        "target": "on Monday",
+                        "in_dialogue": false,
+                        "pronunciation_native": "он мандэй"
+                    },
+                    {
+                        "native": "через две недели",
+                        "target": "in two weeks",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ин ту уикс"
+                    }
+                ],
+                "hint_native": "время въезда"
+            },
+            "frame_native": "Я хотел бы въехать ___.",
+            "frame_target": "I'd like to move in ___.",
+            "pronunciation_native": "Айд лайк ту мув ин ___."
+        },
+        {
+            "id": "p8",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "банковским переводом",
+                        "target": "by bank transfer",
+                        "in_dialogue": true,
+                        "pronunciation_native": "бай бэнк трансфёр"
+                    },
+                    {
+                        "native": "наличными",
+                        "target": "in cash",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ин кэш"
+                    },
+                    {
+                        "native": "картой",
+                        "target": "by card",
+                        "in_dialogue": false,
+                        "pronunciation_native": "бай кард"
+                    }
+                ],
+                "hint_native": "способ оплаты"
+            },
+            "frame_native": "Можно оплатить это ___?",
+            "frame_target": "Can I pay it ___?",
+            "pronunciation_native": "Кэн ай пэй ит ___?"
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "answer",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "1050 евро",
+                        "text_target": "1,050 euros"
+                    },
+                    {
+                        "text_native": "1200 евро",
+                        "text_target": "1,200 euros"
+                    },
+                    {
+                        "text_native": "1400 евро",
+                        "text_target": "1,400 euros"
+                    }
+                ],
+                "text_native": "Сколько стоит аренда в месяц?",
+                "text_target": "How much is the monthly rent?",
+                "explanation_native": "Арендодатель сказал, что аренда стоит 1200 евро в месяц.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Арендодатель",
+                    "role_target": "Landlord",
+                    "text_native": "Это гостиная. Аренда — 1200 евро в месяц.",
+                    "text_target": "This is the living room. The rent is 1,200 euros a month."
+                },
+                {
+                    "filler": "a year",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Арендатор",
+                    "role_target": "Tenant",
+                    "text_native": "Мне нужна квартира на год.",
+                    "text_target": "I need it for a year.",
+                    "speaking_key": "need it for",
+                    "simplified_variants": [
+                        "I want it for a year.",
+                        "For a year."
+                    ],
+                    "pronunciation_native": "Ай нид ит фор э йир."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "До получения ключей",
+                        "text_target": "Before getting the keys"
+                    },
+                    {
+                        "text_native": "Со вторым платежом за аренду",
+                        "text_target": "With the second month's rent"
+                    },
+                    {
+                        "text_native": "В конце аренды",
+                        "text_target": "At the end of the lease"
+                    }
+                ],
+                "text_native": "Когда нужно внести депозит?",
+                "text_target": "When does the deposit have to be paid?",
+                "explanation_native": "Арендодатель сказал, что депозит нужно заплатить до заселения.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "the deposit",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Арендатор",
+                    "role_target": "Tenant",
+                    "text_native": "Сколько составляет депозит?",
+                    "text_target": "How much is the deposit?",
+                    "speaking_key": "How much is",
+                    "simplified_variants": [
+                        "What is the deposit?"
+                    ],
+                    "pronunciation_native": "Хау мач из зэ дипозит?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Арендодатель",
+                    "role_target": "Landlord",
+                    "text_native": "Депозит — это аренда за два месяца, его нужно внести до заселения.",
+                    "text_target": "The deposit is two months' rent, paid before move-in."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Электричество и интернет",
+                        "text_target": "Power and internet"
+                    },
+                    {
+                        "text_native": "Вода и отопление",
+                        "text_target": "Water and heating"
+                    },
+                    {
+                        "text_native": "Отопление и интернет",
+                        "text_target": "Heating and internet"
+                    }
+                ],
+                "text_native": "Какие две вещи оплачиваются отдельно?",
+                "text_target": "Which two things cost extra?",
+                "explanation_native": "Отдельно оплачиваются электричество и интернет.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "the utility charges",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Арендатор",
+                    "role_target": "Tenant",
+                    "text_native": "Что входит в коммунальные платежи?",
+                    "text_target": "What's included in the utility charges?",
+                    "speaking_key": "included in the",
+                    "simplified_variants": [
+                        "What do the utility charges include?"
+                    ],
+                    "pronunciation_native": "Уотс инклюдид ин зэ ютилити чарджиз?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Арендодатель",
+                    "role_target": "Landlord",
+                    "text_native": "Вода и отопление включены. Электричество и интернет оплачиваются отдельно.",
+                    "text_target": "Water and heating are included. Electricity and internet are extra."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Где арендатор обычно работает",
+                        "text_target": "The tenant's work location"
+                    },
+                    {
+                        "text_native": "В какие часы работает арендатор",
+                        "text_target": "The tenant's working hours"
+                    },
+                    {
+                        "text_native": "Кто работодатель арендатора",
+                        "text_target": "The tenant's employer"
+                    }
+                ],
+                "text_native": "О чём спрашивает арендодатель?",
+                "text_target": "What does the landlord ask about?",
+                "explanation_native": "Арендодатель спрашивает, работает ли арендатор из дома.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Арендодатель",
+                    "role_target": "Landlord",
+                    "text_native": "Вы регулярно работаете из дома?",
+                    "text_target": "Do you work from home regularly?"
+                },
+                {
+                    "filler": "from home",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Арендатор",
+                    "role_target": "Tenant",
+                    "text_native": "Да, я работаю из дома.",
+                    "text_target": "Yes, I work from home.",
+                    "speaking_key": "work from",
+                    "simplified_variants": [
+                        "Yes, I work at home.",
+                        "I work from home."
+                    ],
+                    "pronunciation_native": "Йес, ай уорк фром хоум."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Не должно быть сильного шума",
+                        "text_target": "There should be no loud noise"
+                    },
+                    {
+                        "text_native": "Нужен отдельный кабинет",
+                        "text_target": "You need a separate office"
+                    },
+                    {
+                        "text_native": "Можно работать только неполный день",
+                        "text_target": "You can work only part-time"
+                    }
+                ],
+                "text_native": "Какое условие называет арендодатель?",
+                "text_target": "What condition does the landlord give?",
+                "explanation_native": "Удалённая работа допустима, если в квартире тихо.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "that",
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Арендатор",
+                    "role_target": "Tenant",
+                    "text_native": "Это здесь нормально?",
+                    "text_target": "Is that acceptable here?",
+                    "speaking_key": "acceptable here",
+                    "simplified_variants": [
+                        "Is that okay here?"
+                    ],
+                    "pronunciation_native": "Из зэт аксептэбл хиэ?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Арендодатель",
+                    "role_target": "Landlord",
+                    "text_native": "Да, это нормально, если у вас тихо.",
+                    "text_target": "Yes, that's fine, as long as it's quiet."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "В общий сад",
+                        "text_target": "Into the common garden"
+                    },
+                    {
+                        "text_native": "В спальню",
+                        "text_target": "Into the bedroom"
+                    },
+                    {
+                        "text_native": "На балкон",
+                        "text_target": "Onto the balcony"
+                    }
+                ],
+                "text_native": "Куда кошке нельзя?",
+                "text_target": "Where can't the cat go?",
+                "explanation_native": "Арендодатель говорит, что кошке нельзя в общий сад.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "a cat",
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Арендатор",
+                    "role_target": "Tenant",
+                    "text_native": "Можно с кошкой?",
+                    "text_target": "Is a cat allowed?",
+                    "speaking_key": "allowed",
+                    "simplified_variants": [
+                        "Can I keep a cat?"
+                    ],
+                    "pronunciation_native": "Из э кэт элауд?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Арендодатель",
+                    "role_target": "Landlord",
+                    "text_native": "Да, одна кошка разрешена, но не в общем саду.",
+                    "text_target": "Yes, one cat is allowed, but not in the shared garden."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Когда арендатор планирует въехать",
+                        "text_target": "The planned move-in time"
+                    },
+                    {
+                        "text_native": "На какой срок нужен договор",
+                        "text_target": "How long the contract is"
+                    },
+                    {
+                        "text_native": "Сколько человек будет жить в квартире",
+                        "text_target": "How many people will live there"
+                    }
+                ],
+                "text_native": "Что хочет узнать арендодатель?",
+                "text_target": "What does the landlord want to know?",
+                "explanation_native": "Арендодатель спрашивает о желаемой дате въезда.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Арендодатель",
+                    "role_target": "Landlord",
+                    "text_native": "Когда вы хотели бы въехать?",
+                    "text_target": "When would you like to move in?"
+                },
+                {
+                    "filler": "next month",
+                    "speaker": "B",
+                    "phrase_id": "p7",
+                    "role_native": "Арендатор",
+                    "role_target": "Tenant",
+                    "text_native": "Я хотел бы въехать в следующем месяце.",
+                    "text_target": "I'd like to move in next month.",
+                    "speaking_key": "move in",
+                    "simplified_variants": [
+                        "Next month would be good.",
+                        "I can move in next month."
+                    ],
+                    "pronunciation_native": "Айд лайк ту мув ин некст манс."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 8,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Картой в офисе",
+                        "text_target": "Card at the office"
+                    },
+                    {
+                        "text_native": "Наличными в день заселения",
+                        "text_target": "Cash on move-in day"
+                    },
+                    {
+                        "text_native": "Банковским переводом",
+                        "text_target": "Transfer through the bank"
+                    }
+                ],
+                "text_native": "Какой способ оплаты принимает арендодатель?",
+                "text_target": "What payment method does the landlord accept?",
+                "explanation_native": "Арендодатель принимает оплату банковским переводом.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "filler": "by bank transfer",
+                    "speaker": "B",
+                    "phrase_id": "p8",
+                    "role_native": "Арендатор",
+                    "role_target": "Tenant",
+                    "text_native": "Можно оплатить это банковским переводом?",
+                    "text_target": "Can I pay it by bank transfer?",
+                    "speaking_key": "pay it by",
+                    "simplified_variants": [
+                        "Is bank transfer okay?"
+                    ],
+                    "pronunciation_native": "Кэн ай пэй ит бай бэнк трансфёр?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Арендодатель",
+                    "role_target": "Landlord",
+                    "text_native": "Да, и аренда, и депозит оплачиваются банковским переводом.",
+                    "text_target": "Yes, rent and deposit are both paid by bank transfer."
+                }
+            ],
+            "initiator": "B"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "На какой срок арендатору нужна квартира?",
+                "options_native": [
+                    "На год",
+                    "На полгода",
+                    "На два года"
+                ],
+                "explanation_native": "Арендатор говорит, что квартира нужна на год.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Что включено в коммунальные платежи?",
+                "options_native": [
+                    "Интернет и электричество",
+                    "Вода и отопление",
+                    "Только отопление"
+                ],
+                "explanation_native": "Арендодатель говорит, что вода и отопление включены.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "При каком условии удалённая работа подходит?",
+                "options_native": [
+                    "Если есть отдельный кабинет",
+                    "Если в квартире тихо",
+                    "Если работать только днём"
+                ],
+                "explanation_native": "Арендодатель согласен, если от работы дома нет шума.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Какое ограничение есть для кошки?",
+                "options_native": [
+                    "Нельзя в общий сад",
+                    "Нельзя на балкон",
+                    "Нельзя оставлять одну"
+                ],
+                "explanation_native": "Арендодатель разрешает одну кошку, но не в общем саду.",
+                "correct_option_index": 0
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "word",
+            "used_in": [
+                "p2",
+                "A8"
+            ],
+            "term_target": "deposit",
+            "image_prompt": "cash and keys on a table during an apartment viewing",
+            "definition_target": "money paid before renting as security",
+            "translation_native": "депозит",
+            "pronunciation_native": "дипозит"
+        },
+        {
+            "id": "v2",
+            "kind": "chunk",
+            "used_in": [
+                "p3"
+            ],
+            "term_target": "utility charges",
+            "image_prompt": "apartment bills and a calculator on a kitchen counter",
+            "definition_target": "regular extra housing costs for services in a building",
+            "translation_native": "коммунальные платежи",
+            "pronunciation_native": "ютилити чарджиз"
+        },
+        {
+            "id": "v3",
+            "kind": "word",
+            "used_in": [
+                "p3",
+                "A3"
+            ],
+            "term_target": "included",
+            "image_prompt": null,
+            "definition_target": "part of the price or payment already",
+            "translation_native": "включён",
+            "pronunciation_native": "инклюдид"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "A3"
+            ],
+            "term_target": "heating",
+            "image_prompt": "radiator under a window in a furnished apartment",
+            "definition_target": "the system that keeps a home warm",
+            "translation_native": "отопление",
+            "pronunciation_native": "хитинг"
+        },
+        {
+            "id": "v5",
+            "kind": "chunk",
+            "used_in": [
+                "p5"
+            ],
+            "term_target": "remote work",
+            "image_prompt": "laptop open on a dining table in a flat",
+            "definition_target": "work done from home or outside an office",
+            "translation_native": "удалённая работа",
+            "pronunciation_native": "римоут уорк"
+        },
+        {
+            "id": "v6",
+            "kind": "word",
+            "used_in": [
+                "p5"
+            ],
+            "term_target": "acceptable",
+            "image_prompt": null,
+            "definition_target": "allowed or okay in a situation",
+            "translation_native": "приемлемо",
+            "pronunciation_native": "аксептэбл"
+        },
+        {
+            "id": "v7",
+            "kind": "word",
+            "used_in": [
+                "A2",
+                "p7"
+            ],
+            "term_target": "move-in",
+            "image_prompt": "packed boxes near the door of an apartment",
+            "definition_target": "the time when a tenant starts living in a place",
+            "translation_native": "заселение",
+            "pronunciation_native": "мув-ин"
+        },
+        {
+            "id": "v8",
+            "kind": "chunk",
+            "used_in": [
+                "p8",
+                "A8"
+            ],
+            "term_target": "bank transfer",
+            "image_prompt": "person using online banking on a laptop at home",
+            "definition_target": "a payment sent directly from one bank account to another",
+            "translation_native": "банковский перевод",
+            "pronunciation_native": "бэнк трансфёр"
+        }
+    ],
+    "role_gender": "male",
+    "learner_role": {
+        "role_native": "Арендатор",
+        "role_target": "Tenant"
+    }
+}

@@ -1,0 +1,636 @@
+{
+    "interview": {
+        "day1": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "frame.unresolved_pronoun": 1,
+                "check.verbatim": 1,
+                "vocab.used_in_wrong": 1,
+                "vocab.nested": 1
+            },
+            "raw_fatal": 0,
+            "final_codes": {
+                "frame.unresolved_pronoun": 1,
+                "check.verbatim": 1,
+                "vocab.used_in_wrong": 1,
+                "vocab.nested": 1,
+                "vocab.known_repeat": 8,
+                "frame.known_repeat": 8
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 51.8,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 9707,
+                "cached": 0,
+                "tokens_out": 4593,
+                "cost_cached": 0.088404,
+                "cost_no_cache": 0.088404,
+                "unmatched": 0
+            },
+            "cached_share": 0.0,
+            "story_words": []
+        },
+        "before": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "vocab.used_in_wrong": 3,
+                "native.gendered_past": 6
+            },
+            "raw_fatal": 0,
+            "final_codes": {
+                "vocab.used_in_wrong": 3,
+                "native.gendered_past": 6
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 46.7,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 8926,
+                "cached": 0,
+                "tokens_out": 4514,
+                "cost_cached": 0.08496000000000001,
+                "cost_no_cache": 0.08496000000000001,
+                "unmatched": 0
+            },
+            "cached_share": 0.0,
+            "story_words": []
+        },
+        "after": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "pronunciation.script": 1,
+                "variant.longer": 1,
+                "native.gendered_past": 4
+            },
+            "raw_fatal": 0,
+            "final_codes": {
+                "pronunciation.script": 1,
+                "variant.longer": 1,
+                "native.gendered_past": 4
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 44.5,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 9835,
+                "cached": 7936,
+                "tokens_out": 4250,
+                "cost_cached": 0.066675,
+                "cost_no_cache": 0.084531,
+                "unmatched": 0
+            },
+            "cached_share": 0.807,
+            "story_words": []
+        }
+    },
+    "rent": {
+        "day1": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "frame.unresolved_pronoun": 2,
+                "variant.longer": 1,
+                "check.verbatim": 1,
+                "listening.same_exchange": 1,
+                "listening.distractor_not_filler": 1,
+                "native.gendered_past": 2
+            },
+            "raw_fatal": 0,
+            "final_codes": {
+                "frame.unresolved_pronoun": 2,
+                "variant.longer": 1,
+                "check.verbatim": 1,
+                "listening.same_exchange": 1,
+                "listening.distractor_not_filler": 1,
+                "native.gendered_past": 2,
+                "vocab.known_repeat": 8,
+                "frame.known_repeat": 8
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 49.3,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 9797,
+                "cached": 7936,
+                "tokens_out": 4385,
+                "cost_cached": 0.066944,
+                "cost_no_cache": 0.0848,
+                "unmatched": 0
+            },
+            "cached_share": 0.81,
+            "story_words": []
+        },
+        "before": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "variant.longer": 1,
+                "check.verbatim": 1,
+                "listening.same_exchange": 1,
+                "vocab.used_in_wrong": 2,
+                "vocab.known_repeat": 1,
+                "frame.known_native_repeat": 1
+            },
+            "raw_fatal": 1,
+            "final_codes": {
+                "variant.longer": 1,
+                "check.verbatim": 1,
+                "listening.same_exchange": 1,
+                "vocab.used_in_wrong": 2,
+                "vocab.known_repeat": 1,
+                "frame.known_native_repeat": 1
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 46.0,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 8965,
+                "cached": 6912,
+                "tokens_out": 4511,
+                "cost_cached": 0.069409,
+                "cost_no_cache": 0.084961,
+                "unmatched": 0
+            },
+            "cached_share": 0.771,
+            "story_words": [
+                "deposit"
+            ]
+        },
+        "after": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "variant.longer": 1,
+                "rescue.new_fact": 1
+            },
+            "raw_fatal": 0,
+            "final_codes": {
+                "variant.longer": 1,
+                "rescue.new_fact": 1
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 42.2,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 9875,
+                "cached": 7936,
+                "tokens_out": 4187,
+                "cost_cached": 0.065526,
+                "cost_no_cache": 0.083382,
+                "unmatched": 0
+            },
+            "cached_share": 0.804,
+            "story_words": []
+        }
+    },
+    "bank": {
+        "day1": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "frame.unresolved_pronoun": 1,
+                "check.verbatim": 1,
+                "vocab.used_in_wrong": 1
+            },
+            "raw_fatal": 0,
+            "final_codes": {
+                "frame.unresolved_pronoun": 1,
+                "check.verbatim": 1,
+                "vocab.used_in_wrong": 1,
+                "vocab.known_repeat": 8,
+                "frame.known_repeat": 8
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 56.8,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 9807,
+                "cached": 7936,
+                "tokens_out": 6426,
+                "cost_cached": 0.097537,
+                "cost_no_cache": 0.11539300000000001,
+                "unmatched": 0
+            },
+            "cached_share": 0.809,
+            "story_words": []
+        },
+        "before": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "frame.unresolved_pronoun": 1,
+                "variant.longer": 1,
+                "listening.same_exchange": 1,
+                "vocab.abbreviation": 1
+            },
+            "raw_fatal": 1,
+            "final_codes": {
+                "frame.unresolved_pronoun": 1,
+                "variant.longer": 1,
+                "listening.same_exchange": 1,
+                "vocab.abbreviation": 1
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 40.8,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 8578,
+                "cached": 6912,
+                "tokens_out": 4016,
+                "cost_cached": 0.062458,
+                "cost_no_cache": 0.07801,
+                "unmatched": 0
+            },
+            "cached_share": 0.806,
+            "story_words": []
+        },
+        "after": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "frame.unresolved_pronoun": 1,
+                "learner.restates_partner": 1,
+                "rescue.new_fact": 1,
+                "check.verbatim": 1,
+                "vocab.abbreviation": 2,
+                "vocab.used_in_wrong": 1
+            },
+            "raw_fatal": 2,
+            "final_codes": {
+                "frame.unresolved_pronoun": 1,
+                "learner.restates_partner": 1,
+                "rescue.new_fact": 1,
+                "check.verbatim": 1,
+                "vocab.used_in_wrong": 1,
+                "vocab.nested": 1
+            },
+            "repairs": 2,
+            "repair_addresses": [
+                "v5",
+                "v7"
+            ],
+            "lesson_calls": 1,
+            "wall_s": 43.5,
+            "spend": {
+                "calls": 4,
+                "tokens_in": 16926,
+                "cached": 7936,
+                "tokens_out": 4165,
+                "cost_cached": 0.08328100000000001,
+                "cost_no_cache": 0.101137,
+                "unmatched": 0
+            },
+            "cached_share": 0.469,
+            "story_words": []
+        }
+    },
+    "restaurant": {
+        "day1": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "frame.unresolved_pronoun": 1,
+                "variant.longer": 2,
+                "check.verbatim": 2,
+                "vocab.used_in_wrong": 1,
+                "vocab.learner_share": 1
+            },
+            "raw_fatal": 0,
+            "final_codes": {
+                "frame.unresolved_pronoun": 1,
+                "variant.longer": 2,
+                "check.verbatim": 2,
+                "vocab.used_in_wrong": 1,
+                "vocab.learner_share": 1,
+                "vocab.known_repeat": 8,
+                "frame.known_repeat": 7
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 40.0,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 9555,
+                "cached": 7936,
+                "tokens_out": 4149,
+                "cost_cached": 0.063766,
+                "cost_no_cache": 0.081622,
+                "unmatched": 0
+            },
+            "cached_share": 0.831,
+            "story_words": []
+        },
+        "before": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "frame.count": 1,
+                "frame.twin": 2,
+                "frame.unused": 1,
+                "frame.known_native_repeat": 2
+            },
+            "raw_fatal": 0,
+            "final_codes": {
+                "frame.count": 1,
+                "frame.twin": 2,
+                "frame.unused": 1,
+                "frame.known_native_repeat": 2
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 40.6,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 8665,
+                "cached": 6912,
+                "tokens_out": 4040,
+                "cost_cached": 0.062379000000000004,
+                "cost_no_cache": 0.077931,
+                "unmatched": 0
+            },
+            "cached_share": 0.798,
+            "story_words": []
+        },
+        "after": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "partner.two_questions": 1,
+                "check.verbatim": 1,
+                "vocab.used_in_wrong": 2,
+                "vocab.nested": 1,
+                "frame.known_native_repeat": 1,
+                "frame.known_repeat": 1
+            },
+            "raw_fatal": 1,
+            "final_codes": {
+                "frame.native_agreement": 1,
+                "partner.two_questions": 1,
+                "check.verbatim": 1,
+                "vocab.used_in_wrong": 2,
+                "vocab.nested": 1,
+                "frame.known_native_repeat": 1
+            },
+            "repairs": 1,
+            "repair_addresses": [
+                "p2"
+            ],
+            "lesson_calls": 1,
+            "wall_s": 44.0,
+            "spend": {
+                "calls": 3,
+                "tokens_in": 14305,
+                "cached": 7936,
+                "tokens_out": 3984,
+                "cost_cached": 0.074011,
+                "cost_no_cache": 0.091867,
+                "unmatched": 0
+            },
+            "cached_share": 0.555,
+            "story_words": []
+        }
+    },
+    "airport": {
+        "day1": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "pronunciation.script": 4,
+                "frame.adjacent_repeat": 1,
+                "frame.native_agreement": 1,
+                "vocab.used_in_wrong": 3
+            },
+            "raw_fatal": 0,
+            "final_codes": {
+                "pronunciation.script": 4,
+                "frame.adjacent_repeat": 1,
+                "frame.native_agreement": 1,
+                "vocab.used_in_wrong": 3,
+                "vocab.known_repeat": 8,
+                "frame.known_repeat": 5
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 36.4,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 9369,
+                "cached": 7936,
+                "tokens_out": 3802,
+                "cost_cached": 0.05911,
+                "cost_no_cache": 0.076967,
+                "unmatched": 0
+            },
+            "cached_share": 0.847,
+            "story_words": []
+        },
+        "before": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "variant.longer": 1,
+                "check.verbatim": 2,
+                "vocab.used_in_wrong": 2,
+                "vocab.known_repeat": 1
+            },
+            "raw_fatal": 1,
+            "final_codes": {
+                "variant.longer": 1,
+                "check.verbatim": 2,
+                "vocab.used_in_wrong": 2,
+                "vocab.known_repeat": 1
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 45.8,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 8887,
+                "cached": 6912,
+                "tokens_out": 4324,
+                "cost_cached": 0.066508,
+                "cost_no_cache": 0.08206,
+                "unmatched": 0
+            },
+            "cached_share": 0.778,
+            "story_words": [
+                "backpack"
+            ]
+        },
+        "after": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "variant.longer": 2,
+                "check.verbatim": 2,
+                "vocab.used_in_wrong": 2
+            },
+            "raw_fatal": 0,
+            "final_codes": {
+                "variant.longer": 2,
+                "check.verbatim": 2,
+                "vocab.used_in_wrong": 2
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 50.7,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 9684,
+                "cached": 7936,
+                "tokens_out": 4080,
+                "cost_cached": 0.063836,
+                "cost_no_cache": 0.081691,
+                "unmatched": 0
+            },
+            "cached_share": 0.819,
+            "story_words": []
+        }
+    },
+    "doctor": {
+        "day1": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "exchange.second_question": 1,
+                "frame.native_agreement": 1,
+                "frame.native_alternatives": 1,
+                "filler.one_in_dialogue": 1,
+                "line.ne_frame": 1,
+                "learner.restates_partner": 1,
+                "check.verbatim": 2,
+                "vocab.used_in_wrong": 1
+            },
+            "raw_fatal": 2,
+            "final_codes": {
+                "frame.native_agreement": 1,
+                "frame.native_alternatives": 1,
+                "learner.restates_partner": 1,
+                "check.verbatim": 1,
+                "vocab.used_in_wrong": 1,
+                "vocab.known_repeat": 8,
+                "frame.known_repeat": 7
+            },
+            "repairs": 2,
+            "repair_addresses": [
+                "x3",
+                "B5"
+            ],
+            "lesson_calls": 1,
+            "wall_s": 51.2,
+            "spend": {
+                "calls": 4,
+                "tokens_in": 21026,
+                "cached": 0,
+                "tokens_out": 4671,
+                "cost_cached": 0.11758199999999999,
+                "cost_no_cache": 0.11758199999999999,
+                "unmatched": 0
+            },
+            "cached_share": 0.0,
+            "story_words": []
+        },
+        "before": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "frame.native_agreement": 2,
+                "variant.longer": 2,
+                "vocab.used_in_wrong": 1,
+                "vocab.everyday_word": 1,
+                "vocab.learner_share": 1,
+                "vocab.known_repeat": 1,
+                "frame.known_repeat": 1
+            },
+            "raw_fatal": 2,
+            "final_codes": {
+                "frame.native_agreement": 2,
+                "variant.longer": 2,
+                "vocab.used_in_wrong": 1,
+                "vocab.everyday_word": 1,
+                "vocab.learner_share": 1,
+                "vocab.known_repeat": 1,
+                "frame.known_repeat": 1
+            },
+            "repairs": 0,
+            "repair_addresses": [],
+            "lesson_calls": 1,
+            "wall_s": 42.9,
+            "spend": {
+                "calls": 2,
+                "tokens_in": 8830,
+                "cached": 6912,
+                "tokens_out": 4224,
+                "cost_cached": 0.06497,
+                "cost_no_cache": 0.080523,
+                "unmatched": 0
+            },
+            "cached_share": 0.783,
+            "story_words": [
+                "sore throat"
+            ]
+        },
+        "after": {
+            "status": "ready",
+            "fail_reason": null,
+            "raw_codes": {
+                "frame.native_agreement": 2,
+                "variant.longer": 1,
+                "check.verbatim": 2,
+                "vocab.used_in_wrong": 1,
+                "vocab.learner_share": 1,
+                "frame.known_repeat": 1
+            },
+            "raw_fatal": 1,
+            "final_codes": {
+                "frame.native_agreement": 1,
+                "variant.longer": 1,
+                "check.verbatim": 2,
+                "vocab.used_in_wrong": 1,
+                "vocab.learner_share": 1
+            },
+            "repairs": 1,
+            "repair_addresses": [
+                "p4"
+            ],
+            "lesson_calls": 1,
+            "wall_s": 49.5,
+            "spend": {
+                "calls": 3,
+                "tokens_in": 14628,
+                "cached": 10752,
+                "tokens_out": 4218,
+                "cost_cached": 0.071637,
+                "cost_no_cache": 0.095829,
+                "unmatched": 0
+            },
+            "cached_share": 0.735,
+            "story_words": []
+        }
+    }
+}

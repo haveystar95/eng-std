@@ -166,9 +166,19 @@ the way out. This is the only place where "every provider gets the same schema" 
 true; the same constraint is expressed in each vendor's dialect.
 
 `ConfiguredContentModelCatalog` reports availability: **no key is not an error**, it is a provider
-that does not run, named in the report with the env var that would fix it. Retries escalate
-(4s/8s/12s) and only on statuses that can change by themselves — a 429 is a per-minute token ceiling
-and clears; a 403 (no credits) never will.
+that does not run, named in the report with the env var that would fix it. Every adapter sends through
+`Infrastructure/Adapter/VendorCall` (наряд GEN-3): connect in 10 s, wait for the answer as long as the caller says (the
+plan's calls — 180 s), a row in Observability's `model_calls` journal BEFORE the call and its usage, `cached_tokens` and
+price after — or `lost` when no answer came. Retries escalate (4s/8s/12s) and only on statuses the vendor ANSWERED that
+can change by themselves (408, 409, 429, 5xx) — a 429 is a per-minute token ceiling and clears; a 403 (no credits) never
+will; a call that got no answer is never sent again, because the vendor may have billed the first one.
+
+## The playground (`PlaygroundRuns`)
+
+A person's prompt from the admin panel is not answered inside the web request: `PlaygroundRuns::start` stores a
+`queued` run (`PlaygroundRunStore` → `CachePlaygroundRunStore`, a day) and dispatches `RunPlaygroundCallJob` (one try,
+the playground timeout + a minute); the job marks the run `running`, calls `PlaygroundCall` and stores it `done` with the
+reply (or the error). Admin polls the run by id (наряд GEN-3). The call is journaled like any other.
 
 ## The bake-off (`php artisan generation:bakeoff`)
 

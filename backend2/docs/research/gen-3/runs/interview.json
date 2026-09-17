@@ -1,0 +1,1025 @@
+{
+    "slug": "interview",
+    "goal": "Собеседование на позицию менеджера проектов в IT-компании. У меня пять лет опыта, руковожу командой из шести человек",
+    "level": "intermediate",
+    "user_id": "01M2QR88J8RNBG8892G425CEVV",
+    "plan_id": "01M2QR88KDJZNK4YYECM3D1K2D",
+    "scene_ids": [
+        "01M2QR8NX4EZSYW9CVN021Y96F",
+        "01M2QR8NX57G0M7CHJ3VC2WGSC"
+    ],
+    "scenes": [
+        {
+            "title_native": "Интервью с HR",
+            "title_target": "HR Interview",
+            "partner": "HR manager / HR-менеджер",
+            "brief": "Situation: The learner is interviewing for a project manager position at an IT company. This is an HR interview early in the hiring process, where the learner needs to present five years of experience and mention managing a team of six people.\nLearner: the job candidate. Partner: the HR manager.\nLearner must be able to: introduce their professional background clearly; explain current responsibilities and leadership experience; answer questions about motivation, strengths, and reasons for changing jobs; ask basic questions about the role and hiring process.\nPartner will: ask about the learner’s experience, current job, and management style; ask why they want this position and what they know about the company; explain the next interview steps.\nNot in this scene: detailed project examples, technical discussion, stakeholder conflicts, salary negotiation, final hiring decision."
+        },
+        {
+            "title_native": "Интервью с тимлидом",
+            "title_target": "Team Lead Interview",
+            "partner": "Team lead / Тимлид",
+            "brief": "Situation: The learner has moved to the main interview with a team lead at the IT company for a project manager role. The focus is on real work examples, including five years of experience, managing a team of six, priorities, delivery, and communication in projects.\nLearner: the job candidate. Partner: the team lead.\nLearner must be able to: describe one or two relevant projects in a structured way; explain how they planned work, led a team, and handled deadlines; answer questions about risks, conflicts, and changing priorities; ask thoughtful questions about the team, tools, and expectations.\nPartner will: ask for specific examples of leadership and project delivery; challenge decisions and ask what the learner would do differently; describe the team’s workflow and current needs.\nNot in this scene: self-introduction basics, reasons for changing jobs, HR process, salary, benefits, final offer."
+        }
+    ],
+    "learner_role": "Project manager / Менеджер проектов",
+    "plan_call": {
+        "cost_usd": "0.019230",
+        "wall_s": 13.7,
+        "calls": [
+            {
+                "call": "plan",
+                "at": "2026-09-17T13:17:47+00:00",
+                "prompt_version": "plan-builder-v2",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 3018,
+                "cached_tokens": 0,
+                "tokens_out": 779,
+                "cost_usd": "0.019230",
+                "latency_ms": 13574,
+                "asked": {
+                    "scenes": 2
+                },
+                "payload": {
+                    "status": "ok",
+                    "unclear_reason": null,
+                    "plan": {
+                        "title_native": "Собеседование в IT",
+                        "title_target": "IT Job Interview",
+                        "event_native": "Собеседование",
+                        "until_phrase_native": "До собеседования",
+                        "overdue_native": "Собеседование было вчера",
+                        "cover_image_prompt": "modern meeting room in an IT company office, interview setting with a table, laptops closed, neutral professional light, no text, no logos, no faces in close-up",
+                        "learner_role_target": "Project manager",
+                        "learner_role_native": "Менеджер проектов"
+                    },
+                    "scenes": [
+                        {
+                            "order": 1,
+                            "kind": "situation",
+                            "priority": 1,
+                            "title_native": "Интервью с HR",
+                            "title_target": "HR Interview",
+                            "teaches_native": "представить опыт и мотивацию",
+                            "goals_native": [
+                                "рассказать о своём опыте",
+                                "объяснить смену работы",
+                                "описать свои сильные стороны",
+                                "задать вопросы о роли"
+                            ],
+                            "learner_role_target": "Project manager",
+                            "learner_role_native": "Менеджер проектов",
+                            "partner_role_target": "HR manager",
+                            "partner_role_native": "HR-менеджер",
+                            "topic_description": "Situation: The learner is interviewing for a project manager position at an IT company. This is an HR interview early in the hiring process, where the learner needs to present five years of experience and mention managing a team of six people.\nLearner: the job candidate. Partner: the HR manager.\nLearner must be able to: introduce their professional background clearly; explain current responsibilities and leadership experience; answer questions about motivation, strengths, and reasons for changing jobs; ask basic questions about the role and hiring process.\nPartner will: ask about the learner’s experience, current job, and management style; ask why they want this position and what they know about the company; explain the next interview steps.\nNot in this scene: detailed project examples, technical discussion, stakeholder conflicts, salary negotiation, final hiring decision.",
+                            "image_prompt": "professional HR interview in a modern IT office meeting room, candidate and recruiter sitting across a table, realistic photo, no text, no logos, no faces in close-up"
+                        },
+                        {
+                            "order": 2,
+                            "kind": "situation",
+                            "priority": 2,
+                            "title_native": "Интервью с тимлидом",
+                            "title_target": "Team Lead Interview",
+                            "teaches_native": "обсудить проекты и решения",
+                            "goals_native": [
+                                "описать сложный проект",
+                                "объяснить свои решения",
+                                "рассказать о работе с командой",
+                                "ответить на сложные вопросы"
+                            ],
+                            "learner_role_target": "Project manager",
+                            "learner_role_native": "Менеджер проектов",
+                            "partner_role_target": "Team lead",
+                            "partner_role_native": "Тимлид",
+                            "topic_description": "Situation: The learner has moved to the main interview with a team lead at the IT company for a project manager role. The focus is on real work examples, including five years of experience, managing a team of six, priorities, delivery, and communication in projects.\nLearner: the job candidate. Partner: the team lead.\nLearner must be able to: describe one or two relevant projects in a structured way; explain how they planned work, led a team, and handled deadlines; answer questions about risks, conflicts, and changing priorities; ask thoughtful questions about the team, tools, and expectations.\nPartner will: ask for specific examples of leadership and project delivery; challenge decisions and ask what the learner would do differently; describe the team’s workflow and current needs.\nNot in this scene: self-introduction basics, reasons for changing jobs, HR process, salary, benefits, final offer.",
+                            "image_prompt": "technical job interview with a team lead in a modern IT company meeting room, discussion across a table, realistic office setting, no text, no logos, no faces in close-up"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "day1": {
+        "status": "illustrating",
+        "fail_reason": null,
+        "prompt_version": "lesson_day.v4.6",
+        "cost_usd": "0.088404",
+        "latency_ms": 51736,
+        "attempts": 1,
+        "findings": [
+            {
+                "code": "frame.unresolved_pronoun",
+                "detail": "«I would describe it as ___.» leans on «it», and nothing in the frame is what it stands for",
+                "address": "p4"
+            },
+            {
+                "code": "check.verbatim",
+                "detail": "the right option «Product and engineering» repeats «and engineering» of the partner's line",
+                "address": "x6.check"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "detail": "«responsibilities» is not in the partner's line of exchange 6",
+                "address": "v6"
+            },
+            {
+                "code": "vocab.nested",
+                "detail": "«manage» is inside «hiring manager» (v7)",
+                "address": "v4"
+            },
+            {
+                "code": "filler.native_seam",
+                "detail": "«Меня интересует возможности роста.» («Меня интересует ___ .» with «возможности роста») does not read as Russian, the seam judge says",
+                "address": "p5.f3"
+            },
+            {
+                "code": "filler.native_seam",
+                "detail": "«Можете подробнее рассказать о основных обязанностях?» («Можете подробнее рассказать о ___?» with «основных обязанностях») does not read as Russian, the seam judge says",
+                "address": "p6.f1"
+            }
+        ],
+        "wall_s": 51.8,
+        "started_at": "2026-09-17T13:18:01+00:00",
+        "finished_at": "2026-09-17T13:18:53+00:00",
+        "calls": [
+            {
+                "call": "lesson",
+                "at": "2026-09-17T13:18:01+00:00",
+                "prompt_version": "lesson_day.v4.6",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 8320,
+                "cached_tokens": 0,
+                "tokens_out": 4371,
+                "cost_usd": "0.086365",
+                "latency_ms": 49826,
+                "asked": {
+                    "violations": [],
+                    "earlier_days": 0,
+                    "roles": {
+                        "learnerTarget": "Project manager",
+                        "learnerNative": "Менеджер проектов",
+                        "partnerTarget": "HR manager",
+                        "partnerNative": "HR-менеджер"
+                    }
+                },
+                "payload": {
+                    "topic": {
+                        "title_target": "HR interview for a project manager role",
+                        "title_native": "Собеседование с HR на роль менеджера проектов",
+                        "description_target": "Talk about your background, current responsibilities, motivation, and the next hiring steps.",
+                        "description_native": "Поговорите о своём опыте, текущих обязанностях, мотивации и следующих этапах найма."
+                    },
+                    "learner_role": {
+                        "role_target": "Project manager",
+                        "role_native": "Менеджер проектов"
+                    },
+                    "role_gender": "female",
+                    "dialogue": [
+                        {
+                            "step": 1,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "HR manager",
+                                    "role_native": "HR-менеджер",
+                                    "text_target": "Could you briefly tell me about your background?",
+                                    "text_native": "Можете коротко рассказать о своём опыте?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Project manager",
+                                    "role_native": "Менеджер проектов",
+                                    "phrase_id": "p1",
+                                    "filler": "five years of project management",
+                                    "text_target": "I have five years of project management experience.",
+                                    "text_native": "У меня пять лет опыта в управлении проектами.",
+                                    "pronunciation_native": "Ай хэв файв йирз ов проджект менеджмент икспириэнс.",
+                                    "speaking_key": "have five years of",
+                                    "simplified_variants": [
+                                        "I have five years in project management.",
+                                        "My project management experience is five years."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the HR manager ask the candidate to describe?",
+                                "text_native": "Что HR-менеджер просит кандидата коротко описать?",
+                                "options": [
+                                    {
+                                        "text_target": "Their professional background",
+                                        "text_native": "Свой профессиональный опыт"
+                                    },
+                                    {
+                                        "text_target": "Their expected salary",
+                                        "text_native": "Ожидаемую зарплату"
+                                    },
+                                    {
+                                        "text_target": "Their university grades",
+                                        "text_native": "Оценки в университете"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "HR-менеджер просит коротко рассказать о профессиональном опыте кандидата."
+                            }
+                        },
+                        {
+                            "step": 2,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "HR manager",
+                                    "role_native": "HR-менеджер",
+                                    "text_target": "What do you do in your current role?",
+                                    "text_native": "Чем вы занимаетесь на своей текущей должности?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Project manager",
+                                    "role_native": "Менеджер проектов",
+                                    "phrase_id": "p2",
+                                    "filler": "planning and team coordination",
+                                    "text_target": "I focus on planning and team coordination.",
+                                    "text_native": "Я в основном занимаюсь планированием и координацией команды.",
+                                    "pronunciation_native": "Ай фоукэс он плэнинг энд тим коордынэйшн.",
+                                    "speaking_key": "focus on",
+                                    "simplified_variants": [
+                                        "I mainly handle planning and team coordination.",
+                                        "My work is planning and team coordination."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What is the HR manager asking about here?",
+                                "text_native": "О чём здесь спрашивает HR-менеджер?",
+                                "options": [
+                                    {
+                                        "text_target": "The candidate's current duties",
+                                        "text_native": "О текущих обязанностях кандидата"
+                                    },
+                                    {
+                                        "text_target": "The candidate's vacation plans",
+                                        "text_native": "О планах кандидата на отпуск"
+                                    },
+                                    {
+                                        "text_target": "The candidate's language level",
+                                        "text_native": "Об уровне языка кандидата"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Вопрос касается того, чем кандидат занимается на своей нынешней работе."
+                            }
+                        },
+                        {
+                            "step": 3,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "HR manager",
+                                    "role_native": "HR-менеджер",
+                                    "text_target": "Do you manage anyone at the moment?",
+                                    "text_native": "Вы сейчас кем-то руководите?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Project manager",
+                                    "role_native": "Менеджер проектов",
+                                    "phrase_id": "p3",
+                                    "filler": "a team of six people",
+                                    "text_target": "Yes, I manage a team of six people.",
+                                    "text_native": "Да, я руковожу командой из шести человек.",
+                                    "pronunciation_native": "Йес, ай мэнидж э тим ов сикс пипл.",
+                                    "speaking_key": "I manage",
+                                    "simplified_variants": [
+                                        "Yes, I lead six people.",
+                                        "I manage six people now."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the HR manager want to know?",
+                                "text_native": "Что хочет узнать HR-менеджер?",
+                                "options": [
+                                    {
+                                        "text_target": "Whether the candidate currently leads staff",
+                                        "text_native": "Руководит ли кандидат сейчас людьми"
+                                    },
+                                    {
+                                        "text_target": "Whether the candidate works remotely",
+                                        "text_native": "Работает ли кандидат удалённо"
+                                    },
+                                    {
+                                        "text_target": "Whether the candidate travels often",
+                                        "text_native": "Часто ли кандидат ездит в командировки"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "HR-менеджер спрашивает, есть ли у кандидата сейчас управленческая роль."
+                            }
+                        },
+                        {
+                            "step": 4,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "HR manager",
+                                    "role_native": "HR-менеджер",
+                                    "text_target": "How would you describe your management style?",
+                                    "text_native": "Как бы вы описали свой стиль управления?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Project manager",
+                                    "role_native": "Менеджер проектов",
+                                    "phrase_id": "p4",
+                                    "filler": "clear and supportive",
+                                    "text_target": "I would describe it as clear and supportive.",
+                                    "text_native": "Я бы описал это как понятный и поддерживающий стиль.",
+                                    "pronunciation_native": "Ай вуд дисклайб ит эз клир энд сэпортэв.",
+                                    "speaking_key": "describe it as",
+                                    "simplified_variants": [
+                                        "My style is clear and supportive.",
+                                        "I try to be clear and supportive."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the HR manager ask the candidate to explain?",
+                                "text_native": "Что HR-менеджер просит кандидата объяснить?",
+                                "options": [
+                                    {
+                                        "text_target": "Their leadership approach",
+                                        "text_native": "Свой подход к управлению"
+                                    },
+                                    {
+                                        "text_target": "Their office schedule",
+                                        "text_native": "Свой график в офисе"
+                                    },
+                                    {
+                                        "text_target": "Their contract type",
+                                        "text_native": "Свой тип контракта"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Вопрос касается того, как кандидат управляет командой."
+                            }
+                        },
+                        {
+                            "step": 5,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "HR manager",
+                                    "role_native": "HR-менеджер",
+                                    "text_target": "Why do you want this position?",
+                                    "text_native": "Почему вы хотите эту позицию?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Project manager",
+                                    "role_native": "Менеджер проектов",
+                                    "phrase_id": "p5",
+                                    "filler": "the product and the team",
+                                    "text_target": "I'm interested in the product and the team.",
+                                    "text_native": "Меня интересуют продукт и команда.",
+                                    "pronunciation_native": "Айм интрэстид ин зэ продакт энд зэ тим.",
+                                    "speaking_key": "interested in",
+                                    "simplified_variants": [
+                                        "I like the product and the team.",
+                                        "This product and team interest me."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What is the HR manager asking about?",
+                                "text_native": "О чём спрашивает HR-менеджер?",
+                                "options": [
+                                    {
+                                        "text_target": "The candidate's motivation for the role",
+                                        "text_native": "О мотивации кандидата к этой роли"
+                                    },
+                                    {
+                                        "text_target": "The candidate's last job title",
+                                        "text_native": "О последней должности кандидата"
+                                    },
+                                    {
+                                        "text_target": "The candidate's notice period",
+                                        "text_native": "О сроке отработки кандидата"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "HR-менеджер хочет понять, почему кандидату интересна именно эта позиция."
+                            }
+                        },
+                        {
+                            "step": 6,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Project manager",
+                                    "role_native": "Менеджер проектов",
+                                    "phrase_id": "p6",
+                                    "filler": "the main responsibilities",
+                                    "text_target": "Could you tell me more about the main responsibilities?",
+                                    "text_native": "Можете подробнее рассказать об основных обязанностях?",
+                                    "pronunciation_native": "Куд ю тэл ми мор эбаут зэ мэйн риспонсибилитиз?",
+                                    "speaking_key": "tell me more about",
+                                    "simplified_variants": [
+                                        "Could you explain the main responsibilities?",
+                                        "What are the main responsibilities?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "HR manager",
+                                    "role_native": "HR-менеджер",
+                                    "text_target": "The role includes leading delivery and coordinating with product and engineering.",
+                                    "text_native": "Эта роль включает руководство поставкой и координацию с продуктовой и инженерной командами."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which two groups does the role involve working with?",
+                                "text_native": "С какими двумя группами связана работа в этой роли?",
+                                "options": [
+                                    {
+                                        "text_target": "Product and engineering",
+                                        "text_native": "С продуктовой и инженерной командами"
+                                    },
+                                    {
+                                        "text_target": "Sales and finance",
+                                        "text_native": "С продажами и финансами"
+                                    },
+                                    {
+                                        "text_target": "Legal and marketing",
+                                        "text_native": "С юридическим и маркетинговым отделами"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "HR-менеджер говорит о координации с продуктовой и инженерной командами."
+                            }
+                        },
+                        {
+                            "step": 7,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Project manager",
+                                    "role_native": "Менеджер проектов",
+                                    "phrase_id": "p7",
+                                    "filler": "the next steps",
+                                    "text_target": "Could you walk me through the next steps?",
+                                    "text_native": "Можете рассказать мне о следующих этапах?",
+                                    "pronunciation_native": "Куд ю вок ми сру зэ нэкст степс?",
+                                    "speaking_key": "walk me through",
+                                    "simplified_variants": [
+                                        "Could you explain the next steps?",
+                                        "What are the next steps?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "HR manager",
+                                    "role_native": "HR-менеджер",
+                                    "text_target": "Next, you'll meet the hiring manager, then have a team interview.",
+                                    "text_native": "Дальше вы встретитесь с нанимающим менеджером, а потом будет интервью с командой."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Who does the candidate meet first after this?",
+                                "text_native": "С кем кандидат встретится сначала после этого этапа?",
+                                "options": [
+                                    {
+                                        "text_target": "The team members",
+                                        "text_native": "С членами команды"
+                                    },
+                                    {
+                                        "text_target": "The hiring manager",
+                                        "text_native": "С нанимающим менеджером"
+                                    },
+                                    {
+                                        "text_target": "The company founder",
+                                        "text_native": "С основателем компании"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Сначала будет встреча с нанимающим менеджером, а уже потом интервью с командой."
+                            }
+                        },
+                        {
+                            "step": 8,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "HR manager",
+                                    "role_native": "HR-менеджер",
+                                    "text_target": "We usually make a decision within one week.",
+                                    "text_native": "Обычно мы принимаем решение в течение одной недели."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Project manager",
+                                    "role_native": "Менеджер проектов",
+                                    "phrase_id": "p8",
+                                    "filler": "good to know",
+                                    "text_target": "That's good to know.",
+                                    "text_native": "Хорошо знать.",
+                                    "pronunciation_native": "Зэтс гуд ту ноу.",
+                                    "speaking_key": "good to know",
+                                    "simplified_variants": [
+                                        "That's helpful.",
+                                        "Good to know."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "When does the company usually decide?",
+                                "text_native": "Когда компания обычно принимает решение?",
+                                "options": [
+                                    {
+                                        "text_target": "In about seven days",
+                                        "text_native": "Примерно за семь дней"
+                                    },
+                                    {
+                                        "text_target": "By the end of today",
+                                        "text_native": "До конца сегодняшнего дня"
+                                    },
+                                    {
+                                        "text_target": "After one month",
+                                        "text_native": "Через месяц"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "HR-менеджер говорит, что решение обычно принимают в течение недели."
+                            }
+                        }
+                    ],
+                    "phrases": [
+                        {
+                            "id": "p1",
+                            "kind": "answer",
+                            "frame_target": "I have ___ experience.",
+                            "frame_native": "У меня есть опыт в ___ .",
+                            "pronunciation_native": "Ай хэв ___ икспириэнс.",
+                            "slot": {
+                                "hint_native": "сфера или срок опыта",
+                                "fillers": [
+                                    {
+                                        "target": "five years of project management",
+                                        "native": "пяти годах управления проектами",
+                                        "pronunciation_native": "файв йирз ов проджект менеджмент",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "software delivery",
+                                        "native": "поставке софта",
+                                        "pronunciation_native": "софтуэр деливери",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p2",
+                            "kind": "answer",
+                            "frame_target": "I focus on ___.",
+                            "frame_native": "Я в основном занимаюсь ___ .",
+                            "pronunciation_native": "Ай фоукэс он ___ .",
+                            "slot": {
+                                "hint_native": "основные задачи",
+                                "fillers": [
+                                    {
+                                        "target": "planning and team coordination",
+                                        "native": "планированием и координацией команды",
+                                        "pronunciation_native": "плэнинг энд тим коордынэйшн",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "delivery and reporting",
+                                        "native": "поставкой и отчётностью",
+                                        "pronunciation_native": "деливери энд рипортинг",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "process improvement",
+                                        "native": "улучшением процессов",
+                                        "pronunciation_native": "проусэс импрувмэнт",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p3",
+                            "kind": "answer",
+                            "frame_target": "I manage ___.",
+                            "frame_native": "Я руковожу ___ .",
+                            "pronunciation_native": "Ай мэнидж ___ .",
+                            "slot": {
+                                "hint_native": "кем или чем вы руководите",
+                                "fillers": [
+                                    {
+                                        "target": "a team of six people",
+                                        "native": "командой из шести человек",
+                                        "pronunciation_native": "э тим ов сикс пипл",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "two project coordinators",
+                                        "native": "двумя координаторами проектов",
+                                        "pronunciation_native": "ту проджект коордынэйторз",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p4",
+                            "kind": "answer",
+                            "frame_target": "I would describe it as ___.",
+                            "frame_native": "Я бы описал это как ___ .",
+                            "pronunciation_native": "Ай вуд дисклайб ит эз ___ .",
+                            "slot": {
+                                "hint_native": "качества стиля управления",
+                                "fillers": [
+                                    {
+                                        "target": "clear and supportive",
+                                        "native": "понятный и поддерживающий стиль",
+                                        "pronunciation_native": "клир энд сэпортэв",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "structured and calm",
+                                        "native": "структурированный и спокойный стиль",
+                                        "pronunciation_native": "страктчэрд энд кам",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p5",
+                            "kind": "answer",
+                            "frame_target": "I'm interested in ___.",
+                            "frame_native": "Меня интересует ___ .",
+                            "pronunciation_native": "Айм интрэстид ин ___ .",
+                            "slot": {
+                                "hint_native": "что вас привлекает",
+                                "fillers": [
+                                    {
+                                        "target": "the product and the team",
+                                        "native": "продукт и команда",
+                                        "pronunciation_native": "зэ продакт энд зэ тим",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "the company culture",
+                                        "native": "культура компании",
+                                        "pronunciation_native": "зэ кампэни калчэр",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "the growth opportunities",
+                                        "native": "возможности роста",
+                                        "pronunciation_native": "зэ гроус опэртьюнитиз",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p6",
+                            "kind": "ask",
+                            "frame_target": "Could you tell me more about ___?",
+                            "frame_native": "Можете подробнее рассказать о ___?",
+                            "pronunciation_native": "Куд ю тэл ми мор эбаут ___?",
+                            "slot": {
+                                "hint_native": "что вы хотите уточнить",
+                                "fillers": [
+                                    {
+                                        "target": "the main responsibilities",
+                                        "native": "основных обязанностях",
+                                        "pronunciation_native": "зэ мэйн риспонсибилитиз",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "the team structure",
+                                        "native": "структуре команды",
+                                        "pronunciation_native": "зэ тим стракчэр",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "the onboarding process",
+                                        "native": "процессе онбординга",
+                                        "pronunciation_native": "зэ онбординг проусэс",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p7",
+                            "kind": "ask",
+                            "frame_target": "Could you walk me through ___?",
+                            "frame_native": "Можете рассказать мне о ___?",
+                            "pronunciation_native": "Куд ю вок ми сру ___?",
+                            "slot": {
+                                "hint_native": "этапы или процесс",
+                                "fillers": [
+                                    {
+                                        "target": "the next steps",
+                                        "native": "следующих этапах",
+                                        "pronunciation_native": "зэ нэкст степс",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "the interview process",
+                                        "native": "процессе собеседования",
+                                        "pronunciation_native": "зэ интервью проусэс",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p8",
+                            "kind": "answer",
+                            "frame_target": "That's ___.",
+                            "frame_native": "Это ___ .",
+                            "pronunciation_native": "Зэтс ___ .",
+                            "slot": {
+                                "hint_native": "ваша краткая реакция",
+                                "fillers": [
+                                    {
+                                        "target": "good to know",
+                                        "native": "хорошо знать",
+                                        "pronunciation_native": "гуд ту ноу",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "helpful",
+                                        "native": "полезно",
+                                        "pronunciation_native": "хэлпфул",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "listening": {
+                        "questions": [
+                            {
+                                "text_native": "Сколько опыта у кандидата?",
+                                "options_native": [
+                                    "Около пяти лет",
+                                    "Около двух лет",
+                                    "Больше десяти лет"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Кандидат говорит, что у него пять лет опыта."
+                            },
+                            {
+                                "text_native": "Сколькими людьми кандидат руководит сейчас?",
+                                "options_native": [
+                                    "Тремя людьми",
+                                    "Шестью людьми",
+                                    "Десятью людьми"
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Кандидат говорит, что руководит командой из шести человек."
+                            },
+                            {
+                                "text_native": "Что входит в эту роль по словам HR-менеджера?",
+                                "options_native": [
+                                    "Только работа с клиентами",
+                                    "Руководство поставкой и координация с product и engineering",
+                                    "Только найм новых сотрудников"
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "HR-менеджер объясняет, что роль связана с delivery и координацией двух команд."
+                            },
+                            {
+                                "text_native": "Кто будет следующим интервьюером после HR?",
+                                "options_native": [
+                                    "Нанимающий менеджер",
+                                    "Финансовый директор",
+                                    "Рекрутер из другого отдела"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "HR-менеджер говорит, что следующим будет встреча с нанимающим менеджером."
+                            }
+                        ]
+                    },
+                    "vocabulary": [
+                        {
+                            "id": "v1",
+                            "term_target": "background",
+                            "translation_native": "опыт",
+                            "pronunciation_native": "бэкграунд",
+                            "definition_target": "your professional and educational history",
+                            "kind": "word",
+                            "image_prompt": null,
+                            "used_in": [
+                                "A1"
+                            ]
+                        },
+                        {
+                            "id": "v2",
+                            "term_target": "project management",
+                            "translation_native": "управление проектами",
+                            "pronunciation_native": "проджект менеджмент",
+                            "definition_target": "the work of planning and leading projects",
+                            "kind": "chunk",
+                            "image_prompt": "project timeline on a laptop screen in an office meeting room",
+                            "used_in": [
+                                "p1"
+                            ]
+                        },
+                        {
+                            "id": "v3",
+                            "term_target": "coordination",
+                            "translation_native": "координация",
+                            "pronunciation_native": "коордынэйшн",
+                            "definition_target": "the act of organizing people and tasks together",
+                            "kind": "word",
+                            "image_prompt": null,
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v4",
+                            "term_target": "manage",
+                            "translation_native": "руководить",
+                            "pronunciation_native": "мэнидж",
+                            "definition_target": "to lead people or be responsible for their work",
+                            "kind": "word",
+                            "image_prompt": "team lead speaking with colleagues around a desk",
+                            "used_in": [
+                                "p3",
+                                "A3"
+                            ]
+                        },
+                        {
+                            "id": "v5",
+                            "term_target": "supportive",
+                            "translation_native": "поддерживающий",
+                            "pronunciation_native": "сэпортэв",
+                            "definition_target": "helpful and encouraging to other people",
+                            "kind": "word",
+                            "image_prompt": "manager listening to an employee in a meeting room",
+                            "used_in": [
+                                "p4"
+                            ]
+                        },
+                        {
+                            "id": "v6",
+                            "term_target": "responsibilities",
+                            "translation_native": "обязанности",
+                            "pronunciation_native": "риспонсибилитиз",
+                            "definition_target": "the tasks and duties of a job",
+                            "kind": "word",
+                            "image_prompt": "printed job description on an office desk",
+                            "used_in": [
+                                "p6",
+                                "A6"
+                            ]
+                        },
+                        {
+                            "id": "v7",
+                            "term_target": "hiring manager",
+                            "translation_native": "нанимающий менеджер",
+                            "pronunciation_native": "хайэринг мэниджер",
+                            "definition_target": "the manager who is choosing a person for the role",
+                            "kind": "chunk",
+                            "image_prompt": "manager interviewing a candidate across a table",
+                            "used_in": [
+                                "A7"
+                            ]
+                        },
+                        {
+                            "id": "v8",
+                            "term_target": "team interview",
+                            "translation_native": "интервью с командой",
+                            "pronunciation_native": "тим интервью",
+                            "definition_target": "an interview with several team members",
+                            "kind": "chunk",
+                            "image_prompt": "several coworkers interviewing one candidate in a conference room",
+                            "used_in": [
+                                "A7"
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "call": "judge",
+                "at": "2026-09-17T13:18:51+00:00",
+                "prompt_version": "lesson_seam_judge.v1.1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 1387,
+                "cached_tokens": 0,
+                "tokens_out": 222,
+                "cost_usd": "0.002039",
+                "latency_ms": 1910,
+                "asked": {
+                    "items": 19
+                },
+                "payload": {
+                    "verdicts": [
+                        {
+                            "id": "p1.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p1.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f3",
+                            "reads": false
+                        },
+                        {
+                            "id": "p6.f1",
+                            "reads": false
+                        },
+                        {
+                            "id": "p6.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p8.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p8.f2",
+                            "reads": true
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

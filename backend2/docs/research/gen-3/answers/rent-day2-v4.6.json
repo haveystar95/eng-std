@@ -1,0 +1,726 @@
+{
+    "topic": {
+        "title_target": "Discussing the lease agreement",
+        "title_native": "Обсуждение договора аренды",
+        "description_target": "Talk with the landlord about the contract, charges, notice period, and deposit return.",
+        "description_native": "Поговорите с арендодателем о договоре, платежах, сроке уведомления и возврате депозита."
+    },
+    "learner_role": {
+        "role_target": "Tenant",
+        "role_native": "Арендатор"
+    },
+    "role_gender": "male",
+    "dialogue": [
+        {
+            "step": 1,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Landlord",
+                    "role_native": "Арендодатель",
+                    "text_target": "The lease is for twelve months, starting on May first.",
+                    "text_native": "Договор на двенадцать месяцев, он начинается первого мая."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Tenant",
+                    "role_native": "Арендатор",
+                    "phrase_id": "p1",
+                    "filler": "May first",
+                    "text_target": "That start date works for May first.",
+                    "text_native": "Эта дата начала мне подходит: первое мая.",
+                    "pronunciation_native": "Зэт старт дэйт уоркс фор Мэй фёрст.",
+                    "speaking_key": "start date works",
+                    "simplified_variants": [
+                        "May first works for me.",
+                        "That date works."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "When does the lease begin?",
+                "text_native": "Когда начинается договор?",
+                "options": [
+                    {
+                        "text_target": "On the first day of May",
+                        "text_native": "В первый день мая"
+                    },
+                    {
+                        "text_target": "At the end of April",
+                        "text_native": "В конце апреля"
+                    },
+                    {
+                        "text_target": "In the middle of May",
+                        "text_native": "В середине мая"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Арендодатель сказал, что договор начинается первого мая."
+            }
+        },
+        {
+            "step": 2,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Tenant",
+                    "role_native": "Арендатор",
+                    "phrase_id": "p2",
+                    "filler": "the notice period",
+                    "text_target": "Could you explain the notice period?",
+                    "text_native": "Вы можете объяснить срок уведомления?",
+                    "pronunciation_native": "Куд ю иксплэйн зэ ноутис пириэд?",
+                    "speaking_key": "explain the",
+                    "simplified_variants": [
+                        "Can you explain the notice period?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Landlord",
+                    "role_native": "Арендодатель",
+                    "text_target": "It's three months, and it must be in writing.",
+                    "text_native": "Он составляет три месяца, и уведомление должно быть письменным."
+                }
+            ],
+            "check": {
+                "text_target": "How must the tenant give notice?",
+                "text_native": "Как арендатор должен подать уведомление?",
+                "options": [
+                    {
+                        "text_target": "By phone call",
+                        "text_native": "По телефону"
+                    },
+                    {
+                        "text_target": "In written form",
+                        "text_native": "Письменно"
+                    },
+                    {
+                        "text_target": "With a text message",
+                        "text_native": "Сообщением"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Арендодатель уточнил, что уведомление должно быть письменным."
+            }
+        },
+        {
+            "step": 3,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Tenant",
+                    "role_native": "Арендатор",
+                    "phrase_id": "p3",
+                    "filler": "the deposit",
+                    "text_target": "What happens to the deposit?",
+                    "text_native": "Что происходит с депозитом?",
+                    "pronunciation_native": "Уот хэпэнз ту зэ дипозит?",
+                    "speaking_key": "happens to the",
+                    "simplified_variants": [
+                        "What about the deposit?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Landlord",
+                    "role_native": "Арендодатель",
+                    "text_target": "I return it after the final inspection, if there is no damage.",
+                    "text_native": "Я возвращаю его после финальной проверки, если нет повреждений."
+                }
+            ],
+            "check": {
+                "text_target": "When is the deposit given back?",
+                "text_native": "Когда возвращают депозит?",
+                "options": [
+                    {
+                        "text_target": "After the apartment check at the end",
+                        "text_native": "После итоговой проверки квартиры"
+                    },
+                    {
+                        "text_target": "Before the tenant moves out",
+                        "text_native": "До выезда арендатора"
+                    },
+                    {
+                        "text_target": "With the first monthly payment",
+                        "text_native": "Вместе с первым ежемесячным платежом"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Арендодатель сказал, что депозит возвращается после финальной проверки."
+            }
+        },
+        {
+            "step": 4,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Landlord",
+                    "role_native": "Арендодатель",
+                    "text_target": "The monthly charges cover water, heating, and building cleaning.",
+                    "text_native": "Ежемесячные платежи покрывают воду, отопление и уборку дома."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Tenant",
+                    "role_native": "Арендатор",
+                    "phrase_id": "p4",
+                    "filler": "building cleaning",
+                    "text_target": "Good, monthly charges include building cleaning.",
+                    "text_native": "Хорошо, в ежемесячные платежи входит уборка дома.",
+                    "pronunciation_native": "Гуд, мансли чарджиз инклуд билдинг клининг.",
+                    "speaking_key": "charges include",
+                    "simplified_variants": [
+                        "Okay, building cleaning is included."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "Which service is part of the monthly charges?",
+                "text_native": "Какая услуга входит в ежемесячные платежи?",
+                "options": [
+                    {
+                        "text_target": "Apartment insurance",
+                        "text_native": "Страховка квартиры"
+                    },
+                    {
+                        "text_target": "Cleaning of shared areas",
+                        "text_native": "Уборка общих зон"
+                    },
+                    {
+                        "text_target": "Private parking",
+                        "text_native": "Личное парковочное место"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Арендодатель добавил, что в платежи входит уборка дома, то есть общих зон."
+            }
+        },
+        {
+            "step": 5,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Tenant",
+                    "role_native": "Арендатор",
+                    "phrase_id": "p5",
+                    "filler": "paid separately",
+                    "text_target": "Is electricity paid separately?",
+                    "text_native": "Электричество оплачивается отдельно?",
+                    "pronunciation_native": "Из илэктрисити пэйд сэпэрэтли?",
+                    "speaking_key": "paid separately",
+                    "simplified_variants": [
+                        "Do I pay electricity separately?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Landlord",
+                    "role_native": "Арендодатель",
+                    "text_target": "Yes, electricity and internet are separate, and you arrange both yourself.",
+                    "text_native": "Да, электричество и интернет оплачиваются отдельно, и вы сами всё оформляете."
+                }
+            ],
+            "check": {
+                "text_target": "Which two services does the landlord say are extra?",
+                "text_native": "Какие две услуги арендодатель называет отдельными?",
+                "options": [
+                    {
+                        "text_target": "Power and web service",
+                        "text_native": "Электричество и интернет"
+                    },
+                    {
+                        "text_target": "Water and heating",
+                        "text_native": "Вода и отопление"
+                    },
+                    {
+                        "text_target": "Cleaning and parking",
+                        "text_native": "Уборка и парковка"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Арендодатель сказал, что отдельно оплачиваются электричество и интернет."
+            }
+        },
+        {
+            "step": 6,
+            "kind": "rescue",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Tenant",
+                    "role_native": "Арендатор",
+                    "phrase_id": null,
+                    "filler": null,
+                    "text_target": "Sorry, could you say that more slowly?",
+                    "text_native": "Извините, можете сказать это помедленнее?",
+                    "pronunciation_native": "Сори, куд ю сэй зэт мор слоули?",
+                    "speaking_key": "say that more slowly",
+                    "simplified_variants": [
+                        "Sorry, more slowly, please.",
+                        "Could you repeat that slowly?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Landlord",
+                    "role_native": "Арендодатель",
+                    "text_target": "Electricity and internet are extra. You set them up yourself.",
+                    "text_native": "Электричество и интернет отдельно. Вы сами их оформляете."
+                }
+            ],
+            "check": {
+                "text_target": "Who sets up those extra services?",
+                "text_native": "Кто оформляет эти отдельные услуги?",
+                "options": [
+                    {
+                        "text_target": "The tenant does it",
+                        "text_native": "Это делает арендатор"
+                    },
+                    {
+                        "text_target": "The building manager does it",
+                        "text_native": "Это делает управляющий домом"
+                    },
+                    {
+                        "text_target": "The landlord does it",
+                        "text_native": "Это делает арендодатель"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "В повторе арендодатель сказал, что эти услуги арендатор оформляет сам."
+            }
+        },
+        {
+            "step": 7,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Tenant",
+                    "role_native": "Арендатор",
+                    "phrase_id": "p6",
+                    "filler": "my cat",
+                    "text_target": "Is there any rule about my cat?",
+                    "text_native": "Есть ли какое-то правило насчёт моей кошки?",
+                    "pronunciation_native": "Из зэа эни рул эбаут май кэт?",
+                    "speaking_key": "rule about",
+                    "simplified_variants": [
+                        "Are there rules about my cat?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Landlord",
+                    "role_native": "Арендодатель",
+                    "text_target": "Yes. Please keep the cat inside the flat, not in the garden.",
+                    "text_native": "Да. Пожалуйста, держите кошку в квартире, а не в саду."
+                }
+            ],
+            "check": {
+                "text_target": "Where should the cat stay?",
+                "text_native": "Где должна находиться кошка?",
+                "options": [
+                    {
+                        "text_target": "Inside the apartment",
+                        "text_native": "Внутри квартиры"
+                    },
+                    {
+                        "text_target": "In the shared garden",
+                        "text_native": "В общем саду"
+                    },
+                    {
+                        "text_target": "In the basement area",
+                        "text_native": "В подвальном помещении"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Арендодатель сказал, что кошка должна быть в квартире, а не в саду."
+            }
+        },
+        {
+            "step": 8,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Tenant",
+                    "role_native": "Арендатор",
+                    "phrase_id": "p7",
+                    "filler": "this clause",
+                    "text_target": "Could you clarify this clause?",
+                    "text_native": "Вы можете пояснить этот пункт?",
+                    "pronunciation_native": "Куд ю клэрэфай зыс клоуз?",
+                    "speaking_key": "clarify this",
+                    "simplified_variants": [
+                        "Can you clarify this clause?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Landlord",
+                    "role_native": "Арендодатель",
+                    "text_target": "It says home office is fine if you do not disturb neighbors.",
+                    "text_native": "Там сказано, что работать из дома можно, если вы не мешаете соседям."
+                }
+            ],
+            "check": {
+                "text_target": "What condition is attached to working from home?",
+                "text_native": "Какое условие связано с работой из дома?",
+                "options": [
+                    {
+                        "text_target": "You must avoid bothering other residents",
+                        "text_native": "Нужно не мешать другим жильцам"
+                    },
+                    {
+                        "text_target": "You need a separate work room",
+                        "text_native": "Нужна отдельная рабочая комната"
+                    },
+                    {
+                        "text_target": "You can only work at weekends",
+                        "text_native": "Можно работать только по выходным"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Арендодатель объяснил, что удалённая работа разрешена, если не беспокоить соседей."
+            }
+        }
+    ],
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "frame_target": "That start date works for ___.",
+            "frame_native": "Эта дата начала мне подходит: ___.",
+            "pronunciation_native": "Зэт старт дэйт уоркс фор ___.",
+            "slot": {
+                "hint_native": "дата",
+                "fillers": [
+                    {
+                        "target": "May first",
+                        "native": "первое мая",
+                        "pronunciation_native": "Мэй фёрст",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "June first",
+                        "native": "первое июня",
+                        "pronunciation_native": "Джун фёрст",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p2",
+            "kind": "ask",
+            "frame_target": "Could you explain ___?",
+            "frame_native": "Вы можете объяснить ___?",
+            "pronunciation_native": "Куд ю иксплэйн ___?",
+            "slot": {
+                "hint_native": "условие договора",
+                "fillers": [
+                    {
+                        "target": "the notice period",
+                        "native": "срок уведомления",
+                        "pronunciation_native": "зэ ноутис пириэд",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "the payment schedule",
+                        "native": "график платежей",
+                        "pronunciation_native": "зэ пэймэнт скэджул",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "the move-out rules",
+                        "native": "правила выезда",
+                        "pronunciation_native": "зэ мув-аут рулз",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p3",
+            "kind": "ask",
+            "frame_target": "What happens to ___?",
+            "frame_native": "Что происходит с ___?",
+            "pronunciation_native": "Уот хэпэнз ту ___?",
+            "slot": {
+                "hint_native": "деньги или документ",
+                "fillers": [
+                    {
+                        "target": "the deposit",
+                        "native": "депозитом",
+                        "pronunciation_native": "зэ дипозит",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "the first payment",
+                        "native": "первым платежом",
+                        "pronunciation_native": "зэ фёрст пэймэнт",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "frame_target": "Monthly charges include ___.",
+            "frame_native": "В ежемесячные платежи входит ___.",
+            "pronunciation_native": "Мансли чарджиз инклуд ___.",
+            "slot": {
+                "hint_native": "услуга",
+                "fillers": [
+                    {
+                        "target": "building cleaning",
+                        "native": "уборка дома",
+                        "pronunciation_native": "билдинг клининг",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "water",
+                        "native": "вода",
+                        "pronunciation_native": "уотэр",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "heating",
+                        "native": "отопление",
+                        "pronunciation_native": "хитинг",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "frame_target": "Is ___ paid separately?",
+            "frame_native": "___ оплачивается отдельно?",
+            "pronunciation_native": "Из ___ пэйд сэпэрэтли?",
+            "slot": {
+                "hint_native": "услуга",
+                "fillers": [
+                    {
+                        "target": "electricity",
+                        "native": "электричество",
+                        "pronunciation_native": "илэктрисити",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "internet",
+                        "native": "интернет",
+                        "pronunciation_native": "интэрнэт",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "frame_target": "Is there any rule about ___?",
+            "frame_native": "Есть ли какое-то правило насчёт ___?",
+            "pronunciation_native": "Из зэа эни рул эбаут ___?",
+            "slot": {
+                "hint_native": "животное или бытовая ситуация",
+                "fillers": [
+                    {
+                        "target": "my cat",
+                        "native": "моей кошки",
+                        "pronunciation_native": "май кэт",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "quiet hours",
+                        "native": "тихих часов",
+                        "pronunciation_native": "куайэт ауэрз",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "frame_target": "Could you clarify ___?",
+            "frame_native": "Вы можете пояснить ___?",
+            "pronunciation_native": "Куд ю клэрэфай ___?",
+            "slot": {
+                "hint_native": "пункт в договоре",
+                "fillers": [
+                    {
+                        "target": "this clause",
+                        "native": "этот пункт",
+                        "pronunciation_native": "зыс клоуз",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "that sentence",
+                        "native": "то предложение",
+                        "pronunciation_native": "зэт сэнтэнс",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "На какой срок договор аренды?",
+                "options_native": [
+                    "На шесть месяцев",
+                    "На один год",
+                    "На два года"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "В начале разговора арендодатель говорит, что договор на двенадцать месяцев."
+            },
+            {
+                "text_native": "Что арендатор уточнил про отдельную оплату?",
+                "options_native": [
+                    "Электричество",
+                    "Уборку дома",
+                    "Отопление"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Арендатор спрашивает, оплачивается ли электричество отдельно."
+            },
+            {
+                "text_native": "Когда арендодатель возвращает депозит?",
+                "options_native": [
+                    "После финальной проверки",
+                    "В день въезда",
+                    "Через неделю после подписания"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Арендодатель объясняет, что возвращает депозит после итоговой проверки, если нет повреждений."
+            },
+            {
+                "text_native": "Какое правило действует для работы из дома?",
+                "options_native": [
+                    "Можно только днём",
+                    "Нужно не мешать соседям",
+                    "Нужен отдельный кабинет"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "В последнем ответе арендодатель говорит, что работать из дома можно, если не беспокоить соседей."
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "term_target": "lease",
+            "translation_native": "договор аренды",
+            "pronunciation_native": "лис",
+            "definition_target": "a legal rental agreement for a home",
+            "kind": "word",
+            "image_prompt": "rental contract papers and keys on a wooden table",
+            "used_in": [
+                "A1"
+            ]
+        },
+        {
+            "id": "v2",
+            "term_target": "notice period",
+            "translation_native": "срок уведомления",
+            "pronunciation_native": "ноутис пириэд",
+            "definition_target": "the amount of time you must give before leaving",
+            "kind": "chunk",
+            "image_prompt": null,
+            "used_in": [
+                "p2"
+            ]
+        },
+        {
+            "id": "v3",
+            "term_target": "in writing",
+            "translation_native": "в письменном виде",
+            "pronunciation_native": "ин райтинг",
+            "definition_target": "communicated in written form, not just spoken",
+            "kind": "chunk",
+            "image_prompt": "hand signing a printed letter on a desk",
+            "used_in": [
+                "A2"
+            ]
+        },
+        {
+            "id": "v4",
+            "term_target": "final inspection",
+            "translation_native": "финальная проверка",
+            "pronunciation_native": "файнэл инспэкшн",
+            "definition_target": "the last check of the apartment before or after move-out",
+            "kind": "chunk",
+            "image_prompt": "person checking an empty apartment with a clipboard",
+            "used_in": [
+                "A3"
+            ]
+        },
+        {
+            "id": "v5",
+            "term_target": "damage",
+            "translation_native": "повреждения",
+            "pronunciation_native": "дэмидж",
+            "definition_target": "harm done to the property",
+            "kind": "word",
+            "image_prompt": "scratched wooden floor near a wall",
+            "used_in": [
+                "A3"
+            ]
+        },
+        {
+            "id": "v6",
+            "term_target": "building cleaning",
+            "translation_native": "уборка дома",
+            "pronunciation_native": "билдинг клининг",
+            "definition_target": "cleaning of shared areas in the building",
+            "kind": "chunk",
+            "image_prompt": "cleaner mopping an apartment building hallway",
+            "used_in": [
+                "p4",
+                "A4"
+            ]
+        },
+        {
+            "id": "v7",
+            "term_target": "separately",
+            "translation_native": "отдельно",
+            "pronunciation_native": "сэпэрэтли",
+            "definition_target": "not included together with something else",
+            "kind": "word",
+            "image_prompt": null,
+            "used_in": [
+                "p5"
+            ]
+        },
+        {
+            "id": "v8",
+            "term_target": "clause",
+            "translation_native": "пункт договора",
+            "pronunciation_native": "клоуз",
+            "definition_target": "a specific statement or section in a contract",
+            "kind": "word",
+            "image_prompt": "close view of a contract paragraph marked with a pen",
+            "used_in": [
+                "p7"
+            ]
+        }
+    ]
+}

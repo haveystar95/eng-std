@@ -1,0 +1,7 @@
+database=wordtrainer_e2e_test plan.driver=openai lesson=gpt-5.4 repair=gpt-5.4 judge=gpt-5.4-mini timeout=180
+13:24:48 interview day 2 v4.6 ready · calls lesson,judge · $0.066675 · 44.5s
+13:25:30 rent day 2 v4.6 ready · calls lesson,judge · $0.065526 · 42.2s
+13:26:13 bank day 2 v4.6 ready · calls lesson,repair:v5,repair:v7,judge · $0.083281 · 43.5s
+13:26:57 restaurant day 2 v4.6 ready · calls lesson,repair:p2,judge · $0.074011 · 44.0s
+13:27:48 airport day 2 v4.6 ready · calls lesson,judge · $0.063836 · 50.7s
+13:28:38 doctor day 2 v4.6 ready · calls lesson,repair:p4,judge · $0.071637 · 49.5s
