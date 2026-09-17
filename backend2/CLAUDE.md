@@ -63,8 +63,11 @@ ruleset entry, add a row to the table above, and write the module `README.md` fr
 ## The database is not disposable
 
 - **Before ANY operation that touches the dev database** — a migration, a seeder, a content
-  backfill, a manual UPDATE — take a backup: `scripts/db-backup.sh` (dumps to the gitignored
-  `storage/db-backups/`). It takes a second and it is the only copy that exists.
+  backfill, a manual UPDATE — take a backup: `scripts/db-backup.sh --safety` (dumps to the gitignored
+  `storage/db-backups/`). It takes a second and it is the only copy that exists. `--safety` is what makes
+  that run prune NOTHING (наряд BACK-TAILS-1 §3.5): an insurance copy must not be the thing that deletes
+  the older copy you would need if the migration goes wrong. A plain run keeps dumps 30 days back
+  (`DAYS=`), never the newest one.
 - **`migrate:fresh` / `migrate:refresh` / `migrate:reset` / `migrate:rollback` / `db:wipe` on the
   main database (`wordtrainer`) are forbidden. Always.** Not "unless you're careful" — the store
   catalogue, the enriched content and the owner's collections live only there, and re-creating them

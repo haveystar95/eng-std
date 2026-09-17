@@ -1,0 +1,273 @@
+[
+  {
+    "name": "1. speak_retell берёт реплику собеседника, а не ученика",
+    "rule": "«Повтори свою реплику» стоит на реплике УЧЕНИКА (§1.1, кадр 35-4)",
+    "defect": "payload собирается из реплики собеседника",
+    "file": "app/Modules/Plan/Domain/Assembly/SpeakCards.php",
+    "find": "        $ownLine = CardObjects::ownLine($scene, $exchange);\n        if ($ownLine === null) {",
+    "replace": "        $ownLine = CardObjects::partnerLine($exchange);\n        if ($ownLine === null) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/SpeakStageTest.php",
+        "filter": "writes speak_echo and speak_retell"
+      }
+    ]
+  },
+  {
+    "name": "2. speak_retell берёт реплику, которую день уже спросил speak_answer",
+    "rule": "реплика ученика, не занятая speak_answer этого дня (§1.1)",
+    "defect": "занятые обмены не исключаются",
+    "file": "app/Modules/Plan/Domain/Assembly/SpeakStage.php",
+    "find": "        $taken = array_fill_keys($answered, true);",
+    "replace": "        $taken = [];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/SpeakStageTest.php",
+        "filter": "retells the learner"
+      }
+    ]
+  },
+  {
+    "name": "3. speak_retell снова судится сервером",
+    "rule": "судья окна — только phrase_own_slot и speak_answer (§1.1)",
+    "defect": "speak_retell возвращён в судимые виды",
+    "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+    "find": "        return in_array($this, [self::PhraseOwnSlot, self::SpeakAnswer], true);",
+    "replace": "        return in_array($this, [self::PhraseOwnSlot, self::SpeakAnswer, self::SpeakRetell], true);",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/CardKindTest.php",
+        "filter": "counts every kind exactly one way"
+      },
+      {
+        "path": "tests/Feature/Plan/SlotJudgeTest.php",
+        "filter": "judges only the judged kinds"
+      }
+    ]
+  },
+  {
+    "name": "4. варианты listen_predict — снова строки на родном",
+    "rule": "вариант listen_predict — реплика дня с обоими текстами и звуком (§1.2)",
+    "defect": "вариант сводится к переводу",
+    "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+    "find": "            $option = CardObjects::line($scene->exchange($line['step']) ?? $exchange, $line['message']);",
+    "replace": "            $option = ['text_target' => $line['message']->textTarget, 'text_native' => $line['message']->textNative];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+        "filter": "predicts the partner"
+      }
+    ]
+  },
+  {
+    "name": "5. отвлекающие listen_predict — любые реплики, не отвечающие ученику",
+    "rule": "отвлекающие — того же рода: отвечающие ученику (§1.2)",
+    "defect": "род не различается",
+    "file": "app/Modules/Plan/Domain/Assembly/ListenCards.php",
+    "find": "            $out[] = [...$line, 'answers' => ! $exchange->partnerStarts()];",
+    "replace": "            $out[] = [...$line, 'answers' => false];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+        "filter": "predicts the partner"
+      }
+    ]
+  },
+  {
+    "name": "6. «Поймай число» снова предлагает даты",
+    "rule": "варианты — только числа и количества (§1.3)",
+    "defect": "количеством считается любое значение времени",
+    "file": "app/Modules/Plan/Domain/Assembly/NumberValues.php",
+    "find": "        return array_values(array_filter($this->runs($text), static fn (array $run): bool => $run['amount']));",
+    "replace": "        return $this->runs($text);",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+        "filter": "offers no date and no adverb"
+      },
+      {
+        "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+        "filter": "asks the number of the visit"
+      }
+    ]
+  },
+  {
+    "name": "7. единица счёта перестаёт делать значение количеством",
+    "rule": "количество — числительное ИЛИ единица счёта (§1.3)",
+    "defect": "количеством считается только числительное",
+    "file": "app/Modules/Plan/Domain/Assembly/NumberValues.php",
+    "find": "            $amount = $number || $this->isAmount($word);",
+    "replace": "            $amount = $number;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+        "filter": "offers no date and no adverb"
+      },
+      {
+        "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+        "filter": "reads a value as a run"
+      }
+    ]
+  },
+  {
+    "name": "8. ask-обмен снова раздаёт отдельную карточку проверки",
+    "rule": "ask раздаёт одну карточку, проверка — на ней (§1.5)",
+    "defect": "dialogue_partner возвращён ask-обменам",
+    "file": "app/Modules/Plan/Domain/Assembly/DialogueStage.php",
+    "find": "                    $drafts[] = DialogueCards::ask($scene, $exchange);\n                    break;",
+    "replace": "                    $drafts[] = DialogueCards::ask($scene, $exchange);\n                    $drafts[] = DialogueCards::partner($scene, $exchange);\n                    break;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/DialogueStageTest.php",
+        "filter": "deals the visit in its order"
+      },
+      {
+        "path": "tests/Unit/Plan/Session/SessionDayAssemblyTest.php",
+        "filter": "deals the clean lesson in five stages"
+      }
+    ]
+  },
+  {
+    "name": "9. dialogue_ask теряет проверку обмена",
+    "rule": "question_native, options, correct — на карточке ask (§1.5)",
+    "defect": "проверка не кладётся в payload",
+    "file": "app/Modules/Plan/Domain/Assembly/DialogueCards.php",
+    "find": "        return self::spoken(CardKind::DialogueAsk, $scene, $exchange, self::check($scene, $exchange) ?? []);",
+    "replace": "        return self::spoken(CardKind::DialogueAsk, $scene, $exchange);",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/DialogueStageTest.php",
+        "filter": "deals an ask as one card"
+      }
+    ]
+  },
+  {
+    "name": "10. mode=rounds снова отбивается сервером",
+    "rule": "клиент вправе назвать режим rounds (§2.1)",
+    "defect": "режим снят из списка",
+    "file": "app/Modules/Plan/Presentation/Http/Request/AnswerCardRequest.php",
+    "find": "    public const MODES = ['chips', 'tiles', 'voice_hint', 'voice_blind', 'rounds'];",
+    "replace": "    public const MODES = ['chips', 'tiles', 'voice_hint', 'voice_blind'];",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/SessionAnswerTest.php",
+        "filter": "keeps what the answer left"
+      }
+    ]
+  },
+  {
+    "name": "11. перевод сказанного наполнения снова собирается",
+    "rule": "перевод предложения для сказанного наполнения — text_native реплики модели (§2.3)",
+    "defect": "реплика не цитируется",
+    "file": "app/Modules/Plan/Domain/Assembly/SceneMaterial.php",
+    "find": "            return $said['glue'] !== '' || trim($learner->textNative) === '' ? null : $learner->textNative;",
+    "replace": "            return null;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+        "filter": "shows the model"
+      }
+    ]
+  },
+  {
+    "name": "12. цитируется и реплика после клея",
+    "rule": "реплика после клея не цитируется — две стороны карточки разойдутся (§2.3)",
+    "defect": "клей не проверяется",
+    "file": "app/Modules/Plan/Domain/Assembly/SceneMaterial.php",
+    "find": "            return $said['glue'] !== '' || trim($learner->textNative) === '' ? null : $learner->textNative;",
+    "replace": "            return trim($learner->textNative) === '' ? null : $learner->textNative;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+        "filter": "shows the model"
+      }
+    ]
+  },
+  {
+    "name": "13. пробел перед знаком конца остаётся в frame_target",
+    "rule": "разбор снимает пробел перед знаком конца и у цели (§3.1)",
+    "defect": "целевой каркас читается как написан",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonParser.php",
+    "find": "            frameTarget: FrameText::withEndMarkClosed($this->string($row, 'frame_target', $path)),",
+    "replace": "            frameTarget: $this->string($row, 'frame_target', $path),",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonNativeMarksTest.php"
+      }
+    ]
+  },
+  {
+    "name": "14. чужие буквы в чтении перестают быть фатальными",
+    "rule": "pronunciation.foreign_script — фатальный код, фатальных 10 (§3.2)",
+    "defect": "код снят с порога",
+    "file": "app/Modules/Plan/Domain/Check/LessonGate.php",
+    "find": "        LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT,\n    ];",
+    "replace": "    ];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonGateTest.php",
+        "filter": "holds the day for exactly the ten fatal codes"
+      }
+    ]
+  },
+  {
+    "name": "15. чужая буква не находится вовсе",
+    "rule": "буква вне письменности родного языка — находка (§3.2)",
+    "defect": "буквы чтения не читаются",
+    "file": "app/Modules/Plan/Domain/Check/Language/LanguageWords.php",
+    "find": "            if (preg_match('/^\\p{L}$/u', $character) === 1 && preg_match($letters, $character) !== 1) {",
+    "replace": "            if (false) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "counts the one rule a lesson breaks"
+      }
+    ]
+  },
+  {
+    "name": "16. журнал снова называет все вызовы плана «plan»",
+    "rule": "назначение вызова в журнале — plan / lesson / repair / judge (§3.3)",
+    "defect": "журналу отдаётся денежный ярлык",
+    "file": "app/Modules/Generation/Infrastructure/Adapter/OpenAiCompatibleContentModel.php",
+    "find": "            $this->journalPurpose ?? $this->purpose,",
+    "replace": "            $this->purpose,",
+    "tests": [
+      {
+        "path": "tests/Feature/Observability/ModelCallJournalTest.php",
+        "filter": "names each plan call in the journal"
+      }
+    ]
+  },
+  {
+    "name": "17. финер ярлык уезжает и в лог расхода",
+    "rule": "расход остаётся одним purpose = plan (§3.3)",
+    "defect": "журнальное назначение подставляется в лог исходящих",
+    "file": "app/Modules/Generation/Infrastructure/Adapter/OpenAiCompatibleContentModel.php",
+    "find": "            fn () => $this->context->run($this->purpose, null, fn () => Http::withToken($this->apiKey)",
+    "replace": "            fn () => $this->context->run($this->journalPurpose ?? $this->purpose, null, fn () => Http::withToken($this->apiKey)",
+    "tests": [
+      {
+        "path": "tests/Feature/Observability/ModelCallJournalTest.php",
+        "filter": "names each plan call in the journal"
+      }
+    ]
+  },
+  {
+    "name": "18. день события снова не учебный при укорачивании",
+    "rule": "daysUntil считает день события учебным (§3.4)",
+    "defect": "день события выпадает из счёта",
+    "file": "app/Modules/Plan/Domain/Service/PlanCalendar.php",
+    "find": "        return max(self::MIN_DAYS, min(self::MAX_DAYS, self::calendarDaysBetween($today, $eventDate) + 1));",
+    "replace": "        return max(self::MIN_DAYS, min(self::MAX_DAYS, self::calendarDaysBetween($today, $eventDate)));",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/PlanCalendarTest.php",
+        "filter": "counts the days up to and including the event"
+      },
+      {
+        "path": "tests/Unit/Plan/PlanShorteningTest.php",
+        "filter": "shortens the plan to the days left"
+      }
+    ]
+  }
+]
